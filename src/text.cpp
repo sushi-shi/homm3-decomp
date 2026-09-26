@@ -65,6 +65,8 @@ const char* g_tavernInfo[8];
 DATA(0x006a5e60)
 TSpreadsheetResource* g_campaignDialogResource;
 
+// The seerhut consumer also identifies retail 0x006a5e64; this definition
+// owns the full eight-pointer table, including the spare final cell.
 DATA(0x006a5e64)
 const char* g_resourceNames[8];
 
@@ -346,8 +348,9 @@ const char* g_humanCpu[3];
 
 DATA(0x006a8098)
 const char* g_newLoadSaveText[3];
-// These checks have empty release bodies in the DC image. The line gaps
-// do not recover the elided debug checks, so none are invented here.
+// These checks have empty release bodies in the DC image. The named calls
+// in initializeArrayText still preserve its source boundaries and labels;
+// the checker body itself has no recovered debug behavior.
 // Original: CheckTextResource; text.cpp:49, dc 0x160ff4.
 static void checkTextResource(const TTextResource&, int, const char*)
 {
@@ -944,48 +947,63 @@ unsigned char initializeArrayText()
         return 0;
 
     i = 2;
+    checkTextResource(*g_arrayText, i - 1, "gStatDesc");
     for (j = 0; j < 4; j++, i++)
         g_statDesc[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gLuckText");
     for (j = 0; j < 7; j++, i++)
         g_luckText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gMoraleText");
     for (j = 0; j < 7; j++, i++)
         g_moraleText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gOwnedByColor");
     for (j = 0; j < 8; j++, i++)
         g_ownedByColor[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gMonthNames");
     for (j = 0; j < 10; j++, i++)
         g_monthNames[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gWeekNames");
     for (j = 0; j < 15; j++, i++)
         g_weekNames[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cLuckInfo");
     for (j = 0; j < 25; j++, i++)
         g_luckInfo[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cMoraleInfo");
     for (j = 0; j < 42; j++, i++)
         g_moraleInfo[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cNewTurn");
     for (j = 0; j < 8; j++, i++)
         g_newTurn[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cMapSize");
     for (j = 0; j < 4; j++, i++)
         g_mapSize[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cDifficulty");
     for (j = 0; j < 5; j++, i++)
         g_difficulty[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cDirections");
     for (j = 0; j < 9; j++, i++)
         g_directions[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cRumourTerrainDescriptions");
     for (j = 0; j < 10; j++, i++)
         g_rumourTerrainDescriptions[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "cPersonality");
     for (j = 0; j < 4; j++, i++)
         g_personality[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gArmySizeNames");
     for (j = 0; j < 9; j++) {
         int k;
 
@@ -993,27 +1011,35 @@ unsigned char initializeArrayText()
             g_armySizeNames[j][k] = g_arrayText->getText(i);
     }
     i++;
+    checkTextResource(*g_arrayText, i - 1, "const_wise_tree_price_text");
     for (j = 0; j < 3; j++, i++)
         g_constWiseTreePriceText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "HumanCPU");
     for (j = 0; j < 3; j++, i++)
         g_humanCpu[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "HandiText");
     for (j = 0; j < 3; j++, i++)
         g_handiText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "AGRText");
     for (j = 0; j < 3; j++, i++)
         g_agrText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "gTownTypeNames");
     for (j = 0; j < 10; j++, i++)
         g_townTypeNames[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "NewLoadSave");
     for (j = 0; j < 3; j++, i++)
         g_newLoadSaveText[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "Army Speed Names");
     for (j = 0; j < 21; j++, i++)
         g_speedNames[j] = g_arrayText->getText(i);
     i++;
+    checkTextResource(*g_arrayText, i - 1, "Town Size Names");
     for (j = 0; j < 4; j++, i++)
         g_townSizeNames[j] = g_arrayText->getText(i);
     i++;

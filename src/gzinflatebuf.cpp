@@ -23,9 +23,7 @@
 // names the type `._N`) and are caught in the constructor itself, which is
 // what leaves the stream in raw pass-through mode with ok == 0.
 // Retail's basic_streambuf constructor calls std::_Lockit around
-// _Locimp::_Init; that is the external-lock view of <yvals.h>, so expose it
-// while this TU is parsed exactly as game.obj does. The pinned /ML runtime
-// is unchanged.
+// _Locimp::_Init; the /MT game profile exposes that external-lock view.
 #include "va.h"
 
 #include <memory>

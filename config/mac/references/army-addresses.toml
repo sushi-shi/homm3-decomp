@@ -1,0 +1,956 @@
+# Address-only references discovered from ARMY TU order, then independently verified.
+# Names remain owned by src/army.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x0043d250
+unit = "army"
+mac_section = 0
+mac_offset = 0x48b38
+mac_size = 0x1ac
+target_sha256 = "26d497b2680966396d9e741df8e050a97ffedc66bef8f05bdd98a4fbe78d46ae"
+evidence = "NEW: Constructs eight resource handles at+0x170 and deque+0x420, four vectors+0x4e0/+0x4ec/+0x4f8/+0x504; disposes icons+0x164/+0x168 and resets side/slot -1. Return at0x48ce0; following0x48ce4 is separate handle constructor. End0x48ce4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d400
+unit = "army"
+mac_section = 0
+mac_offset = 0x48cf0
+mac_size = 0x140
+target_sha256 = "b6344004ca0966a78af528988bdfb83dab453000acf5cf4f8a96695649fc210e"
+evidence = "NEW: Reverse destruction of four vectors, deque+0x420, eight handles+0x170, two icons; optional CodeWarrior deletion flag. End0x48e30; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d540
+unit = "army"
+mac_section = 0
+mac_offset = 0x48ec4
+mac_size = 0x68
+target_sha256 = "355912ed1ba13e41e9167a08a51543f5a071748375755c799939155f71ef2c40"
+evidence = "NEW: Quick-combat gate0x76bc8; indexed sample+0x170 then sound memorySample0x218d54. End0x48f2c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d580
+unit = "army"
+mac_section = 0
+mac_offset = 0x48f2c
+mac_size = 0x6c
+target_sha256 = "890b92e8df34003bd6999da4406e941804da86aedf7dc6301b04be8af4ccc5aa"
+evidence = "NEW: Quick-combat gate and indexed sample+0x170, dereferenced sample handle then stopSample0x218968. End0x48f98; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d5c0
+unit = "army"
+mac_section = 0
+mac_offset = 0x49008
+mac_size = 0x100
+target_sha256 = "06a88478b6b3996afac0110790876d73e1746b9c86c6dd007e3ddbf0f5251b3a"
+evidence = "NEW: Eight sample disposals, spell array memset, deque clear0x55094, GameTime0x20fc5c and sprite disposal; resets mirror indices -1. End0x49108; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d730
+unit = "army"
+mac_section = 0
+mac_offset = 0x49108
+mac_size = 0x1d8
+target_sha256 = "5b3fb03af062ca3027b6c8968160cfb8888e8b31194a143833051d709ba1e7a5"
+evidence = "NEW: Calls initClean0x49008, copies creature traits stride0x74, hero trait modifier0x1070a0; sets native terrain, side/grid/counts. End0x492e0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d8b0
+unit = "army"
+mac_section = 0
+mac_offset = 0x492e0
+mac_size = 0x13c
+target_sha256 = "484a59e5bfbd5a72f52dcb45a3ec50ca1cf6eb4d5ff2de7b8201b6d5babc7a74"
+evidence = "NEW: Calls initialize0x49108 and addAura0x4a904, validates hex<187 with cell stride0x70, resets retaliation0x48e5c. End0x4941c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043d9f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4941c
+mac_size = 0x774
+target_sha256 = "7065c25fba415c6554d9be387a4deb666aba7d94db81cea031bb6b0b0d395a71"
+evidence = "NEW: Resource load sequence with sprite/sample filename sprintf0x28dfa8 and resource loader0x153f78; creature-specific resource cases including0x92/0x91 war machines. End0x49b90; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043df20
+unit = "army"
+mac_section = 0
+mac_offset = 0x49b90
+mac_size = 0x150
+target_sha256 = "52a6ce29efa413957e7fb98ac84f77ac083d2bbd3049427747271e8a0611f0ef"
+evidence = "NEW: Hero artifact checks0xf4dfc, armyGroup luck0x58dd0; magic terrain comparisons6/3/9/2 and luck clamping. End0x49ce0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043e000
+unit = "army"
+mac_section = 0
+mac_offset = 0x49ce0
+mac_size = 0x1f4
+target_sha256 = "0bc3e0bf68c56022a95427201dfc987020f4503f96e752b96d66c08b335f5f0e"
+evidence = "NEW: ArmyGroup morale0x58944 and two hero artifact checks; magic terrain6/3/9, morale clamp and undead0x4e/0x4f cases. End0x49ed4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043e140
+unit = "army"
+mac_section = 0
+mac_offset = 0x49ed4
+mac_size = 0x810
+target_sha256 = "c4f2c533b401f5da42280f93986150d723b9a25e92a9d45966a0bffd7aa4255e"
+evidence = "NEW: Creature drawing helper family0x13b7xx..0x13c0xx, text/format calls and midX0x527c0/midY0x52754; spell-effect count and troop-box display paths. End0x4a6e4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043ea00
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a88c
+mac_size = 0x78
+target_sha256 = "e82e25e99328f0bc5a64a4f139df613ee60f75d1bbb8343045ebf0f80ff986f2"
+evidence = "NEW: Reverse index walk over army pointer vector, match pointer and call erase0x3a7bc; called by both aura and binding teardown. End0x4a904; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043ea70
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a904
+mac_size = 0x180
+target_sha256 = "a3e16874f57a4a0429ad182475c2c41b8293a0b45ab5ae5a2f7505fb823725ab"
+evidence = "NEW: Adjacent hex0x13d260, valid grid0..186, unicorn24/25 tests; four addItem0x4a7b0 calls for reciprocal aura vectors. End0x4aa84; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043ec50
+unit = "army"
+mac_section = 0
+mac_offset = 0x4aa84
+mac_size = 0xa8
+target_sha256 = "ec66d36192dce658ca6c8aa784602f88c491af43eef242a1c45666c9649b3f89"
+evidence = "NEW: Two backward aura-vector walks calling eraseItem0x4a88c then clearing their lengths. End0x4ab2c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043ee10
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ab2c
+mac_size = 0xc4
+target_sha256 = "20080c1935f4a3a27b1c482f70c4e6fa0010c206f61bfa7f0d52bac8f719b316"
+evidence = "NEW: Two bound/binder vector walks eraseItem0x4a88c and cancelIndividualSpell0x50580 when last binder removed. End0x4abf0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043efe0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4abf0
+mac_size = 0x118
+target_sha256 = "8aa6f8dad59190044f4487c18d9800097a6264ae017db950764d69344d5df665"
+evidence = "NEW: Area-effect latch comparison/store, combat army marker with side stride0x6bf4/army0x524, animation-valid0x76b70 and frame state. End0x4ad08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043f0b0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ad94
+mac_size = 0x20c
+target_sha256 = "6f4c364cf4c8fcf9b49a419cb6e881b419cb9363a404365c1daa4648755ede3a"
+evidence = "NEW: Walk sequence calls setupAnimation0x52aac, turn0x52938, adjacentDirection0x13d1d0; play sample and animation followed by endWalk0x4ad08. End0x4afa0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043f2c0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4afa0
+mac_size = 0x68c
+target_sha256 = "b7aee31b6bc41bac872b8cb4123fbeee60c43c8000f34cb4a6b2b3e629b9a550"
+evidence = "NEW: Missile resource/animation path, shooter-specific IDs0x88/0x4c/0x23/0x4a/0x7a/0x78, projection/drawing and frame timer calls. End0x4b62c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0043f900
+unit = "army"
+mac_section = 0
+mac_offset = 0x4b62c
+mac_size = 0x6e4
+target_sha256 = "d3dec82fc8808442d709a5895981be743bf0088071d7c53d14cd9fe69706ec74"
+evidence = "NEW: Ranged target overload calls animateMissile0x4afa0, both owners0x4e51c, damageEnemy0x4ffb4, adjacent splash victims and waitSample0x48f98. End0x4bd10; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00440160
+unit = "army"
+mac_section = 0
+mac_offset = 0x4bd10
+mac_size = 0x1a0
+target_sha256 = "eccfa15cfd23c4a3297728a33d004c1051cb0036605c02c095f13e78aceb22fe"
+evidence = "NEW: Ranged wrapper selects combat target, turns/setupAnimation, calls ranged target0x4b62c repeatedly, owner/controller comparison and spell cancellation. End0x4beb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00440310
+unit = "army"
+mac_section = 0
+mac_offset = 0x4bf70
+mac_size = 0x1fc
+target_sha256 = "fe49be7ae135038b3decb4ba12b83bac406b220ba13c312e05b4fdcf236cea90"
+evidence = "NEW: Eight-direction attack-mask walk, adjacent cell0x13d260/0x1081f8, damageEnemy0x4ffb4 and target mark/animation. End0x4c16c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00440500
+unit = "army"
+mac_section = 0
+mac_offset = 0x4c16c
+mac_size = 0x440
+target_sha256 = "618b5b008675f4cba76acf5a6c7ea8d198ca16d9f3f8729de3c58abaacb4f59f"
+evidence = "NEW: Creature-specific special-attack switch IDs0x4e/0x42/0x1a/0x18/0x16/0x3b/0x45/0x44/0x4c/0x6d/0x6a/0x51/0x6c/0x8d/0x87; Random0x1314b4 and spell application0x199df8. End0x4c5ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004409c0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4c5ac
+mac_size = 0x258
+target_sha256 = "4ec5944f2fa93cd0d85297b1e3f9e5bef4ff17f400caf29b10fb77668a77bad6"
+evidence = "NEW: Fire-shield damage display/animation, current army mark, damage0x5004c and sound begin/end0x218f58/0x219000. End0x4c804; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00440bc0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4c804
+mac_size = 0xa84
+target_sha256 = "e5b7fb0050557f210a8bcc9f036956428c6910745851184da1606ec04a023dfd"
+evidence = "NEW: Post-attack creature cases0x67/0x5d/0x3f/0x87/0x6a; text messages, damage0x5004c, resurrection spell0x190540 and random effects. End0x4d288; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00441610
+unit = "army"
+mac_section = 0
+mac_offset = 0x4d288
+mac_size = 0x638
+target_sha256 = "58fa5c4d49c96dda5dcdc4f7e0d76811d8d2831ab837a08c045fdde8c00e1588"
+evidence = "NEW: Melee target+direction overload calls multihead mask helpers0x4bf10/0x4beb0, doMultiHeadAttack0x4bf70, getTotalHitPoints0x4ef38, damageEnemy0x4ffb4, special attack0x4c16c, postattack0x4c804/fire shield0x4c5ac. End0x4d8c0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00441cb0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4d8c0
+mac_size = 0x36c
+target_sha256 = "d7a9bb84911c8c7d5f5af66d62f51fbc94d8c3f95cbb4d832351eb9746310f8c"
+evidence = "NEW: Direction wrapper finds adjacent target and attack direction0x51860, turn/setupAnimation, invokes target attack0x4d288 up to three times with timing. End0x4dc2c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00441f70
+unit = "army"
+mac_section = 0
+mac_offset = 0x4dc2c
+mac_size = 0x44
+target_sha256 = "7eb90ca4dbe2cce8af17ba03b7a9e47560a1354ddc0512f2ca12b24613cd4c98"
+evidence = "NEW: Arrow-tower149 exclusion, calls combat obstacle attack0x76cf0 passing movement flag. End0x4dc70; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00441fa0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4dc70
+mac_size = 0x3a4
+target_sha256 = "cde0fd1879cbd5ad6514a74b044983ef47904328755ba831685c5996af538a35"
+evidence = "NEW: Walking path/speed0x55028, search path0x13cd64, removes aura/binding, walk0x4ad94, obstacle check0x4dc2c and restores aura0x4a904. End0x4e014; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442410
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e174
+mac_size = 0x160
+target_sha256 = "4a24e6087b43b82fdcc03c197632018288e4d01a1ce17fb062d0c8147f046ffc"
+evidence = "NEW: Attacker skill/spell adjustment, two controller0x4e4e8 lookups, hero modifier0x106f98 and defense0x4e31c for Frenzy. End0x4e2d4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442550
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e2d4
+mac_size = 0x48
+target_sha256 = "7c4cad2d6c1f4ed64791ed278a28c9c15ada358a7702718ee9cd3dc319a9a71d"
+evidence = "NEW: Calls adjustedAttack0x4e174 and subtracts base creature attack from traits stride0x74. End0x4e31c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442590
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e31c
+mac_size = 0x17c
+target_sha256 = "0d2e983f889af3acc5c46cdd2803688e61e8e2fcd760a319da3dd9a7610eb715"
+evidence = "NEW: Defense skill checks Frenzy and defense-lowering effects; two creature spell-bonus0x764c4 calls and Behemoth96/97 cases. End0x4e498; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442660
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e498
+mac_size = 0x50
+target_sha256 = "1c6044bf357812dec170f79ab3098136973a597a1d63a2b32a2a0934aec7c332"
+evidence = "NEW: Calls adjustedDefense0x4e31c then subtracts base traits defense using creature stride0x74. End0x4e4e8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442690
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e4e8
+mac_size = 0x34
+target_sha256 = "a3fb81bd6ab8a0644a032d255d3dddd8f7d6d23d8161386015ccf198fe57aaff"
+evidence = "NEW: Hypnotize row+0x288 reverses combat side+0xf4 then selects hero array+0x53cc. End0x4e51c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004426d0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e51c
+mac_size = 0x1c
+target_sha256 = "12a203129c3e148df249dfed97ff77ce1dc046d4a1267441ded670114cc0ceee"
+evidence = "NEW: Selects combat hero array+0x53cc by owning side+0xf4 without hypnotize adjustment. End0x4e538; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004426f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e61c
+mac_size = 0xd8
+target_sha256 = "65390c64c222760034e07c03afa1ec9ef2ecdfe3236de14f2d65aadcba519ab7"
+evidence = "NEW: Bless/curse rows select high+bless or max(low-curse,1), otherwise floating average of low/high damage. End0x4e6f4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442780
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e6f4
+mac_size = 0xdc
+target_sha256 = "f3124824838527e4f4be36f03d42fe102c90694ed62468d221b70d5b853168d4"
+evidence = "NEW: Calls average0x4e61c, adjustDamage0x4fe80 and totalHP0x4ef38; clone HP1, double ranged attack, damage limit. End0x4e7d0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442880
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e7d0
+mac_size = 0x70
+target_sha256 = "29434da39da463ca0e95f611f59f6e2a622fba86312739dc738541f060bbfe47"
+evidence = "NEW: Null/self rejection and side/hypnotize ownership comparison; returns enemy relation. End0x4e840; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004429f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e958
+mac_size = 0x94
+target_sha256 = "6ed82fdec0db2e04faf045c8e248660fc67a3e7c4b2ad03e638d8c9d665b0eef"
+evidence = "NEW: Calls combat adjacent-enemy0x75c3c, then secondGrid0x52874 and repeats for wide creature. End0x4e9ec; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00442a50
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e9ec
+mac_size = 0x30c
+target_sha256 = "1004e37336e048502733dcf53e027171cdfa2dba3ddbb4b3b1b338df6c25bacd"
+evidence = "NEW: Unit valuation calls attack/defense modifiers0x4e2d4/0x4e498, defender reduction0x4fd04, canShoot0x4e840, controllers and average damage; minimum attack/defense parameters. End0x4ecf8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004430d0
+unit = "army"
+mac_section = 0
+mac_offset = 0x4efa0
+mac_size = 0x5c
+target_sha256 = "fb41b35b3f99e78d47df08121f3d0b5c3fd3dc07a9888bdf12765c97552d137f"
+evidence = "NEW: Calls totalHP0x4ef38, stores expected damage and divides by per-creature hitpoints for expected troop count. End0x4effc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443130
+unit = "army"
+mac_section = 0
+mac_offset = 0x4effc
+mac_size = 0x30
+target_sha256 = "267f51bc335c76db1546ae23dadd4ad257fd237a49085c828ac2b0fd8ae3cd9a"
+evidence = "NEW: FireShield row and EfreetSultan53 special case return shield strength float. End0x4f02c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443160
+unit = "army"
+mac_section = 0
+mac_offset = 0x4f02c
+mac_size = 0x204
+target_sha256 = "d8cd00caea595eddf2c44eaf669e543c5448b4c9eb9e4b51f6fdfcc8f57036c7"
+evidence = "NEW: Base damage bless/curse, controller lookup, random low/high damage rolls0x1314b4, arrowtower146 and capped ten-unit sampling. End0x4f230; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443320
+unit = "army"
+mac_section = 0
+mac_offset = 0x4f230
+mac_size = 0x530
+target_sha256 = "d0369cb6343c7cd06954a3b0f60e22e7101a08b47bd0ce017dc7511bb817eb17"
+evidence = "NEW: Attack-vs-defense and hatred0x4e538, controller/hero bonuses0x104e5c/0x104f70/0x106f98, jousting and creature matchup bonus messages. End0x4f760; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443840
+unit = "army"
+mac_section = 0
+mac_offset = 0x4f760
+mac_size = 0x358
+target_sha256 = "1d0167f663ae398d907eb6e1197ce5d03265b8fe7993870687e3712eb52a1593"
+evidence = "NEW: Calls attackerBonus0x4f230 then luck/deathblow random0x1314b4 with BlackKnight67 and arrowtower146 special cases/messages. End0x4fab8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443b90
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fac0
+mac_size = 0x244
+target_sha256 = "a50c736656dda5c25bfefd4d2b868c03e7337e26f42f92229bf965e4712aae52"
+evidence = "NEW: Damage reduction attack/defense and psychic120/121, EfreetSultan83, obstacle/wall penalty0x73778/0x7388c. End0x4fd04; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443e30
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fd8c
+mac_size = 0xf4
+target_sha256 = "32b7e93b193a91a32472c26f6cb1a4ba3eea5c602b1d2982481117de15251ea7"
+evidence = "NEW: Estimated damage calls attackerBonus0x4f230, defenderBonus0x4fab8, attacker reduction0x4fac0 and defender reduction0x4fd04; minimum1. End0x4fe80; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00443f40
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fe80
+mac_size = 0x134
+target_sha256 = "e5553e674541d10c1e851ee95a28b903deeaf94e47df47439457ab5ee7900674"
+evidence = "NEW: Damage adjustment calls bonuses0x4f760/0x4fab8, totalHP0x4ef38 and fireShield0x248e4, both reduction helpers; minimum1. End0x4ffb4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00444090
+unit = "army"
+mac_section = 0
+mac_offset = 0x5004c
+mac_size = 0xac
+target_sha256 = "3195b057f0f170b557ba9272f528772f1a32fbb9f267b9d5a23534b56b30b2a1"
+evidence = "NEW: Divides damage+topHP by creature HP+0xc0, clone override, stores damaged/dead flags and troop count then cancelSpellType(2)0x50430. End0x500f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00444120
+unit = "army"
+mac_section = 0
+mac_offset = 0x500f8
+mac_size = 0x338
+target_sha256 = "ee2317554491c9e91d299a47bed9cc95dc9943c269a6b820140d89926422675e"
+evidence = "NEW: Death routine removes aura/bindings, cancels all spells0x50c24, random morale, writes corpse hex grids and recursively kills linked mirror. End0x50430; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004444d0
+unit = "army"
+mac_section = 0
+mac_offset = 0x50430
+mac_size = 0x7c
+target_sha256 = "b3709622057d2d9e5446c761670bb129a5ecf637420019a82bb33bc524196988"
+evidence = "NEW: Spell-type dispatch makes four cancelIndividualSpell0x50580 calls, includes damage-removable and round categories. End0x504ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00444510
+unit = "army"
+mac_section = 0
+mac_offset = 0x50580
+mac_size = 0x3b4
+target_sha256 = "6ab6fbb300155f3f3502577fe2f87d23c08dd208f1a1c5c1d93f2f815bf126fb"
+evidence = "NEW: Cancels influence row, aura unlink/restore, hitpoint adjust0x504ac, deque erasure0x551b4 and special spell47/48 handling. End0x50934; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004448f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x50c8c
+mac_size = 0x7a8
+target_sha256 = "9ee54e89e772d1177e57f4b9a82ef4f1ba758667d296095f4e456fd99598e77e"
+evidence = "NEW: Spell influence dispatch, repeated hero spell bonuses0x106f98, cancels opposing spells0x50580, aura/hitpoint updates and inserts spell into deque0x559e4. End0x51434; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445490
+unit = "army"
+mac_section = 0
+mac_offset = 0x514cc
+mac_size = 0x1d0
+target_sha256 = "97bf92afcfb30f823c516c185ce4f1736a2b6262ac99c1a88e7db784fe3ca950"
+evidence = "NEW: Berserk candidate collection checks canShoot0x4e840, combat targets, sorts/filters closest targets in vector; arrowtower149 gate. End0x5169c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004456d0
+unit = "army"
+mac_section = 0
+mac_offset = 0x5169c
+mac_size = 0x118
+target_sha256 = "81e109b842b364efd747d9d1f421e25a8f04680ab525e96e5ddc3f18cab73c4e"
+evidence = "NEW: Constructs vector, getBerserkTargets0x514cc, random target and berserk movement0x246f4 then destroys vector on branches. End0x517b4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445840
+unit = "army"
+mac_section = 0
+mac_offset = 0x517b4
+mac_size = 0xac
+target_sha256 = "1049e2e8b5a89b613ddcccb552ff0522eaae04e5aab4e23fe7494a69c368faa9"
+evidence = "NEW: Explicit enemy hex overload loops six/eight directions through getAdjacentHex0x13d260 comparing selected hex. End0x51860; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004458b0
+unit = "army"
+mac_section = 0
+mac_offset = 0x51860
+mac_size = 0x108
+target_sha256 = "3b6b80484410c272c72ce352b28f3bf92d83b7e5c0698a91f73fdbd860ac2234"
+evidence = "NEW: Implicit enemy hex overload loops adjacent cells0x13d260/0x1081f8, checks army pointer and wide-cell alternate directions. End0x51968; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445950
+unit = "army"
+mac_section = 0
+mac_offset = 0x51968
+mac_size = 0x16c
+target_sha256 = "415093076a362d3a135a80a817a03a832e32f69edde7c0eaa3b469b7cd0dd556"
+evidence = "NEW: Movement validity hex<187 and canFit0x53028, path/cursor checks, dragon54/55 cases; calls walkTo0x4dc70. End0x51ad4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445a60
+unit = "army"
+mac_section = 0
+mac_offset = 0x51ad4
+mac_size = 0x1b4
+target_sha256 = "3c986ed15a41f1509f61fb5443f948e98eb31926afcefce784ef49aeb4fd7194"
+evidence = "NEW: Attack chosen hex loads target0x1081f8, shooting branch0x4bd10 else direction0x51860 and melee0x4d8c0 with facing restore. End0x51c88; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445d10
+unit = "army"
+mac_section = 0
+mac_offset = 0x51c88
+mac_size = 0x20
+target_sha256 = "e00839cbec25825003fbcc5bf3ffcaaa2a59e8541ccf90c5eee78df4f7bd0bf6"
+evidence = "NEW: Small wrapper forwards hex/facing to simpleMove0x51968, then returns successful movement status. End0x51ca8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445d30
+unit = "army"
+mac_section = 0
+mac_offset = 0x51d54
+mac_size = 0x13c
+target_sha256 = "3529029eea0d89af93315cbdf4124eedf08eac04d208be4faf42909947c5a1c0"
+evidence = "NEW: Target-grid wall selection gates tower95/94 and catapult145, ballistics traits from hero0x4e4e8, invokes overload0x51e90. End0x51e90; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445ec0
+unit = "army"
+mac_section = 0
+mac_offset = 0x51e90
+mac_size = 0x114
+target_sha256 = "4223e48907df1f0e9e5fe370a8ae61feacf788d91736c598aad92b4ff8d4eaad"
+evidence = "NEW: Ballistics trait rolls Random0x1314b4, chooseWallTarget0x51ca8, per-wall damage then attackWall(wall,levels)0x51fa4. End0x51fa4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00445fd0
+unit = "army"
+mac_section = 0
+mac_offset = 0x51fa4
+mac_size = 0x64c
+target_sha256 = "3dea88cfbc8e521814d6f3129bc6f565dda712244fe4e3a67f1ec121d4ef9bd5"
+evidence = "NEW: Wall damage animation: wall table stride12, projectile resources0x153f78, samples, battle draw/sound and spell cancellation0x50430. End0x525f0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446500
+unit = "army"
+mac_section = 0
+mac_offset = 0x525f0
+mac_size = 0x164
+target_sha256 = "06e12b99055688f44b8ed817ad21fd693bba253175ffbade7114584c591d23e5"
+evidence = "NEW: Cure adjusts HP and cancels fourteen adverse spells0x50580, computes spell-power bonus then hero0x106f98, clamps top damage. End0x52754; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446630
+unit = "army"
+mac_section = 0
+mac_offset = 0x52754
+mac_size = 0x2c
+target_sha256 = "7b6804d3ccd28c89a86c63436ec0bc5c7b95bb4a22c3d709b006a627800b41cc"
+evidence = "NEW: Hex cell stride0x70 refY minus half image height+0x16c, signed division by2. End0x52780; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446660
+unit = "army"
+mac_section = 0
+mac_offset = 0x527c0
+mac_size = 0x48
+target_sha256 = "64e11ccf71937c092da5bd743beb117fe2f5f67ad5a0a8360d5efb6b430fcd93"
+evidence = "NEW: Hex cell stride0x70 refX plus signed22 when double-wide, selected by facing. End0x52808; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446720
+unit = "army"
+mac_section = 0
+mac_offset = 0x52938
+mac_size = 0x174
+target_sha256 = "cdfe794a7b51a8e9cf25284770839891cd37f941418e7614ba259b4fcd72f145"
+evidence = "NEW: Facing turn animation0x52c08 with wide-creature grid corrections; updates facing and current frame. End0x52aac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446830
+unit = "army"
+mac_section = 0
+mac_offset = 0x52aac
+mac_size = 0x15c
+target_sha256 = "cc82125a7ff93db4d25a462988c6eac87bc7eebe719f5a3bd47509da9478e139"
+evidence = "NEW: Animation placement from hexcell stride0x70, quickCombat0x76bc8, drawToBuffer0x49ed4 and frame timing0x5c0f8. End0x52c08; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446940
+unit = "army"
+mac_section = 0
+mac_offset = 0x52c08
+mac_size = 0x420
+target_sha256 = "ad2425efc7b1d52df3a1ccc8a2fb073d9141c30264a8c0766ba08f363bbdc921"
+evidence = "NEW: Three animation parameters drive frame loop; quickCombat gate, drawToBuffer0x49ed4, refresh0xa5f6c and timing0x20fc68/0x20fc5c. End0x53028; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446c40
+unit = "army"
+mac_section = 0
+mac_offset = 0x53028
+mac_size = 0x374
+target_sha256 = "7d5a4aee102fbdc9affcffd3ee3b752bf6a2ce928ad511f2e0da872a1f566258"
+evidence = "NEW: Destination0..186 checks, wide-creature occupancy0x7618c and adjacent directions0x13d1d0, row modulo17 edge rejection and optional shifted hex output. End0x5339c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00446e30
+unit = "army"
+mac_section = 0
+mac_offset = 0x5339c
+mac_size = 0x300
+target_sha256 = "c2bfb76f75d4e07a8a8b22b02beef32e4da67d1d1f33069fe0d464913c4f016e"
+evidence = "NEW: New-turn poison/regeneration and morale handling, hero artifact check0xf4dfc, creature60/61/144 cases, random50 percent gate and spell expiry. End0x5369c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447120
+unit = "army"
+mac_section = 0
+mac_offset = 0x5369c
+mac_size = 0x15c
+target_sha256 = "6634bcf371ba3cf2a50bfc3fbf34b4972394edc4e524e56e824c4b5d12a09c02"
+evidence = "NEW: Round reset calls retaliation0x48e5c, decrementSpellRounds0x51434, hitpoint update0x504ac; sound/display and processDeath0x500f8. End0x537f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447330
+unit = "army"
+mac_section = 0
+mac_offset = 0x537f8
+mac_size = 0x100
+target_sha256 = "df3f73e1c7a03bfe7af45956e68d4b288fe628f689f1fb7026a2c32d9f798455"
+evidence = "NEW: Resurrection HP uses troop count times50 for Archangel13 otherwise100, divides by target HP and limits original troop count. End0x538f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004473d0
+unit = "army"
+mac_section = 0
+mac_offset = 0x538f8
+mac_size = 0x144
+target_sha256 = "337015fef2896d003a2188a1bbe79e102b73f594de6cf0b6b3ce780b687ace75"
+evidence = "NEW: Archangel13/PitLord51 eligibility, hero spell allowance0x214bc and target validation0x194788/0x1945d8, resurrection size0x537f8. End0x53a3c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447510
+unit = "army"
+mac_section = 0
+mac_offset = 0x53a3c
+mac_size = 0x18c
+target_sha256 = "8b48f211c9124f58490153a614ab8080fb9161e024e949c30e99284b9abad264"
+evidence = "NEW: Faerie-dragon spell selection via random0x28e00c, message formatting and creature traits stride0x88 spell metadata. End0x53bc8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447a80
+unit = "army"
+mac_section = 0
+mac_offset = 0x542f0
+mac_size = 0x17c
+target_sha256 = "41959dee2c103696ea04649dff4b6d8688e7c47e6ea24c9134f749add8f37df2"
+evidence = "NEW: Spell target validity switch has current influence gate, validSpellTargetArmy0x19459c, spellbook artifact0xf4dfc, group helpers0x5429c/0x54034/0x54168 and canShoot0x4e840. End0x5446c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447eb0
+unit = "army"
+mac_section = 0
+mac_offset = 0x54518
+mac_size = 0x44
+target_sha256 = "4c0f79eddc29a15a5d2a4938a5c8f7c681fc4fc640790b08438a4ecfa6b0b42b"
+evidence = "NEW: Checks spell trait stride0x88 flags+0xc bit0x800, then forwards spell/target to validity0x542f0. End0x5455c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447ee0
+unit = "army"
+mac_section = 0
+mac_offset = 0x545c4
+mac_size = 0xd8
+target_sha256 = "9077674f01f9145ecb99a2489c1a76332aa97bb047f569409952f64b16165bd5"
+evidence = "NEW: Caliph casts: hex validation, count valid spells0x5455c, random choice0x130cf4, loop until70 via validity0x54518 then cast0x190540. End0x5469c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00447fe0
+unit = "army"
+mac_section = 0
+mac_offset = 0x54700
+mac_size = 0x1f4
+target_sha256 = "197f641c28f205a8527f4f62fbe373c5f7e4aae008e44eda2e9dcb9778a20f81"
+evidence = "NEW: Automatic creature spell chooses valid group spell0x5446c with random0x28e00c, hero spell allowance0x214bc, effect sample and cast0x190540. End0x548f4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00448260
+unit = "army"
+mac_section = 0
+mac_offset = 0x548f4
+mac_size = 0x4f0
+target_sha256 = "8fa86bd95eed429824a06a2fe2f783f9a5268af63f406d6e25261dc8d29afc91"
+evidence = "NEW: Creature spell dispatcher follows known canCastSpell species123/51/37/13/91/128/126/125/134/130; retained resurrection helpers0x53f00/0x53fc4, caliph0x545c4, mass spell0x5469c and multiple cast0x190540. End0x54de4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004487f0
+unit = "army"
+mac_section = 0
+mac_offset = 0x54de4
+mac_size = 0x5c
+target_sha256 = "23685ff3634b64a5034418c8d6a4aa8f64e98267d5a697a2e332a681104216db"
+evidence = "NEW: Magic Mirror spell row or creature134 gate, returns mirror effect strength. End0x54e40; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "groupHasMelee"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54034
+mac_size = 0x134
+target_sha256 = "cdfff1e292862e4d46582f76386cad8e049892c1604bf2fae726d02ad4a93693"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54408. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54120 and returns true for a non-shooter; BLR 0x54164 and next shooter helper 0x54168. Dreamcast names group_has_melee."
+
+[[helpers]]
+source_helper = "groupHasShooters"
+unit = "army"
+mac_section = 0
+mac_offset = 0x54168
+mac_size = 0x134
+target_sha256 = "5a730a3d9411e7bde063e0c34c3abe934ab55dfdcf33f3ff6705a0776765ab56"
+evidence = "spellIsValidOnTarget calls this source helper at 0x54414. It scans the selected army group in reverse, rejects cannotAttack, calls army::canShoot at 0x54254 and returns true for a shooter; BLR 0x54298 and next dragon helper 0x5429c. Dreamcast names group_has_shooters."
+
+[[helpers]]
+source_helper = "groupHasDragons"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5429c
+mac_size = 0x54
+target_sha256 = "fa46fb2f9b74143bdcfdc2cd78d2d54fef35a44858ebb6c5f4c643a75cfb9fef"
+evidence = "spellIsValidOnTarget calls this source helper at 0x543fc. It scans the selected army group backward, tests the creatureKing1 attribute bit at +0x84 and returns one for a dragon; BLR 0x542ec and next spell-validity worker 0x542f0. Dreamcast names group_has_dragons."
+
+[[helpers]]
+source_helper = "army::topY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52780
+mac_size = 0x24
+target_sha256 = "5e05fb55b318709189927d8f04d55ac361b2420bb3f804c2e8b5bbf57495d836"
+evidence = "drawToBuffer calls this retained top-edge helper at 0x4a62c. It reads the cell refY by m_gridIndex and subtracts m_imageHeight; BLR 0x527a0. Adjacent midY and bottomY bodies fix source order."
+
+[[helpers]]
+source_helper = "army::bottomY"
+unit = "army"
+mac_section = 0
+mac_offset = 0x527a4
+mac_size = 0x1c
+target_sha256 = "bfabd8ab760c3b158f8d1ffc366f44263c4543f8e69623fbc79cf966437e33cd"
+evidence = "drawToBuffer calls this retained bottom-edge helper at 0x4a5b4. It returns the cell refY indexed by m_gridIndex without height adjustment; BLR 0x527bc. Adjacent topY and midX bodies fix source order."
+
+[[helpers]]
+source_helper = "army::frontX"
+unit = "army"
+mac_section = 0
+mac_offset = 0x52808
+mac_size = 0x6c
+target_sha256 = "1095d1b605054a7f41bda3cfebe78b88e3305c044fc5c4189a04f72cc9c739cf"
+evidence = "drawToBuffer calls this retained front-edge helper at 0x4a63c. It computes cropped x plus width minus 196 from m_stdIcon, then subtracts or adds that offset to cell refX according to facing; BLR 0x52870. Next getSecondGridIndex 0x52874."
+
+[[helpers]]
+source_helper = "army::damageEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ffb4
+mac_size = 0x98
+target_sha256 = "95430868268328a107672de23b4f0382041869d56c67d8ca8341dbf7e9f15bc7"
+evidence = "Ranged and melee attack callers retain this helper at 0x4ffb4. It checks the enemy, computes base damage, calls adjustDamage at 0x4fe80 and enemy::damage at 0x5004c, writes both output pointers, clears luck status and returns fire damage. The canonical army.cpp definition is explicit inline; Windows expands it in callers. Final BLR at 0x50048; next entry 0x5004c."
+
+[[helpers]]
+source_helper = "army::computeDefenderDamageBonuses"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4fab8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "getEstimatedDamage and adjustDamage call this retained leaf at 0x4fab8; it returns zero for every baseDamage, matching the canonical explicit-inline source definition. Windows expands the constant return into callers. Final BLR at 0x4fabc; next entry 0x4fac0."
+
+[[helpers]]
+source_helper = "army::waitSample"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48f98
+mac_size = 0x70
+target_sha256 = "5c45d10880b84f11d22fef735b4791f7f3b74acd9bae3cfc8fff755df2e77cfe"
+evidence = "Mac army::rangeAttack calls this retained helper at 0x48f98. It checks quick combat at 0x76bc8, indexes m_armySample at +0x170, and passes the sample handle at +0x28 to soundManager::waitSample at 0x2189b8. Dreamcast names the member boundary; Windows expands its explicit-inline source body. Final BLR at 0x49004; next entry 0x49008."
+
+[[helpers]]
+source_helper = "army::getClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4beb0
+mac_size = 0x60
+target_sha256 = "ae1c72ada10da7b95cc0a0670da9b19e6d29ab98867a6dc437f2317d5ccb8020"
+evidence = "Mac melee/multihead callers retain this source helper. A wide army maps direction through the ring-index/order tables with +1 mod 8; a narrow army returns (direction+1) mod 6. The explicit-inline Windows source calls it in the same multihead logic. Final BLR at 0x4bf0c; next entry 0x4bf10."
+
+[[helpers]]
+source_helper = "army::getCounterClockwise"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4bf10
+mac_size = 0x60
+target_sha256 = "50a22dee7588c3ed927b9ef1a53a277fa33a0b523df93dbcf3abc92c892b4c39"
+evidence = "Mac melee/multihead callers retain this adjacent source helper. A wide army maps direction through the ring-index/order tables with +7 mod 8; a narrow army returns (direction+5) mod 6. The explicit-inline Windows source calls it. Final BLR at 0x4bf6c; next entry 0x4bf70."
+
+[[helpers]]
+source_helper = "army::adjustHitpoints"
+unit = "army"
+mac_section = 0
+mac_offset = 0x504ac
+mac_size = 0xd4
+target_sha256 = "f3bca54a3dd01f1ecc6f1b95145e0781f28bb5dd91dca20ba7926a048cbced03"
+evidence = "Mac cancelIndividualSpell and resetRound call this retained helper at 0x504ac. It scales original hit points by poison factor, halves for Age, adds 0.95 before integer conversion, then clamps top-creature damage to hitPoints-1 using the two-value min. Dreamcast names army::adjust_hitpoints; Windows expands the ordinary source helper. Final BLR at 0x5057c; next entry 0x50580."
+
+[[helpers]]
+source_helper = "army::setRetaliationCount"
+unit = "army"
+mac_section = 0
+mac_offset = 0x48e5c
+mac_size = 0x68
+target_sha256 = "798f5c6e8f183983fd281e3512b4677d61b69a8b4321717432d7784534c772b2"
+evidence = "Mac army setup and round reset retain this helper at 0x48e5c. It starts retaliation count at one, applies Griffin/Royal Griffin cases, Counterstrike bonus and siege-weapon zeroing, matching the ordinary source definition and its two Windows callers. Final BLR at 0x48ec0; next entry 0x48ec4."
+
+[[helpers]]
+source_helper = "army::checkLuck"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e014
+mac_size = 0x160
+target_sha256 = "d6d9c965f68c0caf10b6bc2ffe64dfe0ab0a85e21ffb5efaa473dccf59feea57"
+evidence = "Mac attack callers retain this helper at 0x4e014. It clears luck status, obtains controller at 0x4e4e8, rolls luck through Mac sRandom at 0x1314b4 and emits sound/text/spell effect outside quick combat. Windows expands the explicit-inline source helper and uses the same authored sRandom call; the sRandom and random bodies share retail code at 0x50b230. Final BLR at 0x4e170; next entry at 0x4e174."
+
+[[helpers]]
+source_helper = "army::endWalk"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4ad08
+mac_size = 0x8c
+target_sha256 = "b92bb3cede72cf36d4ad740a5a641599e652a6ff9ca6fc5865f97630aeceaf63"
+evidence = "Mac walk callers retain this ordinary source helper. It checks quick combat at 0x76bc8, plays the post-walk sample at 0x48ec4, stops the walk sample and plays postwalk/wait animations at 0x52c08. The existing Windows callers use endWalk; final BLR at 0x4ad90, next entry 0x4ad94."
+
+[[helpers]]
+source_helper = "isNaturalEnemy"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4e538
+mac_size = 0xe4
+target_sha256 = "c2183ce95bcdb1406d3cb789ceb5747bcfce934963fc348316520b848efb8160"
+evidence = "Mac computeAttackerBonus retains this source call. Its switch checks Angel 0xc/0xd against Devil 0x36/0x37, Efreet 0x34/0x35 against Genie 0x24/0x25, and Black Dragon 0x53 against Titan 0x29 in both directions, matching the Dreamcast-named ordinary army.cpp helper. Final BLR at 0x4e618; next entry 0x4e61c."
+
+[[helpers]]
+source_helper = "chooseWallTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51ca8
+mac_size = 0xac
+target_sha256 = "6f89ed171df37de09039cde4e5157f4dd66c0e3bb66171471348711622cae2f6"
+evidence = "Mac attackWall overloads call this retained helper with candidate array and count. It starts at distance 50, skips the current wall and invalid targets, chooses nearest valid wall, and breaks equal distances with sRandom. The existing Windows source calls chooseWallTarget; final BLR at 0x51d50, next entry 0x51d54."
+
+[[helpers]]
+source_helper = "enchanterSpellHasTarget"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5446c
+mac_size = 0xac
+target_sha256 = "d5f327d8d65ba00cc0d27845ff50fb324fe34f2c32c2e8040b03512bbeeea12f"
+evidence = "Mac Enchanter calls this retained helper twice. It selects side from spell karma, reads that side's army count, tests spellIsValidOnTarget at 0x542f0 and returns whether any test succeeds. The Windows source had duplicated this scan in both caller loops; the helper name is inferred. Final BLR at 0x54514, next entry 0x54518."
+
+[[helpers]]
+source_helper = "army::getValidCaliphSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5455c
+mac_size = 0x68
+target_sha256 = "0213ab909d5c1f4e6f7b44aaee7469933d2c1f1659621e216e78dbd1d3150bab"
+evidence = "Mac canCastSpell and castCaliphSpell call this retained source helper. It counts spells 10 through 69 for which isValidCaliphSpell at 0x54518 succeeds. Windows expands the existing helper in both callers; final BLR at 0x545c0, next entry 0x545c4."
+
+[[helpers]]
+source_helper = "army::castResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53f00
+mac_size = 0xc4
+target_sha256 = "f69047a88a442575b95f1dc30f2e9cdb0d19b3476311f9493b91ce5d6f185f38"
+evidence = "Mac castSpell retains this ordinary method. It selects a resurrection target by controlling side and hex at 0x1945d8, then plays its sample and calls combatManager::resurrect at 0x1986ec for m_numTroops times 100. The existing Windows source calls castResurrect; final BLR at 0x53fc0, next entry 0x53fc4."
+
+[[helpers]]
+source_helper = "army::castDemonicResurrect"
+unit = "army"
+mac_section = 0
+mac_offset = 0x53fc4
+mac_size = 0x70
+target_sha256 = "6306672c39c472beac41c2184f6f81cfa03d2fa6de7779032c206bbead8b353e"
+evidence = "Mac castSpell retains this adjacent ordinary method. It finds the demonic resurrection target by controlling side and hex at 0x194788, then calls combatManager::demonicResurrection at 0x1984ec. The Windows source already calls it; final BLR at 0x54030, next entry 0x54034."
+
+[[helpers]]
+source_helper = "army::castFaerieDragonSpell"
+unit = "army"
+mac_section = 0
+mac_offset = 0x5469c
+mac_size = 0x64
+target_sha256 = "97c136ac36e6d48a86697c38f291f0b7c4711447cfa82b000496099a6ea6fed5"
+evidence = "Mac castSpell retains this method after castCaliphSpell and before the Enchanter. It bounds-checks hex against 187 and passes m_faerieDragonSpell and m_numTroops times five to combatManager::castSpell at 0x190540. Windows source previously had its body inline in the switch; name inferred. Final BLR at 0x546fc, next entry 0x54700."
+
+[[helpers]]
+source_helper = "army::cancelAllSpells"
+unit = "army"
+mac_section = 0
+mac_offset = 0x50c24
+mac_size = 0x68
+target_sha256 = "c13ffbead54ec6a2c97845c6af025bf59d6dd9e551d48359e061c983788e962d"
+evidence = "Mac processDeath retains this ordinary source helper. It scans 81 spell-duration entries at +0x198 and calls cancelIndividualSpell at 0x50580 for positive durations. Windows source already calls cancelAllSpells; final BLR at 0x50c88, next entry 0x50c8c."
+
+[[helpers]]
+source_helper = "army::decrementSpellRounds"
+unit = "army"
+mac_section = 0
+mac_offset = 0x51434
+mac_size = 0x98
+target_sha256 = "abd799961682d1a02bc51fdeaf7b3b2deb7f00154849f118872c549175b1edae"
+evidence = "Mac resetRound retains this ordinary source helper. It decrements positive spell-duration entries except Frenzy at index 56, cancels one-round spells through 0x50580 and decrements roundsLeftBeforeVanish at +0x2c. Windows expands the existing source helper; final BLR at 0x514c8, next entry 0x514cc."
+
+[[helpers]]
+source_helper = "army::computeKarma"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a6e4
+mac_size = 0xcc
+target_sha256 = "74d11aaa3e662d3e65e06dd76911685b00eebea0c4d353c6c1f4d7c8af1c0ff3"
+evidence = "Mac drawToBuffer retains this ordinary source helper. It checks m_numSpellInfluences at +0x194, sums spell karma and absolute karma across 81 entries, then divides the sums as double. Dreamcast names army::ComputeKarma; Windows expands the existing source call. Final BLR at 0x4a7ac, next entry 0x4a7b0."
+
+[[helpers]]
+source_helper = "addItem"
+unit = "army"
+mac_section = 0
+mac_offset = 0x4a7b0
+mac_size = 0xdc
+target_sha256 = "4acfc9326919ffe7fb9a7b14580a6fd1f37523851508d90cfe391cf686953944"
+evidence = "Six calls from addAura and checkSpecialAttack reach this source-private helper. It searches a vector<army*> for the argument, returns zero when found, otherwise appends it and returns one. The final BLR is at 0x4a888; the next body starts at 0x4a88c. All six callers already use the canonical addItem source call."

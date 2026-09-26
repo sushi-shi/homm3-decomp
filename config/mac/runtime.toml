@@ -1,0 +1,1676 @@
+# Reviewed generated and library call destinations; these are not game reconstruction scores.
+
+[[functions]]
+symbol = ".msl_vector_pointer_erase_3a7bc"
+mac_section = 0
+mac_offset = 0x3a7bc
+mac_size = 0xcc
+sha256 = "fa27034a4ca3f07faa9b6341e2a7613290f24850fef85dc3e5b30b58f8b888c5"
+evidence = "Computes the distance from a four-byte element pointer to a three-word vector's end, shifts following words down, decrements the size word at +4, and returns the erased iterator. army::eraseItem and TRmgVoronoi::removeEdge call it for their authored vector.erase operations; other callers use the same four-byte vector operation. BLR at 3a884; next independent insertion entry at 3a888. MSL vector instantiation, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_word_fill_insert_3a888"
+mac_section = 0
+mac_offset = 0x3a888
+mac_size = 0x394
+sha256 = "3e8ccc2d66509ee7790c4db3006d15c34d1361e305997946d7bc087dc602c6b9"
+evidence = "Three-word vector insertion checks capacity, grows storage when needed, and copies/fills four-byte elements. type_AI_player::canTradeResources calls it twice for the authored baseCost.insert(begin,count,0) and unitCost.insert(begin,count,0); RMG uses the same template family. BLR at 3ac18, followed by a distinct prologue at 3ac1c. MSL vector instantiation, not a game helper."
+
+[[functions]]
+symbol = ".mac_handle_buffer_init_26aab0"
+mac_section = 0
+mac_offset = 0x26aab0
+mac_size = 0x10
+sha256 = "9e26ca7688e0fe8f9479abdbda2fff42cbb94be7bad7cbe8499fe0add7067c42"
+evidence = "Initializes the Mac buffer's handle pointer at +4 and ownership-kind byte at +0 to zero. LODFile::read and three ResourceManager loaders call it before Mac OS Handle allocation; this is platform storage, not a shared game helper. BLR at 26aabc; next independent destructor entry at 26aac0."
+
+[[functions]]
+symbol = ".mac_handle_buffer_deleting_dtor_26aac0"
+mac_section = 0
+mac_offset = 0x26aac0
+mac_size = 0x54
+sha256 = "fd0895223773a352378a445f2ca24fa0ca420cc4bc2903569d257715668b77b4"
+evidence = "Null-guarded deleting destructor calls the Mac buffer release body at 26ac00, then optionally frees the wrapper itself. LODFile::read and ResourceManager sprite/bitmap loaders use it on exits; this is generated Mac platform cleanup. BLR at 26ab10; next allocation entry at 26ab14."
+
+[[functions]]
+symbol = ".mac_handle_buffer_allocate_26ab14"
+mac_section = 0
+mac_offset = 0x26ab14
+mac_size = 0xec
+sha256 = "a27fcda008df2129020d0ba9e8b9e59fe8834eafba5e9875beea1458a9bfa243"
+evidence = "Takes a size, releases the prior Mac buffer, tries imported TempNewHandle/TempHLock, falls back to NewHandle, records the handle kind at +0, and returns the locked data pointer. LODFile::read uses it for compressed bytes; ResourceManager uses it for sprite and bitmap buffers. Windows retail LODFile::read is exact with its separate raw allocation path. BLR at 26abfc; release entry starts 26ac00."
+
+[[functions]]
+symbol = ".mac_handle_buffer_release_26ac00"
+mac_section = 0
+mac_offset = 0x26ac00
+mac_size = 0x7c
+sha256 = "47741be3ca6982c65e40cb29a8da5df090a46b93e0a2da1f13850322b87221d5"
+evidence = "Reads the Mac buffer's ownership-kind byte, dispatches to imported TempHUnlock/TempDisposeHandle or DisposeHandle, and clears the handle pointer at +4. Called by the allocation and deleting-destructor bodies. Classic Mac OS Handle management, not a shared game helper. BLR at 26ac78."
+
+[[functions]]
+symbol = ".generated_CAutoArray_CDPlayPlayer_destroy_177ad0"
+mac_section = 0
+mac_offset = 0x177ad0
+mac_size = 0x98
+sha256 = "472e31874d53e43a3fe6417c5febfb03bf131d54f9c657585dde9ff2763b3fee"
+evidence = "CDPlayPlayer CAutoArray::destroy loops over virtual get(i), conditionally deletes each element, deletes the backing array, then clears pointer, size and capacity. Remote::updateCurrentPlayers and both single-selection setup modes use the authored CAutoArray<CDPlayPlayer> in include/array.h; the selection calls are from its implicit destructor. BLR at 0x177b64 bounds this template instantiation, not a missing helper body."
+
+[[functions]]
+symbol = ".msl_string_concat_16468c"
+mac_section = 0
+mac_offset = 0x16468c
+mac_size = 0x68
+sha256 = "29fbabb63fd3c6e07f3956376598f91c5bf432d275c9c2b93b7de3f1499e0007"
+evidence = "The two base quest dialog getters call this with their stored string and getTimeLimitText() result for the authored string concatenation. The body copies a string into a temporary, appends the other string, constructs the result, and destroys the temporary. BLR at 0x1646f0 bounds the body. MSL string operator+, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_default_init_d82b8"
+mac_section = 0
+mac_offset = 0xd82b8
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "Zeroes the three words of a vector object. game::randomizeEvents uses it for local containers; NewfullMap's black-box and event readers use it for the three vector members of BlackBoxData. BLR at 0xd82c8 bounds the body. MSL vector construction, not a missing game helper."
+
+[[functions]]
+symbol = ".msl_vector_storage_init_166538"
+mac_section = 0
+mac_offset = 0x166538
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Stores the supplied null storage pointer into the first vector word. The artifact quest and artifact-victory callers then clear the other two words of their local vectors. BLR at 0x16653c bounds the body. MSL vector construction, not a missing game helper."
+
+[[functions]]
+symbol = ".msl_bitset_reference_init_967ec"
+mac_section = 0
+mac_offset = 0x967ec
+mac_size = 0xc
+sha256 = "ee949594dbe1655bf6315dba758d4af3901f1073b0cc325f83d7c8407d6b5740"
+evidence = "Stores the bitset pointer and index into the two-word proxy. Campaign scenario and game map readers call it in their bit loops immediately before the proxy assignment at 0x9d7d8. BLR at 0x967f4 bounds the body. MSL bitset reference construction, not a game helper."
+
+[[functions]]
+symbol = ".msl_bitset_test_10e518"
+mac_section = 0
+mac_offset = 0x10e518
+mac_size = 0x44
+sha256 = "589713ad4e390fbb9500b5da0f7c98bfdab50909638814de4aef68b39aac1590"
+evidence = "Computes a byte and bit mask from the supplied index, reads that byte from the bitset storage, and returns whether the bit is set. Keyboard processing and save-game edit key filtering call it. BLR at 0x10e558 bounds the body. MSL bitset test, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_28adc"
+mac_section = 0
+mac_offset = 0x28adc
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. Four chooseMelee call sites use it while walking type_AI_combat_data::m_creatures, already authored as std::vector indexing. BLR at 0x28ae0 bounds the body. MSL vector storage accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_map_member_address_d8ea0"
+mac_section = 0
+mac_offset = 0xd8ea0
+mac_size = 0x8
+sha256 = "628252647637b09398402afe55ab55ea98bc50a5b0146e4b8636c17f941a2a32"
+evidence = "Returns receiver+12 for the map header member. game::loadMap, game::applyMapHeaderAvailability and NewSMapHeader::save call it while iterating m_heroPlayerSetups, already represented as std::map in the authored source. BLR at 0xd8ea4 bounds the body. MSL map accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_obstacle_push_back_76f7c"
+mac_section = 0
+mac_offset = 0x76f7c
+mac_size = 0xc0
+sha256 = "1c7139823589feb938394759e5f3314fcaafd66b9d9a92dfc97777a0cf6cf030"
+evidence = "The body grows three-word vector storage when full and appends one 0x18-byte element. combatManager::placeObstacle, setupAndLoadObstacles and castSpell call it where the authored code pushes combat obstacles into m_obstacles. Final BLR at 0x77038 precedes a distinct prologue at 0x7703c. MSL vector insertion, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_word_resize_a11f0"
+mac_section = 0
+mac_offset = 0xa11f0
+mac_size = 0x64
+sha256 = "bc111aaccc7074f57788f906134dbfb71a781e5a34da99961cd563c664f6ef08"
+evidence = "Compares requested size with the current vector size, then grows or shrinks four-byte elements. NewfullMap map-object readers and text-resource callers use authored vector resize operations; random-map callers share the instantiation. Final BLR at 0xa1250 precedes a separate two-instruction function. MSL vector resizing, not a game helper."
+
+[[functions]]
+symbol = ".msl_sort_int_entries_17cde8"
+mac_section = 0
+mac_offset = 0x17cde8
+mac_size = 0xb8
+sha256 = "5fd3896da3f384f8bc45b7610eac5876c27fce550193d732ca440e8ece5042c9"
+evidence = "The comparator-driven element exchange/scan is called for the six sort choices in TSingleSelectionWindow::sortMaps, whose source uses std::sort with six predicates. Final BLR at 0x17ce9c precedes a separate prologue at 0x17cea0. MSL sorting machinery, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_storage_init_17566c"
+mac_section = 0
+mac_offset = 0x17566c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The two-instruction body stores its pointer argument at offset zero and returns. TSingleSelectionWindow construction calls it for three adjacent 12-byte vector members, then initializes their remaining words; sortMaps calls it for a local vector. The authored code constructs those std::vector objects. BLR at 0x175670 precedes the next function. MSL storage initialization, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_16fe1c"
+mac_section = 0
+mac_offset = 0x16fe1c
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. The two map-list tick callers use it around vector size/index operations on their header lists, already authored as std::vector access. BLR at 0x16fe20 precedes the next function. MSL vector member accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_backing_pointer_1283f8"
+mac_section = 0
+mac_offset = 0x1283f8
+mac_size = 0x8
+sha256 = "59fdcae5f48fe0f3f53325d0a334381138490d2632049b646d44c2cb75668e68"
+evidence = "Returns the pointer at receiver+8. NewfullMap::calcCellExtra calls it in its repeated reverse walks of NewmapCell::m_objects, authored as std::vector reverse iteration. BLR at 0x1283fc precedes the adjacent address accessor. MSL vector storage accessor, not a game helper."
+
+[[functions]]
+symbol = ".msl_vector_member_address_128400"
+mac_section = 0
+mac_offset = 0x128400
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Returns receiver+8. NewfullMap::calcCellExtra calls it with the adjacent pointer accessor at 0x1283f8 in its repeated reverse walks of NewmapCell::m_objects. BLR at 0x128404 precedes the next function. MSL vector member accessor, not a game helper."
+
+[[functions]]
+symbol = "._strrev"
+mac_section = 0
+mac_offset = 0x20ef58
+mac_size = 0x6c
+sha256 = "1ceae4080017b4fc280bd4c59f9f15e4f2b4d3b26a9c15d80d6640c829b39004"
+evidence = "This string reverse helper calls strlen, swaps bytes inward, and returns its input pointer. advManager::open calls it on the cached-graphic name and NewfullMap::readObjectType calls it twice around the mask-extension edit; all three authored sites already call _strrev. Final BLR at 0x20efc0 precedes another function at 0x20efc4. Library/port helper only."
+
+[[functions]]
+symbol = ".mac_sprite_resource_forwarder_154660"
+mac_section = 0
+mac_offset = 0x154660
+mac_size = 0x20
+sha256 = "f5ee5d738626b9aab47dcaa677ddfc60f812d7cf13c9e6c87de2ca2e3a9b1718"
+evidence = "Mac forwarding wrapper calls the already paired ResourceManager::pointToSpriteResource body at 0x1522ec with the argument unchanged. The map object-type reader and TObjectType::setImageName call the wrapper twice each; their authored source already calls that helper. BLR at 0x15467c precedes the adjacent bitmap wrapper. No separate C++ helper."
+
+[[functions]]
+symbol = ".mac_bitmap_resource_forwarder_154680"
+mac_section = 0
+mac_offset = 0x154680
+mac_size = 0x20
+sha256 = "06909f413ba5476d074359907d8c2f679e72ad242e4b413de9a9651fb6912758"
+evidence = "Mac forwarding wrapper calls the already paired ResourceManager::pointToBitmapResource body at 0x152374 with the argument unchanged. CampaignHeaderStruct::load calls this wrapper for its resource fallback, and the shared source already calls the helper. BLR at 0x15469c precedes the next function. No separate C++ helper."
+
+[[functions]]
+symbol = ".__cvt_fp2unsigned"
+mac_section = 0
+mac_offset = 0x280548
+mac_size = 0x50
+sha256 = "d12451bad639791f6e9fee395ece0f2cf38a9fffcc97171b1d89183b85e80413"
+evidence = "CodeWarrior RuntimePPC.Lib contains the named double-to-unsigned conversion helper: its final 76 bytes equal the pinned PEF at 0x28054c..0x280598, while the first TOC load is relocated from 0x80820000 to 0x8082bb00. drawing::cycleCombatScreen calls it for the unsigned lastFidgetTime assignment at 0xa8b00. The prior body ends with BLR at 0x280544; this helper ends with BLR at 0x280594 and the next body starts at 0x280598. Runtime identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details64compressed_pair_imp<Q23std30allocator<17type_monster_data>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x26624
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The Mac type_AI_combat_data constructor calls this vector<type_monster_data> allocator-capacity constructor with receiver in r3 and zero in r4, then zeros vector size and data at +4/+8. A CodeWarrior -O3 probe emits the exact named compressed_pair_imp hunk and the same eight bytes, stw r4,0(r3); blr. The preceding vector destructor ends at 0x26620 and initializeCreatures begins at 0x2662c. MSL template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>Fv"
+mac_section = 0
+mac_offset = 0x672d0
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "The pinned SavedGameHeader and campaign-brief constructors call this on CMapHeaderData::m_placeholders at+0x20. A CodeWarrior -O3 probe with the same MSL vector<int> emits the named 20-byte __vector_pod<unsigned long> default constructor, exactly the five target instructions zeroing capacity, size and data. Library template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std11bitset<156>Fv"
+mac_section = 0
+mac_offset = 0x682e0
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "The same constructors call this on NewSMapHeader::m_availableHeroes at+0x2b4. A CodeWarrior -O3 probe using the pinned MSL bitset<156> emits this exact 28-byte constructor: zero five words and return. Library template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std225__tree<Q23std29pair<Ci,18type_map_hero_info>,Q33std99map<i,18type_map_hero_info,Q23std7less<i>,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>13value_compare,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>FRCQ33std99map<i,18type_map_hero_info,Q23std7less<i>,Q23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>>13value_compareRCQ23std48allocator<Q23std29pair<Ci,18type_map_hero_info>>"
+mac_section = 0
+mac_offset = 0x687d4
+mac_size = 0x28
+sha256 = "596ad37c10a507a14295d258929e251d94c4827ae1c48be3f4f82f61fbab5530"
+evidence = "CMapHeaderData constructors call this on m_heroPlayerSetups at+0x29c with the comparator byte by reference. CodeWarrior -O3 with the pinned MSL map<int,type_map_hero_info> emits the same 40-byte __tree constructor shape and full mangled symbol; it initializes the tree sentinel, zero count and comparator. The target's TOC load is link-specific. Library template identity only."
+
+[[functions]]
+symbol = ".test__Q23std9bitset<4>CFUl"
+mac_section = 0
+mac_offset = 0xe97d4
+mac_size = 0xe4
+sha256 = "1f627b696ae2f4a0bfb3d3a89781dbb0ce8d9cea616314e5841688d1f86dd387"
+evidence = "The MSL bitset<4>::test body compares the index against four, uses the `index out of range of bitset::test` exception text at data 1+0x42f17, then extracts the selected bit. Game and single-selection callers use four-bit player masks. Final BLR at 0xe98b4 precedes bitset<48>::set."
+
+[[functions]]
+symbol = ".test__Q23std9bitset<9>CFUl"
+mac_section = 0
+mac_offset = 0x3b210
+mac_size = 0xe4
+sha256 = "0af27269f75934437f3f10ad7fcd6e45531babd77f5eea6c83ff775e324fc3a3"
+evidence = "The MSL bitset<9>::test body bounds-checks the index against nine and extracts the bit. AI-player and army-group callers use the authored grouped-alignment bitset and its test operation. Final BLR at 0x3b2f0 precedes bitset<144>::test at 0x3b2f4. Library template identity only."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<10>CFUl"
+mac_section = 0
+mac_offset = 0x12b128
+mac_size = 0xe4
+sha256 = "a243e9e94049e01c2b386f32b50576242b0f312474ac82c2d0a02994a5aabbc8"
+evidence = "The MSL bitset<10>::test body bounds-checks the index against ten and extracts the selected bit. Mapcell and object-type callers use the authored terrain masks; random-map callers use the same library instantiation. Final BLR at 0x12b208 precedes bitset<10>::set at 0x12b20c. Library template identity only."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<48>CFUl"
+mac_section = 0
+mac_offset = 0x1c82c
+mac_size = 0xe4
+sha256 = "7627479991d5a9261bb4b9518c729f720ebae664999724346461020e941dc97d"
+evidence = "MSL bitset<48>::test takes receiver and bit index, bounds-checks against 48, and returns the selected bit. Repeated calls from mapcell, game, advmgr and viewwrld are library operations, not game helper boundaries. Final BLR at 0x1c90c precedes the next body."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<48>FUlb"
+mac_section = 0
+mac_offset = 0xe98b8
+mac_size = 0xe8
+sha256 = "ac6403f4f887fb81e2dba836e333e60d136caec0950f12f41745b8246e79ff03"
+evidence = "MSL bitset<48>::set takes receiver, bit index and boolean value, bounds-checks against 48, then sets or clears the selected bit. Repeated calls from mapcell, game, hero and objecttype are library operations. Final BLR at 0xe999c precedes bitset<70>::test."
+
+[[functions]]
+symbol = ".mac_msl_bitset_19_test_5b014"
+mac_section = 0
+mac_offset = 0x5b014
+mac_size = 0xe4
+sha256 = "a7c5f69442a866cc0f22a5196d4e19cbe7400a4e9272f6f4bfb15d4d80c91419"
+evidence = "Artifact, hero and swap-manager callers pass a four-byte artifact-slot mask and slot index to this MSL bitset<19>::test body. It checks index against 19, uses the installed MSL bitset::test bounds-error path, extracts the requested bit and returns bool; BLR at 0x5b0f4 precedes bitset<19>::set. The authored Windows source already uses the bitset and its indexing/test operations. Library template identity only."
+
+[[functions]]
+symbol = ".mac_msl_bitset_19_set_5b0f8"
+mac_section = 0
+mac_offset = 0x5b0f8
+mac_size = 0xe8
+sha256 = "0d5bd2e594a178b7c03a9da060c4e26dfc8c661eefdc0a6c34803a3702ae9985"
+evidence = "Artifact mask construction and initializeArtifactTraits call this MSL bitset<19>::set body. It bounds-checks index against 19, then sets or clears the selected word bit according to r5 and returns its receiver. The installed CodeWarrior bitset header has the same operation; BLR at 0x5b1dc precedes bitset<144>::set. Both authored Windows callers already use set. Library template identity only."
+
+[[functions]]
+symbol = ".mac_msl_bitset_144_set_5b1e0"
+mac_section = 0
+mac_offset = 0x5b1e0
+mac_size = 0xe8
+sha256 = "7d114e0995c2052e821a501ce002c7488ba175844eedf91423642c263cdcb850"
+evidence = "Artifact, campaign, game, hero and RMG callers pass a five-word artifact-component mask, index and bool to this MSL bitset<144>::set body. It checks the index against 144, selects word index/bit, then sets or clears the bit and returns the receiver. The installed CodeWarrior bitset header confirms this operation; BLR at 0x5b2c4 precedes artifact initialization at 0x5b2c8. Existing Windows callers express bitset access in source. Library template identity only."
+
+[[functions]]
+symbol = ".strcat"
+mac_section = 0
+mac_offset = 0x28e2b0
+mac_size = 0x2c
+sha256 = "689b5cc2bf5373779578fb2d6aa300c65acc73633a2a806d7b74c69d291931c4"
+evidence = "Scans the destination for NUL, then copies the source including its terminator; 140 calls in six unfinished caller units are C library concatenation. Final BLR at 0x28e2d8 ends the body."
+
+[[functions]]
+symbol = ".__nw__FUl"
+mac_section = 0
+mac_offset = 0x26897c
+mac_size = 0x1b0
+sha256 = "ff6e60f59fa7321f1f508efcf15f7854033a181ff825acb6c1436a3dbf504f19"
+evidence = "CodeWarrior emits this named scalar operator new(unsigned long) hunk for ResourceManager::getSprite allocations. The Mac target calls 0:0x26897c with sizes 0x38, 0x48, 0x21c and 0x31c; the callee implements heap allocation and returns at 0x268b28. The next operator delete body begins at 0x268b2c. Runtime identity only."
+
+[[functions]]
+symbol = ".__nwa__FUl"
+mac_section = 0
+mac_offset = 0x268c14
+mac_size = 0x20
+sha256 = "dfcaea543f8be03240ac66e646071a79456ba6bccb637272a55e692663e380f5"
+evidence = "CodeWarrior emits this named operator new[](unsigned long) for the getSprite sequence arrays. Mac target calls 0:0x268c14 at +0x128, +0x16c and +0x198; the complete 32-byte callee forwards the size in r3 to scalar new at 0x26897c and returns at 0x268c30. Preceding BLR at 0x268c10 and next array delete prologue at 0x268c34 bound the span. Runtime identity only."
+
+[[functions]]
+symbol = ".__dl__FPv"
+mac_section = 0
+mac_offset = 0x268b2c
+mac_size = 0xe8
+sha256 = "bdb5c66d21461b5a03666ff5cb86e7234cdcbbbf5754627360a98cedb27e9ec4"
+evidence = "CodeWarrior MSL scalar operator delete(void*) starts at 0:0x268b2c, checks null and releases the allocation. The Mac array delete wrapper at 0x268c34 calls this body with the pointer unchanged. Final BLR at 0x268c10 and next array new prologue at 0x268c14 bound its 232 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__dla__FPv"
+mac_section = 0
+mac_offset = 0x268c34
+mac_size = 0x20
+sha256 = "4ec424ef1927f7c2111f9495ad079bfabb6ae081fdf52713040213f0e37243b6"
+evidence = "CodeWarrior emits this named operator delete[](void*) for getSprite's temporary sequence arrays. The Mac target calls 0:0x268c34 at +0x4a0, +0x4a8 and +0x4c4. The 32-byte wrapper forwards its pointer argument to scalar delete at 0x268b2c and returns at 0x268c50; next prologue at 0x268c54 bounds the body. Runtime identity only."
+
+[[functions]]
+symbol = ".__construct_array"
+mac_section = 0
+mac_offset = 0x28022c
+mac_size = 0x100
+sha256 = "40f4b064f04cee6deb556254c31df3aa3f7e3072a846873d3be7a3285d998164"
+evidence = "CodeWarrior emits this runtime array-construction call for TNormalDialogInfo::m_icons at normalDialog+0x70. Retail passes the icon array in r3, constructor transition vector in r4, destructor vector in r5, stride 0x34 in r6, and count 8 in r7 to code0:0x28022c. The callee invokes each constructor through __ptr_glue and unwinds partial construction through the destructor pointer. Final BLR at 0x280328 and next array-destructor prologue at 0x28032c bound all 256 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__destroy_arr"
+mac_section = 0
+mac_offset = 0x28032c
+mac_size = 0x78
+sha256 = "1f3f71201d7a144366c0eedae18b5f8488c8632633553c58460875e1634391c2"
+evidence = "CodeWarrior emits this runtime array-destruction call twice in normalDialog: after doNormalDialog for the by-value copy and again for its local record. Retail passes array address in r3, icon destructor transition vector in r4, stride 0x34 in r5 and count 8 in r6. The callee walks backward through elements and invokes the pointer via __ptr_glue. Final BLR at 0x2803a0 and next prologue at 0x2803a4 bound all 120 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFRCQ23std6string"
+mac_section = 0
+mac_offset = 0x1c628
+mac_size = 0xc8
+sha256 = "28a934a277fc95694c22552e6c95c0f7ef21d3b503c933fd67066e1a77c61a3a"
+evidence = "normalDialog copies TNormalDialogInfo by value after calculateNormalDialogSize; its emitted std::string copy constructor call takes destination and source handles in r3/r4. Retail calls code0:0x1c628 at +0x134, and that callee copies the representation pointer, increments shared count when nonzero, or constructs a new 16-byte representation when needed. Final BLR at 0x1c6ec and next prologue at 0x1c6f0 bound all 200 bytes. Library identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details66compressed_pair_imp<Q23std32allocator<19type_creature_value>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x2bb9c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI calculateReserve constructs its vector<type_creature_value> storage with this named Metrowerks compressed_pair_imp constructor. The retail call reaches 0:0x2bb9c with vector address in r3 and zero in r4; the entire callee stores r4 at +0 and returns. Candidate CodeWarrior emits the same 8-byte named hunk; next function begins at 0x2bba4. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details62compressed_pair_imp<Q23std28allocator<15HeroDestination>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x33a70
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI_PLAYER valueOfHiring constructs its vector<HeroDestination> capacity pair at caller 0:0x35270. The emitted named CodeWarrior hunk receives the pair in r3 and zero in r4. The pinned Mac callee at 0:0x33a70 is exactly stw r4,0(r3); blr, ending at 0x33a78 before the next function. Library template identity only."
+
+[[functions]]
+symbol = ".clear__Q23std29vector<19type_creature_value>Fv"
+mac_section = 0
+mac_offset = 0x25ca4
+mac_size = 0x3c
+sha256 = "ca811356059aab177fa016fafcc46908f87923c31e93b46ccdcb7ffebfa33b20"
+evidence = "AI calculateReserve calls this named std::vector<type_creature_value>::clear at its reserve body +0x9c; the vector destructor independently calls it at 0:0x25a24. It reads 12-byte element count and data at vector+4/+8, runs the element destruction loop and stores zero size at +4. Final blr at 0x25cdc and next prologue at 0x25ce0 bound the 60-byte body. Runtime template identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std29vector<19type_creature_value>FRC19type_creature_value"
+mac_section = 0
+mac_offset = 0x3ad64
+mac_size = 0xa8
+sha256 = "7387ba9366f44492d21acfe4c87b3938d5a68b43c49714b71556329a13e5e089"
+evidence = "AI calculateReserve appends a source-owned 12-byte type_creature_value record through this named vector instantiation at 0:0x3ad64. The callee grows vector storage through 0x3c370 when full, copies three words into the next slot and increments size. Final blr at 0x3ae08 and next prologue at 0x3ae0c bound the 168-byte body. Runtime template call identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std29vector<19type_creature_value>Fv"
+mac_section = 0
+mac_offset = 0x25a00
+mac_size = 0x64
+sha256 = "d2fd2f69c922f6911d54bb0aaa272f9f8603921dda0a367e96f6f58852dd0d11"
+evidence = "AI calculateReserve destroys its local vector<type_creature_value> through this named CodeWarrior destructor. It calls the verified clear at 0x25ca4, frees backing data through 0x268b2c and conditionally deletes the object for a positive deleting flag. Final blr at 0x25a60 and next body starts at 0x25a64. Runtime template identity only."
+
+[[functions]]
+symbol = ".sort<19type_creature_value>__3stdFP19type_creature_valueP19type_creature_value"
+mac_section = 0
+mac_offset = 0x39fbc
+mac_size = 0x228
+sha256 = "96390a38cee3c407ad6a6c944f44bda88f1ea39857152256a17043268b88eaa6"
+evidence = "AI calculateReserve sorts its vector's 12-byte value records through this named std::sort instantiation. The callee computes record count from a 12-byte pointer difference, uses insertion sort for runs of 20 or fewer and dispatches larger ranges through the library sorter. Final blr at 0x3a1e0 and next prologue at 0x3a1e4 bound the 552-byte body. Runtime template call identity only."
+
+[[functions]]
+symbol = ".resize__Q23std13vector<4mine>FUl"
+mac_section = 0
+mac_offset = 0xe8460
+mac_size = 0xc4
+sha256 = "77ec8f1a6e78e05c8bdd7debbcb66287759648f6cf72893761e364e79cc33796"
+evidence = "game::loadMinePool at 0:0xcb454 passes its mine vector at game+0x4d048 and the one-byte count to this std::vector<mine>::resize instantiation. The callee compares the count with vector size at +4, constructs a default 0x40-byte mine at stack+0x60, inserts copies as needed, or erases excess elements. Final blr at 0xe8520 and next prologue at 0xe8524 bound all 196 bytes. Runtime template call identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std9vector<l>Fv"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI markMultiheadedEnemy constructs its stack vector<long> at caller 0:0x21d18..0x21d20, passing vector address in r3 and zero in r4. This named CodeWarrior template constructor stores r4 at receiver+0 and returns. Preceding BLR at 0x74b4 and next prologue at 0x74c0 bound the complete eight-byte body. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details46compressed_pair_imp<Q23std12allocator<l>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The canonical MSL vector<long> compressed-pair declaration view emits this named base constructor at AI markMultiheadedEnemy caller +0x64. It receives vector storage in r3 and zero in r4, stores r4 at receiver+0 and returns, exactly the eight-byte retained body at 0:0x74b8. This is an ABI alias of the simple vector constructor symbol for the same code span, not an additional target. Preceding BLR at 0x74b4 and next prologue at 0x74c0 bound it."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details55compressed_pair_imp<Q23std21allocator<P8pathCell>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x74b8
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "AI_PLAYER valueOfHiring constructs its vector<pathCell*> at caller 0:0x352c0 through this emitted MSL compressed_pair_imp constructor. The pinned 8-byte callee at 0:0x74b8 stores r4 at pair+0 and returns, ending before the next body at 0x74c0. This is a template ABI alias of the already reviewed vector<long> constructor at the same address, not another game target."
+
+[[functions]]
+symbol = ".second__Q310Metrowerks7details55compressed_pair_imp<Q23std21allocator<P8pathCell>,Ul,1>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "The canonical MSL pointer-vector push_back used in AI_PLAYER valueOfHiring emits three calls to this compressed-pair second() accessor. The pinned callee at 0:0x215c consists solely of blr: the receiver is already in r3, so it returns the member reference unchanged. Its next function starts with mflr at 0x2160. Library template identity only."
+
+[[functions]]
+symbol = ".second__Q210Metrowerks49compressed_pair<Q23std21allocator<P8pathCell>,Ul>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Installed CodeWarrior MSL msl_utility:859 defines compressed_pair::second as return base::second(). Restoring MSL's empty vector -> __vector_imp -> __vector_pod constructor layer makes valueOfHiring emit this wrapper at candidate +0x428/+0x440/+0x454 for capacity_ access. Retail calls the corresponding details::compressed_pair_imp::second at +0x400/+0x418/+0x42c. Both receive the same pair address in r3 and return its second-member reference; the emitted wrapper's full four-byte body is blr, identical to the independently bounded pinned 0:0x215c accessor before the next prologue at 0x2160. This is a verified library-template ABI alias, not a source-owned game helper."
+
+[[functions]]
+symbol = ".second__Q310Metrowerks7details54compressed_pair_imp<Q23std20allocator<P7CSprite>,Ul,1>Fv"
+mac_section = 0
+mac_offset = 0x215c
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "GAME convertObject's installed-MSL vector<CSprite*> push_back emits three calls to this compressed-pair capacity accessor at candidate +0x2dc/+0x2fc/+0x314; the target has three calls to the same four-byte BLR body at code0+0x215c. The template element changes its MWOB spelling only, and the accessor returns the receiver in r3 unchanged. Runtime template ABI alias only."
+
+[[functions]]
+symbol = ".reserve__Q23std24__vector_pod<P8pathCell>FUl"
+mac_section = 0
+mac_offset = 0x47b0
+mac_size = 0x10c
+sha256 = "3cc56d7f3bda84ce4151786be7cb0db34f1f42098209e911577824ad30971999"
+evidence = "AI_PLAYER valueOfHiring's canonical MSL vector<pathCell*> push_back emits this named POD reserve call at candidate +0x464; Mac retail calls the body at 0:0x47b0 from 0:0x354b4. The callee compares requested capacity, allocates and copies pointer entries, frees the previous buffer, and updates capacity. Its final return precedes the next body at 0x48bc. Library template identity only."
+
+[[functions]]
+symbol = ".reserve__Q23std23__vector_pod<P7CSprite>FUl"
+mac_section = 0
+mac_offset = 0x47b0
+mac_size = 0x10c
+sha256 = "3cc56d7f3bda84ce4151786be7cb0db34f1f42098209e911577824ad30971999"
+evidence = "GAME convertObject's installed-MSL vector<CSprite*> push_back emits this POD reserve call at candidate +0x330 when capacity is full; the Mac target calls code0+0x47b0 at +0x304. The body copies four-byte pointer elements, expands capacity and returns; element-type spelling differs from the already reviewed pathCell* instantiation but the pinned code body is the same. Runtime template ABI alias only."
+
+[[functions]]
+symbol = ".__dt__Q23std25vector<15HeroDestination>Fv"
+mac_section = 0
+mac_offset = 0x3b1ac
+mac_size = 0x64
+sha256 = "1ef86ceaf20ed281b851916449f60b47d8fa70473ce83f5bd013516f9adc1cb9"
+evidence = "AI_PLAYER valueOfHiring calls this named vector<HeroDestination> destructor at 0:0x357ac with deleting flag zero. The 100-byte body calls its element deleter at 0x3c70c, frees backing data and conditionally deletes the vector itself; its final return precedes the next prologue at 0x3b210. Runtime template identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std9vector<l>Fv"
+mac_section = 0
+mac_offset = 0x745c
+mac_size = 0x5c
+sha256 = "d5321bd30d8796d5377aaab7f653e75f7723cab7f5d5884e13946194798e8bee"
+evidence = "AI markMultiheadedEnemy destroys its local vector<long> at 0:0x21f1c..0x21f24 with deleting flag zero. This named CodeWarrior template destructor frees backing data at receiver+8 and conditionally deletes the receiver. Entry follows preceding BLR at 0x7458 and final BLR at 0x74b4 precedes the vector constructor. Runtime template identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std18vector<P8pathCell>Fv"
+mac_section = 0
+mac_offset = 0x745c
+mac_size = 0x5c
+sha256 = "d5321bd30d8796d5377aaab7f653e75f7723cab7f5d5884e13946194798e8bee"
+evidence = "AI_PLAYER valueOfHiring calls this named vector<pathCell*> destructor at 0:0x357a0 with deleting flag zero. The complete callee at 0:0x745c frees backing data at receiver+8 and conditionally deletes the receiver, ending before the constructor at 0x74b8. It shares the reviewed vector<long> runtime span as an ABI alias, not an additional game byte target."
+
+[[functions]]
+symbol = ".bzero"
+mac_section = 0
+mac_offset = 0x26ad3c
+mac_size = 0x84
+sha256 = "0e74282c0341e4f476e287b0e0a28cbb5634e1dcd5712dd76b9c3daccd840357"
+evidence = "AI markMultiheadedEnemy zeroes two 187-byte arrays through the two-argument Mac port routine at 0:0x26ad3c, passing destination in r3 and count in r4. A declaration-view probe emits the named .bzero call for the same canonical memset-to-zero source operation. The callee aligns and clears large regions with dcbz, then zeros remaining bytes; smaller regions use a byte loop. Preceding BLR at 0x26ad38, final BLR at 0x26adbc and next prologue at 0x26adc0 bound all 132 bytes. Runtime call identity only."
+
+[[data]]
+symbol = "__upper_map"
+mac_section = 1
+mac_offset = 0x61328
+mac_size = 0x100
+sha256 = "d8feb40390c91aa6d8dcd2863be7a3698628dde0897b132bbfe7f61a9814878b"
+evidence = "CodeWarrior Pro 6 MSL cctype declares extern unsigned char __upper_map[] and inlines toupper(c) as EOF-or-table lookup after unsigned-char conversion. Mac showCongrats at code 0:0x115e00 reads the table through loader-relocated TOC 1+0xc14 -> initialized data 1+0x61328. The full 256-byte table maps ASCII lowercase to uppercase and retains the Mac Roman high-byte cases. Candidate KB emits an external IL/TC reference; this binds library data identity and address only, not a game source DATA claim."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<70>CFUl"
+mac_section = 0
+mac_offset = 0xe99a0
+mac_size = 0xe4
+sha256 = "58e060ea260b389edb0ba9ba3a56af5618279b82a273aee93c8e3b383c1782e6"
+evidence = "Instantiated std::bitset<70>::test(unsigned long) used by canonical HeroExtra::m_spells.test(i) in hero::initialize. Retail caller passes setup+0x314 and indices 0..69 at +0x2a0; callee bounds-checks against 70, selects a 32-bit word, masks the indexed bit and returns bool. Candidate emits this named template symbol. Final blr at 0xe9a80 and next prologue at 0xe9a84 bound all 228 bytes. Runtime identity only, not a candidate template-body match or a Windows VA claim."
+
+[[functions]]
+symbol = ".test__Q23std9bitset<8>CFUl"
+mac_section = 0
+mac_offset = 0xe9d98
+mac_size = 0xe4
+sha256 = "99932086e58bb01c051432c8d3fbe5111f33e312706dcdacda86725c2819a23c"
+evidence = "The source-owned game::getNewHeroId candidate emits this named std::bitset<8>::test(unsigned long) call for the hero-pool eligibility test. The Mac target calls 0xe9d98 in both hero scans and passes the pool-map word with player position. The callee bounds-checks against eight, masks the selected bit, and returns bool; preceding BLR at 0xe9d94 and own BLR at 0xe9e78 before next prologue 0xe9e7c bound all 228 bytes. Runtime template identity only."
+
+[[functions]]
+symbol = ".test__Q23std10bitset<12>CFUl"
+mac_section = 0
+mac_offset = 0xe9bcc
+mac_size = 0xe4
+sha256 = "5ed75d357a2c5d5ff6b4c0f2e8805b887564d0c708a9e0e0b929b98fb03eae3d"
+evidence = "The Mac hero::giveArtifact body tests playerData::m_assembledCombinations through this named bitset<12>::test(unsigned long) instantiation. The complete callee bounds-checks twelve, selects the word, masks the indexed bit and returns bool. Its last BLR is at 0xe9cac and the next prologue begins 0xe9cb0. Runtime template call identity only."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<12>FUlb"
+mac_section = 0
+mac_offset = 0xe9cb0
+mac_size = 0xe8
+sha256 = "2254e14ecd76cf615ef3781f9b93640001857e346d0667cbed30e052d1b18a78"
+evidence = "The Mac hero::giveArtifact source sets playerData::m_assembledCombinations[targetCombo] and emits the named bitset<12>::set(unsigned long,bool) instantiation. The complete callee bounds-checks twelve and sets or clears the selected bit. Its last BLR is at 0xe9d94 before the next prologue at 0xe9d98. Runtime template call identity only."
+
+[[functions]]
+symbol = ".test__Q23std11bitset<144>CFUl"
+mac_section = 0
+mac_offset = 0x3b2f4
+mac_size = 0xe4
+sha256 = "a0ae3b2aa10bb831eac59843939e261299a11b87f69347a95c12984dffa45dfc"
+evidence = "HERO removeArtifact emits named std::bitset<144>::test(unsigned long) at object +0x88; its Mac caller passes indices 0..143 and reaches 0x3b2f4. Callee bounds-checks 144, selects one of five 32-bit words, masks the indexed bit and returns bool. Final BLR 0x3b3d4 and next function prologue 0x3b3d8 bound all 228 bytes. Runtime identity only, not a candidate template-body match."
+
+[[functions]]
+symbol = ".__dt__Q23std30vector<20type_creature_source>Fv"
+mac_section = 0
+mac_offset = 0x3b0a8
+mac_size = 0x64
+sha256 = "bf19cbd1ac457175f989d5efc66ca03d1028859aaabbdf07ed250665abf47bd5"
+evidence = "Library template instantiated by source-owned type_AI_creature_purchaser::m_creatures (include/ai_player.h). Three buyCreatures calls pass purchaser+0x2c (stack+0xa4), matching this vector member and the emitted CodeWarrior destructor symbol. Full body null-checks this, calls clear at 0x3b06c, frees data at this+8 through 0x268b2c, and deletes this iff the signed-short deleting flag is positive; returns this. Final blr at 0x3b108 and next entry at 0x3b10c bound the span. This is a retained runtime binding, not a candidate template-body match."
+
+[[functions]]
+symbol = ".memset"
+mac_section = 0
+mac_offset = 0x28b040
+mac_size = 0x4c
+sha256 = "f43e784c6795493a4a8a817ef3cd137d0a44506c9eaa80337494fe9bd4937916"
+evidence = "Named 80-byte .memset hunk in CodeWarrior Pro 6 MSL C.PPC.Lib: all 48 executable bytes match after resolving .__fill_mem to 0x28b17c and removing its +0x18 reload slot. The full 76-byte retail span also retains the library's named traceback trailer; its sole changed trailer word is the function-relative traceback offset, 0x34 to 0x30 after that removal. The 224-byte named .__fill_mem hunk matches retail exactly without relocations. Runtime identity only; traceback rewriting is not generalized into the game comparator."
+
+[[functions]]
+symbol = ".memcpy"
+mac_section = 0
+mac_offset = 0x28aa6c
+mac_size = 0x2f0
+sha256 = "29f4dce16802ccc3b9dd784021de042b108f0c5aacf189a250d89737952fd63a"
+evidence = "All 752 bytes exactly equal the named .memcpy code hunk in the installed CodeWarrior Pro 6 MSL C.PPC.Lib, with no relocations. Library extent includes the final copy paths after the earlier return at +0x2d0; that return alone is not the function boundary."
+
+[[functions]]
+symbol = ".sprintf"
+mac_section = 0
+mac_offset = 0x28dfa8
+mac_size = 0x64
+sha256 = "7956b996488068b19a859d64cd4cc2487abfd581925bd1aeee1f56e2681698b8"
+evidence = "Named .sprintf 100-byte hunk from CodeWarrior Pro 6 MSL C.PPC.Lib matches every retail byte after resolving its sole .vsnprintf branch at +0x34 to code 0x28decc. Varargs wrapper and updateArmies formatting call independently agree."
+
+[[functions]]
+symbol = ".strcpy"
+mac_section = 0
+mac_offset = 0x28e218
+mac_size = 0x38
+sha256 = "453be70191526c38d62f145285a57f89e0dacd1cf48c6a46770f31439b1fcd04"
+evidence = "Unique exact occurrence of all 56 bytes of the named .strcpy hunk in CodeWarrior Pro 6 MSL C.PPC.Lib; no relocations. Copies through and including the terminating zero and returns destination."
+
+[[functions]]
+symbol = ".strlen"
+mac_section = 0
+mac_offset = 0x28e1dc
+mac_size = 0x20
+sha256 = "c5431bb2faeaf28c92459e7378c633b1a06a7cf3d042e9b50f24ad768b8f44ef"
+evidence = "All 32 executable bytes exactly equal the named .strlen hunk's instructions in CodeWarrior Pro 6 MSL C.PPC.Lib string.c; the unlinked hunk's remaining bytes are traceback metadata. Retail ends at blr 0x28e1f8, and 433 linked callers include KB setter's string-assignment path at 0x11684c. Runtime identity only, not a source-template match."
+
+[[functions]]
+symbol = ".assign__Q23std6stringFPCcUl"
+mac_section = 0
+mac_offset = 0x445c
+mac_size = 0x64
+sha256 = "8ffe91edc1ec2a914b2b06a7230d384d25540d36cfd7dde950b2986c00ab791f"
+evidence = "KB setter's char-pointer assignment compiles through a source-view inline operator=(const char*) into named std::string::assign(const char*, unsigned long): strlen first, then receiver/pointer/length in r3/r4/r5. Retail repeats the same call sequence at 0x116848..0x11685c and calls this callee at 0x445c. The callee passes length to string storage helper 0x4ad4, copies with .memcpy, returns receiver; own prologue follows preceding BLR, final BLR 0x44bc, next destructor prologue 0x44c0 bound all 100 bytes. Runtime identity and ABI evidence only; no candidate library-body score."
+
+[[functions]]
+symbol = ".assign__Q23std6stringFRCQ23std6stringUlUl"
+mac_section = 0
+mac_offset = 0x1c094
+mac_size = 0x250
+sha256 = "d3b56bb17fa8233c223e3f186ceff91d3b3e779b6a2e219459be246577de1cef"
+evidence = "Retail KB formatString temporary assignment passes destination r3, source r4, position zero r5 and npos r6 to 0x1c094 at 0x116914..0x116924. Source-view inline std::string::operator=(const string&) now exposes the same named assign(const string&, unsigned long, unsigned long) ABI. Callee uses source string length and storage, returns destination; final BLR 0x1c2e0 and next prologue 0x1c2e4 bound all 592 bytes. Library call identity only, not a template-body score."
+
+[[functions]]
+symbol = ".append__Q23std6stringFUlc"
+mac_section = 0
+mac_offset = 0x1c388
+mac_size = 0xf8
+sha256 = "32d260bd698fcd15717a56fda5a8c03c294ebe62bff969b7067acbbd0be2637e"
+evidence = "The pinned CodeWarrior MSL string header defines operator+=(char) as append(1, char); HERO type_artifact::getDescription emits the exact named append(unsigned long,char) call at candidate +0x94. Retail calls 0x1c388 at code 0xf75d8 with count one in r4 and character in r5. The callee checks count and capacity, grows string storage, then writes the byte through memset. Its final BLR at 0x1c47c and next append(const char*,unsigned long) prologue at 0x1c480 bound the full 248-byte SHA-verified body. Runtime library identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std6stringFv"
+mac_section = 0
+mac_offset = 0x44c0
+mac_size = 0xa8
+sha256 = "6b1832d7920128a61af4112c4bfbdf946fcfa98f59f4f50cb37869132736fdf6"
+evidence = "KB destroys each stack formatString temporary after assignment, passing receiver r3 and deleting flag -1 r4 to this string destructor at 0x44c0. Callee updates shared-storage count, frees storage only at zero and conditionally frees receiver for positive flag. Own prologue follows assign BLR 0x44bc, final BLR 0x4564 and next constructor prologue 0x4568 bound all 168 bytes. Library identity only, not a template-body score."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFPCcRCQ23std12allocator<c>"
+mac_section = 0
+mac_offset = 0x4568
+mac_size = 0xdc
+sha256 = "c4cafd34c0430f98133a12603038811c79a560b389707f82c61458d6b8abd865"
+evidence = "The named CodeWarrior MSL basic_string(const char*, const allocator&) constructor is emitted at type_artifact::getDescription candidate +0x50; the source-view declaration follows the pinned MSL string header. Retail getDescription calls 0x4568 at code 0xf759c with destination r3, artifact description r4 and stack allocator r5. The callee stores an empty handle, calls strlen on r4, checks the length and initializes from the source range. Its prologue follows the prior destructor BLR at 0x4564, final BLR is 0x4640 and the next prologue starts 0x4644. Full 220-byte pinned PEF span was SHA-verified. Runtime library identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFv"
+mac_section = 0
+mac_offset = 0x46c8
+mac_size = 0xe8
+sha256 = "0efce2295baf13b484dceb6934f3454a1f0a6ddf71f3021ac3def4a82157327b"
+evidence = "The KB showCongrats Mac view emits the named std::string default constructor with its local string receiver at candidate +0x24; retail calls 0x46c8 with its stack string receiver at 0x115c5c. Callee allocates a 16-byte representation, seeds storage/count and zero length, writes the empty terminator, then returns its receiver. Own prologue 0x46c8, final BLR 0x47ac and next constructor prologue 0x47b0 bound all 232 bytes. Runtime library identity only, not a candidate string-body score."
+
+[[functions]]
+symbol = ".__ct__Q23std6stringFRCQ23std12allocator<c>"
+mac_section = 0
+mac_offset = 0x46c8
+mac_size = 0xe8
+sha256 = "0efce2295baf13b484dceb6934f3454a1f0a6ddf71f3021ac3def4a82157327b"
+evidence = "MAPCELL readMonsterData's Mac source view passes a stack allocator temporary in r4 to this CodeWarrior string constructor. Retail prepares receiver r3 at code 0:0x123cb4 and allocator r4 at 0:0x123cb8 before calling code 0:0x46c8 at 0:0x123cbc. The emitted allocator-argument symbol has the same 232-byte retained body as the reviewed no-argument MSL constructor row above; the shared callee does not use r4. The pinned whole-span hash and adjacent BLR/prologue bounds are identical. This alias resolves a compiler-generated library call, not a game-function match."
+
+[[functions]]
+symbol = ".__vc__Q23std10vector<Pc>CFi"
+mac_section = 0
+mac_offset = 0x2a0c
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "Canonical TTextResource::operator[] calls getText, indexing its m_text vector at object+0x1c. The KB Mac view now emits named std::vector<char*>::operator[](int) from that shared inline body. Retail KB setter repeatedly adds +0x1c to the resource before calling 0x2a0c; its four instructions load vector first pointer at +8, scale index by 4, return element address, and end with BLR 0x2a18 before the next entry 0x2a1c. Runtime template identity only, not a vector-body score; the byte-identical 0x948 entry is not used by this caller."
+
+[[functions]]
+symbol = ".append__Q23std6stringFPCcUl"
+mac_section = 0
+mac_offset = 0x1c480
+mac_size = 0x80
+sha256 = "51a0fdcfd08cb2182ca226a0cc81035f5d81b3343df62dc64a81e03af85ce4c1"
+evidence = "KB secondary-skill text uses canonical string += char-pointer statements. Retail first calls strlen at 0x116db0 then passes receiver/pointer/length in r3/r4/r5 to 0x1c480 at 0x116dc0, repeating at 0x116dec..0x116dfc. Source-view inline operator+= exposes the same named append(const char*, unsigned long) call. Callee grows storage via 0x4ad4, then .memcpy at 0x28aa6c, returns receiver; final BLR 0x1c4fc and next prologue 0x1c500 bound all 128 bytes. Runtime identity only, not a library-body score."
+
+[[functions]]
+symbol = ".append__Q23std6stringFRCQ23std6stringUlUl"
+mac_section = 0
+mac_offset = 0x1c500
+mac_size = 0x128
+sha256 = "2392ce5a9bcb3eeb17259fdd82ae2d6621bbfa3f54a6f05b4e13f694297f9bbc"
+evidence = "The TOWN creature reward helper passes destination string r3, temporary source r4, position zero r5 and npos r6 at 0x1b5a2c..0x1b5a3c, matching the canonical operator+=(const string&) source-view expansion. This callee copies source length/data, grows destination via 0x4ad4 and copies through .memcpy; preceding char-append BLR at 0x1c4fc, final BLR at 0x1c624 and next prologue at 0x1c628 bound all 296 bytes. Runtime identity only."
+
+[[functions]]
+symbol = ".mac_msl_string_replace_fill_1c910"
+mac_section = 0
+mac_offset = 0x1c910
+mac_size = 0x350
+sha256 = "276c01564404ae8be91ad5875545a4be8029176d4ef77ee22cd43979ae2d787e"
+evidence = "The installed MSL string header implements replace(pos, removed_length, inserted_count, char) with position and length checks, copy-on-write storage, tail move, character fill and terminator update. Retail calls this body with string receiver r3, position r4, removed length r5, inserted count r6 and character r7. The seven sites include erase() with r4=0/r5=npos/r6=r7=0, erase(pos) in ResourceManager, and one comma insertion with r6=1/r7=','. The body checks string size at +0, allocates a new 16-byte representation if needed, calls the fill operation at 0x28b040, and returns at 0x1cc5c; the next prologue starts at 0x1cc60. This neutral label records an MSL string operation, not a game helper."
+
+[[functions]]
+symbol = ".mac_msl_string_char_array_data_10c220"
+mac_section = 0
+mac_offset = 0x10c220
+mac_size = 0x8
+sha256 = "5d9a1b452d6935a19a897fdbed86c41fbed9fe502cda3ec46eb9648aa3405b9a"
+evidence = "Six calls in hiscore, multiplayerwindow and singleselectionwindow pass the std::string representation pointer loaded from textWidget::m_text at widget+0x30. The installed MSL basic_string::c_str/data inline path calls CharArray::data(), which returns its data_ field at representation+0xc. Retail's entire callee is `lwz r3,0xc(r3); blr` at 0x10c220..0x10c224; the next CHSInputDlg accessor begins at 0x10c228. The authored Windows callers already use getText() or m_text.c_str(); this is a library accessor, not an omitted game helper."
+
+[[functions]]
+symbol = ".clear__Q23std30vector<20type_dialog_resource>Fv"
+mac_section = 0
+mac_offset = 0x1c790
+mac_size = 0x38
+sha256 = "cdc70e474f8e878affe097f9c1a18ecefdbdd70d519dd8f37e4161e96fa0c8a4"
+evidence = "TOWN reward helper calls vector<type_dialog_resource>::clear at 0x1b5b6c after its optional extendedDialog. The callee computes 8-byte element distance from size and data pointer, then stores zero to vector size at +4; prior push-back BLR at 0x1c78c, own BLR at 0x1c7c4 and next vector destructor prologue at 0x1c7c8 bound 56 bytes. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q310Metrowerks7details67compressed_pair_imp<Q23std33allocator<20type_dialog_resource>,Ul,1>FUl"
+mac_section = 0
+mac_offset = 0x66a4
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "The selected Seer Hut view emits this exact CodeWarrior MSL compressed_pair_imp constructor for vector<type_dialog_resource> at caller +0x44. The retail shared four-skill dialog helper calls 0x66a4 at 0x164e6c with its stack vector address in r3 and zero capacity in r4, then zeros size/data. The entire target body is `stw r4,0(r3); blr`, bounded by its return at 0x66a8 and the next prologue at 0x66ac; all eight bytes are pinned by SHA. Loader xrefs identify 16 code callers, including the Seer Hut helper and TOWN dialog setup. This binds one emitted library-template identity, not a game helper or broader alias."
+
+[[functions]]
+symbol = ".push_back__Q23std36__vector_imp<20type_dialog_resource>FRC20type_dialog_resource"
+mac_section = 0
+mac_offset = 0x1c6f0
+mac_size = 0xa0
+sha256 = "fb6d891be3b5ce597de85373ad3b7b60ffa541bcdafe9bce2c8f75035268704f"
+evidence = "The installed CodeWarrior MSL vector classifies this custom record as non-POD (default class_has_trivial_* traits are false), and its __vector_imp<T,false>::push_back definition matches the selected view's emitted symbol at caller +0x88. Retail's shared four-skill dialog helper calls 0x1c6f0 at 0x164eb4 with vector receiver r3 and an eight-byte record r4. The full 0xa0-byte callee tests size against capacity, reserves when full, conditionally copies both words into data[size] with constructed-local cleanup metadata, and increments size. Its preceding helper returns at 0x1c6ec, this one at 0x1c78c, and clear begins at 0x1c790; 23 linked callers include Seer Hut and TOWN dialog builders. This binds only the non-POD library-template identity."
+
+[[functions]]
+symbol = ".__dt__Q23std30vector<20type_dialog_resource>Fv"
+mac_section = 0
+mac_offset = 0x1c7c8
+mac_size = 0x64
+sha256 = "d671677ee7e33cb6836e8364b4ded77d717a80214c4a4a521afaaf5d4827c551"
+evidence = "The selected non-POD MSL view emits this vector destructor at doProgressDialog candidate +0xc4. Retail's shared four-skill dialog helper calls 0x1c7c8 at 0x164ee4 with the constructed vector receiver and deleting flag -1. Its full body calls the reviewed vector::clear at 0x1c790, frees the data pointer if present, then conditionally frees the vector receiver for a positive deleting flag, as in the installed MSL vector lifetime. The preceding clear returns at 0x1c7c4 and this body returns at 0x1c828; 18 code callers include the Seer Hut helper and other dialog builders. This is a library-template identity, not a game helper."
+
+[[functions]]
+symbol = ".strncpy"
+mac_section = 0
+mac_offset = 0x28e250
+mac_size = 0x60
+sha256 = "185b801a4449e3847142ead8e612085f2ae3e9d4ba253b981b18a1dd0fde0393"
+evidence = "All 96 bytes equal the named .strncpy hunk from CodeWarrior Pro 6 MSL C.PPC.Lib, without relocations. The full extent includes the zero-padding loop after the early return at +0x40; hero::initialize calls this entry."
+
+[[functions]]
+symbol = ".abs"
+mac_section = 0
+mac_offset = 0x288778
+mac_size = 0x10
+sha256 = "224cb73d9c41a3021c6b869de415325429a4b38f620242ae322b7dd389971b2d"
+evidence = "Four-instruction signed int absolute value (cmpwi r3,0; bgelr; neg r3,r3; blr). Both named abs calls in the paired hero::isInPatrolRadius reach this entry."
+
+[[functions]]
+symbol = ".__ptr_glue"
+mac_section = 0
+mac_offset = 0x2a3310
+mac_size = 0x14
+sha256 = "6770c5490d20d4da79988bb471aa2afcfb9d37c78c6aed7996ac82cd2a081e4a"
+call_kind = "indirect_tvector"
+evidence = "Exact five-instruction __ptr_glue body from CodeWarrior runtime.c and MSL RuntimePPC.Lib. Function-pointer and virtual-call controls emit a named call to this glue; MWLink retains the following slot as lwz r2,20(r1). Retail has 3237 direct branches to this dynamic-dispatch helper."
+
+[[functions]]
+symbol = ".__ct__Q23std19__vector_deleter<i>FUl"
+mac_section = 0
+mac_offset = 0x152b94
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "ResourceManager::open calls this vector<int> storage constructor at 0x152958 with the requested reserve count in r4. The entire body stores r4 at receiver+0 and returns; next function prologue begins at 0x152b9c. Source-view CodeWarrior emits the exact named MSL template call. Runtime identity only."
+
+[[functions]]
+symbol = ".reserve__Q23std9vector<i>FUl"
+mac_section = 0
+mac_offset = 0x154954
+mac_size = 0xf0
+sha256 = "c197589ba0a8bd4b3480265e0d04ad8daa0d6d30d60e0dfff5eda2148b02af87"
+evidence = "ResourceManager::open calls this vector<int>::reserve at 0x152978. It compares the requested capacity in r4 to receiver+0, allocates four bytes per element, copies old elements, swaps storage and destroys the temporary. Its blr at 0x154a40 precedes the next helper at 0x154a44; source-view CodeWarrior emits this named MSL template call. Runtime identity only."
+
+[[functions]]
+symbol = ".__throw"
+mac_section = 0
+mac_offset = 0x27fc44
+mac_size = 0xb0
+sha256 = "bdd2d8e1139eba4b9e4fe57ad87cf54b4745d8afcc97c5111e2e2821b5e5c513"
+evidence = "Five exception arms in ResourceManager::open call CodeWarrior runtime __throw at 0x27fc44. It saves integer and floating registers, records the thrown object/type arguments and enters the exception runtime at 0x27f998. Final blr at 0x27fcf0 and next __end__catch prologue at 0x27fcf4 bound the full span. Runtime identity only."
+
+[[functions]]
+symbol = ".pop_back__Q23std9vector<i>Fv"
+mac_section = 0
+mac_offset = 0x152b34
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "ResourceManager::open rollback calls the retained vector<int>::pop_back at 0x152b34. This retail entry is a single blr; the next function begins with a prologue at 0x152b38. Source-view CodeWarrior emits the named MSL call. Runtime identity only; the empty body is not inferred to describe other vector instantiations."
+
+[[functions]]
+symbol = ".__end__catch"
+mac_section = 0
+mac_offset = 0x27fcf4
+mac_size = 0x44
+sha256 = "2a450b18f7e15a1a48b48e5bbd7eadc0a01644022b78ad6fd544eaf23480d1da"
+evidence = "ResourceManager::open catch cleanup calls CodeWarrior runtime __end__catch at 0x27fcf4. It conditionally dispatches the thrown object's destructor through __ptr_glue, then returns at 0x27fd34; the next function starts at 0x27fd38. Runtime identity only."
+
+[[functions]]
+symbol = ".__dt__Q23std9vector<i>Fv"
+mac_section = 0
+mac_offset = 0x154a58
+mac_size = 0x64
+sha256 = "dc864884c86cd99f34b4993889da3b68a027b02756d3ce9cfbebae6189face58"
+evidence = "ResourceManager::open destroys its stack vector<int> through this MSL destructor at 0x154a58. The callee clears elements at 0x154abc, frees storage at receiver+8, conditionally deletes the receiver for a positive flag, and returns at 0x154ab8 before the clear helper starts at 0x154abc. Runtime identity only."
+
+[[functions]]
+symbol = ".reset__Q23std10bitset<48>Fv"
+mac_section = 0
+mac_offset = 0xe73a8
+mac_size = 0x10
+sha256 = "765d467aef28897a16c69e550974242c7e115dedbd156d3e0451e5ebd9b2e0b8"
+evidence = "Hero initialize(short) calls this retained MSL bitset<48>::reset at code 0xf417c. Its complete four-instruction body zeroes the two 32-bit words at receiver offsets 0 and 4 and returns at 0xe73b4; the next bitset helper begins at 0xe73b8. The emitted MWOB relocation names this instantiation exactly. Runtime call identity only."
+
+[[functions]]
+symbol = ".compare__Q23std6stringCFUlUlPCcUl"
+mac_section = 0
+mac_offset = 0x41c4
+mac_size = 0x154
+sha256 = "a6dbd751832b5e9823eb9e0a2b2ed88612cde06289360a0aa3077b9f9278755d"
+evidence = "NewfullMap::newfullMapFn005042C0 calls the retained MSL string compare at code 0x127218. The candidate's named call takes string receiver, position, count, byte pointer and length in r3-r7; the retail body bounds-checks the position, calls the bounded byte comparison at 0x28b11c and returns at 0x4314. The next prologue at 0x4318 bounds the full helper. Runtime call identity only."
+
+[[functions]]
+symbol = ".mac_memcmp_28b11c"
+mac_section = 0
+mac_offset = 0x28b11c
+mac_size = 0x44
+sha256 = "3b0860fe866d178d85ece2f1e78b3352f9c7e29564805202258d74b5114e0a05"
+evidence = "CDiffMaker::findNextSame calls this at 0xa2798 for a 16-byte binary comparison. The three-argument leaf compares every byte up to the count without stopping at NUL, returns -1, 0 or 1, and ends at 0x28b160. MSL string::compare also calls it; its behavior is memcmp, not strncmp. Runtime identity only."
+
+[[functions]]
+symbol = ".begin__Q23std10vector<Pc>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Recruit update calls the retained MSL vector<char*>::begin accessor at code 0x14f4dc. The complete body at 0x5eec returns receiver+8 then blr; its next neighbor begins at 0x5ef4. The emitted MWOB call is named .begin__Q23std10vector<Pc>CFv, and the Mac image has 349 direct calls to this small accessor. Runtime call identity only."
+
+[[functions]]
+symbol = ".begin__Q23std43vector<PQ214TCampaignBrief14ScenarioStruct>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaign-brief ally/enemy flag body calls 0x5eec at 0x645b8 on its vector<ScenarioStruct*> at campaign header +0x18. This exact MSL leaf returns the receiver+8 iterator slot and BLR; the emitted specialization has the same pointer-vector ABI as the already reviewed vector<char*> alias. Runtime call identity only."
+
+[[functions]]
+symbol = ".data__Q23std38__vector_pod<Ul,Q23std13allocator<Ul>>CFv"
+mac_section = 0
+mac_offset = 0x5eec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Recruit update calls 0x5eec at code 0x14f4dc for TTextResource storage. Its CodeWarrior vector_pod<Ul>::data instantiation emits the identical eight-byte addi r3,r3,8; blr body. Runtime call identity only."
+
+[[functions]]
+symbol = ".reset__Q23std10bitset<70>Fv"
+mac_section = 0
+mac_offset = 0xe7378
+mac_size = 0x14
+sha256 = "1f57a9e7fd6ea30160ea07cfe7ac4e4a42647e04ba9018c22c46348019cde391"
+evidence = "Town initializeSpells calls the retained MSL bitset<70>::reset. Its complete body clears three 32-bit words and returns at 0xe7388; the next body begins at 0xe738c. The emitted MWOB relocation names this instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".set__Q23std10bitset<70>FUlb"
+mac_section = 0
+mac_offset = 0xe9a84
+mac_size = 0xe8
+sha256 = "13e49a6bf1fd32c623779b55529e994e063108a75c9fd42dbe82f555519e755f"
+evidence = "Town initializeSpells calls this retained MSL bitset<70>::set at 0x1b3b40 with receiver r3, bit index r4 and bool r5. It checks the 70-bit bound, sets or clears the selected word, returns the receiver, and ends at BLR 0xe9b68 before the next body at 0xe9b6c. Runtime call identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std21vector<11MonsterData>FRC11MonsterData"
+mac_section = 0
+mac_offset = 0x129618
+mac_size = 0xf8
+sha256 = "78650eaee44bf3abdb60ff8ff3f74acb18e8f7c9aad6cb5cb56a0a943ce04cf6"
+evidence = "NewfullMap::readMonsterData calls this retained MSL vector<MonsterData>::push_back at 0x123db0 with receiver this+0x30 and a local element. The complete body grows capacity through 0x12d7f0 when needed, uses 0x24-byte elements, copies their string and eight dwords, increments size, then returns at 0x12970c before the next prologue at 0x129710. Candidate MWOB names this instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".push_back__Q23std21vector<11CObjectType>FRC11CObjectType"
+mac_section = 0
+mac_offset = 0xe7d24
+mac_size = 0xac
+sha256 = "592e867f45b9822ac232a3a68256c3920411eb0579076644a7b42bf6097162f8"
+evidence = "Mac game::convertObject calls this MSL vector<CObjectType>::push_back at 0xe0c40 with receiver the NewfullMap object-type vector and a 0x38-byte CObjectType element. The complete body checks size against capacity, grows through 0xeab64, copies the element at 0xe7dd0, increments size, and returns at BLR 0xe7dcc before the copy constructor's distinct prologue at 0xe7dd0. Candidate MWOB names the exact instantiation. Runtime call identity only."
+
+[[functions]]
+symbol = ".__vc__Q23std10vector<Pc>CFUl"
+mac_section = 0
+mac_offset = 0x948
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "HERO getMoraleDescription at 0xf88fc and getLuckDescription at 0xf8efc both call code 0:0x948 after adding 0x1c to TTextResource, passing text index 438 in r4. The complete 16-byte body loads vector data at receiver+8, scales the index by four, adds it to the data pointer and returns the element address; BLR is at 0x954 and the next prologue starts 0x958. The pinned MSL vector<T>::operator[](size_type) forwards through its POD indexer, and CodeWarrior emits the named `.__vc__Q23std10vector<Pc>CFUl` call in the shared HERO candidate. Runtime template identity only, with no Windows VA claim."
+
+[[functions]]
+symbol = ".mac_vector_storage_8100"
+mac_section = 0
+mac_offset = 0x8100
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "The full body is addi r3,r3,8; blr, ending before the next function at 0x8108. Mac has 100 direct calls, including combatWindow::showMessages on its vector<string*> and AI_PLAYER vector scans; callers then load the vector data pointer from the returned slot. This is a separately retained MSL vector storage accessor with the same bytes as 0x5eec. The neutral label does not assert a particular template instantiation or emitted symbol."
+
+[[functions]]
+symbol = ".mac_pointer_vector_push_back_20e0"
+mac_section = 0
+mac_offset = 0x20e0
+mac_size = 0x7c
+sha256 = "decc742866e65de134a9c80af61d5e6112d0e6dbd493c9ab34cb8221ad5b7ee2"
+evidence = "The 125 direct callers include TAdventureMapWindow construction of its vector<widget*>. The callee compares size with capacity, doubles capacity through reviewed POD-vector reserve 0x47b0 when full, copies one four-byte pointer from r4 to data[size], increments size, and returns at 0x2158; the next function starts at 0x215c. The neutral label covers the pointer-vector operation without claiming one template spelling for all callers."
+
+[[functions]]
+symbol = ".__copy"
+mac_section = 0
+mac_offset = 0x27e888
+mac_size = 0x30
+sha256 = "6fe466f5875277e2d1ddc956839991a8fb6c971050c69ea64fb7aa67d3c0ca62"
+evidence = "All 48 bytes exactly equal the CodeWarrior Pro 6 MSL RuntimePPC.Lib .__copy code body, whose archive names the symbol. It copies r5 bytes from r4 to r3, returns the destination, and ends at BLR 0x27e8b4 before the next prologue at 0x27e8b8. The 124 direct calls include generated hero-copy and event-message copies; this is compiler runtime code, not a source-owned helper."
+
+[[functions]]
+symbol = ".mac_vector_string_push_back_be4d4"
+mac_section = 0
+mac_offset = 0xbe4d4
+mac_size = 0xac
+sha256 = "8c50af787a6f989d43aada5167a3430b9b28119cdd4fbe86bc0e661ed0d27eab"
+evidence = "Nineteen direct calls include event, font, Seer Hut and text-scroller string-vector appends. The callee doubles four-byte-element capacity through 0xbead8, invokes the reviewed std::string copy constructor at 0x1c628 for the new element, increments size and returns at 0xbe57c; the next function starts at 0xbe580. The neutral label records an MSL vector<string>::push_back operation without guessing its mangled instantiation."
+
+[[functions]]
+symbol = ".__ct__Q23std10bitset<48>Fv"
+mac_section = 0
+mac_offset = 0x99f38
+mac_size = 0x10
+sha256 = "765d467aef28897a16c69e550974242c7e115dedbd156d3e0451e5ebd9b2e0b8"
+evidence = "The installed MSL bitset default constructor zeros each storage word. CObjectType construction calls this body on four consecutive eight-byte bitset<48> members at 0x128c14/1c/24/2c; the complete body zeros both words and returns at 0x99f44 before the next prologue at 0x99f48. A CodeWarrior source-view probe emits the corresponding default-constructor mangling for bitset<70>, and this 16-byte body is byte-identical to the separately retained bitset<48>::reset. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_ascii_stricmp_20efc4"
+mac_section = 0
+mac_offset = 0x20efc4
+mac_size = 0x58
+sha256 = "eeef8fc3dbf15928a5c7bb8ef55a573e4c1e87245595426ea5ecb060528d9cc0"
+evidence = "Forty-four direct callers include cheat-code checks, LOD filename search and spellbook trait ordering; their authored source calls _strcmpi or _stricmp. This complete leaf lowercases only ASCII A-Z in both NUL-terminated inputs, returns their unsigned-byte difference at 0x20f008 or zero at 0x20f018, and ends before the bounded compare variant at 0x20f01c. The neutral name records the C-library comparison operation without asserting which port-specific symbol supplied this body."
+
+[[functions]]
+symbol = ".mac_ascii_strnicmp_20f01c"
+mac_section = 0
+mac_offset = 0x20f01c
+mac_size = 0x68
+sha256 = "3be10fa15817a614fa37173d8b70d4831d1ae0b46e20e9786f6766471ce6c8a6"
+evidence = "Nine direct calls include advManager::open, game save/load filename checks and single-selection file highlighting. The callee compares at most the r5 byte count, lowercases only ASCII A-Z, returns the first unsigned-byte difference or zero, and ends at BLR 0x20f080 before the next prologue at 0x20f084. Callers use the _strnicmp source operation. The neutral label records the bounded C-library comparison without claiming a particular port symbol."
+
+[[functions]]
+symbol = ".mac_terminating_string_copy_26ae40"
+mac_section = 0
+mac_offset = 0x26ae40
+mac_size = 0x1c
+sha256 = "05452e5994bfb340d1251287fb40bbef43eb5b5c2e019daded5dc21ef2deafbd"
+evidence = "Forty-five direct callers include chained path construction in game::newMap and campaign loading. This seven-instruction leaf copies each byte through the terminating NUL from r4 to r3 and returns r3 pointing at the written terminator, allowing the next copy to append without rescanning. Its BLR at 0x26ae58 precedes the next helper at 0x26ae5c. The neutral name distinguishes this retained copy primitive from the separate reviewed standard .strcpy at 0x28e218."
+
+[[functions]]
+symbol = ".__register_global_object"
+mac_section = 0
+mac_offset = 0x27fd40
+mac_size = 0x1c
+sha256 = "486289f4a54bb8464ff4bc2e90222559d831faf86d24b4e17f9f954f78ee44eb"
+evidence = "The installed CodeWarrior Pro 6 MSL RuntimePPC.Lib names .__register_global_object; its complete 28-byte code hunk agrees with retail after resolving the first word's TOC displacement to the global destructor-chain head. The callee links the three-word registration record in r5, with object and destructor from r3/r4, then returns at 0x27fd58 before the chain-destruction routine at 0x27fd5c. Mac has 221 direct calls, mostly compiler-generated global initializers."
+[[functions]]
+symbol = ".set__Q23std9bitset<8>FUlb"
+mac_section = 0
+mac_offset = 0x9d60c
+mac_size = 0xe8
+sha256 = "3be0e2ae9c7955fc3fd4f91fe6fab50ed7038c520aca38a3831d9a298a549acd"
+evidence = "Seven direct calls from campaign, game, events and hero bodies pass a bitset receiver, index in r4 and bool in r5. The complete MSL setter bounds-checks against eight, sets or clears the indexed word bit and returns the receiver at BLR 0x9d6f0 before the next bitset helper at 0x9d6f4. Its instruction shape and CodeWarrior mangling follow the reviewed bitset<12>/48/70 set instantiations. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_pod_vector_deleting_dtor_67278"
+mac_section = 0
+mac_offset = 0x67278
+mac_size = 0x58
+sha256 = "f998b04d691f0798696c874beffbfe24311ca80c94e04d5a073b29c6b4b0c475"
+evidence = "This retained deleting wrapper tests the vector receiver, calls the shared vector destructor at 0x68da4 with a zero flag, and calls scalar delete at 0x268b2c only when its own deleting flag is positive. The BLR at 0x672cc precedes an independent zero-initializing vector constructor at 0x672d0. It has 43 direct calls in unfinished campaign and game bodies. Several POD-vector instantiations can fold to this code, so the neutral label intentionally makes no element-type or Windows-VA claim."
+
+[[functions]]
+symbol = ".mac_stream_integer_formatter_26ae5c"
+mac_section = 0
+mac_offset = 0x26ae5c
+mac_size = 0x148
+sha256 = "1e3d8c217697d804fccb64699d6556ffaad999bef066c7bb4b45f41c7b963ff1"
+evidence = "Seven direct calls in bottom-view and quick-hero constructors take a character buffer in r3, a signed integer in r4 and a width in r5. The front path writes an optional minus sign and decimal digits; a later branch also emits hexadecimal digits, so this is a general integer formatter. Its final BLR at 0x26afa0 precedes the adjacent string-append primitive at 0x26afa4. Windows retail at the bottom-view resource site retains std::ostrstream integer insertion, as does the authored Windows source; Dreamcast's older build records char[20] and sprintf there. The neutral label identifies the Mac formatting call without claiming a matching Windows source helper or a proven CodeWarrior symbol."
+
+[[functions]]
+symbol = ".rand"
+mac_section = 0
+mac_offset = 0x28e00c
+mac_size = 0x24
+sha256 = "96b94d0e79b318734d2fe3906c68bbed6781424c460845fd93ca4fe581ebfb85"
+evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib contains this unique 36-byte .rand hunk at file offset 0x1669c. Every word equals the pinned PEF body except three TOC displacements to the shared seed. It multiplies by 0x41c64e6d, adds 0x3039 and returns the upper 15 bits. Direct callers include game, seer hut and selection code; many RMG callers are deferred from the current sweep. Final BLR at 0x28e02c. Runtime library identity only."
+
+[[functions]]
+symbol = ".atoi"
+mac_section = 0
+mac_offset = 0x28fb1c
+mac_size = 0x28
+sha256 = "2f3b8cd1fbb716384a278dafba9cc4222b50ec09e9d33aeb50708298a2b2c654"
+evidence = "The installed CodeWarrior Pro 6 MSL C.PPC.Lib names this 40-byte .atoi hunk. Every instruction equals the pinned Mac body except its call at +0x14, whose object relocation links to strtol at 0x28fa14; the final BLR is at 0x28fb40. It calls strtol(text, NULL, 10). Mac has 122 direct calls, including creature trait and combat wall table parsing. Library identity only."
+
+[[functions]]
+symbol = ".atof"
+mac_section = 0
+mac_offset = 0x28f66c
+mac_size = 0x24
+sha256 = "d63ef61d47be9ed4612184801ef7ab866e3ef8f2b15b1d5ce1ca9dd09b2af970"
+evidence = "The complete 36-byte MSL wrapper sets end-pointer argument r4 to null, calls strtod at 0x28f598, and returns the floating-point result; BLR at 0x28f68c bounds the body. Five direct calls in initializeCreatureAnimationTraits correspond to its five source atof conversions. Library identity only."
+
+[[functions]]
+symbol = ".set__Q23std11bitset<145>FUlb"
+mac_section = 0
+mac_offset = 0x9d524
+mac_size = 0xe8
+sha256 = "b65037753f66e1693a3d5cd2c6f266c585c9a83e36cae5e0808d338116e712e5"
+evidence = "Nineteen calls in two unfinished game/campaign callers pass receiver, bit index and bool to this setter. It bounds-checks r4 against 0x91 (145), sets or clears one of five storage words, and returns the receiver at BLR 0x9d608 before the reviewed bitset<8>::set entry at 0x9d60c. The shared CampaignHeaderStruct::ScenarioStruct member m_crossoverCreatures is bitset<145>, and the method shape matches the reviewed MSL bitset setters. Runtime template identity only."
+
+[[functions]]
+symbol = ".__ct__Q23std10bitset<10>FUl"
+mac_section = 0
+mac_offset = 0x4f50
+mac_size = 0xc
+sha256 = "7ec2db04100e6605dac8621215382100d5ab55d000156fb32ce68d85dd7d6788"
+evidence = "Ten calls in the puzzle-window global initializer construct one-word masks from value 1 before shifting each by offsets 0..9. This complete three-instruction body masks r4 to ten bits, stores the word at receiver+0 and returns at 0x4f58 before the shift operator at 0x4f5c. The installed MSL bitset(unsigned long) definition performs this mask for N<32, and a CodeWarrior game source view emits the exact bitset<10> constructor symbol. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_bitset10_shift_left_4f5c"
+mac_section = 0
+mac_offset = 0x4f5c
+mac_size = 0xf8
+sha256 = "d0ca3d234c0b15f13f06a66643dbcce54689099bf63bc5fc852a38bdb787982f"
+evidence = "The puzzle-window initializer calls this body after constructing each bitset<10>(1), passing shifts 0..9. It shifts the receiver's word left by r4, clears higher words if any, masks the low word to ten bits and returns at BLR 0x5050 before the next prologue at 0x5054. The neutral label records the MSL bitset<10> shift operation without guessing the emitted operator mangling."
+
+[[functions]]
+symbol = ".__ct__Q23std9bitset<8>Fv"
+mac_section = 0
+mac_offset = 0xe728c
+mac_size = 0xc
+sha256 = "1d07a0cbd27fe409ee017931a201fc6bef604d6d87e290224325623dc3c60def"
+evidence = "NewSMapHeader::read/load and game construction call this complete three-instruction zero-word constructor for stack bitset<8> temporaries. The callers then copy its word or call the adjacent bitset<8>::flip to form an all-players mask. BLR at 0xe7294 precedes flip at 0xe7298. The installed MSL default bitset constructor zeros its one storage word; runtime template identity only."
+
+[[functions]]
+symbol = ".flip__Q23std9bitset<8>Fv"
+mac_section = 0
+mac_offset = 0xe7298
+mac_size = 0x1c
+sha256 = "14f394c4ce9c24ee9dbd4fcb739763cc7ddf976644a234c98d13784bd69da19f"
+evidence = "NewSMapHeader::load and game construction call this on a copied zero-initialized bitset<8> temporary; its seven instructions complement the sole word, mask it to eight bits and return the receiver. BLR at 0xe72b0 precedes the next helper at 0xe72b4. The exact eight-bit mask and callers identify the MSL bitset<8>::flip instantiation."
+
+[[functions]]
+symbol = ".set__Q23std11bitset<156>FUlb"
+mac_section = 0
+mac_offset = 0xe9f60
+mac_size = 0xe8
+sha256 = "41b4270f068462904cfaa1cc1e41cd5c6770d64c086545bcf695bf5dad6e69b0"
+evidence = "NewSMapHeader::read calls this setter three times for its five-word m_availableHeroes bitset<156>; the bound check compares r4 with 0x9c, then sets or clears the indexed bit according to r5. The complete body returns at BLR 0xea044 and the next bitset helper begins at 0xea048. It shares the reviewed MSL bitset-set instruction shape and mangling. Runtime template identity only."
+[[functions]]
+symbol = ".mac_vector_hero_delete_flag_dtor_6c6e4"
+mac_section = 0
+mac_offset = 0x6c6e4
+mac_size = 0x64
+sha256 = "1ce909dd352c6e420de33a7a0e5e730a244878e6238d5c7eb4076f4d8fd2bc87"
+evidence = "Five customcampaign calls destroy local vector<hero> objects. The callee checks the receiver, clears elements through 0x6c748, deletes vector data at +8, and optionally deletes the receiver when the CodeWarrior delete flag is positive. BLR at 0x6c744 precedes the clear body. This neutral label identifies the vector operation, not a proven mangled instantiation."
+
+[[functions]]
+symbol = ".mac_vector_hero_erase_one_9cb7c"
+mac_section = 0
+mac_offset = 0x9cb7c
+mac_size = 0xb8
+sha256 = "aaa548b3d823204b9d61a1f85f0aa382690323b1c4d7e6bd3dbc8acec7133649"
+evidence = "Five customcampaign calls erase one vector<hero> element. The callee computes the following range at 0x486-byte hero stride, shifts later heroes with assignment 0x9ab44, decrements vector size at +4, destroys the former last element at +0x3da and returns the erased position. BLR at 0x9cc30 precedes the distinct insertion body. Neutral operation label only."
+
+[[functions]]
+symbol = ".mac_vector_hero_field0_init_95a70"
+mac_section = 0
+mac_offset = 0x95a70
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Three customcampaign vector<hero> constructions pass zero in r4 and a new 12-byte vector record in r3. This retained two-instruction body initializes only the record's first word; callers separately zero words at +4 and +8. BLR at 0x95a74 precedes the artifact collector at 0x95a78. Neutral field-initializer label, not a claim that this is the full vector constructor."
+
+[[functions]]
+symbol = ".mac_vector_hero_push_back_9cfb4"
+mac_section = 0
+mac_offset = 0x9cfb4
+mac_size = 0xac
+sha256 = "c44be25dcb4d09f630380fc606b63355bd5cee2e9d58b48d54e2cadb2d87e65b"
+evidence = "Nine customcampaign calls append a hero to vector<hero>. The callee checks size against capacity, grows through 0x9d8c0 when full, copy-constructs a 0x486-byte hero at data + size * 0x486 using 0x6bd4c, increments size at +4 and returns. BLR at 0x9d05c precedes the next generated body. Neutral operation label only."
+
+[[functions]]
+symbol = ".mac_vector_bool_num_words_72244"
+mac_section = 0
+mac_offset = 0x72244
+mac_size = 0x10
+sha256 = "de2c6be1829b6156740f6fe09ddd105cc0fac31c9f434790da4f6865d2946ce9"
+evidence = "The installed CodeWarrior MSL vector<bool>::num_words(size_type) computes (capacity - 1) / 32 + 1. This complete four-instruction body subtracts one, shifts right by five, adds one and returns at 0x72250; the next body begins at 0x72254. Called during TPickANumber cleanup in cmbtmgr and spells. Runtime template operation only, without a Windows helper claim."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_delete_flag_dtor_68da4"
+mac_section = 0
+mac_offset = 0x68da4
+mac_size = 0x64
+sha256 = "f21000100527465cd0945e8398264397ae207c021050942be4294f3ed78d1381"
+evidence = "Seven calls from compiler-generated destruction in CMapHeaderData, CampaignScenarioPreview, SCampaign, ScenarioStruct, SavedGameHeader and game. The body calls 0x68f40 to clear four-byte trivial elements and zero the vector size, frees data at +8, and optionally deletes the vector receiver when the delete flag is positive. BLR at 0x68e04 precedes another vector destructor. The common body does not identify a unique template instantiation."
+
+[[functions]]
+symbol = ".mac_vector_4byte_assign_range_682fc"
+mac_section = 0
+mac_offset = 0x682fc
+mac_size = 0x19c
+sha256 = "11f88a25f3d3de420d9d0ae4d9955a9bc2258403e720fd8f68e6cff134a84b27"
+evidence = "Five constructor/copy sites in campaignbrief, campaignwindow, game and singleselectionwindow pass a vector record plus begin/end pointers. The body computes a four-byte element count, copies or grows the vector and updates size; BLR 0x68494. Runtime range assignment, without a unique element type claim."
+
+[[functions]]
+symbol = ".mac_vector_8byte_stringlike_assign_range_68498"
+mac_section = 0
+mac_offset = 0x68498
+mac_size = 0x1f0
+sha256 = "ae6fecc83d7737ecb099124b42fad716feeaf3d157ca17d446f6ba06e8b6a881"
+evidence = "Campaignbrief copy construction calls this range assignment at 0x64234. It counts eight-byte elements, copies a scalar word and assigns a std::string at +4 through MSL 0x1c094, with string destruction on shrink; BLR 0x68684. Runtime container operation only."
+
+[[functions]]
+symbol = ".mac_tree_string_node_destroy_68688"
+mac_section = 0
+mac_offset = 0x68688
+mac_size = 0x80
+sha256 = "1bf3a53c3142d3fba66dc43e7d8abdab34f356f1dc3637719e17db53cc97c4af"
+evidence = "Campaignbrief generated destructors call this tree-node cleanup at 0x67324 and 0x670fc. It recursively destroys both child links, destroys a string member at +0x14 and deletes the node; BLR 0x68704. Runtime tree cleanup only."
+
+[[functions]]
+symbol = ".mac_tree_copy_assign_68708"
+mac_section = 0
+mac_offset = 0x68708
+mac_size = 0xcc
+sha256 = "3370d8a6a22073293bf10fb8d1aedc61eebe67566a82d5aac76598a4f054f8ee"
+evidence = "Campaignbrief CMapHeaderData copy construction calls this tree assignment at 0x64250. It clears the destination tree, copies the source root and count, then repairs the sentinel/leftmost link; BLR 0x687d0. Runtime tree operation only."
+
+[[functions]]
+symbol = ".mac_vector_mapheader_append_687fc"
+mac_section = 0
+mac_offset = 0x687fc
+mac_size = 0x118
+sha256 = "cfcac5dec27977319428c8975b6ee357571bf169de2d896d159777d3d602f670"
+evidence = "Campaignbrief appends a CMapHeaderData value at 0x658b0 and 0x65b04. The body grows a vector if full, copy-constructs a 0x498-byte element, advances size and returns; BLR 0x68910. Runtime vector append, not a new game helper."
+
+[[functions]]
+symbol = ".mac_vector_delete_flag_dtor_68e6c"
+mac_section = 0
+mac_offset = 0x68e6c
+mac_size = 0x64
+sha256 = "af27b0fa4fe4670dc85a1fdbe9c8cb509d09de77cdc6c12e10408eda89bce0bb"
+evidence = "Campaignbrief generated destruction calls this vector destructor at 0x678f4. It clears through 0x69504, frees data at +8 and optionally deletes the receiver when the flag is positive; BLR 0x68ecc. The element instantiation is not established."
+
+[[functions]]
+symbol = ".mac_vector_8byte_stringlike_clear_68ed0"
+mac_section = 0
+mac_offset = 0x68ed0
+mac_size = 0x70
+sha256 = "35a0ac1400856ff8f7038787977700545ca75ae608890580b64ef654008cc579"
+evidence = "Game container cleanup calls this body at 0xdaa34. It walks eight-byte elements backward, destroys the std::string member at +4 and sets vector size to zero; BLR 0x68f3c. Runtime vector clear only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_clear_68f40"
+mac_section = 0
+mac_offset = 0x68f40
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "The 0x68da4 deleting destructor calls this body; customcampaign and game also call it directly at 0x99aa4 and 0xdb33c. It advances over four-byte trivial elements and zeros vector size; BLR 0x68f74. Runtime vector clear only."
+
+[[functions]]
+symbol = ".mac_tree_clear_68f78"
+mac_section = 0
+mac_offset = 0x68f78
+mac_size = 0x50
+sha256 = "b9726d75337b96ad00c7455a8fc4d79832506295034d8542758bbc9d6d052a67"
+evidence = "Game clears a tree at 0xdb3b4 and 0xdc590. This body destroys nodes through 0x68688, zeroes the root and count, and resets its sentinel link; BLR 0x68fc4. Runtime tree clear only."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6426c"
+mac_section = 0
+mac_offset = 0x6426c
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Two calls during CMapHeaderData copy construction return the data field of a 12-byte vector record at this+8; BLR 0x64270. The specific instantiation is not established."
+
+[[functions]]
+symbol = ".mac_vector_4byte_index_670bc"
+mac_section = 0
+mac_offset = 0x670bc
+mac_size = 0x10
+sha256 = "680dea8ae86a092b429256ac5e937163c668865b1794dcb179c9529761499f3f"
+evidence = "Two CMapHeaderData copy sites pass a vector and index; the body returns data at +8 plus index times four, BLR 0x670c8. Runtime vector element access only."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aad4"
+mac_section = 0
+mac_offset = 0x6aad4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aad8. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aadc"
+mac_section = 0
+mac_offset = 0x6aadc
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aae0. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aae4"
+mac_section = 0
+mac_offset = 0x6aae4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, customcampaign, game and singleselectionwindow call this two-instruction vector data accessor during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aae8. Neutral instantiation label."
+
+[[functions]]
+symbol = ".mac_vector_data_accessor_6aaec"
+mac_section = 0
+mac_offset = 0x6aaec
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "Campaignwindow, game and singleselectionwindow call this two-instruction vector data accessor repeatedly during CMapHeaderData copies; it returns this+8 and ends at BLR 0x6aaf0. Neutral instantiation label."
+[[functions]]
+symbol = ".mac_file_adapter_ctor_277b60"
+mac_section = 0
+mac_offset = 0x277b60
+mac_size = 0x10
+sha256 = "68d01920fe203031e2c4c21ef03c5efd3201b5992053eccfbd90e5856460bca9"
+evidence = "Mac-only file adapter construction zeros the state byte at +0 and handle at +4, then returns at 0x277b6c before the deleting destructor starts at 0x277b70. High-score open constructs its stack adapter at 0x10a7ec, then opens a pathname through 0x277bc4. Windows uses CRT _open directly; this neutral label does not assert a shared source helper or original class spelling."
+
+[[functions]]
+symbol = ".mac_file_adapter_deleting_dtor_277b70"
+mac_section = 0
+mac_offset = 0x277b70
+mac_size = 0x54
+sha256 = "e41dbc90adeae0724916616d9229a242f7065f4d21d0a8e5d7d6334f09d1e4ea"
+evidence = "Mac-only file adapter deleting destructor checks this, calls close at 0x277dd0, conditionally calls operator delete 0x268b2c using its short delete flag, and returns this at BLR 0x277bc0 before open starts. High-score open invokes it on a stack adapter at 0x10a85c; game, sound, preference and selection callers repeat it. Runtime/platform identity only."
+
+[[functions]]
+symbol = ".mac_file_adapter_open_path_277bc4"
+mac_section = 0
+mac_offset = 0x277bc4
+mac_size = 0x148
+sha256 = "8d0877974edeb11c831d26a09ce1958101393d115e0bd081cda3fb256746f726"
+evidence = "Mac-only file adapter open takes an adapter at r3 and pathname at r5, initializes file state, converts the path and opens through Mac glue 0x2a1a60; success sets state byte +0, failures close at 0x277dd0, and BLR 0x277d08 precedes a separate entry at 0x277d0c. High-score open passes its formatted score pathname at 0x10a820; sound, preferences, LOD, game and selection callers use the same adapter. Windows uses CRT or registry operations, so this is not a shared game helper."
+
+[[functions]]
+symbol = ".mac_file_adapter_close_277dd0"
+mac_section = 0
+mac_offset = 0x277dd0
+mac_size = 0x58
+sha256 = "180c37b62fdc6304d6bac4161901dff4f315bfa1103a1baaee04f82a97cc2dcb"
+evidence = "Mac-only file adapter close checks the state byte at +0, calls adjacent handle-close routine 0x277e8c when handle at +4 is nonzero, then zeros both fields and returns zero. High-score open calls it at 0x10a850 before the stack adapter destructor; the deleting destructor 0x277b70 calls it too. BLR 0x277e24 precedes the separate open-handle entry 0x277e28. Platform identity only."
+
+[[functions]]
+symbol = ".mac_file_adapter_open_handle_277e28"
+mac_section = 0
+mac_offset = 0x277e28
+mac_size = 0x64
+sha256 = "16e1d9304f8c00a7eba5ac15dddba238baabea8d1e2bd89d32764ca55e935938"
+evidence = "Mac-only file adapter operation checks handle +4, otherwise passes its file spec at +8 and output reference at +2 to Mac glue 0x2a1ac0, translates the result through 0x2781ec and sets handle +4 to one on success. High-score open calls it at 0x10a830 and reads only on a zero result. BLR 0x277e88 precedes the adjacent handle-close entry 0x277e8c. This is platform file access, not a shared gameplay helper."
+
+[[functions]]
+symbol = ".mac_file_adapter_read_277f10"
+mac_section = 0
+mac_offset = 0x277f10
+mac_size = 0x68
+sha256 = "551d20de66f698e8a9ef90b0b12f50259028a2fac77ab872b0dbf35693f38962"
+evidence = "Mac-only file adapter read takes a buffer at r4 and requested length at r5, passes file reference +2, buffer and in/out length to Mac glue 0x2a1778, translates the result through 0x2781ec and reports short reads with error 0x14. High-score open calls it at 0x10a848 for its 0x898-byte score table; game, LOD, sound and preferences also read through it. BLR 0x277f74 precedes the next write-like entry 0x277f78. Platform identity only."
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_push_back_89ae8"
+mac_section = 0
+mac_offset = 0x89ae8
+mac_size = 0x98
+sha256 = "08a5eea7d6d3c840030b7f75f9cf3b52b51fc36e8ab9be1a65b609592592a03a"
+evidence = "Sixteen direct calls from creature_bank, seerhut and victorylossconditions append four-byte artifacts or IDs to authored vectors. The body grows through 0x89b80 when size equals capacity, copies one word to data + 4*size and increments size; BLR 0x89b7c. This common runtime operation does not identify one template instantiation."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_grow_89b80"
+mac_section = 0
+mac_offset = 0x89b80
+mac_size = 0xf0
+sha256 = "dff5e05296154baf457dbffc29bad5e3b6aad5d52b16e8743a05918e3bd988b1"
+evidence = "The 0x89ae8 append calls this body when requested capacity exceeds current capacity; victorylossconditions also calls it for reserve. It allocates four bytes per element, copies old values, swaps storage and destroys the temporary vector; BLR 0x89c6c. Runtime growth only."
+
+[[functions]]
+symbol = ".mac_vector_capacity_swap_89c70"
+mac_section = 0
+mac_offset = 0x89c70
+mac_size = 0x14
+sha256 = "8f40617fcb4aa8a2033a807bec6b0c31e6f68135759f5a3169c02176969ad0bf"
+evidence = "The 0x89b80 growth body calls this five-instruction helper to exchange the first capacity word of two vector records; BLR 0x89c80. Runtime field swap only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_delete_flag_dtor_89c84"
+mac_section = 0
+mac_offset = 0x89c84
+mac_size = 0x64
+sha256 = "cd63a931b5036c1098c0603a292194b698bb327953ae61bf2183d586b5c8d6a4"
+evidence = "Seventeen generated/container cleanup calls across game, mapcell, seerhut and victorylossconditions. The body clears through 0x89ce8, frees data at +8 and optionally deletes the vector receiver for a positive flag; BLR 0x89ce4. Runtime destructor only."
+
+[[functions]]
+symbol = ".mac_vector_4byte_trivial_clear_89ce8"
+mac_section = 0
+mac_offset = 0x89ce8
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "The 0x89c84 destructor calls this four-byte-element clear body; mapcell also calls it directly. It walks trivial elements and resets size to zero; BLR 0x89d1c. Runtime clear only."
+
+[[functions]]
+symbol = ".mac_platform_message_dialog_20f0b0"
+mac_section = 0
+mac_offset = 0x20f0b0
+mac_size = 0x5c
+sha256 = "adaac66f347d0cefa8845b880f605b814a4b754f20b4c402b12bdc73fdd83ae5"
+evidence = "Nine callers in game, kb, mapcell and smackmgr correspond to authored Windows MessageBox error paths: invalid generator, shutdown, map-object read errors and video archive failures. This Mac wrapper accepts the message and title pointers, constructs a resource-backed dialog argument using ID 1001 through 0x26adc0, then passes both strings to common display routine 0x269014; BLR 0x20f108. Platform UI helper, not a game-source inlining boundary or an MSL bounds/exception path."
+
+[[functions]]
+symbol = ".mac_ai_creature_vector_delete_flag_dtor_29ba4"
+mac_section = 0
+mac_offset = 0x29ba4
+mac_size = 0x64
+sha256 = "9f062984f64024b83513f11d82401e50af949facd22159d762052a9e9ea7105d"
+evidence = "Fourteen calls in five ai_combat/ai_player functions destroy stack type_AI_combat_data objects, whose first member is m_creatures. The generated type_AI_combat_data destructor at 0x28a7c calls this body on that first member; this callee is the MSL vector<type_monster_data> deleting-flag destructor, not an authored game helper. It clears through 0x2a9e8, frees vector data at +8 if present, optionally deletes the vector receiver for a positive flag, and returns at 0x29c04; the next body starts at 0x29c08. All observed stack callers pass flag zero."
+
+[[functions]]
+symbol = ".mac_ai_creature_vector_clear_2a9e8"
+mac_section = 0
+mac_offset = 0x2a9e8
+mac_size = 0x38
+sha256 = "1091d49071992676332417731545304aa3855d2ca814f834b1a1da883419780e"
+evidence = "The reviewed 0x29ba4 vector destructor calls this clear body. It computes data + size * 0x40, walks the 64-byte Mac type_monster_data elements, then zeros vector size at +4. BLR at 0x2aa1c and the next entry begins at 0x2aa20. Generated MSL container cleanup only."
+[[functions]]
+symbol = ".mac_vector_pathcell_clear_3b10c"
+mac_section = 0
+mac_offset = 0x3b10c
+mac_size = 0x3c
+sha256 = "22f31a0f4089998b18a0a9311dae9032438eb312089d0de882b34857dddcb35f"
+evidence = "A vector<pathCell> clear routine: this+4 is the size, this+8 is data, and the loop stride is 0x1e, the verified pathCell size. It resets size to zero and returns at 0x3b144; next function begins 0x3b148. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_vector_pathcell_delete_flag_dtor_3b148"
+mac_section = 0
+mac_offset = 0x3b148
+mac_size = 0x64
+sha256 = "3db6059398151f260cd046fbd5132292eedb7f968347d2955ab2fa06800f0cf3"
+evidence = "Eleven ai_player/findpath callers reach this scalar-deleting vector<pathCell> destructor. It calls the 0x3b10c clear routine, frees this+8, conditionally frees this when the signed-short deleting flag is positive, and returns this. Final BLR 0x3b1a8; next prologue 0x3b1ac. Runtime template identity only."
+
+[[functions]]
+symbol = ".mac_pathcell_empty_dtor_c5528"
+mac_section = 0
+mac_offset = 0xc5528
+mac_size = 0x4
+sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "One-instruction BLR called by the vector<pathCell>::pop_back path in searchArray::seedPosition. The adjacent next prologue begins at 0xc552c. Element destruction is trivial; this is a generated/runtime identity, not a recovered game helper body."
+
+[[functions]]
+symbol = ".mac_msl_player_vector_index_1e788"
+mac_section = 0
+mac_offset = 0x1e788
+mac_size = 0x10
+sha256 = "096589c39705f67f4fb8c92e01c22b10fcf6a5118faf144c1217fb8c7f7a340d"
+evidence = "advManager::townGate calls this with the game player vector and an index. It multiplies the index by the verified Mac playerData stride 0x15c, adds the vector data pointer at +8, and returns. BLR 0x1e794; next body starts 0x1e798. MSL vector element access, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_data_slot_1b43a4"
+mac_section = 0
+mac_offset = 0x1b43a4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "town::destroyExtraCapitol calls this vector accessor at 0x1b4290 while traversing g_game's towns. It returns this+8, the address of the vector data pointer; BLR 0x1b43a8, next body 0x1b43ac. MSL container access only."
+
+[[functions]]
+symbol = ".mac_msl_vector_data_slot_1b88b4"
+mac_section = 0
+mac_offset = 0x1b88b4
+mac_size = 0x8
+sha256 = "8f2d4d81c30f59f9321bbd9c7fbedd6895ae81fcc806351a7dce8ba897a8f0f1"
+evidence = "TTownGateWindow::updateTownLocator and townManager::setupTown/setCommandAndText call this two-instruction accessor. It returns this+8, the vector data-pointer slot; BLR 0x1b88b8, next body 0x1b88bc. This is an MSL container accessor rather than a game helper."
+
+[[functions]]
+symbol = ".mac_implicit_hero_copy_assign_9ab44"
+mac_section = 0
+mac_offset = 0x9ab44
+mac_size = 0x3b0
+sha256 = "31f4136f39a7bff221c44ce665c998aba27394f7b9091156acde95c5f4756130"
+evidence = "CTradeRequestMsg and CHeroUpdateMsg constructors each call this body twice to copy their left/right hero snapshots; vector<hero>::erase also shifts elements through it. It copies the Mac hero's fields through the final word at +0x482, including nontrivial members, then returns at 0x9aef0. The next body begins at 0x9aef4. Compiler-generated hero copy assignment, not a separately authored helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_bool_test_99fb8"
+mac_section = 0
+mac_offset = 0x99fb8
+mac_size = 0x30
+sha256 = "ed2ec29f580125dca3985607ee80e2012ed747eb6bb776b9217157a69fa63547"
+evidence = "TPickANumber::pick, seer-hut loading and RMG bit-vector consumers call this body with a container and bit index. It reads a word from the data pointer at +8, extracts index modulo 32 and returns a normalized bool. BLR 0x99fe4; next body 0x99fe8. MSL vector<bool> access, not a game-source helper."
+
+[[functions]]
+symbol = ".mac_msl_vector_bool_set_e73b8"
+mac_section = 0
+mac_offset = 0xe73b8
+mac_size = 0x48
+sha256 = "ce3aa435bdb095c75a00c07734df1c7721bb9a4cfab79be05fa1567fe378a331"
+evidence = "TPickANumber::pick and the same seer-hut/RMG bit-vector consumers pass a container, index and boolean to this body. It selects the word at the data pointer +8 and sets or clears the indexed bit. The two return arms end at 0xe73e4/0xe73fc; next body begins at 0xe7400. MSL vector<bool> mutation only."
+
+[[functions]]
+symbol = ".mac_msl_widget_vector_begin_20bb2c"
+mac_section = 0
+mac_offset = 0x20bb2c
+mac_size = 0x8
+sha256 = "59fdcae5f48fe0f3f53325d0a334381138490d2632049b646d44c2cb75668e68"
+evidence = "heroWindow::findWidgetPtr calls this while comparing its reverse traversal with m_widgets.begin(). It returns the vector's data pointer at +8; BLR 0x20bb30, followed by the end accessor. The ordinary source already names begin()."
+
+[[functions]]
+symbol = ".mac_msl_widget_vector_end_20bb34"
+mac_section = 0
+mac_offset = 0x20bb34
+mac_size = 0x14
+sha256 = "fa30d5391deb4aa99a4fede5e1ba93a48ef5abd80eb5ea57c9d63714d520a5a1"
+evidence = "heroWindow::findWidgetPtr first calls this for m_widgets.end(). It adds vector size at +4 times four to the data pointer at +8 and returns; BLR 0x20bb44, next body starts 0x20bb48. The ordinary source already names end()."
+
+[[functions]]
+symbol = ".strcmp"
+mac_section = 0
+mac_offset = 0x28e2f8
+mac_size = 0x34
+sha256 = "a7b170e6778aa58df0c87ff80e92e9b5ba6ad4a9647bb00ff5778455d6a2fcaa"
+evidence = "Border, hero and single-selection callers compare two C strings here. The routine advances both pointers one byte at a time, returns zero on equal NUL terminators and otherwise returns the byte difference; BLR at 0x28e328. C runtime strcmp, not an authored helper."
+
+[[functions]]
+symbol = ".srand"
+mac_section = 0
+mac_offset = 0x28e048
+mac_size = 0x8
+sha256 = "bf0bdc176797df13095f3ec65f646acb0e052eba61ecc1aeb980beeffccd4814"
+evidence = "Mac sRand calls this routine with its integer seed. The two-instruction body stores that seed to its TOC global at r2-0x1b90 and returns at 0x28e04c; next code begins at 0x28e050. C runtime srand, not a game helper."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_981a8"
+mac_section = 0
+mac_offset = 0x981a8
+mac_size = 0x58
+sha256 = "7b8ca06d3eb7d8f7fd434c3637987996659005c6ee15d7d6acaf73fe87a12be0"
+evidence = "Mac game::load reaches this generated cleanup wrapper repeatedly. It calls subobject destructor 0x6b8c4 with deleting flag zero, then conditionally calls scalar delete 0x268b2c for a positive flag. BLR 0x981fc; next body starts 0x98200. Generated lifetime cleanup, not an authored helper."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_98264"
+mac_section = 0
+mac_offset = 0x98264
+mac_size = 0x58
+sha256 = "341c8ca7a164c1442a8ad5bbc403a338da5dce9e0c2c95483f538079c6cdbf8f"
+evidence = "The second repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b860 with flag zero, then conditionally frees this when the signed-short deleting flag is positive. BLR 0x982b8; next body 0x982bc. Compiler-generated destructor path only."
+
+[[functions]]
+symbol = ".mac_generated_deleting_dtor_98320"
+mac_section = 0
+mac_offset = 0x98320
+mac_size = 0x58
+sha256 = "7d4d2cb7e9d5ce93ba967dad9ee28603deb6941a88e2c40f923d415c5556afdc"
+evidence = "The third repeated Mac game::load cleanup wrapper calls subobject destructor 0x6b7fc with flag zero and conditionally frees this through scalar delete. BLR 0x98374; next body 0x98378. Compiler-generated destructor path only."
+
+[[functions]]
+symbol = ".mac_crt_strcat_26afa4"
+mac_section = 0
+mac_offset = 0x26afa4
+mac_size = 0x2c
+sha256 = "2d84d5856e995e0cd8e4110a9b4e312721c575ec5120eb8874310b87215246dc"
+evidence = "Mac bottom-view, multiplayer and quick-window callers append C strings through this routine. It advances r3 to the destination NUL, then copies r4 through its terminator and returns at 0x26afcc; strlen begins at 0x26afd0. C runtime strcat, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_crt_abs_2887a0"
+mac_section = 0
+mac_offset = 0x2887a0
+mac_size = 0x10
+sha256 = "224cb73d9c41a3021c6b869de415325429a4b38f620242ae322b7dd389971b2d"
+evidence = "AI combat, combat-manager and command callers pass a signed integer in r3. This body returns nonnegative inputs directly and negates negative inputs before BLR at 0x2887ac. C runtime abs, not an authored combat helper."
+
+[[functions]]
+symbol = ".mac_vector_word_deleting_dtor_e924c"
+mac_section = 0
+mac_offset = 0xe924c
+mac_size = 0x64
+sha256 = "b3eb69471945de777b292342c82a1ce49e01beb827bca93375554097affb86d5"
+evidence = "Game/playerData destruction, Mac oldmain and town-portal search call this generated vector destructor. It clears the vector through 0xe9214, frees its backing store when present, and frees the vector object only for a positive deleting flag. BLR at 0xe92ac; the next generated destructor starts at 0xe92b0. Container lifetime, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_ctor_b931c"
+mac_section = 0
+mac_offset = 0xb931c
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Events and seer-hut callers construct a local twelve-byte vector, passing its initial backing pointer in r4. The complete body stores r4 into its receiver's first word and returns at 0xb9320; the following body begins at 0xb9324. Compiler library construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_deleting_dtor_be6e4"
+mac_section = 0
+mac_offset = 0xbe6e4
+mac_size = 0x64
+sha256 = "867430bb909447398822ff361810df0bdfe9bb5bcde4ca9e60f6c0eb13c62734"
+evidence = "Events and seer-hut callers destroy the same local vector built through 0xb931c. The body calls its element cleanup at 0xbecf8, frees the backing pointer at +8, and frees the receiver only for a positive deleting flag. BLR at 0xbe744; the next destructor starts at 0xbe748. Compiler library lifetime, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_word_copy_ctor_469b4"
+mac_section = 0
+mac_offset = 0x469b4
+mac_size = 0x54
+sha256 = "c2c749726edad478b0a84e8c2e0d661385cb1c8771af4df9b0fa9b2cf7c8b6ba"
+evidence = "Twenty-four Mac AI tactical call sites construct four copies at a time. The body zeros the receiver's three vector words, takes the source vector's size and backing pointer from r4, then delegates the element copy to 0x46f54. BLR at 0x46a04; the next body starts at 0x46a08. Library vector copy construction, not an authored combat helper."
+
+[[functions]]
+symbol = ".mac_set_iterator_ctor_768e0"
+mac_section = 0
+mac_offset = 0x768e0
+mac_size = 0x8
+sha256 = "fab91cd52eeb64feaaba001f6898f1d230704b8e6d1b10bb40d46f6fdadba847"
+evidence = "Eagle Eye call sites construct one-word iterator temporaries from a set position. The complete body copies r4 to the receiver and returns at 0x768e4; adjacent 0x768e8 returns an object's field at +0xc. This is a container iterator constructor, not a combat game helper."
+
+[[functions]]
+symbol = ".strtok"
+mac_section = 0
+mac_offset = 0x28e3f8
+mac_size = 0x130
+sha256 = "72dea29796fc2ff44b45525424cdf001546030fd170ed888e7e165f5e3d455a4"
+evidence = "Save-game and selection callers pass a mutable pathname and delimiter string as their authored strtok call. The callee builds a delimiter bitset, retains its current input through the TOC for null-first-argument calls, and ends at BLR 0x28e524. C library tokenization, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_network_host_flag_211154"
+mac_section = 0
+mac_offset = 0x211154
+mac_size = 0x10
+sha256 = "3e8a4f2dfa6574eb2fbb026e4a464c4e4bbc91e428e919ea664793c6835bd464"
+evidence = "Six network callers load g_dPlay before calling this entry. TSingleSelectionWindow::isHost at 0x182650 uses its result after the g_remoteOn guard, matching the source's platform host query. The Mac callee ignores the receiver and reads byte +1 through a separate TOC global at 1+0x553560; remoteCleanup also calls it during Mac-only host cleanup. BLR at 0x211160 and the next entry at 0x211164 bound the four-instruction body. This is Mac network state, not a missing shared game helper."
+
+[[functions]]
+symbol = ".mac_selection_preview_vector_dtor_187ccc"
+mac_section = 0
+mac_offset = 0x187ccc
+mac_size = 0x7c
+sha256 = "f16553317c21b649f9ceb7b1470e06124c0dd35d2c781b00ab6698d8e0468e61"
+evidence = "Eight calls in five selection-window bodies destroy a vector of 0xc08-byte records. The loop calls SavedGameHeader and CampaignScenarioPreview destructors within each record, walks backward from the vector's size and backing pointer, then clears its size at +4. BLR at 0x187d44 precedes the deleting wrapper at 0x187d48. This is generated container cleanup for authored vector lifetimes."
+
+[[functions]]
+symbol = ".mac_bitset_144_default_ctor_5afcc"
+mac_section = 0
+mac_offset = 0x5afcc
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "makeArtifactComponentMask constructs its source std::bitset<144> through this body; campaign scenario and map loading callers also construct five-word bitsets. It zeros receiver words +0,+4,+8,+12,+16 and returns at 0x5afe4 before the next entry. MSL template construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_bitset_145_default_ctor_99f00"
+mac_section = 0
+mac_offset = 0x99f00
+mac_size = 0x1c
+sha256 = "e12f2d6efa51301180c25e54c1d8db558804318916e35ff87770c7d1c05f78b8"
+evidence = "The Mac getRandomMonster call constructs the source std::bitset<CREATURE_CATAPULT>, whose bound is 145; campaign scenario callers construct a five-word crossover creature bitset. The callee zeros receiver words +0,+4,+8,+12,+16 and returns at 0x99f18. MSL template construction, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_bitset_144_count_99f48"
+mac_section = 0
+mac_offset = 0x99f48
+mac_size = 0x70
+sha256 = "dd0b67d26ddb78927c05c4069d7cd67c1fe86c0695b9c6532bd2c4fbbd862b81"
+evidence = "Campaign-start and two artifact-victory callers use std::bitset<144>::count on the source crossover or combination-artifact mask. This body iterates five 32-bit words, calls the word popcount helper at 0x9d3e0, sums the counts, and returns at 0x99fb4 before the next body. MSL bitset operation, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_varargs_format_wrapper_28df60"
+mac_section = 0
+mac_offset = 0x28df60
+mac_size = 0x2c
+sha256 = "a336b8ca2bd39e4876ab101705c0be7fd0eee797954aba20c2f4cde0e852092c"
+evidence = "formatString and five CChatManager varargs callers pass destination, format and arguments here. The wrapper shifts the format/argument registers, sets the length argument to -1, and calls the bounded formatter at 0x28decc. BLR at 0x28df88 bounds the body. C-library formatting, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_timer_refresh_20f084"
+mac_section = 0
+mac_offset = 0x20f084
+mac_size = 0x2c
+sha256 = "5d277b818d19d32222750656008f4108ba37f6d65c27f1f8fb3d663a632f6f41"
+evidence = "Save-game transfer, pollSound, window processing and selection tick callers refresh Mac time here. It passes a TOC global to 0x2778f0, whose body calls Mac time glue at 0x2a1430 and scales to milliseconds, then stores the returned value through a second TOC global. BLR at 0x20f0ac bounds the wrapper. Platform timing, not a shared game helper."
+
+[[functions]]
+symbol = ".mac_event_vector_deleting_dtor_be748"
+mac_section = 0
+mac_offset = 0xbe748
+mac_size = 0x64
+sha256 = "59d4586ccd935fd5ebed5476f66eaf86993472202d3b5dd8049832f6e7d7f87e"
+evidence = "Exchange-spells and map-cell event readers call this deleting vector destructor for local containers. It calls element cleanup at 0xbed64, frees backing storage at +8 when present, and frees the receiver only for a positive deleting flag. BLR at 0xbe7a8 precedes the next body. Generated container lifetime, not a source helper omission."
+
+[[functions]]
+symbol = ".mac_vector_word_clear_e9214"
+mac_section = 0
+mac_offset = 0xe9214
+mac_size = 0x38
+sha256 = "71fd8d5e7c39a167a5e408094504616055dadfbd71eb5b81238761e48087dab7"
+evidence = "Ten game calls clear four-byte-element vectors, including player shipyards and map-loading containers. The callee derives end from size+backing pointer, performs the trivial element walk, then stores zero to size at +4. BLR at 0xe9248 bounds the body. MSL vector::clear, not an authored game helper."
+
+[[functions]]
+symbol = ".mac_vector_word_append_e8010"
+mac_section = 0
+mac_offset = 0xe8010
+mac_size = 0xa0
+sha256 = "3034a3d0f37c5914a490726acdc4ca483a0dd23f3733ea5ca8c42bb5221b813f"
+evidence = "Eight calls from game setup, event randomization, shipyard claims and path search append four-byte values to vectors. The callee checks size against capacity, grows through 0xeb0ac when full, then copies an element into the backing pointer and advances size. BLR at 0xe80ac bounds the body. MSL vector append, not an authored game helper."
+[[functions]]
+symbol = ".mac_bitset_144_any_107450"
+mac_section = 0
+mac_offset = 0x107450
+mac_size = 0x34
+sha256 = "9774f42faf3208d784cbd166e934be208ed49c6b8a64f5fee012bf5ec5bdc581"
+evidence = "hero::heroFn004DBF30 calls this five-word bitset predicate at 0xf85e4. It scans the five 32-bit words, returns true on the first nonzero word, otherwise false. BLR at 0x107480; the inverse predicate starts at 0x107484. The authored source calls std::bitset<144>::any; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_144_none_107484"
+mac_section = 0
+mac_offset = 0x107484
+mac_size = 0x34
+sha256 = "a6b14268bd45f401ddb6644fbf936d9677ac4eedfc71096c816c6121fc147859"
+evidence = "hero::heroFn004DBE80 calls this five-word bitset predicate at 0xf8498. It scans the five 32-bit words, returns false on the first nonzero word, otherwise true. BLR at 0x1074b4; count starts at 0x1074b8. The authored source calls std::bitset<144>::none; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_19_count_1074b8"
+mac_section = 0
+mac_offset = 0x1074b8
+mac_size = 0x68
+sha256 = "5cd2c538396d49080e0c84d54ee4d56af3b20a38d2139b93a398288f5d1c7501"
+evidence = "hero::heroFn004E2550 calls this one-word count at 0x1032a4 and 0x1033e4. It invokes the following bit-count routine once and returns the sum. BLR at 0x10751c; its callee starts at 0x107520. The authored source calls std::bitset<19>::count; this is an MSL library identity only."
+
+[[functions]]
+symbol = ".mac_bitset_word_count_107520"
+mac_section = 0
+mac_offset = 0x107520
+mac_size = 0x60
+sha256 = "456d2a4dee15284505603ae001aeb0d1105e9b57fc4d8749a9b5847bcaf3407a"
+evidence = "The bitset count routine at 0x1074b8 calls this word popcount at 0x1074ec. It counts set bits four at a time through a nibble switch until the word is zero. BLR at 0x10757c; the next independent prologue starts at 0x107580. MSL library identity only."
+
+[[functions]]
+symbol = ".mac_msl_string_substr_81724"
+mac_section = 0
+mac_offset = 0x81724
+mac_size = 0xf8
+sha256 = "bb42606b02b9def85d29f0ab9e34d05cefc5b7c1df7dbc4793f082037e3aef37"
+evidence = "Seven direct calls from TCombatWindow::combatMessage, TSpellbookWindow::getSpellDescription and textEntryWidget::draw/setupDisplayString correspond to authored std::string::substr calls. The callee bounds the requested start/count by the source length and forwards the selected range to the MSL string constructor at 0x819c4. BLR at 0x81818 precedes an independent string find body at 0x8181c. MSL library identity only."
+
+[[functions]]
+symbol = ".mac_vector_campaign_hero_pool_assign_range_6b0b8"
+mac_section = 0
+mac_offset = 0x6b0b8
+mac_size = 0x29c
+sha256 = "fffea6bee07a19342a6a83817da4253c884f675ad7d8900d9e831ca483cafa5d"
+evidence = "SCampaign memberwise copies in campaignwindow, game and singleselectionwindow pass the +0x30 vector and begin/end pointers. This body counts 12-byte outer elements, assigns or grows the vector and ends at BLR 0x6b350 before the next assignment entry. Generated vector range assignment, not an authored helper."
+
+[[functions]]
+symbol = ".mac_vector_campaign_artifact_pool_assign_range_6b354"
+mac_section = 0
+mac_offset = 0x6b354
+mac_size = 0x29c
+sha256 = "5fec5e2ccacd68538941949acb4ce97612ef38b587b1f9033f2f067fc7f058a6"
+evidence = "The same four SCampaign copy sites pass the +0x3c vector and begin/end pointers. This body counts 12-byte outer elements, assigns or grows the vector and ends at BLR 0x6b5ec before the next assignment entry. Generated vector range assignment, not an authored helper."
+
+[[functions]]
+symbol = ".mac_vector_campaign_map_score_assign_range_6b5f0"
+mac_section = 0
+mac_offset = 0x6b5f0
+mac_size = 0x20c
+sha256 = "a81fb0f00e47b73ace78bc0c5a5c2588fba73e98808cdf70b07717181248aee1"
+evidence = "The same four SCampaign copy sites pass the +0x48 vector and begin/end pointers. This body counts 20-byte MapScore elements, assigns or grows the vector and ends at BLR 0x6b7f8 before the next function. Generated vector range assignment, not an authored helper."

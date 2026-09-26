@@ -288,6 +288,7 @@ public:
 
     std::string skillRequirementText(
         const signed char (&skills)[4]);
+    void showSkillRequirementsDialog(const char* text, const signed char* skills);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void doProposalDialog(hero* currentHero);
@@ -372,6 +373,8 @@ public:
     virtual void setDefaultText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    void showArtifactProgress(const char* text,
+                              const std::vector<TArtifact>& artifacts);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.

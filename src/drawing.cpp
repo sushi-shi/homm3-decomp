@@ -187,7 +187,7 @@ static std::string getEstimatedDamage(const army* currentArmy,
     long high = currentArmy->m_monInfo.m_damageHighBound * currentArmy->m_numTroops;
     std::string result;
 
-    if (currentArmy->m_spellInfluence[41] || currentArmy->m_spellInfluence[42]) {
+    if (currentArmy->getSpellTime(41) || currentArmy->getSpellTime(42)) {
         low = high = currentArmy->computeBaseDamage(1);
     } else if (currentArmy->m_creatureType == CREATURE_BALLISTA) {
         hero* controller = currentArmy->getController();
@@ -499,10 +499,8 @@ void combatManager::updateCombatArea()
         g_windowManager->updateScreen(
             g_combatDrawLimits.m_minX,
             g_combatDrawLimits.m_minY,
-            g_combatDrawLimits.m_maxX
-                - g_combatDrawLimits.m_minX + 1,
-            g_combatDrawLimits.m_maxY
-                - g_combatDrawLimits.m_minY + 1);
+            g_combatDrawLimits.width(),
+            g_combatDrawLimits.height());
     }
 }
 
@@ -1039,7 +1037,7 @@ void combatManager::drawFrame(bool update,
         for (column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
             hexcell& cell = m_cells[getHexIndex(column, row)];
             if (cell.m_attributes & hexcell::obstacleOrigin) {
-                TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+                TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
                 if (obstacle.m_shape->m_underlay) {
                     if (obstacle.m_isVisible
                             || (obstacle.m_owner == m_currentSide
@@ -1179,7 +1177,7 @@ void combatManager::drawObstacleAt(int hexIndex)
 {
     hexcell& cell = m_cells[hexIndex];
     if (cell.m_attributes & hexcell::obstacleOrigin) {
-        TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+        TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
         if (!obstacle.m_shape->m_underlay) {
             if (obstacle.m_isVisible
                     || (obstacle.m_owner == m_currentSide
@@ -1540,19 +1538,18 @@ int combatManager::drawCreatureAndHeroSubwindows()
         m_combatWindow->m_heroSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     // Complete adds four creature-panel tests at 0x49569b..0x495710.
-    // DC 0x85f1c calls only the two hero-panel IsShown accessors; neither
-    // its procedure roster nor its (forward-only) creature-panel type
-    // proves the reconstruction's additional creature accessor.
-    if (m_combatWindow->m_creatureSubWindows[0]->m_shown)
+    // Mac checks the shown byte for all six panels in the same shape;
+    // the creature accessor is our name for the additional boundary.
+    if (m_combatWindow->m_creatureSubWindows[0]->isShown())
         m_combatWindow->m_creatureSubWindows[0]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[1]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[1]->isShown())
         m_combatWindow->m_creatureSubWindows[1]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[2]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[2]->isShown())
         m_combatWindow->m_creatureSubWindows[2]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[3]->m_shown)
+    if (m_combatWindow->m_creatureSubWindows[3]->isShown())
         m_combatWindow->m_creatureSubWindows[3]->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     return 1;
@@ -1561,7 +1558,7 @@ int combatManager::drawCreatureAndHeroSubwindows()
 VA(0x00495730, 0x73)  // dc 0x85f70
 int combatManager::drawObstacle(const hexcell& cell)
 {
-    TObstacle& obstacle = m_obstacles[cell.m_obstacleIndex];
+    TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
     int yOffset = 42 * (obstacle.m_shape->m_minRow - 1);
     return drawSpriteObject(
         obstacle.m_sprite,
@@ -1797,7 +1794,7 @@ void combatManager::cycleCombatScreen()
     int selectorGroup;
     int selectorIndex;
     if (m_lastMovedArmy) {
-        selectorGroup = m_lastMovedArmy->m_combatSide;
+        selectorGroup = m_lastMovedArmy->getOwningSide();
         selectorIndex = m_lastMovedArmy->m_bitIndex;
     } else {
         selectorGroup = -1;

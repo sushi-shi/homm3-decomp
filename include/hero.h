@@ -219,19 +219,9 @@ struct type_artifact {
 public:
     TArtifact m_artifactId;
     int m_extra;
-    // DC Hero.h:211 stores the artifact argument at +0, then line 212 stores
-    // the -1 sentinel at +4. Retail value_of_town preserves that order in
-    // its register allocation even though the eventual by-value pushes are
-    // ordered by record layout.
-    // Complete's generated offering constructor emits the member-initializer
-    // store order of a distinct default constructor. Dreamcast instead calls
-    // the TArtifact overload with -1 here, so this boundary is versioned.
-    type_artifact()
-    {
-        m_extra = -1;
-        m_artifactId = ARTIFACT_NONE;
-    }
-    explicit type_artifact(TArtifact id)
+    // DC Hero.h:211-212 and the Windows/Mac sacrifice-window constructors store
+    // the artifact ID before the -1 payload, including default construction.
+    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
     {
         m_artifactId = id;
         m_extra = -1;
@@ -735,6 +725,9 @@ public:
     // DC hero.cpp:1862 has only the experience parameter, no receiver;
     // retail GiveExperience expands the same receiver-independent helper.
     static int getLevel(int experience);
+    // Mac retains one predicate body at 0xf66a0, called by both level-up paths.
+    // Its original source spelling is unknown.
+    bool isLevelUpCampaignOverride() const;
     // 0x4da720, hero.cpp:2147 in the Dreamcast roster (dc 0xcd17c) - the
     // no-argument level-up check advManager::TownEvent runs after each
     // combat it starts. Declared only; the body is not reconstructed and
@@ -1068,7 +1061,7 @@ public:
     {
         return m_backpack[slot];
     }
-    // E:\gamedcs\Hero.h:976. Dreamcast keeps this const header wrapper as
+    // E:\gamedcs\Hero.h:976, dc 0x2e60. Dreamcast keeps this const header wrapper as
     // a separate public; Complete folds it at each use into the retail-proven
     int getExperienceIncrement() const
     {
@@ -1095,14 +1088,14 @@ public:
     // DC hero.h:991 (0x37dc4) and the class signature record the const
     // long-returning duration accessor used by AI reward valuation.
     long getValueOfDuration() const { return m_valueOfDuration; }
-    long getValueOfKnowledge() const
+    __forceinline long getValueOfKnowledge() const
     {
         return m_valueOfKnowledge;
     }
     // Dreamcast hero.h:1001/1006. Retail folds both one-field accessors into
     // get_skill_value; retaining the source boundaries still emits the direct
     // loads proved at +0x47e/+0x486.
-    long getValueOfPower() const
+    __forceinline long getValueOfPower() const
     {
         return m_valueOfPower;
     }

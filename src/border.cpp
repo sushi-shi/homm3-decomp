@@ -192,8 +192,10 @@ int coloredBorderFrame::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5e6fc.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
         case WIDGET_SET_COLOR:
@@ -292,8 +294,8 @@ void bitmapBorder::setImage(const char* bitmapName)
 VA(0x00450520, 0x2D)  // dc 0x549ec
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
-    ::setPlayerPaletteColors(m_image->m_p16.m_colors.m_data, whichPlayer);
-    ::setPlayerPaletteColors(m_image->m_p24, whichPlayer);
+    ::setPlayerPaletteColors(m_image->getPalette().m_colors.m_data, whichPlayer);
+    ::setPlayerPaletteColors(m_image->getPalette24(), whichPlayer);
 }
 
 VA(0x00450550, 0x132)  // dc 0x54a20
@@ -302,8 +304,10 @@ int bitmapBorder::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5eb44.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE:
@@ -415,8 +419,10 @@ int bitmapBorder16::main(message& msg)
     if (m_sleepCount > 0)
         return 0;
     if (!(m_status & WIDGET_ACTIVE)) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 0;
+        // Mac retains this base call separately at 0:0x5eee8.
+        if (msg.m_id == MESSAGE_WIDGET)
+            return border::main(msg);
+        return 0;
     } else if (msg.m_id == MESSAGE_WIDGET && msg.m_codeY == m_id) {
         switch (msg.m_codeX) {
         case WIDGET_SET_PALETTE:

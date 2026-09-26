@@ -1,0 +1,11 @@
+# Independently bounded source-owned callee of setupNewOverviewType.
+
+[[functions]]
+retail_va = 0x004ce9b0
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6c88
+mac_size = 0x3c
+mac_symbol = ".getLocalPlayer__4gameFv"
+target_sha256 = "407eae05d104b951eac883b26dc37dc9623c7cfa93a5180194a99fae13656aa7"
+evidence = "The source-owned game::getLocalPlayer at src/game.cpp:10228 returns m_players[getLocalPlayerGamePos()]. Mac 0:0xe6c88 calls the already reviewed getLocalPlayerGamePos at 0:e6cc4, multiplies the result by player stride 0x15c and adds game player-base displacement 0x1ff48; setupNewOverviewType calls it twice at 0:0x135d9c/+0x135dac. Prior BLR at 0xe6c84 and own BLR at 0xe6cc0 followed by the next prologue at 0xe6cc4 bound exactly 0x3c bytes."

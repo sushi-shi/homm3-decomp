@@ -1,0 +1,6 @@
+# Registered ordinary shared headers with source ownership at the include site.
+
+[[fragments]]
+fragment = "include/message_record.h"
+owner = "include/struct.h"
+evidence = "Existing canonical body extracted without changing expanded C++ tokens; the owner includes it at its original definition position."

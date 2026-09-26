@@ -1,0 +1,85 @@
+# Recruit-window palette pointer storage; the Mac initializer is external.
+
+[[data]]
+retail_va = 0x00698998
+source = "include/kb.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527e44
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Retail recruitUnit hero and town constructors store the first timer at BSS 0x00698998, the address of canonical g_timers[0]. Both Mac constructors load TOC 1+0x744, which points to zero-filled storage at 1+0x527e44 before writing the same first timer. The four-byte span binds external storage without supplying an initializer or claiming the full array extent."
+
+[[data]]
+retail_va = 0x0069d5e8
+source = "src/recruit.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5408
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Retail recruitUnit::update and recruitUnit::open use .bss 0x69d5e8 for the sole recruit dialog pointer, defined without an initializer in this TU. Mac update reads the same active window directly from zero-filled TOC storage 1+0x5408 at 0:0x14f540 and 19 later sites; the Mac target has 72 total TOC uses of the cell and no loader pointer. CodeWarrior emits same-TU UDATA with a direct TOC reference, matching this ownership without supplying an initializer."
+
+[[data]]
+retail_va = 0x006aacb0
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x553448
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Retail COFF relocations for recruitUnit::update name gSystemPalette at RVA 0x2aacb0; the canonical pointer declaration has the same retail storage. Mac update loads TOC 1+0x6a4 at 0:0x14f484, which the loader points to zero-filled four-byte storage 1+0x553448, then reads palette entries at +0x5a/+0x64 near the end. Seventeen code sites use that TOC cell. This binds external storage only; the palette initializer and pointee are not compared."
+
+[[data]]
+retail_va = 0x0069d630
+source = "src/remote.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x553568
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The source-owned CTurnDuration at remote.cpp DATA(0x0069d630) is external to recruit.cpp. Mac recruitUnit::main loads TOC 1+0x708 at 0:0x14fb78; its loader pointer targets zero-filled storage 1+0x553568 immediately before the retained isExpired call at 0:0x14fb84. This binds its external start address without inferring full object layout or initialization."
+
+[[data]]
+retail_va = 0x0069d808
+source = "src/remote.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x553580
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The source-owned g_dPlay pointer at remote.cpp DATA(0x0069d808) is external to recruit.cpp. Mac recruitUnit::main loads TOC 1+0x734 at 0:0x14fbb0; its loader pointer targets zero-filled storage 1+0x553580 immediately before getNetMsgHandler. This binds the external pointer slot without supplying an initializer."
+
+[[data]]
+retail_va = 0x006a7558
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54e280
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The source-owned g_recruitHelp array at text.cpp DATA(0x006a7558) is external to recruit.cpp. Mac setRolloverText loads TOC 1+0xe28 at 0:0x14fa44; its loader pointer targets the zero-filled help array start 1+0x54e280, then reads entries at +0, +8 and +0x10 for maximum, cancel and accept. This binds only its external start address."
+
+[[constants]]
+units = ["recruit"]
+mac_section = 1
+mac_offset = 0x5401
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The source-owned inline getArmyName fallback selects a one-byte empty string. Mac update takes direct TOC address 1+0x5401 at 0:0x14f4fc; that byte is NUL and 12 other recruit-family sites use the same address."
+
+[[constants]]
+units = ["recruit"]
+mac_section = 1
+mac_offset = 0x4c9ee
+mac_size = 6
+sha256 = "8ec87a7169d8e1cc47f4e79a20ff4add737a78bf43b530180b6736b3364cb557"
+evidence = "Mac update loads TOC 1+0x2b0c at 0:0x14f514; the loader points to the six-byte NUL-terminated '%s %s' source format at data 1+0x4c9ee, also used by its adjacent recruit-family caller."
+
+[[constants]]
+units = ["recruit"]
+mac_section = 1
+mac_offset = 0x5404
+mac_size = 3
+sha256 = "0b782fc3030dbdf3756f17e7adf2ce5808dfc513ca7589adeb679c7d25eaef6f"
+evidence = "Mac update takes direct TOC address 1+0x5404 for the NUL-terminated '%d' format at 0:0x14f5b8 and seven later amount displays; source uses the same format and 10 other recruit-family sites use this cell."

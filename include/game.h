@@ -2,12 +2,17 @@
 #define HOMM3_GAME_H
 
 #include <ctype.h>
+#if defined(HOMM3_TARGET_MAC)
+#include <unistd.h>
+#else
 #include <direct.h>
+#endif
 #include <map>
 #include <memory>
 #include <string.h>
 #include <vector>
 
+#include "advmgr.h"
 #include "advmgr_objects.h"
 #include "creature_bank_types.h"
 #include "creaturetype.h"
@@ -230,6 +235,9 @@ enum EVictoryCastleLevel {
 };
 
 enum EVictoryConditionType {
+    // VictoryConditionStruct initializes m_type to -1; DC and Mac
+    // displayVCWinLoss both dispatch this empty condition separately.
+    VICTORY_CONDITION_NONE = -1,
     // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
     // the map-format acquire-artifact ordinal.
     VICTORY_CONDITION_ARTIFACT = 0,
@@ -596,10 +604,9 @@ public:
     inline long getOwner() const { return m_playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
     bool load(TAbstractFile* infile);
-    // update_bonus's negative twin. Retail has no out-of-line row for it
-    // (nothing fits between generator::save's end at 0x4b8791 and
-    // update_bonus at 0x4b87a0), so it is inline-only - the same shape
-    // set_owner below carries.
+    // update_bonus's negative twin. Retail has no retained row between
+    // generator::save and update_bonus; its known callers expand the body.
+    // That does not establish the original inline spelling.
     inline void removeBonus();
     bool save(TAbstractFile* outfile);
     inline void setOwner(long owner);
@@ -778,11 +785,12 @@ public:
 };
 SIZE(garrison, 0x40);
 
-#pragma pack(push, 8)
 // Dreamcast NB11 type 0x3591, AI: six members, 0x78 bytes. Complete
 // playerData::operator= (0x58f750) copies this entire subobject with
 // rep movsd (30 dwords) from +0xf0, after the separate +0xe8 bitset.
 // playerData::Init independently clears the same +0xf0..+0x168 range.
+// Natural compiler packing gives 0x78 on VC6 and 0x74 on CodeWarrior;
+// Mac reads the resource values at player+0x11c and the final float at +0x158.
 struct AI {
 public:
     float m_gameAttentionValue[3];
@@ -793,8 +801,6 @@ public:
     float m_turnValueOfAvgArtifact;
 };
 SIZE(AI, 0x78);
-
-#pragma pack(pop)
 
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper). sizeof is 360, byte-proven
@@ -1443,6 +1449,10 @@ public:
     void showMoraleInfo(hero* who, int dialogType);
     void recordHideHero(hero* who, char newOwner,
                           unsigned char townGarrison);
+    // 0x4c86a0. town::hire passes the player id and consumed two-slot
+    // recruit index; hero::hire uses the same closeout call. The body
+    // remains outside the admitted surface.
+    void finishTownHire(long playerId, int recruitSlot);
     // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
     VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3, dc 0x1febc
     bool onSameTeam(int player1, int player2) const
@@ -1451,6 +1461,8 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
+    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
+    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     VA(0x00529710, 0x34)
@@ -1464,31 +1476,28 @@ public:
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
     }
-    // Dreamcast IsHumanTeam (game.h:839, dc 0x37f64) has a bool result
-    // (_N in its public), a negative-team guard and an IsHuman call.
-    // Complete's expanded copy
-    // in ClaimTown proves the latch-tested eight-player scan: the usual `for`
-    // rotates its final branch, while this source produces all 76 retail
-    // blocks exactly.
-    VA(0x0042b9e0, 0x45)  // dc 0x37f64
-    inline bool isHumanTeam(int teamNum) const
-    {
-        if (teamNum >= 0) {
-            int player = 0;
-            while (1) {
-                if (m_mapHeader.m_teamInfo[player] == teamNum
-                    && g_game->isHuman(player))
-                    return true;
-                ++player;
-                if (player >= 8)
-                    break;
-            }
+// Dreamcast Game.h:839-850, IsHumanTeam (dc 0x37f64): reject a negative
+// team, scan its eight player slots, and call gpGame->IsHuman on a member.
+// Windows 0x42b9e0 and Mac 0:0x2d3e4 retain this same guarded scan.
+// Town and philai emit the retail call to IsHuman; game.obj expands that
+// callee. The reviewed town comparison uses the same canonical header body.
+// This is distinct from is_human_ally at dc 0x37fd8, which takes a player
+// number and calls IsHumanTeam(GetTeam(player_number)).
+VA(0x0042b9e0, 0x45)  // guarded team scan + named IsHuman callee, dc 0x37f64
+bool isHumanTeam(int teamNum) const
+{
+    if (teamNum >= 0) {
+        for (int player = 0; player < 8; ++player) {
+            if (m_mapHeader.m_teamInfo[player] == teamNum
+                && g_game->isHuman(player))
+                return true;
         }
-        return false;
     }
+    return false;
+}
     // Dreamcast Game.h:856 proves ClaimTown's source-visible
     // IsComputerTeam boundary. Complete keeps the same boundary but its
-    // retail lowering calls the exact IsHumanTeam COMDAT above; retaining
+    // retail lowering calls the retained IsHumanTeam COMDAT above; retaining
     // the wrapper is what preserves the materialized logical negation.
     // The DC public ?IsComputerTeam@game@@QBA_NH@Z likewise proves bool.
     inline bool isComputerTeam(int teamNum) const
@@ -1497,13 +1506,13 @@ public:
             return 0;
         return !isHumanTeam(teamNum);
     }
-    VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
-    int getTeam(int playerNum) const
-    {
-        if (playerNum < 0)
-            return playerNum;
-        return m_mapHeader.m_teamInfo[playerNum];
-    }
+VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
+int getTeam(int playerNum) const
+{
+    if (playerNum < 0)
+        return playerNum;
+    return m_mapHeader.m_teamInfo[playerNum];
+}
     // Game.h:877. DispatchEvent's obelisk arm preserves this named helper;
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
@@ -1586,10 +1595,6 @@ public:
                   const town* thisTown, int x, int y,
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
-    // DC lines 972..979 prove the null-first branch and leave four source
-    // lines before the successful return. Naming that array element preserves
-    // this retained body and makes cursor's expanded OnRecruitHero keep the
-    // nested GetHero call, as retail does, without an inline-depth pin.
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
     hero* getHero(int which)
     {
@@ -1810,6 +1815,7 @@ extern int g_inSetup;
 // 0x69cca8: the hot-seat game position of this machine's player - the
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
+DATA(0x0069cca8)
 extern int g_netLocalGamePos;                // .bss 0x69cca8
 extern unsigned char g_curPlayerBit;
 
@@ -1846,92 +1852,6 @@ inline SavedGameHeader::SavedGameHeader()
     memset(m_id, 0, sizeof(m_id));
     strcpy(m_id, "H3SVG");
     m_version = 42;
-}
-
-// E:\gamedcs\Game.h:1312, dc 0xbcf00
-VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
-inline void SavedGameHeader::reset()
-{
-    if (g_inCampaign)
-        strcpy(m_id, "H3SVC");
-    else
-        strcpy(m_id, "H3SVG");
-
-    m_version = 42;
-    m_gameVersion = g_game->m_gameVersion;
-
-    m_campaign = g_game->m_campaign;
-
-    m_mapHeader = g_game->m_mapHeader;
-
-    m_currentPlayer = g_netLocalGamePos;
-    m_mapSetup = g_game->m_setup;
-    m_campaignGame = g_inCampaign;
-    m_fileName = g_game->m_saveFileName;
-    m_difficultyRating = g_game->m_difficultyRating;
-    m_numDeadPlayers = g_game->m_numDeadPlayers;
-    memcpy(m_deadPlayer, g_game->m_playerDisabled, sizeof(m_deadPlayer));
-
-    int* human = m_humanPlayer;
-    for (int i = 0; i < 8; ++i)
-        *human++ = g_game->m_players[i].isHuman();
-}
-
-// Complete serializes the expanded snapshot through its abstract stream.
-// Preserve the disjoint scalar staging scopes used by retail stack slots.
-// E:\gamedcs\Game.h:1325, dc 0xbcf6c
-VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
-inline int SavedGameHeader::save(TAbstractFile* outfile)
-{
-    char fileNameBuffer[0x15f];
-    char compatibilityBuffer[32];
-
-    outfile->write(m_id, sizeof(m_id));
-
-    {
-        int buffer = m_version;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        int buffer = m_gameVersion;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-
-    if (outfile->write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
-        sizeof(compatibilityBuffer))
-        return -1;
-
-    if (m_mapHeader.save(outfile) < 0)
-        return -1;
-    if (m_mapSetup.save(outfile) < 0)
-        return -1;
-
-    {
-        short buffer = m_campaignGame;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    if (m_campaignGame)
-        m_campaign.save(outfile);
-
-    strcpy(fileNameBuffer, m_fileName.c_str());
-    outfile->write(fileNameBuffer, sizeof(fileNameBuffer));
-
-    {
-        short buffer = m_difficultyRating;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    {
-        char buffer = m_numDeadPlayers;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-    outfile->write(m_deadPlayer, sizeof(m_deadPlayer));
-    outfile->write(m_humanPlayer, sizeof(m_humanPlayer));
-    {
-        int buffer = m_currentPlayer;
-        outfile->write(&buffer, sizeof(buffer));
-    }
-
-    return 0;
 }
 
 // Complete reads versioned nested records through the abstract stream;
@@ -2014,7 +1934,9 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
     return 0;
 }
 
-// DC game.h:1370, is_human_ally maps a player through the canonical team helpers.
+// Dreamcast Game.h:1370-1371, is_human_ally (dc 0x37fd8). The two named
+// calls are GetTeam followed by IsHumanTeam; this wrapper takes a player,
+// not a team. No standalone Windows VA is claimed for the wrapper.
 inline bool game::isHumanAlly(int playerNum) const
 {
     return isHumanTeam(getTeam(playerNum));

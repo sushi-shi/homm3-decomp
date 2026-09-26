@@ -16,13 +16,10 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
         moves = getSpeed();
     else
         moves = 99;
-    if (m_spellInfluence[72])
+    // Dreamcast path.cpp:36/40 names these two army header helpers.
+    if (getSpellTime(72))
         moves = 0;
-    int group;
-    if (m_spellInfluence[60])
-        group = 1 - m_combatSide;
-    else
-        group = m_combatSide;
+    int group = getControllingSide();
     return g_searchArray->findCombatPath(this, group, fpTargetCellIndex,
         g_combatManager->m_creaturePlacement, moves, -1);
 }
@@ -120,12 +117,14 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
 VA(0x00523df0, 0x86)  // dc 0x10cc80
 long army::getAdjacentHex(long hex, long direction) const
 {
+    // Dreamcast path.cpp:271 calls OffsetToFront(-1) for the double-wide
+    // adjustment; retail expands its facing-dependent +/-1 result.
     if (is(creatureDoubleWide)) {
         if (m_facing == 0) {
             if (direction >= 3)
-                hex--;
+                hex += offsetToFront(-1);
         } else if ((direction >= 0 && direction <= 2) || direction >= 6) {
-            hex++;
+            hex += offsetToFront(-1);
         }
     }
     return getAdjacentCellIndex(hex, direction);

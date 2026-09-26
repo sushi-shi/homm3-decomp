@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "artifact.h"
+#include "domains.h"
 #include "herospec.h"
 #include "primaryskill.h"
 #include "secondaryskill.h"
@@ -317,8 +318,9 @@ SIZE(ShipyardInfo, 4);
 //   * bit  18     dont_grow                   (named by the DC, unread here)
 //   * bits 19..26 index                       `shr eax,0x13 / and eax,0xff`
 //   * bit  31     custom                      `shr edx,0x1f / test dl,1`
-// The DC names six fields for twenty-eight bits, so the four bits between
-// index and custom stay unnamed padding rather than being invented.
+// Dreamcast's older index is 12 bits. Complete uses an eight-bit index and
+// clears the intervening four bits explicitly; Windows readMonsterData's
+// 0x87fbffff mask and Mac code0+0x123e64..0x123e6c prove that clearing.
 // GATED: this is a type DEFINITION in a header that rides initialize.cpp's
 // include closure - see the cellFlags note inside the class for what an
 // ungated one costs there.
@@ -929,26 +931,11 @@ public:
 };
 SIZE(CObjectType, 0x44);
 
-class CObject {
+// CodeView CObject records 0x30aa and 0x6401 both give the public
+// ExtraInfoUnion base at +0, x/y/z at +4/+5/+6, TypeID at +8 and frameOffset
+// at +0xa. Complete's readers/writers use the same payload and offsets.
+class CObject : public ExtraInfoUnion {
 public:
-    // readScholarData reaches the scholar lanes of this dword directly -
-    // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
-    // which no mask spelling over the plain dword produces. Only that one
-    // arm is carried here; the other five typed views stay events-only.
-
-    // readObject (0x502e00) adds two more arms of the same dword, and both
-    // are bitfield stores no mask spelling over the plain dword produces:
-    // its SHIPYARD arm clears the low byte with `and cl,0` before merging
-    // the owner in, and its SHRINE arm writes a signed ten-bit lane thirteen
-    // bits up. The shipyard's record is the one game::ClaimShipyard already
-    // reads off the CELL - the same encoding, because the object's dword is
-    // what ends up in NewmapCell::extraInfo.
-    union {
-        unsigned long m_extraInfo;
-        ScholarInfo m_scholarInfo;
-        ShipyardInfo m_shipyardInfo;
-        ShrineInfo m_shrineInfo;
-    };
     unsigned char m_x;
     unsigned char m_y;
     unsigned char m_z;
@@ -1345,6 +1332,8 @@ public:
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
     int loadSeerList(TAbstractFile* infile, int saveVersion);
+    int saveSeerList(TAbstractFile* outfile);
+    void saveQuestGuardList(TAbstractFile* outfile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
@@ -1380,6 +1369,11 @@ public:
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readSeerData(TAbstractFile* infile, CObject* seerObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
+    void readHeroPlaceholderData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingLevelData(TAbstractFile* infile, CObject* object);
+    void readRandomDwellingFactionData(TAbstractFile* infile, CObject* object);
+    void readQuestGuardData(TAbstractFile* infile, CObject* object);
     // The map-object dispatcher. `ret 0xc`: three arguments, and the third
     // is the map version every version-sensitive reader below takes - it is
     // forwarded verbatim to readTownData, readHeroData, readEventData,
@@ -1507,9 +1501,15 @@ inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 // the value-returning helper preserved retail's shr/test of the top bit.
 inline bool ExtraInfoUnion::isCustomized() const { return m_artifactInfo.m_custom != 0; }
 
-inline TCreatureType ExtraInfoUnion::getArtifactDefender() const { return m_artifactInfo.m_guard; }
+inline TCreatureType ExtraInfoUnion::getArtifactDefender() const
+{
+    return H3_ENUM_DECODE(TCreatureType, m_artifactInfo.m_guard);
+}
 
-inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const { return m_artifactInfo.m_price; }
+inline ArtifactPrices ExtraInfoUnion::getArtifactPrice() const
+{
+    return H3_ENUM_DECODE(ArtifactPrices, m_artifactInfo.m_price);
+}
 
 inline enum EGameResource ExtraInfoUnion::getArtifactResourceCost() const
 {
@@ -1579,7 +1579,10 @@ inline void ExtraInfoUnion::fillGarden(enum EGameResource resource)
 // `test` on cell+1 instead.
 inline unsigned char ExtraInfoUnion::gardenIsFull() const { return m_gardenInfo.m_full; }
 
-inline enum EGameResource ExtraInfoUnion::getGardenResource() const { return m_gardenInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getGardenResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_gardenInfo.m_resource);
+}
 
 // Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
 inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
@@ -1703,7 +1706,10 @@ inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resou
 
 inline int ExtraInfoUnion::getWagonArtifact() const { return m_wagonInfo.m_artifact; }
 
-inline enum EGameResource ExtraInfoUnion::getWagonResource() const { return m_wagonInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getWagonResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_wagonInfo.m_resource);
+}
 
 inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasArtifact; }
 
@@ -1733,12 +1739,18 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
     m_wagonInfo.m_visitedBits = 0;
 }
 
+// DC MapCell.h:1186..1189 assigns artifact, full, has_artifact, visited_bits.
+// Mac randomizeWagon 0xd67f4..0xd6820 expands the same four field stores.
+// These named stores retain the exact 0x4c2390 body; the packed-mask
+// spelling made VC6 expand every use and omit the standalone helper.
 // E:\gamedcs\MapCell.h:1185, dc 0xbcb3c
 VA(0x004c2390, 0x21)
 inline void ExtraInfoUnion::setWagon(int artifact)
 {
-    m_value = (m_value & 0xfe00601f)
-        | ((artifact & 0x3ff) << 15) | 0x6000;
+    m_wagonInfo.m_artifact = artifact;
+    m_wagonInfo.m_full = 1;
+    m_wagonInfo.m_hasArtifact = 1;
+    m_wagonInfo.m_visitedBits = 0;
 }
 
 inline void ExtraInfoUnion::emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
@@ -1774,7 +1786,10 @@ inline void ExtraInfoUnion::setWheelGold(short amount) { m_waterWheelInfo.m_gold
 
 inline short ExtraInfoUnion::getWindmillAmount() const { return m_windmillInfo.m_amount; }
 
-inline enum EGameResource ExtraInfoUnion::getWindmillResource() const { return m_windmillInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getWindmillResource() const
+{
+    return H3_ENUM_DECODE(EGameResource, m_windmillInfo.m_resource);
+}
 
 inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amount)
 {

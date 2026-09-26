@@ -1,0 +1,208 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x472010
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x7fef4
+mac_size = 0x198
+target_sha256 = "c373538d53006efcb3f6587f0e86261d2d93c81ec2e93430a808bef6b5dcb13f"
+evidence = "NEW: Cheat chat checks three encoded strings0x20efc4, two kill-side0x75a1c arms and spellbook/artifact/add70spells arm0xf4dfc/0xf4fec, then clears chat. End0x8008c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4721d0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x8008c
+mac_size = 0x52c
+target_sha256 = "0911f50b699d44b5f4853c92ae727a24fad86bc1aefcb9e67fd5a442733fdcf5"
+evidence = "NEW: Full-screen combatWindow ctor800x600 creates chat0x21215c, placement0x785fc/control0x780a0 bar, two hero subwindows0x78984 and four creature subwindows0x79b2c. End0x805b8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472600
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x8146c
+mac_size = 0x118
+target_sha256 = "7149afb8328837c4516dfb51d4e80365a52944cb6577f416db135e3c4dc5d7a1"
+evidence = "NEW: Chat keypress edit base0x212248, checks max48characters, editing0x1afaa0, updates chat text0x81318 and redraw. End0x81584; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4726b0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x81584
+mac_size = 0xb0
+target_sha256 = "62fbd0a8715b868907a208d15c2bd87060fdca2ff74327b74259d2390274ab65"
+evidence = "NEW: SendChat makes string, multiplayer0xe6fc4 gate, cheat checker0x7fef4 or network send0x212d70, closes edit and restores chat display. End0x81634; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4727f0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x81634
+mac_size = 0x78
+target_sha256 = "0cb69de80380b70b5b58c9ed09dc97de3c8cbde343e8b75482ab668302f236a7"
+evidence = "NEW: Escape closes edit0x20bb84, parent virtual updates, redraw chat0x81318 and returns handled. End0x816ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472850
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x816ac
+mac_size = 0x78
+target_sha256 = "9e2ceb95a5eda02fa9209a1475792ac144b4478fd023056f4535e19c37e9ed21"
+evidence = "NEW: Chat updateScreen invokes parent virtual draw then screen redraw0x20df2c. End0x81724; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4728d0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x8063c
+mac_size = 0x6c
+target_sha256 = "8544e4762ed166fd6f7ba54ea2af426b2c90625884a2724e34873380b6d0656b"
+evidence = "NEW: Combat close releases active subwindow virtually then calls heroWindow close0x20b158. End0x806a8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472900
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x806a8
+mac_size = 0x1ec
+target_sha256 = "072f6c5b781195d5a98447cc05e077b1d35254994e478da36f709bfce90560f7"
+evidence = "NEW: Window dtor destroys subwindows, message strings/vector0x745c, baseheroWindow0x20aebc and optional delete. End0x80894; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472a50
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80974
+mac_size = 0xb4
+target_sha256 = "4b9d3c3e7e72398b69e56a3760786667164f2aa3e3bea1e50cc66fd2caf5d39b"
+evidence = "NEW: Right-select uses widget-help mapping0x80894 then help lookup0x117cac and dialog0x117f10. End0x80a28; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472b80
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80a74
+mac_size = 0x68
+target_sha256 = "a8f6919c2919838844922a4e89d1ee9a14540d4d511b8c370e3c2616c744edde"
+evidence = "NEW: Hover obtains widget hint, updates text0x80a28; scroll IDs2006/2007 special handling. End0x80adc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472bf0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80adc
+mac_size = 0x6c
+target_sha256 = "cd535e11f48d4ff9dc423aa462c9e22567818a6800ef0f1b1768f9fd35db9389"
+evidence = "NEW: Clear combat messages checks GameTime0x20fc5c against3000ms then pushes empty combatMessage0x80d48. End0x80b48; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472c30
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80b48
+mac_size = 0x110
+target_sha256 = "958b5a3de02c55f6dcb94b881b486141fd996fac21302006de7c0097134bdb32"
+evidence = "NEW: ShowMessages combines selected vector strings through0x8100, string append/substr0x1c388/0x1c500, writes rollover0x80a28 and timestamp. End0x80c58; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472db0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80c58
+mac_size = 0x58
+target_sha256 = "088e6db5af8e34509a5ef6c5e2e4930f9a6307b2063dcd68bd9f133b97e78887"
+evidence = "NEW: Scroll clamps message start range and calls showMessages0x80b48. End0x80cb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472df0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80cb0
+mac_size = 0x4c
+target_sha256 = "7e51733fc7b72cc99fcd58fbcda8a1cc731efd0f154bb208fa01f315f5f145fc"
+evidence = "NEW: ScrollUp callback key/event13 gate then scrollRollover0x80c58 with positive direction. End0x80cfc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472e40
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80cfc
+mac_size = 0x4c
+target_sha256 = "fc467ed081ad4bb9e25a9f51a4b6b30576b847700a865e19335d845c2df07f39"
+evidence = "NEW: ScrollDown callback mirrors ScrollUp with opposite scrollRollover0x80c58 delta. End0x80d48; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x472e90
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x80d48
+mac_size = 0x400
+target_sha256 = "ba9db2e174d15fef51d8659dbec1090cb48c1e7ba4fe3516a594968f1544d087"
+evidence = "NEW: Combat message handles quick-combat, priority duration3000ms, splits string into lines, appends owned strings to message vector and calls showMessages0x80b48. End0x81148; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4731f0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x81148
+mac_size = 0xc0
+target_sha256 = "70e0c003c28d525b8369de9861c731577caadf0038c1777001d0bc0a4ca1a6d9"
+evidence = "NEW: End placement destroys placement bar and allocates control bar0x780a0, virtual refresh/redraw. End0x81208; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x473290
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x81208
+mac_size = 0x8c
+target_sha256 = "0d330e071039d2961b4f1d1bf799633bf36ad52fda264e3cfadfc92d65498df6"
+evidence = "NEW: Draw chat text calls chat draw0x211a78 then parent virtual draw and optional screen update. End0x81294; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x4732f0
+unit = "combatwindow"
+mac_section = 0x0
+mac_offset = 0x813b0
+mac_size = 0x44
+target_sha256 = "33d9d29e17ae3718d36fb4c5d66a3898ec007bb0fda944353c0759dbafc3002f"
+evidence = "The source drawWindow calls heroWindow::drawWindow, then drawChatEdit. Mac 0x813b0 calls those exact retained bodies at 0x20b58c and 0x81294 in order; the former 0x81294 assignment was the adjacent drawChatEdit helper. Prior onChatActivate BLR at 0x813ac; own BLR at 0x813f0 precedes a generated deleting destructor at 0x813f4."
+
+[[helpers]]
+source_helper = "TCombatWindow::convertID2HelpID"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x80894
+mac_size = 0xe0
+target_sha256 = "b79cb783349d9df7b666febf523206d1c80e3a3d8041bf3fe89fe803c8880dc5"
+evidence = "Mac processRightSelect calls this retained widget-ID switch at 0x80988. Its 2001..2010 and 2300/0x7802 cases return help indices 0..10, including shared index 5 for scroll arrows, matching the canonical inline helper expanded in Windows. Destructor BLR at 0x80890 precedes entry; final BLR at 0x80970 precedes processRightSelect."
+
+[[helpers]]
+source_helper = "TCombatWindow::setRollover"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x80a28
+mac_size = 0x4c
+target_sha256 = "1cd71832e78f021c4b9bff328f98143620e69465badbcecd21713049908dd8bc"
+evidence = "handleWidgetHover calls this retained helper twice; showMessages and combatMessage also call it. It checks control subwindow +0x68 and chat-edit focus +0x61, then invokes the control subwindow's virtual rollover setter. The Dreamcast-proven inline source helper expands in Windows. Prior processRightSelect BLR at 0x80a24; own BLR at 0x80a70 precedes handleWidgetHover."
+
+[[helpers]]
+source_helper = "TCombatWindow::drawChatEdit"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x81294
+mac_size = 0x84
+target_sha256 = "548f3de095c96a988ba49b304a4d20370b01efc9f5c65778e54ae816b7154bd2"
+evidence = "Mac drawWindow at 0x813b0 calls this retained helper after heroWindow::drawWindow. It checks the chat-edit pointer +0x48 and focus flag +0x61, draws the widget virtually and optionally updates its rectangle through 0x20df2c. The canonical ordinary source helper expands in Windows. Prior drawChatText BLR at 0x81290; own BLR at 0x81314 precedes onChatActivate."
+
+[[helpers]]
+source_helper = "TCombatWindow::onChatActivate"
+unit = "combatwindow"
+mac_section = 0
+mac_offset = 0x81318
+mac_size = 0x98
+target_sha256 = "2112825642920f250888896a7c1fc2916ea50314c041d96b47de25e8661948a6"
+evidence = "sendChat and escape handling call this retained activation helper. It sends widget status 5 or 6 to the control subwindow rollover widget and redraws the subwindow in the deactivate arm, matching the canonical ordinary helper expanded in Windows. Prior drawChatEdit BLR at 0x81314; own BLR at 0x813ac precedes drawWindow."

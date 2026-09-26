@@ -1,0 +1,502 @@
+# Reviewed callees reached by the three admitted PHILAI bodies. These resolve
+# call targets but do not claim a compiled match for the callee.
+
+[[helpers]]
+source_helper = "onMySide"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d554
+mac_size = 0x64
+mac_symbol = ".onMySide__Fi"
+target_sha256 = "997a0896f5fe9d9f35b8f0be978734f5f46abba82be44b8e3671197e7a8c8dd0"
+evidence = "The file-static source helper rejects negative player IDs, then compares that player's team with g_netLocalGamePos. Mac 0:0x13d554 performs those same checks and is called by valueOfMine at 0:0x143d84 and the town evaluator at 0:0x14549c; its final blr at 0x13d5b4 precedes the next prologue at 0x13d5b8. CodeWarrior emits the canonical symbol; identity only."
+
+[[helpers]]
+source_helper = "incrementHourGlass"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d688
+mac_size = 0x9c
+mac_symbol = ".incrementHourGlass__Fv"
+target_sha256 = "1595783b447f096f6bd982398fbec6ced0ff8a1ef9cb9bf8cad62d9b974acba3"
+evidence = "Mac doAI calls this helper at 0:0x13d680. It increments g_curHourGlassPhase, applies the one/two/three-hero phase skips and caps the phase at nine. The final blr is 0x13d720 before restoreMouse at 0x13d724. Dreamcast also names the file-static helper and Complete expands its source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
+source_helper = "moveAllHeroes"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x140b60
+mac_size = 0xcc
+mac_symbol = ".moveAllHeroes__FlPl"
+target_sha256 = "3528b5970b7b4586e0db642fd12fd045b67f3f4900f00cb7106a3d96df9b9a9e"
+evidence = "Mac doAI at 0:0x140c2c calls this helper twice. The body initializes separate last-hero and explore-mode bytes, reads difficulty and town count, loops hero selection/movement, and demobilizes the current hero; the final blr is 0x140c28 before doAI begins. Dreamcast names the file-static move_all_heroes and Complete expands both calls. CodeWarrior emits the source-owned symbol; identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::getSummoningValue"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1413ac
+mac_size = 0xb0
+mac_symbol = ".getSummoningValue__15type_spellvalueCFll"
+target_sha256 = "6ae4eaf5c5403a27ae20bee630906559f302426e37f57493052552ee8fbce59c"
+evidence = "Mac getRawSpellValue retains the source-owned summoning evaluator at 0:0x1413ac. It scales damage by ten against m_stackValue, caps the ratio and cast count, indexes the cast curve, caps the knowledge contribution and converts the final double to long. Its blr at 0x141458 precedes getRawSpellValue at 0x14145c. CodeWarrior emits the canonical symbol; identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::fillCreatureValueList"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141658
+mac_size = 0xd0
+mac_symbol = ".fillCreatureValueList__15type_spellvalueFv"
+target_sha256 = "8284eb891c772e7212bbf09a55692c505b367b733bcba369ca658b811310e919"
+evidence = "The type_spellvalue constructor calls this helper. Mac 0:0x141658 scans seven hero army slots, skips empty creature IDs, forms type/amount/value records using g_creatureTypeTraits and appends them to the value list before sorting. Its blr at 0x141724 precedes getBestSpellValue at 0x141728. Dreamcast independently retains this named member; CodeWarrior emits the source-owned symbol. Identity only."
+
+[[helpers]]
+source_helper = "type_spellvalue::getValueOfIncrease"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141900
+mac_size = 0x90
+mac_symbol = ".getValueOfIncrease__15type_spellvalueFllll"
+target_sha256 = "a655d61a0820168b6bfb129267c629f627b9ed2aa52df89dd3e52c95184df955"
+evidence = "Mac aiSetHeroBonuses calls this retained member five times. The body adds the requested power/duration/mana deltas, calls getBestSpellValue, restores all three fields and subtracts the supplied baseline. Its final blr is 0x14198c, before valueOfExperience at 0x141990. Dreamcast preserves the same member boundary; CodeWarrior emits the source-owned symbol. Identity only."
+
+[[helpers]]
+source_helper = "valueOfSpell(const hero* currentHero, SpellID spell)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1421e8
+mac_size = 0x6c
+mac_symbol = ".valueOfSpell__FPC4heroi"
+target_sha256 = "d72f9cc14323ce3229fe5f085fbf575e406666f8fd0d22fa9c65fd13f0179539"
+evidence = "Dreamcast names the file-static ValueOfSpell at philai.cpp:1945, separate from value_of_learning at 1959. Mac valueOfLearning at 0:0x142254 calls this preceding helper, which checks the hero's in-spellbook byte, calls isWieldingArtifact for the spellbook and then aiGetSpellValue when eligible. Its final blr is 0x142250. Complete expands the same source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
+source_helper = "computeUpgradeValue"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141e50
+mac_size = 0xc4
+mac_symbol = ".computeUpgradeValue__FP4heroii"
+target_sha256 = "f4636d8cf76206d5013365dae2bc662da82be38edbe75d920c9611d7c7488da2"
+evidence = "Mac valueOfStables calls this helper at 0:0x144e44, while the helper itself calls hero::creatureTypeCount, computes the source-to-upgrade AI-value gain and halves the reward when the destination stack exists. It ends at blr 0x141f10 before valueOfArena at 0x141f14. Dreamcast names ComputeUpgradeValue and Complete expands its source call; CodeWarrior emits the canonical symbol. Identity only."
+
+[[helpers]]
+source_helper = "checkForTown"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d788
+mac_size = 0x7c
+mac_symbol = ".checkForTown__FP4hero"
+target_sha256 = "c0f1471f7163a2a880daa42d82ab2b8e2dc64e312a79fac2bad8bcda2e00fc81"
+evidence = "The canonical static checkForTown body reads hero x/y/z, calls game::getTownId, returns when negative, resolves the nonnegative town ID, and calls aiEnterTown. Mac 0+0x13d788 performs that sequence through 0x13d7e8 and ends in blr at 0x13d800 before the next prologue at 0x13d804. The only incoming branch is Mac moveHero at 0x1405e4; Dreamcast MoveHero line 1059 also calls check_for_town."
+
+[[helpers]]
+source_helper = "markShipyards"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13fd54
+mac_size = 0x2ec
+mac_symbol = ".markShipyards__FP10playerData"
+target_sha256 = "3ac5bb2478b3a9b740ee1546fcad384209c2cf3b83dba7146a4550bffca11002"
+evidence = "Canonical static markShipyards checks wood >=10 and gold >=1000, loops player towns, computes dock cells, tests/builds DOCK costs, then loops shipyard points to mark boat cells. Mac 0+0x13fd54 has the same resource guards, town loop, seven-resource comparisons, shipyard vector loop and cell-bit stores. It returns at blr 0x14003c before clearShipyards begins at 0x140040; the sole incoming call is PHILAI moveHero at 0x140784."
+
+[[helpers]]
+source_helper = "clearShipyards"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x140040
+mac_size = 0x198
+mac_symbol = ".clearShipyards__FP10playerData"
+target_sha256 = "b7542a4c5c67561542cd53b041d1d11db5bcea7cb51f131562aa2b522d5284b8"
+evidence = "Canonical static clearShipyards loops player towns and clears canBuildShip on valid dock cells, then loops recorded shipyards and clears the corresponding boat cells. Mac 0+0x140040 has the town-ID index, paired dock-coordinate sentinel guards, map-cell bit clear and second vector loop. Its leaf body ends at blr 0x1401d4 before inner moveHero begins at 0x1401d8; its sole caller is outer moveHero at 0x1407b0."
+
+[[helpers]]
+source_helper = "restoreMouse"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d724
+mac_size = 0x64
+mac_symbol = ".restoreMouse__FUc"
+target_sha256 = "8a3de4ac608c7ac4051b17a9a7ce859a672ad3b5e511ec5b8a2658a436bfdd1d"
+evidence = "Canonical static restoreMouse checks the prior-visible flag and mouse hide count, temporarily enables complete draw, calls showPointer(0), then restores the draw flag. Mac 0+0x13d724 has those same guards, +0x68 hide count, draw flag save/restore and named showPointer call, returns at blr 0x13d784 before checkForTown starts 0x13d788. Its sole caller is outer moveHero at 0x1408d8."
+
+[[functions]]
+retail_va = 0x41a750
+unit = "advmgr"
+mac_section = 0
+mac_offset = 0x1b330
+mac_size = 0xd8
+mac_symbol = ".mapExtraPosAndAdjacentsSet__FiiiUc"
+target_sha256 = "1638b351155cf5645be998004a502a89c8d937077ea25dfda81c9ad0e6649f85"
+evidence = "Source-owned mapExtraPosAndAdjacentsSet at Windows 0x41a750 checks the map extra bit at the origin and then scans neighboring positions. Mac 0+0x1b330 performs the same bit test and bounded neighbor scan; blr at 0x1b404 precedes the next prologue at 0x1b408. Six incoming calls include PHILAI moveHero at 0x140678."
+
+[[functions]]
+retail_va = 0x402b90
+unit = "adventuremapwindow"
+mac_section = 0
+mac_offset = 0x21f4
+mac_size = 0x4c
+mac_symbol = ".animateBottomView__19TAdventureMapWindowFUc"
+target_sha256 = "ccfa1a7d4aeeaefb510bb4ba6dae6435cd0a701b87e975dfc4c2c7fe4d8c4593"
+evidence = "Source-owned TAdventureMapWindow::animateBottomView at Windows 0x402b90 tests its background flag and window pointer before calling the bottom view animation. Mac 0+0x21f4 has the same guarded call, ends in blr at 0x223c, and next prologue begins 0x2240; Mac moveHero calls this exact entry at 0x140634 and seven other callers agree."
+
+[[functions]]
+retail_va = 0x417b20
+unit = "advmgr"
+mac_section = 0
+mac_offset = 0x18220
+mac_size = 0x594
+mac_symbol = ".setHeroContext__10advManagerFiiUcUc"
+target_sha256 = "deb0114b6e44dd17f89770ca058682545bcdbebb0379b85b75a594f75aef6471"
+evidence = "Source-owned advManager::setHeroContext at Windows 0x417b20 rejects hero ID -1, deactivates the current hero, stores the new player currHeroId, resolves the hero array and updates map context. Mac 0+0x18220 follows that order, returns at blr 0x187b0, and the next prologue begins 0x187b4. Twenty callers include PHILAI moveHero at 0x1406fc with hero ID and the three context flags."
+
+[[functions]]
+retail_va = 0x42de50
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x316f4
+mac_size = 0x118
+mac_symbol = ".aiMarkDangerZones__FP4heroPl"
+target_sha256 = "78fd68a860b71f7b2336a236a7b40d3dea2fad9e7036336329116243204411c5"
+evidence = "Source-owned aiMarkDangerZones at Windows 0x42de50 loops over eight players, skips a current-hero ally or disabled player, then walks each opponent's hero IDs and calls markDangerZones. Mac 0+0x316f4 has the same eight-player loop, team-byte comparison, disabled check, 0x15c player stride and inner hero loop calling 0x31500. It returns at blr 0x31808 before the next prologue 0x3180c; its sole caller is PHILAI moveHero at 0x14077c."
+
+[[functions]]
+retail_va = 0x5267b0
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1401d8
+mac_size = 0x3a4
+mac_symbol = ".moveHero__FP4heroUcRUc"
+target_sha256 = "3cfb6233c45dffa5e1b9851642d9f6d732f0ea723d3e8ee3b2a02295972e041c"
+evidence = "Canonical PHILAI inner moveHero takes hero, isLastHero and exploreMode by reference; it initializes a 32000 maximum, checks pathTargetX, seeds the destination, loops destination selection up to five times, attempts the move, and wakes heroes when exploration reveals a new area. Mac 0+0x1401d8 begins with the 32000 seed and path-target negative check, has the destination/selection and wake-up sequence, returns at blr 0x140578, and is followed immediately by the outer moveHero prologue at 0x14057c. Its sole caller is outer moveHero at 0x14079c."
+
+[[functions]]
+retail_va = 0x4b9fc0
+unit = "game"
+mac_section = 0
+mac_offset = 0xcc4fc
+mac_size = 0x1bc
+mac_symbol = ".addGarrisonHero__10playerDataFP4town"
+target_sha256 = "86aceb63affa0fcaacee675f1c756f1209b3cbf732127e89498e34dc64509be9"
+evidence = "Source-owned playerData::addGarrisonHero at Windows 0x4b9fc0 checks visiting and garrison hero IDs, merges the visiting hero's army, records the hide, removes that hero from the player's list, and assigns the town garrison ID. Mac 0+0xcc4fc performs the same guards, army merge and hero-list shift, returns at blr 0xcc6b4, and the next function starts 0xcc6b8. Two callers include PHILAI moveHero at 0x140854."
+
+[[functions]]
+retail_va = 0x44ada0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5874c
+mac_size = 0x94
+mac_symbol = ".getCreatureTotal__9armyGroupCFv"
+target_sha256 = "0a6f68552eb018decfdce4bb579d17a4893b8f33df8464706f2af875ff010d3a"
+evidence = "Source-owned armyGroup::getCreatureTotal() at Windows 0x44ada0 sums counts across seven slots only where the creature ID is not -1. Mac 0+0x5874c unrolls seven identical ID tests and conditional count additions, returns at blr 0x587dc, and the typed overload starts at 0x587e0. Eight callers include PHILAI moveHero at 0x1408a0."
+
+[[functions]]
+retail_va = 0x44ac80
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x584d4
+mac_size = 0x54
+mac_symbol = ".getAIValue__9armyGroupCFv"
+target_sha256 = "d04fe7123839c0e43cfb709441da5fb890dd143dd10a79de6df2dc443736760f"
+evidence = "Source-owned armyGroup::getAIValue at Windows 0x44ac80 accumulates each occupied troop count times that creature's AI value. Mac 0+0x584d4 loops seven slots, skips ID -1, scales the creature traits by 0x74 and reads its AI value at +0x40, multiplies by the troop count, and returns at blr 0x58524 before getNumArmies starts 0x58528. Thirty-five callers include PHILAI moveHero at 0x1408b0 and 0x1408c0."
+
+[[functions]]
+retail_va = 0x5be450
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3910
+mac_size = 0x1ac
+mac_symbol = ".swapHeroes__4townFv"
+target_sha256 = "779cd22349a008996a37404ab2b9e8af5fe22c27c3acaba3585bafa569f71fb0"
+evidence = "Source-owned town::swapHeroes at Windows 0x5be450 resolves the two hero IDs, swaps garrison and visitor IDs, hides and restores the visiting hero, removes it from the player roster, and sends the town hero context. Mac 0+0x1b3910 has the same two hero lookups, adjacent ID swap, roster shift and final context call, returns at blr 0x1b3ab8 before the next prologue 0x1b3abc. Its two callers include PHILAI moveHero at 0x1408d0."
+
+[[functions]]
+retail_va = 0x524d20
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13e09c
+mac_size = 0xbc
+mac_symbol = ".getSchoolValue__FPC4hero15TSecondarySkill"
+target_sha256 = "e0b621879033367704fad7aa8aa4580cd23011f97acbc10261226b870a242cc6"
+evidence = "Source-owned getSchoolValue constructs a spell evaluator, gets class-mask 0x1f8000 best value, raises hero's selected mastery at +0xc9, reevaluates, restores the byte, and returns the delta. Mac body at 0x13e09c performs that sequence, bounded by preceding blr 0x13e098 and following getSkillValue prologue 0x13e158; all four getSkillValue magic-school arms call this entry."
+
+[[functions]]
+retail_va = 0x4d91f0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf4dfc
+mac_size = 0xc4
+mac_symbol = ".isWieldingArtifact__4heroCFi"
+target_sha256 = "a2e1c031e5c3addd3ca7af058dfb1ed70b76696da2f1d8285968e43b6789a368"
+evidence = "Source-owned hero::isWieldingArtifact checks direct equipped IDs across 19 slots at hero+0x12d, then follows artifact trait combination ID at +0x18 in 0x20-byte rows and recurses through combination records. Mac body at 0xf4dfc has that same scan and recursive call at 0xf4e98; preceding hasArtifact ends with blr 0xf4df8 and next prologue begins 0xf4ec0. getSkillValue calls it twice at 0x13e70c and 0x13e8d0."
+
+[[functions]]
+retail_va = 0x4d91b0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf4d94
+mac_size = 0x68
+mac_symbol = ".hasArtifact__4heroCFi"
+target_sha256 = "a986f6d467168ffb67e27b1c55cfa22c8f66628cb040cc7edaf957dfd80ef1cc"
+evidence = "Body scans 19 equipped artifact IDs at hero+0x12d with stride 8, then 64 backpack IDs at +0x1d4 with stride 8, returning 1 on either match and 0 after both scans. Previous function ends at 0xf4d90; this body ends in blr at 0xf4df8 before the next prologue at 0xf4dfc. Thirty incoming branches include valueOfWarFactory at 0x13f098."
+
+[[functions]]
+retail_va = 0x4336c0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x3879c
+mac_size = 0x428
+mac_symbol = ".aiGetValueOfArtifact__F13type_artifactPC4heroUcUc"
+target_sha256 = "a792dd64c7e260d6b29d0087aa85d51af6e19cf11575b1df8f56e0cd6f98a744"
+evidence = "Two-dword artifact arrives by value; body returns 0 for ID -1, dispatches IDs 1 and 4..6 separately, uses owner spell and army fields including +0x3de/+0x424 and +0x91, and continues ordinary artifact valuation through the 144-entry trait range. Prior body ends before prologue 0x3879c; epilogue blr at 0x38bc0 precedes next prologue 0x38bc4. Six incoming calls include valueOfWarFactory at 0x13f0e4."
+
+[[functions]]
+retail_va = 0x550360
+unit = "recruit"
+mac_section = 0
+mac_offset = 0x14f41c
+mac_size = 0x50
+mac_symbol = ".siegeArtifactToCreature__F9TArtifact"
+target_sha256 = "659443e654477a4521cf3ef6e3fe9959c7807e01719303a30673fff626bfd71e"
+evidence = "Four artifact cases 3..6 map to siege creature IDs 0x91,0x92,0x94,0x93; all others return -1, matching the source switch. Preceding blr at 0x14f418 and following prologue at 0x14f46c bound the 0x50-byte body; three incoming calls include valueOfWarFactory at 0x13f0f0."
+
+[[functions]]
+retail_va = 0x527760
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141a30
+mac_size = 0x1c8
+mac_symbol = ".aiSetHeroBonuses__FP4hero"
+target_sha256 = "a815ac3e178a087c79d2408a2ab80651a709ea7e36fed34b7e3b7d95a0646e6b"
+evidence = "Body constructs type_spellvalue at 0x140e1c, calculates hero experience ratio from army at +0x91 and stores it at +0x109, then values spell power and duration using class mask 0x1f8000 and writes hero bonus fields +0x472/+0x476/+0x47a. Prior blr at 0x141a2c and next prologue at 0x141bf8 bound the span; getTurnAIVars calls it at 0x141c68."
+
+[[functions]]
+retail_va = 0x433aa0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x38cf4
+mac_size = 0xc4
+mac_symbol = ".aiGetValueOfArtifact__FRC13type_artifactl"
+target_sha256 = "186fad45647c7bba030bcb36da5f9c5f80ab2ec5d2936d04d0e7591e9d21fd1f"
+evidence = "Const-reference artifact ID -1 returns 0; otherwise player ID selects a 0x15c-byte player record, starts best value at 10, walks its hero IDs, resolves each hero with 0x486 stride, and calls the equip-value helper at 0x38bc4. Prior function ends at 0x38cf0 and following prologue is 0x38db8; calls from getTurnAIVars 0x141cc8 and purchase-value helper 0x13dc5c corroborate identity."
+
+[[functions]]
+retail_va = 0x4d90c0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf4c84
+mac_size = 0x6c
+mac_symbol = ".getNumberInBackpack__4heroCFUc"
+target_sha256 = "d79aaba372c1a28219fba057af5787e69a5d231e400e4f621978866bc8336639"
+evidence = "Nonzero countWarMachines returns signed backpack count from hero+0x3d4; zero walks 64 backpack IDs at +0x1d4 stride 8, excluding -1 and IDs 3..6. Blr at 0xf4c80 precedes entry; blr at 0xf4cec and next function at 0xf4cf0 bound it. BuyArtifacts calls at 0x13dd0c."
+
+[[functions]]
+retail_va = 0x529750
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13dbe8
+mac_size = 0xfc
+mac_symbol = ".getArtifactPurchaseValue__F9TArtifactlPl"
+target_sha256 = "66ae85d1f45e8251b599f85e4cd764c24216dd985fbf8f6a8e1e592d12da0166"
+evidence = "Artifact ID -1 returns zero; body calls purchase price at 0x13daa8, checks the selected resource against caller funds, constructs artifact {ID,-1}, calls player artifact value at 0x38cf4, subtracts price times current-player resource value at +0x11c, and clamps negative results to zero. Previous blr at 0x13dbe4 and next prologue at 0x13dce4 bound it; buyArtifacts calls at 0x13dd40."
+
+[[functions]]
+retail_va = 0x524550
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13daa8
+mac_size = 0x140
+mac_symbol = ".getArtifactPurchasePrice__F9TArtifactlP13EGameResource"
+target_sha256 = "8c3bc872b6c4e647bb8490b8136adca79bf599ce649ee8500573a0b661200fee"
+evidence = "Artifact ID indexes 0x20-byte trait rows for gold cost; writes GOLD=6 to output resource, applies marketplace efficiency, then tests resource indices 0..5 against player funds at +0x98 and values at +0x11c to select a cheaper purchase. Prior blr at 0x13daa4 and next prologue at 0x13dbe8 bound it; called by purchase-value and buyArtifacts."
+
+[[functions]]
+retail_va = 0x4e3070
+unit = "hero"
+mac_section = 0
+mac_offset = 0x103da8
+mac_size = 0x2f0
+mac_symbol = ".giveArtifact__4heroFPC13type_artifactUcUc"
+target_sha256 = "63daa9b7e020a5425bd5c967b401e01c1a7d6bd405d241982bba702694f4895f"
+evidence = "Calls equipArtifact at 0x1035fc with slot -1, checks game combination-artifact state and hero owner, handles announce and end-check flags, and falls back to backpack placement before returning a byte result. Previous blr at 0x103da4 and following prologue at 0x104098 bound it; buyArtifacts calls at 0x13ddc0."
+
+[[functions]]
+retail_va = 0x433b40
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x39344
+mac_size = 0xb8
+mac_symbol = ".aiEquipArtifacts__FP4hero"
+target_sha256 = "0f58dbc1660027a2fabcbabd57a37e5b60c9d510331bb67347545660856f68ec"
+evidence = "Calls removeNegativeArtifacts, gets the last backpack index, walks artifact records at hero+0x1d4 backward by 8, passes nonempty ones to addArtifact, and removes successfully equipped entries. Previous blr at 0x39340 and next prologue at 0x393fc bound the span; buyArtifacts fallback calls at 0x13ddd4."
+
+[[functions]]
+retail_va = 0x5c12a0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b6de0
+mac_size = 0x40
+mac_symbol = ".isLegalBuilding__4townCF16type_building_id"
+target_sha256 = "631a8e50a6ea559136b01e87df43478bb791332df16a030e68fdde29abe50dfb"
+evidence = "Mac leaf indexes the g_bitNumber table by its building-ID argument and intersects the 64-bit available mask at town+0x154 before returning a byte boolean, matching canonical town::isLegalBuilding. It ends at blr 0x1b6e1c; the next leaf begins at 0x1b6e20. aiEnterTown calls it with HOLY_GRAIL_ID=26 at 0x13f944."
+
+[[functions]]
+retail_va = 0x4e2dd0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x103b04
+mac_size = 0xd4
+mac_symbol = ".removeArtifact__4heroF9TArtifact"
+target_sha256 = "d77650048b3ed03cc407b123306192405ad75386e20135d4e5c640cb4bed6685"
+evidence = "Mac body receives hero and artifact ID, has the source's special ID-1 arm, then calls artifact removal machinery and returns a byte result. It ends at blr 0x103bd4 before the next prologue 0x103bd8. aiEnterTown passes Grail ID 2 at 0x13f958."
+
+[[functions]]
+retail_va = 0x5bede0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b43ac
+mac_size = 0x420
+mac_symbol = ".buildBuilding__4townFiUcUc"
+target_sha256 = "f35e1bc312e452dde2b12b8c3b75866cb5cb189ba28aba1db49a40ae1a968c70"
+evidence = "Mac entry receives town, building ID, and two byte flags; it loads bitNumber, current-game and cost-mask tables and updates town construction state, matching town::buildBuilding. Final blr is 0x1b47c8 before the next prologue at 0x1b47cc. aiEnterTown passes building 26 and flags 1,1 at 0x13f96c."
+
+[[functions]]
+retail_va = 0x5f1ef0
+unit = "victorylossconditions"
+mac_section = 0
+mac_offset = 0x1fddc4
+mac_size = 0x2d0
+mac_symbol = ".checkForGrailBuildingWin__22VictoryConditionStructFv"
+target_sha256 = "5a570140c21e3c2e0f0ee2d49d277064f511a2fd2b88ea718fb604030d2ff76c"
+evidence = "Mac entry checks victory type 4, current-player presence, and subsequent Grail-town win conditions, then returns a byte result. It ends at blr 0x1fe090; a distinct leaf starts at 0x1fe094. aiEnterTown passes the game victory-condition field at +0x1f124 and branches on its result."
+
+[[functions]]
+retail_va = 0x4f2ce0
+unit = "kb"
+mac_section = 0
+mac_offset = 0x114cdc
+mac_size = 0x380
+mac_symbol = ".checkEndGame__Fi"
+target_sha256 = "8e3c8326ccada7eac11ba4b587bca000500e6fbbfd78a75bedfb44baee37a354"
+evidence = "Mac entry receives the integer forced-result argument, loads current-player and game state, and performs the shared win/loss handling; aiEnterTown calls it with zero after a Grail win check at 0x13f98c. It ends at blr 0x115058 before the next prologue at 0x11505c."
+
+[[functions]]
+retail_va = 0x525200
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f784
+mac_size = 0x158
+mac_symbol = ".considerGarrisoning__FP4heroP4town"
+target_sha256 = "f25b66cdf2afacefdb91ab9a03ecb5e8abb783cd89bc3e53b4635a1e1cd4cdbe"
+evidence = "Mac entry receives hero and town, checks the acting player's hero count against two, then reads game/town garrison state as the source helper does. Final blr 0x13f8d8 precedes aiEnterTown prologue 0x13f8dc, whose owner-equal arm calls it at 0x13f9e0."
+
+[[functions]]
+retail_va = 0x42beb0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x2f660
+mac_size = 0x214
+mac_symbol = ".buyMageGuild__14type_AI_playerFP4heroP4town"
+target_sha256 = "50002e49c8a50a00fd25d13174287793d4b7b5245ce52695cfbc9db61b58c3d2"
+evidence = "Mac entry receives AI player, hero and town, then checks mage-guild building and purchase conditions for the active town as source buyMageGuild does. It ends at blr 0x2f870 before next prologue 0x2f874; aiEnterTown calls it immediately after buyCreatures at 0x13fa24."
+
+[[functions]]
+retail_va = 0x5be030
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b3460
+mac_size = 0x204
+mac_symbol = ".giveSpells__4townCFP4hero"
+target_sha256 = "77f5d7906b19e2c64d54f154f2071d9ca80d538c1d4ad52d1c28b2cf5100cb95"
+evidence = "Mac entry tests supplied hero pointer and both town hero IDs, then loads spell traits and game state to grant guild spells, matching town::giveSpells. It ends at blr 0x1b3660 before next prologue 0x1b3664; aiEnterTown passes its current hero at 0x13fac4."
+
+[[functions]]
+retail_va = 0x5259e0
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13debc
+mac_size = 0x1e0
+mac_symbol = ".buyArtifacts__FP4heroP4town"
+target_sha256 = "5e77d3fbc26298d98bdb862dbc0265410611968a3611cfa4b12a30944b43cc3c"
+evidence = "Mac body receives hero and town, rejects towns other than Tower/Dungeon by signed type at town+4, and uses current-player funds and town building masks to buy faction artifacts as the source does. Final blr 0x13e098 precedes getSchoolValue at 0x13e09c; aiEnterTown calls it at 0x13fb0c."
+
+[[functions]]
+retail_va = 0x433fe0
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x393fc
+mac_size = 0x164
+mac_symbol = ".aiSwapArtifacts__FP4heroP4hero"
+target_sha256 = "6379fa37329c211f0de6e5288a1f15158f5ee2ad0543f0832f54f165cb167088"
+evidence = "Mac body receives source and destination heroes, initializes two empty artifact records, and calls the source helper's artifact removal/transfer machinery. Final blr 0x3955c precedes next prologue 0x39560; aiEnterTown calls it in both hero orders at 0x13fb34 and 0x13fb40."
+
+[[functions]]
+retail_va = 0x525ca0
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f3b4
+mac_size = 0x274
+mac_symbol = ".buySiegeEngine__FP4heroP4town16type_building_id9TArtifact"
+target_sha256 = "f0bc8dda318f5070011695cbbfcd738a07d0e589ca6d3c858d66b3468666406d"
+evidence = "Mac entry receives hero, town, building ID and artifact ID; it calls hasArtifact, values the siege artifact, maps it to a creature, debits seven resource costs and gives the artifact as source buySiegeEngine does. Final blr 0x13f624 precedes next prologue 0x13f628; aiEnterTown calls twice at 0x13fb64/0x13fb84."
+
+[[functions]]
+retail_va = 0x5d2d80
+unit = "townmgr"
+mac_section = 0
+mac_offset = 0x1cfbcc
+mac_size = 0x24
+mac_symbol = ".initializeMagicSkills__15type_universityFv"
+target_sha256 = "f605688607db1fd55d569e28d87d32479fc57c64b887fdba091404d3486bc1f8"
+evidence = "Mac leaf writes four consecutive elemental-magic skill IDs 14..17 into the caller's 16-byte university aggregate, matching the method identity; Complete source currently writes only the first three, a version difference to retain explicitly. The leaf starts at 0x1cfbcc after a prior return and ends at blr 0x1cfbec before next prologue 0x1cfbf0. aiEnterTown calls it at 0x13fbc4."
+
+[[functions]]
+retail_va = 0x524ed0
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ec3c
+mac_size = 0x114
+mac_symbol = ".aiVisitUniversity__FP4heroP15type_university"
+target_sha256 = "b319821f7cd0dc36bc87aed339ce6cbf5fa1eca610bf6c6b3a272f3e329674f6"
+evidence = "Mac entry rejects heroes with eight skills and players below 2000 gold, then evaluates and teaches university skills from the aggregate, matching source aiVisitUniversity. Final blr 0x13ed4c precedes buySpecialBuilding prologue 0x13ed50; aiEnterTown calls it at 0x13fbd0."
+
+[[functions]]
+retail_va = 0x417680
+unit = "advmgr"
+mac_section = 0
+mac_offset = 0x17e58
+mac_size = 0x14c
+mac_symbol = ".demobilizeCurrHero__10advManagerFUcUc"
+target_sha256 = "c9a570db902995a11c2a5eab1e0ba54d7c22988f5ee442434b8133c22e10daf8"
+evidence = "Mac entry receives advManager and two byte flags, tests waitingPlayer and current-player state, and demobilizes the active hero as the source member does. Final blr 0x17fa0 precedes next prologue 0x17fa4; aiEnterTown calls with flags 0,0 at 0x13fbe4."
+
+[[functions]]
+retail_va = 0x5bd8e0
+unit = "town"
+mac_section = 0
+mac_offset = 0x1b2b88
+mac_size = 0x700
+mac_symbol = ".applySpecialBuildingEffect__4townFP4hero"
+target_sha256 = "497e1baa37e7899a966925aa89bb1bc2bd7b22cc33a302033ca1967ec75a13ea"
+evidence = "Mac entry receives town and hero, first dispatches Dungeon type 5 to Mana Vortex handling and then processes other faction special buildings using game/text and building-bit tables, matching town::applySpecialBuildingEffect. Final blr 0x1b3284 precedes next prologue 0x1b3288; aiEnterTown calls it for garrison and visiting heroes at 0x13fbf8/0x13fc2c."
+
+[[helpers]]
+unit = "philai"
+source_helper = "upgradeCreatures"
+mac_section = 0
+mac_offset = 0x13d8d8
+mac_size = 0x1d0
+mac_symbol = ".upgradeCreatures__FP4heroPC4town"
+target_sha256 = "394f38d0adaf4d5533876bd4b71bed4ad22eb8f2f7a17b0b082597141cbd1cb4"
+evidence = "The unique canonical static helper scans seven dwelling upgrades and seven hero army slots, then compares the seven-resource cost difference before upgrading. Mac 0x13d8d8 begins with base/upgraded dwelling and trait TOC loads and seven-count loops, ends at blr 0x13daa4, and is called by aiEnterTown at 0x13faf4. No standalone Windows VA is claimed because VC6 expands it in aiEnterTown."
+
+[[helpers]]
+unit = "philai"
+source_helper = "buySpecialBuilding"
+mac_section = 0
+mac_offset = 0x13ed50
+mac_size = 0x324
+mac_symbol = ".buySpecialBuilding__FPC4heroP4town"
+target_sha256 = "078b30a97d4122dc161016eb8f22f2d70e25868eb53acee0d39846181ee513f7"
+evidence = "The unique canonical static helper checks same-owner/townAlreadyBuiltOn and dispatches faction special-building buys. Mac 0x13ed50 compares hero owner+0x22 with town owner+1, calls the already-built check and several town build-cost methods, ends at blr 0x13f070 before valueOfWarFactory at 0x13f074, and is called by aiEnterTown at 0x13fb00. No standalone Windows VA is claimed because VC6 expands it in aiEnterTown."

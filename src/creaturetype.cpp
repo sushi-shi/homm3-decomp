@@ -187,23 +187,30 @@ TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
         townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
 }
 
+// Provisional name: Mac retains this source helper at 0:0x888d0, immediately
+// before isBaseCreature. All three following queries call it there; VC6
+// expands its two-row lookup in their Windows bodies.
+static int getCreatureDwellingIndex(TCreatureType type)
+{
+    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
+    int townType = traits.m_townType;
+    if (townType == -1)
+        return -1;
+
+    int creatureIndex = traits.m_level;
+    if (type == g_townDwellingCreatures[townType * 14 + creatureIndex])
+        return creatureIndex;
+    creatureIndex += 7;
+    if (type == g_townDwellingCreatures[townType * 14 + creatureIndex])
+        return creatureIndex;
+    return -1;
+}
+
 VA(0x0047b120, 0x5D)  // dc 0x718fc
 int isBaseCreature(TCreatureType monType)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[monType];
-    int townType = traits.m_townType;
-    if (townType == -1)
-        return 0;
-
-    int creatureIndex = traits.m_level;
-    if (monType != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
-        creatureIndex += 7;
-        if (monType != g_townDwellingCreatures[townType * 14 + creatureIndex])
-            return 0;
-    }
-    if (creatureIndex < 0 || creatureIndex >= 7)
-        return 0;
-    return 1;
+    int creatureIndex = getCreatureDwellingIndex(monType);
+    return creatureIndex >= 0 && creatureIndex < 7;
 }
 
 VA(0x0047b180, 0x16)  // dc 0x71934
@@ -217,17 +224,7 @@ unsigned char isSiegeWeapon(TCreatureType creature)
 VA(0x0047b1a0, 0x71)  // dc 0x71948
 TCreatureType upgradedCreatureType(TCreatureType type)
 {
-    const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
-    int townType = traits.m_townType;
-    if (townType == -1)
-        return CREATURE_NONE;
-
-    int creatureIndex = traits.m_level;
-    if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
-        creatureIndex += 7;
-        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
-            return CREATURE_NONE;
-    }
+    int creatureIndex = getCreatureDwellingIndex(type);
     if (creatureIndex < 0 || creatureIndex >= 7)
         return CREATURE_NONE;
     return g_townDwellingCreatures[
@@ -237,25 +234,11 @@ TCreatureType upgradedCreatureType(TCreatureType type)
 VA(0x0047B220, 0x6D)
 TCreatureType downgradedCreatureType(TCreatureType type)
 {
-    do {
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
-        int townType = traits.m_townType;
-        int creatureIndex;
-        if (townType == -1)
-            break;
-
-        creatureIndex = traits.m_level;
-        if (type != g_townDwellingCreatures[townType * 14 + creatureIndex]) {
-            creatureIndex += 7;
-            if (type != g_townDwellingCreatures[townType * 14 + creatureIndex])
-                break;
-        }
-        if (creatureIndex < 7)
-            break;
-        return g_townDwellingCreatures[
-            g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
-    } while (0);
-    return CREATURE_NONE;
+    int creatureIndex = getCreatureDwellingIndex(type);
+    if (creatureIndex < 7)
+        return CREATURE_NONE;
+    return g_townDwellingCreatures[
+        g_creatureTypeTraits[type].m_townType * 14 + creatureIndex - 7];
 }
 
 VA(0x0047b290, 0x1E9)  // dc 0x71968

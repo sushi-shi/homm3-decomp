@@ -1,0 +1,42 @@
+# Source-owned RECRUIT helpers retained as out-of-line Mac callees. They do
+# not enter the scored function inventory.
+
+[[helpers]]
+unit = "recruit"
+source_helper = "recruitUnit::updateCost"
+mac_section = 0
+mac_offset = 0x1506e0
+mac_size = 0xd8
+mac_symbol = ".updateCost__11recruitUnitFv"
+target_sha256 = "6743ef8155ef73cac487c5c7f60b89e312dc7678c84cf75c1040b41c774a600d"
+evidence = "Dreamcast Update line 519 calls updateCost and Mac recruitUnit::update calls 0:0x1506e0 at 0:0x14f4cc. This body calls the already bounded getMonsterCost 0:0x14d20c, scans six resource costs, and stores goldPerTroop/altResource/resourcesPerTroop at the same +0x84/+0x88/+0x8c fields. It returns at blr 0:0x1507b4; adjacent 0:0x1507b8 begins with mflr. Four linked recruit-family callers target the entry."
+
+[[helpers]]
+unit = "recruit"
+source_helper = "siegeMonsterToSiegeArtifact"
+mac_section = 0
+mac_offset = 0x14f3cc
+mac_size = 0x50
+mac_symbol = ".siegeMonsterToSiegeArtifact__F13TCreatureType"
+target_sha256 = "e93e15367cf5c202eb01299103ab243a7bda2ee165c18537d5697a2953e980ce"
+evidence = "Dreamcast Update line 533 calls the canonical static creature-to-artifact switch. Mac update at 0:0x14f574 calls 0:0x14f3cc, whose four siege-creature cases return the corresponding artifact ordinals and default -1; its blr is at 0:0x14f418 before siegeArtifactToCreature begins at 0:0x14f41c. Windows VC6 inlines this helper in Update, so no independent Windows VA is claimed."
+
+[[functions]]
+retail_va = 0x0044d530
+unit = "basemgr"
+mac_section = 0
+mac_offset = 0x5bc04
+mac_size = 0x5c
+mac_symbol = ".__ct__11baseManagerFv"
+target_sha256 = "8dc7b21011c68ab53d0290b22ed0b88e97f9a13d81881536bdac6340789ebe88"
+evidence = "The source-owned baseManager constructor at src/basemgr.cpp:10 and DC dc0x50a28 precede every recruitUnit constructor body. Mac hero and army-group constructors call 0:0x5bc04, which zeroes manager links, sets priority/id to -1, copies the default name, and returns at 0:0x5bc5c. Adjacent 0:0x5bc60 begins a new prologue."
+
+[[functions]]
+retail_va = 0x004f82e0
+unit = "kbwin"
+mac_section = 0
+mac_offset = 0x20fc5c
+mac_size = 0xc
+mac_symbol = ".get__8GameTimeFv"
+target_sha256 = "b91bcd79b23c68c26443d309fa8dd5bbca628d32c70fa12f1ab9b9db3dd71037"
+evidence = "The source-owned GameTime::get at src/kbwin.cpp:391 and DC dc0xe8058 reads the game clock. Mac 0:0x20fc5c loads the clock pointer through TOC 1+0x121c, loads its current word, and returns at 0:0x20fc64; 0:0x20fc68 begins a new prologue. Both recruitUnit constructors call this body just before storing g_timers[0]."

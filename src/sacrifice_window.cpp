@@ -235,7 +235,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 414, 104, 50,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_NEXT_LEVEL],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
@@ -245,7 +245,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 492, 104, 42,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
@@ -743,13 +743,7 @@ void type_sacrifice_window::setArtifactMode()
     for (i = 0; i < m_artifactOfferingWidgets.size(); ++i)
         updateArtifactOffering(i);
 
-    for (i = 0; i < m_backpackWidgets.size(); ++i)
-        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->getBackpack(i));
-
-    unsigned char scrollBackpack =
-        m_currentHero->getLastBackpackIndex() + 1 > m_backpackWidgets.size();
-    m_leftBackpackButton->enable(scrollBackpack);
-    m_rightBackpackButton->enable(scrollBackpack);
+    updateBackpack();
 
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
                     &m_holdingArtifact);
@@ -772,17 +766,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering)
 {
     type_artifact artifact = *offering;
-    if (artifact.m_artifactId == -1) {
-        artifactWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(0, 0, 1);
-    } else {
-        artifactWidget->setIconFrame(artifact.m_artifactId);
-        artifactWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(
-            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
-    }
+    updateArtifactWidget(artifactWidget, artifact);
 
     if (offering->m_artifactId == -1) {
         artifactWidget->setHelpText(
@@ -872,7 +856,7 @@ void type_sacrifice_window::updateCreatureOffering(
         creature->m_selectionWidget->setVisible(creature->m_amount > 0);
         result = convertWithCommas(totalHits);
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_EXPERIENCE],
             result.c_str());
         creature->m_experienceText->setText(result.c_str());
         creature->m_experienceText->setVisible(creature->m_amount > 0);
@@ -885,7 +869,7 @@ void type_sacrifice_window::updateCreatureOffering(
         } else {
             std::string helpText;
             helpText = formatString(
-                g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE],
                 getArmyName(creatureType, 0));
             creature->m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
             creature->m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
@@ -990,8 +974,7 @@ void type_sacrifice_window::artifactClick(
 
         if (oldArtifact.m_artifactId == ARTIFACT_CATAPULT) {
             normalDialog(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1018,8 +1001,9 @@ void type_sacrifice_window::artifactClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
-// Complete expands this helper into both halves of backpack_click. Its widget
-// vector walk and shared scrolling-state byte are directly visible there.
+// Complete expands this helper in setArtifactMode and both halves of
+// backpackClick. Mac retains the call in setArtifactMode at 0:0x1594dc;
+// Dreamcast names update_backpack on source line 895.
 void type_sacrifice_window::updateBackpack()
 {
     for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
@@ -1175,8 +1159,9 @@ unsigned char type_sacrifice_window::addArtifact(
     return 1;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1310
-// The helper is expanded at each callback. Retail scans the fixed 64-record
+// E:\gamedcs\sacrifice_window.cpp:1310. Mac retains this ordinary helper at
+// 0:0x15a4b4 and calls it from allArtifacts; VC6 expands it at each callback.
+// Retail scans the fixed 64-record
 // backpack for its next occupied slot and stops if the offering pane fills.
 void type_sacrifice_window::emptyBackpack()
 {
@@ -1438,8 +1423,10 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
-// Retail expands this helper at both callers. The scan preserves one troop
-// only when every other army slot has already been offered to its limit.
+// Retail expands this helper at both callers. Mac retains the body at
+// 0:0x15aecc; allCreatures and creatureClick call it at 0:0x15b06c and
+// 0:0x15b558. The scan preserves one troop only when every other army slot
+// has already been offered to its limit.
 long type_sacrifice_window::getMaxAmount(long slot) const
 {
     long amount = m_currentHero->m_army.m_numTroops[slot];
@@ -1543,8 +1530,7 @@ void type_sacrifice_window::creatureClick(
         if (slot < 0) {
             if (rightClick) {
                 normalDialog(
-                    g_generalText->getText(
-                        SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE),
+                    (*g_generalText)[SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             return;
@@ -1580,8 +1566,7 @@ void type_sacrifice_window::creatureClick(
         } else {
             std::string buffer;
             buffer = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE_NAME],
                 getArmyName(m_currentHero->m_army.m_armyTypes[slot], 0));
             m_creatureNameWidget->setText(buffer.c_str());
             m_creatureNameWidget->setVisible(1);
@@ -1725,13 +1710,11 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
 
     m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
@@ -1814,10 +1797,12 @@ void type_skeleton_window::unselect()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
-// All Complete callers inline this source helper. The DC call edges and the
+// All Complete callers expand this ordinary source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
-// terminal button states.
-inline void type_skeleton_window::updateButtons()
+// terminal button states. Mac retains the body at code0+0x15c3f8 before
+// update(), with calls from creatureClick(), allCreatures(), and sacrifice().
+// Retained Dreamcast and Mac call boundaries support an ordinary helper.
+void type_skeleton_window::updateButtons()
 {
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -1858,24 +1843,21 @@ void type_skeleton_window::update(long group, long index)
 
     if (group == 0) {
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE], name);
     } else {
         int transformed = g_deathCreature[type];
         if (transformed != type) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE],
                 name, getArmyName(
                     transformed, m_armies[group]->m_numTroops[index]));
         } else if (m_armies[group]->m_numTroops[index] == 1) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE],
                 name);
         } else {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY],
                 name);
         }
     }
@@ -1909,8 +1891,7 @@ void type_skeleton_window::creatureClick(
     } else if (m_selectedGroup < 0) {
         m_selectedIndex = slot;
         m_selectedGroup = side;
-        m_selectBorder[side][slot]->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[side][slot]->setVisible(1);
         m_selectBorder[side][slot]->draw();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
@@ -1929,8 +1910,7 @@ void type_skeleton_window::creatureClick(
             m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex] = creatureType;
             m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
-        m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
         update(side, slot);
         update(m_selectedGroup, m_selectedIndex);
 
@@ -2022,10 +2002,11 @@ void type_skeleton_window::createCreatureIcons(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
-// DC names this helper and records both transformer callbacks as callers.
-// Complete expands both calls: occupied source slots move into the same
+// DC records move_all_armies as file-static and both transformer callbacks
+// as callers. Mac retains its body immediately before those callbacks.
+// Complete expands both ordinary source calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-inline void moveAllArmies(armyGroup* source, armyGroup* dest)
+static void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (source->m_armyTypes[i] == CREATURE_NONE)

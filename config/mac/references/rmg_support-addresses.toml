@@ -1,0 +1,315 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x22210c
+mac_size = 0x1ec
+unit = "rmg_support"
+target_sha256 = "23ffb84e3518f45b075c3b8181a414ec89dfdadece5cbdc1afa66ea20dd5585e"
+evidence = "Contiguous rmg_support TU order corroborated by body: allocates-patternCount4-byte-array,copies-patterns,and-nine-range-count-pairs. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4f9be0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x2222f8
+mac_size = 0x54
+unit = "rmg_support"
+target_sha256 = "80305f93cb9f898c18011bcfc5ee80d6d9a55cb82832e98e4930dc2af0ad1165"
+evidence = "Contiguous rmg_support TU order corroborated by body: deletes-array-member4;Mac-ABI-optional-delete-flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4f9ca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x222498
+mac_size = 0x2a4
+unit = "rmg_support"
+target_sha256 = "5737a9fbed6415f7a3060709dd2fc45a3d204a6e91d41e1dec9b1fe28d5c7627"
+evidence = "Contiguous rmg_support TU order corroborated by body: cardinal-neighbours-and-pattern8/6/7/2/3-branches,reflection-table-loop,and-corner-variant5. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4f9cb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253ccc
+mac_size = 0x60
+unit = "rmg_support"
+target_sha256 = "729fed90407c3db6cfe90a366f487723e8a60be08e3ffa9f61c91a72387e0a65"
+evidence = "Contiguous rmg_support TU order corroborated by body: derived-river-vtable-then-base-dtor253a90;Mac-ABI-delete-flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55eda0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253ad8
+mac_size = 0x8
+unit = "rmg_support"
+target_sha256 = "4e6be45cfb1e56cbacc1ef7bc915d35b25e73d07f1c54e0895c651eb3c85a928"
+evidence = "Contiguous rmg_support TU order corroborated by body: returns-shared-table-initialized-with13-river-patterns-at253ee4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55edb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253ae0
+mac_size = 0x54
+unit = "rmg_support"
+target_sha256 = "0fed74e60d8f2aeeb24b5e3d0d52898c2c0769d8fe342676e0c544219e98b55b"
+evidence = "Contiguous rmg_support TU order corroborated by body: four-component-terrain-tile-snapshot-and-adapter-slot0xc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55edc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253b64
+mac_size = 0x44
+unit = "rmg_support"
+target_sha256 = "4139fd285467dcd4742ae165c21914de2909dd500924311229fbb84992a0aa79"
+evidence = "Contiguous rmg_support TU order corroborated by body: adapter-overlay-slot0x20-and-accepts-values8/9. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55ee00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253c30
+mac_size = 0x30
+unit = "rmg_support"
+target_sha256 = "c57209f88d64259ece61f6bde8b717cad0018f92aedbef5de876fd0a4aa2a8e6"
+evidence = "Contiguous rmg_support TU order corroborated by body: forwards-to-adapter-slot0x1c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55ee30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253c60
+mac_size = 0x6c
+unit = "rmg_support"
+target_sha256 = "0b0781633b3eed1dab8a17b8134b38da849ca451a566e1a307d892524e737f48"
+evidence = "Contiguous rmg_support TU order corroborated by body: river-base253a20-and-lineWalker222c40-at-subobject0x10. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55ee50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x253fc0
+mac_size = 0x8
+unit = "rmg_support"
+target_sha256 = "2b5de999a5780ab2d8132b1a2ab9498caf1dd977292666688124f0711236729e"
+evidence = "Contiguous rmg_support TU order corroborated by body: returns-shared-table-initialized-with17-road-patterns-at2543cc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f320
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25401c
+mac_size = 0x30
+unit = "rmg_support"
+target_sha256 = "89282821ee0ccdf1dad52d0d053ecd1f90885afba687abbdb879d73f134e7404"
+evidence = "Contiguous rmg_support TU order corroborated by body: adapter-slot0x10-forwarder. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x254090
+mac_size = 0x88
+unit = "rmg_support"
+target_sha256 = "7ec4820643cd9f3c84436ee4c9bbdf2f073159a3d5a4d3ec9afd1cb43670cfd3"
+evidence = "Contiguous rmg_support TU order corroborated by body: adapter-slot0x18-hidden-result-snapshot-copies-terrain/frame/flipX/flipY. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f350
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x254118
+mac_size = 0x30
+unit = "rmg_support"
+target_sha256 = "f3f404f4b16508068ab22544669dee44060777bde10d32fb9d365e55dc673f92"
+evidence = "Contiguous rmg_support TU order corroborated by body: adapter-slot0x1c-forwarder. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x254148
+mac_size = 0x6c
+unit = "rmg_support"
+target_sha256 = "cbc0cb13269ce70212352942dc38c3a01ea8180c1ef7d0742901bb82845586d3"
+evidence = "Contiguous rmg_support TU order corroborated by body: road-base253f08-and-lineWalker222c40-at-subobject0x10. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f3b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x2541b4
+mac_size = 0x60
+unit = "rmg_support"
+target_sha256 = "25d9397de6790f28551deb2e5f29998a477b0da93ef2e86a57608de8b7aa17b0"
+evidence = "Contiguous rmg_support TU order corroborated by body: road-derived-vtable-then-base-dtor253f78;Mac-ABI-delete-flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x55f460
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c018
+mac_size = 0x64
+unit = "rmg_support"
+target_sha256 = "2c0d6ff8f92ef7340335097654e679c587a79c2916a89078a072fd9c59fc7e0a"
+evidence = "Contiguous rmg_support TU order corroborated by body: loads-vector-x/y,sums-squares,sqrt2a1b68,integer-conversion. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fceb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c07c
+mac_size = 0x98
+unit = "rmg_support"
+target_sha256 = "8c7065e50431bf13a68544cd20a28cf520264ebfc05715bee97680f67626cb33"
+evidence = "Contiguous rmg_support TU order corroborated by body: site/zone-assignment,allocates-twin,helper25c114,initialize25c164. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fcef0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c184
+mac_size = 0x34
+unit = "rmg_support"
+target_sha256 = "ad3161bf6e26a8dfd379754cc0786929fe60a952688ffa9d1f56dd55a302a170"
+evidence = "Contiguous rmg_support TU order corroborated by body: swaps-next-previous-links-and-next-pointers. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fcf60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c1b8
+mac_size = 0x4c
+unit = "rmg_support"
+target_sha256 = "ced5c81eb3386907a908cacc38fee03284f81d01793d041265708da14acd901d"
+evidence = "Contiguous rmg_support TU order corroborated by body: two-splice25c184-calls-on-this-and-twin. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fcfa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c4e4
+mac_size = 0x14c
+unit = "rmg_support"
+target_sha256 = "27c55c078fdfb7a5403e6ca15cc9a1b9e6fbb7d53abc1364ec9bf3787f53d6cc"
+evidence = "Contiguous rmg_support TU order corroborated by body: four-corners-minus200/400,four-createEdge25c758,four-splice25c184,connectEdges25caec. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd010
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c6b4
+mac_size = 0xa4
+unit = "rmg_support"
+target_sha256 = "3614700c4e211d524c4b82d2bb52dd9b0e1307900195b758f015f83fdb3df720"
+evidence = "Contiguous rmg_support TU order corroborated by body: deletes-each-edge-pointer-and-owned-vector. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c758
+mac_size = 0x170
+unit = "rmg_support"
+target_sha256 = "a7b16c09cd1a0b4918c11b2c81251df3c497ca503ae1a897501768f6745902b1"
+evidence = "Contiguous rmg_support TU order corroborated by body: allocates-edge,paired-ctor25c07c,pushes-edge-and-twin-to-vector. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c8c8
+mac_size = 0x100
+unit = "rmg_support"
+target_sha256 = "fb07ef0fafae72b0641ef3454ea852421bf5a750ef54454431698fcd30ab6e53"
+evidence = "Contiguous rmg_support TU order corroborated by body: detaches25c1b8,finds-and-erases-both-halfedges,then-deletes-both. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd5b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c9c8
+mac_size = 0x124
+unit = "rmg_support"
+target_sha256 = "9e191c2c612b8e776479c1327586c0e592c509f7233507320538df17ecea70af"
+evidence = "Contiguous rmg_support TU order corroborated by body: endpoint-equality-and-three-rightOfEdge25c36c-tests-walk-edge-ring. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd6b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25cd44
+mac_size = 0x218
+unit = "rmg_support"
+target_sha256 = "b1d6c57da5cd64aaa4f0d6a83fe95d96877e7caa5ac795a8286f8d00c47299f4"
+evidence = "Contiguous rmg_support TU order corroborated by body: locate25c9c8,onSegment25c3ec,removeEdge25c8c8,createEdge25c758,connectEdges25caec,circle25cb80,and-flip25c204. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fd790
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x25c2b4
+mac_size = 0x50
+unit = "rmg_support"
+target_sha256 = "4e8f66e6b2200511ee0340c2124b5c7272d30d3ee08486b509a9cbc7b9289984"
+evidence = "Contiguous rmg_support TU order corroborated by body: signed-cross-product-of-three-by-value-points. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5fdae0
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x253b34
+mac_size = 0x30
+unit = "rmg_support"
+target_sha256 = "af908fbf50c8f3e0ca586555b4ff909d2b49e1714eb6a984d78f3a9c80251b39"
+evidence = "Source helper without standalone Windows VA. TU order plus adapter-overlay-slot0x10-forwarder"
+source_helper = "TRmgLinePainter::setOverlay"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x253ba8
+mac_size = 0x88
+unit = "rmg_support"
+target_sha256 = "040c027a6770d715a297f38de0183d7ac04c2d9d4b462c1da3dbc4997ecd1939"
+evidence = "Source helper without standalone Windows VA. TU order plus adapter-slot0x18-hidden-result-and-four-component-snapshot-copy"
+source_helper = "TRmgLinePainter::getTile"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x253fc8
+mac_size = 0x54
+unit = "rmg_support"
+target_sha256 = "297a5699ae703f51da4853da9959da86235bc90407b98e231e04fb7070b8f03a"
+evidence = "Source helper without standalone Windows VA. TU order plus adapter-slot0xc-four-component-snapshot-copy"
+source_helper = "TRmgRoadLinePainter::setTile"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25404c
+mac_size = 0x44
+unit = "rmg_support"
+target_sha256 = "b439d218c82836d98c5c5f8e6df986c17401bb041d1a38b6a3657056a29f0903"
+evidence = "Source helper without standalone Windows VA. TU order plus adapter-overlay-slot0x20-and-accepts8/9"
+source_helper = "TRmgRoadLinePainter::canPaint"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25c164
+mac_size = 0x20
+unit = "rmg_support"
+target_sha256 = "d31f219fb63b3fa7a1719ac002fb163be3f00a241f0bad6681efccfbe819675e"
+evidence = "Source helper without standalone Windows VA. TU order plus self-next-and-previous,zero-positionComputed,and-minus1-position"
+source_helper = "TRmgBoundaryVertex::initialize"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25caec
+mac_size = 0x94
+unit = "rmg_support"
+target_sha256 = "157624a42c33a013d12d8f73f364ce7a6febefa0ec434da4bb333b1e2b227a0c"
+evidence = "Source helper without standalone Windows VA. TU order plus first-opposite-and-second-origin-site/zone,createEdge25c758,and-two-splice25c184"
+source_helper = "TRmgVoronoi::connectEdges"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25c304
+mac_size = 0x68
+unit = "rmg_support"
+target_sha256 = "1840195c35f128890897e7b9b08e742bf73e91696e2183c7925d0c40c537c031"
+evidence = "Source helper without standalone Windows VA. TU order plus orientation25c2b4-result-positive"
+source_helper = "isRmgCounterClockwise"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25c204
+mac_size = 0xb0
+unit = "rmg_support"
+target_sha256 = "4770257bf99e941272f9fb1b7eb6f0fc5dcfbb2b2863e13a6dff88dfe237456d"
+evidence = "Source helper without standalone Windows VA. TU order plus snapshots-predecessors,detach25c1b8,moves-site-and-zone-fields,two-splice25c184"
+source_helper = "flipRmgEdge"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x25cb80
+mac_size = 0x1c4
+unit = "rmg_support"
+target_sha256 = "55d7145c2c6bc4ef69c70b65e243e4355d8ef7f7cf63a099c8b598bda4846a30"
+evidence = "Source helper without standalone Windows VA. TU order plus four-orientation25c2b4-calls-and-signed-wide-circle-determinant"
+source_helper = "isRmgPointInsideCircle"

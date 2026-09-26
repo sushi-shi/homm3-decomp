@@ -1,0 +1,73 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x4fa660
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11b6f0
+mac_size = 0x148
+target_sha256 = "cbe99e7a8c8237590fb2b991f98b385706931099b55321941d69ba5d295a1e00"
+evidence = "Direct callee of getItemIndex at 0x11b6b0; binary search over 0x20-byte LODEntry names, recursive half-range calls and _strcmpi at 0x20efc4; BLR 0x11b834 before next leaf."
+
+[[functions]]
+retail_va = 0x4fa780
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11b854
+mac_size = 0x7c
+target_sha256 = "9e0d9324b199125b07e7a7eddcca9a4e8505dd6ce603aa569d43cc21367289f3"
+evidence = "LODFile construction calls underlying file state init, LODHeader ctor 0x11b9b0 and vector init; clears opened at +0x150 and calls clear 0x11b598. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x4fa800
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11b934
+mac_size = 0x7c
+target_sha256 = "a9c3c36abeaadd041d0a37e1bab509162038869d87814822eef983daea28ebdc"
+evidence = "Canonical destructor maps to Mac delete-flag body: calls LODFile::clear 0x11b598, destroys subindex vector and underlying file object, optional operator delete; complete BLR before LODHeader ctor."
+
+[[functions]]
+retail_va = 0x4fa8a0
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11ba00
+mac_size = 0x174
+target_sha256 = "b76fde9654942a44bbe45f93e2e822e02d50e1a7a455167d43925d357e65ab35"
+evidence = "Tests opened +0x150 and calls clear, opens archive, copies name and reads header, resizes 0x20-byte LODEntry vector, seeks stream, stores opened=1; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x4faa70
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11bb74
+mac_size = 0x80
+target_sha256 = "4d0ac147f6d2e58e7335546c50970e716b910c16f0b66747c5c9917b620c446b"
+evidence = "Calls canonical getDataPtr helper 0x11b5f4, sets current item/position fields +0x15c/+0x160 and deletes old data buffer; complete BLR/next prologue."
+
+[[helpers]]
+source_helper = "LODFile::getDataPtr"
+unit = "lodfile"
+mac_section = 0x0
+mac_offset = 0x11b5f4
+mac_size = 0x8c
+target_sha256 = "01e78629c6a6a523ce54837580b335a8ae85619d7ce160e361b85cb2be45d4b1"
+evidence = "Direct callee of pointAt 0x11bb8c; checks opened, calls find, seeks selected entry offset, stores current item index and returns stream handle."
+
+[[helpers]]
+source_helper = "LODEntry::LODEntry"
+unit = "lodfile"
+mac_section = 0
+mac_offset = 0x11b838
+mac_size = 0x1c
+target_sha256 = "7c5db7ef49ab5fa541ba770d9205fda6b4c277a8e1726e4d74eff2d27077dd24"
+evidence = "The Mac vector resize at 0x11bd68 constructs new 0x20-byte LODEntry rows through this retained body. It zeros name[0] and the four dword fields at +0x10..+0x1c, exactly the ordinary source constructor. BLR at 0x11b850 precedes LODFile construction. Windows expands this constructor into vector growth."
+
+[[helpers]]
+source_helper = "LODHeader::LODHeader"
+unit = "lodfile"
+mac_section = 0
+mac_offset = 0x11b9b0
+mac_size = 0x50
+target_sha256 = "defb0a176ac260c8a5ccf8f8d01e0eb098ada66f0d81749d403701660639731d"
+evidence = "LODFile's Mac constructor calls this retained body at 0x11b880 on its +0x168 header subobject. It copies the LOD signature, stores version 500 at +4 and entry count zero at +8, then clears 80 reserved bytes from +0xc. This is the ordinary source constructor that Windows expands. BLR at 0x11b9fc precedes LODFile::open."

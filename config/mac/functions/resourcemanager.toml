@@ -1,0 +1,37 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x55d070
+unit = "resourcemanager"
+source = "src/resourcemanager.cpp"
+mac_section = 0
+mac_offset = 0x1546a0
+mac_size = 0x88
+mac_symbol = ".getBitmapResourceSize__15ResourceManagerFPCc"
+target_sha256 = "1a8c3a68732871103bb5fcc5a918c243625f6efa039425597ca469517e979c58"
+data = [0x0069e4f0]
+evidence = "Mac caller 0x96ed0 passes the same bitmap name immediately after pointToBitmapResource at 0x154680; body selects active context bitmap list at +0xc, walks 0x1d8-byte archive slots with LODFile at +4, calls getItemIndex at 0x11b680, and returns entry size at +0x14. Prior wrapper ends in blr at 0x15469c; next function starts with mflr at 0x154728."
+
+[[functions]]
+retail_va = 0x55a250
+unit = "resourcemanager"
+source = "src/resourcemanager.cpp"
+mac_section = 0
+mac_offset = 0x152924
+mac_size = 0x210
+mac_symbol = ".open__15ResourceManagerFbbPi"
+target_sha256 = "bd86bc2e7343d9dc7fa812f19f49e7a2f970c6ab4cd3e7a8e2b986e14a990eaa"
+evidence = "Sole linked caller 0:0x10f2f0 passes two open flags and error output pointer; body at 0:0x152924 calls the separately bounded openArchiveResource at 0:0x152210 once for each archive list, reserves an eight-entry vector, catches and publishes an int error, and returns at 0:0x152b30; adjacent function begins at 0:0x152b34."
+data = [0x69e4f0]
+
+[[functions]]
+retail_va = 0x55c7b0
+unit = "resourcemanager"
+source = "src/resourcemanager.cpp"
+mac_section = 0
+mac_offset = 0x153fcc
+mac_size = 0x618
+mac_symbol = ".getSprite__15ResourceManagerFPCc"
+target_sha256 = "04f9fc9ba212a599f86704819815ca90f09016eede371f1ad34851314fc03c97"
+evidence = "Mac body 0:0x153fcc starts with getFromCache 0x152194 and pointToSpriteResource 0x1522ec; 74 linked callers target its entry, it returns at 0:0x1545e0, and the adjacent loader starts at 0:0x1545e4. It reads a 0x310 DEF header, allocates a 0x38 CSprite, builds 0x10 sequence records and 0x48 CSpriteFrame objects, then attaches palettes. Dreamcast and Windows both identify this getSprite loader."
+data = [0x69e4f0]

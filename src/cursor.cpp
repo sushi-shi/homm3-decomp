@@ -224,8 +224,8 @@ void advManager::drawCursorAlpha()
 VA(0x0047ffe0, 0x1A)  // dc 0x7a428
 void advManager::turnTo(int newDirection)
 {
-    m_cursorTurning = 0;
     m_cursorDirection = newDirection;
+    stopCursor(0);
 }
 
 VA(0x00480000, 0x84)  // dc 0x7a45c
@@ -500,7 +500,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
-                boat* newBoat = &g_game->m_boats[destCell->m_extraInfo];
+                boat* newBoat = g_game->getBoat(destCell->m_extraInfo);
                 g_game->recordHideHero(curr, curr->m_owner, 0);
                 g_game->recordHideBoat(newBoat, 1, curr->m_id);
                 g_game->recordShowHero(curr, curr->m_owner,
@@ -662,7 +662,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman()
                 && g_game->onSameTeam(
-                    g_game->m_garrisons[eventCell->m_extraInfo].m_playerOwner,
+                    g_game->getGarrison(eventCell->m_extraInfo)->m_playerOwner,
                     g_netLocalGamePos))
                 returnCell = 0;
             break;
@@ -943,7 +943,7 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 void advManager::onDeadPlayer(CMapChange* mapChange)
 {
     CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT],
             g_game->getPlayerName(change->m_playerPos));
     normalDialog(g_text, 1, -1, -1, 10, change->m_playerPos,
                  -1, -1, -1, 5000, -1, 0);

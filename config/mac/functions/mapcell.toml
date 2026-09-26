@@ -1,0 +1,23 @@
+# Reviewed source-owned Mac pairs.
+
+[[functions]]
+retail_va = 0x5042c0
+unit = "mapcell"
+source = "src/mapcell.cpp"
+mac_section = 0
+mac_offset = 0x1270c0
+mac_size = 0x1b8
+mac_symbol = ".rebuildObjectTypeIndex__10NewfullMapFv"
+target_sha256 = "39148d7b1a3be8446296eb06db52aaf71e9ed0750c47ba3f02ac8e7a2cc3b1ea"
+evidence = "The Mac body at 0:0x1270c0 clears resolved halfword indices at +0x36 across 232 per-class vectors using four unrolled groups of 58, then scans 0x38-byte objectType records backward, compares extra and image names, and stores the source object index. Its prologue follows the prior blr at 0x1270bc; its blr at 0x127274 precedes the next prologue at 0x127278. Exactly two inbound calls at 0x1273d8 and 0x127890 follow the two object-type readers, matching Windows readMapObjects and loadMapObjects."
+
+[[functions]]
+retail_va = 0x5013b0
+unit = "mapcell"
+source = "src/mapcell.cpp"
+mac_section = 0
+mac_offset = 0x123b10
+mac_size = 0x3dc
+mac_symbol = ".readMonsterData__10NewfullMapFP13TAbstractFileP7CObject"
+target_sha256 = "79134495bee5c2f237e12deede5a2c620a86e051da99da3746c6ac4ba4554087"
+evidence = "Mac 0:0x123b10 receives map, stream and CObject; reads version 14, two-byte quantity and one-byte disposition; calls random exactly for (1,7), (1,10), (4,10); reads a string and seven resources into a 0x24-byte MonsterData, appends it, reads flag bytes, and records an x/y/z identifier. The preceding BLR at 0x123b0c and this BLR at 0x123ee8 before the next prologue at 0x123eec bound 0x3dc bytes. The sole inbound call at 0x126088 is in the map-object reader."

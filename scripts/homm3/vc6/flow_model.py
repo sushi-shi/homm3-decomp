@@ -44,7 +44,7 @@ evidence the original source had that form - and every winning edit is
 only ever proposed, never landed. Such labels say so ("retail arbitrates").
 
 Pipeline per candidate: compile via homm3.core.cc_wrap with the game
-profile (config/units.toml `game_o2_ml_gr_windows` + /GR-) + /FAs, slice
+profile (config/units.toml `game_o2_mt_gr_windows` + /GR-) + /FAs, slice
 fn F from the COFF object with homm3.sema._asm's llvm-objdump path, and
 score against the reference with _flow.distance (unpaired flow kinds +
 unpaired branch tokens + ret delta; 0 = branch sequences agree - whatever

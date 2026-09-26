@@ -1,0 +1,1090 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x5e04
+mac_size = 0xe8
+unit = "advmgr"
+target_sha256 = "39b93c78d6aa8eab428343d74d4b8710e54146ca65095d89aab9c3d3a58ef6e4"
+evidence = "Contiguous advmgr TU order corroborated by body: resource-text calls and loops80/2. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405d20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x5ef4
+mac_size = 0xa0
+unit = "advmgr"
+target_sha256 = "a7a1d122c8c99a78b23214c4241b77005115c9f1dade105d3c9952e4c2892c19"
+evidence = "Contiguous advmgr TU order corroborated by body: resource-text call and28entries. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405d80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x5f94
+mac_size = 0x2c
+unit = "advmgr"
+target_sha256 = "e01c06ac260fc70c1fb47b38a514b066370eb12c2ce59be23ee89a4cc1dd5f0f"
+evidence = "Contiguous advmgr TU order corroborated by body: getBlackBox0xab730. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x5fc0
+mac_size = 0x24
+unit = "advmgr"
+target_sha256 = "90816934f268944a358093a878767ed5c55a6e80b2d059f1d2107d468f01de8b"
+evidence = "Contiguous advmgr TU order corroborated by body: creature-bank indexed lookup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405df0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x5fe4
+mac_size = 0x20
+unit = "advmgr"
+target_sha256 = "0c68d91a1bcb3deb15398e7f97924997012f2b041e91c1640e3d7185f4bece65"
+evidence = "Contiguous advmgr TU order corroborated by body: university indexed lookup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405e10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x6004
+mac_size = 0x498
+unit = "advmgr"
+target_sha256 = "ada8c29fe16ffbf979378b3ad35ecd9466f982bec311cc9727fffce9e8329ecc"
+evidence = "Contiguous advmgr TU order corroborated by body: network dispatcher constants419/427. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x405e30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x649c
+mac_size = 0x1ac
+unit = "advmgr"
+target_sha256 = "a72c223d776e6b25b19e2d236657253c04e6b0f8f8f836c43c08f02101b87ec4"
+evidence = "Contiguous advmgr TU order corroborated by body: text360/resource-transfer. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x406a20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x66ac
+mac_size = 0x1e4
+unit = "advmgr"
+target_sha256 = "549d1458ebb01cd8f7f04ae6f3fd093f65b1c7cc8cd49465f82063337705e267"
+evidence = "Contiguous advmgr TU order corroborated by body: text359/resource-update. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x406bf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x7024
+mac_size = 0x3a8
+unit = "advmgr"
+target_sha256 = "f98ad807c26c81864a3c495e1a15ee74b8dd8d79232d34525f8e1e78100ce953"
+evidence = "Contiguous advmgr TU order corroborated by body: base ctor0x5bc04 and member-init loops10/18/70. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x406df0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x74c0
+mac_size = 0x84c
+unit = "advmgr"
+target_sha256 = "280572b740f11d4d3b9d219ca2de8b2abb2df0fc9e74b9e0a493e7a2e44c7f3c"
+evidence = "Contiguous advmgr TU order corroborated by body: graphic/terrain/road/cursor resource initialization. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x406fd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x7d0c
+mac_size = 0x3f4
+unit = "advmgr"
+target_sha256 = "c5c2986fb1a043302b2abb990d9383b9ebdd3d82ada34bf072f9c8235897ecfa"
+evidence = "Contiguous advmgr TU order corroborated by body: resource-release loops corresponding to open. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4077e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x8108
+mac_size = 0x78
+unit = "advmgr"
+target_sha256 = "25d3592345cf74529cf15e2b6608b4609fa44eeae957cf569d18b111913686fb"
+evidence = "Contiguous advmgr TU order corroborated by body: rectangle fields18/1a/1c/1e. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x407ac0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x81f8
+mac_size = 0x60
+unit = "advmgr"
+target_sha256 = "1a3e0e7b573a296275069ceeab6c9d35d50adb1051b31ca7a89a913fc2490663"
+evidence = "Contiguous advmgr TU order corroborated by body: origin fields e0/e2 and mousepoint. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x407b10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x8258
+mac_size = 0xa44
+unit = "advmgr"
+target_sha256 = "3af59dd9a7cd945fa42e2182dcd34ff19621bc2fdfb29c59071148fd88a9efe4"
+evidence = "Contiguous advmgr TU order corroborated by body: adventure command dispatch and context calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x407b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x8c9c
+mac_size = 0x4a8
+unit = "advmgr"
+target_sha256 = "013fabd21750f155a208a64b63985cce43ffa4edca6dd3ed62c19cf310b87df3"
+evidence = "Contiguous advmgr TU order corroborated by body: message dispatch into key/select/deselect/hover. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4087b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x9144
+mac_size = 0x8ec
+unit = "advmgr"
+target_sha256 = "4baf725b21dfb188becfa20945c298995f8cf68a28324cdfa7173fc2767e0cb3"
+evidence = "Contiguous advmgr TU order corroborated by body: keyboard constants and command routing. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x408c40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x9a30
+mac_size = 0x23c
+unit = "advmgr"
+target_sha256 = "11c9c466e929edc7342f40d1935765e3baa9ef783e771b981e1f76e1f770a1b2"
+evidence = "Contiguous advmgr TU order corroborated by body: select mouse message and processMapSelect/radar calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4097e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x9c6c
+mac_size = 0x5d4
+unit = "advmgr"
+target_sha256 = "ae4642a42f8bebbaaa955a67fb09dfcfd40bbab741b2776348a173d47f1ce91e"
+evidence = "Contiguous advmgr TU order corroborated by body: deselect message and adventure-command routing. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x409a70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa240
+mac_size = 0x59c
+unit = "advmgr"
+target_sha256 = "b341bdc6e90e897e24a5e53a612bf9139bd2fe9f3fb43b6567f17559f4f33e2c"
+evidence = "Contiguous advmgr TU order corroborated by body: radar point conversion and bounds. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40a0c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xa7dc
+mac_size = 0x648
+unit = "advmgr"
+target_sha256 = "210b948eb5f7362e95d920ca2f68536805731413413812cf55968b0a75183924"
+evidence = "Contiguous advmgr TU order corroborated by body: map trigger lookup and hero/town context. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40a5d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb018
+mac_size = 0x290
+unit = "advmgr"
+target_sha256 = "76c606331c978b2bb05f0f3e1a3b2e316094f8146b51c4dbdb8c0a8911e16ca4"
+evidence = "Contiguous advmgr TU order corroborated by body: army ctor0x58050 initialize0x5810c seven slots and text203. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40abe0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf28
+mac_size = 0x54
+unit = "advmgr"
+target_sha256 = "23fa37666ff2ed9fb25d62658c1d10903a7c1c6e5455ba651a2ee3363f31dead"
+evidence = "Contiguous advmgr TU order corroborated by body: restoreCell0xc0d4 and Mac deleting flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40af60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf7c
+mac_size = 0x158
+unit = "advmgr"
+target_sha256 = "b82e95d327118a9b82562ca1dc2a662680a69f27dc9ece73568978415de24e76"
+evidence = "Contiguous advmgr TU order corroborated by body: bounds9/8 obscure0xf2474 restore0xf25e4 and cell trigger0x11e21c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40afb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc154
+mac_size = 0x94
+unit = "advmgr"
+target_sha256 = "2069f8158bee2770f94a8fdd3419e94906a912ec2eb0d5e20a90b42f29b9763d"
+evidence = "Contiguous advmgr TU order corroborated by body: widget200 and rectangle redraw0x20df2c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40b0e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1e8
+mac_size = 0x1eb4
+unit = "advmgr"
+target_sha256 = "bb6d5cca8ddc5c0b36becd43accff35623b649c2fcc437ca6257e099c00784a3"
+evidence = "Contiguous advmgr TU order corroborated by body: object dispatcher calling named help family0xae24..0xbd70. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40b150
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb2a8
+mac_size = 0x19c
+unit = "advmgr"
+mac_symbol = ".getCreatureBankHelpText__FPcP10NewmapCell23type_creature_bank_typelPCcUc"
+target_sha256 = "2a3abe9987f9fd255c30e4b58a92621bf3742fe7eaf5f8865423019653603a57"
+evidence = "Contiguous advmgr TU order corroborated by body: getCreatureBank0x5fc0 hasCreatures0x56454 and getArmyHelpText0xb018. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40d3f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb444
+mac_size = 0x184
+unit = "advmgr"
+target_sha256 = "9867c82a4fa23fdee70155795e4f8a9223639675bd9b4304579bd9ac843fd05e"
+evidence = "Contiguous advmgr TU order corroborated by body: mine-owner/resource help and guarded army. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40d670
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb5c8
+mac_size = 0x1c0
+unit = "advmgr"
+target_sha256 = "750bbc4af1a27afa9229f3139a4397a3c290d066f3153e5b19963caaa6d1fe75"
+evidence = "Contiguous advmgr TU order corroborated by body: spelltable stride88 and texts355/356. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40d8d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xb788
+mac_size = 0x1c0
+unit = "advmgr"
+target_sha256 = "af86f19f9570b9635245f6851bdf85f39529f27cffd92d43839460c93b00a9ef"
+evidence = "Contiguous advmgr TU order corroborated by body: quickViewText102 price bits and hero tree flags+0x6b. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40db00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbd70
+mac_size = 0x1a4
+unit = "advmgr"
+target_sha256 = "acf0d5591dee122e73fe71895a5b3f92b333e998f97b60573e52368391cd5e6a"
+evidence = "Contiguous advmgr TU order corroborated by body: quickViewText113 and texts357/358 with hero skills+c9. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40dcc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xe09c
+mac_size = 0x368
+unit = "advmgr"
+target_sha256 = "7a1f63585c82d194e617248815069e86d415778b9346efdadab8b8ba38bd4e98"
+evidence = "Contiguous advmgr TU order corroborated by body: map area and waiting-hover cursor. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40deb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xe4d8
+mac_size = 0x110
+unit = "advmgr"
+target_sha256 = "06b2ee5f90b3018573db93e020406e13ce505d6620bb1f5a09bff5a9b46f792d"
+evidence = "Contiguous advmgr TU order corroborated by body: object type cursor selection. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40e280
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xe5e8
+mac_size = 0xa94
+unit = "advmgr"
+target_sha256 = "46c138625b29ccee8f8b02f5b15b27d54e92ec15a121755ba8d42b846f0db394"
+evidence = "Contiguous advmgr TU order corroborated by body: normal/waiting cursor and rollover calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40e360
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf07c
+mac_size = 0xc
+unit = "advmgr"
+target_sha256 = "cd02b4ded51094446b73c0f1069182ed5fe5304e70feb4bc51346ac7180e139f"
+evidence = "Contiguous advmgr TU order corroborated by body: three-instruction zero store to route field+0x50. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40ec80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf088
+mac_size = 0x668
+unit = "advmgr"
+target_sha256 = "f47051e1abbc9c4655c0d53b93582626b9d51052015064ba4ba46d990091deb8"
+evidence = "Contiguous advmgr TU order corroborated by body: full-backpack64 dialog and digging flow. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40ec90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf7a8
+mac_size = 0x1a0
+unit = "advmgr"
+target_sha256 = "34c6fad540229ad20c930af75b9868764e91137fa2efebc42b182c41247a2ec1"
+evidence = "Contiguous advmgr TU order corroborated by body: four rendering calls0x8a76c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40f2f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf948
+mac_size = 0x5e0
+unit = "advmgr"
+target_sha256 = "f3d54f610ab97a6c7694c266cc9666c74f67a4b1db0ffa9499390a56bf8da757"
+evidence = "Contiguous advmgr TU order corroborated by body: rendering grid19x17 and drawGround0x133d4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40f3f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xff74
+mac_size = 0x31c
+unit = "advmgr"
+target_sha256 = "c0f88c9be00c0e655d2c2074edb71303d8628a0bcc5ff45e7901483b2b6054eb"
+evidence = "Contiguous advmgr TU order corroborated by body: neighbor visibility calls0x11972c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40f8c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x10290
+mac_size = 0x13c
+unit = "advmgr"
+target_sha256 = "d8304f1010dae6300960406656517902d7c34dbfa108a0b6090a21245722fd6a"
+evidence = "Contiguous advmgr TU order corroborated by body: two-by-two scan getCell0x13770 and hero/boat parts. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40fb30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x103cc
+mac_size = 0x70
+unit = "advmgr"
+target_sha256 = "7f93b6ca86af66932bcee96ad735887f65f5ae29855eec80ca577e9553f46171"
+evidence = "Contiguous advmgr TU order corroborated by body: object constants53/33/20/17/42/87/77/98. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40fca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1043c
+mac_size = 0x130
+unit = "advmgr"
+target_sha256 = "b0da972ca1cba333e20f79c878c737c0bed4dfc5a2db836a3d2ba6acd49bc8fc"
+evidence = "Contiguous advmgr TU order corroborated by body: flagged-object switch and owner fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40fd20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1056c
+mac_size = 0x560
+unit = "advmgr"
+target_sha256 = "a0b81e9fcea1d79d90bcf7286ad006a2c8b60a851b1acb97a56a2ab926db4f66"
+evidence = "Contiguous advmgr TU order corroborated by body: heroStandSequence0xf4cf0 and render0x8ada4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x40fe30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x10acc
+mac_size = 0x57c
+unit = "advmgr"
+target_sha256 = "a0b21ae55e7c61e4af126812e929badbe41b04a9c711f69f616095ce5a469f7a"
+evidence = "Contiguous advmgr TU order corroborated by body: heroStandSequence0xf4cf0 and shadowrender0x8ae50. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4102c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11048
+mac_size = 0x2a8
+unit = "advmgr"
+target_sha256 = "b44cc7ef8f6f9d1b624b37f57b3724b9c1f59b960f293a2716674fdd832c7da8"
+evidence = "Contiguous advmgr TU order corroborated by body: boatStandSequence0xf4d40 and render0x8ada4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x410760
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x112f0
+mac_size = 0x2a8
+unit = "advmgr"
+target_sha256 = "dd67747178c7b8c32a30916891a6240c3860ac1d82d962fa2c69a1ee4cfa01f0"
+evidence = "Contiguous advmgr TU order corroborated by body: boatStandSequence0xf4d40 and shadowrender0x8ae50. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4109b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11598
+mac_size = 0xa08
+unit = "advmgr"
+target_sha256 = "2b9c3bcf18d1d6da60c8fa59fc209c273a6b58a777cd7f64205c5b090a5fd663"
+evidence = "Contiguous advmgr TU order corroborated by body: scanForHeroOrBoat0x10290 and bitset/render helper calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x410c00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x11fa0
+mac_size = 0x680
+unit = "advmgr"
+target_sha256 = "66b99219dfc2d6c9c45d2756ffa06373e75ee047d646e78a10e94785c7e9f0b3"
+evidence = "Contiguous advmgr TU order corroborated by body: shadow counterpart to preceding drawAdvObj. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x411590
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12620
+mac_size = 0x1cc
+unit = "advmgr"
+target_sha256 = "32d0549cfddbae724d7958efcc0f89bae6340a3e9f57f3673f8b595746d6b427"
+evidence = "Contiguous advmgr TU order corroborated by body: river frame/flip fields and renderer. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x411b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x127ec
+mac_size = 0x1d8
+unit = "advmgr"
+target_sha256 = "9af79af3f03d21069277b4ad77b51d3fca1e94aad4e8a097e8a2d2cab99983e3"
+evidence = "Contiguous advmgr TU order corroborated by body: road frame/flip fields and renderer. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x411d60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x129c4
+mac_size = 0x19c
+unit = "advmgr"
+target_sha256 = "a8379afd191e38a2430caa2a18448b316693e19162e03b725025eb4e88242fd5"
+evidence = "Contiguous advmgr TU order corroborated by body: route value0x1bcf8 and shadowrender0x8ac2c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x411f50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12b60
+mac_size = 0x198
+unit = "advmgr"
+target_sha256 = "3fc9d96674dd7c143990de848d3561e9b1dd445b8b83f06c01da564b8cf5a2d2"
+evidence = "Contiguous advmgr TU order corroborated by body: route value0x1bcf8 and render0x8ab98. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4120b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12cf8
+mac_size = 0x2d0
+unit = "advmgr"
+target_sha256 = "55f104c023dcd583b08a6f9c3a2bf7e00f3c6f64bca8a0ca5c19b4f2a644ed17"
+evidence = "Contiguous advmgr TU order corroborated by body: cloudLookup0xff74 cloudrender0x8acc0 frames100/1/5/3. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x412220
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x12fc8
+mac_size = 0x40c
+unit = "advmgr"
+target_sha256 = "2910ca824d79c06e63a4e753ae566b78eb03be52ee53262f01aace71190f87f1"
+evidence = "Contiguous advmgr TU order corroborated by body: hasFlag0x103cc objectTrigger0x120b38 owner0x1043c flagdraw0x8a960/0x8a8cc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x412470
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x133d4
+mac_size = 0x324
+unit = "advmgr"
+target_sha256 = "82aab620f9dc241f68e5c1a6a24f079a61b1dd9b2546277104e27ecc5b7a28bf"
+evidence = "Contiguous advmgr TU order corroborated by body: terrain edgeframes16/19/17/18 and renderer0x8ab98. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x412900
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1382c
+mac_size = 0xd74
+unit = "advmgr"
+target_sha256 = "8b14218658bbc49bb9f04ee9edbaa079d90cbf29d28014d651dccfe1d163d8a2"
+evidence = "Contiguous advmgr TU order corroborated by body: point overload and per-cell radar color/object overlays. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x412c40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x145e8
+mac_size = 0x1fe0
+unit = "advmgr"
+target_sha256 = "b8bdff02cf36bd84f1d684eba0c914e50a3d8bf018faa09c8173086a98eb3cb7"
+evidence = "Contiguous advmgr TU order corroborated by body: help-dialog dispatcher using same named help family. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4137c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16600
+mac_size = 0xb0
+unit = "advmgr"
+target_sha256 = "dad3a7e1af90fcec83a9b34fbbbebd1631d7ebe819638d28a4770a13644e6888"
+evidence = "Contiguous advmgr TU order corroborated by body: view switch and GameTime0x20fc5c. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x415d60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x166b0
+mac_size = 0x1b4
+unit = "advmgr"
+target_sha256 = "e5285a230cdcc5990256aa899636c18412a687c70875bc5de684b0b82755e01c"
+evidence = "Contiguous advmgr TU order corroborated by body: typed bottom-view updater dispatch. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x415de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16864
+mac_size = 0x88
+unit = "advmgr"
+target_sha256 = "7ae067b25c7829a0dac97c7a699dc81debf72675420c1de7714128ca81fc4eff"
+evidence = "Contiguous advmgr TU order corroborated by body: view5 and constructor0x61cd8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x415f20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x168ec
+mac_size = 0xa4
+unit = "advmgr"
+target_sha256 = "1b6ef5353246a830b3598267b7e5ad895da4ccdd2c51fef74be6ddbb1a3d6114"
+evidence = "Contiguous advmgr TU order corroborated by body: view1 and constructor0x5f2c0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x415fb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16990
+mac_size = 0x8c
+unit = "advmgr"
+target_sha256 = "59c2cbd0f81fe796291646cad3d9b2f3efbef50d0d56adbb77b7ea6a4d618176"
+evidence = "Contiguous advmgr TU order corroborated by body: assign string/view6 and updBottomView. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16a1c
+mac_size = 0x94
+unit = "advmgr"
+target_sha256 = "b2d14b30bd3cea8343e9d7f57394e017c7e79d742663835dee7d69030bca838f"
+evidence = "Contiguous advmgr TU order corroborated by body: view6 and constructor0x5f7a4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ab0
+mac_size = 0x74
+unit = "advmgr"
+target_sha256 = "230d1da85341cee3d3ba979a014bc5b5a827356bd8c917703275efb68650ed5f"
+evidence = "Contiguous advmgr TU order corroborated by body: assign string/view7 and updBottomView. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416210
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16b24
+mac_size = 0x8c
+unit = "advmgr"
+target_sha256 = "3168fe4d404dfdd3a7625aeaa3895f84770250e7ca6942a4f8803da2538edbd5"
+evidence = "Contiguous advmgr TU order corroborated by body: view7 and constructor0x5fbc0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4162f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16bb0
+mac_size = 0x98
+unit = "advmgr"
+target_sha256 = "5aecdd9189603ec3a7833bb54a05cb6c9cc900eae3c44c3b2161b86b79014461"
+evidence = "Contiguous advmgr TU order corroborated by body: view2 and constructor0x61434. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4163a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16c48
+mac_size = 0x88
+unit = "advmgr"
+target_sha256 = "bf9557fd1ec9525320b2751800d304b4941c8f8891fdf5c6f19a8b55e95446e6"
+evidence = "Contiguous advmgr TU order corroborated by body: view3 and constructor0x5fdd4. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416450
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16cd0
+mac_size = 0x88
+unit = "advmgr"
+target_sha256 = "606b0405254f144a4026a6cc2c209d505b7f337ed22a5692246e9776bac033e4"
+evidence = "Contiguous advmgr TU order corroborated by body: view4 and constructor0x60788. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4164f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e24
+mac_size = 0x1e8
+unit = "advmgr"
+target_sha256 = "7b454197ff3c2deaf10d2c8dca90382607577320da7d7b8b6faf6aa178853dc4"
+evidence = "Contiguous advmgr TU order corroborated by body: hero coordinates vision-range helper0x16d58 and quickhero ctor0x14a820/show0x14b4d0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416590
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1700c
+mac_size = 0x638
+unit = "advmgr"
+target_sha256 = "52e2d807350ff30fc7d9bd104c334ee83c9c1f4da9e40b1a576da16fce6e239c"
+evidence = "Contiguous advmgr TU order corroborated by body: town text/army and quicktown window. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4167a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17644
+mac_size = 0x16c
+unit = "advmgr"
+target_sha256 = "8a3231aa2ed3380506cafccc9fea2b733678b31cd592f8f6b8bafe319ccdb04a"
+evidence = "Contiguous advmgr TU order corroborated by body: skill1..3 and quickgarrison ctor0x14c8ac/show0x14cecc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x416f80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x177b0
+mac_size = 0x388
+unit = "advmgr"
+target_sha256 = "710c8bcdf49a33f5c6913dfa9b507ad84f2d2def05d0d71d71ae368e099433ca"
+evidence = "Contiguous advmgr TU order corroborated by body: monster index+1e vision/quantity and ctor0x14b6bc/show0x14bc30. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x417150
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17b38
+mac_size = 0x18c
+unit = "advmgr"
+target_sha256 = "ae71dde5f8e68ecd4fef026ebb6850bfaf4a9b8bebd20b6c4c74a74818e87dba"
+evidence = "Contiguous advmgr TU order corroborated by body: saveborder/bottomview/completeDraw/radar calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x417420
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17d78
+mac_size = 0xe0
+unit = "advmgr"
+target_sha256 = "8d7d81615f497c16b205bb93a3b71d8fc6b42b8f41a53469e26850880e78d171"
+evidence = "Contiguous advmgr TU order corroborated by body: selected hero mobility and route. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4175e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17fa4
+mac_size = 0x27c
+unit = "advmgr"
+target_sha256 = "6f017f85ac881f30fc62065f02db189c4587eef7081921bc89b922fc3aa318b6"
+evidence = "Contiguous advmgr TU order corroborated by body: town lookup/context selection and deactivation. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x417830
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x187b4
+mac_size = 0x288
+unit = "advmgr"
+target_sha256 = "e5407a42ae62b80a9f8407964368af8132cb6fbcd423ef991212944b665e4e63"
+evidence = "Contiguous advmgr TU order corroborated by body: save-dialog and game serialization calls. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x418160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18a3c
+mac_size = 0x290
+unit = "advmgr"
+target_sha256 = "da89a645f4716e2ff61d779e4fc7682b18901245b364ddec4136d0d6298ea781"
+evidence = "Contiguous advmgr TU order corroborated by body: directional loops radii2..4 insertSound0x19294 and soundmgr0x218968/0x218a48. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4183d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18d38
+mac_size = 0x55c
+unit = "advmgr"
+target_sha256 = "e6f33a049971bd2c3d8260bdd8e370d643757b4fc46a412d3b15e02572788199"
+evidence = "Contiguous advmgr TU order corroborated by body: terrain/object sound switch and specialTerrain0x11e6ac. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x418620
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19294
+mac_size = 0x1ec
+unit = "advmgr"
+target_sha256 = "63d1122cef54c1723ef36c5fdade2cdde28642912ecd1f50052cadec1ea7039f"
+evidence = "Contiguous advmgr TU order corroborated by body: sound priority queue insertion. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x418c10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19480
+mac_size = 0x3c8
+unit = "advmgr"
+target_sha256 = "170232f73a9a526f630bfcd8f51798f1a900c6cfdcb71c44ef165f00a605d687"
+evidence = "Contiguous advmgr TU order corroborated by body: route visibility/path/render state. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x418dd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19a20
+mac_size = 0x78
+unit = "advmgr"
+target_sha256 = "b882768b668cdadcb22bb4a478286f7805c84a3d564a910e45a0b02537770cdd"
+evidence = "Contiguous advmgr TU order corroborated by body: widget11 enable/disable. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419450
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19a98
+mac_size = 0x148
+unit = "advmgr"
+target_sha256 = "56e01f1e2b020234ee7c55908e9182fcd6cb3e19cca9591d19ecc1e91d56c1a4"
+evidence = "Contiguous advmgr TU order corroborated by body: seed0x1631a0 twice. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4194a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19be0
+mac_size = 0x68
+unit = "advmgr"
+target_sha256 = "3662349d075981108c1659898fc7dad41567a9698f98f83bb403bec9ad7c03b3"
+evidence = "Contiguous advmgr TU order corroborated by body: mouse position0x21774c and processHover0xe5e8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419570
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19c48
+mac_size = 0x208
+unit = "advmgr"
+target_sha256 = "cbe64554264fd33831d2c3b9ce4707afbdf322fc0848ea9078a51a7b7ca53fd6"
+evidence = "Contiguous advmgr TU order corroborated by body: map origin bounds-9/-8 and mousepointer0x216fc0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4195c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x19e50
+mac_size = 0x1a0
+unit = "advmgr"
+target_sha256 = "4532ed33b179ef0f21a976dc14159d8b8ba33eddbcc651079e5466d70ebde67a"
+evidence = "Contiguous advmgr TU order corroborated by body: screen800x600 edge16 speed100. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419820
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1a074
+mac_size = 0x2d4
+unit = "advmgr"
+target_sha256 = "38605281e94d414ab12a178c0efd2573d7f1c80462b9fda4460d2def1c9d4d56"
+evidence = "Contiguous advmgr TU order corroborated by body: current hero/town coordinates and mobilize. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419990
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1a348
+mac_size = 0x170
+unit = "advmgr"
+target_sha256 = "6368aa6e26e20e6d7c9fc0b0633a55258784e75f07b5890df9868c8f2009d2b5"
+evidence = "Contiguous advmgr TU order corroborated by body: text14 dialog player/day. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419c80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1a4b8
+mac_size = 0x39c
+unit = "advmgr"
+target_sha256 = "03bccc254ec92cadbad10db391c358bd28f77ec961fc6fdaf2e624d0c640d670"
+evidence = "Contiguous advmgr TU order corroborated by body: computeAdvNetControl0x1b1d0 multiplayer and popup0x1a348. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x419e00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1a854
+mac_size = 0xcc
+unit = "advmgr"
+target_sha256 = "789774b0f7e211c9b45cb3e80b2ab317e40f6f84bbff61ceec9126250ddd707d"
+evidence = "Contiguous advmgr TU order corroborated by body: loadgame then startLocalPlayerTurn0x1a4b8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1a920
+mac_size = 0x378
+unit = "advmgr"
+target_sha256 = "2598a96d0f4aeb83d1e9108e7f3115112d78898b53461f6a8c2124048f5e713d"
+evidence = "Contiguous advmgr TU order corroborated by body: soundcount70 sort priorities and cleanup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a1e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1ac98
+mac_size = 0x11c
+unit = "advmgr"
+target_sha256 = "dc15fa868455973a3a83585725737991668580e9b61a345dbdd95b2fcbae48dd"
+evidence = "Contiguous advmgr TU order corroborated by body: widgetIDs3..11 disable0x20b534. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a2e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1adb4
+mac_size = 0x11c
+unit = "advmgr"
+target_sha256 = "7eb40e52c194b337eeaab745c5d71a9d4af4d7e6c5d1297ebf1ba797ec111efd"
+evidence = "Contiguous advmgr TU order corroborated by body: widgetIDs3..11 enable0x20b504. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a3a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1aed0
+mac_size = 0x300
+unit = "advmgr"
+target_sha256 = "df218bd020b43ac86ec9269736f9483ede5332738c630c60038582d45a3d5d8f"
+evidence = "Contiguous advmgr TU order corroborated by body: adjacentxy trigger0x11e454/type0x11e34c and monster54. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a460
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1b1d0
+mac_size = 0x160
+unit = "advmgr"
+target_sha256 = "cd12dcdcbd1367f0402a8137cd0cbe9d79767ced9c242cbc3b47e35575c37e33"
+evidence = "Contiguous advmgr TU order corroborated by body: human/remote/isLocal checks. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a660
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1b408
+mac_size = 0x2b0
+unit = "advmgr"
+target_sha256 = "48db52e1c347e8e5a898700d8d1e9d61eb5b024d726c067111c586236bd9d7e8"
+evidence = "Contiguous advmgr TU order corroborated by body: puzzlewindow ctor0x14727c draw0x1479cc and gems0xf7a8. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41a7f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1b798
+mac_size = 0x12c
+unit = "advmgr"
+target_sha256 = "cbf3d88f5babb4f57bc98f13d766324f09bcb18ef66fec790210d408bd3acae6"
+evidence = "Contiguous advmgr TU order corroborated by body: optionswindow ctor0x5054/dtor0x587c and selection commands. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41ab00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1b8c4
+mac_size = 0x1f0
+unit = "advmgr"
+target_sha256 = "f916f8ebf38bf5fd03c34cf1e49547315a6121da48fcce693c8bcdf8bd977969"
+evidence = "Contiguous advmgr TU order corroborated by body: systemwindow ctor0x1aa2ec/show0x1ac964 and commands6b/69/66/7802. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41ac00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1bab4
+mac_size = 0x244
+unit = "advmgr"
+target_sha256 = "6c7cc9aac4899a41ad6b8ea9bacb516231347b5188c7ae7e2a7566c73a44b93b"
+evidence = "Contiguous advmgr TU order corroborated by body: adjacent cells getCell0x13770 and tree flags. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41adb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1bd2c
+mac_size = 0x34
+unit = "advmgr"
+target_sha256 = "70598e59e594a6b819363d4624ea6fef6135a666c98f1714c1df9ef8d702d7e4"
+evidence = "Contiguous advmgr TU order corroborated by body: route base+0x48 indexed by map dimensions; returns address without load. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b010
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1bd60
+mac_size = 0xa0
+unit = "advmgr"
+target_sha256 = "bbfc7de8ab26a62b2b1c8e317d36dc5460d8378445a671325c9014cc93251b11"
+evidence = "Contiguous advmgr TU order corroborated by body: CHeroWindowEx constructor and popup vtable. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b040
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1be60
+mac_size = 0x9c
+unit = "advmgr"
+target_sha256 = "715587c5923ed672d6d9b13c75bbc98c6be43004c6915d3103b7ccfaa28388a8"
+evidence = "Contiguous advmgr TU order corroborated by body: popup fields/base destruction and Mac deleting flag. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b120
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1befc
+mac_size = 0x30
+unit = "advmgr"
+target_sha256 = "6959986a929616def85f7e3a6d9f22c370fa3ff931c3f4845a41a2617c6d7c7b"
+evidence = "Contiguous advmgr TU order corroborated by body: message exit field and return. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b190
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1bf2c
+mac_size = 0x108
+unit = "advmgr"
+target_sha256 = "a60bf6d52ce8fca0c89fbc402785b40d540fab2bdb075b07bb9ae371a59211a1"
+evidence = "Contiguous advmgr TU order corroborated by body: popup mouse message routing and exitDialog. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x41b1c0
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x6890
+mac_size = 0x794
+unit = "advmgr"
+target_sha256 = "05d63f2d4b6d3f38cfc9705fa8bbb16671003d567fcc0aac253d37ca1e821988"
+evidence = "Source helper without standalone Windows VA. TU order plus two hero structures offsets2c/51/53 and4b2/4d7; trade-request source follows gift handler"
+source_helper = "CAdvMgrNetMsgHandler::handleTradeRequestMsg"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x8180
+mac_size = 0x78
+unit = "advmgr"
+target_sha256 = "a60ad7471b02815c4ec6d00199fa4d322f30f1f849c341dff8afef03db3d9a27"
+evidence = "Source helper without standalone Windows VA. TU order plus formats and loads10 walk-sample resources via0x153f78"
+source_helper = "advManager::getCursorSampleSet"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xae24
+mac_size = 0x6c
+unit = "advmgr"
+target_sha256 = "f37fa9d03b56489cb5f6a7c45a94754506d902787228e1b6a724ae7f34d8788c"
+evidence = "Source helper without standalone Windows VA. TU order plus town name/index+1e and sprintf"
+source_helper = "setTownHelp"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xae90
+mac_size = 0x98
+unit = "advmgr"
+target_sha256 = "8f8d40496821e7559afc37c98a8457be4377bc99669598b939caaada48467d4a"
+evidence = "Source helper without standalone Windows VA. TU order plus hero helper0xf4a74 and text16"
+source_helper = "setHeroHelp"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xaf28
+mac_size = 0xf0
+unit = "advmgr"
+target_sha256 = "1c021d4dceaaf3e17ffe549324e6328054b309afe05c1610e82b4d4af940dc4a"
+evidence = "Source helper without standalone Windows VA. TU order plus quickview59 trigger and visited texts353/354"
+source_helper = "setPyramidHelp"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xb948
+mac_size = 0x100
+unit = "advmgr"
+target_sha256 = "5759a6df958468f39cad078cc1f8dfa0c6bd83f8016b71c9a22aabb8b9ddbe8d"
+evidence = "Source helper without standalone Windows VA. TU order plus quickViewText105 at+0x1a4 and visited texts353/354"
+source_helper = "setWagonHelpText"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xba48
+mac_size = 0x100
+unit = "advmgr"
+target_sha256 = "655a88300944e47bbcc0fa95b25f554084fadb3826f786ccadb7297ad84ffced"
+evidence = "Source helper without standalone Windows VA. TU order plus quickViewText108 at+0x1b0 and visited texts353/354"
+source_helper = "setTombHelpText"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbb48
+mac_size = 0x114
+unit = "advmgr"
+target_sha256 = "d1caedce6762fc369108cf9ae4ca3be3b61aef40696d402fc8b8ea8c88d68b91"
+evidence = "Source helper without standalone Windows VA. TU order plus quickViewText109 and low5bits times500"
+source_helper = "setWaterWheelHelpText"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbc5c
+mac_size = 0x114
+unit = "advmgr"
+target_sha256 = "dadbf5c55ecd9d61189797d2ae50f79cac4070862419acc590adbcfa9692021f"
+evidence = "Source helper without standalone Windows VA. TU order plus quickViewText112 and bits13..16 amount"
+source_helper = "setWindmillHelpText"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc0d4
+mac_size = 0x80
+unit = "advmgr"
+target_sha256 = "93cbd7de0a87ba441a7adf28ea60ec2814018931773c6c1dfb855e18a75e75ec"
+evidence = "Source helper without standalone Windows VA. TU order plus restores saved obscure-cell state"
+source_helper = "type_cell_adjuster::restoreCell"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xe404
+mac_size = 0xd4
+unit = "advmgr"
+target_sha256 = "d3f619810eb031ee37dcafc3add333cfbee67e5b3de7692bb111845304ce8434"
+evidence = "Source helper without standalone Windows VA. TU order plus hasCreatures0x56454 and getNormalCursor0xe4d8"
+source_helper = "advManager::getGarrisonCursor"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x16d58
+mac_size = 0xcc
+unit = "advmgr"
+target_sha256 = "0a5feefccc0e62afa07e17a1df2563a78b08506d58d211acd31f6852985f0559"
+evidence = "Source helper without standalone Windows VA. TU order plus hero visions0x106ce0 and range0x106d34"
+source_helper = "getIdentifyLevel"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x18ccc
+mac_size = 0x6c
+unit = "advmgr"
+target_sha256 = "7506f2a85e1c7c5e2279411b7fc29d18857fce46f1eca1b75d89441cbf9f7bda"
+evidence = "Source helper without standalone Windows VA. TU order plus checks sound70 calls trimLoopingSounds0x1a920 and getSample0x153f78"
+source_helper = "advManager::checkLoadSample"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x19958
+mac_size = 0xc8
+unit = "advmgr"
+target_sha256 = "a07240247fbb8d691261fff450f860d8c640b163855075cc198b19a0cdf050a7"
+evidence = "Source helper without standalone Windows VA. TU order plus isMobile0x106e6c showRoute0x19480 and checkDimNextHeroBut0x19a20"
+source_helper = "advManager::checkDimHero"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x19ff0
+mac_size = 0x84
+unit = "advmgr"
+target_sha256 = "2a02d31a59846f013a6db7358180389a732e9056ea2ba4073591f01b1f258e6d"
+evidence = "Source helper without standalone Windows VA. TU order plus screen800x600 bounds and16pixel edge"
+source_helper = "advManager::mouseInScrollZone"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1b6b8
+mac_size = 0xe0
+unit = "advmgr"
+target_sha256 = "1f19e115409050e5210b2cc4ad1a0a82cdb4018a40fbc4cf0f595bf2739405ab"
+evidence = "Source helper without standalone Windows VA. TU order plus completeDraw0xf948 and render0x8ab98"
+source_helper = "advManager::puzzleDraw"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1bcf8
+mac_size = 0x34
+unit = "advmgr"
+target_sha256 = "c9e01f7c9297eaee1881932c2238d5c533819c65c2c59791c3496115c8f7c75b"
+evidence = "Source helper without standalone Windows VA. TU order plus route base+0x48 dimensional indexing and lhzx return-value load"
+source_helper = "advManager::getRouteArray"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x165c8
+mac_size = 0x38
+unit = "advmgr"
+target_sha256 = "74d17f14406d50e4d0f254fa2317930c6e5067744c4fc9a4008c53f600a29a7b"
+evidence = "Source helper without standalone Windows VA. TU order plus window clearBottomView0x3b98 and default bottom-view field store"
+source_helper = "advManager::clearBottomView"
+
+[[helpers]]
+source_helper = "advManager::getCell(int x, int y, int z)"
+unit = "advmgr"
+mac_section = 0x0
+mac_offset = 0x136f8
+mac_size = 0x78
+target_sha256 = "e7a7fa76b8fdf93451998594427c817a69f3b9d5220a867d4f5508901bcbb868"
+evidence = "Dreamcast names advManager::GetCell(int,int,int) at dc:0x14b08. Mac drawAdvObj calls 0x136f8 at 0x1160c with this and x/y/z; the body checks map bounds and returns either the first map cell or the indexed 0x22-byte cell. Windows expands this ordinary helper. BLR 0x1376c precedes the next function at 0x13770."

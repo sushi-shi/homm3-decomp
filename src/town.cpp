@@ -37,7 +37,7 @@ DATA(0x00688eb4) int g_siloIncome[9][7] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 0, 0, 0, 0, 0 }
 };
-DATA(0x006888c0) const int g_eventBuildingIds[9][41] = {
+DATA(0x006888c0) const int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -214,13 +214,14 @@ const int g_townNameFixedLength = 13;
 // posBuffer first, and an undeclared assignment; worse are an unsigned short
 // nameLength read (98.10), reading into `saveVersion` itself (97.60) and
 // hoisting `m_name = g_text` out of the two arms (88.68).
+// DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
 VA(0x005bcd60, 0x586)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
-    char posBuffer;
-    unsigned char spellBuf[70];
+    unsigned char ucharBuffer;
+    unsigned char inBuf[70];
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
@@ -237,21 +238,21 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     m_type = charBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapX = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapX = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapY = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapY = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_mapZ = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_mapZ = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_dockSite = posBuffer;
-    if (infile->read(&posBuffer, sizeof(posBuffer)) < sizeof(posBuffer))
+    m_dockSite = ucharBuffer;
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer)) < sizeof(ucharBuffer))
         return -1;
-    m_dockSiteY = posBuffer;
+    m_dockSiteY = ucharBuffer;
 
     if (m_garrison.load(infile) < 0)
         return -1;
@@ -293,11 +294,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
         < sizeof(m_mageGuildSpells))
         return -1;
 
-    if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+    if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell) {
         m_spells.set(spell,
-                   (spellBuf[spell / 8] & (1 << (spell % 8))) != 0);
+                   (inBuf[spell / 8] & (1 << (spell % 8))) != 0);
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -441,11 +442,13 @@ int town::save(TAbstractFile* outfile)
     return 0;
 }
 
+// Dreamcast town.cpp:764 calls the Town.h HasBuilding accessor;
+// retail expands the active-mask test.
 VA(0x005bd700, 0x47)  // dc 0x165d5c
 int town::getPortraitFrame(bool isSmall) const
 {
     int frame;
-    if (m_active & g_bitNumber[CASTLE_FORT_ID])
+    if (hasBuilding(CASTLE_FORT_ID, true))
         frame = m_type * 2;
     else
         frame = m_type * 2 + 18;
@@ -504,7 +507,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         int maxMana = townHero->getMaxMana() * 2;
         if (townHero->m_mana < maxMana) {
             if (g_game->isLocalHuman(m_owner))
-                normalDialog(g_generalText->getText(GENERAL_TEXT_MANA_VORTEX_VISIT), // Mana Vortex
+                normalDialog((*g_generalText)[GENERAL_TEXT_MANA_VORTEX_VISIT], // Mana Vortex
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             townHero->m_mana = static_cast<short>(maxMana);
             m_manaVortexFull = 0;
@@ -517,7 +520,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->m_maxMovePoints += g_stablesMovementBonus;
         townHero->m_movePoints += g_stablesMovementBonus;
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(GENERAL_TEXT_STABLES_VISIT), // Stables
+            normalDialog((*g_generalText)[GENERAL_TEXT_STABLES_VISIT], // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
@@ -527,7 +530,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT), // Wall of Knowledge
+                (*g_generalText)[GENERAL_TEXT_WALL_OF_KNOWLEDGE_VISIT], // Wall of Knowledge
                 1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
     }
 
@@ -536,7 +539,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
-            normalDialog(g_generalText->getText(GENERAL_TEXT_ORDER_OF_FIRE_VISIT), // Order of Fire
+            normalDialog((*g_generalText)[GENERAL_TEXT_ORDER_OF_FIRE_VISIT], // Order of Fire
                          1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
     }
 
@@ -546,7 +549,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
             townHero->getExperienceBonusFactor() * 1000.0f);
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT), // Battle Scholar Academy
+                (*g_generalText)[GENERAL_TEXT_BATTLE_SCHOLAR_ACADEMY_VISIT], // Battle Scholar Academy
                 1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->giveExperience(experience, 1, 1);
@@ -556,7 +559,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_HALL_OF_VALHALLA_VISIT), // Hall of Valhalla
+                (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
                 1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(0, 1);
@@ -566,7 +569,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
         && !townHero->m_townSpecialGrantedMask[m_id]) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
-                g_generalText->getText(GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT), // Cage of Warlords
+                (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords
                 1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(1, 1);
@@ -623,16 +626,13 @@ void town::initializeHordes()
     }
 }
 
+// Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
+// getArmy and retail expands the ordinary town helper here.
 VA(0x005bdfe0, 0x4E)  // dc 0x16654c
 int town::hasGarrison()
 {
     if (m_visitingHeroId < 0) {
-        armyGroup* group;
-        if (m_garrisonHeroId < 0)
-            group = &m_garrison;
-        else
-            group = &g_game->getHero(m_garrisonHeroId)->m_army;
-        if (!group->hasCreatures())
+        if (!getArmy().hasCreatures())
             return 0;
     }
     return 1;
@@ -662,19 +662,19 @@ void town::giveSpells(hero* forceHero) const
             if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
                 if (hasBuilding(MAGE_GUILD_ID, true)) {
                     if (m_type == TOWN_CONFLUX
-                        && (m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+                        && (hasBuilding(HOLY_GRAIL_ID, true))) {
                         for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                             if (!m_spells.test(spell)
                                 && g_spellTraits[spell].m_level
-                                    < currentHero->m_skillLevel[
-                                        eSecSkillWisdom] + 3
+                                    < currentHero->getSecondarySkill(
+                                        eSecSkillWisdom) + 3
                                 && spell != SPELL_TITANS_LIGHTNING_BOLT)
                                 currentHero->addSpell(spell);
                         }
                     } else {
                         for (int level = 0;
-                             level < currentHero->m_skillLevel[
-                                         eSecSkillWisdom] + 2
+                             level < currentHero->getSecondarySkill(
+                                         eSecSkillWisdom) + 2
                                  && level <= m_mageLevel;
                              ++level) {
                             for (int slot = 0;
@@ -738,6 +738,8 @@ void town::deallocate()
     m_owner = -1;
 }
 
+// Dreamcast town.cpp:1106 calls town::PlaceInMap after moving the
+// garrison hero to the visiting slot. Retail expands the wrapper.
 VA(0x005be390, 0xB7)  // dc 0x16682c
 void town::removeGarrisonHero()
 {
@@ -747,12 +749,7 @@ void town::removeGarrisonHero()
     int player = m_owner;
     m_visitingHeroId = m_garrisonHeroId;
     m_garrisonHeroId = -1;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    placedHero->placeInMap(player, point, 0);
+    placeInMap(garrisonHero->m_id, player, 0);
 }
 
 // E:\gamedcs\town.cpp:1111
@@ -797,26 +794,27 @@ void town::swapHeroes()
         }
     }
 
+    // Dreamcast town.cpp:1143 and Mac retain the ordinary town::PlaceInMap call.
     int player = currentTown->m_owner;
-    hero* placedHero = g_game->getHero(garrisonHero->m_id);
-    type_point point;
-    point.m_x = currentTown->m_mapX;
-    point.m_y = currentTown->m_mapY;
-    point.m_z = currentTown->m_mapZ;
-    placedHero->placeInMap(player, point, 0);
+    currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
 VA(0x005be600, 0x32A)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {
+    // CodeWarrior emits this default ctor with the exact 20 bytes of Mac's
+    // bitset<70>::reset target at 0:e7378; an explicit reset adds a call.
+    // VC6's ctor calls _Tidy, which retail expands at this site.
     std::bitset<70> prohibited;
     for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
         // Complete builds this mask one bit at a time; retail 0x5be668
         // retains Dinkumware's set(position,bool), without a game adapter.
-        prohibited.set(spell,
-            m_spells[spell] || g_game->m_spellDisabledInfo[spell]);
+        prohibited[spell] =
+            m_spells[spell] || g_game->m_spellDisabledInfo[spell];
     }
 
+    // Mac retail materializes bitset reference temporaries at both guild
+    // assignments; DC town.cpp:1192 names reference::operator= at the tail.
     for (int level = 1; level <= 5; ++level) {
         for (int slot = 0;
              slot < g_mageGuildBaseSpellCounts[level - 1] + 1; ++slot) {
@@ -829,7 +827,7 @@ void town::initializeSpells(const TownExtra* townSetup)
                         g_spellTraits[spell].m_townProbability[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] = spell;
-                        prohibited.set(spell);
+                        prohibited[spell] = true;
                         break;
                     }
                 }
@@ -851,7 +849,7 @@ void town::initializeSpells(const TownExtra* townSetup)
                 }
             }
             m_mageGuildSpells[level - 1][slot] = spell;
-            prohibited.set(spell);
+            prohibited[spell] = true;
         }
     }
 
@@ -882,23 +880,25 @@ void town::setSpellsAvailable()
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::createBuilding(type_building_id building)
 {
+    // Dreamcast CodeView names this short local `dwelling`.
+    short dwelling;
     m_built |= g_bitNumber[building];
     m_built &= ~s_includedBuildings[m_type][building];
 
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        short dw = s_constHordeEffects[m_type][slot].m_dwelling;
+        dwelling = s_constHordeEffects[m_type][slot].m_dwelling;
         if (building == g_hordeBuildings[slot]) {
-            m_built &= ~g_bitNumber[DWELLING_0_ID + dw];
-            if (dw < TOWN_DWELLING_COUNT
-                && (m_built & g_bitNumber[DWELLING_0_UPG_ID + dw])) {
+            m_built &= ~g_bitNumber[DWELLING_0_ID + dwelling];
+            if (dwelling < TOWN_DWELLING_COUNT
+                && hasBuilding(DWELLING_0_UPG_ID + dwelling, false)) {
                 m_built &= ~g_bitNumber[building];
-                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dw];
+                m_built &= ~g_bitNumber[DWELLING_0_UPG_ID + dwelling];
                 building = g_hordeBuildings[slot + 1];
                 m_built |= g_bitNumber[building];
             }
         }
-        if (m_built & g_bitNumber[g_hordeBuildings[slot]]) {
-            if (building == DWELLING_0_UPG_ID + dw) {
+        if (hasBuilding(g_hordeBuildings[slot], false)) {
+            if (building == DWELLING_0_UPG_ID + dwelling) {
                 m_built &= ~g_bitNumber[building];
                 m_built &= ~g_bitNumber[g_hordeBuildings[slot]];
                 building = g_hordeBuildings[slot + 1];
@@ -988,13 +988,10 @@ type_building_id town::buildBuilding(int buildingId,
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
         if (g_game->m_setup.m_difficulty < 2) {
-            int team = m_owner;
-            if (team >= 0)
-                team = g_game->m_mapHeader.m_teamInfo[team];
-            if (!g_game->isHumanTeam(team))
-                m_builtThisTurn = 2;
-            else
+            if (g_game->isHumanAlly(m_owner))
                 m_builtThisTurn = 1;
+            else
+                m_builtThisTurn = 2;
         } else {
             m_builtThisTurn = 1;
         }
@@ -1022,10 +1019,12 @@ type_building_id town::buildBuilding(int buildingId,
     if (m_type == TOWN_TOWER) {
         if (buildingId == EXTRA_0_ID) {
             g_game->setVisibility(m_mapX, m_mapY, m_mapZ, m_owner, 20, 0);
-        } else if (buildingId == HOLY_GRAIL_ID) {
+        }
+        if (buildingId == HOLY_GRAIL_ID) {
             g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 0, m_owner,
                                   g_mapWidth, 0);
-            if (g_game->m_worldMap.getNumLevels() > 1)
+            // DC town.cpp:1390 calls the game helper; both retail loops inline it.
+            if (g_game->getNumMapLevels() > 1)
                 g_game->setVisibility(g_mapWidth / 2, g_mapHeight / 2, 1,
                                       m_owner, g_mapWidth, 0);
         }
@@ -1041,25 +1040,19 @@ type_building_id town::buildBuilding(int buildingId,
 VA(0x005bf210, 0x1A5)  // dc 0x1671cc
 void town::updateShipyard()
 {
-    if (m_active & g_bitNumber[DOCK_ID]) {
-        type_point point;
-        point.m_x = m_dockSite;
-        point.m_y = m_dockSiteY;
-        point.m_z = m_mapZ;
+    if (hasBuilding(DOCK_ID, true)) {
+        type_point point(m_dockSite, m_dockSiteY, m_mapZ);
 
-        NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
-        if (cell->m_isTrigger && (cell->m_type == BOAT || cell->m_type == HERO)) {
-            if (!(m_active & g_bitNumber[DOCK_WITH_BOAT_ID])) {
-                createBuilding(DOCK_WITH_BOAT_ID);
-                return;
+        NewmapCell* cell = g_game->getCell(point);
+        if (!cell->m_isTrigger
+            || (cell->m_type != BOAT && cell->m_type != HERO)) {
+            if (hasBuilding(DOCK_WITH_BOAT_ID, false)) {
+                m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
+                updateFullBuildingMask();
             }
-        } else if (m_built & g_bitNumber[DOCK_WITH_BOAT_ID]) {
-            m_built &= ~g_bitNumber[DOCK_WITH_BOAT_ID];
-            m_active = m_built;
-            for (int building = 0; building < TOWN_BUILDING_SLOTS; building++) {
-                if (m_built & g_bitNumber[building])
-                    m_active |= s_includedBuildings[m_type][building];
-            }
+        } else if (!(hasBuilding(DOCK_WITH_BOAT_ID, true))) {
+            createBuilding(DOCK_WITH_BOAT_ID);
+            return;
         }
     }
 }
@@ -1094,13 +1087,16 @@ unsigned char town::canBuildDock() const
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
 
+// Dreamcast town.cpp:1491 calls is_legal_building and HasBuilding;
+// Complete expands both helper bodies into the two mask tests.
 VA(0x005bf4f0, 0x7A)  // dc 0x167388
 void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 {
     *archerLevel = 10;
     int level = 4;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-        if ((m_available & g_bitNumber[building]) && (m_built & g_bitNumber[building]))
+        if (isLegalBuilding(type_building_id(building))
+                && hasBuilding(building, false))
             level++;
     }
     *numArchers = level;
@@ -1116,30 +1112,34 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
     return 0;
 }
 
+// Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
+// all five source checks use the same built/active Town.h accessor.
 VA(0x005bf600, 0xC6)  // dc 0x167458
 short town::getGoldIncome(unsigned char includeSilo) const
 {
     short income = 500;
-    if (m_built & g_bitNumber[HALL_TOWN_ID])
+    if (hasBuilding(HALL_TOWN_ID, false))
         income = 1000;
-    if (m_built & g_bitNumber[HALL_CITY_ID])
+    if (hasBuilding(HALL_CITY_ID, false))
         income = 2000;
-    if (m_built & g_bitNumber[HALL_CAPITOL_ID])
+    if (isCapitol())
         income = 4000;
-    if (includeSilo && (m_built & g_bitNumber[MARKETPLACE_SILO_ID]))
+    if (includeSilo && hasBuilding(MARKETPLACE_SILO_ID, false))
         income += getSiloIncome()[GOLD];
-    if (m_active & g_bitNumber[HOLY_GRAIL_ID])
+    if (hasBuilding(HOLY_GRAIL_ID, true))
         income += 5000;
     return income;
 }
 
+// Dreamcast town.cpp:1539 calls HasBuilding; retail expands the
+// active-mask checks for the dwelling and matching horde building.
 VA(0x005bf6d0, 0x97)  // dc 0x1674d4
 int town::getHorde(long dwelling) const
 {
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
+    if (!hasBuilding(DWELLING_0_ID + dwelling, true))
         return MAX_BUILDING_TYPE;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if (m_active & g_bitNumber[g_hordeBuildings[slot]]) {
+        if (hasBuilding(g_hordeBuildings[slot], true)) {
             if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
                 return g_hordeBuildings[slot];
         }
@@ -1147,14 +1147,16 @@ int town::getHorde(long dwelling) const
     return MAX_BUILDING_TYPE;
 }
 
+// Dreamcast town.cpp:1560 calls HasBuilding for the horde-bonus gate;
+// both active-mask checks use that same header boundary.
 VA(0x005bf770, 0x9E)  // dc 0x167544
 long town::getHordeBonus(long dwelling) const
 {
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwelling]))
+    if (!hasBuilding(DWELLING_0_ID + dwelling, true))
         return 0;
     long bonus = 0;
     for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if (m_active & g_bitNumber[g_hordeBuildings[slot]]) {
+        if (hasBuilding(g_hordeBuildings[slot], true)) {
             if (s_constHordeEffects[m_type][slot].m_dwelling == dwelling)
                 bonus = s_constHordeEffects[m_type][slot].m_bonus;
         }
@@ -1162,25 +1164,26 @@ long town::getHordeBonus(long dwelling) const
     return bonus;
 }
 
+// Mac getAssembledLegionBonus calls the ordinary getCastleGrowthBonus
+// body at 0:0x1b4c20; retail VC6 expands that same source call.
 VA(0x005bf810, 0xE2)
 long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-        long growth = g_creatureTypeTraits[g_townDwellingCreatures[
-            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling]].m_growthRate;
-        if (m_built & g_bitNumber[CASTLE_CASTLE_ID])
-            bonus = growth;
-        else if (m_built & g_bitNumber[CASTLE_CITADEL_ID])
-            bonus = growth / 2;
-        else
-            bonus = 0;
+        TCreatureType creature = g_townDwellingCreatures[
+            m_type * (2 * TOWN_DWELLING_COUNT) + dwelling];
+        long growth = g_creatureTypeTraits[creature].m_growthRate;
+        bonus = getCastleGrowthBonus(creature);
         bonus += growth;
         bonus /= 2;
     }
     return bonus;
 }
 
+// Dreamcast town.cpp:1593 calls Town.h get_location and game::get_cell;
+// retail expands both. Complete checks wielded Legion artifacts in the
+// tier cases, while the older Dreamcast calls hero::HasArtifact.
 VA(0x005bf900, 0x258)  // dc 0x1675d4
 long town::getLegionBonus(long dwelling) const
 {
@@ -1196,11 +1199,7 @@ long town::getLegionBonus(long dwelling) const
     if (m_visitingHeroId >= 0) {
         visitingHero = currentGame->getHero(m_visitingHeroId);
     } else {
-        // Constructor form, not default-then-assign: it merges the y|z
-        // bitfield unit into one clear-then-or (99.8469 -> 100.0000).
-        type_point point(m_mapX, m_mapY, m_mapZ);
-
-        NewmapCell* cell = currentGame->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+        NewmapCell* cell = currentGame->getCell(getLocation());
         if (cell->m_type == HERO)
             visitingHero = currentGame->getHero(cell->m_extraInfo);
     }
@@ -1240,14 +1239,21 @@ long town::getLegionBonus(long dwelling) const
     return bonus;
 }
 
+// The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
+// CodeWarrior preserves that boundary. Windows expands the same helper
+// before its retained getLegionBonus call. The retained standalone Windows
+// helper is non-const, so this const caller uses it through const_cast.
+// The restored call shifts VC6's hasBuilding inlining: one additional call
+// remains in this candidate. Keep the source helper boundary while that
+// compiler decision is investigated.
 VA(0x005bfb60, 0x266)  // dc 0x167748
 short town::getGrowthRate(short dwelling) const
 {
     long dwellingIndex = dwelling;
-    if (!(m_active & g_bitNumber[DWELLING_0_ID + dwellingIndex]))
+    if (!hasBuilding(DWELLING_0_ID + dwellingIndex, true))
         return 0;
     if (dwelling < TOWN_DWELLING_COUNT
-        && (m_active & g_bitNumber[DWELLING_0_UPG_ID + dwellingIndex]))
+        && hasBuilding(DWELLING_0_UPG_ID + dwellingIndex, true))
         return 0;
 
     TCreatureType creature = g_townDwellingCreatures[
@@ -1256,29 +1262,21 @@ short town::getGrowthRate(short dwelling) const
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {
-        long legionBonus = 0;
-        if (g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
-            TCreatureType legionCreature = g_townDwellingCreatures[
-                m_type * TOWN_DWELLING_SLOTS + dwellingIndex];
-            long legionGrowth =
-                g_creatureTypeTraits[legionCreature].m_growthRate;
-            long castleBonus = getCastleGrowthBonus(legionCreature);
-            legionBonus = (legionGrowth + castleBonus) / 2;
-        }
-        growth += legionBonus;
+        growth += const_cast<town*>(this)->getAssembledLegionBonus(dwellingIndex);
         growth += getLegionBonus(dwellingIndex);
     }
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        if ((m_active & g_bitNumber[g_hordeBuildings[slot]])
+        // Retail retains this hasBuilding call; DC also names the helper.
+        if (hasBuilding(g_hordeBuildings[slot], true)
             && s_constHordeEffects[m_type][slot].m_dwelling == dwelling) {
             growth += s_constHordeEffects[m_type][slot].m_bonus;
             break;
         }
     }
 
-    growth += m_generatorBonus[dwellingIndex];
-    if (m_active & g_bitNumber[HOLY_GRAIL_ID])
+    growth += getGeneratorBonus(dwellingIndex);
+    if (hasBuilding(HOLY_GRAIL_ID, true))
         growth += growth / 2;
     return growth;
 }
@@ -1358,11 +1356,11 @@ static const int g_rewardDialogBatch = 8;
 VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
 void town::giveEventReward(const TTownEvent* thisEvent)
 {
-    __int64 mask = m_active;
+    __int64 mask = getBuildingMask();
     __int64 grantable = 0;
     __int64 eventBuildings = thisEvent->m_buildBuildings;
     int i;
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+    for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
         if (eventBuildings & g_bitNumber[i])
             grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
     }
@@ -1395,7 +1393,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->m_generatorBonuses[i] != 0) {
-            if (m_active & g_bitNumber[DWELLING_0_UPG_ID + i]) {
+            if (hasBuilding(DWELLING_0_UPG_ID + i, true)) {
                 reward.m_resource = 0x15;
                 m_population[i + TOWN_DWELLING_COUNT] +=
                     thisEvent->m_generatorBonuses[i];
@@ -1405,7 +1403,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                               m_type * (2 * TOWN_DWELLING_COUNT)
                               + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
-            } else if (m_active & g_bitNumber[DWELLING_0_ID + i]) {
+            } else if (hasBuilding(DWELLING_0_ID + i, true)) {
                 reward.m_resource = 0x15;
                 m_population[i] += thisEvent->m_generatorBonuses[i];
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
@@ -1459,25 +1457,25 @@ VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>* rewards)
 {
-    std::string text;
+    std::string msg;
     for (int i = 0; i < rewards->size(); i++) {
         long count = (*rewards)[i].m_qualifier >> 16;
         int creature = static_cast<unsigned short>((*rewards)[i].m_qualifier);
         if (i > 0) {
             if (i == rewards->size() - 1)
-                text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
+                msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
-                text += ", ";
+                msg += ", ";
         }
-        text += formatString("%d ", count);
-        text += getArmyName(creature, count);
+        msg += formatString("%d ", count);
+        msg += getArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].m_qualifier >> 16;
-    text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
-                         firstCount, text.c_str(), thisTown->m_name.c_str());
+    msg = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
+                         firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(text.c_str(), *rewards, -1, -1, 0);
+        extendedDialog(msg.c_str(), *rewards, -1, -1, 0);
     rewards->clear();
 }
 
@@ -1546,19 +1544,19 @@ void town::initialize(const TownExtra* townSetup)
 }
 
 VA(0x005c08c0, 0x3CE)  // dc 0x167ff4
+// DC locals: disabled_buildings and built_mask.
 void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 {
     int i;
     memset(currentTown->m_population, 0, sizeof(currentTown->m_population));
-    currentTown->m_built = 0;
-    currentTown->updateFullBuildingMask();
+    currentTown->setMask(0);
     currentTown->createBuilding(HALL_VILLAGE_ID);
 
-    __int64 unavailable = 0;
+    __int64 disabledBuildings = 0;
     if (g_game->m_mapHeader.m_victoryCondition.m_type
             == VICTORY_CONDITION_BUILD_GRAIL
         && !g_game->m_mapHeader.m_victoryCondition.isGrailTarget(currentTown))
-        unavailable = g_bitNumber[HOLY_GRAIL_ID];
+        disabledBuildings = g_bitNumber[HOLY_GRAIL_ID];
 
     currentTown->m_dockSite = -1;
     currentTown->m_dockSiteY = -1;
@@ -1567,45 +1565,46 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
                                    currentTown->m_mapY + 2)
             && !checkShipyardSquare(currentTown, currentTown->m_mapX + 1,
                                       currentTown->m_mapY + 2)))
-        unavailable |= g_bitNumber[DOCK_ID];
+        disabledBuildings |= g_bitNumber[DOCK_ID];
 
     if (townSetup->m_customBuildings) {
-        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        // Editor masks have 41 columns; canonical building masks have 44.
+        for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingDisabledMask & g_bitNumber[i])
-                unavailable |= g_bitNumber[
+                disabledBuildings |= g_bitNumber[
                     g_eventBuildingIds[currentTown->m_type][i]];
         }
-        if (unavailable & g_bitNumber[HORDE_ID])
-            unavailable |= g_bitNumber[HORDE_UPG_ID];
-        if (unavailable & g_bitNumber[HORDE_2_ID])
-            unavailable |= g_bitNumber[HORDE_2_UPG_ID];
-        currentTown->setLegalBuildings(unavailable);
+        if (disabledBuildings & g_bitNumber[HORDE_ID])
+            disabledBuildings |= g_bitNumber[HORDE_UPG_ID];
+        if (disabledBuildings & g_bitNumber[HORDE_2_ID])
+            disabledBuildings |= g_bitNumber[HORDE_2_UPG_ID];
+        currentTown->setLegalBuildings(disabledBuildings);
 
-        __int64 toBuild = 0;
-        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        __int64 builtMask = 0;
+        for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
             if (townSetup->m_buildingBuiltMask & g_bitNumber[i])
-                toBuild |= town::s_includedBuildings[currentTown->m_type][
+                builtMask |= town::s_includedBuildings[currentTown->m_type][
                         g_eventBuildingIds[currentTown->m_type][i]]
                     | g_bitNumber[g_eventBuildingIds[currentTown->m_type][i]];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if ((toBuild & g_bitNumber[i])
-                && !(currentTown->m_available & g_bitNumber[i]))
-                toBuild &= ~g_bitNumber[i];
+            if ((builtMask & g_bitNumber[i])
+                && !currentTown->isLegalBuilding(type_building_id(i)))
+                builtMask &= ~g_bitNumber[i];
         }
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (toBuild & g_bitNumber[i])
+            if (builtMask & g_bitNumber[i])
                 currentTown->createBuilding(type_building_id(i));
         }
         return;
     }
 
-    currentTown->setLegalBuildings(unavailable);
+    currentTown->setLegalBuildings(disabledBuildings);
     if (townSetup->m_hasFort)
         currentTown->createBuilding(CASTLE_FORT_ID);
     if (currentTown->m_owner >= 0) {
         currentTown->createBuilding(TAVERN_ID);
-        if (currentTown->m_built & g_bitNumber[CASTLE_FORT_ID]) {
+        if (currentTown->hasBuilding(CASTLE_FORT_ID, false)) {
             currentTown->createBuilding(DWELLING_0_ID);
             if (random(1, 100) <= 30)
                 currentTown->createBuilding(DWELLING_1_ID);
@@ -1667,45 +1666,48 @@ void town::updateFullBuildingMask()
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::canBuild(short buildingId) const
 {
-    if (g_game->townAlreadyBuiltOn(m_id))
-        return 0;
-    if (!isLegalBuilding(type_building_id(buildingId)))
-        return 0;
-    if (buildingId == DOCK_ID)
-        return canBuildDock();
-    if (buildingId == HALL_CAPITOL_ID)
-        return !g_game->m_players[m_owner].hasCapitol();
-
-    char townType = m_type;
-    __int64 requirements = g_hierarchyMask[townType][buildingId];
-    __int64 buildingMask = getBuildingMask();
-    if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
-        && townType == TOWN_CASTLE)
-        requirements &= ~g_bitNumber[BLACKSMITH_ID];
-    if (!(buildingMask & g_bitNumber[buildingId])
-        && (buildingMask & requirements) == requirements)
-        return 1;
-    return 0;
-}
-
-VA(0x005c0e60, 0xC0)  // dc 0x16865c
-// Complete reads the full dword parameter and its exact symbol encodes int;
-// Dreamcast's older interface records short building_id.
-unsigned char town::canEverBuild(int buildingId) const
-{
-    if (g_bitNumber[buildingId] & m_available) {
-        if (buildingId == DOCK_ID)
-            return m_dockSite != TOWN_DOCK_SITE_NONE;
-        if (!(buildingId == HALL_CAPITOL_ID
-              && g_game->m_players[m_owner].hasCapitol())) {
-            __int64 requirements = g_hierarchyMask[m_type][buildingId];
-            if (((m_active | m_available) & requirements) == requirements)
+    if (!g_game->townAlreadyBuiltOn(m_id)) {
+        if (isLegalBuilding(type_building_id(buildingId))) {
+            if (buildingId == DOCK_ID)
+                return canBuildDock();
+            if (buildingId == HALL_CAPITOL_ID)
+                return !g_game->m_players[m_owner].hasCapitol();
+            char townType = m_type;
+            __int64 requirements = g_hierarchyMask[townType][buildingId];
+            __int64 buildingMask = getBuildingMask();
+            if (g_game->m_isTutorial && buildingId == DWELLING_2_ID
+                && townType == TOWN_CASTLE)
+                requirements &= ~g_bitNumber[BLACKSMITH_ID];
+            if (!(buildingMask & g_bitNumber[buildingId])
+                && (buildingMask & requirements) == requirements)
                 return 1;
         }
     }
     return 0;
 }
 
+// Dreamcast town.cpp:2141/2147 calls is_legal_building and CanBuildDock.
+// Mac retains both; retail expands the first and can inline the second.
+VA(0x005c0e60, 0xC0)  // dc 0x16865c
+// Complete reads the full dword parameter and its exact symbol encodes int;
+// Dreamcast's older interface records short building_id.
+unsigned char town::canEverBuild(int buildingId) const
+{
+    if (isLegalBuilding(type_building_id(buildingId))) {
+        if (buildingId == DOCK_ID)
+            return canBuildDock();
+        if (!(buildingId == HALL_CAPITOL_ID
+              && g_game->m_players[m_owner].hasCapitol())) {
+            __int64 requirements = g_hierarchyMask[m_type][buildingId];
+            if (((getBuildingMask() | m_available) & requirements) == requirements)
+                return 1;
+        }
+    }
+    return 0;
+}
+
+// Dreamcast town.cpp:2188 calls CanBuildDock; the source helper also
+// survives as a direct Mac call at 0:0x1b6b8c.
 VA(0x005c0f20, 0x156)  // dc 0x168714
 __int64 town::getBuildableMask() const
 {
@@ -1723,7 +1725,7 @@ __int64 town::getBuildableMask() const
             mask |= g_bitNumber[building];
     }
     mask &= m_available;
-    if (m_dockSite == TOWN_DOCK_SITE_NONE)
+    if (!canBuildDock())
         mask &= ~g_bitNumber[DOCK_ID];
     if (g_game->m_players[m_owner].hasCapitol())
         mask &= ~g_bitNumber[HALL_CAPITOL_ID];
@@ -1802,6 +1804,9 @@ unsigned char town::isDisabled(type_building_id building) const
     return (g_townEligibleBuildMask[m_type] & g_bitNumber[building]) != 0;
 }
 
+// Dreamcast town.cpp:2328 calls town::PlaceInMap; retail expands the
+// wrapper before the hero placement call. Complete's recruit alignment
+// differs from the older Dreamcast get_alignment call at line 2338.
 VA(0x005c12e0, 0xC9)  // dc 0x168a98
 void town::hire(hero* newHero, long playerId)
 {
@@ -1814,25 +1819,18 @@ void town::hire(hero* newHero, long playerId)
     }
 
     player->m_resources[GOLD] -= g_heroGoldCost;
-    hero* hiredHero = g_game->getHero(heroId);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    hiredHero->placeInMap(playerId, point, 1);
+    placeInMap(heroId, playerId, 1);
     giveSpells(0);
     g_game->replaceRecruit(playerId, recruitSlot);
 }
 
+// Dreamcast town.cpp:2346 calls Town.h get_location while placing the
+// hero; retail expands the point construction.
 VA(0x005c13b0, 0x83)  // dc 0x168b54
 void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 {
     hero* newHero = g_game->getHero(heroId);
-    type_point point;
-    point.m_x = m_mapX;
-    point.m_y = m_mapY;
-    point.m_z = m_mapZ;
-    newHero->placeInMap(playerId, point, resetFlags);
+    newHero->placeInMap(playerId, getLocation(), resetFlags);
 }
 
 VA(0x005c1440, 0xC)  // dc 0x168ba0

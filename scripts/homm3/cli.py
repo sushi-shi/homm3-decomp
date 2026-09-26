@@ -6,9 +6,10 @@ Compiling and linking need the toolchain shell: `nix develop .#build`.
 
 Subcommands
 -----------
-  init [--exe PATH] [--dreamcast-exe PATH] [--force] [--no-smoke]
+  init [--exe PATH] [--dreamcast-exe PATH] [--mac-exe PATH]
+       [--mac-toolchain PATH] [--force] [--no-smoke]
         One-time local setup so a fresh checkout goes straight to `homm3 build`:
-        verify and stage HOMM3_EXE and HOMM3_DREAMCAST_EXE (CLI paths override
+        verify and stage HOMM3_EXE, HOMM3_DREAMCAST_EXE and HOMM3_MAC_EXE (CLI paths override
         the environment); read Dreamcast debug symbols from its executable;
         the git-ignored build dirs; build.ninja + objdiff.json (configure); the
         VC6 SP3 toolchain (unpacked from build/homm3-toolchain-vc6-sp3.tar.xz if
@@ -58,7 +59,7 @@ Subcommands
         reports source edits whose new MAX falls below the prior MAX without
         gating. Unrelated CUR dips are silent; HIST preserves older peaks.
 
-  sema <xref|diff|disasm|rva|strings|data|candidates|compare> ...
+  sema <xref|diff|disasm|rva|strings|data|coverage|candidates|compare> ...
         Read-only navigation over the retail image (homm3.sema): caller
         trees + exact data refs (xref --to = every referencing site),
         base-vs-target diffs (skeleton by default; --summary = every
@@ -72,6 +73,9 @@ Subcommands
         joined CodeView names/signatures/locals/scopes, breakpoint-labelled SH4
         assembly and CFG blocks, explicitly qualified retail correlations,
         and generated C++/JSON reference trees (structure).
+
+  mac <labels|show|disasm|diff|build> ...
+        Navigate and byte-compare admitted Classic Mac PowerPC counterparts.
 
   link [<homm3.build.link args>] [-- <extra link flags>]
         Link the base objects with genuine VC6, the game runtime and vendor
@@ -116,14 +120,17 @@ def run_module(module: str, *args: str) -> int:
 
 def cmd_init(args) -> int:
     from homm3.core import inputs, nb11
+    from homm3.mac import toolchain as mac_toolchain
     try:
         retail = inputs.stage_executable(inputs.RETAIL, args.exe)
         dreamcast = inputs.stage_executable(inputs.DREAMCAST, args.dreamcast_exe)
+        mac = inputs.stage_executable(inputs.MAC, args.mac_exe)
         nb11.parse(inputs.read_verified(inputs.DREAMCAST, dreamcast))
-    except inputs.InputError as exc:
+        mac_toolchain.stage(args.mac_toolchain)
+    except (inputs.InputError, ValueError, OSError) as exc:
         log(f"ERROR: {exc}")
         return 1
-    log(f"inputs verified: {retail}, {dreamcast} (with embedded debug symbols)")
+    log(f"inputs verified: {retail}, {dreamcast} (with embedded debug symbols), {mac}")
     for d in ("build/gen", "build/objdiff/base", "build/exe", "build/smoke"):
         (ROOT / d).mkdir(parents=True, exist_ok=True)
     if run_module("homm3.build.configure"):
@@ -238,6 +245,8 @@ def _dispatch(argv: list[str]) -> int:
         return run_module("homm3.match.source_inventory", *argv[1:])
     if argv and argv[0] == "dreamcast":
         return run_module("homm3.analysis.dreamcast", *argv[1:])
+    if argv and argv[0] == "mac":
+        return run_module("homm3.mac", *argv[1:])
     if argv and argv[0] == "warnings":
         return run_module("homm3.analysis.compiler_warnings", *argv[1:])
     if argv and argv[0] == "victor":
@@ -262,6 +271,10 @@ def _dispatch(argv: list[str]) -> int:
                    help="retail HEROES3.EXE (otherwise HOMM3_EXE or staged copy)")
     p.add_argument("--dreamcast-exe", metavar="PATH",
                    help="Dreamcast H3.EXE (otherwise HOMM3_DREAMCAST_EXE or staged copy)")
+    p.add_argument("--mac-exe", metavar="PATH",
+                   help="Classic Mac Heroes_III_raw.pef (otherwise HOMM3_MAC_EXE or staged copy)")
+    p.add_argument("--mac-toolchain", metavar="PATH",
+                   help="directory with pinned CodeWarrior tools (otherwise HOMM3_MAC_TOOLCHAIN or staged copy)")
     p.add_argument("--force", action="store_true", help="re-init the wine prefix")
     p.add_argument("--no-smoke", action="store_true", help="skip the smoke compile")
     p.set_defaults(fn=cmd_init)
@@ -324,6 +337,9 @@ def _dispatch(argv: list[str]) -> int:
     p.add_argument("dreamcast_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_dreamcast)
 
+    sub.add_parser("mac", add_help=False,
+                   help="Classic Mac exact target: labels / show / disasm / diff / build")
+
     p = sub.add_parser("vc6", help="compiler model + solvers: argv / il-diff / "
                        "predict-inline / why-reg / oracle / check (homm3.vc6)")
     p.add_argument("vc6_args", nargs=argparse.REMAINDER)
@@ -353,7 +369,7 @@ def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     # Analysis rc=1 means an answered difference. Build/init and the other
     # pipeline commands use rc=1 for failure.
-    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "rmg", "victor"} else 1
+    failure_rc = 2 if argv and argv[0] in {"sema", "vc6", "dreamcast", "mac", "rmg", "victor"} else 1
     return usage.run_logged(
         _dispatch, argv,
         lambda rc, **meta: usage.append(ROOT / "build/homm3_usage.log",

@@ -218,7 +218,6 @@ VA(0x00602520, 0x280)  // anchor-global, dc 0x19ad18
 int heroWindowManager::doDialog(heroWindow* dialogWindow,
                                 TDialogHandler dialogFunction, int fadeIn)
 {
-    heroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -226,8 +225,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
     try {
         g_inDialog = 1;
         try {
-            for (w = m_tailWindow; w; w = w->m_prevWindow)
-                w->sleepAllWidgets(1);
+            sleepAllWindows(1);
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
@@ -280,12 +278,10 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
                 if (dialogWindow)
                     removeWindow(dialogWindow);
             } catch (...) {
-                for (w = m_headWindow; w; w = w->m_nextWindow)
-                    w->sleepAllWidgets(0);
+                sleepAllWindows(0);
                 throw;
             }
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
         } catch (...) {
             g_inDialog = 0;
             throw;
@@ -317,7 +313,6 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                                     TDialogHandler dialogDrawFunction,
                                     int fadeIn)
 {
-    heroWindow* w;
     int endFlag;
 
     if (g_dialogNestCount++ == 0)
@@ -325,8 +320,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
     try {
         g_inDialog = 1;
         try {
-            for (w = m_tailWindow; w; w = w->m_prevWindow)
-                w->sleepAllWidgets(1);
+            sleepAllWindows(1);
             try {
                 m_lastHover = -1;
                 if (dialogWindow)
@@ -386,12 +380,10 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
                     removeWindow(dialogWindow);
                 g_inputManager->flush();
             } catch (...) {
-                for (w = m_headWindow; w; w = w->m_nextWindow)
-                    w->sleepAllWidgets(0);
+                sleepAllWindows(0);
                 throw;
             }
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
         } catch (...) {
             g_inDialog = 0;
             throw;
@@ -410,12 +402,9 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
 VA(0x00602a40, 0x188)  // dc 0x19b0fc
 void heroWindowManager::doQuickView(heroWindow* window)
 {
-    heroWindow* w;
-
     g_mouseManager->hidePointer();
     try {
-        for (w = m_tailWindow; w; w = w->m_prevWindow)
-            w->sleepAllWidgets(1);
+        sleepAllWindows(1);
         try {
             if (window)
                 addWindow(window, -1, 1);
@@ -449,12 +438,10 @@ void heroWindowManager::doQuickView(heroWindow* window)
             if (window)
                 removeWindow(window);
         } catch (...) {
-            for (w = m_headWindow; w; w = w->m_nextWindow)
-                w->sleepAllWidgets(0);
+            sleepAllWindows(0);
             throw;
         }
-        for (w = m_headWindow; w; w = w->m_nextWindow)
-            w->sleepAllWidgets(0);
+        sleepAllWindows(0);
     } catch (...) {
         g_mouseManager->showPointer(false);
         throw;
@@ -675,11 +662,8 @@ void heroWindowManager::fizzleForward(int startX, int startY, int width,
 // the same view Bitmap16Bit::Draw uses; the manager's colour cycling is
 // latched off for the whole fade and restored with the saved source.
 
-// ONE `RECT` serves both blit sites - retail writes the same four slots at
-// [ebp-0x54] in the frame loop and after it, and two separate declarations
-// cost the exact 0x10 of frame the record occupies (0x90 against retail's
-// 0x80). Its field order differs between the two sites and that is source:
-// left/right/top/bottom inside the loop, left/top/right/bottom after it.
+// Mac retains BlitToScreenWithPointer at both update sites. The Windows
+// optimizer expands the same helper's rectangle setup into this caller.
 
 VA(0x00602dc0, 0x2F7)  // anchor-import + exhaustive tail order, dc 0x19b8fc
 void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
@@ -707,7 +691,6 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
             if (fadeTime == -1)
                 fadeTime = defaultFadeTime;
 
-            RECT rect;
             Bitmap16Bit destination(width, height);
             destination.grab(m_screenBitmap->getMap(0, 0), startX, startY,
                              m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
@@ -750,18 +733,13 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                         od++;
                     }
                     // Canonical DC GetPitch boundaries (lines 1407/1409).
-                    if (row + 1 < height)
-                        screen.m_bytes += m_screenBitmap->getPitch();
+                    screen.m_bytes += m_screenBitmap->getPitch();
                     target.m_bytes += destination.getPitch();
                     source.m_bytes += m_bmpFizzleSource->getPitch();
                 }
 
                 pollSound();
-                rect.left = startX;
-                rect.right = startX + width;
-                rect.top = startY;
-                rect.bottom = startY + height;
-                robAppBlit(&rect);
+                blitToScreenWithPointer(startX, startY, width, height);
                 GameTime::delayTil(deadline);
             }
 
@@ -769,11 +747,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                              startX, startY, m_screenBitmap->getWidth(),
                              m_screenBitmap->getHeight(), m_screenBitmap->getPitch(),
                              false);
-            rect.left = startX;
-            rect.top = startY;
-            rect.right = startX + width;
-            rect.bottom = startY + height;
-            robAppBlit(&rect);
+            blitToScreenWithPointer(startX, startY, width, height);
 
             m_colorCyclingOn = savedColorCycling;
             // DC line 1434 calls the ordinary helper; Complete expands it.
@@ -962,8 +936,6 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     unsigned long maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
     unsigned long maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    RECT screenRect;
-
     fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
         m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
@@ -990,22 +962,16 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
             sourceBytes += fadeFrom.getPitch();
             destinationBytes += m_screenBitmap->getPitch();
         }
-        screenRect.left = 0;
-        screenRect.top = 0;
-        screenRect.right = WINDOW_SCREEN_WIDTH;
-        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-        robAppBlit(&screenRect);
+        blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                                WINDOW_SCREEN_HEIGHT);
         if (GameTime::get() - started > 50)
             break;
         GameTime::delayTil(deadline);
     }
 
     m_screenBitmap->fillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
-    screenRect.left = 0;
-    screenRect.top = 0;
-    screenRect.right = WINDOW_SCREEN_WIDTH;
-    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-    robAppBlit(&screenRect);
+    blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                            WINDOW_SCREEN_HEIGHT);
     if (expectFadein) {
         fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
             m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
@@ -1026,8 +992,6 @@ void heroWindowManager::fadeFromBlack(int speed)
     unsigned long maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
     unsigned long maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    RECT screenRect;
-
     fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
         m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
@@ -1054,11 +1018,8 @@ void heroWindowManager::fadeFromBlack(int speed)
             sourceBytes += fadeFrom.getPitch();
             destinationBytes += m_screenBitmap->getPitch();
         }
-        screenRect.left = 0;
-        screenRect.top = 0;
-        screenRect.right = WINDOW_SCREEN_WIDTH;
-        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-        robAppBlit(&screenRect);
+        blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                                WINDOW_SCREEN_HEIGHT);
         if (GameTime::get() - started > 50)
             break;
         GameTime::delayTil(deadline);
@@ -1067,9 +1028,22 @@ void heroWindowManager::fadeFromBlack(int speed)
     fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
         m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
         m_screenBitmap->getPitch(), 0);
-    screenRect.left = 0;
-    screenRect.top = 0;
-    screenRect.right = WINDOW_SCREEN_WIDTH;
-    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
-    robAppBlit(&screenRect);
+    blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                            WINDOW_SCREEN_HEIGHT);
+}
+
+// Mac retains this shared window-state helper at code 0+0x20ece4. DoDialog,
+// DoDialogDraw and DoQuickView each call it for the initial sleep and both
+// normal and exception cleanup paths. The Windows loops were expanded in
+// those callers. Dreamcast records the caller layouts but no helper name.
+void heroWindowManager::sleepAllWindows(unsigned char sleep)
+{
+    heroWindow* window;
+    if (sleep) {
+        for (window = m_tailWindow; window; window = window->m_prevWindow)
+            window->sleepAllWidgets(1);
+    } else {
+        for (window = m_headWindow; window; window = window->m_nextWindow)
+            window->sleepAllWidgets(0);
+    }
 }

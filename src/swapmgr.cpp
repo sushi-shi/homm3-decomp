@@ -756,7 +756,10 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
         && g_game->isHuman(rightHero->m_owner))
     {
         m_humanPlayerTrade = 1;
-        m_givingToAlly = (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos());
+        if (isLeftHero())
+            m_givingToAlly = 1;
+        else
+            m_givingToAlly = 0;
     }
     g_swapManager = this;
     m_netMsgHandler = 0;
@@ -818,6 +821,8 @@ int swapManager::drawSwapWin()
 // common &msg push across the two skill arms (three size-only blocks) plus
 // downstream scratch-register choices. The bounded why-reg model found no
 // movable creation-order carrier.
+// DC line 703 uses TTextResource::operator[] for the hero-name format;
+// restoring that source call is VC6 byte-flat.
 VA(0x005ae750, 0x3A2)  // full retail body + dc 0x15c66c dossier
 int swapManager::open(int newPriority)
 {
@@ -852,7 +857,7 @@ int swapManager::open(int newPriority)
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
             msg.m_extra);
 
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
                 m_heroes[hero]->heroFn004D8F70());
         msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -881,14 +886,18 @@ int swapManager::open(int newPriority)
                 int skill = m_heroes[hero]->getNthSS(skillIndex);
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
-                msg.m_extra = m_heroes[hero]->m_skillLevel[skill]
-                            + 3 * skill + 2;
+                msg.m_extra = m_heroes[hero]->getSecondarySkill(
+                                  TSecondarySkill(skill))
+                    + 3 * skill + 2;
+                // Mac retains this call at 0:0x1a6504.
+                m_parent->broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
                 msg.m_codeY = hero * 8 + skillIndex + 200;
                 msg.m_extra = widget::WIDGET_DRAWN;
+                // Mac retains this call at 0:0x1a6534.
+                m_parent->broadcastMessage(msg);
             }
-            m_parent->broadcastMessage(msg);
         }
     }
 
@@ -1265,6 +1274,8 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // why-branch finds no applicable source mutation and why-reg's model finds no
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
+// DC lines 1118/1124 use TTextResource::operator[] for the two trade
+// warnings; those calls are restored and VC6 byte-flat.
 VA(0x005af590, 0x3F7)  // Main roster/callees + full retail body, dc 0x15d150
 void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
@@ -1279,7 +1290,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (rightClick) {
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
-                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 4, -1, 28,
+                normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
                 return;
             }
@@ -1321,7 +1332,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 
         if (slot == eArtifactSlotSpellbook
             || slot == eArtifactSlotWarMachine4) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1584,14 +1595,16 @@ int swapManager::main(message& msg)
                         int skill = m_heroes[skillHero]->getNthSS(skillIndex);
                         strcpy(g_text,
                                g_sSkillTraits[skill].m_levelNames[
-                                   m_heroes[skillHero]->m_skillLevel[skill] - 1]);
+                                   m_heroes[skillHero]->getSecondarySkill(
+                                       TSecondarySkill(skill)) - 1]);
                         normalDialog(
                             g_text,
                             rightMouse
                                 ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                             -1, -1, 20,
-                            m_heroes[skillHero]->m_skillLevel[skill]
+                            m_heroes[skillHero]->getSecondarySkill(
+                                TSecondarySkill(skill))
                                 + 3 * skill + 2,
                             -1, 0, -1, 0, -1, 0);
                     }
@@ -2101,7 +2114,8 @@ void swapManager::setRolloverText(int codeY)
             int skill = m_heroes[0]->getNthSS(
                 codeY - kSwapRolloverLeftSkill0);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[m_heroes[0]->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        m_heroes[0]->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2114,7 +2128,8 @@ void swapManager::setRolloverText(int codeY)
             int skill = m_heroes[1]->getNthSS(
                 codeY - kSwapRolloverRightSkill0);
             sprintf(g_text, g_heroScreen[21],
-                    g_secondarySkillLevels[m_heroes[1]->m_skillLevel[skill] - 1],
+                    g_secondarySkillLevels[
+                        m_heroes[1]->getSecondarySkill(TSecondarySkill(skill)) - 1],
                     g_sSkillTraits[skill].m_name);
         }
         break;
@@ -2185,6 +2200,7 @@ void swapManager::setRolloverText(int codeY)
 // Dreamcast proves this as one source statement with no locals. Complete's
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
+// Mac retains this helper at code 0:0x1a8cd4 and handleMonster calls it.
 
 void swapManager::viewMon()
 {

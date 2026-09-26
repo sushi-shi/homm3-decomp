@@ -545,7 +545,7 @@ void checkAdvCheatCode(std::string& chatString)
                    0x0063a4a8, advCheatNeo, "ajparb"))
                && currentHero) {
         cheatUsed = true;
-        int increment = hero::getExperienceIncrement(currentHero->m_level);
+        int increment = currentHero->getExperienceIncrement();
         currentHero->giveExperience(increment, 1, 1);
     } else if (code.compare(DATA_COMPGEN(
                    0x0063a4b0, advCheatFollowTheWhiteRabbit,
@@ -638,7 +638,10 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        chatString = g_generalText->getText(GENERAL_TEXT_CHEATER);
+        // DC line 211 calls TTextResource::operator[] here. This canonical
+        // access is VC6 byte-flat while the string assignment remains the
+        // retail inliner difference.
+        chatString = (*g_generalText)[GENERAL_TEXT_CHEATER];
         g_game->m_isCheater = 1;
         if (g_inCampaign)
             g_game->m_campaign.m_isCheater = 1;
@@ -897,9 +900,9 @@ hero_rollover: {
                     break;
 
                 hero* mapHero = g_game->getHero(heroID);
+                // Dreamcast adventuremapwindow.cpp:733 names operator[].
                 sprintf(g_text,
-                    g_generalText->getText(
-                        GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     mapHero->m_name, mapHero->heroFn004D8F70());
                 rolloverText = g_text;
                 break;
@@ -1012,8 +1015,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
             int heroId = player->m_heroes[m_topHero + i];
             if (heroId != -1 && !g_completeDrawAllCells
                 && heroId == player->m_currHeroId) {
-                m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+                m_heroLocators[i]->setVisible(1);
                 m_heroLocators[i]->setImage("hpsyyy.pcx");
                 m_heroLocators[i]->draw();
                 break;
@@ -1095,7 +1097,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
 
     int heroId = player->m_heroes[m_topHero + which];
     if (heroId != -1 && !g_completeDrawAllCells) {
-        hero* thisHero = &g_game->m_heroes[heroId];
+        hero* thisHero = g_game->getHero(heroId);
         widgetSetStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
         m_heroPortraits[which]->setImage(
             g_heroTraits[thisHero->m_portrait].m_smallPortraitName);
@@ -1127,8 +1129,7 @@ void TAdventureMapWindow::updateHeroLocator(int which, unsigned char drawWinSect
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
             m_heroLocators[which]->setImage("hpsyyy.pcx");
-            m_heroLocators[which]->sendMessage(widget::WIDGET_SET_STATUS,
-                                              widget::WIDGET_DRAWN);
+            m_heroLocators[which]->setVisible(1);
             m_heroLocators[which]->draw();
         }
         if (update)
@@ -1184,15 +1185,13 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     }
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++)
-        m_heroLocators[i]->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
+        m_heroLocators[i]->setVisible(0);
 
     for (i = 0; i < NUM_HERO_BUTTONS; i++) {
         int heroId = player->m_heroes[m_topHero + i];
         if (heroId != -1 && !g_completeDrawAllCells
             && heroId == player->m_currHeroId) {
-            m_heroLocators[i]->sendMessage(widget::WIDGET_SET_STATUS,
-                                          widget::WIDGET_DRAWN);
+            m_heroLocators[i]->setVisible(1);
             m_heroLocators[i]->setImage("hpsyyy.pcx");
             m_heroLocators[i]->draw();
             break;

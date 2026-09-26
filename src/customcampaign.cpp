@@ -9,7 +9,9 @@
 #include "bitset_iterator.h"
 
 #include <algorithm>
+#ifdef _WIN32
 #include <direct.h>
+#endif
 #include <fstream>
 #include <string.h>
 #include <strstream>
@@ -244,7 +246,7 @@ int heroPower(hero* candidate)
     int primary = candidate->getPrimarySkillTotal();
     int skills = 0;
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
-        skills += candidate->m_skillLevel[skill];
+        skills += candidate->getSecondarySkill(TSecondarySkill(skill));
     return skills + primary;
 }
 
@@ -304,7 +306,9 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 
 // The shared hero picker. `best` and the player record are both live
 // before the selector is tested, which is what puts them in the
-// prologue; numHeroes is re-read from the record on every pass.
+// prologue; numHeroes is re-read from the record on every pass. Mac calls
+// heroPower for candidate and then best at 0:0x91ecc/0:0x91ed8;
+// Complete expands both copies of this ordinary helper.
 VA(0x004840d0, 0x155)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
@@ -314,21 +318,11 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
     case CAMPAIGN_BONUS_HERO_STRONGEST: {
         for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
             int heroId = player->m_heroes[heroIndex];
-            hero* candidate = heroId == -1 ? 0 : &g_game->m_heroes[heroId];
-            if (best != 0) {
-                int bestTotal = best->getPrimarySkillTotal();
-                int bestSkills = 0;
-                int skill;
-                for (skill = 0; skill < 28; ++skill)
-                    bestSkills += best->m_skillLevel[skill];
-                int candidateTotal = candidate->getPrimarySkillTotal();
-                int candidateSkills = 0;
-                for (skill = 0; skill < 28; ++skill)
-                    candidateSkills += candidate->m_skillLevel[skill];
-                if (bestSkills + bestTotal >= candidateSkills + candidateTotal)
-                    continue;
-            }
-            best = candidate;
+            hero* candidate = g_game->getHero(heroId);
+            // A single expression lets VC6 evaluate best first and Mac
+            // evaluate candidate first, as their retail call sequences do.
+            if (!best || heroPower(best) < heroPower(candidate))
+                best = candidate;
         }
         return best;
     }
@@ -337,11 +331,11 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
             return 0;
         if (player->m_heroes[0] == -1)
             return 0;
-        return &g_game->m_heroes[player->m_heroes[0]];
+        return g_game->getHero(player->m_heroes[0]);
     case CAMPAIGN_BONUS_HERO_NONE:
         return 0;
     }
-    hero* chosen = &g_game->m_heroes[heroSelector];
+    hero* chosen = g_game->getHero(heroSelector);
     return chosen->m_owner == whichPlayer ? chosen : 0;
 }
 
@@ -380,12 +374,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
-        int faction;
-        if (g_game->m_gameVersion == 0 &&
-            isBaseElemental(creature))
-            faction = -1;
-        else
-            faction = g_creatureTypeTraits[creature].m_townType;
+        int faction = g_game->getAlignment(creature);
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
@@ -661,8 +650,9 @@ VA(0x00484ca0, 0x4F)
 void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
-    if (target != 0 && target->m_skillLevel[m_skill] <= m_level) {
-        if (target->m_skillLevel[m_skill] == 0)
+    if (target != 0
+        && target->getSecondarySkill(TSecondarySkill(m_skill)) <= m_level) {
+        if (target->getSecondarySkill(TSecondarySkill(m_skill)) == 0)
             target->giveSS(m_skill, m_level);
         else
             target->m_skillLevel[m_skill] = m_level;
@@ -822,11 +812,8 @@ bool TCampaignStartOption::slot12(void* scenarioRecord, int value) const
 {
     TCampaignBrief::ScenarioStruct* scenario =
         static_cast<TCampaignBrief::ScenarioStruct*>(scenarioRecord);
-    for (unsigned int prereq = 0;
-         prereq < scenario->m_prerequisites.size(); ++prereq)
-        if (scenario->m_prerequisites[prereq]
-            && !g_game->m_campaign.m_mapScores[prereq].m_completed)
-            return false;
+    if (!scenario->prerequisitesMet())
+        return false;
 
     int count = getCount();
     if (count == 0) {
@@ -995,16 +982,13 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // own scenario but the last completed scenario sharing its crossover slot;
 // the map name itself is only available after re-opening the campaign file
 // and inflating that scenario's header.
-// Residual (85.98%): 19/19 blocks with 18 exact and the branch census
-// clean 11/11; the whole gap is ONE /Ob2 decision, and the call stream
-// names it outright. Retail CALLS `ScenarioStruct::LoadMapHeader`
-// (0x487d30) where our CL expands it - the pubseekoff through vtable slot
-// 8, the TGzInflateBuf constructor, `NewSMapHeader::Read` and the
-// inflate-buffer destructor all arrive inline as four base-only calls.
-// The source already WRITES the call, so this is not a missing statement;
-// it is the over-inline family, and both documented levers are closed
-// here (this lane adds no statement pins, and the Dreamcast roster names
-// no helper to split out of a Complete-only body).
+// Mac +0x93974 calls the retained campaign score scan at +0x98b7c, and
+// +0x93a58 calls CampaignHeaderStruct::loadScenario (+0x96c64), ignoring
+// its result. Complete expands both; the retained Windows loadScenario
+// body (0x488810) is exact and its expansion calls loadMapHeader.
+// With both canonical calls, VC6 currently gives 64.62% and 14 blocks
+// against retail's 19: constructor and nested inflater calls diverge.
+// The old flattened source gave 86.04%, but omitted both Mac helpers.
 VA(0x00485530, 0x260)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
                                                    int which) const
@@ -1012,20 +996,10 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
     int slot = g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
-    int source = -1;
-    for (unsigned int score = 0;
-         score < g_game->m_campaign.m_mapScores.size(); ++score)
-        if (g_game->m_campaign.m_mapScores[score].m_completed
-            && g_game->m_campaign.m_mapScores[score].m_index == slot
-            && (source < 0
-                || g_game->m_campaign.m_mapScores[score].m_completeOrder
-                       >= g_game->m_campaign.m_mapScores[source].m_completeOrder))
-            source = score;
+    int source = g_game->m_campaign.findLatestCrossoverScenario(slot);
 
     NewSMapHeader mapHeader;
-    if (campaign->load())
-        campaign->m_scenarios[source]->loadMapHeader(campaign->m_stream,
-                                                   &mapHeader, source);
+    campaign->loadScenario(source, &mapHeader);
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT), mapHeader.m_mapName.c_str());
 }
 
@@ -1310,6 +1284,8 @@ void hero::clearSpells()
 // receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
 // code also proves the pointer-end artifact fill, custom-name flag order,
 // guarded west-adjacent TOWN test, and the final hero-id value lifetime.
+// The custom-name assignment still lacks retail's out-of-line _Eos;
+// spelling it as string::assign is byte-flat at 94.5908%.
 VA(0x00486590, 0xA84)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
@@ -1493,10 +1469,10 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
-        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        NewmapCell* cell = g_game->getCell(heroLocation);
         if (cell->m_type == TOWN && cell->m_isTrigger)
             --currentHero->m_x;
     }
@@ -1513,6 +1489,20 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
+// Mac retains this artifact offer at code 0:0x951b0. Its only caller passes
+// one collected artifact and the selected player; VC6 expands the hero walk.
+// Original helper spelling and linkage are unproved.
+static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
+                                       int player)
+{
+    playerData& recipient = g_game->m_players[player];
+    for (int playerHero = 0; playerHero < recipient.m_numHeroes; ++playerHero) {
+        hero* target = g_game->getHero(recipient.m_heroes[playerHero]);
+        if (target->giveArtifact(&artifact, 0, 0))
+            break;
+    }
+}
+
 // Complete-only, and the sibling of InitializeCrossoverHero above: the map
 // hero placeholders that carry no crossover hero. The record's own hero id
 // picks the path - -1 asks the game for a starting hero of the player's
@@ -1520,6 +1510,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 // the rest is the shared tail: the hero lands on the object's trigger cell,
 // steps one west off a town entrance, and is registered with its player,
 // the availability table, the hero pool map and the fog.
+// Mac stores the packed point's x/y/z fields in order. Expanding the point
+// constructor into three field assignments drops Windows from 93.5215% to
+// 88.94%; preserve the canonical constructor call.
 VA(0x00487020, 0x263)  // anchor-caller(0x487290's two placeholder loops), retail-only
 void TCampaignBrief::ScenarioStruct::placeStartingHero(
     HeroPlaceholderData* placeholder)
@@ -1552,10 +1545,10 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_maxMovePoints = currentHero->m_movePoints
         = currentHero->getMobility();
 
-    type_point heroLocation(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
     if (heroLocation.m_x >= 0) {
-        NewmapCell* cell = g_game->m_worldMap.cell(heroLocation);
+        NewmapCell* cell = g_game->getCell(heroLocation);
         if (cell->m_type == TOWN && cell->m_isTrigger)
             --currentHero->m_x;
     }
@@ -1686,7 +1679,7 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
         type_point lossHero(g_game->m_mapHeader.m_lossCondition.m_heroX,
                             g_game->m_mapHeader.m_lossCondition.m_heroY,
                             g_game->m_mapHeader.m_lossCondition.m_heroZ);
-        NewmapCell* cell = g_game->m_worldMap.cell(lossHero);
+        NewmapCell* cell = g_game->getCell(lossHero);
         if (!cell->m_isTrigger || cell->m_type != HERO) {
             for (placeholderIndex = 0; placeholderIndex < placeholders.size();
                  ++placeholderIndex) {
@@ -1741,7 +1734,9 @@ static void collectCrossoverArtifacts(const hero& sourceHero,
 // temporary across both inner loops. Its expansion restores retail's 0x64
 // frame, shared stack home, and the first push_back's retained single-element
 // insert wrapper. The two outer loops also reuse one index, restoring the
-// retail -0x14 home. All 38 CFG blocks and instruction rows agree. Retail's
+// retail -0x14 home. Mac code+0x95bc4..0x95bd4 initializes the local artifact's
+// ID word before its payload word, supporting the TArtifact constructor here;
+// this also makes the Windows body exact. Retail's
 // ICF label names vector<type_dialog_resource>::insert at the wrapper address;
 // the source-correct vector<type_artifact> specialization resolves there too.
 VA(0x00487900, 0x2CD)  // anchor-caller(game::NewMap +0x5cb), retail-only
@@ -1753,7 +1748,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
     int slot = m_options->slot5(this, choice);
     if (slot >= 0) {
         std::vector<hero>& heroes = campaign->m_carryOverHeroes[slot];
-        type_artifact artifact;
+        type_artifact artifact(ARTIFACT_NONE);
         std::vector<type_artifact> artifacts = campaign->m_carryoverArtifact[slot];
 
         unsigned int itemIndex;
@@ -1771,15 +1766,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
                 continue;
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
                 continue;
-            playerData& recipient = g_game->m_players[player];
-            for (int playerHero = 0;
-                 playerHero < recipient.m_numHeroes;
-                 ++playerHero) {
-                hero* target = g_game->getHero(
-                    recipient.m_heroes[playerHero]);
-                if (target->giveArtifact(&artifact, 0, 0))
-                    break;
-            }
+            offerArtifactToPlayerHeroes(artifact, player);
         }
     }
 
@@ -1989,8 +1976,23 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
-// CampaignHeaderStruct's constructor (0x4885d0) and destructor
-// (0x4886a0) are defined in campaignbrief.cpp, their CodeView owner.
+// Complete's constructor and destructor live before their callers in this
+// TU. VC6 expands them in selectCampaign; other TUs retain source calls.
+VA(0x004885d0, 0xCB)  // retained body and cross-TU callers
+TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
+    const char* filename)
+{
+    m_fileName = filename;
+    m_data = 0;
+    m_stream = 0;
+    m_fileError = CAMPAIGN_FILE_OK;
+}
+
+VA(0x004886a0, 0x132)  // retained body and cross-TU callers
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    clearScenarios();
+}
 
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
@@ -2176,6 +2178,18 @@ void TCampaignBrief::CampaignHeaderStruct::startMusic()
     g_soundManager->startMP3(g_campaignMusicTraits[m_campaignMusic].m_name, 0, 1);
 }
 
+// Mac retains this shared prerequisite check at code 0:0x9758c. Both the
+// start-option predicate and getAvailableScenarios call it; VC6 expands the
+// same loop in their retail bodies. Original method spelling is unproved.
+bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
+{
+    for (unsigned int i = 0; i < m_prerequisites.size(); ++i)
+        if (m_prerequisites[i]
+            && !g_game->m_campaign.m_mapScores[i].m_completed)
+            return false;
+    return true;
+}
+
 // Complete-only. A scenario without map data is marked unavailable and
 // already completed; otherwise every prerequisite scenario must be
 // completed in the running campaign's score table.
@@ -2189,16 +2203,18 @@ void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
         if (scenario->m_inflatedSize <= 0) {
             available[i] = 0;
             g_game->m_campaign.m_mapScores[i].m_completed = true;
-        } else {
-            for (unsigned int j = 0; j < scenario->m_prerequisites.size(); ++j) {
-                if (scenario->m_prerequisites[j]
-                    && !g_game->m_campaign.m_mapScores[j].m_completed) {
-                    available[i] = 0;
-                    break;
-                }
-            }
-        }
+        } else if (!scenario->prerequisitesMet())
+            available[i] = 0;
     }
+}
+
+// Mac code+0x976c4 follows getAvailableScenarios and retains the selection
+// as a call from the campaign-header playback helper. Complete expands it.
+void TCampaignBrief::ScenarioStruct::playText(bool epilogue)
+{
+    MapTextStruct* text = epilogue ? m_epilogue : m_prologue;
+    if (text)
+        text->play();
 }
 
 VA(0x00488fb0, 0x528)  // PlayScenarioPrologue callee + music-cell reader, retail-only
@@ -2302,7 +2318,7 @@ void TCampaignBrief::MapTextStruct::play()
         if (videoNeedsUpdate())
             videoDrawRects();
 
-        if (static_cast<long>(GameTime::get() - nextScroll) >= 0) {
+        if (GameTime::isPast(nextScroll)) {
             if (strip) {
                 if (redraw) {
                     if (scrollDelay)
@@ -2324,18 +2340,27 @@ void TCampaignBrief::MapTextStruct::play()
                                 g_windowManager->m_screenBitmap->getHeight(),
                                 g_windowManager->m_screenBitmap->getPitch(), false);
                 } else {
-                    if (scrollY >= textHeight - g_campaignSubtitleHeight) {
+                    // Mac retains separate draws at 0:0x97b20 and 0:0x97b84.
+                    if (scrollY < textHeight - g_campaignSubtitleHeight) {
+                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                                    g_campaignSubtitleHeight,
+                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_campaignSubtitleX, g_campaignSubtitleY,
+                                    g_windowManager->m_screenBitmap->getWidth(),
+                                    g_windowManager->m_screenBitmap->getHeight(),
+                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                    } else {
                         if (!textDone)
                             textEnd = GameTime::get();
                         textDone = 1;
+                        strip->draw(0, scrollY, g_campaignSubtitleWidth,
+                                    g_campaignSubtitleHeight,
+                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_campaignSubtitleX, g_campaignSubtitleY,
+                                    g_windowManager->m_screenBitmap->getWidth(),
+                                    g_windowManager->m_screenBitmap->getHeight(),
+                                    g_windowManager->m_screenBitmap->getPitch(), false);
                     }
-                    strip->draw(0, scrollY, g_campaignSubtitleWidth,
-                                g_campaignSubtitleHeight,
-                                g_windowManager->m_screenBitmap->getMap(0, 0),
-                                g_campaignSubtitleX, g_campaignSubtitleY,
-                                g_windowManager->m_screenBitmap->getWidth(),
-                                g_windowManager->m_screenBitmap->getHeight(),
-                                g_windowManager->m_screenBitmap->getPitch(), false);
                 }
                 if (redraw) {
                     g_windowManager->updateScreen(g_campaignSubtitleX,
@@ -2346,6 +2371,8 @@ void TCampaignBrief::MapTextStruct::play()
                 }
             }
 
+            // Mac retains musicPlaying at 0x97c40; Complete uses the Miles
+            // stream-status import at retail 0x4893a1 for this playback path.
             if (!speechStarted && (mp3Started || m_audio == -1)
                 && speech) {
                 g_soundManager->memorySample(speech);
@@ -2375,13 +2402,13 @@ void TCampaignBrief::MapTextStruct::play()
             nextScroll = GameTime::get() + g_campaignScrollInterval;
 
             if (speechDone
-                && static_cast<long>(GameTime::get() - speechEnd)
+                && GameTime::elapsedSince(speechEnd)
                        >= g_campaignLingerMs
                 && textDone
-                && static_cast<long>(GameTime::get() - textEnd)
+                && GameTime::elapsedSince(textEnd)
                        >= g_campaignLingerMs
                 && videoDone
-                && static_cast<long>(GameTime::get() - videoEnd)
+                && GameTime::elapsedSince(videoEnd)
                        >= g_campaignVideoLingerMs)
                 finished = 1;
         }
@@ -2410,11 +2437,58 @@ void TCampaignBrief::MapTextStruct::play()
     videoClose();
 }
 
+// Mac code+0x97dbc follows MapTextStruct::play and calls playText. The two
+// campaign wrappers are its only direct Mac callers, with three call sites.
+void TCampaignBrief::CampaignHeaderStruct::playScenarioText(int which, bool epilogue)
+{
+    g_soundManager->stopAllSamples(1);
+    m_scenarios[which]->playText(epilogue);
+}
+
 VA(0x004894e0, 0x1D)
 void TCampaignBrief::CampaignHeaderStruct::startScenario(
     int which, int option)
 {
     m_scenarios[which]->startScenario(m_stream, option);
+}
+
+// Mac retains the per-scenario score reader at code 0:0x97e70. SCampaign's
+// load loop calls it once per row; VC6 expands the same five ordered reads.
+void CampaignScenarioInfo::read(TAbstractFile* infile)
+{
+    m_completed = readValue<unsigned char>(infile) != 0;
+    m_days = readValue<int>(infile);
+    m_score = readValue<int>(infile);
+    m_completeOrder =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+    m_index =
+        static_cast<signed char>(readValue<unsigned char>(infile));
+}
+
+// Mac retains this per-scenario score writer at code 0:0x97f74. SCampaign's
+// save loop calls it once per row; VC6 expands its five ordered writes.
+void CampaignScenarioInfo::write(TAbstractFile* outfile) const
+{
+    {
+        char flag = m_completed;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        int intBuffer = m_days;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        int intBuffer = m_score;
+        outfile->write(&intBuffer, sizeof(intBuffer));
+    }
+    {
+        char flag = m_completeOrder;
+        outfile->write(&flag, sizeof(flag));
+    }
+    {
+        char flag = m_index;
+        outfile->write(&flag, sizeof(flag));
+    }
 }
 
 VA(0x00489590, 0x233)
@@ -2565,16 +2639,9 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
         m_campaignCompleted[m_currentCampaign] = 1;
         if (m_currentCampaign >= g_campaignOrdinal07
             && m_currentCampaign < g_campaignOrdinal13 && !m_isCheater) {
-            int total = 0;
-            int scored = 0;
-            for (i = 0; i < m_mapScores.size(); ++i) {
-                if (m_mapScores[i].m_completed && m_mapScores[i].m_score >= 0) {
-                    total += m_mapScores[i].m_score;
-                    ++scored;
-                }
-            }
-            if (scored
-                && ((total + scored / 2) / scored) * 5 >= 350)
+            // Mac completeCurrentMap +0x480 calls the retained getScore
+            // body, then compares its result with 350.
+            if (getScore() >= 350)
                 m_secretActive = 1;
         }
     }
@@ -2582,12 +2649,12 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
     pruneCrossoverHeroes(campaignHeader);
 }
 
-// This helper and the four ordinary Complete-only helpers below recover the
-// source boundaries visible in pruneCrossoverHeroes. VC6 expands them into
-// that caller: the header pass retains its vector size calls, the scenario
-// queries preserve their temporary homes, and the collector owns one hero
-// receiver across the two artifact loops. The flattened spelling has 91 CFG
-// blocks against retail's 62; these calls restore the retail source shape.
+// Four ordinary helpers have retained Mac bodies: markRequiredCampaignHeroes
+// at code+0x96cd8 (including the wanted-array clear), usesCrossoverPool at
+// +0x96060, getMaxCrossoverHeroes at +0x95ea8, and collectCrossoverArtifacts
+// at +0x95a78. Mac pruneCrossoverHeroes (+0x98934) calls all four. VC6 expands
+// them into this caller; the flattened spelling has 91 CFG blocks against
+// retail's 62. getCampaignScenarioCount remains a Windows-side inference.
 static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
 {
     return header.m_scenarios.size();
@@ -2595,6 +2662,7 @@ static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header
 
 static void markRequiredCampaignHeroes(TCampaignBrief::CampaignHeaderStruct& header, unsigned char* wanted)
 {
+    memset(wanted, 0, game::HERO_COUNT);
     for (unsigned int mapIndex = 0; mapIndex < header.m_scenarios.size(); ++mapIndex) {
         if (!g_game->m_campaign.m_mapScores[mapIndex].m_completed)
             header.m_scenarios[mapIndex]->markCrossoverHeroes(wanted);
@@ -2639,8 +2707,6 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
 
     unsigned char wanted[game::HERO_COUNT];
-    memset(wanted, 0, sizeof wanted);
-
     markRequiredCampaignHeroes(*header, wanted);
 
     for (int pool = m_carryOverHeroes.size(); pool--;) {
@@ -2683,31 +2749,43 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
     }
 }
 
+// Mac +0x98b7c retains this scan between pruneCrossoverHeroes and the
+// epilogue wrapper. Its sole direct caller is getText at +0x93974; the
+// Windows caller expands the same loop. The provisional name describes
+// the returned score-table index.
+int SCampaign::findLatestCrossoverScenario(int slot) const
+{
+    unsigned int score;
+    int source = -1;
+    for (score = 0; score < m_mapScores.size(); ++score)
+        if (m_mapScores[score].m_completed
+            && m_mapScores[score].m_index == slot
+            && (source < 0
+                || m_mapScores[score].m_completeOrder
+                       >= m_mapScores[source].m_completeOrder))
+            source = score;
+    return source;
+}
+
 VA(0x0048a270, 0x2F)
 void SCampaign::playScenarioPrologue(void* campaignHeader)
 {
     int map = m_currentMap;
-    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->m_scenarios[map]->m_prologue)
-        header->m_scenarios[map]->m_prologue->play();
+    header->playScenarioText(map, false);
 }
 
 VA(0x0048a2a0, 0x70)
 void SCampaign::playScenarioEpilogue(void* campaignHeader)
 {
     int map = m_currentMap;
-    g_soundManager->stopAllSamples(1);
     TCampaignBrief::CampaignHeaderStruct* header =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
-    if (header->m_scenarios[map]->m_epilogue)
-        header->m_scenarios[map]->m_epilogue->play();
+    header->playScenarioText(map, true);
     if (m_currentCampaign == g_campaignOrdinal02 && m_mapScores[0].m_completed
         && m_mapScores[1].m_completed && !m_mapScores[2].m_completed) {
-        g_soundManager->stopAllSamples(1);
-        if (header->m_scenarios[g_campaignOrdinal02]->m_prologue)
-            header->m_scenarios[g_campaignOrdinal02]->m_prologue->play();
+        header->playScenarioText(g_campaignOrdinal02, false);
     }
 }
 
@@ -2725,10 +2803,9 @@ void SCampaign::playScenarioEpilogue(void* campaignHeader)
 // Artifact fields sign-extend two-byte reads into the shared TArtifact type.
 // The legacy secret flag is reset after assigning the campaign filename.
 
-// Inferred pre-v28 per-hero conversion boundary. VC6 expands this helper at
-// its sole call and changes the surrounding vector inlining in SCampaign::load.
-// No standalone DC or retail procedure proves the original boundary; the
-// coherent conversion operation and measured caller output support the model.
+// Mac retains this pre-v28 per-hero conversion at code 0:0x98cb0 and calls it
+// from SCampaign::load. VC6 expands the helper at that same source call and
+// changes the surrounding vector inlining. Its original spelling is unproved.
 static void convertLegacyCampaignHero(hero& newHero,
                                       const LegacyCampaignHero& oldHero)
 {
@@ -2780,18 +2857,6 @@ static void readAssignedCampaignHeroes(TAbstractFile* infile,
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
         campaign.m_assignedCarryover[assignedIndex] = readValue<short>(infile);
     }
-}
-
-static void readCampaignScore(TAbstractFile* infile, CampaignScenarioInfo& scenario)
-{
-    scenario.m_completed = readValue<unsigned char>(infile) != 0;
-    scenario.m_days = readValue<int>(infile);
-    scenario.m_score = readValue<int>(infile);
-
-    scenario.m_completeOrder =
-        static_cast<signed char>(readValue<unsigned char>(infile));
-    scenario.m_index =
-        static_cast<signed char>(readValue<unsigned char>(infile));
 }
 
 // 99.0228%: the record readers, direct score-vector ownership and shared
@@ -2887,7 +2952,7 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
     m_mapScores.resize(count);
     for (i = 0; i < count; ++i) {
         CampaignScenarioInfo& scenario = m_mapScores[i];
-        readCampaignScore(infile, scenario);
+        scenario.read(infile);
     }
 
     count = readValue<unsigned char>(infile);
@@ -2998,27 +3063,7 @@ void SCampaign::save(TAbstractFile* outfile)
     {
         for (index = 0; index < m_mapScores.size();
              ++index) {
-            CampaignScenarioInfo& score = m_mapScores[index];
-            {
-                char flag = score.m_completed;
-                outfile->write(&flag, sizeof(flag));
-            }
-            {
-                int intBuffer = score.m_days;
-                outfile->write(&intBuffer, sizeof(intBuffer));
-            }
-            {
-                int intBuffer = score.m_score;
-                outfile->write(&intBuffer, sizeof(intBuffer));
-            }
-            {
-                char flag = score.m_completeOrder;
-                outfile->write(&flag, sizeof(flag));
-            }
-            {
-                char flag = score.m_index;
-                outfile->write(&flag, sizeof(flag));
-            }
+            m_mapScores[index].write(outfile);
         }
     }
 

@@ -1,0 +1,64 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x52d8c0
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x149038
+mac_size = 0xfc0
+target_sha256 = "aaaed0090245e9204d5feced9b931a2ca5bb3b303c51b4d01eacdc9f1186b2c9"
+evidence = "Quest log constructor: CAdvPopup(205,32,389,535), vector reserve 20, QuestLog.pcx at TOC 1+0x2a8c used 0x1490cc and QLexit.def at TOC 1+0x2a84 used 0x149ef0, 16 row text widgets, slider and exit button. BLR 0x149ff4; next destructor entry 0x149ff8."
+
+[[functions]]
+retail_va = 0x52e170
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x148fe4
+mac_size = 0x54
+target_sha256 = "9104699e1ca1dfa66a561a8f72610448170e41b174468f93d232e6da33acc908"
+evidence = "Quest slider callback writes state to quest-window +0x68, calls row-loop helper 0x14a1f4, then virtual drawWindow with full bounds -65535/+65535. BLR 0x149034; next constructor 0x149038."
+
+[[functions]]
+retail_va = 0x52e1e0
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x149ff8
+mac_size = 0xc8
+target_sha256 = "e92c112dedf297f133a9d7a683920ad2aa01c6afdfe5260fc1756b0a0d51fc9f"
+evidence = "Quest window destructor: vptr at this+0, iterates widget vector at +0x34/+0x38 and invokes widget vtable deleting destructor; base cleanup. BLR 0x14a0bc; next locator 0x14a0c0."
+
+[[functions]]
+retail_va = 0x52e270
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x14a0c0
+mac_size = 0x134
+target_sha256 = "683c7326af1d784436d96ba7d02b032de2659fe83cdf24fceba86e8f0232e6d4"
+evidence = "updateQuestLocator gets firstVisibleQuest +0x68 plus row index, branches across map seer hut list and quest guard list, copies log string to g_text, broadcasts MESSAGE_WIDGET text code 3 with row+1. BLR 0x14a1f0; next 16-row helper 0x14a1f4."
+
+[[functions]]
+retail_va = 0x52e410
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x14a240
+mac_size = 0x40
+target_sha256 = "24cc4a9140d6d9a99c318237be449a8d6e2913342c825ad4216bb514ec3e0138"
+evidence = "windowHandler calls CAdvPopup::windowHandler 0x1bf2c; on zero calls trueFalseDialogHandler 0x112660; BLR 0x14a27c; next doQuestLog 0x14a280."
+
+[[functions]]
+retail_va = 0x52e430
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x14a280
+mac_size = 0x3e0
+target_sha256 = "cadbc5a14fdfd2157d8a731d1bfb773f0112c6920346ef04bf33acbbcc5972e7"
+evidence = "doQuestLog sets default pointer, constructs quest window (0x149038), walks game seer hut and quest guard vectors into log, broadcasts slider resolution, calls 16-row locator helper and modal, destroys window. BLR 0x14a65c; next unrelated function 0x14a660."
+
+[[helpers]]
+source_helper = "TQuestLogWindow::updateQuestLocators"
+unit = "questlogwindow"
+mac_section = 0x0
+mac_offset = 0x14a1f4
+mac_size = 0x4c
+target_sha256 = "5756512f4aca7a5d13ef3834661f2947c06e971031b87ff6467b5fdba7ad4070"
+evidence = "Unique source-defined helper loops row r31 from 0 to 15 and calls locator 0x14a0c0 sixteen times; BLR 0x14a23c; next windowHandler 0x14a240."

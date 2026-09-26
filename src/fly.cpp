@@ -59,7 +59,7 @@ bool army::findFlyerAttackCell(int start, int target) const
     for (long dir = 0; dir < 6; dir++) {
         long adjacent = g_combatManager->m_adjacentCells[target][dir];
         long hex = adjacent - start + m_gridIndex;
-        if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
+        if (adjacent >= 0 && combatManager::validHex(hex)
                 && combatManager::getDistance(start, adjacent) <= getSpeed()
                 && canFit(hex, 0, 0))
             return 1;

@@ -1,0 +1,126 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4ea720
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c3f0
+mac_size = 0xa8
+target_sha256 = "963aeac8d01e7dbf38825ecb97e88fbad25775470bff4863cf4946ec6f439518"
+evidence = "Constructs widget base at 0x20a504 with x/y/w/h/id/style arguments, installs iconWidget vtable at +0, stores frame +0x34, sequence +0x38, flip +0x3c, back color +0x44 and obtains sprite from ResourceManager::getSprite when image nonnull. BLR 0x10c494; next destructor 0x10c498."
+
+[[functions]]
+retail_va = 0x4ea7b0
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c498
+mac_size = 0x7c
+target_sha256 = "a6742a658fb6e42268e37ba95b1e55bcdbff8de0b45327c5ddc12ea81d3acef8"
+evidence = "Combined Mac destructor installs iconWidget vtable, disposes sprite +0x30, invokes widget base destructor at 0x20a580 and conditionally frees this under r4. BLR 0x10c510; Windows scalar deleting thunk remains separate."
+
+[[functions]]
+retail_va = 0x4ea810
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c514
+mac_size = 0x33c
+target_sha256 = "fb142afe0e963d05fc065057002e4a2344ac1e9452a04c31679198f15b06ded2"
+evidence = "Checks sleep +0x2c and WIDGET_ACTIVE, dispatches MESSAGE_WIDGET=0x200 commands 4..13 through jump table, calling setSprite 0x10d074 and setIconFrame 0x10cf60; handles left/right mouse down/up and hit test, then inherited widget main. BLR 0x10c84c; next handleClick body 0x10c850."
+
+[[functions]]
+retail_va = 0x4eab10
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c850
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "Mac iconWidget handleClick vtable hook returns literal zero in one instruction plus BLR 0x10c854, adjacent width/height getters follow."
+
+[[functions]]
+retail_va = 0x4eab20
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c858
+mac_size = 0xc
+target_sha256 = "ea754fe0af16599575b7fcd04c982128d414340a30ff0cea842c98d51f10add2"
+evidence = "Loads sprite +0x30 then width +0x30 and returns; BLR 0x10c860, immediately before height getter."
+
+[[functions]]
+retail_va = 0x4eab30
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c864
+mac_size = 0xc
+target_sha256 = "6f14526239d16bcea3fbdd9608da810ef4e1894e5de99b098cc7ac74ad4fdc98"
+evidence = "Loads sprite +0x30 then height +0x34 and returns; BLR 0x10c86c, followed by empty zBufferDraw hook."
+
+[[functions]]
+retail_va = 0x4eab40
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10c874
+mac_size = 0x6ec
+target_sha256 = "4f1dc026ee2be193f8ff26dcbf6421c666a1e85fc5b73c6bd8331ebae85eddcf"
+evidence = "Draw dispatches by widget style, accesses sprite +0x30/frame +0x34/sequence +0x38, obtains screen bitmap and calls reviewed CSprite::draw 0x8a76c, drawCreature 0x8a818 and drawAdvObj 0x8a8cc among its arms. BLR 0x10cf5c; next setIconFrame body 0x10cf60."
+
+[[functions]]
+retail_va = 0x4eaff0
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10cf60
+mac_size = 0x50
+target_sha256 = "c85c0184b9962d6d5566f9086a047adf5a487f16d54c8882e61648bd1eeab7a8"
+evidence = "Computes newFrame modulo sprite sequence frame count using +0x30 sprite, +0x38 sequence, CSprite valid-mask +0x2c and frame pointers +0x1c, then stores result at +0x34. BLR 0x10cfac; next setIconSequence body 0x10cfb0."
+
+[[functions]]
+retail_va = 0x4eb030
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10d074
+mac_size = 0x5c
+target_sha256 = "1c378a162792d7b979548774bf2eaa0024834f37b48676207f82141c6d8467ae"
+evidence = "Disposes old sprite at +0x30 if nonnull, calls ResourceManager::getSprite 0x153fcc with r4 image and stores new pointer at +0x30. Called from main's WIDGET_SET_ICON_NAME arm at 0x10c604. BLR 0x10d0cc."
+
+[[functions]]
+retail_va = 0x4eb060
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10d0d0
+mac_size = 0x210
+target_sha256 = "54ef8cb1517326668a2da3e38336af41d03b177aecc2941ac32e8c41d6f20a74"
+evidence = "Checks next frame against sprite sequence count, otherwise builds 11-entry weighted animation table at TOC 1+0x2744, calls random(1,100), handles prewalk/postwalk transitions and stores new sequence/frame. BLR 0x10d2dc; next four-entry siege variant 0x10d2e0."
+
+[[functions]]
+retail_va = 0x4eb250
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10d2e0
+mac_size = 0x190
+target_sha256 = "cf89774f19a08f4831b0768001df10e258b14571063c422b657960b86d704161"
+evidence = "Checks next frame then builds four-entry weighted siege sequence table 94/2/2/2 at TOC 1+0x2740, calls random(1,100), retries empty sequences and changes sequence. BLR 0x10d46c; next prologue 0x10d470."
+[[helpers]]
+source_helper = "iconWidget::setIconSequence"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10cfb0
+mac_size = 0x10
+target_sha256 = "c00f5e26eab164b37d5793096537a0f3de8dab940aa5aaec852ce7d9b405f749"
+evidence = "Mac Main calls this tiny retained method in the set-sequence command arm. It writes the new sequence at +0x38 and clears the frame at +0x34, matching DC lines 447-448 and the authored helper. Complete body ends in BLR at 0x10cfbc."
+
+[[helpers]]
+source_helper = "iconWidget::setPalette"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10cfc0
+mac_size = 0x60
+target_sha256 = "93b2d48de9d143ee3556ed23d874bbb977b205b54390e8d944a860f6b361cf3c"
+evidence = "Mac Main calls this retained method for WIDGET_SET_PALETTE. The body gets a palette, applies it to sprite +0x30 and disposes the temporary; Dreamcast names the ordinary helper and Windows expands it in Main. Complete body ends in BLR at 0x10d01c."
+
+[[helpers]]
+source_helper = "iconWidget::setPlayerPaletteColors"
+unit = "iconwdgt"
+mac_section = 0x0
+mac_offset = 0x10d020
+mac_size = 0x54
+target_sha256 = "421a67f718d3912bcc4ff806d0524ebd4526e0743828faca27f537541d88cfd6"
+evidence = "Mac Main calls this retained method for WIDGET_SET_PLAYER_PALETTE_COLORS. It obtains both sprite palette views and passes each to the color helper; the authored method has the same two calls. Complete body ends in BLR at 0x10d070."

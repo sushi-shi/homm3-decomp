@@ -73,6 +73,14 @@ score ledger to invent policy. Existing banked carriers remain when bodies stop
 emitting, and all banked TU/RVA inline bindings are retained. Missing bodies stay
 measurable rather than disappearing from the comparison universe.
 
+`config/units.toml` can pin a reviewed header comparison in
+`[header_comparisons]`, using an absolute Windows VA and an existing unit name.
+The header annotation still owns the function name and body. This selects the
+compiler-emitted copy used for comparison when TU visibility changes its
+inlining; it does not change source, compiler flags or scores. Review retail
+instructions and named relocations before adding a binding. A missing selected
+copy stays unavailable rather than silently switching to another copy.
+
 Caches remain content based. Ownership keys include the manifest, project
 configuration and compiler-profile implementation. Ninja dependencies include
 project/manifest configuration, so changed include search order triggers a

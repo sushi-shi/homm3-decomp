@@ -4,7 +4,7 @@
 #include "va.h"
 
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "array.h"
 

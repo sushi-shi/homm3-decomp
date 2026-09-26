@@ -779,6 +779,7 @@ public:
     void castCaliphSpell(long hex);
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
+    void castFaerieDragonSpell(long hex);
     unsigned char checkSpecialAttack(army* target);
     void castSpell(long hex);
     // Complete retains this ordinary destructor in Army code at 0x43d400,
@@ -1617,13 +1618,16 @@ inline int army::offsetToFront(int direction) const
         return m_facing ? 1 : -1;
     }
 
-    // E:\gamedcs\Army.h:752
+    // E:\gamedcs\Army.h:752, dc 0x27ccc. The older DC helper clears
+    // expectedDamage, target, time and value. Complete's x86 findAITargets
+    // at 0x422b20 and Mac at 0:0x25100 instead clear target, value,
+    // possibleTargets and time in this order, leaving expectedDamage intact.
 inline void army::clearAIValues()
     {
-        m_aiExpectedDamage = 0;
         m_aiTarget = 0;
-        m_aiTargetTime = 0;
         m_aiTargetValue = 0;
+        m_aiPossibleTargets = 0;
+        m_aiTargetTime = 0;
     }
 
     // E:\gamedcs\Army.h:760

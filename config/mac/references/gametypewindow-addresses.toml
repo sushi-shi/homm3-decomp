@@ -1,0 +1,35 @@
+[[functions]]
+retail_va = 0x004d54c0
+unit = "gametypewindow"
+mac_section = 0
+mac_offset = 0xf0fa4
+mac_size = 0x590
+target_sha256 = "d33db01fa9462c508439f5587117eb16df67febaabd263a4bcd5ee5e471eaab7"
+evidence = "NEW: Unique gtsingl.def at data1+0x43018 xrefs code0+0xf1104; constructor starts0xf0fa4; base heroWindow800x600, five button allocations and widget vector loop; last blr0xf1530 before next prologue0xf1534."
+
+[[functions]]
+retail_va = 0x004d5890
+unit = "gametypewindow"
+mac_section = 0
+mac_offset = 0xf1534
+mac_size = 0xb4
+target_sha256 = "136f8349943cf57154939a6f2af18eadf0135ca7334acf6ff32e3b40d608efb7"
+evidence = "NEW: Destructor walks widget vector with virtual deletions, clears g_gameTypeWindow TOC1+0x4bf0 and calls heroWindow dtor0x20aebc; Mac folds optional object deallocation into same ABI body. Prologue0xf1534 last blr0xf15e4 next prologue0xf15e8."
+
+[[functions]]
+retail_va = 0x004d5910
+unit = "gametypewindow"
+mac_section = 0
+mac_offset = 0xf15e8
+mac_size = 0x58
+target_sha256 = "9d64d08e2efb437abfe1cee33927513eae8dc0271383d40fc47564e641a84237"
+evidence = "NEW: Calls soundManager::startMP3 with MainMenu TOC1+0x43053 then windowManager doDialog0x20d6c0 with handler descriptor. Prologue0xf15e8 last blr0xf163c next prologue0xf1640."
+
+[[functions]]
+retail_va = 0x004d5940
+unit = "gametypewindow"
+mac_section = 0
+mac_offset = 0xf1640
+mac_size = 0x2c0
+target_sha256 = "d937a82f0a67514f2a8a6ab1c73b129f44013fc67af3191762c98c2e951a1369"
+evidence = "NEW: Handler reads message modifier+0xc and widget codes; dispatches help, hover widget IDs 0x64..0x68, sendMessage and redraw; prologue0xf1640 last blr0xf18fc next prologue0xf1900."

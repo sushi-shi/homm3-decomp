@@ -1,7 +1,7 @@
 #ifndef HOMM3_KBWIN_H
 #define HOMM3_KBWIN_H
 
-#include <windows.h>
+#include "platform.h"
 
 #include "struct.h"
 

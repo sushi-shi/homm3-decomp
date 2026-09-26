@@ -1,0 +1,71 @@
+# Reviewed external storage used by the paired ADVMGR context setter.
+# Address-only bindings do not compare platform-specific initializers.
+
+[[data]]
+retail_va = 0x0063a66c
+source = "src/advmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a3434
+mac_size = 12
+sha256 = "7b0b5ea3ff36958c8e32ccf24b71da9ac68e51d0881bf75e62b837ec9ea6f3a5"
+evidence = "Dreamcast names static akScrollSpeedInc and source owns the DATA-claimed {1,2,3} three-int row at its original position via the registered fragment. Mac screenScroll at 0+0x19cac loads TOC 1+0x1c1c -> code 0+0x2a3434 and indexes three big-endian 32-bit values 1,2,3. The following word is 300, fixing the 12-byte bound; full payload/hash and loader pointer are pinned."
+
+[[data]]
+retail_va = 0x00696a04
+source = "src/advmgr.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x67658
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Source DATA declaration names the Complete draw-message bypass byte. Mac setHeroContext loads TOC 1+0x6ac -> initialized byte storage 1+0x67658 at 0+0x1822c, then tests it at 0+0x1838c, 0+0x18500, and 0+0x1864c in the corresponding draw guards; loader relocation and full one-byte payload/hash are pinned."
+
+[[data]]
+retail_va = 0x006989c8
+source = "src/advmgr.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527e40
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical nonlocal adventure-command guard reads this DATA-claimed dword together with g_unnamed69ccd4. Mac HideRoute at 0+0x1987c loads TOC 1+0x694 -> zero-filled dword 1+0x527e40, tests it, then loads reviewed g_unnamed69ccd4 through TOC 1+0x670 at 0+0x1988c; setHeroContext calls HideRoute at 0+0x18288. Full four-byte storage and loader pointer are pinned; the guard's Mac helper placement differs from Windows source."
+
+[[data]]
+retail_va = 0x00682a38
+source = "src/remote.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x59192
+mac_size = 1
+sha256 = "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+evidence = "Source-owned g_followPlayerMode is the byte checked between g_videoPaused and the draw-message bypass in the context setter. Mac 0+0x1837c loads TOC 1+0x68c -> initialized byte 1+0x59192 and tests it at 0+0x18380; full byte and loader relocation are pinned."
+
+[[data]]
+retail_va = 0x00691209
+source = "src/advmgr.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x630e4
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Canonical context setter tests g_unnamed691209 before game::isLastHuman in the paused nonhuman arm. Mac 0+0x183bc loads TOC 1+0x5cc -> byte 1+0x630e4 and tests it at 0+0x183c0 before the same player-position/last-human call chain. Full one-byte payload and loader pointer are pinned."
+
+[[data]]
+retail_va = 0x00678330
+source = "include/soundmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x43264
+mac_size = 9
+sha256 = "a44b63833a040b00a29c6720aa7ea3941ad55b90c43c8be00b2176e1e4348957"
+evidence = "Retail relocation evidence and the canonical soundmgr.h comment identify the nine terrain-to-music bytes at 0x678330. Mac setHeroContext at 0+0x18764 loads TOC 1+0x714 -> initialized table 1+0x43264 and indexes it by m_lastTerrain before switchAmbientMusic. Its complete nine-byte payload is 08 07 03 04 05 09 0a 06 02, identical to the documented Windows table; loader pointer and payload hash are pinned."
+
+[[data]]
+retail_va = 0x006994e0
+source = "include/inputmgr.h"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528954
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical inputmgr.h documents retail .bss 0x6994e0 and Dreamcast gpInputManager for this existing extern. Mac setHeroContext's final forceMouseMove arm at 0+0x1878c loads TOC 1+0x71c -> zero-filled external pointer storage 1+0x528954 before calling inputManager::forceMouseMove; full four bytes and loader pointer are pinned."

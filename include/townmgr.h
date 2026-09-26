@@ -947,6 +947,7 @@ private:
     void doSkeletonTransformer();
     void doHall();
     void selectArmy(strip* fromStrip, long slot, unsigned char isOwnerCell);
+    void showBuildingInfo(int buildingId, unsigned char rightClick);
 
 public:
     // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs

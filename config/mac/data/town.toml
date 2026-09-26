@@ -1,0 +1,55 @@
+[[data]]
+retail_va = 0x0066cd98
+source = "src/town.cpp"
+declaration_only = false
+mac_section = 1
+mac_offset = 0x354c8
+mac_size = 0x200
+sha256 = "03cb29647bde2f8a5530d9c9259a195be44f7521693895639fc77e979155044e"
+evidence = "Mac initializeSpells and ai_player::buyCreatures load TOC 1+0x690 -> 1+0x354c8 and index eight-byte masks. The 64 complete big-endian 64-bit powers of two at 1+0x354c8..0x356c8 match the 64 little-endian Windows entries at retail DATA(0x0066cd98); the next bytes begin a distinct table. src/town.cpp owns the initializer; require the emitted CodeWarrior payload to match this reviewed table."
+
+[[data]]
+retail_va = 0x006782a4
+source = "src/town.cpp"
+declaration_only = false
+mac_section = 1
+mac_offset = 0x43218
+mac_size = 5
+sha256 = "6ca634de76e9d886a6e5f19e5daa54ccd9c0af3338ec96bbcf1cefc0691663df"
+evidence = "Mac initializeSpells loads TOC 1+0x111c -> 1+0x43218 and uses the five signed bytes 05 04 03 02 01 as its level-one through level-five candidate counts. src/town.cpp owns the initialized retail DATA(0x006782a4); require the emitted CodeWarrior payload to match."
+
+[[data]]
+retail_va = 0x00697798
+source = "src/town.cpp"
+declaration_only = false
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x5270c0
+mac_size = 0xc60
+sha256 = "98c87f2e8ed0d35a1677aedef5b954012bb0da4c61c421a370fb97fe99a04df0"
+evidence = "Mac canBuild loads TOC 1+0x844 -> zero-filled storage 1+0x5270c0 and indexes a 9-town by 44-building table of eight-byte masks with 0x160-byte town rows. src/town.cpp defines g_hierarchyMask without an initializer at retail BSS 0x00697798; require an indirect IL TOC reference and exact zero-filled 0xc60-byte UDATA hunk."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x5985
+mac_size = 3
+sha256 = "3d757ff595408954cec727b0d878225712ce19aec0114f97f903407756702d14"
+evidence = "Mac showCreatureRewards uses this null-terminated comma-space literal through TOC 1+0x5985 at code 0x1b5a04 and 0x1b5a14 for intermediate reward rows."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x5988
+mac_size = 4
+sha256 = "9d2fbb7d019778a2cea264523a3dd94a63bf002b7ca1c5855ed19f379a08efbd"
+evidence = "Mac showCreatureRewards passes this null-terminated percent-d-space literal through TOC 1+0x5988 to formatString at code 0x1b5a24..0x1b5a28, matching the canonical source expression."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x598c
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The canonical getArmyName fallback emits one empty-string byte. Mac showCreatureRewards uses TOC 1+0x598c at 0x1b5a5c before creature trait-name selection."

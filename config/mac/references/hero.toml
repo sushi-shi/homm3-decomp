@@ -1,0 +1,241 @@
+# Source-owned game callees required by paired HERO bodies. These bindings
+# resolve calls without admitting the callee bodies for Mac scoring.
+[[helpers]]
+unit = "hero"
+source_helper = "markSpells"
+mac_section = 0
+mac_offset = 0xf5008
+mac_size = 0xb4
+mac_symbol = ".markSpells__F12TSpellSchool"
+target_sha256 = "8e58b07ad84ff136ef60bc4949a8c2c59a46517624a53bac4ce5eb4dcb09cd72"
+evidence = "The ordinary global markSpells body precedes markArtifactSpells in src/hero.cpp and Dreamcast names mark_spells at dc 0xcc360. Mac 0xf5008 resets a 70-bit result, iterates 70 spell traits of stride 0x88, tests schoolBits at +0x1c against the passed school mask, sets matching bits, then copies the three result words. Four Tome arms of markArtifactSpells at 0xf514c, 0xf515c, 0xf516c and 0xf517c call it with school masks 1, 2, 4 and 8; Windows 0x4d9350 contains the corresponding four expanded loops. The preceding addSpell BLR is at 0xf5004, this body ends at 0xf50b8 and the next prologue begins 0xf50bc. Focused CodeWarrior compile emits the canonical .markSpells__F12TSpellSchool symbol."
+
+[[functions]]
+retail_va = 0x004e36c0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x10434c
+mac_size = 0x300
+mac_symbol = ".getLuck__4heroCFPC4heroUcUc"
+target_sha256 = "e1eac1aeffcfc6f6b7dc13a21ef85dfacc1b3ba0d958ead936eae33e6e5fb018"
+evidence = "getLuckDescription calls this body at 0xf93c8 with self hero, null other hero, and two zero flags. The body starts at 0x10434c after the preceding function, tests hero luck-nullification flag at +0x105, cursed-ground byte, and Hourglass artifact 0x55 on either hero, then calculates skill/artifact/town luck before its BLR at 0x104648. The next prologue begins 0x10464c. Dreamcast names hero::GetLuck at dc:0xd4070, and source-owned Windows VA 0x4e36c0 has the same three parameters and checks; the full 0x300-byte pinned Mac span is independently hashed."
+
+[[functions]]
+retail_va = 0x004d74d0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf22a4
+mac_size = 0x3c
+mac_symbol = ".initialize__21type_obscuring_objectFv"
+target_sha256 = "8a1ca6e008f959f3465ae1edb48476ff77868b2fc62cf32f3630c54d5f9bd1c1"
+evidence = "Hero::initialize(short) calls this member at 0xf4018. Its 0xf22a4..0xf22e0 body sets three leading coordinates to -1, clears valid and obscured-type state, and returns at 0xf22dc before the next prologue, matching source-owned type_obscuring_object::initialize at Windows 0x4d74d0."
+
+[[functions]]
+retail_va = 0x004e2bd0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x103854
+mac_size = 0x200
+mac_symbol = ".removeArtifact__4heroFl"
+target_sha256 = "dbbc611ad743827ac5a190fa54dc00fc811dd6fa9804ebcb23239791ead40517"
+evidence = "Siege's single equipped-slot removal call reaches 0x103854. The callee indexes the same stride-eight equipped array at this+0x12d/+0x131, confirming removeArtifact(slot); the preceding body ends with BLR at 0x103850 and the next prologue starts at 0x103a54."
+
+[[functions]]
+retail_va = 0x004d95d0
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf52d0
+mac_size = 0x298
+mac_symbol = ".updateSpellList__4heroFv"
+target_sha256 = "6260d32b1cb80cac89b70525cb10bae12aec5276d028adef2ddc68880d473b1c"
+evidence = "Both equipArtifact at 0x103838 and removeArtifact at 0x103a3c call this body. It copies 70 inSpellbook bytes at hero+0x3de to availableSpells at +0x424, then walks 19 equipped records at +0x12d, handling spell scroll payloads and spell-granting artifacts, matching source-owned updateSpellList. Preceding BLR is 0xf52cc, this body ends with BLR at 0xf5564, and the next prologue begins 0xf5568."
+
+[[functions]]
+retail_va = 0x004e2f90
+unit = "hero"
+mac_section = 0
+mac_offset = 0x103c74
+mac_size = 0x134
+mac_symbol = ".addToBackpack__4heroFPC13type_artifactl"
+target_sha256 = "e4bc6c2500b16f8aad7bfe6352fdbc69b2b8cbc8dabf84558189c0b286de4f0b"
+evidence = "Initialize calls this three-argument member at 0xf48fc; 12 other Mac callers reach the same body. It bounds the backpack count at hero+0x3d4 to 64, rejects siege-weapon artifact ids 3..6, finds or opens a backpack slot, shifts stride-eight records at +0x1d4 and copies both artifact words, matching source-owned addToBackpack. The preceding BLR is 0x103c70, this body ends at 0x103da4, and the next prologue is 0x103da8."
+
+[[functions]]
+retail_va = 0x004d9330
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf4fec
+mac_size = 0x1c
+mac_symbol = ".addSpell__4heroFi"
+target_sha256 = "cff4149a50189e5a93baea5b6ecb064f8986b6787d400cec037c27e23c61bdcb"
+evidence = "Initialize calls this two-argument member at 0xf4800 after a spell bitset test. The complete callee writes 1 to hero inSpellbook and availableSpells bytes at +0x3de and +0x424 indexed by the spell argument, matching the source-owned Windows-exact addSpell at 0x4d9330 and Dreamcast named helper at 0xcc348. The preceding BLR is 0xf4fe8, own BLR is 0xf5004, and the next prologue begins 0xf5008."
+
+[[functions]]
+retail_va = 0x004da720
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf6ac0
+mac_size = 0x664
+mac_symbol = ".checkLevel__4heroFv"
+target_sha256 = "24670ebf2a91c2b9cc3a405f503ed46606e54560b1bb4f2d9dad730d45260d6d"
+evidence = "Initialize calls this no-argument hero member at 0xf49c8 immediately after giveExperience, and giveExperience itself calls it at 0x104114/0x104208. Its body computes a level from experience at hero+0x51, compares/updates short level at +0x55, formats the level-up title, chooses primary and secondary skill awards, and gives the skill via giveSS; this matches source-owned checkLevel at Windows 0x4da720. Prior BLR at 0xf6abc and own BLR at 0xf7120 precede next prologue 0xf7124."
+
+[[functions]]
+retail_va = 0x004e4d90
+unit = "hero"
+mac_section = 0
+mac_offset = 0x105be0
+mac_size = 0x38
+mac_symbol = ".getMobility__4heroCFv"
+target_sha256 = "9a1631e3ee55290e8eead74ccb7f42ea515a87a9af068d31ebe727001b4ff83a"
+evidence = "Initialize calls this no-argument member at 0xf4a48. The complete body extracts the sea-movement bit from hero flags at +0x105 and forwards to the one-argument getMobility at 0x105898, matching source-owned Windows 0x4e4d90 and Dreamcast 0xd4d60. Prior BLR at 0x105bdc and own BLR at 0x105c14 precede next prologue 0x105c18."
+
+[[functions]]
+retail_va = 0x004e48b0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x105768
+mac_size = 0x98
+mac_symbol = ".getIntelligenceFactor__4heroCFv"
+target_sha256 = "613e672b42e5a76ea3324dc00e34d431a7a7e4a8a2b9130bda959edbec2c50c0"
+evidence = "Initialize calls this float-returning helper at 0xf4a04 from its inlined getMaxMana calculation. Its complete body reads Intelligence skill at hero+0xe1, indexes the factor table, checks the hero-specific Intelligence specialty, applies the level multiplier, and returns factor plus one, matching source-owned Windows 0x4e48b0. Prior BLR at 0x105764 and own BLR at 0x1057fc precede next body at 0x105800."
+
+[[functions]]
+retail_va = 0x005fede0
+unit = "window"
+mac_section = 0
+mac_offset = 0x20b3e8
+mac_size = 0xc4
+mac_symbol = ".broadcastMessage__10heroWindowFR7message"
+target_sha256 = "89bbb11d32be355a4b293387577dff31e566343fc206cb8061af571ac6699d6d"
+evidence = "UpdateArmies invokes this target seven times with a message reference. The callee walks heroWindow widget pointers and dispatches the message through each widget's virtual handler; the preceding body ends with BLR at 0x20b3e4 and the next prologue is 0x20b4ac."
+
+[[functions]]
+retail_va = 0x005feed0
+unit = "window"
+mac_section = 0
+mac_offset = 0x20b504
+mac_size = 0x30
+mac_symbol = ".widgetSetStatus__10heroWindowFii"
+target_sha256 = "9e9a4cb16090b526e7661b912d61e79f2daa279a0734e2bf58c6370f8d78cce9"
+evidence = "UpdateArmies calls this selected-slot status helper. It forwards MESSAGE_WIDGET 0x200 and WIDGET_SET_STATUS 5 to the four-argument broadcast wrapper at 0x20b4ac; the preceding BLR is 0x20b500 and the next prologue starts 0x20b534."
+
+[[functions]]
+retail_va = 0x005fef60
+unit = "window"
+mac_section = 0
+mac_offset = 0x20b534
+mac_size = 0x30
+mac_symbol = ".widgetClearStatus__10heroWindowFii"
+target_sha256 = "6e239895872c61f75412343edca79131d7039e9c576da586683cd4000eb8330d"
+evidence = "UpdateArmies calls this selected-slot status helper. It forwards MESSAGE_WIDGET 0x200 and WIDGET_CLEAR_STATUS 6 to the four-argument broadcast wrapper at 0x20b4ac; the preceding BLR is 0x20b530 and the next function starts 0x20b564."
+
+[[functions]]
+retail_va = 0x0050b230
+unit = "misc"
+mac_section = 0
+mac_offset = 0x130cf4
+mac_size = 0x6c
+mac_symbol = ".random__Fii"
+target_sha256 = "4a958021d052fb336ede21bdcb86ea4860c75552ea68635cd886e47bf707a1b1"
+evidence = "Both getSkillAward weighted-choice calls reach 0x130cf4. Its complete body checks equal/reversed bounds, calls rand, and computes min + rand() % (max-min+1), matching source-owned random at 0x50b230; prior body ends at 0x130cf0 and next prologue begins 0x130d60."
+
+[[functions]]
+retail_va = 0x004e22d0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x102ec4
+mac_size = 0x98
+mac_symbol = ".giveSS__4heroFii"
+target_sha256 = "cf64a674964dbc9705b6aefa4e507a5997fd892b17737f5d367c5dd3145933cb"
+evidence = "Initialize calls this named three-argument member at 0xf46fc. Its complete body reads skillLevel at hero+0xc9, updates skillOrder at +0xe5 and skillCount at +0x101, caps level at 3, and returns new minus old level; BLR at 0x102f58 and next body at 0x102f5c bound 0x98 bytes."
+
+[[functions]]
+retail_va = 0x004e2a00
+unit = "hero"
+mac_section = 0
+mac_offset = 0x1035fc
+mac_size = 0x258
+mac_symbol = ".equipArtifact__4heroFPC13type_artifactl"
+target_sha256 = "990abe633b6b22323d5f2e818d1981102bd88faa13c804bf718ad02cebf2ffd0"
+evidence = "Initialize calls this named three-argument member at 0xf4880. Its body handles slot -1, writes two artifact words to hero equipped storage at +0x12d/+0x131, reads g_artifactTraits, and recursively equips a related item; preceding BLR at 0x1035f8 and next removeArtifact prologue at 0x103854 bound 0x258 bytes."
+
+[[helpers]]
+unit = "hero"
+source_helper = "hero::getLevel"
+mac_section = 0
+mac_offset = 0xf6390
+mac_size = 0xd0
+mac_symbol = ".getLevel__4heroFi"
+target_sha256 = "eba5a06f124dd7628e5100a97edd62cdf22f906edb119af9246c7e9701492e34"
+evidence = "giveExperience calls this named hero helper at 0x1041f4. The complete 0xf6390..0xf6460 body reads g_experienceForLevel, scans thresholds 1..12, extrapolates subsequent thresholds by 1.2, and returns the previous level. Its final BLR at 0xf645c precedes a distinct next body at 0xf6460. Source owns getLevel in src/hero.cpp; VC6 expands it and has no retained Windows VA."
+
+[[helpers]]
+unit = "hero"
+source_helper = "hero::isLevelUpCampaignOverride"
+mac_section = 0
+mac_offset = 0xf66a0
+mac_size = 0x50
+mac_symbol = ".isLevelUpCampaignOverride__4heroCFv"
+target_sha256 = "c5dc7b00a41becd998a491ac94536b36537515e78c15c713b535548d0443c203"
+evidence = "The complete 0x50-byte Mac body starts after preceding BLR at 0xf669c and ends at BLR 0xf66ec before getSkillAward prologue 0xf66f0. It checks g_inCampaign, game campaign 14 and hero id 45 and returns bool. GetSkillAward calls it at 0xf673c and checkLevel at 0xf6bd8; one ordinary source-owned member implements their shared predicate without a Windows VA claim."
+
+[[functions]]
+retail_va = 0x004e33b0
+unit = "hero"
+mac_section = 0
+mac_offset = 0x104098
+mac_size = 0x18c
+mac_symbol = ".giveExperience__4heroFiiUc"
+target_sha256 = "8696df08e73d1e318d6238a482d9c895cef66bf324cdce267bac00e618fafeab"
+evidence = "Hero::initialize calls the source-owned three-argument giveExperience. The Mac body at 0:0x104098 updates hero experience at +0x51 and level at +0x55, reads the game maximum-level cap, calls getExperience and checkLevel, then returns the gained amount. Preceding BLR at 0x104094, own BLR at 0x104220 and next prologue at 0x104224 bound 0x18c bytes. This binds callee identity, not a giveExperience byte match."
+
+[[functions]]
+retail_va = 0x004dbe80
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf83ec
+mac_size = 0xc8
+mac_symbol = ".heroFn004DBE80__4heroFi"
+target_sha256 = "94c21b8c34cc46825294cba87aa36b1bb6154a4c49af67618016335303b9a35a"
+evidence = "Bounded Mac function copies five words of combination bits from g_combinationArtifacts, walks 19 equipped IDs at hero+0x12d stride 8, clears nonempty component bits and calls the five-word zero test at 0x107484. Prior body ends before prologue 0xf83ec, final BLR is 0xf84b0, and next function starts at 0xf84b4. Four callers include giveArtifact at 0x103e38. Source-owned Windows-exact heroFn004DBE80 has the same signature and operation."
+
+[[functions]]
+retail_va = 0x004cea20
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6cc4
+mac_size = 0x90
+mac_symbol = ".getLocalPlayerGamePos__4gameCFv"
+target_sha256 = "f8f03446095939776575847fd27cf8bf30bb6ee0042e00d8cb4921d17af1ca62"
+evidence = "Mac body checks hot-seat protocol 3, validates net local position 0..7, indexes 0x15c-byte player records, calls isHuman at 0xcdbf0, falls back to getLastHuman at 0xe6ff4, otherwise loads g_localGamePos. Source-owned game::getLocalPlayerGamePos at Windows 0x4cea20 has the same semantics; giveArtifact calls this Mac entry at 0x103e6c. Entry 0xe6cc4 follows prior BLR; final BLR 0xe6d50 precedes next prologue 0xe6d54."
+
+[[functions]]
+retail_va = 0x004dbf30
+unit = "hero"
+mac_section = 0
+mac_offset = 0xf84b4
+mac_size = 0x184
+mac_symbol = ".heroFn004DBF30__4heroFil"
+target_sha256 = "d0284396f07049966dac5012f3100de6e84e5006e136251bb2be1d82b3d7d7f8"
+evidence = "Mac body copies a combination bitset, optionally removes a source-slot artifact, walks equipped slots backward to remove matched components until no bits remain, then equips the assembled artifact. It calls source-owned removeArtifact at 0x103854 and equipArtifact at 0x1035fc, matching Windows heroFn004DBF30 at 0x4dbf30. Prologue 0xf84b4 follows prior BLR; own BLR at 0xf8634 precedes next prologue 0xf8638. giveArtifact calls this entry twice in dialog paths."
+
+[[functions]]
+retail_va = 0x005f1610
+unit = "victorylossconditions"
+mac_section = 0
+mac_offset = 0x1fd3cc
+mac_size = 0x44c
+mac_symbol = ".checkForArtifactWin__22VictoryConditionStructFv"
+target_sha256 = "baa83fdb00584d47f1f3d5fd2e3f20d5ad2ae7f638538a1badd91e039b506f57"
+evidence = "Mac body loads campaign/map from game+0x1ed04, checks the campaign 7/18 artifact cases and human player, scans heroes with hasArtifact at 0xf4d94, checks victory flags and returns a byte. This matches source-owned VictoryConditionStruct::checkForArtifactWin at Windows 0x5f1610; hero::giveArtifact calls it at 0x10406c. Prologue 0x1fd3cc and final BLR 0x1fd814 before next prologue 0x1fd818 bound the body."
+
+[[functions]]
+retail_va = 0x004ce970
+unit = "game"
+mac_section = 0
+mac_offset = 0xe6c3c
+mac_size = 0x4c
+mac_symbol = ".isLocalHuman__4gameCFi"
+target_sha256 = "24937b76ec4df998e88509c6541c6b66d2734d089da045f4576517b55cefd799"
+evidence = "Mac body rejects player positions below zero or at least eight, computes game+0x1ff48+0x15c*position, then calls the player isLocalHuman method at 0xcdba4. Source-owned game::isLocalHuman at Windows 0x4ce970 and DC 0xbbfcc has the same bounds and helper call; hero::giveExperience calls this Mac entry at 0x10413c. Entry 0xe6c3c follows prior BLR, final BLR 0xe6c84 precedes next prologue 0xe6c88."

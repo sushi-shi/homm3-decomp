@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "army.h"
@@ -189,6 +190,7 @@ void army::stopSample(army::TSampleID id)
 // 92.6261 exactly). The GameTime store schedules one slot later than
 // retail's and the dispose vtable call uses EDX where retail uses EAX
 // - all downstream of the same homing choice, no spelling reaches it.
+// Naming the GameTime result before its store is byte-flat at 99.7217%.
 VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::initClean()
 {
@@ -242,11 +244,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
-    traits->m_townType =
-        (g_game->m_gameVersion == 0
-         && isBaseElemental(type))
-            ? -1
-            : g_creatureTypeTraits[type].m_townType;
+    traits->m_townType = g_game->getAlignment(type);
     if (owner != 0)
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
@@ -804,11 +802,13 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         }
         if (m_facing == 0)
             step = -step;
-        if ((g_combatManager->m_cells[m_gridIndex + step].m_armySide >= 0
-             && !g_combatManager->m_cells[m_gridIndex + step]
-                     .getArmy()
-                     ->m_isMoving)
-            || (g_combatManager->m_cells[m_gridIndex + step].m_attributes & hexcell::blocked)) {
+        // DC army.cpp:808 calls hexcell::HasArmy here; VC6 expands it.
+        // Mac and retail both retain one computed neighbor index for the
+        // army and blocked-cell checks.
+        long neighborIndex = m_gridIndex + step;
+        if ((g_combatManager->m_cells[neighborIndex].hasArmy()
+             && !g_combatManager->m_cells[neighborIndex].getArmy()->m_isMoving)
+            || (g_combatManager->m_cells[neighborIndex].m_attributes & hexcell::blocked)) {
             xoff -= 0x25;
             yoff = -0xf;
         } else {
@@ -963,7 +963,7 @@ void army::addAura()
         count = 6;
 
     while (count-- > 0) {
-        long hex = getAdjacentHex(m_gridIndex, count);
+        long hex = getAdjacentHex(count);
         if (!g_combatManager->validHex(hex))
             continue;
         army* other = g_combatManager->m_cells[hex].getArmy();
@@ -1251,10 +1251,8 @@ void army::animateMissile(army* armyToAttack)
                            g_windowManager->m_screenBitmap->getWidth(),
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(), false);
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = right;
-                updateArea.m_maxY = bottom;
+                // Mac 0x4b3f4 constructs and copies the rectangle value.
+                updateArea = TDrawbridgeBounds(x, y, right, bottom);
                 x += stepX;
                 y += stepY;
                 right += stepX;
@@ -1271,26 +1269,14 @@ void army::animateMissile(army* armyToAttack)
                               g_windowManager->m_screenBitmap->getHeight(),
                               g_windowManager->m_screenBitmap->getPitch(),
                               flipped, 1);
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            // DC army.cpp:1326-1327 constructs this rectangle, then calls
+            // SLimitData::Include and Clip; VC6 expands both methods.
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             GameTime::delayTil(nextFrameTime);
         }
     }
@@ -1505,7 +1491,9 @@ void army::rangeAttack()
     if (is(creatureTwoAttacks) && target->m_numTroops > 0)
         rangeAttack(target);
     if (m_creatureType == ARMY_CREATURE_BALLISTA && target->m_numTroops > 0
-        && getController() && getController()->m_skillLevel[eSecSkillBattlefieldBallistics] > 1) {
+        && getController()
+        && getController()->getSecondarySkill(eSecSkillBattlefieldBallistics)
+               > 1) {
         rangeAttack(target);
     }
     if (m_facing != oldFacing) {
@@ -1516,13 +1504,13 @@ void army::rangeAttack()
 }
 
 // E:\gamedcs\army.cpp:1629 / 1643. DC has both out-of-line (0x45fc0,
-// 0x46008, 70 B each); retail has NEITHER, so they are `inline` here
-// and every use is an expansion. One hex step around the combat ring:
+// 0x46008, 70 B each); Mac retains calls to both, while VC6 expands
+// every Windows use. One hex step around the combat ring:
 // a one-hex stack walks its six neighbours with +-1 modulo 6, a
 // two-hex stack has eight and they are not in ring order, so it goes
 // through the index/order table pair. Only get_multi_head_directions
 // expands them so far, and it expands each exactly once.
-inline long army::getClockwise(long direction) const
+long army::getClockwise(long direction) const
 {
     if (is(creatureDoubleWide))
         return g_wideDirectionRingOrder[
@@ -1530,7 +1518,7 @@ inline long army::getClockwise(long direction) const
     return (direction + 1) % COMBAT_DIRECTION_COUNT;
 }
 
-inline long army::getCounterClockwise(long direction) const
+long army::getCounterClockwise(long direction) const
 {
     if (is(creatureDoubleWide))
         return g_wideDirectionRingOrder[
@@ -1554,7 +1542,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
     for (int i = 0; i < 8; i++) {
         if (attackMask & (1 << i))
             continue;
-        long hex = getAdjacentHex(m_gridIndex, i);
+        long hex = getAdjacentHex(i);
         if (!g_combatManager->validHex(hex))
             continue;
         army* target = g_combatManager->m_cells[hex].getArmy();
@@ -1567,7 +1555,7 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
         }
         *damageAmount += tempDamage;
         *killed += tempKilled;
-        g_combatManager->markCreatureEffect(target->m_combatSide,
+        g_combatManager->markCreatureEffect(target->getOwningSide(),
                                             target->m_bitIndex);
         target->m_hitByCreature = 1;
         if (!firstTarget || firstTarget->m_creatureType == target->m_creatureType)
@@ -1599,7 +1587,7 @@ unsigned char army::checkSpecialAttack(army* target)
 {
     switch (m_creatureType) {
     case CREATURE_GHOST_DRAGON:
-        if (target->is(creatureAlive) && random(1, 100) <= 20
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 20
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_AGE,
                                                getControllingSide(),
@@ -1607,7 +1595,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_AGE;
         return 0;
     case CREATURE_ZOMBIE:
-        if (target->is(creatureAlive) && random(1, 100) <= 20
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 20
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_DISEASE,
                                                getControllingSide(),
@@ -1616,7 +1604,7 @@ unsigned char army::checkSpecialAttack(army* target)
         return 0;
     case ARMY_CREATURE_UNICORN:
     case ARMY_CREATURE_WAR_UNICORN:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_BLIND,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -1634,7 +1622,7 @@ unsigned char army::checkSpecialAttack(army* target)
     case CREATURE_BLACK_KNIGHT:
     case CREATURE_DREAD_KNIGHT:
     case CREATURE_MUMMY:
-        if (random(1, 100) <= 25 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 25 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_CURSE,
                                                getControllingSide(),
                                                target, 1, 1))
@@ -1644,7 +1632,7 @@ unsigned char army::checkSpecialAttack(army* target)
     case CREATURE_MEDUSA_QUEEN:
     case CREATURE_BASILISK:
     case CREATURE_GREATER_BASILISK:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_STONE,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -1657,7 +1645,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
         return 0;
     case CREATURE_WYVERN_MONARCH:
-        if (target->is(creatureAlive) && random(1, 100) <= 30
+        if (target->is(creatureAlive) && sRandom(1, 100) <= 30
             && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_POISON,
                                                getControllingSide(),
@@ -1665,7 +1653,7 @@ unsigned char army::checkSpecialAttack(army* target)
             target->m_postPowSpellToCast = SPELL_POISON;
         return 0;
     case CREATURE_SCORPICORE:
-        if (random(1, 100) <= 20 && target->m_numTroops > 0
+        if (sRandom(1, 100) <= 20 && target->m_numTroops > 0
             && g_combatManager->spellCastWorks(SPELL_PARALYZE,
                                                getControllingSide(),
                                                target, 1, 1)) {
@@ -1830,7 +1818,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
     }
 
     case CREATURE_THUNDERBIRD:
-        if (target->m_numTroops > 0 && random(1, 100) <= 20) {
+        if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
             if (g_combatManager->spellCastWorks(SPELL_LIGHTNING_BOLT,
                                                 getControllingSide(),
                                                 target, 1, 1)) {
@@ -1879,7 +1867,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                                            target->m_gridIndex, 1, -1, 0,
                                            3);
             if (m_creatureType == CREATURE_DRAGON_FLY
-                && target->m_spellInfluence[SPELL_WEAKNESS] == 0) {
+                && target->getSpellTime(SPELL_WEAKNESS) == 0) {
                 if (g_combatManager->spellCastWorks(
                         SPELL_WEAKNESS, getControllingSide(), target,
                         1, 1))
@@ -1891,8 +1879,8 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
         break;
 
     case CREATURE_RUST_DRAGON:
-        if (target->m_numTroops > 0 && random(1, 100) <= 20) {
-            long damage = random(m_monInfo.m_damageLowBound, m_monInfo.m_damageHighBound) * m_numTroops / 2;
+        if (target->m_numTroops > 0 && sRandom(1, 100) <= 20) {
+            long damage = sRandom(m_monInfo.m_damageLowBound, m_monInfo.m_damageHighBound) * m_numTroops / 2;
             if (damage > 0) {
                 std::string text;
                 SAMPLE2 sample;
@@ -1965,7 +1953,7 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
     } else {
         armyToAttack->m_hitByCreature = 1;
         if (is(creatureHasExtendedAttack)) {
-            int adjacentHex = getAdjacentHex(m_gridIndex, direction);
+            int adjacentHex = getAdjacentHex(direction);
             long behindHex = getAdjacentCellIndex(adjacentHex, direction);
             if (g_combatManager->validHex(behindHex)) {
                 behind = g_combatManager->m_cells[behindHex].getArmy();
@@ -1991,10 +1979,10 @@ unsigned char army::doAttack(army* armyToAttack, int direction)
         doMultiHeadAttack(attackMask, &damage, &killed,
                              &fireDamage);
     } else {
-        g_combatManager->markCreatureEffect(armyToAttack->m_combatSide,
+        g_combatManager->markCreatureEffect(armyToAttack->getOwningSide(),
                                             armyToAttack->m_bitIndex);
         if (behind)
-            g_combatManager->markCreatureEffect(behind->m_combatSide,
+            g_combatManager->markCreatureEffect(behind->getOwningSide(),
                                                 behind->m_bitIndex);
         totalLife = armyToAttack->getTotalHitPoints(0);
         fireDamage = damageEnemy(armyToAttack, &damage, &killed, 0);
@@ -2065,7 +2053,7 @@ VA(0x00441cb0, 0x2BE)  // dc 0x46fb0
 void army::doAttack(int direction)
 {
     m_drawPriority = 6;
-    int hex = getAdjacentHex(m_gridIndex, direction);
+    int hex = getAdjacentHex(direction);
     if (!g_combatManager->validHex(hex))
         return;
     army* armyToAttack = g_combatManager->m_cells[hex].getArmy();
@@ -2076,16 +2064,16 @@ void army::doAttack(int direction)
     if (armyToAttack->needToTurn(counterDirection)) {
         int savedSide = g_combatManager->m_actingSide;
         int savedSlot = g_combatManager->m_actingSlot;
-        g_combatManager->m_actingSide = armyToAttack->m_combatSide;
+        g_combatManager->m_actingSide = armyToAttack->getOwningSide();
         g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
         armyToAttack->setupAnimation();
         armyToAttack->turn(1);
         g_combatManager->m_actingSide = savedSide;
         g_combatManager->m_actingSlot = savedSlot;
     }
-    if (armyToAttack->m_spellInfluence[62])
+    if (armyToAttack->getSpellTime(62))
         armyToAttack->m_residualBlindness = 1;
-    if (armyToAttack->m_spellInfluence[74])
+    if (armyToAttack->getSpellTime(74))
         armyToAttack->m_residualParalyze = 1;
     unsigned char killed = doAttack(armyToAttack, direction);
     m_joustBonus = 0;
@@ -2110,7 +2098,7 @@ void army::doAttack(int direction)
         if (savedArmyToAttackFacing != armyToAttack->m_facing) {
             int savedSide = g_combatManager->m_actingSide;
             int savedSlot = g_combatManager->m_actingSlot;
-            g_combatManager->m_actingSide = armyToAttack->m_combatSide;
+            g_combatManager->m_actingSide = armyToAttack->getOwningSide();
             g_combatManager->m_actingSlot = armyToAttack->m_bitIndex;
             armyToAttack->setupAnimation();
             armyToAttack->turn(1);
@@ -2151,8 +2139,10 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // 2481/2483) closes the two store-order differences: 100% without pins.
 // Merely swapping stop/succeeded after the visibility store cross-jumps
 // the trap arms and gives 95.78%; the full statement order matters.
-// Complete has no emitted CancelSpellType(AFTER_MOVE) operation here;
-// its cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE.
+// Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0.
+// Windows Complete has no such call or expanded operation here; its
+// cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE. This Mac
+// snapshot difference is not a missing Windows helper call.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
@@ -2231,8 +2221,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     }
     m_isMoving = 0;
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-    // Complete folded DC TestRaiseDoor's occupancy checks into RaiseDoor.
-    g_combatManager->raiseDoor();
+    g_combatManager->testRaiseDoor();
     return succeeded;
 }
 
@@ -2241,8 +2230,7 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        // Dreamcast named SRandom here; Complete retail calls random in both
-        // rangeAttack and doAttack.
+        // Dreamcast names SRandom here; Complete's expanded callers call random.
         if (random(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
@@ -2276,9 +2264,8 @@ long army::getAdjustedAttack(const army* enemy,
             || (enemy->is(creatureKing2) && m_slayerLevel >= 2)
             || (enemy->is(creatureKing3) && m_slayerLevel >= 3)) {
             attack += 8;
-            if (g_combatManager->m_heroes[getControllingSide()]) {
-                hero* castingHero =
-                    g_combatManager->m_heroes[getControllingSide()];
+            if (getController()) {
+                hero* castingHero = getController();
                 attack += castingHero->getHeroSpellBonus(55, m_monInfo.m_level, 8);
             }
         }
@@ -2313,7 +2300,7 @@ long army::getAdjustedDefense(const army* enemy,
     if (g_combatManager->m_moatOn) {
         int secondHex;
         if (is(creatureDoubleWide))
-            secondHex = m_gridIndex + (m_facing ? 1 : -1);
+            secondHex = m_gridIndex + offsetToFront(-1);
         else
             secondHex = -1;
         if (g_combatManager->isInMoat(m_gridIndex, 0)
@@ -2332,25 +2319,15 @@ long army::getDefenseModifier() const
 
 // E:\gamedcs\army.cpp:2680
 // Dreamcast's eight-byte body returns 1.0, but the shared helper boundary is
-// still visible in get_unit_combat_value. Complete expands the later body
-// below at that call site; no retail out-of-line copy survives.
+// still visible in get_unit_combat_value. Mac expands this inline wrapper and
+// calls computeDefenderDamageReduction at 0:0x4ea40; keep the canonical
+// reduction body instead of spelling it a second time here. In a focused VC6
+// build, the caller falls from 96.5871% to 84.0903% because this compile
+// retains the reduction call where retail expands it through getDefenseFactor.
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
 {
-    double factor = 1.0;
-    if (rangedAttack) {
-        if (m_spellInfluence[28])
-            factor = m_airShieldFactor;
-    } else {
-        if (m_spellInfluence[27])
-            factor = m_shieldFactor;
-    }
-    if (m_spellInfluence[70])
-        factor = factor * 0.5;
-    hero* controller = getController();
-    if (controller)
-        factor = controller->getDefenseFactor() * factor;
-    return factor;
+    return computeDefenderDamageReduction(rangedAttack);
 }
 
 // The controller/owner pair, and the resolution of a naming inversion
@@ -2417,12 +2394,7 @@ long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long 
     long damage = adjustDamage(const_cast<army*>(enemy),
                                 static_cast<long>(amount * average),
                                 rangedAttack, 1, distance, 0);
-    long totalLife;
-    if (enemy->is(creatureClone))
-        totalLife = 1;
-    else
-        totalLife = enemy->m_monInfo.m_hitPoints * enemy->m_numTroops
-                     - enemy->m_topCreatureDamage;
+    long totalLife = enemy->getTotalHitPoints(0);
     if (damage < 1)
         damage = 1;
     if (rangedAttack && is(creatureTwoAttacks))
@@ -2439,7 +2411,7 @@ unsigned char army::isEnemy(const army* arg) const
         return 0;
     if (this == arg)
         return 0;
-    if (!m_spellInfluence[59] && !arg->m_spellInfluence[59])
+    if (!m_spellInfluence[59] && !arg->getSpellTime(59))
         return getControllingSide() != arg->getOwningSide();
     return 1;
 }
@@ -2449,6 +2421,15 @@ unsigned char army::isEnemy(const army* arg) const
 //   no keyword anywhere                  92.0000      27.8667     0.0000
 //   `inline` on the army.h declarator    (none)      100.0000    92.5170
 //   `inline` + ONE rejected site         92.0000      100.0000    92.5170
+
+// Mac keeps this body at code0+0x4e840, between isEnemy and
+// enemyIsAdjacent in the army function sequence. Its 55 direct callers
+// include other units, but retained Mac calls do not locate a definition.
+// Windows has 53 direct calls to 0x4428f0; surveyed cross-TU callers in
+// ai_tactical and combatcontrolsubwindow retain the call and match their
+// retail instruction shape. No cross-TU expansion presently proves header
+// body visibility. The current explicit `inline` spelling is a VC6 emission
+// control in the current reconstruction, not a recovered source keyword.
 
 // UNTIL 0x447a80 IS RECONSTRUCTED the rejected site is supplied by a
 // SCAFFOLD: `#pragma inline_depth(0)` around get_total_combat_value
@@ -2531,7 +2512,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (m_creatureType == ARMY_CREATURE_BALLISTA) {
         if (getController()) {
             if (getController()
-                    ->m_skillLevel[eSecSkillBattlefieldBallistics] > 1)
+                    ->getSecondarySkill(eSecSkillBattlefieldBallistics) > 1)
                 attack = attack + attack;
             attack =
                 attack
@@ -2600,7 +2581,7 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
                                          ranged, 0);
     if (is(creatureClone))
         return static_cast<long>(m_numTroops * value / 5.0);
-    return static_cast<long>((m_monInfo.m_hitPoints * m_numTroops - m_topCreatureDamage)
+    return static_cast<long>(getTotalHitPoints(0)
                              * value / m_monInfo.m_hitPoints);
 }
 
@@ -2637,7 +2618,9 @@ long army::getTotalHitPoints(unsigned char simulated) const
 VA(0x004430d0, 0x56)  // dc 0x484a0
 void army::setAIExpectedDamage(long arg)
 {
-    m_aiExpectedDamage = cppMin(arg, getTotalHitPoints(0));
+    // Complete's by-value min helper retains the argument home at [ebp+8];
+    // DC names its reference-taking std::min counterpart at this source line.
+    m_aiExpectedDamage = min(arg, getTotalHitPoints(0));
 }
 
 VA(0x00443130, 0x25)
@@ -2681,11 +2664,11 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
         int total = 0;
         if (num > 10) {
             for (int i = 0; i < 10; i++)
-                total += random(low, high);
+                total += sRandom(low, high);
             damage = total * num / 10;
         } else {
             for (int i = 0; i < num; i++)
-                total += random(low, high);
+                total += sRandom(low, high);
             damage = total;
         }
     }
@@ -2758,15 +2741,13 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
                     if (m_numTroops == 1)
                         text = formatString(
                             g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_ONE_FORMAT),
-                            ::getArmyName(m_creatureType, m_numTroops),
-                            ::getArmyName(defender->m_creatureType,
-                                    defender->m_numTroops));
+                            getName(),
+                            defender->getName());
                     else
                         text = formatString(
                             g_generalText->getText(GENERAL_TEXT_HATRED_DAMAGE_MANY_FORMAT),
-                            ::getArmyName(m_creatureType, m_numTroops),
-                            ::getArmyName(defender->m_creatureType,
-                                    defender->m_numTroops));
+                            getName(),
+                            defender->getName());
                     g_combatManager->m_combatWindow->combatMessage(
                         text.c_str(), 1, 0);
                 }
@@ -2775,8 +2756,7 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
     }
 
     long total = bonus;
-    hero* controller =
-        g_combatManager->m_heroes[getControllingSide()];
+    hero* controller = getController();
     if (controller != 0) {
         if (isShooting)
             total = static_cast<long>(
@@ -2814,19 +2794,18 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                                         simulateOnly == 0, distance);
     switch (m_creatureType) {
     case ARMY_CREATURE_BALLISTA: {
-        hero* controlling =
-            g_combatManager->m_heroes[getControllingSide()];
+        hero* controlling = getController();
         long mastery =
-            controlling->m_skillLevel[eSecSkillBattlefieldBallistics];
+            controlling->getSecondarySkill(eSecSkillBattlefieldBallistics);
         if (!simulateOnly
-            && random(1, 100) <= g_artilleryDoubleChances[mastery]) {
+            && sRandom(1, 100) <= g_artilleryDoubleChances[mastery]) {
             result += baseDamage;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
                 std::string text;
                 const char* creatureName;
                 creatureName = getName();
-                text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
+                text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
                                      creatureName);
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -2836,16 +2815,16 @@ int army::computeAttackerDamageBonuses(int baseDamage,
     }
 
     case CREATURE_DREAD_KNIGHT:
-        if (!simulateOnly && random(1, 100) <= 20) {
+        if (!simulateOnly && sRandom(1, 100) <= 20) {
             result += baseDamage;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
                 std::string text;
                 if (m_numTroops == 1)
-                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT),
+                    text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_ONE_FORMAT],
                                          getName());
                 else
-                    text = formatString(g_generalText->getText(GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT),
+                    text = formatString((*g_generalText)[GENERAL_TEXT_DOUBLE_DAMAGE_MANY_FORMAT],
                                          getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -2892,7 +2871,7 @@ double army::computeAttackerDamageReduction(const army* defender,
     if (isShooting) {
         int hex = m_gridIndex;
         if (is(creatureDoubleWide))
-            hex += m_facing ? 1 : -1;
+            hex = getSecondGridIndex();
         if (g_combatManager->shotIsThroughWall(this, hex, defender->m_gridIndex))
             reduction *= 0.5;
         if (g_combatManager->shotIsNotOptimal(this, defender))
@@ -2925,7 +2904,7 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
     }
     if (m_spellInfluence[70])
         reduction *= 0.5;
-    hero* castingHero = g_combatManager->m_heroes[getControllingSide()];
+    hero* castingHero = getController();
     if (castingHero)
         reduction *= castingHero->getDefenseFactor();
     return reduction;
@@ -2981,9 +2960,11 @@ long army::getEstimatedDamage(const army* target, long amount,
     // bytes) and a named `long bonus` local, which is strictly worse
     // (it sinks the add past the ComputeAttackerDamageReduction call
     // and spills the bonus to a stack slot first).
+    // Mac retains this defender-bonus call; VC6 expands its zero return.
     amount = computeAttackerBonus(amount, ranged, const_cast<army*>(target),
                                     0, distance)
-             + amount;
+             + amount
+             + target->computeDefenderDamageBonuses(amount);
     amount = static_cast<long>(
         computeAttackerDamageReduction(target, ranged) * amount);
     amount = static_cast<long>(
@@ -3052,9 +3033,7 @@ int army::damage(int damage)
     m_numTroops -= killed;
     if (m_numTroops <= 0)
         m_allUnitsKilled = 1;
-    cancelIndividualSpell(62);
-    cancelIndividualSpell(70);
-    cancelIndividualSpell(74);
+    cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
     return killed;
 }
 
@@ -3425,18 +3404,12 @@ static void drop_aura_links(army* self)
 // 4054-4057 recover CancelIndividualSpell -> remove_aura -> add_aura;
 // 4067-4068 are two separate Disease mins; 4075 is max followed by the
 // adjust_hitpoints boundary; and 4091-4092 are adjust_hitpoints followed by
-// one further min. Restoring those statement groups changes the retail CFG
-// from 31/135 to 121/135 exact blocks and restores its exact 54-branch
-// sequence. The byte score is 96.98% with the older 99.5510% peak banked.
+// one further min. Those statement groups account for the retail 54-branch
+// sequence.
 
-// Complete retail lowers Poison's 0.5 floor through double temporaries, so
-// the direct max statement retains that x86-proved type conversion even
-// though the SH4/STLport build uses a float max. Binding the result to a
-// named value reproduces the local copy but perturbs VC6's whole-function
-// inliner state and drops the structure to 110 exact blocks; the direct
-// expression is therefore the coherent form. The remaining missing block is
-// inside deque::push_back's nested iterator update. A statement-scoped
-// inline_depth(1) is byte-flat and is not retained.
+// Complete retail materializes Poison's double max result before converting
+// it to float. A named double reproduces the stack copy and all 135 retail
+// blocks; naming the float result or either input does not.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
@@ -3610,8 +3583,8 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_monInfo.m_defenseSkill = m_monInfo.m_defenseSkill - m_diseaseDefensePenalty;
         break;
     case SPELL_POISON: {
-        m_poisonPenalty = static_cast<float>(
-            cppMax(static_cast<double>(m_poisonPenalty - 0.1f), 0.5));
+        double poisonValue = cppMax(static_cast<double>(m_poisonPenalty - 0.1f), 0.5);
+        m_poisonPenalty = static_cast<float>(poisonValue);
         adjustHitpoints();
         break;
     }
@@ -3726,7 +3699,7 @@ long army::getAttackDirection(long ourHex, const army* enemy,
 {
     long secondHex = enemyHex;
     if (enemy->is(creatureDoubleWide))
-        secondHex = enemyHex + (enemy->m_facing ? 1 : -1);
+        secondHex = enemyHex + enemy->offsetToFront(-1);
     for (long direction = 0; direction < 8; direction++) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
@@ -3745,11 +3718,11 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
     for (;;) {
         if (direction < COMBAT_DIRECTION_COUNT || is(creatureDoubleWide)) {
             long hex = getAdjacentHex(ourHex, direction);
-            if (hex >= 0 && hex < COMBAT_GRID_CELLS
+            if (combatManager::validHex(hex)
                 && enemy == g_combatManager->m_cells[hex].getArmy()) {
-                if (direction >= COMBAT_DIRECTION_COUNT)
-                    return direction;
-                if ((m_facing == 0) == (direction >= 3))
+                // Mac 0x518e8..0x51930 expands needToTurn, including its
+                // direction < 6 guard.
+                if (!needToTurn(direction))
                     return direction;
                 if (best == -1)
                     best = direction;
@@ -3945,7 +3918,7 @@ void army::attackWall(int targetGridIndex)
     long level;
     switch (m_creatureType) {
     case CREATURE_CATAPULT:
-        level = controller->m_skillLevel[eSecSkillSiegeBallistics];
+        level = controller->getSecondarySkill(eSecSkillSiegeBallistics);
         break;
 
     case ARMY_CREATURE_CYCLOPS:
@@ -3980,7 +3953,7 @@ void army::attackWall(TWallTargetId wall,
                        const type_ballistics_traits& ballistics)
 {
     long levels;
-    int roll = random(1, 100);
+    int roll = sRandom(1, 100);
     for (levels = 0; levels < 2; levels++) {
         roll -= ballistics.m_levelChance[levels];
         if (roll <= 0)
@@ -4005,7 +3978,7 @@ void army::attackWall(TWallTargetId wall,
         chance = ballistics.m_chanceToHitWall;
         break;
     }
-    if (random(1, 100) > chance) {
+    if (sRandom(1, 100) > chance) {
         wall = chooseWallTarget(wall, g_walls, 4);
     }
     attackWall(wall, levels);
@@ -4153,22 +4126,11 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     long right = explosion->getWidth() - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        bounds.m_minX = x;
-        bounds.m_minY = y;
-        bounds.m_maxX = right;
-        bounds.m_maxY = bottom;
+        // Mac 0x52374 builds the four-word rectangle on the stack and
+        // copies it into the manager bounds before clipping.
+        bounds = TDrawbridgeBounds(x, y, right, bottom);
     }
-    {
-        TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
-        if (bounds.m_minX < g_combatDrawLimits.m_minX)
-            bounds.m_minX = g_combatDrawLimits.m_minX;
-        if (bounds.m_minY < g_combatDrawLimits.m_minY)
-            bounds.m_minY = g_combatDrawLimits.m_minY;
-        if (bounds.m_maxX > g_combatDrawLimits.m_maxX)
-            bounds.m_maxX = g_combatDrawLimits.m_maxX;
-        if (bounds.m_maxY > g_combatDrawLimits.m_maxY)
-            bounds.m_maxY = g_combatDrawLimits.m_maxY;
-    }
+    g_combatManager->m_drawbridgeBounds.clip(g_combatDrawLimits);
 
     for (long frame = 0; frame < explosion->getNumFrames(0); frame++) {
         if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
@@ -4176,12 +4138,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
             g_combatManager->damageWall(wall, levelsDestroyed);
         g_combatManager->drawFrame(0, 0, 1, 100, 0, 1);
         explosion->draw(0, frame, 0, 0,
-                        g_combatManager->m_drawbridgeBounds.m_maxX
-                            - g_combatManager->m_drawbridgeBounds.m_minX
-                            + 1,
-                        g_combatManager->m_drawbridgeBounds.m_maxY
-                            - g_combatManager->m_drawbridgeBounds.m_minY
-                            + 1,
+                        g_combatManager->m_drawbridgeBounds.width(),
+                        g_combatManager->m_drawbridgeBounds.height(),
                         g_windowManager->m_screenBitmap->getMap(0, 0),
                         targetX - explosion->getWidth() / 2,
                         targetY - explosion->getHeight() / 2,
@@ -4191,10 +4149,8 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         g_windowManager->updateScreen(
             g_combatManager->m_drawbridgeBounds.m_minX,
             g_combatManager->m_drawbridgeBounds.m_minY,
-            g_combatManager->m_drawbridgeBounds.m_maxX
-                - g_combatManager->m_drawbridgeBounds.m_minX + 1,
-            g_combatManager->m_drawbridgeBounds.m_maxY
-                - g_combatManager->m_drawbridgeBounds.m_minY + 1);
+            g_combatManager->m_drawbridgeBounds.width(),
+            g_combatManager->m_drawbridgeBounds.height());
     }
     explosion->dispose();
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
@@ -4209,13 +4165,7 @@ VA(0x00446500, 0x126)
 void army::cure(int level, int spellPower, const hero* castingHero)
 {
     m_poisonPenalty = 1.0f;
-    if (m_spellInfluence[SPELL_AGE])
-        m_monInfo.m_hitPoints = static_cast<int>(
-            static_cast<float>(m_origHitPoints) * 0.5f + 0.95f);
-    else
-        m_monInfo.m_hitPoints = static_cast<int>(
-            static_cast<float>(m_origHitPoints) + 0.95f);
-    m_topCreatureDamage = cppMin(m_topCreatureDamage, m_monInfo.m_hitPoints - 1);
+    adjustHitpoints();
     cancelIndividualSpell(SPELL_CURSE);
     cancelIndividualSpell(SPELL_WEAKNESS);
     cancelIndividualSpell(SPELL_SORROW);
@@ -4317,7 +4267,7 @@ unsigned char army::isAdjacent(int hex) const
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
         return 1;
     if (is(creatureDoubleWide)) {
-        int secondHex = m_gridIndex + (m_facing ? 1 : -1);
+        int secondHex = getSecondGridIndex();
         return g_combatManager->isAdjacent(secondHex, hex);
     }
     return 0;
@@ -4434,8 +4384,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         TDrawbridgeBounds frame = bounds;
         g_combatManager->m_saveScreenPostGrid->draw(
             frame.m_minX, frame.m_minY,
-            frame.m_maxX - frame.m_minX + 1,
-            frame.m_maxY - frame.m_minY + 1,
+            frame.width(),
+            frame.height(),
             g_windowManager->m_screenBitmap->getMap(0, 0),
             frame.m_minX, frame.m_minY,
             g_windowManager->m_screenBitmap->getWidth(),
@@ -4453,14 +4403,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->m_drawbridgeBounds.m_minX -= 17;
         g_combatManager->m_drawbridgeBounds.m_maxX += 17;
         bounds = g_combatManager->m_drawbridgeBounds;
-        if (frame.m_minX > bounds.m_minX)
-            frame.m_minX = bounds.m_minX;
-        if (frame.m_minY > bounds.m_minY)
-            frame.m_minY = bounds.m_minY;
-        if (frame.m_maxX < bounds.m_maxX)
-            frame.m_maxX = bounds.m_maxX;
-        if (frame.m_maxY < bounds.m_maxY)
-            frame.m_maxY = bounds.m_maxY;
+        frame.include(bounds);
         g_combatManager->m_drawbridgeBounds = frame;
 
         g_combatManager->m_limitToExtent = 1;
@@ -4472,8 +4415,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
         g_windowManager->updateScreen(
             frame.m_minX, frame.m_minY,
-            frame.m_maxX - frame.m_minX + 1,
-            frame.m_maxY - frame.m_minY + 1);
+            frame.width(),
+            frame.height());
     }
 
     if (nframes > 0)
@@ -4495,16 +4438,15 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (newDestIndex)
         *newDestIndex = destIndex;
 
-    if (destIndex < 0 || destIndex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(destIndex))
         return 0;
-    if (destIndex % COMBAT_GRID_ROW_STRIDE == 0
-            || destIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+    if (combatManager::inInvisibleColumn(destIndex))
         return 0;
 
     const hexcell* cell = &g_combatManager->m_cells[destIndex];
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
-    if (cell->m_armySide >= 0) {
+    if (cell->hasArmy()) {
         if (cell->m_armySide != m_combatSide)
             return 0;
         if (cell->m_armySlot != m_bitIndex)
@@ -4515,14 +4457,13 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
         return 1;
 
     int otherIndex = getAdjacentCellIndex(destIndex, m_facing ? 1 : 4);
-    if (otherIndex < 0 || otherIndex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(otherIndex))
         return 0;
-    if (otherIndex % COMBAT_GRID_ROW_STRIDE == 0
-            || otherIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+    if (combatManager::inInvisibleColumn(otherIndex))
         return 0;
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
-        if (otherCell->m_armySide < 0
+        if (!otherCell->hasArmy()
                 || (otherCell->m_armySide == m_combatSide
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
@@ -4530,16 +4471,14 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 
     if (allowShifting) {
         int shiftedIndex = getAdjacentCellIndex(destIndex, m_facing ? 4 : 1);
-        if (shiftedIndex < 0 || shiftedIndex >= COMBAT_GRID_CELLS)
+        if (!combatManager::validHex(shiftedIndex))
             return 0;
-        if (shiftedIndex % COMBAT_GRID_ROW_STRIDE == 0
-                || shiftedIndex % COMBAT_GRID_ROW_STRIDE
-                       == COMBAT_GRID_LAST_COLUMN)
+        if (combatManager::inInvisibleColumn(shiftedIndex))
             return 0;
         hexcell* shiftedCell = &g_combatManager->m_cells[shiftedIndex];
         if (g_combatManager->hexIsBlocked(shiftedIndex))
             return 0;
-        if (shiftedCell->m_armySide >= 0) {
+        if (shiftedCell->hasArmy()) {
             if (shiftedCell->m_armySide != g_combatManager->m_actingSide)
                 return 0;
             if (shiftedCell->m_armySlot != g_combatManager->m_actingSlot)
@@ -4584,11 +4523,11 @@ void army::newTurn()
                 std::string text;
                 if (m_numTroops == 1)
                     text = formatString(
-                        g_generalText->getText(GENERAL_TEXT_REGENERATION_ONE_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_REGENERATION_ONE_FORMAT],
                         getName());
                 else
                     text = formatString(
-                        g_generalText->getText(GENERAL_TEXT_REGENERATION_MANY_FORMAT),
+                        (*g_generalText)[GENERAL_TEXT_REGENERATION_MANY_FORMAT],
                         getName());
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
@@ -4654,25 +4593,27 @@ void army::resetRound()
 }
 
 VA(0x00447330, 0x9C)  // dc 0x4bd80
+// Complete expands the by-value min wrappers, each containing cppMin.
+// Direct reference selectors give 78.33%; these wrappers restore 100%.
+// The shared long power/maxHits lifetime suggested by DC and Mac gives
+// 64.27% in this TU; its remaining source-context difference is unresolved.
 long army::getResurrectionSize(const army* target) const
 {
     if (m_creatureType == CREATURE_ARCHANGEL) {
         int missing = target->m_origNumTroops - target->m_numTroops;
         int raised = m_numTroops * 100 / target->m_monInfo.m_hitPoints;
-        return cppMin(raised, missing);
+        return min(raised, missing);
     }
     int totalLife = target->m_monInfo.m_hitPoints * target->m_origNumTroops;
-    int raised = cppMin(totalLife, m_numTroops * 50)
+    int raised = min(totalLife, m_numTroops * 50)
         / g_creatureTypeTraits[ARMY_CREATURE_DEMON].m_hitPoints;
-    return cppMin(raised, target->m_origNumTroops);
+    return min(raised, target->m_origNumTroops);
 }
 
 VA(0x004473d0, 0x13D)  // dc 0x4be64
 bool army::canCastResurrect(long hex) const
 {
-    if ((m_creatureType != CREATURE_ARCHANGEL
-         && m_creatureType != ARMY_CREATURE_PIT_LORD)
-        || m_monInfo.m_hasSpell <= 0)
+    if (!canCastResurrect())
         return 0;
     long side = getControllingSide();
     if (!g_combatManager->canCastSpells(side, 0))
@@ -4734,7 +4675,7 @@ void army::faerieDragonSpell()
                 : DATA_COMPGEN(0x00660aac, faerieReadyFormat,
                                "The %s ready %s (press F to cast)");
         g_combatManager->m_combatWindow->combatMessage(
-            formatString(fmt, ::getArmyName(m_creatureType, m_numTroops),
+            formatString(fmt, getName(),
                           g_spellTraits[m_faerieDragonSpell].m_name)
                 .c_str(),
             1, 0);
@@ -4748,7 +4689,7 @@ unsigned char army::canCastSpell(long hex) const
         return 0;
     if (!g_combatManager->canCastSpells(getControllingSide(), 0))
         return 0;
-    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
     switch (m_creatureType) {
@@ -4866,7 +4807,7 @@ VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spellIsValidOnTarget(int spell, const army* target)
 {
-    if (target->m_spellInfluence[spell])
+    if (target->getSpellTime(spell))
         return 0;
     long side = g_combatManager->m_currentSide;
     if (!g_combatManager->validSpellTargetArmy(spell, side, target, 1, 1))
@@ -4901,6 +4842,22 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     return 1;
 }
 
+// Mac retains this helper at 0x5446c, between spellIsValidOnTarget and
+// isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
+static unsigned char enchanterSpellHasTarget(int spell)
+{
+    long side = g_combatManager->m_currentSide;
+    if (g_spellTraits[spell].m_karma < 0)
+        side = 1 - side;
+    army* targets = g_combatManager->m_armies[side];
+    long n = g_combatManager->m_numArmies[side];
+    while (n-- != 0) {
+        if (spellIsValidOnTarget(spell, targets))
+            return 1;
+    }
+    return 0;
+}
+
 VA(0x00447eb0, 0x21)  // dc 0x4c210
 unsigned char isValidCaliphSpell(SpellID spell, const army* target)
 {
@@ -4926,7 +4883,7 @@ long army::getValidCaliphSpells(const army* target) const
 VA(0x00447ee0, 0xF8)  // dc 0x4c3ac
 void army::castCaliphSpell(long hex)
 {
-    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+    if (!combatManager::validHex(hex))
         return;
     army* target = g_combatManager->m_cells[hex].getArmy();
     if (!target)
@@ -4947,6 +4904,15 @@ void army::castCaliphSpell(long hex)
             }
         }
     }
+}
+
+// Mac retains this ordinary method at 0x5469c, immediately after
+// castCaliphSpell; Windows expands it in castSpell. The name is inferred.
+void army::castFaerieDragonSpell(long hex)
+{
+    if (combatManager::validHex(hex))
+        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
+                                   m_numTroops * 5);
 }
 
 // The Enchanter's per-turn mass-cast roster: (spell, weight) pairs,
@@ -4984,17 +4950,8 @@ unsigned char army::unnamed447fe0()
     long spell;
     while (*p >= 0) {
         spell = *p++;
-        long side = g_combatManager->m_currentSide;
-        if (g_spellTraits[spell].m_karma < 0)
-            side = 1 - side;
-        army* targets = g_combatManager->m_armies[side];
-        long n = g_combatManager->m_numArmies[side];
-        while (n-- != 0) {
-            if (spellIsValidOnTarget(spell, targets)) {
-                total += *p;
-                break;
-            }
-        }
+        if (enchanterSpellHasTarget(spell))
+            total += *p;
         p++;
     }
     if (total == 0)
@@ -5003,17 +4960,8 @@ unsigned char army::unnamed447fe0()
     long roll = rand() % total;
     for (p = g_enchanterSpells; *p >= 0; p += 2) {
         spell = *p;
-        long side = g_combatManager->m_currentSide;
-        if (g_spellTraits[spell].m_karma < 0)
-            side = 1 - side;
-        army* targets = g_combatManager->m_armies[side];
-        long n = g_combatManager->m_numArmies[side];
-        while (n-- != 0) {
-            if (spellIsValidOnTarget(spell, targets)) {
-                roll -= p[1];
-                break;
-            }
-        }
+        if (enchanterSpellHasTarget(spell))
+            roll -= p[1];
         if (roll < 0)
             break;
     }
@@ -5024,9 +4972,7 @@ unsigned char army::unnamed447fe0()
         army* stack = g_combatManager->m_armies[side];
         for (long i = 0; i < g_combatManager->m_numArmies[side]; i++, stack++) {
             if (stack->m_creatureType == ARMY_CREATURE_ENCHANTER
-                && stack->m_spellInfluence[SPELL_BLIND] == 0
-                && stack->m_spellInfluence[SPELL_STONE] == 0
-                && stack->m_spellInfluence[SPELL_PARALYZE] == 0
+                && !stack->isIncapacitated()
                 && !stack->is(creatureImmobilized)) {
                 stack->m_showAttackFrames = 1;
                 stack->m_showAttackFrameType = cs_range_r;
@@ -5107,9 +5053,7 @@ void army::castSpell(long hex)
         castCaliphSpell(hex);
         break;
     case CREATURE_FAERIE_DRAGON:
-        if (hex >= 0 && hex < COMBAT_GRID_CELLS)
-            g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, 2,
-                                       m_numTroops * 5);
+        castFaerieDragonSpell(hex);
         break;
     case CREATURE_STORM_ELEMENTAL:
         g_combatManager->castSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
@@ -5173,7 +5117,7 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
     if (turns == 1)
         m_aiPossibleTargets |= 1 << enemy->m_bitIndex;
     if (m_aiTarget) {
-        long current = getAITargetTime(getSpeed());
+        long current = getAITargetTime();
         if (turns > current)
             return;
         if (turns == current && value <= m_aiTargetValue)

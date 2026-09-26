@@ -1074,17 +1074,15 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
                         m_currFrame = 0;
                 }
             } else {
-                // Residual (95.55%): retail defers this select to the push
-                // site - `test eax,eax` right after `push 1`, then `jne`
-                // between the last two pushes - while our CL materialises
-                // it into edx ahead of the whole argument run and spends
-                // edi on the scratch chain in consequence. ARM ORDER IS
-                // SOURCE (94.88 written `numFrames ? currFrame : 0`, 95.55
-                // this way round); the sinking is not reachable from the
-                // arm order, and `!numFrames` is byte-identical to `== 0`.
-                m_objIcon->draw(0, m_numFrames == 0 ? 0 : m_currFrame, 0, 0,
-                              m_objIcon->getWidth(), m_objIcon->getHeight(),
-                              g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                // Mac retains separate calls at 0:0x1b95d4 and 0:0x1b9644.
+                if (m_numFrames == 0)
+                    m_objIcon->draw(0, 0, 0, 0,
+                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
+                else
+                    m_objIcon->draw(0, m_currFrame, 0, 0,
+                                  m_objIcon->getWidth(), m_objIcon->getHeight(),
+                                  g_windowManager->m_screenBitmap, m_x, m_y, 0, 1);
             }
         }
         if (g_outlinedTownObjectId == m_objId)
@@ -1151,7 +1149,7 @@ void townManager::setupExtraStuff()
 {
     if (g_buildAllBuildings) {
         for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (!(m_townToView->m_active & g_bitNumber[i])
+            if (!(m_townToView->hasBuilding(i, true))
                 && (g_townEligibleBuildMask[m_townToView->m_type] & g_bitNumber[i]))
                 m_townToView->buildBuilding(i, 0, 1);
         }
@@ -1525,6 +1523,10 @@ void TTownScreenWindow::updateTownLocators()
 // preassignment without a default arm, and the two split bonus locals
 // were each structural wins (83.53 -> 87.93 combined). No local
 // spelling reached the EBX/EDI tie-break.
+// DC names GetArmyName twice and TTextResource::operator[] six times;
+// restoring those shared calls lifts Windows from 87.70778% to 88.50%.
+// DC places get_horde before get_legion_bonus, but Complete calls them
+// in the opposite order, so the Windows source follows retail.
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
 void TTownScreenWindow::setBonusDisplay(town* currTown)
@@ -1537,7 +1539,8 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     int j;
     MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
 
-    for (int i = 0; i < TOWN_DWELLING_COUNT; i++) {
+    int i;
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (currTown->hasBuilding(DWELLING_0_ID + i, true)) {
             int slot = i;
             if (currTown->hasBuilding(DWELLING_0_UPG_ID + i, true))
@@ -1547,29 +1550,28 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
                 currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
             int offsetToMon = currTown->getGrowthRate(slot) - growth;
-            const char* name;
-            if (creature >= 0 && creature <= 0x96)
-                name = g_creatureTypeTraits[creature].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(creature, 1);
 
-            helpText = formatString(g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT), name);
-            rightText = formatString(g_generalText->getText(GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT), name,
+            helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
+            rightText = formatString((*g_generalText)[GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT], name,
                                        offsetToMon + growth);
             if (offsetToMon > 0)
-                rightText += formatString(g_generalText->getText(GENERAL_TEXT_BASIC_GROWTH_FORMAT),
+                rightText += formatString((*g_generalText)[GENERAL_TEXT_BASIC_GROWTH_FORMAT],
                                             growth);
 
+            // Mac keeps one getBuildingName call in each arm at 0:0x1bdb68,
+            // 0:0x1bdbbc and 0:0x1bdbd4.
             if (currTown->getCastleGrowthBonus(creature) > 0) {
-                int building;
+                const char* buildingName;
                 if (currTown->hasBuilding(CASTLE_CASTLE_ID, false))
-                    building = CASTLE_CASTLE_ID;
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_CASTLE_ID);
                 else if (currTown->hasBuilding(CASTLE_CITADEL_ID, false))
-                    building = CASTLE_CITADEL_ID;
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_CITADEL_ID);
                 else
-                    building = CASTLE_FORT_ID;
-                const char* buildingName =
-                    getBuildingName(currTown->m_type, building);
+                    buildingName = getBuildingName(currTown->m_type,
+                                                   CASTLE_FORT_ID);
                 rightText += formatString(
                     DATA_COMPGEN(0x0068c1f0, signedBonusFormat, "\n%s %+d"),
                     buildingName,
@@ -1631,7 +1633,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             }
 
             if (currTown->getGeneratorBonus(slot) > 0) {
-                rightText += formatString(g_generalText->getText(GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT),
+                rightText += formatString((*g_generalText)[GENERAL_TEXT_EXTERNAL_DWELLINGS_FORMAT],
                                             currTown->getGeneratorBonus(slot));
                 offsetToMon -= currTown->getGeneratorBonus(slot);
             }
@@ -1662,15 +1664,10 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
         if (currTown->m_summoningType == CREATURE_NONE)
             currTown->setSummoningGenerator();
         if (currTown->m_summoningType != CREATURE_NONE) {
-            const char* name;
-            if (currTown->m_summoningType >= 0
-                && currTown->m_summoningType <= 0x96)
-                name = g_creatureTypeTraits[currTown->m_summoningType].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(currTown->m_summoningType, 1);
 
-            helpText = formatString(g_generalText->getText(GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT), name);
-            rightText = formatString(g_generalText->getText(GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT), name, 0);
+            helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
+            rightText = formatString((*g_generalText)[GENERAL_TEXT_WEEKLY_GROWTH_IS_FORMAT], name, 0);
 
             m_growthBonusIcon[count]->setIconFrame(
                 currTown->m_summoningType + 2);
@@ -1806,11 +1803,11 @@ void townManager::updateTownInfo()
     msg.m_id = MESSAGE_WIDGET;
 
     int frame = 0;
-    if (m_townToView->m_built & g_bitNumber[HALL_TOWN_ID])
+    if (m_townToView->hasBuilding(HALL_TOWN_ID, false))
         frame = 1;
-    else if (m_townToView->m_built & g_bitNumber[HALL_CITY_ID])
+    else if (m_townToView->hasBuilding(HALL_CITY_ID, false))
         frame = 2;
-    else if (m_townToView->m_built & g_bitNumber[HALL_CAPITOL_ID])
+    else if (m_townToView->isCapitol())
         frame = 3;
     msg.m_extra = frame;
     msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
@@ -1818,11 +1815,11 @@ void townManager::updateTownInfo()
     m_townWindow->broadcastMessage(msg);
 
     frame = 3;
-    if (m_townToView->m_built & g_bitNumber[CASTLE_FORT_ID])
+    if (m_townToView->hasBuilding(CASTLE_FORT_ID, false))
         frame = 0;
-    else if (m_townToView->m_built & g_bitNumber[CASTLE_CITADEL_ID])
+    else if (m_townToView->hasBuilding(CASTLE_CITADEL_ID, false))
         frame = 1;
-    else if (m_townToView->m_built & g_bitNumber[CASTLE_CASTLE_ID])
+    else if (m_townToView->hasBuilding(CASTLE_CASTLE_ID, false))
         frame = 2;
     msg.m_extra = frame;
     msg.m_codeY = 0x9f;
@@ -1995,7 +1992,7 @@ void townManager::setupTown(unsigned char fade)
                 if (!m_townObjects[m_townObjectCount])
                     memError();
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
+                    if (!(m_townToView->hasBuilding(objToLoad, false))) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -2015,7 +2012,7 @@ void townManager::setupTown(unsigned char fade)
             objToLoad = g_townBuildOrder[m_townToView->m_type][i];
             if (objToLoad != -1) {
                 if (m_townObjects[m_townObjectCount]->m_objBorder) {
-                    if (!(m_townToView->m_built & g_bitNumber[objToLoad])) {
+                    if (!(m_townToView->hasBuilding(objToLoad, false))) {
                         m_townObjects[m_townObjectCount]->m_objBorder->m_status
                             &= ~widget::WIDGET_ACTIVE;
                         m_townObjects[m_townObjectCount]->m_visible = 0;
@@ -2050,7 +2047,7 @@ void townManager::setupTown(unsigned char fade)
     m_currIndex = -2;
 
     for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
-        if (m_townToView->m_active & g_bitNumber[DWELLING_0_UPG_ID + slot])
+        if (m_townToView->hasBuilding(DWELLING_0_UPG_ID + slot, true))
             m_currentDwellingIdOff[slot] = slot + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[slot] = slot;
@@ -2108,7 +2105,7 @@ void townManager::newStrips()
             0x7c, 0, m_townWindow);
         if (!m_heroStrip)
             memError();
-        if (m_townToView->m_active & g_bitNumber[MAGE_GUILD_ID])
+        if (m_townToView->hasBuilding(MAGE_GUILD_ID, true))
             m_townToView->giveSpells(0);
     } else {
         m_heroStrip = new strip(
@@ -2364,7 +2361,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
 // (dc 0x16ceb4) has no distinct retail carve row here. The tail is
 // the ordinary ShowText helper, which Complete expands at this call site.
-// Residual (92.05%): register-role transpositions with the structure
+// Residual (96.53% after restoring source helpers): register-role transpositions
+// with the structure
 // exact - the CFG, the cluster tree (dword table -1-biased, two byte
 // maps, the range-tested resource/exit chain) and every arm's content
 // agree. Retail's dispatch keeps `code` in EDI and takes EAX for the
@@ -2379,6 +2377,11 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // and case -1 on default), field_138/field_128 stored before their
 // strip partners in the crest arm, hero* locals for the two name
 // sprintfs, and the shared `field_19c = 0` after both (+1.68).
+// Restoring DC's three GetArmyName calls raises this row from 92.05097%
+// to 96.53%; the Complete-only second horde arm uses the same helper
+// without changing bytes. DC's GetTownName and text-resource index calls
+// are also restored and VC6 byte-flat. The remaining 103/105 block split
+// is in the dispatcher shape, with 42 versus 44 conditional branches.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
 void townManager::setCommandAndText(message* msg)
@@ -2433,12 +2436,7 @@ void townManager::setCommandAndText(message* msg)
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_hordeDwellingSlot[m_townToView->m_type][code - HORDE_ID]];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case HORDE_2_ID:
@@ -2446,12 +2444,7 @@ void townManager::setCommandAndText(message* msg)
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS
             + g_horde2DwellingSlot[m_townToView->m_type][code - HORDE_2_ID]];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case SPECIAL_BUILDING_ID:
@@ -2476,7 +2469,7 @@ void townManager::setCommandAndText(message* msg)
                 strcpy(m_statusText, g_townCommand[11]);
                 m_command = -2;
             } else {
-                hero* garrison = &g_game->m_heroes[m_townToView->m_garrisonHeroId];
+                hero* garrison = g_game->getHero(m_townToView->m_garrisonHeroId);
                 sprintf(m_statusText, g_townCommand[12], garrison->m_name);
                 m_command = 0;
             }
@@ -2491,18 +2484,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
         int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
-        if (m_garrisonStrip->m_group) {
-            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
-                selectArmy(m_garrisonStrip, slot, 0);
-            } else {
-                m_destStrip = m_garrisonStrip;
-                m_destIndex = slot;
-                if (m_divideStatus == 0 && shift == 0)
-                    setArmyCommand(0, 0);
-                else
-                    setArmyCommand(1, 0);
-            }
-        }
+        armyCommand(m_garrisonStrip, slot, shift, 0);
         break;
     }
     case TTownScreenWindow::PORTRAIT_ID:
@@ -2520,7 +2502,7 @@ void townManager::setCommandAndText(message* msg)
             m_currStrip = m_heroStrip;
             visiting = (m_townToView->m_visitingHeroId == -1)
                            ? 0
-                           : &g_game->m_heroes[m_townToView->m_visitingHeroId];
+                           : g_game->getHero(m_townToView->m_visitingHeroId);
             sprintf(m_statusText, g_townCommand[32], visiting->m_name);
             m_command = 0;
         }
@@ -2534,18 +2516,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
         int shift = msg->m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
-        if (m_heroStrip->m_group) {
-            if (m_srcIndex < 0 || m_srcStrip->m_owner != g_netLocalGamePos) {
-                selectArmy(m_heroStrip, slot, 0);
-            } else {
-                m_destStrip = m_heroStrip;
-                m_destIndex = slot;
-                if (m_divideStatus == 0 && shift == 0)
-                    setArmyCommand(0, 0);
-                else
-                    setArmyCommand(1, 0);
-            }
-        }
+        armyCommand(m_heroStrip, slot, shift, 0);
         break;
     }
     case TTownScreenWindow::TOWN_WIDGET_50_ID:
@@ -2556,12 +2527,7 @@ void townManager::setCommandAndText(message* msg)
             strcpy(m_statusText, g_townCommand[3]);
         } else {
             int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-            const char* name;
-            if (id >= 0 && id <= 0x96)
-                name = g_creatureTypeTraits[id].m_pluralName;
-            else
-                name = "";
-            sprintf(m_statusText, g_townCommand[0], name);
+            sprintf(m_statusText, g_townCommand[0], getArmyName(id, 2));
         }
         break;
     case DWELLING_0_ID:
@@ -2580,12 +2546,7 @@ void townManager::setCommandAndText(message* msg)
     case DWELLING_6_UPG_ID: {
         TCreatureType creature = g_townDwellingCreatures[
             m_townToView->m_type * TOWN_DWELLING_SLOTS + code - DWELLING_0_ID];
-        const char* name;
-        if (creature >= 0 && creature <= 0x96)
-            name = g_creatureTypeTraits[creature].m_pluralName;
-        else
-            name = "";
-        sprintf(m_statusText, g_townCommand[21], name);
+        sprintf(m_statusText, g_townCommand[21], getArmyName(creature, 2));
         break;
     }
     case TTownScreenWindow::TOWN_0_ID:
@@ -2593,9 +2554,9 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_2_ID: {
         playerData* player = g_game->getLocalPlayer();
         sprintf(m_statusText, g_townCommand[4],
-                g_game->m_towns[player->m_townIds[
+                g_game->getTownName(player->m_townIds[
                     static_cast<TTownScreenWindow*>(m_townWindow)->m_topTown
-                    + code - TTownScreenWindow::TOWN_0_ID]].m_name.c_str());
+                    + code - TTownScreenWindow::TOWN_0_ID]));
         break;
     }
     case TTownScreenWindow::BONUS_0_ID:
@@ -2637,7 +2598,7 @@ void townManager::setCommandAndText(message* msg)
         }
         break;
     case TTownScreenWindow::INCOME_TEXT_ID:
-        strcpy(m_statusText, g_generalText->getText(GENERAL_TEXT_DAILY_INCOME));
+        strcpy(m_statusText, (*g_generalText)[GENERAL_TEXT_DAILY_INCOME]);
         break;
     case TTownScreenWindow::BONUS_0_TEXT_ID:
     case TTownScreenWindow::BONUS_1_TEXT_ID:
@@ -2738,7 +2699,8 @@ void townManager::selectArmy(strip* fromStrip, long slot,
 
 // DC townmgr.cpp:3825..3838 (0x16d1e0) proves this ordinary member and
 // its SetArmyCommand/select_army calls. SetCommandAndText's two slot arms
-// call ArmyCommand at DC line 4951; Complete expands it in both arms.
+// call ArmyCommand at DC line 4951; Mac calls it at 0:0x1bfed4 and
+// 0:0x1bffac. Complete expands it in both arms.
 void townManager::armyCommand(strip* whichStrip, int i, int shift,
                               unsigned char joinDialog)
 {
@@ -2910,6 +2872,9 @@ DATA(0x006aa820) char g_infoText[400];
 // choice. The two jump-table dispatch instructions also differ only in whether
 // the table offset rides the displacement (retail) or the self-reloc (ours) -
 // the delinker folds the table into the function symbol, VC6 emits a $L label.
+// DC's GetHero and text-resource index calls are restored and VC6 byte-flat.
+// Its GetArmyName call in the creature arm changes the Windows CFG and drops
+// this row to 89.80%; Complete's explicit range/trait path is retained.
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
 void TThievesGuildWindow::setRolloverText(int codeY)
@@ -2940,7 +2905,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
         if (codeY < 0x352) {
             if (codeY >= 0x2ee && codeY <= 0x2f5) {
                 int heroId = g_heroWidgetMap[codeY - HERO_P0];
-                hero* h = (heroId == -1) ? 0 : &g_game->m_heroes[heroId];
+                hero* h = g_game->getHero(heroId);
                 strcpy(g_text, h->m_name);
             } else {
                 strcpy(g_text, "");
@@ -2955,7 +2920,7 @@ void TThievesGuildWindow::setRolloverText(int codeY)
     } else if (codeY != EXIT_BUTTON_ID) {
         strcpy(g_text, "");
     } else {
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_EXIT));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_EXIT]);
     }
 
     message textMessage;
@@ -3434,7 +3399,7 @@ void TMageGuildWindow::setRolloverText(int codeY)
         int level = cell / 6;
         int slot = cell % 6;
         if (thisTown->m_type == TOWN_CONFLUX
-            && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+            && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_ARTIFACT_MAKES_ALL_SPELLS_AVAILABLE_FORMAT),
                     getBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
         } else if (slot >= thisTown->m_mageGuildSpellCounts[level]) {
@@ -3512,7 +3477,7 @@ int TMageGuildWindow::windowHandler(message& msg)
                 int level = slot / 6;
                 int column = slot % 6;
                 if (thisTown->m_type == TOWN_CONFLUX
-                    && (thisTown->m_active & g_bitNumber[HOLY_GRAIL_ID])) {
+                    && (thisTown->hasBuilding(HOLY_GRAIL_ID, true))) {
                     normalDialog(
                         formatString(
                             // Row 715, byte-proven: the inlined lookup
@@ -3808,6 +3773,8 @@ type_garrison_base_window::~type_garrison_base_window()
 // different, beginning with the register used for the manager load.
 // Earlier flattened-arm control: moving thisStrip/mgr before qualifier
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
+// DC's GetArmyName is restored in the divide status arm; VC6 still emits
+// the same 34 blocks and 10 retained calls at 98.838425%.
 VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
 void type_garrison_base_window::setCommandAndText(message* msg)
 {
@@ -3857,9 +3824,7 @@ void type_garrison_base_window::setCommandAndText(message* msg)
             // is a member of `army`, which this compiland's include
             // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    creature >= 0 && creature <= 0x96
-                        ? g_creatureTypeTraits[creature].m_name
-                        : "");
+                    getArmyName(creature, 1));
         }
         break;
     }
@@ -4491,6 +4456,11 @@ int TShipWindow::windowHandler(message& msg)
         return result;
 
     switch (msg.m_id) {
+    case MESSAGE_WIDGET:
+        if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT)
+            setRightClickText(msg.m_codeY);
+        break;
+
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
         if (msg.m_codeY != g_windowManager->m_lastHover) {
@@ -4514,10 +4484,9 @@ int TShipWindow::windowHandler(message& msg)
     return 1;
 }
 
-// The shipyard dialog, opened from the adventure map's own shipyard
-// handler (0x49e2e0, the only caller in the image) rather than from the
-// town page. `type` is the town faction whose dock art the window loads,
-// and it is the one argument the constructor takes.
+// The shipyard dialog, opened from the adventure map handler (0x49e2e0)
+// and the town dock command. `type` is the town faction whose dock art
+// the window loads, and it is the one argument the constructor takes.
 
 VA(0x005d2720, 0x84)  // dc 0x1747fc
 void doShipyard(int type)
@@ -4636,6 +4605,16 @@ char* getBuildingInfo(const town* thisTown, int buildingId, unsigned char includ
     return g_infoText;
 }
 
+// Mac retains this ordinary town-manager helper at 0:0x1cfaf8. The source
+// calls in doUniversity and the two EXTRA_0 arms expand in Windows retail.
+void townManager::showBuildingInfo(int buildingId, unsigned char rightClick)
+{
+    std::string info(getBuildingInfo(m_townToView, buildingId, 1, 1));
+    normalDialog(info.c_str(), rightClick ? 4 : 1, -1, -1,
+                 m_townToView->m_type + 0x16, buildingId,
+                 -1, 0, -1, 0, -1, 0);
+}
+
 VA(0x005d2d80, 0x1E)
 type_university* type_university::initializeMagicSkills()
 {
@@ -4659,9 +4638,7 @@ void townManager::doUniversity()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (!townHero) {
-        std::string info(getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-        normalDialog(info.c_str(), 1, -1, -1, m_townToView->m_type + 0x16,
-                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+        showBuildingInfo(EXTRA_0_ID, 0);
     } else {
         type_university townUniversity;
         townUniversity.initializeMagicSkills();
@@ -4699,21 +4676,7 @@ void townManager::doSkeletonTransformer()
         skeletonWin.doModal(0);
     }
 
-    if (m_srcStrip)
-        m_srcStrip->m_current = -2;
-    if (m_destStrip)
-        m_destStrip->m_current = -2;
-    m_divideStatus = 0;
-    m_heroStrip->draw(CREATURE_NONE);
-    m_garrisonStrip->draw(CREATURE_NONE);
-    m_destStrip = 0;
-    m_srcStrip = 0;
-    m_destIndex = -2;
-    m_srcIndex = -2;
-    g_windowManager->broadcastMessage(MESSAGE_WIDGET,
-                                      widget::WIDGET_SET_STATUS, 0x9a,
-                                      widget::WIDGET_UPDATE
-                                          | widget::WIDGET_DIMMED);
+    resetStrips();
     redrawTownScreen();
 }
 
@@ -4742,7 +4705,7 @@ void townManager::handleHallClick()
         townHero = g_game->getHero(m_townToView->m_garrisonHeroId);
 
     if (townHero && townHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
-        && !(m_townToView->m_built & g_bitNumber[HOLY_GRAIL_ID])
+        && !(m_townToView->hasBuilding(HOLY_GRAIL_ID, false))
         && g_currentPlayer->isLocalHuman()) {
         if (m_townToView->isLegalBuilding(HOLY_GRAIL_ID)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_GRAIL_HOME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
@@ -4794,6 +4757,7 @@ void townManager::handleHallClick()
 // free function called by both Main head checks. Retail merges its two
 // expansions into the return-2 block at 0x5d32c7; absence of a retained
 // body does not change the proven external declaration into a static.
+// Mac retains the body at 0:0x1d008c and calls it at both head checks.
 // E:\gamedcs\townmgr.cpp:5778
 int exitTownManager(message& msg)
 {
@@ -4885,7 +4849,7 @@ int townManager::main(message& msg)
     }
 
     {
-        int delta = GameTime::get() - g_timers[0];
+        int delta = GameTime::elapsedSince(g_timers[0]);
         if (delta >= 0) {
             g_timers[0] += cppMin(delta, 150);
             drawTown(1, 1, 0);
@@ -5035,11 +4999,7 @@ int townManager::main(message& msg)
                         MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
                         TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
                     if (g_game->getBoatsBuilt() < 0x40) {
-                        g_shipWindow = new TShipWindow(m_townToView->m_type);
-                        if (!g_shipWindow)
-                            memError();
-                        g_shipWindow->doModal(0);
-                        delete g_shipWindow;
+                        doShipyard(m_townToView->m_type);
                         m_resourceDisplay->update(1, 1);
                         if (g_windowManager->m_dialogReturn
                             == TShipWindow::BUY_BUTTON_ID) {
@@ -5102,11 +5062,7 @@ int townManager::main(message& msg)
                 break;
             case EXTRA_0_ID:
                 if (rclick) {
-                    std::string info(
-                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-                    normalDialog(info.c_str(), 4, -1, -1,
-                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
-                                 -1, 0, -1, 0, -1, 0);
+                    showBuildingInfo(code, 1);
                 } else switch (m_townToView->m_type) {
                 case TOWN_STRONGHOLD:
                     doFreelancersGuild(m_townToView);
@@ -5118,11 +5074,7 @@ int townManager::main(message& msg)
                     m_resourceDisplay->update(1, 1);
                     break;
                 default: {
-                    std::string info(
-                        getBuildingInfo(m_townToView, EXTRA_0_ID, 1, 1));
-                    normalDialog(info.c_str(), 1, -1, -1,
-                                 m_townToView->m_type + 0x16, EXTRA_0_ID,
-                                 -1, 0, -1, 0, -1, 0);
+                    showBuildingInfo(code, 0);
                     break;
                 }
                 }
@@ -5937,6 +5889,10 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // own refusal lines; a building the town can never build gets the generic
 // refusal; otherwise the assembled list (or GetText(220) when nothing is
 // missing) becomes the rollover text.
+// DC calls TTextResource::operator[] for both text lines; restored here
+// without changing VC6 bytes. Its is_legal_building check is older game
+// logic: Complete retains a call to canEverBuild, which also checks dock,
+// capitol and hierarchy conditions.
 
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
@@ -5948,7 +5904,8 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     if (g_game->m_isTutorial && building == DWELLING_2_ID && currentTown->m_type == 0)
         mask &= ~g_bitNumber[BLACKSMITH_ID];
 
-    mask &= ~currentTown->m_active;
+    // DC line 7281 retains this header helper; VC6 expands its m_active read.
+    mask &= ~currentTown->getBuildingMask();
 
     for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
         if ((g_bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
@@ -5961,7 +5918,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
         if ((g_bitNumber[j] & mask) != 0) {
             if (count == 0) {
-                strcpy(g_text, g_generalText->getText(GENERAL_TEXT_REQUIRES));
+                strcpy(g_text, (*g_generalText)[GENERAL_TEXT_REQUIRES]);
                 strcat(g_text, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
             } else {
                 strcat(g_text, DATA_COMPGEN(0x00660db4, commaText, ","));
@@ -6001,7 +5958,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
     if (count != 0)
         m_rolloverText->setText(g_text);
     else
-        m_rolloverText->setText(g_generalText->getText(GENERAL_TEXT_BUILDING_PREREQUISITES_MET));
+        m_rolloverText->setText((*g_generalText)[GENERAL_TEXT_BUILDING_PREREQUISITES_MET]);
 }
 
 // E:\gamedcs\townmgr.cpp:7354
@@ -6191,21 +6148,14 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
                                const int w, const int h)
 {
     g_outlinedTownObjectId = m_townObjects[objectIndex]->m_objId;
-    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->m_p16;
+    TPalette16& pal = m_townObjects[objectIndex]->m_objOutline->getPalette();
     unsigned short saved = pal.m_data[96];
 
     for (int i = 128; i < 135; i++) {
         unsigned long nextFrame = GameTime::get() + 100;
         pal.m_data[96] = g_systemPalette->m_data[i];
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int j = 0; j < m_townObjectCount; j++) {
-            m_townObjects[j]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         g_windowManager->updateScreen(x, y, w, h);
         pollSound();
@@ -6214,14 +6164,7 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 
     pal.m_data[96] = saved;
 
-    memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-           800 * 600 * 2);
-    static_cast<bitmapBorder16*>(m_panorama)->draw2();
-    pollSound();
-    for (int k = 0; k < m_townObjectCount; k++) {
-        m_townObjects[k]->draw(1, 1);
-        pollSound();
-    }
+    drawTown(0, 1, 1);
 
     g_windowManager->updateScreen(x, y, w, h);
 }
@@ -6239,31 +6182,28 @@ void townManager::cycleOutline(const int objectIndex, const int x, const int y,
 // the reference-returning min/max pair below and fizzles with no time
 // cap. Everything else fizzles just its own object's box over 0x42 ms.
 
-// The town-redraw block is transcribed in place three times for the
-// reason recorded at CycleOutline: retail has no out-of-line
-// townManager::DrawTown, so /Ob2 expanded it at every site. The first
-// expansion differs from the other two - no zBuffer clear, and the
-// objects draw with hotspots OFF.
+// The three DrawTown calls survive in Mac (0x1d3e58, 0x1d4144,
+// 0x1d4250), while VC6 expands the same ordinary helper at each site.
+// The first call draws without hotspots and updates the screen; the
+// later calls draw with hotspots before their respective fizzle runs.
+// Mac 0x1d3fac..0x1d3fe8 initializes the search index to -1 but assigns
+// the extra building ID only in the three hall cases. Removing the
+// unsupported ID initializer reproduces Windows retail exactly (62 blocks,
+// 25 calls); the hall-upgrade path selects one of those three cases.
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
 void townManager::buildObj(int buildingId)
 {
-    if (m_townToView->m_active & g_bitNumber[buildingId])
+    if (m_townToView->hasBuilding(buildingId, true))
         return;
 
-    static_cast<bitmapBorder16*>(m_panorama)->draw2();
-    pollSound();
-    for (int i = 0; i < m_townObjectCount; i++) {
-        m_townObjects[i]->draw(1, 0);
-        pollSound();
-    }
-    g_windowManager->updateScreen(0, 0, 800, 374);
+    drawTown(1, 1, 0);
 
     type_building_id newBuilding = m_townToView->buildBuilding(buildingId, 1, 1);
 
     for (int j = 0; j < m_townObjectCount; j++) {
-        if (m_townToView->m_built & g_bitNumber[m_townObjects[j]->m_objId]) {
+        if (m_townToView->hasBuilding(m_townObjects[j]->m_objId, false)) {
             m_townObjects[j]->m_visible = 1;
             m_townObjects[j]->m_objBorder->m_status |= widget::WIDGET_ACTIVE;
         } else {
@@ -6283,7 +6223,7 @@ void townManager::buildObj(int buildingId)
          || m_townToView->m_type == TOWN_NECROPOLIS)
         && buildingId > HALL_VILLAGE_ID && buildingId <= HALL_CAPITOL_ID) {
         int extraIndex = -1;
-        int extraId = -1;
+        int extraId;
         switch (newBuilding) {
         case HALL_TOWN_ID:
             extraId = EXTRA_3_ID;
@@ -6308,14 +6248,7 @@ void townManager::buildObj(int buildingId)
         int boxH = max(hall->m_y + hall->m_h, extra->m_y + extra->m_h) - boxY;
         g_windowManager->saveFizzleSourceX(boxX, boxY, boxW, boxH);
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int n = 0; n < m_townObjectCount; n++) {
-            m_townObjects[n]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         sample = loadPlaySample("buildtwn.82M");
         g_windowManager->fizzleForwardX(boxX, boxY, boxW, boxH, -1);
@@ -6325,7 +6258,7 @@ void townManager::buildObj(int buildingId)
         // object by ten frames once that extra is standing.
         if (m_townToView->m_type == TOWN_DUNGEON
             && newBuilding == MAGE_GUILD5_ID
-            && (m_townToView->m_built & g_bitNumber[EXTRA_0_ID]))
+            && (m_townToView->hasBuilding(EXTRA_0_ID, false)))
             m_townObjects[19]->m_currFrame += 10;
 
         g_windowManager->saveFizzleSourceX(m_townObjects[builtIndex]->m_x,
@@ -6333,14 +6266,7 @@ void townManager::buildObj(int buildingId)
                                            m_townObjects[builtIndex]->m_w,
                                            m_townObjects[builtIndex]->m_h);
 
-        memset(static_cast<TTownScreenWindow*>(m_townWindow)->m_zBuffer, 0,
-               800 * 600 * 2);
-        static_cast<bitmapBorder16*>(m_panorama)->draw2();
-        pollSound();
-        for (int p = 0; p < m_townObjectCount; p++) {
-            m_townObjects[p]->draw(1, 1);
-            pollSound();
-        }
+        drawTown(0, 1, 1);
 
         sample = loadPlaySample("buildtwn.82M");
         g_windowManager->fizzleForwardX(m_townObjects[builtIndex]->m_x,
@@ -6363,8 +6289,7 @@ void townManager::buildObj(int buildingId)
                                           | widget::WIDGET_DIMMED);
 
     for (int q = 0; q < TOWN_DWELLING_COUNT; q++) {
-        if (m_townToView->m_active
-            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + q])
+        if (m_townToView->hasBuilding(DWELLING_0_ID + TOWN_DWELLING_COUNT + q, true))
             m_currentDwellingIdOff[q] = q + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[q] = q;
@@ -6401,7 +6326,7 @@ void townManager::setupMage(heroWindow* mageWin)
         for (int slot = 0; slot < 6; slot++) {
             int state = g_mageGuildBaseSpellCounts[level];
             if (m_townToView->m_type == TOWN_TOWER
-                && (m_townToView->m_active & g_bitNumber[EXTRA_1_ID]))
+                && (m_townToView->hasBuilding(EXTRA_1_ID, true)))
                 state++;
             // Retail passes the loop counter to IsLegalBuilding
             // (`mov edx,[ebp-4]; push edx`) in the same representation.
@@ -6439,7 +6364,7 @@ void townManager::setupMage(heroWindow* mageWin)
                 msg.m_codeY = 40 + level * 6 + slot;
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 if (m_townToView->m_type == TOWN_CONFLUX
-                    && (m_townToView->m_active & g_bitNumber[HOLY_GRAIL_ID]))
+                    && (m_townToView->hasBuilding(HOLY_GRAIL_ID, true)))
                     msg.m_extra = 70;
                 else
                     msg.m_extra = m_townToView->m_mageGuildSpells[level][slot];
@@ -6646,7 +6571,7 @@ int TTavernWindow::windowHandler(message& msg)
                     msg.m_codeY = 9 - m_selectedRecruit;
                     broadcastMessage(msg);
 
-                    g_tavernHero = &g_game->m_heroes[player->m_recruits[m_selectedRecruit]];
+                    g_tavernHero = g_game->getHero(player->m_recruits[m_selectedRecruit]);
                     long artifacts = g_tavernHero->getNumberInBackpack(0)
                                      + g_tavernHero->getEquippedArtifacts(0);
                     sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT),
@@ -6744,6 +6669,8 @@ void doMapTavern(type_point point)
 // prologue `push <scopetable>` addend (a reloc addend, not a state count),
 // a deferred `push ebx`, and the singular-artifact `.`-append indexing
 // gText[len-2] off the end pointer rather than off gText's base.
+// DC records TTextResource::operator[] for both text formats; those
+// shared calls are VC6 byte-flat here and clear the source audit.
 // E:\gamedcs\townmgr.cpp:8055
 VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
 unsigned char doTavern()
@@ -6768,7 +6695,7 @@ unsigned char doTavern()
 
     msg.m_extraText = g_text;
     if (g_currentPlayer->isLocalHuman()) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_RUMOR_FORMAT), g_game->m_currentRumour);
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_RUMOR_FORMAT], g_game->m_currentRumour);
         msg.m_codeX = widget::WIDGET_SET_TEXT;
         msg.m_codeY = 2;
         g_tavernWindow->broadcastMessage(msg);
@@ -6783,7 +6710,7 @@ unsigned char doTavern()
         g_tavernHero = 0;
         g_tavernWindow->widgetClearStatus(8, widget::WIDGET_DRAWN);
     } else {
-        g_tavernHero = &g_game->m_heroes[player->m_recruits[0]];
+        g_tavernHero = g_game->getHero(player->m_recruits[0]);
         g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_codeY = 5;
@@ -6802,13 +6729,13 @@ unsigned char doTavern()
                 .m_largePortraitName;
         g_tavernWindow->broadcastMessage(msg);
         if (g_tavernHero == 0)
-            g_tavernHero = &g_game->m_heroes[player->m_recruits[1]];
+            g_tavernHero = g_game->getHero(player->m_recruits[1]);
     }
 
     if (g_tavernHero) {
         int total = g_tavernHero->getNumberInBackpack(0)
                   + g_tavernHero->getEquippedArtifacts(0);
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT), g_tavernHero->m_name,
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT], g_tavernHero->m_name,
                 g_tavernHero->m_level, g_tavernHero->heroFn004D8F70(), total);
         if (total == 1) {
             int len = strlen(g_text);
@@ -6903,7 +6830,7 @@ void townManager::doTownGate()
         int townId = player->m_townIds[i];
         town* otherTown = g_game->getTown(townId);
         if (otherTown != m_townToView && otherTown->m_type == TOWN_INFERNO
-            && (otherTown->m_active & g_bitNumber[EXTRA_1_ID])
+            && (otherTown->hasBuilding(EXTRA_1_ID, true))
             && otherTown->m_visitingHeroId < 0)
             gateWindow->addTown(townId);
     }
@@ -6953,12 +6880,12 @@ TCastleWindow::TCastleWindow()
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType == -1)
         g_townManager->m_townToView->setSummoningGenerator();
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType != -1) {
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
         m_use8 = 1;
@@ -7012,11 +6939,7 @@ TCastleWindow::TCastleWindow()
         m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
         int summoned = g_townManager->m_townToView->m_summoningType;
         strcpy(g_text, g_townCastleDefNames[
-                   ((!g_game->m_gameVersion
-                     && isBaseElemental(summoned))
-                        ? -1
-                        : g_creatureTypeTraits[summoned].m_townType)
-                   + 1]);
+                   g_game->getAlignment(summoned) + 1]);
         m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else {
         m_widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, g_text, 0x800));
@@ -7596,7 +7519,7 @@ void TCastleWindow::setRolloverText(message* msg)
         strcpy(g_text, g_castleInfo[(code - 0x39) / 8]);
     } else if (code >= 0x11 && code <= 0x17) {
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
-        if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
+        if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
             TCreatureType rowCreature =
                 g_townDwellingCreatures[g_townManager->m_townToView->m_type
                                        * TOWN_DWELLING_SLOTS + dwelling];
@@ -7665,7 +7588,7 @@ void TCastleWindow::recruit(int i)
     // exactly as this body does. DC records no locals for this function,
     // so it offers no lead on the remaining allocator state.
     int dwelling = g_townManager->m_currentDwellingIdOff[i];
-    if (g_townManager->m_townToView->m_active & g_bitNumber[DWELLING_0_ID + dwelling]) {
+    if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
         g_recruitUnit = new recruitUnit(g_townManager->m_townToView, dwelling, 1);
         if (!g_recruitUnit)
             memError();
@@ -7902,8 +7825,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
 
     int i;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        if (m_townToView->m_active
-            & g_bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + i])
+        if (m_townToView->hasBuilding(DWELLING_0_ID + TOWN_DWELLING_COUNT + i, true))
             m_currentDwellingIdOff[i] = i + TOWN_DWELLING_COUNT;
         else
             m_currentDwellingIdOff[i] = i;
@@ -7921,7 +7843,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         msg.m_codeY = i + 9;
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
-        if (m_townToView->m_active
+        if (m_townToView->getBuildingMask()
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
             sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                     m_townToView->m_population[m_currentDwellingIdOff[i]]);
@@ -7993,7 +7915,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
                                   i + 0x79, textMessage.m_extra);
-        if (m_townToView->m_active
+        if (m_townToView->getBuildingMask()
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
             int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
             sprintf(g_text, "%d", growth);
@@ -8085,7 +8007,8 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
             (thievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
 
     int numDisabled = 0;
-    for (int k = 0; k < 8; k++) {
+    int k;
+    for (k = 0; k < 8; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
     }

@@ -1,0 +1,91 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x4ec460
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e068
+mac_size = 0x7c
+target_sha256 = "c9bd990f2d578f73188bd8866bcac3267fc2e20d1fa7604af089273ffc0ca8e2"
+evidence = "baseManager constructor, constructs 64-message array, initializes status/buffer fields; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec4d0
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e10c
+mac_size = 0x78
+target_sha256 = "176a23ba70c4a8e35054696b2a45ae73170d967c5bbaba0b9ae9795f1faf68e9"
+evidence = "clears 0x800-byte event buffer, stores manager id 4 and copies unique inputManager string at TOC1+0x27a8; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec540
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e184
+mac_size = 0x24
+target_sha256 = "7793985d5f8ca38128729936d6364e7724edea0b0bbe081ca04fbf1cc6b08123"
+evidence = "active status guard then zeros head/tail/keyboard flag/status; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec560
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e1a8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "leaf returns zero from manager main; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec570
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e1b0
+mac_size = 0x38
+target_sha256 = "ca98730fdb651cb5eb8b1ec6b54aa846531fee0829ce3e5c5c8f8944d8eff2d7"
+evidence = "calls process1WindowsMessage counterpart then zeros queue head/tail; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec590
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e1e8
+mac_size = 0x15c
+target_sha256 = "3194f442f305bc84c176a40d2d18f790d4b60c87ca6c6b2296c9c13f37e3afe1"
+evidence = "polls sound, copies 32-byte message from ring buffer and advances head modulo64; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec640
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e344
+mac_size = 0x154
+target_sha256 = "46829c0b2ab3d509b799d07eb5f58942c1fbb980bb3c4dc375f5a55a4011680b"
+evidence = "polls sound and copies 32-byte ring message without head advance; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ecc00
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e568
+mac_size = 0xe8
+target_sha256 = "cc9490733d39713b2ef6343aff8422ad7fe54e3b81a560dbc493a12b6268f3e5"
+evidence = "buffer-busy guard at +0x840, creates mouse-move message, gets mouse coordinates and qualifiers, advances ring modulo64; complete adjacent PowerPC span."
+
+[[functions]]
+retail_va = 0x4ec6f0
+unit = "inputmgr"
+mac_section = 0x0
+mac_offset = 0x10e55c
+mac_size = 0xc
+target_sha256 = "69d0c0afc20064c5050b1af6de3936e47f7cd8ba1facb6b6b0c32f20f29fa225"
+evidence = "textEntryWidget::onKeyPress calls this retained body at 0x1afd48 with g_inputManager and message; it copies message codeY (+8) to codeX (+4) and returns. Windows inputManager::asciiConvert at 0x4ec6f0 translates scan codes and shift state, a platform input difference. Dreamcast names the method at dc 0xddd60. Final BLR at 0x10e564; next input-manager body starts at 0x10e568."
+
+[[helpers]]
+source_helper = "inputManager::getCurrQuals"
+unit = "inputmgr"
+mac_section = 0
+mac_offset = 0x10e498
+mac_size = 0x80
+target_sha256 = "9eece356a2145675fa8d09f61f21d38964d8f9bb9e449ff62e10a709426bf040"
+evidence = "forceMouseMove calls this at 0x10e5d4. The Mac body calls GetKeys, tests Control, Alt and Shift through the adjacent key-bit helper 0x10e518, and ORs qualifier bits 4, 0x20 and 1 respectively. Dreamcast names inputManager::GetCurrQuals at inputmgr.cpp:970; Windows expands the canonical calls using GetKeyState. BLR 0x10e514; key-bit helper begins 0x10e518."

@@ -1,0 +1,91 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x44f800
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5daf0
+mac_size = 0xc4
+target_sha256 = "57eca5e7b892d739af2dec4370cfab6051bb62d4bdddd441d18e90ee6c4ea8c5"
+evidence = "Data-buffer ctor called by ResourceManager::getBitmap816 0x152df8; stores width/height/pitch at +0x24/+0x28/+0x2c, constructs both palettes, allocates data and memcpy."
+
+[[functions]]
+retail_va = 0x44f9d0
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5dbb4
+mac_size = 0x88
+target_sha256 = "d0d7e8f95e05c343cf521643a56d2b3076aa40fa40d3682a5ca4fc77fc7344e1"
+evidence = "Canonical destructor is Mac combined delete-flag body after ctor; releases map, two palette subobjects, resource base and optionally this."
+
+[[functions]]
+retail_va = 0x44fba0
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5dc3c
+mac_size = 0xf8
+target_sha256 = "c1515078408a55ca29f1ebb4b8c16cde31397c702362f7a15e7b84be65dbe6e2"
+evidence = "ZBufferDraw raw-pointer form clips source/destination rectangles, reads 8-bit mask map and writes caller ID to 16-bit output only for nonzero pixels."
+
+[[functions]]
+retail_va = 0x44fc70
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5dd34
+mac_size = 0x21c
+target_sha256 = "25fa8947ee6ff74938e814ed7319190107277ee5488a67bc511298a954785f7e"
+evidence = "Draw raw-pointer form is adjacent longer clipped pixel loop, branches on transparent blit and indexes embedded 16-bit palette for each 8-bit source pixel."
+
+[[functions]]
+retail_va = 0x44fdb0
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5df50
+mac_size = 0x44
+target_sha256 = "e67feac039f509ce08d5b65317e4ce0ed813bad646f0a3d8642db325168e89d3"
+evidence = "Draw Bitmap16Bit wrapper forwards destination map, dimensions and pitch to raw draw 0x5dd34; text widget calls this wrapper."
+
+[[functions]]
+retail_va = 0x44fdf0
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5df94
+mac_size = 0x40
+target_sha256 = "09968177b27456d2638558f92dd16cbc7b53ef39cc5047b301a4d108a1c402b9"
+evidence = "ZBufferDraw fixed-screen wrapper passes 800,600,1600 to raw zBufferDraw 0x5dc3c."
+
+[[functions]]
+retail_va = 0x44fe30
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5dfd4
+mac_size = 0xc
+target_sha256 = "7ff8130b8281bd53c243c2ea9246bf4ed910e3a5a2669226af9939b293c3f0e7"
+evidence = "GetSize leaf loads dataSize at +0x1c and adds Mac Bitmap816 object size 0x56c; virtual resource size accessor."
+
+[[functions]]
+retail_va = 0x44fe40
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5dfe0
+mac_size = 0x34
+target_sha256 = "8ea14da0e7d99c76a9549cd833aa8cbacea14fa1cb41d32f1bb5f57808c6614b"
+evidence = "SetPalette ushort-pointer form copies 0x200 bytes into embedded palette at +0x50 using memcpy 0x2a1538."
+
+[[functions]]
+retail_va = 0x44fe60
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5e014
+mac_size = 0x24
+target_sha256 = "c08a7cfdac6897c1f3e5b89a2d493d7de6bff63067005220099f787e80ea9cd6"
+evidence = "SetPalette TPalette24-pointer form forwards to TPalette24 assignment 0x13c420 at object +0x250."
+
+[[functions]]
+retail_va = 0x44fe80
+unit = "bitmap816"
+mac_section = 0x0
+mac_offset = 0x5e038
+mac_size = 0x4c
+target_sha256 = "05068c4073c19349bb52354e2b8201c7164ad672ca4a89b93d19113f2f4e79ab"
+evidence = "ResetPalette constructs 16-bit palette temporary from embedded 24-bit palette +0x250, calls setPalette ushort form 0x5dfe0 and destroys temporary."

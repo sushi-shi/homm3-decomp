@@ -463,49 +463,6 @@ void CTeamAlignmentDlg::getTeams()
 }
 
 // ============================================================================
-// The scenario-setup "Resource" starting bonus, in two halves.
-// ============================================================================
-
-// The two differ only in their text bank: 693..696 with default 90 for the
-// short bottom title, 689..692 with default 94 for the description block.
-
-VA(0x00576e00, 0x80)
-const char* getStartingResourceName(int town)
-{
-    switch (town) {
-    case TOWN_RAMPART:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_CAPTION);
-    case TOWN_TOWER:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_CAPTION);
-    case TOWN_INFERNO:
-    case TOWN_CONFLUX:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_CAPTION);
-    case TOWN_DUNGEON:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_CAPTION);
-    default:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_CAPTION);
-    }
-}
-
-VA(0x00576e80, 0x80)
-const char* getStartingResourceDescription(int town)
-{
-    switch (town) {
-    case TOWN_RAMPART:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_RAMPART_DESCRIPTION);
-    case TOWN_TOWER:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_TOWER_DESCRIPTION);
-    case TOWN_INFERNO:
-    case TOWN_CONFLUX:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_INFERNO_DESCRIPTION);
-    case TOWN_DUNGEON:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DUNGEON_DESCRIPTION);
-    default:
-        return g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS_DEFAULT_DESCRIPTION);
-    }
-}
-
-// ============================================================================
 // TRandomMapProgress - the modal progress bar around the generator run.
 // ============================================================================
 

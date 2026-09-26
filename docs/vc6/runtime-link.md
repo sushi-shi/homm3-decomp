@@ -22,13 +22,13 @@ IFC20 import identities. IFC20's error-handling flags are a data import.
 ## Runtime selection
 
 Retail uses the multithreaded static CRT and C++ runtime; see
-[executable libraries](../reference/executable-libraries.md). Four provisional
-`/ML` profiles—kb, newgame, quickherowindow and quicktownwindow—emitted a retained
-empty `std::_Lockit` destructor that collided with LIBCPMT's real lock release
-at retail 0x60b634. Using `/MT` removes that conflicting definition and retains
-real lock acquisition/release. Isolated profile probes left all 78 enrolled game
-function scores unchanged; changes to emitted standard-library helpers are
-expected. Subsequent source and data corrections are separate from this probe.
+[executable libraries](../reference/executable-libraries.md). All game TUs now
+use `/MT`. The earlier `/ML` profile was provisional: it emitted an empty
+`std::_Lockit` destructor where retail uses LIBCPMT's lock release. Focused
+`/ML`→`/MT` comparisons left all 207 `hero`, 59 `viewwrld`, and 10 `gzfile`
+function bodies byte identical. `gzfile` explicitly retains zlib's separate
+C-linkage `errno` cell because `/MT` defines `errno` as `_errno()` in VC6 headers.
+Whole-tree score and link verification remain for the next full build.
 
 The zlib objects legitimately use `/ML`. Their four retail references at
 0x6063f3, 0x6065e8, 0x60669c and 0x606768 address the global `errno` at 0x6ab15c;

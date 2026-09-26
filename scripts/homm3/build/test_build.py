@@ -12,6 +12,8 @@ from homm3.build import build, configure, delink, normalize_objs
 from homm3.cleanliness import board
 from homm3.core import inputs
 from homm3.core.nb11 import NB11Error
+from homm3.mac import build as mac_build
+from homm3.mac import queue as mac_queue
 from homm3.match import banked_rows, single_view, source_ownership, source_inventory, status, verify_va_claims
 
 
@@ -22,6 +24,9 @@ class BuildModeTest(unittest.TestCase):
         self.target = self.root / "build/objdiff/target/cursor.c.obj"
         self.target.parent.mkdir(parents=True)
         self.target.write_bytes(b"existing retail target")
+        (self.root / "config").mkdir()
+        (self.root / "config/units.toml").write_text(
+            '[[unit]]\nunit = "cursor"\n[[unit]]\nunit = "hero"\n')
         self.events = []
         self.mocks = {}
         self.preflight = self.enterContext(patch.object(inputs, "stage_executable"))
@@ -38,6 +43,7 @@ class BuildModeTest(unittest.TestCase):
             ("normalize", normalize_objs, "normalize_all", 0),
             ("report", status, "refresh_report", {}),
             ("fingerprints", status, "source_hash_pair", ({}, {})),
+            ("mac", mac_build, "run", []),
             ("history", status, "baseline_history", ''),
             ("check", status, "cmd_check", None),
             ("checkpoint", status, "cmd_update", None),
@@ -49,6 +55,7 @@ class BuildModeTest(unittest.TestCase):
             ("inventory", source_inventory, "run_gate", []),
             ("cleanliness", board, "check_and_roll", []),
             ("readme", status, "write_readme", None),
+            ("queue", mac_queue, "refresh", {}),
         ]:
             def called(*args, _name=name, _result=result, **kwargs):
                 self.events.append(_name)
@@ -58,11 +65,12 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "fingerprints", "history", "check", "checkpoint", "banked", "claims",
-                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
+                                      "fingerprints", "mac", "history", "check", "checkpoint", "banked", "claims",
+                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme", "queue"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
-        self.assertEqual(self.preflight.call_count, 2)
+        self.assertEqual(self.preflight.call_count, 3)
+        self.mocks["mac"].assert_called_once_with(None, checkpoint=True)
         self.mocks["origins"].assert_called_once_with(include_declarations=True)
         self.mocks["ownership"].assert_called_once_with(origins=[])
         self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
@@ -114,12 +122,27 @@ class BuildModeTest(unittest.TestCase):
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "queue"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
         self.preflight.assert_not_called()
+        self.mocks["mac"].assert_called_once_with({"cursor"}, checkpoint=False)
+
+    def test_mac_tool_error_preserves_windows_gates_and_fails(self):
+        self.mocks["mac"].side_effect = ValueError("unresolved Mac relocation")
+        self.assertEqual(build.main([]), 1)
+        self.mocks["checkpoint"].assert_called_once()
+        self.mocks["ownership"].assert_called_once()
+        self.mocks["readme"].assert_called_once()
+        self.mocks["cleanliness"].assert_called_once_with(write=False, dc_origins=[])
+
+    def test_mac_score_difference_is_observational(self):
+        self.mocks["mac"].side_effect = None
+        self.mocks["mac"].return_value = [{"exact": False, "score": 95.0}]
+        self.assertEqual(build.main(["--fast", "hero"]), 0)
+        self.mocks["mac"].assert_called_once_with({"hero"}, checkpoint=False)
 
     def test_fast_build_cannot_silently_bootstrap_a_delink(self):
         self.target.unlink()

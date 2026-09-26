@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import tomllib
 from typing import TypedDict
 
 from homm3.core import common, clang
@@ -56,6 +57,56 @@ class Definition:
     original_name: str = ""
     template: bool = False
     internal: bool = False
+    source_owner: str = ""
+    owner_include_offset: int | None = None
+
+
+def definition_owner(definition: Definition) -> str:
+    return definition.source_owner or definition.file
+
+
+def definition_order(definition: Definition):
+    return (definition_owner(definition),
+            definition.owner_include_offset if definition.owner_include_offset is not None else definition.offset,
+            definition.offset if definition.source_owner else -1)
+
+
+def fragment_owners(root: Path) -> dict[str, tuple[str, int]]:
+    """Validate explicit source fragments at their canonical include positions.
+
+    This changes source-file attribution only. The physical body, signature,
+    duplicate-definition checks and ordering within the owner remain visible.
+    """
+    path = root / 'config/source/header-fragments.toml'
+    if not path.is_file():
+        return {}
+    from homm3.retail_labels.source import mask_lexical_noise
+    result = {}
+    for row in tomllib.loads(path.read_text()).get('fragments', []):
+        fragment, owner = row['fragment'], row['owner']
+        for name, directory in ((fragment, 'include'),
+                                (owner, 'src' if owner.startswith('src/') else 'include')):
+            location = root / name
+            if (not name.startswith(directory + '/') or not location.is_file()
+                    or not location.resolve().is_relative_to((root / directory).resolve())
+                    or (directory == 'src' and not name.endswith('.cpp'))):
+                raise ValueError(f'invalid source fragment path {name!r}')
+        if fragment == owner or fragment in result or not row['evidence'].strip():
+            raise ValueError(f'duplicate or unproven source fragment {fragment!r}')
+        text = (root / owner).read_text()
+        masked = mask_lexical_noise(text)
+        sites = []
+        for match in re.finditer(r'^\s*#\s*include\s+"([^"\n]+)"', text, re.MULTILINE):
+            at = text.index('#', match.start(), match.end())
+            if (masked[at] == '#' and
+                    (root / owner).parent.joinpath(match.group(1)).resolve() == (root / fragment).resolve()):
+                sites.append(at)
+        if len(sites) != 1:
+            raise ValueError(f'{fragment}: expected one literal include in source owner {owner}')
+        result[fragment] = (owner, sites[0])
+    if any(owner in result for owner, _ in result.values()):
+        raise ValueError('nested source fragment owners are unsupported')
+    return result
 
 
 @dataclass(frozen=True)
@@ -572,7 +623,42 @@ def resolve_instances(definitions, requests, unit, root, args):
     return definitions, errors
 
 
-def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Definition], list[str], list[str]]:
+def skip_conditional_signature_tail(masked: str, offset: int) -> int:
+    """Skip an inactive #else/#elif arm after Clang's active declarator."""
+    from homm3.vc6 import _source
+    offset = _source._skip_ws(masked, offset)
+    if offset >= len(masked) or masked[offset] != '#':
+        return offset
+    line_end = masked.find('\n', offset)
+    if line_end < 0:
+        return offset
+    directive = masked[offset:line_end]
+    if re.match(r'#[ \t]*endif\b', directive):
+        return _source._skip_ws(masked, line_end + 1)
+    if not re.match(r'#[ \t]*(?:else|elif)\b', directive):
+        return offset
+    # The remainder of this conditional arm is inactive in Clang's parsed
+    # declarator. Skip it only when a balanced closing #endif is followed
+    # immediately by the function body.
+    depth = 0
+    scan = line_end + 1
+    while scan < len(masked):
+        end = masked.find('\n', scan)
+        if end < 0:
+            end = len(masked)
+        line = masked[scan:end].lstrip()
+        if re.match(r'#[ \t]*(?:if|ifdef|ifndef)\b', line):
+            depth += 1
+        elif re.match(r'#[ \t]*endif\b', line):
+            if depth == 0:
+                after = _source._skip_ws(masked, end + 1)
+                return after if after < len(masked) and masked[after] == '{' else offset
+            depth -= 1
+        scan = end + 1
+    return offset
+
+
+def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None) -> tuple[list[Definition], list[str], list[str]]:
     """Fail visibly on parse errors; never turn an unreadable TU into no bodies."""
     from clang import cindex
     import ctypes
@@ -595,6 +681,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
         options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
     from homm3.vc6 import _source
     texts = {}
+    fragments = fragment_owners(root) if fragment_map is None else fragment_map
     raw_texts = {}
     byte_texts = {}
     line_indexes = {}
@@ -647,7 +734,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 # below use Python character offsets. Comments may be UTF-8.
                 return len(encoded[:offset].decode('utf-8'))
             masked = texts[relative]
-            opening = _source._skip_ws(masked, char_offset(cursor.extent.end.offset))
+            opening = skip_conditional_signature_tail(masked, char_offset(cursor.extent.end.offset))
             if opening < len(masked) and masked[opening] == ':':
                 opening = _source._skip_init_list(masked, opening)
             if opening is None or opening >= len(masked) or masked[opening] != '{':
@@ -707,6 +794,8 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 original_name=original_name_hint(
                     line_indexes[relative], char_offset(cursor.location.offset)),
                 template=template,
+                source_owner=fragments.get(relative, ('', None))[0],
+                owner_include_offset=fragments.get(relative, ('', None))[1],
                 internal=(cursor.kind == k.FUNCTION_DECL
                           and cursor.storage_class == cindex.StorageClass.STATIC)))
             if instances:
@@ -788,6 +877,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     cache = root / 'build/source-ownership/units'
     cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
+    fragments = fragment_owners(root)
 
     def cached_scan(unit):
         source = unit['source']
@@ -803,7 +893,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                             saved['errors'], saved['reached'])
             except (OSError, ValueError, KeyError, TypeError, AttributeError):
                 pass  # Disposable cache; a damaged entry must trigger a scan.
-        definitions, errors, reached = scan_unit(unit, root, profiles=profiles)
+        definitions, errors, reached = scan_unit(unit, root, profiles=profiles, fragment_map=fragments)
         dependencies = {os.path.normpath(p) for p in [*reached, source]}
         input_hashes = {p: content.get(p) for p in sorted(dependencies)}
         saved = dict(key=key, definitions=[asdict(d) for d in definitions],
@@ -838,7 +928,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
         reached.update(paths)
         for d in definitions:
             unique[(d.file, d.offset, d.name, d.signature)] = d
-    definitions = sorted(unique.values(), key=lambda d: (d.file, d.offset, d.signature))
+    definitions = sorted(unique.values(), key=lambda d: (*definition_order(d), d.signature))
     return definitions, errors, sorted(reached)
 
 
@@ -1082,7 +1172,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         # Bind only the owning file before duplicate detection and before
         # exposing matches to the bidirectional inventory. Otherwise one local
         # helper can consume another TU's row or manufacture an ambiguity.
-        actual = d.file.split('/', 1)[1].lower()
+        actual = definition_owner(d).split('/', 1)[1].lower()
         owned = [o for o in candidates if o.file == actual]
         if owned:
             candidates = owned
@@ -1130,7 +1220,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         # the source-line stream; an ordinary retail claim cannot advance it.
         if d.file.startswith('src/') and d.va is not None and not d.inline:
             continue
-        key = (d.file, file)
+        key = (definition_owner(d), file)
         prior = previous.get(key)
         if prior and dc_line < prior[1]:
             errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')

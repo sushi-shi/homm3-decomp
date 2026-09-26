@@ -33,8 +33,10 @@
  *                                  specialization token that causes it;
  *                                  direct-symbol kinds only claim a named
  *                                  COFF symbol VC6 already emitted
- *   DATA(addr)                     global datum definition (never on a
- *                                  header extern)
+ *   DATA(addr)                     owning global datum definition, or the
+ *                                  canonical extern when its defining TU
+ *                                  is not authored; externs identify storage
+ *                                  and do not claim an initializer match
  *   DATA_COMPGEN(addr, name, value)
  *                                  anonymous compiler-generated allocation
  *                                  (string literal / float pool entry);

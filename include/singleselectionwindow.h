@@ -12,6 +12,9 @@
 #include "rmg_request.h"
 #include "town.h"
 
+const char* getResourceBonusCaption(int townType);
+const char* getResourceBonusDescription(int townType);
+
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
 // its random flavor creature past both. TU-private for the same
@@ -274,6 +277,9 @@ public:
         memset(m_description, 0, sizeof(m_description));
         m_setup.m_difficulty = 1;
     }
+
+    unsigned char read(TAbstractFile* infile);
+    unsigned char write(TAbstractFile* outfile);
 
     // Both the copy ctor and operator= are IMPLICIT: the synthesized
     // memberwise bodies are retail's 0x5904f0 and 0x578440 COMDATs, and
@@ -676,6 +682,8 @@ public:
     void drawBasicMapInfo();
     unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
     void updateFilterWidgets();
+    void refreshFilterWidgets();
+    void openRandomMapOptions();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
@@ -711,6 +719,7 @@ public:
                                 int position);
     void onDeleteFile();
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    bool assignPlayerToOpenHumanSlot(unsigned long dpid);
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);
@@ -765,6 +774,7 @@ public:
     // UpdateGameVars role (dc 0x139090, void()). Called after the
     // header transfer completes.
     void updateGameVars();
+    void applyHeaderToGame(GameSelectionHeadersStruct* header);
     unsigned char beginSavedGame();
     bool beginNewGame();
     void updateMainWindow();
@@ -775,6 +785,8 @@ public:
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
     int getFileSpecNbr();
+    char* getHeaderDirectory();
+    std::vector<GameSelectionHeadersStruct>* getSourceHeaders();
     void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
     void windowFn00582e90(
         std::vector<GameSelectionHeadersStruct>* headers);

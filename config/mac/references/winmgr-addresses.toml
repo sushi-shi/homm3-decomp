@@ -1,0 +1,171 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x602170
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d13c
+mac_size = 0x6c
+target_sha256 = "3139d2d68d251b13313e0f29a641bbb6f6af6cbbccbe3b42d75ecf5bddfbbfdf"
+evidence = "baseManager constructor; stores null manager/window/bitmap fields and -1 hover/dialog fields; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6021b0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d1a8
+mac_size = 0x10c
+target_sha256 = "b47aa64a947f5282b9dad112100fc099514f9635f626c3e4feb189f3eb52c996"
+evidence = "calls video initialization, bitmap allocation/fill, pointer setup, then copies heroWindowManager name; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6022d0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d2b4
+mac_size = 0xac
+target_sha256 = "1ee09a2a624bcb7f523aca6a27a766d04c51a85322f8a7a56172979261e10127"
+evidence = "active-status guard; walks tail windows through removeWindow, deletes both bitmaps; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602320
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d360
+mac_size = 0x78
+target_sha256 = "fb0b69cc63fdb447bf2656f35c92099f226e034e884fe9447920c68c88a11960"
+evidence = "walks tail windows, checks sleep count at +0x44, calls heroWindow::broadcastMessage and tests return 1..2; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602360
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d3d8
+mac_size = 0x2c
+target_sha256 = "25eb5ba0c58d2d2f693d6014f9e202e2438a0c3a32b89d3d78d4228579dc196b"
+evidence = "single virtual main(message) forwarding through manager vtable; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602370
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d404
+mac_size = 0x64
+target_sha256 = "90c3223f4034812a9193bb53bc62ace922e358d15905ffba11e58c3c75e74a9f"
+evidence = "zero-initializes stack message and stores four caller fields before virtual dispatch; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6023b0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d468
+mac_size = 0x154
+target_sha256 = "502e7c5a7f5e664a34e7a689b5bf2e5dffebf9f7be692d4cd73831e1a3ee03da"
+evidence = "window priority/fixed-layer checks, virtual open, linked-list insert and active-window updates; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6024a0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d5bc
+mac_size = 0x104
+target_sha256 = "b73dfb1facf811ed4da2f65cb393a94d25af7cfead9ed226d5afa14357c85271"
+evidence = "virtual close then head/tail/middle linked-list unlink and active-window repair; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602520
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d6c0
+mac_size = 0x308
+target_sha256 = "3edc4a1dae7c6881b7f6ccc49426148d18ea983ff22c94778a7b7f35e18252e6"
+evidence = "dialog nest/menus and sleeping window traversal; fadeScreen and handler event loop; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6027a0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20d9c8
+mac_size = 0x340
+target_sha256 = "1103c3777ba6f431d59601bfa2a774c42d0d7f51d0a7383bcd786600739e67aa"
+evidence = "dialog variant invokes draw handler and dispatches return/redraw widget cases; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602a40
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20dd08
+mac_size = 0x224
+target_sha256 = "571c83896a8053ea8518e53ea97c9d8699b137a9a1835b42b7792284bfd7c3a9"
+evidence = "quick-view loop tests left/right button events and remote abort; called by three quickWindowWait wrappers; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602bd0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20df2c
+mac_size = 0x9c
+target_sha256 = "6b9e9dee9603d37e7eb90ef72e25ade863fbb2649c5a04885c22342d7c115904"
+evidence = "checks waiting-for-fade; clips x/y/width/height to 800x600, calls screen blit helper and polls sound; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602cc0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20e0f0
+mac_size = 0x110
+target_sha256 = "b0f3630729120df9ef0c55acefd0cbc822af7a73e807e2fe2e0334ce68b1d4a1"
+evidence = "complete-draw flag, clip rectangle, delete and allocate Bitmap16Bit, then grab source pixels; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x602dc0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20e200
+mac_size = 0x3e0
+target_sha256 = "15b198c0c3818dc3d9df834a601f7b6f7b6347305f253a2442be7ca0e6a8a50d"
+evidence = "complete-draw flag, rectangle clip, eight-frame color interpolation, blit and timer, then releaseFizzleSource call; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6030c0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20e5e0
+mac_size = 0x54
+target_sha256 = "041cacddbca92c4c042db35b87422cb62587729a462f492f20ec11e317641d17"
+evidence = "deletes bitmap field +0x4c through virtual delete and clears it; called at fizzleForwardX tail; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6030e0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20e634
+mac_size = 0x444
+target_sha256 = "5dc8a7bf3450a484f1b7521101d7287e567f6126a49cf10197fcc4ffbd172a83"
+evidence = "fading routine has expectFadein branch, 800x600 bitmap work, repeated blit/timing calls; follows releaseFizzleSource; bounded by adjacent PowerPC function entry and return."
+
+[[functions]]
+retail_va = 0x6032e0
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20ea78
+mac_size = 0x26c
+target_sha256 = "710ba9ed453ed66f1b8707c8bb80e47907bc352ca0408eac5d49c99e64d3a913"
+evidence = "one-argument fade routine with 800x600 screen blits, timer loop and temporary Bitmap16Bit; bounded by adjacent PowerPC function entry and return."
+[[helpers]]
+source_helper = "heroWindowManager::blitToScreenWithPointer"
+unit = "winmgr"
+mac_section = 0x0
+mac_offset = 0x20dfc8
+mac_size = 0x74
+target_sha256 = "09408d19503458a85053f13e6cc0a037d552cd5115f05f10b7c9e00458529207"
+evidence = "Mac retained helper checks positive width and height, builds a rectangle from x/y/width/height, then calls the platform blit. Nine direct Mac calls occur across fizzleForwardX, fadeToBlack and fadeFromBlack. Dreamcast names BlitToScreenWithPointer in the fade bodies; Windows expands its rectangle setup into those callers. Complete body ends with BLR at 0x20e038."
+
+[[helpers]]
+source_helper = "heroWindowManager::sleepAllWindows"
+unit = "winmgr"
+mac_section = 0
+mac_offset = 0x20ece4
+mac_size = 0x70
+target_sha256 = "39def40533ca5d43f00e6a7d097451bd285d08633ffabc261fcc691262c841f7"
+evidence = "DoDialog, DoDialogDraw and DoQuickView make nine calls to this retained helper, once with sleep=1 and twice with sleep=0 including exception cleanup. It walks m_tailWindow through m_prevWindow for sleep=1 or m_headWindow through m_nextWindow for sleep=0, calling heroWindow::sleepAllWidgets with the corresponding byte. The Windows callers had the same loops expanded; one ordinary canonical helper now owns them. Prior fadeFromBlack BLR at 0x20ece0, helper BLR at 0x20ed50, and next static initializer prologue at 0x20ed54 bound all 0x70 bytes."

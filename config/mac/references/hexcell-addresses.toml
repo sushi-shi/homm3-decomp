@@ -1,0 +1,20 @@
+# Address-only references discovered from HEXCELL TU order, then independently verified.
+# Names remain owned by src/hexcell.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x004e7150
+unit = "hexcell"
+mac_section = 0
+mac_offset = 0x1081cc
+mac_size = 0x2c
+target_sha256 = "5838120d1268a2ce0e141458a735f257d48498b8e6f7a9abe457f36357940bca"
+evidence = "NEW: Constructor stores obstacle-1, attributes0, signed side/slot/part-1, bodies0, shaded0 and background-1; array ctor descriptor in combatManager confirms hexcell identity. End0x1081f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004e71b0
+unit = "hexcell"
+mac_section = 0
+mac_offset = 0x108238
+mac_size = 0x44
+target_sha256 = "6ed4ac4f6321ce33b8cebe901d664f65f61622d4c5f24bcc55ac21a304d56ec2"
+evidence = "NEW: Adds corpse index to this; reads signed dead side+0x20 and dead slot+0x2e, null if negative else combat army address with strides0x6bf4/0x524. End0x10827c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

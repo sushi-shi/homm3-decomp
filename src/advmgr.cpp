@@ -281,7 +281,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
             g_advManager->updBottomView(1, 1, 1);
         }
         if (g_currentPlayer->isHuman()) {
-            g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT),
+            g_chatMan.systemMsg((*g_generalText)[GENERAL_TEXT_PLAYER_TURN_ITS_FORMAT],
                       g_currentPlayer->m_name);
             g_playerTurn = g_netLocalGamePos;
         }
@@ -360,7 +360,7 @@ CNetMsg* CAdvMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
         break;
     }
     case RS_PLAYER_ACTIVE:
-        g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_ACTIVE_PLAYER_FORMAT),
+        g_chatMan.systemMsg((*g_generalText)[GENERAL_TEXT_ACTIVE_PLAYER_FORMAT],
             g_game->getPlayerName(g_game->getLocalPlayerGamePos()));
         break;
     case RS_GIFT:
@@ -409,12 +409,12 @@ void CAdvMgrNetMsgHandler::handleGiftRequestMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_greedyGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT],
             g_game->m_players[gift->m_greedyGuy].m_name,
             g_resourceNames[gift->m_resource]);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST_FORMAT],
             g_colors[gift->m_greedyGuy],
             g_resourceNames[gift->m_resource]);
     }
@@ -443,11 +443,11 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
     std::string text;
     if (g_game->m_players[gift->m_niceGuy].isHuman()) {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT],
             g_game->m_players[gift->m_niceGuy].m_name);
     } else {
         text = formatString(
-            g_generalText->getText(GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT),
+            (*g_generalText)[GENERAL_TEXT_AI_GIFT_RECEIVED_FORMAT],
             g_colors[gift->m_niceGuy]);
     }
 
@@ -478,8 +478,8 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
     CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
     g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
     g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
-                           &g_game->m_heroes[msg->m_right.m_id]);
+    g_advManager->heroSwap(g_game->getHero(msg->m_left.m_id),
+                           g_game->getHero(msg->m_right.m_id));
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -763,7 +763,7 @@ int advManager::open(int newPriority)
         g_blackoutPlayer = 1;
         g_completeDrawEnabled = g_currentPlayer->isLocalHuman();
         char text[256];
-        sprintf(text, g_generalText->getText(GENERAL_TEXT_PLAYER_TURN_FORMAT), g_currentPlayer->getName());
+        sprintf(text, (*g_generalText)[GENERAL_TEXT_PLAYER_TURN_FORMAT], g_currentPlayer->getName());
         g_windowManager->m_isWaitingForFadeIn = 0;
         g_game->waitForPlayer(text, g_netLocalGamePos);
         redrawAdvScreen(1, 0);
@@ -1114,7 +1114,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         demobilizeCurrHero(0, 1);
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-        newTown = currHero->getObscuredTown();
+        newTown = currHero->getOccupiedTown();
         newTown->view(0);
         eventCell = 0;
         break;
@@ -1198,6 +1198,9 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     return eventCell;
 }
 
+// DC advmgr.cpp:1568/1575/1625/1629 names ElapsedSince,
+// get_map_center, IsPast and UpdateScreen in this order. Mac retains
+// UpdateScreen at 0:0x90e0; Complete expands the other helper bodies.
 VA(0x004087b0, 0x487)  // dc 0x8644
 int advManager::main(message& msg)
 {
@@ -1213,7 +1216,7 @@ int advManager::main(message& msg)
     if (g_turnDuration.isExpired()) {
         // Row 202 of the general text, the turn-timer expiry notice. No
         // surviving symbol names the row.
-        normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_TURN_TIME_EXPIRED), 1, 15000, -1, -1,
+        normalDialogTimeOut((*g_generalText)[GENERAL_TEXT_TURN_TIME_EXPIRED], 1, 15000, -1, -1,
                             -1, 0, -1, 0, -1, -1, 0);
         g_turnDuration.clear();
         g_game->nextPlayer();
@@ -1248,19 +1251,11 @@ int advManager::main(message& msg)
 
     if (!g_noSound && g_config.m_musicVolume) {
         unsigned long ambientStamp = g_forceSwitchMusic;
-        if (ambientStamp
-            && static_cast<long>(GameTime::get() - ambientStamp) > 6000) {
+        if (ambientStamp && GameTime::elapsedSince(ambientStamp) > 6000) {
             g_forceSwitchMusic = 0;
             g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
 
-            type_point ambientCentre;
-            int centreX = m_radarOrigin.m_x + 9;
-            int centreY = m_radarOrigin.m_y + 8;
-            int centreZ = m_radarOrigin.m_z;
-            ambientCentre.m_x = centreX;
-            ambientCentre.m_y = centreY;
-            ambientCentre.m_z = centreZ;
-            setEnvironmentOrigin(ambientCentre, 1);
+            setEnvironmentOrigin(getMapCenter(), 1);
         }
     }
 
@@ -1314,30 +1309,10 @@ int advManager::main(message& msg)
     } else {
         unsigned long lastFrame =
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        if (static_cast<long>(GameTime::get() - lastFrame) >= 0) {
+        if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-            g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                          ADVENTURE_SCREEN_Y,
-                                          ADVENTURE_SCREEN_WIDTH,
-                                          ADVENTURE_SCREEN_HEIGHT);
-
-            unsigned long curTime = GameTime::get();
-            if (static_cast<long>(
-                    curTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                    >= 0
-                && !m_animCtrPaused) {
-                ++m_animCtr;
-                long elapsedTime =
-                    curTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(elapsedTime,
-                             static_cast<long>(
-                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
-            }
-            process1WindowsMessage();
+            updateScreen(0, 0);
         }
     }
 
@@ -1419,6 +1394,12 @@ unsigned char saveGame(unsigned char campaignWinMode);
 // ebx/edi pushes past it (a 5-instruction `xor eax,eax` exit) where we
 // push all three in the prologue, and the SPACE arm's type_point cell
 // lookup keeps `fullMap` in a register slot where ours reloads it.
+// Current source (92.7551%) restores DC's ordinary HideRoute calls at
+// lines 1834/1855/1900, GetCurrHero at 1767/1892/1894, GetCurrHeroId at
+// 1890, and Reseed(0, 0) at 1918. Their first Windows restoration raised
+// the current score from 87.6584%; the historical 97.61% predates these
+// helper facts. Mac shape aligns 326/571 instructions and 52/52 direct
+// call counts; this is source-shape evidence, not a Mac byte verdict.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
 int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -1444,23 +1425,11 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             break;
 
         if (!m_curHeroMobile) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
+            hideRoute(1, 0, 1);
             setHeroContext(localPlayer->m_currHeroId, 0, 0, 1);
         }
 
-        type_point heroPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        type_point heroPoint = currHero->getLocation();
 
         NewmapCell* standingOn = getCell(heroPoint);
         if (!standingOn->m_isTrigger)
@@ -1468,7 +1437,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (standingOn->m_type == ANCHOR_POINT)
             break;
 
-        type_point eventPoint(currHero->m_x, currHero->m_y, currHero->m_z);
+        type_point eventPoint = currHero->getLocation();
         doEvent(standingOn, eventPoint);
         return 1;
     }
@@ -1540,7 +1509,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_D:
         if (waitingPlayer)
             break;
-        if (!g_game->getHero(g_currentPlayer->m_currHeroId))
+        if (!g_game->getCurrHero())
             break;
         processSearch(-1, -1, -1);
         return 1;
@@ -1558,7 +1527,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             break;
         // Rows 68/69/70 are the new-game, load-game and exit confirms;
         // their enum names describe those roles because no source symbol survives.
-        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_RESTART_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1569,7 +1538,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_L:
         if (g_game->isMultiplayer())
             break;
-        normalDialog(g_generalText->getText(GENERAL_TEXT_LOAD_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_LOAD_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1579,7 +1548,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
 
     case KEYCODE_ESCAPE:
         videoPause();
-        normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_QUIT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         videoResume();
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
@@ -1597,7 +1566,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         g_game->showScenInfo();
         if (g_windowManager->m_dialogReturn != SYSOPT_COMMAND_111)
             break;
-        normalDialog(g_generalText->getText(GENERAL_TEXT_RESTART_GAME_PROMPT), 2, -1, -1, -1, 0, -1, 0,
+        normalDialog((*g_generalText)[GENERAL_TEXT_RESTART_GAME_PROMPT], 2, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
@@ -1609,21 +1578,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         int townId = localPlayer->nextTown();
         if (townId == -1)
             break;
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         setTownContext(townId, waitingPlayer, 1);
         return 1;
     }
@@ -1641,21 +1597,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             doAdvCommand(triggerPoint);
             return 1;
         }
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         setHeroContext(localPlayer->m_currHeroId, 0, waitingPlayer, 1);
         return 1;
 
@@ -1663,48 +1606,10 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
     }
     if (moveDir >= 0 && !waitingPlayer
-        && g_currentPlayer->m_currHeroId != -1) {
-        walker = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
-        if (validMove(walker, moveDir, 0, 1)) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                int heroId = g_currentPlayer->m_currHeroId;
-                if (heroId != -1) {
-                    hero* pathHero = &g_game->m_heroes[heroId];
-                    pathHero->m_pathTargetX = -1;
-                    pathHero->m_pathTargetY = -1;
-                }
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                                  ADVENTURE_SCREEN_Y,
-                                                  ADVENTURE_SCREEN_WIDTH,
-                                                  ADVENTURE_SCREEN_HEIGHT);
-
-                    unsigned long curTime = GameTime::get();
-                    if (static_cast<long>(
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                            >= 0
-                        && !m_animCtrPaused) {
-                        ++m_animCtr;
-                        long elapsedTime =
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(elapsedTime,
-                                     static_cast<long>(
-                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
-                    }
-                    process1WindowsMessage();
-                }
-            }
+        && g_game->getCurrHeroId() != -1) {
+        walker = g_game->getCurrHero();
+        if (validMove(g_game->getCurrHero(), moveDir, 0, 1)) {
+            hideRoute(1, 1, 1);
 
             g_mouseManager->hidePointer();
             walker->m_pathTargetX = walker->m_x + g_normalDirTable[moveDir].m_x;
@@ -1726,7 +1631,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                 doEvent(*peventCell, walkTrigger);
                 *peventCell = 0;
             }
-            m_seedingValid = 0;
+            reseed(0, 0);
 
             forceNewHover();
             updBottomView(1, 1, 1);
@@ -1747,6 +1652,8 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
 // four functions down does: once at the top for the waitingPlayer byte
 // this passes on to SetHeroContext/SetTownContext, and once more inside
 // the town arm's guard, uncached.
+// DC line 1981 retains HideRoute(1, 0, 1) in the town arm. The canonical
+// source call keeps this Windows function exact.
 
 VA(0x004097e0, 0x290)  // dc 0x9330
 int advManager::processSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
@@ -1787,41 +1694,8 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     case TAdventureMapWindow::TOWN_4_ID: {
         int townSlot = msg->m_codeY - TAdventureMapWindow::TOWN_0_ID;
         int townId = localPlayer->m_townIds[m_advWindow->m_topTown + townSlot];
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                                  ADVENTURE_SCREEN_Y,
-                                                  ADVENTURE_SCREEN_WIDTH,
-                                                  ADVENTURE_SCREEN_HEIGHT);
-
-                    unsigned long curTime = GameTime::get();
-                    if (static_cast<long>(
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
-                            >= 0
-                        && !m_animCtrPaused) {
-                        ++m_animCtr;
-                        long elapsedTime =
-                            curTime
-                            - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                            cppMax(elapsedTime,
-                                     static_cast<long>(
-                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
-                    }
-                    process1WindowsMessage();
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 1);
         if (townId == localPlayer->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
             *peventCell = doAdvCommand(triggerPoint);
@@ -1854,6 +1728,11 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     return 1;
 }
 
+// DC lines 2187/2234 retain hideRoute(1, 0, 1)/(1, 0, 0), and lines
+// 2288..2294 retain overrideBottomView. DC also names CheckDimNextHeroBut
+// and get_map_center; Mac calls CheckDimNextHeroBut at 0:0x9e08. Complete
+// expands their bodies here. The reviewed Mac address has instruction-shape
+// evidence, but no admitted exact byte verdict.
 VA(0x00409a70, 0x641)  // dc 0x9a94
 int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
 {
@@ -1886,34 +1765,13 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         if (sleeper) {
             sleeper->m_isSleeping = !sleeper->m_isSleeping;
             if (sleeper->m_isSleeping) {
-                if (!waitingPlayer) {
-                    if (g_currentPlayer->isLocalHuman()
-                        || (g_debugLevel && g_aiHeroMoveActive)) {
-                        g_windowManager->broadcastMessage(
-                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                            TAdventureMapWindow::MOVE_ID,
-                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                        if (m_showRoute) {
-                            m_showRoute = 0;
-                            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y,
-                                         m_radarOrigin.m_z, 0, 1);
-                            this->updateScreen(0, 0);
-                        }
-                    }
-                }
+                if (!waitingPlayer)
+                    hideRoute(1, 0, 1);
                 setHeroContext(localPlayer->nextHero(), 0, waitingPlayer, 1);
                 sleeper = g_game->getHero(localPlayer->m_currHeroId);
             }
             m_advWindow->setSleepImage(sleeper->m_isSleeping);
-            if (g_currentPlayer->isLocalHuman()
-                && g_currentPlayer->hasMobileHero())
-                m_advWindow->widgetClearStatus(
-                    TAdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-            else
-                m_advWindow->widgetSetStatus(
-                    TAdventureMapWindow::NEXT_HERO_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            checkDimNextHeroBut();
         }
         break;
     }
@@ -1946,24 +1804,17 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
             // its enum name describes that role.
             normalDialog(g_generalText->getText(GENERAL_TEXT_END_TURN_HEROES_CAN_MOVE_PROMPT), 2, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
-            if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
-                break;
+            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
+                g_game->nextPlayer();
+        } else {
+            // Mac retains this second call at 0:0x9f68.
+            g_game->nextPlayer();
         }
-        g_game->nextPlayer();
         break;
 
     case TAdventureMapWindow::NEXT_HERO_ID:
-        if (!waitingPlayer) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                if (m_showRoute) {
-                    m_showRoute = 0;
-                    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z,
-                                 0, 1);
-                    this->updateScreen(0, 0);
-                }
-            }
-        }
+        if (!waitingPlayer)
+            hideRoute(1, 0, 0);
         setHeroContext(g_currentPlayer->nextHero(), 0, waitingPlayer, 1);
         break;
 
@@ -1983,14 +1834,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
             g_game->getTown(g_overviewReturnActionExtra)->view(1);
             fadeOut = 0;
         } else if (g_lowMemory) {
-            type_point viewCentre;
-            int centreX = m_radarOrigin.m_x + 9;
-            int centreY = m_radarOrigin.m_y + 8;
-            int centreZ = m_radarOrigin.m_z;
-            viewCentre.m_x = centreX;
-            viewCentre.m_y = centreY;
-            viewCentre.m_z = centreZ;
-            setEnvironmentOrigin(viewCentre, 1);
+            setEnvironmentOrigin(getMapCenter(), 1);
         }
         redrawAdvScreen(1, 0);
         if (fadeOut)
@@ -2003,7 +1847,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case TAdventureMapWindow::ELEVATION_TOGGLE_ID:
-        if (g_game->m_worldMap.getNumLevels() > 1) {
+        if (g_game->getNumMapLevels() > 1) {
             demobilizeCurrHero(0, 1);
             m_radarOrigin.m_z = 1 - m_radarOrigin.m_z;
             m_advWindow->setElevationToggleImage(m_radarOrigin.m_z);
@@ -2017,22 +1861,23 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
 
     if (msg->m_codeY >= ADV_HELP_ID_FIRST && msg->m_codeY <= ADV_HELP_ID_LAST) {
         if (m_bottomViewOverride == BOTTOM_VIEW_2) {
-            m_bottomViewOverride = BOTTOM_VIEW_1;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_1, -1);
         } else if (m_bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
-            m_bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+            overrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
         } else if (m_bottomViewType == BOTTOM_VIEW_2) {
-            m_bottomViewOverride = BOTTOM_VIEW_1;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_1, -1);
         } else {
-            m_bottomViewOverride = BOTTOM_VIEW_2;
-            m_bottomViewDeadline = GameTime::get() + 3000;
+            overrideBottomView(BOTTOM_VIEW_2, -1);
         }
         updBottomView(1, 1, 1);
     }
     return 1;
 }
 
+// DC lines 2373/2420 call UpdateScreen after each map repaint. Mac source
+// shape retains both updateScreen calls. DC lines 2410-2413 name the
+// includes.h by-value max/min wrappers; restoring those four calls gives
+// exact VC6 retail bytes, CFG, and all 21 ordered calls.
 VA(0x0040a0c0, 0x50D)  // dc 0xa168
 void advManager::processRadarSelect(const message* msg)
 {
@@ -2078,22 +1923,7 @@ void advManager::processRadarSelect(const message* msg)
 
     updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
     completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-    g_windowManager->updateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
-                                  ADVENTURE_SCREEN_WIDTH,
-                                  ADVENTURE_SCREEN_HEIGHT);
-
-    unsigned long curTime = GameTime::get();
-    if (static_cast<long>(
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-        && !m_animCtrPaused) {
-        ++m_animCtr;
-        long elapsedTime =
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-        g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-            cppMax(elapsedTime,
-                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
-    }
-    process1WindowsMessage();
+    updateScreen(0, 0);
 
     message dragMsg;
     message event;
@@ -2130,33 +1960,16 @@ void advManager::processRadarSelect(const message* msg)
                 (dragMsg.m_codeY - m_advWindow->m_radarWidget->m_y) / radarScale);
             int dragX = static_cast<int>(
                 (dragMsg.m_codeX - m_advWindow->m_radarWidget->m_x) / radarScale);
-            int newX = cppMin(cppMax(0, dragX), g_mapWidth - 1);
-            int newY = cppMin(cppMax(0, dragY), g_mapWidth - 1);
-            m_radarOrigin.m_x = newX - 9;
-            m_radarOrigin.m_y = newY - 8;
+            dragX = max(dragX, 0);
+            dragX = min(dragX, g_mapWidth - 1);
+            dragY = max(dragY, 0);
+            dragY = min(dragY, g_mapWidth - 1);
+            m_radarOrigin.m_x = dragX - 9;
+            m_radarOrigin.m_y = dragY - 8;
 
             updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
             completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-            g_windowManager->updateScreen(ADVENTURE_SCREEN_X,
-                                          ADVENTURE_SCREEN_Y,
-                                          ADVENTURE_SCREEN_WIDTH,
-                                          ADVENTURE_SCREEN_HEIGHT);
-
-            unsigned long dragTime = GameTime::get();
-            if (static_cast<long>(
-                    dragTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-                && !m_animCtrPaused) {
-                ++m_animCtr;
-                long dragElapsed =
-                    dragTime
-                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-                g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
-                    cppMax(dragElapsed,
-                             static_cast<long>(
-                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
-            }
-            process1WindowsMessage();
+            updateScreen(0, 0);
             dragMsg.m_id = 0;
         }
     } while (event.m_id != MESSAGE_LEFT_BUTTON_UP);
@@ -2180,9 +1993,12 @@ void advManager::processRadarSelect(const message* msg)
 // arm. 77.76 -> 90.90 on that one edit.
 
 // Restoring GetCell alone measured 87.5712%; restoring the retail-proven
-// live-member reads as well is 84.9222%. Keep those reads despite the score
-// dip. Cell/register homes and the duplicated VIEW_HERO dispatch remain
-// different. Historical explicit-goto models changed the wrong CFG (88.463%);
+// live-member reads as well measured 84.9222%. DC line 2438 and retail call
+// #1 both retain GetLocalPlayer for a playerData* local; DC lines 2478/2481
+// and 2602 name GetCurrHeroId and GetTown. Restoring these calls brings the
+// current body to 89.6774%. Cell/register homes and the duplicated
+// VIEW_HERO dispatch remain different. Historical explicit-goto models changed
+// the wrong CFG (88.463%);
 // hoisting the DC locals alone was byte-flat in that older context.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
@@ -2192,7 +2008,7 @@ VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::processMapSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
-    int localPlayer = g_game->getLocalPlayerGamePos();
+    playerData* player = g_game->getLocalPlayer();
 
     type_point point = m_lastMapHover;
     if (!point.isValid())
@@ -2202,7 +2018,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
 
     unsigned char visible =
-        (getMapExtra(point.m_x, point.m_y, point.m_z)
+        (getMapExtra(point)
          & visibilityBit) != 0;
 
     NewmapCell* cell = getCell(point);
@@ -2215,11 +2031,11 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
 
         TAdventureObjectType objType;
         int objIndex;
-        if (g_currentPlayer == &g_game->m_players[localPlayer]
+        if (g_currentPlayer == player
             && m_lastHoverX == HERO_VIEW_TILE_X
             && m_lastHoverY == HERO_VIEW_TILE_Y
-            && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
-            objIndex = g_currentPlayer->m_currHeroId;
+            && g_game->getCurrHeroId() != -1 && m_curHeroMobile) {
+            objIndex = g_game->getCurrHeroId();
             objType = HERO;
         } else {
             objType = cell->m_type;
@@ -2306,7 +2122,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
         }
         if (clickedIndex == -1)
             return;
-        town* clickedTown = &g_game->m_towns[clickedIndex];
+        town* clickedTown = g_game->getTown(clickedIndex);
         unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
         if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->m_owner)
             || m_debugViewAll)
@@ -2540,14 +2356,16 @@ type_cell_adjuster::~type_cell_adjuster()
     restoreCell();
 }
 
+// DC advmgr.cpp:3075/3077/3100 names GetCurrHeroId, GetCurrHero and
+// GetBoat; Complete expands their header bodies at these uses.
 VA(0x0040afb0, 0x12F)  // dc 0xbf1c
 NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y)
 {
     restoreCell();
 
     if (x == MOBILE_HERO_CELL_X && y == MOBILE_HERO_CELL_Y
-            && g_currentPlayer->m_currHeroId != -1) {
-        m_mobileHero = &g_game->m_heroes[g_currentPlayer->m_currHeroId];
+            && g_game->getCurrHeroId() != -1) {
+        m_mobileHero = g_game->getCurrHero();
         if (m_mobileHero && !m_mobileHero->isOnMap()) {
             m_mobileHero->obscureCell();
             return mapCell;
@@ -2564,7 +2382,7 @@ NewmapCell* type_cell_adjuster::getTriggerCell(NewmapCell* mapCell, int x, int y
             m_obscuringHero = g_game->getHero(triggerCell->m_extraInfo);
             m_obscuringHero->restoreCell();
         } else if (triggerCell->m_type == BOAT) {
-            m_obscuringBoat = &g_game->m_boats[triggerCell->m_extraInfo];
+            m_obscuringBoat = g_game->getBoat(triggerCell->m_extraInfo);
             m_obscuringBoat->restoreCell();
         }
     }
@@ -3085,11 +2903,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LIGHTHOUSE:
         strcpy(g_text, g_quickViewText[LIGHTHOUSE]);
         if (cell->m_isTrigger) {
-            if (g_game->m_mines[cell->m_extraInfo].m_playerOwner != -1) {
+            if (g_game->getMine(cell->m_extraInfo)->m_playerOwner != -1) {
                 sprintf(tempText, DATA_COMPGEN(
                     0x00660334, rolloverOwnerSuffixFormat, " - %s"),
                     g_ownedByColor[
-                        g_game->m_mines[cell->m_extraInfo].m_playerOwner]);
+                        g_game->getMine(cell->m_extraInfo)->m_playerOwner]);
                 strcat(g_text, tempText);
             }
         }
@@ -3518,6 +3336,10 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // retail control flow. Sibling full/compact scopes now share retail's -0x14
 // result-string home and 0x14-byte frame; the residual is register allocation
 // and the associated cleanup-tail scheduling.
+// DC 2767/2773 and Mac 0xb348/0xb390 use TTextResource::operator[] for the
+// unvisited/visited labels. Restoring those calls is byte-flat in VC6.
+// DC 2771/2778 and Mac 0xb370/0xb3b0/0xb3f4 call the retained
+// ExtraInfoUnion::getCreatureBank helper. VC6 expands all three calls here.
 
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_type type, long playerId, const char* separator, unsigned char showFullList)
@@ -3527,25 +3349,22 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
 
     const char* armyName;
     if (!cell->playerKnowsCell(playerId)) {
-        armyName = g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT);
+        armyName = (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT];
     } else {
         unsigned long testFlag = cell->m_extraInfo;
         if ((testFlag & 0x02000000)
-            || !g_game->m_creatureBanks[
-                    (testFlag >> 13) & 0xfff].m_guards.hasCreatures()) {
-            armyName = g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT);
+            || !cell->getCreatureBank().m_guards.hasCreatures()) {
+            armyName = (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT];
         } else {
             if (showFullList) {
                 std::string result = getArmyHelpText(
-                    &g_game->m_creatureBanks[
-                        (cell->m_extraInfo >> 13) & 0xfff].m_guards, 1);
+                    &cell->getCreatureBank().m_guards, 1);
                 strcat(buffer, result.c_str());
                 return;
             } else {
                 strcat(buffer, "(");
                 std::string result = getArmyHelpText(
-                    &g_game->m_creatureBanks[
-                        (cell->m_extraInfo >> 13) & 0xfff].m_guards, 0);
+                    &cell->getCreatureBank().m_guards, 0);
                 strcat(buffer, result.c_str());
                 armyName = ")";
             }
@@ -3569,7 +3388,7 @@ VA(0x0040d670, 0x253)
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    mine* currentMine = g_game->getMine(cell->m_extraInfo);
     int owner = currentMine->m_playerOwner;
     int mineType = currentMine->m_type;
     const char* description = g_mineDescriptions[7];
@@ -3681,7 +3500,8 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
                 g_generalText->getText(GENERAL_TEXT_WITCH_SKILL_FORMAT),
                 g_sSkillTraits[skill].m_name);
         strcat(buffer, tempText);
-        if (currentHero && currentHero->m_skillLevel[skill]) {
+        if (currentHero
+            && currentHero->getSecondarySkill(TSecondarySkill(skill))) {
             strcat(buffer, separator2);
             strcat(buffer, g_generalText->getText(
                 GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL));
@@ -3693,14 +3513,13 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
 }
 
 // E:\gamedcs\advmgr.cpp:4385
-// RETAIL-RECONSTRUCTED 2026-08-11 (80.9400%). Retail proves the complete
-// map-area, packed-hover, visibility/current-level, rollover, owned hero/town
-// cursor and scroll-zone fallback paths. The 27-branch and four-return counts
-// and every symbolic branch target agree. The remaining delta is VC6
-// register/stack scheduling around the inlined point helpers: retail retains
-// mouseY/mouseX in EBX/EDI and reuses their parameter homes for local-player
-// state, giving an eight-byte local frame; this compile spills that state and
-// uses sixteen bytes. A shared rx/ry scope was tested and rejected (80.27%).
+// DC records mouseManager::GetFrame in the scroll-zone fallback. Calling its
+// shared inline getter changes VC6's inliner decision at the earlier GetCell:
+// retail's retained NewfullMap::zCell call now appears in the candidate too.
+// Retail's final branch destinations prove an outside-range frame must reset
+// the pointer; correcting the earlier inverted predicate makes Windows exact
+// (15/15 calls, 27/27 branches). Mac shape has 16/16 direct calls but no
+// exact byte verdict. A shared rx/ry scope was tested and rejected earlier.
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
 int advManager::processWaitingHover(int mouseX, int mouseY)
 {
@@ -3717,57 +3536,60 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
         int thisPlayerBit = 1 << g_game->getLocalPlayerGamePos();
         playerData* thisPlayer = g_game->getLocalPlayer();
         if (m_lastMapHover.isValid()
-            && (getMapExtra(m_lastMapHover) & thisPlayerBit)) {
-            if (thisPlayer->m_currHeroId == -1
+            && (getMapExtra(m_lastMapHover) & thisPlayerBit)
+            && (thisPlayer->m_currHeroId == -1
                 || g_game->getHero(thisPlayer->m_currHeroId)->m_z
-                    == m_radarOrigin.m_z) {
-                NewmapCell* currCell = getCell(get_mouse_map_point());
+                    == m_radarOrigin.m_z)) {
+            NewmapCell* currCell = getCell(get_mouse_map_point());
 
-                // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
-                // coordinates here, exactly as ProcessHover does. At
-                // fn+0x246 it pushes ebx and edi, and edi is built at
-                // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
-                // eax,edx / sar edi,5` from [ebp+8] - the same value it
-                // then stores into lastHoverX at [esi+0xec]. Passing the
-                // raw pixel coordinates kept both parameters live to this
-                // point and cost VC6 the two dead parameter homes retail
-                // spills into (`mov [ebp+8],eax` right at this call).
-                setRolloverText(currCell, rx, ry);
-                switch (currCell->m_type) {
-                case TOWN: {
-                    class town* town = g_game->getTown(currCell->m_extraInfo);
-                    if (g_game->isLocalHuman(town->m_owner)) {
-                        m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
-                        g_mouseManager->setPointer(
-                            3, mouseManager::ADVENTURE_SET);
-                        return 1;
-                    }
-                    break;
+            // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
+            // coordinates here, exactly as ProcessHover does. At
+            // fn+0x246 it pushes ebx and edi, and edi is built at
+            // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
+            // eax,edx / sar edi,5` from [ebp+8] - the same value it
+            // then stores into lastHoverX at [esi+0xec]. Passing the
+            // raw pixel coordinates kept both parameters live to this
+            // point and cost VC6 the two dead parameter homes retail
+            // spills into (`mov [ebp+8],eax` right at this call).
+            setRolloverText(currCell, rx, ry);
+            switch (currCell->m_type) {
+            case TOWN: {
+                class town* town = g_game->getTown(currCell->m_extraInfo);
+                if (g_game->isLocalHuman(town->m_owner)) {
+                    m_advCommand = thisPlayer->m_currTownId == -1 ? 5 : 3;
+                    g_mouseManager->setPointer(
+                        3, mouseManager::ADVENTURE_SET);
+                    return 1;
                 }
-                case HERO: {
-                    class hero* hero = g_game->getHero(currCell->m_extraInfo);
-                    if (g_game->isLocalHuman(hero->m_owner)
-                        && hero->m_owner == g_netLocalGamePos) {
-                        g_mouseManager->setPointer(
-                            2, mouseManager::ADVENTURE_SET);
-                        m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
-                        return 1;
-                    }
-                    break;
-                }
-                }
+                break;
             }
+            case HERO: {
+                class hero* hero = g_game->getHero(currCell->m_extraInfo);
+                if (g_game->isLocalHuman(hero->m_owner)
+                    && hero->m_owner == g_netLocalGamePos) {
+                    g_mouseManager->setPointer(
+                        2, mouseManager::ADVENTURE_SET);
+                    m_advCommand = thisPlayer->m_currHeroId == -1 ? 4 : 2;
+                    return 1;
+                }
+                break;
+            }
+            }
+        } else {
+            // Mac resets the pointer and returns at 0:0xe22c when the
+            // visibility or selected-hero check fails.
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+            return 1;
         }
 
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         return 1;
     }
 
-    if (g_mouseManager->m_frame >= HOVER_SCROLL_POINTER_FIRST
-        && g_mouseManager->m_frame <= HOVER_SCROLL_POINTER_LAST) {
-        if (!mouseInScrollZone())
-            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
-    }
+    if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+        || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
+        || !mouseInScrollZone())
+        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     m_advWindow->processHover(mouseX, mouseY);
     return 1;
@@ -3898,6 +3720,14 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // `get_trigger_cell()->get_map_extraInfo()` at all four sites.  One
 // `ExtraInfoUnion cellExtra;` per big block scores 91.6133 and one per ARM
 // scores the same, against 91.6263 - retail re-reads.
+// DC's mouseManager::GetFrame is restored in the scroll fallback. Its
+// GetCurrHero/get_location calls at lines 4642/4645 are also restored.
+// The pair currently lowers to 88.6107% in Windows (from 92.1875% with
+// direct field reads); each helper was isolated and both together beat the
+// GetCurrHero-only 85.8737%; /MT leaves the score unchanged. The Mac shape
+// aligns 435/677 instructions with both calls, versus 433/677 when the
+// latter helper is omitted. Keep the
+// source-backed helper boundaries through this compiler-state score dip.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::processHover(int mouseX, int mouseY)
 {
@@ -3968,14 +3798,9 @@ int advManager::processHover(int mouseX, int mouseY)
             return 1;
         } else {
 
-        hero* currHero = g_game->getHero(g_currentPlayer->m_currHeroId);
-        // FIELD ASSIGNMENT, not the ctor, at this ONE site: the ctor form
-        // that is worth +2.5 to +5.7 in the neighbouring hover/context
-        // bodies costs 0.62 here (83.5000 -> 82.8763). Measured per site.
+        hero* currHero = g_game->getCurrHero();
         type_point heroPoint;
-        heroPoint.m_x = currHero->m_x;
-        heroPoint.m_y = currHero->m_y;
-        heroPoint.m_z = currHero->m_z;
+        heroPoint = currHero->getLocation();
         if (heroPoint == m_lastMapHover) {
             g_mouseManager->setPointer(2, mouseManager::ADVENTURE_SET);
             m_advCommand = 2;
@@ -4103,8 +3928,8 @@ int advManager::processHover(int mouseX, int mouseY)
         }
         }
     } else {
-        if (g_mouseManager->m_frame < HOVER_SCROLL_POINTER_FIRST
-            || g_mouseManager->m_frame > HOVER_SCROLL_POINTER_LAST
+        if (g_mouseManager->getFrame() < HOVER_SCROLL_POINTER_FIRST
+            || g_mouseManager->getFrame() > HOVER_SCROLL_POINTER_LAST
             || !mouseInScrollZone())
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         m_advWindow->processHover(mouseX, mouseY);
@@ -4142,7 +3967,11 @@ void advManager::reseed(int targetX, int targetY)
 
 // DC line 4878 constructs the point argument and calls GetCell on the same
 // row. Restoring that natural temporary and helper raises 93.7323% to 98.5243%.
-// The CheckDimNextHeroBut tail already uses its canonical source call.
+// The CheckDimNextHeroBut tail already uses its canonical source call. DC
+// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
+// the current 96.5199%.
+// DC 4853/4863/4893/4899/4920/4934/4947 uses TTextResource::operator[]
+// for all seven messages. Restoring those calls is Windows byte-flat.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4159,8 +3988,7 @@ int advManager::processSearch(int x, int y, int z)
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4172,8 +4000,7 @@ int advManager::processSearch(int x, int y, int z)
             g_currentPlayer->m_puzzleGuess = invalidPoint;
             return 1;
         }
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_BACKPACK_FULL),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4195,14 +4022,13 @@ int advManager::processSearch(int x, int y, int z)
     }
 
     if (currCell->m_groundSet == eTerrainWater) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_SEARCH_WATER),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_WATER],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
 
     if (!currCell->isDiggable()) {
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NOT_DIGGABLE),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NOT_DIGGABLE],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -4221,8 +4047,7 @@ int advManager::processSearch(int x, int y, int z)
                 >= HERO_BACKPACK_CAPACITY) {
             if (g_currentPlayer->isHuman())
                 normalDialog(
-                    g_generalText->getText(
-                        GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
+                    (*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             type_artifact grail(ARTIFACT_HOLY_GRAIL);
@@ -4236,7 +4061,7 @@ int advManager::processSearch(int x, int y, int z)
                 sprintf(g_text,
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
-                        g_generalText->getText(GENERAL_TEXT_SEARCH_FOUND_PREFIX),
+                        (*g_generalText)[GENERAL_TEXT_SEARCH_FOUND_PREFIX],
                         g_artifactTraits[ARTIFACT_HOLY_GRAIL].m_name);
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
@@ -4252,8 +4077,7 @@ int advManager::processSearch(int x, int y, int z)
             g_game->m_ultimateArtifactPresent = 0;
         }
     } else if (g_currentPlayer->isHuman()) {
-        normalDialog(g_generalText->getText(
-                         GENERAL_TEXT_SEARCH_NOTHING_FOUND),
+        normalDialog((*g_generalText)[GENERAL_TEXT_SEARCH_NOTHING_FOUND],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
@@ -4270,7 +4094,7 @@ int advManager::processSearch(int x, int y, int z)
 
     checkDimHero();
 
-    m_seedingValid = 0;
+    reseed(0, 0);
     return 1;
 }
 
@@ -4547,6 +4371,8 @@ bool hasFlag(int objType)
     }
 }
 
+// DC advmgr.cpp:5641 calls game::GetHero; Complete expands its null guard
+// and hero-array lookup before querying the obscured object.
 VA(0x0040fd20, 0x10E)  // dc 0x1129c
 int getFlaggedObjectOwner(NewmapCell* thisCell)
 {
@@ -4555,11 +4381,7 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     int owner = -1;
 
     if (type == HERO) {
-        hero* thisHero;
-        if (extraInfo == -1)
-            thisHero = 0;
-        else
-            thisHero = &g_game->m_heroes[extraInfo];
+        hero* thisHero = g_game->getHero(extraInfo);
         type = thisHero->getObscuredType();
         extraInfo = thisHero->getObscuredExtraInfo();
     }
@@ -4571,10 +4393,10 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
         break;
     case LIGHTHOUSE:
     case MINE:
-        owner = g_game->m_mines[extraInfo].m_playerOwner;
+        owner = g_game->getMine(extraInfo)->m_playerOwner;
         break;
     case GARRISON:
-        owner = g_game->m_garrisons[extraInfo].m_playerOwner;
+        owner = g_game->getGarrison(extraInfo)->m_playerOwner;
         break;
     case CREATURE_GENERATOR_1:
     case CREATURE_GENERATOR_4:
@@ -4964,15 +4786,9 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         tilew, tileh, g_windowManager->m_screenBitmap,
                         baseX, baseY + 8, false);
                 } else {
-                    switch (objType->m_objectType) {
-                    case CREATURE_GENERATOR_1:
-                    case CREATURE_GENERATOR_4:
-                    case GARRISON:
-                    case LIGHTHOUSE:
-                    case MINE:
-                    case RANDOM_TOWN:
-                    case SHIPYARD:
-                    case TOWN: {
+                    // DC line 6067 and Mac's call to 0+0x103cc retain
+                    // hasFlag here; VC6 expands it without changing bytes.
+                    if (hasFlag(objType->m_objectType)) {
                         int triggerX;
                         int triggerY;
                         mapObjects->m_objects[objCell->m_objectIndex].findTrigger(
@@ -4995,9 +4811,7 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                             tilew, tileh, g_windowManager->m_screenBitmap,
                             baseX, baseY + 8,
                             g_systemPalette->m_data[64 + owner], false);
-                        break;
-                    }
-                    default:
+                    } else {
                         if (objCell->m_objectIndex == m_movingObjectIndex) {
                             signed char offsets = objCell->m_offsets;
                             signed char yOffset = offsets >> 4;
@@ -5026,7 +4840,6 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                                 tilew, tileh, g_windowManager->m_screenBitmap,
                                 baseX, baseY + 8, false);
                         }
-                        break;
                     }
                 }
             }
@@ -5477,6 +5290,8 @@ void advManager::drawArrow(int srcX, int srcY, int z, int destX, int destY)
                            0, 0);
 }
 
+// Dreamcast advmgr.cpp:6708 calls GetCell for the temporary map point.
+// Retail keeps its inlined validity call after discarding the cell result.
 VA(0x00412220, 0x248)  // dc 0x13fc8
 void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5488,7 +5303,7 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
     {
         type_point point;
         point = type_point(srcX, srcY, z);
-        point.isValid();
+        getCell(point);
     }
 
     int baseX = m_scrollX + destX * 32;
@@ -5550,23 +5365,13 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\advmgr.cpp:6805
-// Residual (92.7034%): register homing/scheduling only. The two streams have
-// exactly 22 branches and one return with identical symbolic targets; why-reg
-// measures flow distance 0 and 223 register-visible slots, while its allocator
-// model finds the initial ESI/EDI/EBX definitions identical and the divergence
-// entirely past those first definitions. Dreamcast's lexical scopes were
-// restored and retained: the top roster `tilew, tileh, tilex, tiley, baseX,
-// baseY, thisCell`; signed `numObj` plus `SprPtr, ObjCell, ObjType`; and the
-// flag arm's `triggerCell, triggerY, triggerX, Obj, owner`. All three changes
-// are byte-flat at 92.7034%, including the attested Obj temporary used only by
-// FindTrigger. With exact flow and no extra evaluated expression in retail,
-// there is no byte evidence for manufacturing a release VERIFY carrier here.
-// The type_point constructor lever (a PER-SITE fact elsewhere in the tree) is
-// bounded here too, 2026-09-06: at the DrawHeroCell site, three field stores
-// score 91.6110 and `type_point point(srcX, srcY, z)` is byte-flat at
-// 92.7034; at the FindTrigger site `type_point triggerPoint(triggerX,
-// triggerY, z)` scores 91.2827.  The written default-then-assign form is the
-// maximum at both.
+// DC lines 6862/6871 retain hasFlag and GetCell; Mac retains hasFlag and
+// both GetCell calls. Replacing the repeated type switch is byte-flat
+// in Windows, while restoring GetCell at the trigger raises 90.1618% to
+// 95.2382%. Retail and candidate now agree on 41 CFG blocks, 22 branches,
+// and all nine direct calls. Mac's direct-call count also agrees at 7/7.
+// Earlier default-then-assign point controls beat direct constructors at
+// both call sites; the residual is register scheduling.
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -5623,15 +5428,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             if (!objType->m_suppressDraw)
                 continue;
 
-            switch (objType->m_objectType) {
-            case CREATURE_GENERATOR_1:
-            case CREATURE_GENERATOR_4:
-            case GARRISON:
-            case LIGHTHOUSE:
-            case MINE:
-            case RANDOM_TOWN:
-            case SHIPYARD:
-            case TOWN: {
+            // DC line 6862 and the Mac PEF call to 0+0x103cc retain
+            // the canonical hasFlag boundary; VC6 expands it here.
+            if (hasFlag(objType->m_objectType)) {
                 NewmapCell* triggerCell;
                 int triggerY;
                 int triggerX;
@@ -5641,20 +5440,9 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 obj->findTrigger(triggerX, triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
-                // The `valid` and `map` locals are the file's own
-                // trigger-cell idiom (DrawHeroCell, DrawAdvObjShadow), and
-                // both halves are measured here: 92.2180 bare, 92.5775 with
-                // `valid` alone, 92.7034 with both. Retail's two arms each
-                // re-read fullMap where `map` reads it once, so the byte
-                // reading argues against the local and the score argues for
-                // it - the score is the verdict.
-                unsigned char valid = triggerPoint.isValid();
-                NewfullMap* map = m_fullMap;
-                if (!valid)
-                    triggerCell = map->cell(0, 0, 0);
-                else
-                    triggerCell = map->cell(
-                        triggerPoint.m_x, triggerPoint.m_y, triggerPoint.m_z);
+                // DC line 6871 retains the ordinary GetCell helper. Retail
+                // expands its point check and map access at this call site.
+                triggerCell = getCell(triggerPoint);
                 owner = getFlaggedObjectOwner(triggerCell);
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
@@ -5671,9 +5459,7 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8,
                     g_systemPalette->m_data[64 + owner], false);
-                break;
-            }
-            default: {
+            } else {
                 int frame = (m_animCtr
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
@@ -5688,8 +5474,6 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     tiley + (objType->m_height - yOffset - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8, false);
-                break;
-            }
             }
         }
     }
@@ -5846,6 +5630,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
         return;
     m_heroLogoShowing = 0;
 
+    // DC advmgr.cpp:7085 names game::GetHero for this lookup. Complete
+    // expands the accessor within the existing current-hero branch.
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
     // The two knobs the 2026-08-21 note banked as REJECTED (-0.69 for the
@@ -5870,7 +5656,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     if (localPlayer->m_currHeroId == -1) {
         currentHero = 0;
     } else {
-        currentHero = &g_game->m_heroes[localPlayer->m_currHeroId];
+        currentHero = g_game->getHero(localPlayer->m_currHeroId);
         if (currentHero && currentHero->m_z == origin.m_z) {
             heroX = currentHero->m_x;
             heroY = currentHero->m_y;
@@ -5985,8 +5771,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
-                                    g_game->m_mines[trigger
-                                        ->getMapExtraInfo()].m_playerOwner];
+                                    g_game->getMine(trigger
+                                        ->getMapExtraInfo())->m_playerOwner];
                         }
                         break;
                     case CREATURE_GENERATOR_1:
@@ -6006,8 +5792,8 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
-                                    g_game->m_garrisons[trigger
-                                        ->getMapExtraInfo()].m_playerOwner];
+                                    g_game->getGarrison(trigger
+                                        ->getMapExtraInfo())->m_playerOwner];
                         }
                         break;
                     case SHIPYARD:
@@ -6699,7 +6485,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     char owner =
-                        g_game->m_mines[testCell->m_extraInfo].m_playerOwner;
+                        g_game->getMine(testCell->m_extraInfo)->m_playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
                                 g_ownedByColor[owner]);
@@ -7188,6 +6974,8 @@ void advManager::overrideBottomView(advManager::EBottomViewType view, int time)
     }
 }
 
+// Dreamcast advmgr.cpp:8875/8919/8921 calls GameTime::IsPast and
+// Game.h GetCurrHeroId/GetCurrTownId. Retail expands all three.
 VA(0x00415de0, 0x140)  // dc 0x18d38
 void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWindow, unsigned char update)
 {
@@ -7195,7 +6983,7 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         return;
 
     unsigned long deadline = m_bottomViewDeadline;
-    if (static_cast<long>(GameTime::get() - deadline) >= 0)
+    if (GameTime::isPast(deadline))
         m_bottomViewOverride = BOTTOM_VIEW_DEFAULT;
 
     int changed = 0;
@@ -7221,9 +7009,9 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
             break;
         }
     } else if (g_currentPlayer->isLocalHuman() && !g_completeDrawAllCells) {
-        if (g_currentPlayer->m_currHeroId != -1)
+        if (g_game->getCurrHeroId() != -1)
             changed = updBottomViewHero(forceUpdate);
-        else if (g_currentPlayer->m_currTownId != -1)
+        else if (g_game->getCurrTownId() != -1)
             changed = updBottomViewTown(forceUpdate);
         else
             changed = updBottomViewNewTurn(forceUpdate);
@@ -7235,6 +7023,8 @@ void advManager::updBottomView(unsigned char forceUpdate, unsigned char drawWind
         m_advWindow->drawBottomView(update != 0);
 }
 
+// Dreamcast bottom-view update family calls advManager::ClearBottomView;
+// retail expands its window clear and default-state assignment.
 VA(0x00415f20, 0x87)  // dc 0x18f48
 unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 {
@@ -7242,7 +7032,7 @@ unsigned char advManager::updBottomViewEnemyTurn(unsigned char forceUpdate)
 
     if (m_bottomViewType != BOTTOM_VIEW_5) {
         changed = 1;
-        m_advWindow->clearBottomView();
+        clearBottomView();
         m_bottomViewType = BOTTOM_VIEW_5;
         m_advWindow->setBottomView(new TBottomViewEnemyTurn(m_advWindow));
     }
@@ -7258,7 +7048,7 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
         return 0;
     }
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_1;
     m_advWindow->setBottomView(new TBottomViewNewTurn(m_advWindow));
     m_advWindow->updateResourceDisplay(1, 1);
@@ -7266,23 +7056,19 @@ unsigned char advManager::updBottomViewNewTurn(unsigned char forceUpdate)
 }
 
 // E:\gamedcs\advmgr.cpp:8968
-// Residual (93.33%): identical to BVMessage's one string-library choice -
-// retail calls basic_string::_Tidy(0) for an empty shared string while this
-// invocation clears the representation inline. All resource stores, override
-// timing, forced refresh and resource-display update instructions agree.
+// DC source row 8972 calls OverrideBottomView(this, 6, -1), and Mac
+// bvResMsg retains that call at +0x169d8. Restoring it also makes the
+// Windows string cleanup and whole body byte-exact; the former 93.33%
+// residue was caller codegen collateral.
 VA(0x00416060, 0xF7)  // anchor-global, dc 0x19098
 void advManager::bvResMsg(const char* msg, int resType, int resQty)
 {
     m_bottomViewResourceType = resType;
     m_bottomViewResourceQuantity = resQty;
-    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
-    // assignment, to chase retail's out-of-line basic_string::_Tidy(0)
-    // (base x2 vs retail x3), costs 93.33 -> 26.42. Retail INLINES the
-    // assign here and only its _Tidy tail is out of line, and a statement
-    // pin cannot express "inline the parent, call the child".
     m_bottomViewMessage = msg;
-    m_bottomViewOverride = BOTTOM_VIEW_6;
-    m_bottomViewDeadline = GameTime::get() + 5000;
+    // Mac bvResMsg +0x48 calls overrideBottomView(6, -1). Its ordinary
+    // body supplies the 5000-tick default and VC6 expands it here.
+    overrideBottomView(BOTTOM_VIEW_6, -1);
     g_advManager->updBottomView(1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
 }
@@ -7293,7 +7079,7 @@ unsigned char advManager::updBottomViewResMsg(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_6)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_6;
     m_advWindow->setBottomView(new TBottomViewResourceMessage(
         m_advWindow, m_bottomViewResourceType, m_bottomViewResourceQuantity,
@@ -7324,7 +7110,7 @@ unsigned char advManager::updBottomViewMessage(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_7)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_7;
     m_advWindow->setBottomView(
         new TBottomViewMessage(m_advWindow, &m_bottomViewMessage));
@@ -7337,7 +7123,7 @@ unsigned char advManager::updBottomViewKingdom(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_2)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_2;
     m_advWindow->setBottomView(new TBottomViewKingdom(m_advWindow));
     m_advWindow->updateResourceDisplay(1, 1);
@@ -7350,7 +7136,7 @@ unsigned char advManager::updBottomViewHero(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_3)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_3;
     m_advWindow->setBottomView(new TBottomViewHero(m_advWindow));
     return 1;
@@ -7362,7 +7148,7 @@ unsigned char advManager::updBottomViewTown(unsigned char forceUpdate)
     if (!forceUpdate && m_bottomViewType == BOTTOM_VIEW_4)
         return 0;
 
-    m_advWindow->clearBottomView();
+    clearBottomView();
     m_bottomViewType = BOTTOM_VIEW_4;
     m_advWindow->setBottomView(new TBottomViewTown(m_advWindow));
     return 1;
@@ -7386,12 +7172,14 @@ static TSkillMastery getIdentifyLevel(type_point point)
     return (TSkillMastery)identifyLevel;
 }
 
+// Dreamcast advmgr.cpp:9088 calls Hero.h get_location before
+// get_identify_level; retail expands the point construction.
 VA(0x00416590, 0x210)  // dc 0x194bc
 void advManager::heroQuickView(int heroId, int x, int y,
                                unsigned char displayDropShadow)
 {
     hero* theHero = g_game->getHero(heroId);
-    type_point heroPoint(theHero->m_x, theHero->m_y, theHero->m_z);
+    type_point heroPoint = theHero->getLocation();
 
     TSkillMastery identifyLevel = getIdentifyLevel(heroPoint);
 
@@ -7541,13 +7329,18 @@ void advManager::townQuickView(int townId, int x, int y,
 }
 
 // E:\gamedcs\advmgr.cpp:9243
+// DC garrison_quick_view calls game::GetGarrison. Its inline accessor
+// reproduces the same Windows bytes as direct array indexing here.
+// DC lines 9253/9257 assign Expert to identifyLevel for friendly/debug
+// viewers, then test it separately; lines 9263/9267/9271 assign each view
+// level in its own branch. This also matches retail VC6 byte for byte.
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrisonQuickView(int id, int x, int y)
 {
     if (id == -1)
         return;
 
-    garrison* const thisGarrison = &g_game->m_garrisons[id];
+    garrison* const thisGarrison = g_game->getGarrison(id);
     type_point point(thisGarrison->m_mapX, thisGarrison->m_mapY,
                      thisGarrison->m_mapZ);
 
@@ -7555,14 +7348,16 @@ void advManager::garrisonQuickView(int id, int x, int y)
 
     TQuickTownWindow::TViewLevel level;
     if (g_game->onSameTeam(thisGarrison->m_playerOwner, g_curWatchPlayer)
-        || m_debugViewAll || identifyLevel == eMasteryExpert)
+        || m_debugViewAll)
+        identifyLevel = eMasteryExpert;
+    if (identifyLevel == eMasteryExpert)
         level = TQuickTownWindow::ViewAll;
     else if (g_game->getNumThievesGuilds(g_curWatchPlayer) >= 2)
         level = TQuickTownWindow::ViewArmySizes;
+    else if (g_game->getNumThievesGuilds(g_curWatchPlayer) >= 1)
+        level = TQuickTownWindow::ViewArmyTypes;
     else
-        level = g_game->getNumThievesGuilds(g_curWatchPlayer) >= 1
-                    ? TQuickTownWindow::ViewArmyTypes
-                    : TQuickTownWindow::ViewNone;
+        level = TQuickTownWindow::ViewNone;
 
     TQuickTownWindow window(thisGarrison, level);
     window.center(x, y);
@@ -7599,7 +7394,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
              && currHero->heroFn004E5DE0() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
-            const int diplomacy = currHero->m_skillLevel[eSecSkillDiplomacy];
+            const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);
             const float strengthRatio =
                 static_cast<float>(aiApproximateStrength(currHero))
                 / static_cast<float>(g_creatureTypeTraits[type].m_aiValue
@@ -7747,24 +7542,24 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 // Makes a town the adventure view's subject: drop any mobile hero, clear
 // the current-hero slot, centre the radar on the town and repoint the
 // locator strip, the spell/sleep buttons and the ambient music at it.
-// Retail resolves the acting player TWICE and caches neither, but spells
-// the two differently, which the bytes insist on: the first is a ternary,
-// the second an if-assignment over a gpCurrentPlayer default, re-reading
-// the parameter off the stack (85.39 -> 88.13 for that one line). It also
+// Retail resolves the acting player TWICE and caches neither: the first
+// selection assigns m_currHeroId directly in each if/else branch, and the
+// second is an if-assignment over a gpCurrentPlayer default. This spelling
+// also reproduces retail's GetTown register sequence. It also
 // reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
 
-// Residual (88.13%): instruction selection only - branch sequences agree
-// mnemonic-for-mnemonic (14 branches, 1 return) and the call multisets are
-// identical; what is left is the register choice in the GetTown index
-// chain and reloc-name-only rows on data.
+// DC lines 9477/9513/9528/9530 retain DeactivateCurrHero,
+// HideRoute(0, 0, 1), get_map_center and town::get_location.
+// Mac also calls DeactivateCurrHero at 0:0x17fd0. Windows expands it
+// to DemobilizeCurrHero plus the acting-player id clear. With that
+// first assignment, Windows is
+// exact with all 26 CFG blocks and 16 direct calls agreeing. Mac's reviewed
+// address has 14 direct calls against this source's 15 in the structural
+// view, with no admitted exact byte verdict here.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
-    demobilizeCurrHero(waitingPlayer, 0);
-
-    playerData* heroOwner = waitingPlayer ? g_game->getLocalPlayer()
-                                          : g_currentPlayer;
-    heroOwner->m_currHeroId = -1;
+    deactivateCurrHero(waitingPlayer);
 
     playerData* player = g_currentPlayer;
     if (waitingPlayer)
@@ -7792,24 +7587,14 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
         m_advWindow->updateSleepButton(0);
     }
 
-    if (g_currentPlayer->isLocalHuman()
-        || (g_debugLevel && g_aiHeroMoveActive)) {
-        g_windowManager->broadcastMessage(
-            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-            TAdventureMapWindow::MOVE_ID,
-            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-        if (m_showRoute)
-            m_showRoute = 0;
-    }
+    hideRoute(0, 0, 1);
 
     g_advManager->redrawAdvScreen(update, 0);
 
-    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    type_point point = getMapCenter();
     setEnvironmentOrigin(point, 1);
 
-    point.m_x = currTown->m_mapX;
-    point.m_y = currTown->m_mapY;
-    point.m_z = currTown->m_mapZ;
+    point = currTown->getLocation();
 
     int ground = getCell(point)->m_groundSet;
     if (ground != m_lastTerrain) {
@@ -7858,29 +7643,21 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
 // temporary at the SeedTo call (99.27). Dreamcast nevertheless proves the
 // named hero::get_target boundary before SeedTo; restoring that inline
 // helper is byte-flat and is source-shape truth rather than a score lever.
+// DC lines 9648/9671 also retain Reseed(0, 0) and get_map_center;
+// restoring them is Windows byte-flat at the current 97.0315%.
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
 {
     if (heroId == -1)
         return;
 
-    if (waitingPlayer) {
-        g_game->getLocalPlayer()->m_currTownId = -1;
-    } else {
-        g_currentPlayer->m_currTownId = -1;
-        if (drawChanges) {
-            if (g_currentPlayer->isLocalHuman()
-                || (g_debugLevel && g_aiHeroMoveActive)) {
-                g_windowManager->broadcastMessage(
-                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
-                    TAdventureMapWindow::MOVE_ID,
-                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
-                if (m_showRoute)
-                    m_showRoute = 0;
-            }
-        }
-    }
-
+    // DC advmgr.cpp:9548/9551 and Mac 0+0x18264/0x18288 retain these
+    // helpers in this order. hideRoute's third flag performs the same
+    // button-status update as the former expanded block, with no screen
+    // redraw or target removal.
+    deactivateCurrTown(waitingPlayer);
+    if (!waitingPlayer && drawChanges)
+        hideRoute(0, 0, 1);
     deactivateCurrHero(waitingPlayer);
 
     playerData* player = g_currentPlayer;
@@ -7945,7 +7722,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
 
     if (drawChanges && !inMove
         && (m_status == STATUS_ACTIVE || g_currentPlayer->isLocalHuman())) {
-        m_seedingValid = 0;
+        reseed(0, 0);
         if (curr->m_pathTargetX >= 0) {
             type_point routeTarget = curr->getTarget();
             seedTo(routeTarget);
@@ -7966,17 +7743,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
                                       HOVER_SCREEN_HEIGHT);
     }
 
-    // The same merged y|z store ProcessDeSelect's kingdom-overview arm
-    // needs: both values have to be in hand before the first bitfield
-    // write or VC6 emits two read-modify-write inserts instead of one
-    // masked store.
-    type_point viewCentre;
-    int centreX = m_radarOrigin.m_x + 9;
-    int centreY = m_radarOrigin.m_y + 8;
-    int centreZ = m_radarOrigin.m_z;
-    viewCentre.m_x = centreX;
-    viewCentre.m_y = centreY;
-    viewCentre.m_z = centreZ;
+    type_point viewCentre = getMapCenter();
     setEnvironmentOrigin(viewCentre, 1);
 
     if (cell->m_groundSet != m_lastTerrain && drawChanges) {
@@ -8183,9 +7950,9 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             default: return LOOPING_SOUND_INVALID;
             }
         case MINE: {
-            int type = g_game->m_mines[thisCell->m_extraInfo].m_type;
+            int type = g_game->getMine(thisCell->m_extraInfo)->m_type;
             unsigned char abandoned =
-                g_game->m_mines[thisCell->m_extraInfo].m_isAbandoned;
+                g_game->getMine(thisCell->m_extraInfo)->m_isAbandoned;
             if (abandoned)
                 return LOOPING_SOUND_7;
             switch (type) {
@@ -8550,6 +8317,8 @@ void advManager::checkDimNextHeroBut()
         m_advWindow->widgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
+// Dreamcast advmgr.cpp:10586 calls game::GetCurrHero; retail expands
+// its null guard and hero array lookup before seedPosition.
 VA(0x004194a0, 0xC7)  // dc 0x1c64c
 void advManager::seedTo(type_point target)
 {
@@ -8560,8 +8329,8 @@ void advManager::seedTo(type_point target)
     if (heroId == -1)
         return;
 
-    hero* currentHero = &g_game->m_heroes[heroId];
-    type_point start(currentHero->m_x, currentHero->m_y, currentHero->m_z);
+    hero* currentHero = g_game->getCurrHero();
+    type_point start = currentHero->getLocation();
 
     if (!m_seedingValid) {
         g_searchArray->seedPosition(currentHero, start, target, 59999,
@@ -8590,27 +8359,27 @@ void advManager::forceNewHover()
     }
 }
 
+
 // The per-speed scroll step. Dreamcast advmgr.obj publishes the static
 // (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
 // three-int row.
 DATA(0x0063a66c) static const int g_scrollSpeedInc[3] = { 1, 2, 3 };
 
-// Written on every scroll tick with the fresh GameTime::Get stamp; no
-// located reader yet. Nearest consumer holds the declaration (the
-// town.cpp gUnnamed69778c precedent); ownership stays open for the data
-// phase.
-
+// ScreenScroll stamps this tick and CheckScreenScroll reads it. The Mac
+// build uses direct TOC scalar storage at 1+0x3d20.
 
 // E:\gamedcs\advmgr.cpp:10624
+// VC6 matches retail exactly when scrollInc is declared before the two map
+// origin locals. The Mac source shape retains all six ordered direct calls.
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
 void advManager::screenScroll(int dir, int changeMouse)
 {
     g_config.m_windowScrollSpeed =
         limit(0, g_config.m_windowScrollSpeed, 2);
 
+    int inc = g_scrollSpeedInc[g_config.m_windowScrollSpeed];
     int x = m_radarOrigin.m_x;
     int y = m_radarOrigin.m_y;
-    int inc = g_scrollSpeedInc[g_config.m_windowScrollSpeed];
     g_lastMapScrollTime = GameTime::get();
 
     switch (dir) {
@@ -8661,26 +8430,18 @@ void advManager::screenScroll(int dir, int changeMouse)
         demobilizeCurrHero(0, 0);
         m_radarOrigin.m_x = x;
         m_radarOrigin.m_y = y;
-        updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-        g_windowManager->updateScreen(0, 8, 608, 544);
-
-        unsigned long now = GameTime::get();
-        if (static_cast<long>(
-                now - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
-            && !m_animCtrPaused) {
-            m_animCtr++;
-            g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += cppMax(
-                static_cast<long>(
-                    now - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
-                180L);
-        }
-        process1WindowsMessage();
+        // Dreamcast and Mac retain these three helper calls. Complete VC6
+        // expands them here, preserving the retail nine-call sequence.
+        updateRadar(1, 1, 0, 0, 0);
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 }
 
 // The DC also emits MouseInScrollZone (dc 0x1ccf8); its canonical member
 // definition follows this routine. Retail expands the hover callers' tests.
+// Dreamcast advmgr.cpp:10747 calls mouseManager::GetFrame twice;
+// retail expands the byte-backed frame accessor at both comparisons.
 VA(0x00419820, 0x169)  // dc 0x1cb08
 void advManager::checkScreenScroll()
 {
@@ -8727,8 +8488,8 @@ void advManager::checkScreenScroll()
     int origX = m_radarOrigin.m_x;
     int origY = m_radarOrigin.m_y;
     screenScroll(dir, 1);
-    if (g_mouseManager->m_frame >= ADV_SCROLL_POINTER
-        && g_mouseManager->m_frame <= ADV_SCROLL_NORTHWEST
+    if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
+        && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
         && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
@@ -8750,13 +8511,17 @@ int advManager::mouseInScrollZone()
     return 1;
 }
 
+// Dreamcast advmgr.cpp:10782/10785/10830/10836 calls GetCurrTownId,
+// GetCurrTown, get_map_center and Reseed. Mac additionally calls
+// CheckDimNextHeroBut at 0:0x1a324. Retail expands these helpers in
+// the initial-origin path.
 VA(0x00419990, 0x2E3)  // dc 0x1cd68
 void advManager::setInitialMapOrigin()
 {
     m_lastHoverX = m_lastHoverY = 0;
 
-    if (g_currentPlayer->isLocalHuman() && g_currentPlayer->m_currTownId != -1) {
-        town* startTown = &g_game->m_towns[g_currentPlayer->m_currTownId];
+    if (g_currentPlayer->isLocalHuman() && g_game->getCurrTownId() != -1) {
+        town* startTown = g_game->getCurrTown();
         m_radarOrigin.m_x = startTown->m_mapX - 9;
         m_radarOrigin.m_y = startTown->m_mapY - 8;
         m_radarOrigin.m_z = startTown->m_mapZ;
@@ -8767,12 +8532,12 @@ void advManager::setInitialMapOrigin()
                                  ? g_currentPlayer
                                  : g_game->getLocalPlayer();
         if (player->m_numHeroes > 0) {
-            hero* startHero = &g_game->m_heroes[player->m_heroes[0]];
+            hero* startHero = g_game->getHero(player->m_heroes[0]);
             m_radarOrigin.m_x = startHero->m_x - 9;
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;
         } else if (player->m_numTowns > 0) {
-            town* startTown = &g_game->m_towns[player->m_townIds[0]];
+            town* startTown = g_game->getTown(player->m_townIds[0]);
             m_radarOrigin.m_x = startTown->m_mapX - 9;
             m_radarOrigin.m_y = startTown->m_mapY - 8;
             m_radarOrigin.m_z = startTown->m_mapZ;
@@ -8785,17 +8550,14 @@ void advManager::setInitialMapOrigin()
 
     m_advWindow->setElevationToggleImage(m_radarOrigin.m_z);
 
-    type_point center(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    type_point center = getMapCenter();
 
     m_lastTerrain = getCell(center)->m_groundSet;
     g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
     setEnvironmentOrigin(center, 1);
-    m_seedingValid = 0;
+    reseed(0, 0);
 
-    if (g_currentPlayer->isLocalHuman() && g_currentPlayer->hasMobileHero())
-        m_advWindow->widgetClearStatus(11, 0x4008);
-    else
-        m_advWindow->widgetSetStatus(11, 0x4008);
+    checkDimNextHeroBut();
 }
 
 VA(0x00419c80, 0x171)  // dc 0x1d0bc
@@ -8840,6 +8602,8 @@ void popupPlayerTurnInfo()
     }
 }
 
+// DC advmgr.cpp:10965 calls ForceNewHover; Mac retains the call at
+// 0:0x1a728. Complete expands its mouse-coordinate and hover update body.
 VA(0x00419e00, 0x300)  // dc 0x1d30c
 void advManager::startLocalPlayerTurn()
 {
@@ -8887,14 +8651,7 @@ void advManager::startLocalPlayerTurn()
     m_advWindow->updateTownLocators(-1, 1, 1);
     m_advWindow->updateResourceDisplay(1, 1);
 
-    advManager* adv = g_advManager;
-    if (g_currentPlayer->isLocalHuman()) {
-        int mouseX;
-        int mouseY;
-        g_mouseManager->mouseCoords(mouseX, mouseY);
-        adv->m_lastHoverX = -1;
-        adv->processHover(mouseX, mouseY);
-    }
+    g_advManager->forceNewHover();
 
     g_soundManager->m_playSounds = 1;
     if (g_game->m_isCheater && !g_lastCheaterState) {
@@ -9161,6 +8918,8 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 // rejected: grailY-before-grailX declaration order (+0.01, copy-prop
 // eats it). why-reg finds first defs aligned - past-first-defs
 // schedule, the bounded class.
+// DC advmgr.cpp:11281 calls get_map_center at the closing recenter step;
+// Complete expands its fixed viewport offset.
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
 void advManager::viewPuzzle()
 {
@@ -9196,9 +8955,7 @@ void advManager::viewPuzzle()
     if (!g_inViewWorld) {
         redrawAdvScreen(1, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-        type_point centre(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                          m_radarOrigin.m_z);
-        setEnvironmentOrigin(centre, 1);
+        setEnvironmentOrigin(getMapCenter(), 1);
     }
 }
 

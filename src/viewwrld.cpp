@@ -76,29 +76,17 @@ static unsigned char g_viewHeroes;
 // the Dreamcast row is `static`, TViewWorldWindow::init's scale-table loop
 // is its only call site, and VC6 expands a single-call-site static without
 // retaining it (the surrounding carve rows leave no ~98 B slot for one).
-// Two facts are retail's rather than the Dreamcast's, both read off init's
-// expansion. The addend is 2^52 + 2^51 written as a FLOAT: retail
-// materialises it with `mov dword ptr [slot], 0x59c00000` followed by
-// `fld dword ptr [slot]`, which is a float local, not the qword pool entry
-// a `double` literal folds to. And the operand ORDER is magic + d - the
-// float is what reaches the x87 stack first, with `fadd qword ptr` taking
-// the double argument as the memory operand.
+// Dreamcast names the local `const unsigned long magic`; its 0x59c00000 bits
+// are read as a float. Retail materialises those bits on the stack and loads
+// the float before adding the double argument. A named double temporary gives
+// init's inlined copy the retail stack layout and exact VC6 bytes.
 
 static long ftol(double d)
 {
-    union {
-        double m_whole;
-        long m_low;
-    } bits;
-    union {
-        float m_value;
-        long m_raw;
-    } magic;
-
-    magic.m_raw = 0x59c00000;
-    bits.m_whole = d;
-    bits.m_whole = magic.m_value + bits.m_whole;
-    return bits.m_low;
+    const unsigned long magic = 0x59c00000;
+    double adjusted = d;
+    adjusted = *reinterpret_cast<const float*>(&magic) + adjusted;
+    return *reinterpret_cast<long*>(&adjusted);
 }
 
 // E:\gamedcs\viewwrld.cpp:110
@@ -116,19 +104,24 @@ static long ftol(double d)
 // leave a separate copy of the origin untouched, which retail proves by
 // keeping x and y live in ESI/EDI across the whole clip block and pushing
 // those, never the clamped copies.
+// The reviewed Mac body retains adjusted x/y separately and updates frame
+// before the draw; that source shape aligns 99/107 Mac instructions at -O3.
+// Its left clip computes width as 32 - tilex, while Windows retail emits
+// baseX + 24. Substituting the former here changed Windows control flow and
+// lowered its byte match, so the retail expression remains below.
 VA(0x005f73b0, 0x14D)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
     int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
-    x -= offset;
-    y -= offset;
+    int drawY = y - offset;
+    int drawX = x - offset;
 
     int tilex = 0;
     int tiley = 0;
     int tilew = 32;
     int tileh = 32;
-    int baseX = x;
-    int baseY = y;
+    int baseX = drawX;
+    int baseY = drawY;
 
     if (baseX < 8) {
         tilex = 8 - baseX;
@@ -153,14 +146,13 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     else if (hasFlag(thisCell->m_type))
         owner = getFlaggedObjectOwner(thisCell);
 
-    int framenum;
     if (owner >= 0)
-        framenum = frame + owner * 19;
+        frame += owner * 19;
     else
-        framenum = frame + 8 * 19;
+        frame += 8 * 19;
 
-    srcIcon->draw(0, framenum, tilex, tiley, tilew, tileh,
-                  g_windowManager->m_screenBitmap, x, y, false, true);
+    srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
+                  g_windowManager->m_screenBitmap, drawX, drawY, false, true);
 }
 
 inline void vwClipScaleToScreenBuffer(int destX, int destY)
@@ -202,8 +194,11 @@ inline void vwClipScaleToScreenBuffer(int destX, int destY)
                 ++screenBuffer;
             }
         }
+        // Keep the row offset before the buffer lookup, as in the expanded
+        // river, road and object-shadow callers.
+        int sourceLine = mwidth * g_scaleLine[y];
         sourceBufferLineStart =
-            g_memoryBuffer->getMap(0, 0) + mwidth * g_scaleLine[y];
+            g_memoryBuffer->getMap(0, 0) + sourceLine;
         screenBufferLineStart += swidth;
     }
 }
@@ -363,11 +358,10 @@ void advManager::vwDrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX
 VA(0x005f7d00, 0x1E1)  // dc 0x193724
 void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHero(
@@ -392,11 +386,10 @@ void advManager::vwDrawBoatPart(int part, TDrawParts& boatParts, int baseX, int 
 VA(0x005f7ef0, 0x1E1)  // dc 0x1938cc
 void advManager::vwDrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
-    boat* currBoat = &g_game->m_boats[boatParts.m_id];
+    boat* currBoat = g_game->getBoat(boatParts.m_id);
     int boatCellY = part % 3;
     int boatCellX = part / 3;
-    NewmapCell* boatCell = getCell(
-        type_point(currBoat->m_x, currBoat->m_y, currBoat->m_z));
+    NewmapCell* boatCell = getCell(currBoat->getLocation());
 
     if (!(boatCell->m_flags0011 & 0x200)) {
         m_boatFrothIcons[currBoat->m_type]->drawHeroShadow(
@@ -1326,12 +1319,10 @@ int viewWorldSurfaceHandler(message& msg)
         return 0;
     TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 0;
-    window->m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-    window->m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+    window->m_surfaceButton->hide();
+    window->m_undergroundButton->show();
     window->m_undergroundButton->draw();
-    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
-                                 window->m_origin.m_z, window->m_viewableWidth,
-                                 window->m_viewableHeight);
+    window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -1348,12 +1339,10 @@ int viewWorldUndergroundHandler(message& msg)
         return 0;
     TViewWorldWindow* window = static_cast<TViewWorldWindow*>(msg.m_window);
     window->m_origin.m_z = 1;
-    window->m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
-    window->m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
+    window->m_surfaceButton->show();
+    window->m_undergroundButton->hide();
     window->m_surfaceButton->draw();
-    g_advManager->vwCompleteDraw(window->m_origin.m_x, window->m_origin.m_y,
-                                 window->m_origin.m_z, window->m_viewableWidth,
-                                 window->m_viewableHeight);
+    window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -1419,11 +1408,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
                               m_radarOrigin.m_z);
 
         viewWorldWindow.init(mapCenter, 0);
-        g_advManager->vwCompleteDraw(viewWorldWindow.m_origin.m_x,
-                                     viewWorldWindow.m_origin.m_y,
-                                     viewWorldWindow.m_origin.m_z,
-                                     viewWorldWindow.m_viewableWidth,
-                                     viewWorldWindow.m_viewableHeight);
+        viewWorldWindow.drawWindow();
         g_windowManager->m_colorCyclingOn = 1;
         viewWorldWindow.doModal(0);
     }
@@ -1446,21 +1431,9 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
 // iSkipLevel's DECLARATION SITE is worth 13.5 points (83.37 -> 96.87):
 // retail issues the `fdiv` after both integer divisions, so the float
 // local is declared BELOW the two extent assignments, not above them.
-// Residual (98.89%): one instruction, the loop counter's `mov [i], eax`,
-// which retail schedules after the table store and we schedule before it.
-// Byte-flat and rejected: a `while` loop with the increment as the last
-// body statement, `++i` in the header, and landing the ftol result in a
-// named `long` before the table store.
-// Residual (98.8939%): the frame, 0x14 against retail's 0x10, and it is
-// purely the order the ftol expansion's two locals are allocated in. Retail
-// puts the 8-byte `bits` union at the TOP of the frame ([ebp-8], naturally
-// aligned) with iSkipLevel at [ebp-0xc] and the magic float at [ebp-0x10];
-// ours allocates the caller's named local first ([ebp-8]), the magic at
-// [ebp-0xc] and the qword at [ebp-0x14], leaving [ebp-4] dead. MEASURED AND
-// REJECTED 2026-09-06: folding the divisor into the loop expression so it is
-// a CSE rather than a named local (92.54); hoisting the iSkipLevel
-// declaration into the top block and assigning later (98.89, byte-flat);
-// naming the ftol argument as a `double scaled` inside the loop (98.90).
+// The inlined ftol helper's double temporary occupies retail [ebp-8], with
+// skipLevel at [ebp-0xc] and its magic constant at [ebp-0x10]. The earlier
+// union spelling allocated four extra bytes and held this body at 98.8939%.
 VA(0x005fc240, 0x274)  // anchor-caller ViewWorld, anchor-callee UpdateRadar, dc 0x195d30
 void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
 {
@@ -1502,20 +1475,22 @@ void TViewWorldWindow::init(type_point newCenter, unsigned char updateFlag)
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     g_advManager->updateRadar(m_origin, updateFlag, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    if (g_game->m_worldMap.getNumLevels() > 1) {
+    if (g_game->getNumMapLevels() > 1) {
         if (m_origin.m_z == 1) {
-            m_undergroundButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            m_surfaceButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            m_undergroundButton->hide();
+            m_surfaceButton->show();
         } else {
-            m_surfaceButton->sendMessage(widget::WIDGET_CLEAR_STATUS, 6);
-            m_undergroundButton->sendMessage(widget::WIDGET_SET_STATUS, 6);
+            m_surfaceButton->hide();
+            m_undergroundButton->show();
         }
     }
 }
 
 // E:\gamedcs\viewwrld.cpp:1549, dc 0x195ffc. This ordinary method's
 // only source operation is the five-argument adventure repaint. Complete
-// expands the method into updateRadar while retaining vwCompleteDraw.
+// expands this method at some call sites; the Mac build retains six calls
+// across the level callbacks, viewWorld, updateViewWorld, updateRadar and
+// the puzzle path in the window handler.
 void TViewWorldWindow::drawWindow()
 {
     g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
@@ -1590,8 +1565,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
                       m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
 
     init(center, 1);
-    g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z, m_viewableWidth,
-                                 m_viewableHeight);
+    drawWindow();
     drawWindow(1, 0xffff0001, 0xffff);
     g_windowManager->updateScreen(0, 0, 800, 600);
 }
@@ -1727,9 +1701,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                 center = type_point(m_origin.m_x + g_viewHalfWidth,
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
-                g_advManager->vwCompleteDraw(m_origin.m_x, m_origin.m_y, m_origin.m_z,
-                                             m_viewableWidth,
-                                             m_viewableHeight);
+                drawWindow();
                 g_windowManager->updateScreen(0, 0, 800, 600);
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:

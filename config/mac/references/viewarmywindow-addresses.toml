@@ -1,0 +1,235 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5f3360
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x1ff748
+mac_size = 0x650
+target_sha256 = "a196cf4a14d6d1fa82e1f0b1a23cc189a2e36b45699a4dfc406b735f694bb13d"
+evidence = "NEW: Battle army ctor CAdvPopup298x311, adjusted attack/defense0x4e174/0x4e31c, portrait/stats widgets, speed0x55028, morale/luck descriptions0x59734/0x59e48 and spell influence icons. End0x1ffd98; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f3b50
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x1ffd98
+mac_size = 0x4f8
+target_sha256 = "4d4f6b8e3d7fe69aad11e0c8c9c0f8b9a8584e382a9297ba1e34c0dcf8e435de"
+evidence = "NEW: ArmyGroup ctor loads group type/count, applies hero traits0x1070a0, army morale/luck0x58b60/0x58f48; creates optional upgrade/dismiss and checks upgrade0x14d19c. End0x200290; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f4210
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x200290
+mac_size = 0x2a4
+target_sha256 = "817aeb01c09005f3559863d2c94bf51227eba63fb7b831d2530ed8776a02e414"
+evidence = "NEW: Creature-type ctor uses traits stride0x74 without army/hero modifiers, shared portrait/stat builders and optional OK. End0x200534; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f45e0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x200534
+mac_size = 0xc4
+target_sha256 = "021c623439bb8df23175ab6ce5ad49f5fabfd9c9cc44b9769f766dc5ee30f99a"
+evidence = "NEW: Popup destructor disposes resource, destroys two description strings0x44c0, calls CAdvPopup destructor0x1be60 and optional delete. End0x2005f8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f46c0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x2005f8
+mac_size = 0x198
+target_sha256 = "743bfd20f47b9a365dc17db0b3bc3387bc7b495616a10ffa9e775b584b755673"
+evidence = "NEW: Widget-ID to help-ID decision tree covers stat IDs203..224,300/302 and OK0x7802/dismiss0x7804. End0x200790; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f47f0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x2007bc
+mac_size = 0xa8
+target_sha256 = "e15b748f8d67596be2857386842370a5ea9d23a4ac1146ef6fcf2ab35cde4210"
+evidence = "NEW: Modal sets GameTime0x20fc5c deadline, localHuman0xcdba4, disables upgrade/dismiss widgets when remote then base modal0x20bb48. End0x200864; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f4850
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x200864
+mac_size = 0x814
+target_sha256 = "5b2ac17f31b0fd471b7e3c98078d36d7686509fcee636d965f385e7779c15656"
+evidence = "NEW: Popup message handler base0x1bf2c, help mapping0x2005f8, upgrade0x14d19c, dismiss dialogs, spell tooltip flags and animated creature refresh0x10d2e0/0x10d0d0. End0x201078; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5030
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201078
+mac_size = 0x40
+target_sha256 = "a4104baddec48595e720458ca96d3faf6740e67bbbe5c24c52a91d8bd438ac6e"
+evidence = "NEW: Battle cast-spell callback checks message code13 and stores global selected spell/action, returns handled; loader address-taken callback. End0x2010b8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5060
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x2012cc
+mac_size = 0x27c
+target_sha256 = "6639eb511e4ac2125fb2a4375c6f4e661b6f81c95a48f154eefda8cb83498793"
+evidence = "NEW: Portrait creates100x130 background/creature icon and conditional positive count text at21,160; bitmap0x5e7a0/icon0x10c3f0/text0x1b149c. End0x201548; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5340
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201548
+mac_size = 0x1f0
+target_sha256 = "148be850a2bc1301c7f74aa224dcaef49359a635f0359c243019d7a0fc17a4a3"
+evidence = "NEW: Attack stat label/value pair at154,48; base stat table entry0, formats plain or normal(current), distinct label/value widget IDs. End0x201738; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f55d0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201738
+mac_size = 0x1f0
+target_sha256 = "fd5b3193435b7ba0b67477dcf024f5c667fb9cea7a857a1e0ec8298e392d0dfe"
+evidence = "NEW: Defense stat label/value pair at154,66; base stat table entry1, plain or normal(current) formatting. End0x201928; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5860
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201928
+mac_size = 0x270
+target_sha256 = "9310d4a990dd52a2ed700c182ae6dad52b92e036a06f9316b2fbb8f85d797bb6"
+evidence = "NEW: Damage label/value pair compares low/high bounds, ballista146 hero primary attack clamp99 multiplies range, formats single or low-high. End0x201b98; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5b30
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201b98
+mac_size = 0x210
+target_sha256 = "f8cfc1fa9e1d214b436268e8fddf34cb684e17b9f3fe5b2a47bda933c84735e7"
+evidence = "NEW: Shots label/value pair uses creature text-resource entry and compares original/current shot counts, plain or parenthesized format. End0x201da8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f5dd0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201da8
+mac_size = 0x204
+target_sha256 = "38ee5debca0ea88badd21b60210aade1026f2253bc2b9b4d8e744e3905bda1ca"
+evidence = "NEW: Hitpoints label/value pair reads hitpoint description, original/current HP comparison and text formatting. End0x201fac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f6070
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x201fac
+mac_size = 0x1e0
+target_sha256 = "1ea100500ab46155813855b4a8fd92bc3373950142cf11e7f847d3c1fc919b22"
+evidence = "NEW: Hitpoints-left row formats sole remaining HP integer, one sprintf unlike paired original/current rows. End0x20218c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f62f0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x20218c
+mac_size = 0x240
+target_sha256 = "ac89cc3aadaa02ba7683c4acccf00a76c87c74c7842efe9ae010ba00f9893645"
+evidence = "NEW: Speed row clamps displayed normal/current speed to nonnegative then formats plain/parenthesized pair. End0x2023cc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f65b0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x20262c
+mac_size = 0x1b0
+target_sha256 = "73d1430a431636d41e0e0f0312e236ca021aa1fe68b520da97f1589a52f4093a"
+evidence = "NEW: Three spell influence icons, queue indexing via0x7b1c8, stores influence/duration and icon indexspell+1, x stride52. End0x2027dc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f6870
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x2027dc
+mac_size = 0x1c4
+target_sha256 = "c3e54b1dd8033df3fed7858574b4af16131b1e7126cc94bf53db629c37fb5712"
+evidence = "NEW: OK border215,237/66x32 and button216,238/64x30, two hotkeys1/28 through0x20e0. End0x2029a0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f6ae0
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x2029a0
+mac_size = 0x1ac
+target_sha256 = "2ce371dd72900f540709cbd8f769c61827415806c2e5abebfb78e3b25b6d592c"
+evidence = "NEW: Upgrade border74,236/48x34 and button75,237/46x32, hotkey22. End0x202b4c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x5f6d50
+unit = "viewarmywindow"
+mac_section = 0x0
+mac_offset = 0x202b4c
+mac_size = 0x1ac
+target_sha256 = "c8b126c62cf6b0479f761c9780bb7d7df96a77bae6f0c82897ccf4f3c06c3772"
+evidence = "NEW: Dismiss border19,236/48x34 and button20,237/46x32, hotkey32; separate resource and widget ID from upgrade. End0x202cf8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::quickView"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x200790
+mac_size = 0x2c
+target_sha256 = "5333fab92cd1e8edcbb65638e1229e1ca99028aeaa78290f19811b4060b1851e"
+evidence = "The retained wrapper forwards its TViewArmyWindow receiver to heroWindowManager::doQuickView at 0x20dd08. Direct callers from combat, game, hill fort, recruit and sacrifice windows match their canonical quickView source calls. Prior help-ID body ends with BLR at 0x20078c; this wrapper's BLR at 0x2007b8 precedes doModal's prologue at 0x2007bc. Windows expands the wrapper at callers and has no standalone VA claim."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::createBackgroundWidget"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x2010b8
+mac_size = 0x118
+target_sha256 = "5b71aafaa094f8c4b90a36aaf80d1dd11f53217bf1f90612ba41db3de518cc29"
+evidence = "All three view-army constructors call this retained plate builder. Its 0x34-byte bitmapBorder allocation, 298x311 plate and hero-owner/local-player palette arms match the canonical ordinary helper in viewarmywindow.cpp, expanded by VC6 in the Windows callers. It follows cast-spell callback BLR at 0x2010b4 and ends at 0x2011cc before createNameWidget."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::createNameWidget"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x2011d0
+mac_size = 0xfc
+target_sha256 = "1407294629406c6a42bcb01de1c00cc18775d378731c7ccd4dab5d949c11a7f2"
+evidence = "All three view-army constructors call this retained name-row builder. It allocates a 0x44-byte textWidget at 20,21 of size 258x19 with the supplied name and appends it to the widget vector, matching the canonical ordinary source helper expanded in Windows. Prior helper BLR at 0x2011cc; own BLR at 0x2012c8 precedes createPortraitWidget at 0x2012cc."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::createMoraleWidget"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x2023cc
+mac_size = 0x130
+target_sha256 = "a90a41ca78440e539f98ec87b7218f6a181c9a89b8f772efa557af8aa7d7d79a"
+evidence = "Battle and group constructors call this retained helper after speed. It stores morale at +0x64, clamps the reloaded value to -3..3, builds icon ID 0xdb at 23,189/42x38 and appends it. The canonical source helper expands in Windows. Prior createSpeedWidget BLR at 0x2023c8; own BLR at 0x2024f8 precedes createLuckWidget."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::createLuckWidget"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x2024fc
+mac_size = 0x130
+target_sha256 = "7873152fa42ef4c9a88a1e1143c3edfb0db61c7018ffc6ffcb2c455152be8ef8"
+evidence = "Battle and group constructors call this retained helper after the morale row. It stores luck at +0x6c, clamps the reloaded value to -3..3, builds icon ID 0xdc at 77,189/42x38 and appends it. The canonical source helper expands in Windows. Prior morale BLR at 0x2024f8; own BLR at 0x202628 precedes createSpellInfluenceWidgets."
+
+[[helpers]]
+source_helper = "TViewArmyWindow::createRolloverWidget"
+unit = "viewarmywindow"
+mac_section = 0
+mac_offset = 0x202cf8
+mac_size = 0xec
+target_sha256 = "38bcfe69339ddd3dd466052a40e30be1ed5b019092bcd5ac33b192e126c7df18"
+evidence = "Three constructors call this retained rollover-row builder. It allocates a 0x48-byte bitmapBackedTextWidget at 7,285/284x19, stores it at +0x94 and appends the pointer, matching the canonical ordinary source helper expanded in Windows. Prior createDismissWidget BLR at 0x202cf4; own BLR at 0x202de0 precedes unrelated static initialization at 0x202de4."

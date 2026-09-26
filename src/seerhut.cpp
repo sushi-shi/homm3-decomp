@@ -32,7 +32,9 @@ void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
 // The retail factory is frameless under /GX even though its new-expressions
 // construct vector-owning classes, so this TU saw the nothrow deallocator
 // declaration used by the other frameless-construction compilands.
+#if defined(_MSC_VER)
 __declspec(nothrow) void __cdecl operator delete(void* value);
+#endif
 
 // DC dialog ownership changed with the quest representation. In the old
 // TSeerHut (dc0x12d238..0x12d4dc), one artifact and text-row byte drive
@@ -87,9 +89,8 @@ type_quest* createQuest(int questType, unsigned char flags);
 
 std::string formatString(const char* format, ...);
 
-// The seven localized resource names.  The resource-quest string builders
-// walk this array in lockstep with their seven-dword payload.
-
+// The seven localized resource names come from the ai_player.h declaration.
+// src/text.cpp owns DATA(0x006a5e64) and the spare eighth pointer.
 
 // The nine compass phrases describing a quest monster's map region.
 // Retail reaches every cell directly from the initializer below; their
@@ -113,8 +114,11 @@ void extendedDialog(const char* text,
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
 // The name-row append is inferred from retail. Canonical push_back gives
 // 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
-// Explicit/named string construction, positive validation and the cell
-// accessor do not recover retail's retained string::assign during conversion.
+// Mac's lightly optimized build confirms the source-shaped temporary string:
+// its constructor, vector push_back, and destructor are retained in order
+// (8/8 direct calls in the full function). Explicit/named string construction,
+// positive validation and the cell accessor do not recover VC6 retail's
+// retained string::assign during that conversion.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -295,14 +299,14 @@ void type_quest::save(TAbstractFile* file)
 // questTextRow and getCurrentTurn preserve that lookup and the signed-short
 // date result. This Complete-only caller has no Dreamcast source record;
 // the shared helper bodies and retail expansion support these source calls.
-// They are byte-flat at 93.4944%. Moving remainingDays earlier or directly
-// initializing text lost agreement (combined controls: 75.2472%).
+// Constructing text from the separator directly removes two extra Mac calls
+// (6/6 retained) and exactly matches Windows. The earlier 75.2472% control
+// also moved remainingDays earlier, so it did not isolate construction.
 VA(0x0056d040, 0x1F7)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
     int days = g_game->getCurrentTurn();
-    std::string text;
-    text = DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " ");
+    std::string text(DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " "));
     int remainingDays = m_limit - days;
     const TSeerHutTextColumn* row = questTextRow();
     text += formatString(row->m_completion.c_str(), remainingDays);
@@ -325,16 +329,25 @@ std::string type_quest::getProgressDialogText()
     return m_proposalText + getTimeLimitText();
 }
 
+type_experience_quest::type_experience_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_requiredLevel = 0;
+}
+
 VA(0x0056d3e0, 0x2A)
 std::string type_experience_quest::getRequirementText()
 {
     return formatString(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                          m_requiredLevel);
 }
+// All nine description getters use the fourth string in the selected quest
+// text group directly. VC6 reproduces their retail address calculation when
+// the source names m_text3; the generic column selector adds an extra step.
 VA(0x0056d410, 0x72)
 std::string type_experience_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          m_requiredLevel);
 }
 
@@ -416,6 +429,12 @@ void type_experience_quest::setDefaultText()
                               m_requiredLevel);
 }
 
+type_skill_quest::type_skill_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
+}
+
 VA(0x0056d960, 0x22)
 std::string type_skill_quest::getRequirementText()
 {
@@ -424,7 +443,7 @@ std::string type_skill_quest::getRequirementText()
 VA(0x0056d990, 0xD3)
 std::string type_skill_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          skillRequirementText(m_requiredSkills).c_str());
 }
 
@@ -438,6 +457,25 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
             return 0;
     }
     return 1;
+}
+
+// Mac Complete retains this common skill-picture dialog at code0:0x164e44
+// (three callers), taking text and four signed skill values after `this`.
+// Windows Complete expands it in slot 5; preserve one ordinary source body.
+void type_skill_quest::showSkillRequirementsDialog(
+    const char* text, const signed char* skills)
+{
+    std::vector<type_dialog_resource> dialogResources;
+    for (int i = 0; i < 4; ++i) {
+        if (skills[i] > 0) {
+            type_dialog_resource resource;
+            resource.m_resource = 0x1f + i;
+            resource.m_qualifier = 0x10000
+                | static_cast<unsigned short>(skills[i]);
+            dialogResources.push_back(resource);
+        }
+    }
+    extendedDialog(text, dialogResources, -1, -1, 0);
 }
 
 // Slot 4 reports only the primary-skill requirements the visiting hero still
@@ -473,21 +511,7 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     if (m_progressText.length() > 0) {
         std::string text = getProposalDialogText();
         const char* textPointer = text.c_str();
-        {
-            std::vector<type_dialog_resource> dialogResources;
-            type_dialog_resource resource;
-            for (int i = 0; i < 4; ++i) {
-                if (missing[i] > 0) {
-                    resource.m_resource = 0x1f + i;
-                    resource.m_qualifier = 0x10000
-                        | static_cast<unsigned short>(missing[i]);
-                    type_dialog_resource* position = dialogResources.end();
-                    dialogResources.insert(position, resource);
-                }
-            }
-            extendedDialog(
-                textPointer, dialogResources, -1, -1, 0);
-        }
+        showSkillRequirementsDialog(textPointer, missing);
     } else {
         std::string requirement = skillRequirementText(missing);
         const char* requirementPointer = requirement.c_str();
@@ -496,66 +520,24 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
             texts.m_text1.c_str(), requirementPointer);
         text += getTimeLimitText();
         const char* textPointer = text.c_str();
-        {
-            std::vector<type_dialog_resource> dialogResources;
-            type_dialog_resource resource;
-            for (int i = 0; i < 4; ++i) {
-                if (missing[i] > 0) {
-                    resource.m_resource = 0x1f + i;
-                    resource.m_qualifier = 0x10000
-                        | static_cast<unsigned short>(missing[i]);
-                    type_dialog_resource* position = dialogResources.end();
-                    dialogResources.insert(position, resource);
-                }
-            }
-            extendedDialog(
-                textPointer, dialogResources, -1, -1, 0);
-        }
+        showSkillRequirementsDialog(textPointer, missing);
     }
 }
 
 // Slot 5 presents one primary-skill picture for every positive requirement.
 // The picture class advances from 0x1f with the skill index, while the
 // qualifier packs the displayed value below a high-word one.
-// Residual (96.6180%, 2026-09-07): the resource vector has an inner scope,
-// ending before the lifetime-extended text. This removes the three post-delete
-// zero stores and restores retail's 0x30 frame and EBX loop down-counter
-// (76.2135 -> 94.2360%). Declaring the skill cursor before the vector also
-// restores its initialization schedule (96.6180%). The three-variable walk
-// preserves retail's inc-cursor/dec-count loop and picture-id induction.
-// Controls: indexed i < 4 within the scope gives 82.5169%; a named string
-// instead of the const reference is byte-flat at 94.2360%. Moving the picture
-// resource outside the loop is byte-flat after the cursor-order repair.
-// Remaining: c_str reloads the return slot instead of dereferencing returned
-// EAX, and string destruction uses ECX rather than retail's EAX/ECX pair.
-// The earlier bare c_str pointer destroyed the temporary before the loop and
-// is invalid; mutable/const lifetime-extending references gave the same bytes.
+// Mac Complete calls the shared skill-picture helper, and its temporary
+// progress string lives through that call before destruction. This direct
+// full-expression form matches the Mac slot-5 body byte for byte. Windows
+// expands the ordinary helper; the previous local loop scored 96.6180%.
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
 void type_skill_quest::doProgressDialog()
 {
-    const std::string& text = getProgressDialogText();
-    const char* textPointer = text.c_str();
-    {
-        const signed char* skill = m_requiredSkills;
-        std::vector<type_dialog_resource> dialogResources;
-        int picture = 0x1f;
-        int remaining = 4;
-        do {
-            if (*skill > 0) {
-                type_dialog_resource resource;
-                resource.m_resource = picture;
-                resource.m_qualifier = 0x10000
-                    | static_cast<unsigned short>(*skill);
-                dialogResources.push_back(resource);
-            }
-            ++skill;
-            ++picture;
-            --remaining;
-        } while (remaining);
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
-    }
+    showSkillRequirementsDialog(
+        getProgressDialogText().c_str(), m_requiredSkills);
 }
 
 VA(0x0056de60, 0x29)
@@ -639,6 +621,14 @@ void type_skill_quest::setDefaultText()
                                        requirement.c_str());
 }
 
+type_defeat_hero_quest::type_defeat_hero_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_mapHero = 0;
+    m_defeatedHero = -1;
+    m_satisfiedMask = 0;
+}
+
 VA(0x0056e240, 0xF2)
 std::string type_defeat_hero_quest::getRequirementText()
 {
@@ -648,7 +638,7 @@ std::string type_defeat_hero_quest::getRequirementText()
 VA(0x0056e340, 0x8B)
 std::string type_defeat_hero_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_defeatedHero)->m_name);
 }
 
@@ -766,6 +756,12 @@ void type_defeat_hero_quest::setDefaultText()
                               defeatedHero->m_name);
 }
 
+type_monster_quest::type_monster_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
+}
+
 VA(0x0056ea30, 0xF9)
 std::string type_monster_quest::getRequirementText()
 {
@@ -779,7 +775,7 @@ VA(0x0056eb30, 0x90)
 std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
-        questText(QUEST_TEXT_DESCRIPTION).c_str(),
+        questTexts().m_text3.c_str(),
         m_monsterId >= 0 && m_monsterId <= 0x96
             ? g_creatureTypeTraits[m_monsterId].m_pluralName
             : "");
@@ -820,11 +816,8 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
 {
     if (m_defeatedBy >= 0)
         return;
-    if (m_position.m_x != where.m_x)
-        return;
-    if (m_position.m_y != where.m_y)
-        return;
-    if (m_position.m_z != where.m_z)
+    // Mac 0:0x165dc8 combines the three point comparisons before this guard.
+    if (m_position != where)
         return;
     m_defeatedBy = player;
 }
@@ -994,7 +987,7 @@ std::string type_artifact_quest::getRequirementText()
 VA(0x0056f730, 0xCF)
 std::string type_artifact_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1016,37 +1009,14 @@ void type_artifact_quest::takePayment(hero* currentHero)
         currentHero->removeArtifact(m_artifacts[i]);
 }
 
-// Slot 4 filters the payload to the artifacts the visiting hero still lacks.
-// Retail keeps both that id vector and its parallel name vector alive across
-// the text choice.  Each arm then owns its own picture vector: the generated
-// arm formats the missing-name list into the progress template, while a
-// custom progress string is passed through directly.
-
-// Historical pinned residual (88.7407%): all 31 CFG blocks and every branch target agree, as do
-// retail's 0x68 frame and every persistent vector/string/record slot. Keeping
-// each dialog record outside its loop is what recovers that layout. Retail
-// outlines only the generated arm's repeated vector::size test; restricting
-// inline_depth(0) to that statement restores the complete CFG without also
-// outlining operator[] and push_back.
-
-// Residual (89.1000%): computing the five-column group once fixes the retail
-// quest-text copy schedule. The remaining Dinkumware inline-budget class
-// inlines both dialog-vector destructors and the final trivial artifact-vector
-// destroy where retail calls them, and selects the count-taking insert in the
-// custom arm where retail selects the position/value overload. Extending the
-// depth limit through either dialog scope regresses; retain the source-shaped
-// lifetime instead of manufacturing storage or cleanup flow.
-// Current unpinned source: counted loops and canonical push_back, with the
-// invariant resource type initialized once per dialog record (82.6111%).
-// Assigning that field inside each loop gives 80.4889%; empty() is flat.
-// One function-scope unsigned counter shared by the loops gives 84.5037%;
-// the shared signed-counter control stays at 82.6111%.
-// Using questText(QUEST_TEXT_PROGRESS) instead of the row helper preserves
-// row-before-questType evaluation but falls to 81.4815%; keep questTexts().
-// Per-iteration resource declaration, either assigned or aggregate-initialized,
-// gives the same 83.7074% code; neither restores the retained size/cleanup calls.
-// Old pinned loop + insert(end(), resource) gave 92.0556%, but neither
-// compiler-control scaffolding nor that artificial append is retained.
+// Slot 4 filters the payload to missing artifacts and keeps both the id and
+// name vectors alive across the text choice. Mac retains calls from both
+// branches to the same artifact-picture helper at code offset 0x166b38;
+// CodeWarrior emits both source calls, while VC6 expands the helper here.
+// With the canonical helper, VC6 rises from 75.9889% to 90.2222%; its 31 CFG
+// blocks agree. Earlier attempts to force vector inlining with inline_depth,
+// counted insert, and per-iteration resource construction did not establish
+// a source-backed match, so the ordinary helper and push_back remain.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::doProposalDialog(hero* currentHero)
@@ -1069,56 +1039,37 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
             textFormat.c_str(),
             joinTextList(requirements).c_str());
         textPointer = text.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
-        resource.m_resource = 8;
-        for (i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+        showArtifactProgress(textPointer, missingArtifacts);
     } else {
         textPointer = m_progressText.c_str();
-        std::vector<type_dialog_resource> dialogResources;
-        type_dialog_resource resource;
-        resource.m_resource = 8;
-        for (i = 0; i < missingArtifacts.size(); ++i) {
-            resource.m_qualifier = missingArtifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+        showArtifactProgress(textPointer, missingArtifacts);
     }
 }
 
-// Slot 5 uses extended-dialog artifact pictures: class 8 and the artifact id
-// as qualifier, one row per element in the quest payload.
-// Residual (89.8471%): an inner resource-vector scope removes its three
-// post-delete zero stores and restores retail's ESI/EDI saves and ECX zero,
-// raising 75.2353% without changing destruction order. All twelve CFG blocks
-// still agree. Flattening the scope restores the old bytes. Named mutable
-// or const strings, aggregate resource initialization, and single-element
-// insert(end(), resource) are byte-identical with the scope. Moving the
-// resource outside the loop is byte-identical without it; counted insert
-// instead expands to 25 blocks and is rejected. Keep canonical push_back.
-// Remaining: c_str reloads the return slot rather than dereferencing EAX;
-// insert argument scheduling and string cleanup registers differ. This
-// Complete quest has no Dreamcast counterpart to settle its source scopes.
+// Slot 5 calls that same helper with the full artifact payload. The direct
+// expression below matches all 21 Mac instructions in order after relocation
+// masking, including all three calls; no Dreamcast counterpart exists. VC6
+// expands the helper and currently scores 81.0118% (12/12 CFG blocks align).
+// The earlier copied loop reached 89.8471%, but Mac's retained helper and the
+// two proposal call sites establish a stronger source boundary.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
 {
-    const std::string& text = getProgressDialogText();
-    const char* textPointer = text.c_str();
-    {
-        std::vector<type_dialog_resource> dialogResources;
-        for (unsigned i = 0; i < m_artifacts.size(); ++i) {
-            type_dialog_resource resource;
-            resource.m_resource = 8;
-            resource.m_qualifier = m_artifacts[i];
-            dialogResources.push_back(resource);
-        }
-        extendedDialog(textPointer, dialogResources, -1, -1, 0);
+    showArtifactProgress(getProgressDialogText().c_str(), m_artifacts);
+}
+
+void type_artifact_quest::showArtifactProgress(
+    const char* text, const std::vector<TArtifact>& artifacts)
+{
+    std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
+    resource.m_resource = 8;
+    for (unsigned i = 0; i < artifacts.size(); ++i) {
+        resource.m_qualifier = artifacts[i];
+        dialogResources.push_back(resource);
     }
+    extendedDialog(text, dialogResources, -1, -1, 0);
 }
 VA(0x0056fcb0, 0x1EE)
 void type_artifact_quest::load(TAbstractFile* file, int version)
@@ -1223,6 +1174,11 @@ void type_artifact_quest::setDefaultText()
 VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, type_creature_quest)
 VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
 
+type_creature_quest::type_creature_quest(unsigned char flags)
+    : type_quest(flags)
+{
+}
+
 VA(0x00570480, 0x55)
 int type_creature_quest::getAIValue(int player)
 {
@@ -1248,7 +1204,7 @@ std::string type_creature_quest::getRequirementText()
 VA(0x00570690, 0xCF)
 std::string type_creature_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1474,6 +1430,12 @@ void type_creature_quest::setDefaultText()
 
 VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, type_experience_quest)
 
+type_resource_quest::type_resource_quest(unsigned char flags)
+    : type_quest(flags)
+{
+    memset(m_resources, 0, sizeof(m_resources));
+}
+
 VA(0x00571560, 0x12)
 int type_resource_quest::getAIValue(int player)
 {
@@ -1497,7 +1459,7 @@ std::string type_resource_quest::getRequirementText()
 VA(0x005716e0, 0xCF)
 std::string type_resource_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
@@ -1654,6 +1616,11 @@ void type_resource_quest::setDefaultText()
                               requirement.c_str());
 }
 
+type_be_hero_quest::type_be_hero_quest(unsigned char flags)
+    : type_quest(flags), m_requiredHero(-1)
+{
+}
+
 VA(0x00571f00, 0x19)
 unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
 {
@@ -1681,7 +1648,7 @@ std::string type_be_hero_quest::getRequirementText()
 VA(0x00572160, 0x8B)
 std::string type_be_hero_quest::getQuestDescription()
 {
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_requiredHero)->m_name);
 }
 
@@ -1726,6 +1693,11 @@ void type_be_hero_quest::setDefaultText()
                               requiredHero->m_name);
 }
 
+type_belong_to_player_quest::type_belong_to_player_quest(unsigned char flags)
+    : type_quest(flags), m_requiredOwner(0)
+{
+}
+
 VA(0x005724f0, 0x1A)
 unsigned char type_belong_to_player_quest::isSatisfied(hero* currentHero)
 {
@@ -1757,7 +1729,7 @@ std::string type_belong_to_player_quest::getQuestDescription()
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
-    return formatString(questText(QUEST_TEXT_DESCRIPTION).c_str(),
+    return formatString(questTexts().m_text3.c_str(),
                          requirement.c_str());
 }
 
@@ -1893,7 +1865,7 @@ VA(0x00572d60, 0xE0)
 std::string TQuestGuard::questGuardFn00572D60()
 {
     return formatString(
-        m_quest->questText(type_quest::QUEST_TEXT_LOG).c_str(),
+        m_quest->questTexts().m_text4.c_str(),
         m_quest->getRequirementText().c_str());
 }
 
@@ -1925,34 +1897,6 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
-inline type_experience_quest::type_experience_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_requiredLevel = 0;
-}
-
-inline type_skill_quest::type_skill_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
-}
-
-inline type_defeat_hero_quest::type_defeat_hero_quest(
-    unsigned char flags)
-    : type_quest(flags)
-{
-    m_mapHero = 0;
-    m_defeatedHero = -1;
-    m_satisfiedMask = 0;
-}
-
-inline type_monster_quest::type_monster_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    m_position.m_x = (m_monsterId = m_defeatedBy = -1);
-}
-
 type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {
@@ -1970,28 +1914,6 @@ type_artifact_quest::type_artifact_quest(
     m_textVariant = textRow;
     g_game->m_artifactDisabled[artifact] = 1;
     setDefaultText();
-}
-
-inline type_creature_quest::type_creature_quest(unsigned char flags)
-    : type_quest(flags)
-{
-}
-
-inline type_resource_quest::type_resource_quest(unsigned char flags)
-    : type_quest(flags)
-{
-    memset(m_resources, 0, sizeof(m_resources));
-}
-
-inline type_be_hero_quest::type_be_hero_quest(unsigned char flags)
-    : type_quest(flags), m_requiredHero(-1)
-{
-}
-
-inline type_belong_to_player_quest::type_belong_to_player_quest(
-    unsigned char flags)
-    : type_quest(flags), m_requiredOwner(0)
-{
 }
 
 VA(0x00573240, 0x23C)  // hd-crossbuild + nine vtables + four callers
@@ -2295,7 +2217,7 @@ int TSeerReward::getValue(const hero* currentHero)
         switch (m_value.m_primarySkill.m_skillType) {
         case ePriSkillAttack:
         case ePriSkillDefense: {
-            int experience = hero::getExperienceIncrement(currentHero->m_level);
+            int experience = currentHero->getExperienceIncrement();
             return static_cast<int>(m_value.m_primarySkill.m_bonus
                 * currentHero->m_turnExperienceToRvRatio * experience);
         }
@@ -2379,25 +2301,24 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     {
         int skill = m_value.m_secondarySkill.m_skillType;
         int bonus = m_value.m_secondarySkill.m_bonus;
-        if (currentHero->m_skillLevel[skill] == 0) {
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (currentHero->m_skillCount < 8) {
                 currentHero->giveSS(skill, bonus);
                 break;
             }
         }
-        if (currentHero->m_skillLevel[skill] > 0
-            && currentHero->m_skillLevel[skill] < bonus)
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)) > 0
+            && currentHero->getSecondarySkill(TSecondarySkill(skill)) < bonus)
             currentHero->giveSS(skill,
-                bonus - currentHero->m_skillLevel[skill]);
+                bonus - currentHero->getSecondarySkill(TSecondarySkill(skill)));
         break;
     }
 
     case eRewardArtifact:
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(ARTIFACT_NONE);
-            {
-                artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
-            }
+            // Mac 0x16a2cc initializes both fields to -1, then replaces the ID.
+            type_artifact artifact;
+            artifact.m_artifactId = TArtifact(m_value.m_dwords[0]);
             currentHero->giveArtifact(&artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
@@ -2407,7 +2328,7 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
     case eRewardSpell:
         if (currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[m_value.m_dwords[0]].m_level
-                <= currentHero->m_skillLevel[eSecSkillWisdom] + 2
+                <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
             && !currentHero->isInSpellbook(m_value.m_dwords[0]))
             currentHero->addSpell(m_value.m_dwords[0]);
         break;
@@ -2609,6 +2530,19 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
 // its nested type_quest construction where retail retains that call; the extra
 // inline budget also leaves the name vector's element construction as a call.
+// Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
+// immediately before TSeerHut::read. Complete expands its sole source call.
+static type_quest* readQuestFromMap(TAbstractFile* infile,
+                                    unsigned char flags)
+{
+    unsigned char questType;
+    infile->read(&questType, sizeof(questType));
+    type_quest* quest = createQuest(questType, flags);
+    if (quest)
+        quest->loadFromMap(infile);
+    return quest;
+}
+
 VA(0x00574610, 0x480)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
@@ -2623,13 +2557,7 @@ void TSeerHut::read(TAbstractFile* infile)
                 1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        type_quest* newQuest =
-            createQuest(intBuffer & 0xff, 1);
-        if (newQuest)
-            newQuest->loadFromMap(infile);
-        m_quest = newQuest;
+        m_quest = readQuestFromMap(infile, 1);
     }
 
     m_completedByPlayer = 0;

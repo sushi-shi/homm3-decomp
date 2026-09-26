@@ -801,7 +801,7 @@ def _counts(rep, name):
 # and counting REJECTED sites (call + tail-jmp!) brackets cb.
 # ---------------------------------------------------------------------------
 
-_PROFILE = ["/O2", "/Ob2", "/Oy-", "/Op", "/ML", "/Gr", "/GX", "/GR-",
+_PROFILE = ["/O2", "/Ob2", "/Oy-", "/Op", "/MT", "/Gr", "/GX", "/GR-",
             "/D_WINDOWS"]
 _MODEL_SCRATCH = _common.REPO / "build/vc6/inline-model"
 

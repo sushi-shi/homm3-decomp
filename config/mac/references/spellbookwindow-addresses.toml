@@ -1,0 +1,109 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x59bdf0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18b0ac
+mac_size = 0x1424
+target_sha256 = "920a23dce0b3181e22125d37465e732b28b85c380cdd3568f1da333a9ae8c35a"
+evidence = "combatManager::viewSpells calls this with the hero, army group, combat context and terrain arguments used by the ordinary TSpellbookWindow constructor at Windows VA 0x59bdf0. The Mac body starts with the CAdvPopup base constructor at 0x1bd60, stores these four constructor arguments at offsets 0x60/0x64/0x5c/0x68, and ends at BLR 0x18c4cc immediately before the reviewed destructor at 0x18c4d0. This records a retained game constructor; the Windows caller already has its canonical source call."
+
+[[functions]]
+retail_va = 0x59c8f0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18c4d0
+mac_size = 0xb4
+target_sha256 = "c937a82e63ba9b4423afd8b271c512808c753718535de8325e8162e35bbcd50a"
+evidence = "Canonical destructor maps to Mac full delete-flag body: clears global spellbook window, deletes widget pointers, calls base destructor and optional operator delete; distinct Windows wrapper remains unresolved."
+
+[[functions]]
+retail_va = 0x59c970
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18c584
+mac_size = 0x34
+target_sha256 = "303a4515d979429fadc3c7e5785a9343daee3c383e1228d5faaf3cd413260136"
+evidence = "Tiny wrapper calls heroWindow::open 0x20af50 then converts success to result 3; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x59c990
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18c5b8
+mac_size = 0x20
+target_sha256 = "e11b1433c3506620ee7617ef03385d0d874c3fdc18696adb40975ff1400bfcea"
+evidence = "Tiny wrapper directly calls heroWindow::close 0x20b158; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x59c9a0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18c5d8
+mac_size = 0x5c4
+target_sha256 = "f0dd338107f89576c460dedfbb6b5f51e0d3417b658bc41688f21bc5dad54d2c"
+evidence = "Available-spell enumeration, page sorting and widget updates; direct calls from windowHandler to 0x18c5d8 at 0x18cfc0/18d038/18d1fc. Complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x59d040
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18cdb8
+mac_size = 0xaa0
+target_sha256 = "737cdb924748c82ba1bcc24406bdc4dfdd473d3d3712268350e7068df0433d9d"
+evidence = "Vtable handler calls CAdvPopup::windowHandler 0x1bf2c, pollSound 0x10eaf0, spell-description helper 0x18ae90, and gotoPage 0x18c5d8 repeatedly; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x59dbe0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18d858
+mac_size = 0xa8
+target_sha256 = "4ef9a084cd9ab8fcce53ceb4585a6235e59fbd7a382d328e22405ddbb15fcd7d"
+evidence = "TSpellbookEntry comparison orders two trait levels/schools and finally calls case-insensitive string compare 0x20efc4; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x59ba80
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ad78
+mac_size = 0x2c
+target_sha256 = "7412ec674114a1dfd4486a7598c6f1ff0c85b8ad0d790f6560478a194e166270"
+evidence = "Four global state stores: last-school, last-page, last-context and last-hero id reset to sentinel values; leaf ends BLR 0x18ada0, next prologue 0x18ada4."
+
+[[functions]]
+retail_va = 0x59baa0
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ae90
+mac_size = 0x21c
+target_sha256 = "9f12072e0e83138d9f255a4203f98b9653f5777c84c13ecfb4f41f1ee27fe10f"
+evidence = "Spell description builds string from trait level, checks hero mastery, invokes level-string helper 0x18ada4 for rollover and damage calculations for attack spells; windowHandler calls it at 0x18ce5c. Complete BLR/next prologue."
+
+[[helpers]]
+source_helper = "getLevelString"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ada4
+mac_size = 0xec
+target_sha256 = "371dad1bc957e78ff167095215c9a6e1f1eeacac43cc9590c2f74422df2ec072"
+evidence = "Dreamcast spellbookwindow.cpp:115 names the source-private level-string helper. Mac initializes the five general-text labels once from indices 0xad..0xb1, then indexes by the spell's trait level minus one. getSpellDescription calls it at 0x18afa4 and gotoPage calls it twice at 0x18c980/0x18c9f0. Final BLR at 0x18ae8c precedes getSpellDescription at 0x18ae90."
+
+[[helpers]]
+source_helper = "TSpellbookWindow::displayNewSchool"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18cc00
+mac_size = 0xec
+target_sha256 = "ee7c51b2ffacc05ad24b460b5cbd482f5a9306d4841cf3cc48820ff5c2364cf9"
+evidence = "Dreamcast records DisplayNewSchool as an ordinary member. Mac converts tab position to a school bit, returns if already selected, optionally plays video 0x25, updates school, calls gotoPage(0), sets the school-tab icon and draws the window. windowHandler retains three direct calls at 0x18d100/0x18d1a4/0x18d480. BLR at 0x18cce8 precedes convertID2HelpID."
+
+[[helpers]]
+source_helper = "TSpellbookWindow::convertID2HelpID"
+unit = "spellbookwindow"
+mac_section = 0x0
+mac_offset = 0x18ccec
+mac_size = 0xcc
+target_sha256 = "f12b5c51e6b67a1fb97836e2ea66bc4cc1523691b1f1d3920105ea651705bd82"
+evidence = "Dreamcast spellbookwindow.cpp:702 names ConvertID2HelpID. Mac's bounded switch maps the page, context, school, mana and cancel widget IDs to help-text indices and returns -1 for others. windowHandler calls it at 0x18ceb4 and 0x18d728; the final return precedes windowHandler entry at 0x18cdb8."

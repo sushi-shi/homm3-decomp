@@ -1,0 +1,19 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x56c120
+unit = "seerhuttext"
+mac_section = 0x0
+mac_offset = 0x2543f0
+mac_size = 0x1fc
+target_sha256 = "af87326b7e53dcee0221da5fb5105de9147f849875e0e91f324bb4e52094ec19"
+evidence = "initializeSeerHutText Mac 0x2545ec calls this body twice per column. It loads spreadsheet row 1 into name, loops q=1..9 over five row texts with 0x50 quest stride, then row 47 into completion at column +0x330. BLR 0x2545e8; next initializeSeerHutText 0x2545ec."
+
+[[functions]]
+retail_va = 0x56c960
+unit = "seerhuttext"
+mac_section = 0x0
+mac_offset = 0x163f0c
+mac_size = 0xe8
+target_sha256 = "3243a839f15801f52d32b3c09df29be19adfece8f98a26b541c78e66d15838e3"
+evidence = "Seer hut artifact/creature/skill requirement callers share 0x163f0c. It walks MSL string vector count+4/data+8 at four-byte stride, appends general text index 0x8e for final conjunction or TOC comma separator for earlier items, then appends each item and copy-returns string. BLR 0x163ff0; next body 0x163ff4."

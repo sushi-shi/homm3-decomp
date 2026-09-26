@@ -1,0 +1,64 @@
+# Address-only BinkManager references; independently bounded.
+
+[[functions]]
+retail_va = 0x44d5a0
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25d430
+mac_size = 0x27c
+target_sha256 = "d56d6f5e64d4261b4f09c14cfcc2d35429594201ddaf144f57138a838fe25fb0"
+evidence = "The .bik TOC string at 1+0x5dc50 is used at 0x25d480. Four archive searches use 0x2c-byte video-entry stride and call BinkOpen at 0x25d4e8/0x25d558/0x25d5d4/0x25d674. Callers 0x25d74c and 0x25d788 are the next Bink opener. BLR 0x25d6a8 bounds the body."
+
+[[functions]]
+retail_va = 0x44d830
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25d6ac
+mac_size = 0x19c
+target_sha256 = "3f01dc7a2c6dd37543d60194ee98fdf55b392269f464afb44c3ec656e03b1ecc"
+evidence = "Calls getBinkFilePtr twice at 0x25d74c/0x25d788, then closeBink on failures at 0x25d760/0x25d79c. Stores playingBINK dimensions/screen fields and uses Bink surface type. BLR 0x25d844; next prologue 0x25d848."
+
+[[functions]]
+retail_va = 0x44d9e0
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25d848
+mac_size = 0xe8
+target_sha256 = "089838fdae56134d232eb87f60cb437cf00484d21c4cd488f82e9bdf98eb32a6"
+evidence = "Draws selected Bink stream with BinkDoFrame at 0x25d890/0x25d8e8 and BinkCopyToBuffer at 0x25d8b4/0x25d90c. Inbound call 0x25e7b0. BLR 0x25d92c; next prologue 0x25d930."
+
+[[functions]]
+retail_va = 0x44da50
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25d930
+mac_size = 0x78
+target_sha256 = "a6c175974c6247da3c8edd124e48f1826f528dac202342ae9a0fb66a22eb654e"
+evidence = "Checks current Bink pointer then calls BinkGoto at 0x25d958, BinkDoFrame at 0x25d964 and BinkCopyToBuffer at 0x25d98c. Inbound calls at 0x6afcc and 0x25e958. BLR 0x25d9a4; next prologue 0x25d9a8."
+
+[[functions]]
+retail_va = 0x44daa0
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25d9a8
+mac_size = 0x278
+target_sha256 = "466e119592be20cc596947b2d162db670bfa49a18806fb1b40dd6a7300bf4d9d"
+evidence = "BinkWait at 0x25da20 gates frame advance; BinkDoFrame/Copy follow. End-of-stream calls BinkClose, BinkNextFrame, BinkGetSummary and closeBink at 0x25db98. Inbound call 0x25e728. BLR 0x25dc1c; next prologue 0x25dc20."
+
+[[functions]]
+retail_va = 0x44dcc0
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25dc20
+mac_size = 0x9c
+target_sha256 = "e22756e552a98608ef0de921782ba9e8ddec890624f4483b3d6ca1e5bac772e2"
+evidence = "Checks both Bink pointers, calls BinkPause/BinkClose at 0x25dc48/0x25dc54 and 0x25dc70/0x25dc7c, then zeroes playback state. Seven inbound branches include openBink failures, nextBinkFrame and playBink. BLR 0x25dcb8; next prologue 0x25dcbc."
+
+[[functions]]
+retail_va = 0x44dd20
+unit = "binkmanager"
+mac_section = 0
+mac_offset = 0x25dd0c
+mac_size = 0x240
+target_sha256 = "70705c73cb6ace29b15ceaa2bb3217d9685ee367338501e45d3de9682dc61159"
+evidence = "Receives id,x,y,w,h in r3-r7, calls openBink at 0x25dd70, hides/shows mouse, centers dimensions, polls Windows-style messages, calls closeBink at 0x25decc and updates/fades screen. Its one inbound branch at 0x25dcd8 is a source-local wrapper. BLR 0x25df48; next prologue 0x25df4c."

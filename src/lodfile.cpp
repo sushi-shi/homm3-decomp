@@ -139,6 +139,7 @@ LODFile::LODFile()
 {
     m_fileptr = 0;
     m_opened = 0;
+    clear();
     m_dataBuffer = 0;
 }
 

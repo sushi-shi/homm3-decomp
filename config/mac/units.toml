@@ -1,0 +1,9 @@
+# Authored bodies retain their source include prefix and source order.
+# Both compilers read ordinary project headers; MSL supplies Mac library types.
+[units.hero]
+mode = "paired_bodies"
+flags = ["-O3", "-proc", "750", "-nolink", "-char", "unsigned"]
+# Additional source-owned VA definitions can be made visible as ordinary
+# helpers without admitting them as scored Mac pairs.
+helpers = []
+source_helpers = ["markSpells", "hero::getLevel", "hero::isLevelUpCampaignOverride"]

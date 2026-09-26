@@ -1,0 +1,9 @@
+# Cross-unit game call retained by the Mac combat command TU.
+[[functions]]
+retail_va = 0x00556430
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ee4
+mac_size = 0x178
+target_sha256 = "ad4f5340a798acbb1e0b00f0d96f70f545b748ddb79c80871e752c8e4a0b8f40"
+evidence = "combatManager::handleCombatPlayerDrop at 0:0x88608 calls this body with the disconnected player's DPID. It finds the player position, logs the drop, calls CChatManager::playerDropMsg at 0:0x211890, updates local-player state and can transmit a remote message. This matches source-owned handlePlayerDrop at Windows 0x00556430. Its final blr at 0x214058 precedes the next function at 0x21405c. Reference identity only."

@@ -11,6 +11,9 @@
 
 class TownExtra;  // canonical definition in Game.h
 
+// The retail town-event building tables contain 41 entries per faction.
+enum { TOWN_EVENT_BUILDING_SLOTS = 41 };
+
 // Town/faction ids - the domain of town::type and of the creature
 // traits' townType column (armygrp's alignment switches case on it:
 // good 0-2 / evil 3-5 / neutral 6-8). NH3API terrain.hpp TTownType
@@ -215,6 +218,7 @@ SIZE(type_horde_effect, 8);
 // 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
 class TTownEvent;
 
+DATA(0x0066cd98)
 extern __int64 g_bitNumber[];
 
 class town {
@@ -372,13 +376,13 @@ public:
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
-    // checkIncluded includes buildings supplied by an upgrade (m_active);
-    // false tests only the explicitly constructed buildings (m_built).
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
-        if (checkIncluded)
+        if (checkIncluded) {
             return (m_active & g_bitNumber[buildingId]) != 0;
-        return (m_built & g_bitNumber[buildingId]) != 0;
+        } else {
+            return (m_built & g_bitNumber[buildingId]) != 0;
+        }
     }
     // Original: town::set_mask; Town.h:331, dc 0x168dfc.
     void setMask(__int64 newMask)
@@ -390,15 +394,15 @@ public:
     // the DC T_UCHAR return record is lowered, as for hasBuilding.
     bool isCastle() const
     {
-        return hasBuilding(CASTLE_FORT_ID, false)
-            || hasBuilding(CASTLE_CITADEL_ID, false)
-            || hasBuilding(CASTLE_CASTLE_ID, false);
+        return hasBuilding(CASTLE_FORT_ID, 0)
+            || hasBuilding(CASTLE_CITADEL_ID, 0)
+            || hasBuilding(CASTLE_CASTLE_ID, 0);
     }
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
     // proves native bool. Both declarations are byte-flat in all consumers.
     bool isCapitol() const
     {
-        return hasBuilding(HALL_CAPITOL_ID, false);
+        return hasBuilding(HALL_CAPITOL_ID, 0);
     }
     void setSummoningGenerator();
     int getPortraitFrame(bool isSmall) const;
@@ -561,6 +565,7 @@ extern __int64 g_townEligibleBuildMask[9];
 // Transitive building-requirement masks, one 44-slot row per town type
 // (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
 // 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
+DATA(0x00697798)
 extern __int64 g_hierarchyMask[9][44];
 
 enum ETownConstants {
@@ -619,6 +624,7 @@ extern int g_siloIncome[9][NUM_RESOURCES];
 // BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
+DATA(0x006747b4)
 extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 // Biased view of the upgraded half of the same first town row. Retail
 // GiveTroopsToNeutralTown carries a distinct relocation to this address.

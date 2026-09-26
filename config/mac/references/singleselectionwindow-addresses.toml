@@ -1,0 +1,1403 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onMapHeaderRequestMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x18092c
+mac_size = 0x84
+target_sha256 = "a54c499a7d169e29935fa10f8baab6d0b77b9e458a9ac0082a956cc5c65bc209"
+evidence = "The main network dispatcher calls this retained map-header request handler. It looks up the sender in the update manager, forwards the request flag and number to the found procedure, logs all three values, and returns true. BLR at 0x1809ac precedes getProc."
+
+[[helpers]]
+source_helper = "CNewPlayerUpdateMan::getProc"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809b0
+mac_size = 0x40
+target_sha256 = "2981b6f93be9546fccde8e5adf831d29460ae7ec3d51ca0f9c257a716bcb8a95"
+evidence = "The header-request and confirmation handlers call this retained eight-entry lookup with sender DPID. It returns the first non-null procedure whose first word equals DPID, otherwise null. BLR at 0x1809ec precedes the confirmation handler."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x1809f0
+mac_size = 0x68
+target_sha256 = "f94cf4ada45641c55f24537d21158952fbf4ec6036f5df8d5ca65b5b9de7b551"
+evidence = "The network dispatcher calls this retained confirmation handler. It finds the sender's update procedure via getProc, marks it confirmed when present, logs the sender DPID and returns true. BLR at 0x180a54 precedes checkMissingHeaders."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onReqHeaderConfirmMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x180ba4
+mac_size = 0x80
+target_sha256 = "3a8bd4426a9dd5826fdf801596c7d402a9050e5d61e79c37db50384786943ede"
+evidence = "The network dispatcher calls this retained request-confirmation handler. It checks missing headers for the sender, logs the no-missing case and transmits message 0x412 to that DPID, then returns true. BLR at 0x180c20 precedes onMapFileNameMsg."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::assignPlayerToOpenHumanSlot"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17c8f0
+mac_size = 0xc0
+target_sha256 = "78d8faa7c44b9df14d952259fea4381582b62ec8920252748516d01b5b317757"
+evidence = "onNewPlayerMsg calls this retained method once at 0x18185c with the joining DPID. It resolves the player, scans eight seats for an unoccupied human-legal row, skips disabled rows in load mode, assigns playerPos and returns success. Windows expands the same loop in its advanced-options arm; original method spelling is unproved. BLR at 0x17c9ac precedes setHumanSlot."
+
+[[helpers]]
+source_helper = "GameSelectionHeadersStruct::read"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e420
+mac_size = 0x100
+target_sha256 = "e7aff6cf07b0dd7038d359e90e8b56126bc2568f4af862b9caee2ada9a84c2e5"
+evidence = "CGameHeaderInfoMsg::read calls this retained row reader at 0x16e6a4. It loads the map header, reads setup, wasHuman, hero availability, title, description and file time in order, then returns the inverted saved-header load result. BLR at 0x16e51c precedes write."
+
+[[helpers]]
+source_helper = "GameSelectionHeadersStruct::write"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e520
+mac_size = 0xfc
+target_sha256 = "8f26f03b8a3c7c8c1eecb2a2caabb1d99bfe6b2591dfedccd9070561ad1371b2"
+evidence = "CGameHeaderInfoMsg::write calls this retained row writer at 0x16e72c. It saves the map header, writes the same six member bands in order, then returns the inverted saved-header save result. BLR at 0x16e618 precedes the message reader."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onRequestHeroFaceMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182b38
+mac_size = 0xdc
+target_sha256 = "fcab1f07e33da66e73efed65dd73d49126a1d357335baf0b1acef06d0385b7e2"
+evidence = "Both normal and popup network dispatchers call this retained method. It checks isHost, resolves the sender, requires a seated player, calls getHeroFace, constructs a hero-face reply (message 0x40c), transmits it and passes it to onRequestHeroFaceReplyMsg. BLR at 0x182c10 precedes the next method."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onSetAGRMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x182cec
+mac_size = 0x8c
+target_sha256 = "222215f2750d70a1500b35684e4eccbfe6d52ea214dc59d742fe780325d7b2ca"
+evidence = "Both network dispatchers call this retained AGR setter. It resolves a human then computer player by message game position, writes the bonus index at player+0x6c, and redraws the advanced option outside popup mode. BLR at 0x182d74 precedes onSetAsHostMsg."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onTownUpdateMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184508
+mac_size = 0x30
+target_sha256 = "74bd8d8555af0f65617667ec31a5e52d0dbf542d35d50b91a825180d3e4a16ec"
+evidence = "Both network dispatchers call this retained wrapper. It passes message game position and town at +0x14/+0x18, plus popup flag, to the already paired updateTown at 0x184538. BLR at 0x184534 precedes updateTown."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::calcPosition"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x185cbc
+mac_size = 0x58
+target_sha256 = "12df63f03a0823e100e3fbe56dfbefa2bb6287abbfc8119a96d97c933f25e87d"
+evidence = "onNameClick and drawHeroAdvancedOption call this retained row counter. It counts prior seats with playerPos >= 0 and, in load mode, excludes disabled seats. BLR at 0x185d10 precedes the next method."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onNameChange"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184d94
+mac_size = 0xbc
+target_sha256 = "868562e2b05a37f01f38bec971b68b4295ccd6e6550c3e92fe0b839c62c5f1c6"
+evidence = "Both CEnterNameEdit overrides call this retained member. It resolves the seated player, clears focus, copies the name into the player and preferences, writes preferences, updates widget gamePos+345, then calls drawHeroAdvancedOption(gamePos,1,-1). BLR at 0x184e4c precedes updateNames."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::updateNames"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x184e50
+mac_size = 0xb0
+target_sha256 = "1f0a3af90645b8d7ba253ff2ca5d98c5c39c0adcc8a0cf38fde03b4093dd21e1"
+evidence = "The selection window update calls this retained eight-row loop. Each row gets its seated player and name widget (id row+345), then sets the default-player label or player name. BLR at 0x184efc precedes highlightFile."
+
+[[helpers]]
+source_helper = "savedGameExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16dc00
+mac_size = 0x84
+target_sha256 = "919c7459967b8bab1c60b2e2aecc6351a9e4f3e56b52ef44a451e94fd6ee548c"
+evidence = "saveValid calls this source helper with the filename. Mac formats the save suffix and checks existence through its file API, returning at 0x16dc80 before saveValid starts; the authored Windows body uses desktop file APIs. No standalone Windows VA is established."
+
+[[helpers]]
+source_helper = "getGameVersion"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16e388
+mac_size = 0x24
+target_sha256 = "b659e502726d302e47aa6ec6578f81a65a2cedf2c99560de5926a81d76d33e63"
+evidence = "Between stopMouseThread and the two hero-availability helpers, the retained Mac body copies its fixed version string to the caller buffer via the string-copy routine at 0x26ae40. Windows obtains ProductVersion through its file-version API; the shared source helper identity follows the same TU order and call role, with platform-specific bodies."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getCompPlayerInPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16ef6c
+mac_size = 0x14
+target_sha256 = "4a42cb322478960ec594a01da8c9e3da622cec401f1610f0ee19fd9592d60cdf"
+evidence = "Immediately after getPlayerInPos, this leaf returns the computer-player record at the supplied index using the 0x7c player stride; BLR at 0x16ef7c precedes addNewPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getGamePos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0b4
+mac_size = 0x48
+target_sha256 = "a2c7305fd0b50d6b20400e2f2a4f716c6e8218680dd4d5a04afea1b8e928a213"
+evidence = "Calls getNetPos at 0x16f20c, returns -1 for an absent DPID, otherwise reads playerPos at record+0x70 with 0x7c stride. BLR at 0x16f0f8 precedes playerExists."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::playerExists"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f0fc
+mac_size = 0x34
+target_sha256 = "29f6ddce4e37dfa384601f7a119e76134e02cd39c82b641b5c90e1f980ce42d5"
+evidence = "addNewPlayer calls this retained wrapper, which calls getNetPos at 0x16f20c and returns whether the result differs from -1. BLR at 0x16f12c precedes getPlayer."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getNetPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f20c
+mac_size = 0x34
+target_sha256 = "281329a267d54ffb09f9778d96a70c0f3a8800dacdbc47c82b3effe113e3e91d"
+evidence = "Three retained callers query this leaf. It scans eight 0x7c-byte human-player records for the DPID and returns the index or -1; terminal BLR at 0x16f23c precedes the unassigned-position helper."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getUnassignedPlayerPos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f240
+mac_size = 0x58
+target_sha256 = "d141cff194ea482d3bb3cd3bf67397f124fc2e22a099011315cfcfa45260defd"
+evidence = "setNextPlayer calls this retained eight-record scan: nonzero DPID with playerPos -1 returns its index, otherwise -1. BLR at 0x16f294 precedes getPlayerCount."
+
+[[helpers]]
+source_helper = "CNetPlayerHandler::getPlayerCount"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x16f298
+mac_size = 0x68
+target_sha256 = "9321bc9495283d237d7c36b834bbde58e69f58d64876e94a70ddf3635cc4e7fa"
+evidence = "Eight-player scan counts human records and optionally requires assigned playerPos, matching the authored helper and its following t_map_list_update::go boundary at 0x16f300."
+
+[[helpers]]
+source_helper = "updateTurnDuration"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x18128c
+mac_size = 0x50
+target_sha256 = "18cfd15c8c3e5501b1687179bf4b47379684d7daa73cfba3fb7ccd3c1235fa2a"
+evidence = "onGameTransmitInitMsg calls this retained helper at 0x181428, and later selection handlers reuse it. The body indexes turn-duration minutes by game setup, multiplies by 60000 and calls the duration setter at 0x215aec; BLR at 0x1812d8 precedes the next handler."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::getThisPlayerGamePos"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17fb78
+mac_size = 0x2c
+target_sha256 = "330463b1e2c10e7d34981a223f11825ade596e5d0783530a3122fad43f3abc09"
+evidence = "This retained wrapper immediately precedes updatePlayerPositions and passes the local network player's DPID to CNetPlayerHandler::getGamePos at 0x16f0b4 using this+0xfb8. It returns at 0x17fba0 before updatePlayerPositions begins."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onClickMsg"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17de80
+mac_size = 0x60
+target_sha256 = "08009bad9a479c123c3ba69627d662f6aaf70b875a78bac6a1061bb02bc40c9e"
+evidence = "The selection window handler calls this retained click-message wrapper at 0x180540. It creates a local message, copies the incoming widget ID from netMsg+0x14 and calls onWidgetDeselect at 0x17e644 with message, exit flag and remote-click=true, then returns true at 0x17dedc."
+
+[[helpers]]
+source_helper = "getVCText"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17bb54
+mac_size = 0xd0
+target_sha256 = "462734fb6dea52f1edee48c9f7947524eb8e93870277b23783c45f3fcc0486ef"
+evidence = "drawBasicMapInfo calls this retained victory-description helper. It indexes the description table by condition type, copies text, and optionally formats the normal-victory OR clause; BLR at 0x17bc20 precedes getLCText."
+
+[[helpers]]
+source_helper = "getLCText"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17bc24
+mac_size = 0x3c
+target_sha256 = "658221ba4f931bfe9d5ba5e90b8492e860a9e01b2c006295ae5e869eae107f35"
+evidence = "drawBasicMapInfo calls this retained loss-description helper after getVCText. It indexes the loss-description table by type and copies that string to the caller buffer; BLR at 0x17bc5c precedes drawBasicMapInfo."
+
+[[functions]]
+retail_va = 0x5792c0
+unit = "singleselectionwindow"
+compgen_kind = "IMPLICIT_COPY_ASSIGN"
+compgen_type = "SavedGameHeader"
+mac_section = 0
+mac_offset = 0x17064c
+mac_size = 0x2c8
+target_sha256 = "e06bdf74d2949d106c2ce9175076bc1fa6b7ee9c0133587a79d8b3dd471c3a72"
+evidence = "CNewPlayerUpdateProc::tick and OnMapFileNameMsg call this on the SavedGameHeader member at Mac row+0x6c8 after copying the surrounding GameSelectionHeadersStruct fields. The body copies the SavedGameHeader prefix, assigns its CMapHeaderData at+0x10, strings at+0x2bc/+0x2c0 and the remaining fields through+0x53c. BLR0x170910 precedes the next short setter. The Windows TU claims the corresponding synthesized copy assignment at0x5792c0."
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16dc84
+mac_size = 0x18c
+unit = "singleselectionwindow"
+target_sha256 = "19c22b1f2088a3c4e35f158568684e4135d069545858c9be2a4f112b2d9c6e0b"
+evidence = "Save validation: disk space threshold1MB, general-text IDs0x2c5/0x1ee, 100-byte filename, strtok/overwrite dialog and copies into NEWGAME.gm1 global. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577360
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16de10
+mac_size = 0x320
+unit = "singleselectionwindow"
+target_sha256 = "83fcbe2473f907aecf3d6deabd7ff71a446a16a57db6e07e3d84b35253712946"
+evidence = "Copies map header64044, setup/campaign members and vectors, compares source with game global, transfers saved/local player and arrays lengths0x9c/0x15f/8. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577530
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e31c
+mac_size = 0x3c
+unit = "singleselectionwindow"
+target_sha256 = "917073211a917b0434aab763093ed4f9349bc34fefd1a0a02295a0bea482add7"
+evidence = "Mac start-mouse counterpart keeps setPointer(1,1) and serviceSounds219268; OS thread creation absent on Mac. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577790
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e358
+mac_size = 0x30
+unit = "singleselectionwindow"
+target_sha256 = "ecd27512b69b40b27721cfe8f1d6b68c5ac25a0a1d408fd1fdaf0a41cb0a8332"
+evidence = "Mac stop-mouse counterpart is setPointer(0,1); Windows event/thread shutdown absent on Mac. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577810
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e61c
+mac_size = 0xa4
+unit = "singleselectionwindow"
+target_sha256 = "1f23ecf23a014e99d401ff85d81f477a25992a5a925e43d57bf69b98aa024b15"
+evidence = "Message reader reads flag1byte and number4bytes with lwbrx, stores message+18/+1c then calls header reader16e420 at message+20. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577880
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e6c0
+mac_size = 0x88
+unit = "singleselectionwindow"
+target_sha256 = "94f9e06c7114d2b647a407f87ae143c4d7ff66e82726acde475c28328eb40e94"
+evidence = "Writer reverses reader: flag1byte, stwbrx number4bytes and header writer16e520 at message+20. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577950
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e748
+mac_size = 0x38
+unit = "singleselectionwindow"
+target_sha256 = "2de880b239779e1c3ccc290eb64fa91e9d1db16adc54daa143196ce9bce9566f"
+evidence = "Embedded NewSMapHeader load dbef4 with version42, returns logical negation. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577a10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e780
+mac_size = 0x34
+unit = "singleselectionwindow"
+target_sha256 = "f7f0a36c1a2e9c09e5dd76db942462debe1b8836e8b11d4ff07b173df57a17be"
+evidence = "Embedded NewSMapHeader save db804, returns logical negation. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577a30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e7b4
+mac_size = 0x94
+unit = "singleselectionwindow"
+target_sha256 = "0875523cd2946da9df5d0eb064683a8af981b9bc1d4d9cdc4d60b2eb4970d39d"
+evidence = "Unique vcdesc.txt resource153ad8, failurefalse, 14-description pointer fill. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577a50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e848
+mac_size = 0x94
+unit = "singleselectionwindow"
+target_sha256 = "55d9ff1cc4e146d7ea3398b94f55a2d2d0c3243677937c49df4b64ddd97d7288"
+evidence = "Unique lcdesc.txt resource153ad8, failurefalse, 4-description pointer fill. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577a80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16e8dc
+mac_size = 0x94
+unit = "singleselectionwindow"
+target_sha256 = "6676fd81a0161aace85f6035783d1f836dd78a16e2a5b4936817bdf040c29218"
+evidence = "Unique turndur.txt resource153ad8, failurefalse, 11-description pointer fill. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577ab0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ee14
+mac_size = 0x120
+unit = "singleselectionwindow"
+target_sha256 = "7dd1848297d783b50844a08a359573e0e6afd7a9e4d0e7e2827512763474e8e6"
+evidence = "Calls player-in-pos16ef34 and unassigned-position16f240; cycles8 human seats, preserves old assigned position, clears hero/town indices to-1. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577ae0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ef34
+mac_size = 0x38
+unit = "singleselectionwindow"
+target_sha256 = "dea76f026410d4b1b10e9e6cdea22d288011fa3c32a9d50238eff34962518111"
+evidence = "Eight human records stride0x7c; compares playerPos field and returns matching receiver-relative record ornull. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577bb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ef80
+mac_size = 0xd4
+unit = "singleselectionwindow"
+target_sha256 = "4f74dfea00db2257478a0e42edf3be393098ab57e5c8befb89e5fafd21bcd09c"
+evidence = "Eight-seat limit, duplicate DPID lookup16f0fc, inline empty-seat clear and strcpy name, DPID/version stores. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577be0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f054
+mac_size = 0x60
+unit = "singleselectionwindow"
+target_sha256 = "01f2684def8b3e7f2858d651fcf69ef7465f6bc8d99fda01ce38997d6f531428"
+evidence = "getNetPos16f20c, -1 failure, clears matched0x7c record, returns boolean. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577c90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f130
+mac_size = 0x38
+unit = "singleselectionwindow"
+target_sha256 = "3f53514d30fbb29624edf83368f20a8bfd8f5acad368a55c7572d0a6edb51627"
+evidence = "Eight human records stride0x7c, DPID compare, matching record pointer ornull; distinct from playerPos scan16ef34. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577ce0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f168
+mac_size = 0xa4
+unit = "singleselectionwindow"
+target_sha256 = "868039bf470375671ff1535d2b9339a59acb5fb9f8e194144f1cbda0d8d550e8"
+evidence = "Eight positions excluding supplied index; getPlayerInPos16ef34, heroIndex!=-1 and availableHeroes[index]==face. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577d10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f300
+mac_size = 0x68
+unit = "singleselectionwindow"
+target_sha256 = "41b0fefb1593f6e30c30943e40ee3d26f952f60e8f79e42cee05f9bd14600e9a"
+evidence = "Sends0x43b init message carrying transferHeaders count; transmitRemoteDataDPID212b88 with false,true. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577d70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f368
+mac_size = 0x49c
+unit = "singleselectionwindow"
+target_sha256 = "9caef73f7e53e18ac951ea5a66499156a05cda0c62f352a77c51ddb9ebf46df5"
+evidence = "Elapsed-time75ms gate; transfer vector window+f9c, batches5 file-name0x406 records withflag1; pending header requests and confirmation paths expanded; updates lastSendTime. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x577de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16f8b8
+mac_size = 0x2c0
+unit = "singleselectionwindow"
+target_sha256 = "9be3226d2e8e019cc7bc61e603ccf1a9ad099117f3d944711e6fae13d23e54dc"
+evidence = "GameSelectionHeadersStruct assignment: receiver/source header64044 and strings, setup block0x39words, title0x3d anddescription0x12d; SavedGameHeader copy16fb78; final string assignment. Distinct from constructor. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x578440
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16fe24
+mac_size = 0xf0
+unit = "singleselectionwindow"
+target_sha256 = "441362e157540751ceb3225d7ff0595edde5e6a1053bac9d970ee85b1d80c721"
+evidence = "Sends end0x401, filter0x408, scroll0x403 messages in order via212b88, each false,true. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x578930
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ff14
+mac_size = 0xac
+unit = "singleselectionwindow"
+target_sha256 = "4cb6e29ff4232ac47b276d29f54409b8a959753032978ac7cd8d9b01db2b7be2"
+evidence = "Builds header-init0x400 length0x30 with gameVersion19chars, headers count andloadMode; transmits false,true. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5789f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ffc0
+mac_size = 0x68c
+unit = "singleselectionwindow"
+target_sha256 = "a108b411f945909c05c23dec90fda2ffae75f564eae2e713c7b94a3a45e02fda"
+evidence = "75ms gate, headersA atwindow+f90, batches5; loadMode chooses full header0x3ff versusfilename0x406 flag0; requests andconfirmation expanded; lastSendTime update. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x578a90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x170950
+mac_size = 0x240
+unit = "singleselectionwindow"
+target_sha256 = "fa678545203729b73e862b2666ec10d6b3a54f038c48376e94df2f517c308b8e"
+evidence = "End/filter/scroll messages thensetup181c70, three click0x413 messages for0x81/0x80/0x82, player-position181bac andface helpers18353c/1835d8. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5795a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1756bc
+mac_size = 0x1c50
+unit = "singleselectionwindow"
+target_sha256 = "1207da3add6b73ba018455ee9846ec29eff97582d1b4da8f6526fd2084763708"
+evidence = "Complete random-map filter controls, unique RanSizS/M/L/X.def, RanUndr.def andplayer/team/water/strength assets; widget constructors62c6c andregistration calls. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57d170
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17730c
+mac_size = 0x480
+unit = "singleselectionwindow"
+target_sha256 = "16c96a350483b8411f593fec824b42945a2b90f6068a01aabbca3a1e77edba0f"
+evidence = "Updates random-map filter widget states: widget119..11d/11f/127 andselection flags0x10, map-size/player/team/current option fields. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57ef70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17778c
+mac_size = 0x344
+unit = "singleselectionwindow"
+target_sha256 = "5b5ad8bf0d5b6410f460bea09cbe088c49561872417909f6666acf55d505be23"
+evidence = "Load-mode setup: widgets69/b3 disable, local player joining0x410 andseat assignment186224, save header initialization, getHeaders17a914 andmap selection17d418. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57f330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x177c3c
+mac_size = 0x328
+unit = "singleselectionwindow"
+target_sha256 = "e8b2b57155e8208377a9f6384f161b2e7b619f9dd0826f2d8b3bd58a1f346cd3"
+evidence = "New-game mode setup mirrors load setup, sets difficulty10 anduses Arrogance.h3m fallback, getHeaders17a914 andselection17d418. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57f740
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x177f64
+mac_size = 0x90
+unit = "singleselectionwindow"
+target_sha256 = "85ecf60de851f528625011f2f1151d7b8f2783fa083717b194fd9f63dcac36aa"
+evidence = "showWidget toggles requested widget via20b564/20aa0c andchecks host18262c beforeenabling redraw. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57fb20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x177ff4
+mac_size = 0xf0
+unit = "singleselectionwindow"
+target_sha256 = "cfd22183b0d18a62eadd98e0186afaae5e4a1d4f1834347a39025b6f4ff89751"
+evidence = "Main setup buttons80/81/82,6b..6f,ba via showWidget177f64; feature/version e97d4 andbegin/back visibility. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57fb90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1780e4
+mac_size = 0x5ec
+unit = "singleselectionwindow"
+target_sha256 = "8823922b0163de1b1ae1c8d2bfcc3d9f4646040d15ae19311871178fa1234870"
+evidence = "Filter-pane setup firstturns off other panes179aa8/179660/17980c, thenupdates large random-map control band via widget enable/redraw operations. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57feb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1786d0
+mac_size = 0x4c4
+unit = "singleselectionwindow"
+target_sha256 = "d360b32a7288e923ecb7639c9d6364eee79eef682d4cd97225ace68440ab71b0"
+evidence = "Rebuild filtered game setup using temporaryheader, defaultbounds0x1c/0x15/0xe, player arrays8, text2e5/2e6; updateGameVars17b0b0, setHumanSlot17c9b0, makeHeroFilter17b304 andbroadcast181bac. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x580430
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x178b94
+mac_size = 0x33c
+unit = "singleselectionwindow"
+target_sha256 = "e520336c96414465859e0f3875262eb21834d306a68209210dac05717901a2e7"
+evidence = "Scenario options: disable other panes, host scan headers, send0x43c, enable65/169/89.., startMouse16e31c, header scan andstopMouse16e358. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x580a70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x178ed0
+mac_size = 0x790
+unit = "singleselectionwindow"
+target_sha256 = "e73083f51a7ceacc88756169293464dc29121ed9193d862b7cfacb18711f5872"
+evidence = "Advanced options with platform/version dialogs text2ea/2eb/2e8/2e9, pane toggles androw controls, setHumanSlot17c9b0, game vars17b1c4, makeHeroFilter17b304/checkFaces18353c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x581100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x179660
+mac_size = 0x1ac
+unit = "singleselectionwindow"
+target_sha256 = "b108a8f07c9e7847dc4c4a19752d650134c966c6753ab672b510fef59b220451"
+evidence = "Disable scenario option widgets65/169/89..8d andassociated rows using status6 redraw6. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5819a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17980c
+mac_size = 0x29c
+unit = "singleselectionwindow"
+target_sha256 = "b5324285359c9b5960df38ff2744da06b021cc9ab600c7038964a4a38fbf06e9"
+evidence = "Disable advanced option pane66 andper-player town/hero controls, gates bycurrent game mode184098. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x581b20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x179aa8
+mac_size = 0x5b4
+unit = "singleselectionwindow"
+target_sha256 = "173ce875da15ae614ce446e7a11eae6f74ebb18ac4fb9468f02df900eb99de2a"
+evidence = "Disable filter pane67 andcomplete random-map control sequence118 onward using status6/redraw6. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x581d80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17a05c
+mac_size = 0x844
+unit = "singleselectionwindow"
+target_sha256 = "bd7b64ee48d605dbfd7d1b78e6cd532aab231769a25d8ba5b49cf9e264b2b0e1"
+evidence = "Right-select dispatch creates town/hero/random-map popup classes16bc5c/16c1b0/16cb68/16d4f4; paired hero names/faces, modal andcleanup, updates chat/window afteractions. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5822d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17a914
+mac_size = 0x204
+unit = "singleselectionwindow"
+target_sha256 = "32a397c60f3464455a75e03353bbd36be04e5ff5c5703af8b897715be9f65b23"
+evidence = "Directory/header scan using Mac file APIs, capacity500 recordsstride150, headerget17ac88, thenlist/cache cleanup; platform directory implementation differs. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x582b40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17ab18
+mac_size = 0x170
+unit = "singleselectionwindow"
+target_sha256 = "7e412149833efbcfee07289ea4fb34a467a725defd9e5b9752f95e1c6c703f2a"
+evidence = "Post-scan selection state: sortMaps17cea0, highlightFile184f00 twice, backupGameHeaders16de10, setCurrentMap17d418/updateGameVars17b1c4. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x582e90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17ac88
+mac_size = 0x428
+unit = "singleselectionwindow"
+target_sha256 = "3f212f6c336e373840326d347e7ba3f6fa7c682c50081058036e67d6c714f022"
+evidence = "Opens/reads file header, savedgame loadercfc34, map/header copies, formatted title/description andgeneral-text1af; closesMac file atreturn. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x583170
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17b1c4
+mac_size = 0x140
+unit = "singleselectionwindow"
+target_sha256 = "5a7a90b8a1ee5557177197e7987b410899ecc5c1d3e687b57052ad2e54045e1f"
+evidence = "Selects currentheader stridec08, calls sharedgame-var copy17b0b0; optional backup16de10; copies eight playerdisabled and32-byte wasHuman arrays. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x583580
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17b304
+mac_size = 0x200
+unit = "singleselectionwindow"
+target_sha256 = "72902604c0b842668ccf7ec203f6ce828bbf2b13b083b0478319689324aeea7a"
+evidence = "Hero filter obtains seat/hero town, switchmaps alignment tohero class pairs0/1,3/2,5/4,...10/11; hero-setup tree lookup186e20 and feature test e9d98. Includesinternal jump-table targets17b3a8..17b408. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x583890
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17b964
+mac_size = 0xe8
+unit = "singleselectionwindow"
+target_sha256 = "9fa860e5848723f412ec70effba01aa2853cdf0a55732998616e9f50f373f9e7"
+evidence = "Current map filename lookup with map-count guards andfallback general text1fc/1fd, recordstridec08. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x583f20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17ba4c
+mac_size = 0x108
+unit = "singleselectionwindow"
+target_sha256 = "a43a5e256197ca71cf441355b5674938a84999c97adb7f53f3544e6de7fcf349"
+evidence = "Current map title lookup, randommap texts2e5 andfilename fallback1fc/1fd, recordstridec08. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x584010
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17bc60
+mac_size = 0x44c
+unit = "singleselectionwindow"
+target_sha256 = "5d320b421f445d4282bd221c75567f5faa4eb8a13450c2a9e9ba84a7558e41a9"
+evidence = "Draw map metadata via filename17b964/mapname17ba4c, date formatting, font calls andvictory/loss/version icons; unique date literal inbody. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5840f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17c0ac
+mac_size = 0x7b4
+unit = "singleselectionwindow"
+target_sha256 = "f8fc1a75e36bb720805ba03a485f88e0495cee6e2cfd701b8264a6924bd58ed7"
+evidence = "Main update owns unique %d/%d literal17c0bc, callsbasicmap17bc60, paintsallies/enemies andheroadvanced184ff0, updatesfilter17730c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x584550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17c9b0
+mac_size = 0x384
+unit = "singleselectionwindow"
+target_sha256 = "7d537821e35bd1d8969ef8307ef64f27c4cc55d99ccf9b5f1c4ff79770319d5b"
+evidence = "Sets human slot via gamevar update17b1c4 andunassigned/player-position helpers16f240/16ef34,8seat loop andhost broadcasts182c14. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x584c40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17cea0
+mac_size = 0x338
+unit = "singleselectionwindow"
+target_sha256 = "9b6771da57e5c65e9169940932338c8c33ee030173a8fe7aceb9f2e02d88ced7"
+evidence = "Map sorting dispatch: six comparators through17cde8, rebuilds header vectorstridec08, sends0x407 andupdatesgamevars/UI. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x585050
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17d1d8
+mac_size = 0x240
+unit = "singleselectionwindow"
+target_sha256 = "c9ed2f0e23131482d5d28392c02e810f7370b5d1e81fa1f2df4ee955437b05a2"
+evidence = "Eight-player ally/enemy flags, windowmode gate184098 andgamealliancee6cc4; widget/status andflagpositions0x1c8/0x192. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x585300
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17d418
+mac_size = 0x708
+unit = "singleselectionwindow"
+target_sha256 = "c6f9d308a4a3b54821009e0c90e4f1514f384cf316adef8e2079776ba1f3a53a"
+evidence = "Map selection: filename copy/tokenize, stridec08, gamevars/human/filter update, slider0x200 andmapchange0x403, allyflags andfullUI refresh. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x585500
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17db3c
+mac_size = 0x258
+unit = "singleselectionwindow"
+target_sha256 = "087aa21cd6e34646b9565badbccb8fae2ae48147d3cdfc2e5c0e682eb9812023"
+evidence = "Sets sizefilter, filtersheader liststridec08, slider0x200 andselection updates, broadcasts0x408 withnewfilter. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x585d90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17dd94
+mac_size = 0xec
+unit = "singleselectionwindow"
+target_sha256 = "f87910455c5d1b057669dcc30416de451d24913978a92a45a324e1d865450c8d"
+evidence = "Difficulty highlight widgets0x6b onward, clearsstates thensetsselected5, sendsupdate forslider0x200. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x586060
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17dee0
+mac_size = 0x428
+unit = "singleselectionwindow"
+target_sha256 = "8f9d1306744593bba23056c470b8986ad5673043fed835888c0c3addbb12be41"
+evidence = "Random-map generation: validatesnumericparameters, mousehelpers16e31c/16e358, RMG ctor250fe0/generate2511b0, progressdialog16d654/16dba8/16d870 andfailuretexts2ee. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5860e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17e424
+mac_size = 0x220
+unit = "singleselectionwindow"
+target_sha256 = "e13a7f00a46cf26229616008e9d274df22ff1ea8dfc96243a40eeb99f63348d2"
+evidence = "Returns generated-map name; unique random_map_%i.h3m and*.h3m strings, date/timecomponents andMac fileenumeration. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5879a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ec50
+mac_size = 0x28
+unit = "singleselectionwindow"
+target_sha256 = "cd2b7033a5e343ac5d1f51f88e9b8117f116932f227840a76ed73d29bcd56268"
+evidence = "Static chat slider callback loads singleton window andforwardsstate to18266c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57c7d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16ec78
+mac_size = 0x28
+unit = "singleselectionwindow"
+target_sha256 = "f21303fb63f8ce1cd29ef13ab9f3e41616d2dcdd9b44ba739229d91d6a4e369f"
+evidence = "Static duration slider callback loads singleton andforwardsstate to1826d0. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57c7f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16eca0
+mac_size = 0x28
+unit = "singleselectionwindow"
+target_sha256 = "3ffc9c84e98e8147012b6072e7ceea5529753d6c9d49078ecce7e2c38e831d94"
+evidence = "Static file-menu callback loads singleton andforwardsstate to1826a4. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57c990
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17e644
+mac_size = 0xd5c
+unit = "singleselectionwindow"
+target_sha256 = "3612414cb81fd9b3e633dccf43f920a386e2bf363adbd5f6dfe85221d4e10505"
+evidence = "Full widget-deselect dispatcher sends0x413, handles save/random-map/options/town/hero controls andfilter sizes24/48/6c/90; includesall jump-table cases17e778..17f388 andsharedreturn17f388. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5865b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17f3a0
+mac_size = 0x130
+unit = "singleselectionwindow"
+target_sha256 = "7f0eea33b1c9207017817af9db127d1cb8212bcde8485587bfde53649e257c4c"
+evidence = "Unique exit-lobby log strings, detachnetworkhandler, clearChat211f98, 8seat dump, transformsmessage id200 andcodes10, returns2. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x587bc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17f4d0
+mac_size = 0x6a8
+unit = "singleselectionwindow"
+target_sha256 = "bb846ff44446b66d9e9d457c951567b56440ecbc1fb9c69cbe10ef5ef6205285"
+evidence = "Window event loop pollsound10eaf0, no-savedgames2ae, popup/base dispatch, networkhandle17fff0, map/page key navigation, widget-deselect17e644 andhero-row redraw184ff0. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x587d00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17fba4
+mac_size = 0x44c
+unit = "singleselectionwindow"
+target_sha256 = "95ae9fc0239297d4e0be820e7b88eb55bb458f44a69f77ea76ef7c667b4cafbe"
+evidence = "Synchronizes eight playerData recordsstride15c fromnetwork/computer seats, names andtownchoice, mapsetupd6410 andgamepositione6c3c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x588330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x17fff0
+mac_size = 0x7e0
+unit = "singleselectionwindow"
+target_sha256 = "a8837e151c569098f7d0ffcab1fb549d52206961eac0929208f973bf27cd40e7"
+evidence = "Full network opcode dispatcher; switchcalls reviewed handlers, host/fatal dialog paths andhostwait loops; includesall caseblocks1800fc..1807b0 andfinalmessage disposal21393c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5887a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x180844
+mac_size = 0x5c
+unit = "singleselectionwindow"
+target_sha256 = "1bec493fb8f63d03366fcd754c9cb56f446ad8c38f5c08285f7d668ecd664f3c"
+evidence = "Echoes pingtime inresponse0x418 length18, transmit212b88 toincoming senderfalse,true. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5894d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1808a0
+mac_size = 0x8c
+unit = "singleselectionwindow"
+target_sha256 = "b724deb92a956fb803ed055cbcd110b5a455498d3f07c2f1e65da41db2f7a4de"
+evidence = "Elapsedtime20fc5c minusmessagepingtime, text43 formatting andreceiveChat1828a8, preservespopupflag. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589510
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x180a58
+mac_size = 0x14c
+unit = "singleselectionwindow"
+target_sha256 = "440b3ee8646dc9381fbf858fe9a8f41bdfdd3165b6244a0e57b8983ef389561a"
+evidence = "Scansbothheaderlistsstridec08 foruninitialized mapfiles, sends0x405 requestswithflag0/1 andlogsunique Missing Header [%d]. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5895c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x180c24
+mac_size = 0x668
+unit = "singleselectionwindow"
+target_sha256 = "f6905626161d80c887e28dbb6763de4919deaa50828c7d71c7aeee09404900dd"
+evidence = "Map-file-name reception: Mac fileopen/stat, getHeader17ac88, comparesfiletimes, copiesheaderrecordintoappropriate list andsendsmissing/headerrequests; fullfileclose boundary. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589710
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1812dc
+mac_size = 0x168
+unit = "singleselectionwindow"
+target_sha256 = "610c817b549d507cd22159101b164b86bc80e791c3a2de2e6f17b6059c1e80c8"
+evidence = "Initgame transfer updatespositions17fba4, receivessavee31b0, redraw/update17c0ac, loads gamed4be0/d44fc andnetworktransfers18128c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589b20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x181444
+mac_size = 0x108
+unit = "singleselectionwindow"
+target_sha256 = "0e93616c173b4d4e90b3d80c6c302c57fdd303e3ab4ea6f1d90ae2cbaddc4331"
+evidence = "Copies setup0x39words andadditionalplayerextras, flagbyte thenredraw/update17c0ac, returns1. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589c60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18154c
+mac_size = 0x148
+unit = "singleselectionwindow"
+target_sha256 = "b24efd9dbe6bbbb2a4fdba100b9aa462664708bafefcf1fbb0effc5c20ae3a29"
+evidence = "Comparesversionstringscase-insensitive thenallowedversion/fragmentsusingstrncmp28e2f8; severalacceptedearlyreturnsandfailure0. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589d30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x181694
+mac_size = 0x268
+unit = "singleselectionwindow"
+target_sha256 = "f053513a7f2c7e335741252d96a2003c433edaaf374ceb84678d150eb943dc23"
+evidence = "Unique OnNewPlayerMsg (%d) andincompatibleversion logs, version18154c, badversion0x416, seat assignment186224, updaterallocation20bytes, human/filter/chatrefresh. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x589fa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x181d80
+mac_size = 0x14c
+unit = "singleselectionwindow"
+target_sha256 = "6e8d17ea13060f060b6e96ebeed5ee86fab4fc952d4a9075a7ba362ac5740366"
+evidence = "Header-initversion gate18154c, badversion0x416 onfailure, clears/resizesheaders withstridec08 andsetsreceivingflag. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58a440
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x181ecc
+mac_size = 0x98
+unit = "singleselectionwindow"
+target_sha256 = "14a912d6f7763a75379ecc1b98c75ccf4b55ea7333bb315423c8bdcd14414411"
+evidence = "Extendedheader-init resetsandresizesbothlists, storesflagsandrecordcounts; no versiondialog branch. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58a780
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x181f64
+mac_size = 0x590
+unit = "singleselectionwindow"
+target_sha256 = "da6eb567fff3857f98249ae13b9689b3e1055ce6ce90ce0183497af181509212"
+evidence = "Readscompressedincomingheader through223398/223554 intoheaderaggregate, logs Rec'd game header [%d], writesappropriate list usingheaderassignment17064c andrequestsconfirmation; fulltemporary cleanup. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58aa40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18262c
+mac_size = 0x40
+unit = "singleselectionwindow"
+target_sha256 = "66e8c32e00bf49caf947f8c748f3b634decfd8224e1ffb862f13e4f676e17b94"
+evidence = "isHost checks network/local state andcallsremotehost211154; returns1 forlocal/non-network mode. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58adf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1828a8
+mac_size = 0x74
+unit = "singleselectionwindow"
+target_sha256 = "759200b0ae4ad511068292c605240f3e9d62937049ce928e8f3ee4ec3b17a8fa"
+evidence = "receiveChat resolves senderDPID via16f130, callschatmanager211584 then displayChat18291c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ae10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18291c
+mac_size = 0x104
+unit = "singleselectionwindow"
+target_sha256 = "c6da20d61bb9557d932531f02f31c14623aabaf87918c3d45d70eefa42b5cf12"
+evidence = "displayChat iterateschat records via211a78, updateschatwidgetstext/state andscrollbar throughvirtual calls. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ae80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x182a20
+mac_size = 0x118
+unit = "singleselectionwindow"
+target_sha256 = "6f4274eb3e607d64772f3432a6693f292e0a9481ec6c872f6328d26bf26ed8d1"
+evidence = "Chooseshero face usingDPID/gamepos16f0b4 andisFaceTaken16f168, supportsforward/backward selection and-1randomface. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58af20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x182c58
+mac_size = 0x94
+unit = "singleselectionwindow"
+target_sha256 = "2f53ad52b424dfe9b788136f9ff98fffb01f9cc396ddb2b9a5327603b3e82503"
+evidence = "Appliesreplyface toseatresolved16ef34, redrawswindowandupdate17c0ac. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58b0b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x182d78
+mac_size = 0x218
+unit = "singleselectionwindow"
+target_sha256 = "e1dc1db0f4aa4f125868db09d9ff09865a4bcfa3e47b0da96a84739cad02163e"
+evidence = "Becominghost: text1d7, hostflagmessage0x40e, rebuild scenario options178b94, seatflags/updaterallocation20bytes, updateMainWindow177ff4 andUI. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58b120
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x182f90
+mac_size = 0x140
+unit = "singleselectionwindow"
+target_sha256 = "f854127dc88dbcec28af15f9dbb7e46041c0a0436c4bd06c89e592b876ff430f"
+evidence = "Newhost updateshostflags, disablesbeginwidgetb3, pane reset179660/17980c, turnchaton1841f4, named/unknownhosttext211 andremotehost2117ec. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58b510
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1830d0
+mac_size = 0x154
+unit = "singleselectionwindow"
+target_sha256 = "098579c268a4620aa4a05385167c5f18fc2bccf9d653bf6201eec3f0bfeaf454"
+evidence = "Name-edit activation inallowedgamemode184098, getseat182c14, widgettextentry5df50, per-seat xstride50andwidth57, togglesname controls. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58b620
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x183224
+mac_size = 0x150
+unit = "singleselectionwindow"
+target_sha256 = "c7e32b721756f7332d369d164284e5caa6f1b39e4e90271ee973f8b92a8be5ff"
+evidence = "Player-position click hostcheck18262c, setNextPlayer16ee14, makeHeroFilter17b304, broadcastposition181bac, facevalidation18353c/send1835d8 andallyflags17d1d8. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58b790
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x183374
+mac_size = 0x1c8
+unit = "singleselectionwindow"
+target_sha256 = "cfd186f818d746de1c15997b7b4efc2b1d789fb2c4db4eec7d58de39af0cf44c"
+evidence = "Updatesboth human/computerseat arrayslength3e0, reseatsDPIDs186224, name lists1840cc, hero filter17b304 andallyflags17d1d8 thenredraw. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ba40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18353c
+mac_size = 0x9c
+unit = "singleselectionwindow"
+target_sha256 = "c685ee80335d23080086d093562a436f2155194912401ec7f411216e9824b6e4"
+evidence = "Validatesfacesforseat7..0 via16ef34/isFaceTaken16f168 andgetHeroFace182a20. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58bbc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1835d8
+mac_size = 0xc0
+unit = "singleselectionwindow"
+target_sha256 = "236990d3c8fb93bf4e49988b06574c42a04e736e3fb038796a43e13dfde46553"
+evidence = "Sendsface0x40c messagesforeachhumanplayer, 0x7c-seatstride, false,true delivery. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58bc70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x183698
+mac_size = 0x51c
+unit = "singleselectionwindow"
+target_sha256 = "4d563ea1d637dc15fd61ff4ae906f463f10343abac74ae07c054a75bcbb3372a"
+evidence = "Begin-game validatesrandommap/file/players andmissingheaders, sendsstartmessage, randmap17dee0 andheader17ac88, disk/load checks thenbeginSaved183bb4 orbeginNew183d5c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58bce0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x183bb4
+mac_size = 0x1a8
+unit = "singleselectionwindow"
+target_sha256 = "a79c5efa7dc73fb9a33d69d503bc96a9ba2f969697e1a3d1a5e4ff51cde70fe3"
+evidence = "Begin savedgame usesinputclear10e908, networktransfer18128c, savedgameloadd4be0 andstart0x415message, playerpositions17fba4 andgamehandoffe2414. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58c290
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x183d5c
+mac_size = 0x33c
+unit = "singleselectionwindow"
+target_sha256 = "121a68d9eb1aef57d0a68bec200877f848281226a7c2bbff91f431218495125a"
+evidence = "Begin newgame usesdefaultgamee43b0, mapcreationd47e4/d6350, start0x415message, mapheader temporary andgamehandoffe2414; network/playerposition updates. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58c570
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1840cc
+mac_size = 0x128
+unit = "singleselectionwindow"
+target_sha256 = "c75558f64232da641fc42eb9ca415758829285190842ac9bd760d1bd924560c9"
+evidence = "Updates the two name-list widgets with human-seat loops0..3 and4..7, seatstride7c andfallbackname buffer. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58c960
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1841f4
+mac_size = 0x190
+unit = "singleselectionwindow"
+target_sha256 = "fa3fa2554aa323f6615d0e3a55dabc3436ec9f2fafb1029531cc98463a48b067"
+evidence = "Turnchaton: text214, toggles69,b5,b4,150,b3 andname controls, callsupdateNameLists1840cc andredraw. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ca80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184384
+mac_size = 0x184
+unit = "singleselectionwindow"
+target_sha256 = "88d91f85711a571562af30fbfc04399da24bcf216933df7600688ffc02ba3dc3"
+evidence = "Turnchatoff: text215, inverse69/b5/b4/150/b3 widgetstatesandname controls, redraw. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58cbf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184538
+mac_size = 0xac
+unit = "singleselectionwindow"
+target_sha256 = "eb08af6c1a40e06b9333087d6790afc6fe405596f517da6715d053886815d11d"
+evidence = "Town change resolveshuman/computerseat, storesnewtown andheroIndex-1, makeHeroFilter17b304/checkFaces18353c anddrawHeroAdvancedOption184ff0. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58cd50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1845e4
+mac_size = 0x6c
+unit = "singleselectionwindow"
+target_sha256 = "126cd21faa74af8f79c6fc229923f7aa3b47db63a9eaf8013f7223fe133c5f5d"
+evidence = "Multiple-town check obtainsalignmentmask via132158 andtestsremainingbits; firstfailure0 thenboolresult. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ce70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184650
+mac_size = 0x14c
+unit = "singleselectionwindow"
+target_sha256 = "1b81668666beb80cefb0d9178dff0257d4ef4f4fd4ce88dc5a95ca0aa27a0837"
+evidence = "Canchoose town: resolvesseat, host/loadmode gatesandmultiple-town helper1845e4, checksalignment/assignment flags. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ceb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x18479c
+mac_size = 0x154
+unit = "singleselectionwindow"
+target_sha256 = "38ce2ad6f5ca33e0ff53043b775a5cd79aba20e1e8b2cad20ae833331e5c4d62"
+evidence = "Canchoosehero: seat lookup, town helper184ae4 andmaphero/random flags, permissions andmode guards. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58cfb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1848f0
+mac_size = 0x12c
+unit = "singleselectionwindow"
+target_sha256 = "23f5ea8bd0de728300e0da7a5b6b3e74f8f3e453191d079bf814fbee5469a73b"
+evidence = "Displayface resolveshuman/computerseatandhero-setup tree lookup186e20, returns-1forrandom/unavailable orselectedface. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58d0e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184b94
+mac_size = 0x200
+unit = "singleselectionwindow"
+target_sha256 = "a1553983a305474b432afadb1bc4cf82586114f0a894b8863a67c917a3cd3981"
+evidence = "Hero name: selectedhero indexstride486 andgeneraltext20c fallback, hero-setup tree lookup186e20 anddisplayhero184a1c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58d1f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184f00
+mac_size = 0xf0
+unit = "singleselectionwindow"
+target_sha256 = "7f7608de6a38e8f24e89f1fe5dad9ea183377bc094df0acc7239678aff6d8704"
+evidence = "Filename search overheadersstridec08, length andcase-insensitive compare20f01c, setscurrentrow/slider via virtual call, boolfound. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58d3e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x184ff0
+mac_size = 0xccc
+unit = "singleselectionwindow"
+target_sha256 = "0308dc1a50c836424b17e6a4375c35574f7ca6b6101ce58c2df3c9e754301a0d"
+evidence = "Draw fulladvancedhero row usingdisplayface1848f0/name184b94/town184ae4, canChooseTown184650, hero/font/spritewidget calls; multioptionbranches andsharedtail. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58d510
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x185d14
+mac_size = 0x98
+unit = "singleselectionwindow"
+target_sha256 = "1291291b27d0cb166c8d0c9ae3a9822a4435bf8d22a8a75e650698d9ab66bdf7"
+evidence = "Bad-version dialog: clearsremote/popup state212a50, formatsmessage28dfa8, normalDialog117f10 timeout0x4e20, returns1. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58df50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x185dac
+mac_size = 0x258
+unit = "singleselectionwindow"
+target_sha256 = "a0405e85e865e466e116a4fca769f25948e856393f5483ba8af6538c8b1dea12"
+evidence = "Delete currentfile: text2b0 confirmation, Mac file APIs, headererase andsort17cea0, mapselection17d418, fullfileclosepath. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58dfb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186004
+mac_size = 0x24
+unit = "singleselectionwindow"
+target_sha256 = "47f96a6b896e73e6e6c623de7ad813a3963fa264e0146f3882e39113d7a1619f"
+evidence = "Nullary global update callback loads singleton andcalls mainupdate17c0ac. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58e2d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186068
+mac_size = 0x58
+unit = "singleselectionwindow"
+target_sha256 = "6bd8248aee4a1dd355827fa0e7493cae8b838cdc2e7742899f562af4eee47391"
+evidence = "Net-handler checksremote message21294c, virtual handlerdispatch, returnsnull whenhandled. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58e310
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1860c0
+mac_size = 0x164
+unit = "singleselectionwindow"
+target_sha256 = "f938761be099c73d9ed9a7e5d67c679ffb86e5c9b41a493ae20b7f289604429a"
+evidence = "Popup-network handler switches hero-face/chat/pingmessages to182b38/184508/182cec/182c58/1828a8/180844/1808a0 anddisposesmessages21393c. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58e340
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186224
+mac_size = 0x1e8
+unit = "singleselectionwindow"
+target_sha256 = "bfbf1acf83bf7996b406bcb6360e566ff3a80c8236977149ad38433462806ad7"
+evidence = "Seatnewplayer via16ef80 thencommonversion186448, filteredsetup1786d0 andfeaturegatee97d4, eight-seat Conflux/town reset184538. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58e700
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186448
+mac_size = 0xe0
+unit = "singleselectionwindow"
+target_sha256 = "c4adc4bbd12198398f8eaa7db3e3575ae8f26dc5f7e271aeca813848683722e5"
+evidence = "Intersectsplayerfeaturebitsets via186d98/186de8/186dbc foreach8seatstride7c, derivescommoncontextlevele97d4. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x58ea00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186528
+mac_size = 0x88
+unit = "singleselectionwindow"
+target_sha256 = "cfcaf36dcae76dc31131a680386db4eab14805fdbfd5901ed7b596339b572896"
+evidence = "Animatedhostwait handlerbase2133bc, getRemoteData21294c(1,0), senderDPIDcomparewithmember, exitDialoga2344 onmatch. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x5891b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1866fc
+mac_size = 0x38
+unit = "singleselectionwindow"
+target_sha256 = "09ba50970665989d70580b0e8be1e4d1be045c6a019999b7dbe810c37d2f12c4"
+evidence = "Chat-slider resolution clampsnumStates to>=1, caps current/oldstate ifabove newcount. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57c9d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186734
+mac_size = 0x60
+unit = "singleselectionwindow"
+target_sha256 = "b97486ca6e4bc396d9b5822cd2600c5e023a469a2238dceb6c55f52f6209b1b2"
+evidence = "Chat-slider state clamps0..n-1, writescurrent/oldstate, knobposition=16ifn<=1 elseknobRange*state/(n-1)+16. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57ca00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1867f4
+mac_size = 0x80
+unit = "singleselectionwindow"
+target_sha256 = "440223be3ef8ec391ddd8429f7466c21633cd52eabf47b63a7b9011bfb61f4b1"
+evidence = "Chatwidget destructor deletesowned saveobject throughvirtual destructor, textWidgetbase1b1550, optionalMacdelete. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cba0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186874
+mac_size = 0xfc
+unit = "singleselectionwindow"
+target_sha256 = "b6f1b1b36be8fa5e98467557841c8f8f3ae8a32507bcdf9277fd4ba8d10f3d80"
+evidence = "Chatwidget draw selectsbackgroundsave/restore dependingcached flag, callsbitmap5c250/5c0f8 thentextWidgetdraw1b1834. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57ca90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186624
+mac_size = 0x2c
+unit = "singleselectionwindow"
+target_sha256 = "29c17b4987181e04eb6289fafff25cd1ff3692c8ec31bfa10d01dce953eee49b"
+evidence = "Chat edit send wrapper loads singleton andforwardschat with-1 senderselector tosendChat182770; no copiedsendbody. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cc00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186650
+mac_size = 0x4c
+unit = "singleselectionwindow"
+target_sha256 = "64dfb4c6b18d4b936189e8993abed160b57a794a748ee48edb92ab6cb7ea20b4"
+evidence = "Ignores five Mac keycodes35,74,79,7d,7e (escape/navigation); readsmessage codeX+4 andreturnsbool, platform keycodes differ. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cd00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1869d0
+mac_size = 0x88
+unit = "singleselectionwindow"
+target_sha256 = "917553b98d26be9e452156190579d854a3ac0863a969432e06e47724a36bd526"
+evidence = "Enter-name key handler extractskey1afaa0, commitsname through184d94 onenter andotherwise callsbase1afb44; widgethide/clearhover retained. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cdc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186a58
+mac_size = 0x64
+unit = "singleselectionwindow"
+target_sha256 = "527464f4c6dec171be0b556abe242be704a2af1b97ef4cf075636fa52c8d5fd3"
+evidence = "Name edit focus loss hideswidget, clears mousehover10c220, commitsname184d94 thenbasefocus1b0800. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cee0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186b1c
+mac_size = 0xec
+unit = "singleselectionwindow"
+target_sha256 = "ec626620d70811a005531aff45e00bf2a607576690452776f4053a0333152043"
+evidence = "Save edit ignore-key switch withMaccontrol/shift states through2a18c8/10e518; includesallinternalcases186b4c..186bf4 andfinalboolreturn. Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57cfe0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x186c08
+mac_size = 0x68
+unit = "singleselectionwindow"
+target_sha256 = "b5c5a35d04a669bf9400ec9884c5dd504d015ab93b764c5ecd3bde95b79d37af"
+evidence = "Save edit key handler callsbase1afb44, comparesm_text withNEWGAME.gm1 via20efc4 andclearsselectionthroughsetCurrentMap17d418(-1,1). Reviewed complete return boundary; linked/loader entry corroborates source role."
+retail_va = 0x57d0b0
+[[helpers]]
+source_helper = "TSingleSelectionWindow::refreshFilterWidgets"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e308
+mac_size = 0x5c
+target_sha256 = "489b55c611214303df77cf5ac9025bd6883c564f1fd12990214a18ab6b987a33"
+evidence = "Mac retained method sits immediately before OnWidgetDeselect and receives 16 direct calls from its filter arms. Its body calls updateFilterWidgets, the virtual drawWindow with full-window arguments, and update. Windows expands the same three-call sequence at those source sites; VC6 emits no call relocation for the helper. Complete Mac body ends with BLR at 0x17e360."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::openRandomMapOptions"
+unit = "singleselectionwindow"
+mac_section = 0x0
+mac_offset = 0x17e3c4
+mac_size = 0x60
+target_sha256 = "637c15bbac02edd7527d17c120c6e5d018a737e5516e9bdc3bd086abdc463aeb"
+evidence = "Mac retains this method immediately before OnWidgetDeselect and calls it from the random-maps arm. Its body calls setupScenarioOptions(1), the virtual drawWindow with full-window arguments, then update. Windows source had that exact sequence expanded in the same arm. Complete Mac body ends with BLR at 0x17e420."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::isMultiPlayer"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x184098
+mac_size = 0x34
+target_sha256 = "bff2ef20a33f3a7b728169126f3dc4b65d0e2c091200a2e642d9a1a0c606b754"
+evidence = "Dreamcast singleselectionwindow.cpp:7889 names TSingleSelectionWindow::IsMultiPlayer and its source body already exists beside updateNameLists. The Mac entry checks g_remoteOn then protocol value 3 (hotseat) and returns a byte boolean; final BLR 0x1840c8 precedes the next prologue 0x1840cc. Its 29 direct callers are selection-window methods, including reviewed controls at 0x17130c and 0x17c898. No Windows standalone VA is claimed; caller expansions need separate VC6 proof."
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onGameHeaderInfoEndMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1824f4
+mac_size = 0xd0
+target_sha256 = "7b1dc9d1b9f2b123d39edb03a982cf09d0189ee37acd44ab6288655f631b50ef"
+evidence = "handleNetMsg calls this at 0x180400 in the RS_GAME_HEADER_INFO_END dispatch arm, between the onGameHeaderInfoMsg and onScrollMsg calls. The body sets received-map state, clears current map and receiving flags, restores chat widget 179 when shown, updates slider resolution and redraws, matching the existing source method. Mac retains the call; Windows expands it into handleNetMsg. BLR at 0x1825c0 precedes the next method at 0x1825c4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onNewMapHeaderInfo"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181a3c
+mac_size = 0xac
+target_sha256 = "1035dd2a9f1283b2c7b95e33b636f9e223ac3de4c6ab220604048d9d51d41596"
+evidence = "handleNetMsg calls this at 0x1803e0 in the RS_NEW_MAP_HEADER_INFO arm. The retained body constructs CNewMapHeaderInfoMsg at 0x181a68, reads the incoming message and calls game::setupOrigData, matching the existing source method that Windows expands in the dispatcher. BLR at 0x181ae4 precedes the next method at 0x181ae8."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onScrollMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1825c4
+mac_size = 0x68
+target_sha256 = "1cf3154a38da2bf402c4377b0d044338da291276a56c9e35bce39566aa01233f"
+evidence = "handleNetMsg calls this at 0x180410 in the RS_SCROLL arm. The retained body copies the scroll index from message+0x18 to window+0x36c, updates the slider and calls setCurrentMap with message map index, matching the existing source method that Windows expands in the dispatcher. BLR at 0x182628 precedes the next method at 0x18262c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onPlayerDroppedMsg"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x181910
+mac_size = 0x12c
+target_sha256 = "d09c4a63cdd6fbb1ac659f1f38218658973d32280f81adbaf7b9647419ff265f"
+evidence = "handleNetMsg calls this at 0x180350 in the RS_PLAYER_DROPPED arm. The retained body looks up and removes the sender from the player list, updates common game version, notifies the update manager and redraws the lobby, matching the existing source method that Windows expands into the dispatcher. BLR at 0x181a38 precedes onNewMapHeaderInfo at 0x181a3c."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onChatWindowSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x18266c
+mac_size = 0x38
+target_sha256 = "7532d68b2678392d7bd1cc064413d6be48ecc3745d76fbaa837495dc13bb3498"
+evidence = "The sliderChatWindow callback calls this at 0x16ec64. It sets chat position through the chat manager at 0x182684, then calls displayChat at 0x18268c, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826a0 precedes the file-slider method at 0x1826a4."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onFileMenuSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826a4
+mac_size = 0x2c
+target_sha256 = "af1764e92a3b13bc6e7461cff610800b1b20045181ced1d048e7a6a6a2429fb5"
+evidence = "The sliderFileMenu callback calls this at 0x16ecb4. It stores the new index at window+0x36c, loads the current map at+0x370 and calls setCurrentMap with update flag one, matching the existing inline source method that Windows expands into its callback. BLR at 0x1826cc precedes the duration-slider method at 0x1826d0."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::onDurationSlider"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x1826d0
+mac_size = 0xa0
+target_sha256 = "1407e01cf6fcce6f4d7e182fe8c769fd3beef20724c364d765f2753eb19d77bf"
+evidence = "The sliderDuration callback calls this at 0x16ec8c. It stores the duration index at window+0x374 and into the game setup, broadcasts setup to a remote host where needed, then redraws and updates, matching the existing inline source method that Windows expands into its callback. BLR at 0x18276c precedes sendChat at 0x182770."
+
+[[helpers]]
+source_helper = "TSingleSelectionWindow::sendChat"
+unit = "singleselectionwindow"
+mac_section = 0
+mac_offset = 0x182770
+mac_size = 0x138
+target_sha256 = "819cd85ef4865bc43e74892a1e1fe8c614d52f0f27fb37372e0820309b5f67e2"
+evidence = "CSingleSelectionChatEdit::sendChat calls this at 0x18663c. The retained method handles the ping command first, otherwise formats the local player's chat line, displays chat and broadcasts CChatMsg, matching the existing inline source method that Windows expands into the editor override. BLR at 0x1828a4 precedes the next method at 0x1828a8."

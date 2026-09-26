@@ -1,0 +1,138 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x223910
+mac_size = 0x74
+unit = "objecttype"
+target_sha256 = "40268f6f0127b69e7ccdb58ecf4bf670cc8ba18a94c14ecdea870d55ec3b30b8"
+evidence = "Contiguous objecttype TU order corroborated by body: slot-category24-zero,terrain18-test-and-popcount-at-most3;vtable1:5c3d0-descriptor1:8c58. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x5141b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x223984
+mac_size = 0x4c
+unit = "objecttype"
+target_sha256 = "21e263329c873923f84303f1484c5014f9d72d9a12dc707dce55a650bed2344b"
+evidence = "Contiguous objecttype TU order corroborated by body: slot-category24-zero-and-terrain18-popcount-greater3;vtable1:5c37c-descriptor1:8c68. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514220
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x2239d0
+mac_size = 0x18
+unit = "objecttype"
+target_sha256 = "0a00f11ba480da1880e18970f9ff21272cef79f717b1d5a605a1818b323f5fef"
+evidence = "Contiguous objecttype TU order corroborated by body: compares-filter4-with-object-slot-category24;vtable1:5c318-descriptor1:8c80. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514260
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x224728
+mac_size = 0x48
+unit = "objecttype"
+target_sha256 = "0318721f3adc1dddfb23b9c3bd9e1a05cdca04d8f068787e5d4c238c0ccb3b74"
+evidence = "Contiguous objecttype TU order corroborated by body: base-vtable-TOC-minus6c4c-installed,optional-Mac-ABI-delete;derived-dtors-use-same-base-vtable. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514530
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x223aa4
+mac_size = 0x2b8
+unit = "objecttype"
+mac_symbol = ".setImageName__11TObjectTypeFRCQ23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
+target_sha256 = "d106bae5544746d4aae76d1a8760667f1aaf706f64d8d0097db25f139921eae0"
+evidence = "Contiguous objecttype TU order corroborated by body: registry223798-and-getIndex2268d0,string-dot-rfind226240,archive154660,and-four-mask-reads154728. Reviewed terminal BLR and next entry; excludes interleaved template bodies. CodeWarrior emits the named 948-byte body; relocation-masked shape aligns 77/174 retail instructions with 27 candidate versus 22 retail direct calls, so no exact Mac verdict is claimed."
+retail_va = 0x514610
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x223dcc
+mac_size = 0x80
+unit = "objecttype"
+target_sha256 = "d373759dcca660a31ef517205d6ec38dee76c7a767a965997801c9ee47c077a5"
+evidence = "Contiguous objecttype TU order corroborated by body: shared-image-registry-initialization-and-imageNumber-index-to-name. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514960
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x223f44
+mac_size = 0x134
+unit = "objecttype"
+target_sha256 = "63a9445e574af34f706e7c4083a2e0d9793e479838f25951bfa07287097e543c"
+evidence = "Contiguous objecttype TU order corroborated by body: bitset-minus-passableMask,hasTrigger,first-cell-loop,and-default8-by6-sentinel. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514a60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x224078
+mac_size = 0x1ac
+unit = "objecttype"
+target_sha256 = "0e8cb87a35adc701ef92339c2bc8ad9975447b614027d26b4b56a65d5257dc35"
+evidence = "Contiguous objecttype TU order corroborated by body: string-and-bitset48/9-extraction,four-integers,fluent-setImageName223aa4/passable223ea8/trigger223f44/terrain223e4c/recommended223e94/slot223ea0. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x514b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x224224
+mac_size = 0x244
+unit = "objecttype"
+mac_symbol = ".load__16TObjectTypeTableFPc"
+target_sha256 = "42797b0618438d586cb33145c6cc60069a763a3e4bbb15f0106204e88569c679"
+evidence = "Contiguous objecttype TU order corroborated by body: objects.txt-caller234440,getText153ad8,atoi-count,resize2264fc,istrstream22453c,and-row-parser224078. Reviewed terminal BLR and next entry; excludes interleaved template bodies. CodeWarrior emits the named 640-byte body; relocation-masked shape aligns 119/145 retail instructions and all 21 ordered direct calls."
+retail_va = 0x514d80
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x223798
+mac_size = 0x78
+unit = "objecttype"
+target_sha256 = "f734a59ec91160ef03856a9394bf829523938c997d3ad02dab39d6828eaea3f2"
+evidence = "Source helper without standalone Windows VA. TU order plus guarded-static-name-registry-initialization-shared-by-setImageName-and-getImageName"
+source_helper = "getObjectImageNames"
+
+[[helpers]]
+source_helper = "TObjectImageNameTable::getIndex"
+unit = "objecttype"
+in_class = true
+mac_section = 0
+mac_offset = 0x2268d0
+mac_size = 0xc4
+target_sha256 = "39ed1ebaea9d8f6647d0c27f36c52154138ff53b9e38f2dfe384cd6e2782175c"
+evidence = "TObjectType::setImageName calls this retained registry lookup at 0x223ad4. The Mac body finds a string key, inserts a name/index pair when absent, appends the returned map iterator to the row vector, then returns the mapped index at node+0x10. BLR at 0x226990 precedes the next function at 0x226994. Windows setImageName at 0x514610 expands this helper's map lookup, insertion and row append with no standalone call; the ordinary class method and its source call are already present."
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x223e4c
+mac_size = 0x48
+unit = "objecttype"
+target_sha256 = "c7a03fef8d23c876ed6845a4fae8cf9635a588f8c502da3a157672ef7dd7bb66"
+evidence = "Source helper without standalone Windows VA. TU order plus recommendedTerrain18-bitset-reset224818-then-terrain14-assignment"
+source_helper = "TObjectType::setTerrainMask"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x223e94
+mac_size = 0xc
+unit = "objecttype"
+target_sha256 = "f9315ef6c73a743c7ef227906605aaf5d99a88303cf10c963a5208883a4744bd"
+evidence = "Source helper without standalone Windows VA. TU order plus copies-bitset-word-to-recommendedTerrain18"
+source_helper = "TObjectType::setRecommendedTerrainMask"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x223ea0
+mac_size = 0x8
+unit = "objecttype"
+target_sha256 = "89be22fd96e003b7821ad7be0284b4cbd4d9359bca9eff5605cfed600562d55b"
+evidence = "Source helper without standalone Windows VA. TU order plus writes-category24-and-returns-this"
+source_helper = "TObjectType::setSlotCategory"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x223ea8
+mac_size = 0x9c
+unit = "objecttype"
+target_sha256 = "b96cc327f27bd4bf8183619578c70f2cea72f72c8efdc18512917ec570f749b2"
+evidence = "Source helper without standalone Windows VA. TU order plus combines-input-mask-with-complement-of-image-drawMask3c-and-writes-passable4/8"
+source_helper = "TObjectType::setPassableMask"

@@ -1,0 +1,247 @@
+# Source-owned HERO data used by the Mac getSkillAward body.
+
+[[constants]]
+units = ["hero"]
+mac_section = 1
+mac_offset = 0x4c74
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Mac initialize at 0xf4448 takes the address of the one-byte empty string at TOC 1+0x4c74, calls strlen, then passes it to std::string::assign. Complete now uses pooled empty literals at 0x691210; the source has no standalone DATA declaration, so this is a Mac constant pool span."
+
+[[data]]
+retail_va = 0x0067dcec
+source = "src/herodefs.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x49ed4
+mac_size = 4
+sha256 = "77e2ef61ee388e0bf8f70927caca401b496da42cd869ecaca6c0442867e16ae7"
+evidence = "Mac getSkillAward at 0xf6700 reads TOC 1+0x9bc -> pointer cell 1+0x49ed4, whose payload addresses 18 class rows at 1+0x49a50. The body indexes rows at 0x40 stride and skill chances at +0x18. Source has the reference-to-array DATA claim; this binds storage, not initializer bytes."
+
+[[data]]
+retail_va = 0x0067dce8
+source = "src/herodefs.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x49ed0
+mac_size = 4
+sha256 = "8ab41ad514b30979874624b94a49ea57c61f1db17b9a993d2898d5b4a8b6d25e"
+evidence = "Mac initialize at 0xf456c reads TOC 1+0x5e0 -> pointer cell 1+0x49ed0 with payload 1+0x45fbc. HeroExtra id selects a 0x5c-byte trait row and class at +0x08, matching the source-owned reference to 156 hero traits. External pointer storage only."
+
+[[data]]
+retail_va = 0x0069774c
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5270a4
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Mac campaign predicate at 0xf66a0 reads TOC 1+0x614 -> zero-filled flag at 1+0x5270a4. Same flag is tested in hero initialization at 0xf4960. Source-owned bool g_inCampaign is address-bound only."
+
+[[data]]
+retail_va = 0x00679ca0
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x44bec
+mac_size = 28
+sha256 = "a11fa07a108de88944021019df4456866dd90c6733e58f62717d481526d4f092"
+evidence = "Mac getSkillAward at 0xf6748 substitutes TOC 1+0x264c -> 28-byte disabled-skill table 1+0x44bec when campaign predicate succeeds. Mac and Windows versions differ in table entries, so this binds the source-owned table address without asserting identical initializers."
+
+[[data]]
+retail_va = 0x00679cbc
+source = "src/hero.cpp"
+mac_section = 1
+mac_offset = 0x44c08
+mac_size = 16
+sha256 = "9765073a388a5c1a4b1c678adde5d165f584c549f6dcf69dd0aa971f9475c916"
+evidence = "Mac getSkillAward loads TOC 1+0x2648 -> four live 32-bit school IDs 14,15,16,17 at 1+0x44c08, matching the source-owned initialized g_magicSchools table in order."
+
+[[data]]
+retail_va = 0x00660b6c
+source = "src/artifact.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x2ac2c
+mac_size = 4
+sha256 = "cb55fe4cbdb63b255072a6cc60c524fb0ff27d91453a4b63c0f70ba97bc0d779"
+evidence = "Mac removeArtifact at 0x1038c4 loads TOC 1+0x7c8 -> pointer cell 1+0x2ac2c, payload 1+0x645c8. A combination index selects 0x18-byte rows and the bitset<144> member at +4; this binds the source-owned g_combinationArtifacts pointer storage only."
+
+[[data]]
+retail_va = 0x0063e758
+source = "src/artifact.cpp"
+declaration_only = true
+mac_section = 0
+mac_offset = 0x2a4d90
+mac_size = 0x240
+sha256 = "c3c1ecfbac0db4eb40802f5350d41819a0dcf700dc1ae1f16285ac3a285ad7fc"
+evidence = "Mac removeArtifact at 0x103864 loads TOC 1+0x25d0 -> 0+0x2a4d90 and indexes four signed primary-skill deltas for each of 144 artifact IDs. Source declares this table at 0x63e758 and its adjacent end at 0x63e998, exactly 0x240 bytes later; address-only binding because Mac table lives in the code section."
+
+[[data]]
+retail_va = 0x006a57bc
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54dec0
+mac_size = 0xa8
+sha256 = "e3c2af35d1dfc500e16f826a071cc311bf55003a3de77de7ea3376c6b6fa2857"
+evidence = "Mac getMoraleDescription at 0xf88e4 loads TOC 1+0x8a8 -> 1+0x54dec0, then indexes 42 morale text pointers in the same order as the source-owned DATA 0x6a57bc declaration in viewarmywindow.cpp. The 0xa8-byte storage is zero-initialized in the pinned PEF and is populated later; this binds storage identity, not text contents. KB and other view callers use the same TOC pointer."
+
+[[data]]
+retail_va = 0x006a532c
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54df68
+mac_size = 0x64
+sha256 = "cd00e292c5970d3c5e2f0ffa5171e555bc46bfc4faddfb4a418b6840b86e79a3"
+evidence = "Mac getLuckDescription at 0xf8eb0 loads TOC 1+0x8a4 -> 1+0x54df68 and indexes the 25 luck text pointers at offsets +0x54, +0x10, and later entries. The source-owned DATA 0x6a532c declaration in viewarmywindow.cpp names the same array. Its 0x64-byte pinned PEF storage is zero-initialized and populated later; this binds storage identity, not text contents."
+
+# initialize(short) uses five separate zero-byte TOC literals. Their payloads
+# are identical, so each binding pins both its candidate use and target load.
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x48
+target_offset = 0x44
+mac_section = 1
+mac_offset = 0x4c5c
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The first std::fill_n clear in hero::initialize(short) starts at the inSpellbook array. Candidate @27 is loaded at function +0x48; target +0x44 directly loads zero from TOC 1+0x4c5c."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x6c
+target_offset = 0x68
+mac_section = 1
+mac_offset = 0x4c5d
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The second std::fill_n clear is availableSpells. Candidate @28 is loaded at +0x6c; target +0x68 directly loads zero from TOC 1+0x4c5d."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0xbc
+target_offset = 0xc8
+mac_section = 1
+mac_offset = 0x4c64
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The third byte clear is artifactSlotCounts. Candidate @33 is loaded at +0xbc; target +0xc8 directly loads the zero value from TOC 1+0x4c64."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x114
+target_offset = 0x130
+mac_section = 1
+mac_offset = 0x4c6c
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The fourth byte clear is skillLevel. Candidate @38 is loaded at +0x114; target +0x130 directly loads zero from TOC 1+0x4c6c. The target uses a wider load, which remains visible as a code difference."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x138
+target_offset = 0x158
+mac_section = 1
+mac_offset = 0x4c70
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The fifth byte clear is skillOrder. Candidate @39 is loaded at +0x138; target +0x158 directly loads zero from TOC 1+0x4c70. The target uses a wider load, which remains visible as a code difference."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x470
+target_offset = 0x464
+mac_section = 1
+mac_offset = 0x4c74
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Hero initialize(short) assigns an empty custom-name string. The source `\"\"` emits candidate @145 at +0x470; target +0x464 forms the direct TOC address 1+0x4c74 for strlen. The zero-byte payload and target instruction are checked independently."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004d8720
+candidate_offset = 0x4c0
+target_offset = 0x4b0
+mac_section = 1
+mac_offset = 0x4c74
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The second use of the same emitted @145 empty-string literal is at candidate +0x4c0 for assign. Target +0x4b0 forms the same direct TOC address 1+0x4c74. Both candidate use sites are required for this one-symbol binding."
+
+# CodeWarrior maps '\n' to Mac CR in ordinary literals. The shared explicit
+# LF escape emits the seven bytes used by the retail morale Grail line.
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dc320
+candidate_offset = 0x8
+target_offset = 0x8
+mac_section = 1
+mac_offset = 0x44c2c
+mac_size = 7
+sha256 = "82686ba26da75d2b5310b3dcceaa6c277b4c8c4424097e07c6414e1b4c98e357"
+evidence = "Candidate getMoraleDescription emits @646 bytes 0a2573202b3200 after spelling the Grail format with an explicit LF; this body's TOC use is function +0x8. Pinned retail code at 0xf88d4 also loads TOC 1+0x263c -> data 1+0x44c2c, the identical seven-byte Grail format literal. The immediately following getLuckDescription body has a separate use of the same target literal."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dcac0
+candidate_offset = 0x10
+target_offset = 0x10
+mac_section = 1
+mac_offset = 0x44c2c
+mac_size = 7
+sha256 = "82686ba26da75d2b5310b3dcceaa6c277b4c8c4424097e07c6414e1b4c98e357"
+evidence = "The candidate getLuckDescription reuses @646, the seven-byte explicit-LF Grail format, with a second IL TOC use at body +0x10. Pinned target body at 0xf8eb8 loads the same TOC 1+0x263c -> data 1+0x44c2c at target +0x10. Both body uses of this shared candidate symbol are reviewed separately."
+
+# The four sign arguments are distinct source literals with direct TOC addi
+# uses in the bounded Mac luck body. Each candidate/target site is checked.
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dcac0
+candidate_offset = 0x244
+target_offset = 0x1e8
+mac_section = 1
+mac_offset = 0x4c8e
+mac_size = 3
+sha256 = "fece4135c13c215cc29820614f9148c10ba37a255e9dd9e2b9f70fffa4d227f0"
+evidence = "Candidate @782 is the three-byte source literal '-1\\0' at a direct TOC addi xref +0x244 with the pinned MSL allocator constructor visible. Target getLuckDescription at 0xf9090 (+0x1e8) directly forms TOC 1+0x4c8e, whose pinned bytes are 2d3100, for the first signed formatString argument."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dcac0
+candidate_offset = 0x290
+target_offset = 0x228
+mac_section = 1
+mac_offset = 0x4c91
+mac_size = 3
+sha256 = "91a50c91f08a086053d9c72cfcfd47853d6de4e4b64a24ef16c21f3beaf872f8"
+evidence = "Candidate @783 is the three-byte source literal '+1\\0' at a direct TOC addi xref +0x290 with the pinned MSL allocator constructor visible. Target body at 0xf90d0 (+0x228) forms TOC 1+0x4c91, whose pinned bytes are 2b3100, for the second signed formatString argument."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dcac0
+candidate_offset = 0x2dc
+target_offset = 0x268
+mac_section = 1
+mac_offset = 0x4c94
+mac_size = 3
+sha256 = "d0b3e173286fc4323df0154a82659f1d408887ecae7e42475419d1376f061591"
+evidence = "Candidate @784 is the three-byte source literal '+2\\0' at a direct TOC addi xref +0x2dc with the pinned MSL allocator constructor visible. Target body at 0xf9110 (+0x268) forms TOC 1+0x4c94, whose pinned bytes are 2b3200, for the third signed formatString argument."
+
+[[constants]]
+units = ["hero"]
+owner_va = 0x004dcac0
+candidate_offset = 0x328
+target_offset = 0x2a8
+mac_section = 1
+mac_offset = 0x4c97
+mac_size = 3
+sha256 = "a8e67ffbebdefe933162b435dc6a64f4a32e299ba550e8ad96b15215afdcdf7b"
+evidence = "Candidate @785 is the three-byte source literal '+3\\0' at a direct TOC addi xref +0x328 with the pinned MSL allocator constructor visible. Target body at 0xf9150 (+0x2a8) forms TOC 1+0x4c97, whose pinned bytes are 2b3300, for the fourth signed formatString argument."

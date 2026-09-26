@@ -1,0 +1,371 @@
+# Address-only references discovered from COMMAND TU order, then independently verified.
+# Names remain owned by src/command.cpp VA claims; no compiled Mac target admission.
+
+[[functions]]
+retail_va = 0x00473c00
+unit = "command"
+mac_section = 0
+mac_offset = 0x81d04
+mac_size = 0x3f8
+target_sha256 = "4daab827e6cac950eed39a8a59c868b32d3f5b8c78e8f23aa2814601da6a2e1a"
+evidence = "NEW: Catapult145 gate, wall validity0x844b0, hero controller0x4e4e8, random0x1314b4 and wall table stride12 chooses attack order. End0x820fc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00473ea0
+unit = "command"
+mac_section = 0
+mac_offset = 0x820fc
+mac_size = 0x1b8
+target_sha256 = "ccd8079936fbb7bfa6dd8ca7dcb26d45faef733baae3a2a600f2d10336160fd1"
+evidence = "NEW: FirstAidTent147 automation, current controller0x4e4e8, scans side armies excluding undead60/61, chooses wounded target. End0x822b4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474040
+unit = "command"
+mac_section = 0
+mac_offset = 0x822b4
+mac_size = 0xd0
+target_sha256 = "b84a6067dc0482ac4fcf3837003f949aefa2e9e66f5919004f117391f809f7c1"
+evidence = "NEW: Quick combat gate, GameTime0x20fc5c clocks, mouse/animation0x10eaf0 and cycle0xa83a8. End0x82384; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004740d0
+unit = "command"
+mac_section = 0
+mac_offset = 0x823fc
+mac_size = 0x39c
+target_sha256 = "c6effe84733c8f9fb01d420724e1b7305aab0d4de774ca5b3d52cdf6931608e6"
+evidence = "NEW: Main event dispatcher calls animations0x822b4, AI action0x82ebc, getControl0x8674c, tent/catapult automation0x820fc/0x81d04, combatMsg0x831ac and processNextAction0x871d0. Switch labels internal; epilogue ends0x82798. End0x82798; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474690
+unit = "command"
+mac_section = 0
+mac_offset = 0x82810
+mac_size = 0x4a0
+target_sha256 = "0daa22247405ed37f33d880607d07673bf7667cbc1d13c9867b34b822d8fbc84"
+evidence = "NEW: Combat direction setup, army speed0x55028, seed path0xc64ac, canFit0x53028 twice and abs, twelve attack-direction choices. End0x82cb0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474a00
+unit = "command"
+mac_section = 0
+mac_offset = 0x82cb0
+mac_size = 0x1e8
+target_sha256 = "29e2b4e75a4a91c4e64b3c0c8bb56b5dfe16cdbe22277a98e6fd3ac1c66ec480"
+evidence = "NEW: Mouse direction uses pixel offsets from hex row17 x44/y42, two abs0x288778 and cursor setter0x216fc0. End0x82e98; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474ba0
+unit = "command"
+mac_section = 0
+mac_offset = 0x82ebc
+mac_size = 0x64
+target_sha256 = "89ef97e8b00a904856e2f3a1ea7fff5363143be70695ae71d923c2e9c09a1200"
+evidence = "NEW: Nullary computerAction checks quickCombat0x76bc8 and forwards active army pointer from strides0x6bf4/0x524 to0x82f20. End0x82f20; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474bf0
+unit = "command"
+mac_section = 0
+mac_offset = 0x82f20
+mac_size = 0x28c
+target_sha256 = "334fb63c6772cf87b42ab0347125d5077b1091599af3b295c684d5c9e7391c79"
+evidence = "NEW: Army computerAction overload checks tent147/catapult145/tower149, controlling hero and human0xe6bf4 plus automation flags. End0x831ac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00474d80
+unit = "command"
+mac_section = 0
+mac_offset = 0x831ac
+mac_size = 0xc64
+target_sha256 = "11f795a97eefbea1866d43b17a98ce212db3dd03eedfb8f809411f4d33f8f12f"
+evidence = "NEW: Combat input handler dispatches widget/key/mouse IDs200/0xc/0xe/0x7805; options0x74c18, surrender0x85c98, command0x84534, mouse direction0x82cb0, rightclick0x84ad8. End0x83e10; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00475ed0
+unit = "command"
+mac_section = 0
+mac_offset = 0x83e10
+mac_size = 0x274
+target_sha256 = "6f2157a8c02e077f9fea8d2f0ea419ded6d990584c5c4e6f7d93a71b7575e2ac"
+evidence = "NEW: Round reset notifies network, turns highlighter off0x86180, resets40 army slots0x5369c, vanish0x730bc, expires obstacles0x72d58. End0x84084; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00476200
+unit = "command"
+mac_section = 0
+mac_offset = 0x84084
+mac_size = 0x238
+target_sha256 = "0ff0142964a8676e5bc04313e66e95e51e7882adcfc7feaa237a2206a8dc3523"
+evidence = "NEW: Copies surviving armies into two armyGroups0x58050 then invokes aiAutoCombat0x29158 and applies results. End0x842bc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004762f0
+unit = "command"
+mac_section = 0
+mac_offset = 0x842bc
+mac_size = 0x15c
+target_sha256 = "556ae269984b8fd7f55afb5ab09fd223370bf43fde71078b4f470a1a31a773cb"
+evidence = "NEW: Quick combat resolves0x84084, combatIsOver0x713a4 and isWinner0x71514, then doVictory0x853cc. End0x84418; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004763f0
+unit = "command"
+mac_section = 0
+mac_offset = 0x84418
+mac_size = 0x98
+target_sha256 = "8124bac19737d363925f742b53c83ddb6df07e4c323f415346f7a256fbb4dd4d"
+evidence = "NEW: Placement bounds compare combat row/column index17 against side-specific tactical placement distance. End0x844b0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00476440
+unit = "command"
+mac_section = 0
+mac_offset = 0x844b0
+mac_size = 0x84
+target_sha256 = "00d27b3d778053bf61fefd4cfb624f0dca8cf807337032e91abe940a60109785"
+evidence = "NEW: Wall bounds0..7, fortification thresholds3/2 for6/7 and indexed wall table stride12. End0x84534; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00476490
+unit = "command"
+mac_section = 0
+mac_offset = 0x84534
+mac_size = 0x5a4
+target_sha256 = "b5c455d0d2947ab47cb32e530c726895250218be96b45559e26b3bc1e2a85b6b"
+evidence = "NEW: Command hit-test handles special tower hex253/252/255/254, ordinary0..186 target, cast0x53bc8, shooting penalties0x73778/0x7388c, resurrect0x538f8 and placement bound0x84418. End0x84ad8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004769c0
+unit = "command"
+mac_section = 0
+mac_offset = 0x84ad8
+mac_size = 0x200
+target_sha256 = "e43f571b165a437e8cab8b6c6fa237c156909bf5c09207207821cf7859b5fbcb"
+evidence = "NEW: Rightclick special tower253/252 calls viewCastleBallista0x88414; normal hex resolves army0x1081f8 then viewArmy0x74dcc, restores cursor. End0x84cd8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00476bd0
+unit = "command"
+mac_section = 0
+mac_offset = 0x84cd8
+mac_size = 0x308
+target_sha256 = "77828b37b62743d8fbf4d02632c61608f0ca656fb51df852a2e6294e8e895c2b"
+evidence = "NEW: Command0..22 switch stores pending action/hex, spell dialog0x18ef48, tower/army views0x88414/0x74dcc and cursor reset0x86cf8. Switch labels internal; epilogue0x84fdc. End0x84fe0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00476fe0
+unit = "command"
+mac_section = 0
+mac_offset = 0x84fe0
+mac_size = 0x2a0
+target_sha256 = "80cd7de0e0c237230c10b7990efd32c7d0a49dbc79343f4f37f1c0962ded16e4"
+evidence = "NEW: EagleEye set iteration0x768e8/0x768e0/0x76e9c, spell names stride0x88, forms list/dialog0x1194d8 and sample0x219150. End0x85280; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004772b0
+unit = "command"
+mac_section = 0
+mac_offset = 0x85280
+mac_size = 0x14c
+target_sha256 = "f3cb25dd041a9d731ee9736614cef087f6599ca49923dbeab9bd55c7e4d6df1b"
+evidence = "NEW: Looted artifact vector dialog, string/item formatting0x131520 and0x1194d8 with reward sample and timeout. End0x853cc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00477470
+unit = "command"
+mac_section = 0
+mac_offset = 0x853cc
+mac_size = 0x6e4
+target_sha256 = "23530527155220369ae995d576c696ffbae57c6062fa0e079fe9aed24523ed05"
+evidence = "NEW: Victory updates armies0x6fad4, experience0x76a94, skeletons0x766dc/EagleEye0x767f0/loot0x768f0, resultsWindow0x7df80 then reward dialogs0x84fe0/0x85280. End0x85ab0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00477ac0
+unit = "command"
+mac_section = 0
+mac_offset = 0x85d6c
+mac_size = 0xcc
+target_sha256 = "882100bd834eda9740505eee341f112aa5af368381c779a5eea0919f7dbe93c2"
+evidence = "NEW: Selector army state quick-combat gate, draws selector with mark0xa5134/redraw0xa5f6c when active selection changes. End0x85e38; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00477b60
+unit = "command"
+mac_section = 0
+mac_offset = 0x85e38
+mac_size = 0xf0
+target_sha256 = "22bee1be53d85f5fe05e1b246e736f89a7abe10e1f5fd72575989130faa89638"
+evidence = "NEW: Clears selector, marks army or tower0x76b70 and redraw0xa5f6c conditional drawIt. End0x85f28; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00477c20
+unit = "command"
+mac_section = 0
+mac_offset = 0x85f28
+mac_size = 0x258
+target_sha256 = "e83b236c76f6b154f458f916f41da81f4e9e43c301c174961ef7e4b5b9228245"
+evidence = "NEW: Highlighter hex bounds187, resolves army0x1081f8, marks old/new army/tower and redraw; handles side and owner state. End0x86180; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00477ee0
+unit = "command"
+mac_section = 0
+mac_offset = 0x86388
+mac_size = 0x3c4
+target_sha256 = "1293065f0142ffa951a723b60f370a80649e0335930c3d77e99abfec7c13bd92"
+evidence = "NEW: AI move checks retreat0x1f874, surrenderCost0x85b14 and human dialog conditions, calls chooseAction0x245e4. End0x8674c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x004782d0
+unit = "command"
+mac_section = 0
+mac_offset = 0x8674c
+mac_size = 0x5ac
+target_sha256 = "0e1b0c24a75cea272a44a014edbc5e2165a732d69a1183ec2234f8e28f414c4c"
+evidence = "NEW: GetControl updates selector0x85d6c, human status0xe6bf4/e6c3c, many widget enable/disable messages, hero spell artifact and spellAI0x253d4. End0x86cf8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00478890
+unit = "command"
+mac_section = 0
+mac_offset = 0x86cf8
+mac_size = 0xb4
+target_sha256 = "89786555d9712a74982ed187c56962f14099267169e3588f96437a09df7b2465"
+evidence = "NEW: Mouse reset checks quickCombat/human, restores combat cursor0x80adc and mouse0x10e568/setPointer0x216fc0. End0x86dac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00478900
+unit = "command"
+mac_section = 0
+mac_offset = 0x86dac
+mac_size = 0x1f8
+target_sha256 = "e9b10e9d6f3820631a1fd6d229d8f5d20774424632bf98dbbccb18a5a89ccd8c"
+evidence = "NEW: Move-then-attack executes prep0x87d0c, moveTo0x51c88/attackHex0x51ad4, obstacles0x4dc2c, facing restore, checkWin0x842bc and good morale0x703d4. End0x86fa4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00478b90
+unit = "command"
+mac_section = 0
+mac_offset = 0x86fa4
+mac_size = 0x22c
+target_sha256 = "6508c2caea21febc97b84d9cc02449828440060a52d7c4ba91bbdcbb62058371"
+evidence = "NEW: First aid resolves target0x1081f8, controlling hero0x4e4e8 first-aid skill0x105800, random healing0x1314b4 and sound/message/effect. End0x871d0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00478d80
+unit = "command"
+mac_section = 0
+mac_offset = 0x871d0
+mac_size = 0xb3c
+target_sha256 = "7cac8de7e6090c5a0211a4f57ad2bb2b275ffae6cb9f5645f1c356d03e17cf28"
+evidence = "NEW: Pending action dispatcher: army move/attack/spell, surrender/flee artifact gates, catapult0x51d54, firstAid0x86fa4, reset/checkWin/nextArmy. Internal case labels through0x87c74 share frame; final return0x87d08. End0x87d0c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00479de0
+unit = "command"
+mac_section = 0
+mac_offset = 0x87d0c
+mac_size = 0x164
+target_sha256 = "f3297ecb26577b24f173d7606d3d671c5af3c456b5298ac4f40da3de1632ad27"
+evidence = "NEW: Two-side creature cycle reset, tower mark0x76b70, animation0xa7db8, two GameTime stamps and redraw. End0x87e70; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00479f30
+unit = "command"
+mac_section = 0
+mac_offset = 0x87e70
+mac_size = 0xa4
+target_sha256 = "ebfe6710e04524ad48f13f21b0738d08468e5068d734902393f6999affb1f6c4"
+evidence = "NEW: Two-side fidget timers use GameTime0x20fc5c and random interval<=51 via0x130cf4. End0x87f14; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x00479fc0
+unit = "command"
+mac_section = 0
+mac_offset = 0x87f58
+mac_size = 0xec
+target_sha256 = "375273ab1c293ed44e053379b0e183cbb409d5a27ae24a9855158694a7d4c414"
+evidence = "NEW: Sets grid display flags/intensity then marks grid0xa5df4 and army hex0xa4f6c, optional redraw and mouse reset. End0x88044; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0047a100
+unit = "command"
+mac_section = 0
+mac_offset = 0x88044
+mac_size = 0x2f0
+target_sha256 = "0cf1451f65930c14e28f7996efa5bf2ca612bbaad8cdf58339cab29b9b4df0a6"
+evidence = "NEW: Finds free army slot, init0x492e0/loadResources0x4941c, marks army/tower, summon fizzle animation and returns army pointer. End0x88334; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0047a2d0
+unit = "command"
+mac_section = 0
+mac_offset = 0x88334
+mac_size = 0xe0
+target_sha256 = "8a330ef48e6169167a0bd4aec533ff67d36b8b1877f8365004b09037d7414afb"
+evidence = "NEW: Tower string formats archer count/skill and wall info stride0x288, returns constructed std string via0x131520. End0x88414; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0047a380
+unit = "command"
+mac_section = 0
+mac_offset = 0x88414
+mac_size = 0x190
+target_sha256 = "db9db55e808da7b804c7591178f6aa6a4c44bddf5e31bd78822d33446fefdf1a"
+evidence = "NEW: Castle ballista popup gets town archer levels0x1b4b80, formats three tower strings0x88334 and shows dialog0x117f10. End0x885a4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x0047a500
+unit = "command"
+mac_section = 0
+mac_offset = 0x885a4
+mac_size = 0x16c
+target_sha256 = "090cb79b86b3f1e651e39d3514e61b8a1a847d2f01b802340a42547be1829507"
+evidence = "NEW: Network player drop maps player0xe6e7c, network0x213ee4, localized notifications0x117eb8, timers0x87e70 and checkWin0x842bc. End0x88710; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[helpers]]
+source_helper = "combatManager::finishCreaturePlacement"
+unit = "command"
+mac_section = 0
+mac_offset = 0x82384
+mac_size = 0x78
+target_sha256 = "ccb27f6b44f3ed7a57e02ef51d6f2af979fa3d7cba4065e669da2f5b481d4fe1"
+evidence = "Bounded between doAnimations and main. Checks m_creaturePlacement, resets acting side/slot/turn and placement state, calls TCombatWindow::endPlacementPhase unless quick combat, then resetRound. Direct Mac calls from main 0x82640, processCombatMsg 0x8363c, and resetRound 0x83e6c; all three Windows bodies held the same block."
+
+[[helpers]]
+source_helper = "combatManager::getPointer"
+unit = "command"
+mac_section = 0
+mac_offset = 0x82e98
+mac_size = 0x24
+target_sha256 = "c33bdd6276c0769c385eabc76a4b1cce2c2215a0d466d0835f01feb9d23e2141"
+evidence = "processCombatMsg calls this retained member at 0x83b2c. It maps inCombatCommand 21 or 22 to pointer 5 and otherwise returns the input unchanged; unused iHexIndex is named in Dreamcast's matching two-int signature. BLR 0x82eb8; next independent function 0x82ebc."
+
+[[helpers]]
+source_helper = "combatManager::doSurrender"
+unit = "command"
+mac_section = 0
+mac_offset = 0x85c98
+mac_size = 0xd4
+target_sha256 = "af2cdf26baf0ab87a25415c419b433eab471d340627fb12aa87a4de046733d8d"
+evidence = "processCombatMsg calls this retained surrender dialog helper at 0x83538. It gets surrender cost 0x85b14, formats a text-resource offer, opens normalDialog and returns whether the player accepted; BLR 0x85d68. Windows expands its one source call."
+
+[[helpers]]
+source_helper = "combatManager::automateTower"
+unit = "command"
+mac_section = 0
+mac_offset = 0x8627c
+mac_size = 0x10c
+target_sha256 = "45f90fa41bbd3159b578f627650470652af39715669c25ebfbd2019eec9e13a3"
+evidence = "main calls this retained arrow-tower turn helper at 0x82550 between automateFirstAidTent and automateCatapult. It requires citadel level and the current arrow tower, maps lower/keep/upper hex to wall 13/14/5, immobilizes a destroyed tower or runs computer action/resetMouse, then returns a byte turn flag; BLR 0x86384. Windows main had this body flattened."
+
+[[helpers]]
+source_helper = "combatManager::setCombatViewArmy"
+unit = "command"
+mac_section = 0
+mac_offset = 0x87f14
+mac_size = 0x44
+target_sha256 = "2ffd9579bf845978ccdc74d663410802b71875c62ee8047d33d7b5e222d21abe"
+evidence = "processNextAction calls this retained preference setter at 0x87ca8. It writes g_config combat army info, calls drawFrame and writePrefs, then BLR 0x87f54. Windows source already has the ordinary method and caller."

@@ -4,7 +4,7 @@
 
 #include "va.h"
 
-#include <windows.h>
+#include "platform.h"
 
 struct SoundHeaderStruct;
 

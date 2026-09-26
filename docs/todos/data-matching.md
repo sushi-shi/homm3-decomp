@@ -5,6 +5,12 @@ executable has been reconstructed. Extend data matching with independent retail
 extents and explicit pointer ownership, keeping enrollment separate from match
 quality. Candidate object sizes alone cannot prove retail boundaries.
 
+`homm3 sema coverage --output build/data-coverage` now supplies an independent,
+exhaustive byte map with explicit unknown spans, overlaps and reference leads.
+See [retail data coverage and linking](../tooling/data-coverage.md) for its
+evidence policy, measured baseline and remaining limitations. Extent admission,
+candidate enrollment and pointer/access-width verification remain unfinished.
+
 ## Implementation checklist
 
 1. **Make data enrollment explicit.** Display disabled data comparison as such.

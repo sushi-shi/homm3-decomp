@@ -1,0 +1,153 @@
+# Names and C++ definitions come from the owning DATA annotation.
+[[data]]
+retail_va = 0x006994e8
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528940
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "External game pointer storage in zero-filled Mac data; loader proves TOC slot 1+0x630 -> 1+0x528940. getNextHumanPlayer and buyCreatures load this cell before Mac game member access. This binds the external address only, not an initializer or a data byte match."
+
+[[data]]
+retail_va = 0x00679c88
+source = "src/hero.cpp"
+mac_section = 1
+mac_offset = 0x44bd4
+mac_size = 24
+sha256 = "814dbc9bdcd82b419f93dc3fb42672730bad42366f5956c85268152e2467be95"
+evidence = "Unique 12 signed-short experience thresholds in expanded data; loader relocates TOC slot 1+0x2650 to this table. The two readers at code 0xf6290 and 0xf6390 implement indexed threshold/extrapolation and level lookup."
+
+# Compiler-generated literals have no source name. Match their emitted payload,
+# not CodeWarrior's context-dependent @number label, to a reviewed target span.
+[[constants]]
+units = ["hero"]
+mac_section = 1
+mac_offset = 0x4d10
+mac_size = 8
+sha256 = "68fc9699adeb966781bc946940815e1b7c835aa25ec8f810ac38f52073584984"
+evidence = "IEEE binary64 1.2, read directly at RTOC-0x32f0 by both experience extrapolation loops."
+
+[[constants]]
+mac_section = 1
+mac_offset = 0x4d18
+units = ["hero"]
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "IEEE binary64 0x4330000080000000 conversion bias, addressed through the loader-relocated TOC slot 1+0x265c. Independently emitted by CodeWarrior for signed int-to-double conversion."
+
+[[data]]
+retail_va=0x0069923c
+source="src/resourcemanager.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x5c040
+mac_size=0x4
+sha256="1e519721f6902db7ba68412cf46ee4006917a7ab7fdab3e423a717783fbb3b11"
+evidence="TOC 1+0xc0c; pointer storage points at active resource context ordinal; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x0069d870
+source="src/resourcemanager.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x54c1c4
+mac_size=0xec0
+sha256="0762a4678ac1a3275480f3a6a8e523bdb8b4dab9e7138add7adb03ed1f4edd06"
+evidence="TOC 1+0x2c04; eight LOD slots, Mac stride 0x1d8, initializer code 0x154af4; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x0069e538
+source="src/resourcemanager.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x54c134
+mac_size=0x60
+sha256="2ea9ab9198d1638007400cd2c3bef1cc745b864b76011a0e1bc52180ac6452d4"
+evidence="TOC 1+0x2c00; four 24-byte context rows, initialized by code 0x154af4; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x00697738
+source="src/hero.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x527d3c
+mac_size=0x4
+sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="TOC 1+0xc68, updateArmies slot reader at code 0xf56e0; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x00698a78
+source="src/hero.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x5281b8
+mac_size=0x4
+sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="TOC 1+0xc6c, updateArmies window reader at code 0xf56e8; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x00698a44
+source="src/hero.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x5281bc
+mac_size=0x4
+sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="TOC 1+0xc60, updateArmies live-strip reader at code 0xf56d8; external address binding only, initializer not compared."
+
+[[data]]
+retail_va=0x006747b0
+source="src/creaturetype.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x3ee84
+mac_size=0x4
+sha256="1ffb5b52d6892a45d6f5b77e7202a268ca9009e303b49a18c3592ab8657377cb"
+evidence="TOC 1+0x6d8; loader-relocated pointer cell to traits array 1+0x3aa8c. Source reference-to-array and Mac view pointer both address this external storage.; external address binding only, initializer not compared."
+
+[[constants]]
+units = ["hero"]
+mac_section=1
+mac_offset=0x4c88
+mac_size=3
+sha256="0b782fc3030dbdf3756f17e7adf2ce5808dfc513ca7589adeb679c7d25eaef6f"
+evidence="Percent-d null-terminated format string; updateArmies loads its address with addi r4,r2,-0x3378 at code 0xf5800."
+
+[[constants]]
+units = ["ai"]
+mac_section = 1
+mac_offset = 0x3e38
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "IEEE binary64 signed-int conversion bias 0x4330000080000000. Mac chooseBallistaTarget loads it through loader-relocated TOC 1+0x1cfc at code 0x1f310 and 0x1f4c8, converting averageDamage before both target scans."
+
+[[data]]
+retail_va=0x006973d8
+source="include/kb.h"
+declaration_only=true
+mac_section=1
+mac_offset=0x527e6c
+mac_size=1
+sha256="6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence="Canonical unsized shared scratch buffer. Windows updateArmies pushes VA 0x6973d8 to sprintf and message extraText; Mac updateArmies reads TOC 1+0x5ec -> BSS 1+0x527e6c. One-byte anchor binds address only; does not establish full buffer extent or initializer match."
+
+[[data]]
+retail_va=0x0069ccb0
+source="src/game.cpp"
+declaration_only=true
+mac_section=1
+mac_offset=0x52c07c
+mac_size=4
+sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="Windows valueOfWarFactory gpCurrentPlayer DIR32 alias at RVA 0x29ccb0. Mac corresponding player resources/value loop reads TOC 1+0x62c -> BSS pointer storage 1+0x52c07c; initializer not compared."
+
+[[data]]
+retail_va=0x00699280
+source="include/winmgr.h"
+declaration_only=true
+mac_section=1
+mac_offset=0x52894c
+mac_size=4
+sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="Windows doSinglePlayerWindow gpWindowManager DIR32 alias at RVA 0x299280. Mac same modal-dialog return path reads TOC 1+0x5f4 -> BSS pointer storage 1+0x52894c; initializer not compared."

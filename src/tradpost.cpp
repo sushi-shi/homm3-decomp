@@ -1336,7 +1336,7 @@ VA(0x005e9d20, 0x139)  // dc 0x188454
 void doArtifactMerchants()
 {
     if (g_townManager->m_townToView->m_visitingHeroId == -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_VISITING_HERO_ONLY_FORMAT],
                 g_specialBuildingNames[g_townManager->m_townToView->m_type][0]);
         normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
@@ -1745,8 +1745,8 @@ void TTradeResourceWindow::update(unsigned char update)
                 qtyLeft, wordLeft, g_resourceNames[g_leftResource],
                 qtyRight, wordRight, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? g_generalText->getText(GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE)
-                                        : g_generalText->getText(GENERAL_TEXT_TRADE_INSTRUCTIONS));
+        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
+                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1802,7 +1802,7 @@ void TTradeResourceWindow::update(unsigned char update)
         g_marketSource != MARKET_SOURCE_FREELANCER &&
         (g_townManager->m_townToView->m_type == TOWN_TOWER ||
          g_townManager->m_townToView->m_type == TOWN_DUNGEON) &&
-        (g_townManager->m_townToView->m_built & g_bitNumber[17])) {
+        g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOn(MARKET_RIGHT_LABEL_ID);
     } else {
         setWidgetOff(MARKET_RIGHT_LABEL_ID);
@@ -1811,7 +1811,7 @@ void TTradeResourceWindow::update(unsigned char update)
     if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
         g_marketSource != MARKET_SOURCE_FREELANCER &&
         g_townManager->m_townToView->m_type == TOWN_STRONGHOLD &&
-        (g_townManager->m_townToView->m_built & g_bitNumber[21])) {
+        g_townManager->m_townToView->hasBuilding(21, false)) {
         setWidgetOn(MARKET_TITLE_ID);
     } else {
         setWidgetOff(MARKET_TITLE_ID);
@@ -1919,15 +1919,15 @@ void TGiveResourceWindow::update(bool update)
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_GIVE_RESOURCE_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_GIVE_RESOURCE_FORMAT],
                 g_resourceNames[g_selectedArtifact],
                 g_colors[
                     m_slotPlayerColor[g_leftResource]]);
     } else {
         if (g_leftDenominated)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_GIVE_MORE_PROMPT));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_GIVE_MORE_PROMPT]);
         else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_GIVE_INSTRUCTIONS));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_GIVE_INSTRUCTIONS]);
     }
 
     msg.m_id = MESSAGE_WIDGET;
@@ -1984,8 +1984,7 @@ void TGiveResourceWindow::update(bool update)
         && g_marketSource != MARKET_SOURCE_FREELANCER
         && (g_townManager->m_townToView->m_type == TOWN_TOWER
             || g_townManager->m_townToView->m_type == TOWN_DUNGEON)
-        && (g_townManager->m_townToView->m_built
-            & g_bitNumber[17])) {
+        && g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOn(MARKET_RIGHT_LABEL_ID);
     } else {
         setWidgetOff(MARKET_RIGHT_LABEL_ID);
@@ -2143,8 +2142,8 @@ void TBuyArtifactWindow::update(unsigned char update)
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? g_generalText->getText(GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE)
-                                        : g_generalText->getText(GENERAL_TEXT_TRADE_INSTRUCTIONS));
+        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
+                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2337,9 +2336,9 @@ void TSellArtifactWindow::update(unsigned char update)
                                 : g_generalText->getText(GENERAL_TEXT_UNIT),
                 g_resourceNames[g_leftResource], g_artifactTraits[art].m_name);
     } else if (g_leftDenominated) {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE));
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
     } else {
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_INSTRUCTIONS));
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2512,9 +2511,9 @@ void TSellCreatureWindow::update(bool update)
                           .m_name);
     } else {
         if (g_leftDenominated)
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
         else
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_INSTRUCTIONS));
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
 
     msg.m_id = MESSAGE_WIDGET;
@@ -2821,11 +2820,12 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
             *inMaxUnitsToTrade =
                 g_marketHero->m_army.m_numTroops[inLeftResource] / *inTradeRatio;
     } else {
-        *inLeftDenominated = 1;
         if (ratio == 0.0f) {
+            *inLeftDenominated = 1;
             *inTradeRatio = 0;
             *inMaxUnitsToTrade = 0;
         } else {
+            *inLeftDenominated = 1;
             *inTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
             if (g_marketHero->m_army.getNumArmies() == 1)
                 *inMaxUnitsToTrade =
@@ -2835,13 +2835,9 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
                     g_marketHero->m_army.m_numTroops[inLeftResource];
         }
     }
-    // Residual (97.60%): all nine CFG blocks and the float/control semantics
-    // agree. The inverted arm allocates its throwaway pointer/scratch registers
-    // as edx/eax/ecx where retail rotates ecx/edx/eax; the denominated arm's
-    // idiv pins iInTradeRatio in esi and matches exactly. why-reg measured 20
-    // slots. Its v2 creation-order probes were either ill-typed or byte-flat;
-    // the guided 1.0f/name probes were flat and volatile ratio added 12 slots.
-    // This is a front-end handle-order register wall, not a missing branch.
+    // DC 2268 and 2274 store bInLeftDenominated in the zero and nonzero
+    // inverted-ratio arms separately. VC6 merges those stores in retail but
+    // their source placement fixes the final arm's register order.
 }
 
 // The four private helpers below survive only as inlined bodies in the retail
@@ -3203,7 +3199,7 @@ void TGiveResourceWindow::setRolloverText(int codeY)
     case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
     case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
     case GIVE_RECIPIENT_SLOT_6_ID:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_FORMAT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_PLAYER_FORMAT],
                 g_colors[m_slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
         break;
     case MARKET_COMMAND_ID: strcpy(g_text, g_giveHelpText[4].m_text); break;
@@ -3435,7 +3431,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
             case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
             case MARKET_ARTIFACT_SLOT_17_ID:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_ITEM_CANNOT_BE_TRADED), 1, -1, -1, -1, 0, -1, 0,
+                normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 return MESSAGE_DISPATCH_CONSUME;
 

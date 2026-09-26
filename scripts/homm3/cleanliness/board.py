@@ -80,7 +80,11 @@ The rows (all ratcheted; floors start at the tree's current counts):
                       anywhere in the tree, so a use of
                       HOMM3_MAKE_DPLAY_ERROR inside a DPERR_* constant is
                       not a scaffold) and whatever include/va.h defines
-                      (the annotation/verify machinery). Ratchets to zero.
+                      (the annotation/verify machinery). The one target
+                      selector `HOMM3_TARGET_MAC` is exempt only in
+                      conditionals: the Mac compiler command line defines it,
+                      while a source-local #define or
+                      #undef remains a counted scaffold. Ratchets to zero.
 
 Every invocation self-tests first: each metric's embedded positive
 samples must be detected and its negatives must count zero, so the gate
@@ -179,7 +183,9 @@ def _regex_sites(pattern):
 # --- the other ratcheted shapes (gruntz spellings) --------------------------------
 _REINTERPRET = re.compile(r"\breinterpret_cast\s*<")
 _VOLATILE = re.compile(r"\bvolatile\b")
-_CPP_EXTERN = re.compile(r"^[ \t]*extern\b", re.MULTILINE)
+_CPP_EXTERN = re.compile(
+    r'^[ \t]*extern\b(?![ \t]*"(?:C|C\+\+)"[ \t]*\{)',
+    re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
 _CPP_LOCAL_DEF = re.compile(
@@ -374,6 +380,11 @@ VA_HEADER = REPO / "include/va.h"
 # same name in a game TU/header, or a source #define, remains a scaffold.
 _OWNERSHIP_ANNOTATION_SWITCH = "HOMM3" + "_SOURCE_OWNERSHIP"
 _ANNOTATION_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|elif)\b")
+# This names a retail platform, not a per-TU declaration or inline switch.
+# It is introduced by the Mac compiler command line. A source #define/#undef
+# is still debt and must fail the zero floor.
+_MAC_TARGET_SWITCH = "HOMM3" + "_TARGET_MAC"
+_TARGET_CONDITIONAL = re.compile(r"^[ \t]*\#[ \t]*(?:if|ifdef|ifndef|elif)\b")
 
 
 def _legit_pp_names(sources) -> frozenset:
@@ -400,6 +411,8 @@ def _scaffold_preprocessor_sites(code: str, ctx) -> list:
         for match in _SCAFFOLD_IDENT.finditer(text):
             name = match.group()
             if name.endswith("_H") or name in legit:
+                continue
+            if name == _MAC_TARGET_SWITCH and _TARGET_CONDITIONAL.match(text):
                 continue
             if (ctx.get("path") == VA_HEADER
                     and name == _OWNERSHIP_ANNOTATION_SWITCH
@@ -674,7 +687,8 @@ _SAMPLES = {
          '  extern "C" void mm_init();'),
         ("int externalize();",
          "// extern lives in the owner header",
-         "internal_extern_helper();")),
+         "internal_extern_helper();",
+         'extern "C" {\nint errno;\n}')),
     ".cpp-local views": (
         ("struct TFoo { int a; };",
          "class advPopup : public TWindow {"),
@@ -771,6 +785,7 @@ _SCAFFOLD_LAYOUT = _SCAFFOLD_PREFIX + "SECOND_LAYOUT"
 _SCAFFOLD_ERROR = _SCAFFOLD_PREFIX + "SAMPLE_ERROR"
 _SCAFFOLD_VERIFY = _SCAFFOLD_PREFIX + "SAMPLE_VERIFY"
 _SCAFFOLD_RELEASE_VERIFY = _SCAFFOLD_PREFIX + "RELEASE_VERIFY"
+_SCAFFOLD_MAC_TARGET = _SCAFFOLD_PREFIX + "TARGET_MAC"
 _SAMPLES["per-TU preprocessor scaffolds"] = (
     ("#define " + _SCAFFOLD_DECLS,
      "#undef " + _SCAFFOLD_DECLS,
@@ -780,7 +795,9 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
      + _SCAFFOLD_LAYOUT + ")",
      "#elif defined(" + _SCAFFOLD_DECLS + ")",
      "#if !defined(" + _SCAFFOLD_INLINE + ")",
-     "  # define " + _SCAFFOLD_DECLS + " 1"),
+     "  # define " + _SCAFFOLD_DECLS + " 1",
+     "#define " + _SCAFFOLD_MAC_TARGET + " 1",
+     "#undef " + _SCAFFOLD_MAC_TARGET),
     ("#ifn" + "def " + _SCAFFOLD_PREFIX + "SAMPLE_H\n#define "
      + _SCAFFOLD_PREFIX + "SAMPLE_H",
      "#define " + _SCAFFOLD_ERROR + "(code) (0x88770000UL + (code))\n"
@@ -791,6 +808,10 @@ _SAMPLES["per-TU preprocessor scaffolds"] = (
      "#pragma " + _SCAFFOLD_DECLS,
      "#include <va.h>",
      "#else\n#endif",
+     "#if defined(" + _SCAFFOLD_MAC_TARGET + ")",
+     "#ifdef " + _SCAFFOLD_MAC_TARGET,
+     "#ifndef " + _SCAFFOLD_MAC_TARGET,
+     "#elif defined(" + _SCAFFOLD_MAC_TARGET + ")",
      "int " + _SCAFFOLD_DECLS + " = 1;",
      "// #define " + _SCAFFOLD_PREFIX + "COMMENT_DECLS"))
 

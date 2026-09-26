@@ -9,7 +9,7 @@
 #include <ddraw.h>
 #include <string>
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "smackmgr.h"
 
@@ -415,12 +415,21 @@ void videoNextFrame()
     g_insideNextFrame = 0;
 }
 
+// Mac retains this call from videoDrawCurrentFrame at 0:0x25e788.
+// Keep the helper visible before the caller so VC6 can expand it.
+VA(0x00598e80, 0x25)
+void SmackManager::drawSmackerFrame()
+{
+    if (g_smackVideo && SmackManager::g_playingSmacker && !g_smackPaused)
+        SmackDoFrame(g_smackVideo);
+}
+
 VA(0x00597740, 0x53)  // dc 0x14ac48
 void videoDrawCurrentFrame()
 {
     if (g_smackVideo || g_smackVideo2) {
-        if (!g_smackPaused && g_smackVideo && SmackManager::g_playingSmacker)
-            SmackDoFrame(g_smackVideo);
+        if (!g_smackPaused)
+            SmackManager::drawSmackerFrame();
     }
     if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) {
         if (!BinkManager::g_playingBink.m_paused)
@@ -1015,13 +1024,6 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
 // and store order. The CE CloseSmacker body itself is only rts/nop.
 namespace SmackManager {
 
-VA(0x00598e80, 0x25)
-void drawSmackerFrame()
-{
-    if (g_smackVideo && SmackManager::g_playingSmacker && !g_smackPaused)
-        SmackDoFrame(g_smackVideo);
-}
-
 VA(0x00598eb0, 0x193)  // dc 0x14adfc
 void nextSmackerFrame()
 {
@@ -1051,15 +1053,7 @@ void nextSmackerFrame()
             SmackNextFrame(smk);
         }
     } else {
-        if (g_smackVideo)
-            SmackClose(g_smackVideo);
-        if (g_smackVideo2)
-            SmackClose(g_smackVideo2);
-        g_smackVideo2 = 0;
-        g_smackVideo = 0;
-        g_smackPaused = 0;
-        SmackManager::g_playingSmacker = 0;
-        SmackManager::g_needsUpdate = 0;
+        closeSmacker();
         if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
             g_windowManager->fadeScreen(1, 4, 0);
         else

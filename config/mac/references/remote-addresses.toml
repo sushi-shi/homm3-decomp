@@ -1,0 +1,772 @@
+# Reviewed shared remote identities in the Mac PEF.
+
+[[functions]]
+retail_va = 0x557400
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215040
+mac_size = 0x8
+target_sha256 = "eda68d0df624b748a9875bc045e46daa54bfed64affe3d868ddea8dfaebc6262"
+evidence = "CSaveScreen::isSaved reads its saved byte at +0x38 and returns. The selection-window ally/enemy update calls it at 0x17d22c; that caller already uses isSaved in the shared source. BLR at 0x215044 precedes another function at 0x215048."
+
+[[helpers]]
+source_helper = "CChatManager::CChatManager"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2113a0
+mac_size = 0x7c
+target_sha256 = "b49535380561a8d0818f09b9d06cbdd03ec3c481e4b74cfe2088db35bd2e35b7"
+evidence = "The retained constructor initializes chat ring fields and five sample pointers, then calls setMaxLines at 0x212058. The global g_chatMan initializer expands it in Windows. BLR at 0x211418 precedes the deleting destructor wrapper."
+
+[[functions]]
+retail_va = 0x5537b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211484
+mac_size = 0x64
+target_sha256 = "ad389364e26effa48fb08da2f7c43f6819a08a38287842a4c609e9cd782088f4"
+evidence = "CChatManager::init calls the same ResourceManager::getSample body at 0x153f78 for five sound names, storing results at +0x30 through +0x40. BLR at 0x2114e4 precedes shutDown."
+
+[[functions]]
+retail_va = 0x553800
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2114e8
+mac_size = 0x9c
+target_sha256 = "b81816c30db7bb1648a94eb946ac6bb2d5d84d0b844486b9d77d3e0a1fdaec24"
+evidence = "CChatManager::shutDown tests the first sample pointer, then invokes the virtual dispose slot for all five samples. BLR at 0x211580 precedes addChat."
+
+[[functions]]
+retail_va = 0x554050
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211ef0
+mac_size = 0x30
+target_sha256 = "d3c4e0fefc769cc7e9d19ce85de7795c32f89165330250ec7edbad497c396ebd"
+evidence = "CChatManager::pauseTimeOuts calls GameTime::get at 0x20fc5c and stores the result at +0x10. BLR at 0x211f1c precedes resumeTimeOuts."
+
+[[functions]]
+retail_va = 0x554060
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211f20
+mac_size = 0x78
+target_sha256 = "842b64031e924117b02a10a6ad96ce8ac07a0d45bae9e57aa76ed87fed19d666"
+evidence = "CChatManager::resumeTimeOuts walks twenty 0x88-byte records, extends nonzero kill times by GameTime elapsed since pause and clears pauseTime at +0x10. BLR at 0x211f94 precedes clearChat."
+
+[[helpers]]
+source_helper = "getPlayerPos"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ba4
+mac_size = 0xec
+target_sha256 = "4f8165ddd3b6492f06b796ea3ca485be3cb9e11d00114032ce56ca19383dfafa"
+evidence = "handlePlayerDrop calls this retained eight-seat DPID lookup at 0x213f08. It compares each game player record's DPID using the 0x15c stride, returns the matching index or -1, and ends at 0x213c8c before getPriorPlayer. Windows expands the same source helper."
+
+[[functions]]
+retail_va = 0x556430
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ee4
+mac_size = 0x178
+target_sha256 = "ad4f5340a798acbb1e0b00f0d96f70f545b748ddb79c80871e752c8e4a0b8f40"
+evidence = "handlePlayerDrop calls retained getPlayerPos at 0x213f08, updates player and chat state, then calls getPriorPlayer at 0x213f88 before host recovery or transmitting a drop message. BLR at 0x214058 precedes handleNewHost."
+
+[[helpers]]
+source_helper = "getPriorPlayer"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213c90
+mac_size = 0x58
+target_sha256 = "4ee7d50f7245c163d7a71dabc90c826f7aa9fb0d8efeffdd66a64afe25b1dda5"
+evidence = "handlePlayerDrop calls this retained prior-human-seat search at 0x213f88. It decrements the row with wrap to seven and repeats until game::isHuman succeeds. BLR at 0x213ce4 precedes isValidHuman. Windows expands the same source helper."
+
+[[helpers]]
+source_helper = "isValidHuman"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213ce8
+mac_size = 0x94
+target_sha256 = "7c56af6b4013f880a99c4a8ae379b27dde586fbedfc6d0edd61c673acdaefab4"
+evidence = "updateCurrentPlayers calls this retained auto-array DPID search at 0x213de4. It uses the array's virtual Get/GetCount slots, reads each CDPlayPlayer ID at +0x100 and returns true on a match. BLR at 0x213d78 precedes updateCurrentPlayers. Windows expands the same source helper."
+
+[[functions]]
+retail_va = 0x5540b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211f98
+mac_size = 0xc0
+target_sha256 = "cc7aa3d1ae1857ef2ac37e625b6cd456a510c1bf03b4531c83ee5ac47b8b2f33"
+evidence = "remoteCleanup calls this retained CChatManager::clearChat at 0x212a94. It resets message count and changed flag, then zeros the killTime at +0x80 in each of twenty 0x88-byte records. BLR at 0x212054 precedes setMaxLines."
+
+[[functions]]
+retail_va = 0x5540d0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212058
+mac_size = 0xc0
+target_sha256 = "97c4e0a3e01c111f9ac5fba3bf24c7acb4fe910aa7464599abdd545b2b9d3380"
+evidence = "The retained CChatManager::setMaxLines deletes its widget-text and message arrays, allocates replacement arrays with the maxLines count and calls clearChat. BLR at 0x212114 precedes the generated CChatStr constructor."
+
+[[functions]]
+retail_va = 0x554170
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21212c
+mac_size = 0x30
+target_sha256 = "4f947302911284be90b14c9b1d7e08e68bc19c60dea5b25e556a59baebb1c34f"
+evidence = "The retained CChatManager::setPosition clamps a negative or out-of-range row to msgCount-1, stores position at +0x20 and sets changed at +0x14. BLR at 0x212158 precedes the CChatEdit constructor."
+
+[[helpers]]
+source_helper = "CChatManager::getNextFreeMsgNbr"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b34
+mac_size = 0x20
+target_sha256 = "43257ce7ad291645dccf9e66e520db10dc09ef16c95ac62953bf730ba388b610"
+evidence = "CChatManager::addChat calls this retained leaf at 0x211634. It returns (currMsg+msgCount)%maxLines using member words at +4/+8/+0x1c. BLR at 0x211b50 precedes getNextMsgNbr."
+
+[[helpers]]
+source_helper = "CChatManager::getNextMsgNbr"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b54
+mac_size = 0x18
+target_sha256 = "3b7dfca7a2b29a13bfaf18948d3e94440dec5c8649af8665d1cef92ee7d2f398"
+evidence = "The chat expiry and new-chat loops call this retained leaf. It returns (msgNbr+1)%maxLines, and BLR at 0x211b68 precedes hasOldChat."
+
+[[helpers]]
+source_helper = "CChatManager::updateNewChat"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211cf4
+mac_size = 0x90
+target_sha256 = "6586709816e9b13383926e7dd3e50adb145e920e86e27068421ab48b97ea56a2"
+evidence = "CChatManager::updateWidget calls this retained message timestamp loop at 0x211ab4. It starts at currMsg, fills zero killTime entries from GameTime and advances through getNextMsgNbr. BLR at 0x211d80 precedes updateWidgetText."
+
+[[functions]]
+retail_va = 0x553df0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211bd8
+mac_size = 0x11c
+target_sha256 = "e2f75c3acfa857b9247309bc7f28e56d2d0a4b960808d7ee33f1303ce95e7068"
+evidence = "CChatManager::updateWidget calls this retained expiry pass at 0x211ac4. It tests the current message age, removes old entries, adjusts following kill times and position, calling getNextMsgNbr for the ring walk. BLR at 0x211cf0 precedes updateNewChat."
+
+[[functions]]
+retail_va = 0x553ee0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211d84
+mac_size = 0x16c
+target_sha256 = "5d5b73b1c4b13bee66a858f90dae8926e67aa17cdaf3cc231fdf56402dbf0fae"
+evidence = "CChatManager::updateWidget calls this retained text formatter at 0x211af0 with line count and widget. It computes line lengths, trims to visible lines and concatenates the selected chat messages into widgetText. BLR at 0x211eec precedes pauseTimeOuts."
+
+[[functions]]
+retail_va = 0x5541a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21215c
+mac_size = 0x84
+target_sha256 = "704bb836b54f047d6a804cc2bcf549c553c9a8eed86d439e202e027dfe7dcbab"
+evidence = "The retained CChatEdit constructor forwards its sixteen arguments directly to textEntryWidget::textEntryWidget at 0x1af7b0 and installs the CChatEdit vtable. Adventure and combat chat editor constructors call it. It does not clear CGameChatEdit's separate activated byte, so this is the CChatEdit source body at Windows VA 0x5541a0. Final BLR at 0x2121dc precedes the next body at 0x2121e0."
+
+[[functions]]
+retail_va = 0x554a80
+unit = "remote"
+compgen_kind = "SCALAR_DELETING_DTOR"
+compgen_type = "CAnimatedDlg"
+mac_section = 0
+mac_offset = 0x213028
+mac_size = 0x8c
+target_sha256 = "466a34105f47cf657c4711a478384dffd0cddcc9ba222c5fbb2825442f347b19"
+evidence = "The Mac body is the scalar deleting CAnimatedDlg destructor: it destroys the dialog subobjects and conditionally calls operator delete based on the deleting flag. Windows owns the generated scalar deleting destructor at 0x554a80. The reviewed Mac span begins at 0x213028, ends at its BLR, and is reached by retained dialog cleanup calls."
+
+[[functions]]
+retail_va = 0x557eb0
+unit = "remote"
+compgen_kind = "SCALAR_DELETING_DTOR"
+compgen_type = "CNetMsgHandlerPause"
+mac_section = 0x0
+mac_offset = 0x215c94
+mac_size = 0x78
+target_sha256 = "ad816c48103d6368f973c7acd7f928a87a551c608c6e7584a948f69015d88d79"
+evidence = "This deleting CNetMsgHandlerPause destructor installs its vtable, restores the saved handler through CDPlayHeroes::setNetMsgHandler at 0x2110ec, destroys the base at 0x215568, then conditionally calls scalar delete. Events doCombat, game transmitSaveGame and remote wait wrappers reach the retained body. The final BLR at 0x215d08 precedes the next function at 0x215d0c; Windows owns the generated scalar deleting destructor claim at 0x557eb0."
+
+[[functions]]
+retail_va = 0x557810
+unit = "remote"
+compgen_kind = "SCALAR_DELETING_DTOR"
+compgen_type = "CNetMsgHandler"
+mac_section = 0x0
+mac_offset = 0x215568
+mac_size = 0x84
+target_sha256 = "42bc249f9238e9ae2c67123a0b3f455f5264edb7eaca1c4bdabb2462a3015547"
+evidence = "This generated CNetMsgHandler deleting destructor installs the base vtable, clears g_dPlay's handler when it points to this object, and conditionally frees the receiver. CNetMsgHandlerPause destruction, TSingleSelectionWindow cleanup and CSwapMgrNetMsgHandler cleanup call it. BLR at 0x2155e8 precedes the next body at 0x2155ec; Windows owns the corresponding generated claim at 0x557810."
+
+[[helpers]]
+source_helper = "CLogFile::log"
+unit = "remote"
+source = "include/remote.h"
+mac_section = 0x0
+mac_offset = 0x82798
+mac_size = 0x1c
+target_sha256 = "260a28e55ae6c44541cbe261c30036229065f94e566755cf3d6a56b7ee045567"
+evidence = "Dreamcast names the cdecl variadic CLogFile::Log in remote.h:249. Mac's 28-byte release body spills variadic registers r5-r10 to their caller homes and returns; the command main call at 0x8260c passes the `Received action [%d]--> [%d,%d,%d]` format and four message fields, and game/remote/selection callers pass their authored g_logFile.log formats. Windows retains those source calls to the folded empty representative at 0x404df0. The preceding main ends at 0x82794 and the next body begins at 0x827b4."
+
+[[functions]]
+retail_va = 0x557a80
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2156e4
+mac_size = 0x28
+target_sha256 = "68b0de91ac94c7ce08fc412facadebc964aec1d3f6dd73b7dc31f8e697c49c2c"
+evidence = "CTurnDuration::start at 0x215afc calls this retained on-state check; it returns false for zero duration or g_inCampaign. The final BLR at 0x215708 precedes the paired isExpired at 0x21570c. Source and Windows claim 0x557a80 implement the same check."
+
+[[functions]]
+retail_va = 0x557d90
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215afc
+mac_size = 0x6c
+target_sha256 = "f1f3a4be52292971a24a5c62abbe56944d878fd234d5a0807ab592eae2189aeb"
+evidence = "game::nextPlayer and oldmain call this turn-timer starter. It calls isOn at 0x2156e4, saves GameTime::get at receiver+4 and +0, clears nextWarning at +0xc and sets one-quarter or one-half of duration depending on the 60000 threshold. The final BLR at 0x215b64 precedes addTime. Windows source and VA 0x557d90 have the same control flow."
+
+[[helpers]]
+source_helper = "CTurnDuration::addTime"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215b68
+mac_size = 0x1c
+target_sha256 = "c731abb52d0edd1fba74cdc3f4e238d34deb7a273e7943b880275645d4c47b2a"
+evidence = "CTurnDuration::resume at 0x215bc0 calls this retained helper with elapsed pause time. It adds the argument to turnStartTime at +4 and lastWarned at +0, matching the canonical source body. Final BLR at 0x215b80 precedes pause at 0x215b84; Windows retail expands the source call."
+
+[[functions]]
+retail_va = 0x556ab0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214748
+mac_size = 0x58
+target_sha256 = "cd91a50114edad54a31d28d8ea12ac3f492ef52e8f0dd54d99f69699c8fd2733"
+evidence = "advManager::doCombat constructs this level-pick wait dialog before calling waitForLevels at 0x2147a0. The body calls the CAnimatedDlg base constructor, installs CLevelPickWaitDlg's vtable at data 1+0x5965c, constructs its embedded CNetMsgHandlerPause at +0x78, sets fromWho=-1 and playerDropped=0, then returns at 0x21479c. This matches the Windows constructor claim 0x556ab0."
+
+[[functions]]
+retail_va = 0x00556ba0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2147a0
+mac_size = 0xd4
+target_sha256 = "d8a5c118dc5850d389ccaac0399ff196eeafe6c8b65e00bd60f20ff7c05da9f8"
+evidence = "The reviewed CLevelPickWaitDlg constructor ends at 0x21479c. This following body stores fromWho, calls GameTime::get and sRand, repeats sRandom(0,111) while the creature is Devil or Arch Devil, then sets up general-text entry 472 and opens the modal dialog. Dreamcast WaitForLevels line 2490 also names SRandom. Its BLR at 0x214870 precedes the next prologue at 0x214874."
+
+[[functions]]
+retail_va = 0x00554d90
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2133bc
+mac_size = 0x24
+target_sha256 = "f4a2c162e07d928832fec58dfbf1e0329ac36819d0e2c17a43a4e389445f7a4e"
+evidence = "Both reviewed wait-dialog message handlers call this CAnimatedDlg base method at 0x214890 and 0x214cd4. It calls the following tickAnimation body at 0x2133e0 and returns zero, matching the ordinary source method and Windows 0x554d90. BLR at 0x2133dc bounds its 0x24-byte body."
+
+[[functions]]
+retail_va = 0x00554e10
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2133e0
+mac_size = 0xf0
+target_sha256 = "4da5771a34fca727b9852ea7390700ccc49725f04cb85671c82b8504bc21688b"
+evidence = "The immediately preceding CAnimatedDlg::handleMessage calls this body. It reads GameTime::get twice, compares elapsed time against 200, advances the sprite frame, draws the window and calls updateScreen at 0x20df2c, matching the source-owned tickAnimation method and Windows 0x554e10. BLR at 0x2134cc precedes the next prologue at 0x2134d0."
+
+[[functions]]
+retail_va = 0x00556c20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214874
+mac_size = 0x178
+target_sha256 = "6e5a57d82ff740ecc33eae60cbe63445a650b0dd692a7157da0afc0780a5aaf5"
+evidence = "Immediately after CLevelPickWaitDlg::waitForLevels, this message handler calls CAnimatedDlg::handleMessage at 0x2133bc, pollSound at 0x10eaf0, and getRemoteData at 0x21294c before dispatching the received message. The source-owned player-drop and ready branches account for its calls at 0x2148f4 and 0x21492c. Its BLR at 0x2149e8 precedes the separate player-drop helper at 0x2149ec."
+
+[[helpers]]
+source_helper = "handleNewHost"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21405c
+mac_size = 0xe0
+target_sha256 = "7e213dc3234201427b92b6feac9361a12514eb8be9193336962454eead7ab0e1"
+evidence = "CLevelPickWaitDlg::handleMessage calls this retained helper at 0x214950 on RS_SET_AS_HOST. It logs HandleNewHost, tests the current player's human status, updates the local game position or transmits a player-drop update, then posts the host system message, matching the ordinary source helper. BLR at 0x214138 precedes the distinct onPlayerDropUpdateMsg prologue at 0x21413c; Windows expands the source calls."
+
+[[helpers]]
+source_helper = "CLevelPickWaitDlg::onPlayerDrop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2149ec
+mac_size = 0x88
+target_sha256 = "3127a2f4ebc13eccfec05c037661340831a921ee7f178514703ca9076731290a"
+evidence = "The level-pick message handler calls this helper at 0x21492c on RS_PLAYER_DROPPED. It resolves the sender's game position, marks a matching dropped player, calls handlePlayerDrop and conditionally exits the modal, matching the ordinary source helper. BLR at 0x214a70 precedes the next prologue at 0x214a74; Windows expands the source call."
+
+[[helpers]]
+source_helper = "CLevelPickWaitDlg::onHeroLevelUpdate"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214a74
+mac_size = 0x8c
+target_sha256 = "de62338e54eb44bb71e9f57c84ec717cd8b92bdef180a081336f21ae2400b3f1"
+evidence = "The level-pick message handler calls this helper at 0x2148f4 on RS_HERO_LEVEL_UPDATE. It finds the selected hero and copies the secondary-skill and primary-stat bands before storing the skill count, matching the ordinary source helper. BLR at 0x214afc precedes the reviewed remote-battle constructor at 0x214b00; Windows expands the source call."
+
+[[functions]]
+retail_va = 0x556f20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214b00
+mac_size = 0x104
+target_sha256 = "4d7645bd0e0eed5feded6385f899309cc03ea2ef84056d3783ce718324788f92"
+evidence = "advManager::doCombat constructs this remote-battle wait dialog. The body calls the CAnimatedDlg base constructor, installs CWaitForRemoteBattleDlg's vtable at data 1+0x595dc, constructs its embedded CCombatInitMsg and pause handler, and initializes received state. Its final BLR at 0x214c00 immediately precedes the wait method; Windows constructor claim is 0x556f20."
+
+[[functions]]
+retail_va = 0x00557090
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214c04
+mac_size = 0xac
+target_sha256 = "f523206d5b22054c16b25717693b40e529dec12c098af56a905f695d02f13327"
+evidence = "The reviewed CWaitForRemoteBattleDlg constructor ends at 0x214c00. This following body stores playerPos, calls sRandom(0,111), sets up general-text entry 473 with sprite and sequence 12, then opens the modal dialog. Dreamcast Wait line 2603 also names SRandom. Its BLR at 0x214cac precedes the next prologue at 0x214cb0."
+
+[[functions]]
+retail_va = 0x005570f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214cb0
+mac_size = 0x1b8
+target_sha256 = "f60cff226a8a419dd2041a68487ff94b03a48b09aa13c56821773cb709a219ea"
+evidence = "Immediately after CWaitForRemoteBattleDlg::wait, this message handler calls CAnimatedDlg::handleMessage at 0x2133bc, pollSound at 0x10eaf0, and getRemoteData at 0x21294c before processing the remote-battle message. The call at 0x214d50 enters its source-owned player-drop helper. Its BLR at 0x214e64 precedes that helper's prologue at 0x214e68."
+
+[[helpers]]
+source_helper = "CWaitForRemoteBattleDlg::onPlayerDrop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214e68
+mac_size = 0x84
+target_sha256 = "5949dfd3d50ba15fb871c9f22388202d66788fa2f6ed290dd542fea2fd3a1d95"
+evidence = "The remote-battle message handler calls this helper at 0x214d50 on RS_PLAYER_DROPPED. It resolves the sender, runs handlePlayerDrop and closes the modal only for the awaited combat peer, matching the ordinary source helper. BLR at 0x214ee8 precedes the next prologue at 0x214eec; Windows expands the source call."
+
+[[functions]]
+retail_va = 0x557dd0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215b84
+mac_size = 0x3c
+target_sha256 = "d450ead600ff8a2232337c6dcbb8cd9a07a8436eab3a75d7fa1e9d2eadbe9476"
+evidence = "advManager::doCombat pauses its turn timer through this body. It checks turnStartTime at receiver+4 and stores GameTime::get into pauseTime at +0x10 when active. This is the existing CTurnDuration::pause source call and Windows body 0x557dd0. BLR at 0x215bbc precedes resume at 0x215bc0."
+
+[[functions]]
+retail_va = 0x557df0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215bc0
+mac_size = 0x68
+target_sha256 = "e25c3cf329049ae5adce03962fc4948e45c788edb7ece572052e7e0cbe6f257d"
+evidence = "advManager::doCombat calls this body twice while unwinding its paused turn timer. The body checks CTurnDuration pauseTime at +0x10 and turnStartTime at +4, computes GameTime::get minus pauseTime, calls the adjacent addTime helper at 0x215b68, then clears pauseTime. This is the existing CTurnDuration::resume source call and the Windows exact body at 0x557df0. Final BLR at 0x215c24 precedes the next entry at 0x215c28."
+
+[[functions]]
+retail_va = 0x553770
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2110ec
+mac_size = 0x60
+target_sha256 = "e1d6c539db9c3cdbbbcc96fe2292770f12f19f12c837f1fd2664e757524c5740"
+evidence = "At swapManager::open +0x1a6634 the call immediately follows construction of its 16-byte CSwapMgrNetMsgHandler and passes g_dPlay and that new handler. This is the authored CDPlayHeroes::setNetMsgHandler call. The Mac body writes the handler at receiver+0x7c and transfers old handler state; final BLR at 0x211148 precedes getNetMsgHandler."
+
+[[functions]]
+retail_va = 0x554200
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2121e0
+mac_size = 0x68
+target_sha256 = "0b73cee8397774d832f1e8a299e2abd7c4d47e711d4b73969c87abbe46850f2a"
+evidence = "CChatEdit::updateScreen draws through the widget virtual slot, then adds its position to its parent window position and passes the bounds to heroWindowManager::updateScreen 0x20df2c. The Windows source has the same virtual helper and four-coordinate manager call. Terminal BLR 0x212244 precedes onKeyPress at 0x212248."
+
+[[functions]]
+retail_va = 0x557e30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215c28
+mac_size = 0x6c
+target_sha256 = "cd1a3963f1e85171927702ca48839bb9095c3304d6cfd7f8b696ade35dacebb6"
+evidence = "CNetMsgHandlerPause constructor: six calls in cmbtmgr, game and remote construct the existing authored pause-handler object. The Mac body calls CNetMsgHandler base construction at 0x215484, installs the RTTI-proven CNetMsgHandlerPause vtable, then if g_dPlay exists calls getNetMsgHandler at 0x21114c, stores the result at this+0xc, and calls setNetMsgHandler at 0x2110ec with this. Windows remote.cpp owns the same constructor at 0x557e30. BLR at 0x215c90 and next destructor prologue at 0x215c94 bound the full body. Source calls are already present."
+
+[[functions]]
+retail_va = 0x557aa0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x21570c
+mac_size = 0xac
+target_sha256 = "3f026e3832b908a578cf52ea86c4b50098415002528caaff06a8818eed6a9a34"
+evidence = "CTurnDuration::isExpired checks g_currentPlayer/isLocalHuman, its duration and pause fields, then compares GameTime::get against start+duration. Hero::checkLevel, recruitUnit::main, swapManager::main and townManager::main call this retained body directly. The complete return is at 0x2157b4; the next function begins at 0x2157b8."
+
+[[functions]]
+retail_va = 0x557d00
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215a3c
+mac_size = 0x9c
+target_sha256 = "ca1502d01229bd572f53f28b5e2f514cbcdda13ad3299adb737c2cd58da54ea1"
+evidence = "CChatManager::turnDurationMsg calls this with 59000 milliseconds. Mac CTurnDuration::isClose calls isOn at 0x2156e4, checks start and pause fields, then compares GameTime::get + threshold against start + duration. BLR at 0x215ad4 precedes the next function. Windows source and retail isClose at 0x557d00 perform the same checks; VC6 expands the isOn call."
+
+[[functions]]
+retail_va = 0x553840
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211584
+mac_size = 0x148
+target_sha256 = "07dd202c9e4d269717ebff69f13c33bbd5d4b81a6a9aed245ffeef7e8d74006b"
+evidence = "CChatManager::turnDurationMsg calls this retained addChat helper at 0x2117bc with its formatted line. The callee formats the varargs, updates the chat ring and its widget, then returns at 0x2116c8 immediately before turnDurationMsg at 0x2116cc. The ordinary Windows CChatManager::addChat body is VA 0x553840; its call remains a source call."
+
+[[functions]]
+retail_va = 0x5577f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215484
+mac_size = 0x18
+target_sha256 = "05c13babdcf32558d71c6e3f92e3df27cccb1a8be508d961269bf4a62be13913"
+evidence = "CNetMsgHandler constructor is reached from both advManager::open and swapManager::open through their derived network handlers. The six-instruction Mac body installs the base vtable at +0 and clears m_inPopup at +4 and m_abortPopupMsg at +8, matching the Windows constructor at 0x5577f0. Terminal BLR 0x215498 precedes checkHandleNet at 0x21549c."
+
+[[functions]]
+retail_va = 0x557860
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21549c
+mac_size = 0xcc
+target_sha256 = "94935ec6fd79b42945468376657a8a5957dc507b2f3e6a78cf1bbfbdd94832fd"
+evidence = "CNetMsgHandler::checkHandleNet follows the base constructor in Mac TU order. It clears msgReceived when supplied, sets m_inPopup, handles an outstanding abort message through virtual handleNetMsg, otherwise asks g_dPlay for remote data at 0x21294c and dispatches it through the same virtual slot. The authored Windows helper at 0x557860 has this branch and call order. Terminal BLR 0x215564 precedes the Mac deleting destructor at 0x215568."
+
+[[functions]]
+retail_va = 0x557d60
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215ad8
+mac_size = 0x14
+target_sha256 = "9b24282cfb24936e8c1955d084ae7ed625c44bce18541be4b31431b2660818f3"
+evidence = "CTurnDuration::clear zeros lastWarned +0, turnStartTime +4, and nextWarning +0xc in that order. Mac calls include game::nextPlayer 0xdd8e0 and other game/remote callers; Windows has the same authored helper at 0x557d60. Terminal BLR 0x215ae8 precedes setDuration."
+
+[[functions]]
+retail_va = 0x557d70
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215aec
+mac_size = 0x10
+target_sha256 = "3e45e9cb204be77348f6524246bb77d782f782bd0128577c518b5b504995d652"
+evidence = "CTurnDuration::setDuration clears turnStartTime +4 and stores its argument at currDuration +8. Mac caller 0x1812c8 and Windows source at 0x557d70 agree; BLR 0x215af8 precedes start."
+
+[[functions]]
+retail_va = 0x553960
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2116cc
+mac_size = 0x120
+target_sha256 = "0c01ddd71c813030b6dfd1eaba119977385400d55799f5fce92c18817f82b3f0"
+evidence = "CChatManager::turnDurationMsg: variadic vsprintf into a 1024-byte buffer, suspended advManager and popup guards, g_turnDuration.isClose(59000), general-text prefix 0x36, addChat and retained chat-sound helper. Complete BLR at 0x2117e8; next formatter begins 0x2117ec."
+
+[[functions]]
+retail_va = 0x555910
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21393c
+mac_size = 0x20
+target_sha256 = "d12b46feae98e8b363662d544e6d323102bcce265dd806f4e432807e6914981f"
+evidence = "The retained destroyMsg(CNetMsg*) body forwards its pointer to CodeWarrior operator delete 0x268b2c and returns. The three combatManager::main calls and four game::transmitSaveGame calls arise from CMessageKill local cleanup; both source callers keep that owner and destroyMsg call. Its final BLR is at 0x213958 and the next body begins at 0x21395c. Windows owns the free destroyMsg body at 0x555910."
+
+[[functions]]
+retail_va = 0x5544b0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212a50
+mac_size = 0x138
+target_sha256 = "8c174bbe33972d235d62329852434de5a0d675e236a1d3a93ec4a7286b3251cb"
+evidence = "The retained remoteCleanup body clears multiplayer state, calls the shared chat manager clear at 0x211f98, tests g_remoteOn, destroys the active DirectPlay player/session and wrapper, then clears g_remoteOn and resets the net player info from g_videoGameState. Its nine calls from KB oldmain, multiplayer window dismissal, and single-selection back path correspond to authored remoteCleanup calls. Final BLR at 0x212b84 precedes the already paired transmitRemoteDataDPID at 0x212b88."
+
+[[functions]]
+retail_va = 0x554560
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212b88
+mac_size = 0x68
+target_sha256 = "761a8232c406da060923baa0a37bbe7ce028cf08ca2780b482becb4eca87fc76"
+evidence = "Free transmitRemoteDataDPID wrapper: four inputs, guard g_remoteOn/g_dPlay, call the Mac DPID member sender 0x210ee4, normalize byte result; zero otherwise. Direct callers include the net message sender. Complete BLR at 0x212bec; parallel recipient wrapper begins 0x212bf0."
+
+[[functions]]
+retail_va = 0x5545f0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212bf0
+mac_size = 0x68
+target_sha256 = "0ab0cf18ca9f95473010ee5334dacfa412b5526667bb24949ccdb6322335e02c"
+evidence = "Free transmitRemoteData wrapper: same four-input remote/dPlay guard as its adjacent DPID variant, forwarding to member recipient sender 0x210cd0 and normalizing byte result. Direct calls include swapmgr; complete BLR at 0x212c54, next function starts 0x212c58."
+
+[[functions]]
+retail_va = 0x5547c0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212d70
+mac_size = 0x220
+target_sha256 = "51cdba0d7aecff23df7a7b4f46c9626e88dfe98e47a6e329c2cb60498a58eece"
+evidence = "Global sendChat is called by the adventure chat edit at 0x3f54, with additional combat and swap chat callers. Its Mac body compares the input to general-text chat ping command 0x49, sends a ping or builds a bounded 0x7f-byte network message, then calls transmitRemoteData 0x212bf0. Windows source retains the same global helper at 0x5547c0 and each caller's source call. Terminal BLR 0x212f8c precedes the next entry at 0x212f90."
+
+[[functions]]
+retail_va = 0x5565e0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x21413c
+mac_size = 0x1d4
+target_sha256 = "89a8737eafb63b88d85f79d99dabd4f51757176b626ff43f466c4269387f0fa7"
+evidence = "Unique OnPlayerDropUpdateMsg log string at data 1+0x59402 anchors the entry. Body shows pointer/dialog/hourglass, primary then recovery loadGame, player net-info clear, local-seat and visibility updates, and nextPlayer versus startLocalPlayerTurn. Mac compares old/new net local position where Windows uses g_weMoved, a reviewed port difference. Complete BLR at 0x21430c; next function starts 0x214310."
+
+[[functions]]
+retail_va = 0x554f10
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x213594
+mac_size = 0x1ec
+target_sha256 = "884b724ab92de9f081e903a30074e42dab152239cb7bfe2476c90769fb115bc4"
+evidence = "waitForReadyToPlayMsg: stack dialog construction, eight ready-byte scan and fast destructor path; otherwise GameTime/sRand, random(0,111) rejecting creatures 0x36/0x37, setup/modal and host broadcast via transmitRemoteData +0x212bf0. Complete BLR at 0x21377c; adjacent derived destructor begins +0x213780."
+
+[[functions]]
+retail_va = 0x553840
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211584
+mac_size = 0x148
+target_sha256 = "07dd202c9e4d269717ebff69f13c33bbd5d4b81a6a9aed245ffeef7e8d74006b"
+evidence = "CChatManager::addChat: direct callers include the adjacent chat formatters, receiveChat and the selection window. Its variadic vsprintf, newest-position test at +0x20, twenty-message cap, 0x88-byte chat records and conditional sample path match the source and Windows VA. Complete BLR at 0x2116c8; turnDurationMsg begins at 0x2116cc."
+
+[[functions]]
+retail_va = 0x553aa0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2117ec
+mac_size = 0xa4
+target_sha256 = "09a0fffc15d7b173858dadc5fb7cdb275b514fcd8e873f5a179c194ca86f3572"
+evidence = "CChatManager::systemMsg: sendChat calls this formatter twice, and the body prefixes general text 0x36, sets the system flag, calls addChat, clears the flag, then calls playChatSample with sample at +0x38. Complete BLR at 0x21188c; adjacent player-drop formatter starts at 0x211890."
+
+[[functions]]
+retail_va = 0x553b60
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211890
+mac_size = 0xa4
+target_sha256 = "6771505f975f4e236cabb44aac51747b2e75a4b262a8eb3a57bc5c56afaa4464"
+evidence = "CChatManager::playerDropMsg: same general-text prefix and addChat as adjacent chat formatters, followed by playChatSample with player-drop sample at +0x34 before clearing the system flag. The source method and Windows VA have that order. Complete BLR at 0x211930; next formatter starts at 0x211934."
+
+[[functions]]
+retail_va = 0x553c30
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211934
+mac_size = 0xa4
+target_sha256 = "81d95d8fa5befe8bb3a5d6bf081028d54df9588e21e947fea120b94c05474f50"
+evidence = "CChatManager::playerEnterMsg: source order follows playerDropMsg; Mac formats the same prefix, calls addChat, then playChatSample with player-enter sample at +0x40 before clearing the system flag. Complete BLR at 0x2119d4; the reviewed sample helper starts at 0x2119d8."
+
+[[helpers]]
+source_helper = "CChatManager::playChatSample"
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2119d8
+mac_size = 0xa0
+target_sha256 = "87f95a7182a98ea01ec6f0a748f4051a3a0cc7924a334c4cfcd4d1b928c46b4e"
+evidence = "Five Mac chat formatters directly call this ordinary method. It checks the current sample, falls back from preferred to m_chatSample, temporarily enables sound, calls soundManager::memorySample, then restores the prior flag. Those bodies were copied at five Windows source sites and are now canonical calls. Complete BLR at 0x211a74."
+
+[[functions]]
+retail_va = 0x553d00
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x211a78
+mac_size = 0xbc
+target_sha256 = "a6aad35ee573fe0ca1e4f52569123fa07837f870b60ea180b7f87a51ed64606b"
+evidence = "CChatManager::updateWidget checks pauseTime at +0x10, calls updateNewChat 0x211cf4 and conditional killOldChat 0x211bd8, then tests changed/lastWidget, calls updateWidgetText 0x211d84, sets widget text virtually and clears changed. Dreamcast remote.cpp:1033 names the same method and callees. Combat window drawChatText calls this retained body at 0x8123c. Final BLR at 0x211b30 precedes the next accessor at 0x211b34."
+
+[[functions]]
+retail_va = 0x553db0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x211b6c
+mac_size = 0x6c
+target_sha256 = "e9e0149a553263b638eb63ee8deb57b4ade66ba2c5d8327a91ffa2f2015d7dba"
+evidence = "CChatManager::hasOldChat returns false for zero messages, otherwise reads the current message killTime at 0x80 within 0x88-byte records and compares GameTime::get 0x20fc5c against 20000 ms. Dreamcast remote.cpp:1070 names the method; swapManager::main calls it at 0x1a86b4 before updateWidget. Final BLR at 0x211bd4 precedes killOldChat."
+
+[[functions]]
+retail_va = 0x5537a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21114c
+mac_size = 0x8
+target_sha256 = "1b3c4c86e574c65c73fdaddb03441f754b3420a1fa75181033f9e3faede802f1"
+evidence = "CDPlayHeroes::getNetMsgHandler returns the handler pointer at Mac +0x7c (Windows +0xf0 after a larger deque). Calls from advManager::doAdvCommand 0x8b18, recruitUnit::main 0x14fbbc and CChatManager::turnDurationMsg 0x211744 all pass g_dPlay as receiver and use the returned handler; the canonical Windows method is VA 0x5537a0. Its BLR at 0x211150 and adjacent next entry 0x211154 bound the eight-byte body."
+
+[[functions]]
+retail_va = 0x00554400
+unit = "remote"
+mac_section = 0
+mac_offset = 0x21294c
+mac_size = 0x30
+target_sha256 = "0210c0063a476900abb054f4c2da049bb854a03424f018030ff5b527ab7281a1"
+evidence = "Free getRemoteData wrapper: forwards removeFromQueue to g_dPlay->getRemoteData at 0x210b84 with null compression output. Called by command and remote dispatchers. Final BLR at 0x212978; next entry 0x21297c."
+
+[[functions]]
+retail_va = 0x00554a20
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212f90
+mac_size = 0x48
+target_sha256 = "7ed2f82e4ff7ee9fea9312c9012a9ea38718843c7311841b7160f9df5b0c9743"
+evidence = "Free receiveChat: passes sender to game::getPlayerName at 0xe6e34, then formats player and chat text through CChatManager::addChat at 0x211584. Command's RS_CHAT_MSG arm calls it. Final BLR at 0x212fd4; next entry 0x212fd8."
+
+[[functions]]
+retail_va = 0x00554a50
+unit = "remote"
+mac_section = 0
+mac_offset = 0x212fd8
+mac_size = 0x50
+target_sha256 = "c383eeb973262eb22d9821f16d6337b7bd46b38778058db9449ea49f1f19c4bb"
+evidence = "CAnimatedDlg constructor passes dialog kind 0x12 to CTextDialog, installs its vtable and clears sprite, frame, tick and palette fields. waitForReadyToPlayMsg constructs it on the stack. Final BLR at 0x213024; next entry 0x213028."
+
+[[functions]]
+retail_va = 0x005562e0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x213d7c
+mac_size = 0x168
+target_sha256 = "42f409140b112e6137a3de0e02c696c0766db510dec848572710b54b72f9102e"
+evidence = "updateCurrentPlayers constructs the 0x19-byte CDPlayPlayer array, calls CDPlayHeroes::enumPlayers at 0x2111c0, checks eight game players and clears absent ones. onPlayerDropUpdateMsg calls this no-argument body immediately after the hourglass stop. Final BLR at 0x213ee0; next entry 0x213ee4."
+
+[[functions]]
+retail_va = 0x00557f80
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215d0c
+mac_size = 0x34
+target_sha256 = "8605843f3a05e364281354ba81cb7d0221166aacc37eba79ede2fc2bef19e42b"
+evidence = "CHourGlass constructor stores the thread byte and calls the retained start helper at 0x215dd8. onPlayerDropUpdateMsg passes one for its local guard. Final BLR at 0x215d3c; next entry 0x215d40."
+
+[[helpers]]
+source_helper = "CHourGlass::stop"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215d94
+mac_size = 0x44
+target_sha256 = "2e7d2cb4e92e0e51ebd465cc9fc2459b55dca5bcbcfc644637dd760bf0082573"
+evidence = "Retained CHourGlass::stop branches on m_thread: stopMouseThread at 0x16e358 or mouseManager::setPointer(0, ADVENTURE_SET) at 0x216fc0. onPlayerDropUpdateMsg and the deleting destructor call it. Windows expands this source helper and has no standalone VA. Final BLR at 0x215dd4; next entry 0x215dd8."
+
+[[helpers]]
+source_helper = "CHourGlass::start"
+unit = "remote"
+mac_section = 0
+mac_offset = 0x215dd8
+mac_size = 0x44
+target_sha256 = "885e0a29080d99f8bee332d3c2c2517cdf2e3923a34842cf58751340fb1cc3a6"
+evidence = "Retained CHourGlass::start branches on m_thread: startMouseThread at 0x16e31c or mouseManager::setPointer(1, ADVENTURE_SET) at 0x216fc0. The Mac constructor calls it; Windows expands this source helper and has no standalone VA. Final BLR at 0x215e18; next entry 0x215e1c."
+
+[[functions]]
+retail_va = 0x554240
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212248
+mac_size = 0x59c
+target_sha256 = "7d4feef8f2bd2dc649baba55fd81c5dff5086edfe716c2bf7f88c88379f736c9"
+evidence = "CChatEdit::onKeyPress starts with getCharPressed and dispatches Mac Enter, Escape and function-key codes through virtual slots 20-22; the default path invokes the text-entry base keypress and virtual updateScreen. CGameChatEdit::onKeyPress at 0x3fb0 and the combat editor call it directly, and the CChatEdit vtable also points here. Terminal BLR at 0x2127e0; the next authored method starts at 0x2127e4."
+
+[[functions]]
+retail_va = 0x554330
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2127e4
+mac_size = 0x7c
+target_sha256 = "a92331db7d303faa9c3904eada8373af4fe9d695d5f8ebb041ff6588f163ee87"
+evidence = "CChatEdit::onFunctionKey checks the chat text at receiver+0x30, sends it through virtual slot 24 with its toWho argument, clears the displayed text and invokes virtual updateScreen. Its BLR at 0x21285c precedes the onEnter body at 0x212860."
+
+[[functions]]
+retail_va = 0x554380
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212860
+mac_size = 0x7c
+target_sha256 = "e22abc1c537b994661c9039466fb7c7ef3b8178b58ecdfdf57f6d01f5666a6bd"
+evidence = "CChatEdit::onEnter checks chat text, invokes virtual sendChat with recipient 0x7f, clears the displayed text and invokes virtual updateScreen. The body is adjacent to function-key and Escape handlers in source order, ending with BLR at 0x2128d8."
+
+[[functions]]
+retail_va = 0x5543c0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2128dc
+mac_size = 0x4c
+target_sha256 = "f311c8d873d30eeb47f30e397800f490bbc1cf78f9a45b7c7dab4549a3acf480"
+evidence = "CChatEdit::onEscape clears the displayed text via textEntryWidget::setupDisplayString and invokes virtual updateScreen, returning 1. CGameChatEdit::onEscape at 0x40bc calls this base method with a copied message; the CChatEdit vtable also points here. BLR at 0x212924; next method starts at 0x212928."
+
+[[functions]]
+retail_va = 0x554200
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x2121e0
+mac_size = 0x68
+target_sha256 = "0b73cee8397774d832f1e8a299e2abd7c4d47e711d4b73969c87abbe46850f2a"
+evidence = "CChatEdit::updateScreen follows the independently paired base constructor. It invokes virtual draw at slot 6, adds the widget and parent-window positions, then passes the widget width and height to windowManager::updateScreen at 0x20df2c. Complete BLR at 0x212244 precedes the onKeyPress entry at 0x212248."
+
+[[functions]]
+retail_va = 0x5543e0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212928
+mac_size = 0x1c
+target_sha256 = "92b0dd49e086a79cc38bca21536baa1d75c2fa7c40c167c8c926b714504748d9"
+evidence = "CChatEdit::isOpen reads the size of the chat text at receiver+0x30 and normalizes nonzero to a byte boolean. It follows onEscape in source order, ends with BLR at 0x212940, and precedes the eight-byte ignoreKey body."
+
+[[functions]]
+retail_va = 0x5543f0
+unit = "remote"
+mac_section = 0x0
+mac_offset = 0x212944
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "CChatEdit::ignoreKey is the source's constant-zero override: Mac loads zero into r3 and returns. It follows isOpen directly, and the next getRemoteData wrapper starts at 0x21294c."
+[[functions]]
+retail_va = 0x00556780
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214310
+mac_size = 0x1ac
+target_sha256 = "9a6c323810d69dd9a115cfb3058938433611410ff30323be46dcbee011ec4d8c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x622c in the RS_PLAYER_DEAD arm with player position and show-message flag. It marks the player disabled, handles local versus remote defeat and selects the next human turn, matching the retained Windows handlePlayerDead body. BLR at 0x2144b8 precedes handlePlayerWon at 0x2144bc."
+
+[[functions]]
+retail_va = 0x00556940
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2144bc
+mac_size = 0xb8
+target_sha256 = "5edfb71840f2496d6c6e7ade9e290bfc53d826a51caf71c4627902a9cf55137c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x6250 in the RS_PLAYER_WON arm. It copies the message victory condition, sets game over, calls the victory display and updates the all-players-defeated flag, matching the retained Windows handlePlayerWon body. BLR at 0x214570 precedes handlePlayerLost at 0x214574."
+
+[[functions]]
+retail_va = 0x005569a0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x214574
+mac_size = 0x74
+target_sha256 = "22aa18b7a329e032960c7a89eeca0df481fe118e11124c7b09308bca78d13611"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x6274 in the RS_PLAYER_LOST arm. It passes the message loss condition to the loss display and updates the all-players-defeated flag, matching the retained Windows handlePlayerLost body. BLR at 0x2145e4 precedes handleNormalWinMsg at 0x2145e8."
+
+[[functions]]
+retail_va = 0x005569f0
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2145e8
+mac_size = 0x160
+target_sha256 = "ab9feb397a3a4e5d4c4485764521bc6b07eb06a1325459e8aab1ee5829b2bc5c"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg calls this at 0x645c in the RS_NORMAL_WIN arm. The body sets game over, compares the winning player with the local team and displays the team victory or defeat dialog, matching the retained Windows handleNormalWinMsg body. BLR at 0x214744 precedes the next function at 0x214748."
+
+[[functions]]
+retail_va = 0x00557920
+unit = "remote"
+mac_section = 0
+mac_offset = 0x2155fc
+mac_size = 0xd0
+target_sha256 = "d8c815315d7350675b41e78c46333c87f60d41d261f5e6c611d7bbdfe27bc8ac"
+evidence = "CAdvMgrNetMsgHandler::handleNetMsg delegates its session-lost and default arms to this base handler at 0x6434 and 0x646c. The retained body dispatches RS_SET_AS_HOST and RS_SESSION_LOST, then destroys the message, matching the retained Windows CNetMsgHandler::handleNetMsg body. BLR at 0x2156c8 precedes a distinct tiny function at 0x2156cc."

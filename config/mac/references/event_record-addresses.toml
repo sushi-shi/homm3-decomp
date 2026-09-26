@@ -1,0 +1,829 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbefc0
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "313785347c1942e8228b340eb9217b718033a5c2e194d186d38a9f5ac96d1548"
+evidence = "One-byte player ID read via slot0xc; equality result. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a5e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf008
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "9476dcfe688a76756660034557c896294156bee0ee7991a21776aedc057c1205"
+evidence = "One-byte player ID writer via slot0x10; equality result. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a600
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf1a8
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "07bc81c5722a62702b4f52af8a40f15b10a3e80e2140d4be46c03158709fd1cf"
+evidence = "Allocates0x18 record, base constructor and move-hero vtable. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a650
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf1f0
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "2bf7a94759a252fd0d2af700ff876c19ab13998fb28ac5b0db3c70cdbc9ef8d6"
+evidence = "Virtual leaf returns record kind1. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a680
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf1f8
+mac_size = 0x148
+unit = "event_record"
+target_sha256 = "2be72359ac5629fee4acc965e9c13d7548640ff998ebab6254b5bd96b5ae3a11"
+evidence = "Player byte, heroID4, direction byte, two packed points4; heroID-1/null and stride0x486. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a690
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf340
+mac_size = 0xe4
+unit = "event_record"
+target_sha256 = "3ebf86ee3968f27043f8762e2a3f73ad67c7fb60bba0284546a5d4a3fddaff79"
+evidence = "Writer of preceding move-hero fields; five file writes. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a750
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf424
+mac_size = 0x15c
+unit = "event_record"
+target_sha256 = "677b3b3272d1d77b5afa923ee83f281e044897320df024de01b6589b716e9fbf"
+evidence = "setPlayer0xbf050, setHeroContext0x18220, move-visibility0x8ef78, turn0x8ef50 and animate0x8f3b8. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a7c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf580
+mac_size = 0x9c
+unit = "event_record"
+target_sha256 = "21fe3c93dd5e8fcf492d4ef0fb76611df4bcbb8b307883322c2186641f88d44e"
+evidence = "Hero restoreCell0xf25e4, facing/position restore, conditional obscureCell0xf2474. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a910
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf6c0
+mac_size = 0x50
+unit = "event_record"
+target_sha256 = "14f445713da9f84716f599b74723e9be36ef4bd7006f8ab2f8fb593f0acc5ec7"
+evidence = "Allocates0x18 record, base constructor and teleport vtable. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a980
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf710
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "8286a529f25a748db551e16c92ccf02567e092085eb2f9c47fed829693da3b13"
+evidence = "Virtual leaf returns record kind2. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a9b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf718
+mac_size = 0x60
+unit = "event_record"
+target_sha256 = "3d5e81eba1a98312e3f53b0144b004f67c7536ccd774c6269d47cf131ddb09d5"
+evidence = "setPlayer0xbf050 then teleportTo0x1ec20 with destination,0,0,draw,1. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49a9c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf7f0
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "7fc27a8177d61bf5af2c88d11ab17e622be65bf3f135e47517f36185248d2d45"
+evidence = "Allocates0x10 claim-mine record, base constructor; adjacent kind3 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49aa40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf840
+mac_size = 0xec
+unit = "event_record"
+target_sha256 = "bba2ec6ad02e47766d68b34bf2be71241715cf941c3ae57218febd0e26a0856c"
+evidence = "Player byte, mineID4, old/new-owner bytes; four read calls with checks. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49aa70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf92c
+mac_size = 0xbc
+unit = "event_record"
+target_sha256 = "9989d6426c1ddc2b9351e11bac076fecd8ea45ea975d57b2ae1b603589bb5546"
+evidence = "Four writer calls for preceding claim-mine fields. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49aaf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbf9e8
+mac_size = 0xc4
+unit = "event_record"
+target_sha256 = "36a0f302f5c523bb1ab9a08faf99f220ae9cdf7aa4ac39a117a40aca90d23961"
+evidence = "claimMine0xdcd68 with recorded action3; visibility test/getMapExtra0x11972c, redraw0xff28 and updateScreen0xf6f0. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ab40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfaac
+mac_size = 0x24
+unit = "event_record"
+target_sha256 = "eff68b9c8b5dfcc1edafdcf6f6e4c71186101e058c82969edd1d18267c2c3746"
+evidence = "Mine vector slot indexed by id, restores old-owner byte. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49abc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbef78
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "e91a79a2b822747bbaf05e43db15b920aeddb8abe9d64a110f56c14a10aa5dc1"
+evidence = "Base event-record destructor; vptr and conditional operator delete. Mac destructor delete-flag ABI differs from Windows bare destructor. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49abe0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfbb4
+mac_size = 0x50
+unit = "event_record"
+target_sha256 = "1b04979025088afd6280dd9dab917cdda67874b8a1409f82e01862b728685c82"
+evidence = "Allocates0x10 claim-town record and sets derived vtable; adjacent kind4 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49abf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfc0c
+mac_size = 0xac
+unit = "event_record"
+target_sha256 = "cf8b151e227dca97a6a68c20699d6977404619db32d779c75b9ffc7262b38348"
+evidence = "Town stride0x15c owner assignment; visibility test/getMapExtra0x11972c, redraw/update. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ac20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfcb8
+mac_size = 0x28
+unit = "event_record"
+target_sha256 = "c6a726e67b933050c199f904c3365d5c215dbd1c05566f16266b79680f4337e1"
+evidence = "Town stride0x15c restores old-owner byte. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49aca0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfd60
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "2b1146eb2ba7c2d1ab6c1684fe9119ddcea8cb446ef1343e20851c7bdf6d8759"
+evidence = "Allocates0x18 hide-boat record; adjacent kind5 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49acc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfda8
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "b5e824029c5a68b80822850f95cf0780462c4ebe92a6dee01aa71a3da27b38e2"
+evidence = "Virtual leaf returns record kind5. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49acf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbfdb0
+mac_size = 0x1c0
+unit = "event_record"
+target_sha256 = "99d39b818c5d8073ba55dba9344104741bfdf04138ca4d84891fef4d45f10cca"
+evidence = "Version18/28/30/35 branches and boat stride0x28; player/id/occupancy/hero-ID reads. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ad00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xbff70
+mac_size = 0x11c
+unit = "event_record"
+target_sha256 = "91b502b09e6d5aff240fe9f8017765b1e8abcf758127e512f54523aa9f5ba210"
+evidence = "Player/boat bytes, occupancy bytes and two hero-ID shorts written in corresponding source order. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49adf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc008c
+mac_size = 0x78
+unit = "event_record"
+target_sha256 = "b236617f43db581bea98303b332a6c2aff980075f4d539cdfe9cd1be5602769b"
+evidence = "Boat restoreCell0xf25e4 and redraw/update, occupancy and occupying hero update. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ae80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0104
+mac_size = 0x44
+unit = "event_record"
+target_sha256 = "20c7e414f18fb3b005194072a9a68519a7cdcebfb1da3e7e8e2b23b9e7e41099"
+evidence = "Boat obscureCell0xf2474 with type8, restores saved occupancy and hero fields. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49aed0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc023c
+mac_size = 0x50
+unit = "event_record"
+target_sha256 = "789025ffe1ac6dde1f0ad2ae575c26e1601b8b0b88dab19df8fcd81fad782651"
+evidence = "Allocates0x20 show-boat record; adjacent kind6 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49af00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc028c
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "e988c9e8beedcb40a2ce67db5727d53f8e248fda49998df4aaa4f7bd0060616e"
+evidence = "Virtual leaf returns record kind6. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49af30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0294
+mac_size = 0xa8
+unit = "event_record"
+target_sha256 = "85fc2153b62a2226c3e4550f0e405eb0cf2a66c7b21cceedc74eeb1cf0fd56ac"
+evidence = "Calls hide-boat load0xbfdb0 then reads source/destination points4 each. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49af40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc033c
+mac_size = 0x88
+unit = "event_record"
+target_sha256 = "2d0bff4895c4a89767616668597e970e5f31a1f7b9f58de32c08eed75cace90a"
+evidence = "Calls hide-boat save0xbff70 then writes two points4 each. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49afa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc03c4
+mac_size = 0xf8
+unit = "event_record"
+target_sha256 = "d1f0e7a194f6d6da5385f9237fc65d796509714731336d25578c564be2137c09"
+evidence = "Boat obscureCell type8 then location visibility test/redraw. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b040
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc04bc
+mac_size = 0x78
+unit = "event_record"
+target_sha256 = "084b1945bb13d1533837c142e233c5c1cfa933e2b6fcfdea50b71b9756ce46a8"
+evidence = "Boat restoreCell0xf25e4 then restore saved position and boat occupancy. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc05a8
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "f05620dbb1769c752c687f5a1bbfefb00981b9e878040b23f11250ee09f88a3f"
+evidence = "Allocates0x18 erase record; adjacent kind7 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b150
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc05f0
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "0c4b2db562bc0a86e3cd3ae4fde9e960d29797781b24bd7421eb5aa322c75f3a"
+evidence = "Virtual leaf returns record kind7. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b180
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc05f8
+mac_size = 0x118
+unit = "event_record"
+target_sha256 = "39213925aab3f16846937cdba0c27d00b166faff9d2fee88c09583c9417b7817"
+evidence = "Five reads: player byte and point/objectType/extra/objectIndex4 each. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b190
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0710
+mac_size = 0xd8
+unit = "event_record"
+target_sha256 = "ac88cb2367597ef0158f5f3c9913af9ad396e0b310b3daa5862d1c28ac59b740"
+evidence = "Five matching erase-record writes. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b220
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc07e8
+mac_size = 0x144
+unit = "event_record"
+target_sha256 = "242d7b6a265488cd6d552910733ddd450e203e3257d92f9145e764b3c3bac907"
+evidence = "Deactivate context0x17d78, erase object0xb7cbc, mapcell stride0x22, visibility/redraw and reactivate0x17e58. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b280
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc092c
+mac_size = 0xc0
+unit = "event_record"
+target_sha256 = "9acf6c4e5c2f75e297c8aa296a17b22301a83d84c4db30ff12cb6cdea39314fa"
+evidence = "Map placement0x12850c and restored type/extra fields through map-cell stride0x22. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b370
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0a5c
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "18fabe3bbc47f49cdff6925e532df223c39a20828f07a172aa3b912c6de60572"
+evidence = "Allocates0x10 hide-hero record; adjacent kind8 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b400
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0aac
+mac_size = 0x150
+unit = "event_record"
+target_sha256 = "8f802eae0a3d235081f3c88324396e07905f8666364643dc086296f9d95aa946"
+evidence = "HeroID/null/stride0x486 and owner/garrison fields through file reader; counterpart inherited by show-hero load. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b430
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0bfc
+mac_size = 0xdc
+unit = "event_record"
+target_sha256 = "12f3686ac9283a1417715baf54c2cea41a9b03595c3d6b1b37ad2131e52b2cf1"
+evidence = "Four hide-hero writes with optional on-map/garrison handling; counterpart inherited by show-hero writer. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b500
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0cd8
+mac_size = 0x130
+unit = "event_record"
+target_sha256 = "3346ecaf9cafd427e74a99289b57833268e3cc13c24ad28acb8bb9a9b897c56c"
+evidence = "setPlayer0xbf050/setHeroContext0x18220 and hero restoreCell0xf25e4, redraw/update. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b570
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0e08
+mac_size = 0x44
+unit = "event_record"
+target_sha256 = "d484f955d265e89a0d858025d4f00ef9d5424a361a5f40976d7be9acd9ab477f"
+evidence = "Owner state restore and conditional hero obscureCell with type34. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b680
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0f64
+mac_size = 0x50
+unit = "event_record"
+target_sha256 = "e2f5e7e9e139d0739cbb2353da43e0c7ac4c99201285db4070f59c01a25d3b99"
+evidence = "Allocates0x1c show-hero record; adjacent kind9 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b6a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc0fbc
+mac_size = 0x100
+unit = "event_record"
+target_sha256 = "823cbb582cd1cf7f1b965e1f771562941d6ead36abf647b00aadb40d2e0ba2f4"
+evidence = "Calls hide-hero reader0xc0aac then two packed points and two byte flags. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b6d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc10bc
+mac_size = 0xc0
+unit = "event_record"
+target_sha256 = "1b3b9860d552f3b50467e5d6a9018d1d2570067bbcd66d57ef939f7e1dfb471d"
+evidence = "Calls hide-hero writer0xc0bfc then two points and byte flags. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b760
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc117c
+mac_size = 0x178
+unit = "event_record"
+target_sha256 = "239f420ebd921f1112e396c71264e5aad4b7edbd1b05103c46716f3f4c67064b"
+evidence = "setPlayer and hero obscureCell type34, visibility/getMapExtra and context redraw. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc12f4
+mac_size = 0xe0
+unit = "event_record"
+target_sha256 = "c480cbaadeb57861cf2bee19984c8fbee1063560a1d36b4dfdbe5b124e8f61cc"
+evidence = "Hero restoreCell0xf25e4, position/owner saved fields restored conditionally. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49b960
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc13d4
+mac_size = 0x48
+unit = "event_record"
+target_sha256 = "c13b7174e870c0a970da09ee49d63eaf1c68a6cdc472282a844d16a31be46735"
+evidence = "Allocates0xc player-death record; adjacent kind10 getter. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ba00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc141c
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "94cfec9d0830752e40f244d3e8a57a3d6db42c440e0e2f79022c38baabd6a607"
+evidence = "Virtual leaf returns record kind10. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ba30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1424
+mac_size = 0x94
+unit = "event_record"
+target_sha256 = "13c7372c5a63478e1290bc68408677b86da61c58986fc2fcd5443fb0049b4627"
+evidence = "Two byte reads for acting and dead player IDs. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ba40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc14b8
+mac_size = 0x84
+unit = "event_record"
+target_sha256 = "0c21d2fad425bb85fac3946a7c974d033fa3905384bac3b673f595e9ca79b4e9"
+evidence = "Two byte writes for same player IDs. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49ba80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc153c
+mac_size = 0xf4
+unit = "event_record"
+target_sha256 = "87ac3dcfa19a274ec46ef1ec0c9e71f05129cb45b3696b05e33584ecb0bebe78"
+evidence = "Player name0xe6e34, text formatting, normalDialog0x117f10 and MSL string lifetimes; adjacent empty undo. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bab0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1698
+mac_size = 0x40
+unit = "event_record"
+target_sha256 = "88b3cf94eaed481b97b5a48a10c5ffa573cd8cee1b4ea0041f0c84b4365e7597"
+evidence = "Allocates0x14 shroud record and calls constructor0xc1634. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bc30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc16d8
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "9b15c270c3a60716a9af043a0a6011feb05d00d49436fda42a7bafac68327a79"
+evidence = "Virtual leaf returns record kind11. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bc80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc16e0
+mac_size = 0xf4
+unit = "event_record"
+target_sha256 = "dd5665ee83f55a902ccfe5dab9c37dd7d69a69a6827a60b9fc60471e3560d819"
+evidence = "Player byte/count short, resize and eight-byte shroud change reads with pushes. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bc90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc17d4
+mac_size = 0xcc
+unit = "event_record"
+target_sha256 = "089495491a3a1a1a199b82b2719a34a90ecc664d50791ad0a620adfa1a969077"
+evidence = "Player byte/count short and eight-byte change records written. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bdf0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1900
+mac_size = 0xe4
+unit = "event_record"
+target_sha256 = "f718b655fa1743f6c387c6aa1048e7bd0f37c9ab71dcfca0fbd6e67b8efc4c99"
+evidence = "Iterates shroud changes, getMapExtraPtr0x119764, visible-cell redraw/update. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49be60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc19e4
+mac_size = 0xa4
+unit = "event_record"
+target_sha256 = "9403239ee481bdd34900f05baf576ff644a6f50717b23912abd1ed9e118de972"
+evidence = "Reverse shroud change traversal, oldValue store through getMapExtraPtr0x119764. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bf20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1a88
+mac_size = 0x124
+unit = "event_record"
+target_sha256 = "bb8d864c8c5593d500c5c44636e37051d4f5ca7cc1293c7f9b970a63d80a7c77"
+evidence = "Map-change message0x41c and constructor0xbf778 claim-mine, record-vector push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49bf90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1bac
+mac_size = 0x124
+unit = "event_record"
+target_sha256 = "38e3d57d04286ee02c6996d3fd2b1181ef9da81c18afe0fa8bf4c9e2f66d4489"
+evidence = "Map-change message0x41d and constructor0xbfad0 claim-town, record-vector push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49c190
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1cd0
+mac_size = 0xec
+unit = "event_record"
+target_sha256 = "7e9c49d039b450066374e773d4423ee3b921ab0ba80ce48fdddf8f36e9e6017e"
+evidence = "Allocates0x18 and calls erase constructor0xc0534 then record-vector push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49c390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1dbc
+mac_size = 0xdc
+unit = "event_record"
+target_sha256 = "2a5ea85403cc991ad9053e8434c0d846868bd8038f44911a866830540e7fa59e"
+evidence = "Allocates0x18 and calls hide-boat constructor0xbfce0 then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49c560
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1e98
+mac_size = 0xdc
+unit = "event_record"
+mac_symbol = ".recordHideHero__4gameFP4herocUc"
+target_sha256 = "8047b3b3a95df6f094ff6151e37ff76c3310e1cd4013cb9cdcceaabfa4cbcfcd"
+evidence = "Allocates0x10 and calls hide-hero constructor0xc09ec then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49c720
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc1f74
+mac_size = 0xe4
+unit = "event_record"
+target_sha256 = "7f22f7d8d58351305df5e7f473309a5369bec54f8cd5960b8dea1168d6526185"
+evidence = "Allocates0x20 and calls show-boat constructor0xc0148 then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49c900
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2058
+mac_size = 0xe4
+unit = "event_record"
+target_sha256 = "7cedc1e4cc7627d2082b18c1814b2a59d1de344de7caaa17067e2b81349af4ea"
+evidence = "Allocates0x1c and calls show-hero constructor0xc0e4c then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49cb20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc213c
+mac_size = 0xf4
+unit = "event_record"
+target_sha256 = "73625073a5be19074aa8177efd3e035cf8b05ec7206cac677d10194a21befb83"
+evidence = "Allocates0x18 and calls move-hero constructor0xbf100 then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49cd50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2230
+mac_size = 0xe4
+unit = "event_record"
+target_sha256 = "a7465be772766836f06ce258091ec04e46058e159c2ff436908e486cf9a9b234"
+evidence = "Allocates0x18 and calls teleport constructor0xbf61c then push. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49cf50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc274c
+mac_size = 0x39c
+unit = "event_record"
+target_sha256 = "42612a0ab5e08590427acaf8318fdf59e314838883dc9d2a16c68ce0a8267cd3"
+evidence = "Negative visibility twin; team mask|0x100 AND, shroud constructor0xc1634, circular range test and record push/delete. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49d3d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2ae8
+mac_size = 0x90
+unit = "event_record"
+target_sha256 = "70d04d173815fcc1d5cdbde08aa75ec804aa51011e21b958b5d20d578d1645e3"
+evidence = "Reverse vector traversal deleting record through virtual slot then clears size. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49d630
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2b78
+mac_size = 0x12c
+unit = "event_record"
+target_sha256 = "92ce1dfec9f2ad8f7023c4f93164ddfcbfd479c85d3313637d610761452408d7"
+evidence = "Two getPlayerId0x8100 scans delimit contiguous player segment, virtual deletes then vector erase0xa125c. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49d6c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2ca4
+mac_size = 0x2f4
+unit = "event_record"
+target_sha256 = "e4f5083f1c7b59931d09eefe80ade0dc355ccad9bccab47b89d25e6755b314c4"
+evidence = "Undo/replay virtual loops, input getEvent0x10e1e8, processMessage0x20f90c, setPlayer0xbf050 then context/draw restore. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49d7a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2f98
+mac_size = 0x50
+unit = "event_record"
+target_sha256 = "fba3d970c25fd15cf4c06ab834c9d9b3e2dcb7732bd2f16afc6d0a680ff506f2"
+evidence = "Record player-ID comparison against local player, returns1 on first different owner. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49da70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc2fe8
+mac_size = 0x19c
+unit = "event_record"
+target_sha256 = "cc6a87bb2db729ff2a45045fb8fa69d76098e04969c8c18d34228d3bcf478cc6"
+evidence = "Count read4, clearEventRecords0xc2ae8, type range1..11, factory indirect call/load, record-vector append. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49dac0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc3184
+mac_size = 0xf4
+unit = "event_record"
+target_sha256 = "a31b249dfc1a0e54a42fdc13ddaeea128bf8412a15bcbbd574a57487bb8ccd59"
+evidence = "Count writer4; loop virtual getType, byte write and virtual save, early failure. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+retail_va = 0x49dc60
+
+[[helpers]]
+source_helper = "type_event_record::type_event_record"
+unit = "event_record"
+mac_section = 0x0
+mac_offset = 0xbef5c
+mac_size = 0x1c
+target_sha256 = "98436891090c135cd1d0d0ba721a64c97fe990c72076c1165ce29c0f10e81135"
+evidence = "Retained base constructor sets its vtable and copies signed g_netLocalGamePos to playerId at +4; BLR 0xbef74 precedes the scalar deleting destructor 0xbef78. Seventeen derived constructors call it, including ten record factory paths, while Windows expands the authored base constructor."
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbf050
+mac_size = 0xa8
+unit = "event_record"
+target_sha256 = "a03f3a699af2d6bb574313d2e359b0527409e9e478ff4eb41950ffc315634dc3"
+evidence = "Seat change calls deactivate town/hero0x17cc4/0x17d18; updates player pointer stride0x15c and player-bit. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "setPlayer"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbf0f8
+mac_size = 0x4
+unit = "event_record"
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Base replay vtable points to empty return. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_event_record::replay"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbf0fc
+mac_size = 0x4
+unit = "event_record"
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Base undo vtable points to distinct empty return. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_event_record::undo"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbf838
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "a963069fd417e2eaddd4eeb6f689cf8838cc71f63c571df163fe3a54ff8f0744"
+evidence = "Virtual leaf returns record kind3. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_record_claim_mine::getType"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xbfc04
+mac_size = 0x8
+unit = "event_record"
+target_sha256 = "fe9c110b732955f4deec1dfac58f1e6efe4f68d3a99c9b6c005a30e659c54080"
+evidence = "Virtual leaf returns record kind4. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_record_claim_town::getType"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc1630
+mac_size = 0x4
+unit = "event_record"
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Player-death undo vtable points to empty return. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_record_player_death::undo"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc18a0
+mac_size = 0x60
+unit = "event_record"
+target_sha256 = "e98ccf50907fc5998d183f2a282b97b84314e7c76f4f32c78df86c5afbb101b4"
+evidence = "Builds eight-byte shroud-change record then vector push0xc34e8. TU order, direct calls and loader virtual entries reviewed; complete terminal-return extent."
+source_helper = "type_record_shroud::addChange"
+
+[[helpers]]
+source_helper = "type_record_hide_boat::type_record_hide_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfce0
+mac_size = 0x80
+target_sha256 = "0e5c5956376213d8517226f6d13ef123aa0b07bc2daf16c17c8336d30386f7c8"
+evidence = "game::recordHideBoat calls this retained constructor at 0xbfce0. It stores the boat pointer, occupied byte and occupying hero, and snapshots the boat's occupied byte at +0x24 and hero at +0x20 into the record. Dreamcast names the constructor at dc:0x8ce74; Windows expands the authored same-TU helper. Final BLR at 0xbfd5c; next entry 0xbfd60."
+
+[[helpers]]
+source_helper = "type_record_hide_hero::type_record_hide_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc09ec
+mac_size = 0x70
+target_sha256 = "efad98f5160e7806493958acaab3be95fb26e52175a9944369f9208fc23a30e4"
+evidence = "game::recordHideHero calls this constructor at 0xc09ec. It stores the hero pointer, snapshots owner from hero+0x22 before writing the requested owner and garrison bytes. The canonical source helper is explicit inline, so Windows may expand it while Mac retains this call. Final BLR at 0xc0a58; next entry 0xc0a5c."
+
+[[helpers]]
+source_helper = "type_record_show_boat::type_record_show_boat"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0148
+mac_size = 0x94
+target_sha256 = "0f30c0be03ed0164eda982f49d911fcc3f1eddbc4909ffde5de42c81c5dd59a8"
+evidence = "game::recordShowBoat calls this retained constructor at 0xc0148. It calls the canonical hide-boat constructor at 0xbfce0, then stores the boat's packed location and requested replacement point in its record fields. The source helper is explicit inline; Mac retains its body and Windows expands it. Final BLR at 0xc01d8; next entry 0xc01dc."
+
+[[helpers]]
+source_helper = "type_record_move_hero::type_record_move_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf100
+mac_size = 0xa8
+target_sha256 = "fbfa442974e1f78703e1b00f8f041e0862fee02d336b861a5ffa1529fedc1881"
+evidence = "game::recordMove calls this retained constructor at 0xbf100. It snapshots the hero facing byte at +0x47 and packed source location before storing requested direction and destination. The Mac teleport constructor also delegates to it; Windows expands the ordinary source helper at both callers. Final BLR at 0xbf1a4; next entry 0xbf1a8."
+
+[[helpers]]
+source_helper = "type_record_teleport::type_record_teleport"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf61c
+mac_size = 0x44
+target_sha256 = "b1fac8f8a3d5b515f9391f0a918e88e8e8381109b1ed0fc515197f3cfadd508b"
+evidence = "game::recordTeleport calls this retained constructor at 0xbf61c. It forwards the hero's current facing and requested destination to the move-hero constructor at 0xbf100, then installs its derived vtable. Windows expands this ordinary delegating source helper. Final BLR at 0xbf65c; next entry 0xbf660."
+
+[[helpers]]
+source_helper = "type_record_show_hero::type_record_show_hero"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0e4c
+mac_size = 0xb8
+target_sha256 = "e57171cad52f306d7df7148bb8b64eaf02912327aaa288ae3f79872919acacd9"
+evidence = "game::recordShowHero calls this retained constructor at 0xc0e4c. It delegates to hide-hero at 0xc09ec, snapshots the hero's on-boat flag and packed location, then stores requested boat flag and destination. The source helper is explicit inline; Mac retains the call while Windows expands it. Final BLR at 0xc0f00; next entry 0xc0f04."
+
+[[helpers]]
+source_helper = "type_record_claim_mine::type_record_claim_mine"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbf778
+mac_size = 0x78
+target_sha256 = "8b7f0e610be4a7afbc90e1601fff20206da422ec7a00c0999e24c1a20fdbee1c"
+evidence = "game::recordClaimMine calls this retained constructor at 0xbf778. It stores mine ID and requested owner, then reads the old owner from game mine pool entry id*0x40. Windows expands this ordinary same-TU constructor; Dreamcast records its source definition. Final BLR at 0xbf7ec; next entry 0xbf7f0."
+
+[[helpers]]
+source_helper = "type_record_claim_town::type_record_claim_town"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xbfad0
+mac_size = 0x84
+target_sha256 = "5d1d35cdd61c635a2fcd7dc61504ef713a8dad09a9eb01351894203f92164db5"
+evidence = "game::recordClaimTown calls this retained constructor at 0xbfad0. It installs base then derived vtables, stores town ID and requested owner, and snapshots old owner from game town pool with 0x15c stride. Windows expands the ordinary source constructor. Final BLR at 0xbfb50; next entry 0xbfb54."
+
+[[helpers]]
+source_helper = "type_record_erase::type_record_erase"
+unit = "event_record"
+mac_section = 0
+mac_offset = 0xc0534
+mac_size = 0x74
+target_sha256 = "8520265773862e8dfe48fbb02e5d47a5e3d03699b879cd925540f8d8b1ee3b4f"
+evidence = "game::recordEraseObject calls this retained constructor at 0xc0534. It stores packed location, object ID, extra info and object index to record offsets +8..+0x14 after the base constructor. Windows expands the ordinary source helper. Final BLR at 0xc05a4; next entry 0xc05a8."

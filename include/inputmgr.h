@@ -136,7 +136,7 @@ public:
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
-extern inputManager* g_inputManager;
+DATA(0x006994e0) extern inputManager* g_inputManager;
 
 // The Windows-message bridges (inputmgr.cpp bodies; kbwin's
 // AppWndProc forwards the keyboard/mouse arms through them).

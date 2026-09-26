@@ -1,0 +1,172 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x46b610
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7765c
+mac_size = 0x894
+target_sha256 = "ffd9a15b089c87aff7a82a70e4601b16b824fcd6781291aed484ab03c9c9a65e"
+evidence = "NEW: Base combat bar ctor invokes TSubWindow0x19b8c8 at0,556,800,44; creates background, seven buttons0x62c6c, registers widgets and disables controls. End0x77ef0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46bbb0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x77ef0
+mac_size = 0xcc
+target_sha256 = "f22caaf6f2438514595297e48bbf2c62463d89d04a1fe6c642ebd48912bc046d"
+evidence = "NEW: Combat bar destructor walks owned controls removing/disposal, calls TSubWindow dtor0x19b95c and optional delete. End0x77fbc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46bc30
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x780a0
+mac_size = 0x3f8
+target_sha256 = "7410fb0d0a066fcaea38e653bededd418e5a0a6574e38c5ade016d9e2b740c2d"
+evidence = "NEW: Control bar ctor calls base0x7765c with cbar background, adds combat-log0x1b1934 and two scroll buttons0x63a98, registers and sets text. End0x78498; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46bed0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7851c
+mac_size = 0x60
+target_sha256 = "f4be10e5cdff978bd2df363315356bce0c74b26f14774c7b13c54554fabd0b10"
+evidence = "NEW: Control-derived destructor resets vtable then calls base0x77ef0 and optional delete. End0x7857c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46bf50
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x78580
+mac_size = 0x5c
+target_sha256 = "323293f165730c74f98b2cd5699914bcc96a0b79d865d7a43981528dbde4fcef"
+evidence = "NEW: Rollover setter forwards new text through virtual widget call and updates two widget captions0x20aa0c. End0x785dc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46bf90
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x77fc4
+mac_size = 0xdc
+target_sha256 = "0c698755575b23ece9e479eae003a9764d879a900ba332d8a398efcf91ee0d6d"
+evidence = "NEW: Disables seven fixed buttons via0x20b504, virtual child update and redraw0x20df2c. End0x780a0; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46c050
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x785fc
+mac_size = 0x2d8
+target_sha256 = "117e2fb14a7785f82504ec494511878021a5af5a67bc39351b220c5c29924823"
+evidence = "NEW: Placement bar ctor calls base0x7765c with placement background, constructs two placement buttons0x62c6c, child list and registers. End0x788d4; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46c210
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x788d4
+mac_size = 0x60
+target_sha256 = "6c04ac468abc4a6f7cf1f2339b5cc0b10ab3a9e78a38b41636887f3bf636796c"
+evidence = "NEW: Placement-derived destructor calls base0x77ef0 with destructor flag then optional delete; loader vtable identity. End0x78934; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46c290
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x78934
+mac_size = 0x50
+target_sha256 = "c3b00b04a24fb764b9db2c918c53ad98d39cdcf34b44220249de9a99605e0a3c"
+evidence = "NEW: Disables two placement-specific buttons then calls shared disableAllButtons0x77fc4. End0x78984; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46c370
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x78984
+mac_size = 0xd0c
+target_sha256 = "c54fe5bc5e805f4b017a863dfa2a3963bbc7209ef2bc80da175b2f306022c48f"
+evidence = "NEW: Hero subwindow ctor creates background/portrait and primary-stat text widgets0x1b149c, luck/morale icons0x10c3f0; registers children0x19ba08. End0x79690; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46cba0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x79690
+mac_size = 0xb0
+target_sha256 = "ea78e0b20f7a1bd581f49cc5293d563f109f39d486ed499a7f9904351a1d4406"
+evidence = "NEW: Hero subwindow destructor disposes its resource, calls TSubWindow dtor0x19b95c, optional delete; precedes named hero update. End0x79740; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46cc10
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x79740
+mac_size = 0x29c
+target_sha256 = "119d8022c04cd421a31609bd3cee80e707490ae92e53ef4ba2d9c436a3796cac"
+evidence = "NEW: Hero update sets portrait0x5eabc/0x5ea48, formats four primary skills capped99, hero morale0x10464c/luck0x10434c/spellpoints0x105768. End0x799dc; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46cdf0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x799dc
+mac_size = 0xd0
+target_sha256 = "4973cac380a133cd322803d734cea7d491a5894ddc699c9239fc991532c6ace3"
+evidence = "NEW: Hero show updates parent subwindow state then TSubWindow show0x19bb18, draw0x19ba74 and redraw0x20df2c. End0x79aac; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46ce70
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x79aac
+mac_size = 0x80
+target_sha256 = "319741316a3adb10a7709d545cddfe400d673c434f7e60bbabbb692ac29844ed"
+evidence = "NEW: Hero hide restores parent state and invokes TSubWindow unShow0x19bbb4. End0x79b2c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46ceb0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x79b2c
+mac_size = 0x10ec
+target_sha256 = "c758ed557706256a29728a8c887a5ee312fbefd10b11bcc6be715bea855d66f5"
+evidence = "NEW: Creature subwindow ctor has viewLevel parameter, creature icon/stats texts and extra detail row when level3; registers children0x19ba08. End0x7ac18; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46dbc0
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7ac18
+mac_size = 0xb0
+target_sha256 = "c9b23b1451b016d05090016ee29f68b43ef0ec24d057ddb1a62fd08fcb03e835"
+evidence = "NEW: Creature subwindow destructor disposes resource then TSubWindow0x19b95c and optional delete; vtable separate from hero window. End0x7acc8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46dc30
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7acc8
+mac_size = 0x3b4
+target_sha256 = "9a080eee27fb5beac0ba9ef2551c027a69c2d097ff65ce607b230d8619890b7d"
+evidence = "NEW: Creature update invokes canShoot/adjustedAttack/adjustedDefense0x4e840/0x4e174/0x4e31c, luck/morale icon0x10cf60 and resource caption updates. End0x7b07c; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46df00
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7b07c
+mac_size = 0xcc
+target_sha256 = "c733e7f3aafed005c7e92248e10e96dddf9d29f5f6c7a0d6abf0e9bd57ccd694"
+evidence = "NEW: Creature show invokes TSubWindow show0x19bb18/draw0x19ba74/redraw0x20df2c, instance fields distinct from hero show. End0x7b148; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."
+
+[[functions]]
+retail_va = 0x46df80
+unit = "combatcontrolsubwindow"
+mac_section = 0x0
+mac_offset = 0x7b148
+mac_size = 0x80
+target_sha256 = "cbbae9c40bd142f56423dcf536953d6d77c8c073a54010020272d878b4718664"
+evidence = "NEW: Creature hide invokes TSubWindow unShow0x19bbb4 and parent state update. End0x7b1c8; last word0x4e800020. TU order used as lead, named calls/constants/fields corroborate identity."

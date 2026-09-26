@@ -1,0 +1,4 @@
+mode = "paired_bodies"
+flags = ["-O3", "-proc", "750", "-nolink"]
+helpers = []
+source_helpers = []

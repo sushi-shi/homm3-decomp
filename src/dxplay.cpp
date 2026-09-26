@@ -1438,3 +1438,9 @@ TRuntimeError::TRuntimeError(const char* text)
     : std::runtime_error(std::string(text))
 {
 }
+
+// The retained empty-base calls at 0x41b62a and 0x514dbd reach a body
+// folded with philAI::philAI at 0x524360. Its original TU is unknown.
+TDebugBreak::TDebugBreak()
+{
+}

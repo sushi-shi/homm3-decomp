@@ -1,0 +1,82 @@
+# Source-order and call/constant verified Campaign Set window Mac bodies.
+
+[[functions]]
+retail_va = 0x00456ec0
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e104
+mac_size = 0x4cc
+target_sha256 = "cbc3fdd0655b7dbb5439fa5b4d547a5b7b92a11e67048f87fee21cda2fb4e5a0"
+evidence = "Five distinct CSSsod/CSSarm/CSSroe/CSScus/CSSexit strings occur in constructor order; sets button callbacks/hotkeys, then invokes addWidgetsToMessageStream; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x00457230
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e5d0
+mac_size = 0x68
+target_sha256 = "72c143c6c2234fd74fe38b6fc4832be3983858b91dcb79adfc0525a42900c345"
+evidence = "Canonical authored destructor maps to Mac full delete-flag body: takes r4 delete flag; invokes widget cleanup and optional operator delete. Ends BLR before first callback."
+
+[[functions]]
+retail_va = 0x00457280
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e638
+mac_size = 0xb8
+target_sha256 = "e665fe358f7660168669318edebfb350b02cd919940fda7fe936cfefb67e1022"
+evidence = "Button callback gets help row 0x2df, right-click normalDialog and writes modal result 0 (SOD). Complete BLR and next callback boundary."
+
+[[functions]]
+retail_va = 0x004572f0
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e6f0
+mac_size = 0xb8
+target_sha256 = "f1afc07ac0951848feed1afa9bca7f248cb9365768e2b0e92e3bd4fc57ed6d9b"
+evidence = "Button callback gets help row 0x2d5, right-click normalDialog and writes modal result 1 (ARM). Complete BLR and next callback boundary."
+
+[[functions]]
+retail_va = 0x00457360
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e7a8
+mac_size = 0xb8
+target_sha256 = "f543f8d22f334885d164cbdd551b305c2bb7de531614dc564061636ae59c28aa"
+evidence = "Button callback gets help row 0x2d7, right-click normalDialog and writes modal result 3 (CUS). Complete BLR and next callback boundary."
+
+[[functions]]
+retail_va = 0x004573d0
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e860
+mac_size = 0xb8
+target_sha256 = "0b051d902db8e06bc20d7a5d18de6007946b693ed13149be2b3c39edcd075b5b"
+evidence = "Button callback gets help row 0x2d8, right-click normalDialog and writes modal result 0x7801 (EXIT). Complete BLR and next callback boundary."
+
+[[functions]]
+retail_va = 0x00457440
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e918
+mac_size = 0xb8
+target_sha256 = "1ca4f8dc47e677a9f943bde59be4e3de8c338f9bbdca4d1c94e981354b60f5d1"
+evidence = "Button callback gets help row 0x2d6, right-click normalDialog and writes modal result 2 (ROE). Complete BLR and next function boundary."
+
+[[functions]]
+retail_va = 0x004574a0
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21e9d0
+mac_size = 0x58
+target_sha256 = "b210195e9ad935e29ee86669f75d23bdfdae8eee445995af9d5f635db8a8ee62"
+evidence = "MainMenu music pointer, startMP3 and windowManager::doDialog(this,heroWindowHandler,0) call sequence; complete BLR/next prologue."
+
+[[functions]]
+retail_va = 0x004574d0
+unit = "campaign"
+mac_section = 0
+mac_offset = 0x21ea28
+mac_size = 0x144
+target_sha256 = "7f373c039093ed9d4fcc057ba6d2e935a984960e80cbf1c66fd79d9155922409"
+evidence = "Message handler calls pollSound, findWidget, getWidget/sendMessage on hover, then drawWindow/updateScreen; complete BLR and next prologue."

@@ -1,0 +1,41 @@
+# Reviewed source-owned callees for the MAPCELL readMonsterData pairing.
+
+[[functions]]
+retail_va = 0x4c6010
+unit = "game"
+mac_section = 0
+mac_offset = 0xdc878
+mac_size = 0x114
+mac_symbol = ".readString__13NewSMapHeaderFP13TAbstractFileRQ23std6string"
+target_sha256 = "012ca3800696645e70cb23184dea90be02ab80faf9ddb44d35e9afc557e27f8f"
+evidence = "src/game.cpp owns annotated NewSMapHeader::readString at 0x4c6010. Mac 0xdc878 reads a big-endian length through the abstract stream virtual read, bounds it, allocates length+1, reads bytes, assigns into the supplied string, frees the buffer, and returns count or -1. readMonsterData calls it at 0x123cd0 with infile and its local message. The prior body ends at 0xdc874; BLR at 0xdc988 and next prologue 0xdc98c bound the full 0x114 bytes."
+
+[[functions]]
+retail_va = 0x4ced40
+unit = "game"
+mac_section = 0
+mac_offset = 0xe7118
+mac_size = 0x3c
+mac_symbol = ".recordMonsterIdentifier__4gameFi10type_point"
+target_sha256 = "743addd254f0efca32511f0f2f56511656ed4aecfebff8679a852a9e829dcb82"
+evidence = "src/game.cpp owns annotated game::recordMonsterIdentifier at 0x4ced40. Mac 0xe7118 receives game, identifier and packed type_point in r3-r5, forms an eight-byte record on the stack and appends it to the game vector. readMonsterData calls it at 0x123ed0 after assembling the object's x/y/z point. BLR at 0xe7150 and next routine at 0xe7154 bound the 0x3c-byte span."
+
+[[helpers]]
+unit = "mapcell"
+source_helper = "readMapCreatureId"
+mac_section = 0
+mac_offset = 0x1217a0
+mac_size = 0x6c
+mac_symbol = ".readMapCreatureId__FP13TAbstractFilei"
+target_sha256 = "1bcba2c77b36de108d522c1856840c72f00e49e9e29c75e3b18e6818fdc4a63a"
+evidence = "The Mac body checks map format 14, reads one signed byte or two little-endian bytes through the abstract file virtual read, and returns the sign-extended creature ID. It ends in BLR at 0x121808 before the adjacent save-version helper starts at 0x12180c. Direct calls at 0x121d50, 0x124428, 0x124ef4 and 0x1254b8 come from readBlackBox, readTownData, readHeroData and readGarrisonData; Windows expands the ordinary helper in these callers."
+
+[[helpers]]
+unit = "mapcell"
+source_helper = "readSavedCreatureId"
+mac_section = 0
+mac_offset = 0x12180c
+mac_size = 0x6c
+mac_symbol = ".readSavedCreatureId__FP13TAbstractFilei"
+target_sha256 = "b1ae9e611ef584b15abf1b18dab3efcd54431560f9fd0d37d7f90aae9e9e010c"
+evidence = "This adjacent Mac body selects a signed byte below save version 25 and a little-endian signed short otherwise, then returns the creature ID. It ends in BLR at 0x121874 before readBlackBox starts at 0x121878. loadBlackBox calls it at 0x122b58; Windows source had the same branch in the caller and VC6 expands the restored ordinary helper."

@@ -26,6 +26,82 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_conditional_parameter_signature_keeps_one_body(self):
+        from homm3.match.source_ownership import scan_unit, skip_conditional_signature_tail
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            parsing_project(root)
+            (root / 'src').mkdir()
+            source = root / 'src/widget.cpp'
+            source.write_text(
+                'struct Widget { int read(unsigned char value); };\n'
+                '#ifdef _MSC_VER\n'
+                'int Widget::read(unsigned char value)\n'
+                '#else\n'
+                'int Widget::read(int value)\n'
+                '#endif\n'
+                '{ return value; }\n')
+            definitions, errors, _ = scan_unit({'source': 'src/widget.cpp'}, root)
+            self.assertEqual(errors, [])
+            self.assertEqual([(d.name, d.argument_types) for d in definitions],
+                             [('Widget::read', ('unsigned char',))])
+            self.assertEqual(source.read_text()[definitions[0].end - 1], '}')
+        self.assertEqual(skip_conditional_signature_tail('#else\nint x\n', 0), 0)
+
+    def test_fragment_can_retain_original_cpp_owner(self):
+        from homm3.match.source_ownership import fragment_owners
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config/source').mkdir(parents=True)
+            (root / 'include').mkdir()
+            (root / 'src').mkdir()
+            (root / 'include/constant.inl').write_text('const int value = 7;\n')
+            owner = root / 'src/game.cpp'
+            owner.write_text('#include "constant.inl"\n')
+            inventory = root / 'config/source/header-fragments.toml'
+            inventory.write_text('[[fragments]]\nfragment="include/constant.inl"\n'
+                                 'owner="src/game.cpp"\nevidence="original constant"\n')
+            with self.assertRaises(ValueError):
+                fragment_owners(root)
+            owner.write_text('#include "../include/constant.inl"\n')
+            self.assertEqual(fragment_owners(root)['include/constant.inl'][0], 'src/game.cpp')
+            owner.write_text('#include "../include/constant.inl"\n'
+                             '#include "../include/constant.inl"\n')
+            with self.assertRaises(ValueError):
+                fragment_owners(root)
+
+    def test_fragment_owner_requires_real_include_and_preserves_order_and_duplicates(self):
+        from dataclasses import replace
+        from homm3.match.source_ownership import fragment_owners, definition_order, scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            parsing_project(root)
+            (root / 'config/source').mkdir()
+            (root / 'include').mkdir()
+            owner = root / 'include/widget.h'
+            owner.write_text('struct Widget {\nvoid before() {}\n#include "draw.inl"\nvoid after() {}\n};\n')
+            (root / 'include/draw.inl').write_text('void draw() {}\n')
+            path = root / 'config/source/header-fragments.toml'
+            path.write_text('[[fragments]]\nfragment="include/draw.inl"\nowner="include/widget.h"\nevidence="canonical body at original include position"\n')
+            defs, errors, _ = scan_unit({'source': 'include/widget.h'}, root)
+            self.assertEqual(errors, [])
+            defs.sort(key=definition_order)
+            self.assertEqual([d.name for d in defs], ['Widget::before', 'Widget::draw', 'Widget::after'])
+            draw = defs[1]
+            self.assertEqual(draw.file, 'include/draw.inl')
+            self.assertEqual(draw.source_owner, 'include/widget.h')
+            origins = [origin(name=d.name, line=10 * (i + 1)) for i, d in enumerate(defs)]
+            self.assertEqual(compare(defs, origins, {}, {})[0], [])
+            self.assertTrue(any(e.startswith('ORDER ') for e in compare(list(reversed(defs)), origins, {}, {})[0]))
+            duplicate = replace(draw, file='include/copy.inl')
+            self.assertTrue(any(e.startswith('DUPLICATE ') for e in compare([draw, duplicate], origins, {}, {})[0]))
+            for bad in (owner.read_text().replace('#include "draw.inl"', ''),
+                        owner.read_text().replace('#include "draw.inl"', '/*\n#include "draw.inl"\n*/'),
+                        owner.read_text().replace('#include "draw.inl"', '#include "draw.inl"\n#include "draw.inl"')):
+                owner.write_text(bad)
+                with self.assertRaises(ValueError):
+                    fragment_owners(root)
+
     def test_reviewed_declaration_gap_cannot_hide_other_source_facts(self):
         from dataclasses import replace
         d = replace(definition(), declaration_only_type=0x1234,

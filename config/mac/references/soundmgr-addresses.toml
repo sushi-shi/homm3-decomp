@@ -1,0 +1,208 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5997d0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218578
+mac_size = 0x160
+target_sha256 = "331e56c5ef4688974a8490ab4cc923a8eae2b80b642674fdb9ac6113fb2c29e1"
+evidence = "Mac soundManager open initializes audio service and driver, calls an audio-handle setup routine at 0x2186d8 and sets manager fields; complete BLR after anchored ctor. The separately identified virtual close entry is at 0x2187f4."
+
+[[functions]]
+retail_va = 0x599a90
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2187f4
+mac_size = 0xf4
+target_sha256 = "596393e2de4bfe7049e5380dc3e4a0895de0d9922fce590388148dc898567aba"
+evidence = "The soundManager vtable at data 1+0x5b0a0 has open, close, main slots through transition vectors 1+0x89a8, 1+0x89a0 and 1+0x8998. Its close slot resolves to code 0x2187f4, which checks the manager open state at +0x30, shuts down audio and clears that state. Prior 0x2186d8 reference pointed to a distinct audio-handle routine called by open; it does not occupy the close slot. Own BLR at 0x2188e4 precedes the eight-byte main leaf. Platform audio APIs differ."
+
+[[functions]]
+retail_va = 0x599d90
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2188f0
+mac_size = 0x78
+target_sha256 = "e4bd003402d705632b0bde868f659f45b211fd113a52cef3ee9890607787044e"
+evidence = "stopAllSamples checks no-sound/play state, calls audio stop 0x2777bc, and if stopMusicToo calls stopMP3 0x2196d0; startMP3 calls it at 0x2194a0."
+
+[[functions]]
+retail_va = 0x599e80
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218968
+mac_size = 0x50
+target_sha256 = "a9adb9e6bb77a89b6c3ed61bb7f83a869fd2b18cd1080ba06c99078ee4e1a621"
+evidence = "stopSample checks no-sound and nonnull handle, resolves sample 0x277744 and stops it 0x27713c; complete BLR."
+
+[[functions]]
+retail_va = 0x599ec0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2189b8
+mac_size = 0x90
+target_sha256 = "1e36c0d8e5020ee4c1ac5ad2b49fcf6221c57c14589ba1e861aa3d1b8114c467"
+evidence = "waitSample normalizes negative timeout, uses GameTime 0x20fc5c and audio status 0x27725c in event-poll loop; complete BLR."
+
+[[functions]]
+retail_va = 0x599f40
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218a48
+mac_size = 0x100
+target_sha256 = "0929e45c546fa9d03236d50c7894a113e052bdcf5e191db169dd17ceab8f399f"
+evidence = "modifySample checks sound state, then converts volume via anchored convertVolume 0x218434 and updates audio handle through 0x277284; complete BLR."
+
+[[functions]]
+retail_va = 0x59a030
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218b48
+mac_size = 0xac
+target_sha256 = "ac04cc59bd13066a0c6dee506ed89b69979ab85654870cf768d7b7ab9237a82e"
+evidence = "getSampleInfo switches operation 1 or 4 and reads audio handle volume/status via 0x277744, matching source query contract; complete BLR."
+
+[[functions]]
+retail_va = 0x59a0c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218bf4
+mac_size = 0xcc
+target_sha256 = "1ce19bf40b3111961d9b0da8aa124560b3108f536dbd212797cef6cdf17b894c"
+evidence = "adjustSoundVolumes loops handles and calls convertVolume 0x218434 twice plus audio volume update 0x277284; complete BLR."
+
+[[functions]]
+retail_va = 0x59a1b0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218cc0
+mac_size = 0x4c
+target_sha256 = "4f201b67700413caf7d5725ebee83057cdae2c5839322b23c6e8704573824b84"
+evidence = "adjustMusicVolumes checks sound state then calls anchored setMusicVolume 0x21832c; complete BLR."
+
+[[functions]]
+retail_va = 0x59a1e0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218d0c
+mac_size = 0x48
+target_sha256 = "382efa2c01f1cd094eb14db29d3aa8b83779411f31a117b93a4b1bfdbcfabda8"
+evidence = "switchAmbientMusic range-checks terrain ID and calls reviewed startMP3 0x21938c; complete BLR."
+
+[[functions]]
+retail_va = 0x59a210
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218d54
+mac_size = 0x194
+target_sha256 = "629502b243d0c94234dd52b4a13ec1c2e289d19800ef02673410e1b53c041894"
+evidence = "memorySample checks sound/config/sample state, selects channel and calls convertVolume 0x218434 and audio play routine. Its final BLR at 0x218ee4 precedes the separate musicPlaying leaf at 0x218ee8; the former 0x1b4 span included that helper."
+
+[[functions]]
+retail_va = 0x59a3f0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218ee8
+mac_size = 0x20
+target_sha256 = "472eb0ce3be00c96583b107cf554f274d842f19d748f8e848de93a54fbdf2474"
+evidence = "View-world windowHandler calls this at 0x209f2c after base dispatch and branches to switchAmbientMusic only when false, matching its source musicPlaying call. The Mac leaf checks the no-sound global, then returns the manager byte at +0x48; this corresponds to the Windows source's no-sound guard and m_mp3Playing return. Prior memorySample BLR at 0x218ee4 and own BLR at 0x218f04 before clearMemSample bound the complete span. Former 0x219378 binding tested an unrelated word at +0x30."
+
+[[functions]]
+retail_va = 0x59a410
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218f08
+mac_size = 0x50
+target_sha256 = "076f2386c1e8cc78f92d05c0c2a20e21d2b206eca4242bdcb6a8a69b694a8d21"
+evidence = "clearMemSample checks sample pointer and shutdown flag then calls virtual sample dispose; waitEndSample 0x219080 and service loop 0x219114 call it."
+
+[[functions]]
+retail_va = 0x59a470
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218f58
+mac_size = 0xa8
+target_sha256 = "3e54179a47b39e9d6f3f03c307df1608806070f270dc170d2e88c5eefd0fcc47"
+evidence = "loadPlaySample returns null pair for missing name/sample, obtains ResourceManager sample 0x153f78 and calls memorySample 0x218d54; complete BLR."
+
+[[functions]]
+retail_va = 0x59a4c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x219000
+mac_size = 0xa0
+target_sha256 = "6898157c4c4f4f252f2dde5b890021cab5eb80517d315b5f6c0875948277cd96"
+evidence = "waitEndSample defaults timeout to 4000, polls sample status 0x27725c and event/sound services, then calls clearMemSample 0x218f08."
+
+[[functions]]
+retail_va = 0x59a590
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x219150
+mac_size = 0x118
+target_sha256 = "e21ee97ffb951377e6035f8890fb88a6d8361b19787ff15db2abaaa0003a56ed"
+evidence = "launchSample checks audio/config/name, loads sample via 0x153f78, calls memorySample 0x218d54 and the reviewed serviceSounds wrapper 0x219268; complete BLR."
+
+[[functions]]
+retail_va = 0x0059a7d0
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x219268
+mac_size = 0x20
+target_sha256 = "bd0e3cf7941c5049289306f5d6783446a38573fbf4ed893a75889048201d862f"
+evidence = "soundManager::serviceSounds is source-owned at Windows 0x59a7d0. Mac launchSample calls this retained wrapper immediately after memorySample, matching src/soundmgr.cpp, and townManager::main calls the same wrapper at 0x1d0124, matching its source serviceSounds call. The Mac body at 0x219268 forwards to platform audio service 0x2181a0, then returns; Windows instead uses Miles/critical-section stream service, an evidenced platform implementation difference. Preceding launchSample BLR is 0x219264, this wrapper ends at 0x219284, and the next prologue starts at 0x219288. Address-only until a soundmgr Mac compiler profile is available."
+
+[[functions]]
+retail_va = 0x59b010
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x2196d0
+mac_size = 0x30
+target_sha256 = "8a12390bdb058f5d0cf9275eef1ce8ca609b98a27686e6ba62a021ab127498e2"
+evidence = "stopMP3 is a Mac leaf that clears current stream pointer and schedules negative volume fade; startMP3 calls it at 0x21948c. Audio implementation is platform-specific."
+
+[[functions]]
+retail_va = 0x5994b0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x21832c
+mac_size = 0x108
+target_sha256 = "5777396f8b4e77fa650854ba9583f3078192a31449d6ced09c511f04ef981d4c"
+evidence = "Only combat%02d TOC use at 0:0x2183cc; checks g_noSound, calls volume converter with 127/type101, then MP3/resume/terrain branches and startMP3. Complete BLR 0x218430; next function 0x218434."
+
+[[functions]]
+retail_va = 0x5996c0
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218434
+mac_size = 0xdc
+target_sha256 = "4a7393522b7a4e51b6f324a7887408fec8ab68d6e1c04be5c3f29e3f7b69b4cb"
+evidence = "Direct callee of setMusicVolume at 0:0x21835c with 127/type101; selects two config volume fields at +8/+0xc, clamps 0..127 and converts to Mac float scale. BLR 0x21850c; next prologue 0x218510."
+
+[[functions]]
+retail_va = 0x599760
+unit = "soundmgr"
+mac_section = 0x0
+mac_offset = 0x218510
+mac_size = 0x68
+target_sha256 = "3d46019696d9380d0cafdd0f01ce103cdc1751fe7a8e48bf7eae1829e466751f"
+evidence = "baseManager constructor at 0x218528, soundManager vtable store, bzero 14 short driver states, clear members and return this. BLR 0x218574; next prologue 0x218578."
+
+[[helpers]]
+source_helper = "soundManager::main"
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x2188e8
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "The soundManager vtable at data 1+0x5b0a8 points through transition vector 1+0x8998 to this eight-byte leaf. It returns zero, matching the canonical ordinary soundManager::main(message&) source helper and the third virtual slot after open and close. Prior close BLR at 0x2188e4; own BLR at 0x2188ec precedes stopAllSamples at 0x2188f0."
+
+[[functions]]
+retail_va = 0x59ac00
+unit = "soundmgr"
+mac_section = 0
+mac_offset = 0x219288
+mac_size = 0x104
+target_sha256 = "bbb7cc5939b63df92c8cd84ff67103ce30d1693a2f967c120b809e66dff974f1"
+evidence = "setMusicVolume calls this body at 0x2183a4 when a stream exists but is not playing, matching its canonical resumeStream source call. The Mac body checks pending/current streams, uses platform stream virtual calls, and calls convertVolume 0x218434. Final BLR at 0x219388; startMP3 begins 0x21938c. Windows uses Miles and thread state instead; Dreamcast names ResumeStream at dc 0x14b8e8."

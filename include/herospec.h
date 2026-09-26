@@ -6,6 +6,7 @@
 #include "va.h"
 
 #include "secondaryskill.h"
+#include "creaturetype_fwd.h"
 
 // Five TSecondarySkill values are independently retail-proven here:
 // hero.obj's specialty factor getters each read hero::skillLevel at a fixed

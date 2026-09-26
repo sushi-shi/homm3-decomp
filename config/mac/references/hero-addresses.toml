@@ -1,0 +1,901 @@
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf1cac
+mac_size = 0xec
+unit = "hero"
+target_sha256 = "1a8de8aa1f431533750fb50e0d57e333a5f843735f2f9f8279cb9a118bb9ddfa"
+evidence = "Contiguous hero TU order corroborated by body: spreadsheetminimum158rows;156recordsstride40;copies3textpointers. Boundaries reviewed against return/next entry."
+retail_va = 0x4d71a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf1d98
+mac_size = 0x1c
+unit = "hero"
+target_sha256 = "1ca71b5ff169ce5fbeb0c15889a5d32d1be543e316eaffc7cb7b7bf199d5563f"
+evidence = "Contiguous hero TU order corroborated by body: heroID+1a selects40-byte specialty record shorttext+1c. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7220
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2048
+mac_size = 0x1cc
+unit = "hero"
+target_sha256 = "a207317318eebbefe45041f22199f87ba8e01f4d2caf7f4f6c574caa61833b60"
+evidence = "Contiguous hero TU order corroborated by body: spreadsheet6rows;fourmastery andthreeweapon records;atoi;calls moveinitializerf1db4. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7240
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2214
+mac_size = 0x30
+unit = "hero"
+target_sha256 = "5471ef558a0061856cfa371f853627dd3a98d870d88763447d5df9cb172dd317"
+evidence = "Contiguous hero TU order corroborated by body: calls initializerf22a4 then returns this. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7470
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2244
+mac_size = 0x60
+unit = "hero"
+target_sha256 = "dfeb91d3d18eb9e12addda69087f8b47a7c0dd7a90de6f834222a4065cf24d94"
+evidence = "Contiguous hero TU order corroborated by body: valid+6; type+0c98; trigger+10; townid+14. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7490
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf22e0
+mac_size = 0x194
+unit = "hero"
+target_sha256 = "27aedd4ab72b4e3dcd1aa387bbb77adea5f829ef6747ce60d8d21e364c50458c"
+evidence = "Contiguous hero TU order corroborated by body: eight virtual reads; short byte point enum trigger extra fields and short-read checks. Boundaries reviewed against return/next entry."
+retail_va = 0x4d74f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2474
+mac_size = 0x170
+unit = "hero"
+target_sha256 = "f8541e610cfaf67897944d13d810de2286d3ba9170a574c59ceac22cf95f9f1b"
+evidence = "Contiguous hero TU order corroborated by body: packedxyz and mapcell22stride; saves then replaces type/extra/trigger; visiting townhero. Boundaries reviewed against return/next entry."
+retail_va = 0x4d75d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf25e4
+mac_size = 0x104
+unit = "hero"
+mac_symbol = ".restoreCell__21type_obscuring_objectFv"
+target_sha256 = "b6662be8e121f6fa5e22ab4cc5840d6777cc4a56981ebea06d5cee7a9ea9bc99"
+evidence = "Contiguous hero TU order corroborated by body: inverse obscuring; restores type/extra/trigger and visitingtownhero=-1. Boundaries reviewed against return/next entry."
+retail_va = 0x4d76e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf26e8
+mac_size = 0x194
+unit = "hero"
+target_sha256 = "64dd413beb2cc76d464b7d2bf9ceb00e5a34a6d7e8f5985d5ef6d7a2214e26e0"
+evidence = "Contiguous hero TU order corroborated by body: eight virtual writes same field order as load. Boundaries reviewed against return/next entry."
+retail_va = 0x4d77b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf287c
+mac_size = 0xac
+unit = "hero"
+target_sha256 = "dfacfc5297da3ed8421136af46483ab2e460c412a73de4c549b1784895d27821"
+evidence = "Contiguous hero TU order corroborated by body: owner playerhero roster append then placeInMapf2928 and game hire. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7890
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2928
+mac_size = 0x18c
+unit = "hero"
+target_sha256 = "d6bd7c2bc48c9a67e89fda9a0ba48d7881ce08c9e32e892583d048fccdf63dc3"
+evidence = "Contiguous hero TU order corroborated by body: copies packedpoint; sets owner; flags; obscureCellf2474 type34. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7900
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf2ab4
+mac_size = 0xa04
+unit = "hero"
+target_sha256 = "637674a15771175f62d16c3addc4a524c14f2aecedeb18e4d57124aceb38f164"
+evidence = "Contiguous hero TU order corroborated by body: base readf22e0; version25; fields+3d5/+112; artifact/spell loops. Boundaries reviewed against return/next entry."
+retail_va = 0x4d7a20
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf34b8
+mac_size = 0x974
+unit = "hero"
+target_sha256 = "3c2ef167c51397b6998fcc4eaf61f63f4cbb07c63dd3b6fdd107fba2effba977"
+evidence = "Contiguous hero TU order corroborated by body: base writef26e8; virtual field writes; paired layout with load. Boundaries reviewed against return/next entry."
+retail_va = 0x4d80c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf3e2c
+mac_size = 0x1b8
+unit = "hero"
+target_sha256 = "d381d665b604c72acd31996a6f046a6b8be41ef187fd5a87d0b05cb523556fd2"
+evidence = "Contiguous hero TU order corroborated by body: base constructorf2214; army58050;19equipped64backpack; strings; initializer. Boundaries reviewed against return/next entry."
+retail_va = 0x4d85f0
+mac_symbol = ".__ct__4heroFv"
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4a74
+mac_size = 0x84
+unit = "hero"
+target_sha256 = "ec8f524d85d879c41d038cd3fcff24b90bfa1386f8f0da6a81a76830d4c60ca5"
+evidence = "Contiguous hero TU order corroborated by body: hero27 campaign15 override generalText736; otherwise class table. Boundaries reviewed against return/next entry."
+retail_va = 0x4d8f70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4af8
+mac_size = 0xc8
+unit = "hero"
+target_sha256 = "ccf626647903073d71dd6ce9d8ead610faf7ba8c1556252631441f004d16af90"
+evidence = "Contiguous hero TU order corroborated by body: custom name flag then string compare traitname; fallback sharednames. Boundaries reviewed against return/next entry."
+retail_va = 0x4d8fb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4bc0
+mac_size = 0x5c
+unit = "hero"
+target_sha256 = "d7fdd6e5b219b041079ea392449fc9ca8a12c4aaa00a768d1c672884d336a81a"
+evidence = "Contiguous hero TU order corroborated by body: owner+22 negativecheck then isHuman e6bf4. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9050
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4c1c
+mac_size = 0x68
+unit = "hero"
+target_sha256 = "92d8681058c36d94b876d4b0c1d6b88353626ce009edc6903ccb6ae3dc9f722d"
+evidence = "Contiguous hero TU order corroborated by body: 19slots at12d stride8; excludedwar artifacts0/3/4/5/6. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4cf0
+mac_size = 0x50
+unit = "hero"
+target_sha256 = "aca5002b00575bcc61203b315f6a8e0687513055dfd915dae96b6d824da239c9"
+evidence = "Contiguous hero TU order corroborated by body: directionbyte+47 maps8directions to5standingframes. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9110
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf4d40
+mac_size = 0x54
+unit = "hero"
+target_sha256 = "a5680d2cfc93c8d911e1d3eb116b699b9718db7adfd08bb152e42dc76ebabc77"
+evidence = "Contiguous hero TU order corroborated by body: directionbyte+1b maps8directions to5standingframes. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf50bc
+mac_size = 0x214
+unit = "hero"
+target_sha256 = "46ab9d5ea049f26790a1fd5d05f9b609571023fe8f661e19f4d63c7018b78b01"
+evidence = "Contiguous hero TU order corroborated by body: artifact switch86/88/90/123/128/125/135; four school helperf5008; bitset70. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9350
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf58f8
+mac_size = 0xd0
+unit = "hero"
+target_sha256 = "fb3cb85cc465611178749af958be150cd97d29de469a805eec0d53c1bbf6c080"
+evidence = "Contiguous hero TU order corroborated by body: primary-stat clamp99 and lowerbound; dialog117f10. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9990
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf59c8
+mac_size = 0x124
+unit = "hero"
+target_sha256 = "b91e2499a31235b1158c14b3e6d82db84e48be58c8c002c3c25e9a37898445c2"
+evidence = "Contiguous hero TU order corroborated by body: spellscroll1 vs ordinary; descriptionf7550; dialog117f10. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9a00
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf5aec
+mac_size = 0x104
+unit = "hero"
+target_sha256 = "ffddda44fcdfcada77ea6a798b0082bfe439d7a7ef482b66e38f4252b10c8739"
+evidence = "Contiguous hero TU order corroborated by body: disassembly prompt generalText734; descriptionf7550; dialogmode2. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9b30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf5bf0
+mac_size = 0x14c
+unit = "hero"
+target_sha256 = "c50f0cd7e92039eeaab2e046185727bb795e35e6494dc2d717f381766fcb228f"
+evidence = "Contiguous hero TU order corroborated by body: assembly prompt generalText733; descriptionf7550; formatting131520; dialogmode2. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9cc0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf5d3c
+mac_size = 0x554
+unit = "hero"
+target_sha256 = "77e63d787704681c03bb7eaf849a7be97de2e9a53d11129a62a039f9673613b1"
+evidence = "Contiguous hero TU order corroborated by body: owner/player roster; restore obscure cell; map position; clear resources; ends before experience. Boundaries reviewed against return/next entry."
+retail_va = 0x4d9ec0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf6460
+mac_size = 0x220
+unit = "hero"
+target_sha256 = "349ad62b285b222d164f864e10bc3f38ad45fb7aaf81678293a2856ca310cd55"
+evidence = "Contiguous hero TU order corroborated by body: repeated masks against flags+105 and temporaryflags+109; clears counters. Boundaries reviewed against return/next entry."
+retail_va = 0x4da510
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf6680
+mac_size = 0x20
+unit = "hero"
+target_sha256 = "08abcb8cee150e506ace81a4896daef0f3819c51b40d03c7239add0b6955390f"
+evidence = "Contiguous hero TU order corroborated by body: sole call applyBattleWinTempsf6460. Boundaries reviewed against return/next entry."
+retail_va = 0x4da710
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf71ec
+mac_size = 0x124
+unit = "hero"
+target_sha256 = "22de8ce1b3f31e05ee46ee659b70e946e2fa8913106f64a88acce5e57374d015"
+evidence = "Contiguous hero TU order corroborated by body: artifact lookup; equipability1034d8; repeated widget helperf7124. Boundaries reviewed against return/next entry."
+retail_va = 0x4daf90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf7310
+mac_size = 0x50
+unit = "hero"
+target_sha256 = "ade74acda8b877d0dd909e3683edbf0745160fa8275edcc1b4eb720bdd1de99e"
+evidence = "Contiguous hero TU order corroborated by body: 19slot loop callingf71ec. Boundaries reviewed against return/next entry."
+retail_va = 0x4db1d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf7398
+mac_size = 0x13c
+unit = "hero"
+target_sha256 = "4f9de0d46a588157b8f322b79f5c38caa8c60bd2cc8efacc27e3b83f88a664f7"
+evidence = "Contiguous hero TU order corroborated by body: five visible slots; f7360 helper; lastindexf8290; arrow widgets. Boundaries reviewed against return/next entry."
+retail_va = 0x4db1f0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf74d4
+mac_size = 0x7c
+unit = "hero"
+target_sha256 = "6844b2432400eef93f63ec4c7a585181cb1f43dd185ec35a824112972913c2eb"
+evidence = "Contiguous hero TU order corroborated by body: artifact=-1 clears; ordinary copiesname; scroll formats spell. Boundaries reviewed against return/next entry."
+retail_va = 0x4db350
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf76ac
+mac_size = 0x7b8
+unit = "hero"
+target_sha256 = "d10bc6cfb88f4cb938a30898652e3c9219673d0d23964bf3220f78bd8fc1bc04"
+evidence = "Contiguous hero TU order corroborated by body: widget-id switch; description strings; hero and artifact UI identifiers. Boundaries reviewed against return/next entry."
+retail_va = 0x4db660
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf8290
+mac_size = 0x38
+unit = "hero"
+target_sha256 = "237b1e79648681bf785e61189a56e50388790a18888fbc5c368abf87bd20fe6d"
+evidence = "Contiguous hero TU order corroborated by body: backward64-slot artifact scan for nonnegative ID. Boundaries reviewed against return/next entry."
+retail_va = 0x4dbd90
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf82c8
+mac_size = 0x94
+unit = "hero"
+target_sha256 = "1c33cdc22ee5c633bb3b77ac37a4326f490335265b48e80a43ebc86c87bb7de7"
+evidence = "Contiguous hero TU order corroborated by body: calls lastindexf8290; rotates stride8 records left. Boundaries reviewed against return/next entry."
+retail_va = 0x4dbdb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf835c
+mac_size = 0x90
+unit = "hero"
+target_sha256 = "480825e60751738eebe7cc805357610768c344b177ef34633c292d9b75183ddd"
+evidence = "Contiguous hero TU order corroborated by body: calls lastindexf8290; rotates stride8 records right. Boundaries reviewed against return/next entry."
+retail_va = 0x4dbe10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf8638
+mac_size = 0xb4
+unit = "hero"
+target_sha256 = "8c155f5901ee4a983a42215145fe4e1fefee6d23a1648839f31761950d279bf3"
+evidence = "Contiguous hero TU order corroborated by body: removes combination103854;144 component traversal; equip1035fc. Boundaries reviewed against return/next entry."
+retail_va = 0x4dc070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf86ec
+mac_size = 0x1e0
+unit = "hero"
+target_sha256 = "d23d67567072628c090dff65dc79a6e4db8e592bdcb5d880419313fe1e1764db"
+evidence = "Contiguous hero TU order corroborated by body: assembly eligibilityf83ec; prompt733; confirmation7805; assemblef84b4. Boundaries reviewed against return/next entry."
+retail_va = 0x4dc100
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf9684
+mac_size = 0x2c
+unit = "hero"
+target_sha256 = "40eafd94de56042e4eab4a12a4f52bff7a5ac85f722707a9fca14e51164f7a76"
+evidence = "Contiguous hero TU order corroborated by body: stores7802 dialogReturn;msg200/10/10;return2. Boundaries reviewed against return/next entry."
+retail_va = 0x4dd2a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xf96b0
+mac_size = 0xf40
+unit = "hero"
+target_sha256 = "ef537e4cbf619b2ce779a5edebedac8b37dfa1f770161d6c0955e45eb5831860"
+evidence = "Contiguous hero TU order corroborated by body: message/widget dispatcher; artifact/backpack handling; terminal return before constructorfa5f0. Boundaries reviewed against return/next entry."
+retail_va = 0x4dd2d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xfa5f0
+mac_size = 0x78b4
+unit = "hero"
+target_sha256 = "cb6eee618098374e59627c0ae0382bb4e02030faf38e5bc7fbc6258b5b9663cc"
+evidence = "Contiguous hero TU order corroborated by body: popupgeometry64/7/672/586; dozens widget constructors; widgetvector insertion; returns this. Boundaries reviewed against return/next entry."
+retail_va = 0x4de710
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x101ea4
+mac_size = 0xfc
+unit = "hero"
+target_sha256 = "ab82766b3de83410b173ef94e91b1580fb77ba199910cf4098abc6da7105eac3"
+evidence = "Contiguous hero TU order corroborated by body: vtable store;returns draggedartifact via103da8;clearsarmyslot;deleteswidgetvector;base destructor;Mac deleting flag ABI. Boundaries reviewed against return/next entry."
+retail_va = 0x4e1550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x101fa0
+mac_size = 0x110
+unit = "hero"
+target_sha256 = "a54f9ec143d64d024ac5fc61c082f791e53978e2cafd088c20f06e8871eee75e"
+evidence = "Contiguous hero TU order corroborated by body: hero lookup; widgetid138; locator broadcast. Boundaries reviewed against return/next entry."
+retail_va = 0x4e1600
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x10210c
+mac_size = 0x224
+unit = "hero"
+target_sha256 = "1fb2b1e125ade7ee9805faf4257b2ad77973bb699f646e69acb1ae2b1a1f3ba8"
+evidence = "Contiguous hero TU order corroborated by body: four primary stats99clamp; getLuck10434c/getMorale10464c and UI broadcasts. Boundaries reviewed against return/next entry."
+retail_va = 0x4e16d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x102330
+mac_size = 0x27c
+unit = "hero"
+target_sha256 = "18070085a9962f93f42fd7b465a41a40695cbbc24620cd3ea09580af2ec06ac7"
+evidence = "Contiguous hero TU order corroborated by body: window ctorfa5f0; setup1025ac; fade/run dialogs and restorewindow. Boundaries reviewed against return/next entry."
+retail_va = 0x4e1800
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1025ac
+mac_size = 0x918
+unit = "hero"
+target_sha256 = "a9d38bdcd64c5d09410698c2e13f19026a43329990f2cf37c3caf65436a13ed5"
+evidence = "Contiguous hero TU order corroborated by body: hero portrait/name/level; secondaryskill widgets; disables widgetIDs up to7800. Boundaries reviewed against return/next entry."
+retail_va = 0x4e1a50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x102f5c
+mac_size = 0x4c
+unit = "hero"
+target_sha256 = "753214207161cc33accd798d2f6564a93eddc8ba49dad6a2de8de6726268ec49"
+evidence = "Contiguous hero TU order corroborated by body: seven armies+91 and positive troopcounts+ad. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2340
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x102fa8
+mac_size = 0x38
+unit = "hero"
+target_sha256 = "ec2df7fbc6e5da17e8aeb57894a6331542f55fbc505d65f538e49e6e9c83d8ec"
+evidence = "Contiguous hero TU order corroborated by body: seven armies+91 replace sourceID with destinationID. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2370
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x102fe0
+mac_size = 0x38
+unit = "hero"
+target_sha256 = "3516a4010a56291fce48980fae0c8601fe4960116875f0c51a679198fd48f841"
+evidence = "Contiguous hero TU order corroborated by body: compares skillorder+e5 against which+1 over28skills. Boundaries reviewed against return/next entry."
+retail_va = 0x4e23a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x103038
+mac_size = 0x198
+unit = "hero"
+target_sha256 = "fbb2bca45fafc66ab7523d4667016f15bd1cf0d93d5f5f91ce32b401ffca5ec0"
+evidence = "Contiguous hero TU order corroborated by body: 19equipped and reversebackpack; exceptions0/2/3/4/5/6; calls add/remove. Boundaries reviewed against return/next entry."
+retail_va = 0x4e23d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1031d0
+mac_size = 0x308
+unit = "hero"
+target_sha256 = "40705d296956d5b8312badb92da9c5d003f95d896810e254a01c96bc29ab3f5f"
+evidence = "Contiguous hero TU order corroborated by body: artifact slot compatibility; combination component masks; bitset count1074b8. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1034d8
+mac_size = 0x124
+unit = "hero"
+target_sha256 = "7b9f47fe3b9e5b3b7acf0f76390d3312be30913e2fdab21ccf41744336fe7231"
+evidence = "Contiguous hero TU order corroborated by body: save displacedartifact; eligibility1031d0; remove103854; equip1035fc; exception restore. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2840
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x103a54
+mac_size = 0xb0
+unit = "hero"
+target_sha256 = "43b991213e5f59d1153b0b78b6d4528afb39fdb194982108b40dff8e3c8e8a13"
+evidence = "Contiguous hero TU order corroborated by body: lastindexf8290; shifts eight-byte records; clears slot. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2d50
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x103bd8
+mac_size = 0x9c
+unit = "hero"
+target_sha256 = "a91fe5102a2ed3387dc9ead69221b56fd732d782a7a6d55d944c08c895bc7004"
+evidence = "Contiguous hero TU order corroborated by body: count64; generalText153/154; formatted name. Boundaries reviewed against return/next entry."
+retail_va = 0x4e2ed0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104224
+mac_size = 0x128
+unit = "hero"
+target_sha256 = "edd1e753ea91ca59681ac7b23c58885404862c08ee780ff1ad337ec8ddd80131"
+evidence = "Contiguous hero TU order corroborated by body: resource index0..6; owner+22; resource update; calls game isHuman. Boundaries reviewed against return/next entry."
+retail_va = 0x4e3600
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104904
+mac_size = 0x84
+unit = "hero"
+target_sha256 = "076eaa81adf5f134e1143ea5c882d93d9a337e88d792260a23e60bd189ba7625"
+evidence = "Contiguous hero TU order corroborated by body: artifact82; necromancy+d5 mastery3/2/1 chooses lich/wight/zombie. Boundaries reviewed against return/next entry."
+retail_va = 0x4e3c60
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104988
+mac_size = 0x280
+unit = "hero"
+target_sha256 = "9b4cbf02f80d0d06f6be5292f3540a2c9cd8286b003d471edd3e896cb840c913"
+evidence = "Contiguous hero TU order corroborated by body: skill+d5; artifacts36/37/38/82; owned Necropolis loop. Boundaries reviewed against return/next entry."
+retail_va = 0x4e3cd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104d40
+mac_size = 0x11c
+unit = "hero"
+target_sha256 = "999a9d0fc218d0ffe03ac567868047a9cd182b5750b2728ae6bcb5b4ffe4ffbd"
+evidence = "Contiguous hero TU order corroborated by body: skill+cc; specialty3; artifacts34/35. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4070
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104e5c
+mac_size = 0x114
+unit = "hero"
+target_sha256 = "48e578a98941cadc4383bcafdeb133a2349ed129e7afdb64ff8a4ec2ad23cb68"
+evidence = "Contiguous hero TU order corroborated by body: skill+ca; specialty1; artifacts3c/3d/3e. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4160
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x104f70
+mac_size = 0x90
+unit = "hero"
+target_sha256 = "c06e871676ebfe333c6439d40aa3590d2413c5305c963720d8b58080050582c9"
+evidence = "Contiguous hero TU order corroborated by body: skill+df; specialty16; level*factor. Boundaries reviewed against return/next entry."
+retail_va = 0x4e42b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x105000
+mac_size = 0xa8
+unit = "hero"
+target_sha256 = "516a29d4b1a89b5f3f773c19138e067fe54307833d20b78f357fc972b237bca8"
+evidence = "Contiguous hero TU order corroborated by body: skill+e0; specialty17; clamp and return1-factor. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4310
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1050a8
+mac_size = 0xf8
+unit = "hero"
+target_sha256 = "f83137baac55afa5e6c7fce1a82c65c32cfe8b15bdabd4dc0ef498ba8542e935"
+evidence = "Contiguous hero TU order corroborated by body: skill+d6; specialty0xd; resource specialty2/gold6 adds350. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4390
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1051a0
+mac_size = 0x124
+unit = "hero"
+target_sha256 = "34739e759e7dc2a2a04f4249b42249746b149851cbfe94e532ead72e66eb4e2a"
+evidence = "Contiguous hero TU order corroborated by body: skill+d4; specialty0xb; artifacts3f/40/41; clamp. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4420
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1052c4
+mac_size = 0x128
+unit = "hero"
+target_sha256 = "c13960e24668b67426d5dc25abb986c0ddba6cebe04d5de6d5da690e3634dc1e"
+evidence = "Contiguous hero TU order corroborated by body: skill+cd; specialty4; artifacts42/43/44; clamp then1-factor. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4580
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1053ec
+mac_size = 0x128
+unit = "hero"
+target_sha256 = "b1bdce7b9ae6518ab0f7c0150f528787603d8f7ae16b161098460cdd855e9a2d"
+evidence = "Contiguous hero TU order corroborated by body: skill+e3; specialty1a; artifacts39/3a/3b; clamp then1-factor. Boundaries reviewed against return/next entry."
+retail_va = 0x4e46e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x105514
+mac_size = 0x98
+unit = "hero"
+target_sha256 = "cb4289cdaf59bb71b16afdb334ecde55ce2be2336711f70d51786b8e9568fc79"
+evidence = "Contiguous hero TU order corroborated by body: skill+de; specialty15; return factor+1. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4840
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x105800
+mac_size = 0x98
+unit = "hero"
+target_sha256 = "59df6fa438636983e24490423d576ae11f57ceb9b358333b98a386e44e30ef62"
+evidence = "Contiguous hero TU order corroborated by body: skill+e4; specialty1b; return factor+1. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4920
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x105898
+mac_size = 0x348
+unit = "hero"
+target_sha256 = "a473e3b4127b2b23690f0052afb50c8060ad002a2a8e4635b666c853ef3bec38"
+evidence = "Contiguous hero TU order corroborated by body: calls navigation105644/logistics1055ac; seven army slots; sea/land branches and movement artifacts. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4990
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x105c18
+mac_size = 0x94
+unit = "hero"
+target_sha256 = "42ea56c5abb1563603011e8eb655a4b9550d6b244055e87c48c6425fe60c336e"
+evidence = "Contiguous hero TU order corroborated by body: artifacts4c/4d/4e/8b; adds1/2/3/50. Boundaries reviewed against return/next entry."
+retail_va = 0x4e4db0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106308
+mac_size = 0x70
+unit = "hero"
+target_sha256 = "1518f8ee1c6bd789afb2e4d786ac1fb836d931fd43dcd6d4c15f39e55191d774"
+evidence = "Contiguous hero TU order corroborated by body: movePoints+4d thresholds2300/2500/2800; divide100. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5330
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106378
+mac_size = 0x60
+unit = "hero"
+target_sha256 = "36e7eb7e1baff0964c88ec20e3a047462fb097689c47fdcdea1854b1d3b18843"
+evidence = "Contiguous hero TU order corroborated by body: mana+18 thresholds116/145/170; (mana+4)/5. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5380
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1063d8
+mac_size = 0x28
+unit = "hero"
+target_sha256 = "e1b992e02fcd203b2fdfff527da9ebf319f3b90b8a06cfc1e2bd19f66b399324"
+evidence = "Contiguous hero TU order corroborated by body: cell+0 selects bit in arenaFlags+73. Boundaries reviewed against return/next entry."
+retail_va = 0x4e53c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106400
+mac_size = 0x1c
+unit = "hero"
+target_sha256 = "38d1f81364aef4e4ec25b082e73dc94b05ae37dbe7c56867dce893af759789ed"
+evidence = "Contiguous hero TU order corroborated by body: cell+0 selects OR bit store arenaFlags+73. Boundaries reviewed against return/next entry."
+retail_va = 0x4e53e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x10641c
+mac_size = 0xec
+unit = "hero"
+target_sha256 = "c211024195068b0a34eda8bfb2cf368cfafb5e7957294e5176c57e925ec19a37"
+evidence = "Contiguous hero TU order corroborated by body: signed stats+46a/+46b clamped0..99; product and sqrt glue2a1b68. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5400
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106508
+mac_size = 0x10c
+unit = "hero"
+target_sha256 = "00e39f58ca7c7604e0b7a48bc11349273d1856d2c9260645c364935e38d1f386"
+evidence = "Contiguous hero TU order corroborated by body: calls getHeroBoat then28-byte boat traversal; allocated/occupied/owner; two abs288778. Boundaries reviewed against return/next entry."
+retail_va = 0x4e54a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106614
+mac_size = 0xd0
+unit = "hero"
+target_sha256 = "3b55dc0aa75a43b3f9d57c2df12ee06b6171ba340c75575a9080d0a055f3d788"
+evidence = "Contiguous hero TU order corroborated by body: summon spell+424; calls10600c/105e5c/10621c/106508; mana threshold and mastery2. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5550
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1066e4
+mac_size = 0x38
+unit = "hero"
+target_sha256 = "d5739b564bcbfd3570c3a554f84184f1c64aeaf0bde41e3cca4274012190ae05"
+evidence = "Contiguous hero TU order corroborated by body: signed owner+22; negative null; stride15c player address. Boundaries reviewed against return/next entry."
+retail_va = 0x4e56b0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1067ec
+mac_size = 0x15c
+unit = "hero"
+target_sha256 = "5b9785c62bfb77d2c119480877f0ad8b6f196592e7c196d216bcd20e56eb7186"
+evidence = "Contiguous hero TU order corroborated by body: spelltraits88; school mask; artifacts4f/50/51/52; sorcery1056d0 and bonus106f98. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5760
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1069d0
+mac_size = 0x50
+unit = "hero"
+target_sha256 = "4a24dc5be1e2ea98383927a90ad4a7d0d0343c1adf23c40172fa9b9bac4a1f08"
+evidence = "Contiguous hero TU order corroborated by body: stores flight+112; terrain105e5c; mana10621c with spell6; useSpellf4f4c. Boundaries reviewed against return/next entry."
+retail_va = 0x4e59a0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106a20
+mac_size = 0x9c
+unit = "hero"
+target_sha256 = "27ec9250f3e6af12cd4ed1584afe3683a82e1d6360f1a935459d6849c561fbc5"
+evidence = "Contiguous hero TU order corroborated by body: artifacts61/45/63 add1/1/2; ability kind5 add2. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5aa0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106abc
+mac_size = 0xdc
+unit = "hero"
+target_sha256 = "0225242a39c0250803138d2b02ea739196a71b67dec247196ee7fa44dc107641"
+evidence = "Contiguous hero TU order corroborated by body: artifacts5e/5f/60 add1/1/2; creature alive and artifact83 quarterHP. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5b80
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106b98
+mac_size = 0x140
+unit = "hero"
+target_sha256 = "88a32ac5c3438563f8e87502ddba8eb7b9c4992b5317a8543edfafe9357e1750"
+evidence = "Contiguous hero TU order corroborated by body: mapcell22 stride; ground8 and sea flag; landing/trigger bits. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5ce0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106cd8
+mac_size = 0x8
+unit = "hero"
+target_sha256 = "c4ac16582dfd1fcc4bee5b6199f57205888f7e893f3d653b163b2092cde4bf68"
+evidence = "Contiguous hero TU order corroborated by body: single store waterWalk+116 thenblr. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5dd0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106ce0
+mac_size = 0x54
+unit = "hero"
+target_sha256 = "b078a20d67297c9f5dcf3805f3e3b487724f05a4b7957fd2b4e2bc1daf7694b8"
+evidence = "Contiguous hero TU order corroborated by body: visionsPower+129 versus3; Rogue143 army call587e0; return3 or power. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5de0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106d34
+mac_size = 0x138
+unit = "hero"
+target_sha256 = "9fc5d05b0bb46a1c099f04e9c3f5beda7e514c671485496f03c51464cc45f513"
+evidence = "Contiguous hero TU order corroborated by body: calls106ce0; primary spellpower+46c; visions table; squared xy radius samez. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5e10
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106e6c
+mac_size = 0x12c
+unit = "hero"
+target_sha256 = "ef8ca5e3e2a4777125af6a37bb20ffb80bd083db9be471fe51ce9d4e2df0c004"
+evidence = "Contiguous hero TU order corroborated by body: getCell13770; nomad142 count587e0; minimumTerrainCostc4c7c; flight+112/waterwalk+116. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5f30
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x106f98
+mac_size = 0x108
+unit = "hero"
+target_sha256 = "03f7824fef013d6010854e84cf4a604559de9b5f579046c25a2adc61d42a561d"
+evidence = "Contiguous hero TU order corroborated by body: specialtykind3; spell-indexed switch; targetlevel; ceil2a1b50. Boundaries reviewed against return/next entry."
+retail_va = 0x4e5ff0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1070a0
+mac_size = 0x3b0
+unit = "hero"
+target_sha256 = "43210fee7e38bef7663981db169e7707ef60f42f2e3dc4f94ec5f32dd14ea105"
+evidence = "Contiguous hero TU order corroborated by body: attack/defense+54/+58; artifact7f dragon+5; specialties1/4/7; speed106a20 and HP106abc. Boundaries reviewed against return/next entry."
+retail_va = 0x4e6120
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf1db4
+mac_size = 0x294
+unit = "hero"
+target_sha256 = "3918a2a21e6b0e990994463cb3ec0f8050234eae57e2fa7a57753e72e92e489c"
+evidence = "Source helper without standalone Windows VA. TU order plus spreadsheet23rows;movement constants load;called from ballistics initializer"
+source_helper = "initializeMoveConstants"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf5568
+mac_size = 0xb4
+unit = "hero"
+target_sha256 = "ba2d2e82e690cbb75ac020f07374ddf72413f56da78d6a498b80e03645adaf4f"
+evidence = "Source helper without standalone Windows VA. TU order plus messagebroadcast and virtual draw with text"
+source_helper = "THeroScreenWindow::heroMessageUpdate"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf561c
+mac_size = 0x9c
+unit = "hero"
+target_sha256 = "fc9acf45f0994829c21a8c8f3763874746ae6523e81792ae1f036f78519d127c"
+evidence = "Source helper without standalone Windows VA. TU order plus calls updateArmiesf56b8;selectedslot and two broadcasts;draw"
+source_helper = "hero::heroScreenUpdate"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf7124
+mac_size = 0xc8
+unit = "hero"
+target_sha256 = "1c3258854d69fce25e5ad7563210acdfafd02ec7a27e412cea55ecdf833f5f52"
+evidence = "Source helper without standalone Windows VA. TU order plus widget message clear/set/icon sequence;called repeatedly by updateSlot"
+source_helper = "updateArtifactSlot"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf7360
+mac_size = 0x38
+unit = "hero"
+target_sha256 = "7759b566e0152fd3dd61d61dfea63c08c2ff9a7e7cb65f4f7217873249cabd07"
+evidence = "Source helper without standalone Windows VA. TU order plus backpack+1d4 indexed stride8;widgetid i+40;calls updateArtifactSlot"
+source_helper = "updateBackpackItem"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf7e64
+mac_size = 0x42c
+unit = "hero"
+target_sha256 = "b07a7724440bde53b9ad6df29954097f43cd8a9e5a18ffa494ced008f48cb1be"
+evidence = "Source helper without standalone Windows VA. TU order plus artifact assembly/disassembly prompts;slot19;calls f5aec/f5bf0/f84b4/f8638"
+source_helper = "handleArtifactClick"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xf947c
+mac_size = 0x208
+unit = "hero"
+target_sha256 = "52eb2f457d28d07d2223cf8f1ea83cc80dcf1089698fd9e970db8a167bc7faf1"
+evidence = "Source helper without standalone Windows VA. TU order plus backpack drag path;remove103a54/add103c74;error103bd8;mousepointer and windowupdate"
+source_helper = "handleBackpackClick"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1020b0
+mac_size = 0x5c
+unit = "hero"
+target_sha256 = "e412a3bbd7927b307db2b44dfb26b9447329d0c5bc9316b412be675d7132fd54"
+evidence = "Source helper without standalone Windows VA. TU order plus eight indices calling101fa0;widget138"
+source_helper = "THeroScreenWindow::updateHeroLocators"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x103018
+mac_size = 0x20
+unit = "hero"
+target_sha256 = "6b4dc886dc417843ebbb88aa1d9e4585bdca7511adb7a0363ace13918f33c00c"
+evidence = "Source helper without standalone Windows VA. TU order plus index into skillorder+e5;boolean nonzero result"
+source_helper = "hero::hasSecondarySkill"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1055ac
+mac_size = 0x98
+unit = "hero"
+target_sha256 = "c84279ffefe2399a7f379680a04fb031800c8d4a3f61d9a37b1747f025f7f587"
+evidence = "Source helper without standalone Windows VA. TU order plus skill+cb;specialty2;returns factor+1;called from mobility105898"
+source_helper = "hero::getLogisticsFactor"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x105644
+mac_size = 0x8c
+unit = "hero"
+target_sha256 = "796f5eb23cf7cb508305c430e688bdea0ec3de8eb18bceb407d02745b0388978"
+evidence = "Source helper without standalone Windows VA. TU order plus skill+ce;specialty5;sea movement table;level*base/20;called from mobility105898"
+source_helper = "hero::getNavigationFactor"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1056d0
+mac_size = 0x98
+unit = "hero"
+target_sha256 = "87d453242353faec26fe036ac8750e7728bdae0c58a08f91a185f1e1e09afc72"
+evidence = "Source helper without standalone Windows VA. TU order plus skill+e2;specialty25;returns factor+1;called from modifySpellDamage1067ec"
+source_helper = "hero::getSorceryFactor"

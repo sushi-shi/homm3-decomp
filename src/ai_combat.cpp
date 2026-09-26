@@ -36,10 +36,6 @@ const unsigned int g_aiSpellClassMask = 0x1f8000;
 // side (Recanter's Cloak). Familiar's 0x2b identity is now shared through
 // TCreatureType: CastSpell and this AI projection independently prove it.
 const int g_artifactRecantersCloak = 0x53;
-const int g_secondarySkillWisdom = 7;
-const int g_secondarySkillSiegeBallistics = 10;
-const int g_secondarySkillEagleEye = 11;
-const int g_secondarySkillTactics = 19;
 
 // Attribute roles byte-proven by initialize_creatures. Kept TU-local for
 // the same shared-header codegen reason as the cast_spell constants above.
@@ -233,9 +229,9 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
 
     m_tacticsAdvantage = 0;
     if (m_currentHero)
-        m_tacticsAdvantage = m_currentHero->m_skillLevel[g_secondarySkillTactics];
+        m_tacticsAdvantage = m_currentHero->getSecondarySkill(eSecSkillBattleTactics);
     if (enemyHero) {
-        m_tacticsAdvantage -= enemyHero->m_skillLevel[g_secondarySkillTactics];
+        m_tacticsAdvantage -= enemyHero->getSecondarySkill(eSecSkillBattleTactics);
         if (m_tacticsAdvantage < 0)
             m_tacticsAdvantage = 0;
     }
@@ -344,7 +340,9 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
             m_wallSpeedLimit = 0;
         }
         if (m_wallSpeedLimit > 0) {
-            m_wallSpeedLimit = static_cast<short>(m_wallSpeedLimit - m_currentHero->m_skillLevel[g_secondarySkillSiegeBallistics]);
+            m_wallSpeedLimit = static_cast<short>(
+                m_wallSpeedLimit
+                - m_currentHero->getSecondarySkill(eSecSkillSiegeBallistics));
             if (m_wallSpeedLimit < 2)
                 m_wallSpeedLimit = 2;
         }
@@ -418,7 +416,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.m_currentHero, damage) > 0)
+                                                  defender.getHero(), damage) > 0)
             break;
     }
     if (i >= 0)
@@ -427,7 +425,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
         if (excluded & (1 << i))
             continue;
         if (defender.m_creatures[i].getSpellDamage(SPELL_CHAIN_LIGHTNING, m_currentHero,
-                                                  defender.m_currentHero, damage) > 0)
+                                                  defender.getHero(), damage) > 0)
             break;
     }
     if ((unsigned)i < defender.m_creatures.size())
@@ -449,7 +447,7 @@ void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, cons
         if (target < 0)
             break;
         choice.m_value += defender.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+            choice.m_spell, m_currentHero, defender.getHero(), damage);
         excluded |= 1 << target;
     }
 }
@@ -462,7 +460,7 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
-                                                           defender.m_currentHero, damage);
+                                                           defender.getHero(), damage);
         if (value <= 0)
             continue;
         choice.m_value += value;
@@ -478,7 +476,7 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     for (long i = defender.m_creatures.size(); i-- > 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
-                                                           defender.m_currentHero, damage);
+                                                           defender.getHero(), damage);
         if (value > choice.m_value) {
             choice.m_value = value;
             choice.m_target = i;
@@ -529,7 +527,7 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
         long value = defender.m_creatures[i].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+            choice.m_spell, m_currentHero, defender.getHero(), damage);
         if (value <= 0)
             continue;
         defender.m_totalCombatValue -= defender.m_creatures[i].takeDamage(value);
@@ -544,7 +542,7 @@ void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_com
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
     long value = defender.m_creatures[choice.m_target].getSpellDamage(
-        choice.m_spell, m_currentHero, defender.m_currentHero, damage);
+        choice.m_spell, m_currentHero, defender.getHero(), damage);
     defender.m_totalCombatValue -= defender.m_creatures[choice.m_target].takeDamage(value);
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
@@ -806,7 +804,7 @@ void type_AI_combat_data::castSpell(
             continue;
 
         mastery = m_currentHero->getSpellLevel(spell, m_terrain);
-        long manaCost = m_currentHero->getManaCost(spell, defender.m_currentArmy, m_terrain);
+        long manaCost = m_currentHero->getManaCost(spell, defender.getArmy(), m_terrain);
         if (manaCost > m_mana)
             continue;
 
@@ -840,7 +838,7 @@ void type_AI_combat_data::castSpell(
         return;
 
     m_mana -= bestManaCost;
-    if (defender.m_currentHero && defender.hasCreature(CREATURE_FAMILIAR))
+    if (defender.getHero() && defender.hasCreature(CREATURE_FAMILIAR))
         defender.m_mana += bestManaCost / 5;
 
     switch (g_spellTraits[bestChoice.m_spell].m_flags
@@ -1142,18 +1140,20 @@ void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 // E:\gamedcs\ai_combat.cpp:1398
 static void doEagleEye(hero* winner, hero* loser)
 {
-    if (winner->m_skillLevel[g_secondarySkillEagleEye] > 0
+    if (winner->getSecondarySkill(eSecSkillEagleEye) > 0
         && winner->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (!loser->spellIsAvailable(spell)
                 || winner->spellIsAvailable(spell))
                 continue;
             const SSpellTraits& traits = g_spellTraits[spell];
-            if (winner->m_skillLevel[g_secondarySkillEagleEye] + 1 < traits.m_level)
+            if (winner->getSecondarySkill(eSecSkillEagleEye) + 1
+                < traits.m_level)
                 continue;
             if (!(traits.m_flags & 1))
                 continue;
-            if (traits.m_level <= winner->m_skillLevel[g_secondarySkillWisdom] + 2) {
+            if (traits.m_level
+                <= winner->getSecondarySkill(eSecSkillWisdom) + 2) {
                 winner->addSpell(spell);
                 return;
             }
@@ -1206,6 +1206,8 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
+        // Retail reads the low word directly here; the long-returning getter
+        // makes VC6 issue a dword load. Keep getMana for its other callers.
         defeatedHero->m_mana = static_cast<short>(defender.m_mana);
 
     if (m_totalCombatValue > 0) {

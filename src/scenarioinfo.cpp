@@ -100,7 +100,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     widgets.push_back(new bitmapBorder(
         0, 0, 557, 585, 102, "AdvOptBk.pcx", 0x800));
 
-    sprintf(g_text, "%s:", g_generalText->getText(GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY));
+    // Dreamcast scenarioinfo.cpp:275 calls TTextResource::operator[].
+    sprintf(g_text, "%s:", (*g_generalText)[GENERAL_TEXT_SCENARIO_PLAYER_DIFFICULTY]);
     widgets.push_back(new textWidget(
         411, 429, 334, 19, g_text, "smalfont.fnt",
         font::PRIMARY_HIGHLIGHT, 132,
@@ -277,10 +278,12 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         row->m_startingBonus = g_game->m_setup.m_startingBonus[i];
         row->m_bonusSprite = m_bonusSprite;
         row->m_startingHero = startingHero;
-        row->m_heroPortrait = ResourceManager::getBitmap816(
-            startingHero
-                ? g_heroTraits[startingHero->m_portrait].m_smallPortraitName
-                : "hpsrand6.pcx");
+        // Mac retains both bitmap calls and their stores at 0:0x15faa8/0x15fab8.
+        if (startingHero)
+            row->m_heroPortrait = ResourceManager::getBitmap816(
+                g_heroTraits[startingHero->m_portrait].m_smallPortraitName);
+        else
+            row->m_heroPortrait = ResourceManager::getBitmap816("hpsrand6.pcx");
         widgets.push_back(row);
 
         int y = 124 + rowPosition * 50;
@@ -620,14 +623,14 @@ unsigned char CScenarioInfoDlg::processRightSelect(int id)
             break;
         case NEW_MAP_BONUS_RESOURCE:
             // Conflux shares Inferno's icon frame exactly as it shares
-            // Inferno's text row in GetStartingResourceName (0x576e00).
+            // Inferno's text row in GetResourceBonusCaption (0x576e00).
             frame = TOWN_INFERNO;
             if (g_game->m_setup.m_alignment[playerPosition] != TOWN_CONFLUX)
                 frame = g_game->m_setup.m_alignment[playerPosition];
             title = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
-            botTitle = getStartingResourceName(
+            botTitle = getResourceBonusCaption(
                 g_game->m_setup.m_alignment[playerPosition]);
-            description = getStartingResourceDescription(
+            description = getResourceBonusDescription(
                 g_game->m_setup.m_alignment[playerPosition]);
             break;
         case NEW_MAP_BONUS_RANDOM:

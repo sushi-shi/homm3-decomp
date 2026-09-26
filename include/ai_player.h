@@ -112,13 +112,14 @@ protected:
     // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
     // helper; the prohibited-creature array belongs to its body.
     void purchaseBuildings();
-    static float s_attackHumanBonus;
-    static float s_attackComputerBonus;
+    DATA(0x006604fc) static float s_attackHumanBonus;
+    DATA(0x006604f8) static float s_attackComputerBonus;
 };
 
 // Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
 // recalculates the recipient's demand through this array before giving
 // resources to another computer player. Owner TU remains unlocated.
+DATA(0x00692950)
 extern type_AI_player g_aiPlayers[8];
 
 // Dreamcast records this exact 12-byte value object, and retail's
@@ -155,6 +156,7 @@ protected:
     unsigned char m_alignments[10];
     long m_armyValueIncrease;
     short m_improvement;
+    int normalizeAlignment(int alignment) const;
     void getAlignments();
 
 public:
@@ -359,13 +361,15 @@ public:
                            unsigned char exact) const;
 };
 
-// The recovered Complete type inventory names this no-data base. Retail's
-// initializer keeps the type_combat_artifact constructor call for both
-// necromancy branches; the extra inline layer reproduces those boundaries
-// without adding storage or a distinct vtable.
+// The recovered Complete type inventory names this no-data base. Mac retains
+// its getValue body at 0:0x36f38 and calls it from both derived classes;
+// retail VC6 expands those calls. Its override occupies the inherited
+// virtual slot and adds no data or vptr.
 class type_base_necromancy_artifact : public type_combat_artifact {
 public:
     type_base_necromancy_artifact(long newBonus);
+    virtual long getValue(const hero* owner, unsigned char equipped,
+                          unsigned char exact) const;
 };
 
 class type_necromancy_artifact : public type_base_necromancy_artifact {

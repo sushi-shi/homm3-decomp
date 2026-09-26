@@ -1,0 +1,99 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x161498
+mac_size = 0x41c
+unit = "search"
+target_sha256 = "426941e3598f527e37eac28b46889d303a4bea35243281faa83a4d3b56a22367"
+evidence = "Contiguous search TU order corroborated by body: path traceback packed points and result vector append. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56a0d0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1618b4
+mac_size = 0xe4
+unit = "search"
+target_sha256 = "cd7bc920ffa62fbe8c507a7e05dc3176f4727c24a41d9d5c510495cdeb52c752"
+evidence = "Contiguous search TU order corroborated by body: map visibility0x11972c adjacent monster0x1aed0 and AI danger0x147048. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56a360
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x161998
+mac_size = 0x3e4
+unit = "search"
+target_sha256 = "8d872e37b2f28ef2ad76c09109398f76cf138f6495fce21da75a6059cf3ca315"
+evidence = "Contiguous search TU order corroborated by body: checkAdjacentMonster0x1618b4 lith list iteration and pushPoint0xc4ecc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56a400
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x161d7c
+mac_size = 0x1b8
+unit = "search"
+target_sha256 = "31a71cfabf5b5946a3872988132210a814e54061929b3f3743846d45fceed09c"
+evidence = "Contiguous search TU order corroborated by body: getOtherGate0xe5650 packed coordinate/sentinel255 and pushPoint0xc4ecc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56a730
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16202c
+mac_size = 0x35c
+unit = "search"
+target_sha256 = "628c31aa0c31dbe7a11fe1fdbfc07aa0ae9cba9f7323ac7352eb6707d5121da1"
+evidence = "Contiguous search TU order corroborated by body: town special building22 and movement0x1066e4 then pushPoint0xc4ecc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56a850
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x162388
+mac_size = 0x104
+unit = "search"
+target_sha256 = "321e17953c68b7165904f6f8e5ae169d17ad907098eb88a92aeff6921da84c0b"
+evidence = "Contiguous search TU order corroborated by body: entry-point differences danger0x147048 and trigger flags. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56aad0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x16248c
+mac_size = 0x560
+unit = "search"
+target_sha256 = "0d81461be87d0dd89baba4c1ff95b7bf985074ee2f8747c0526ad2a6e07d37a4"
+evidence = "Contiguous search TU order corroborated by body: getCell0x13770 dispatch object types33/212/54/34/9/8/44/43/46/111/103/98/215. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56ab40
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x162c18
+mac_size = 0x45c
+unit = "search"
+target_sha256 = "d70fc2a6abf0aaa9d4a924f848b950f54da5ebacaeb304032a3115b9007bccbf"
+evidence = "Contiguous search TU order corroborated by body: spell9 mana/mastery town list and dimension/movement helpers. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56b050
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0x1631a0
+mac_size = 0xbac
+unit = "search"
+target_sha256 = "1a28215514b83cc4e2697d386deb7ee3fe4f3576af1c23514b3f498084bd0f8d"
+evidence = "Contiguous search TU order corroborated by body: hero obscure restore0xf25e4 mobility0x105898 artifacts72/90 and spell8/6 setup. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x56b440
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x161f34
+mac_size = 0xf8
+unit = "search"
+target_sha256 = "e36c35b450ed7dc0a6f17c6449443329a366a9b75ef9e149a164b9764f22cb96"
+evidence = "Source helper without standalone Windows VA. TU order plus packed location/flags and movement transition calculation"
+source_helper = "searchArray::boardBoat"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0x1629ec
+mac_size = 0x22c
+unit = "search"
+target_sha256 = "46bc38d30cd61647bf3149bec5ff6db0d5d8904ef6fec00ea4efd419c894d9df"
+evidence = "Source helper without standalone Windows VA. TU order plus canSummonBoat106614,current-hero-location,eight-neighbours,and-map-boat-check"
+source_helper = "checkSummonBoat"

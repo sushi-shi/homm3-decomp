@@ -342,7 +342,7 @@ enum EAIOrder {
 // FREE fastcall function, not a method (the DC name is scoped to
 // combatManager, so retail moved it out of the class). It is declared
 // here because the Dreamcast-proven TWallTarget inline below uses it.
-extern const unsigned char g_castleWallColumns[];
+DATA(0x0063bd00) extern const unsigned char g_castleWallColumns[];
 
 // The combat-hero sprite state is stored as an int rather than as a
 // CodeView enum. One is the timed idle fidget; the two event-driven states
@@ -1871,6 +1871,7 @@ public:
     // retaining the helper's source-level surrender-dialog boundary.
     int doSurrender();
     int checkWin(message* msg);
+    void finishCreaturePlacement();
     void resetRound();
     // The named command rearm helper. 0x4782d0 (1461 B, command.obj) is
     // Dreamcast's named GetControl method; SetNextArmy calls it immediately
@@ -1894,6 +1895,7 @@ private:
                                  long skill) const;
     void autoResolveCombat();
     unsigned char automateFirstAidTent();
+    unsigned char automateTower();
     void processFirstAid(army* currentArmy);
     unsigned char processMoveThenAttack(message* msg);
 };

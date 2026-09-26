@@ -1,0 +1,262 @@
+# Reviewed Mac address identities; unbound compiler names are intentionally omitted.
+
+[[functions]]
+retail_va = 0x5fe9f0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20ae1c
+mac_size = 0xa0
+target_sha256 = "f2e8cf2c7fd3cdd503aa2b41fbc6620acdf922d14520be3831e4818003ba3600"
+evidence = "Hero-window constructor invokes window base constructor 0x74b8, initializes focus to -1 and widget head/tail; multiple derived window constructors call this entry."
+
+[[functions]]
+retail_va = 0x5fea80
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20aebc
+mac_size = 0x94
+target_sha256 = "5a9c8befb6e929643df984bacb26a29bab2c5f546b7c59c8f6adc2d880f12641"
+evidence = "Canonical heroWindow destructor is the adjacent Mac delete-flag body: virtual widget teardown, base destructor 0x745c and conditional deallocation; separate Windows deleting wrapper remains unresolved."
+
+[[functions]]
+retail_va = 0x5feae0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20af50
+mac_size = 0x208
+target_sha256 = "96d9ed0436716798dbae0727ee4cc6fd80cc8b7711eba0562e02210cf02e8f87"
+evidence = "Open calls saveBackground 0x20b6d0, four Bitmap16Bit darken edges 0x5c550 and window draw/update calls; complete BLR before close."
+
+[[functions]]
+retail_va = 0x5fec60
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b158
+mac_size = 0x84
+target_sha256 = "2f628410820bad18d83a8a618cd94beae523568172250725d55c914fd293e387"
+evidence = "Close calls restoreBackground 0x20b790 and removeWidget 0x20b300; complete body includes short return tail before addWidget."
+
+[[functions]]
+retail_va = 0x5fecb0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b1dc
+mac_size = 0x124
+target_sha256 = "f56b1c7ede008862223577d8e1b74e2a1454310f5c5a03c3ff35d0c2146d1249"
+evidence = "AddWidget links widget and invokes its virtual setup through 0x2a3310; removeWidget immediately follows."
+
+[[functions]]
+retail_va = 0x5fed60
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b300
+mac_size = 0xe8
+target_sha256 = "73e2d0b1d71cf8b50c501eb7d8dd5d614e78f67e66c046404d5092e21ccc5417"
+evidence = "RemoveWidget first calls widget::close 0x20a680 then unlinks list/head/tail fields; broadcastMessage follows."
+
+[[functions]]
+retail_va = 0x5fee40
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b4ac
+mac_size = 0x58
+target_sha256 = "82cc2554c62de0f0551f914409c65ba7d5c4659e0ee22e4eee825fae60340b3d"
+evidence = "Four-int broadcast wrapper constructs MESSAGE_WIDGET fields and calls message-reference broadcastMessage 0x20b3e8; status wrappers follow."
+
+[[functions]]
+retail_va = 0x5ff020
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b58c
+mac_size = 0x144
+target_sha256 = "3fa297d96347a4172344cd2098cb101dfa90bda8d4758f80b58899dd48ff6ecd"
+evidence = "DrawWindow routes window draw and widget draw callbacks, then updates window surface; follows getWidget 0x20b564 and precedes saveBackground."
+
+[[functions]]
+retail_va = 0x5ff100
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b6d0
+mac_size = 0xc0
+target_sha256 = "c70528c36d8a9908051720efe89eab503bf53ba7523ea55bcc0d20bdd4285d37"
+evidence = "SaveBackground allocates two 0x38-byte Bitmap16Bit objects, invokes Bitmap16Bit constructors 0x5be20 and grab 0x5c250; open calls it."
+
+[[functions]]
+retail_va = 0x5ff1c0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b790
+mac_size = 0xe0
+target_sha256 = "d197719d90af5fc37e17de515ab17e3f2031ba51c397e85abb5443294bb6b2f6"
+evidence = "RestoreBackground calls Bitmap16Bit draw 0x5c0f8, releases stored surface and resets pointer; close calls it."
+
+[[functions]]
+retail_va = 0x5ff240
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20b870
+mac_size = 0x1b0
+target_sha256 = "18b4e31bc284f3df34cae4556152a4ca91b55f58a743dd66a2e2329a621ea2fa"
+evidence = "CenterWindow performs Bitmap16Bit draw 0x5c0f8 and grab 0x5c250 before screen updates; next findWidget wrapper begins 0x20ba20."
+
+[[functions]]
+retail_va = 0x5ff3b0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20ba20
+mac_size = 0x34
+target_sha256 = "3d62a13ed806322b6a861207ffb85b31c4e92ed630e86c2cd02a50ff53e547f2"
+evidence = "FindWidget calls findWidgetPtr 0x20ba54 and returns widget id or -1; complete 0x34-byte wrapper."
+
+[[functions]]
+retail_va = 0x5ff3e0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20ba54
+mac_size = 0xf4
+target_sha256 = "ddb649694497142ddf594ebec415671fbba1da6d889b4113bad9486cda055a5d"
+evidence = "FindWidgetPtr subtracts window origin, reverse-walks widgets and tests coordinates/status bits before returning found pointer or null; doModal follows."
+
+[[functions]]
+retail_va = 0x5ff460
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bb48
+mac_size = 0x3c
+target_sha256 = "a15a64693d22b86a36861939c5f145b5a58e8972eb7d3ab664de63477ec4beff"
+evidence = "DoModal calls window-manager dialog entry 0x20d6c0 with window and handler pointer; setFocus follows."
+
+[[functions]]
+retail_va = 0x5ff490
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bb84
+mac_size = 0x98
+target_sha256 = "fa8db9c4cbc98dea8cce2b62a6ea39c49a4452995247347f1c21c6c90e8c3b6c"
+evidence = "SetFocus calls getWidget 0x20b564 twice around kill/set focus virtual callbacks, with -1 guard; next is static handler."
+
+[[functions]]
+retail_va = 0x5ff510
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bc50
+mac_size = 0x7c
+target_sha256 = "ea89f6e12416c613d5222ba67d78087a4cc131a776a87d56f663127cae3a5522"
+evidence = "DeleteWidgets iterates widget vector, deletes nonnull widgets through virtual destructor 0x2a3310 and clears vector; next method calls addWidget."
+
+[[functions]]
+retail_va = 0x5ff570
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bccc
+mac_size = 0x74
+target_sha256 = "c795b387ecaa8905d3c9190a0fb27c353856e70fcfb9bb56468f1e22dffa40f2"
+evidence = "AddWidgetsToMessageStream iterates widget vector, calls addWidget 0x20b1dc with index -1 for entries and memError 0x115edc for null."
+
+[[functions]]
+retail_va = 0x5ff5b0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bd40
+mac_size = 0x74
+target_sha256 = "dc5bf14166b56665b2ffce9ebe3dbda4ea960d9f42998b0608017811784d734a"
+evidence = "SleepAllWidgets changes nested sleep counter and calls virtual vslot8 only on first sleep/final wake; following body is widget iteration."
+
+[[functions]]
+retail_va = 0x5ff5f0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bdb4
+mac_size = 0xbc
+target_sha256 = "4903d3b39307bc18ec6f9d2220d392fa99825616db59da38574d28280508715d"
+evidence = "Vslot8 iterates widget vector and invokes each widget sleep virtual with requested flag; derived constructor follows."
+
+[[functions]]
+retail_va = 0x5ff640
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20be70
+mac_size = 0x40
+target_sha256 = "737ac3c18527fec700bd28b5feca4b127e892cfae81f487fb788de0d50ea0290"
+evidence = "CHeroWindowEx constructor calls heroWindow ctor 0x20ae1c, installs derived vtable and sets rollover id to -1."
+
+[[functions]]
+retail_va = 0x5ff6e0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20beb0
+mac_size = 0x130
+target_sha256 = "39a8856bee09fe15db7b98a957f404e35d33e141066af30b4773a173f45a9376"
+evidence = "ProcessHover calls findWidgetPtr 0x20ba54, compares rollover id, sets mouse pointer 0x216fc0 and updates text/screen on change."
+
+[[functions]]
+retail_va = 0x5ff790
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bfe0
+mac_size = 0xb4
+target_sha256 = "65a9f1803f60f16cbecd6c4e6d9517861f665f14f8c435a923499807de201f70"
+evidence = "ProcessRightSelect calls getWidget 0x20b564, checks help string and dispatches normalDialog 0x117f10 with mode 4."
+
+[[functions]]
+retail_va = 0x5ff820
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c094
+mac_size = 0x104
+target_sha256 = "f5c91b50d620be82e075f3b5934abf3aa151da1acd7e52473cdd481182c0a9cb"
+evidence = "WindowHandler has right-select codes 12/14, mouse-move 4 and widget-deselect 13 arms, calls three virtual slots, and emits end-dialog code 10."
+
+[[functions]]
+retail_va = 0x5ff8d0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c1a0
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "GetRolloverWidget is the adjacent null-return leaf after onWidgetDeselect and before setHelpText; derived vtable slot supplies this leaf."
+
+[[functions]]
+retail_va = 0x5ff8e0
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c1a8
+mac_size = 0x7c
+target_sha256 = "9809db5dd312ff5b793fc03fd187121053d34c9129e6d0ebed33773e15dc564a"
+evidence = "SetHelpText loops IDs and calls getWidget 0x20b564 then widget setHelpText 0x20aad4; initializeWinSetupText follows."
+
+[[functions]]
+retail_va = 0x5ff960
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c224
+mac_size = 0x200
+target_sha256 = "97977d54c0c679e0d98679ad3d5a339fb69c824071553c967ce9061f72988d62"
+evidence = "InitializeWinSetupText calls ResourceManager getText 0x153ad8 and seven repeated text-line loops of counts 9,1,2,20,2,2,1, totaling 37 setup entries."
+
+[[functions]]
+retail_va = 0x5ffa30
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c424
+mac_size = 0xa0
+target_sha256 = "63c0db12f954de871b0a20bf93c0e440bdc63bf00bac49f5355f3bf502a98070"
+evidence = "SetWinText loops exactly 37 setup records (cmpwi 0x25), builds MESSAGE_WIDGET/WIDGET_SET_TEXT and calls heroWindow::broadcastMessage 0x20b3e8."
+
+[[helpers]]
+source_helper = "heroWindow::heroWindowHandler"
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20bc1c
+mac_size = 0x34
+target_sha256 = "7ee8710352aa7b399a44497d0dab877b8b57a2ea8f78d7831d4a810fc0d8ec6e"
+evidence = "Address-taken static doModal callback forwards message window to virtual handleMessage through 0x2a3310; immediately follows setFocus."
+
+[[helpers]]
+source_helper = "CHeroWindowEx::onWidgetDeselect"
+unit = "window"
+mac_section = 0x0
+mac_offset = 0x20c198
+mac_size = 0x8
+target_sha256 = "d4e9e7520ef19698837e384bfe1708ac4b91fcf26b16ec098ec21c1e344ad3db"
+evidence = "Source-owned ordinary no-op return-zero body is the first of two adjacent 8-byte leaves after CHeroWindowEx handler; derived vtable slot 12."

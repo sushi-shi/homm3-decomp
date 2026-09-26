@@ -49,7 +49,6 @@ inline const T& tLimit(const T& minimum, const T& value,
         return value;
     }
 }
-
 // E:\gamedcs\includes.h:134
 inline int limit(int minimum, int value, int maximum)
 {

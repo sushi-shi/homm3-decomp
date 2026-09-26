@@ -4,6 +4,7 @@
 #include "va.h"
 
 #include <bitset>
+#include <stddef.h>
 
 // The PC standard library's bitset has no iterator surface.  The game uses
 // this two-word adapter where a run of bits is traversed as a range; its

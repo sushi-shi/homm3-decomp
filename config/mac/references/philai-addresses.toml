@@ -1,0 +1,846 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+
+[[helpers]]
+source_helper = "showStatus"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13d680
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "philAI::doAI calls this at 0x140ce0 between getTurnAIVars and incrementHourGlass, the exact authored call order. The body is one BLR; the adjacent empty constructor begins at 0x13d684 and incrementHourGlass starts at 0x13d688. Complete has no retained standalone body for this internal helper."
+
+# The event dispatcher at 0x146134 retains these source helpers as calls.
+# Their order and terminal returns delimit the spans; the field operations
+# and called functions identify each body independently of that order.
+[[helpers]]
+source_helper = "valueOfUniversity(const hero* currentHero, NewmapCell* cell)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ebfc
+mac_size = 0x40
+target_sha256 = "2bd1413846d79c81082c296624728fd0e88c66e3ecf6e152e4ae518ccda9a9cf"
+evidence = "Dispatcher call 0x14696c reaches a two-call adapter: getUniversity at 0x5fe4, then the already paired three-argument valueOfUniversity at 0x13eb18 with mustPay=1. BLR 0x13ec38 precedes aiVisitUniversity."
+
+[[helpers]]
+source_helper = "valueOfCampfire"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1426c8
+mac_size = 0x6c
+target_sha256 = "4569c303e082fe9b8d89cbc18fc441e49dab274d17daaa8c93bc90ce4246ff2b"
+evidence = "Dispatcher call 0x146260 reaches the leaf body that extracts campfire size/resource from cell bits and multiplies both player resource values. BLR 0x142730 precedes the named generator body."
+
+[[helpers]]
+source_helper = "valueOfDefenseTower"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142b14
+mac_size = 0x84
+target_sha256 = "1630bdc392bf9e1b17e963f602f150675d2e68050f4ebe5b8a88ca669a9e1520"
+evidence = "Dispatcher call 0x146344 reaches the visited-defense-tower bit test, hero experience increment and turn-ratio valuation. BLR 0x142b94 precedes the next helper."
+
+[[helpers]]
+source_helper = "valueOfGarrison"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142c74
+mac_size = 0x164
+target_sha256 = "0cf030b678b4e83b30c4086c80e03e43ea07470eb8aa829530f10abd2b964489"
+evidence = "Dispatcher call 0x1464d8 reaches the garrison owner/team tests, creature swapper and combat fallback of the source helper. BLR 0x142dd4 precedes valueOfIdol."
+
+[[helpers]]
+source_helper = "valueOfIdol"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142dd8
+mac_size = 0x184
+target_sha256 = "321b170bee37346274a6ddb1bd1533eada6eb859ff8be3d6c97bf572a0aeb585"
+evidence = "Dispatcher call 0x1464e8 reaches the hero visited/movement gates and Sunday morale-plus-luck valuation. BLR 0x142f58 precedes valueOfFlotsam."
+
+[[helpers]]
+source_helper = "valueOfFlotsam"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142f5c
+mac_size = 0x28
+target_sha256 = "4e216da47dbc72b89a957a2c393d68043ae02977392fe632d6441e5a40752a41"
+evidence = "Dispatcher call 0x14639c reaches a leaf double expression with player gold and wood values and two pool constants. BLR 0x142f80 precedes the Garden helper."
+
+[[helpers]]
+source_helper = "valueOfGarden"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142f84
+mac_size = 0x28
+target_sha256 = "1e7dfa0767a99a49b407e0f4003d0ddd661979468c531faca6d622a466ceaaa5"
+evidence = "Dispatcher call 0x1464c8 reaches the garden visit-bit gate and cached knowledge value at hero+0x47a. BLR 0x142fa8 precedes Lean-To."
+
+[[helpers]]
+source_helper = "valueOfLeanTo"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142fac
+mac_size = 0x34
+target_sha256 = "cfb9132afb9547b19994a955eea667fe7aa4e1a5c1b5390e1d952bbea17359b3"
+evidence = "Dispatcher call 0x146554 reaches the packed item-ID visit-bit test and triple average resource valuation. BLR 0x142fdc precedes valueOfEnemyTown."
+
+[[helpers]]
+source_helper = "valueOfHeroEvent"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1432e8
+mac_size = 0x2e8
+target_sha256 = "f596a6adae7ef6ce29ad288a6f89b9e3553a8b5170828737bec636da494f5b96"
+evidence = "Dispatcher call 0x146524 reaches the hero-event appraisal with second-hero lookup, enemy combat/town branch and friendly creature-swap branch. BLR 0x1435cc precedes Hill Fort."
+
+[[helpers]]
+source_helper = "valueOfHillFort"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1435d0
+mac_size = 0x298
+target_sha256 = "1874d31a5c47f39e7cf2923e3a8861842c5c930ebc507dfab18c3b19fcaeee54"
+evidence = "Dispatcher call 0x146534 reaches the seven-army-slot upgrade and seven-resource affordability loops. BLR 0x143864 precedes aiVisitHillFort."
+
+[[helpers]]
+source_helper = "valueOfLibrary"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143aa4
+mac_size = 0xb0
+target_sha256 = "a9f548be1eafcf75f896122c47d6b0fbbd2212c72e6453f531a05e64cb884210"
+evidence = "Dispatcher call 0x146564 reaches the library visit-bit and level gates, power/knowledge values and army value. BLR 0x143b50 precedes Lighthouse."
+
+[[helpers]]
+source_helper = "valueOfLighthouse"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143b54
+mac_size = 0x80
+target_sha256 = "f5af2a41414f2952f23f74f86c80d00374e5c86cf55fc3e7f50c494636099f20"
+evidence = "Dispatcher call 0x146570 reaches the mine-owner lookup, same-team test and 1000-value leaf. BLR 0x143bd0 precedes the skill-choice leaf."
+
+[[helpers]]
+source_helper = "valueOfMercenaryCamp"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x143cb8
+mac_size = 0x84
+target_sha256 = "f0a9852284cdb19b75ace8819a05d405acfa92a0840c3076b86a409d7d306dbe"
+evidence = "Dispatcher call 0x1465bc reaches the mercenary-camp visit-bit gate, experience increment and turn-ratio multiplication. BLR 0x143d38 precedes valueOfMine."
+
+[[helpers]]
+source_helper = "valueOfMagusHut"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1442e4
+mac_size = 0x14
+target_sha256 = "7a2b23ad7840cbc6121a423f71bf504b234827ef2c1fc2ea6f6f67f3e74838fa"
+evidence = "Dispatcher call 0x146544 reaches a five-instruction leaf indexing the AI player by 0x94 and returning its +4 hut value. BLR 0x1442f4 precedes valueOfPowerSchool."
+
+[[helpers]]
+source_helper = "valueOfSkeleton"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1449a0
+mac_size = 0xb4
+target_sha256 = "71b344b2f407a272800c65c8af47df5ad16a29564ff4c5f5f76a23a80dd01d0a"
+evidence = "Dispatcher call 0x146334 reaches the skeleton visit-bit gate, owner-player lookup and backpack-capacity choice between artifact and gold value. BLR 0x144a50 precedes valueOfScroll."
+
+[[helpers]]
+source_helper = "valueOfShrine"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x144b3c
+mac_size = 0x2c
+target_sha256 = "7b27723f86869f1ceab2b42e8ffcbd765d99580a6afbef078ba32ba64e1ad653"
+evidence = "Dispatcher call 0x14684c reaches a packed shrine-spell extraction and the named valueOfLearning call at 0x142254. BLR 0x144b64 precedes valueOfSirens."
+
+[[helpers]]
+source_helper = "valueOfBlackMarket"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13ddec
+mac_size = 0xac
+mac_symbol = ".valueOfBlackMarket__FPC4heroPC10NewmapCell"
+target_sha256 = "9f4dd2be41cf300b5e57972cbdb3cb7b782131038a957a48ea5a0371ae824e99"
+evidence = "Mac aiValueOfEvent calls this retained helper from its BLACK_MARKET arm at 0x1461e0. It rejects a full backpack, selects the cell's seven-artifact market and sums five-market purchase values. Final BLR at 0x13de94 precedes the adjacent helper. Dreamcast names this source helper; Windows expands it in the event dispatcher."
+
+[[helpers]]
+source_helper = "valueOfArena"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x141f14
+mac_size = 0x7c
+mac_symbol = ".valueOfArena__FPC4heroP10NewmapCell"
+target_sha256 = "d97de8fdf0ed4326f73cbcbb2d54c168c435fdf6a83819572902228661911fa3"
+evidence = "Mac aiValueOfEvent calls this retained helper from its ARENA arm at 0x1461b0. It tests visitedArena, obtains the hero level's experience increment, doubles it and applies the turn experience ratio. Final BLR at 0x141f8c precedes valueOfCustomItem; Dreamcast names the same helper and Windows expands its source call."
+
+[[helpers]]
+source_helper = "valueOfMapArtifact"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x142010
+mac_size = 0x1d8
+mac_symbol = ".valueOfMapArtifact__FPC4heroP10NewmapCell"
+target_sha256 = "8b57a325e012ab85ffcc11c49bc7eca624dd13ac32a6e3d37dbc14b71caa582b"
+evidence = "Mac aiValueOfEvent calls this retained helper from its ARTIFACT arm at 0x1461c0. Its backpack gate, artifact valuation and purchase cases match the source body and Dreamcast helper. Final BLR at 0x1421e4 precedes the separately retained file-static ValueOfSpell at 0x1421e8; Windows expands the source call."
+
+[[helpers]]
+source_helper = "valueOfBlackBox"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x1422c4
+mac_size = 0x2d8
+mac_symbol = ".valueOfBlackBox__FPC4heroP10NewmapCell"
+target_sha256 = "dfd2cedb782b82297317d3c68591aba9948e077389d0c488c57e4d78341d480d"
+evidence = "Mac aiValueOfEvent calls this retained helper from its BLACK_BOX arm at 0x1461d0. It reads the cell's black box and values guardians, experience, resources, skill bonuses, artifacts, spells and creatures. Final BLR at 0x142598 precedes valueOfBank; Dreamcast names the same helper and Windows expands its source call."
+
+[[functions]]
+retail_va = 0x5242d0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13d5b8
+mac_size = 0xc8
+target_sha256 = "ef2e259f43c9354db5e4bd21ad603b1cc633a02abf3b400aa5afd382e0fc85bc"
+evidence = "NEW: 15-tick timer gate, 180-tick animation reset, process-message and poll-sound calls match checkDoMain; next two entries are empty hooks. Span ends at0x13d680; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x524360
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13d684
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "NEW: Empty constructor follows showStatus0x13d680 (called by doAI). Independent caller0x10ee44..0x10ee64 allocates one byte, calls0x13d684 and stores the result into the AI global; adjacent allocation constructs g_searchArray. Span ends at0x13d688; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x524370
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13d804
+mac_size = 0xd4
+target_sha256 = "aea6c3022f7353c4ce3bc38f01ec5dbfcd9b8be492e37e00e8911f82a722c027"
+evidence = "NEW: Hero+0x22 owner equality with garrison, removable-troops flag and campaign<7 gate; calls Angelic Alliance check and creature swapper ctor/doSwap. Span ends at0x13d8d8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5243f0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13de98
+mac_size = 0x24
+target_sha256 = "9ba6ee52e4439e6dc8bf29e15789fec963492402433ee4d9efb7ce43e19df6a7"
+evidence = "NEW: Tiny wrapper passes artifact-array pointer and market count 5 to admitted buyArtifacts 0x13dce4. Span ends at0x13debc; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x524630
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13ea7c
+mac_size = 0x9c
+target_sha256 = "986febc00ce8a0a8d7036d3e0e40685b7e555eae45751ca4e2932a5be1cbe7bc"
+evidence = "NEW: Hero skill byte +0xc9 compared to requested level; 8-skill cap; wantsSkill(1) at 0x13e904 and getSkillValue(1) at 0x13e158. Independent seer-reward call. Span ends at0x13eb18; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x524dd0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13e904
+mac_size = 0x178
+target_sha256 = "1b512372733d6a6afd144d8ed21cac4832cd4bfd26420baf4511a53d79da0ef1"
+evidence = "NEW: Enumerates 28 skills and class probabilities then calls admitted getSkillValue; sole helper used by university and seer-skill gating, matching wantsSkill. Span ends at0x13ea7c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x524fc0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13f36c
+mac_size = 0x48
+target_sha256 = "f784496f4cf67f406fa6e34703f79b08a048809c4869ddd86eb5f814a3343d07"
+evidence = "NEW: Three visitWarFactory calls at 0x13f254 with engine IDs 6,4,5; body boundaries bracketed by visitWarFactory and buySiegeEngine. Span ends at0x13f3b4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x525bf0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13eb18
+mac_size = 0xe4
+target_sha256 = "9d4c85df75e9886325ee110d02339c6caa4660b298912bfc0d7f275039da9c29"
+evidence = "NEW: University appraisal checks skill count 8 and gold 2000, scans four skills, calls wantsSkill/getSkillValue, returns best valuation. Span ends at0x13ebfc; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x525dc0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13fc44
+mac_size = 0x110
+target_sha256 = "41ac4050915c38d61d0c79f45fc1cee67a1d52bd61be66ccd1331412ec62aef9"
+evidence = "NEW: Two-hero argument flow; compares primary skill totals, calls creature swapper in the appropriate direction and aiSwapArtifacts both orders. Span ends at0x13fd54; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x525e80
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x140c2c
+mac_size = 0x114
+target_sha256 = "d5169cfe84bf50ac60219b965e52196ad4f2fcec9a921b28c5238c3c3aeaa04c"
+evidence = "NEW: doAI calls admitted getTurnAIVars 0x141bf8, empty showStatus, incrementHourGlass and moveAllHeroes twice around adventure AI phases. Span ends at0x140d40; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x526a90
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1408f0
+mac_size = 0x270
+target_sha256 = "9d24e54907b27952d769e2de6b2d004050fe5d539d488b9c486b5fb6d545d25e"
+evidence = "NEW: Player hero roster scan at 0x486 hero stride; waiting/dead/movement gates, 99 threshold, output last-hero flag and town visitor cleanup. Called from moveAllHeroes. Span ends at0x140b60; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x526c70
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x140d40
+mac_size = 0x78
+target_sha256 = "a5adc2fed1a9bc2c6f9536f49db95876f1b121ae01b2543ff4951a1a89379e59"
+evidence = "NEW: Seven resource entries multiplied by player double values at +0x11c then converted to integer; overloaded wrapper 0x140db8 directly calls this entry. Span ends at0x140db8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x526d20
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x140df0
+mac_size = 0x2c
+target_sha256 = "ffa70734eef84bc5e5ed19ab7b693dbed3d0d2fea2a931d1099594b30249b4e2"
+evidence = "NEW: Player index times AI-player stride 0x94 and delegates to resource trading 0x2e438; preserves costs and flag arguments. Span ends at0x140e1c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x526d40
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x140e1c
+mac_size = 0x174
+target_sha256 = "151c135b41a873081bd81e95bf8600fc5cad0271d3b19dcc084526b427bee245"
+evidence = "NEW: Spell evaluator ctor records hero, checks spellbook(0) and Orb of Inhibition(126), zeroes power/duration/mana/stack otherwise; calls army AI value, maxMana and fillCreatureValueList. Span ends at0x140f90; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5270e0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x140f90
+mac_size = 0x180
+target_sha256 = "49def1c97e6ba52638f5e7cfdf62da0bd2fcd6f81940ac0b318ff19cc237a02a"
+evidence = "NEW: Spell traits stride 0x88, special Titan bolt ID 57, damage-modifier call, 14-cast cap to13 and curve threshold loop identify damage evaluator. Span ends at0x141110; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5271c0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141110
+mac_size = 0x144
+target_sha256 = "ad63bb3acebeb4859f24c6b1264d844e505d8e851a47f0b488ac235a86026bf7"
+evidence = "NEW: Seven army slots, 0x74 creature stride, calls spell-work chance then damage evaluator 0x140f90 and clamps net damage valuation at zero. Span ends at0x141254; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527290
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141254
+mac_size = 0x158
+target_sha256 = "2f072e78f0cab0067f6b9246016c4746c3c0b09cee1c99344eec786b009a442c"
+evidence = "NEW: Duration/cast clamping at7, single-army targeting helper, spell-work chance loop and division by700 identify enchantment evaluator. Span ends at0x1413ac; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5273d0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x14145c
+mac_size = 0x1fc
+target_sha256 = "68bf09859b9b4b487b29ff6d8ef42bee569ada13f66811a745ed98df8b52b81a"
+evidence = "NEW: Obtains spell mastery and mana cost then dispatches damage, mass damage, enchantment and summoning to 0x140f90/0x141110/0x141254/0x1413ac; special branch sqrt call. Span ends at0x141658; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5275b0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141728
+mac_size = 0xd8
+target_sha256 = "782a8046efb8e716d75e2e37cb42f1a867711a93c4573945f34248742150badc"
+evidence = "NEW: Recanters cloak check, zero-power guard, scans70 spell flags with level2 cap and calls raw evaluator 0x14145c. Span ends at0x141800; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527640
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141800
+mac_size = 0x100
+target_sha256 = "a9df8cc9d866ff4fd2ea5f86d4c9d56fa2c13226ecf174a3c389d5736fc42205"
+evidence = "NEW: Constructs spell evaluator 0x140e1c, gets raw and best spell class values, destroys vector storage, returns one or difference. Span ends at0x141900; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527710
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141990
+mac_size = 0xa0
+target_sha256 = "0edb91897c5b22f05d5842321d1fb281ad2f714bb70316915cec584d41561847"
+evidence = "NEW: Calls level experience increment 0xf6348 and army AI value 0x584d4; combines hero gold cost and army value, divides by40*increment. Span ends at0x141a30; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527aa0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1422a4
+mac_size = 0x20
+target_sha256 = "3a5898cbb7a9a8362a18c5e4c2acdc6c4a1ba57d850e09716f45846dda9dc6c6"
+evidence = "NEW: Member wrapper delegates to valueOfLearning 0x142254; sole inbound call 0x16a0f0 is seer reward spell arm, adjacent to seer secondary skill call to 0x13ea7c. Mac retains extra free ValueOfSpell at0x1421e8. Span ends at0x1422c4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527b00
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x142a4c
+mac_size = 0xc8
+target_sha256 = "8b1b6d866a4fb39e5696b24004bbb18bd5de3a933da4f8f40cfeea4fbea030de"
+evidence = "NEW: Generator purchaser ctor0x30684, Angelic Alliance check, hero morale(0,0,1), doPurchase0x30ca8 and purchaser dtor; parallels generator valuation helper. Span ends at0x142b14; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527bb0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143868
+mac_size = 0x23c
+target_sha256 = "bb503d37a2ffaeba20116e85e53c75102939957bfd244b31d3bf292b633d4637"
+evidence = "NEW: Seven army-slot hill-fort upgrade loop; upgrade/cost helper calls0x889a0 and0x14d19c; seven resource affordability/debit loop and creature replacement. Span ends at0x143aa4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527cd0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143bd4
+mac_size = 0x20
+target_sha256 = "6545b8537753e3d1cdb4fa78fdc896e625c0320b5ab2f74522e951b54529fbb7"
+evidence = "NEW: Leaf compares hero cached power+0x472 and knowledge+0x47a; returns primary skill enum2 or3. Span ends at0x143bf4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527cf0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143fc8
+mac_size = 0xd8
+target_sha256 = "0d0cdb31eee5bc77f74654bb95faaf772c0f4fb54b70a7ea908223678335f016"
+evidence = "NEW: All-undead guard then morale and morale-value calls; primary-skill total+40 times army AI value divided by40 and double scaling. Span ends at0x1440a0; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527d80
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144104
+mac_size = 0xdc
+target_sha256 = "af36b408cddce539bc583d9c271accd42b703f868c5d4b8ce93d7bb8697542a1"
+evidence = "NEW: Luck call with 0,0,1, cap at3 and aiValueOfLuck; same primary-total+40 and army value/40 scaling as morale sibling. Span ends at0x1441e0; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527e10
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144744
+mac_size = 0xd4
+target_sha256 = "47eb285771cf11dc5988568e9295e0b94c47454177fe1f070612b0723cfe0e0f"
+evidence = "NEW: Explicit creature/count purchaser ctor0x30860 mode0, Angelic Alliance, hero morale(0,0,1), doPurchase0x30ca8 and dtor. Count pointer preserved. Span ends at0x144818; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527ec0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144b68
+mac_size = 0xf0
+target_sha256 = "c8361c70e48a39e4e7bf40726222c2e1ae7f651d60114477df1b3bbcbb550689"
+evidence = "NEW: Seven army slots, troops>1, stores 0.7-scaled short troop count and accumulates creature HP lost, then calls experience bonus factor. Span ends at0x144c58; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527f60
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145890
+mac_size = 0xe0
+target_sha256 = "44947554108e51373a14911f5b08d1aeba8ed9d11c8de8f8cf45566c1afbd8d6"
+evidence = "NEW: Builds temporary monster army using creature/count, gets hero player, subtracts gold*resource value from army AI value, compares against combat value. Span ends at0x145970; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x527fe0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145970
+mac_size = 0xac
+target_sha256 = "1e637f91ec3893d00a4fa31943286698a8b520296e2c445c5ce5b230d68117c1"
+evidence = "NEW: Experience integer scaled by hero float at+0x109 vs amount scaled by selected player double resource value at+0x11c; returns strict comparison byte. Span ends at0x145a1c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x528040
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x146134
+mac_size = 0xa58
+target_sha256 = "52026458147f73f245ac3aae7897707f5f473ff05ea8fa176321454e17891ed7"
+evidence = "NEW: Large object-type dispatcher: trigger check, switch max109 and calls previously identified valuation helpers; wrapper0x147048 passes zero move cost. Span ends at0x146b8c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5297d0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x13f1d4
+mac_size = 0x80
+target_sha256 = "11dfa0b71c6837178634be8c791ad8eee1a039f9898dcbccd99a7bf314974004"
+evidence = "NEW: Three calls to admitted valueOfWarFactory 0x13f074 with IDs6,4,5 and sum results. Span ends at0x13f254; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529810
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141d98
+mac_size = 0xb8
+target_sha256 = "1a6aa1ae44044b8c6d2f1956bf7ceb7ddbab8dcb9075e5456fb2195f2e319e43"
+evidence = "NEW: Hero-owner player lookup stride0x15c; affordability against gold and selected resource; artifact value minus both weighted resource prices. Span ends at0x141e50; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529890
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x141f90
+mac_size = 0x80
+target_sha256 = "9ca823cf8681e37ecc4813e28a7dd1ee88e440752971c9d9b88968453808d118"
+evidence = "NEW: Calls getTreasureData0xaa36c, checks custom guardians, adds combat value to incoming item value. Span ends at0x142010; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x5298d0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x142254
+mac_size = 0x50
+target_sha256 = "f577389edcc1f39a0067ee57168c7e363d2f093cb4e37addc384527f723ca2cf"
+evidence = "NEW: Wisdom byte hero+0xd0 plus2 compared against spell level at 0x88-stride traits+0x18, then calls free ValueOfSpell0x1421e8. DC source line1963/1964 records this gate+ValueOfSpell call. Shrine0x144b3c and black-box0x142010 call this entry. Span ends at0x1422a4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529920
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x14259c
+mac_size = 0x12c
+target_sha256 = "38709f1291a28d3a1f88cc0f78f4bb3456fead09f8d4e841af01584cb88f12f8"
+evidence = "NEW: Creature bank accessor0x5fc0, depleted bank-bit test, combat valuation, resource-array appraisal, reward creature AI value and artifact-average reward. Span ends at0x1426c8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529a30
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x142734
+mac_size = 0x318
+target_sha256 = "1bb3d9ec11b2e2667ef1e17b506f4d6f8f377e60bf5a4e94658149d67c33a83f"
+evidence = "NEW: Generator ID/data copy stride0x5c; guards/combat; purchaser, 400-move-cost gate and flag-all-generators victory bonus. Span ends at0x142a4c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529cb0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x142fe0
+mac_size = 0x308
+target_sha256 = "f7baba0c6fa297b4e65f2f4514534ae76c553c3ca459c977ab28c60f3d16051f"
+evidence = "NEW: Enemy garrison hero lookup, combat fallback, town income and silo, seven dwelling costs via aiResourceCost0x140d40, growth timing and capture victory/loss bonuses. Span ends at0x1432e8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x529f90
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143bf4
+mac_size = 0xc4
+target_sha256 = "681b57a2b8adca4f4ff4e21042a854fdde4fdc294f8ddaa09057c3a6e21fa4fc"
+evidence = "NEW: Magic-school visited mask hero+0x77, 1000gold affordability, max of cached power+0x472 and knowledge+0x47a less weighted1000gold. Span ends at0x143cb8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a010
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143d3c
+mac_size = 0x184
+target_sha256 = "931b2bbb757af1507b1e6061246f2747e09557cbe53d7397d8add22252d5965a"
+evidence = "NEW: Mine owner via onMySide0x13d554, guarded combat, mine-income weighted by resource and attack bonus, flag-all-mines victory type9. Span ends at0x143ec0; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a140
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x143ec0
+mac_size = 0x108
+target_sha256 = "289dca71ac6e74302405f3fcbd7a4bfb06376c1a21b43d20eebb3b51d3658733"
+evidence = "NEW: Builds army from cell creature and 12bit count, calls combat, checks defeat-monster victory type7 and coordinate triplet. Span ends at0x143fc8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a1e0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1440a0
+mac_size = 0x64
+target_sha256 = "8e255913f71785250a52098a1a7798d39036de6e79de61299772f3f4148fdb40"
+evidence = "NEW: Hero flags at+0x105 mask, moveCost reference reduced by signed-short increase or zeroed with10000 return, otherwise moraleIncreaseValue(1). Span ends at0x144104; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a2b0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1441e0
+mac_size = 0x104
+target_sha256 = "976dfc8735f9a982bb08e1c36e768b06bcb36f0427d8be24ed49e025596e4c5b"
+evidence = "NEW: Obelisk visited bit, ultimate artifact presence/guessed coordinates, grail artifact valuation at0x38cf4 divided by number of obelisks. Span ends at0x1442e4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a380
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1442f8
+mac_size = 0x28
+target_sha256 = "c4487783bf819be9dabf179aa136d69104bc256b8609d908ba6db6a3b31121ab"
+evidence = "NEW: Leaf visited mask hero+0x67 from cell extraInfo then returns cached power+0x472. Span ends at0x144320; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a3a0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144320
+mac_size = 0xa0
+target_sha256 = "0dfef4ecf57bca00b3b8e90949e7094a738ce60491a647e9b137b82f889b27c0"
+evidence = "NEW: Rejects eight owned heroes, selects prisoner at cell index*0x486 and calls army AI value, adds weighted2500gold. Span ends at0x1443c0; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a410
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x1443c0
+mac_size = 0x144
+target_sha256 = "7ccd5f8ea5bf914ba8e5fbbff82a7ca17548810d88ea7ba3b12fdef59f2b2b7f"
+evidence = "NEW: Pyramid guard army initialized with creature116 count40 and117 count20; wisdom>=3 and level5 spell scan; free ValueOfSpell call plus guarded combat. Span ends at0x144504; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a510
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144504
+mac_size = 0x140
+target_sha256 = "f42e4aac2d62675d9db0bd78d0c1ae50feae3ec6a6936c949e2a137dc2255761"
+evidence = "NEW: Well-used flag test, valid hero path target coordinates, moveCost300 threshold, map types0x31/0x30 and cached well valuation. Span ends at0x144644; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a5f0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144644
+mac_size = 0xd4
+target_sha256 = "391ae8ac45875528323a0a16d89cbffe556c58081e64c392add4ebe88ba1d76b"
+evidence = "NEW: Rally-flag mask0x10000, move-source increase200 via0x1440a0, luck and morale valuations summed. Span ends at0x144718; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a700
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144718
+mac_size = 0x2c
+target_sha256 = "b87905dcb98f1f2b56d1384e75aadec43158376c5007c6092401ded3fb67e13f"
+evidence = "NEW: Loads creature from mapcell objectIndex and signed-short amount from extraInfo then calls recruiting valuation0x142b98. Span ends at0x144744; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a710
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x142b98
+mac_size = 0xdc
+target_sha256 = "e1280a9c62c5ca2f93bc0dd09c4c5b0791e8f94ed36837911a54f69d2b64e6e9"
+evidence = "NEW: Creature/count purchaser mode0, Angelic Alliance, morale(0,0,1), getPurchaseValue0x30d4c and dtor. Span ends at0x142c74; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a7c0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144818
+mac_size = 0xfc
+target_sha256 = "fff022c94d70aa7347ef0c514097bb2a825b46d02770569a6b66b83f3b173fcc"
+evidence = "NEW: Customized treasure guard branch, count masked19bits, resource ID6 multiplies amount100, weighted player resource value plus combat. Span ends at0x144914; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a870
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144914
+mac_size = 0x8c
+target_sha256 = "0b291d1dac84bf9e8ce88f823a7cba132aad13e2f57b34741c7e1556ddf934c5"
+evidence = "NEW: Hero player and backpack count64 check; average artifact/10 added only with space, gold resource value scaled1200. Span ends at0x1449a0; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a8c0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144a54
+mac_size = 0xe8
+target_sha256 = "730bf7dd59b0d95b2130a5cb3e6dac24d2b4b3051afcd6c444277ce47fa8146d"
+evidence = "NEW: Backpack64 gate, default10 value, customized treasure guards, spell availability byte+0x424, artifact(type1,spell) valuation. Span ends at0x144b3c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52a960
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144c58
+mac_size = 0x170
+target_sha256 = "3a14d19b65f6cdf3a1c0dcfd0cacc42d253dbe90262b98f28e1a94b6a3190851"
+evidence = "NEW: Copies army, compares AI values before/after aiVisitSirens0x144b68, skill-total+40 scaling and valueOfExperience0x141990. Span ends at0x144dc8; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52aac0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144dc8
+mac_size = 0x98
+target_sha256 = "bc7de6c79268487856a617c1c9ebd4200a83226fee07fafd0e8aeacce4a7eb5f"
+evidence = "NEW: Stables visited flag2, week day movement remainder, 50 versus10000 value and computeUpgradeValue0x141e50 with Cavalier/Champion. Span ends at0x144e60; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52ab80
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145390
+mac_size = 0x500
+target_sha256 = "b877ed227bf5ec7d643c9606d2a5bd64b45ad8c5fdb7e5d76bd268fda456d845"
+evidence = "NEW: Town lookup and allied/hostile dispatch to building0x145000 and enemy0x142fe0 values, reinforcing0x144e60, grail/transport checks and five legion artifacts. Span ends at0x145890; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b090
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x144e60
+mac_size = 0x1a0
+target_sha256 = "c97a0a72bace15795f5e2df369dc4e1330083866ab639b18c23a58c63aab0163"
+evidence = "NEW: Town creature purchaser0x307d0, garrison lookup, getSwapValue0x2fe60 and getPurchaseValue0x30d4c, 400movement gate and armyIncrease<armyAI/3. Span ends at0x145000; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b1e0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145000
+mac_size = 0x390
+mac_symbol = ".valueOfTownBuildings__FPC4heroP4town"
+target_sha256 = "a7abb4f16d0c31deed1f7ab035ce1e8e750c051feb84e512df3251613a743888"
+evidence = "NEW: Conflux8 university ctor0x1cfbcc and appraisal0x13eb18, spellbook/500gold gate, guild spells via0x141800 and faction bonus arms; called twice from valueOfTown. Span ends at0x145390; last word0x4e800020; direct-call entry and adjacent boundary inspected. CodeWarrior compile emits the named symbol at 944 bytes; relocation-masked shape aligns 190/228 instructions and all seven ordered direct calls."
+
+[[functions]]
+retail_va = 0x52b4e0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145a1c
+mac_size = 0x124
+target_sha256 = "ca69d25fbced4278895c14ba991614b572b96c2d4003ad589bd57b7d5669aa53"
+evidence = "NEW: Three max comparisons of experience*turnRatio versus gold*resourceValue, then averageArtifact/20; distinctive successive floating constant pairs. Span ends at0x145b40; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b5a0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145b40
+mac_size = 0x20c
+target_sha256 = "5c46da485b75148d26c361aba6097494f9e0ef3268649d11986b5a78070a8b0e"
+evidence = "NEW: Knowledge-tree hero visited flag, experience increment, player-known price dispatch: gold2000 or gems10, otherwise expected price and2/3cap. Span ends at0x145d4c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b710
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145d4c
+mac_size = 0xc0
+target_sha256 = "7aae53876492aee651aeb9a7fe4862bf8efddee4de48ec61b8dd1562a1f10dd0"
+evidence = "NEW: Cell player-known bit; player stride0x15c and average resource value*7/4 plus artifact average*2/5. Span ends at0x145e0c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b790
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145e0c
+mac_size = 0xb8
+target_sha256 = "2dcb3108b3d7b7ed00d4616bb370ae1a3a84fa10dd83ed5b14a64d2669f7f348"
+evidence = "NEW: War-school visited mask, gold1000 guard, experience increment0xf6348 times hero ratio less weighted1000gold. Span ends at0x145ec4; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b810
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x145ec4
+mac_size = 0x140
+target_sha256 = "26f2018f35aa329c478c9e248aa79952609767d9f8db0e9c91b39df6a8006ee6"
+evidence = "NEW: Spring-full extraInfo bit, path coordinates, moveCost300 threshold and magic well/spring IDs0x31/0x30; returns cached spring value. Span ends at0x146004; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b900
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x146004
+mac_size = 0x130
+target_sha256 = "576047d3b643add5fddd98b33fdb196b4e2508235d7b98a12b32364c0165b045"
+evidence = "NEW: Known-cell mask, eight-skill cap, skill -1 guard, wantsSkill0x13e904/getSkillValue0x13e158, fallback experience increment. Span ends at0x146134; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52b9c0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x146b8c
+mac_size = 0x2f4
+target_sha256 = "4bb57fd48e5b39bea54996e499aa8dcdf75f3951f892cc0b3daa779da25541b3"
+evidence = "NEW: Triple map coordinate sweep, cell stride0x22, passable bit, rock9/water8 distinction, terrain-cost100 threshold across three mastery levels; writes map fractions. Span ends at0x146e80; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52bbd0
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x146e80
+mac_size = 0xf4
+target_sha256 = "2eb516569ed5d041f62a34ac3f1890b24b7dd27a41d905e0bb2ea5a8ec3b05c7"
+evidence = "NEW: Two skill bytes at hero+0xc9, compares known/unknown status, calls getSkillValue twice or wantsSkill and returns first/second ordinal. Span ends at0x146f74; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52bc60
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x146f74
+mac_size = 0xd4
+target_sha256 = "fa2fc2effb809dc9d485dddad753f70b2abf56e69e4846e578f69aa0c18adc91"
+evidence = "NEW: Creature purchaser ctor mode1 rather than refugee mode0, Angelic Alliance and morale0,0,1, then doPurchase; passed amount temporary address. Span ends at0x147048; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[functions]]
+retail_va = 0x52bd10
+unit = "philai"
+mac_section = 0x0
+mac_offset = 0x147048
+mac_size = 0x34
+target_sha256 = "5941a9cc1774ccd0426f3a10c95e55b714da67d7dc7442634837b917c308c1d1"
+evidence = "NEW: Small overload stores zero moveCost on stack and passes its address with hero and copied point to0x146134; last game body before next TU initializer. Span ends at0x14707c; last word0x4e800020; direct-call entry and adjacent boundary inspected."
+
+[[helpers]]
+source_helper = "visitWarFactory"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f254
+mac_size = 0x118
+target_sha256 = "a0cba4e4035d8b1f534e48fc3be15a01713af0cebc90e65d02fe462d64dca58a"
+evidence = "Mac aiVisitWarFactory calls this retained helper for ballista, first-aid tent and ammo cart at 0x13f384/390/39c. It checks the war-factory value, debits the seven creature-resource costs and gives the artifact; BLR 0x13f368. The Windows caller already has the three canonical source calls."
+
+[[helpers]]
+source_helper = "getBestHero"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f628
+mac_size = 0xb0
+target_sha256 = "83cb66adca2c5e1f468f7694d8362724f6cd60a5ca526be378bf74fec54898e6"
+evidence = "Mac shouldGarrisonTown calls this retained player-hero selector at 0x13f754. It walks the player's hero IDs and retains the largest primary-skill total; BLR 0x13f6d4. Windows expands this ordinary helper through shouldGarrisonTown in considerGarrisoning."
+
+[[helpers]]
+source_helper = "shouldGarrisonTown(const hero* currentHero, const town* currentTown)"
+unit = "philai"
+mac_section = 0
+mac_offset = 0x13f6d8
+mac_size = 0xac
+target_sha256 = "cd7bbc7573e88cab59f27fe85ec8b5a7742c5782819a4422991faafd127fc893"
+evidence = "Mac considerGarrisoning calls this retained helper at 0x13f838 after the second-hero skill guard. It checks capture-town victory, finds the required town and compares the current hero with getBestHero; BLR 0x13f780. Dreamcast names should_garrison_town at philai.cpp:707. The authored Windows caller now restores this canonical call, whose body VC6 expands."

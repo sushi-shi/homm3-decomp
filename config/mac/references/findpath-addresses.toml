@@ -1,0 +1,153 @@
+# Reviewed address identities; compiler linkage names remain unbound.
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4594
+mac_size = 0xc8
+unit = "findpath"
+target_sha256 = "05a672086ac25745924e7401c12449657e52000b6180ef1d796e91834e0aceef"
+evidence = "Contiguous findpath TU order corroborated by body: vector members/default movement flags and water/flight levels-1. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1370
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc465c
+mac_size = 0xa8
+unit = "findpath"
+target_sha256 = "080f2ef890e4b3b3f4315c2e8d3a8774cd632956a6bed6a623ad4f1348a2735b"
+evidence = "Contiguous findpath TU order corroborated by body: close0xc4830 and vector destructors. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b13e0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4704
+mac_size = 0x128
+unit = "findpath"
+target_sha256 = "a71de6d6ba346d9930e1d25cb1626b7219f66fff3e3427d2a44fc5b624e8ecdc"
+evidence = "Contiguous findpath TU order corroborated by body: close0xc4830 rectangle initialization allocate maplevels*height*width*2 and187moat flags. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1460
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4830
+mac_size = 0xb0
+unit = "findpath"
+target_sha256 = "7d2ca64c93443945602b64c115a24836c92dbf1edb29df60efd92462622a6f12"
+evidence = "Contiguous findpath TU order corroborated by body: deletes cell/moat arrays and nulls fields. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1500
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc48e0
+mac_size = 0x198
+unit = "findpath"
+target_sha256 = "cdde4b49a65205a3124f3c307e449fef5a1c207f10b3c69334c4136fd426232c"
+evidence = "Contiguous findpath TU order corroborated by body: queue/result/visited reset then rectangle/z/fly planes and row memset. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1530
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4a78
+mac_size = 0x204
+unit = "findpath"
+target_sha256 = "6cb2f20eabef1258b49b7c88aab61fe97eff33114356128fc26970f0e30e39b8"
+evidence = "Contiguous findpath TU order corroborated by body: specialTerrain0x11e6ac road/flying/waterwalking/native terrain branches and diagonal multiplier. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1740
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4c7c
+mac_size = 0x4c
+unit = "findpath"
+target_sha256 = "fcf65d901d5e3541c52f22e8adf6cef087193e3f2ecfc1447735bd0c99dab20c"
+evidence = "Contiguous findpath TU order corroborated by body: forwards to calcTerrainCost0xc4a78 with direction0/road0 and arguments. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1880
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4cc8
+mac_size = 0x204
+unit = "findpath"
+target_sha256 = "4029872ed11428812a09a2dfeb7fdbe2c2949f66f611d852db8acb20da6a253a"
+evidence = "Contiguous findpath TU order corroborated by body: hero artifacts72/90 nomad142 native terrain0x5a1f0 then calcTerrainCost0xc4a78. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b18c0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc4ecc
+mac_size = 0x65c
+unit = "findpath"
+target_sha256 = "a3cecef63caf758b1735257d3eb86a88f039990713345fa570b2c1b754c9ef6e"
+evidence = "Contiguous findpath TU order corroborated by body: path fields time/limit transition barrier/monster and queue update. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b1a70
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc552c
+mac_size = 0xf80
+unit = "findpath"
+target_sha256 = "71502e74393233ee6713222da6b1b4e3c1ef2c5fa90d346821d6e7064ca977d2"
+evidence = "Contiguous findpath TU order corroborated by body: map getCell0x13770 nomad142 terrain costs0xc4a78 and pushPoint0xc4ecc. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b2300
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc6a08
+mac_size = 0x1d0
+unit = "findpath"
+target_sha256 = "f920bef08ec0bb665fcff0aedfb6a3c430edf96690d70482246cf206c5935b17"
+evidence = "Contiguous findpath TU order corroborated by body: clears187 flags moat/inner-moat hex arrays town types54/55. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b3290
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc6e78
+mac_size = 0x720
+unit = "findpath"
+target_sha256 = "b4724a1c29240078127a0631228cacb0512d75d10e0ce892ef1f4f1307061b5c"
+evidence = "Contiguous findpath TU order corroborated by body: valid combat hex187 init/setMoat0xc4704/0xc6a08 path queue and pushCombatPoint0xc7598. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b3400
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc7598
+mac_size = 0x194
+unit = "findpath"
+target_sha256 = "b7f17ee1f3e8836adbc0f60f0ce833162092e402425a56be5d99d0a140dfd8fc"
+evidence = "Contiguous findpath TU order corroborated by body: index187 bounds movement/flight costs and path queue. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b3bb0
+
+[[functions]]
+mac_section = 0x0
+mac_offset = 0xc772c
+mac_size = 0x18
+unit = "findpath"
+target_sha256 = "5c5a2b890d1fa558bb683516e6056f44d0304519ed4b9ff1ed1863782c810691"
+evidence = "Contiguous findpath TU order corroborated by body: two moat slow flags cleared. Reviewed terminal BLR and next entry; excludes interleaved template bodies."
+retail_va = 0x4b3f10
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc6d48
+mac_size = 0x58
+unit = "findpath"
+target_sha256 = "be4219961720b2a56c141f56f11730cc391176f306eb2b9a3596cbf389b6d8c2"
+evidence = "Source helper without standalone Windows VA. TU order plus path danger-value stores indexed by combat hex"
+source_helper = "searchArray::markEnemy"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc6bd8
+mac_size = 0x170
+unit = "findpath"
+target_sha256 = "9b1171332890e9c9b2d853ce50b4e3e11c8d3a6f5a50b62ff43fba12cb1a4dab"
+evidence = "Source helper without standalone Windows VA. TU order plus validHex187,army-side-minus-one,result-vector-traceback,oppositeDirection13d354,and-army-adjacent13d1d0"
+source_helper = "searchArray::buildCombatPath"
+
+[[helpers]]
+mac_section = 0x0
+mac_offset = 0xc6da0
+mac_size = 0xd8
+unit = "findpath"
+target_sha256 = "ae129c41c691e258d794676f16c6f3ca96f8b416b7830a8e4bd9199bf8143ad3"
+evidence = "Source helper without standalone Windows VA. TU order plus validHex187,getArmy1081f8,markEnemy-twice,and-secondGrid52874"
+source_helper = "searchArray::checkEnemyArmies"

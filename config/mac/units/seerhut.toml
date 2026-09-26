@@ -1,0 +1,17 @@
+mode = "paired_bodies"
+flags = ["-O3", "-proc", "750", "-nolink"]
+helpers = []
+source_helpers = [
+  "type_experience_quest::type_experience_quest",
+  "type_skill_quest::type_skill_quest",
+  "type_skill_quest::showSkillRequirementsDialog",
+  "type_defeat_hero_quest::type_defeat_hero_quest",
+  "type_monster_quest::type_monster_quest",
+  "type_artifact_quest::type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow)",
+  "type_artifact_quest::showArtifactProgress",
+  "type_creature_quest::type_creature_quest",
+  "type_resource_quest::type_resource_quest",
+  "type_be_hero_quest::type_be_hero_quest",
+  "type_belong_to_player_quest::type_belong_to_player_quest",
+  "readQuestFromMap",
+]

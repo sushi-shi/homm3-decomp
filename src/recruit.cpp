@@ -3,7 +3,11 @@
 #include "includes.h"
 
 #include <stdio.h>
+#if defined(_MSC_VER)
 #include <xutility>
+#else
+#include <algorithm>
+#endif
 
 #include "recruit.h"
 
@@ -31,7 +35,12 @@
 #include "widget.h"
 #include "winmgr.h"
 
-DATA(0x0069d5e8) TRecruitWindow* g_recruitWindow;
+// The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
+// gp<Type> house convention); recruitUnit::Open builds it,
+// recruitUnit::Close RemoveWindow()s and deletes it, and Update
+// broadcasts every widget refresh through it. Mac's direct TOC storage
+// confirms this pointer belongs to the TU rather than a public interface.
+DATA(0x0069d5e8) static TRecruitWindow* g_recruitWindow;
 DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
 
 
@@ -100,6 +109,8 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // that order costs 4.82 (94.1908, four size-only blocks). The `and al,-0x18`
 // is a CONSEQUENCE of landing in EAX, not a cause - VC6 has no 8-bit form
 // for EDI - so nothing at this site can move the allocation. WALL.
+// DC lines 207/215/218/224 name the four TTextResource::operator[] calls
+// below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
 VA(0x0054e850, 0x1295)  // unique x86/DC structure + constructor call, dc 0x118bb4
 TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
@@ -128,7 +139,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
         font::HEADING, 0x226, font::CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0x42, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
+        (*g_generalText)[GENERAL_TEXT_COST_PER_TROOP],
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -153,7 +164,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
     m_widgets.push_back(new textWidget(0xad, 0xdf, 0x41, 0x15,
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_AVAILABLE_LABEL),
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_AVAILABLE_LABEL],
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x208,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -163,7 +174,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
     m_widgets.push_back(new textWidget(0xf7, 0xdf, 0x41, 0x15,
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20d,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -180,7 +191,7 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
     m_widgets.push_back(m_quantitySlider);
 
     m_widgets.push_back(new textWidget(0x144, 0xe0, 0x5f, 0x11,
-        g_generalText->getText(GENERAL_TEXT_TOTAL_COST),
+        (*g_generalText)[GENERAL_TEXT_TOTAL_COST],
         DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x20f,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
@@ -310,10 +321,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgrounds[
-            g_game->m_gameVersion == 0
-                && isBaseElemental(creature)
-            ? -1 : g_creatureTypeTraits[creature].m_townType],
+        g_creatureBackgrounds[g_game->getAlignment(creature)],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -352,7 +360,7 @@ int recruitUnit::open(int newPriority)
     else
         creatureName = "";
     sprintf(g_text, "%s %s",
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0x226;
@@ -515,6 +523,21 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
+// Windows Update matches all 55 CFG blocks and 29 calls. The remaining
+// arithmetic pair at +0x390 loads goldPerTroop before numberToBuy, whereas
+// retail loads numberToBuy first; reversing the source multiplication or
+// splitting it into assignment and multiplication is byte-flat under VC6.
+// Mac code0+0x14f85c loads goldPerTroop before numberToBuy too; this does
+// not decide VC6's load order. Reviewed retail ABI aliases for gpCurrentPlayer
+// and gSystemPalette make the named relocations agree but do not change the
+// 99.989845% score, so this source keeps the canonical global names.
+// The reviewed Mac Update and native-header candidate are both 1484 B;
+// 1367/1484 bytes and all 33 ordered calls agree. Mac's 20 uses of the
+// recruit-window pointer resolve directly to the TU's zero-filled TOC cell.
+// Remaining Mac differences are register and stack-home choices; this does
+// not decide VC6's load order at the Windows multiplication sites.
+// DC line 521 calls TTextResource::operator[] for the recruit title. Restoring
+// that canonical source call is VC6 byte-flat and clears its audit finding.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::update(unsigned char newMonster, long slot)
 {
@@ -526,7 +549,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     updateCost();
 
     sprintf(g_text, "%s %s",
-        g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE),
+        (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
         getArmyName(m_monsterType, 2));
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -657,9 +680,12 @@ void recruitUnit::update(unsigned char newMonster, long slot)
     g_recruitWindow->broadcastMessage(msg);
 }
 
-// E:\gamedcs\recruit.cpp:666 / :693. Both Dreamcast helpers are header-sized
-// single-purpose bodies. Retail /Ob2 expands them into Main and /OPT:REF leaves
-// no standalone row in the recruit band.
+// E:\gamedcs\recruit.cpp:666 / :693. Dreamcast and Mac retain both helpers
+// as functions. VC6 expands them into Main and /OPT:REF leaves no standalone
+// recruit-band row. Keeping setRolloverText inline is a working hypothesis:
+// with its body ordinary and visible here, VC6 retains the call and Main drops
+// from 99.95448% to 87.196785%. The small exit helper needs no inline keyword:
+// VC6 auto-inlines it while Mac retains its call.
 inline void recruitUnit::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -686,7 +712,7 @@ inline void recruitUnit::setRolloverText(int codeY)
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
 }
 
-inline int exitRecruitUnit(message& msg)
+int exitRecruitUnit(message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
     msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
@@ -722,6 +748,15 @@ inline int exitRecruitUnit(message& msg)
 // DC lines 707/723 call ExitRecruitUnit, but its older four-store body also
 // sets the dialog result and codeY: retail's other three helper expansions
 // write only id/codeX, so those PC routing differences remain explicit.
+// Current 99.95% build has 119/119 exact CFG blocks. Retail reuses one
+// TViewArmyWindow stack slot for the first three arms and gives the fourth a
+// second slot; VC6 currently reuses one for all four. DC and the bounded Mac
+// counterpart each retain four distinct shadowed locals, so this does not
+// justify a synthetic Windows-only object or scope.
+// The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
+// anonymous 16-byte zero template for DC's const monType[4] array that Mac
+// retail never loads; Main also expands setRolloverText in the candidate while
+// Mac retail calls its retained helper.
 VA(0x00550940, 0xA08)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
@@ -889,7 +924,7 @@ int recruitUnit::main(message& msg)
                     & g_ctaSiegeWeapon) {
                     if (m_thisHero->getNumberInBackpack(1) + m_numberToBuy
                         > 64) {
-                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_BACKPACK_FULL),
+                        normalDialog((*g_generalText)[GENERAL_TEXT_RECRUIT_BACKPACK_FULL],
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                         break;
                     }
@@ -910,22 +945,13 @@ int recruitUnit::main(message& msg)
                     m_currArmyGroup->add(m_monsterType, m_numberToBuy, -1);
                 } else {
                     if (m_currArmyGroupIsTownGarrison) {
-                        normalDialog(g_generalText->getText(GENERAL_TEXT_RECRUIT_GARRISON_FULL),
+                        normalDialog((*g_generalText)[GENERAL_TEXT_RECRUIT_GARRISON_FULL],
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     } else {
-                        const char* creatureName;
-                        if (m_monsterType >= 0 && m_monsterType <= 150) {
-                            if (m_numberToBuy == 1)
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_name;
-                            else
-                                creatureName = g_creatureTypeTraits[
-                                    m_monsterType].m_pluralName;
-                        } else {
-                            creatureName = "";
-                        }
+                        const char* creatureName =
+                            getArmyName(m_monsterType, m_numberToBuy);
                         normalDialog(formatString(
-                            g_generalText->getText(GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT), creatureName).c_str(),
+                            (*g_generalText)[GENERAL_TEXT_RECRUIT_INSUFFICIENT_PROVISIONS_FORMAT], creatureName).c_str(),
                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     }
                     break;
@@ -976,11 +1002,12 @@ int recruitUnit::main(message& msg)
 }
 
 // E:\gamedcs\recruit.cpp:1082
-// Dreamcast keeps this source-visible helper out of line; Complete's VC6
-// build expands it at every recruitUnit call site and emits no standalone
-// body.  Raw NB11 names the sole surviving local `resCost`, while the body
-// calls the exact GetMonsterCost helper above before deriving the two costs.
-inline void recruitUnit::updateCost()
+// Dreamcast and Mac keep this source-visible helper out of line. Without an
+// explicit inline specifier, VC6 still expands it in all three constructors;
+// both admitted Mac constructors then match exactly with their updateCost
+// calls intact. Raw NB11 names the sole surviving local `resCost`, while the
+// body calls the exact GetMonsterCost helper before deriving the two costs.
+void recruitUnit::updateCost()
 {
     int resCost[7];
     getMonsterCost(m_monsterType, resCost);
@@ -1006,20 +1033,10 @@ inline void recruitUnit::updateCost()
 // the byte at [ebp+0xc] -> +0x9c, then the four (type, count-pointer)
 // pairs into +0x5c/+0x6c .. +0x68/+0x78, with the first pair also
 // seeding monsterType/numAvail.
-// Residual (97.9750%): three head instructions. Retail parks the shared
-// zero in edx before the first store and cycles eax through the
-// argument loads; our CL parks it in eax and hoists the MonType2 load
-// (and its store) ahead of monsterType/MonType1. Statement order was
-// swept: putting `currArmyGroup = newGroup` first reproduces retail's
-// store ORDER for the zero group but then hoists MonType2 the same way
-// AND loses the 0x60 placement (95.8); moving `numAvail` to where
-// retail's store for it lands - after MonType1 (97.7/80.3) or after
-// MonType2 (95.4/79.4) - costs the hero constructor badly.
-// Register-homing family; the value written to every field is
-// identical in all spellings. The CFG is 6/6 block-exact. why-reg v2's three
-// highest creation-order controls (the adjacent zero/member store swaps) were
-// flat, flat, and worse, leaving this as a front-end handle/register-homing
-// wall rather than a missing statement.
+// DC lines 1121..1141 and Mac 0:0x150804..0x150848 preserve the full
+// field-store order below. The earlier isolated head-store probes left
+// type/viewOnly and selectedPosition outside that sequence. VC6 now matches
+// the 0x101-byte retail constructor exactly, including both calls.
 VA(0x00551350, 0x101)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
 recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     TCreatureType monType1, short* numMon1,
@@ -1027,19 +1044,19 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     TCreatureType monType3, short* numMon3,
     TCreatureType monType4, short* numMon4)
 {
+    m_type = -1;
+    m_viewOnly = 0;
     m_inTownMainScreen = 0;
     m_thisHero = 0;
-    m_selectedPosition = 0;
     m_currArmyGroup = newGroup;
     m_currArmyGroupIsTownGarrison = groupIsTownGarrison;
     m_monsterType = monType1;
     m_numAvail = numMon1;
+    m_selectedPosition = 0;
     m_monType1 = monType1;
     m_monType2 = monType2;
     m_monType3 = monType3;
     m_monType4 = monType4;
-    m_type = -1;
-    m_viewOnly = 0;
     m_available[0] = numMon1;
     m_available[1] = numMon2;
     m_available[2] = numMon3;
@@ -1051,14 +1068,9 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
 // E:\gamedcs\recruit.cpp:1158
 // `ret 0x24` = the nine hero-flavoured parameters; identical body with
 // thisHero taking the armyGroup pair's place.
-// Residual (96.6709%): the same head-scheduling delta as the constructor
-// above, plus the thisHero store. Retail's store order (thisHero
-// first, then the four zeros) is reproduced exactly by writing
-// `thisHero = _thisHero;` first - but that spelling then hoists the
-// MonType2 load/store out of place and scores 95.8. Everything from
-// the MonType3 load onward is byte-identical in both. The CFG is 6/6
-// block-exact, and why-reg v2's three adjacent-store creation-order controls
-// were all byte-flat, confirming the residual as front-end handle scheduling.
+// DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c establish the complete
+// field-store order below. VC6 matches the 0xFE-byte retail body exactly;
+// the earlier thisHero-first-only probe omitted the surrounding store order.
 VA(0x00551460, 0xFE)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
 recruitUnit::recruitUnit(hero* thisHero,
     TCreatureType monType1, short* numMon1,
@@ -1066,19 +1078,21 @@ recruitUnit::recruitUnit(hero* thisHero,
     TCreatureType monType3, short* numMon3,
     TCreatureType monType4, short* numMon4)
 {
+    // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c put the source
+    // fields in this order after baseManager construction.
+    m_type = -1;
+    m_viewOnly = 0;
     m_inTownMainScreen = 0;
+    m_thisHero = thisHero;
     m_currArmyGroup = 0;
     m_currArmyGroupIsTownGarrison = 0;
-    m_selectedPosition = 0;
-    m_thisHero = thisHero;
     m_monsterType = monType1;
     m_numAvail = numMon1;
+    m_selectedPosition = 0;
     m_monType1 = monType1;
     m_monType2 = monType2;
     m_monType3 = monType3;
     m_monType4 = monType4;
-    m_type = -1;
-    m_viewOnly = 0;
     m_available[0] = numMon1;
     m_available[1] = numMon2;
     m_available[2] = numMon3;
@@ -1117,10 +1131,10 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     updateCost();
 }
 
-// E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
-// QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
-// the single-call-site STATIC rule dropped the out-of-line copy.
-inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+// E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
+// Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
+// definition into the sole Windows caller at 0x551780 (45/45 calls agree).
+TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
     : heroWindow(x2, y2, 160, 320, 0x12)
 {
     m_widgets.reserve(49);
@@ -1197,10 +1211,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgrounds[
-            g_game->m_gameVersion == 0
-                && isBaseElemental(monType)
-            ? -1 : g_creatureTypeTraits[monType].m_townType],
+        g_creatureBackgrounds[g_game->getAlignment(monType)],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,
@@ -1208,13 +1219,13 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
 
     sprintf(g_text,
         DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
-        g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL), *numMon);
+        (*g_generalText)[GENERAL_TEXT_CREATURES_AVAILABLE_LABEL], *numMon);
     recruitWindow->addWidget(new textWidget(30, 182, 100, 17, g_text,
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x209,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
     recruitWindow->addWidget(new textWidget(32, 218, 96, 19,
-        g_generalText->getText(GENERAL_TEXT_COST_PER_TROOP),
+        (*g_generalText)[GENERAL_TEXT_COST_PER_TROOP],
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x1f4,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);

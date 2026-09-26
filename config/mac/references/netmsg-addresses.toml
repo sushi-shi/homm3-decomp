@@ -1,0 +1,73 @@
+# Reviewed address identities; source owns names and compiler symbols remain unbound.
+
+[[functions]]
+retail_va = 0x512b00
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x2231f8
+mac_size = 0x78
+target_sha256 = "502a5c79188434a9bb7970c3dbc7edab37992320e06c4694c67f7a497af92625"
+evidence = "Mac port calls the identical 0x14-byte stream class t_net_file: ownsBuffer byte +4 controls freeing buffer +8; ABI-combined destructor takes delete flag r4 and restores base vptr. RTTI/vtable at data1+0x5c0c8/0x5c0f8 proves t_net_file name/layout. Mac body code0+0x2231f8..0x223270; terminal BLR 0x22326c, next entry 0x223270."
+
+[[functions]]
+retail_va = 0x512b30
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x223270
+mac_size = 0x70
+target_sha256 = "b6fee69940626955c24c390ebcf8fe267a36359bc270873c84f4fe31fc5dc6d3"
+evidence = "t_net_file read compares position+size at +0x10 against capacity +0xc, clamps, memcpy from buffer+position at +8, advances position and returns bytes read. Vtable data1+0x5c10c selects this body. Mac body code0+0x223270..0x2232e0; terminal BLR 0x2232dc, next entry 0x2232e0."
+
+[[functions]]
+retail_va = 0x512b80
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x2232e0
+mac_size = 0xb8
+target_sha256 = "4504d2fbf26f4ed362e0460980031f1e41168159d381b79762d2b40de0ccccf3"
+evidence = "t_net_file write compares position+size against capacity, grows by 0x64 or requested amount, allocates/copies old buffer, conditionally frees if ownsBuffer +4, copies new payload and advances position. Vtable data1+0x5c110 selects this body. Mac body code0+0x2232e0..0x223398; terminal BLR 0x223394, next entry 0x223398."
+
+[[functions]]
+retail_va = 0x512c20
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x223398
+mac_size = 0x2c
+target_sha256 = "116aaac84942c112fe7de7338246f7f4a39d8a5a62a44c1a8dfceab162060c5e"
+evidence = "t_complex_net_message default ctor stores class vptr, CNetMsg subtype 0x3e8 (RS_GAME_TRANSMIT_INIT=1000), flag -1 and zeros message size/payload words; same 0x18-byte class layout as Windows. Mac body code0+0x223398..0x2233c4; terminal BLR 0x2233c0, next entry 0x2233c4."
+
+[[functions]]
+retail_va = 0x512c50
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x2233c4
+mac_size = 0x28
+target_sha256 = "ac3ad221382ab2f1f878d95f61818d27954f7cc53edbe4627a6fa640f039141f"
+evidence = "t_complex_net_message subtype ctor stores class vptr and incoming r4 subtype at +0xc, flag -1 and zeros remaining CNetMsg fields; same 0x18-byte layout as Windows. Mac body code0+0x2233c4..0x2233ec; terminal BLR 0x2233e8, next entry 0x2233ec."
+
+[[functions]]
+retail_va = 0x512c80
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x2233ec
+mac_size = 0xb4
+target_sha256 = "fd53b4c63a064abb3cf5d6400185f75699b3b7883392155e5b7dc9ec1597a74c"
+evidence = "DPID sender constructs owning t_net_file 0x223168, writes 0x14-byte CNetMsg via 0x2232e0, calls virtual payload write, writes stream position into wire size and calls transmitRemoteDataDPID 0x212b88; then destroys stream. Mac body code0+0x2233ec..0x2234a0; terminal BLR 0x22349c, next entry 0x2234a0."
+
+[[functions]]
+retail_va = 0x512d40
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x2234a0
+mac_size = 0xb4
+target_sha256 = "13b54dd1e628b796dbe0d8a81d176ef656b9f5a31d639ba28e42db09b334f5ef"
+evidence = "Broadcast sender has same owned stream/header/virtual write sequence as DPID twin but calls transmitRemoteData 0x212bf0 with toWho and flag arguments; then destroys stream. Mac body code0+0x2234a0..0x223554; terminal BLR 0x223550, next entry 0x223554."
+
+[[functions]]
+retail_va = 0x512e00
+unit = "netmsg"
+mac_section = 0x0
+mac_offset = 0x223554
+mac_size = 0x84
+target_sha256 = "261b50556d30d2f741e45a6d87f51b74d751b9e45b902f671337eb32db56adf5"
+evidence = "Reader constructs borrowed t_net_file 0x2231cc over received CNetMsg, copies 0x14-byte header via read 0x223270, dispatches virtual payload read and destroys stream on success/failure. Mac body code0+0x223554..0x2235d8; terminal BLR 0x2235d4, next entry 0x2235d8."

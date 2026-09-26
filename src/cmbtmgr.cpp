@@ -508,8 +508,10 @@ int combatManager::open(int newPriority)
     m_powSprite = 0;
     m_powSpellEffect = -1;
 
-    int leftTactics = m_heroes[0] ? m_heroes[0]->m_skillLevel[19] : 0;
-    int rightTactics = m_heroes[1] ? m_heroes[1]->m_skillLevel[19] : 0;
+    int leftTactics = m_heroes[0]
+        ? m_heroes[0]->getSecondarySkill(eSecSkillBattleTactics) : 0;
+    int rightTactics = m_heroes[1]
+        ? m_heroes[1]->getSecondarySkill(eSecSkillBattleTactics) : 0;
     int tacticsSide = rightTactics > leftTactics;
     m_placementBoundaryDepth = leftTactics - rightTactics;
     m_creaturePlacement = m_placementBoundaryDepth != 0 && !m_isSurrounded;
@@ -564,7 +566,7 @@ int combatManager::open(int newPriority)
         char music[100];
         sprintf(music,
                 DATA_COMPGEN(0x0066fedc, combatMusicFormat, "combat%02d"),
-                random(1, 4));
+                sRandom(1, 4));
         g_soundManager->startMP3(music, 0, 1);
     }
 
@@ -1063,8 +1065,8 @@ void combatManager::setupAdjacencyArray()
 {
     int adjacent;
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        int row = hex / COMBAT_GRID_ROW_STRIDE;
-        int column = hex % COMBAT_GRID_ROW_STRIDE;
+        int row = gridY(hex);
+        int column = gridX(hex);
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
@@ -1082,27 +1084,27 @@ void combatManager::setupAdjacencyArray()
 
             switch (direction) {
             case COMBAT_DIRECTION_0:
-                adjacent = (row & 1) ? hex - 17 : hex - 16;
+                adjacent = rowIsOdd(row) ? hex - 17 : hex - 16;
                 break;
             case COMBAT_DIRECTION_1:
                 adjacent = hex + 1;
                 break;
             case COMBAT_DIRECTION_2:
-                adjacent = (row & 1) ? hex + 17 : hex + 18;
+                adjacent = rowIsOdd(row) ? hex + 17 : hex + 18;
                 break;
             case COMBAT_DIRECTION_3:
-                adjacent = (row & 1) ? hex + 16 : hex + 17;
+                adjacent = rowIsOdd(row) ? hex + 16 : hex + 17;
                 break;
             case COMBAT_DIRECTION_4:
                 adjacent = hex - 1;
                 break;
             case COMBAT_DIRECTION_5:
-                adjacent = (row & 1) ? hex - 18 : hex - 17;
+                adjacent = rowIsOdd(row) ? hex - 18 : hex - 17;
                 break;
             }
 
             if (validHex(adjacent)) {
-                int adjacentColumn = adjacent % COMBAT_GRID_ROW_STRIDE;
+                int adjacentColumn = gridX(adjacent);
                 if (adjacentColumn != 0
                         && adjacentColumn != COMBAT_GRID_LAST_COLUMN) {
                     m_adjacentCells[hex][direction] =
@@ -1198,11 +1200,11 @@ void combatManager::determineCombatTerrain()
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->getMapObject() == MINE
             && m_combatCell->m_isTrigger
-            && (g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+            && (g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_6
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_4
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_isAbandoned)) {
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_isAbandoned)) {
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->m_flags0011 & 0x200) {
         m_magicTerrain = 0;
@@ -1281,30 +1283,24 @@ const char* combatManager::getBackgroundName()
     m_combatFringe = -1;
     return background;
 }
+// Bound-first SLimitData comparisons reproduce retail's four expanded
+// rectangle checks; all 39 CFG blocks and the six return sites now agree.
 VA(0x004647a0, 0x17A)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {
-    if (combatManager::s_leftHeroLimits.m_minX <= x && x <= combatManager::s_leftHeroLimits.m_maxX
-            && combatManager::s_leftHeroLimits.m_minY <= y
-            && y <= combatManager::s_leftHeroLimits.m_maxY)
+    if (combatManager::s_leftHeroLimits.contains(x, y))
         return 252;
-    if (combatManager::s_rightHeroLimits.m_minX <= x && x <= combatManager::s_rightHeroLimits.m_maxX
-            && combatManager::s_rightHeroLimits.m_minY <= y
-            && y <= combatManager::s_rightHeroLimits.m_maxY)
+    if (combatManager::s_rightHeroLimits.contains(x, y))
         return 253;
-    if (combatManager::s_mainBuildingLimits.m_minX <= x && x <= combatManager::s_mainBuildingLimits.m_maxX
-            && combatManager::s_mainBuildingLimits.m_minY <= y
-            && y <= combatManager::s_mainBuildingLimits.m_maxY)
+    if (combatManager::s_mainBuildingLimits.contains(x, y))
         return 254;
-    if (combatManager::s_upperTowerLimits.m_minX <= x && x <= combatManager::s_upperTowerLimits.m_maxX
-            && combatManager::s_upperTowerLimits.m_minY <= y
-            && y <= combatManager::s_upperTowerLimits.m_maxY)
+    if (combatManager::s_upperTowerLimits.contains(x, y))
         return 255;
 
     int px = x - 14;
     int py = y - 86;
     int row = py / 42;
-    if ((row & 1) == 0)
+    if (!rowIsOdd(row))
         px -= 22;
     int col = px / 44;
     if (px < 0 || px >= 748 || py < 0 || py >= 472)
@@ -1315,16 +1311,16 @@ int combatManager::getGridIndex(int x, int y) const
         if (depth < abs(across - 22) / 2) {
             row--;
             if (across < 22) {
-                if ((row & 1) == 0)
+                if (!rowIsOdd(row))
                     col--;
-            } else if ((row & 1) != 0) {
+            } else if (rowIsOdd(row)) {
                 col++;
             }
         }
     }
     if (row < 0 || row >= 11 || col < 0 || col >= 17)
         return -1;
-    return row * 17 + col;
+    return getHexIndex(col, row);
 }
 
 // Original: combatManager::CombineGroups; cmbtmgr.cpp:1971, dc 0x5f1d0.
@@ -1372,7 +1368,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         return;
     if (!stack->m_numTroops)
         return;
-    if (random(1, 24) > stack->getMorale(1))
+    if (sRandom(1, 24) > stack->getMorale(1))
         return;
     stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
     if (!isQuickCombat()) {
@@ -1380,7 +1376,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
-            getArmyName(stack->m_creatureType, stack->m_numTroops));
+            stack->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -1393,15 +1389,15 @@ int combatManager::checkApplyBadMorale(int group, int index)
 {
     if (group >= 0 && index >= 0) {
         army* stack = &m_armies[group][index];
-        if (random(1, 12) <= -stack->getMorale(1)) {
-            if (m_sideIsAi[group] || random(1, 4) != 1) {
+        if (sRandom(1, 12) <= -stack->getMorale(1)) {
+            if (m_sideIsAi[group] || sRandom(1, 4) != 1) {
                 stack->m_monInfo.m_attributes |= creatureDone;
                 if (!isQuickCombat()) {
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
                         g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
-                        getArmyName(stack->m_creatureType, stack->m_numTroops));
+                        stack->getName());
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
                     waitEndSample(sample, -1);
@@ -1421,11 +1417,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
     if (selected->m_creatureType == CREATURE_AZURE_DRAGON)
         return 0;
 
-    int actualSide;
-    if (selected->m_spellInfluence[60])
-        actualSide = 1 - selected->m_combatSide;
-    else
-        actualSide = selected->m_combatSide;
+    int actualSide = selected->getControllingSide();
     int opposingSide = 1 - actualSide;
 
     int azureDragons = 0;
@@ -1446,7 +1438,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
-                getArmyName(selected->m_creatureType, selected->m_numTroops));
+                selected->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         spellEffect(15, selected, 100, 1);
         waitEndSample(sample, -1);
@@ -1476,8 +1468,8 @@ unsigned char combatManager::unnamed464f50(
             return incumbent->getSpeed() < candidate->getSpeed();
         return incumbent->getSpeed() > candidate->getSpeed();
     }
-    if (incumbent->m_combatSide != candidate->m_combatSide)
-        return incumbent->m_combatSide != m_actingSide;
+    if (incumbent->getOwningSide() != candidate->getOwningSide())
+        return incumbent->getOwningSide() != m_actingSide;
     return incumbent->m_bitIndex < candidate->m_bitIndex;
 }
 
@@ -1525,20 +1517,17 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
             if (best) {
                 if (!m_inSecondPhase)
                     best->newTurn();
-                if (best->m_spellInfluence[62])
-                    continue;
-                if (best->m_spellInfluence[70])
-                    continue;
-                if (best->m_spellInfluence[74])
+                // Mac 0x70d50..0x70d90 expands this inline predicate.
+                if (best->isIncapacitated())
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
                     && !m_inSecondPhase) {
-                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
+                    if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
                         continue;
                     if (unnamed464d40(best))
                         continue;
                 }
-                setNextArmy(best->m_combatSide, best->m_bitIndex);
+                setNextArmy(best->getOwningSide(), best->m_bitIndex);
                 return 1;
             }
             break;
@@ -1759,7 +1748,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
         return;
 
     int strength;
-    strength = m_wallStrength[s_wallTargets[targetWall].m_wall] - damage;
+    strength = getWallStrength(targetWall) - damage;
     if (strength < 0)
         strength = 0;
 
@@ -1841,7 +1830,7 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
 void combatManager::keepAttack(int towerPos)
 {
-    army* tower = &m_armies[m_actingSide][m_actingSlot];
+    army* tower = getCurrentArmy();
     int archerIndex;
     switch (tower->m_gridIndex) {
     case COMBAT_HEX_KEEP:
@@ -1903,7 +1892,7 @@ void combatManager::keepAttack(int towerPos)
     // up-counted `for (i = 0; i < n; i++)` does not produce.
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
-        damage += random(2, 4);
+        damage += sRandom(2, 4);
     damage = static_cast<int>(
         damage * target->computeDefenderDamageReduction(1));
     if (damage <= 0)
@@ -1938,7 +1927,7 @@ void combatManager::unnamed465f20()
     int numArchers;
     int archerLevel;
     m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
-    if (m_armies[m_actingSide][m_actingSlot].m_gridIndex != COMBAT_HEX_KEEP)
+    if (getCurrentArmy()->m_gridIndex != COMBAT_HEX_KEEP)
         numArchers = (numArchers + 1) / 2;
 
     int target = chooseBallistaTarget(0, archerLevel, numArchers * 6 / 2);
@@ -2062,6 +2051,8 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //   * both obstacle-budget arms tail-merge into ONE Random call site,
 //     which is what says a single local is assigned in an if/else
 //     rather than two calls written out;
+//   * the landmine placement passes size()-1 directly. Dreamcast records
+//     no slot local, and retail pushes the final argument before the decrement;
 //   * the large-obstacle guard is the De Morgan form
 //     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
 //     retail falls THROUGH to Random on `jl` and skips on `je`, and the
@@ -2148,9 +2139,8 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
                 m_obstacles.push_back(newLandmine);
-                int landmineSlot = m_obstacles.size();
-                landmineSlot--;
-                placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);
+                placeObstacle(newLandmine, m_obstacles.size() - 1, hex,
+                              hexcell::landMine);
             }
         }
 
@@ -2176,9 +2166,9 @@ void combatManager::setupAndLoadObstacles()
     int budget;
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
             && m_defendingTown->m_type == TOWN_STRONGHOLD)
-        budget = random(10, 16);
+        budget = sRandom(10, 16);
     else
-        budget = random(5, 12);
+        budget = sRandom(5, 12);
 
     unsigned int terrainMask = 0;
     unsigned int specialTerrainMask = 0;
@@ -2189,7 +2179,7 @@ void combatManager::setupAndLoadObstacles()
 
     if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
-            && random(1, 100) <= 40)
+            && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
 
     int placed = 0;
@@ -2414,9 +2404,9 @@ void combatManager::makeCreaturesVanish()
         }
         computeMaxExtent();
         x = m_drawbridgeBounds.m_minX;
-        width = m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1;
+        width = m_drawbridgeBounds.width();
         y = m_drawbridgeBounds.m_minY;
-        height = m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1;
+        height = m_drawbridgeBounds.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2427,8 +2417,8 @@ void combatManager::makeCreaturesVanish()
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
             if (stack.is(creatureDoubleWide)) {
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySide = -1;
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySlot = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
             }
         }
     }
@@ -2446,8 +2436,7 @@ void combatManager::makeCreaturesVanish()
 VA(0x00467130, 0x82)  // dc 0x60ee0
 unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
-    int side = thisArmy->m_spellInfluence[60] ? 1 - thisArmy->m_combatSide
-                                        : thisArmy->m_combatSide;
+    int side = thisArmy->getControllingSide();
     if (side != 1 || m_fortificationLevel == 0 || m_drawbridgeState != DRAWBRIDGE_UP)
         return 0;
     if (hex == COMBAT_HEX_GATE || hex == COMBAT_HEX_GATE_MOAT
@@ -2455,7 +2444,7 @@ unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
         return 1;
     if (!thisArmy->is(creatureDoubleWide))
         return 0;
-    long second = hex + (thisArmy->m_facing != 0 ? 1 : -1);
+    long second = hex + thisArmy->offsetToFront(-1);
     if (second == COMBAT_HEX_GATE || second == COMBAT_HEX_GATE_MOAT
             || second == COMBAT_HEX_OUTER_MOAT)
         return 1;
@@ -2486,14 +2475,14 @@ void combatManager::raiseDoor()
 {
     if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
         return;
-    if (m_cells[COMBAT_HEX_GATE].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
             || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
         return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
             || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
         return;
     if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].m_armySide >= 0
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
                 || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
         return;
 
@@ -2547,8 +2536,7 @@ VA(0x00467510, 0xEA)  // dc 0x61224
 unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIndex,
                                                int destIndex) const
 {
-    int side = shooter->m_spellInfluence[60] ? 1 - shooter->m_combatSide
-                                      : shooter->m_combatSide;
+    int side = shooter->getControllingSide();
     if (shooter->m_creatureType == CREATURE_MAGE
             || shooter->m_creatureType == CREATURE_ARCH_MAGE
             || shooter->m_creatureType == CREATURE_ENCHANTER
@@ -2567,8 +2555,7 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
 VA(0x00467600, 0x23A)  // dc 0x61284
 unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
-    int side = attacker->m_spellInfluence[60] ? 1 - attacker->m_combatSide
-                                       : attacker->m_combatSide;
+    int side = attacker->getControllingSide();
     if (m_heroes[side]
             && (m_heroes[side]->isWieldingArtifact(ARTIFACT_GOLDEN_BOW)
                 || m_heroes[side]->isWieldingArtifact(
@@ -2596,10 +2583,10 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     if (!m_fortificationLevel)
         return 1;
 
-    int sourceX = sourceIndex % COMBAT_GRID_ROW_STRIDE;
-    int sourceY = sourceIndex / COMBAT_GRID_ROW_STRIDE;
-    int deltaX = destIndex % COMBAT_GRID_ROW_STRIDE - sourceX;
-    int deltaY = destIndex / COMBAT_GRID_ROW_STRIDE - sourceY;
+    int sourceX = gridX(sourceIndex);
+    int sourceY = gridY(sourceIndex);
+    int deltaX = gridX(destIndex) - sourceX;
+    int deltaY = gridY(destIndex) - sourceY;
     if (deltaY == 0 && deltaX == 0)
         return 1;
     int sample;
@@ -2626,8 +2613,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     for (sample = 0; sample < samples; sample++) {
         x += stepX;
         y += stepY;
-        int hex = static_cast<int>(y) * COMBAT_GRID_ROW_STRIDE
-            + static_cast<int>(x);
+        int hex = getHexIndex(static_cast<int>(x), static_cast<int>(y));
         if (hex == COMBAT_HEX_GATE) {
             if (m_drawbridgeState == DRAWBRIDGE_UP)
                 return 0;
@@ -2750,10 +2736,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         for (; step < nframes; step++) {
             unsigned long nextFrameTime = GameTime::get() + missileperiod;
             if (step != 0) {
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = x + width - 1;
-                updateArea.m_maxY = y + height - 1;
+                // Mac 0x73e24 copies a four-word rectangle temporary here.
+                updateArea = TDrawbridgeBounds(
+                    x, y, x + width - 1, y + height - 1);
                 x = startX + travelX / nframes;
                 y = static_cast<int>(
                     (deltaY - remaining * flatness) * step
@@ -2771,26 +2756,12 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
             int right = x + width - 1;
             int bottom = y + height - 1;
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -2881,10 +2852,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             if (step != 0) {
                 saved.draw(0, 0, width, height,
                            g_windowManager->m_screenBitmap, x, y, false);
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = right;
-                updateArea.m_maxY = bottom;
+                // Mac 0x743e0 constructs and copies the four-word bounds.
+                updateArea = TDrawbridgeBounds(x, y, right, bottom);
                 x += addX;
                 right += addX;
                 y += addY;
@@ -2893,26 +2862,12 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.grab(g_windowManager->m_screenBitmap, x, y);
             missile->draw(0, frame, 0, 0, width, height,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;
@@ -3021,10 +2976,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch(), false);
-            updateArea.m_minX = x;
-            updateArea.m_minY = y;
-            updateArea.m_maxX = right;
-            updateArea.m_maxY = bottom;
+            // Mac 0x749f8 constructs and copies the four-word bounds.
+            updateArea = TDrawbridgeBounds(x, y, right, bottom);
             x += addX;
             right += addX;
             y += addY;
@@ -3043,25 +2996,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getWidth(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
-        if (updateArea.m_minX > x)
-            updateArea.m_minX = x;
-        if (updateArea.m_minY > y)
-            updateArea.m_minY = y;
-        if (updateArea.m_maxX < right)
-            updateArea.m_maxX = right;
-        if (updateArea.m_maxY < bottom)
-            updateArea.m_maxY = bottom;
-        if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-            updateArea.m_minX = g_combatDrawLimits.m_minX;
-        if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-            updateArea.m_minY = g_combatDrawLimits.m_minY;
-        if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-            updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-        if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-            updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+        updateArea.include(SLimitData(x, y, right, bottom));
+        updateArea.clip(g_combatDrawLimits);
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
-                                      updateArea.m_maxX - updateArea.m_minX + 1,
-                                      updateArea.m_maxY - updateArea.m_minY + 1);
+                                      updateArea.width(),
+                                      updateArea.height());
         GameTime::delayTil(nextFrameTime);
     }
 
@@ -3089,7 +3028,7 @@ void combatManager::removeArmyFromGrid(const army& a)
     m_cells[a.m_gridIndex].m_armySide = -1;
     m_cells[a.m_gridIndex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        int hex = a.m_gridIndex + (a.m_facing != 0 ? 1 : -1);
+        int hex = a.m_gridIndex + a.offsetToFront(-1);
         m_cells[hex].m_armySlot = -1;
         m_cells[hex].m_armySide = -1;
         m_cells[hex].m_partOfDouble = -1;
@@ -3099,13 +3038,13 @@ void combatManager::removeArmyFromGrid(const army& a)
 VA(0x004687c0, 0x99)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
+    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0;
-        int second = hex + (a.m_facing != 0 ? 1 : -1);
-        m_cells[second].m_armySide = static_cast<signed char>(a.m_combatSide);
+        int second = hex + a.offsetToFront(-1);
+        m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
         m_cells[second].m_partOfDouble = a.m_facing != 0;
     }
@@ -3360,8 +3299,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             drawFrame(0, 1, 0, 100, 1, 1);
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height());
         }
     }
 
@@ -3521,8 +3460,7 @@ void combatManager::updateArmyLuckAndMorale()
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
-            int ownerSide = stack.m_spellInfluence[60]
-                ? 1 - stack.m_combatSide : stack.m_combatSide;
+            int ownerSide = stack.getControllingSide();
             town* ownerTown;
             if (!ownerSide)
                 ownerTown = 0;
@@ -3737,13 +3675,8 @@ void combatManager::raiseSkeletons(int side)
         added = m_armyGroups[side]->add(
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
-            TCreatureType upgradedType = m_raisedCreatureType;
-            if (!g_game->m_gameVersion
-                && isBaseElemental(upgradedType)) {
-                upgradedType = CREATURE_NONE;
-            } else {
-                upgradedType = upgradedCreatureType(upgradedType);
-            }
+            TCreatureType upgradedType =
+                g_game->upgradedCreatureType(m_raisedCreatureType);
 
             m_raisedCreatureType = upgradedType;
             m_raisedCreatureCount = (m_raisedCreatureCount * 2 + 2) / 3;
@@ -3765,7 +3698,7 @@ void combatManager::learnSpellFromEagleEye(int side)
         SpellID spell = *it;
         if (m_heroes[side]->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[spell].m_level
-                <= m_heroes[side]->m_skillLevel[eSecSkillWisdom] + 2)
+                <= m_heroes[side]->getSecondarySkill(eSecSkillWisdom) + 2)
             m_heroes[side]->addSpell(spell);
     }
 }

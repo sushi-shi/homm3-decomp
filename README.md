@@ -4,26 +4,26 @@ Binary-matching decompilation of **Heroes of Might and Magic III Complete**
 (`HEROES3.EXE`, New World Computing, 2000). The goal is to recover the C++ structure and
 behavior.
 
-This repository does **not** contain either game's executable or resources. To match
-the game, supply your own legally obtained retail `HEROES3.EXE` and Dreamcast `H3.EXE`.
+This repository does **not** contain the game's executables or resources. To match
+the game, supply your own copies of retail `HEROES3.EXE`, Dreamcast `H3.EXE`,
+and the Classic Mac PowerPC PEF, plus the pinned CodeWarrior tools.
 
 <!-- match-score:start -->
 
-**Executable MAX: 97.10%** — weighted by function size across 1,999,142 bytes of code included in matching.
+**Executable MAX: 97.36%** — weighted by function size across 1,999,142 bytes of code included in matching.
 
-**Function exact MAX** — 4,266 / 4,768 current implementations (89.5%) have reached 100%.
+**Function exact MAX** — 4,307 / 4,768 current implementations (90.3%) have reached 100%.
 
-**CUR diagnostics** — 4,199 / 4,768 functions exact (88.1%) in this build (4767 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
+**CUR diagnostics** — 4,268 / 4,768 functions exact (89.5%) in this build (4768 in linked units). Compiler-context dips with held MAX do not reduce matching progress.
 
-| Module        | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
-| :------------ | ----: | ------------------: | ------------------: | --------: | --------: |
-| `game`        |   123 | 3533 / 3990 (88.5%) | 3588 / 3990 (89.9%) |    97.01% |    97.35% |
-| `rmg`         |     3 |   291 / 368 (79.1%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
-| `network`     |     4 |   266 / 280 (95.0%) |   268 / 280 (95.7%) |    97.68% |    98.08% |
-| `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
-| `codec`       |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
-| `victor`      |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
-| `(unmatched)` |     — |        0 / 1 (0.0%) |        0 / 1 (0.0%) |      0.0% |      0.0% |
+| Module       | Units | Functions exact CUR |  Function exact MAX | Fuzzy CUR | Fuzzy MAX |
+| :----------- | ----: | ------------------: | ------------------: | --------: | --------: |
+| `game`       |   123 | 3601 / 3991 (90.2%) | 3628 / 3991 (90.9%) |    97.39% |    97.59% |
+| `rmg`        |     3 |   290 / 368 (78.8%) |   301 / 368 (81.8%) |    93.19% |    94.37% |
+| `network`    |     4 |   268 / 280 (95.7%) |   269 / 280 (96.1%) |    98.06% |    98.30% |
+| `zlib-1.1.3` |    14 |    69 / 69 (100.0%) |    69 / 69 (100.0%) |   100.00% |   100.00% |
+| `codec`      |     4 |     35 / 43 (81.4%) |     35 / 43 (81.4%) |    94.70% |    94.70% |
+| `victor`     |     4 |      5 / 17 (29.4%) |      5 / 17 (29.4%) |    85.40% |    85.40% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
@@ -35,6 +35,12 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
 <!-- match-score:end -->
+
+<!-- mac-match-score:start -->
+
+**Lightly optimized Classic Mac PowerPC reference (latest full build):** 6 / 35 available comparisons exact; 57.90% of 26,876 compared bytes match. Another 38 / 73 admitted pairs are unavailable, so a complete Mac checkpoint is pending. The admitted-pair count is coverage, not the whole Mac game.
+
+<!-- mac-match-score:end -->
 
 The score ledger always keeps `CUR <= MAX <= HIST`. CUR is the latest full
 build; MAX is the best score observed for the function's current source hash;
@@ -64,22 +70,34 @@ size        8,425,752 bytes
 sha256      cdbc7e75bd7d057171fa12b728aaaee01c1db133fff350b034950dd21dd07736
 ```
 
+The **Classic Mac OS PowerPC PEF** is a lightly optimized reference build
+used to recover source structure for Windows matching:
+
+```
+file        Heroes_III_raw.pef
+size        3,418,835 bytes
+sha256      650be8880cfda81ffa7704ce3bcdb9c5a6528f67afdf77c0c0c63e8259250d86
+format      Joy!peffpwpc (CodeWarrior PowerPC)
+```
+
 ## Quickstart
 
-You need Nix with flakes enabled and your own copies of the two executables
-listed above. From the repository root:
+You need Nix with flakes enabled, the three executables above, and the pinned
+CodeWarrior tools. From the repository root:
 
 ```sh
 nix develop .#build
 gh auth login        # needed for the toolchain download
 HOMM3_EXE=/absolute/path/to/HEROES3.EXE \
 HOMM3_DREAMCAST_EXE=/absolute/path/to/H3.EXE \
+HOMM3_MAC_EXE=/absolute/path/to/Heroes_III_raw.pef \
+HOMM3_MAC_TOOLCHAIN=/absolute/path/to/CodeWarrior/tools \
   homm3 init
 
-homm3 build          # build all modules, compare with retail, and run checks
+homm3 build          # build all modules, compare Windows and Mac bytes, and run checks
 ```
 
-`homm3 init` verifies the executables and sets up the VC6 toolchain and Wine.
+`homm3 init` verifies all executables and both compilers, and sets up Wine.
 The build compiles and compares reconstructed code; it does not yet produce
 a playable game.
 
@@ -109,6 +127,25 @@ to set up the compiler headers needed for code navigation.
    homm3 build --fast philai
    homm3 sema diff 0x00524dd0 --summary
    ```
+
+   Where a Mac counterpart has been admitted, the same build compiles it with
+   CodeWarrior. `homm3 mac labels` lists the Mac section offsets paired with
+   existing source names. Use `homm3 mac show <Windows-VA>` and
+   `homm3 mac diff <Windows-VA>` to inspect that exact target.
+
+   `homm3 mac calls <Windows-VA>` compares retail and candidate call counts
+   and ordered targets. Omit the selector for all admitted pairs. Every build
+   also writes `build/mac/calls.tsv` and `build/mac/calls.json`.
+   `homm3 mac queue` generates the full action list in
+   `build/mac/queue.tsv` and `build/mac/queue.json`, including missing pairings,
+   stale observations and deferred modules. Missing evidence is shown as
+   unavailable. See the [tooling rollout](docs/tooling/mac-matching-roadmap.md).
+   That guide also covers `homm3 mac compile` for emitted symbol discovery,
+   `homm3 mac pair` for reviewed admission, and `homm3 mac campaign` for
+   separate worker packets.
+
+   The [implementation report](docs/tooling/mac-matching-report.md) explains
+   the two-target pipeline, validation, current coverage and remaining tooling.
 
 4. Repeat, then run `homm3 build` for the full checks before submitting changes.
 

@@ -8,10 +8,10 @@ import sys
 from homm3.sema import _asm
 from homm3.vc6 import _common
 
-# Game C++ profile: config/units.toml `game_o2_ml_gr_windows` (minus the
+# Game C++ profile: config/units.toml `game_o2_mt_gr_windows` (minus the
 # build-plumbing /nologo /c, added at invocation) + /GR- per the catalog's
 # profile-under-test (0.6: no COL pointers / no __RTDynamicCast in retail).
-GAME_FLAGS = ["/O2", "/Ob2", "/Oy-", "/Op", "/ML", "/Gr", "/GX", "/GR-",
+GAME_FLAGS = ["/O2", "/Ob2", "/Oy-", "/Op", "/MT", "/Gr", "/GX", "/GR-",
               "/D_WINDOWS"]
 
 

@@ -23,7 +23,8 @@ hexcell::hexcell()
 VA(0x004e7170, 0x3C)  // dc 0xd6138
 army* hexcell::getArmy() const
 {
-    if (m_armySide >= 0)
+    // Dreamcast hexcell.cpp:39 calls the canonical HexCell.h helper.
+    if (hasArmy())
         return &g_combatManager->m_armies[m_armySide][m_armySlot];
     return 0;
 }

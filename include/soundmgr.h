@@ -1,10 +1,12 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
+#include "platform.h"
+#if !defined(HOMM3_TARGET_MAC)
 #include <bink.h>
+#endif
 #include <dsound.h>
 #include <Mss.h>
-#include <windows.h>
 
 #include "basemgr.h"
 #include "crt_process.h"
@@ -259,10 +261,10 @@ extern const char* const g_terrainMusic[9];
 // indexes it with advManager::field_58 and hands the result to the same
 // [id - 2] terrain-name lookup SwitchAmbientMusic uses, which is what
 // bounds the id domain to 2..10. Name provisional.
-extern unsigned char g_terrainMusicIds[9];
+DATA(0x00678330) extern unsigned char g_terrainMusicIds[9];
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
-extern soundManager* g_soundManager;
+DATA(0x006993c4) extern soundManager* g_soundManager;
 
 
 #endif  /* HOMM3_SOUNDMGR_H */

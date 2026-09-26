@@ -1,0 +1,140 @@
+# Independently bounded source-owned GAME callees; identity only.
+[[functions]]
+retail_va = 0x00505a10
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x128408
+mac_size = 0x104
+mac_symbol = ".calculateCellExtra__10NewfullMapFP10NewmapCellUc"
+target_sha256 = "d7f4de73f64e0648d1c4a7216c84471462edb0b57165a01fff4e751cdb4b7cb1"
+evidence = "game::convertObject calls code0+0x128408 at 0xe0ff0 with NewfullMap, cell and set-extra flag. It calls NewmapCell::getMapObject, skips event type 0x1a, restores obscuring hero/boat objects, calls calcCellExtra at 0x127f6c, then re-obscures them, matching source-owned NewfullMap::calculateCellExtra VA 0x00505a10. Final BLR at 0x128508 and next prologue at 0x12850c bound the 0x104-byte body. Callee identity only."
+
+[[functions]]
+retail_va = 0x00505ea0
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x1289dc
+mac_size = 0x50
+mac_symbol = ".findObjectType__10NewfullMapFii"
+target_sha256 = "d84d7744877d3a2a8f034629ba8c92bf18eddf4124547a80afbaec17fe1d9d81"
+evidence = "game::convertObject calls this body at code0+0xe0d00 with NewfullMap, object type and extra. It indexes the 0xc-byte object-type vector at map+0xac, scans 0x38-byte entries backward for m_extra at element+0x30 and returns the matching entry pointer, matching source-owned NewfullMap::findObjectType VA 0x00505ea0. Final BLR at 0x128a28 and next prologue at 0x128a2c bound the 0x50-byte body. Callee identity only."
+
+[[functions]]
+retail_va = 0x004fcbd0
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11e34c
+mac_size = 0x98
+mac_symbol = ".getMapObject__10NewmapCellCFv"
+target_sha256 = "8ebf57fa659e5e514ba8d3a3097d7ccd22a40f413027d1b18fa920dee0c041d4"
+evidence = "game::convertObject calls this leaf at code0+0xe0c6c. It checks cell type 0x22 (hero) and 8 (boat), traverses the corresponding game arrays and returns each object's obscured type, or the cell type for all others, matching source-owned NewmapCell::getMapObject VA 0x004fcbd0. Multiple BLRs end by 0x11e3e0, followed immediately by getMapExtraInfo at 0x11e3e4. Callee identity only."
+
+[[functions]]
+retail_va = 0x004fcc30
+unit = "mapcell"
+mac_section = 0
+mac_offset = 0x11e3e4
+mac_size = 0x70
+mac_symbol = ".getMapExtraInfo__10NewmapCellCFv"
+target_sha256 = "e09076ed499e820d420bcb5d996fc0e5465a32955af3669fc191205ab62076be"
+evidence = "game::convertObject calls this leaf at code0+0xe0d2c. It checks cell type 0x22 (hero) and 8 (boat), returns the obscured extra information at hero+0x14 or boat+0x14, otherwise the cell's extra field, matching source-owned NewmapCell::getMapExtraInfo VA 0x004fcc30. Entry follows getMapObject's BLR; its own BLR at 0x11e450 precedes the next body at 0x11e454. Callee identity only."
+
+[[functions]]
+retail_va = 0x004c7ba0
+unit = "game"
+mac_section = 0
+mac_offset = 0xde380
+mac_size = 0xb8
+mac_symbol = ".growCoverOfDarkness__4gameFv"
+target_sha256 = "bdf877ea133fa0b0a0addf8ec8679c6a4ed5bc0ffb75dbe735f1c4650eb635cb"
+evidence = "game::perDay calls this body at 0xdead8; it loops 0x15c-byte towns, tests Necropolis type 4 and the special building mask, calls resetVisibility at 0xc274c for owned coordinates, and returns a changed byte. The final BLR at 0xde434 is followed by resetAllPlayerVisibility's prologue at 0xde438. Source-owned Windows game::growCoverOfDarkness is 0x004c7ba0; callee identity only."
+
+[[functions]]
+retail_va = 0x004c7c50
+unit = "game"
+mac_section = 0
+mac_offset = 0xde438
+mac_size = 0x3e0
+mac_symbol = ".resetAllPlayerVisibility__4gameFv"
+target_sha256 = "7e8697aa389ec385d0adae4e52f5ff7e41ab096aea7a8b15e9b9ff4aa724430d"
+evidence = "game::perDay calls this body at 0xdeae8 only after cover growth. It walks the 156-hero array at game+0x20a34 and town/map visibility pools matching canonical game::resetAllPlayerVisibility; the final BLR at 0xde814 precedes perDay's prologue at 0xde818. Source-owned Windows VA 0x004c7c50; callee identity only."
+
+[[functions]]
+retail_va = 0x004b8af0
+unit = "game"
+mac_section = 0
+mac_offset = 0xca978
+mac_size = 0x878
+mac_symbol = ".calculateProduction__4gameFv"
+target_sha256 = "5675a6bf0b7d37a3dc5fc326c19fd791a923c4963386a557f9037fda7df0bb77"
+evidence = "game::perDay calls the daily production body at 0xdeb9c. The Mac body traverses eight player records, mine/town resources and Rampart's pond income, matching source-owned game::calculateProduction Windows 0x004b8af0 and Dreamcast 0xa3474; final BLR at 0xcb1ec is followed by another prologue at 0xcb1f0. Callee identity only."
+
+[[functions]]
+retail_va = 0x005f1c80
+unit = "victorylossconditions"
+mac_section = 0
+mac_offset = 0x1fd9fc
+mac_size = 0x130
+mac_symbol = ".checkForTotalResources__22VictoryConditionStructFv"
+target_sha256 = "13ca73f5d86d8708f8399b2ac2ff779d192a28e3109f523070ea712beeab870a"
+evidence = "game::perDay calls this victory check at 0xdec50. The Mac body tests victory type 2, current player, active player flag, then compares the requested resource type/count before setting gameWon and playerWinner at +0x48/+0x49. It starts after the previous BLR and ends at 0x1fdb28, followed by a distinct prologue at 0x1fdb2c. Source-owned Windows VictoryConditionStruct::checkForTotalResources is 0x005f1c80; callee identity only."
+
+[[functions]]
+retail_va = 0x004e3f40
+unit = "hero"
+mac_section = 0
+mac_offset = 0x104c08
+mac_size = 0x138
+mac_symbol = ".getMysticismBonus__4heroCFv"
+target_sha256 = "3c53c7a944f860b73a6ee9c201b10944e0c83abf2b271b126a185972466b70ee"
+evidence = "game::perDay calls the hero's Mysticism bonus at 0xded0c. The Mac callee loads signed skill mastery at hero+0xd1, checks the class ability at hero+0x1a, and tests artifacts 0x49/0x4a before returning the bonus, matching source-owned hero::getMysticismBonus Windows 0x004e3f40. Its final BLR is at 0x104d3c and the next prologue at 0x104d40. Callee identity only."
+
+[[functions]]
+retail_va = 0x0044aa40
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x57fc0
+mac_size = 0x90
+mac_symbol = ".load__9armyGroupFP13TAbstractFile"
+target_sha256 = "84275ed43827b47f8548317e11b28d096f5505bb206ca0114a884d2deac3d34e"
+evidence = "The saveVersion >=25 arm of game::loadMinePool calls this callee at 0xcb550 on the mine guard group at element+4 with the input file. The callee reads two 0x1c-byte army arrays through TAbstractFile read slot +0xc, returning -1 on short reads, matching source-owned armyGroup::load. Final blr at 0x5804c and next prologue at 0x58050 bound the span. Callee identity only."
+
+[[functions]]
+retail_va = 0x0044ab00
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x5810c
+mac_size = 0x40
+mac_symbol = ".initialize__9armyGroupFv"
+target_sha256 = "cdd8fb539c4f86c2db4df935353c21478224b03e3ca44d92c527f5a80867773e"
+evidence = "The pre-version-25 arm of game::loadMinePool calls this callee at 0xcb56c on the mine guard group at element+4. It fills the first seven int slots with -1 and zeroes the following 0x1c bytes, matching source-owned armyGroup::initialize. Final blr at 0x58148 and next function begins at 0x5814c. Callee identity only."
+
+[[functions]]
+retail_va = 0x0044ace0
+unit = "armygrp"
+mac_section = 0
+mac_offset = 0x585a4
+mac_size = 0x16c
+mac_symbol = ".add__9armyGroupFiii"
+target_sha256 = "7e94349d32c4837a27901f5c9b0a041ea2cad879ca22d328b0ae91ed68b2d30e"
+evidence = "The legacy mine-guard arm calls this callee at 0xcb5d4 with type, amount and index -1 after validating two read bytes. The callee searches seven army slots, inserts or increments the chosen type, and returns success, matching source-owned armyGroup::add. Entry at 0x585a4 follows the preceding body; final blr at 0x5870c and next function begins at 0x58710. Callee identity only."
+
+[[functions]]
+retail_va = 0x004c8780
+unit = "game"
+mac_section = 0
+mac_offset = 0xdf4d8
+mac_size = 0x6bc
+mac_symbol = ".perWeek__4gameFv"
+target_sha256 = "31e49534b6449fd3d68774b39918ddb667e3c86b580cd1a9084aa35abe5fbeb8"
+evidence = "Mac game::perDay calls this body at 0xde870 after resetting day from 8 to 1. It starts with mflr/stmw at 0xdf4d8 after the preceding BLR, sets week type, rolls random weeks, scans creature traits and map cells, and ends BLR at 0xdfb90 immediately before perMonth at 0xdfb94. Source-owned game::perWeek has Windows VA 0x004c8780 and Dreamcast dc 0xb41e0. Callee identity only."
+
+[[functions]]
+retail_va = 0x004c8f40
+unit = "game"
+mac_section = 0
+mac_offset = 0xdfb94
+mac_size = 0x340
+mac_symbol = ".perMonth__4gameFv"
+target_sha256 = "1b93af6ff8ff6c88bde393a4cc2900e9d18235b4d5deeaa9f246f32bef5fecc9"
+evidence = "Mac game::perDay calls this body at 0xde890 after resetting week from 5 to 1. It begins at 0xdfb94 following perWeek BLR, increments the month short at game+0x1eed2, chooses the month kind via random, updates town dwelling creature growth, and ends BLR at 0xdfed0 before the next prologue at 0xdfed4. Source-owned game::perMonth has Windows VA 0x004c8f40 and Dreamcast dc 0xb47b8. Callee identity only."
