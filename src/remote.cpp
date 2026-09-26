@@ -1165,7 +1165,8 @@ void pollRemote()
                    > g_playerActiveUpdateInterval) {
             g_lastActiveUpdate = GameTime::get();
             CPlayerActiveMsg msg;
-            transmitRemoteDataDPID(&msg, 0, false, false);
+            // Mac 0x212d40 retains the player-recipient broadcast wrapper.
+            transmitRemoteData(&msg, NET_MESSAGE_RECIPIENT_ALL, false, false);
         }
     } else {
         g_lastActiveUpdate = 0;
@@ -2378,6 +2379,7 @@ void CGameTransferSmack::setPercentage(float pct)
 // DC retains an empty body on the console; retail SetPercentage calls the
 // Windows video draw wrapper through this source helper.
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
+MAC_ADDRESS(0x2152b8, 0x24)
 inline void CGameTransferSmack::drawCurrentFrame()
 {
     SmackManager::drawSmackerFrame();
