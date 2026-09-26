@@ -837,7 +837,7 @@ mac_section = 0x0
 mac_offset = 0x1cc7cc
 mac_size = 0xe0
 target_sha256 = "2bb09b707f9f58986d331bccc590fdf2a88ae499b9f3968de4b5351ba50f18e0"
-evidence = "Builds MESSAGE_WIDGET SET_TEXT for status widget 0xc9 and broadcasts; direct caller setCommandAndText at 0x1cc7b4."
+evidence = "Builds MESSAGE_WIDGET SET_TEXT for status widget 0xc9, broadcasts at 0x1cc850, invokes virtual drawWindow(0,0xc8,0xc9) at 0x1cc86c and updates rectangle (x+7,y+0x171,0x217,0x13) at 0x1cc894; direct caller setCommandAndText at 0x1cc7b4."
 
 [[helpers]]
 source_helper = "type_garrison_base_window::viewArmy"

@@ -3848,11 +3848,11 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     }
 
     showText();
-    drawWindow(0, 0xc8, 0xc9);
-    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
 
 // Original: type_garrison_base_window::ShowText; townmgr.cpp:4998, dc 0x172c68
+// Mac 0x1cc7cc retains broadcast, virtual draw and screen update together;
+// setCommandAndText calls this complete helper at 0x1cc7b4.
 MAC_ADDRESS(0x1cc7cc, 0xe0)
 void type_garrison_base_window::showText()
 {
@@ -3862,6 +3862,8 @@ void type_garrison_base_window::showText()
     textMessage.m_codeY = 0xc9;
     textMessage.m_extraText = g_townManager->m_statusText;
     broadcastMessage(textMessage);
+    drawWindow(0, 0xc8, 0xc9);
+    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
 
 // Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012, dc 0x172ca0
