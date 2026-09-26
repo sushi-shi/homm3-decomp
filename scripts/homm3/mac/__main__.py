@@ -32,6 +32,19 @@ def _image():
     return PEF(inputs.read_verified(inputs.MAC, executable))
 
 
+def _raw_code_names(root):
+    """Label raw disassembly without compiling or resolving full-TU objects."""
+    from homm3.mac import addresses, tables
+    claims, _, problems = addresses.scan(root)
+    if problems:
+        raise ValueError("; ".join(problems))
+    names = {(0, claim.offset): claim.label for claim in claims}
+    names.update({(0, row.offset): row.name for row in tables.read_runtime(root)})
+    names.update({(0, row.offset): row.name for row in tables.read_glue(root)})
+    names.update({(0, row.offset): row.name for row in tables.read_zlib(root)})
+    return names
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="homm3 mac", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -419,8 +432,11 @@ def main(argv=None) -> int:
         if args.command == "disasm":
             from capstone import Cs, CS_ARCH_PPC, CS_MODE_32, CS_MODE_BIG_ENDIAN
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
-            names = {(address.section, address.offset): name
-                     for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
+            if args.size is not None:
+                names = _raw_code_names(common.HOMM3_DIR)
+            else:
+                names = {(address.section, address.offset): name
+                         for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name
