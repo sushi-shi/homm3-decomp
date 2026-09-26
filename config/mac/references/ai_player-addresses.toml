@@ -896,3 +896,201 @@ mac_offset = 0x2b304
 mac_size = 0x68
 target_sha256 = "a7a36b80a52c938381aa63f09f2f9cc23b1774debc5876df632a74ad46ff578f"
 evidence = "Purchaser destructor destroys source vector at this+0x2c via0x3b0a8 and supports CodeWarrior deleting flag; all three purchaser constructors initialize that member. Return0x2b368, next entry0x2b36c."
+
+[[helpers]]
+source_helper = "type_scouting_artifact::type_scouting_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36c50
+mac_size = 0x48
+target_sha256 = "37a748f164b5902f4d8e6801e8394a2fffb3faa7b06d63f24d3978ae91e3ff04"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x36c94."
+
+[[helpers]]
+source_helper = "type_might_artifact::type_might_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36d58
+mac_size = 0x38
+target_sha256 = "16d4b1791c20c5a1cd2c9d51ac8858114b5ca8a55a3090a57523d6fbf81aa00a"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x36d8c."
+
+[[helpers]]
+source_helper = "type_power_artifact::type_power_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36e50
+mac_size = 0x38
+target_sha256 = "7233d963a6649533749aa246772d1db5faa28282c059047ee2ab3b3be63e48ae"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x36e84."
+
+[[helpers]]
+source_helper = "type_knowledge_artifact::type_knowledge_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36ea8
+mac_size = 0x38
+target_sha256 = "4c57b8bce74f6dc07e786eb186bf479cc0da8c5b53fddb80b3848d8ac1792c42"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x36edc."
+
+[[helpers]]
+source_helper = "type_base_necromancy_artifact::type_base_necromancy_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x36f00
+mac_size = 0x38
+target_sha256 = "22491ca8973e17a7bda746400a7224b6e3b6240c21b71f2c392632e1e74ac15a"
+evidence = "Shared necromancy base constructor: retained callers at 0x37048 and 0x384bc invoke this base, which calls type_combat_artifact at 0x36cc0 and installs its vtable. Ordinary constructor exists in src/ai_player.cpp. BLR at 0x36f34."
+
+[[helpers]]
+source_helper = "type_necromancy_artifact::type_necromancy_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37034
+mac_size = 0x38
+target_sha256 = "36653ee65487f4f70cecbdf4e7c338707367d40e358c14c47ae6ab43e4ccd32d"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36f00, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37068."
+
+[[helpers]]
+source_helper = "type_movement_artifact::type_movement_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x3710c
+mac_size = 0x38
+target_sha256 = "35b5f0bddd658c9da56ce8327a5e67ea9317f4903f6d2bdef8b6a68be37dd4a6"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37140."
+
+[[helpers]]
+source_helper = "type_spellcaster_artifact::type_spellcaster_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37198
+mac_size = 0x38
+target_sha256 = "09bc98adf448b37186cc0a08efa9b3f68415081a058232d914ac2456fb78c5b4"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x371cc."
+
+[[helpers]]
+source_helper = "type_morale_artifact::type_morale_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37248
+mac_size = 0x38
+target_sha256 = "14afa230024900eb753de703d138f496f9db7a82458bd64683455e35aa4aa911"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x3727c."
+
+[[helpers]]
+source_helper = "type_luck_artifact::type_luck_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37344
+mac_size = 0x38
+target_sha256 = "21e2fc4b5bee2f67b098f2478acacb00745ea339e23d7a3e433aa0f3865ca48d"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37378."
+
+[[helpers]]
+source_helper = "type_duration_artifact::type_duration_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37440
+mac_size = 0x38
+target_sha256 = "57089d310c1af89898fc64570a9aa9917b00c66590b084f5bb5cb74ce4833ccd"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36e50, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37474."
+
+[[helpers]]
+source_helper = "type_school_artifact::type_school_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37504
+mac_size = 0x4c
+target_sha256 = "afbc360311d06cbc95fca838f3a3d42cc9adf2096eb38f630c5e3dc53a303b9f"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36e50, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x3754c."
+
+[[helpers]]
+source_helper = "type_antimagic_artifact::type_antimagic_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37734
+mac_size = 0x48
+target_sha256 = "4deec4371e8af7a47bdffd921f65c46f115ac4fe948073cb28756d1349c28ca4"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37778."
+
+[[helpers]]
+source_helper = "type_antimorale_artifact::type_antimorale_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x3788c
+mac_size = 0x38
+target_sha256 = "5492d78385737f55bc63637e6f73c2678eb42003b6727ff53d1cf09c0d68c472"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x378c0."
+
+[[helpers]]
+source_helper = "type_antiluck_artifact::type_antiluck_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x379a8
+mac_size = 0x38
+target_sha256 = "bb09b3628f57a5244dc00f41a6d4d5b5ee455ab207701715b98940eeab632439"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x379dc."
+
+[[helpers]]
+source_helper = "type_tome_artifact::type_tome_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37ac4
+mac_size = 0x4c
+target_sha256 = "89a8dc5d4f4135c0dda5b3390fa4f1c61abd8323933e2040128f7879ae3be8e6"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37b0c."
+
+[[helpers]]
+source_helper = "type_income_artifact::type_income_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37c40
+mac_size = 0x58
+target_sha256 = "507de5f2660a9ced031880d1526611bdd48657cd14156fbc57784c568d24ad08"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37c94."
+
+[[helpers]]
+source_helper = "type_creature_growth_artifact::type_creature_growth_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37cfc
+mac_size = 0x58
+target_sha256 = "96947a82f20ce0116f756f9bcee4ac4dda074625f2ebf93b08fc717c31c0b353"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x37d50."
+
+[[helpers]]
+source_helper = "type_spell_artifact::type_spell_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x37fcc
+mac_size = 0x48
+target_sha256 = "6a763f1ffea664eef6368982c5807df70cd5389ae97b555f80a6eadb2ca778ba"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36bfc, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x38010."
+
+[[helpers]]
+source_helper = "type_shooter_bonus_artifact::type_shooter_bonus_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x380e8
+mac_size = 0x38
+target_sha256 = "25a2740f411ab65311a95bd3ae6e9211607d0da7d012e83c0a9bb3b84e4c9619"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36cc0, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x3811c."
+
+[[helpers]]
+source_helper = "type_angelic_alliance_artifact::type_angelic_alliance_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x38190
+mac_size = 0x3c
+target_sha256 = "74ec3589d718e1a8b0f7293942bcc787be106d3d64876b3e87107c2c8a1ebb07"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36d58, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x381c8."
+
+[[helpers]]
+source_helper = "type_undead_king_cloak_artifact::type_undead_king_cloak_artifact"
+unit = "ai_player"
+mac_section = 0
+mac_offset = 0x384a4
+mac_size = 0x3c
+target_sha256 = "5e25bc37865844faaf6802d34ce4fd39fec4237e9d8a520f74251a44acee406e"
+evidence = "Artifact-effect constructor: initializer switch selects this class; body calls base constructor 0x36f00, installs its class vtable and writes any added fields. Ordinary constructor already exists in src/ai_player.cpp. Straight-line body ends with BLR at 0x384dc."

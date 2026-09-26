@@ -939,9 +939,10 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
-            int localTeam = g_game->getTeam(g_netLocalGamePos);
-            if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
-                    if (g_creatureTypeTraits[creature].m_level
+            // Mac 0x2d36c retains the same isHumanAlly expansion as
+            // 0x2d248 above: getTeam followed by isHumanTeam.
+            if (!g_game->isHumanAlly(g_netLocalGamePos)) {
+                if (g_creatureTypeTraits[creature].m_level
                         == TOWN_DWELLING_COUNT - 1)
                     prohibited[creature] = 1;
                 if (g_creatureTypeTraits[creature].m_growthRate
