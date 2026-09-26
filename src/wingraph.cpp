@@ -1,7 +1,11 @@
 #include "prefs.h"
 #include "va.h"
 
+#if defined(HOMM3_TARGET_MAC)
+#include "platform.h"  // ddraw.h needs the Win32 SDK scope platform.h opens
+#else
 #include <ddraw.h>
+#endif
 #include <string.h>
 
 #include "wingraph.h"

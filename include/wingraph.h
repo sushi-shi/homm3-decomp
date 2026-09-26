@@ -3,7 +3,11 @@
 
 #include "va.h"
 
+#if defined(HOMM3_TARGET_MAC)
+#include "platform.h"  // ddraw.h needs the Win32 SDK scope platform.h opens
+#else
 #include <ddraw.h>
+#endif
 
 // E:\gamedcs\WinGraph.h:55.  Dreamcast keeps this header helper out of
 // line, and its xref graph proves calls from mousemgr, spells, and wingraph.
