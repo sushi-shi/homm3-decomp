@@ -1,6 +1,5 @@
 #include "va.h"
 #include "includes.h"
-#include "homm3_minmax.h"
 
 #include <algorithm>
 #include <math.h>

@@ -475,7 +475,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         if (m_attackArmy->is(creatureDoubleWide)) {
             long otherHex = hex + m_attackArmy->offsetToFront(-1);
             value += getHexAttackValue(otherHex, checked);
-            threat = ::min(m_enemyAttackArray[otherHex], threat);
+            threat = min(m_enemyAttackArray[otherHex], threat);
         }
         value += threat;
         if (m_bestHex >= 0 && turns == m_bestAttackTime) {
@@ -528,7 +528,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
             continue;
         long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
         if (estimate->m_simulated)
-            damage = ::min(static_cast<int>(damage),
+            damage = min(static_cast<int>(damage),
                            static_cast<int>(target->getTotalHitPoints(1)));
         value += target->getLossCombatValue(estimate->m_lowestAttack,
                                                estimate->m_lowestDefense, 0, damage, 0);
@@ -551,7 +551,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
         return 0;
     long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
     if (estimate->m_simulated)
-        damage = ::min(static_cast<int>(damage),
+        damage = min(static_cast<int>(damage),
                        static_cast<int>(target->getTotalHitPoints(1)));
     long value = target->getLossCombatValue(estimate->m_lowestAttack,
                                                estimate->m_lowestDefense, 0, damage,
@@ -775,7 +775,7 @@ long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const h
                                              creatureCast) * damage);
     if (value <= 0)
         return 0;
-    long capped = ::min(target->getTotalHitPoints(0), value);
+    long capped = min(target->getTotalHitPoints(0), value);
     value = target->getLossCombatValue(m_estimate.m_lowestAttack, m_estimate.m_lowestDefense,
                                           target->canShoot(0), capped,
                                           m_estimate.m_killsOnly);
@@ -1752,7 +1752,7 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
     long value = getCancelValue(&currentArmy, 1);
     int mastery = caster.getMasteryValue();
     int damage = ourArmy->m_topCreatureDamage;
-    int healed = ::min(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power,
+    int healed = min(mastery + g_spellTraits[SPELL_CURE].m_powerFactor * caster.m_power,
                        damage);
     if (m_winLikely) {
         if (ourArmy->m_topCreatureDamage + ourArmy->getAIExpectedDamage()
@@ -1919,7 +1919,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
         return 0;
     long total = 0;
     const army* enemyRow = g_combatManager->m_armies[m_enemySide];
-    long turns = ::min(g_hypnotizeTurns[caster.m_mastery],
+    long turns = min(g_hypnotizeTurns[caster.m_mastery],
                        m_estimate.m_roundsLeft);
     if (enemy->is(creatureDone))
         turns--;
@@ -1934,7 +1934,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
             continue;
         if (!g_combatManager->m_cells[enemyRow->m_gridIndex].m_validMove)
             continue;
-        total = ::max(getTraitorValue(enemy, enemyRow), total);
+        total = max(getTraitorValue(enemy, enemyRow), total);
     }
     return total;
 }
@@ -2191,7 +2191,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
                 && missing < healedArmy->m_origNumTroops * 3 / 4
                 && !m_winLikely)
             continue;
-        long healed = ::min(resurrected, missing);
+        long healed = min(resurrected, missing);
         if (healed < 1)
             continue;
         long value = static_cast<long>(

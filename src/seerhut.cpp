@@ -2034,7 +2034,7 @@ int TSeerHut::getValue(hero* currentHero)
     // The by-value max wrapper owns its argument temporaries only in this
     // arm; retail reuses that stack slot for the active quest below.
     if (!playerHasInfo(currentHero->m_owner))
-        return ::max(value, 20);
+        return max(value, 20);
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))

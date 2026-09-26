@@ -5,7 +5,7 @@
 // carcass is not force-claimed merely from roster order.
 #include "text.h"
 #include "va.h"
-#include "homm3_minmax.h"
+#include "includes.h"
 #include "bitset_iterator.h"
 
 #include <algorithm>

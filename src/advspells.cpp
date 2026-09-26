@@ -510,7 +510,7 @@ void advManager::townGate(TSkillMastery level)
     teleportTo(who, destination->getLocation(), traits.m_sample, 0, 1, 0);
     destination->giveSpells(0);
     who->m_movePoints -= cost;
-    who->m_movePoints = ::max(who->m_movePoints, 0);
+    who->m_movePoints = max(who->m_movePoints, 0);
     who->useSpell(who->getManaCost(SPELL_TOWN_PORTAL));
     m_advWindow->updateHeroLocator(-1, 1, 1);
     if (g_game->m_mapHeader.m_victoryCondition.checkForArtifactTransportWin(
