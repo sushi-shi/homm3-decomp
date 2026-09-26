@@ -12,4 +12,4 @@ flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
 # Mac newMap retains this ordinary helper; compile its source once with the
 # owning game unit so isolated shape probes expose the retained body and calls.
-source_helpers = ["game::randomizeHeroPool"]
+source_helpers = ["game::randomizeHeroPool", "randomizeWagon"]
