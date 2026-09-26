@@ -624,9 +624,7 @@ VA(0x004fd950, 0x268) MAC_ADDRESS(0x11f834, 0x114)  // caller Load 0xfdbc0; TQue
 void NewfullMap::loadQuestGuardList(
     TAbstractFile* infile, int saveVersion)
 {
-    int count;
-    infile->read(&count, 2);
-    count &= 0xFFFF;
+    int count = readValue<unsigned short>(infile);
     m_questGuardList.resize(count);
 
     if (count > 0) {
@@ -870,26 +868,26 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             signed char value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_groundSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_groundIndex = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_riverSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_riverIndex = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_roadSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_roadIndex = value;
 
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             unsigned int flags = value;
             thisCell->m_roadFlippedVertical = (flags >> 5) & 1;
@@ -934,47 +932,44 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
-            char byteValue;
-            byteValue = static_cast<char>(thisCell->m_groundSet);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_groundSet)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->m_groundIndex);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_groundIndex)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->m_riverSet);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_riverSet)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->m_riverIndex);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_riverIndex)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->m_roadSet);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_roadSet)) < 1)
                 return -1;
-            byteValue = static_cast<char>(thisCell->m_roadIndex);
-            if (static_cast<unsigned>(outfile->write(&byteValue, 1)) < 1)
-                return -1;
-
-            short wordValue;
-            wordValue = static_cast<short>(thisCell->m_cellFlags);
-            if (static_cast<unsigned>(outfile->write(&wordValue, 2)) < 2)
-                return -1;
-            wordValue = static_cast<short>(thisCell->m_type);
-            if (static_cast<unsigned>(outfile->write(&wordValue, 2)) < 2)
-                return -1;
-            short indexValue;
-            indexValue = thisCell->m_objectIndex;
-            if (static_cast<unsigned>(outfile->write(&indexValue, 2)) < 2)
-                return -1;
-            indexValue = thisCell->m_objectTypeIndex;
-            if (static_cast<unsigned>(outfile->write(&indexValue, 2)) < 2)
+            if (static_cast<unsigned>(
+                    writeValue<char>(outfile, thisCell->m_roadIndex)) < 1)
                 return -1;
 
-            unsigned long extra = thisCell->m_extraInfo;
-            if (static_cast<unsigned>(outfile->write(&extra, 4)) < 4)
+            if (static_cast<unsigned>(
+                    writeValue<short>(outfile, thisCell->m_cellFlags)) < 2)
+                return -1;
+            if (static_cast<unsigned>(
+                    writeValue<short>(outfile, thisCell->m_type)) < 2)
+                return -1;
+            if (static_cast<unsigned>(
+                    writeValue<short>(outfile, thisCell->m_objectIndex)) < 2)
+                return -1;
+            if (static_cast<unsigned>(
+                    writeValue<short>(outfile, thisCell->m_objectTypeIndex)) < 2)
                 return -1;
 
-            int count = thisCell->m_objects.size();
-            if (static_cast<unsigned>(outfile->write(&count, 4)) < 4)
+            if (static_cast<unsigned>(
+                    writeValue<unsigned long>(outfile, thisCell->m_extraInfo)) < 4)
+                return -1;
+
+            if (static_cast<unsigned>(
+                    writeValue<int>(outfile, thisCell->m_objects.size())) < 4)
                 return -1;
 
             for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
@@ -1120,50 +1115,50 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
             signed char value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_groundSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_groundIndex = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_riverSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_riverIndex = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_roadSet = value;
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            if (readValue(infile, value) < sizeof(value))
                 return -1;
             thisCell->m_roadIndex = value;
 
             unsigned short wordValue;
-            if (infile->read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+            if (readValue(infile, wordValue) < sizeof(wordValue))
                 return -1;
             thisCell->m_cellFlags = wordValue;
-            if (infile->read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+            if (readValue(infile, wordValue) < sizeof(wordValue))
                 return -1;
             thisCell->m_typeValue = wordValue;
 
             unsigned short indexValue;
-            if (infile->read(&indexValue, sizeof(indexValue))
+            if (readValue(infile, indexValue)
                 < sizeof(indexValue))
                 return -1;
             thisCell->m_objectIndex = indexValue;
-            if (infile->read(&indexValue, sizeof(indexValue))
+            if (readValue(infile, indexValue)
                 < sizeof(indexValue))
                 return -1;
             thisCell->m_objectTypeIndex = indexValue;
 
             unsigned long extra;
-            if (infile->read(&extra, sizeof(extra)) < sizeof(extra))
+            if (readValue(infile, extra) < sizeof(extra))
                 return -1;
             thisCell->m_extraInfo = extra;
 
             int count;
-            if (infile->read(&count, sizeof(count)) < sizeof(count))
+            if (readValue(infile, count) < sizeof(count))
                 return -1;
             thisCell->m_objects.resize(count);
 
