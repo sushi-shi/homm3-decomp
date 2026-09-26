@@ -1767,7 +1767,12 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
+#if defined(HOMM3_TARGET_MAC)
+            // Mac 0x095cbc calls bitset<144>::test; MSL's bitset has no at().
+            if (!m_crossoverArtifacts.test(artifact.m_artifactId))
+#else
             if (!m_crossoverArtifacts.at(artifact.m_artifactId))
+#endif
                 continue;
             offerArtifactToPlayerHeroes(artifact, player);
         }
