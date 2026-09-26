@@ -874,11 +874,19 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
 // also fits a hidden value result; retail adapter 0x532790 distinguishes the
 // contracts by copying from the returned reference, not the named temporary.
 VA(0x00532240, 0x15) MAC_ADDRESS(0x22eb84, 0x14)
+#if defined(HOMM3_TARGET_MAC)
+// Mac 0x22eb84 stores both dimensions through the hidden result pointer.
+TRmgGridPoint type_random_map::getSize()
+{
+    return TRmgGridPoint(m_mapWidth, m_mapHeight);
+}
+#else
 TRmgGridPoint& type_random_map::getSize(TRmgGridPoint& output)
 {
     output = TRmgGridPoint(m_mapWidth, m_mapHeight);
     return output;
 }
+#endif
 
 // Slot 4 expands the packed terrain fields into the adapter's three-dword
 // value, including the two independent flip bytes.
@@ -973,7 +981,12 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 // its returned reference before the full expression ends, as in the painter.
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0x22f2e4 forwards its own hidden result to the value-returning slot.
+    return m_map->getSize();
+#else
     return m_map->getSize(TRmgGridPoint());
+#endif
 }
 
 // The real road-painting stack construction at 0x548120 retains the
@@ -1059,7 +1072,12 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 VA(0x00532790, 0x27) MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF with road slot 3
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0x22f2e4 forwards its own hidden result to the value-returning slot.
+    return m_map->getSize();
+#else
     return m_map->getSize(TRmgGridPoint());
+#endif
 }
 
 VA(0x005327C0, 0x63) MAC_ADDRESS(0x22f320, 0xa4) // anchor-vtable + packed-field evidence; Complete-only
