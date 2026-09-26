@@ -341,6 +341,22 @@ class OwnershipTest(unittest.TestCase):
         distinct_type = replace(d, name='widget::getValue')
         self.assertTrue(compare([distinct_type], [o], {}, {})[0][0].startswith('WIN_ONLY '))
 
+    def test_reviewed_owner_placement_requires_exact_live_dc_file(self):
+        from dataclasses import replace
+        d = replace(definition(), file='include/shared.h')
+        o = origin(file='widget.cpp')
+        key = (d.file, d.name, d.signature, o.file)
+        matched = []
+        errors, counts = compare([d], [o], {}, {}, owner_placements={key: 'Mac and retail evidence'},
+                                 matched_out=matched)
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['reviewed_owner_placement'], 1)
+        self.assertEqual(len(matched), 1)
+        wrong = (*key[:3], 'other.cpp')
+        errors, _ = compare([d], [o], {}, {}, owner_placements={wrong: 'wrong origin'})
+        self.assertTrue(any(e.startswith('OWNER ') for e in errors))
+        self.assertTrue(any(e.startswith('FILTER stale owner_placements.tsv') for e in errors))
+
     def test_normalized_name_collision_requires_source_identity(self):
         d = definition(name='Widget::getValue')
         errors, _ = compare([d], [origin(name='Widget::GetValue'),
