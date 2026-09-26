@@ -32,6 +32,18 @@ inline double min(double left, double right)
     return cppMin(left, right);
 }
 
+#if defined(HOMM3_TARGET_MAC)
+// CodeWarrior ranks long->int and long->double conversions equally, so a
+// same-typed long pair is ambiguous between the wrappers above (VC6 prefers
+// the integral one). Mac getSpellDamage (0x026228) selects its long operands
+// by reference, reading m_totalValue in place, as this selector does.
+template <class T>
+inline const T& min(const T& left, const T& right)
+{
+    return cppMin(left, right);
+}
+#endif
+
 // E:\gamedcs\includes.h:124, dc 0x20d2c. CodeView types all three
 // parameters and the return as const references. The retained retail body and
 // ordinary limit expansions use maximum < value for the upper clamp. Retail
