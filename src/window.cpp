@@ -119,6 +119,8 @@ void heroWindow::close(unsigned char update)
 
 // Original: heroWindow::handle_message; window.cpp:194, dc 0x19731c.
 // Retail base vtable0x643cc4 slot3 shares the return-zero body0x4ec560.
+// Mac retains this body at 0x20b1d0; CSingleSelPopup::handleMessage calls it.
+MAC_ADDRESS(0x20b1d0, 0x8)
 int heroWindow::handleMessage(message& msg)
 {
     return 0;
