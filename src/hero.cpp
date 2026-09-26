@@ -478,7 +478,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     player->m_heroes[player->m_numHeroes] = m_id;
     ++player->m_numHeroes;
     g_game->m_heroAvailability[m_id] = static_cast<char>(playerId);
-    g_game->m_heroPoolMap[m_id].set(playerId);
+    g_game->m_heroPoolMap[m_id][playerId] = true;
 
     m_owner = static_cast<signed char>(playerId);
     m_x = point.m_x;
@@ -539,58 +539,36 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     unsigned short ushortBuffer;
     int intBuffer;
     short shortBuffer;
-    unsigned char ucharBuffer;
-    char charBuffer;
 
     if (!type_obscuring_object::load(infile))
         return -1;
 
     if (saveVersion >= 25) {
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_sex = static_cast<signed char>(charBuffer);
-        infile->read(&ucharBuffer, sizeof(ucharBuffer));
-        m_hasCustomName = ucharBuffer != 0;
+        m_sex = static_cast<signed char>(readValue<char>(infile));
+        m_hasCustomName = readValue<unsigned char>(infile) != 0;
         m_customName = readLengthPrefixedString(infile);
     }
 
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_owner = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_patrolRadius = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_moraleBonus = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_luckBonus = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_backpackCount = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_disguiseLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_flightLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_waterWalkLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_dWalkSpellsCast = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_visionsPower = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_id = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_heroClass = static_cast<signed char>(charBuffer);
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_portrait = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_patrolX = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_patrolY = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_facing = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_formation = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_levelSeed = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_lastWisdom = ucharBuffer;
+    m_owner = readValue<char>(infile);
+    m_patrolRadius = readValue<char>(infile);
+    m_moraleBonus = readValue<char>(infile);
+    m_luckBonus = readValue<char>(infile);
+    m_backpackCount = readValue<char>(infile);
+    m_disguiseLevel = static_cast<signed char>(readValue<char>(infile));
+    m_flightLevel = static_cast<signed char>(readValue<char>(infile));
+    m_waterWalkLevel = static_cast<signed char>(readValue<char>(infile));
+    m_dWalkSpellsCast = readValue<char>(infile);
+    m_visionsPower = static_cast<signed char>(readValue<char>(infile));
+    // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
+    m_id = readValue<unsigned char>(infile);
+    m_heroClass = static_cast<signed char>(readValue<char>(infile));
+    m_portrait = readValue<unsigned char>(infile);
+    m_patrolX = readValue<unsigned char>(infile);
+    m_patrolY = readValue<unsigned char>(infile);
+    m_facing = readValue<unsigned char>(infile);
+    m_formation = readValue<unsigned char>(infile);
+    m_levelSeed = readValue<unsigned char>(infile);
+    m_lastWisdom = readValue<unsigned char>(infile);
 
     infile->read(&intBuffer, sizeof(intBuffer));
     m_pathTargetX = intBuffer;
@@ -667,14 +645,13 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion >= 32)
         infile->read(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_isSleeping = ucharBuffer != 0;
+    m_isSleeping = readValue<unsigned char>(infile) != 0;
 
     std::bitset<48> granted;
     unsigned char inBuf[6];
     infile->read(inBuf, sizeof(inBuf));
     for (unsigned int i = 0; i < 48; i++)
-        granted.set(i, (inBuf[i >> 3] & (1 << (i & 7))) != 0);
+        granted[i] = (inBuf[i >> 3] & (1 << (i & 7))) != 0;
     m_townSpecialGrantedMask = granted;
     return 0;
 }
@@ -1152,27 +1129,8 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customName) {
         m_hasCustomName = 1;
-        // Retail keeps basic_string::assign an out-of-line CALL here; our
-        // CL expanded it and spilled its internals (_Grow x2, _Split x2,
-        // _Eos, memmove, operator delete) into this body. inline_depth(0)
-        // is STATEMENT-granular in VC6, so it pins this one site.
-        // And the call retail makes is the THREE-argument assign, not
-        // operator=: push npos, push 0, push src, call assign(str,I,I),
-        // with npos LOADED from its out-of-line definition. Spelling the
-        // three-argument form under the same pin is worth 95.0000 ->
-        // 96.7770; unpinned it collapses (3-arg 55.7360, 1-arg 55.5946).
-        // Current TU: ordinary operator= gives 49.71% against 97.5831%.
-        // Nesting the campaign-mode gate or all three campaign checks is
-        // byte-flat at 49.71%; it does not recover this assignment boundary.
-        // CodeWarrior accepts depth(0) but rejects the empty restore;
-        // guard these VC6-only pragmas to keep later Mac bodies inlined.
-#ifdef _MSC_VER
-#pragma inline_depth(0)
-#endif
-        m_customName.assign(setup->m_name, 0, std::string::npos);
-#ifdef _MSC_VER
-#pragma inline_depth()
-#endif
+        // Mac f4944 retains assign(str, 0, npos) from operator='s expansion.
+        m_customName = setup->m_name;
     }
 
     if (setup->m_customExperience) {
@@ -1399,7 +1357,7 @@ void hero::addSpell(int whichSpell)
 MAC_ADDRESS(0x0f5008, 0xb4)
 std::bitset<70> markSpells(TSpellSchool school)
 {
-    std::bitset<70> granted(0);
+    std::bitset<70> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
         if (g_spellTraits[spell].m_schoolBits & school)
             granted[spell] = true;
@@ -1431,22 +1389,12 @@ std::bitset<70> markSpells(TSpellSchool school)
 // Armageddon's Blade site is deliberately LEFT expanded: retail calls set
 // three times out of four, not four, so pinning both would overshoot.
 
-// Residual (93.96%): Armageddon's Blade still folds to
-// `or dword ptr [result], imm` - which is what retail does at one of its
-// four sites too, so this may already be right and the remainder
-// elsewhere. Everything
-// else - both loops, the jump tables, the tail-merged set chain, the
-// `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
-// registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
-// is what retail's `_Tidy` calls actually prove the source used, but
-// which frees enough budget to lose the operator[] pair (90.49%, and
-// 84.86% before the level helper); its call shape is identical to the
-// `(0)` ctor's at all five sites, so no byte is given up by spelling it
-// this way.
+// Mac f5034/f50e8 initializes each result through the no-argument
+// three-word zeroing body e7378, with no unsigned-long value argument.
 VA(0x004d9350, 0x272) MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<70> markArtifactSpells(int artifactId)
 {
-    std::bitset<70> result(0);
+    std::bitset<70> result;
     switch (artifactId) {
     case ARTIFACT_TOME_OF_AIR_MAGIC:
         result = markSpells(eSchoolAir);
@@ -1463,7 +1411,7 @@ std::bitset<70> markArtifactSpells(int artifactId)
     case ARTIFACT_SPELLBINDERS_HAT: {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_fifthLevelSpell)
-                result.set(spell, true);
+                result[spell] = true;
         }
         break;
     }
@@ -1816,7 +1764,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     m_pathTargetX = -1;
     if (!(m_flags & 0x20000)) {
         m_mana = static_cast<short>(getMaxMana());
-        m_maxMovePoints = m_movePoints = getMobility((m_flags >> 18) & 1);
+        m_maxMovePoints = m_movePoints = getMobility();
     }
 
     if (!g_combatSurrendered)
@@ -2163,12 +2111,9 @@ void hero::checkLevel()
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        if (!g_inSetup && m_owner >= 0)
-                            giveSS(aiChooseSecondarySkill(
-                                       this, skills[0], skills[1], 1), 1);
-                        else
-                            giveSS(aiChooseSecondarySkill(
-                                       this, skills[0], skills[1], 0), 1);
+                        giveSS(aiChooseSecondarySkill(
+                                   this, skills[0], skills[1],
+                                   !g_inSetup && m_owner >= 0), 1);
                     } else if (g_windowManager->m_dialogReturn ==
                                TLevelUpWindow::SKILLICON_1_ID) {
                         giveSS(skills[0], 1);
@@ -2180,12 +2125,10 @@ void hero::checkLevel()
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] == eSecSkillNone)
                     giveSS(skills[0], 1);
-                else if (!g_inSetup && m_owner >= 0)
-                    giveSS(aiChooseSecondarySkill(
-                               this, skills[0], skills[1], 1), 1);
                 else
                     giveSS(aiChooseSecondarySkill(
-                               this, skills[0], skills[1], 0), 1);
+                               this, skills[0], skills[1],
+                               !g_inSetup && m_owner >= 0), 1);
             }
         }
         m_level = newLevel;
@@ -2770,7 +2713,8 @@ MAC_ADDRESS(0x0f7e64, 0x42c)
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact, spell_book_window.
-    long slot = code;
+    // Mac f7e6c decodes the widget id here; its caller passes codeY unchanged.
+    long slot = code - THeroScreenWindow::ARTIFACT_SLOT_0_ID;
     type_artifact oldArtifact = g_currentHero->getArtifact(TArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
@@ -2813,8 +2757,10 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             return;
                         }
                     }
+                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                } else {
+                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
                 }
-                g_currentHero->viewArtifact(&oldArtifact, rightMouse);
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
                     *g_currentHero, 0, TSpellbookWindow::eContextNeither,
@@ -2915,13 +2861,14 @@ unsigned char hero::heroFn004DBE80(int combination)
     return missingComponents.none();
 }
 
+// Mac f8548/f859c/f85d0 expands bitset reference assignment/conversion.
 VA(0x004dbf30, 0x133) MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::heroFn004DBF30(int combination, long slot)
 {
     std::bitset<144> components =
         g_combinationArtifacts[combination].m_components;
     if (slot != -1) {
-        components.reset(m_equipped[slot].m_artifactId);
+        components[m_equipped[slot].m_artifactId] = false;
         removeArtifact(slot);
     }
 
@@ -2931,9 +2878,9 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
         int artifactId = m_equipped[i].m_artifactId;
         if (artifactId == ARTIFACT_NONE)
             continue;
-        if (!components.test(artifactId))
+        if (!components[artifactId])
             continue;
-        components.reset(m_equipped[i].m_artifactId);
+        components[m_equipped[i].m_artifactId] = false;
         removeArtifact(i);
     }
 
@@ -2960,28 +2907,6 @@ void hero::heroFn004DC070(long slot)
         }
     }
 }
-
-// The NOTIFIER half of the family. Two pieces are byte-proven beyond
-// the arithmetic: the player record's +0xe8 dword is walked as a
-// std::bitset<12> (the `cmp x,0xc` bounds check reaches bitset<12>'s own
-// _Xran, and the set is the `or` arm of `set(_P, true)` with the else
-// folded away), and the component sweep calls the TWO-ARGUMENT
-// `set(id, false)` OUT OF LINE where the sibling above inlines its
-// one-argument `reset` - a per-caller /Ob2 budget difference, not a
-// spelling one. `any()` is likewise a call here and inline there.
-// The owner index is taken WITHOUT the `owner < 0` guard get_player
-// carries; retail indexes gpGame->players directly.
-
-// Keep bitset<144>::set(size_t, bool) and bitset<144>::any() out of line at
-// their two call sites.
-
-// 65.9718 -> 87.2712 (2026-08-20), AND THE NOTE BELOW NAMED THE WALL AND
-// THEN DECLARED IT UNSPELLABLE. It was right that retail calls the
-// bitset<12> `_Xran` helper at all three sites (fn+0x61, +0xb7, +0x13a,
-// each `cmp <idx>,0xc / jb / call 0x4d4eb0`) with set/test themselves
-// INLINE, and right that our CL expanded the throw body at two of the
-// three. Its conclusion - "inline_depth cannot express 'inline the
-// parent, not the child'" - is true of the PRAGMA and false of the match.
 
 // The lever is DEPTH, spelled in the source. VC6's <bitset> defines
 //     bool operator[](size_t _P) const   { return (test(_P)); }
@@ -3348,7 +3273,8 @@ MAC_ADDRESS(0x0f947c, 0x208)
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact and msg.
-    long index = code;
+    // Mac f94a0 decodes the widget id inside this retained helper.
+    long index = code - THeroScreenWindow::BACKPACK_SLOT_0_ID;
     type_artifact oldArtifact = g_currentHero->getBackpack(index);
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
@@ -3824,15 +3750,13 @@ int THeroScreenWindow::windowHandler(message& msg)
         case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
         case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
         case ARTIFACT_SLOT_18_ID:
-            handleArtifactClick(msg.m_codeY - ARTIFACT_SLOT_0_ID,
-                                  rightMouse);
+            handleArtifactClick(msg.m_codeY, rightMouse);
             break;
 
         case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
         case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
         case BACKPACK_SLOT_4_ID:
-            handleBackpackClick(msg.m_codeY - BACKPACK_SLOT_0_ID,
-                                  rightMouse);
+            handleBackpackClick(msg.m_codeY, rightMouse);
             break;
 
         case HERO_LOCATOR_0_ID: case HERO_LOCATOR_1_ID:
@@ -4516,7 +4440,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
         return 1;
     }
     g_currentHero->m_maxMovePoints =
-        g_currentHero->getMobility((g_currentHero->m_flags >> 18) & 1);
+        g_currentHero->getMobility();
     g_currentHero = 0;
     return 0;
 }
@@ -4932,7 +4856,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                 continue;
             int occupied = 0;
             for (int i = 0; i < 19; i++) {
-                if (classSlots.test(i) &&
+                if (classSlots[i] &&
                     m_equipped[i].m_artifactId != ARTIFACT_NONE)
                     occupied++;
             }
@@ -4976,7 +4900,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                         (g_artifactTraits[artifact].m_allowableSlotMask
                          == componentClass) ? 1 : 0;
                     for (int i = 0; i < 19; i++) {
-                        if (classSlots.test(i) &&
+                        if (classSlots[i] &&
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
@@ -5352,7 +5276,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
+                        } else if (!player.isHuman()) {
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }

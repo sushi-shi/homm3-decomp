@@ -911,7 +911,7 @@ void advManager::close()
     g_windowManager->removeWindow(m_advWindow);
     delete m_advWindow;
     m_advWindow = 0;
-    delete m_routeArray;
+    delete[] m_routeArray;
     m_routeArray = 0;
     m_status = 0;
     if (m_netMsgHandler) {
@@ -1187,8 +1187,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         doEventShipyard(getCell(get_mouse_map_point()), get_mouse_map_point(),
                         g_currentPlayer->isLocalHuman());
-        updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+        updateRadar(1, 1, 0, 0, 0);
+        completeDraw(0);
         this->updateScreen(0, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
         break;
@@ -1313,7 +1313,7 @@ int advManager::main(message& msg)
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
         if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            completeDraw(0);
             updateScreen(0, 0);
         }
     }
@@ -1923,8 +1923,8 @@ void advManager::processRadarSelect(const message* msg)
     if (m_radarOrigin.m_y > g_mapHeight - 9)
         m_radarOrigin.m_y = g_mapHeight - 9;
 
-    updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+    updateRadar(1, 1, 0, 0, 0);
+    completeDraw(0);
     updateScreen(0, 0);
 
     message dragMsg;
@@ -1969,8 +1969,8 @@ void advManager::processRadarSelect(const message* msg)
             m_radarOrigin.m_x = dragX - 9;
             m_radarOrigin.m_y = dragY - 8;
 
-            updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            updateRadar(1, 1, 0, 0, 0);
+            completeDraw(0);
             updateScreen(0, 0);
             dragMsg.m_id = 0;
         }
@@ -2210,10 +2210,10 @@ static void setPyramidHelp(
     strcpy(buffer, g_quickViewText[PYRAMID]);
     if (cell->m_isTrigger && currentHero) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(currentHero->m_owner)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(currentHero->m_owner))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2224,10 +2224,10 @@ static void setWagonHelpText(
     strcpy(buffer, g_quickViewText[WAGON]);
     if (cell->m_isTrigger) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(g_netLocalGamePos))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2238,10 +2238,10 @@ static void setTombHelpText(
     strcpy(buffer, g_quickViewText[WARRIOR_TOMB]);
     if (cell->m_isTrigger) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(g_netLocalGamePos))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2261,10 +2261,10 @@ static void setWaterWheelHelpText(
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
         short gold = (cell->m_extraInfo & 0x1f) * 500;
-        strcat(buffer,
-               gold == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (gold == 0)
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2284,10 +2284,10 @@ static void setWindmillHelpText(
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
         unsigned long amount = cell->m_extraInfo >> 13;
-        strcat(buffer,
-               (amount & 0xf) == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if ((amount & 0xf) == 0)
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2296,6 +2296,7 @@ static void setWindmillHelpText(
 // those stores before getTriggerCell; retain the constructor boundary
 // instead of aggregate-initializing its implementation in both callers.
 
+MAC_ADDRESS(0x00bf14, 0x14)
 type_cell_adjuster::type_cell_adjuster()
 {
     m_obscuringHero = 0;
@@ -3357,30 +3358,23 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     strcpy(buffer, g_constCreatureBankTraits[type].m_name.c_str());
     strcat(buffer, separator);
 
-    const char* armyName;
     if (!cell->playerKnowsCell(playerId)) {
-        armyName = (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT];
+        strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     } else {
         unsigned long testFlag = cell->m_extraInfo;
         if ((testFlag & 0x02000000)
             || !cell->getCreatureBank().m_guards.hasCreatures()) {
-            armyName = (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT];
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        } else if (showFullList) {
+            strcat(buffer,
+                getArmyHelpText(&cell->getCreatureBank().m_guards, 1).c_str());
         } else {
-            if (showFullList) {
-                std::string result = getArmyHelpText(
-                    &cell->getCreatureBank().m_guards, 1);
-                strcat(buffer, result.c_str());
-                return;
-            } else {
-                strcat(buffer, "(");
-                std::string result = getArmyHelpText(
-                    &cell->getCreatureBank().m_guards, 0);
-                strcat(buffer, result.c_str());
-                armyName = ")";
-            }
+            strcat(buffer, "(");
+            strcat(buffer,
+                getArmyHelpText(&cell->getCreatureBank().m_guards, 0).c_str());
+            strcat(buffer, ")");
         }
     }
-    strcat(buffer, armyName);
 }
 
 // RETAIL-RECONSTRUCTED (97.3418%): no distinct Dreamcast row survives, but the
@@ -3401,10 +3395,10 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
     int owner = currentMine->m_playerOwner;
     int mineType = currentMine->m_type;
-    const char* description = g_mineDescriptions[7];
-    if (!currentMine->m_isAbandoned)
-        description = g_mineDescriptions[mineType];
-    strcpy(buffer, description);
+    if (currentMine->m_isAbandoned)
+        strcpy(buffer, g_mineDescriptions[7]);
+    else
+        strcpy(buffer, g_mineDescriptions[mineType]);
 
     if (owner != -1) {
         strcat(buffer, separator);
@@ -6128,12 +6122,12 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     if (currHero) {
                         testFlag = 1UL << (testCell->m_extraInfo & 0x1f);
                         visited = testFlag & currHero->m_arenaFlags;
-                        sprintf(tempText, visitFormat,
-                            visited
-                                ? g_generalText->getText(
-                                      GENERAL_TEXT_VISITED_OBJECT)
-                                : g_generalText->getText(
-                                      GENERAL_TEXT_UNVISITED_OBJECT));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+                        else
+                            sprintf(tempText, visitFormat,
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -7475,8 +7469,8 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
     m_advWindow->updateResourceDisplay(1, 0);
     m_advWindow->drawWindow(0, -65535, 65535);
     m_advWindow->highlightLocators(0);
-    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-    updateRadar(m_radarOrigin, 0, 1, 0, 0, 0);
+    completeDraw(0);
+    updateRadar(0, 1, 0, 0, 0);
 
     if (update)
         g_windowManager->updateScreen(0, 0, 800, 600);
@@ -7546,7 +7540,7 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
         m_drawCursor = 0;
 
         if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            completeDraw(0);
             updateScreen(0, 0);
         }
     }
@@ -7751,8 +7745,8 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
         m_drawCursor = 1;
 
     if (drawChanges && g_completeDrawEnabled) {
-        updateRadar(m_radarOrigin, 0, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+        updateRadar(0, 1, 0, 0, 0);
+        completeDraw(0);
         g_windowManager->updateScreen(0, 0, HOVER_SCREEN_WIDTH,
                                       HOVER_SCREEN_HEIGHT);
     }
@@ -8465,31 +8459,33 @@ void advManager::checkScreenScroll()
     int y;
     g_mouseManager->mouseCoords(x, y);
 
-    int dir;
-    if (x < 0 || x >= WINDOW_SCREEN_WIDTH || y < 0
-        || y >= WINDOW_SCREEN_HEIGHT) {
-        g_lastMapScrollTime = GameTime::get();
-        return;
+    // Mac initializes the no-scroll sentinel before testing the coordinates;
+    // both outside-window and central-window paths reach the same clock call.
+    const int noScrollDirection = 100;
+    int dir = noScrollDirection;
+    if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
+        && y < WINDOW_SCREEN_HEIGHT) {
+        if (x < 16) {
+            if (y < 16)
+                dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+            else
+                dir = y <= WINDOW_SCREEN_HEIGHT - 16
+                           ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
+                           : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+        } else if (x > WINDOW_SCREEN_WIDTH - 16) {
+            if (y < 16)
+                dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+            else
+                dir = y > WINDOW_SCREEN_HEIGHT - 16
+                           ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
+                           : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+        } else if (y < 16) {
+            dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
+        } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
+            dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
+        }
     }
-    if (x < 16) {
-        if (y < 16)
-            dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
-        else
-            dir = y <= WINDOW_SCREEN_HEIGHT - 16
-                       ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
-                       : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
-    } else if (x > WINDOW_SCREEN_WIDTH - 16) {
-        if (y < 16)
-            dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
-        else
-            dir = y > WINDOW_SCREEN_HEIGHT - 16
-                       ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
-                       : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
-    } else if (y < 16) {
-        dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
-    } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
-        dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
-    } else {
+    if (dir == noScrollDirection) {
         g_lastMapScrollTime = GameTime::get();
         return;
     }
@@ -8610,6 +8606,8 @@ void popupPlayerTurnInfo()
                     ShowWindow(g_hwndApp, SW_RESTORE);
                 SetForegroundWindow(g_hwndApp);
                 Sleep(500);
+                // Windows replays the notification after a timed-out dialog.
+                // Mac 0x1a348 has only the initial loadPlaySample call.
                 sample2 = loadPlaySample("SysMsg.wav");
             }
         } while (dialogReturn == DIALOG_RETURN_TIMEOUT
