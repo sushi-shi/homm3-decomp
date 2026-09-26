@@ -258,9 +258,7 @@ void process1WindowsMessage()
 // (it is the TU's only call site). See AppWndProc's note - without the
 // pragma that function is 74.8%, with it 100%. The pragma is scoped to
 // this definition and changes no other kbwin function.
-#if defined(_MSC_VER) // CodeWarrior spells this VC6 /Ob2 fence without parentheses
 #pragma auto_inline(off)
-#endif
 VA(0x004f8060, 0xD4)  // dc 0xe8014
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -293,9 +291,7 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     }
     return 0;
 }
-#if defined(_MSC_VER)
 #pragma auto_inline(on)
-#endif
 
 // Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
 // The released menu-update hook has an empty body. The adjacent 0x4f8140

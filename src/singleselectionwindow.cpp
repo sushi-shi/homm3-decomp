@@ -546,9 +546,7 @@ void startMouseThread()
 // GenerateRandomMap rises 92.6386% -> 97.9759%, while SetupScenarioOptions
 // falls 100% -> 90.1470%. Mutable/const references and both guard forms
 // share that score tradeoff; no source alternative is retained.
-#if defined(_MSC_VER) // CodeWarrior spells this VC6 /Ob2 fence without parentheses
 #pragma auto_inline(off)
-#endif
 VA(0x00577810, 0x61) MAC_ADDRESS(0x16e358, 0x30)  // dc 0x12fdd4
 void stopMouseThread()
 {
@@ -562,9 +560,7 @@ void stopMouseThread()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     }
 }
-#if defined(_MSC_VER)
 #pragma auto_inline(on)
-#endif
 
 // DC preserves this source helper. Complete expands it into the selection
 // window constructor: the retail body has the same executable-path buffer,
