@@ -564,7 +564,7 @@ TMultiPlayerWindow::~TMultiPlayerWindow()
     delete m_sessions;
 }
 
-VA(0x0050eef0, 0xC9) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x100498
+VA(0x0050eef0, 0xC9)  // dc 0x100498
 void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
@@ -585,7 +585,7 @@ void TMultiPlayerWindow::goSessionList()
     m_sessNameHeader->show();
 }
 
-VA(0x0050efc0, 0x12B)  // dc 0x10051c
+VA(0x0050efc0, 0x12B) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x10051c
 void TMultiPlayerWindow::goMainMenu()
 {
     m_inSessionList = 0;

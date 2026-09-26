@@ -301,6 +301,7 @@ evidence = "Scans player heroes then garrison heroes in owned towns; hero stride
 [[functions]]
 retail_va = 0x004bada0
 unit = "game"
+source = "include/game.h"
 mac_section = 0
 mac_offset = 0xcdbf0
 mac_size = 0x18

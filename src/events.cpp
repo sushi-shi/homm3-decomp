@@ -544,7 +544,7 @@ DATA(0x00696a2c) static const char* g_artifactEventText[144];
 DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
 DATA(0x00696c74) static const char* g_randomSignText[25];
 
-VA(0x0049e0e0, 0x15) MAC_ADDRESS(0x0a936c, 0x44)  // dc 0x9028c
+VA(0x0049e0e0, 0x15) MAC_ADDRESS(0x0a9368, 0x48)  // dc 0x9028c
 bool initializeAdventureEventText()
 {
     g_adventureEventText = ResourceManager::getText(

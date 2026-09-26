@@ -1410,6 +1410,7 @@ void CWaitForReadyPlayersDlg::wait()
 
 // E:\gamedcs\remote.cpp:1798. Dreamcast's `_N` return mangling proves bool;
 // retail independently proves the eight-entry human/ready scan when inlined.
+MAC_ADDRESS(0x216110, 0x7c)
 bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
     for (int i = 0; i < 8; ++i) {
@@ -2268,7 +2269,7 @@ int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
     return 0;
 }
 
-VA(0x005572e0, 0x2D)  // dc 0x11eb40
+VA(0x005572e0, 0x2D) MAC_ADDRESS(0x214eec, 0x48)  // dc 0x11eb40
 CSaveScreen::CSaveScreen(int w, int h)
     : Bitmap16Bit(w, h)
 {
@@ -2750,7 +2751,7 @@ CHourGlass::CHourGlass(unsigned char thread)
     start();
 }
 
-VA(0x00557fc0, 0x1A)  // dc 0x11f4e8
+VA(0x00557fc0, 0x1A) MAC_ADDRESS(0x215d40, 0x54)  // dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
     stop();
