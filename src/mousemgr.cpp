@@ -1,10 +1,8 @@
 #include "va.h"
 
-#if !defined(HOMM3_TARGET_MAC)  // platform.h below imports it on Mac
-#include <ddraw.h>
-#endif
-#include <string.h>
 #include "platform.h"
+#include <ddraw.h>
+#include <string.h>
 
 #include "mousemgr.h"
 

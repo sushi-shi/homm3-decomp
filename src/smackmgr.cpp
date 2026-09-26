@@ -6,12 +6,10 @@
 // The vendored RAD headers own the Smacker and Bink import interfaces.
 #include "va.h"
 
-#if !defined(HOMM3_TARGET_MAC)  // platform.h below imports it on Mac
+#include "platform.h"
 #include <ddraw.h>
-#endif
 #include <string>
 #include <string.h>
-#include "platform.h"
 
 #include "smackmgr.h"
 
