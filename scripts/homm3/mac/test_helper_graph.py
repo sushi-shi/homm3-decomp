@@ -105,6 +105,18 @@ class HelperGraphTests(unittest.TestCase):
         self.assertEqual(report['queue'][0]['mac_call_count'], 2)
         self.assertEqual(report['queue'][0]['source_call_count'], 1)
 
+    def test_direct_count_difference_exposes_nested_header_calls(self):
+        report = self.report([edge('f', 'g', 1), edge('f', 'wrapper', 2),
+                              edge('wrapper', 'g', 3)],
+                             [(0x104, 0x200, 'linked_branch'),
+                              (0x108, 0x200, 'linked_branch')])
+        row = report['queue'][0]
+        self.assertEqual(row['state'], 'call_count_difference')
+        self.assertEqual(row['source_call_count'], 1)
+        self.assertEqual([[step['expression'] for step in path]
+                          for path in row['source_paths']],
+                         [['wrapper()', 'g()']])
+
     def test_source_only_use_requires_mac_inline_evidence(self):
         report = self.report([edge('f', 'g', 1)], [])
         self.assertEqual(report['source_queue'][0]['state'], 'mac_inlining_requires_review')

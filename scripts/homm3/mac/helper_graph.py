@@ -99,6 +99,29 @@ def build(root, index, source, *, complete_source_scope):
     for edge in source['edges']:
         outgoing[edge['caller']].append(edge)
     path_cache = {}
+    nested_cache = {}
+
+    def nested_paths(caller_id, target_ids):
+        """Show source wrappers that could explain extra retained Mac calls.
+
+        A direct call is the shortest path to its target, so the ordinary path
+        search hides other calls reached through inline header helpers.
+        Preserve one lead per first source call without treating it as proof
+        that the Mac compiler expanded that helper.
+        """
+        key = (caller_id, tuple(sorted(target_ids)))
+        if key not in nested_cache:
+            trails, truncated = [], False
+            for edge in outgoing[caller_id]:
+                if edge['dispatch'] != 'direct' or edge['callee'] in target_ids:
+                    continue
+                found, limit = source_graph.paths(source, edge['callee'], target_ids,
+                                                  max_depth=7)
+                truncated |= limit
+                trails.extend([edge, *found[target]] for target in sorted(target_ids)
+                              if target in found)
+            nested_cache[key] = trails, truncated
+        return nested_cache[key]
     queue = []
     for row in calls:
         caller, callee = row['caller'], row['callee']
@@ -118,6 +141,8 @@ def build(root, index, source, *, complete_source_scope):
                 if direct:
                     count = counts[(caller['mac'], callee['mac'])]
                     state = 'direct_count_agrees' if len(direct) == count else 'call_count_difference'
+                    if count > len(direct):
+                        trails, truncated = nested_paths(caller_id, target_ids)
                     if any(e['dispatch'] != 'direct' for e in direct):
                         state = 'dispatch_requires_review'
                 else:
