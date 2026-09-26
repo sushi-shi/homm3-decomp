@@ -226,8 +226,12 @@ int soundManager::open(int newPriority)
                     g_soundManager->m_ds->lppdsb);
                 buffer->SetVolume(0);
             }
+#if !defined(HOMM3_TARGET_MAC)
+            // RAD-to-Miles sound hookup; the Mac build (a VC6 steering aid)
+            // keeps only opaque RAD handles and does not model it.
             SmackSoundUseMSS(g_soundManager->m_ds);
             BinkSoundUseMiles(g_soundManager->m_ds);
+#endif
         }
         m_playSounds = 1;
 
