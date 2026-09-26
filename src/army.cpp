@@ -2445,9 +2445,11 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     long attackDiff = attackModifier - lowestAttack;
     long defenseModifier = getDefenseModifier();
     long defenseDiff = defenseModifier - lowestDefense;
-    double defense =
-        (defenseDiff * 0.05 + 1.0)
-        * getDefenseDamageModifier(ranged);
+    // Mac 0x4ea40 evaluates the reduction before forming adjusted defense,
+    // then multiplies the adjusted value by that factor. Naming its lifetime
+    // preserves every helper and improves Windows 84.0903% -> 84.2839%.
+    double defense = getDefenseDamageModifier(ranged);
+    defense = (defenseDiff * 0.05 + 1.0) * defense;
     if (ranged && !canShoot(0))
         ranged = 0;
     double attack = attackDiff * 0.05 + 1.0;
