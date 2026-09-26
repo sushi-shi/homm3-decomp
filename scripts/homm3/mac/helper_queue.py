@@ -85,11 +85,16 @@ def _source_helpers(root: Path, refs: list, pairs: list, pef) -> list:
         unit = source_units.get(source)
         if unit is None:
             unit = addresses.unit_of(root, claim.path)
+        declaration = _masked_source(source.read_text())[claim.anchor:]
+        declaration = re.split(r"[;{]", declaration, maxsplit=1)[0]
+        selector = claim.label + claim.parameters
+        if re.search(r"\)\s*const\s*$", declaration):
+            selector += " const"
         additions.append(references.Reference(
             None, unit, source, claim.label, tables.CODE_SECTION, claim.offset,
             claim.size, None, hashlib.sha256(pef.code(tables.CODE_SECTION, claim.offset,
                                                      claim.size)).hexdigest(),
-            f"source MAC_ADDRESS at {claim.where}", claim.label + claim.parameters))
+            f"source MAC_ADDRESS at {claim.where}", selector))
     return additions
 
 

@@ -68,6 +68,12 @@ class TestHelperQueue(unittest.TestCase):
             self.assertEqual(found[0].mac_offset, 0x200)
             self.assertIsNone(found[0].retail_va)
             self.assertIn('Widget::run', helper_queue._helper_body(found[0]))
+            source.write_text('MAC_ADDRESS(0x200, 0x4)\nint Widget::run() const { return 1; }\n'
+                              'int Widget::run() { return 2; }\n')
+            found = helper_queue._source_helpers(root, [known], [], pef)
+            self.assertEqual(found[0].source_helper, 'Widget::run() const')
+            self.assertIn('return 1;', helper_queue._helper_body(found[0]))
+            self.assertNotIn('return 2;', helper_queue._helper_body(found[0]))
 
     def test_own_definition_does_not_hide_missing_base_call(self):
         report = self.report('int Derived::save() { return 4; }')

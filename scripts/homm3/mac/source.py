@@ -427,15 +427,8 @@ def source_helper(text: str, selector: str, source: Path) -> tuple[int, str, str
             continue
         if re.search(r'\b(?:return|if|while|switch|for|typedef|template)\b', match['prefix']):
             continue
-        if parameters is not None:
-            actual_parameters = match['parameters']
-            # Source address claims carry the parameter list without a member
-            # qualifier. An unqualified selector may match either qualifier;
-            # the final uniqueness check rejects ambiguous overloads.
-            if not parameters.rstrip().endswith('const'):
-                actual_parameters = re.sub(r'\bconst\s*$', '', actual_parameters)
-            if re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', actual_parameters):
-                continue
+        if parameters is not None and re.sub(r'\s+', '', parameters) != re.sub(r'\s+', '', match['parameters']):
+            continue
         if _data_scope(masked, match.start()):
             raise SourceError(f"{source}: nested source helper needs explicit extraction support")
         brace = match.end() - 1
