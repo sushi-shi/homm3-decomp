@@ -2061,12 +2061,7 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     positive `!(a && b)` spelling emits those two swapped;
 //   * the placement loop is `while (placed < budget)` with `placed`
 //     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
-//     The inner re-draw is the ROTATED two-Pick shape PlaceLargeObstacle
-//     already carries - a leading `Pick()` and a second one at the foot
-//     of the reject loop, not a do/while with one site: retail emits two
-//     out-of-line Pick calls and a do/while can only ever emit one
-//     (89.8722 -> 91.5113 on that rewrite alone). The redundant
-//     `id < 0` re-test in front of place_obstacle survives it.
+//     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
 
 VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
@@ -2187,12 +2182,13 @@ void combatManager::setupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId = obstaclePicker.pick();
-        while (obstacleId >= 0
+        int obstacleId;
+        do {
+            obstacleId = obstaclePicker.pick();
+        } while (obstacleId >= 0
                && !(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
                && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
-            obstacleId = obstaclePicker.pick();
+                    & specialTerrainMask));
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2205,8 +2201,11 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    int obstacleId = picker.pick();
-    while (obstacleId >= 0) {
+    // Mac 0x72b0c keeps the pick at the loop head.
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return 0;
         if ((terrainMask & s_elevationOverlay[obstacleId].m_terrainMask)
                 || (magicTerrainMask
                     & s_elevationOverlay[obstacleId].m_specialTerrainMask)) {
@@ -2220,9 +2219,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             m_largeObstacleId = obstacleId;
             return count;
         }
-        obstacleId = picker.pick();
     }
-    return 0;
 }
 
 VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)  // dc 0x609d0
@@ -2278,11 +2275,11 @@ void combatManager::removeObstacle(int index)
         return;
     TObstacle* obstacle = &getObstacle(index);
     const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd =
-        static_cast<unsigned char>((obstacle->m_hex / 0x11) & 1);
+    // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
+    unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes &= ~hexcell::obstacleMask;
@@ -2310,12 +2307,8 @@ void combatManager::initializeArchers()
 
     archer->m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (archer->m_sprite)
-        archer->m_sprite->dispose();
     archer->m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (archer->m_shadowSprite)
-        archer->m_shadowSprite->dispose();
     archer->m_shadowSprite = locals.m_sprite;
     archer->m_x = info.m_positions[0].m_x;
     archer->m_y = info.m_positions[0].m_y;
@@ -2328,12 +2321,8 @@ void combatManager::initializeArchers()
 
     m_archers[1].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[1].m_sprite)
-        m_archers[1].m_sprite->dispose();
     m_archers[1].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[1].m_shadowSprite)
-        m_archers[1].m_shadowSprite->dispose();
     m_archers[1].m_shadowSprite = locals.m_sprite;
     m_archers[1].m_x = info.m_positions[1].m_x;
     m_archers[1].m_y = info.m_positions[1].m_y;
@@ -2343,12 +2332,8 @@ void combatManager::initializeArchers()
 
     m_archers[2].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[2].m_sprite)
-        m_archers[2].m_sprite->dispose();
     m_archers[2].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[2].m_shadowSprite)
-        m_archers[2].m_shadowSprite->dispose();
     m_archers[2].m_shadowSprite = locals.m_sprite;
     m_archers[2].m_x = info.m_positions[2].m_x;
     m_archers[2].m_y = info.m_positions[2].m_y;
@@ -2514,19 +2499,19 @@ void combatManager::testRaiseDoor()
 VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)  // dc 0x61160
 unsigned char combatManager::inCastle(int index)
 {
-    return index >= g_castleWallColumns[index / 0x11];
+    return index >= g_castleWallColumns[gridY(index)];
 }
 
 VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)  // dc 0x61180
 unsigned char combatManager::leftOfMoat(int index)
 {
-    return index < g_moatHexes[index / 0x11];
+    return index < g_moatHexes[gridY(index)];
 }
 
 VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
 unsigned char combatManager::isAdjacent(int first, int second) const
 {
-    if (first >= 0 && first < 187 && second >= 0 && second < 187) {
+    if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
@@ -3443,13 +3428,14 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
+// Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
 VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
-    int sx = start % 0x11;
-    int sy = start / 0x11;
-    int tx = stop % 0x11;
-    int ty = stop / 0x11;
+    int sx = gridX(start);
+    int sy = gridY(start);
+    int tx = gridX(stop);
+    int ty = gridY(stop);
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))

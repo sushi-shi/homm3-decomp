@@ -1167,10 +1167,10 @@ std::string armyGroup::getMoraleDescription(
 
     // Complete terrain arms: mutate the incoming morale home, then subtract
     // currentMorale at the tail, as proved by retail 0x44b960.
-    int alignment = g_game->getAlignment(creature);
+    // Mac 0x5983c and 0x59910 expand getAlignment separately in each arm.
     {
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND && alignment != -1) {
-            switch (alignment) {
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
+            switch (g_game->getAlignment(creature)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1196,8 +1196,8 @@ std::string armyGroup::getMoraleDescription(
             result += g_moraleInfo[38];
             goto moraleTerrainDone;
         }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG && alignment != -1) {
-            switch (alignment) {
+        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+            switch (g_game->getAlignment(creature)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1387,11 +1387,8 @@ std::string armyGroup::getLuckDescription(
 
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (g_game->m_gameVersion != 0 || !(creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))) {
+    // Mac 0x59f68 expands getAlignment before the town switch.
+    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a
         // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
@@ -1402,7 +1399,7 @@ std::string armyGroup::getLuckDescription(
         // in the no-op arms VC6 sees two outcomes, collapses the whole
         // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
         // instead of the tables.
-        switch (g_creatureTypeTraits[creature].m_townType) {
+        switch (g_game->getAlignment(creature)) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:

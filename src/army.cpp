@@ -75,26 +75,16 @@ DATA(0x00693858) int g_walkingYMod;
 // caller), and this body has no mass to give: writing the eight-sample
 // loop ahead of the icon disposals measured 64.60 and the literal 8 in
 // place of MAX_SAMPLES is byte-flat.
-// The array element destructor retail hands to `??_L` (0x43cb10) IS
-// observable and its body is `if (resource) resource->Dispose()`, but
-// TResourceHandle's destructor cannot carry it: `T` is incomplete in every
-// TU that sees army.h without csprite.h/sound.h, and giving it that body
-// fails the build with C2027 on CSprite and sample.  The relocation is a
-// name-only difference the ratchet already ignores.
+// The array element destructor at 0x43cb10 releases the resource through
+// TResourceHandle. Instantiating TUs include the complete resource types.
 VA(0x0043d250, 0x1A8) MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run, dc 0x436b8
 army::army()
 {
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = 0;
-    if (m_missileIcon)
-        m_missileIcon->dispose();
     m_missileIcon = 0;
     m_imageHeight = 0;
     m_gridIndex = 0;
     for (int i = 0; i < MAX_SAMPLES; i++) {
-        if (m_armySample[i])
-            m_armySample[i]->dispose();
         m_armySample[i] = 0;
     }
     m_side = -1;
@@ -196,8 +186,6 @@ VA(0x0043d5c0, 0x166) MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity, d
 void army::initClean()
 {
     for (int i = 0; i < 8; i++) {
-        if (m_armySample[i])
-            m_armySample[i]->dispose();
         m_armySample[i] = 0;
     }
     m_roundsLeftBeforeVanish = -1;
@@ -205,8 +193,6 @@ void army::initClean()
     memset(m_spellInfluence, 0, sizeof(m_spellInfluence));
     m_spellInfluenceQueue.clear();
     m_lastFidgetTime = GameTime::get();
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = 0;
     m_imageHeight = 0;
     m_showPowEffect = 0;
@@ -225,7 +211,8 @@ void army::initClean()
 // E:\gamedcs\army.cpp:109
 // No retail out-of-line copy survives, but the Dreamcast call graph proves
 // this member boundary in range_attack. VC6 folds the inline definition into
-// that caller.
+// that caller. Mac 0x48f98 retains the body; rangeAttack and castSpell call it
+// at 0x4bcf8 and 0x54d78 with SHOOT_SAMPLE.
 MAC_ADDRESS(0x048f98, 0x70)
 inline void army::waitSample(army::TSampleID which)
 {
@@ -327,12 +314,8 @@ void army::loadResources()
                                     "%smove.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[WALK_SAMPLE])
-            m_armySample[WALK_SAMPLE]->dispose();
         m_armySample[WALK_SAMPLE] = s;
     } else {
-        if (m_armySample[WALK_SAMPLE])
-            m_armySample[WALK_SAMPLE]->dispose();
         m_armySample[WALK_SAMPLE] = 0;
     }
 
@@ -349,24 +332,18 @@ void army::loadResources()
                                     "%sattk.82M"),
                 m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[ATTACK_SAMPLE])
-        m_armySample[ATTACK_SAMPLE]->dispose();
     m_armySample[ATTACK_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609f8, winceSampleFormat,
                                 "%swnce.82M"),
             m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[WINCE_SAMPLE])
-        m_armySample[WINCE_SAMPLE]->dispose();
     m_armySample[WINCE_SAMPLE] = s;
 
     sprintf(g_text, DATA_COMPGEN(0x006609e0, killSampleFormat,
                                 "%skill.82M"),
             m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[DIE_SAMPLE])
-        m_armySample[DIE_SAMPLE]->dispose();
     m_armySample[DIE_SAMPLE] = s;
 
     if (is(creatureSiegeWeapon))
@@ -378,8 +355,6 @@ void army::loadResources()
                                     "%sdfnd.82M"),
                 m_monInfo.m_samplePrefix);
     s = ResourceManager::getSample(g_text);
-    if (m_armySample[DEFEND_SAMPLE])
-        m_armySample[DEFEND_SAMPLE]->dispose();
     m_armySample[DEFEND_SAMPLE] = s;
 
     if (is(creatureShootingArmy) || m_creatureType == CREATURE_MASTER_GENIE
@@ -388,12 +363,8 @@ void army::loadResources()
                                     "%sshot.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[SHOOT_SAMPLE])
-            m_armySample[SHOOT_SAMPLE]->dispose();
         m_armySample[SHOOT_SAMPLE] = s;
     } else {
-        if (m_armySample[SHOOT_SAMPLE])
-            m_armySample[SHOOT_SAMPLE]->dispose();
         m_armySample[SHOOT_SAMPLE] = 0;
     }
 
@@ -405,22 +376,14 @@ void army::loadResources()
                                     "%sext1.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[PRE_WALK_SAMPLE])
-            m_armySample[PRE_WALK_SAMPLE]->dispose();
         m_armySample[PRE_WALK_SAMPLE] = s;
         sprintf(g_text, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
                                     "%sext2.82M"),
                 m_monInfo.m_samplePrefix);
         s = ResourceManager::getSample(g_text);
-        if (m_armySample[POST_WALK_SAMPLE])
-            m_armySample[POST_WALK_SAMPLE]->dispose();
         m_armySample[POST_WALK_SAMPLE] = s;
     } else {
-        if (m_armySample[PRE_WALK_SAMPLE])
-            m_armySample[PRE_WALK_SAMPLE]->dispose();
         m_armySample[PRE_WALK_SAMPLE] = 0;
-        if (m_armySample[POST_WALK_SAMPLE])
-            m_armySample[POST_WALK_SAMPLE]->dispose();
         m_armySample[POST_WALK_SAMPLE] = 0;
     }
 
@@ -435,8 +398,6 @@ void army::loadResources()
     CSprite* icon =
         ResourceManager::getSprite(g_creatureTypeTraits[m_creatureType]
                                        .m_spriteName);
-    if (m_stdIcon)
-        m_stdIcon->dispose();
     m_stdIcon = icon;
     m_imageHeight = 267 - m_stdIcon->getFrame(cs_wait, 0)->getCroppedY();
 
@@ -524,12 +485,8 @@ void army::loadResources()
             break;
         }
         CSprite* missile = ResourceManager::getSprite(missileName);
-        if (m_missileIcon)
-            m_missileIcon->dispose();
         m_missileIcon = missile;
     } else {
-        if (m_missileIcon)
-            m_missileIcon->dispose();
         m_missileIcon = 0;
     }
 }
@@ -2146,10 +2103,9 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // 2481/2483) closes the two store-order differences: 100% without pins.
 // Merely swapping stop/succeeded after the visibility store cross-jumps
 // the trap arms and gives 95.78%; the full statement order matters.
-// Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0.
-// Windows Complete has no such call or expanded operation here; its
-// cancelSpellType handles only AFTER_ATTACK and AFTER_DAMAGE. This Mac
-// snapshot difference is not a missing Windows helper call.
+// Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0,
+// immediately after clearing m_isMoving. Both retained helper bodies have
+// an empty AFTER_MOVE arm. VC6 can eliminate this source call at the site.
 VA(0x00441fa0, 0x461) MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global, dc 0x472f4
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
@@ -2227,6 +2183,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         m_currFrameIndex = 0;
     }
     m_isMoving = 0;
+    cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_MOVE);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
     g_combatManager->testRaiseDoor();
     return succeeded;
@@ -2238,8 +2195,8 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        // Dreamcast names SRandom here; Complete's expanded callers call random.
-        if (random(1, 24) <= min(m_luck, 3)) {
+        // Mac 0x4e084 calls sRandom; Windows folds its body with random.
+        if (sRandom(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -2425,32 +2382,10 @@ unsigned char army::isEnemy(const army* arg) const
     return 1;
 }
 
-//   spelling                          can_shoot  AI_target_time  berserk
-//   `inline`, every site expands         (none)      100.0000    92.5170
-//   no keyword anywhere                  92.0000      27.8667     0.0000
-//   `inline` on the army.h declarator    (none)      100.0000    92.5170
-//   `inline` + ONE rejected site         92.0000      100.0000    92.5170
-
-// Mac keeps this body at code0+0x4e840, between isEnemy and
-// enemyIsAdjacent in the army function sequence. Its 55 direct callers
-// include other units, but retained Mac calls do not locate a definition.
-// Windows has 53 direct calls to 0x4428f0; surveyed cross-TU callers in
-// ai_tactical and combatcontrolsubwindow retain the call and match their
-// retail instruction shape. No cross-TU expansion presently proves header
-// body visibility. The current explicit `inline` spelling is a VC6 emission
-// control in the current reconstruction, not a recovered source keyword.
-
-// UNTIL 0x447a80 IS RECONSTRUCTED the rejected site is supplied by a
-// SCAFFOLD: `#pragma inline_depth(0)` around get_total_combat_value
-// below, which is un-carcassed for exactly this purpose and stays
-// UNCLAIMED because the pragma makes its own body the 49.64 call-form
-// where retail expands. The scaffold buys the 92.0000 row here and
-// costs nothing in the ledger. RETIRE IT when 0x447a80 lands: drop
-// the pragma, and get_total_combat_value's own 81.97 becomes
-// claimable in the same change.
-
+// Mac retains this ordinary body at 0x4e840 between isEnemy and
+// enemyIsAdjacent; its cross-TU callers retain the same helper boundary.
 VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
-inline unsigned char army::canShoot(const army* excluded) const
+unsigned char army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
@@ -3900,7 +3835,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
         long distance = abs(targets[i] - wall);
         if (distance > best)
             continue;
-        if (distance == best && random(1, 100) > 50)
+        if (distance == best && sRandom(1, 100) > 50)
             continue;
         best = distance;
         chosen = targets[i];
@@ -4324,10 +4259,8 @@ void army::turn(unsigned char animateTurn)
             g_combatManager->m_cells[m_gridIndex].m_partOfDouble = 0;
             g_combatManager->m_cells[m_gridIndex + 1].m_partOfDouble = 1;
         }
-        if (animateTurn) {
+        if (animateTurn)
             playAnimation(8, -1, 0);
-            playAnimation(2, 1, 0);
-        }
     } else {
         if (animateTurn)
             playAnimation(7, -1, 0);
@@ -4337,11 +4270,12 @@ void army::turn(unsigned char animateTurn)
             g_combatManager->m_cells[m_gridIndex].m_partOfDouble = 1;
             g_combatManager->m_cells[m_gridIndex - 1].m_partOfDouble = 0;
         }
-        if (animateTurn) {
+        if (animateTurn)
             playAnimation(10, -1, 0);
-            playAnimation(2, 1, 0);
-        }
     }
+    // Mac 0x52a74 keeps one final wait-animation call after either facing arm.
+    if (animateTurn)
+        playAnimation(2, 1, 0);
 }
 
 // Capture the battlefield without this stack on it, once, before an
@@ -5101,10 +5035,7 @@ void army::castSpell(long hex)
         g_combatManager->castSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
         break;
     }
-    if (!static_cast<const combatManager*>(g_combatManager)
-             ->isQuickCombat()
-        && m_armySample[SHOOT_SAMPLE])
-        g_soundManager->waitSample(m_armySample[SHOOT_SAMPLE]->m_memSample.m_memSampleHandle, -1);
+    waitSample(SHOOT_SAMPLE);
     g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
     if (originalFacing != m_facing
         && !static_cast<const combatManager*>(g_combatManager)
