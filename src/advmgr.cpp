@@ -2210,10 +2210,10 @@ static void setPyramidHelp(
     strcpy(buffer, g_quickViewText[PYRAMID]);
     if (cell->m_isTrigger && currentHero) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(currentHero->m_owner)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(currentHero->m_owner))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2224,10 +2224,10 @@ static void setWagonHelpText(
     strcpy(buffer, g_quickViewText[WAGON]);
     if (cell->m_isTrigger) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(g_netLocalGamePos))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2238,10 +2238,10 @@ static void setTombHelpText(
     strcpy(buffer, g_quickViewText[WARRIOR_TOMB]);
     if (cell->m_isTrigger) {
         strcat(buffer, separator);
-        strcat(buffer,
-               cell->playerKnowsCell(g_netLocalGamePos)
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (cell->playerKnowsCell(g_netLocalGamePos))
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2261,10 +2261,10 @@ static void setWaterWheelHelpText(
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
         short gold = (cell->m_extraInfo & 0x1f) * 500;
-        strcat(buffer,
-               gold == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if (gold == 0)
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -2284,10 +2284,10 @@ static void setWindmillHelpText(
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
         unsigned long amount = cell->m_extraInfo >> 13;
-        strcat(buffer,
-               (amount & 0xf) == 0
-                   ? g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT)
-                   : g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+        if ((amount & 0xf) == 0)
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
