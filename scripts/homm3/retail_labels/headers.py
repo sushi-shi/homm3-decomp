@@ -53,6 +53,11 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
     # it supplies only the carrier, never the source name.
     header_names = {d.va - common.IMAGE_BASE: d.mangled for d in claim_definitions(definitions)
                     if d.file.startswith('include/') and d.va is not None}
+    for rva, unit in policy.reviewed.items():
+        if rva not in header_names or unit not in rows_by_unit:
+            problems.append(
+                f"reviewed header comparison 0x{rva + common.IMAGE_BASE:08x} "
+                f"in {unit}: no active header claim or comparison unit (FATAL)")
     banked = policy.for_units(ir_maps)
     anchors = [(row['rva'], unit) for unit, rows in rows_by_unit.items()
                for row in rows if row['kind'] == 'func']
@@ -72,12 +77,16 @@ def project(paths: list[Path], functions: set[int], ir_maps: dict,
             emitters = {unit: mangled for unit in ir_maps
                         if mangled is not None and mangled in authorities[unit]}
             carrier = policy.choose(rva, set(emitters), banked, anchors)
-            if carrier not in emitters:
+            if carrier not in emitters and rva not in policy.reviewed:
                 carrier = equivalent_emitter(mangled, set(emitters)) or carrier
             if carrier is None:
                 problems.append(
                     f"header VA(0x{rva + common.IMAGE_BASE:08x}) in {path.name}: "
                     f"no unique VC6 comparison carrier among {sorted(emitters)} (FATAL)")
+                continue
+            if carrier not in rows_by_unit:
+                problems.append(f"header VA(0x{rva + common.IMAGE_BASE:08x}): "
+                                f"comparison unit {carrier!r} is unavailable (FATAL)")
                 continue
             row['unit'] = carrier
             row['joined'] = mangled

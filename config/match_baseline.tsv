@@ -2016,7 +2016,6 @@ game	?insert@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXPAVtown@@IABV3@
 game	?insertObject@game@@QAEXHHHHHH@Z	100.0000	100.0000	100.0000	0xc9890	tokens1:98f9985bd2ec
 game	?isHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce940	tokens1:4892ccc372db
 game	?isHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbada0	tokens1:fe970bd0ef08
-game	?isHumanTeam@game@@QBE_NH@Z	53.6364	53.6364	100.0000	0x2b9e0	tokens1:ba2d4954cbc3
 game	?isLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50	tokens1:b3ae76c5a53e
 game	?isLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970	tokens1:67b8f473808f
 game	?isLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80	tokens1:db51bf65075d
@@ -2724,7 +2723,7 @@ netmsg	?remoteFn00512E00@t_complex_net_message@@QAEEPAVCNetMsg@@@Z	100.0000	100.
 netmsg	?write@t_memory_file@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x112b80	tokens1:5cdb824a89af
 newgame	?getAlignmentCount@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0	tokens1:91ca5006d629
 newgame	?getLossConditionText@game@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x113800	tokens1:bd6f128039a8
-newgame	?getVictoryConditionText@game@@QAEXPAD@Z	97.8388	97.8388	100.0000	0x1139e0	tokens1:0f72e28ccb0a
+newgame	?getVictoryConditionText@game@@QAEXPAD@Z	98.5847	98.5847	100.0000	0x1139e0	tokens1:b8bf5087ef3b
 newgame	?initNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x113320	tokens1:54b876117b98
 newgame	?pickAlignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	tokens1:11bc8aa15f7e
 newgame	?showScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	tokens1:031ac5d30e89
@@ -4404,6 +4403,7 @@ town	?initializeBuildingCostsTables@town@@SIEXZ	100.0000	100.0000	100.0000	0x1c1
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	tokens1:e8c1524616de
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:12a6d91f4df1
 town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	98.0947	98.0947	100.0000	0x1be600	tokens1:9f5b2b80b5f2
+town	?isHumanTeam@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	tokens1:ba2d4954cbc3
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	tokens1:d9bc20285f48
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	98.1694	98.1694	98.1694	0x1bcd60	tokens1:40f6c5b13677
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:fa81d59c5dda
