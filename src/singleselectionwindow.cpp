@@ -4336,6 +4336,8 @@ int TSingleSelectionWindow::update()
         g_smallFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, font::WHITE, 4, -1);
+        g_windowManager->updateScreen(0, 0, 800, 600);
+        return 1;
     } else {
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
