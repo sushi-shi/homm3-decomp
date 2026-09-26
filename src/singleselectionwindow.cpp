@@ -1117,6 +1117,7 @@ bool initializeTurnDurationText()
 // Retail keeps no out-of-line copy - the 11.6 KB window constructor
 // expands it between its m_players and netMsgHandler member constructions
 // (0x579a2e..0x579a9a), which is where its statements sit in retail.
+MAC_ADDRESS(0x16ecc8, 0xd4)
 CNetPlayerHandler::CNetPlayerHandler()
 {
     m_playersCount = 0;
@@ -8250,6 +8251,7 @@ static int update(message& msg)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8758, dc 0x14514c
+MAC_ADDRESS(0x186028, 0x40)
 inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 {
     m_wasCompressed = 0;
