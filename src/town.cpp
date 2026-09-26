@@ -1851,8 +1851,10 @@ const char* town::getTypeName() const
 
 // Original: town::get_army; town.cpp:2375, dc 0x168bd0.
 // This ordinary non-const twin returns the same selected army address as the
-// const overload. Complete callers of both interfaces share 0x5c1460.
-MAC_ADDRESS(0x1b7020, 0x44)
+// const overload. Complete callers of both interfaces share 0x5c1460. Mac
+// callers that mutate the selected army, including initializeArmy, retain the
+// first body at 0x1b6fdc; const town users call the twin at 0x1b7020.
+MAC_ADDRESS(0x1b6fdc, 0x44)
 armyGroup& town::getArmy()
 {
     if (m_garrisonHeroId < 0)
@@ -1860,7 +1862,7 @@ armyGroup& town::getArmy()
     return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
-VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b6fdc, 0x44)  // dc 0x168bf8
+VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b7020, 0x44)  // dc 0x168bf8
 const armyGroup& town::getArmy() const
 {
     if (m_garrisonHeroId < 0)

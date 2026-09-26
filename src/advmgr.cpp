@@ -1187,8 +1187,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
         doEventShipyard(getCell(get_mouse_map_point()), get_mouse_map_point(),
                         g_currentPlayer->isLocalHuman());
-        updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+        updateRadar(1, 1, 0, 0, 0);
+        completeDraw(0);
         this->updateScreen(0, 0);
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
         break;
@@ -1313,7 +1313,7 @@ int advManager::main(message& msg)
             g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
         if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            completeDraw(0);
             updateScreen(0, 0);
         }
     }
@@ -1923,8 +1923,8 @@ void advManager::processRadarSelect(const message* msg)
     if (m_radarOrigin.m_y > g_mapHeight - 9)
         m_radarOrigin.m_y = g_mapHeight - 9;
 
-    updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+    updateRadar(1, 1, 0, 0, 0);
+    completeDraw(0);
     updateScreen(0, 0);
 
     message dragMsg;
@@ -1969,8 +1969,8 @@ void advManager::processRadarSelect(const message* msg)
             m_radarOrigin.m_x = dragX - 9;
             m_radarOrigin.m_y = dragY - 8;
 
-            updateRadar(m_radarOrigin, 1, 1, 0, 0, 0);
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            updateRadar(1, 1, 0, 0, 0);
+            completeDraw(0);
             updateScreen(0, 0);
             dragMsg.m_id = 0;
         }
@@ -7469,8 +7469,8 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
     m_advWindow->updateResourceDisplay(1, 0);
     m_advWindow->drawWindow(0, -65535, 65535);
     m_advWindow->highlightLocators(0);
-    completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
-    updateRadar(m_radarOrigin, 0, 1, 0, 0, 0);
+    completeDraw(0);
+    updateRadar(0, 1, 0, 0, 0);
 
     if (update)
         g_windowManager->updateScreen(0, 0, 800, 600);
@@ -7540,7 +7540,7 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
         m_drawCursor = 0;
 
         if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
-            completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+            completeDraw(0);
             updateScreen(0, 0);
         }
     }
@@ -7745,8 +7745,8 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
         m_drawCursor = 1;
 
     if (drawChanges && g_completeDrawEnabled) {
-        updateRadar(m_radarOrigin, 0, 1, 0, 0, 0);
-        completeDraw(m_radarOrigin.m_x, m_radarOrigin.m_y, m_radarOrigin.m_z, 0, 1);
+        updateRadar(0, 1, 0, 0, 0);
+        completeDraw(0);
         g_windowManager->updateScreen(0, 0, HOVER_SCREEN_WIDTH,
                                       HOVER_SCREEN_HEIGHT);
     }
