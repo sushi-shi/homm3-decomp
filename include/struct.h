@@ -91,7 +91,8 @@ public:
     // Original: SLimitData::Contains; struct.h:293, dc 0x639ec.
     unsigned char contains(int x, int y) const
     {
-        return x >= m_minX && x <= m_maxX && y >= m_minY && y <= m_maxY;
+        return m_minX <= x && x <= m_maxX
+            && m_minY <= y && y <= m_maxY;
     }
     bool isEmpty() const
     {

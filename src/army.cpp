@@ -2617,7 +2617,9 @@ long army::getTotalHitPoints(unsigned char simulated) const
 VA(0x004430d0, 0x56)  // dc 0x484a0
 void army::setAIExpectedDamage(long arg)
 {
-    m_aiExpectedDamage = cppMin(arg, getTotalHitPoints(0));
+    // Complete's by-value min helper retains the argument home at [ebp+8];
+    // DC names its reference-taking std::min counterpart at this source line.
+    m_aiExpectedDamage = min(arg, getTotalHitPoints(0));
 }
 
 VA(0x00443130, 0x25)
