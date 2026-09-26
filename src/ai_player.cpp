@@ -1357,8 +1357,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
         case TOWN_FORTRESS:
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && currentTown->m_threateningHeroes)
-                return static_cast<const town*>(currentTown)
-                           ->getArmy().getAIValue() / 20;
+                return currentTown->getArmy().getAIValue() / 20;
             break;
         }
         return 0;
@@ -1763,18 +1762,14 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 
     unsigned char alliance = g_game->m_players[currentHero->m_owner]
         .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
-    purchaser.doSwap(currentHero,
-                      const_cast<armyGroup*>(
-                          &static_cast<const town*>(currentTown)->getArmy()),
-                      garrisonHero, alliance);
+    purchaser.doSwap(currentHero, &currentTown->getArmy(),
+                     garrisonHero, alliance);
 
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1),
-                          const_cast<armyGroup*>(
-                              &static_cast<const town*>(currentTown)
-                                   ->getArmy()),
-                          player->m_resources, 1, alliance);
+                          &currentTown->getArmy(), player->m_resources,
+                          1, alliance);
 
     // DC ai_player.cpp:1869/1873 has two early exits; 1893 records short
     // morale, and amount/funds/traits belong to function scope. Retail
@@ -1842,8 +1837,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                 purchaser.set(creature, &amount);
                 long value = purchaser.getPurchaseValue(
                     &currentHero->m_army, morale,
-                    &static_cast<const town*>(currentTown)
-                         ->getArmy(),
+                    &currentTown->getArmy(),
                     funds, alliance);
                 if (value > bestValue) {
                     bestValue = value;
@@ -1860,10 +1854,8 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
-                              const_cast<armyGroup*>(
-                                  &static_cast<const town*>(
-                                       currentTown)->getArmy()),
-                              player->m_resources, 1, alliance);
+                              &currentTown->getArmy(), player->m_resources,
+                              1, alliance);
     }
 }
 
@@ -4236,9 +4228,8 @@ bool considerHiring(long playerId, hero* candidate)
 // against every own hero whose cell the search touched.
 // Raw NB11 places all thirteen named DC locals in the procedure scope and
 // names the mutable town::get_army overload in the older Dreamcast build.
-// Mac 0:0x35070 calls the retained const overload at 0:0x1b6fdc. Complete's
-// normalized Windows target labels the shared ICF-folded body as const, and
-// selecting that overload is byte-flat in VC6 while resolving the Mac call.
+// Mac 0:0x35070 calls the retained mutable overload at 0:0x1b6fdc. Complete's
+// normalized Windows target labels the shared ICF-folded body as const.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
@@ -4255,8 +4246,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
     armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy =
-        static_cast<const town*>(currentTown)->getArmy();
+    armyGroup townArmy = currentTown->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;

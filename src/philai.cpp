@@ -1931,18 +1931,12 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
-    swapper.doSwap(
-        currentHero,
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy()),
-        secondHero, hasAngelicAlliance);
+    swapper.doSwap(currentHero, &currentTown->getArmy(),
+                   secondHero, hasAngelicAlliance);
 
     if (!secondHero) {
-        currentHero->m_army.mergeArmies(
-            *const_cast<armyGroup*>(
-                &static_cast<const town*>(currentTown)->getArmy()));
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy())->initialize();
+        currentHero->m_army.mergeArmies(currentTown->getArmy());
+        currentTown->getArmy().initialize();
     }
 }
 
@@ -2284,10 +2278,8 @@ static void moveHero(hero* currentHero, long* dangerZones,
                         currentTown->m_garrisonHeroId);
                     if ((garrisonHero->m_movePoints > 0
                          && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
+                        || (currentTown->getArmy().getCreatureTotal() > 0
+                            && currentTown->getArmy().getAIValue()
                                    < currentHero->m_army.getAIValue()))
                         currentTown->swapHeroes();
                 }
@@ -3389,11 +3381,11 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
-        &static_cast<const town*>(currentTown)->getArmy(), garrisonHero,
+        &currentTown->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army, currentHero->getMorale(0, 0, 1),
-        &static_cast<const town*>(currentTown)->getArmy(), player->m_resources,
+        &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
     if (moveCost >= 400
