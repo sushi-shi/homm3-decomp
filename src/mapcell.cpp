@@ -1229,7 +1229,7 @@ void CObject::findTrigger(int& resultX, int& resultY) const
     resultX = -1;
     resultY = -1;
 
-    CObjectType* objType = &g_game->m_worldMap.m_objectTypes[m_typeIndex];
+    CObjectType* objType = getObjectTypePtr();
     for (int vert = 0; vert < objType->m_height; ++vert) {
         if (m_y - vert < 0 || m_y - vert >= g_mapHeight)
             continue;
@@ -3076,7 +3076,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     garrison newGarrison;
 
     unsigned char owner;
-    if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
+    if (readValue(infile, owner) < sizeof(owner))
         return -1;
     newGarrison.m_playerOwner = owner;
 
@@ -3089,7 +3089,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
             readMapCreatureId(infile, mapVersion);
 
         short count;
-        if (infile->read(&count, sizeof(count)) < sizeof(count))
+        if (readValue(infile, count) < sizeof(count))
             return -1;
         newGarrison.m_garrisonArmy.m_numTroops[slot] = count;
     }
@@ -3097,9 +3097,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         newGarrison.m_removableTroops = 1;
     } else {
-        unsigned char value;
-        infile->read(&value, sizeof(value));
-        newGarrison.m_removableTroops = value != 0;
+        newGarrison.m_removableTroops = readValue<unsigned char>(infile) != 0;
     }
 
     int triggerX;
