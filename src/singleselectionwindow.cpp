@@ -532,16 +532,8 @@ void startMouseThread()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:344
-// Retail keeps this helper out of line at SetupScenarioOptions even though
-// StartMouseThread immediately above expands there.  Marking this body
-// non-inlinable preserves the Dreamcast-proven helper boundary and that
-// asymmetric retail lowering without changing either function's source order.
-// A 36-state global-handle-reference/early-return family preserves every
-// reload and zero store but cannot reproduce the split without this fence:
-// GenerateRandomMap rises 92.6386% -> 97.9759%, while SetupScenarioOptions
-// falls 100% -> 90.1470%. Mutable/const references and both guard forms
-// share that score tradeoff; no source alternative is retained.
-#pragma auto_inline(off)
+// Retail keeps this helper out of line at SetupScenarioOptions (its inline
+// budget is spent; see there) and expands it in GenerateRandomMap.
 VA(0x00577810, 0x61) MAC_ADDRESS(0x16e358, 0x30)  // dc 0x12fdd4
 void stopMouseThread()
 {
@@ -555,7 +547,6 @@ void stopMouseThread()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
     }
 }
-#pragma auto_inline(on)
 
 // DC preserves this source helper. Complete expands it into the selection
 // window constructor: the retail body has the same executable-path buffer,
@@ -3214,6 +3205,10 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 VA(0x00580A70, 0x68B) MAC_ADDRESS(0x178b94, 0x33c)  // dc 0x135f04
 void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
+    // DC 2839 declares msg for Update(msg); Complete's Update takes none, but
+    // the constructor still spends the budget that keeps stopMouseThread a call.
+    message msg;
+
     if (m_inScenarioOptions) {
         turnOffScenarioOptions();
         return;
@@ -3227,9 +3222,9 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_randomMapMode = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                if (g_remoteOn && !g_dPlay->isHost()) {
-                    CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
-                    transmitRemoteDataDPID(&msg, 0, false, true);
+                if (g_remoteOn && !isHost()) {
+                    CNetMsg request(RS_HEADERS_REQUEST, sizeof(CNetMsg));
+                    transmitRemoteDataDPID(&request, 0, false, true);
                 } else {
                     getHeaders(&m_transferHeaders);
                 }
@@ -3246,11 +3241,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
     m_fileSlider->show();
     m_fileSlider->setResolution(
         m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
-    if (!g_remoteOn)
-        randomMaps = true;
-    else
-        randomMaps = g_dPlay->isHost();
-    m_fileSlider->enable(randomMaps);
+    m_fileSlider->enable(isHost());
     m_fileSlider->setState(m_currentIndex);
 
     showWidget(137);
@@ -3273,10 +3264,10 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (g_remoteOn && !g_dPlay->isHost() && !m_saveMode)
-            g_game->setupOrigData();
-        else
+        if (isHost() || m_saveMode)
             getHeaders(&m_headersA);
+        else
+            g_game->setupOrigData();
         m_scenarioOptionsStarted = 1;
         stopMouseThread();
     }
@@ -5053,16 +5044,7 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // progress bar advances one step; the generator's result code selects one of
 // three general-text failure dialogs.
 
-// Residual (92.6386%): the main delta is a shared-helper conflict
-// rather than a spelling. Retail EXPANDS StopMouseThread here (SetEvent,
-// WaitForSingleObject, the two CloseHandles and the pointer restore all
-// inline, one extra branch) while keeping it OUT of line at
-// SetupScenarioOptions - which is what the `#pragma auto_inline(off)`
-// around its definition above buys. Measured both ways in one build:
-// dropping the pragma takes this row 92.6386 -> 97.9759 and
-// SetupScenarioOptions 100.0000 -> 90.1470. The 36-state real-handle-lifetime
-// follow-up reproduces that same tradeoff throughout its unfenced options;
-// it does not recover the split, so the pragma stays and this call stays a call.
+// Residual (97.66%): StopMouseThread now expands here as in retail.
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
