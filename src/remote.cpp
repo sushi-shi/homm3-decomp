@@ -1752,7 +1752,7 @@ unsigned char handleMPlayerLaunch()
     return 1;
 }
 
-VA(0x00555ef0, 0x3E4)
+VA(0x00555ef0, 0x3E4) MAC_ADDRESS(0x2139a0, 0x204)  // same map setup, host/guest logs, username; Mac native transport
 unsigned char lobbyLaunchConnect()
 {
     strcpy(g_mapName, g_game->m_setup.m_filename);
