@@ -3347,23 +3347,23 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 {
     int count;
     char value;
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     tempObject->m_x = value;
 
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     tempObject->m_y = value;
 
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     tempObject->m_z = value;
 
     int typeIndex;
-    count = infile->read(&typeIndex, sizeof(typeIndex));
+    count = readValue(infile, typeIndex);
     if (count < sizeof(typeIndex))
         return -1;
     tempObject->m_typeIndex = static_cast<unsigned short>(typeIndex);
@@ -3512,24 +3512,20 @@ VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
     int count;
-    char value = tempObject.m_x;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, tempObject.m_x);
+    if (count < sizeof(char))
         return -1;
 
-    value = tempObject.m_y;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, tempObject.m_y);
+    if (count < sizeof(char))
         return -1;
 
-    value = tempObject.m_z;
-    count = outfile->write(&value, sizeof(value));
-    if (count < sizeof(value))
+    count = writeValue<char>(outfile, tempObject.m_z);
+    if (count < sizeof(char))
         return -1;
 
-    unsigned short typeIndex = tempObject.m_typeIndex;
-    count = outfile->write(&typeIndex, sizeof(typeIndex));
-    if (count < sizeof(typeIndex))
+    count = writeValue<unsigned short>(outfile, tempObject.m_typeIndex);
+    if (count < sizeof(unsigned short))
         return -1;
     return 0;
 }
@@ -3538,20 +3534,20 @@ VA(0x005036d0, 0xA4) MAC_ADDRESS(0x126370, 0x108)  // dc 0xf1bf8
 int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 {
     unsigned char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObject->m_x = value;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObject->m_y = value;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObject->m_z = value;
 
     unsigned short typeIndex;
-    if (infile->read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+    if (readValue(infile, typeIndex) < sizeof(typeIndex))
         return -1;
     tempObject->m_typeIndex = typeIndex;
     return 0;
@@ -3969,7 +3965,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int numObjects;
     int count;
     int x;
-    count = infile->read(&intBuffer, sizeof(intBuffer));
+    count = readValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
@@ -4010,7 +4006,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    count = infile->read(&intBuffer, sizeof(intBuffer));
+    count = readValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
@@ -4050,7 +4046,7 @@ VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
     int count = m_objectTypes.size();
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue(outfile, count) < sizeof(count))
         return -1;
 
     unsigned int i;
@@ -4060,7 +4056,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     }
 
     count = m_objects.size();
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue(outfile, count) < sizeof(count))
         return -1;
 
     for (i = 0; i < m_objects.size(); ++i) {
@@ -4079,7 +4075,7 @@ VA(0x00504b70, 0x4E9) MAC_ADDRESS(0x1277f0, 0x2a8)  // dc 0xf318c
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
     int count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_objectTypes.resize(count);
@@ -4114,7 +4110,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
     incProgressBar(1);
 
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_objects.resize(count);
