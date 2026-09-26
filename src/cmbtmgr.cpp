@@ -1814,12 +1814,10 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
 // 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
 
-// Residual (95.0344%): FLOW-DISTANCE 0 and the call multisets agree
-// exactly, 17 against 17, so nothing structural is left. What remains
-// is register binding with the schedule already aligned - eax->ebx x11,
-// ecx->eax x8 - which is the register-homing family damage_message's
-// note also lands in. why-reg's B6/B14 naming knobs are the only route
-// the catalog offers and neither is source-addressable here.
+// DC records const numFrames; a conditional initializer preserves that lifetime.
+// Windows improves from 95.0344% to 98.2722%, with every helper retained.
+// The remaining differences are one missile-frame home and the scheduling of
+// the int-to-double damage conversion around the retained reduction call.
 
 // Two shapes the bytes forced and that are worth not re-litigating:
 // the damage accumulator is a DOWN-counted loop over a copy of
@@ -1870,9 +1868,9 @@ void combatManager::keepAttack(int towerPos)
                 g_creatureTypeTraits[archer->m_creatureType].m_samplePrefix);
         sample = loadPlaySample(g_text);
 
-        int frames = info->m_attackFrames;
-        if (frames <= 0)
-            frames = archer->m_sprite->getNumFrames(armyDir);
+        const int frames = info->m_attackFrames > 0
+            ? info->m_attackFrames
+            : archer->m_sprite->getNumFrames(armyDir);
         archer->m_sequence = armyDir;
         delay = info->m_attackStartCycleTime / frames;
 
