@@ -1716,6 +1716,17 @@ bool playerData::isLocalHuman() const
     return false;
 }
 
+// Dreamcast game.cpp:1946 and the retained Mac body place this ordinary
+// query after isLocalHuman. Windows retains 35 direct calls to this body;
+// Mac has 55 direct references. Both retained bodies normalize the byte.
+VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
+bool playerData::isHuman() const
+{
+    if (m_isHuman)
+        return true;
+    return false;
+}
+
 VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
 char* playerData::getName()
 {

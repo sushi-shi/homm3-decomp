@@ -932,10 +932,8 @@ public:
     // town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
-    // Windows hero::giveArtifact expands this query at 0x4e322d;
-    // Mac retains its body and expands the same test at 0x103f74.
-    VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
-    bool isHuman() const { return m_isHuman ? true : false; }
+    // Retained ordinary body: game.cpp, Windows 0x004bada0.
+    bool isHuman() const;
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
