@@ -873,7 +873,11 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                 relative = path.relative_to(root).as_posix()
                 content[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
                 digest.update(relative.encode())
-                if relative not in admitted:
+                # Mac reference settings do not configure this Windows AST.
+                # Keep names in the shared key (new includes), and hashes in
+                # content so an explicitly included TOML still tracks changes.
+                mac_metadata = relative.startswith('config/mac/') and path.suffix.lower() == '.toml'
+                if relative not in admitted and not mac_metadata:
                     digest.update(content[relative].encode())
     if mirror:
         for path in sorted(mirror.rglob('*')):
