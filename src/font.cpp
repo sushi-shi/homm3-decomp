@@ -517,6 +517,9 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // `result` at `boxWidth` pixels. Retail proves the receiver outright -
 // the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
 // NH3API corroborates the name and the parameter shape only.
+// Mac 0xc9d04..0xc9d08 adds line width before subtracting word width;
+// 0xc9d74..0xc9d7c counts pending spaces down. Both source forms restore
+// the Windows retail body while retaining every string/vector helper.
 
 VA(0x004b5b90, 0x3A5) MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
@@ -564,8 +567,8 @@ void font::fillLinesVector(const char* str, int boxWidth,
                     if (lineWidth + charWidth > boxWidth)
                         break;
                     line += *p;
-                    wordWidth -= charWidth;
                     lineWidth += charWidth;
+                    wordWidth -= charWidth;
                     p++;
                 }
                 result.push_back(line);
@@ -573,7 +576,7 @@ void font::fillLinesVector(const char* str, int boxWidth,
                 lineWidth = 0;
             }
         }
-        for (int space = 0; space != spaceCount; space++)
+        while (spaceCount--)
             line += ' ';
         lineWidth += spaceWidth;
         while (p != wordEnd) {
