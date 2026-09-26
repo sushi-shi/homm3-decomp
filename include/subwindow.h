@@ -17,6 +17,19 @@ class widget;
 // 0x5aa390, so only the destructor is virtual.
 class TSubWindow {
 public:
+    TSubWindow();
+    TSubWindow(int x, int y, int w, int h, heroWindow* parentWindow);
+    virtual ~TSubWindow();
+
+    void initialize(int x, int y, int w, int h, heroWindow* parentWindow);
+    void addWidget(widget* newWidget, int newPriority);
+    void removeWidget(widget* killWidget);
+    void draw(unsigned char update, int lowID, int highID);
+    void saveBackground();
+    void restoreBackground();
+
+    // DC field-list order: the data follows the methods.
+public:
     int m_x;
     int m_y;
     int m_width;
@@ -29,17 +42,6 @@ protected:
 public:
     int m_lowId;
     int m_highId;
-
-    TSubWindow();
-    TSubWindow(int x, int y, int w, int h, heroWindow* parentWindow);
-    virtual ~TSubWindow();
-
-    void initialize(int x, int y, int w, int h, heroWindow* parentWindow);
-    void addWidget(widget* newWidget, int newPriority);
-    void removeWidget(widget* killWidget);
-    void draw(unsigned char update, int lowID, int highID);
-    void saveBackground();
-    void restoreBackground();
 
 private:
     Bitmap16Bit* m_background;

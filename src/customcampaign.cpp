@@ -5,7 +5,7 @@
 // carcass is not force-claimed merely from roster order.
 #include "text.h"
 #include "va.h"
-#include "homm3_minmax.h"
+#include "includes.h"
 #include "bitset_iterator.h"
 
 #include <algorithm>
@@ -1767,7 +1767,8 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
-            if (!m_crossoverArtifacts.at(artifact.m_artifactId))
+            // Mac 0x095cbc: MSL's reference proxy calls test().
+            if (!m_crossoverArtifacts[artifact.m_artifactId])
                 continue;
             offerArtifactToPlayerHeroes(artifact, player);
         }

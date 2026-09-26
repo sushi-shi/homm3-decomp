@@ -3,7 +3,6 @@
 #include "objnames.h"
 #include "includes.h"
 #include "homm3_limit.h"
-#include "homm3_minmax.h"
 #include "bitset_iterator.h"
 
 #include <algorithm>

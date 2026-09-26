@@ -13,6 +13,9 @@
 
 #include <vector>
 
+// Unqualified min/max also reach std's templates (VC6's library has none).
+using namespace std;
+
 // E:\gamedcs\includes.h:97, dc 0x1ef28. The wrapper owns argument
 // copies, then dereferences the selector's returned argument address.
 inline int max(int left, int right)
