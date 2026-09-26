@@ -3020,7 +3020,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             charBuffer = readValue<signed char>(infile);
             if (charBuffer != -2) {
                 heroData->m_customSpells = 1;
-                heroData->m_spells = std::bitset<70>(0);
+                heroData->m_spells = std::bitset<70>();
                 if (charBuffer != -1)
                     heroData->m_spells[charBuffer] = 1;
             }

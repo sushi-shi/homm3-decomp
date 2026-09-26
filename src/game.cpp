@@ -5063,7 +5063,7 @@ bool game::loadMap(TAbstractFile* mapFile)
     }
 
     if (m_mapHeader.m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        std::bitset<144> disabledArtifacts(0);
+        std::bitset<144> disabledArtifacts;
         if (m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
             std::bitset<144> serializedArtifacts = readPackedBits<144>(mapFile);
             disabledArtifacts = serializedArtifacts;
