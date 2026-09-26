@@ -3220,26 +3220,17 @@ void NewfullMap::readRandomDwellingData(TAbstractFile* infile,
 {
     RandomDwellingData dwelling;
 
-    char value;
-    infile->read(&value, sizeof(value));
-    dwelling.m_owner = value;
+    dwelling.m_owner = readValue<char>(infile);
 
     char padding[3];
     infile->read(padding, 3);
 
-    int castleId;
-    infile->read(&castleId, sizeof(castleId));
-    dwelling.m_castleId = castleId;
-    if (castleId == 0) {
-        short factionMask;
-        infile->read(&factionMask, sizeof(factionMask));
-        dwelling.m_factionMask = factionMask;
-    }
+    dwelling.m_castleId = readValue<int>(infile);
+    if (dwelling.m_castleId == 0)
+        dwelling.m_factionMask = readValue<short>(infile);
 
-    infile->read(&value, sizeof(value));
-    dwelling.m_minLevel = value;
-    infile->read(&value, sizeof(value));
-    dwelling.m_maxLevel = value;
+    dwelling.m_minLevel = readValue<char>(infile);
+    dwelling.m_maxLevel = readValue<char>(infile);
 
     dwelling.m_object = object;
     m_randomDwellings.push_back(dwelling);
@@ -3251,21 +3242,14 @@ void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
 {
     RandomDwellingData dwelling;
 
-    char value;
-    infile->read(&value, sizeof(value));
-    dwelling.m_owner = value;
+    dwelling.m_owner = readValue<char>(infile);
 
     char padding[3];
     infile->read(padding, 3);
 
-    int castleId;
-    infile->read(&castleId, sizeof(castleId));
-    dwelling.m_castleId = castleId;
-    if (castleId == 0) {
-        short factionMask;
-        infile->read(&factionMask, sizeof(factionMask));
-        dwelling.m_factionMask = factionMask;
-    }
+    dwelling.m_castleId = readValue<int>(infile);
+    if (dwelling.m_castleId == 0)
+        dwelling.m_factionMask = readValue<short>(infile);
 
     dwelling.m_minLevel = static_cast<unsigned char>(
         m_objectTypes[object->m_typeIndex].m_extra);
@@ -3282,9 +3266,7 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
 {
     RandomDwellingData dwelling;
 
-    char value;
-    infile->read(&value, sizeof(value));
-    dwelling.m_owner = value;
+    dwelling.m_owner = readValue<char>(infile);
 
     char padding[3];
     infile->read(padding, 3);
@@ -3293,10 +3275,8 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
     dwelling.m_factionMask = static_cast<unsigned short>(
         1 << m_objectTypes[object->m_typeIndex].m_extra);
 
-    infile->read(&value, sizeof(value));
-    dwelling.m_minLevel = value;
-    infile->read(&value, sizeof(value));
-    dwelling.m_maxLevel = value;
+    dwelling.m_minLevel = readValue<char>(infile);
+    dwelling.m_maxLevel = readValue<char>(infile);
 
     dwelling.m_object = object;
     m_randomDwellings.push_back(dwelling);
@@ -3305,20 +3285,17 @@ void NewfullMap::readRandomDwellingFactionData(TAbstractFile* infile,
 MAC_ADDRESS(0x125df8, 0xc4)
 void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObject)
 {
-    char value;
     HeroPlaceholderData placeholder;
     placeholder.m_object = tempObject;
 
-    infile->read(&value, sizeof(value));
-    placeholder.m_owner = value;
+    placeholder.m_owner = readValue<unsigned char>(infile);
 
-    infile->read(&value, sizeof(value));
-    placeholder.m_heroId = value;
+    // Mac 0x125e58 and Windows 0x502fe1 widen the serialized ID unsigned.
+    placeholder.m_heroId = readValue<unsigned char>(infile);
     if (placeholder.m_heroId
             == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
         placeholder.m_heroId = -1;
-        infile->read(&value, sizeof(value));
-        placeholder.m_powerRating = value;
+        placeholder.m_powerRating = readValue<unsigned char>(infile);
     }
 
     m_heroPlaceholders.push_back(placeholder);
