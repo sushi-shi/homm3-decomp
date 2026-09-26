@@ -387,13 +387,9 @@ bool generator::load(TAbstractFile* infile)
     if (infile->read(&m_genType, sizeof(m_genType)) != sizeof(m_genType))
         return 0;
 
-    int loaded;
     for (int slot = 0; slot < 4; slot++) {
-        infile->read(&loaded, 1);
-        int creature = loaded & 0xff;
-        {
-            m_type[slot] = TCreatureType(creature);
-        }
+        int creature = readValue<unsigned char>(infile);
+        m_type[slot] = TCreatureType(creature);
         if (creature == g_savedCreatureNone)
             m_type[slot] = CREATURE_NONE;
     }
@@ -422,8 +418,7 @@ bool generator::save(TAbstractFile* outfile)
     outfile->write(&m_genType, sizeof(m_genType));
 
     for (int slot = 0; slot < 4; slot++) {
-        char creatureType = m_type[slot];
-        outfile->write(&creatureType, sizeof(creatureType));
+        writeValue<char>(outfile, m_type[slot]);
     }
 
     outfile->write(m_population, sizeof(m_population));
@@ -1466,7 +1461,7 @@ MAC_ADDRESS(0x0cd41c, 0xb8)
 int game::saveTownPool(TAbstractFile* outfile)
 {
     unsigned char townCount = m_towns.size();
-    int count = outfile->write(&townCount, sizeof(townCount));
+    int count = writeValue<unsigned char>(outfile, townCount);
     if (count < sizeof(townCount))
         return -1;
     for (int x = 0; x < m_towns.size(); ++x) {
@@ -2354,7 +2349,7 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 }
 
 // E:\gamedcs\game.cpp:2716; original save_vector / src_vector.
-// Complete writes two bytes of an int slot, then uses its signed-short value.
+// Mac stages a signed-short count before the contiguous element payload.
 // The guarded return reproduces both retained 96-byte writers exactly,
 // including SETAE. Direct boolean/byte-local returns instead use SBB/INC;
 // that spelling difference does not refute the DC bool/reference signature.
@@ -2363,11 +2358,11 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 template <class T>
 bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
-    int count = srcVector.size();
-    if (outfile->write(&count, sizeof(short)) < sizeof(short))
+    short count = srcVector.size();
+    if (writeValue<short>(outfile, count) < sizeof(short))
         return false;
-    if (outfile->write(&srcVector[0], static_cast<short>(count) * sizeof(T))
-        < static_cast<short>(count) * sizeof(T))
+    if (outfile->write(&srcVector[0], count * sizeof(T))
+        < count * sizeof(T))
         return false;
     return true;
 }
