@@ -4257,7 +4257,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         choice = random(0, availableCount - 1);
         skill = eSecSkillPathfinding;
         for (;;) {
-            if (!availableSkills.test(skill)) {
+            if (!availableSkills[skill]) {
                 {
                     skill = TSecondarySkill(skill + 1);
                 }
@@ -4272,7 +4272,7 @@ void game::randomizeUniversity(NewmapCell* cell)
         }
 
         university.m_skills[i] = skill;
-        availableSkills.set(skill, false);
+        availableSkills[skill] = false;
         --availableCount;
     }
 
