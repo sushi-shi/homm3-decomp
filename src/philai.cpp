@@ -379,6 +379,7 @@ inline long valueOfBlackMarket(const hero* currentHero,
 // Original: buy_special_building; philai.cpp:445, dc 0x10dcc4.
 // Complete expands this ordinary helper into aiEnterTown. Dreamcast records
 // the helper call immediately before buy_artifacts at lines 778/779.
+// Mac retains the player-id aiResourceCost overload in all five cost arms.
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
@@ -391,7 +392,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int value = currentHero->getValueOfKnowledge();
             int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
+            if (value > aiResourceCost(owner, cost))
                 currentTown->buyBuilding(EXTRA_2_ID);
             break;
         }
@@ -401,7 +402,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int value = currentHero->getValueOfPower();
             int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
+            if (value > aiResourceCost(owner, cost))
                 currentTown->buyBuilding(EXTRA_2_ID);
             break;
         }
@@ -410,8 +411,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             int owner = currentHero->m_owner;
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[owner], cost);
+            int resourceCost = aiResourceCost(owner, cost);
             if (currentHero->m_turnExperienceToRvRatio * 1000.0f
                 > resourceCost)
                 currentTown->buyBuilding(EXTRA_2_ID);
@@ -422,8 +422,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
             long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
+            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
             if (static_cast<float>(experience)
                 * currentHero->m_turnExperienceToRvRatio
                 > resourceCost)
@@ -435,8 +434,7 @@ static void buySpecialBuilding(const hero* currentHero, town* currentTown)
                 break;
             int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
             long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
+            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
             if (static_cast<float>(experience)
                 * currentHero->m_turnExperienceToRvRatio
                 > resourceCost)
@@ -797,8 +795,7 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-    hero* currentHero;
-    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
+    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;
@@ -1045,8 +1042,8 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
                 * currentHero->m_turnExperienceToRvRatio);
     }
 
-    value += aiResourceCost(
-        &g_game->m_players[currentHero->m_owner], blackBox->m_resQty);
+    // Mac 0:0x142378 retains the player-id wrapper.
+    value += aiResourceCost(currentHero->m_owner, blackBox->m_resQty);
 
     int primarySkillValue = static_cast<int>(
         static_cast<float>(currentHero->getExperienceIncrement())
@@ -1182,11 +1179,9 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
         currentHero, 0, currentGarrison->m_garrisonArmy, 0, cell);
 }
 
-// E:\\gamedcs\\philai.cpp:2250. The shared Idol helper rejects the two
-// visited flags and an unaffordable trip, values both morale and luck on
-// Sunday, and otherwise selects one from the low flag bit. Complete expands
-// that shared shape into AI_value_of_event. Dreamcast's final fallback after
-// the same movement rejection is dc-only; retail has no corresponding edge.
+// Windows 0x528b3c/0x528b93 and Mac 0x142e38/0x142e94 select the
+// non-Sunday benefit from the day low bit. Mac also retains an unreachable
+// third morale/luck path at 0x142ef4; do not invent dead source calls for it.
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
@@ -1204,7 +1199,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
             + aiValueOfLuck(
                 currentHero->getLuck(0, 0, 1), 1));
     }
-    if (currentHero->m_flags & 1) {
+    if (g_game->m_day & 1) {
         return static_cast<long>(aiValueOfLuck(
             currentHero->getLuck(0, 0, 1), 1));
     }
@@ -1934,18 +1929,12 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
-    swapper.doSwap(
-        currentHero,
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy()),
-        secondHero, hasAngelicAlliance);
+    swapper.doSwap(currentHero, &currentTown->getArmy(),
+                   secondHero, hasAngelicAlliance);
 
     if (!secondHero) {
-        currentHero->m_army.mergeArmies(
-            *const_cast<armyGroup*>(
-                &static_cast<const town*>(currentTown)->getArmy()));
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy())->initialize();
+        currentHero->m_army.mergeArmies(currentTown->getArmy());
+        currentTown->getArmy().initialize();
     }
 }
 
@@ -2287,10 +2276,8 @@ static void moveHero(hero* currentHero, long* dangerZones,
                         currentTown->m_garrisonHeroId);
                     if ((garrisonHero->m_movePoints > 0
                          && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
+                        || (currentTown->getArmy().getCreatureTotal() > 0
+                            && currentTown->getArmy().getAIValue()
                                    < currentHero->m_army.getAIValue()))
                         currentTown->swapHeroes();
                 }
@@ -2883,6 +2870,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         purchaseValue = 0;
     value += purchaseValue;
 
+    // Mac 0x1429c0 expands getAlignment for the generator's creature.
     if (static_cast<unsigned char>(
             g_game->m_mapHeader.m_victoryCondition.appliesToPlayer(
                 g_netLocalGamePos))
@@ -2890,12 +2878,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && (g_game->m_gameVersion != 0
-            || (currentGenerator.m_type[0] != CREATURE_AIR_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_EARTH_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_FIRE_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_WATER_ELEMENTAL))
-        && g_creatureTypeTraits[currentGenerator.m_type[0]].m_townType != -1) {
+        && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
         value += 5000000 / g_game->m_generators.size();
     }
     return value;
@@ -3396,11 +3379,11 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
-        &static_cast<const town*>(currentTown)->getArmy(), garrisonHero,
+        &currentTown->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army, currentHero->getMorale(0, 0, 1),
-        &static_cast<const town*>(currentTown)->getArmy(), player->m_resources,
+        &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
     if (moveCost >= 400
@@ -3765,26 +3748,14 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case LIGHTHOUSE:
         return valueOfLighthouse(cell);
     case MAGIC_SCHOOL:
-        // Both Dreamcast and Complete retain this named helper call. Keep
-        // the source-real boundary even when VC6's current budget wants to
-        // expand it.
-#pragma inline_depth(0)
         return valueOfMagicSchool(currentHero, cell);
-#pragma inline_depth()
     case MAGIC_SPRING:
-        // Both targets retain this source-real helper boundary.
-#pragma inline_depth(0)
         return getValueOfSpring(
             currentHero, cell,
             static_cast<unsigned short>(moveCost));
-#pragma inline_depth()
     case MAGIC_WELL:
-        // Complete retains this helper call as well; keep the decision
-        // independent of the surrounding event arm's changing inline budget.
-#pragma inline_depth(0)
         return getValueOfWell(
             currentHero, static_cast<unsigned short>(moveCost));
-#pragma inline_depth()
     case MERC_CAMP:
         return valueOfMercenaryCamp(currentHero, cell);
     case MERMAID:
@@ -3792,16 +3763,12 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return
             const_cast<hero*>(currentHero)->luckIncreaseValue(1);
-#pragma inline_depth()
     case MINE:
         return valueOfMine(currentHero, cell);
     case MONSTER:
-#pragma inline_depth(0)
         return valueOfMonsters(currentHero, cell, point);
-#pragma inline_depth()
 
     case MYSTICAL_GARDEN: {
         const ExtraInfoUnion* info =
@@ -3816,68 +3783,45 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     }
 
     case OASIS:
-#pragma inline_depth(0)
         return valueOfMoveSource(
             currentHero, 0x80, 400, moveCost);
-#pragma inline_depth()
     case OBELISK:
-#pragma inline_depth(0)
         return valueOfObelisk(cell, currentHero->m_owner);
-#pragma inline_depth()
     case OBSERVATORY:
         return
             aiValueOfObservatory(point, currentHero->m_owner, 20);
     case POWER_SCHOOL:
-#pragma inline_depth(0)
         return valueOfPowerSchool(currentHero, cell);
-#pragma inline_depth()
     case PRISON:
-#pragma inline_depth(0)
         return valueOfPrison(cell, player);
-#pragma inline_depth()
     case PYRAMID:
         return valueOfPyramid(currentHero, cell);
     case RALLY_FLAG:
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return valueOfRallyFlag(currentHero, moveCost);
-#pragma inline_depth()
     case REFUGEE_CAMP:
-#pragma inline_depth(0)
         return valueOfRefugeeCamp(currentHero, cell);
-#pragma inline_depth()
     case RESOURCE:
-#pragma inline_depth(0)
         return valueOfResource(currentHero, cell, player);
-#pragma inline_depth()
     case SCHOLAR:
         return static_cast<int>(
             currentHero->getExperienceIncrement()
             * currentHero->m_turnExperienceToRvRatio);
     case SEA_CHEST:
-#pragma inline_depth(0)
         return valueOfSeaChest(currentHero, cell);
-#pragma inline_depth()
     case SEER:
         return g_game->m_worldMap.m_seerHutList[cell->m_extraInfo].getValue(
             const_cast<hero*>(currentHero));
     case SEPULCHER:
     case SHIPWRECK:
-#pragma inline_depth(0)
         return valueOfBank(currentHero, cell);
-#pragma inline_depth()
     case SHIPYARD: {
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&cell->m_extraInfo));
-        // The Dreamcast statement is a named OnSameTeam call and Complete
-        // retains that boundary.  Pin only the call; the surrounding event
-        // arm remains ordinary source.
-#pragma inline_depth(0)
         if (g_game->onSameTeam(
                 info->m_owner, g_netLocalGamePos))
             return 0;
-#pragma inline_depth()
         return 1000;
     }
     case SHRINE1:
@@ -3885,9 +3829,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case SHRINE3:
         return valueOfShrine(currentHero, cell);
     case SIREN:
-#pragma inline_depth(0)
         return valueOfSirens(currentHero);
-#pragma inline_depth()
     case SPELL_SCROLL:
         return valueOfScroll(currentHero, cell);
     case STABLES:
@@ -3899,10 +3841,8 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return
             const_cast<hero*>(currentHero)->moraleIncreaseValue(2);
-#pragma inline_depth()
     case TOWN:
         return valueOfTown(
             currentHero, point.m_x, point.m_y, point.m_z,
@@ -3923,30 +3863,25 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case UNIVERSITY:
         return valueOfUniversity(currentHero, cell);
     case WAGON:
-#pragma inline_depth(0)
         return valueOfWagon(cell, currentHero->m_owner);
-#pragma inline_depth()
     case WAR_MACHINE_FACTORY:
-#pragma inline_depth(0)
         return valueOfWarFactory(currentHero, moveCost);
-#pragma inline_depth()
     case WAR_SCHOOL:
-#pragma inline_depth(0)
         return valueOfWarSchool(currentHero, cell);
-#pragma inline_depth()
     case WARRIOR_TOMB: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos))
             return 0;
-#pragma inline_depth()
+        // Mac 0x1469f8 retains this tomb-specific backpack check.
+        if (const_cast<hero*>(currentHero)
+                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+            return 0;
+        return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
     }
     case SHIPWRECK_SURVIVOR:
-        // Complete's retail jump table maps object type 86 directly to the
-        // backpack-test / average-artifact tail which WARRIOR_TOMB reaches
-        // by fallthrough. Dreamcast independently proves this named helper.
+        // Mac 0x1467b4 retains a separate survivor backpack check.
         if (const_cast<hero*>(currentHero)
                 ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
@@ -3955,9 +3890,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos)) {
-#pragma inline_depth()
             return static_cast<long>(
                 info->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
         }
@@ -3965,17 +3898,13 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             player->m_ai.m_resourceValue[GOLD] * 1000.0);
     }
     case WATERING_HOLE:
-#pragma inline_depth(0)
         return valueOfMoveSource(
             currentHero, 0x40, 200, moveCost);
-#pragma inline_depth()
     case WINDMILL: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos)) {
-#pragma inline_depth()
             if (info->getWindmillAmount() == 0)
                 return 0;
         }

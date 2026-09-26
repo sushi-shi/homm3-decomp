@@ -33,7 +33,7 @@
 class t_memory_file : public TAbstractFile {
 public:
     // Both constructors are defined inline in this module-local class.
-    // Retail expands
+    // Mac retains their bodies at 0x223168 and 0x2231cc; Windows expands
     // the owning form into 0x512c80 / 0x512d40 (vptr, ownsBuffer, the
     // hundred-byte allocation, capacity, position) and the borrowing form
     // into 0x512e00, over a buffer it must not free.
@@ -45,6 +45,7 @@ public:
     // Assigning in the body puts the two stores adjacent, VC6 drops the
     // base one, and what is left is retail's single `mov [this], 0x640264`
     // ahead of the flag.
+    MAC_ADDRESS(0x223168, 0x64)
     t_memory_file()
     {
         m_ownsBuffer = 1;
@@ -52,6 +53,7 @@ public:
         m_capacity = 100;
         m_position = 0;
     }
+    MAC_ADDRESS(0x2231cc, 0x2c)
     t_memory_file(char* buffer, unsigned int capacity)
     {
         m_ownsBuffer = 0;
