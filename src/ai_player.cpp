@@ -2272,15 +2272,9 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
-        int minimumMorale;
-        if (g_game->m_gameVersion == 0
-            && isBaseElemental(type)) {
-            minimumMorale = 1;
-        } else {
-            minimumMorale = 2;
-            if (traits->m_townType != TOWN_NECROPOLIS)
-                minimumMorale = 1;
-        }
+        // Mac 0x30354 expands getAlignment again for this threshold.
+        int minimumMorale =
+            g_game->getAlignment(type) == TOWN_NECROPOLIS ? 2 : 1;
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)

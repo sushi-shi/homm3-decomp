@@ -2882,6 +2882,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         purchaseValue = 0;
     value += purchaseValue;
 
+    // Mac 0x1429c0 expands getAlignment for the generator's creature.
     if (static_cast<unsigned char>(
             g_game->m_mapHeader.m_victoryCondition.appliesToPlayer(
                 g_netLocalGamePos))
@@ -2889,12 +2890,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && (g_game->m_gameVersion != 0
-            || (currentGenerator.m_type[0] != CREATURE_AIR_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_EARTH_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_FIRE_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_WATER_ELEMENTAL))
-        && g_creatureTypeTraits[currentGenerator.m_type[0]].m_townType != -1) {
+        && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
         value += 5000000 / g_game->m_generators.size();
     }
     return value;
