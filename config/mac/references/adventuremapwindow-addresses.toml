@@ -1,5 +1,23 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[functions]]
+retail_va = 0x401400
+unit = "adventuremapwindow"
+mac_section = 0
+mac_offset = 0x26c
+mac_size = 0x20
+target_sha256 = "ce1f363180b6f8e4f6d2a309e17ac7bf5544a03a5d42ae375a4f92c69883c652"
+evidence = "Adventure-window constructor at 0xa80 installs vtable data 1+0x26ec4. Its open descriptor at 1+0x26ed0 resolves through 1+0x65e8 to code 0x26c. This complete wrapper calls heroWindow::open at 0x20af50, then returns; BLR 0x288 precedes close at 0x28c. Windows 0x401400 has the same base open call and additionally creates/starts its Windows immersion mouse effect. The source already preserves the base helper."
+
+[[functions]]
+retail_va = 0x4014d0
+unit = "adventuremapwindow"
+mac_section = 0
+mac_offset = 0x28c
+mac_size = 0x20
+target_sha256 = "bc48ebda51886777e2953fc31dc5b2b1076ad28a5ce3f1475a95590a2a81500a"
+evidence = "Adventure-window constructor vtable data 1+0x26ec4 has close descriptor at 1+0x26ed4 -> 1+0x65e0 -> code 0x28c. Complete wrapper calls heroWindow::close at 0x20b158; BLR 0x2a8 precedes checkAdvCheatCode at 0x2ac. Windows 0x4014d0 additionally deletes its Windows immersion mouse effect before the same base close operation."
+
+[[functions]]
 mac_section = 0x0
 mac_offset = 0xa34
 mac_size = 0x15e0

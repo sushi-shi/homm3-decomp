@@ -210,6 +210,8 @@ CAdventurMapChatEdit::CAdventurMapChatEdit(
 VA(0x00401400, 0xC5)
 int TAdventureMapWindow::open(int zOrder, unsigned char update)
 {
+    // Mac's override at 0:0x26c only forwards to heroWindow::open;
+    // the immersion mouse-effect lifetime belongs to Windows.
     int result = heroWindow::open(zOrder, update);
     if (result == 0) {
         RECT area;
@@ -232,6 +234,7 @@ int TAdventureMapWindow::open(int zOrder, unsigned char update)
 VA(0x004014d0, 0x3C)
 void TAdventureMapWindow::close(unsigned char update)
 {
+    // Mac 0:0x28c has only the base close call, without immersion teardown.
     delete static_cast<TImmMouseEffect*>(m_immersion);
     m_immersion = 0;
     heroWindow::close(update);
