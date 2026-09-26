@@ -957,38 +957,51 @@ int game::loadBoatPool(TAbstractFile* infile)
     return 0;
 }
 
+// DC records separate unsigned-byte, signed-byte and short staging locals;
+// Mac reuses slots +0x82/+0x83/+0x80 across the retained scalar writes.
 VA(0x004b9c40, 0x1AD) MAC_ADDRESS(0x0cbf08, 0x260)  // dc 0xa4980
 int game::saveBoatPool(TAbstractFile* outfile)
 {
+    unsigned short ushortBuffer;
     int count;
     int x;
+    unsigned char ucharBuffer;
+    char charBuffer;
 
-    count = writeValue<unsigned char>(outfile, m_boats.size());
+    ucharBuffer = m_boats.size();
+    count = writeScalar(outfile, ucharBuffer);
     if (count < sizeof(unsigned char))
         return -1;
 
     for (x = 0; x < m_boats.size(); ++x) {
-        count = writeValue<char>(outfile, m_boats[x].m_allocated);
+        charBuffer = m_boats[x].m_allocated;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        count = writeValue<unsigned char>(outfile, m_boats[x].m_id);
+        ucharBuffer = m_boats[x].m_id;
+        count = writeScalar(outfile, ucharBuffer);
         if (count < sizeof(unsigned char))
             return -1;
-        count = writeValue<char>(outfile, m_boats[x].m_type);
+        charBuffer = m_boats[x].m_type;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        count = writeValue<char>(outfile, m_boats[x].m_facing);
+        charBuffer = m_boats[x].m_facing;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        count = writeValue<char>(outfile, m_boats[x].m_playerOwner);
+        charBuffer = m_boats[x].m_playerOwner;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
 
-        count = writeValue<unsigned short>(outfile, m_boats[x].m_occupyingHero);
+        ushortBuffer = m_boats[x].m_occupyingHero;
+        count = writeScalar(outfile, ushortBuffer);
         if (count < sizeof(unsigned short))
             return -1;
 
-        count = writeValue<char>(outfile, m_boats[x].m_occupied);
+        charBuffer = m_boats[x].m_occupied;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
         if (!m_boats[x].save(outfile))
