@@ -1865,16 +1865,6 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 
 // Canonical Game.h inline definitions after all referenced layouts/globals.
 
-// Complete save files use the H3SVG signature and version 42.
-// E:\gamedcs\Game.h:1301, dc 0xbceb4
-VA(0x004bc0e0, 0x251) MAC_ADDRESS(0x0cf490, 0x260)
-inline SavedGameHeader::SavedGameHeader()
-{
-    memset(m_id, 0, sizeof(m_id));
-    strcpy(m_id, "H3SVG");
-    m_version = 42;
-}
-
 // Complete reads versioned nested records through the abstract stream;
 // Dreamcast uses gzread directly and records the checked ID-read count.
 // The six unchecked scalar reads use returned values rather than artificial

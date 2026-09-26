@@ -2468,6 +2468,18 @@ void applySavedGameHeader(const SavedGameHeader& saved)
     memcpy(g_wasHuman, saved.m_humanPlayer, sizeof(saved.m_humanPlayer));
 }
 
+// Complete places the save-header constructor before its owning game calls.
+// Those calls expand it; the selection TU retains the constructor call.
+// Mac places it before the save-header reset/save/load and game::load cluster.
+// E:\gamedcs\Game.h:1301, dc 0xbceb4
+VA(0x004bc0e0, 0x251) MAC_ADDRESS(0x0cf490, 0x260)
+SavedGameHeader::SavedGameHeader()
+{
+    memset(m_id, 0, sizeof(m_id));
+    strcpy(m_id, "H3SVG");
+    m_version = 42;
+}
+
 // Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
 // SavedGameHeader value and restores the acting-player and human-player state
 // before the map pools. DC's gzread interface became TAbstractFile::read.
