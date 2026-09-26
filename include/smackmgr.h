@@ -7,6 +7,8 @@
 // Only opaque vendor handles are needed by the shared game declarations.
 struct SmackTag;
 typedef SmackTag Smack;
+// Windows Miles entry point used by the shared compilation reference.
+extern "C" unsigned char __stdcall SmackSoundUseMSS(void* digitalDriver);
 #else
 #include <SMACK.H>
 #endif
