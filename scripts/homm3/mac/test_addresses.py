@@ -131,8 +131,7 @@ class TestMacAddressTables(unittest.TestCase):
         write_tables(root, **kwargs)
         claims, windows, problems = scan(text)
         self.assertEqual(problems, [])
-        with patch.object(addresses, "reviewed", return_value=[]), \
-                patch("homm3.mac.glue.stubs", return_value=list(stubs)):
+        with patch("homm3.mac.glue.stubs", return_value=list(stubs)):
             return addresses.check(root, FakePEF(), claims, windows)
 
     def test_claim_must_resolve_to_one_function_row(self):
@@ -274,38 +273,6 @@ class TestParityIndex(unittest.TestCase):
                 _, problems = addresses.index(root, paired, paired_windows, [wrong])
                 self.assertTrue(any("that its VA(0x00401000) claim does not" in item
                                     for item in problems))
-
-
-class TestMigrationEdits(unittest.TestCase):
-    def test_standalone_insertion_skips_a_matched_access_label(self):
-        text = ("class C : public B {\npublic:\n    // comment\n"
-                "    C(int value)\n        : B(value) {}\n};\n")
-        at, inserted = addresses._above_definition(text, text.index("public:"),
-                                                   addresses.spell(0x100, 0x8))
-        updated = text[:at] + inserted + text[at:]
-        self.assertIn("    // comment\n    MAC_ADDRESS(0x000100, 0x8)\n    C(int value)", updated)
-        self.assertEqual(scan(updated)[2], [])
-
-    def test_same_line_insertion_is_idempotent_and_conflicts_fail(self):
-        text = "VA(0x00401000, 0x10)  // dc 0x1\nvoid f()\n{\n}\n"
-        masked = addresses._mask(text)
-        end = addresses._windows_ends(text, masked)[(False, 0x401000)][0]
-        at, inserted = addresses._after_windows_claim(text, end, addresses.spell(0x100, 0x20))
-        updated = text[:at] + inserted + text[at:]
-        self.assertTrue(updated.startswith("VA(0x00401000, 0x10) MAC_ADDRESS(0x000100, 0x20)  //"))
-        end = addresses._windows_ends(updated, addresses._mask(updated))[(False, 0x401000)][0]
-        self.assertIsNone(addresses._after_windows_claim(updated, end, addresses.spell(0x100, 0x20)))
-        with self.assertRaises(addresses.AddressError):
-            addresses._after_windows_claim(updated, end, addresses.spell(0x104, 0x20))
-
-    def test_standalone_insertion_keeps_indentation(self):
-        text = "class C {\n    int get() const\n    {\n        return 1;\n    }\n};\n"
-        start = text.index("int get")
-        at, inserted = addresses._above_definition(text, start, addresses.spell(0x100, 0x8))
-        self.assertEqual(inserted, "    MAC_ADDRESS(0x000100, 0x8)\n")
-        updated = text[:at] + inserted + text[at:]
-        self.assertIsNone(addresses._above_definition(
-            updated, updated.index("int get"), addresses.spell(0x100, 0x8)))
 
 
 class TestRatchetFingerprint(unittest.TestCase):

@@ -53,32 +53,3 @@ def load(root: Path, unit: str) -> Profile | None:
             raise ValueError(f"{unit}: expected ordinary project/vendor include path: {value!r}")
     return Profile(unit, directories, flags, tuple(row.get("helpers", ())),
                    source_helpers=tuple(source_helpers))
-
-
-def include_dirs(root: Path, profile: Profile) -> tuple[str, ...]:
-    from homm3.mac import sdk
-    return profile.include_dirs + sdk.include_dirs(root)
-
-
-def headers(root: Path, profile: Profile) -> dict[str, bytes]:
-    """Snapshot real headers without rewriting declarations or extracting bodies.
-
-    The compiler handles conditional/macro includes and legacy SDK encodings.
-    Whole input trees are fingerprinted so changes to conditional dependencies
-    invalidate comparisons too. There is no alternate declaration-view path.
-    """
-    from homm3.mac import sdk
-    root = root.resolve()
-    result = sdk.inputs(root)
-    for directory in dict.fromkeys(("include", *profile.include_dirs)):
-        folder = root / directory
-        if not folder.is_dir() or not folder.resolve().is_relative_to(root):
-            raise ValueError(f"invalid project header directory: {directory}")
-        for path in sorted(folder.rglob("*")):
-            if path.is_symlink():
-                raise ValueError(f"header inputs must not be symlinks: {path}")
-            if path.is_file():
-                result[path.relative_to(root).as_posix()] = path.read_bytes()
-    if "include/codewarrior_prefix.h" not in result:
-        raise ValueError("missing ordinary compiler compatibility header: include/codewarrior_prefix.h")
-    return result

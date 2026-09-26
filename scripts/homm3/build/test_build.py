@@ -13,7 +13,6 @@ from homm3.cleanliness import board
 from homm3.core import inputs
 from homm3.core.nb11 import NB11Error
 from homm3.mac import build as mac_build
-from homm3.mac import queue as mac_queue
 from homm3.match import banked_rows, single_view, source_ownership, source_inventory, status, verify_va_claims
 
 
@@ -56,7 +55,6 @@ class BuildModeTest(unittest.TestCase):
             ("inventory", source_inventory, "run_gate", []),
             ("cleanliness", board, "check_and_roll", []),
             ("readme", status, "write_readme", None),
-            ("queue", mac_queue, "refresh", {}),
         ]:
             def called(*args, _name=name, _result=result, **kwargs):
                 self.events.append(_name)
@@ -67,7 +65,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
                                       "fingerprints", "mac", "history", "check", "checkpoint", "banked", "claims",
-                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme", "queue"])
+                                      "single_view", "origins", "ownership", "inventory", "cleanliness", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
         self.assertEqual(self.preflight.call_count, 3)
@@ -123,7 +121,7 @@ class BuildModeTest(unittest.TestCase):
 
     def test_fast_build_preserves_targets_and_skips_checkpoint(self):
         self.assertEqual(build.main(["--fast", "cursor"]), 0)
-        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "fast_max", "queue"])
+        self.assertEqual(self.events, ["configure", "compile", "normalize", "configure", "report", "fingerprints", "mac", "fast_max"])
         self.mocks["compile"].assert_called_once_with("ninja", "cursor")
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()

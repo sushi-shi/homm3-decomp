@@ -85,12 +85,6 @@ def main(argv=None) -> int:
 
     if fast:
         status.fast_max_movements(report, selected or None, fingerprint_pair)
-        from homm3.mac import queue as mac_queue
-        try:
-            mac_queue.refresh(ROOT, source_hashes=fingerprint_pair[0])
-        except (ValueError, OSError) as exc:
-            print(f"[build] Mac queue error: {exc}", file=sys.stderr)
-            mac_failed = True
         print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
               "run `homm3 build` before committing")
         return 1 if mac_failed else 0
@@ -158,13 +152,6 @@ def main(argv=None) -> int:
         status.write_readme(report)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
-
-    from homm3.mac import queue as mac_queue
-    try:
-        mac_queue.refresh(ROOT, source_hashes=fingerprint_pair[0])
-    except (ValueError, OSError) as exc:
-        print(f"[build] Mac queue error: {exc}", file=sys.stderr)
-        failed = True
 
     return 1 if failed else 0
 

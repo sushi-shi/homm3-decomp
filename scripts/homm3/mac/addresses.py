@@ -27,26 +27,20 @@ The executable-wide tables mirror ``config/retail``:
 
 Every source address claim and runtime label must resolve to exactly one
 ``functions.tsv`` row, exactly as a retail ``VA()`` must land on a carved
-``config/retail/functions.tsv`` entry. The reviewed TOML inventories remain
-the legacy selected-body build input; ``migrate`` copies their spans into
-source annotations and these tables, and ``check`` proves both agree.
+``config/retail/functions.tsv`` entry; ``check`` proves it.
 """
 from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass, replace
 from functools import lru_cache
-import hashlib
 from pathlib import Path
 import re
-import tomllib
 
 from homm3.core.tsv import write as write_tsv
 
-from homm3.mac.tables import (CODE_SECTION, DISPOSITIONS_TSV, FUNCTIONS_TSV, Alias,
-                               GlueStub, RuntimeLabel, TableError, read_aliases,
-                               read_dispositions, read_functions, read_glue, read_runtime,
-                               runtime_owner)
+from homm3.mac.tables import (CODE_SECTION, DISPOSITIONS_TSV, FUNCTIONS_TSV, TableError,
+                               read_dispositions, read_functions, read_glue, read_runtime)
 
 MAC_HEAD_RE = re.compile(r"\bMAC_ADDRESS\s*\(")
 MAC_COMPGEN_HEAD_RE = re.compile(r"\bMAC_COMPGEN_ADDRESS\s*\(")
@@ -55,6 +49,7 @@ VA_COMPGEN_HEAD_RE = re.compile(r"(?m)^[ \t]*VA_COMPGEN\s*\(")
 HEX_RE = re.compile(r"0x[0-9a-fA-F]+$")
 SIZE_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_RE = re.compile(r"[A-Za-z_]\w*$")
+ACCESS_LABEL_RE = re.compile(r"(?:(?:public|protected|private)\s*:(?!:)\s*)+")
 #: Source lines a backward or forward declarator walk steps over.
 ANNOTATION_LINE_PREFIXES = ("MAC_ADDRESS(", "MAC_COMPGEN_ADDRESS(")
 
@@ -317,242 +312,15 @@ def claim_problems(claims: list[Claim]) -> list[str]:
     return problems
 
 
-# --- reviewed TOML inventories ----------------------------------------------
-
-@dataclass(frozen=True)
-class Reviewed:
-    """One reviewed Mac function span from the legacy TOML inventories."""
-    kind: str                  # pair | reference | helper | compgen | runtime
-    offset: int
-    size: int
-    sha256: str | None
-    source: Path | None = None
-    windows_va: int | None = None
-    helper: str | None = None
-    in_class: bool = False
-    compgen: tuple[str, str] | None = None
-    symbol: str | None = None
-    evidence: str = ""
-    call_kind: str = "direct"
-
-
-def reviewed(root: Path) -> list[Reviewed]:
-    """Pairs, references and runtime rows, validated by their own loaders."""
-    from homm3.mac import references
-    from homm3.mac.source import load_pairs
-    rows = []
-    for pair in load_pairs(root):
-        if pair.mac_section != CODE_SECTION:
-            raise AddressError(f"Mac pair {pair.retail_va:#x} is outside code section 0")
-        rows.append(Reviewed("pair", pair.mac_offset, pair.mac_size, pair.target_sha256,
-                             pair.source, pair.retail_va, symbol=pair.mac_symbol))
-    raw_rows = {}
-    for path in sorted((root / "config/mac/references").glob("*.toml")):
-        inventory = tomllib.loads(path.read_text())
-        for row in inventory.get("functions", []):
-            raw_rows[("va", row["retail_va"])] = row
-        for row in inventory.get("helpers", []):
-            raw_rows[("helper", row["unit"], row["source_helper"],
-                      row.get("source"))] = row
-    paired = {row.windows_va for row in rows}
-    for ref in references.load(root):
-        if ref.retail_va in paired:
-            continue  # references.load proved it repeats the admitted pair
-        if ref.mac_section != CODE_SECTION:
-            raise AddressError(f"Mac reference {ref.identity} is outside code section 0")
-        if ref.retail_va is None:
-            raw = raw_rows.get(("helper", ref.unit, ref.source_helper,
-                                ref.source.relative_to(root).as_posix()))
-            if raw is None:
-                raw = raw_rows.get(("helper", ref.unit, ref.source_helper, None), {})
-            rows.append(Reviewed("helper", ref.mac_offset, ref.mac_size, ref.target_sha256,
-                                 ref.source, None, ref.source_helper,
-                                 bool(raw.get("in_class", False)), symbol=ref.mac_symbol))
-            continue
-        raw = raw_rows.get(("va", ref.retail_va), {})
-        compgen = ((raw["compgen_kind"], raw["compgen_type"])
-                   if raw.get("compgen_kind") else None)
-        rows.append(Reviewed("compgen" if compgen else "reference", ref.mac_offset,
-                             ref.mac_size, ref.target_sha256, ref.source, ref.retail_va,
-                             compgen=compgen, symbol=ref.mac_symbol))
-    for row in legacy_runtime(root):
-        rows.append(Reviewed("runtime", row["mac_offset"], row["mac_size"], row["sha256"],
-                             symbol=row["symbol"], evidence=row["evidence"],
-                             call_kind=row.get("call_kind", "direct")))
-    return rows
-
-
-def legacy_runtime(root: Path) -> list[dict]:
-    """Runtime function rows still in config/mac/runtime.toml, awaiting migrate.
-
-    The runtime maps own these labels; a TOML row appears only when a worker
-    branch adds one before `homm3 mac migrate` moves it.
-    """
-    path = root / "config/mac/runtime.toml"
-    rows = tomllib.loads(path.read_text()).get("functions", []) if path.is_file() else []
-    for row in rows:
-        if row["mac_section"] != CODE_SECTION:
-            raise AddressError(f"Mac runtime {row['symbol']} is outside code section 0")
-        if not row["evidence"].strip():
-            raise AddressError(f"Mac runtime {row['symbol']} lacks evidence")
-    return rows
-
-
-# --- migration ---------------------------------------------------------------
-
-def _windows_ends(text: str, masked: str) -> dict[tuple[bool, int], list[int]]:
-    """(is_compgen, va) -> closing-paren offsets of that Windows claim."""
-    ends: dict[tuple[bool, int], list[int]] = defaultdict(list)
-    for head, compgen in ((VA_HEAD_RE, False), (VA_COMPGEN_HEAD_RE, True)):
-        for _start, end, args, _ in _invocations(masked, head, text):
-            if end is not None and args and HEX_RE.match(args[0]):
-                ends[(compgen, int(args[0], 16))].append(end)
-    return ends
-
-
-def _after_windows_claim(text: str, end: int, spelling: str) -> tuple[int, str] | None:
-    """Insertion after the claim's closing paren, or None when already equal."""
-    line_end = text.find("\n", end)
-    tail = text[end + 1:line_end if line_end >= 0 else len(text)]
-    existing = re.match(r"\s*(MAC_(?:COMPGEN_)?ADDRESS\([^)]*\))", tail)
-    if existing:
-        if re.sub(r"\s+", "", existing.group(1)) != re.sub(r"\s+", "", spelling):
-            raise AddressError(f"source has {existing.group(1)}, reviewed {spelling}")
-        return None
-    return end + 1, " " + spelling
-
-
-ACCESS_LABEL_RE = re.compile(r"(?:(?:public|protected|private)\s*:(?!:)\s*)+")
-
-
-def _above_definition(text: str, start: int, spelling: str) -> tuple[int, str] | None:
-    # An in-class finder match can begin at a preceding access label; the
-    # claim belongs on the declarator's own line, below any comment block.
-    masked = _mask(text)
-    label = ACCESS_LABEL_RE.match(masked, start)
-    if label:
-        start = label.end()
-        while masked[start].isspace():
-            start += 1
-    line_start = text.rfind("\n", 0, start) + 1
-    indent = text[line_start:start]
-    if indent.strip():
-        raise AddressError(f"definition does not begin its line: {text[line_start:start + 40]!r}")
-    previous_start = text.rfind("\n", 0, max(line_start - 1, 0)) + 1
-    previous = text[previous_start:max(line_start - 1, 0)].strip()
-    if previous.startswith("MAC_ADDRESS("):
-        if re.sub(r"\s+", "", previous) != re.sub(r"\s+", "", spelling):
-            raise AddressError(f"source has {previous}, reviewed {spelling}")
-        return None
-    return line_start, indent + spelling + "\n"
-
-
-def migrate(root: Path, pef) -> dict[str, int]:
-    """Copy reviewed TOML spans into source annotations and the TSV tables.
-
-    Idempotent and all-or-nothing: every edit is computed against the current
-    text and every table is validated before anything is written. An equal
-    existing annotation or row is kept; a different one fails. Rows already
-    present in the TSVs but absent from TOML are kept.
-    """
-    from homm3.mac.source import class_header_helper, source_helper
-    rows = reviewed(root)
-    counts: Counter = Counter()
-    for row in rows:
-        data = pef.code(CODE_SECTION, row.offset, row.size)
-        if row.sha256 and hashlib.sha256(data).hexdigest() != row.sha256:
-            raise AddressError(f"reviewed {row.kind} at {row.offset:#x} no longer hashes to its TOML digest")
-
-    from homm3.mac import glue as glue_module
-    spans = read_functions(root)
-    detected = [GlueStub(address.offset, name, library)
-                for address, library, name in glue_module.stubs(pef)]
-    wanted = [(row.offset, row.size, f"reviewed {row.kind}") for row in rows]
-    wanted += [(stub.offset, glue_module.GLUE_SIZE, "import glue") for stub in detected]
-    for offset, size, what in wanted:
-        if spans.get(offset, size) != size:
-            raise AddressError(f"{FUNCTIONS_TSV}: {offset:#x} has size {spans[offset]:#x}, "
-                               f"{what} has {size:#x}")
-        spans[offset] = size
-    ordered = sorted(spans.items())
-    for (offset, size), (following, _) in zip(ordered, ordered[1:]):
-        if following < offset + size:
-            raise AddressError(f"{FUNCTIONS_TSV}: {offset:#x}+{size:#x} overlaps {following:#x}")
-
-    by_file: dict[Path, list[Reviewed]] = defaultdict(list)
-    for row in rows:
-        if row.kind != "runtime":
-            by_file[row.source].append(row)
-    rewritten: dict[Path, str] = {}
-    for path, file_rows in sorted(by_file.items()):
-        text = path.read_text()
-        ends = _windows_ends(text, _mask(text))
-        insertions = []
-        for row in file_rows:
-            try:
-                if row.kind == "helper":
-                    finder = (class_header_helper if path.suffix == ".h" or row.in_class
-                              else source_helper)
-                    start, _signature, _body = finder(text, row.helper, path)
-                    edit = _above_definition(text, start, spell(row.offset, row.size))
-                else:
-                    compgen = row.kind == "compgen"
-                    sites = ends.get((compgen, row.windows_va), [])
-                    if len(sites) != 1:
-                        raise AddressError(f"expected one {'VA_COMPGEN' if compgen else 'VA'}"
-                                           f"({row.windows_va:#010x}) claim, found {len(sites)}")
-                    spelling = (spell_compgen(row.offset, row.size, *row.compgen) if compgen
-                                else spell(row.offset, row.size))
-                    edit = _after_windows_claim(text, sites[0], spelling)
-            except ValueError as exc:
-                raise AddressError(f"{path.relative_to(root)}: {exc}") from exc
-            counts["annotated" if edit else "unchanged"] += 1
-            if edit:
-                insertions.append(edit)
-        if len({at for at, _ in insertions}) != len(insertions):
-            raise AddressError(f"{path.relative_to(root)}: two Mac claims at one source position")
-        for at, inserted in sorted(insertions, reverse=True):
-            text = text[:at] + inserted + text[at:]
-        if insertions:
-            rewritten[path] = text
-
-    primary = {label.offset: label for label in read_runtime(root)}
-    aliases = {(alias.offset, alias.name): alias for alias in read_aliases(root)}
-    for row in rows:
-        if row.kind != "runtime":
-            continue
-        label = primary.get(row.offset)
-        if label is None:
-            primary[row.offset] = RuntimeLabel(row.offset, row.symbol, runtime_owner(root, row.symbol),
-                                               row.call_kind, row.evidence)
-        elif label.name != row.symbol and (row.offset, row.symbol) not in aliases:
-            aliases[(row.offset, row.symbol)] = Alias(row.offset, row.symbol, row.evidence)
-    glue = {stub.offset: stub for stub in read_glue(root)}
-    for stub in detected:
-        glue.setdefault(stub.offset, stub)
-
-    for path, text in rewritten.items():
-        path.write_text(text)
-    counts["files"] = len(rewritten)
-    from homm3.mac import tables
-    tables.write(root, spans, list(primary.values()), list(aliases.values()), list(glue.values()))
-    counts["functions"] = len(ordered)
-    counts["runtime"] = len(primary)
-    counts["aliases"] = len(aliases)
-    counts["glue"] = len(glue)
-    return dict(counts)
-
-
 # --- verification -----------------------------------------------------------
 
 def check(root: Path, pef, claims: list[Claim], windows: list[WindowsClaim]) -> list[str]:
-    """Tables, source claims against them, and agreement with review rows."""
+    """Tables and the source claims against them."""
     from homm3.mac import tables
     problems = tables.validate(root, pef)
     try:
         spans = read_functions(root)
         runtime = read_runtime(root)
-        aliases = read_aliases(root)
         glue = read_glue(root)
         dispositions = read_dispositions(root)
     except ValueError as exc:
@@ -571,41 +339,8 @@ def check(root: Path, pef, claims: list[Claim], windows: list[WindowsClaim]) -> 
         if claim.offset in library:
             problems.append(f"{claim.where}: {claim.identity} Mac span {claim.offset:#x} is also "
                             f"library label {library[claim.offset]}")
-    runtime_names = {(row.offset, row.name) for row in runtime}
-    runtime_names |= {(alias.offset, alias.name) for alias in aliases}
-    runtime_spans = {row.offset for row in runtime}
 
     by_identity = {claim.identity: claim for claim in claims}
-    helpers = defaultdict(list)
-    for claim in claims:
-        if claim.windows_va is None and claim.compgen is None:
-            helpers[(claim.path, claim.offset, claim.size)].append(claim)
-    for row in reviewed(root):
-        label = row.symbol or (f"{row.windows_va:#010x}" if row.windows_va else row.helper)
-        data = pef.code(CODE_SECTION, row.offset, row.size)
-        if row.sha256 and hashlib.sha256(data).hexdigest() != row.sha256:
-            problems.append(f"reviewed {row.kind} {label}: target bytes differ from the TOML digest")
-        if spans.get(row.offset) != row.size:
-            problems.append(f"reviewed {row.kind} {label}: {row.offset:#x}+{row.size:#x} "
-                            f"is not a {FUNCTIONS_TSV} row")
-        if row.kind == "runtime":
-            if (row.offset, row.symbol) not in runtime_names or row.offset not in runtime_spans:
-                problems.append(f"reviewed runtime {row.symbol}: missing from the runtime maps")
-            continue
-        if row.kind == "helper":
-            relative = row.source.relative_to(root).as_posix()
-            if not helpers.get((relative, row.offset, row.size)):
-                problems.append(f"reviewed helper {relative}:{row.helper}: no MAC_ADDRESS "
-                                f"{row.offset:#x}+{row.size:#x} above its definition")
-            continue
-        identity = (f"compgen:0x{row.windows_va:08x}" if row.kind == "compgen"
-                    else f"va:0x{row.windows_va:08x}")
-        claim = by_identity.get(identity)
-        if claim is None:
-            problems.append(f"reviewed {row.kind} {identity}: source has no Mac address claim")
-        elif (claim.offset, claim.size) != (row.offset, row.size):
-            problems.append(f"{claim.where}: {identity} claims {claim.offset:#x}+{claim.size:#x}, "
-                            f"reviewed {row.offset:#x}+{row.size:#x}")
     identities = {claim.identity for claim in claims}
     identities |= {f"{'compgen' if w.compgen else 'va'}:0x{w.va:08x}" for w in windows}
     for identity, (disposition, _evidence) in dispositions.items():

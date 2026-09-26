@@ -14,21 +14,19 @@ from homm3.mac.loader import Loader
 from homm3.mac.object import CodeHunk, DataHunk, ObjectError
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, JumpTable, TocBinding
-from homm3.mac.source import data_rows, load_pairs
 
 
 def bindings(root: Path, pef: PEF, loader: Loader, code: CodeHunk,
              hunks: tuple[DataHunk, ...], *, unit: str | None,
-             retail_va: int | None) -> dict[str, TocBinding]:
+             retail_va: int | None, owner: Address | None = None,
+             owner_size: int | None = None) -> dict[str, TocBinding]:
+    from homm3.mac.toc import data_rows
     rows = [row for row in data_rows(root, "jump_tables")
             if row.get("owner_va") == retail_va and row.get("unit") == unit]
     if not rows:
         return {}
-    owners = [pair for pair in load_pairs(root)
-              if pair.retail_va == retail_va and pair.unit == unit and pair.mac_symbol == code.name]
-    if len(owners) != 1:
-        raise ObjectError("jump table needs one admitted owning function")
-    owner = owners[0]
+    if owner is None or owner_size is None:
+        raise ObjectError("jump table needs its owning function's claimed Mac span")
     toc = loader.toc()
     references = {name for _, kind, name in code.xrefs if kind == "HUNK_XREF_16BIT_IL"}
     result = {}
@@ -42,7 +40,7 @@ def bindings(root: Path, pef: PEF, loader: Loader, code: CodeHunk,
         section, offset, size, reference = (row[field] for field in fields)
         target = Address(section, offset)
         if (offset % 4 or size <= 0 or size % 4 or pef.section(section).kind not in (1, 2)
-                or reference % 4 or not 0 <= reference < owner.mac_size):
+                or reference % 4 or not 0 <= reference < owner_size):
             raise ObjectError("invalid reviewed Mac jump-table span/reference")
         if any(section == other and offset < end and start < offset + size
                for other, start, end in spans):
@@ -51,7 +49,7 @@ def bindings(root: Path, pef: PEF, loader: Loader, code: CodeHunk,
         payload = pef.read(section, offset, size)
         if hashlib.sha256(payload).hexdigest() != row.get("sha256"):
             raise ObjectError("reviewed Mac jump-table payload changed")
-        instruction = int.from_bytes(pef.code(owner.mac_section, owner.mac_offset + reference, 4), "big")
+        instruction = int.from_bytes(pef.code(owner.section, owner.offset + reference, 4), "big")
         if instruction >> 26 != 32 or (instruction >> 16) & 31 != 2:
             raise ObjectError("reviewed jump-table reference is not an RTOC pointer load")
         displacement = instruction & 0xffff
@@ -61,9 +59,9 @@ def bindings(root: Path, pef: PEF, loader: Loader, code: CodeHunk,
             raise ObjectError("retail jump-table TOC load does not select its reviewed span")
         for at in range(0, size, 4):
             destination = loader.pointers.get(Address(section, offset + at))
-            if (not isinstance(destination, Address) or destination.section != owner.mac_section
+            if (not isinstance(destination, Address) or destination.section != owner.section
                     or destination.offset % 4
-                    or not owner.mac_offset <= destination.offset < owner.mac_offset + owner.mac_size):
+                    or not owner.offset <= destination.offset < owner.offset + owner_size):
                 raise ObjectError("retail jump-table entry is not a relocated instruction in its owner")
         values = [hunk for hunk in hunks
                   if hunk.name in references and hunk.name.startswith("@")
@@ -87,5 +85,5 @@ def bindings(root: Path, pef: PEF, loader: Loader, code: CodeHunk,
         entries = tuple(int.from_bytes(payload[at:at + 4], "big") for at in range(0, size, 4))
         result[value.name] = TocBinding(displacement, target, True,
                                         jump_table=JumpTable(addends, entries,
-                                                             pef.section(owner.mac_section).default_address))
+                                                             pef.section(owner.section).default_address))
     return result

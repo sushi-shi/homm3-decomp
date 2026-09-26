@@ -11,7 +11,52 @@ from homm3.mac import jump_tables, vtables
 from homm3.mac.object import CodeHunk, DataHunk, ObjectError
 from homm3.mac.pef import PEF
 from homm3.mac.relocations import Address, TocBinding
-from homm3.mac.source import data_rows, load_data
+from homm3.mac import source
+
+# One build scores thousands of pairs against the same PEF and inventories.
+_CACHE: dict = {}
+
+
+def reset() -> None:
+    """Forget cached loader state and data inventories (call when they may change)."""
+    _CACHE.clear()
+
+
+def data_rows(root: Path, kind: str) -> list[dict]:
+    key = ("rows", root, kind)
+    if key not in _CACHE:
+        _CACHE[key] = source.data_rows(root, kind)
+    return _CACHE[key]
+
+
+def load_data(root: Path):
+    key = ("data", root)
+    if key not in _CACHE:
+        _CACHE[key] = source.load_data(root)
+    return _CACHE[key]
+
+
+def _loader(pef: PEF) -> Loader:
+    key = ("loader", id(pef))
+    if key not in _CACHE:
+        loader = Loader(pef)
+        by_section: dict[int, list[int]] = {}
+        for at in loader.pointers:
+            by_section.setdefault(at.section, []).append(at.offset)
+        inverse: dict = {}
+        for at, destination in loader.pointers.items():
+            inverse.setdefault(destination, []).append(at)
+        _CACHE[key] = (pef, loader, {section: sorted(offsets) for section, offsets in by_section.items()},
+                       inverse)
+    return _CACHE[key][1]
+
+
+def _has_pointer(pef: PEF, section: int, offset: int, size: int) -> bool:
+    import bisect
+    _loader(pef)
+    offsets = _CACHE[("loader", id(pef))][2].get(section, [])
+    at = bisect.bisect_left(offsets, offset - 3)
+    return at < len(offsets) and offsets[at] < offset + size
 
 
 def _function_descriptors(root: Path, pef: PEF, loader: Loader, toc: Address,
@@ -61,12 +106,13 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
                for row in data_rows(root, "jump_tables")):
             raise ObjectError("reviewed jump table has no candidate TOC reference")
         return {}
-    loader = Loader(pef)
+    loader = _loader(pef)
     toc = loader.toc()
     descriptors = _function_descriptors(root, pef, loader, toc,
                                         unit=unit, retail_va=retail_va)
     tables = jump_tables.bindings(root, pef, loader, code, hunks,
-                                 unit=unit, retail_va=retail_va)
+                                 unit=unit, retail_va=retail_va,
+                                 owner=target_origin, owner_size=target_size)
     external_vtables = vtables.external_bindings(root, pef, loader, code, hunks,
                                                  unit=unit, retail_va=retail_va)
 
@@ -78,8 +124,7 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
         payload = pef.read(section, offset, size)
         if hashlib.sha256(payload).hexdigest() != digest:
             raise ObjectError(f"reviewed Mac data changed at {section}+{offset:#x}")
-        if not declaration_only and any(at.section == section and offset < at.offset + 4 and at.offset < offset + size
-               for at in loader.pointers):
+        if not declaration_only and _has_pointer(pef, section, offset, size):
             raise ObjectError("relocatable data payloads require additional matching support")
         return payload
 
@@ -289,8 +334,8 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
                     or cells[0].xrefs != ((0, "HUNK_XREF_32BIT", name),)):
                 raise ObjectError(f"TOC symbol {name!r} lacks its MWOB pointer cell")
         if indirect and not address_load:
-            sites = [at for at, destination in loader.pointers.items()
-                     if destination == target and at.section == toc.section
+            sites = [at for at in _CACHE[("loader", id(pef))][3].get(target, ())
+                     if at.section == toc.section
                      and -0x8000 <= at.offset - toc.offset < 0x8000]
             if len(sites) != 1:
                 raise ObjectError(f"TOC symbol {name!r} has {len(sites)} relocated pointer cells")
