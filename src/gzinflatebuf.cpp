@@ -64,8 +64,7 @@ int TGzInflateBuf::getByte()
         if (count == 0)
             return -1;
     }
-    unsigned char c = *m_stream.next_in;
-    ++m_stream.next_in;
+    unsigned char c = *m_stream.next_in++;
     --m_stream.avail_in;
     return c;
 }
