@@ -3499,22 +3499,22 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
     char charBuffer;
 
     charBuffer = tempObject.m_x;
-    count = writeValue(outfile, charBuffer);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
     charBuffer = tempObject.m_y;
-    count = writeValue(outfile, charBuffer);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
     charBuffer = tempObject.m_z;
-    count = writeValue(outfile, charBuffer);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
     ushortBuffer = tempObject.m_typeIndex;
-    count = writeValue(outfile, ushortBuffer);
+    count = writeScalar(outfile, ushortBuffer);
     if (count < sizeof(unsigned short))
         return -1;
     return 0;
