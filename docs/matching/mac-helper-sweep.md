@@ -40,9 +40,12 @@ work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and
 For each caller, inspect Mac disassembly and direct targets; use Dreamcast
 source facts when they are already available. Restore one canonical helper body
 and source call in its plausible owning TU/header. The name may be ours when
-Mac shows the operation but does not preserve a source symbol. Check
-Mac body order separately from cross-TU VC6 expansion when deciding header
-placement. Record unresolved destinations in the queue instead of silently
-counting them as absent helpers. Batch the helper edits without per-function
-score tuning or per-helper builds; compilation and byte comparisons follow the
-broad restoration pass.
+Mac shows the operation but does not preserve a source symbol. A field load,
+array index, or sequence of stores in Mac can be an expanded helper. Do not
+remove an authored helper call solely because the PEF has no retained call,
+including in Windows functions already at 100%. Check Mac body order
+separately from cross-TU VC6 expansion when deciding header placement.
+Record unresolved destinations in the queue instead of silently counting them
+as absent helpers. Batch the helper edits without per-function score tuning or
+per-helper builds; compilation and byte comparisons follow the broad
+restoration pass.

@@ -3487,7 +3487,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 VA(0x004bf570, 0x203)
 void game::giveTroopsToNeutralTown(int townId)
 {
-    town* currentTown = &m_towns[townId];
+    town* currentTown = getTown(townId);
     long weekNumber = getCurrentTurn() / 7;
     int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
@@ -6749,7 +6749,7 @@ VA(0x004c6a30, 0x21F)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
     hero* obscuringHero = 0;
-    NewmapCell* mapCell = m_worldMap.cell(location);
+    NewmapCell* mapCell = getCell(location);
     if (mapCell->m_type == HERO) {
         obscuringHero = g_game->getHero(mapCell->m_extraInfo);
         obscuringHero->restoreCell();
@@ -8022,7 +8022,7 @@ void game::randomizeHeroPool()
 VA(0x004c9730, 0x159)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
-    armyGroup* currentArmy = &m_heroes[hero].m_army;
+    armyGroup* currentArmy = &getHero(hero)->m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
     if (g_inCampaign
@@ -8658,7 +8658,7 @@ void game::processOnMapTowns()
                     && tempCell->m_isTrigger) {
                     townnum = tempCell->m_extraInfo;
                     townExtra = &m_scenarioTowns[townnum];
-                    currTown = &m_towns[townnum];
+                    currTown = getTown(townnum);
 
                     currTown->m_mapX = x;
                     currTown->m_mapY = y;
@@ -9531,9 +9531,7 @@ int game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
-        // DC names vector<town>::operator[]; Mac loads g_game for this array.
-        town* currentTown =
-            &g_game->m_towns[m_players[whichPlayer].m_townIds[i]];
+        town* currentTown = g_game->getTown(m_players[whichPlayer].m_townIds[i]);
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {

@@ -720,9 +720,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         short heroId = player->m_heroes[heroIndex];
-        // Mac 0x14093c multiplies heroId by the hero stride without a sentinel test;
-        // Complete does likewise, unlike the older Dreamcast GetHero call.
-        currentHero = &g_game->m_heroes[heroId];
+        currentHero = g_game->getHero(heroId);
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
