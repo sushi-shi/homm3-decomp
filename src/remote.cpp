@@ -428,8 +428,10 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-// Mac 0x210f50/0x210f78 retain separate compressed/original sends;
-// 0x210f60 releases the temporary compressed packet through destroyMsg.
+// Windows retains one sendIt join after choosing the packet, then releases
+// the compressed temporary through destroyMsg. Mac 0x210f50/0x210f78
+// instead retains separate compressed/original sends (cleanup at0x210f60);
+// the common helper paths are preserved, but that Mac flow is not yet exact.
 VA(0x00553370, 0x5C) MAC_ADDRESS(0x210ee4, 0xb4)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
@@ -441,13 +443,11 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     if (compressMsg)
         compressedMsg = this->compressMsg(msg);
 
-    bool result;
-    if (compressedMsg) {
-        result = sendIt(compressedMsg, dpidTo, guaranteed);
+    if (compressedMsg)
+        msg = compressedMsg;
+    bool result = sendIt(msg, dpidTo, guaranteed);
+    if (compressedMsg)
         destroyMsg(compressedMsg);
-    } else {
-        result = sendIt(msg, dpidTo, guaranteed);
-    }
     return result;
 }
 
