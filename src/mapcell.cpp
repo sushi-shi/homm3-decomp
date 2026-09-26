@@ -2374,20 +2374,13 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         // 94.96.
         int rawIdentifier;
         infile->read(&rawIdentifier, sizeof(rawIdentifier));
-#if defined(HOMM3_TARGET_MAC)
-        // Mac map data is little endian; the retail PowerPC load uses lwbrx.
-        identifier = __lwbrx(&rawIdentifier, 0);
-#else
-        identifier = rawIdentifier;
-#endif
+        identifier = LITTLE_ENDIAN_LONG(rawIdentifier);
     }
 
     short quantity;
     if (infile->read(&quantity, sizeof(quantity)) < sizeof(quantity))
         return -1;
-#if defined(HOMM3_TARGET_MAC)
-    quantity = __lhbrx(&quantity, 0);
-#endif
+    quantity = LITTLE_ENDIAN_SHORT(quantity);
     monsterObject->m_monsterInfo.m_qty = quantity;
 
     // DC records unsigned char_buffer at line 2598, then the signed
@@ -2440,9 +2433,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
             if (infile->read(&quantityRead, sizeof(quantityRead))
                 < sizeof(quantityRead))
                 return -1;
-#if defined(HOMM3_TARGET_MAC)
-            quantityRead = __lwbrx(&quantityRead, 0);
-#endif
+            quantityRead = LITTLE_ENDIAN_LONG(quantityRead);
             tempMonster.m_resQty[i] = quantityRead;
         }
 
@@ -2454,11 +2445,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         } else {
             short wide;
             infile->read(&wide, sizeof(wide));
-#if defined(HOMM3_TARGET_MAC)
-            artifact = static_cast<short>(__lhbrx(&wide, 0));
-#else
-            artifact = wide;
-#endif
+            artifact = static_cast<short>(LITTLE_ENDIAN_SHORT(wide));
         }
         tempMonster.m_artifact = artifact;
 
