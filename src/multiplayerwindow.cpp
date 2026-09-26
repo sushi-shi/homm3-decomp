@@ -370,10 +370,14 @@ CHeroSessions::CHeroSessions()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1005
-// Slider callback for the session list; scrolls the displayed window of games.
+// The retail slider constructor passes 0x50ee10. Both builds use the global
+// window, store its index, redraw, then call update; the parent is unused.
+VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
 void sliderGames(int state, heroWindow* parentWindow)
 {
-    static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
+    g_multiPlayerWindow->m_currentIndex = state;
+    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_multiPlayerWindow->update();
 }
 
 VA(0x0050de50, 0x8F) MAC_ADDRESS(0x219a1c, 0xc4)  // dc 0xffac0
