@@ -10016,6 +10016,38 @@ VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
 VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 
+// Mac retains the three contiguous-element loadVector specializations.
+// game::load calls the point body four times, then the long and university
+// bodies once each; Windows expands these calls in its caller.
+#if 0  // @carcass -- claim-only template instances
+MAC_ADDRESS(0x0e7688, 0x9c)
+bool loadVector(TAbstractFile* infile, std::vector<type_point>& destVector)
+{
+    // @stub
+}
+
+MAC_ADDRESS(0x0e7724, 0xa0)
+bool loadVector(TAbstractFile* infile, std::vector<long>& destVector)
+{
+    // @stub
+}
+
+MAC_ADDRESS(0x0e77c4, 0x9c)
+bool loadVector(TAbstractFile* infile,
+                std::vector<type_university>& destVector)
+{
+    // @stub
+}
+
+// This body calls generator::load at 0xca1a4 for every element.
+MAC_ADDRESS(0x0e7a34, 0xbc)
+bool loadObjectVector(TAbstractFile* infile,
+                      std::vector<generator>& destVector)
+{
+    // @stub
+}
+#endif
+
 // Retained instantiation of the canonical template at game.cpp2733.
 #if 0  // @carcass -- claim-only template instance
 VA(0x004d2870, 0x24D) MAC_ADDRESS(0x0e7af0, 0xbc)  // dc 0xc1b6c
