@@ -3846,11 +3846,11 @@ int TSingleSelectionWindow::getFileSpecNbr()
 MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
-    return m_randomMapMode
+    return const_cast<char*>(m_randomMapMode
         ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
         : (m_loadMode || m_saveMode
                ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-               : DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
+               : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
@@ -6082,7 +6082,8 @@ VA(0x00588330, 0x462) MAC_ADDRESS(0x17fba4, 0x44c)  // dc 0x13f770
 void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
 {
     g_numHumanPlayers = 0;
-    for (int i = 0; i < 8; ++i) {
+    int i;
+    for (i = 0; i < 8; ++i) {
         g_game->m_players[i].m_isLocal = 0;
         g_game->m_players[i].m_isHuman = 0;
     }
@@ -7276,7 +7277,8 @@ VA(0x0058BA40, 0x175) MAC_ADDRESS(0x183374, 0x1c8)  // dc 0x1421a8
 void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
     updateNameLists();
-    for (int i = 0; i < 8; ++i)
+    int i;
+    for (i = 0; i < 8; ++i)
         m_players.m_humanPlayers[i].m_playerPos = -1;
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
