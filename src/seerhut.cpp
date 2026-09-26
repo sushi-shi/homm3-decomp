@@ -819,7 +819,9 @@ void type_monster_quest::save(TAbstractFile* file)
 // Residual 96.7191%: the middle-north assignment retains string::assign
 // where retail expands it. Moving the name declaration to its use is flat;
 // explicit inner returns in getArmyName worsen this caller to 73.8785% and
-// lower four other consumers, including two exact drawing functions.
+// lower four other consumers, including two exact drawing functions. Keeping
+// its invalid-range guard as an early return restores 96.7191%; the plural
+// selection remains the canonical shared helper's conditional expression.
 VA(0x0056ef20, 0x57C) MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
