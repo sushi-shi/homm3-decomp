@@ -126,6 +126,23 @@ soundManager::soundManager()
     InitializeCriticalSection(&m_sectionMp3NameChange);
 }
 
+// Mac open retains this boundary at 0x2185c4. Its native channel/group
+// setup differs from the Windows Miles handle allocation below.
+MAC_ADDRESS(0x2186d8, 0x11c)
+void soundManager::initializeSamples()
+{
+    if (!g_noSound && m_ds) {
+        int count;
+        for (count = 0; count < 12; ++count) {
+            m_sampleHandles[count] = AIL_allocate_sample_handle(m_ds);
+            if (!m_sampleHandles[count])
+                break;
+        }
+        m_sampleNum = count;
+        g_soundMaxSamples = count;
+    }
+}
+
 // E:\gamedcs\soundmgr.cpp:322
 // Vtable slot 0 and the unique Device:/Miles setup body independently pin
 // this retail expansion of soundManager::Open. The DC body is much smaller
@@ -231,16 +248,7 @@ int soundManager::open(int newPriority)
         }
         m_playSounds = 1;
 
-        if (!g_noSound && m_ds) {
-            int count;
-            for (count = 0; count < 12; ++count) {
-                m_sampleHandles[count] = AIL_allocate_sample_handle(m_ds);
-                if (!m_sampleHandles[count])
-                    break;
-            }
-            m_sampleNum = count;
-            g_soundMaxSamples = count;
-        }
+        initializeSamples();
         m_samples = 1;
     }
 
