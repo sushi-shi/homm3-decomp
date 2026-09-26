@@ -7,16 +7,6 @@
 
 #include "terrain.h"
 
-// The ai_combat lever, applied to a base-subobject unwind instead of a
-// scope-exit one: under /GX the dtor's `delete data` is a throwing call
-// with the ~resource base still to run, so VC6 wraps ~sample in a whole
-// fs:[0] frame. Retail's ~sample (0x566e60) is frameless while its ctor
-// (0x566da0) carries the frame the *new* demands - the two together
-// prove /GX plus a nothrow-visible operator delete.
-#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
-__declspec(nothrow) void __cdecl operator delete(void* p);
-#endif
-
 VA(0x00566da0, 0x8E) MAC_ADDRESS(0x15da8c, 0x84)  // dc 0x129b3c
 sample::sample(const char* newName, const void* src, long len,
                long channel, long volume, long loop)
