@@ -123,7 +123,7 @@ mac_size = 0x30
 unit = "recruit"
 target_sha256 = "ddaba8df1d06d1ca6efc5b5649ea749bcee14a253dd54f6edf4482f1a8113f25"
 mac_symbol = ".exitRecruitUnit__FR7message"
-evidence = "Dreamcast ExitRecruitUnit is an out-of-line source helper; Mac Main calls code0+0x14fb24 at 0x14fb94 and 0x14fc10. The 0x30-byte Mac body sets dialog result 0x7800, message fields 0x4000/4/10 and returns 2, ending at blr 0x14fb50 before Main begins at 0x14fb54. CodeWarrior emits the named .exitRecruitUnit__FR7message when its ordinary source body precedes Main. Windows /Ob2 expands the source helper into Main and leaves no standalone retail VA. Mac's extra dialog/codeY stores reflect the older platform body and are not imported into the Windows implementation."
+evidence = "Mac Main calls the four-store abort helper at 0x14fb94 and 0x14fc10. Code0+0x14fb24 sets dialog result 0x7800, message fields 0x4000/4/10 and returns 2. Windows Main has the same four-store abort behavior. The separate normal-completion path only changes id/codeX and is represented by finishRecruitUnit; it is not this retained Mac helper."
 source_helper = "exitRecruitUnit"
 
 [[helpers]]
