@@ -5739,7 +5739,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
 // back-level file.
 const int g_netCombatSaveVersion = 42;
 
-// Residual on both (98.19% / 97.99%): one `push ecx`. Retail carries no
+// Before scalar-helper recovery, both had one residual `push ecx`. Retail carries no
 // frame at all - it homes the byte buffer at [ebp+0xb] and the dword at
 // [ebp+8], overlapping inside the dead `infile` parameter slot once that
 // pointer is live in ESI. Block-scoping the pair and swapping their
@@ -5749,35 +5749,23 @@ const int g_netCombatSaveVersion = 42;
 // Eight paired scratch-type/lifetime controls (plain/signed char, int/long,
 // shared/per-field dword scopes) produce two distinct objects and leave both
 // scores unchanged. None recovers the overlapping dead parameter home.
+// Mac 0xba8b4/0xbab44 stages each scalar independently; retain those
+// helper lifetimes in both serializers instead of shared scratch variables.
 VA(0x004ad1f0, 0x148) MAC_ADDRESS(0x0ba8b4, 0x290)  // anchor-vtable 0x63e508 slot 0; anchor-callee town::load + hero::load, retail-only
 unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 {
-    char charBuffer;
-    int intBuffer;
-
     infile->read(&m_point, sizeof(m_point));
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_leftHero = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_rightTown = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_rightHero = charBuffer != 0;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_seed = intBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_winner = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_retreatWin = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_combatSurrender = charBuffer != 0;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_leftOwner = charBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_leftGold = intBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_rightOwner = charBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_rightGold = intBuffer;
+    m_leftHero = readValue<char>(infile) != 0;
+    m_rightTown = readValue<char>(infile) != 0;
+    m_rightHero = readValue<char>(infile) != 0;
+    m_seed = readValue<int>(infile);
+    m_winner = readValue<char>(infile);
+    m_retreatWin = readValue<char>(infile) != 0;
+    m_combatSurrender = readValue<char>(infile) != 0;
+    m_leftOwner = readValue<char>(infile);
+    m_leftGold = readValue<int>(infile);
+    m_rightOwner = readValue<char>(infile);
+    m_rightGold = readValue<int>(infile);
 
     m_leftArmyGroup.load(infile);
     m_rightArmyGroup.load(infile);
@@ -5793,33 +5781,20 @@ unsigned char CCombatInitMsg::read(TAbstractFile* infile)
 VA(0x004ad340, 0x126) MAC_ADDRESS(0x0bab44, 0x228)  // anchor-vtable 0x63e508 slot 1; anchor-callee town::save + hero::save, retail-only
 unsigned char CCombatInitMsg::write(TAbstractFile* outfile) const
 {
-    char charBuffer;
-    int intBuffer;
     CCombatInitMsg* record = const_cast<CCombatInitMsg*>(this);
 
     outfile->write(&m_point, sizeof(m_point));
-    charBuffer = m_leftHero;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_rightTown;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_rightHero;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    intBuffer = m_seed;
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    charBuffer = m_winner;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_retreatWin;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_combatSurrender;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    charBuffer = m_leftOwner;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    intBuffer = m_leftGold;
-    outfile->write(&intBuffer, sizeof(intBuffer));
-    charBuffer = m_rightOwner;
-    outfile->write(&charBuffer, sizeof(charBuffer));
-    intBuffer = m_rightGold;
-    outfile->write(&intBuffer, sizeof(intBuffer));
+    writeValue<char>(outfile, m_leftHero);
+    writeValue<char>(outfile, m_rightTown);
+    writeValue<char>(outfile, m_rightHero);
+    writeValue<int>(outfile, m_seed);
+    writeValue<char>(outfile, m_winner);
+    writeValue<char>(outfile, m_retreatWin);
+    writeValue<char>(outfile, m_combatSurrender);
+    writeValue<char>(outfile, m_leftOwner);
+    writeValue<int>(outfile, m_leftGold);
+    writeValue<char>(outfile, m_rightOwner);
+    writeValue<int>(outfile, m_rightGold);
 
     record->m_leftArmyGroup.save(outfile);
     record->m_rightArmyGroup.save(outfile);
@@ -5917,18 +5892,30 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
-                            target)) {
-            winningPlayer = leftPlayer;
+                            target))
             winner = 0;
-            loser = rightHero;
-        } else {
+        else
             winner = 1;
-            winningPlayer = rightPlayer;
-            loser = leftHero;
+        // Mac 0xbaf6c retains the draw check even though quick combat
+        // currently selects only the left or right winner.
+        if (winner == COMBAT_WINNER_NONE) {
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    leftPlayer, rightHero)
+                || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                       rightPlayer, leftHero))
+                checkEndGame(0);
+        } else {
+            if (winner == COMBAT_WINNER_LEFT) {
+                winningPlayer = leftPlayer;
+                loser = rightHero;
+            } else if (winner == COMBAT_WINNER_RIGHT) {
+                winningPlayer = rightPlayer;
+                loser = leftHero;
+            }
+            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                    winningPlayer, loser))
+                checkEndGame(0);
         }
-        if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                winningPlayer, loser))
-            checkEndGame(0);
         mobilizeCurrHero(0, 0, 1);
         return winner;
     }
