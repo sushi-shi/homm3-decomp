@@ -1314,7 +1314,8 @@ int advManager::main(message& msg)
         if (GameTime::isPast(lastFrame)) {
             m_cursorFrameCount = 0;
             completeDraw(0);
-            updateScreen(0, 0);
+            // Mac 0x90e0 retains updateScreen(1, 0); VC6 expands this call.
+            updateScreen(1, 0);
         }
     }
 
