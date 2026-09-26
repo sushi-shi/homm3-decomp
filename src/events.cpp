@@ -1919,9 +1919,11 @@ inline void advManager::doEventBorderGuard(type_point point, NewmapCell* cell,
 }
 
 // Mac 0:0xabe24..0xabec0 is the separate border-gate visitor called by
-// dispatchEvent at 0:0xb61d0. The earlier Dreamcast build has no named body.
+// dispatchEvent at 0:0xb61d0. Mac passes point in r4 before cell in r5 and
+// humanPlayer in r6; this body does not use point. The earlier Dreamcast build
+// has no named body.
 MAC_ADDRESS(0x0abe24, 0x9c)
-void advManager::doEventBorderGate(NewmapCell* cell,
+void advManager::doEventBorderGate(type_point, NewmapCell* cell,
                                    unsigned char humanPlayer)
 {
     if (!(g_game->m_borderTentVisitFlags[cell->m_objectIndex]
@@ -4277,7 +4279,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventDragonCity(currentHero, cell, point, humanPlayer);
         break;
     case BORDER_GATE:
-        doEventBorderGate(cell, humanPlayer);
+        doEventBorderGate(point, cell, humanPlayer);
         break;
     case FREELANCERS_GUILD:
         if (humanPlayer)
