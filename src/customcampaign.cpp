@@ -2018,8 +2018,9 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
-// Complete's constructor and destructor live before their callers in this
-// TU. VC6 expands them in selectCampaign; other TUs retain source calls.
+// Complete's constructor lives before its callers in this TU. VC6 expands it
+// in selectCampaign; other TUs retain source calls. The destructor has its
+// Windows retail body in campaignbrief.cpp.
 VA(0x004885d0, 0xCB) MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
@@ -2028,12 +2029,6 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_data = 0;
     m_stream = 0;
     m_fileError = CAMPAIGN_FILE_OK;
-}
-
-VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    clearScenarios();
 }
 
 // Complete-only; also reached from the custom-campaign list scanner

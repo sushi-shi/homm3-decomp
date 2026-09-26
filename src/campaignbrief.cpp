@@ -801,6 +801,15 @@ std::string TCampaignBrief::CampaignHeaderStruct::getCampaignDescription() const
     return m_campaignDesc;
 }
 
+// CodeView and the delinked Windows retail object place this ordinary body in
+// campaignbrief.cpp. The Mac linker places its counterpart at 0:0x96a68 near
+// customcampaign code; its offset does not determine source TU ownership.
+VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    clearScenarios();
+}
+
 // Canonical body and VA: include/game.h.
 // Canonical body and VA: include/game.h.
 VA_COMPGEN(0x0045a990, 0x119, CLASS_CTOR, CMapHeaderData)
