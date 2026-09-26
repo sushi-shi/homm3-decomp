@@ -101,8 +101,7 @@ unsigned char combatManager::automateCatapult()
     long skill = currentArmy->getController()->getSecondarySkill(
         eSecSkillSiegeBallistics);
     bool targetChosen = 0;
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
-            || isComputerAction(getCurrentArmy())) {
+    if (isComputerAction()) {
         if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
             target = WALL_TARGET_3;
             targetChosen = 1;
@@ -210,8 +209,7 @@ unsigned char combatManager::automateFirstAidTent()
         return 1;
     }
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
-            && !isComputerAction(getCurrentArmy())) {
+    if (!isComputerAction()) {
         if (currentArmy->getController()->getSecondarySkill(
                 eSecSkillFirstAid) > 0)
             return 0;
@@ -272,8 +270,7 @@ int combatManager::main(message& msg)
     unsigned char automaticTurn = 0;
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
-        if (static_cast<const combatManager*>(this)->isQuickCombat()
-                || isComputerAction(getCurrentArmy())) {
+        if (isComputerAction()) {
             while (msg.m_id != MESSAGE_KEY_DOWN
                     && msg.m_id != MESSAGE_LEFT_BUTTON_DOWN
                     && msg.m_id != MESSAGE_LEFT_BUTTON_UP
@@ -388,8 +385,7 @@ process_action:
 VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
-            || isComputerAction(getCurrentArmy()))
+    if (isComputerAction())
         return;
 
     unsigned char secondIsValid;
@@ -568,9 +564,7 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     float slope;
 
     do {
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (isComputerAction(getCurrentArmy()))
+        if (isComputerAction())
             break;
         int xDifference = x - gridX(hex) * 44 - 14;
         int row = gridY(hex);
@@ -622,6 +616,7 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 }
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.
+// Mac 0x82ebc retains this wrapper at all thirteen command/drawing call sites.
 VA(0x00474ba0, 0x4A) MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::isComputerAction()
 {
@@ -809,8 +804,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_autoCombatOn)
                     getControl();
                 if (m_autoCombatOn
-                        && (static_cast<const combatManager*>(this)->isQuickCombat()
-                            || isComputerAction(getCurrentArmy()))) {
+                        && isComputerAction()) {
                     m_combatWindow->m_controlSubWindow->disableAllButtons();
                 }
                 break;
@@ -889,8 +883,7 @@ int combatManager::processCombatMsg(message& msg)
     case MESSAGE_MOUSE_MOVE: {
         unsigned char pointerChanged = 0;
         if ((m_autoCombatOn || g_goSolo)
-                && (static_cast<const combatManager*>(this)->isQuickCombat()
-                    || isComputerAction(getCurrentArmy())))
+                && isComputerAction())
             break;
 
         msgTemp = g_inputManager->peekEvent();
@@ -1053,8 +1046,7 @@ int combatManager::processCombatMsg(message& msg)
             if (m_creaturePlacement)
                 break;
             if ((m_autoCombatOn || g_goSolo)
-                    && (static_cast<const combatManager*>(this)->isQuickCombat()
-                        || isComputerAction(getCurrentArmy())))
+                    && isComputerAction())
                 break;
             {
                 army* currentArmy = getCurrentArmy();
@@ -1110,9 +1102,7 @@ VA(0x00475ed0, 0x32F) MAC_ADDRESS(0x083e10, 0x274)  // unique retail body + orde
 void combatManager::resetRound()
 {
     m_turnNumber++;
-    if (m_creaturePlacement
-            && (static_cast<const combatManager*>(this)->isQuickCombat()
-                || isComputerAction(getCurrentArmy()))
+    if (m_creaturePlacement && isComputerAction()
             && (!m_anyActionTaken || m_turnNumber >= 3)) {
         finishCreaturePlacement();
 
@@ -1895,8 +1885,7 @@ inline unsigned char combatManager::automateTower()
         m_nextAction = 12;
         return 1;
     }
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
-            || isComputerAction(getCurrentArmy())) {
+    if (isComputerAction()) {
         unnamed465f20();
         resetMouse();
         return 1;
