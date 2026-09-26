@@ -6,6 +6,10 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# ADMITTED 0x10ee10 sliderGames callback: the slider constructor at retail
+# 0x50e763 passes this address as a function pointer. Its body sets the
+# current game index, calls drawWindow and tail-jumps to update at 0x50f0f0;
+# the 0x2a-byte body ends before six NOPs and the function at 0x10ee40.
 # ADMITTED pattern-table cleanup entries 0x15ed90/0x15f310: the retained
 # init bodies at 0x15ed70/0x15f2f0 pass their exact addresses to _atexit.
 # Each callback is ten bytes: mov ecx,0x69e5d0/0x69e650 followed by a tail
@@ -3461,6 +3465,7 @@ rva	size
 0x10ed60	67
 0x10edb0	33
 0x10ede0	33
+0x10ee10	42
 0x10ee40	171
 0x10eef0	201
 0x10efc0	299
