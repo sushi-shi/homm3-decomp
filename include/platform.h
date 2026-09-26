@@ -30,6 +30,41 @@
 #include <mmsystem.h>
 #include <dsound.h>
 #include <Mss.h>
+// Compile the Windows reconstruction against the actual RAD vendor ABI.
+// CodeWarrior otherwise selects the Mac SDK declarations in these headers.
+#define __INTEL__ 1
+#if defined(powerc)
+#define HOMM3_RAD_RESTORE_POWERC
+#undef powerc
+#endif
+#if defined(macintosh)
+#define HOMM3_RAD_RESTORE_MACINTOSH
+#undef macintosh
+#endif
+#if defined(__powerc)
+#define HOMM3_RAD_RESTORE_POWER_C
+#undef __powerc
+#endif
+// RAD's declaration branch avoids its unused x86 inline-assembly intrinsics.
+#define __WATCOMC__ 1
+#define __far
+#include <bink.h>
+#include <SMACK.H>
+#undef __far
+#undef __WATCOMC__
+#ifdef HOMM3_RAD_RESTORE_POWERC
+#define powerc 1
+#undef HOMM3_RAD_RESTORE_POWERC
+#endif
+#ifdef HOMM3_RAD_RESTORE_MACINTOSH
+#define macintosh 1
+#undef HOMM3_RAD_RESTORE_MACINTOSH
+#endif
+#ifdef HOMM3_RAD_RESTORE_POWER_C
+#define __powerc 1
+#undef HOMM3_RAD_RESTORE_POWER_C
+#endif
+#undef __INTEL__
 // ShellExecuteA; WIN32_LEAN_AND_MEAN drops it from windows.h.
 #include <shellapi.h>
 #undef __declspec

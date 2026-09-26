@@ -2,16 +2,7 @@
 #define HOMM3_SOUNDMGR_H
 
 #include "platform.h"
-#if defined(HOMM3_TARGET_MAC)
-// Compile-only Windows Miles backend boundary; signatures follow Bink 0.5a.
-struct BINK;
-struct BINKSND;
-typedef long (*BinkMilesSoundOpen)(BINKSND*, unsigned long, long, long, unsigned long, BINK*);
-typedef BinkMilesSoundOpen (*BinkMilesSystemOpen)(unsigned long);
-extern "C" BinkMilesSoundOpen __stdcall BinkOpenMiles(unsigned long param);
-extern "C" long __stdcall BinkSetSoundSystem(BinkMilesSystemOpen open, unsigned long param);
-#define BinkSoundUseMiles(hdigdriver) BinkSetSoundSystem(BinkOpenMiles, (unsigned long)hdigdriver)
-#else
+#if !defined(HOMM3_TARGET_MAC)
 #include <bink.h>
 #endif
 #include <dsound.h>
