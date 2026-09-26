@@ -157,7 +157,7 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 {
     if (objectType->m_slotCategory != 0)
         return 0;
-    return objectType->m_recommendedTerrainMask.test(m_terrain)
+    return objectType->isRecommendedTerrain(m_terrain)
         && objectType->m_recommendedTerrainMask.count() <= 3;
 }
 

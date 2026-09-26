@@ -91,6 +91,10 @@ public:
     {
         return m_recommendedTerrainMask[terrain];
     }
+    bool isRecommendedTerrain(int terrain) const
+    {
+        return m_recommendedTerrainMask.test(terrain);
+    }
     int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
