@@ -1,9 +1,5 @@
 # MANUALLY RATCHETED - homm3.cleanliness.board floors; build
 # rolls them DOWN-only, `board --update` is the only bless.
-# Helper sweep review: 4 representation casts (remote/townmgr/viewwrld),
-# 1 Mac frame-layout record in deferred rmg, and 5 integral-to-domain
-# conversions (ai_player/ai_tactical/spells) remain visible debt. The
-# inline-depth floor fell from 35 to 7.
 C-style casts	0
 reinterpret_casts	4
 volatile qualifiers	0
