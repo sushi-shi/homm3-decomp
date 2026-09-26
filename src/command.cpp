@@ -458,7 +458,7 @@ void combatManager::setCombatDirections(int hex)
             continue;
         }
 
-        if ((currentArmy->m_facing == 0) == (targetIndex <= 2)) {
+        if (currentArmy->needToTurn(targetIndex)) {
             std::swap(firstHex, secondHex);
             std::swap(firstIsValid, secondIsValid);
         }
