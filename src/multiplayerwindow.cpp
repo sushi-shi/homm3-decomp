@@ -1,11 +1,7 @@
 #include "prefs.h"
 #include "va.h"
 
-#if defined(HOMM3_TARGET_MAC) // MSL declares the _open/_chdir/_getcwd family here
-#include <unistd.h>
-#else
 #include <direct.h>
-#endif
 
 #include "multiplayerwindow.h"
 

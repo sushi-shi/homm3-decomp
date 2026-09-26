@@ -55,6 +55,11 @@
 #define _O_TRUNC O_TRUNC
 #define _O_WRONLY O_WRONLY
 #define _S_IWRITE S_IWUSR
+// MSL declares the <io.h>/<direct.h> CRT subset; the SDK copies #error off Win32.
+#include <fcntl.h>
+#include <unistd.h>
+#define _INC_IO
+#define _INC_DIRECT
 
 #endif /* __MWERKS__ */
 

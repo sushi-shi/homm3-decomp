@@ -4,13 +4,8 @@
 #include <algorithm>
 #include "homm3_minmax.h"
 #include <bitset>
-#if defined(HOMM3_TARGET_MAC) // MSL declares the _open/_chdir/_getcwd family here
-#include <fcntl.h>
-#include <unistd.h>
-#else
 #include <direct.h>
 #include <io.h>
-#endif
 #include <memory>
 #include <string.h>
 #include <vector>
