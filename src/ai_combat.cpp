@@ -517,7 +517,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
         if (target < 0)
             break;
         long value = targetData.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, targetData.m_currentHero, damage);
+            choice.m_spell, m_currentHero, targetData.getHero(), damage);
         value = targetData.m_creatures[target].takeDamage(value);
         targetData.m_totalCombatValue -= value;
         excluded |= 1 << target;

@@ -314,6 +314,7 @@ public:
     virtual int questType();
     virtual void notifyHeroDefeated(int heroId, int player);
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void save(TAbstractFile* file);
@@ -334,6 +335,7 @@ public:
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
@@ -355,7 +357,7 @@ public:
     std::vector<TArtifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
-    type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow);
+    type_artifact_quest(TArtifact artifact, int textRow);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -445,6 +447,7 @@ public:
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    virtual void save(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getQuestDescription();
@@ -463,6 +466,7 @@ public:
     virtual std::string getRequirementText();
     virtual std::string getQuestDescription();
     virtual void load(TAbstractFile* file, int version);
+    virtual void loadFromMap(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual void save(TAbstractFile* file);

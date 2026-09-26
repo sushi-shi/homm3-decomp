@@ -297,8 +297,8 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell) {
-        m_spells.set(spell,
-                   (inBuf[spell / 8] & (1 << (spell % 8))) != 0);
+        m_spells[spell] =
+            (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -421,7 +421,7 @@ int town::save(TAbstractFile* outfile)
 
     memset(spellBuf, 0, sizeof(spellBuf));
     for (int spell = 0; spell < 70; ++spell) {
-        if (m_spells.test(spell))
+        if (m_spells[spell])
             spellBuf[spell / 8] |= 1 << (spell % 8);
     }
     if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
@@ -525,7 +525,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask.test(m_id)) {
+        && !townHero->m_townSpecialGrantedMask[m_id]) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -1851,8 +1851,10 @@ const char* town::getTypeName() const
 
 // Original: town::get_army; town.cpp:2375, dc 0x168bd0.
 // This ordinary non-const twin returns the same selected army address as the
-// const overload. Complete callers of both interfaces share 0x5c1460.
-MAC_ADDRESS(0x1b7020, 0x44)
+// const overload. Complete callers of both interfaces share 0x5c1460. Mac
+// callers that mutate the selected army, including initializeArmy, retain the
+// first body at 0x1b6fdc; const town users call the twin at 0x1b7020.
+MAC_ADDRESS(0x1b6fdc, 0x44)
 armyGroup& town::getArmy()
 {
     if (m_garrisonHeroId < 0)
@@ -1860,7 +1862,7 @@ armyGroup& town::getArmy()
     return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
-VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b6fdc, 0x44)  // dc 0x168bf8
+VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b7020, 0x44)  // dc 0x168bf8
 const armyGroup& town::getArmy() const
 {
     if (m_garrisonHeroId < 0)

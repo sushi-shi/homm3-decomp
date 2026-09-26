@@ -34,6 +34,9 @@ DATA(0x006a3394) char g_waitingStream[260];
 DATA(0x0069fe90) int g_currentLoop;
 // Original DC name: waitingLoop; StartMP3 publishes the requested loop count.
 DATA(0x0069fe9c) int g_waitingLoop;
+// Mac 21873c..2187dc builds groups {0}, {1..4}, {5..12}; this Windows
+// table has an extra singleton group. The four/eight-channel groups are
+// therefore categories 1/2 on Mac and 2/3 here (e.g. spell launchSample).
 DATA(0x00684ab8) SoundChannelRange g_soundChannels[4] = {
     { 0, 1, 0 }, { 1, 2, 1 }, { 2, 6, 2 }, { 6, 14, 6 }
 };
@@ -124,6 +127,23 @@ soundManager::soundManager()
     InitializeCriticalSection(&m_sectionSoundCall);
     InitializeCriticalSection(&m_sectionMp3Change);
     InitializeCriticalSection(&m_sectionMp3NameChange);
+}
+
+// Mac open retains this boundary at 0x2185c4. Its native channel/group
+// setup differs from the Windows Miles handle allocation below.
+MAC_ADDRESS(0x2186d8, 0x11c)
+void soundManager::initializeSamples()
+{
+    if (!g_noSound && m_ds) {
+        int count;
+        for (count = 0; count < 12; ++count) {
+            m_sampleHandles[count] = AIL_allocate_sample_handle(m_ds);
+            if (!m_sampleHandles[count])
+                break;
+        }
+        m_sampleNum = count;
+        g_soundMaxSamples = count;
+    }
 }
 
 // E:\gamedcs\soundmgr.cpp:322
@@ -231,16 +251,7 @@ int soundManager::open(int newPriority)
         }
         m_playSounds = 1;
 
-        if (!g_noSound && m_ds) {
-            int count;
-            for (count = 0; count < 12; ++count) {
-                m_sampleHandles[count] = AIL_allocate_sample_handle(m_ds);
-                if (!m_sampleHandles[count])
-                    break;
-            }
-            m_sampleNum = count;
-            g_soundMaxSamples = count;
-        }
+        initializeSamples();
         m_samples = 1;
     }
 
@@ -746,8 +757,11 @@ void __cdecl processStopAndPlayMP3(void* arglist)
     _endthread();
 }
 
-// Mac retains this source call with its platform stream interface at
-// 0:0x219288; Windows resumes through Miles and the playback thread.
+// Mac resumeStream calls convertVolume at 0x219330 while starting its stream;
+// startMP3 calls it at 0x219504/0x21962c/0x219674 for immediate fades.
+// Windows queues playback here. Its playback thread converts the volume at
+// 0x59a865 in processStopAndPlayMP3; startMP3/resumeStream contain no retail
+// call or equivalent volume calculation.
 VA(0x0059ac00, 0xA9) MAC_ADDRESS(0x219288, 0xf0)  // dc 0x14b8e8
 void soundManager::resumeStream()
 {

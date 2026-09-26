@@ -341,6 +341,39 @@ class OwnershipTest(unittest.TestCase):
         distinct_type = replace(d, name='widget::getValue')
         self.assertTrue(compare([distinct_type], [o], {}, {})[0][0].startswith('WIN_ONLY '))
 
+    def test_reviewed_owner_placement_requires_exact_live_dc_file(self):
+        from dataclasses import replace
+        d = replace(definition(), file='include/shared.h')
+        o = origin(file='widget.cpp')
+        key = (d.file, d.name, d.signature, o.file)
+        matched = []
+        errors, counts = compare([d], [o], {}, {}, owner_placements={key: 'Mac and retail evidence'},
+                                 matched_out=matched)
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['reviewed_owner_placement'], 1)
+        self.assertEqual(len(matched), 1)
+        wrong = (*key[:3], 'other.cpp')
+        errors, _ = compare([d], [o], {}, {}, owner_placements={wrong: 'wrong origin'})
+        self.assertTrue(any(e.startswith('OWNER ') for e in errors))
+        self.assertTrue(any(e.startswith('FILTER stale owner_placements.tsv') for e in errors))
+
+    def test_reviewed_order_placement_is_exact_and_stale_checked(self):
+        from dataclasses import replace
+        first = definition(name='first', line=10)
+        second = definition(name='second', line=20)
+        first_dc = origin(name='first', line=200)
+        second_dc = replace(origin(name='second', line=100), offset='0x2000')
+        key = (second.file, second.name, second.signature, first.name, second_dc.file)
+        errors, counts = compare([first, second], [first_dc, second_dc], {}, {},
+                                 order_placements={key: 'Reviewed Mac source order'})
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['reviewed_order_placement'], 1)
+        wrong = (*key[:3], 'other', key[4])
+        errors, _ = compare([first, second], [first_dc, second_dc], {}, {},
+                            order_placements={wrong: 'Wrong preceding helper'})
+        self.assertTrue(any(e.startswith('ORDER ') for e in errors))
+        self.assertTrue(any(e.startswith('FILTER stale order_placements.tsv') for e in errors))
+
     def test_normalized_name_collision_requires_source_identity(self):
         d = definition(name='Widget::getValue')
         errors, _ = compare([d], [origin(name='Widget::GetValue'),
@@ -1045,6 +1078,17 @@ class CoverageTest(unittest.TestCase):
         key = (d.file, d.name, d.signature)
         self.assertEqual(compare([d], [o], {}, {key: 'New Windows overload'})[0], [])
 
+    def test_reviewed_same_arity_overload_requires_distinct_known_formals(self):
+        from dataclasses import replace
+        d = replace(definition(name='Widget::choose', signature='int (int)'),
+                    parameters=1, argument_types=('int',))
+        o = replace(origin(name=d.name), argument_types=('std::bitset<5>',))
+        key = (d.file, d.name, d.signature)
+        self.assertEqual(compare([d], [o], {}, {key: 'Reviewed overload'})[0], [])
+        unknown = replace(o, argument_types=None)
+        self.assertTrue(any('hides a CodeView counterpart' in error for error in
+                            compare([d], [unknown], {}, {key: 'Unproven overload'})[0]))
+
     def test_origin_hints_cannot_waive_formal_arity_or_constness(self):
         from dataclasses import replace
         o = replace(origin(), argument_types=())
@@ -1120,6 +1164,17 @@ class InlineCppOrderTest(unittest.TestCase):
         rows['src/lobby.cpp'][-1] = (3, 'VA', 0x400800, 8)
         functions[0x800] = 8
         self.assertTrue(check(rows, functions, {}, {('src/lobby.cpp', 0x409000)}))
+
+    def test_reviewed_source_before_caller_va_inversion_is_exact(self):
+        from homm3.match.verify_va_claims import check
+        rows = {'src/media.cpp': [(1, 'VA', 0x402000, 8),
+                                  (2, 'VA', 0x401000, 8)]}
+        functions = {0x1000: 8, 0x2000: 8}
+        placement = ('src/media.cpp', 0x401000, 0x402000)
+        self.assertEqual(check(rows, functions, {}, order_placements={placement}), [])
+        wrong = ('src/media.cpp', 0x401000, 0x403000)
+        failures = check(rows, functions, {}, order_placements={wrong})
+        self.assertEqual({kind for kind, _, _ in failures}, {'ORDER', 'ORDER_FILTER'})
 
 
 class CompilerIdentityTest(unittest.TestCase):

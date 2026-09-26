@@ -6,7 +6,8 @@
   config/mac/runtime-map.tsv      offset, name, owner, call_kind, evidence
         Library, runtime and compiler-support labels (label only; the extent
         is the functions.tsv row). owner is msl_c, msl_cxx, cw_runtime,
-        compiler_generated, or empty when unknown. Never game functions.
+        compiler_generated, mac_platform, mac_port, or empty when unknown.
+        Never game functions.
   config/mac/runtime-aliases.tsv  offset, name, evidence
         Additional linkage names of one folded runtime body.
   config/mac/glue-map.tsv         offset, name, library
@@ -38,7 +39,8 @@ ZLIB_MAP_TSV = "config/mac/zlib-map.tsv"
 DISPOSITIONS_TSV = "config/mac/dispositions.tsv"
 
 DISPOSITIONS = ("inlined_only", "mac_only", "windows_only", "folded", "platform_rewritten")
-OWNERS = ("msl_c", "msl_cxx", "cw_runtime", "compiler_generated", "")
+OWNERS = ("msl_c", "msl_cxx", "cw_runtime", "compiler_generated",
+          "mac_platform", "mac_port", "")
 CALL_KINDS = ("direct", "indirect_tvector")
 HEX_RE = re.compile(r"0x[0-9a-f]+$")
 #: CodeWarrior ABI entries that compiler-generated code calls directly:

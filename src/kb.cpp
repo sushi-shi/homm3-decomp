@@ -1,4 +1,5 @@
 #include "va.h"
+#include "homm3_minmax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -370,13 +371,15 @@ int earlySetup()
     }
     ResourceManager::setPath(
         DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
-    if (!ResourceManager::open(1, 1, &openResult))
-        shutDown(openResult == 1
-                     ? DATA_COMPGEN(0x0067f64c, filesMissingMessage,
-                           "Files from Heroes III are missing.   "
-                           "Please reinstall Heroes III.")
-                     : DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
-                           "Unable to initialize resources - possible disk problem."));
+    if (!ResourceManager::open(1, 1, &openResult)) {
+        if (openResult == 1)
+            shutDown(DATA_COMPGEN(0x0067f64c, filesMissingMessage,
+                "Files from Heroes III are missing.   "
+                "Please reinstall Heroes III."));
+        else
+            shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+                "Unable to initialize resources - possible disk problem."));
+    }
     if (!loadGameData())
         shutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
             "Initialization failed!"));
@@ -429,7 +432,6 @@ int earlySetup()
     button::s_clickSample = ResourceManager::getSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
-    initializeCampaignMapTraitsTable();
     g_earlySetupDone = 1;
     return 1;
 }
@@ -634,6 +636,7 @@ static void deleteMainClasses()
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
 // parameter names and SetupCDRom call sites survive in CodeView. Retail's
 // corresponding paths inline the Win32 MessageBoxA body and then exit.
+MAC_ADDRESS(0x10f0c4, 0x30)
 static void earlyShutdown(const char* title, const char* body)
 {
     MessageBoxA(g_hwndApp, body, title, MB_ICONHAND);
@@ -643,6 +646,7 @@ static void earlyShutdown(const char* title, const char* body)
 // E:\gamedcs\kb.cpp:580. This is source-static in CodeView and retail has no
 // standalone body: VC6 /Ob2 folds it into oldmain at +0xd7..+0x245. Keep the
 // helper real so its source boundary participates in the inliner naturally.
+MAC_ADDRESS(0x10f0f4, 0x158)
 static void setupCDRom()
 {
     int oldNoSound = g_noSound;
@@ -1512,19 +1516,9 @@ static int doCampaignWindow(bool newGame, int campaignSet)
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
-// Complete's separate campaign-set/custom-campaign front end. Retail
-// oldmain+0x91c proves this zero-argument entry, not removal of the older
-// parameterized operation above. Its three new-game retry loops include an
-// additional cancel reopen. Sharing the older operation at these inferred
-// sites changes the retained call/expansion pattern; their ownership remains
-// unresolved, unlike oldmain's two positively identified calls.
-// Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
-// exact. Retail leaves one four-byte allocator hole between exitCampaigns
-// (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
-// shifting every later RAII object and the frame by four bytes. Restoring a
-// Complete-local `unsigned char newGame = 1` is byte-neutral; widening
-// exitCampaigns to int is worse (99.78%) and contradicts retail's byte
-// store/test. The proven class size and object scopes therefore stay intact.
+// Mac retains doCampaignWindow(true, set) in all three campaign-set arms
+// (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
+// video after the helper returns; keep that caller operation separate.
 VA(0x004f00a0, 0x3EE) MAC_ADDRESS(0x111028, 0x264)
 static unsigned char doCampaignWindow()
 {
@@ -1543,88 +1537,25 @@ static unsigned char doCampaignWindow()
         switch (g_windowManager->m_dialogReturn) {
         case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 2);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 2))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 1);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 1))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 0);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 0))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
@@ -1964,6 +1895,7 @@ int normalDialogHandler(message& msg)
 }
 
 // E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
+MAC_ADDRESS(0x111ebc, 0x6c)
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     EGameResource newResource, long newQualifier)
@@ -3099,8 +3031,11 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     }
 
     std::string modifiers = thisHero->getLuckDescription();
-    strcat(g_text,
-           modifiers.length() == 0 ? g_luckInfo[18] : modifiers.c_str());
+    // Mac keeps separate append calls at 0x1153d8 and 0x1153e8.
+    if (modifiers.length() == 0)
+        strcat(g_text, g_luckInfo[18]);
+    else
+        strcat(g_text, modifiers.c_str());
 
     normalDialog(g_text, mbType, -1, 28, icon, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -3108,6 +3043,7 @@ void game::showLuckInfo(hero* thisHero, int mbType)
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
 // LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+MAC_ADDRESS(0x11505c, 0xe0)
 static void initVars()
 {
     g_nullSample2.m_resSample = 0;
@@ -3127,6 +3063,8 @@ static void initVars()
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6e));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x70));
     }
+    // Mac retains this call inside initVars at 0x11511c.
+    initializeCampaignMapTraitsTable();
 }
 
 VA(0x004f3690, 0x2A2) MAC_ADDRESS(0x115448, 0x1c4)  // dc 0xe3ce4
@@ -4253,7 +4191,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // recovering 93.6558% from 87.1948% while preserving the seven local types.
 // DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
 // copies BOTH operands to fresh stack homes before selecting a reference:
-// the canonical by-value max wrapper in includes.h supplies those homes.
+// the canonical by-value max wrapper in homm3_minmax.h supplies those homes.
 // Direct std::_cpp_max is the negative control and does not reproduce that
 // boundary. Keep the long locals; the audit intentionally reports std::max.
 // DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past

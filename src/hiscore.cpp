@@ -169,6 +169,7 @@ int highScoreWindowHandler(message& msg);
 // Original: CHighScoreEdit::OnNextEdit; hiscore.cpp:225, dc 0xd8e08.
 // Retail CHighScoreEdit vtable 0x63ebf4 shares slots 19/20 with CMPEdit
 // (0x510850/0x510870), whose two edit links have the same offsets.
+MAC_ADDRESS(0x10c110, 0x40)
 void CHighScoreEdit::onNextEdit()
 {
     if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
@@ -176,6 +177,7 @@ void CHighScoreEdit::onNextEdit()
 }
 
 // Original: CHighScoreEdit::OnPrevEdit; hiscore.cpp:239, dc 0xd8e30.
+MAC_ADDRESS(0x10c150, 0x40)
 void CHighScoreEdit::onPrevEdit()
 {
     if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
@@ -184,6 +186,7 @@ void CHighScoreEdit::onPrevEdit()
 
 // Original: CHighScoreEdit::SetFocus; hiscore.cpp:252, dc 0xd8e58.
 // Slot 14 shares CMPEdit's forwarding body at 0x510890.
+MAC_ADDRESS(0x10afb0, 0x20)
 void CHighScoreEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);

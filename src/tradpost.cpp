@@ -2234,7 +2234,6 @@ void TBuyArtifactWindow::update(unsigned char update)
                 else
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                             g_rightAmount * g_giveQuantity);
-                broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 8;
@@ -2245,8 +2244,9 @@ void TBuyArtifactWindow::update(unsigned char update)
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
-                broadcastMessage(msg);
             }
+            // Mac 0x1f7000: both columns share the quantity-text broadcast.
+            broadcastMessage(msg);
         }
 
         for (int i = 0; i < 7; ++i) {
@@ -2573,10 +2573,12 @@ void TSellCreatureWindow::update(bool update)
     }
 
     if (g_marketSource == MARKET_SOURCE_FREELANCER) {
-        setWidgetDisabled(16);
-        setWidgetDisabled(17);
-        setWidgetDisabled(18);
-        setWidgetDisabled(19);
+        // Mac 0:0x1f7cec..0x1f7d10 retains SetWidgetOff; Windows
+        // 0x5ec91e..0x5ec969 likewise clears 0x1006 for these four tabs.
+        setWidgetOff(16);
+        setWidgetOff(17);
+        setWidgetOff(18);
+        setWidgetOff(19);
     }
 
     for (int side = 0; side < 2; ++side) {
@@ -3488,16 +3490,15 @@ int TSellArtifactWindow::windowHandler(message& msg)
             type_artifact artifact;
             if (artifactSlot < 18) {
                 artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
-                g_marketHero->viewArtifact(&artifact, 1);
-                return MESSAGE_DISPATCH_CONSUME;
             } else {
                 int numInBackpack = g_marketHero->getNumberInBackpack(1);
                 int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
                            % numInBackpack;
                 artifact = g_marketHero->getBackpack(slot);
-                g_marketHero->viewArtifact(&artifact, 1);
-                return MESSAGE_DISPATCH_CONSUME;
             }
+            // Mac 0x1f9b10: equipment and backpack paths share this call.
+            g_marketHero->viewArtifact(&artifact, 1);
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
         case MARKET_WIDGET_ACTIVATE:

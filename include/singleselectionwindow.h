@@ -766,6 +766,7 @@ public:
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
+    void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
     void setupNewGameMode();
     int getCommonGameVersion();

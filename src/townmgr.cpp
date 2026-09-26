@@ -1424,7 +1424,7 @@ TTownScreenWindow::~TTownScreenWindow()
             delete *it;
     }
     if (m_zBuffer) {
-        delete m_zBuffer;
+        delete[] m_zBuffer;
         m_zBuffer = 0;
     }
 }
@@ -2095,8 +2095,7 @@ void townManager::newStrips()
         m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa1,
             m_townToView->m_owner, m_townToView->m_owner, 0,
-            const_cast<armyGroup*>(
-                &static_cast<const town*>(m_townToView)->getArmy()),
+            &m_townToView->getArmy(),
             0x64, 0, m_townWindow);
         if (!m_garrisonStrip)
             memError();
@@ -3848,11 +3847,11 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     }
 
     showText();
-    drawWindow(0, 0xc8, 0xc9);
-    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
 
 // Original: type_garrison_base_window::ShowText; townmgr.cpp:4998, dc 0x172c68
+// Mac 0x1cc7cc retains broadcast, virtual draw and screen update together;
+// setCommandAndText calls this complete helper at 0x1cc7b4.
 MAC_ADDRESS(0x1cc7cc, 0xe0)
 void type_garrison_base_window::showText()
 {
@@ -3862,6 +3861,8 @@ void type_garrison_base_window::showText()
     textMessage.m_codeY = 0xc9;
     textMessage.m_extraText = g_townManager->m_statusText;
     broadcastMessage(textMessage);
+    drawWindow(0, 0xc8, 0xc9);
+    g_windowManager->updateScreen(m_x + 7, m_y + 0x171, 0x217, 0x13);
 }
 
 // Original: type_garrison_base_window::ViewArmy; townmgr.cpp:5012, dc 0x172ca0
@@ -3899,6 +3900,9 @@ void type_garrison_base_window::viewArmy()
 // index read at 5012 before the strip/group reads at 5013; Complete allocates
 // the expanded strip/index values in the opposite register order. Restoring
 // the helper preserves those source facts (95.58%, preceding peak 95.66%).
+// Mac 0x1cc9e8/0x1ccaa0 retain distinct left-select and owner-right-select
+// dispatches. Windows jump tables 0x5d0af0/0x5d0b18 confirm owner 0x7c
+// on right-select and owner/frame ids 0x7b..0x7d on left-select.
 VA(0x005d0910, 0x228) MAC_ADDRESS(0x1cc924, 0x25c)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
 int type_garrison_base_window::windowHandler(message& msg)
 {
@@ -3921,6 +3925,9 @@ int type_garrison_base_window::windowHandler(message& msg)
             case TOP_SLOT_FIRST_ID + 4:
             case TOP_SLOT_FIRST_ID + 5:
             case TOP_SLOT_FIRST_ID + 6:
+            case BOTTOM_OWNER_ID - 1:
+            case BOTTOM_OWNER_ID:
+            case BOTTOM_OWNER_ID + 1:
             case BOTTOM_SLOT_FIRST_ID + 0:
             case BOTTOM_SLOT_FIRST_ID + 1:
             case BOTTOM_SLOT_FIRST_ID + 2:
@@ -3945,7 +3952,8 @@ int type_garrison_base_window::windowHandler(message& msg)
             case TOP_SLOT_FIRST_ID + 6:
                 g_townManager->m_currStrip = g_townManager->m_garrisonStrip;
                 g_townManager->m_currIndex = msg.m_codeY - TOP_SLOT_FIRST_ID;
-                break;
+                win->viewArmy();
+                return 1;
 
             case BOTTOM_SLOT_FIRST_ID + 0:
             case BOTTOM_SLOT_FIRST_ID + 1:
@@ -3956,13 +3964,17 @@ int type_garrison_base_window::windowHandler(message& msg)
             case BOTTOM_SLOT_FIRST_ID + 6:
                 g_townManager->m_currStrip = g_townManager->m_heroStrip;
                 g_townManager->m_currIndex = msg.m_codeY - BOTTOM_SLOT_FIRST_ID;
-                break;
+                win->viewArmy();
+                return 1;
+
+            case BOTTOM_OWNER_ID:
+                g_townManager->doCommand(g_townManager->m_command, 1, win);
+                win->setCommandAndText(&msg);
+                return 1;
 
             default:
                 return 1;
             }
-            win->viewArmy();
-            return 1;
 
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIVIDE_BUTTON_ID) {
@@ -6613,6 +6625,8 @@ int TTavernWindow::windowHandler(message& msg)
                         videoResume();
                     }
                 }
+                // Mac additionally calls videoRestart at 0:0x1d5b74.
+                // Windows 0x5d7dac calls videoOpen then draws directly.
                 if (!videoPlaying())
                     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
                 drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
@@ -8175,7 +8189,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                         long bestValue = 0;
                         for (unsigned int n = 0; n < g_game->m_players[who].m_numTowns; n++) {
                             int id = g_game->m_players[who].m_townIds[n];
-                            const town* t = g_game->getTown(id);
+                            town* t = g_game->getTown(id);
                             for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->getArmy().m_armies[slot] != -1
                                     && t->getArmy().m_numTroops[slot] > 0

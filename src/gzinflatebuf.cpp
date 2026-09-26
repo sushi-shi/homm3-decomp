@@ -26,12 +26,12 @@
 // _Locimp::_Init; the /MT game profile exposes that external-lock view.
 #include "va.h"
 
-#include <memory>
 #include <stdexcept>
 #include <string>
 
 #include "gzinflatebuf.h"
 
+#include "autoarrayptr.h"
 #include "exceptions.h"
 
 class TGzInflateBuf::TDataError : public std::runtime_error {
@@ -45,6 +45,8 @@ public:
 // table rather than two literals.
 DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
+// Mac uses two 4096-byte windows (8192-byte allocation); Windows uses two
+// 512-byte windows. Refill, output bounds and CRC spans follow that size.
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
@@ -68,20 +70,24 @@ int TGzInflateBuf::getByte()
     return c;
 }
 
+// CodeWarrior retains this helper immediately after getByte and calls it
+// twice from the constructor's gzip-magic fallback. Its byte argument is
+// passed at both call sites but the helper only rewinds the input cursor.
+MAC_ADDRESS(0x220ac8, 0x1c)
+void TGzInflateBuf::ungetByte(signed char)
+{
+    --m_stream.next_in;
+    ++m_stream.avail_in;
+}
+
 // 0x4d6050: build the window, then walk the gzip member header exactly as
 // zlib's gzio.c check_header does. A failed magic pair is caught here and
 // demotes the stream to raw pass-through (ok = 0) rather than propagating.
 
-// The 8-byte local at [ebp-0x30] IS a live `std::auto_ptr<unsigned char>`,
-// contrary to the note this replaces: unwind funclet 2
-// (0x62c913, `lea ecx,[ebp-0x30]; jmp 0x4b7040`) is
-// `if (*(char*)this) operator delete(*(void**)((char*)this+4))`, which is
-// VC6 <memory>'s `~auto_ptr` on `{bool _Owns; _Ty *_Ptr;}` exactly. Retail
-// stores the immediate 1 into _Owns because `_P != 0` is already proven by
-// the throw above it, and neither exit destroys it because `release()`
-// leaves _Owns provably false and VC6 folds both the test and the store
-// away. Constructing it takes the frame from 0x1a8 to retail's 0x1b4 and
-// makes fn+0xbd..0xcf byte-identical (76.4458 -> 77.3300).
+// The temporary buffer owner is the ordinary TAutoArrayPtr: Mac stores
+// owns/pointer at stack+0x268/+0x26c, clears owns on release, and calls
+// array delete at 0x2212f4. Windows unwind 0x62c913 -> 0x4b7040 uses
+// the same flag/pointer pair; that body alone did not distinguish auto_ptr.
 
 // The header walk's two LOOP FORMS, 87.7808 -> 91.6008 in two doses, and
 // the second only pays after the first:
@@ -111,7 +117,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     m_buffer = new unsigned char[0x400];
     if (m_buffer == 0)
         throw TAllocationFailure();
-    std::auto_ptr<unsigned char> ownedBuffer(m_buffer);
+    TAutoArrayPtr<unsigned char> ownedBuffer(m_buffer);
     m_outBuffer = m_buffer + 0x200;
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)),
@@ -130,17 +136,17 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         try {
             if (magic != g_gzMagic[0])
                 throw false;
-            magic = getByte();
-            if (magic == -1)
+            // Mac preserves the first byte in r20 for the catch below;
+            // the second byte in r19 is passed to ungetByte at 0x220d0c.
+            int nextMagic = getByte();
+            if (nextMagic == -1)
                 throw false;
-            if (magic != g_gzMagic[1]) {
-                --m_stream.next_in;
-                ++m_stream.avail_in;
+            if (nextMagic != g_gzMagic[1]) {
+                ungetByte(static_cast<signed char>(nextMagic));
                 throw false;
             }
         } catch (bool) {
-            --m_stream.next_in;
-            ++m_stream.avail_in;
+            ungetByte(static_cast<signed char>(magic));
             throw;
         }
     } catch (bool) {
@@ -186,7 +192,11 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
-VA(0x004d65e0, 0xAF) MAC_ADDRESS(0x221994, 0x48)
+// Mac expands this constructor: its retained 0x221994 body is the
+// runtime_error(string) base constructor: r4 is a prebuilt string, copied
+// at 0x2219c0. Callers destroy the temporary then install the derived vptr
+// (e.g. 0x221660 -> 0x22166c -> 0x22167c).
+VA(0x004d65e0, 0xAF)
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
 {
@@ -216,7 +226,7 @@ TGzInflateBuf::~TGzInflateBuf()
         m_source->pubseekoff(
             gptr() - egptr(), std::ios_base::cur, std::ios_base::in);
     }
-    delete m_buffer;
+    delete[] m_buffer;
 }
 
 // 0x4d6920: drain the source into the 0x200-byte output half, either

@@ -714,7 +714,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                         break;
                     hex = const_cast<army*>(currentArmy)->getAdjacentCellIndex(
                             hex, g_searchArray->getStep(pathIndex));
-                    if (hex < 0 || hex >= 187)
+                    if (!validHex(hex))
                         break;
                     const pathCell* cell = g_searchArray->getHex(hex);
                     if (cell->m_flightCost == 0) {

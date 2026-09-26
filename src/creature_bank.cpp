@@ -25,6 +25,8 @@ const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
 // E:\gamedcs\creature_bank.cpp:25, dc 0x7152c
+// Mac array-construction descriptor at TOC-0x75bc names this member ctor.
+MAC_ADDRESS(0x089fe4, 0x30)
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25
@@ -216,8 +218,7 @@ void initializeCreatureBank(type_creature_bank* bank,
 
     if (random(1, 100) <= level->m_upgradeChance) {
         TCreatureType current = bank->m_guards.m_armyTypes[slot];
-        if (!(g_game->m_gameVersion == 0 && isBaseElemental(current))
-            && static_cast<unsigned char>(isBaseCreature(current))) {
+        if (g_game->isBaseCreature(current)) {
             TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
             int upgraded = g_game->upgradedCreatureType(promoted);
             bank->m_guards.m_armies[slot] = upgraded;

@@ -60,7 +60,7 @@ int border::main(message& msg)
             switch (msg.m_id) {
             case MESSAGE_LEFT_BUTTON_DOWN:
                 if (isDisabled)
-                    return widget::main(msg);
+                    break;
                 // fall through
             case MESSAGE_RIGHT_BUTTON_DOWN: {
                 short mouseX = msg.m_codeX - m_parentWindow->m_x;
@@ -80,12 +80,12 @@ int border::main(message& msg)
                     msg.m_codeY = m_id;
                     return 2;
                 }
-                break;
+                return 0;
             }
 
             case MESSAGE_LEFT_BUTTON_UP:
                 if (isDisabled)
-                    return widget::main(msg);
+                    break;
                 // fall through
             case MESSAGE_RIGHT_BUTTON_UP:
                 if (m_status & WIDGET_SELECTED) {
@@ -97,10 +97,12 @@ int border::main(message& msg)
                     msg.m_codeY = m_id;
                     return 2;
                 }
-                break;
+                return 0;
             default:
-                return widget::main(msg);
+                break;
             }
+            // Mac 0x5e560: disabled button cases and default share this call.
+            return widget::main(msg);
         }
     }
 

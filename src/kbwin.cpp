@@ -114,7 +114,9 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
 {
     switch (message) {
         case WM_CREATE:
-            srand(timeGetTime());
+            // Mac core/make callback 0:0x20f7ac retains GameTime::get
+            // before srand; Windows 0x4f7c39 expands its timeGetTime read.
+            srand(GameTime::get());
             GdiSetBatchLimit(1);
             return 0;
         case WM_ACTIVATE:

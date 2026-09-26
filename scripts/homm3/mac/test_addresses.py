@@ -63,6 +63,13 @@ class TestMacAddressScan(unittest.TestCase):
         self.assertEqual(claims[0].identity,
                          "source:src/unit.cpp:initializeMoveConstants()")
 
+    def test_standalone_claim_accepts_comparison_operator(self):
+        claims, _, problems = scan(
+            "MAC_ADDRESS(0x100, 0x10)\n"
+            "bool Tile::operator==(const Tile* other) const\n{\n    return true;\n}\n")
+        self.assertEqual(problems, [])
+        self.assertEqual(claims[0].label, "Tile::operator==")
+
     def test_overloads_have_distinct_identities(self):
         claims, _, problems = scan(
             "MAC_ADDRESS(0x100, 0x10)\nint f(int value)\n{\n    return value;\n}\n"
@@ -185,6 +192,12 @@ class TestMacAddressTables(unittest.TestCase):
                                runtime=[(0x200, ".g")], owner="guess", call_kind="far")
             self.assertTrue(any("unknown owner" in item for item in found))
             self.assertTrue(any("unknown call kind" in item for item in found))
+
+    def test_mac_platform_and_port_labels_are_valid_runtime_owners(self):
+        for owner in ("mac_platform", "mac_port"):
+            with self.subTest(owner=owner), tempfile.TemporaryDirectory() as folder:
+                self.assertEqual(self.check(Path(folder), "", functions=[(0x200, 0x8)],
+                                            runtime=[(0x200, ".g")], owner=owner), [])
 
     def test_glue_rows_must_be_loader_proven_24_byte_stubs(self):
         from homm3.mac.relocations import Address

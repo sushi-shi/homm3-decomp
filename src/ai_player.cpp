@@ -943,9 +943,10 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
         }
 
         if (g_game->m_setup.m_difficulty == 0) {
-            int localTeam = g_game->getTeam(g_netLocalGamePos);
-            if (localTeam < 0 || !g_game->isHumanTeam(localTeam)) {
-                    if (g_creatureTypeTraits[creature].m_level
+            // Mac 0x2d36c retains the same isHumanAlly expansion as
+            // 0x2d248 above: getTeam followed by isHumanTeam.
+            if (!g_game->isHumanAlly(g_netLocalGamePos)) {
+                if (g_creatureTypeTraits[creature].m_level
                         == TOWN_DWELLING_COUNT - 1)
                     prohibited[creature] = 1;
                 if (g_creatureTypeTraits[creature].m_growthRate
@@ -1356,8 +1357,7 @@ static long valueOfBuilding(town* currentTown, type_building_id building,
         case TOWN_FORTRESS:
             if ((building == EXTRA_0_ID || building == EXTRA_1_ID)
                 && currentTown->m_threateningHeroes)
-                return static_cast<const town*>(currentTown)
-                           ->getArmy().getAIValue() / 20;
+                return currentTown->getArmy().getAIValue() / 20;
             break;
         }
         return 0;
@@ -1762,18 +1762,14 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 
     unsigned char alliance = g_game->m_players[currentHero->m_owner]
         .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
-    purchaser.doSwap(currentHero,
-                      const_cast<armyGroup*>(
-                          &static_cast<const town*>(currentTown)->getArmy()),
-                      garrisonHero, alliance);
+    purchaser.doSwap(currentHero, &currentTown->getArmy(),
+                     garrisonHero, alliance);
 
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1),
-                          const_cast<armyGroup*>(
-                              &static_cast<const town*>(currentTown)
-                                   ->getArmy()),
-                          player->m_resources, 1, alliance);
+                          &currentTown->getArmy(), player->m_resources,
+                          1, alliance);
 
     // DC ai_player.cpp:1869/1873 has two early exits; 1893 records short
     // morale, and amount/funds/traits belong to function scope. Retail
@@ -1841,8 +1837,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                 purchaser.set(creature, &amount);
                 long value = purchaser.getPurchaseValue(
                     &currentHero->m_army, morale,
-                    &static_cast<const town*>(currentTown)
-                         ->getArmy(),
+                    &currentTown->getArmy(),
                     funds, alliance);
                 if (value > bestValue) {
                     bestValue = value;
@@ -1859,10 +1854,8 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
-                              const_cast<armyGroup*>(
-                                  &static_cast<const town*>(
-                                       currentTown)->getArmy()),
-                              player->m_resources, 1, alliance);
+                              &currentTown->getArmy(), player->m_resources,
+                              1, alliance);
     }
 }
 
@@ -2271,15 +2264,9 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
-        int minimumMorale;
-        if (g_game->m_gameVersion == 0
-            && isBaseElemental(type)) {
-            minimumMorale = 1;
-        } else {
-            minimumMorale = 2;
-            if (traits->m_townType != TOWN_NECROPOLIS)
-                minimumMorale = 1;
-        }
+        // Mac 0x30354 expands getAlignment again for this threshold.
+        int minimumMorale =
+            g_game->getAlignment(type) == TOWN_NECROPOLIS ? 2 : 1;
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)
@@ -4241,9 +4228,8 @@ bool considerHiring(long playerId, hero* candidate)
 // against every own hero whose cell the search touched.
 // Raw NB11 places all thirteen named DC locals in the procedure scope and
 // names the mutable town::get_army overload in the older Dreamcast build.
-// Mac 0:0x35070 calls the retained const overload at 0:0x1b6fdc. Complete's
-// normalized Windows target labels the shared ICF-folded body as const, and
-// selecting that overload is byte-flat in VC6 while resolving the Mac call.
+// Mac 0:0x35070 calls the retained mutable overload at 0:0x1b6fdc. Complete's
+// normalized Windows target labels the shared ICF-folded body as const.
 // Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
@@ -4260,8 +4246,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
     armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy =
-        static_cast<const town*>(currentTown)->getArmy();
+    armyGroup townArmy = currentTown->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;
@@ -4727,7 +4712,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
 
 VA(0x00433130, 0x26f) MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
-    const hero* owner, unsigned char, unsigned char exact) const
+    const hero* owner, unsigned char equipped, unsigned char exact) const
 {
     std::bitset<9> alliedAlignments = armyGrpFn0044A460();
     playerData* player = &g_game->m_players[owner->m_owner];
@@ -4768,13 +4753,9 @@ long type_angelic_alliance_artifact::getValue(
         }
     }
 
-    long ownArmyValue;
-    if (exact) {
-        ownArmyValue = 0;
-    } else {
-        ownArmyValue = owner->m_army.getAIValue() * m_bonus / 40;
-    }
-    return ownArmyValue + total * 5 / 100;
+    // Mac 0x3846c retains the might-artifact base evaluator at 0x36df0.
+    return type_might_artifact::getValue(owner, equipped, exact)
+        + total * 5 / 100;
 }
 
 // Mac calls the shared base evaluator twice, once for each mastery path.
@@ -5233,62 +5214,74 @@ inline type_artifact_effect::type_artifact_effect()
 {
 }
 
+MAC_ADDRESS(0x036c50, 0x48)
 inline type_scouting_artifact::type_scouting_artifact(long newBonus)
 {
     m_bonus = newBonus;
 }
 
+MAC_ADDRESS(0x036d58, 0x38)
 inline type_might_artifact::type_might_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036e50, 0x38)
 inline type_power_artifact::type_power_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036ea8, 0x38)
 inline type_knowledge_artifact::type_knowledge_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x036f00, 0x38)
 inline type_base_necromancy_artifact::type_base_necromancy_artifact(
     long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037034, 0x38)
 inline type_necromancy_artifact::type_necromancy_artifact(long newBonus)
     : type_base_necromancy_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x03710c, 0x38)
 inline type_movement_artifact::type_movement_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037198, 0x38)
 inline type_spellcaster_artifact::type_spellcaster_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037248, 0x38)
 inline type_morale_artifact::type_morale_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037344, 0x38)
 inline type_luck_artifact::type_luck_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037440, 0x38)
 inline type_duration_artifact::type_duration_artifact(long newBonus)
     : type_power_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x037504, 0x4c)
 inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
                                                    long newBonus)
     : type_power_artifact(newBonus)
@@ -5296,25 +5289,30 @@ inline type_school_artifact::type_school_artifact(TSpellSchool newSchool,
     m_school = newSchool;
 }
 
+MAC_ADDRESS(0x037734, 0x48)
 inline type_antimagic_artifact::type_antimagic_artifact(long maxLevel)
 {
     m_bonus = maxLevel;
 }
 
+MAC_ADDRESS(0x03788c, 0x38)
 inline type_antimorale_artifact::type_antimorale_artifact()
 {
 }
 
+MAC_ADDRESS(0x0379a8, 0x38)
 inline type_antiluck_artifact::type_antiluck_artifact()
 {
 }
 
+MAC_ADDRESS(0x037ac4, 0x4c)
 inline type_tome_artifact::type_tome_artifact(TSpellSchool newSchool)
     : type_combat_artifact(0)
 {
     m_school = newSchool;
 }
 
+MAC_ADDRESS(0x037c40, 0x58)
 inline type_income_artifact::type_income_artifact(
     long newAmount, EGameResource newResource)
 {
@@ -5322,6 +5320,7 @@ inline type_income_artifact::type_income_artifact(
     m_resource = newResource;
 }
 
+MAC_ADDRESS(0x037cfc, 0x58)
 inline type_creature_growth_artifact::type_creature_growth_artifact(
     long newLevel, long newBonus)
 {
@@ -5329,21 +5328,25 @@ inline type_creature_growth_artifact::type_creature_growth_artifact(
     m_growthBonus = newBonus;
 }
 
+MAC_ADDRESS(0x0384a4, 0x3c)
 inline type_undead_king_cloak_artifact::type_undead_king_cloak_artifact()
     : type_base_necromancy_artifact(30)
 {
 }
 
+MAC_ADDRESS(0x037fcc, 0x48)
 inline type_spell_artifact::type_spell_artifact(SpellID newSpell)
     : m_spell(newSpell)
 {
 }
 
+MAC_ADDRESS(0x0380e8, 0x38)
 inline type_shooter_bonus_artifact::type_shooter_bonus_artifact(long newBonus)
     : type_combat_artifact(newBonus)
 {
 }
 
+MAC_ADDRESS(0x038190, 0x3c)
 inline type_angelic_alliance_artifact::type_angelic_alliance_artifact()
     : type_might_artifact(8)
 {

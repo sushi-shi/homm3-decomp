@@ -32,6 +32,19 @@ def _image():
     return PEF(inputs.read_verified(inputs.MAC, executable))
 
 
+def _raw_code_names(root):
+    """Label raw disassembly without compiling or resolving full-TU objects."""
+    from homm3.mac import addresses, tables
+    claims, _, problems = addresses.scan(root)
+    if problems:
+        raise ValueError("; ".join(problems))
+    names = {(0, claim.offset): claim.label for claim in claims}
+    names.update({(0, row.offset): row.name for row in tables.read_runtime(root)})
+    names.update({(0, row.offset): row.name for row in tables.read_glue(root)})
+    names.update({(0, row.offset): row.name for row in tables.read_zlib(root)})
+    return names
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="homm3 mac", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -327,17 +340,38 @@ def main(argv=None) -> int:
                     print(json.dumps(report, indent=2))
                 else:
                     print(f"[mac] references to {calls.address_key(address)}")
-                    scored = pairs.load(common.HOMM3_DIR).pairs
+                    if args.selector.startswith("mac:"):
+                        from bisect import bisect_right
+                        from homm3.mac import addresses
+                        claims, _, problems = addresses.scan(common.HOMM3_DIR)
+                        if problems:
+                            raise ValueError("; ".join(problems))
+                        ordered = sorted(claims, key=lambda claim: claim.offset)
+                        starts = [claim.offset for claim in ordered]
+
+                        def owner(at):
+                            if at.section != 0:
+                                return ""
+                            position = bisect_right(starts, at.offset) - 1
+                            if position < 0:
+                                return ""
+                            claim = ordered[position]
+                            return claim.label if at.offset < claim.offset + claim.size else ""
+                    else:
+                        scored = pairs.load(common.HOMM3_DIR).pairs
+
+                        def owner(at):
+                            return next((pair.signature for pair in scored
+                                         if pair.mac_section == at.section
+                                         and pair.mac_offset <= at.offset < pair.mac_offset + pair.mac_size), "")
                     for group in ("code_branches", "loader_pointers", "toc_uses"):
                         print(f"  {group}: {len(report[group])}")
                         for row in report[group]:
                             at = Address(row["section"], row["offset"])
-                            owner = next((p.signature for p in scored if p.mac_section == at.section
-                                          and p.mac_offset <= at.offset < p.mac_offset + p.mac_size), "")
                             detail = row.get("kind", "")
                             if "toc_offset" in row:
                                 detail = f"via TOC {row['toc_section']}+0x{row['toc_offset']:x}"
-                            print(f"    {calls.address_key(at)} {detail} {owner}".rstrip())
+                            print(f"    {calls.address_key(at)} {detail} {owner(at)}".rstrip())
                 return 0
             if args.limit < 0:
                 parser.error("--limit must be nonnegative")
@@ -419,8 +453,11 @@ def main(argv=None) -> int:
         if args.command == "disasm":
             from capstone import Cs, CS_ARCH_PPC, CS_MODE_32, CS_MODE_BIG_ENDIAN
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
-            names = {(address.section, address.offset): name
-                     for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
+            if args.size is not None:
+                names = _raw_code_names(common.HOMM3_DIR)
+            else:
+                names = {(address.section, address.offset): name
+                         for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name

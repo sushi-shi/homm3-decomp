@@ -156,7 +156,9 @@ int iconWidget::main(message& msg)
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = WIDGET_DESELECT;
             msg.m_codeY = m_id;
-            if (handleClick(false, false))
+            // Mac 0x10c7c8..0x10c7e0 retains this argument expression
+            // after the MESSAGE_WIDGET assignment above.
+            if (handleClick(false, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;

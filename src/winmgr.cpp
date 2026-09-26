@@ -930,6 +930,9 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
     }
 }
 
+// Mac checks its display mode to choose gamma or bitmap fade paths
+// (0x20e650 and 0x20ea8c). Their extra bitmap, blit and delay
+// calls are platform paths, not missing helpers in the Windows fade.
 VA(0x006030e0, 0x1F9) MAC_ADDRESS(0x20e634, 0x444)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {

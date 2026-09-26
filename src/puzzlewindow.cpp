@@ -237,7 +237,7 @@ int TPuzzleWindow::updatePuzzle(int full)
     int piecesNotFound = 0;
 
     for (int i = 0; i < 48; ++i) {
-        if (full || !g_puzzlePiecesRemoved.test(i)) {
+        if (full || !g_puzzlePiecesRemoved[i]) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
             const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
@@ -327,6 +327,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
 
+MAC_ADDRESS(0x147d08, 0x178)
 unsigned char type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile* arg) const
 {
@@ -604,13 +605,15 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     rect.left = max(rect.left, firstX - extents.left);
     rect.left = max(rect.left, 0);
     rect.right = g_mapWidth + firstX - 9;
-    rect.right = min(rect.right, g_mapWidth - extents.right + firstX);
+    rect.right = min(static_cast<int>(rect.right),
+                     g_mapWidth - extents.right + firstX);
     rect.right = min(rect.right, g_mapWidth);
     rect.top = firstY - 8;
     rect.top = max(rect.top, firstY - extents.top);
     rect.top = max(rect.top, 0);
     rect.bottom = g_mapHeight + firstY - 8;
-    rect.bottom = min(rect.bottom, g_mapWidth - extents.bottom + firstY);
+    rect.bottom = min(static_cast<int>(rect.bottom),
+                      g_mapWidth - extents.bottom + firstY);
     rect.bottom = min(rect.bottom, g_mapHeight);
 
     for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {

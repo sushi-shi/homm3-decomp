@@ -214,7 +214,7 @@ static int mainMenuHandler(message& msg)
             }
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = g_mainMenu->findWidget(msg.m_mouseY, msg.m_mouseX);
+        int hoverID = g_mainMenu->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
             g_lastImHoverId = hoverID;

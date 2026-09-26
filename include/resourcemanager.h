@@ -1,6 +1,9 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
+#include "resource.h"
+#include "csprite.h"
+
 class CSprite;
 class font;
 class resource;
@@ -55,9 +58,12 @@ void addToCache(resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
 resource* getFromCache(const char* name);
 
-void dispose(resource* value);
+// Existing disposal wrappers expand across TUs in the selection destructor:
+// Windows 0x583bb8..0x583c35 and Mac 0x17b5b0..0x17b6bc retain only the
+// member virtual calls. Their bodies must be visible at those source calls.
+inline void dispose(resource* value) { value->dispose(); }
 void dispose(sample* value);
-void dispose(CSprite* value);
+inline void dispose(CSprite* value) { value->dispose(); }
 void delSprFromCache();
 
 LODFile* pointToSpriteResource(const char* name);

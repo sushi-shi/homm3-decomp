@@ -929,10 +929,13 @@ public:
     AI m_ai;  // +0xf0
     // Implicit destructor; CodeView dc 0xbd630 compgenx.
     int load(TAbstractFile* infile, int saveVersion);
-    // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
+    // town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
-    bool isHuman() const;
+    // Windows hero::giveArtifact expands this query at 0x4e322d;
+    // Mac retains its body and expands the same test at 0x103f74.
+    VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
+    bool isHuman() const { return m_isHuman ? true : false; }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -1219,6 +1222,7 @@ public:
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
     SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
+    SpellID getRandomSpell(int level);
     boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);
@@ -1465,16 +1469,32 @@ public:
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
+    // Mac expands this version-aware wrapper before the retained global
+    // isBaseCreature call in combatMonsterEvent and the hill-fort guards.
+    unsigned char isBaseCreature(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0 && isBaseElemental(creature))
+            return false;
+        return static_cast<unsigned char>(::isBaseCreature(creature));
+    }
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
-        if (m_gameVersion == 0
-            && (creature == CREATURE_AIR_ELEMENTAL
-                || creature == CREATURE_EARTH_ELEMENTAL
-                || creature == CREATURE_FIRE_ELEMENTAL
-                || creature == CREATURE_WATER_ELEMENTAL))
+        if (m_gameVersion == 0 && isBaseElemental(creature))
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
+    }
+    // Mac getLikeModifier expands this counterpart before calling the
+    // retained global downgradedCreatureType at 0:0xb44b4.
+    TCreatureType downgradedCreatureType(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0
+            && (creature == CREATURE_ICE_ELEMENTAL
+                || creature == CREATURE_STORM_ELEMENTAL
+                || creature == CREATURE_MAGMA_ELEMENTAL
+                || creature == CREATURE_ENERGY_ELEMENTAL))
+            return CREATURE_NONE;
+        return ::downgradedCreatureType(creature);
     }
 // Dreamcast Game.h:839-850, IsHumanTeam (dc 0x37f64): reject a negative
 // team, scan its eight player slots, and call gpGame->IsHuman on a member.

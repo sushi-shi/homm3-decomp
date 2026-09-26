@@ -131,6 +131,18 @@ static void ddSetupClipper()
 
 }
 
+// Mac retains this opaque-only blit at 20ca9c; its only xrefs are the
+// cursor save/restore copies at 20c93c and 20ca84. Its display, readback
+// and offscreen paths expand ddBlit with transparency disabled (including
+// the copy-context lifetime). Windows uses DDBLT_WAIT for this operation.
+// The original helper name is unknown.
+MAC_ADDRESS(0x20ca9c, 0xf0)
+static void ddBlitOpaque(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
+                        IDirectDrawSurface* srcSurface, const tagRECT& srcRect)
+{
+    ddBlit(dstSurface, dstRect, srcSurface, srcRect, DDBLT_WAIT);
+}
+
 // The screen blit: unlock the back buffer, put the damaged rectangle up on
 // the primary, and lock the back buffer again with both Bitmap16Bit views
 // re-referenced to wherever it landed. When the damaged rectangle overlaps
@@ -179,8 +191,8 @@ void robAppBlit(tagRECT* combRect)
             sourceRect = pointerRect;
             OffsetRect(&sourceRect, -g_mouseManager->m_savedRect.left,
                        -g_mouseManager->m_savedRect.top);
-            ddBlit(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
-                   pointerRect, DDBLT_WAIT);
+            ddBlitOpaque(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
+                         pointerRect);
             if (g_mouseManager->isVis() && g_mouseManager->m_sprite
                 && g_mouseManager->getFrame() >= 0) {
                 DDSURFACEDESC surfaceDesc;
@@ -210,8 +222,8 @@ void robAppBlit(tagRECT* combRect)
 
         if (g_mouseManager && g_mouseManager->isVis()
             && g_mouseManager->m_sprite && g_mouseManager->getFrame() >= 0) {
-            ddBlit(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
-                   sourceRect, DDBLT_WAIT);
+            ddBlitOpaque(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
+                         sourceRect);
         }
     } else {
         ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);

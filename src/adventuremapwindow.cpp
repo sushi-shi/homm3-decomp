@@ -207,9 +207,11 @@ CAdventurMapChatEdit::CAdventurMapChatEdit(
 {
 }
 
-VA(0x00401400, 0xC5)
+VA(0x00401400, 0xC5) MAC_ADDRESS(0x00026c, 0x20)
 int TAdventureMapWindow::open(int zOrder, unsigned char update)
 {
+    // Mac's override at 0:0x26c only forwards to heroWindow::open;
+    // the immersion mouse-effect lifetime belongs to Windows.
     int result = heroWindow::open(zOrder, update);
     if (result == 0) {
         RECT area;
@@ -229,9 +231,10 @@ int TAdventureMapWindow::open(int zOrder, unsigned char update)
     return result;
 }
 
-VA(0x004014d0, 0x3C)
+VA(0x004014d0, 0x3C) MAC_ADDRESS(0x00028c, 0x20)
 void TAdventureMapWindow::close(unsigned char update)
 {
+    // Mac 0:0x28c has only the base close call, without immersion teardown.
     delete static_cast<TImmMouseEffect*>(m_immersion);
     m_immersion = 0;
     heroWindow::close(update);
@@ -1370,10 +1373,12 @@ void TAdventureMapWindow::drawChatText(unsigned char update)
 // Original: TAdvMenu::SetAdvWinButtonPalette; adventuremapwindow.cpp:1273, dc 0x1238.
 // Complete owns these menu buttons directly in TAdventureMapWindow; its
 // updateButtons body at 0x403f60 expands GetWidget and the button palette call.
+// Mac 0:0x3c94 receives id in r3 and player in r4, then loads the window
+// through g_advManager; no instance pointer is passed.
 MAC_ADDRESS(0x003c94, 0x4c)
 void TAdventureMapWindow::setAdvWinButtonPalette(int id, int player)
 {
-    widget* w = getWidget(id);
+    widget* w = g_advManager->m_advWindow->getWidget(id);
     if (w)
         static_cast<button*>(w)->setPlayerPaletteColors(player);
 }
@@ -1383,16 +1388,16 @@ void TAdventureMapWindow::updateButtons(unsigned char draw, unsigned char update
 {
     int player = g_game->getLocalPlayerGamePos();
 
-    g_advManager->m_advWindow->setAdvWinButtonPalette(KINGDOM_OVERVIEW_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(ELEVATION_TOGGLE_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(QUEST_LOG_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(SLEEP_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(MOVE_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(CAST_SPELL_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(ADVENTURE_OPTIONS_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(SYSTEM_OPTIONS_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(NEXT_HERO_ID, player);
-    g_advManager->m_advWindow->setAdvWinButtonPalette(END_TURN_ID, player);
+    setAdvWinButtonPalette(KINGDOM_OVERVIEW_ID, player);
+    setAdvWinButtonPalette(ELEVATION_TOGGLE_ID, player);
+    setAdvWinButtonPalette(QUEST_LOG_ID, player);
+    setAdvWinButtonPalette(SLEEP_ID, player);
+    setAdvWinButtonPalette(MOVE_ID, player);
+    setAdvWinButtonPalette(CAST_SPELL_ID, player);
+    setAdvWinButtonPalette(ADVENTURE_OPTIONS_ID, player);
+    setAdvWinButtonPalette(SYSTEM_OPTIONS_ID, player);
+    setAdvWinButtonPalette(NEXT_HERO_ID, player);
+    setAdvWinButtonPalette(END_TURN_ID, player);
 
     if (draw)
         drawWindow(update, KINGDOM_OVERVIEW_ID, END_TURN_ID);
@@ -1417,9 +1422,10 @@ void button::setHotkey(int code)
 
 #endif  // @carcass
 
-VA(0x004040b0, 0x38)
+VA(0x004040b0, 0x38) MAC_ADDRESS(0x003ddc, 0x20)
 void TAdventureMapWindow::vslot8(unsigned char on)
 {
+    // Mac 0:0x3ddc forwards only; the mouse-effect edge is Windows-specific.
     heroWindow::vslot8(on);
 
     if (on) {
