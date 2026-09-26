@@ -613,13 +613,12 @@ void game::calculateProduction()
                 production[i] += siloIncome[i];
         }
 
-        // `currentTown` is `town&`; the static_cast selects retail's
-        // const get_army overload, and the Dreamcast-public QB query then
-        // consumes its const armyGroup directly.
+        // Mac calculateProduction calls the mutable getArmy at 0xcac1c.
+        // Windows folds both overload bodies at 0x5c1460.
         {
             int storage;
             storage = g_productionCreatureCrystalDragon;
-            if (static_cast<const town&>(currentTown).getArmy()
+            if (currentTown.getArmy()
                     .getCreatureTotal(TCreatureType(storage)) > 0)
                 crystalDragonIncome[currentTown.m_owner] = 1;
         }
@@ -1102,8 +1101,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
         return 0;
 
     ourHero = g_game->getHero(ourTown->m_visitingHeroId);
-    if (!ourHero->m_army.merge(const_cast<armyGroup*>(
-            &static_cast<const town*>(ourTown)->getArmy())))
+    if (!ourHero->m_army.merge(&ourTown->getArmy()))
         return 0;
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
@@ -6297,8 +6295,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (isRemoteMove)
         return;
 
-    const_cast<armyGroup&>(
-        static_cast<const town*>(thisTown)->getArmy()).initialize();
+    thisTown->getArmy().initialize();
     if (thisTown->m_owner != -1) {
         m_players[newPlayerOwner].m_townIds[m_players[newPlayerOwner].m_numTowns] =
             static_cast<char>(townId);
