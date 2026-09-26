@@ -1397,6 +1397,10 @@ void type_resource_quest::doProgressDialog()
     extendedDialog(m_proposalText.c_str(), dialogResources, -1, -1, 0);
 }
 
+// These three serializers differ between retails: Windows 0x571b94,
+// 0x571bc4 and 0x571bf4 transfer the whole 28-byte resource array. Mac
+// 0x1684ac, 0x168528 and 0x1685a8 transfer seven 4-byte scalars with
+// byte swapping. A shared serialization-helper boundary remains unresolved.
 VA(0x00571b80, 0x29) MAC_ADDRESS(0x168470, 0x80)
 void type_resource_quest::load(TAbstractFile* file, int version)
 {
