@@ -962,7 +962,7 @@ cmbtmgr	?isAdjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0	t
 cmbtmgr	?isInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0	tokens1:1f8c8af3456a
 cmbtmgr	?isQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0	tokens1:4c1ccdf651d5
 cmbtmgr	?isWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0	tokens1:e20c101d157d
-cmbtmgr	?keepAttack@combatManager@@AAEXH@Z	95.0344	95.0344	95.0344	0x65ad0	tokens1:a5cb47c78145
+cmbtmgr	?keepAttack@combatManager@@AAEXH@Z	98.2722	98.2722	98.2722	0x65ad0	tokens1:8bf7c92bdb82
 cmbtmgr	?learnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0	tokens1:b54358309f5b
 cmbtmgr	?leftOfMoat@combatManager@@SIEH@Z	100.0000	100.0000	100.0000	0x67490	tokens1:36ec688e68bb
 cmbtmgr	?loadArmies@combatManager@@AAEXE@Z	99.3528	99.3528	99.3528	0x63600	tokens1:7c8cb129f897
