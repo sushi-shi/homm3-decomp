@@ -13,7 +13,7 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
-VA(0x0052f8c0, 0x430)  // dc 0x11787c
+VA(0x0052f8c0, 0x430) MAC_ADDRESS(0x14b6bc, 0x514)  // dc 0x11787c
 TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
     TCreatureType id, int count, TDisposition disposition, int cost)
     : TDialogBox(0, 0, 256, 256, 0x12)
@@ -71,7 +71,7 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
 
 VA_COMPGEN(0x0052fcf0, 0x21, SCALAR_DELETING_DTOR, TQuickCreatureWindow)
 
-VA(0x0052fd20, 0xB)  // dc 0x117b5c
+VA(0x0052fd20, 0xB) MAC_ADDRESS(0x14bbd0, 0x60)  // dc 0x117b5c
 TQuickCreatureWindow::~TQuickCreatureWindow()
 {
 }
@@ -79,6 +79,7 @@ TQuickCreatureWindow::~TQuickCreatureWindow()
 // Original: TQuickCreatureWindow::QuickWindowWait; quickinfowindow.cpp:88, dc 0x117b8c.
 // Identical quick-window wrappers fold onto the retail 0x530d30 body.
 // Mac retains this ordinary wrapper at 0:0x14bc30.
+MAC_ADDRESS(0x14bc30, 0x2c)
 void TQuickCreatureWindow::quickWindowWait()
 {
     g_windowManager->doQuickView(this);

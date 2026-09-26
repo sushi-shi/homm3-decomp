@@ -82,7 +82,8 @@ target_sha256 = "0edd5056577ad8d0063117a33fd2e332698db9e19561b2a10d4558d21d51656
 evidence = "Unique static source helper formats puzzle piece filename through indexed prefix table and number then calls ResourceManager::getBitmap816 0x152df8. BLR 0x147278; next puzzle window ctor 0x14727c."
 
 [[helpers]]
-source_helper = "type_AI_puzzle_tile::type_AI_puzzle_tile"
+source_helper = "type_AI_puzzle_tile::type_AI_puzzle_tile()"
+in_class = true
 unit = "puzzlewindow"
 mac_section = 0x0
 mac_offset = 0x147ab8

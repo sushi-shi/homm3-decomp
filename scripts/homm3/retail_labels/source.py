@@ -131,7 +131,8 @@ MACRO_HEADS = {
 ADDR_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$")
 SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
-ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA)\s*\(")
+ANNOTATION_RE = re.compile(
+    r"^\s*(?:VA|VA_COMPGEN|DATA|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # Deliberately bounded comparison-operator spellings. Generic C++ declarator
 # parsing is still outside this scanner's contract, but operator==/operator!=

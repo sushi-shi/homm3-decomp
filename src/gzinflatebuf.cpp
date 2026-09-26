@@ -47,7 +47,7 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
 // hand back the next byte, or -1 at end of source.
-VA(0x004d5fd0, 0x74)
+VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
     if (m_stream.avail_in == 0) {
@@ -98,7 +98,7 @@ int TGzInflateBuf::getByte()
 //    an 87.78 baseline) and +1.28 after it: a rejected knob is only
 //    rejected for the inline structure it was measured in.
 
-VA(0x004d6050, 0x58A)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
+VA(0x004d6050, 0x58A) MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     : m_source(newSource),
       m_buffer(0),
@@ -186,7 +186,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
-VA(0x004d65e0, 0xAF)
+VA(0x004d65e0, 0xAF) MAC_ADDRESS(0x221994, 0x48)
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
 {
@@ -201,7 +201,7 @@ VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 // 0x4d6820: hand the source stream back whatever this object read ahead -
 // the raw bytes still in next_in, or, when the member was never a gzip
 // member, the undrained tail of the output window.
-VA(0x004d6820, 0xF6)
+VA(0x004d6820, 0xF6) MAC_ADDRESS(0x221394, 0x12c)
 TGzInflateBuf::~TGzInflateBuf()
 {
     if (m_stream.avail_in > 0) {
@@ -245,7 +245,7 @@ TGzInflateBuf::~TGzInflateBuf()
 // The candidate also shares its 0x20 exception slot where retail reserves
 // 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
 // byte-count local scores 81.3560% and does not resolve the trailer calls.
-VA(0x004d6920, 0x251)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
+VA(0x004d6920, 0x251) MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
     while (m_stream.avail_out > 0) {

@@ -880,6 +880,7 @@ public:
     // Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
     // E:\gamedcs\MapCell.h:565, dc 0x1f958
+    MAC_ADDRESS(0x127c38, 0x14)
     static unsigned getBitPos(unsigned x, unsigned y)
     {
         return 47 - y * 8 - x;

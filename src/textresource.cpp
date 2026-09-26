@@ -11,7 +11,7 @@ TTextResource::TTextResource() : resource(0, RESOURCE_TYPE_NONE), m_data(0)
 
 VA_COMPGEN(0x005bbb70, 0x21, SCALAR_DELETING_DTOR, TTextResource)
 
-VA(0x005bbba0, 0x227)  // dc 0x163858
+VA(0x005bbba0, 0x227) MAC_ADDRESS(0x1b0b70, 0x21c)  // dc 0x163858
 TTextResource::TTextResource(const char* name, int size, const char* data)
     : resource(name, RESOURCE_TYPE_TEXT)
 {
@@ -68,14 +68,14 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
     }
 }
 
-VA(0x005bbdd0, 0x4D)  // dc 0x1639a4
+VA(0x005bbdd0, 0x4D) MAC_ADDRESS(0x1b0d8c, 0x8c)  // dc 0x1639a4
 TTextResource::~TTextResource()
 {
     if (m_data)
         delete m_data;
 }
 
-VA(0x005bbe20, 0x1B)
+VA(0x005bbe20, 0x1B) MAC_ADDRESS(0x1b0e18, 0xc)
 unsigned int TTextResource::getSize() const
 {
     return sizeof(*this) + m_text.size();
@@ -89,7 +89,7 @@ TSpreadsheetResource::TSpreadsheetResource()
 
 VA_COMPGEN(0x005bbe40, 0x21, SCALAR_DELETING_DTOR, TSpreadsheetResource)
 
-VA(0x005bbe70, 0x2E6)  // dc 0x163a70
+VA(0x005bbe70, 0x2E6) MAC_ADDRESS(0x1b0ea8, 0x270)  // dc 0x163a70
 TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
                                             const char* data)
     : resource(name, RESOURCE_TYPE_TEXT)
@@ -158,13 +158,13 @@ TSpreadsheetResource::TSpreadsheetResource(const char* name, int size,
     }
 }
 
-VA(0x005bc160, 0x7)
+VA(0x005bc160, 0x7) MAC_ADDRESS(0x1b1118, 0xc)
 unsigned int TSpreadsheetResource::getSize() const
 {
     return sizeof(*this) + m_dataSize;
 }
 
-VA(0x005bc170, 0x7F)  // dc 0x163c30
+VA(0x005bc170, 0x7F) MAC_ADDRESS(0x1b1124, 0xe4)  // dc 0x163c30
 TSpreadsheetResource::~TSpreadsheetResource()
 {
     for (TStringVector** it = m_spreadsheet.begin(); it != m_spreadsheet.end();

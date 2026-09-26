@@ -11,7 +11,7 @@
 #include "widget.h"
 #include "winmgr.h"
 
-VA(0x0048fdc0, 0x6F)  // dc 0x81748
+VA(0x0048fdc0, 0x6F) MAC_ADDRESS(0x0a1500, 0x74)  // dc 0x81748
 TDialogBox::TDialogBox(int winX, int winY, int winWidth,
                        int winHeight, unsigned winType)
     : heroWindow(winX, winY, winWidth, winHeight, winType)
@@ -21,13 +21,13 @@ TDialogBox::TDialogBox(int winX, int winY, int winWidth,
 
 VA_COMPGEN(0x0048fe30, 0x21, SCALAR_DELETING_DTOR, TDialogBox)
 
-VA(0x0048fe60, 0x2A)  // dc 0x817b0
+VA(0x0048fe60, 0x2A) MAC_ADDRESS(0x0a1574, 0x4c)  // dc 0x817b0
 TDialogBox::TDialogBox(unsigned winType)
     : heroWindow(0, 0, 800, 600, winType)
 {
 }
 
-VA(0x0048fe90, 0x6B)  // dc 0x817f8
+VA(0x0048fe90, 0x6B) MAC_ADDRESS(0x0a15c0, 0xac)  // dc 0x817f8
 TDialogBox::~TDialogBox()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -36,7 +36,7 @@ TDialogBox::~TDialogBox()
     }
 }
 
-VA(0x0048ff00, 0x833)  // dc 0x8185c
+VA(0x0048ff00, 0x833) MAC_ADDRESS(0x0a166c, 0xa48)  // dc 0x8185c
 unsigned char TDialogBox::setup(int winX, int winY,
                                 int winWidth, int winHeight)
 {
@@ -137,7 +137,7 @@ unsigned char TDialogBox::setup(int winX, int winY,
 
 VA_COMPGEN(0x00490740, 0x21, SCALAR_DELETING_DTOR, CTextDialog)
 
-VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog)
+VA_COMPGEN(0x00490770, 0x6B, IMPLICIT_DTOR, CTextDialog) MAC_COMPGEN_ADDRESS(0x0a23a8, 0x60, IMPLICIT_DTOR, CTextDialog)
 
 // Original: CTextDialog::CTextDialog; dialogbox.cpp:139, dc 0x81d8c.
 CTextDialog::CTextDialog(const char* text, font* currentFont, unsigned winType)
@@ -146,14 +146,14 @@ CTextDialog::CTextDialog(const char* text, font* currentFont, unsigned winType)
     setup(text, currentFont);
 }
 
-VA(0x004907e0, 0x31)  // dc 0x81e00
+VA(0x004907e0, 0x31) MAC_ADDRESS(0x0a20b4, 0x40)  // dc 0x81e00
 CTextDialog::CTextDialog(unsigned winType)
     : TDialogBox(winType)
 {
     m_textWidget = 0;
 }
 
-VA(0x00490820, 0x26B)  // dc 0x81e38
+VA(0x00490820, 0x26B) MAC_ADDRESS(0x0a20f4, 0x17c)  // dc 0x81e38
 unsigned char CTextDialog::setup(const char* text, font* currentFont)
 {
     int winX;
@@ -176,7 +176,7 @@ unsigned char CTextDialog::setup(const char* text, font* currentFont)
     return 1;
 }
 
-VA(0x00490a90, 0x8C)  // dc 0x81f00
+VA(0x00490a90, 0x8C) MAC_ADDRESS(0x0a2270, 0xd4)  // dc 0x81f00
 void CTextDialog::calcDimensions(const char* text, font* currentFont,
                                  int& winX, int& winY,
                                  int& winWidth, int& winHeight)
@@ -194,7 +194,7 @@ void CTextDialog::calcDimensions(const char* text, font* currentFont,
     winY = (600 - winHeight) / 2;
 }
 
-VA(0x00490b20, 0x2C)  // dc 0x81f98
+VA(0x00490b20, 0x2C) MAC_ADDRESS(0x0a2344, 0x2c)  // dc 0x81f98
 int CTextDialog::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
@@ -204,7 +204,7 @@ int CTextDialog::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x00490b50, 0x17)  // dc 0x81fb0
+VA(0x00490b50, 0x17) MAC_ADDRESS(0x0a2370, 0x38)  // dc 0x81fb0
 void CTextDialog::updateText(const char* newText)
 {
     if (m_textWidget)

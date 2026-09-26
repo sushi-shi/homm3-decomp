@@ -169,7 +169,7 @@ public:
     // though completion behavior now belongs to the quest object.
     unsigned char m_completedByPlayer;
     // E:\gamedcs\SeerHut.h:108, dc 0xf4b38
-    VA(0x00573580, 0x13)
+    VA(0x00573580, 0x13) MAC_ADDRESS(0x169ac4, 0x48)
     TSeerHut()
     {
         m_quest = 0;

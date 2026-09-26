@@ -23,7 +23,7 @@ DATA(0x0069cd20) static TQuestLogWindow* g_questLogWindow;
 
 static void questSliderCallback(int state, heroWindow* parentWindow);
 
-VA(0x0052d8c0, 0x8AF)  // dc 0x116604
+VA(0x0052d8c0, 0x8AF) MAC_ADDRESS(0x149038, 0xfc0)  // dc 0x116604
 TQuestLogWindow::TQuestLogWindow()
   : CAdvPopup(205, 32, 389, 535, 2), m_firstVisibleQuest(0)
 {
@@ -80,7 +80,7 @@ TQuestLogWindow::TQuestLogWindow()
     }
 }
 
-VA(0x0052e170, 0x3A)  // dc 0x1165dc
+VA(0x0052e170, 0x3A) MAC_ADDRESS(0x148fe4, 0x54)  // dc 0x1165dc
 static void questSliderCallback(int state, heroWindow* parentWindow)
 {
     g_questLogWindow->m_firstVisibleQuest = state;
@@ -91,7 +91,7 @@ static void questSliderCallback(int state, heroWindow* parentWindow)
 
 VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
 
-VA(0x0052e1e0, 0x8F)  // dc 0x116b6c
+VA(0x0052e1e0, 0x8F) MAC_ADDRESS(0x149ff8, 0xc8)  // dc 0x116b6c
 TQuestLogWindow::~TQuestLogWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -105,7 +105,7 @@ TQuestLogWindow::~TQuestLogWindow()
 // offset - the one thing the constructor zeroed and neither of the
 // other two bodies touched.
 
-VA(0x0052e270, 0x19F)  // dc 0x116bd8
+VA(0x0052e270, 0x19F) MAC_ADDRESS(0x14a0c0, 0x134)  // dc 0x116bd8
 void TQuestLogWindow::updateQuestLocator(int i)
 {
     message msg;
@@ -134,6 +134,7 @@ void TQuestLogWindow::updateQuestLocator(int i)
 // 16 rows; the singular retail callee and loop schedule prove the revision.
 // Keep the ordinary source helper (questlogwindow.cpp:105..107); retail's
 // expansions in DoQuestLog and QuestSliderCallback do not prove `inline`.
+MAC_ADDRESS(0x14a1f4, 0x4c)
 void TQuestLogWindow::updateQuestLocators()
 {
     for (int i = 0; i < 16; ++i)
@@ -141,7 +142,7 @@ void TQuestLogWindow::updateQuestLocators()
 }
 
 // E:\gamedcs\questlogwindow.cpp:111
-VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4
+VA(0x0052e410, 0x1d) MAC_ADDRESS(0x14a240, 0x40)  // source-order map + both retail call edges, dc 0x116ca4
 int TQuestLogWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -151,7 +152,7 @@ int TQuestLogWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\questlogwindow.cpp:142, dc 0x116ccc
-VA(0x0052e430, 0x27E)  // dc 0x116ccc; Complete adds QuestGuardList
+VA(0x0052e430, 0x27E) MAC_ADDRESS(0x14a280, 0x3e0)  // dc 0x116ccc; Complete adds QuestGuardList
 void doQuestLog(int player)
 {
     message msg;

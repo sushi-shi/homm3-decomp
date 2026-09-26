@@ -61,9 +61,9 @@ retail_va = 0x5bc760
 unit = "textwdgt"
 mac_section = 0x0
 mac_offset = 0x1b1934
-mac_size = 0x78
-target_sha256 = "1f0204641bcb62c5b121d05d1660f2dde73fd912b32251f04bde14adfa9f387b"
-evidence = "calls textWidget ctor0x1b149c then ResourceManager::getBitmap8160x152df8 for background; complete adjacent PowerPC span."
+mac_size = 0x74
+target_sha256 = "ec7dbcdf5c2fc413b4192108e101dddc9c23e8932c706ac2464014e05431ff53"
+evidence = "calls textWidget ctor0x1b149c then ResourceManager::getBitmap8160x152df8 for background; complete adjacent PowerPC span. Boundary correction: the final BLR ends the body at 0x1b19a8; tvector entry 0x1b19a8 begins there, so the earlier 0x78-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x5bc7e0

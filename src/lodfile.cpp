@@ -5,7 +5,7 @@
 
 #include "lodfile.h"
 
-VA(0x004fa590, 0x77)  // dc 0xe908c
+VA(0x004fa590, 0x77) MAC_ADDRESS(0x11b598, 0x5c)  // dc 0xe908c
 void LODFile::clear()
 {
     if (m_opened) {
@@ -20,6 +20,7 @@ void LODFile::clear()
 // DC's getDataPtr is an ordinary helper called at pointAt line 431.
 // The PC expansion seeks the archive stream before returning its handle.
 
+MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
 {
     if (!m_opened)
@@ -33,7 +34,7 @@ void* LODFile::getDataPtr(const char* itemName)
     return 0;
 }
 
-VA(0x004fa610, 0x45)  // dc 0xe9154
+VA(0x004fa610, 0x45) MAC_ADDRESS(0x11b680, 0x70)  // dc 0xe9154
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
     if (m_opened) {
@@ -51,7 +52,7 @@ unsigned char LODFile::exist(const char* itemName)
     return m_matchindex >= 0;
 }
 
-VA(0x004fa660, 0x113)  // dc 0xe91c0
+VA(0x004fa660, 0x113) MAC_ADDRESS(0x11b6f0, 0x148)  // dc 0xe91c0
 void LODFile::find(unsigned begin, unsigned end, const char* itemName)
 {
     for (;;) {
@@ -114,6 +115,7 @@ char* LODFile::getErrorString(int lodError)
 
 // E:\gamedcs\lodfile.cpp:226.  DC's seven source rows prove these five
 // stores; retail repeats them exactly in open's vector-resize temporary.
+MAC_ADDRESS(0x11b838, 0x1c)
 LODEntry::LODEntry()
 {
     m_name[0] = 0;
@@ -126,6 +128,7 @@ LODEntry::LODEntry()
 // E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
 // into the one call site below, where the "LOD" strcpy expands to VC6's
 // repne scasb + rep movs pair.
+MAC_ADDRESS(0x11b9b0, 0x50)
 LODHeader::LODHeader()
 {
     strcpy(m_lodId, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
@@ -134,7 +137,7 @@ LODHeader::LODHeader()
     memset(m_reserved, 0, sizeof(m_reserved));
 }
 
-VA(0x004fa780, 0x7B)  // dc 0xe9330
+VA(0x004fa780, 0x7B) MAC_ADDRESS(0x11b854, 0x7c)  // dc 0xe9330
 LODFile::LODFile()
 {
     m_fileptr = 0;
@@ -143,13 +146,13 @@ LODFile::LODFile()
     m_dataBuffer = 0;
 }
 
-VA(0x004fa800, 0x97)  // dc 0xe9374
+VA(0x004fa800, 0x97) MAC_ADDRESS(0x11b934, 0x7c)  // dc 0xe9374
 LODFile::~LODFile()
 {
     clear();
 }
 
-VA(0x004fa8a0, 0x1C4)  // dc 0xe941c
+VA(0x004fa8a0, 0x1C4) MAC_ADDRESS(0x11ba00, 0x174)  // dc 0xe941c
 int LODFile::open(const char* filename, int flags)
 {
     if (m_opened)
@@ -196,7 +199,7 @@ void LODFile::sort()
     qsort(&m_subindex[0], m_numEntries, sizeof(LODEntry), compare);
 }
 
-VA(0x004faa70, 0xAB)  // dc 0xe9690
+VA(0x004faa70, 0xAB) MAC_ADDRESS(0x11bb74, 0x80)  // dc 0xe9690
 unsigned char LODFile::pointAt(const char* itemName)
 {
     if (!getDataPtr(itemName)) {
@@ -212,7 +215,7 @@ unsigned char LODFile::pointAt(const char* itemName)
     return 1;
 }
 
-VA(0x004fab20, 0x114)  // dc 0xe96e0
+VA(0x004fab20, 0x114) MAC_ADDRESS(0x11bbf4, 0x174)  // dc 0xe96e0
 int LODFile::read(void* dest, int numBytes)
 {
     if (!m_opened)

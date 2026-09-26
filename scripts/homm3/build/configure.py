@@ -99,6 +99,15 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             deps="gcc",
         )
         writer.rule(
+            "mwcc",
+            command=("PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts "
+                     "python3 -m homm3.mac.cc_wrap "
+                     "--unit $unit --src $in --out $out"),
+            description="CW $unit",
+            depfile="$out.d",
+            deps="gcc",
+        )
+        writer.rule(
             "link",
             command=("PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts "
                      "python3 -m homm3.build.link --out $out"),
@@ -132,6 +141,31 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
             )
             objects.append(obj)
             writer.build(unit["unit"], "phony", inputs=[obj])
+
+        # Full-TU CodeWarrior objects for the Mac target, built from the same
+        # authored sources. Opt-in while shared headers are brought through
+        # CodeWarrior: `ninja mac-objects` or `ninja mac:<unit>`; `ninja -k 0`
+        # reports every failing TU. Not in `all` until every shared TU has an
+        # object or a reviewed platform-only disposition.
+        mac_objects = []
+        for unit in units:
+            obj = "build/mac/obj/%s.o" % unit["unit"]
+            writer.build(
+                obj,
+                "mwcc",
+                inputs=unit["source"],
+                implicit=["scripts/homm3/mac/cc_wrap.py", "config/units.toml",
+                          "config/mac/toolchain.toml", "config/mac/sdk.toml",
+                          *(["config/mac/units/%s.toml" % unit["unit"]]
+                            if (ROOT / "config/mac/units" / (unit["unit"] + ".toml")).is_file()
+                            else []),
+                          *(["config/mac/units.toml"]
+                            if (ROOT / "config/mac/units.toml").is_file() else [])],
+                variables={"unit": unit["unit"]},
+            )
+            mac_objects.append(obj)
+            writer.build("mac:" + unit["unit"], "phony", inputs=[obj])
+        writer.build("mac-objects", "phony", inputs=mac_objects)
 
         writer.build("objects", "phony", inputs=objects)
         writer.build("all", "phony", inputs=objects)

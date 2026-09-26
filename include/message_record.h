@@ -34,7 +34,7 @@ public:
     // setting codeY and passing it to OnWidgetDeselect. The retained body
     // zeroes offsets +0 through +0x1c and returns the receiver in EAX.
     // E:\gamedcs\struct.h:42, dc 0x2d58
-    VA(0x00589190, 0x1c)  // RS_CLICK constructor + field stores, dc 0x2d58
+    VA(0x00589190, 0x1c) MAC_ADDRESS(0x10e0e4, 0x28)  // RS_CLICK constructor + field stores, dc 0x2d58
     message()
     {
         m_id = 0;

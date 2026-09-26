@@ -57,6 +57,7 @@ public:
     // entry EAX path and reloads only after insertion (fn+0xe8). With the
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
+    MAC_ADDRESS(0x2268d0, 0xc4)
     int getIndex(const std::string& name)
     {
         TNameIndex::iterator found = m_nameIndex.find(name);
@@ -133,6 +134,7 @@ public:
 // so the caller can chain.
 std::istream& operator>>(std::istream& is, TObjectType& objectType);
 
+MAC_ADDRESS(0x223798, 0x78)
 static TObjectImageNameTable& getObjectImageNames()
 {
     static TObjectImageNameTable imageNames;
@@ -150,7 +152,7 @@ VA_COMPGEN(0x00514060, 0xCA, CLASS_CTOR, TObjectImageNameTable)
 
 // --- the object-type filter family -----------------------------------------
 
-VA(0x005141B0, 0x6E)
+VA(0x005141B0, 0x6E) MAC_ADDRESS(0x223910, 0x74)
 unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
     if (objectType->m_slotCategory != 0)
@@ -159,14 +161,14 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
         && objectType->m_recommendedTerrainMask.count() <= 3;
 }
 
-VA(0x00514220, 0x3D)
+VA(0x00514220, 0x3D) MAC_ADDRESS(0x223984, 0x4c)
 unsigned char TAnyTerrainObjectFilter::accepts(const TObjectType* objectType) const
 {
     return objectType->m_slotCategory == 0
         && objectType->m_recommendedTerrainMask.count() > 3;
 }
 
-VA(0x00514260, 0x19)
+VA(0x00514260, 0x19) MAC_ADDRESS(0x2239d0, 0x18)
 unsigned char TSlotCategoryObjectFilter::accepts(const TObjectType* objectType) const
 {
     return objectType->m_slotCategory == m_slotCategory;
@@ -193,7 +195,7 @@ TSlotCategoryObjectFilter::TSlotCategoryObjectFilter(int slotCategory)
 {
 }
 
-VA(0x00514530, 0x7)
+VA(0x00514530, 0x7) MAC_ADDRESS(0x224728, 0x48)
 TObjectTypeFilter::~TObjectTypeFilter()
 {
 }
@@ -388,7 +390,7 @@ VA_COMPGEN(0x00517b50, 0x14, STD_CONSTRUCT, TImageInfo)
 // in the 99.2095 body (the residual is instruction placement).
 // Remaining: counter initialization placement. No inline-depth controls or
 // release-elided operations are used.
-VA(0x00514610, 0x317)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
+VA(0x00514610, 0x317) MAC_ADDRESS(0x223aa4, 0x2b8)  // anchor-callee 0x514b80 per-row `>>`; anchor-global 0x6aba80 .msk cache; retail-only
 TObjectType& TObjectType::setImageName(
     const std::basic_string<char, std::char_traits<char>,
                             std::allocator<char> >& name)
@@ -452,7 +454,7 @@ TObjectType& TObjectType::setImageName(
     return *this;
 }
 
-VA(0x00514960, 0xAD)
+VA(0x00514960, 0xAD) MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
 TObjectType::getImageName()
 {
@@ -464,7 +466,7 @@ TObjectType::getImageName()
     return emptyImageName;
 }
 
-VA(0x00514a60, 0x11D)
+VA(0x00514a60, 0x11D) MAC_ADDRESS(0x223f44, 0x134)
 TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 {
     m_triggerMask = mask & ~m_passableMask;
@@ -494,12 +496,14 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
 // Keep ordinary member boundaries: the reader's expanded chain reproduces
 // retail's retained bitset operations and string destruction. Flattening
 // these calls with the same declarations/default constructors scores 76.6378%.
+MAC_ADDRESS(0x223ea8, 0x9c)
 TObjectType& TObjectType::setPassableMask(const std::bitset<48>& mask)
 {
     m_passableMask = mask | ~m_imageInfo.m_drawMask;
     return *this;
 }
 
+MAC_ADDRESS(0x223e4c, 0x48)
 TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
 {
     m_recommendedTerrainMask &= mask;
@@ -507,6 +511,7 @@ TObjectType& TObjectType::setTerrainMask(const std::bitset<10>& mask)
     return *this;
 }
 
+MAC_ADDRESS(0x223e94, 0xc)
 TObjectType& TObjectType::setRecommendedTerrainMask(const std::bitset<10>& mask)
 {
     m_recommendedTerrainMask = mask;
@@ -522,6 +527,7 @@ TObjectType& TObjectType::setSubtype(int subtype)
     m_subtype = subtype;
     return *this;
 }
+MAC_ADDRESS(0x223ea0, 0x8)
 TObjectType& TObjectType::setSlotCategory(int category)
 {
     m_slotCategory = category;
@@ -533,7 +539,7 @@ TObjectType& TObjectType::setUnderlay(bool underlay)
     return *this;
 }
 
-VA(0x00514b80, 0x1F7)
+VA(0x00514b80, 0x1F7) MAC_ADDRESS(0x224078, 0x1ac)
 std::istream& operator>>(std::istream& is, TObjectType& objectType)
 {
     std::string imageName;
@@ -568,7 +574,7 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 
-VA(0x00514d80, 0x284)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
+VA(0x00514d80, 0x284) MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
 {
     TTextResource* text = ResourceManager::getText(filename);

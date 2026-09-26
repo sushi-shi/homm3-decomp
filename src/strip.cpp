@@ -19,7 +19,7 @@
 #include "window.h"
 #include "winmgr.h"
 
-VA(0x005a9d20, 0x57)  // dc 0x158880
+VA(0x005a9d20, 0x57) MAC_ADDRESS(0x19af44, 0x6c)  // dc 0x158880
 strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
              long newOwner, hero* newHero, armyGroup* groupToDraw,
              int firstId, unsigned char update, heroWindow* inWin)
@@ -38,18 +38,19 @@ strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
 }
 
 // Original: strip::~strip; strip.cpp:70, dc 0x1588e4.
+MAC_ADDRESS(0x19afb0, 0x40)
 strip::~strip()
 {
 }
 
-VA(0x005a9d80, 0x30)  // dc 0x1588e8
+VA(0x005a9d80, 0x30) MAC_ADDRESS(0x19aff0, 0x50)  // dc 0x1588e8
 void strip::draw(TCreatureType divideCreature)
 {
     drawIcons(1, divideCreature);
     g_windowManager->updateScreen(m_x, m_y, 494, 64);
 }
 
-VA(0x005a9db0, 0x2A2)  // dc 0x158910
+VA(0x005a9db0, 0x2A2) MAC_ADDRESS(0x19b040, 0x15c)  // dc 0x158910
 void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 {
     int i;
@@ -82,6 +83,7 @@ void strip::drawIcons(unsigned char update, TCreatureType divideCreature)
 // E:\gamedcs\strip.cpp:124
 // DC125 constructs message,126 sets its id; DrawIcons expands this ordinary
 // helper. The 12-state source-fact family preserves all five tracked bodies.
+MAC_ADDRESS(0x19b19c, 0xa8)
 void strip::drawNumber(int i)
 {
     message msg;
@@ -103,7 +105,7 @@ void strip::drawNumber(int i)
 }
 
 // E:\gamedcs\strip.cpp:139
-VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
+VA(0x005aa060, 0x1CE) MAC_ADDRESS(0x19b244, 0x24c)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::drawOwner(int frame)
 {
     message msg;
@@ -169,7 +171,7 @@ void strip::drawOwner(int frame)
     m_win->broadcastMessage(msg);
 }
 
-VA(0x005aa230, 0xEE)  // dc 0x158c00
+VA(0x005aa230, 0xEE) MAC_ADDRESS(0x19b490, 0x13c)  // dc 0x158c00
 void strip::drawMonster(int i, int frame)
 {
     message msg;
@@ -212,6 +214,7 @@ void strip::drawMonster(int i, int frame)
 // Ordinary helper expanded at all three DrawIcons call sites. DC254
 // constructs message and 255 sets its id. i counts 1..7 for army slots and
 // zero for the owner's selector widget.
+MAC_ADDRESS(0x19b5cc, 0xac)
 void strip::drawSelector(int i)
 {
     message msg;

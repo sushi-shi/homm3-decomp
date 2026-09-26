@@ -206,6 +206,7 @@ public:
         void freeData();
         int getNumMaps() const;
         // Complete expands this shared cleanup in both load and the destructor.
+        MAC_ADDRESS(0x096afc, 0x78)
         void clearScenarios()
         {
             for (unsigned int scenarioIndex = 0;

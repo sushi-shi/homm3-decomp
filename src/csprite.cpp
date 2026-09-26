@@ -21,7 +21,7 @@ CSprite::CSprite()
 {
 }
 
-VA(0x0047b920, 0x118)
+VA(0x0047b920, 0x118) MAC_ADDRESS(0x08a37c, 0xd4)
 CSprite::CSprite(const char* name, int sprtype, int w, int h)
     : resource(name, (EResourceType)sprtype),
       m_s(0), m_p(0), m_p24(0), m_numSequences(0), m_width(w), m_height(h)
@@ -37,7 +37,7 @@ CSprite::CSprite(const char* name, int sprtype, int w, int h)
     }
 }
 
-VA(0x0047ba40, 0xae)  // vtable identity + complete owned-field teardown
+VA(0x0047ba40, 0xae) MAC_ADDRESS(0x08a450, 0x108)  // vtable identity + complete owned-field teardown
 CSprite::~CSprite()
 {
     for (int i = 0; i < m_numSequences; ++i) {
@@ -79,14 +79,14 @@ void CSprite::clear()
     }
 }
 
-VA(0x0047baf0, 0x67)
+VA(0x0047baf0, 0x67) MAC_ADDRESS(0x08a558, 0x7c)
 void CSprite::allocateSeq(int seqnum, int numFrames)
 {
     m_s[seqnum] = new CSequence(numFrames);
     m_validSeqMask[seqnum] = 1;
 }
 
-VA(0x0047bb60, 0x19)
+VA(0x0047bb60, 0x19) MAC_ADDRESS(0x08a5d4, 0x30)
 int CSprite::addFrame(int seqnum, CSpriteFrame* frame)
 {
     return m_s[seqnum]->addFrame(frame);
@@ -114,7 +114,7 @@ int CSprite::addFrame(int seqnum, const char* name, int w, int h,
     return m_s[seqnum]->addFrame(name, w, h, data, csize, encoding);
 }
 
-VA(0x0047bb80, 0x79)  // dc 0x724e0
+VA(0x0047bb80, 0x79) MAC_ADDRESS(0x08a604, 0x80)  // dc 0x724e0
 void CSprite::setPalette(const unsigned short* pal)
 {
     if (m_p)
@@ -122,7 +122,7 @@ void CSprite::setPalette(const unsigned short* pal)
     m_p = new TPalette16(pal);
 }
 
-VA(0x0047bc00, 0xb8)  // dc 0x72538
+VA(0x0047bc00, 0xb8) MAC_ADDRESS(0x08a684, 0xa8)  // dc 0x72538
 void CSprite::resetPalette()
 {
     TPalette24 palette24(m_p24->m_palette);
@@ -139,7 +139,7 @@ void CSprite::resetPalette()
 // Complete's 14-byte body retains the null/array-address conditional; the
 // older SpriteDataReload guard depends on cache fields absent from this
 // retail class (as in its GetNumFrames and IsValidSeq accessors).
-VA(0x0047bcc0, 0x0e)  // vtable-era TU order + p/data layout, dc 0x7258c
+VA(0x0047bcc0, 0x0e) MAC_ADDRESS(0x08a72c, 0x1c)  // vtable-era TU order + p/data layout, dc 0x7258c
 unsigned short* CSprite::getPalette()
 {
     return m_p ? m_p->m_data : 0;
@@ -153,13 +153,13 @@ const unsigned short* CSprite::getPalette() const
     return m_p ? m_p->m_data : 0;
 }
 
-VA(0x0047bcd0, 0x1b)  // dc 0x72628
+VA(0x0047bcd0, 0x1b) MAC_ADDRESS(0x08a748, 0x24)  // dc 0x72628
 void CSprite::colorCycle(int begin, int end, int step)
 {
     m_p->cycle(begin, end, step);
 }
 
-VA(0x0047bcf0, 0x52)  // dc 0x72664
+VA(0x0047bcf0, 0x52) MAC_ADDRESS(0x08a76c, 0xa4)  // dc 0x72664
 void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                    unsigned short* dst, int dx, int dy, int dw, int dh,
                    int dpitch, bool hflip, bool tblit) const
@@ -168,13 +168,13 @@ void CSprite::draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, tblit);
 }
 
-VA(0x0047bd50, 0x06)  // CSprite vtable slot 2 + literal sizeof(CSprite)
+VA(0x0047bd50, 0x06) MAC_ADDRESS(0x08a810, 0x8)  // CSprite vtable slot 2 + literal sizeof(CSprite)
 unsigned int CSprite::getSize() const
 {
     return sizeof(*this);
 }
 
-VA(0x0047bd60, 0x54)  // dc 0x726f4
+VA(0x0047bd60, 0x54) MAC_ADDRESS(0x08a818, 0xb4)  // dc 0x726f4
 void CSprite::drawCreature(int seqnum, int framenum, int sx, int sy,
                            int sw, int sh, unsigned short* dst,
                            int dx, int dy, int dw, int dh, int dpitch,
@@ -195,7 +195,7 @@ void CSprite::drawCreatureAlpha(int seqnum, int framenum, int sx, int sy,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, outcolor);
 }
 
-VA(0x0047bdc0, 0x4c)  // sequence zero + adv-object implementation
+VA(0x0047bdc0, 0x4c) MAC_ADDRESS(0x08a8cc, 0x94)  // sequence zero + adv-object implementation
 void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, bool hflip) const
@@ -204,7 +204,7 @@ void CSprite::drawAdvObj(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047be10, 0x4e)  // sequence zero + adv-object flag forwarding
+VA(0x0047be10, 0x4e) MAC_ADDRESS(0x08a960, 0x94)  // sequence zero + adv-object flag forwarding
 void CSprite::drawAdvObjWithFlag(int framenum, int sx, int sy, int sw,
                                  int sh, unsigned short* dst, int dx, int dy,
                                  int dw, int dh, int dpitch,
@@ -226,7 +226,7 @@ void CSprite::drawAdvObjWithFlagAlpha(int framenum, int sx, int sy,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, outcolor, hflip);
 }
 
-VA(0x0047be60, 0x4a)  // sequence zero + shadow implementation
+VA(0x0047be60, 0x4a) MAC_ADDRESS(0x08a9f4, 0x84)  // sequence zero + shadow implementation
 void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                                unsigned short* dst, int dx, int dy, int dw,
                                int dh, int dpitch, unsigned char hflip) const
@@ -235,7 +235,7 @@ void CSprite::drawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047beb0, 0x4a)  // full-frame pointer draw through sequence zero
+VA(0x0047beb0, 0x4a) MAC_ADDRESS(0x08aa78, 0x8c)  // full-frame pointer draw through sequence zero
 void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
                           int dw, int dh, int dpitch, bool hflip) const
 {
@@ -243,7 +243,7 @@ void CSprite::drawPointer(int framenum, unsigned short* dst, int dx, int dy,
         dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047bf00, 0x4c)  // sequence zero + transparent draw forwarding
+VA(0x0047bf00, 0x4c) MAC_ADDRESS(0x08ab04, 0x94)  // sequence zero + transparent draw forwarding
 void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy, int dw,
                             int dh, int dpitch, bool hflip) const
@@ -252,7 +252,7 @@ void CSprite::drawInterface(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047bf50, 0x4e)  // sequence zero + tile forwarding
+VA(0x0047bf50, 0x4e) MAC_ADDRESS(0x08ab98, 0x94)  // sequence zero + tile forwarding
 void CSprite::drawTile(int framenum, int sx, int sy, int sw, int sh,
                        unsigned short* dst, int dx, int dy, int dw, int dh,
                        int dpitch, bool hflip, bool vflip) const
@@ -261,7 +261,7 @@ void CSprite::drawTile(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
-VA(0x0047bfa0, 0x4e)  // sequence zero + tile-shadow forwarding
+VA(0x0047bfa0, 0x4e) MAC_ADDRESS(0x08ac2c, 0x94)  // sequence zero + tile-shadow forwarding
 void CSprite::drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
@@ -271,7 +271,7 @@ void CSprite::drawTileShadow(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
-VA(0x0047bff0, 0x8b)  // paired tile + shadow calls on one selected frame
+VA(0x0047bff0, 0x8b) MAC_ADDRESS(0x08acc0, 0xe4)  // paired tile + shadow calls on one selected frame
 void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
                              unsigned short* dst, int dx, int dy, int dw,
                              int dh, int dpitch, unsigned char hflip,
@@ -281,7 +281,7 @@ void CSprite::drawShroudTile(int framenum, int sx, int sy, int sw, int sh,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, vflip);
 }
 
-VA(0x0047c080, 0x50)  // selected sequence + adv-object implementation
+VA(0x0047c080, 0x50) MAC_ADDRESS(0x08ada4, 0xac)  // selected sequence + adv-object implementation
 void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
                        int sh, unsigned short* dst, int dx, int dy, int dw,
                        int dh, int dpitch, bool hflip) const
@@ -290,7 +290,7 @@ void CSprite::drawHero(int seqnum, int framenum, int sx, int sy, int sw,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047c0d0, 0x4e)  // selected sequence + shadow implementation
+VA(0x0047c0d0, 0x4e) MAC_ADDRESS(0x08ae50, 0x9c)  // selected sequence + shadow implementation
 void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
                              int sw, int sh, unsigned short* dst,
                              int dx, int dy, int dw, int dh, int dpitch,
@@ -300,7 +300,7 @@ void CSprite::drawHeroShadow(int seqnum, int framenum, int sx, int sy,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip);
 }
 
-VA(0x0047c120, 0x50)  // selected sequence + hero-alpha implementation
+VA(0x0047c120, 0x50) MAC_ADDRESS(0x08aeec, 0xac)  // selected sequence + hero-alpha implementation
 void CSprite::drawHeroAlpha(int seqnum, int framenum, int sx, int sy,
                             int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
@@ -321,7 +321,7 @@ void CSprite::drawCombatHero(int seqnum, int framenum, int sx, int sy,
         sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, *m_p, hflip, 0);
 }
 
-VA(0x0047c170, 0x52)  // selected sequence + spell-effect implementation
+VA(0x0047c170, 0x52) MAC_ADDRESS(0x08af98, 0xa4)  // selected sequence + spell-effect implementation
 void CSprite::drawSpellEffect(int seqnum, int framenum, int sx, int sy,
                               int sw, int sh, unsigned short* dst,
                               int dx, int dy, int dw, int dh, int dpitch,
@@ -425,7 +425,7 @@ const char* CSprite::getSpriteTypeName(const int type)
     }
 }
 
-VA(0x0047c1d0, 0x6c)
+VA(0x0047c1d0, 0x6c) MAC_ADDRESS(0x08b03c, 0x50)
 int CSprite::getNumSeqs(int type)
 {
     switch (type) {

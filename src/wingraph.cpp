@@ -65,7 +65,7 @@ DATA(0x0068c850) DDPIXELFORMAT g_pixelFormat = {
 // first colour in each layout. DC proves unsigned short* and TPalette24&
 // parameters; the retail offsets and fastcall argument locations agree.
 // E:\gamedcs\wingraph.cpp:72
-VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
+VA(0x005ffe20, 0x1E) MAC_ADDRESS(0x20c684, 0x44)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 {
     memcpy(pal + 224, &g_playerPalette->m_data[whichPlayer * 32],
@@ -73,7 +73,7 @@ void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 }
 
 // E:\gamedcs\wingraph.cpp:83
-VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
+VA(0x005ffe40, 0x22) MAC_ADDRESS(0x20c6c8, 0x44)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
     memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
@@ -140,7 +140,7 @@ static void ddSetupClipper()
 // E:\gamedcs\wingraph.cpp:260
 // Mac retains this rectangle/pointer composite at code 0+0x20c80c, using
 // Mac screen surfaces where this Windows body calls DirectDraw.
-VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
+VA(0x005ffe70, 0x35C) MAC_ADDRESS(0x20c80c, 0x290)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
 void robAppBlit(tagRECT* combRect)
 {
     if (IsIconic(g_hwndApp))
@@ -263,7 +263,7 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // E:\gamedcs\wingraph.cpp:931
 // Mac retains the five-argument blit interface at code 0+0x217e10 and
 // uses Mac surfaces for the six pointer-update calls from mousemgr.
-VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
+VA(0x006001d0, 0x1E1) MAC_ADDRESS(0x217e10, 0x1d0)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags)

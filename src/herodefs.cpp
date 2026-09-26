@@ -221,7 +221,7 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
 static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStringVector& values);
 static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values);
 
-VA(0x004e67a0, 0x176)  // dc 0xd5a40
+VA(0x004e67a0, 0x176) MAC_ADDRESS(0x1077f8, 0xd4)  // dc 0xd5a40
 unsigned char initializeHeroTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -245,7 +245,7 @@ unsigned char initializeHeroTraitsTable()
     return 1;
 }
 
-VA(0x004e6920, 0x1E2)  // dc 0xd5ab4
+VA(0x004e6920, 0x1E2) MAC_ADDRESS(0x1078cc, 0xd4)  // dc 0xd5ab4
 bool initializeHeroClassTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -269,7 +269,7 @@ bool initializeHeroClassTraitsTable()
     return 1;
 }
 
-VA(0x004e6b10, 0x1C8)  // dc 0xd5b28
+VA(0x004e6b10, 0x1C8) MAC_ADDRESS(0x1079a0, 0xd4)  // dc 0xd5b28
 bool initializeSSkillTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -297,6 +297,7 @@ bool initializeSSkillTraitsTable()
 // table bodies retain the same row parsing and private string ownership,
 // including the expanded static initialization and destruction families.
 // Original: InitializeHeroTraits; herodefs.cpp:409, dc 0xd5bc0
+MAC_ADDRESS(0x107a74, 0x134)
 static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVector& values)
 {
     THeroTraits& traits = g_heroTraitsStorage[id];
@@ -318,6 +319,7 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
 }
 
 // Original: InitializeHeroClassTraits; herodefs.cpp:441, dc 0xd5d28
+MAC_ADDRESS(0x107c38, 0x1d8)
 static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStringVector& values)
 {
     THeroClassTraits& traits = g_heroClassTraits[id];
@@ -351,6 +353,7 @@ static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStrin
 }
 
 // Original: InitializeSSkillTraits; herodefs.cpp:489, dc 0xd5ee8
+MAC_ADDRESS(0x107e40, 0x16c)
 static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values)
 {
     TSSkillTraits& traits = g_sSkillTraitsStorage[id];

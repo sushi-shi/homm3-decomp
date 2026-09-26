@@ -108,6 +108,7 @@ DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 }
 DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
+MAC_ADDRESS(0x14723c, 0x40)
 static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
 {
     char pieceName[40];
@@ -115,7 +116,7 @@ static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
     return ResourceManager::getBitmap816(pieceName);
 }
 
-VA(0x0052c1e0, 0x388)  // dc 0x114f40
+VA(0x0052c1e0, 0x388) MAC_ADDRESS(0x14727c, 0x548)  // dc 0x114f40
 TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -169,7 +170,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
 VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
 
-VA(0x0052c5a0, 0x96)  // dc 0x115268
+VA(0x0052c5a0, 0x96) MAC_ADDRESS(0x1477c4, 0x10c)  // dc 0x115268
 TPuzzleWindow::~TPuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
@@ -200,7 +201,7 @@ int TPuzzleWindow::convertID2HelpID(int id) const
 }
 
 // E:\gamedcs\puzzlewindow.cpp:203
-VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
+VA(0x0052c640, 0x78) MAC_ADDRESS(0x1478d0, 0xfc)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
 int TPuzzleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -230,7 +231,7 @@ int TPuzzleWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x0052c6c0, 0xAD)  // dc 0x1153a8
+VA(0x0052c6c0, 0xAD) MAC_ADDRESS(0x1479cc, 0xec)  // dc 0x1153a8
 int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
@@ -273,6 +274,7 @@ struct type_AI_puzzle_tile {
 
     // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
     // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4
+    MAC_ADDRESS(0x147ab8, 0x70)
     type_AI_puzzle_tile()
     {
         m_objectType = 0;
@@ -291,7 +293,7 @@ SIZE(type_AI_puzzle_tile, 0x10);
 
 type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 
-VA(0x0052c770, 0x140)  // dc 0x115538
+VA(0x0052c770, 0x140) MAC_ADDRESS(0x147b28, 0x1e0)  // dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
     m_objectType = 0;
@@ -346,7 +348,7 @@ unsigned char type_AI_puzzle_tile::operator==(
 // final cursors are not dereferenced, but their formation is not valid portable
 // C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
 // remain non-exact. No extra allocation or padding guarantee is claimed.
-VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
+VA(0x0052c8b0, 0xFC) MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
     int offsetX = (-16 - destX) & 31;
@@ -391,6 +393,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
 
+MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
@@ -419,6 +422,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
 
+MAC_ADDRESS(0x1480b8, 0x190)
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])
@@ -440,7 +444,7 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 }
 
 // E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
-VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
+VA(0x0052c9b0, 0x55B) MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {
     type_point result;
@@ -509,6 +513,7 @@ type_point aiAttemptPuzzleGuess(long player)
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
 
+MAC_ADDRESS(0x148248, 0x240)
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
                         type_AI_puzzle_tile (*puzzleMap)[17])
@@ -556,7 +561,7 @@ static long checkMatch(long player, long firstX, long firstY,
 // differences are four size-only blocks with matching branch/call structure.
 // VC6 resolves the RECT LONG/LONG min calls to the integer wrapper; Clang
 // considers the integer/double overloads ambiguous, leaving an audit gap.
-VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
+VA(0x0052cf10, 0x5B4) MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
 type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
 {
     type_AI_puzzle_tile first;

@@ -72,7 +72,7 @@ public:
 };
 SIZE(t_memory_file, 0x14);
 
-VA(0x00512b00, 0x24)
+VA(0x00512b00, 0x24) MAC_ADDRESS(0x2231f8, 0x78)
 t_memory_file::~t_memory_file()
 {
     if (m_ownsBuffer) {
@@ -80,7 +80,7 @@ t_memory_file::~t_memory_file()
     }
 }
 
-VA(0x00512b30, 0x43)
+VA(0x00512b30, 0x43) MAC_ADDRESS(0x223270, 0x70)
 int t_memory_file::read(void* data, int size)
 {
     if (m_position + size > m_capacity) {
@@ -91,7 +91,7 @@ int t_memory_file::read(void* data, int size)
     return size;
 }
 
-VA(0x00512b80, 0x9D)
+VA(0x00512b80, 0x9D) MAC_ADDRESS(0x2232e0, 0xb8)
 int t_memory_file::write(const void* data, int size)
 {
     if (m_position + size > m_capacity) {
@@ -113,19 +113,19 @@ int t_memory_file::write(const void* data, int size)
     return size;
 }
 
-VA(0x00512c20, 0x22)  // anchor-vtable 0x640270; anchor-caller 0x5887a0
+VA(0x00512c20, 0x22) MAC_ADDRESS(0x223398, 0x2c)  // anchor-vtable 0x640270; anchor-caller 0x5887a0
 t_complex_net_message::t_complex_net_message()
     : m_netmsg(RS_GAME_TRANSMIT_INIT, 0)
 {
 }
 
-VA(0x00512c50, 0x27)  // anchor-vtable 0x640270; anchor-caller 0x4aeb50
+VA(0x00512c50, 0x27) MAC_ADDRESS(0x2233c4, 0x28)  // anchor-vtable 0x640270; anchor-caller 0x4aeb50
 t_complex_net_message::t_complex_net_message(eRS_Messages subType)
     : m_netmsg(subType, 0)
 {
 }
 
-VA(0x00512c80, 0xBA)
+VA(0x00512c80, 0xBA) MAC_ADDRESS(0x2233ec, 0xb4)
 unsigned char t_complex_net_message::remoteFn00512C80(
     unsigned long dpid, bool compressMsg, bool guaranteed)
 {
@@ -137,7 +137,7 @@ unsigned char t_complex_net_message::remoteFn00512C80(
     return transmitRemoteDataDPID(wire, dpid, compressMsg, guaranteed) != 0;
 }
 
-VA(0x00512d40, 0xBA)
+VA(0x00512d40, 0xBA) MAC_ADDRESS(0x2234a0, 0xb4)
 unsigned char t_complex_net_message::remoteFn00512D40(
     int toWho, bool compressMsg, bool guaranteed)
 {
@@ -149,7 +149,7 @@ unsigned char t_complex_net_message::remoteFn00512D40(
     return transmitRemoteData(wire, toWho, compressMsg, guaranteed) != 0;
 }
 
-VA(0x00512e00, 0xBF)
+VA(0x00512e00, 0xBF) MAC_ADDRESS(0x223554, 0x84)
 unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
 {
     t_memory_file infile(static_cast<char*>(static_cast<void*>(netMsg)),

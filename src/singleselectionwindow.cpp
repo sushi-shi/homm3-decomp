@@ -369,7 +369,7 @@ static int update(message& msg);
 // TU at lines 164/187. Mac retains them at +0x16d4f4/+0x16d5a4 and
 // ProcessRightSelect calls both; VC6 expands their shared bodies there.
 // ScenarioInfo calls the emitted Windows bodies across TUs.
-VA(0x00576e00, 0x80)
+VA(0x00576e00, 0x80) MAC_ADDRESS(0x16d4f4, 0xb0)
 const char* getResourceBonusCaption(int townType)
 {
     switch (townType) {
@@ -388,7 +388,7 @@ const char* getResourceBonusCaption(int townType)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:187
-VA(0x00576e80, 0x80)
+VA(0x00576e80, 0x80) MAC_ADDRESS(0x16d5a4, 0xb0)
 const char* getResourceBonusDescription(int townType)
 {
     switch (townType) {
@@ -411,6 +411,7 @@ const char* getResourceBonusDescription(int townType)
 // but its platform body returns false at line226. Complete expands the
 // desktop check in SaveValid 0x577360: format the extension, enter games,
 // open read-only, restore the parent directory, then close a found file.
+MAC_ADDRESS(0x16dc00, 0x84)
 unsigned char savedGameExists(char* filename)
 {
     char tempText[100];
@@ -425,7 +426,7 @@ unsigned char savedGameExists(char* filename)
     return 0;
 }
 
-VA(0x00577360, 0x1C5)  // dc 0x12f86c
+VA(0x00577360, 0x1C5) MAC_ADDRESS(0x16dc84, 0x18c)  // dc 0x12f86c
 unsigned char saveValid(const char* filename)
 {
     unsigned char valid = 0;
@@ -464,7 +465,7 @@ unsigned char saveValid(const char* filename)
 // at 0x577530 and passes its first two game pointers in ECX/EDX under /Gr.
 DATA(0x0069fb0c) int g_saveCurPlayer;
 
-VA(0x00577530, 0x20C)
+VA(0x00577530, 0x20C) MAC_ADDRESS(0x16de10, 0x320)
 void backupGameHeaders(game* dest, game* src)
 {
     int i;
@@ -510,7 +511,7 @@ unsigned __stdcall processMouse(void* nothing)
     return 0;
 }
 
-VA(0x00577790, 0x7B)  // dc 0x12fdb8
+VA(0x00577790, 0x7B) MAC_ADDRESS(0x16e31c, 0x3c)  // dc 0x12fdb8
 void startMouseThread()
 {
     unsigned threadId;
@@ -541,7 +542,7 @@ void startMouseThread()
 // falls 100% -> 90.1470%. Mutable/const references and both guard forms
 // share that score tradeoff; no source alternative is retained.
 #pragma auto_inline(off)
-VA(0x00577810, 0x61)  // dc 0x12fdd4
+VA(0x00577810, 0x61) MAC_ADDRESS(0x16e358, 0x30)  // dc 0x12fdd4
 void stopMouseThread()
 {
     if (g_mouseThread) {
@@ -564,6 +565,7 @@ void stopMouseThread()
 // reconstruction, not an original declaration. Ordinary auto-inlining and
 // the native bool query chain preserve the caller's bytes and EH metadata.
 // Original locals: file_version_info and product_version.
+MAC_ADDRESS(0x16e388, 0x24)
 void getGameVersion(char* version)
 {
     char filename[351];
@@ -577,6 +579,7 @@ void getGameVersion(char* version)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:382
+MAC_ADDRESS(0x16e3ac, 0x34)
 inline unsigned char hasNonRandomHero(int gamePos)
 {
     return g_game->m_mapHeader.m_playerSlotAttributes[gamePos].m_nonRandomHeroId
@@ -584,6 +587,7 @@ inline unsigned char hasNonRandomHero(int gamePos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:390
+MAC_ADDRESS(0x16e3e0, 0x40)
 inline unsigned char hasRandomHero(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes& slot =
@@ -593,6 +597,7 @@ inline unsigned char hasRandomHero(int gamePos)
 
 // Mac retains these row serializers at 0:0x16e420 and 0:0x16e520. Both
 // CGameHeaderInfoMsg wrappers call them; VC6 expands the same field order.
+MAC_ADDRESS(0x16e420, 0x100)
 unsigned char GameSelectionHeadersStruct::read(TAbstractFile* infile)
 {
     m_header.load(infile, 42);
@@ -605,6 +610,7 @@ unsigned char GameSelectionHeadersStruct::read(TAbstractFile* infile)
     return !m_saved.load(infile);
 }
 
+MAC_ADDRESS(0x16e520, 0xfc)
 unsigned char GameSelectionHeadersStruct::write(TAbstractFile* outfile)
 {
     m_header.save(outfile);
@@ -617,7 +623,7 @@ unsigned char GameSelectionHeadersStruct::write(TAbstractFile* outfile)
     return !m_saved.save(outfile);
 }
 
-VA(0x00577880, 0xC2)
+VA(0x00577880, 0xC2) MAC_ADDRESS(0x16e61c, 0xa4)
 unsigned char CGameHeaderInfoMsg::read(TAbstractFile* infile)
 {
     {
@@ -633,7 +639,7 @@ unsigned char CGameHeaderInfoMsg::read(TAbstractFile* infile)
     return m_header.read(infile);
 }
 
-VA(0x00577950, 0xBE)
+VA(0x00577950, 0xBE) MAC_ADDRESS(0x16e6c0, 0x88)
 unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
 {
     {
@@ -647,13 +653,13 @@ unsigned char CGameHeaderInfoMsg::write(TAbstractFile* outfile) const
     return const_cast<GameSelectionHeadersStruct&>(m_header).write(outfile);
 }
 
-VA(0x00577A10, 0x1A)
+VA(0x00577A10, 0x1A) MAC_ADDRESS(0x16e748, 0x38)
 unsigned char CNewMapHeaderInfoMsg::read(TAbstractFile* infile)
 {
     return !m_header.load(infile, 42);
 }
 
-VA(0x00577A30, 0x18)
+VA(0x00577A30, 0x18) MAC_ADDRESS(0x16e780, 0x34)
 unsigned char CNewMapHeaderInfoMsg::write(TAbstractFile* outfile) const
 {
     return !const_cast<NewSMapHeader&>(m_header).save(outfile);
@@ -1066,7 +1072,7 @@ public:
 };
 
 // All three DC publics end in `_N`, the MSVC mangling for bool.
-VA(0x00577a50, 0x30)  // dc 0x12ff40
+VA(0x00577a50, 0x30) MAC_ADDRESS(0x16e7b4, 0x94)  // dc 0x12ff40
 bool initializeVCDescriptions()
 {
     g_victoryConditionText = ResourceManager::getText(
@@ -1078,7 +1084,7 @@ bool initializeVCDescriptions()
     return 1;
 }
 
-VA(0x00577a80, 0x30)  // dc 0x12ffa4
+VA(0x00577a80, 0x30) MAC_ADDRESS(0x16e848, 0x94)  // dc 0x12ffa4
 bool initializeLCDescriptions()
 {
     g_lossConditionText = ResourceManager::getText(
@@ -1090,7 +1096,7 @@ bool initializeLCDescriptions()
     return 1;
 }
 
-VA(0x00577ab0, 0x30)  // dc 0x130008
+VA(0x00577ab0, 0x30) MAC_ADDRESS(0x16e8dc, 0x94)  // dc 0x130008
 bool initializeTurnDurationText()
 {
     g_turnDurationTextResource = ResourceManager::getText(
@@ -1123,7 +1129,7 @@ CNetPlayerHandler::CNetPlayerHandler()
     }
 }
 
-VA(0x00577ae0, 0xd0)
+VA(0x00577ae0, 0xd0) MAC_ADDRESS(0x16ee14, 0x120)
 unsigned char CNetPlayerHandler::setNextPlayer(int pos)
 {
     CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
@@ -1167,7 +1173,7 @@ unsigned char CNetPlayerHandler::setNextPlayer(int pos)
     return 1;
 }
 
-VA(0x00577bb0, 0x2f)  // dc 0x130604
+VA(0x00577bb0, 0x2f) MAC_ADDRESS(0x16ef34, 0x38)  // dc 0x130604
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -1180,12 +1186,13 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayerInPos(int pos)
 // fallback through it (lea into the computer bank). OnUpdatePlayerPosMsg
 // calls it at DC source line 7644; Mac retains that call at 0:0x183494.
 // E:\gamedcs\singleselectionwindow.cpp:1089, dc 0x130654
+MAC_ADDRESS(0x16ef6c, 0x14)
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 {
     return &m_computerPlayers[pos];
 }
 
-VA(0x00577be0, 0xaf)  // dc 0x130670
+VA(0x00577be0, 0xaf) MAC_ADDRESS(0x16ef80, 0xd4)  // dc 0x130670
 unsigned char CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
 {
     if (m_playersCount >= MAX_PLAYERS)
@@ -1204,7 +1211,7 @@ unsigned char CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
     return 0;
 }
 
-VA(0x00577c90, 0x4d)
+VA(0x00577c90, 0x4d) MAC_ADDRESS(0x16f054, 0x60)
 bool CNetPlayerHandler::deletePlayer(unsigned long dpid)
 {
     int netPos = getNetPos(dpid);
@@ -1221,6 +1228,7 @@ bool CNetPlayerHandler::deletePlayer(unsigned long dpid)
 // load as the fall-through - the arm order UpdatePlayerPositions'
 // retail expansion keeps (found path in line, -1 jumps to the join).
 // E:\gamedcs\singleselectionwindow.cpp:1138, dc 0x130778
+MAC_ADDRESS(0x16f0b4, 0x48)
 int CNetPlayerHandler::getGamePos(unsigned long dpid)
 {
     int netPos = getNetPos(dpid);
@@ -1232,6 +1240,7 @@ int CNetPlayerHandler::getGamePos(unsigned long dpid)
 // Original: CNetPlayerHandler::PlayerExists; singleselectionwindow.cpp:1148, dc 0x1307b4.
 // AddNewPlayer calls this
 // helper at DC1104; retail 0x577be0 expands its GetNetPos comparison.
+MAC_ADDRESS(0x16f0fc, 0x34)
 unsigned char CNetPlayerHandler::playerExists(unsigned long dpid)
 {
     if (getNetPos(dpid) != -1)
@@ -1239,7 +1248,7 @@ unsigned char CNetPlayerHandler::playerExists(unsigned long dpid)
     return 0;
 }
 
-VA(0x00577ce0, 0x2e)  // dc 0x1307dc
+VA(0x00577ce0, 0x2e) MAC_ADDRESS(0x16f130, 0x38)  // dc 0x1307dc
 CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -1248,7 +1257,7 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
     return 0;
 }
 
-VA(0x00577d10, 0x5a)  // dc 0x130828
+VA(0x00577d10, 0x5a) MAC_ADDRESS(0x16f168, 0xa4)  // dc 0x130828
 unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -1263,6 +1272,7 @@ unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1193, dc 0x130898
+MAC_ADDRESS(0x16f20c, 0x34)
 int CNetPlayerHandler::getNetPos(unsigned long dpid)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i)
@@ -1283,6 +1293,7 @@ unsigned char CNetPlayerHandler::setComputer(int pos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1214
+MAC_ADDRESS(0x16f240, 0x58)
 int CNetPlayerHandler::getUnassignedPlayerPos()
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
@@ -1295,6 +1306,7 @@ int CNetPlayerHandler::getUnassignedPlayerPos()
 // Original: CNetPlayerHandler::GetPlayerCount; singleselectionwindow.cpp:1225, dc 0x130968.
 // DC1226..1242 records count/i, IsHuman and the optional assigned-seat
 // test. Preserve the ordinary API without asserting a retained retail body.
+MAC_ADDRESS(0x16f298, 0x68)
 int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
 {
     int count = 0;
@@ -1311,7 +1323,7 @@ int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
     return count;
 }
 
-VA(0x00577d70, 0x6C)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
+VA(0x00577d70, 0x6C) MAC_ADDRESS(0x16f300, 0x68)  // anchor-vtable t_map_list_update vtbl 0x641d38 slot0; Complete-only 0x43b header-count msg from the +0x1044/+0x1048 pair
 void t_map_list_update::go()
 {
     TSingleSelectionWindow* win = g_singleSelectionWindow;
@@ -1383,7 +1395,7 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // loop, moving the counter outside the if, and restoring the DC constructor's
 // mutable char* parameter are all byte-flat. Earlier loop-layout failures
 // were measured before these helper and exhausted-list corrections.
-VA(0x00577DE0, 0x228)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
+VA(0x00577DE0, 0x228) MAC_ADDRESS(0x16f368, 0x49c)  // anchor-vtable vtbl 0x641d38 slot1 - the slot WindowHandler's inlined Man::Tick dispatches; Complete-only override shaped from the Dreamcast base Tick at 0x148130
 void t_map_list_update::tick()
 {
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
@@ -1436,7 +1448,7 @@ VA_COMPGEN(0x00578290, 0x1AB, IMPLICIT_DTOR, GameSelectionHeadersStruct)  // anc
 
 #if 0  // @carcass
 
-VA(0x00578440, 0x312)  // anchor-callee SortMaps' erase move-loop calls it per element (thiscall, one stack arg); memberwise head copies the version/isPlayable/difficulty/numPlayers run, dc-none (compiler-generated)
+VA(0x00578440, 0x312) MAC_ADDRESS(0x16f8b8, 0x2c0)  // anchor-callee SortMaps' erase move-loop calls it per element (thiscall, one stack arg); memberwise head copies the version/isPlayable/difficulty/numPlayers run, dc-none (compiler-generated)
 GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
     const GameSelectionHeadersStruct& that)
 {
@@ -1447,7 +1459,7 @@ GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
 
 VA_COMPGEN(0x00578760, 0x1CE, IMPLICIT_DTOR, CGameHeaderInfoMsg)
 
-VA(0x00578930, 0xB2)
+VA(0x00578930, 0xB2) MAC_ADDRESS(0x16fe24, 0xf0)
 void t_map_list_update::finish()
 {
     CGameHeaderInfoEndMsg endMsg;
@@ -1461,7 +1473,7 @@ void t_map_list_update::finish()
     transmitRemoteDataDPID(&scrollMsg, m_dpid, false, true);
 }
 
-VA(0x005789F0, 0x9E)  // dc 0x1480cc
+VA(0x005789F0, 0x9E) MAC_ADDRESS(0x16ff14, 0xac)  // dc 0x1480cc
 void CNewPlayerUpdateProc::go()
 {
     CGameHeaderInfoInitMsgEx initMsg(
@@ -1483,7 +1495,7 @@ void CNewPlayerUpdateProc::go()
 // also still have anonymous relocation names. An explicit pHeader local was
 // tested and rejected: DC lists only i/msg/msg and it lowered the score.
 // E:\gamedcs\singleselectionwindow.cpp:1282
-VA(0x00578A90, 0x370)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot1, dc 0x148130
+VA(0x00578A90, 0x370) MAC_ADDRESS(0x16ffc0, 0x68c)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot1, dc 0x148130
 void CNewPlayerUpdateProc::tick()
 {
     if (GameTime::elapsedSince(m_lastSendTime) < 75)
@@ -1533,7 +1545,7 @@ CGameHeaderInfoMsg::CGameHeaderInfoMsg(
     m_header = *header;
 }
 
-VA_COMPGEN(0x005792C0, 0x2D1, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
+VA_COMPGEN(0x005792C0, 0x2D1, IMPLICIT_COPY_ASSIGN, SavedGameHeader) MAC_COMPGEN_ADDRESS(0x17064c, 0x2c8, IMPLICIT_COPY_ASSIGN, SavedGameHeader)
 
 // Ticks every live transfer job and reaps the finished ones. Retail
 // keeps this out-of-line copy (not yet located among the 0x5892xx rows)
@@ -1585,6 +1597,7 @@ inline int CNewPlayerUpdateMan::getFirstAvailable()
 
 // DC GetProc (protected there); the HeaderConfirmed body expands it.
 // E:\gamedcs\singleselectionwindow.cpp:1544, dc 0x148998
+MAC_ADDRESS(0x1809b0, 0x40)
 inline CNewPlayerUpdateProc* CNewPlayerUpdateMan::getProc(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i)
@@ -1760,7 +1773,7 @@ public:
 };
 
 // E:\gamedcs\singleselectionwindow.cpp:1393
-VA(0x005795A0, 0x2CA)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
+VA(0x005795A0, 0x2CA) MAC_ADDRESS(0x170950, 0x240)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
 void CNewPlayerUpdateProc::finish()
 {
     CGameHeaderInfoEndMsg endMsg;
@@ -1836,7 +1849,7 @@ CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(
 // This TU-state change also swaps stack homes in the two CEnterNameEdit
 // callbacks (99.8868% / 99.8710%, MAX 100); their canonical helper operations
 // and calls remain unchanged. Do not reshape them solely to steer allocation.
-VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
+VA(0x00579960, 0x2d63) MAC_ADDRESS(0x170b90, 0x4a20)  // anchor-callee CAdvPopup base ctor + embedded header/player/net-handler construction; tail proven by the retail preload/setup call run at +0x2a56..+0x2d45; dc 0x1309f0
 TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -2383,21 +2396,21 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:985
-VA(0x0057C7D0, 0x1B)  // dc 0x13035c
+VA(0x0057C7D0, 0x1B) MAC_ADDRESS(0x16ec50, 0x28)  // dc 0x13035c
 static void sliderChatWindow(int state, heroWindow*)
 {
     g_singleSelectionWindow->onChatWindowSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:989
-VA(0x0057C7F0, 0x194)  // dc 0x13037c
+VA(0x0057C7F0, 0x194) MAC_ADDRESS(0x16ec78, 0x28)  // dc 0x13037c
 static void sliderDuration(int state, heroWindow*)
 {
     g_singleSelectionWindow->onDurationSlider(state);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:994
-VA(0x0057C990, 0x1C)  // dc 0x1303dc
+VA(0x0057C990, 0x1C) MAC_ADDRESS(0x16eca0, 0x28)  // dc 0x1303dc
 static void sliderFileMenu(int state, heroWindow*)
 {
     g_singleSelectionWindow->onFileMenuSlider(state);
@@ -2410,7 +2423,7 @@ CNewPlayerUpdateMan::CNewPlayerUpdateMan()
     MEMSET(m_procs, 0, sizeof(m_procs), i);
 }
 
-VA(0x0057c9d0, 0x2A)  // dc 0x148ad8
+VA(0x0057c9d0, 0x2A) MAC_ADDRESS(0x1866fc, 0x38)  // dc 0x148ad8
 void CChatSlider::setResolution(int num)
 {
     if (num > 0)
@@ -2423,7 +2436,7 @@ void CChatSlider::setResolution(int num)
     }
 }
 
-VA(0x0057ca00, 0x43)  // dc 0x148b1c
+VA(0x0057ca00, 0x43) MAC_ADDRESS(0x186734, 0x60)  // dc 0x148b1c
 void CChatSlider::setState(int state)
 {
     int n = m_numStates;
@@ -2446,7 +2459,7 @@ VA_COMPGEN(0x0057ca80, 0x05, IMPLICIT_DTOR, CChatSlider)
 // DC1676..1681 calls IsSaved, SaveBackground/RestoreBackground, then
 // textWidget::Draw. Retail 0x57ca90 expands the three chat helpers and
 // Bitmap16Bit's forwarding overloads, retaining the raw Grab/Draw calls.
-VA(0x0057ca90, 0xA9)  // dc 0x148df4
+VA(0x0057ca90, 0xA9) MAC_ADDRESS(0x186874, 0xfc)  // dc 0x148df4
 void CChatWidget::draw() const
 {
     if (!m_save->isSaved())
@@ -2460,20 +2473,20 @@ VA_COMPGEN(0x0057cb40, 0x21, SCALAR_DELETING_DTOR, CChatSave)
 
 VA_COMPGEN(0x0057cb70, 0x21, SCALAR_DELETING_DTOR, CChatWidget)
 
-VA(0x0057cba0, 0x56)
+VA(0x0057cba0, 0x56) MAC_ADDRESS(0x1867f4, 0x80)
 CChatWidget::~CChatWidget()
 {
     delete m_save;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1746
-VA(0x0057CC00, 0xF5)  // dc 0x149054
+VA(0x0057CC00, 0xF5) MAC_ADDRESS(0x186624, 0x2c)  // dc 0x149054
 void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 {
     g_singleSelectionWindow->sendChat(0, chat);
 }
 
-VA(0x0057CD00, 0x85)  // dc 0x149080
+VA(0x0057CD00, 0x85) MAC_ADDRESS(0x186650, 0x4c)  // dc 0x149080
 unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 {
     switch (msg->m_codeX) {
@@ -2495,7 +2508,7 @@ unsigned char CSingleSelectionChatEdit::ignoreKey(message* msg)
 VA_COMPGEN(0x0057cd90, 0x21, SCALAR_DELETING_DTOR,
            CSingleSelectionChatEdit)
 
-VA(0x0057cdc0, 0x11D)  // dc 0x1491e0
+VA(0x0057cdc0, 0x11D) MAC_ADDRESS(0x1869d0, 0x88)  // dc 0x1491e0
 int CEnterNameEdit::onKeyPress(message* msg)
 {
     if (getCharPressed(msg) == KEYCODE_ENTER)
@@ -2503,14 +2516,14 @@ int CEnterNameEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
-VA(0x0057cee0, 0xFD)  // dc 0x149290
+VA(0x0057cee0, 0xFD) MAC_ADDRESS(0x186a58, 0x64)  // dc 0x149290
 void CEnterNameEdit::onKillFocus()
 {
     onEnter();
     textEntryWidget::onKillFocus();
 }
 
-VA(0x0057cfe0, 0xCF)  // dc 0x1493c8
+VA(0x0057cfe0, 0xCF) MAC_ADDRESS(0x186b1c, 0xec)  // dc 0x1493c8
 unsigned char CSaveGameEdit::ignoreKey(message* msg)
 {
     switch (msg->m_codeX) {
@@ -2547,7 +2560,7 @@ unsigned char CSaveGameEdit::ignoreKey(message* msg)
     return 0;
 }
 
-VA(0x0057d0b0, 0x50)  // dc 0x149514
+VA(0x0057d0b0, 0x50) MAC_ADDRESS(0x186c08, 0x68)  // dc 0x149514
 int CSaveGameEdit::onKeyPress(message* msg)
 {
     int ret = textEntryWidget::onKeyPress(msg);
@@ -2567,7 +2580,7 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // mapFilter/filterSize members describe the existing scenario-file filter.
 // These desktop random-map helpers retain provisional semantic names.
 
-VA(0x0057D170, 0x1DF7)
+VA(0x0057D170, 0x1DF7) MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createFilterWidgets()
 {
     std::vector<widget*>& widgets = m_widgets;
@@ -2794,7 +2807,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 // Complete-only model: the AI bound selects an operand reference; the
 // player/human bounds use value wrappers. Binding the selected player id
 // before widgetSetStatus preserves the retail argument homes (100%).
-VA(0x0057ef70, 0x3B9)
+VA(0x0057ef70, 0x3B9) MAC_ADDRESS(0x17730c, 0x480)
 void TSingleSelectionWindow::updateFilterWidgets()
 {
     if (!m_inFilterOptions)
@@ -2885,7 +2898,7 @@ void TSingleSelectionWindow::updateFilterWidgets()
 }
 
 // The version-data guards use std::auto_ptr<int>, which performs scalar deletion.
-VA(0x0057F330, 0x3E3)  // dc 0x13575c
+VA(0x0057F330, 0x3E3) MAC_ADDRESS(0x17778c, 0x344)  // dc 0x13575c
 void TSingleSelectionWindow::setupLoadGameMode()
 {
     m_durationIndex = g_game->m_setup.m_turnDuration;
@@ -2946,7 +2959,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
 
 // CNetPlayerInfo owns its retained constructor VA in struct.h.
 
-VA(0x0057F740, 0x3D5)  // dc 0x135aa4
+VA(0x0057F740, 0x3D5) MAC_ADDRESS(0x177c3c, 0x328)  // dc 0x135aa4
 void TSingleSelectionWindow::setupNewGameMode()
 {
     g_game->m_setup.m_turnDuration = 10;
@@ -3003,7 +3016,7 @@ void TSingleSelectionWindow::setupNewGameMode()
     }
 }
 
-VA(0x0057FB20, 0x66)  // dc 0x135da8
+VA(0x0057FB20, 0x66) MAC_ADDRESS(0x177f64, 0x90)  // dc 0x135da8
 void TSingleSelectionWindow::showWidget(int id)
 {
     widget* currentWidget = getWidget(id);
@@ -3013,7 +3026,7 @@ void TSingleSelectionWindow::showWidget(int id)
     currentWidget->enable(isHost() || m_saveMode);
 }
 
-VA(0x0057FB90, 0x31C)  // dc 0x135e80
+VA(0x0057FB90, 0x31C) MAC_ADDRESS(0x177ff4, 0xf0)  // dc 0x135e80
 void TSingleSelectionWindow::updateMainWindow()
 {
     showWidget(128);
@@ -3030,7 +3043,7 @@ void TSingleSelectionWindow::updateMainWindow()
         getWidget(186)->enable(0);
 }
 
-VA(0x0057FEB0, 0x57A)  // Complete-only filter-option control builder
+VA(0x0057FEB0, 0x57A) MAC_ADDRESS(0x1780e4, 0x5ec)  // Complete-only filter-option control builder
 void TSingleSelectionWindow::setupFilterOptions()
 {
     if (m_loadMode || m_saveMode)
@@ -3119,7 +3132,7 @@ void TSingleSelectionWindow::setupFilterOptions()
 // every seat's hero/town choice, redraws, and mirrors the new positions to
 // the other machines through SendPlayerPositions.
 
-VA(0x00580430, 0x63B)  // Complete-only filtered player/setup rebuild
+VA(0x00580430, 0x63B) MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 {
     g_game->setupOrigData();
@@ -3198,7 +3211,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
         sendPlayerPositions(0);
 }
 
-VA(0x00580A70, 0x68B)  // dc 0x135f04
+VA(0x00580A70, 0x68B) MAC_ADDRESS(0x178b94, 0x33c)  // dc 0x135f04
 void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
     if (m_inScenarioOptions) {
@@ -3288,7 +3301,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
 // seven catalog mutations were flat or worse; none reduced the divergence.
 // E:\gamedcs\singleselectionwindow.cpp:2933
-VA(0x00581100, 0x897)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
+VA(0x00581100, 0x897) MAC_ADDRESS(0x178ed0, 0x790)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::setupAdvancedOptions()
 {
     if (m_loadMode && !isMultiPlayer())
@@ -3486,7 +3499,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
     m_inAdvancedOptions = 1;
 }
 
-VA(0x005819a0, 0x171)  // dc 0x136bf4
+VA(0x005819a0, 0x171) MAC_ADDRESS(0x179660, 0x1ac)  // dc 0x136bf4
 void TSingleSelectionWindow::turnOffScenarioOptions()
 {
     getWidget(101)->hide();
@@ -3508,7 +3521,7 @@ void TSingleSelectionWindow::turnOffScenarioOptions()
     m_inScenarioOptions = 0;
 }
 
-VA(0x00581b20, 0x253)  // dc 0x136e94
+VA(0x00581b20, 0x253) MAC_ADDRESS(0x17980c, 0x29c)  // dc 0x136e94
 void TSingleSelectionWindow::turnOffAdvancedOptions()
 {
     // Mac retains all three isMultiPlayer calls; VC6 expands the predicate.
@@ -3554,7 +3567,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
 // (dc 0x13641c, line 2946). Its class record 0x246e has only the advanced
 // and scenario pane flags, without Complete's random-map panel state.
 // The desktop widget-103/280..335 teardown and final +0x37e clear belong here.
-VA(0x00581D80, 0x550)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
+VA(0x00581D80, 0x550) MAC_ADDRESS(0x179aa8, 0x5b4)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
 void TSingleSelectionWindow::turnOffFilterOptions()
 {
     if (m_saveMode || (m_loadMode && !isMultiPlayer()))
@@ -3621,7 +3634,7 @@ void TSingleSelectionWindow::turnOffFilterOptions()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
-VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
+VA(0x005822d0, 0x868) MAC_ADDRESS(0x17a05c, 0x844)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
 unsigned char TSingleSelectionWindow::processRightSelect(int id)
 {
     // File rows consume right clicks without opening a popup. Dreamcast's
@@ -3820,6 +3833,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
     return 1;
 }
 
+MAC_ADDRESS(0x17a8a0, 0x74)
 int TSingleSelectionWindow::getFileSpecNbr()
 {
     if (g_game->m_isTutorial) {
@@ -3832,6 +3846,7 @@ int TSingleSelectionWindow::getFileSpecNbr()
 
 // Mac retains this source choice at code 0:0x175674; VC6 expands its four
 // calls in getHeaders and onMapFileNameMsg.
+MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
     return m_randomMapMode
@@ -3858,7 +3873,7 @@ char* TSingleSelectionWindow::getHeaderDirectory()
 // over-inline direction means this caller presents a LARGER front-end cb or
 // fewer candidate sites than retail's, so the levers are caller mass and site
 // count - not a `clear()`/`erase()` spelling and not a pragma.
-VA(0x00582B40, 0x345)  // anchor-global dir ternary m_randomMapMode/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
+VA(0x00582B40, 0x345) MAC_ADDRESS(0x17a914, 0x204)  // anchor-global dir ternary m_randomMapMode/64/65 over "random_maps"(0x6836ac)/"maps"(0x6772d0)/"games"(0x677d70) + _chdir - the directory-scan opener; order-map GetHeaders..MakeHeroFilter onto 0x582b40..0x583890 (GetFileSpecNbr excluded by arity below), size 0.36x dc 0x916, dc 0x137da8
 void TSingleSelectionWindow::getHeaders(
     std::vector<GameSelectionHeadersStruct>* headers)
 {
@@ -3893,7 +3908,7 @@ void TSingleSelectionWindow::getHeaders(
     windowFn00582e90(headers);
 }
 
-VA(0x00582E90, 0x2DB)
+VA(0x00582E90, 0x2DB) MAC_ADDRESS(0x17ab18, 0x170)
 void TSingleSelectionWindow::windowFn00582e90(
     std::vector<GameSelectionHeadersStruct>* list)
 {
@@ -3931,7 +3946,7 @@ void TSingleSelectionWindow::windowFn00582e90(
     m_receivedMaps = 1;
 }
 
-VA(0x00583170, 0x40E)  // dc 0x1386c0
+VA(0x00583170, 0x40E) MAC_ADDRESS(0x17ac88, 0x428)  // dc 0x1386c0
 int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHeadersStruct* header)
 {
     int gameFileProblem = 0;
@@ -4018,6 +4033,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
 // rebuildFilteredPlayerSetup, both updateGameVars arms and onBeginGame.
+MAC_ADDRESS(0x17b0b0, 0x114)
 void TSingleSelectionWindow::applyHeaderToGame(
     GameSelectionHeadersStruct* header)
 {
@@ -4031,7 +4047,7 @@ void TSingleSelectionWindow::applyHeaderToGame(
     m_descriptionWidget->setText(header->m_description);
 }
 
-VA(0x00583580, 0x30C)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
+VA(0x00583580, 0x30C) MAC_ADDRESS(0x17b1c4, 0x140)  // anchor-global copies the selected header's planes into gpGame (+0x1f6a0 header band, +0x4df18 setup band) off the SelectionHeaders row - the DC UpdateGameVars body shape; size 0.76x dc 0x408, dc 0x139090
 void TSingleSelectionWindow::updateGameVars()
 {
     if (m_selectionHeaders.size() == 0)
@@ -4077,7 +4093,7 @@ void TSingleSelectionWindow::updateGameVars()
     }
 }
 
-VA(0x00583890, 0x2B0)  // dc 0x139498
+VA(0x00583890, 0x2B0) MAC_ADDRESS(0x17b304, 0x200)  // dc 0x139498
 void TSingleSelectionWindow::makeHeroFilter()
 {
     THeroClass heroClass1;
@@ -4164,7 +4180,7 @@ void TSingleSelectionWindow::makeHeroFilter()
     }
 }
 
-VA(0x00583b40, 0x37D)  // dc 0x1396d8
+VA(0x00583b40, 0x37D) MAC_ADDRESS(0x17b504, 0x3a8)  // dc 0x1396d8
 TSingleSelectionWindow::~TSingleSelectionWindow();
 
 // E:\gamedcs\singleselectionwindow.cpp:1553.
@@ -4179,7 +4195,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow();
 VA_COMPGEN(0x00583EC0, 0x21, SCALAR_DELETING_DTOR, CNewPlayerUpdateProc)  // dc 0x1489f0
 VA_COMPGEN(0x00583ef0, 0x26, IMPLICIT_DTOR, CNewPlayerUpdateProc)  // anchor-callee: 0x583ec6 and PlayerDropped 0x5894a3, dc 0x148a28
 
-VA(0x00583f20, 0xEF)  // dc 0x139a20
+VA(0x00583f20, 0xEF) MAC_ADDRESS(0x17b964, 0xe8)  // dc 0x139a20
 const char* TSingleSelectionWindow::getFileName(int which)
 {
     if (which == -1)
@@ -4197,7 +4213,7 @@ const char* TSingleSelectionWindow::getFileName(int which)
     return name;
 }
 
-VA(0x00584010, 0xDF)  // dc 0x139b08
+VA(0x00584010, 0xDF) MAC_ADDRESS(0x17ba4c, 0x108)  // dc 0x139b08
 const char* TSingleSelectionWindow::getMapName(int which)
 {
     if (m_randomMapSelected != 0)
@@ -4224,6 +4240,7 @@ const char* TSingleSelectionWindow::getMapName(int which)
 // calls this ordinary helper; retail expands it inside 0x5840f0.
 // Complete retains the type and description across strcpy (retail +0x21c:
 // dl holds the type, [ebp-0xc] the description); cache them in this helper.
+MAC_ADDRESS(0x17bb54, 0xd0)
 void getVCText(VictoryConditionStruct* vc, char* text)
 {
     signed char vcType = vc->m_type;
@@ -4241,12 +4258,13 @@ void getVCText(VictoryConditionStruct* vc, char* text)
 // Original: GetLCText; singleselectionwindow.cpp:4136, dc 0x139ca4.
 // DC4137 copies the indexed loss description; the source call at DC4197
 // follows GetVCText and precedes both text draws, as in retail 0x5840f0.
+MAC_ADDRESS(0x17bc24, 0x3c)
 void getLCText(LossConditionStruct* lc, char* text)
 {
     strcpy(text, g_lossConditionDesc[lc->m_type + 1]);
 }
 
-VA(0x005840f0, 0x45C)  // dc 0x139ccc
+VA(0x005840f0, 0x45C) MAC_ADDRESS(0x17bc60, 0x44c)  // dc 0x139ccc
 void TSingleSelectionWindow::drawBasicMapInfo()
 {
     if (m_selectionHeaders.size() == 0 && m_saveMode == 0)
@@ -4312,7 +4330,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
-VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
+VA(0x00584550, 0x698) MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
 {
     if (m_receivedMaps == 0) {
@@ -4479,7 +4497,7 @@ int TSingleSelectionWindow::update()
     return 1;
 }
 
-VA(0x00584bf0, 0x50)  // dc 0x13b104
+VA(0x00584bf0, 0x50) MAC_ADDRESS(0x17c860, 0x90)  // dc 0x13b104
 void TSingleSelectionWindow::doModal(bool fade)
 {
     // DC4425 calls the ordinary IsMultiPlayer helper; its retail expansion
@@ -4506,7 +4524,7 @@ void TSingleSelectionWindow::doModal(bool fade)
 // exact rows; it was a misreading of the DC line table, not a source fact.
 // ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
-VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
+VA(0x00584C40, 0x40D) MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
 void TSingleSelectionWindow::setHumanSlot()
 {
     CNetPlayerHandlerPlayer* player;
@@ -4622,6 +4640,7 @@ void TSingleSelectionWindow::setHumanSlot()
 // Dreamcast preserves this helper. Complete expands it into the six sort
 // button arms: active header transfers suppress sorting, a repeated column
 // flips direction, and a new column resets it before sorting and reselection.
+MAC_ADDRESS(0x17cd34, 0xb4)
 inline void TSingleSelectionWindow::onSortMaps(int how)
 {
     if (m_newPlayerUpdateMan && m_newPlayerUpdateMan->isSendingHeaders())
@@ -4653,7 +4672,7 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 // Complete's vector/functor details therefore require retail evidence.
 // DC's message junk belongs to the older Update(message&) interface;
 // Complete calls the no-argument Update, so no unused message is invented.
-VA(0x00585050, 0x2A8)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
+VA(0x00585050, 0x2A8) MAC_ADDRESS(0x17cea0, 0x338)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
 void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                                       unsigned char update)
 {
@@ -4707,7 +4726,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
     }
 }
 
-VA(0x00585300, 0x1FA)  // dc 0x13b9fc
+VA(0x00585300, 0x1FA) MAC_ADDRESS(0x17d1d8, 0x240)  // dc 0x13b9fc
 void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
 {
     long allyCount = 0;
@@ -4768,7 +4787,7 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
     }
 }
 
-VA(0x00585500, 0x889)  // dc 0x13bc60
+VA(0x00585500, 0x889) MAC_ADDRESS(0x17d418, 0x708)  // dc 0x13bc60
 void TSingleSelectionWindow::setCurrentMap(int map, bool update)
 {
     int i;
@@ -4946,12 +4965,13 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
 }
 
 // Mac retains this choice at code 0:0x17db20 before the setFilter body.
+MAC_ADDRESS(0x17db20, 0x1c)
 std::vector<GameSelectionHeadersStruct>* TSingleSelectionWindow::getSourceHeaders()
 {
     return m_randomMapMode ? &m_transferHeaders : &m_headersA;
 }
 
-VA(0x00585d90, 0x2C5)  // dc 0x13c434
+VA(0x00585d90, 0x2C5) MAC_ADDRESS(0x17db3c, 0x258)  // dc 0x13c434
 void TSingleSelectionWindow::setFilter(int size)
 {
     std::vector<GameSelectionHeadersStruct>* src = getSourceHeaders();
@@ -5005,7 +5025,7 @@ void TSingleSelectionWindow::setFilter(int size)
     }
 }
 
-VA(0x00586060, 0x79)  // dc 0x13c698
+VA(0x00586060, 0x79) MAC_ADDRESS(0x17dd94, 0xec)  // dc 0x13c698
 void TSingleSelectionWindow::setDifficultyHiLite()
 {
     message select;
@@ -5046,7 +5066,7 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
-VA(0x005860E0, 0x4CC)
+VA(0x005860E0, 0x4CC) MAC_ADDRESS(0x17dee0, 0x428)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
     int humanPlayerCount = m_randomMapOptions[2];
@@ -5161,6 +5181,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:5085
+MAC_ADDRESS(0x17de80, 0x60)
 bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 {
     CClickMsg* clickMsg = static_cast<CClickMsg*>(netMsg);
@@ -5174,6 +5195,7 @@ bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 // Mac +0x17e308 retains this three-call helper immediately before
 // OnWidgetDeselect and calls it in the filter arms. Windows expands the
 // same sequence at those sites.
+MAC_ADDRESS(0x17e308, 0x5c)
 void TSingleSelectionWindow::refreshFilterWidgets()
 {
     updateFilterWidgets();
@@ -5183,6 +5205,7 @@ void TSingleSelectionWindow::refreshFilterWidgets()
 
 // Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
 // Its random-maps arm calls it; VC6 expands the three calls in that arm.
+MAC_ADDRESS(0x17e3c4, 0x60)
 void TSingleSelectionWindow::openRandomMapOptions()
 {
     setupScenarioOptions(1);
@@ -5219,7 +5242,7 @@ void TSingleSelectionWindow::openRandomMapOptions()
 // spelling it `>= TOWN_CONFLUX + 1` in newgame.h does produce retail's
 // encoding and costs 0.25 overall, so it stays.
 // E:\gamedcs\singleselectionwindow.cpp:5100
-VA(0x005865b0, 0x13EA)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
+VA(0x005865b0, 0x13EA) MAC_ADDRESS(0x17e644, 0xd5c)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                                               unsigned char* exitFlag,
                                               unsigned char remoteClick)
@@ -5800,7 +5823,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
 // matching slot (absent slots keep their zero), and returns the slot with the
 // smallest stamp - i.e. the free slot if there is one, otherwise the oldest.
 
-VA(0x005879A0, 0x219)
+VA(0x005879A0, 0x219) MAC_ADDRESS(0x17e424, 0x220)
 std::string getRandomMapName()
 {
     char names[15][30];
@@ -5855,7 +5878,7 @@ std::string getRandomMapName()
 // survive, the bodies do nothing). The tail rewrites the message into
 // the shared end-dialog command exactly as the tradpost handlers do.
 // E:\gamedcs\singleselectionwindow.cpp:5933
-VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
+VA(0x00587bc0, 0x138) MAC_ADDRESS(0x17f3a0, 0x130)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
 int TSingleSelectionWindow::exitDialog(message& msg)
 {
     if (!m_loadMode && !m_saveMode) {
@@ -5906,7 +5929,7 @@ int TSingleSelectionWindow::exitDialog(message& msg)
 // currentMap) drift with it - the register-homing family. Named-local
 // vs inline respelling of the KP_8 arm measured byte-flat (90.02 both).
 // E:\gamedcs\singleselectionwindow.cpp:5976
-VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
+VA(0x00587d00, 0x624) MAC_ADDRESS(0x17f4d0, 0x6a8)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
 int TSingleSelectionWindow::windowHandler(message& msg)
 {
     unsigned char redraw = 0;
@@ -6047,13 +6070,14 @@ int TSingleSelectionWindow::windowHandler(message& msg)
 
 // Like GetThisPlayer above: retail keeps no out-of-line copy;
 // every caller expands the GetGamePos chain.
+MAC_ADDRESS(0x17fb78, 0x2c)
 inline int TSingleSelectionWindow::getThisPlayerGamePos()
 {
     return m_players.getGamePos(g_thisNetPlayerInfo.m_dpid);
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6301
-VA(0x00588330, 0x462)  // dc 0x13f770
+VA(0x00588330, 0x462) MAC_ADDRESS(0x17fba4, 0x44c)  // dc 0x13f770
 void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
 {
     g_numHumanPlayers = 0;
@@ -6139,7 +6163,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
     g_completeDrawEnabled = g_game->isLocalHuman(g_netLocalGamePos);
 }
 
-VA(0x005887a0, 0x9ED)  // dc 0x13fd74
+VA(0x005887a0, 0x9ED) MAC_ADDRESS(0x17fff0, 0x7e0)  // dc 0x13fd74
 bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
 {
     if (!m_receivedMaps) {
@@ -6313,7 +6337,7 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
     return 0;
 }
 
-VA(0x005891b0, 0x45)  // dc 0x1477b0
+VA(0x005891b0, 0x45) MAC_ADDRESS(0x186528, 0x88)  // dc 0x1477b0
 int CHostWaitDlg::handleMessage(message& msg)
 {
     int ret = CAnimatedDlg::handleMessage(msg);
@@ -6364,7 +6388,7 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 // dc 0x140414. DC6651 constructs CPingResponseMsg, the distinct response
 // class with the same payload as CPingMsg; retail 0x5894f0 stores opcode
 // 0x418 and 0x5894e6 echoes the request's time into its 0x18-byte object.
-VA(0x005894D0, 0x40)  // dc 0x140414
+VA(0x005894D0, 0x40) MAC_ADDRESS(0x180844, 0x5c)  // dc 0x140414
 void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 {
     CPingResponseMsg response(static_cast<CPingMsg*>(netMsg)->m_pingTime,
@@ -6377,7 +6401,7 @@ void TSingleSelectionWindow::onPingMsg(CNetMsg* netMsg)
 // CPingResponseMsg*, and DC6659 calls TTextResource::operator[]. Retail
 // reads the same +0x14 time and +4 sender. Equal message layouts do not
 // establish a platform type difference or justify using CPingMsg here.
-VA(0x00589510, 0xA3)  // dc 0x140450
+VA(0x00589510, 0xA3) MAC_ADDRESS(0x1808a0, 0x8c)  // dc 0x140450
 void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char inPopup)
 {
     CPingResponseMsg* msg = static_cast<CPingResponseMsg*>(netMsg);
@@ -6387,7 +6411,7 @@ void TSingleSelectionWindow::onPingResponseMsg(CNetMsg* netMsg, unsigned char in
     receiveChat(msg->m_dpidFrom, text, inPopup);
 }
 
-VA(0x005895C0, 0x14F)  // dc 0x140588
+VA(0x005895C0, 0x14F) MAC_ADDRESS(0x180a58, 0x14c)  // dc 0x140588
 unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost)
 {
     unsigned char missing = 0;
@@ -6427,7 +6451,7 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 // includes the third operator= expansion, CNetMsg construction and
 // SavedGameHeader cleanup; the constructor's DC 605..608 has no missing
 // initialization to justify synthetic budget mass.
-VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
+VA(0x00589710, 0x40F) MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
 #ifdef _WINDOWS
@@ -6480,6 +6504,7 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6664
+MAC_ADDRESS(0x18092c, 0x84)
 bool TSingleSelectionWindow::onMapHeaderRequestMsg(CNetMsg* netMsg)
 {
     CMapHeaderRequestMsg* msg = static_cast<CMapHeaderRequestMsg*>(netMsg);
@@ -6493,6 +6518,7 @@ bool TSingleSelectionWindow::onMapHeaderRequestMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6677
+MAC_ADDRESS(0x1809f0, 0x68)
 bool TSingleSelectionWindow::onHeaderConfirmMsg(CNetMsg* netMsg)
 {
     m_newPlayerUpdateMan->headerConfirmed(netMsg->m_dpidFrom);
@@ -6503,6 +6529,7 @@ bool TSingleSelectionWindow::onHeaderConfirmMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:6709
+MAC_ADDRESS(0x180ba4, 0x80)
 bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 {
     if (!checkMissingHeaders(netMsg->m_dpidFrom)) {
@@ -6518,6 +6545,7 @@ bool TSingleSelectionWindow::onReqHeaderConfirmMsg(CNetMsg* netMsg)
 // E:\gamedcs\singleselectionwindow.cpp:6773. The DC build retains this
 // helper out of line; Complete expands its sole operation at all three known
 // call sites and has no corresponding x86 function row.
+MAC_ADDRESS(0x18128c, 0x50)
 static inline void updateTurnDuration()
 {
     g_turnDuration.setDuration(
@@ -6529,6 +6557,7 @@ static inline void updateTurnDuration()
 // HandleNetMsg +0x21e recomputes the version after DeletePlayer and calls
 // no-argument Update: the older DC message junk local does not survive.
 // E:\gamedcs\singleselectionwindow.cpp:6937
+MAC_ADDRESS(0x181910, 0x12c)
 bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
     CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
@@ -6549,6 +6578,7 @@ bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 // base ctor 0x512c20, header at +0x18, vtable 0x641d30, read 0x512e00,
 // SetupOrigData, and header teardown. The receive result is not tested.
 // E:\gamedcs\singleselectionwindow.cpp:6968
+MAC_ADDRESS(0x181a3c, 0xac)
 bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 {
     CNewMapHeaderInfoMsg msg;
@@ -6561,6 +6591,7 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 // options call sites. Keep the original cpp boundaries visible while allowing
 // the retail TU to reproduce that lowering.
 // E:\gamedcs\singleselectionwindow.cpp:6980
+MAC_ADDRESS(0x181bac, 0xc4)
 inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
@@ -6574,6 +6605,7 @@ inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
 // adds the window's mode byte and eight filter dwords; VC6 expands this call
 // into Finish while retaining the CNewSetupInfoMsg constructor boundary.
 // E:\gamedcs\singleselectionwindow.cpp:7009
+MAC_ADDRESS(0x181c70, 0x110)
 inline unsigned char TSingleSelectionWindow::sendSetupInfo(
     unsigned long dpid)
 {
@@ -6593,6 +6625,7 @@ inline unsigned char TSingleSelectionWindow::sendSetupInfo(
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7094
+MAC_ADDRESS(0x1824f4, 0xd0)
 bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
 {
     m_receivedMaps = true;
@@ -6610,6 +6643,7 @@ bool TSingleSelectionWindow::onGameHeaderInfoEndMsg(CNetMsg* netMsg)
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
 // E:\gamedcs\singleselectionwindow.cpp:7118
+MAC_ADDRESS(0x1825c4, 0x68)
 bool TSingleSelectionWindow::onScrollMsg(CNetMsg* netMsg)
 {
     CScrollMsg* msg = static_cast<CScrollMsg*>(netMsg);
@@ -6626,7 +6660,7 @@ void TSingleSelectionWindow::onNameSlider(int newIndex)
 {
 }
 
-VA(0x00589b20, 0x13C)  // dc 0x1406ec
+VA(0x00589b20, 0x13C) MAC_ADDRESS(0x1812dc, 0x168)  // dc 0x1406ec
 unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 {
     CGameTransmitInitMsg* msg =
@@ -6669,7 +6703,7 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x00589C60, 0xCE)  // dc 0x140898
+VA(0x00589C60, 0xCE) MAC_ADDRESS(0x181444, 0x108)  // dc 0x140898
 unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
 {
     CNewSetupInfoMsg* msg = static_cast<CNewSetupInfoMsg*>(netMsg);
@@ -6690,7 +6724,7 @@ unsigned char TSingleSelectionWindow::onNewSetupInfoMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x00589D30, 0x265)  // dc 0x1409d4
+VA(0x00589D30, 0x265) MAC_ADDRESS(0x18154c, 0x148)  // dc 0x1409d4
 unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersion)
 {
     if (_strcmpi(m_gameVersion,
@@ -6727,6 +6761,7 @@ unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersi
 // Mac retains this seat assignment at 0:0x17c8f0. The newer helper name is
 // unknown; the single onNewPlayerMsg caller passes the joining DPID, while
 // VC6 expands the same search and assignment in the advanced-options arm.
+MAC_ADDRESS(0x17c8f0, 0xc0)
 bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayer(dpid);
@@ -6758,7 +6793,7 @@ bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
 // compile emits the equivalent call-per-element loop. The other tail delta is
 // register naming around PlayerEnterMsg's gpGeneralText reload.
 // E:\gamedcs\singleselectionwindow.cpp:6884
-VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
+VA(0x00589FA0, 0x2D9) MAC_ADDRESS(0x181694, 0x268)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
 unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
 {
     CNewPlayerMsg* msg = static_cast<CNewPlayerMsg*>(netMsg);
@@ -6827,7 +6862,7 @@ VA_COMPGEN(0x0058A300, 0x13F, IMPLICIT_DTOR, CNewMapHeaderInfoMsg)
 // The short message form has no version string, so it uses "1.0".
 // Starting a transfer resizes both header lists and clears their received flags.
 // E:\gamedcs\singleselectionwindow.cpp:7017
-VA(0x0058A440, 0x33E)  // dc 0x140f24
+VA(0x0058A440, 0x33E) MAC_ADDRESS(0x181d80, 0x14c)  // dc 0x140f24
 unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoInitMsgEx* msg =
@@ -6854,7 +6889,7 @@ unsigned char TSingleSelectionWindow::onGameHeaderInfoInitMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x0058A780, 0x2BA)  // anchor-callee the 1083 arm's single call
+VA(0x0058A780, 0x2BA) MAC_ADDRESS(0x181ecc, 0x98)  // anchor-callee the 1083 arm's single call
 void TSingleSelectionWindow::onGameHeaderInfoInitMsgEx(CNetMsg* netMsg)
 {
     CTransferHeaderInfoInitMsg* msg =
@@ -6870,7 +6905,7 @@ void TSingleSelectionWindow::onGameHeaderInfoInitMsgEx(CNetMsg* netMsg)
         m_transferHeaders[i].m_setup.m_fileInitialized = 0;
 }
 
-VA(0x0058AA40, 0x3AE)  // dc 0x14111c
+VA(0x0058AA40, 0x3AE) MAC_ADDRESS(0x181f64, 0x590)  // dc 0x14111c
 unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoMsg msg;
@@ -6894,7 +6929,7 @@ unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x0058ADF0, 0x1A)  // dc 0x141410
+VA(0x0058ADF0, 0x1A) MAC_ADDRESS(0x18262c, 0x40)  // dc 0x141410
 bool TSingleSelectionWindow::isHost()
 {
     if (!g_remoteOn)
@@ -6904,6 +6939,7 @@ bool TSingleSelectionWindow::isHost()
 
 // Dreamcast retains this member boundary; Complete expands it into the chat
 // slider wrapper below.
+MAC_ADDRESS(0x18266c, 0x38)
 inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
 {
     g_chatMan.setPosition(newIndex);
@@ -6912,6 +6948,7 @@ inline void TSingleSelectionWindow::onChatWindowSlider(int newIndex)
 
 // Dreamcast retains this member boundary. Complete expands it into the tiny
 // file-slider callback below, whose bytes prove the same store/call pair.
+MAC_ADDRESS(0x1826a4, 0x2c)
 inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
 {
     m_currentIndex = newIndex;
@@ -6922,6 +6959,7 @@ inline void TSingleSelectionWindow::onFileMenuSlider(int newIndex)
 // older `message` local disappeared in retail; the x86 body instead proves a
 // host setup broadcast followed by the full-window redraw and duration-clock
 // refresh.
+MAC_ADDRESS(0x1826d0, 0xa0)
 inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
 {
     m_durationIndex = newIndex;
@@ -6936,6 +6974,7 @@ inline void TSingleSelectionWindow::onDurationSlider(int newIndex)
 // into CSingleSelectionChatEdit::SendChat below. Retail independently proves
 // the setup-ping special case, the local player's formatted chat line, the
 // repaint, and the final guaranteed chat broadcast in exactly this order.
+MAC_ADDRESS(0x182770, 0x138)
 inline void TSingleSelectionWindow::sendChat(
     unsigned long dpid, const char* chat)
 {
@@ -6954,7 +6993,7 @@ inline void TSingleSelectionWindow::sendChat(
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7212
-VA(0x0058AE10, 0x63)  // dc 0x14169c
+VA(0x0058AE10, 0x63) MAC_ADDRESS(0x1828a8, 0x74)  // dc 0x14169c
 void TSingleSelectionWindow::receiveChat(
     unsigned long dpid, char* chat, bool inPopup)
 {
@@ -6968,7 +7007,7 @@ void TSingleSelectionWindow::receiveChat(
         displayChat();
 }
 
-VA(0x0058AE80, 0x93)  // dc 0x1416f4
+VA(0x0058AE80, 0x93) MAC_ADDRESS(0x18291c, 0x104)  // dc 0x1416f4
 void TSingleSelectionWindow::displayChat()
 {
     if (g_remoteOn) {
@@ -6984,7 +7023,7 @@ void TSingleSelectionWindow::displayChat()
     }
 }
 
-VA(0x0058AF20, 0x182)  // dc 0x141824
+VA(0x0058AF20, 0x182) MAC_ADDRESS(0x182a20, 0x118)  // dc 0x141824
 void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* player)
 {
     int currFace = player->m_heroIndex;
@@ -7021,6 +7060,7 @@ void TSingleSelectionWindow::getHeroFace(int which, CNetPlayerHandlerPlayer* pla
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7298
+MAC_ADDRESS(0x182b38, 0xdc)
 void TSingleSelectionWindow::onRequestHeroFaceMsg(
         CNetMsg* netMsg, bool inPopup)
 {
@@ -7048,6 +7088,7 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
 // let VC6 jump-thread GetPlayer's NULL arm straight to the caller's exit
 // (UpdateAllyEnemyFlags 100 -> 32.65, ExitDialog 100 -> 68.05); the
 // early-return form keeps retail's `xor eax,eax / test eax,eax` join.
+MAC_ADDRESS(0x182c14, 0x44)
 CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
 {
     CNetPlayerHandlerPlayer* player;
@@ -7057,7 +7098,7 @@ CNetPlayerHandlerPlayer* TSingleSelectionWindow::getThisPlayer()
     return player;
 }
 
-VA(0x0058B0B0, 0x67)  // dc 0x141a74
+VA(0x0058B0B0, 0x67) MAC_ADDRESS(0x182c58, 0x94)  // dc 0x141a74
 void TSingleSelectionWindow::onRequestHeroFaceReplyMsg(CNetMsg* netMsg, bool inPopup)
 {
     CRequestHeroFaceReplyMsg* msg =
@@ -7073,6 +7114,7 @@ void TSingleSelectionWindow::onRequestHeroFaceReplyMsg(CNetMsg* netMsg, bool inP
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7356
+MAC_ADDRESS(0x182cec, 0x8c)
 void TSingleSelectionWindow::onSetAGRMsg(
         CNetMsg* netMsg, bool inPopup)
 {
@@ -7088,7 +7130,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
         drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
 }
 
-VA(0x0058B120, 0x3E8)  // dc 0x141b98
+VA(0x0058B120, 0x3E8) MAC_ADDRESS(0x182d78, 0x218)  // dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
     g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
@@ -7118,7 +7160,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x0058B510, 0x10D)  // dc 0x141d5c
+VA(0x0058B510, 0x10D) MAC_ADDRESS(0x182f90, 0x140)  // dc 0x141d5c
 void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
 {
     m_receivedMaps = 0;
@@ -7147,7 +7189,7 @@ void TSingleSelectionWindow::onNewHostMsg(CNetMsg* netMsg)
     update();
 }
 
-VA(0x0058B620, 0x16F)  // dc 0x141e9c
+VA(0x0058B620, 0x16F) MAC_ADDRESS(0x1830d0, 0x154)  // dc 0x141e9c
 void TSingleSelectionWindow::onNameClick(int pos)
 {
     if (isMultiPlayer())
@@ -7183,7 +7225,7 @@ void TSingleSelectionWindow::onNameClick(int pos)
 // GetWidget(...)->send_message raises the local score slightly, but destroys
 // DC's line-7574 widget* b local/statement group; keep the positive DC shape.
 // E:\gamedcs\singleselectionwindow.cpp:7512
-VA(0x0058B790, 0x2A3)  // shared helper sequence + Complete seat data, dc 0x142028
+VA(0x0058B790, 0x2A3) MAC_ADDRESS(0x183224, 0x150)  // shared helper sequence + Complete seat data, dc 0x142028
 void TSingleSelectionWindow::onPlayerPosClick(int pos)
 {
     if (!isHost())
@@ -7226,7 +7268,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
 // The host's authoritative roster lands: clear every seat, merge each
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
-VA(0x0058BA40, 0x175)  // dc 0x1421a8
+VA(0x0058BA40, 0x175) MAC_ADDRESS(0x183374, 0x1c8)  // dc 0x1421a8
 void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
     updateNameLists();
@@ -7265,7 +7307,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     }
 }
 
-VA(0x0058BBC0, 0xAC)  // dc 0x142534
+VA(0x0058BBC0, 0xAC) MAC_ADDRESS(0x18353c, 0x9c)  // dc 0x142534
 void TSingleSelectionWindow::checkFaces()
 {
     for (int i = 7; i >= 0; --i) {
@@ -7277,7 +7319,7 @@ void TSingleSelectionWindow::checkFaces()
     }
 }
 
-VA(0x0058BC70, 0x66)  // dc 0x1425f0
+VA(0x0058BC70, 0x66) MAC_ADDRESS(0x1835d8, 0xc0)  // dc 0x1425f0
 void TSingleSelectionWindow::sendPlayerFaces()
 {
     for (int i = 1; i < 8; ++i) {
@@ -7315,7 +7357,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // Earlier controls: removing the const bitset cast was byte-flat; .test()
 // scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
-VA(0x0058BCE0, 0x5AF)  // begin-button caller and DC source shape, dc 0x142674
+VA(0x0058BCE0, 0x5AF) MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::onBeginGame()
 {
     if (m_randomMapSelected) {
@@ -7427,7 +7469,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     return beginNewGame();
 }
 
-VA(0x0058C290, 0x2D2)  // dc 0x142870
+VA(0x0058C290, 0x2D2) MAC_ADDRESS(0x183bb4, 0x1a8)  // dc 0x142870
 unsigned char TSingleSelectionWindow::beginSavedGame()
 {
     incProgressBar(1);
@@ -7490,7 +7532,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 // map and the whole save image go out to the other machines before the last
 // progress tick.
 
-VA(0x0058C570, 0x3E7)  // dc 0x1429e8
+VA(0x0058C570, 0x3E7) MAC_ADDRESS(0x183d5c, 0x33c)  // dc 0x1429e8
 bool TSingleSelectionWindow::beginNewGame()
 {
     int gameVersionClass;
@@ -7541,6 +7583,7 @@ bool TSingleSelectionWindow::beginNewGame()
 
 // E:\gamedcs\singleselectionwindow.cpp:7889
 // Original public ?IsMultiPlayer@TSingleSelectionWindow@@QAA_NXZ.
+MAC_ADDRESS(0x184098, 0x34)
 bool TSingleSelectionWindow::isMultiPlayer()
 {
     if (g_remoteOn)
@@ -7550,7 +7593,7 @@ bool TSingleSelectionWindow::isMultiPlayer()
     return 0;
 }
 
-VA(0x0058C960, 0x11C)  // dc 0x142cc0
+VA(0x0058C960, 0x11C) MAC_ADDRESS(0x1840cc, 0x128)  // dc 0x142cc0
 void TSingleSelectionWindow::updateNameLists()
 {
     char names[256];
@@ -7575,7 +7618,7 @@ void TSingleSelectionWindow::updateNameLists()
     m_nameList2->setText(names);
 }
 
-VA(0x0058ca80, 0x162)  // dc 0x142e3c
+VA(0x0058ca80, 0x162) MAC_ADDRESS(0x1841f4, 0x190)  // dc 0x142e3c
 void TSingleSelectionWindow::turnChatOn(bool update)
 {
     m_chatToggle->setText(g_generalText->getText(GENERAL_TEXT_HIDE_CHAT));
@@ -7597,7 +7640,7 @@ void TSingleSelectionWindow::turnChatOn(bool update)
     }
 }
 
-VA(0x0058cbf0, 0x152)  // dc 0x142fac
+VA(0x0058cbf0, 0x152) MAC_ADDRESS(0x184384, 0x184)  // dc 0x142fac
 void TSingleSelectionWindow::turnChatOff(unsigned char update)
 {
     m_chatToggle->setText(g_generalText->getText(GENERAL_TEXT_SHOW_CHAT));
@@ -7619,6 +7662,7 @@ void TSingleSelectionWindow::turnChatOff(unsigned char update)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:7990
+MAC_ADDRESS(0x184508, 0x30)
 void TSingleSelectionWindow::onTownUpdateMsg(
         CNetMsg* netMsg, bool inPopup)
 {
@@ -7626,7 +7670,7 @@ void TSingleSelectionWindow::onTownUpdateMsg(
     updateTown(msg->m_gamePos, msg->m_town, inPopup);
 }
 
-VA(0x0058CD50, 0x119)  // dc 0x143138
+VA(0x0058CD50, 0x119) MAC_ADDRESS(0x184538, 0xac)  // dc 0x143138
 void TSingleSelectionWindow::updateTown(
         int pos, TTownType town, unsigned char inPopup)
 {
@@ -7643,7 +7687,7 @@ void TSingleSelectionWindow::updateTown(
     }
 }
 
-VA(0x0058CE70, 0x40)  // dc 0x1431bc
+VA(0x0058CE70, 0x40) MAC_ADDRESS(0x1845e4, 0x6c)  // dc 0x1431bc
 unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes* slot =
@@ -7657,7 +7701,7 @@ unsigned char TSingleSelectionWindow::hasMultipleTowns(int gamePos)
     return 0;
 }
 
-VA(0x0058CEB0, 0xF7)  // dc 0x143214
+VA(0x0058CEB0, 0xF7) MAC_ADDRESS(0x184650, 0x14c)  // dc 0x143214
 unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
 {
     if (m_loadMode)
@@ -7680,7 +7724,7 @@ unsigned char TSingleSelectionWindow::canChooseTown(int gamePos)
     return slotAtt->m_hasRandomAlignment || hasMultipleTowns(gamePos);
 }
 
-VA(0x0058CFB0, 0x129)  // dc 0x14332c
+VA(0x0058CFB0, 0x129) MAC_ADDRESS(0x18479c, 0x154)  // dc 0x14332c
 unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
 {
     if (m_loadMode)
@@ -7706,7 +7750,7 @@ unsigned char TSingleSelectionWindow::canChooseHero(int gamePos)
     return randomHero;
 }
 
-VA(0x0058D0E0, 0x10A)  // dc 0x143444
+VA(0x0058D0E0, 0x10A) MAC_ADDRESS(0x1848f0, 0x12c)  // dc 0x143444
 int TSingleSelectionWindow::getDisplayFace(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
@@ -7745,6 +7789,7 @@ int TSingleSelectionWindow::getDisplayFace(int gamePos)
 // budget 73 against cost 75 and left a call. Restoring these returns expands
 // that scan naturally (64.6117% -> 88.12766% before fixing name accesses).
 // E:\gamedcs\singleselectionwindow.cpp:8143
+MAC_ADDRESS(0x184a1c, 0xc8)
 inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
@@ -7767,6 +7812,7 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
+MAC_ADDRESS(0x184ae4, 0xb0)
 inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
@@ -7780,7 +7826,7 @@ inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
         static_cast<unsigned short>(slotAtt->m_legalAlignments), 1);
 }
 
-VA(0x0058D1F0, 0x1E7)  // dc 0x1436b4
+VA(0x0058D1F0, 0x1E7) MAC_ADDRESS(0x184b94, 0x200)  // dc 0x1436b4
 const char* TSingleSelectionWindow::getHeroName(int gamePos)
 {
     CMapHeaderData::TPlayerSlotAttributes* slot =
@@ -7828,6 +7874,7 @@ const char* TSingleSelectionWindow::getHeroName(int gamePos)
 // so those two Complete semantics remain explicit below. The original w
 // local and all eight named/virtual source calls retain their order.
 
+MAC_ADDRESS(0x184d94, 0xbc)
 void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
@@ -7846,6 +7893,7 @@ void TSingleSelectionWindow::onNameChange(int gamePos, const char* newName)
 // singleselectionwindow.cpp:8256, dc 0x1438b8. Update calls it at DC4340.
 // Each row resolves its seated player and name widget, then chooses the
 // computer label or player name. Complete expands this loop in 0x584550.
+MAC_ADDRESS(0x184e50, 0xb0)
 void TSingleSelectionWindow::updateNames()
 {
     for (int i = 0; i < 8; ++i) {
@@ -7858,7 +7906,7 @@ void TSingleSelectionWindow::updateNames()
     }
 }
 
-VA(0x0058D3E0, 0x122)  // dc 0x143954
+VA(0x0058D3E0, 0x122) MAC_ADDRESS(0x184f00, 0xf0)  // dc 0x143954
 unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 {
     int len = strlen(filename);
@@ -7901,7 +7949,7 @@ unsigned char TSingleSelectionWindow::highlightFile(char* filename)
 // fall through into the random case. Updating only the local gives 99.7181%;
 // an explicit exit without that update gives 99.6789%; together they give
 // 100%. Nested if/else and early-break forms both reproduce the exact body.
-VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
+VA(0x0058d510, 0xA40) MAC_ADDRESS(0x184ff0, 0xccc)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
 void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
                                                     unsigned char update,
                                                     int position)
@@ -8124,6 +8172,7 @@ void TSingleSelectionWindow::drawHeroAdvancedOption(int playerPos,
 // first byte is setup.playerPos; the second PC-only veto is the game's
 // per-seat disabled byte when the network header mode is active.
 // E:\gamedcs\singleselectionwindow.cpp:8643
+MAC_ADDRESS(0x185cbc, 0x58)
 inline int TSingleSelectionWindow::calcPosition(int playerPos)
 {
     int nextColor = 0;
@@ -8137,7 +8186,7 @@ inline int TSingleSelectionWindow::calcPosition(int playerPos)
     return nextColor;
 }
 
-VA(0x0058DF50, 0x57)  // dc 0x1450a8
+VA(0x0058DF50, 0x57) MAC_ADDRESS(0x185d14, 0x98)  // dc 0x1450a8
 unsigned char TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
 {
     CBadVersionMsg* msg = static_cast<CBadVersionMsg*>(netMsg);
@@ -8147,7 +8196,7 @@ unsigned char TSingleSelectionWindow::onBadVersionMsg(CNetMsg* netMsg)
     return 1;
 }
 
-VA(0x0058dfb0, 0x320)  // dc 0x145120
+VA(0x0058dfb0, 0x320) MAC_ADDRESS(0x185dac, 0x258)  // dc 0x145120
 void TSingleSelectionWindow::onDeleteFile()
 {
     if (m_selectionHeaders.size() == 0)
@@ -8188,7 +8237,7 @@ void TSingleSelectionWindow::onDeleteFile()
 // TSingleSelectionWindow::update (0x584550), followed by five pad NOPs.
 // The DC message& parameter survives in the callback interface; Complete's
 // window update is nullary, so this forwarding body does not use it.
-VA(0x0058e2d0, 0xB)  // anchor-address-take DoModal + tail target
+VA(0x0058e2d0, 0xB) MAC_ADDRESS(0x186004, 0x24)  // anchor-address-take DoModal + tail target
 static int update(message& msg)
 {
     return g_singleSelectionWindow->update();
@@ -8220,7 +8269,7 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 // and the two arguments land at +0x14 and +0x18 as the class declares.
 // Canonical inline body and VA are above in this module.
 
-VA(0x0058e310, 0x21)  // dc 0x1451a0
+VA(0x0058e310, 0x21) MAC_ADDRESS(0x186068, 0x58)  // dc 0x1451a0
 CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
     CNetMsg* msg = getRemoteData(0, &m_wasCompressed);
@@ -8229,7 +8278,7 @@ CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, un
     return handleNetMsg(msg);
 }
 
-VA(0x0058e340, 0x379)  // dc 0x1451e8
+VA(0x0058e340, 0x379) MAC_ADDRESS(0x1860c0, 0x164)  // dc 0x1451e8
 CNetMsg* CSingleSelectionNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
     CNetMsg* msg;
@@ -8365,7 +8414,7 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // level-change scope vs the early return are byte-flat controls. Restoring
 // UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
 // independently exact retained body.
-VA(0x0058e700, 0x2F9)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
+VA(0x0058e700, 0x2F9) MAC_ADDRESS(0x186224, 0x1e8)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
 void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 {
     m_players.addNewPlayer(playerInfo);
@@ -8416,7 +8465,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     }
 }
 
-VA(0x0058ea00, 0x6E)
+VA(0x0058ea00, 0x6E) MAC_ADDRESS(0x186448, 0xe0)
 int TSingleSelectionWindow::getCommonGameVersion()
 {
     std::bitset<4> features = ~std::bitset<4>();

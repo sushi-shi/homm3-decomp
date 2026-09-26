@@ -77,7 +77,7 @@ public:
 SIZE(CScenarioPlayerInfoWidget, 0x60);
 
 // E:\gamedcs\scenarioinfo.cpp:258, dc 0x129db4
-VA(0x00567290, 0x2109)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
+VA(0x00567290, 0x2109) MAC_ADDRESS(0x15ddc0, 0x2640)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape, dc 0x129db4
 CScenarioInfoDlg::CScenarioInfoDlg()
     // DC 258 centers against SCREEN_WIDTH/HEIGHT; retail +0x2f/+0x31
     // pushes y=7 then x=18 for the fixed 800x600 screen.
@@ -457,7 +457,7 @@ CScenarioPlayerInfoWidget::~CScenarioPlayerInfoWidget()
 
 VA_COMPGEN(0x005697d0, 0x21, SCALAR_DELETING_DTOR, CScenarioInfoDlg)
 
-VA(0x00569800, 0x98)  // dc 0x12aa70
+VA(0x00569800, 0x98) MAC_ADDRESS(0x160400, 0x114)  // dc 0x12aa70
 CScenarioInfoDlg::~CScenarioInfoDlg()
 {
     m_victoryIcon->dispose();
@@ -472,7 +472,7 @@ CScenarioInfoDlg::~CScenarioInfoDlg()
     }
 }
 
-VA(0x005698a0, 0x1E)  // dc 0x12ab00
+VA(0x005698a0, 0x1E) MAC_ADDRESS(0x160514, 0x34)  // dc 0x12ab00
 int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == SCENARIO_INFO_ACCEPT_ID)
@@ -480,7 +480,7 @@ int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
     return CHeroWindowEx::onWidgetDeselect(id, exitFlag);
 }
 
-VA(0x005698c0, 0xF2)  // dc 0x12ab20
+VA(0x005698c0, 0xF2) MAC_ADDRESS(0x160548, 0x158)  // dc 0x12ab20
 void CScenarioInfoDlg::updateAllyEnemyFlags()
 {
     int localPlayer = g_game->getLocalPlayerGamePos();
@@ -521,6 +521,7 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
 // Dreamcast keeps this as an ordinary out-of-line member at dc 0x12af90.
 // Complete's ctor at 0x567290 expands the same five-widget/message sequence,
 // so the declaration remains non-inline and VC6 /Ob2 owns the caller choice.
+MAC_ADDRESS(0x160be0, 0xc4)
 void CScenarioInfoDlg::setDifficultyHiLite()
 {
     message msg;
@@ -535,7 +536,7 @@ void CScenarioInfoDlg::setDifficultyHiLite()
     broadcastMessage(msg);
 }
 
-VA(0x005699C0, 0x320)  // dc 0x12ac28
+VA(0x005699C0, 0x320) MAC_ADDRESS(0x1606a0, 0x390)  // dc 0x12ac28
 unsigned char CScenarioInfoDlg::processRightSelect(int id)
 {
     switch (id) {

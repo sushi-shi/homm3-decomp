@@ -401,9 +401,9 @@ retail_va = 0x5666f0
 unit = "sacrifice_window"
 mac_section = 0x0
 mac_offset = 0x15cbe8
-mac_size = 0x88
-target_sha256 = "b0ec6aac00e23ab9cda97d559a998346d6dfd46dd267c36d293fa448295dcf9a"
-evidence = "skeleton window handler calls CAdvPopup::windowHandler0x1bf2c then hover conversion0x20d3d8; complete bounded PowerPC span."
+mac_size = 0x5c
+target_sha256 = "52ec224515f7b272674fb60807b46646754afb929543dab83146abd3e11dac3d"
+evidence = "skeleton window handler calls CAdvPopup::windowHandler0x1bf2c then hover conversion0x20d3d8; complete bounded PowerPC span. Boundary correction: the final BLR ends the body at 0x15cc44; tvector entry 0x15cc44 begins there, so the earlier 0x88-byte extent included a following function."
 
 [[functions]]
 retail_va = 0x566720

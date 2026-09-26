@@ -266,7 +266,7 @@ DATA(0x0069e5ac) int g_soundCountCampaign;
 // Preserve the codec branches and canonical serviceSounds calls: merging
 // all four guards removes one tail here and in videoPause/videoResume.
 // The WinCE counterpart is a four-byte stub and proves no Windows body.
-VA(0x005971b0, 0x3B)  // dc 0x14ac30
+VA(0x005971b0, 0x3B) MAC_ADDRESS(0x25e3f8, 0x6c)  // dc 0x14ac30
 void videoSoundOnOff(int on)
 {
     if (g_smackVideo || g_smackVideo2)
@@ -275,7 +275,7 @@ void videoSoundOnOff(int on)
         g_soundManager->serviceSounds();
 }
 
-VA(0x005971f0, 0xD9)  // dc 0x14ac34
+VA(0x005971f0, 0xD9) MAC_ADDRESS(0x25e464, 0x104)  // dc 0x14ac34
 void videoRealignBuffers()
 {
     g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
@@ -297,7 +297,7 @@ void videoRealignBuffers()
     BinkManager::g_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
 }
 
-VA(0x005972d0, 0x29D)  // dc 0x14ac38
+VA(0x005972d0, 0x29D) MAC_ADDRESS(0x25e568, 0x7c)  // dc 0x14ac38
 int videoPlay(int id, int x, int y, int w, int h)
 {
     POINT pos;
@@ -373,7 +373,7 @@ int videoPlay(int id, int x, int y, int w, int h)
     return BinkManager::playBink(id, x, y, w, h);
 }
 
-VA(0x00597570, 0x75)  // dc 0x14ac3c
+VA(0x00597570, 0x75) MAC_ADDRESS(0x25e5e4, 0x7c)  // dc 0x14ac3c
 void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
@@ -388,7 +388,7 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 
 // Retail's 225-byte body follows this canonical helper chain:
 
-VA(0x005975f0, 0xE1)  // dc 0x14ac40
+VA(0x005975f0, 0xE1) MAC_ADDRESS(0x25e660, 0x50)  // dc 0x14ac40
 void videoClose()
 {
     while (g_videoPauseCount != 0)
@@ -398,7 +398,7 @@ void videoClose()
     BinkManager::closeBink();
 }
 
-VA(0x005976e0, 0x5E)  // dc 0x14ac44
+VA(0x005976e0, 0x5E) MAC_ADDRESS(0x25e6b0, 0x98)  // dc 0x14ac44
 void videoNextFrame()
 {
     if (g_insideNextFrame)
@@ -417,14 +417,14 @@ void videoNextFrame()
 
 // Mac retains this call from videoDrawCurrentFrame at 0:0x25e788.
 // Keep the helper visible before the caller so VC6 can expand it.
-VA(0x00598e80, 0x25)
+VA(0x00598e80, 0x25) MAC_ADDRESS(0x25f948, 0xc8)
 void SmackManager::drawSmackerFrame()
 {
     if (g_smackVideo && SmackManager::g_playingSmacker && !g_smackPaused)
         SmackDoFrame(g_smackVideo);
 }
 
-VA(0x00597740, 0x53)  // dc 0x14ac48
+VA(0x00597740, 0x53) MAC_ADDRESS(0x25e748, 0x80)  // dc 0x14ac48
 void videoDrawCurrentFrame()
 {
     if (g_smackVideo || g_smackVideo2) {
@@ -437,7 +437,7 @@ void videoDrawCurrentFrame()
     }
 }
 
-VA(0x005977a0, 0xA6)  // dc 0x14ac4c
+VA(0x005977a0, 0xA6) MAC_ADDRESS(0x25e7c8, 0xbc)  // dc 0x14ac4c
 void videoPause()
 {
     if (++g_videoPauseCount > 1)
@@ -455,7 +455,7 @@ void videoPause()
     videoSoundOnOff(0);
 }
 
-VA(0x00597850, 0xAB)  // dc 0x14ac50
+VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)  // dc 0x14ac50
 void videoResume()
 {
     if (g_videoPauseCount == 0 || --g_videoPauseCount != 0)
@@ -473,7 +473,7 @@ void videoResume()
     videoSoundOnOff(1);
 }
 
-VA(0x00597900, 0x23)  // dc 0x14ac54
+VA(0x00597900, 0x23) MAC_ADDRESS(0x25e948, 0x24)  // dc 0x14ac54
 void videoRestart()
 {
     if (g_smackVideo) {
@@ -483,7 +483,7 @@ void videoRestart()
     BinkManager::restartBink();
 }
 
-VA(0x00597930, 0x5A)  // dc 0x14ac58
+VA(0x00597930, 0x5A) MAC_ADDRESS(0x25e96c, 0x90)  // dc 0x14ac58
 bool videoNeedsUpdate()
 {
     if (g_smackVideo || g_smackVideo2)
@@ -493,7 +493,7 @@ bool videoNeedsUpdate()
     return 0;
 }
 
-VA(0x00597990, 0x3F)  // dc 0x14ac5c
+VA(0x00597990, 0x3F) MAC_ADDRESS(0x25e9fc, 0x68)  // dc 0x14ac5c
 bool videoPlaying()
 {
     if ((g_smackVideo || g_smackVideo2) && !g_smackPaused)
@@ -533,7 +533,7 @@ bool videoPlaying()
 // predicted register and frame recovery; retain the ordered expressions.
 // Separate arm-local signed scalars likewise preserve the CFG/calls but fall
 // to 89.6347%, so the shared SDK rectangle remains the strongest model.
-VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
+VA(0x005979d0, 0x294) MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global, dc 0x14ac60
 void videoDrawRects()
 {
     POINT pt;
@@ -622,7 +622,7 @@ void videoDrawRects()
     SmackManager::g_needsUpdate = 0;
 }
 
-VA(0x00597c70, 0x84)  // dc 0x14ac64
+VA(0x00597c70, 0x84) MAC_ADDRESS(0x25ed20, 0x4c)  // dc 0x14ac64
 void videoShutDown()
 {
     SmackManager::closeSmacker();
@@ -702,7 +702,7 @@ std::string getDriveArchivePath()
     return path;
 }
 
-VA(0x00598210, 0x223)  // dc 0x14ac68
+VA(0x00598210, 0x223) MAC_ADDRESS(0x25ed6c, 0x2c4)  // dc 0x14ac68
 unsigned char loadAnimHeaders()
 {
     DWORD nread;
@@ -746,7 +746,7 @@ unsigned char loadAnimHeaders()
     return 1;
 }
 
-VA(0x00598440, 0x55)  // dc 0x14ac6c
+VA(0x00598440, 0x55) MAC_ADDRESS(0x25f030, 0x88)  // dc 0x14ac6c
 void deleteAnimHeaders()
 {
     if (g_videoHeader3) {
@@ -763,7 +763,7 @@ void deleteAnimHeaders()
     }
 }
 
-VA(0x005984a0, 0x240)  // dc 0x14aca0
+VA(0x005984a0, 0x240) MAC_ADDRESS(0x25f0b8, 0x31c)  // dc 0x14aca0
 unsigned char loadSoundHeaders()
 {
     DWORD nread;
@@ -809,7 +809,7 @@ unsigned char loadSoundHeaders()
     return 1;
 }
 
-VA(0x005986e0, 0xA2)
+VA(0x005986e0, 0xA2) MAC_ADDRESS(0x25f3d4, 0xa0)
 void deleteSoundHeaders()
 {
     if (g_soundFile != INVALID_HANDLE_VALUE) {
@@ -838,7 +838,7 @@ void deleteSoundHeaders()
     }
 }
 
-VA(0x00598790, 0x2AB)
+VA(0x00598790, 0x2AB) MAC_ADDRESS(0x25f474, 0x270)
 Smack* openSmackerTrack(const char* stem, unsigned long flags,
                         unsigned long extraFlags)
 {
@@ -938,7 +938,7 @@ void SmackManager::setPixelFormat(unsigned long redMask,
     }
 }
 
-VA(0x00598af0, 0x385)
+VA(0x00598af0, 0x385) MAC_ADDRESS(0x25f6e4, 0x264)
 // VideoOpen's DC-proven Boolean flags pass unchanged into this Windows
 // opener. Retail reads autoDraw as a byte and widens advance's low byte.
 // Retail also computes the id-selected descriptor row once and carries it
@@ -1024,7 +1024,7 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
 // and store order. The CE CloseSmacker body itself is only rts/nop.
 namespace SmackManager {
 
-VA(0x00598eb0, 0x193)  // dc 0x14adfc
+VA(0x00598eb0, 0x193) MAC_ADDRESS(0x25fa54, 0x224)  // dc 0x14adfc
 void nextSmackerFrame()
 {
     Smack* smk = g_smackVideo;
@@ -1064,7 +1064,7 @@ void nextSmackerFrame()
         videoDrawRects();
 }
 
-VA(0x00599050, 0x43)  // dc 0x14ae00
+VA(0x00599050, 0x43) MAC_ADDRESS(0x25fc78, 0x74)  // dc 0x14ae00
 void closeSmacker()
 {
     if (g_smackVideo)
@@ -1078,7 +1078,7 @@ void closeSmacker()
     SmackManager::g_needsUpdate = 0;
 }
 
-VA(0x005990a0, 0x1C)
+VA(0x005990a0, 0x1C) MAC_ADDRESS(0x25fd40, 0x44)
 void gotoSmackerFrame(unsigned long frame)
 {
     if (g_smackVideo && SmackManager::g_playingSmacker)

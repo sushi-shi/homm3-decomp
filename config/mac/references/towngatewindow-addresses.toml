@@ -32,9 +32,9 @@ retail_va = 0x5c25b0
 unit = "towngatewindow"
 mac_section = 0x0
 mac_offset = 0x1b86a0
-mac_size = 0x21c
-target_sha256 = "f575d16666e26ffa2876afe678eedaff6102324e51e2f4a0072d8b86fecaa1bf"
-evidence = "Constructs widget status/text/color messages, calls broadcastMessage six times, town-name strcpy and selection positioning; direct target of updateTownLocators. Full BLR/next prologue."
+mac_size = 0x214
+target_sha256 = "24d0e70f19f4ed2d575d7c90df54a46fffb018d93d75a9d3e19f09c89604d49d"
+evidence = "Constructs widget status/text/color messages, calls broadcastMessage six times, town-name strcpy and selection positioning; direct target of updateTownLocators. Full BLR/next prologue. Boundary correction: the final BLR ends the body at 0x1b88b4; the reviewed runtime accessor at 0x1b88b4 begins there, so the earlier 0x21c-byte extent included trailing accessor stubs."
 
 [[functions]]
 retail_va = 0x5c2770

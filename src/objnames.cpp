@@ -90,7 +90,7 @@ static const int g_adventureObjectTrait1Ids[] = {
 // supplies body visibility to both callers; expansion does not establish
 // the original inline qualifier. Moving the body to exceptions.h closed it (98.9899 -> 100.0000) and left gzinflatebuf's own
 
-VA(0x0041b500, 0x28B)
+VA(0x0041b500, 0x28B) MAC_ADDRESS(0x21d350, 0x6dc)
 void initializeAdventureObjectNames()
 {
     static std::auto_ptr<char> nameBuffer;

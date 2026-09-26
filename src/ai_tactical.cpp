@@ -77,6 +77,7 @@ DATA(0x0063b798) const double g_aiOddsLadder[6] = {
 
 // Mac retains this terrain/school test once and calls it from all three
 // creature-spell valuers; Complete expands those calls.
+MAC_ADDRESS(0x03ca2c, 0xd8)
 static unsigned char spellIsExpertOnMagicTerrain(SpellID spell, int terrain)
 {
     switch (terrain) {
@@ -94,14 +95,14 @@ static unsigned char spellIsExpertOnMagicTerrain(SpellID spell, int terrain)
     return 0;
 }
 
-VA(0x00435830, 0x1E)  // dc 0x3c55c
+VA(0x00435830, 0x1E) MAC_ADDRESS(0x03cca4, 0x28)  // dc 0x3c55c
 double aiValueOfMorale(long morale, long change)
 {
     return valueOfLuckAndMorale(morale, change, g_aiGoodMoraleValue,
                                    g_aiBadMoraleValue);
 }
 
-VA(0x00435850, 0x102)  // dc 0x3c29c
+VA(0x00435850, 0x102) MAC_ADDRESS(0x03cb04, 0x1a0)  // dc 0x3c29c
 double valueOfLuckAndMorale(long value, long change, double goodValueMultiplier, double badValueMultiplier)
 {
     if (change > 0) {
@@ -128,7 +129,7 @@ double valueOfLuckAndMorale(long value, long change, double goodValueMultiplier,
            - static_cast<double>(value + change) * badValueMultiplier;
 }
 
-VA(0x00435960, 0x1E)  // dc 0x3c580
+VA(0x00435960, 0x1E) MAC_ADDRESS(0x03cccc, 0x28)  // dc 0x3c580
 double aiValueOfLuck(long luck, long change)
 {
     return valueOfLuckAndMorale(luck, change, g_aiGoodLuckValue,
@@ -140,9 +141,9 @@ double aiValueOfLuck(long luck, long change)
 // four vector<army*> copy constructors. Complete additionally copies resource
 // handles through their refcounting members. The natural implicit constructor
 // supplies the retained 0x437a00 body; do not add a second authored constructor.
-VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
+VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army) MAC_COMPGEN_ADDRESS(0x046c1c, 0x240, IMPLICIT_COPY_CTOR, army)
 
-VA(0x00435980, 0x2A)  // dc 0x3c810
+VA(0x00435980, 0x2A) MAC_ADDRESS(0x03cfd8, 0x44)  // dc 0x3c810
 long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, unsigned char ranged, long distance)
 {
     long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
@@ -153,6 +154,7 @@ long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy,
 // E:\gamedcs\ai_tactical.cpp:215 - dc 0x3c854. No retail slot of its
 // own: simulate_attack (0x4359b0) carries it inlined three times, so
 // /OPT:REF dropped the out-of-line copy.
+MAC_ADDRESS(0x03d01c, 0xc0)
 void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
     // Mac 0x3d054 retains this call; VC6 expands the same source helper.
@@ -172,7 +174,7 @@ void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, lo
         enemyHits = 0;
 }
 
-VA(0x004359b0, 0x1D5)  // dc 0x3c8dc
+VA(0x004359b0, 0x1D5) MAC_ADDRESS(0x03d0dc, 0x19c)  // dc 0x3c8dc
 void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
 {
     if (ranged)
@@ -190,7 +192,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
         simulateSingleAttack(currentArmy, ourHits, enemy, enemyHits, 0, 0);
 }
 
-VA(0x00435b90, 0xD2)  // dc 0x3c9ac
+VA(0x00435b90, 0xD2) MAC_ADDRESS(0x03d278, 0x108)  // dc 0x3c9ac
 long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, long ourTotal, const army& enemy, long enemyTotal, unsigned char ranged, long distance) const
 {
     long ourHits;
@@ -217,7 +219,7 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, l
     return value;
 }
 
-VA(0x00435c70, 0x3D)  // dc 0x3ca94
+VA(0x00435c70, 0x3D) MAC_ADDRESS(0x03d380, 0x7c)  // dc 0x3ca94
 long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, const army& enemy, unsigned char ranged, long distance) const
 {
     long ourTotal = currentArmy.getTotalHitPoints(0);
@@ -225,7 +227,7 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, c
     return getSimpleAttackEffect(currentArmy, ourTotal, enemy, enemyTotal, ranged, distance);
 }
 
-VA(0x00435cb0, 0x10E)  // dc 0x3cae4
+VA(0x00435cb0, 0x10E) MAC_ADDRESS(0x03d3fc, 0x1dc)  // dc 0x3cae4
 long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
@@ -240,7 +242,7 @@ long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, co
             : value / 5;
 }
 
-VA(0x00435dc0, 0xF3)  // dc 0x3cba0
+VA(0x00435dc0, 0xF3) MAC_ADDRESS(0x03d5d8, 0x144)  // dc 0x3cba0
 long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
 {
     unsigned char ranged = currentArmy.canShoot(0);
@@ -268,7 +270,7 @@ long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const
 // enough behind to start trading kills for kills, and how many turns
 // ahead it is worth planning.
 
-VA(0x00435ec0, 0x1F7)  // dc 0x3cc8c
+VA(0x00435ec0, 0x1F7) MAC_ADDRESS(0x03d71c, 0x290)  // dc 0x3cc8c
 type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
 {
     unsigned char first = 1;
@@ -327,7 +329,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
 
 // DC ai_tactical.cpp:497 and Mac 0:0x3da40 retain AI_get_attack_damage;
 // Complete expands its troop-count calculation at this constructor site.
-VA(0x004360c0, 0xBC)  // dc 0x3ceb8
+VA(0x004360c0, 0xBC) MAC_ADDRESS(0x03d9ac, 0xe4)  // dc 0x3ceb8
 type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, const army* defender, const long* attackArray, searchArray* search, const type_AI_combat_parameters* combatData)
 {
     m_data = combatData;
@@ -349,7 +351,7 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 }
 
 // E:\gamedcs\ai_tactical.cpp:511
-VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
+VA(0x00436180, 0x17A) MAC_ADDRESS(0x03da90, 0x1f0)  // anchor-global, dc 0x3cf50
 long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 {
     double combatValue;
@@ -398,6 +400,7 @@ long type_AI_attack_hex_chooser::getHexAttackValue(long hex, long& checked)
 // where the same statements written out in the caller store to the
 // slot at every assignment.
 
+MAC_ADDRESS(0x03dc80, 0x6c)
 long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 {
     if (m_speed == 0)
@@ -422,7 +425,7 @@ long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 // step in the direction it faces, its attack value is added, and the
 // enemy threat taken is the SMALLER of the two hexes'.
 
-VA(0x00436300, 0x31C)  // dc 0x3d1e4
+VA(0x00436300, 0x31C) MAC_ADDRESS(0x03dcec, 0x384)  // dc 0x3d1e4
 void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
 {
     for (long direction = startDirection; direction < stopDirection; direction++) {
@@ -504,7 +507,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 // the ranged argument is 0 in both.
 // DC locals: already_checked and valid_directions. DC also calls the
 // ordinary ValidHex and min(int,int) helpers; VC6 expands both here.
-VA(0x00436620, 0x13A)  // dc 0x3c608
+VA(0x00436620, 0x13A) MAC_ADDRESS(0x03ccf4, 0x184)  // dc 0x3c608
 long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
     long alreadyChecked = 1 << enemy->m_bitIndex;
@@ -535,7 +538,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
 }
 
 // DC calls the same ValidHex and min(int,int) helpers as the multihead twin.
-VA(0x00436760, 0xDF)  // dc 0x3c708
+VA(0x00436760, 0xDF) MAC_ADDRESS(0x03ce78, 0x160)  // dc 0x3c708
 long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopCount, const army* enemy, long enemyHex, const type_AI_combat_parameters* estimate)
 {
     long direction = ourArmy->getAttackDirection(ourHex, enemy, enemyHex);
@@ -560,7 +563,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
 
 // DC ai_tactical.cpp:717/729/735 names OffsetToFront and two ValidHex
 // calls; Complete expands these header helpers in the attack search.
-VA(0x00436840, 0xEA)  // dc 0x3d440
+VA(0x00436840, 0xEA) MAC_ADDRESS(0x03e070, 0x1a0)  // dc 0x3d440
 unsigned char type_AI_attack_hex_chooser::findAttackHex()
 {
     m_bestValue = 0;
@@ -590,6 +593,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
 // E:\gamedcs\ai_tactical.cpp:744 - dc 0x3d524. No retail slot: both
 // type_spell_choice ctors inline it whole (their bytes carry the five
 // stores), so /OPT:REF dropped the out-of-line copy.
+MAC_ADDRESS(0x03e210, 0x1c)
 type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
 {
     m_spell = newSpell;
@@ -599,7 +603,7 @@ type_enchant_data::type_enchant_data(SpellID newSpell, TSkillMastery newMastery,
     m_checkResistance = 1;
 }
 
-VA(0x00436930, 0x1A)  // dc 0x3d56c
+VA(0x00436930, 0x1A) MAC_ADDRESS(0x03e22c, 0x28)  // dc 0x3d56c
 // Mac retains calls from fire shield, earthquake and faerie dragon pricing
 // at 0:0x43a1c, 0:0x45808 and 0:0x464d4.
 long type_enchant_data::getMasteryValue() const
@@ -607,7 +611,7 @@ long type_enchant_data::getMasteryValue() const
     return g_spellTraits[m_spell].m_masteryBonus[m_mastery];
 }
 
-VA(0x00436950, 0x23)  // dc 0x3d584
+VA(0x00436950, 0x23) MAC_ADDRESS(0x03e254, 0x58)  // dc 0x3d584
 type_spell_choice::type_spell_choice()
     : type_enchant_data(-1, eMasteryNone, 0, 0)
 {
@@ -617,7 +621,7 @@ type_spell_choice::type_spell_choice()
     m_castNow = 0;
 }
 
-VA(0x00436980, 0x35)  // dc 0x3d5b0
+VA(0x00436980, 0x35) MAC_ADDRESS(0x03e2ac, 0x48)  // dc 0x3d5b0
 type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery, long newPower, long newDuration)
     : type_enchant_data(newSpell, newMastery, newPower, newDuration)
 {
@@ -630,6 +634,7 @@ type_spell_choice::type_spell_choice(SpellID newSpell, TSkillMastery newMastery,
 // Original: type_AI_spellcaster::initialize; ai_tactical.cpp:779, dc 0x3d5dc.
 // Both constructors call this ordinary helper in DC. Complete expands the
 // same side/hero/flag initialization before the remaining setup operations.
+MAC_ADDRESS(0x03e2f4, 0x3c)
 void type_AI_spellcaster::initialize(combatManager* combat, long side)
 {
     m_side = side;
@@ -640,6 +645,7 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 }
 
 // E:\gamedcs\ai_tactical.cpp:817
+MAC_ADDRESS(0x03e41c, 0x84)
 type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
                                                 combatManager* combat, long side,
                                                 unsigned char creatureSpell)
@@ -675,7 +681,7 @@ type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // Mac 0+0x3e330 stores the creature byte immediately after constructing
 // m_estimate. Putting that assignment before the enemy local makes retail
 // VC6 exact (95.77% -> 100%): 22 blocks, 12 branches and 12 calls agree.
-VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
+VA(0x004369c0, 0x22B) MAC_ADDRESS(0x03e330, 0xec)  // anchor-callee, dc 0x3d604
 type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
                                          unsigned char creatureSpell)
     : m_estimate(combat, side)
@@ -695,7 +701,7 @@ type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
 
 VA_COMPGEN(0x00436bf0, 0x3A, SCALAR_DELETING_DTOR, type_AI_spellcaster)
 
-VA(0x00436c30, 0x21)  // dc 0x3d764
+VA(0x00436c30, 0x21) MAC_ADDRESS(0x03e4a0, 0x88)  // dc 0x3d764
 type_AI_spellcaster::~type_AI_spellcaster()
 {
     if (m_enemyCaster && m_ownsEnemyCaster)
@@ -710,6 +716,7 @@ type_AI_spellcaster::~type_AI_spellcaster()
 // DC 0x3d7b0 reloads m_numArmies at the loop test. Keeping that bound in
 // the condition also reproduces retail VC6's Teleport stack homes exactly.
 
+MAC_ADDRESS(0x03e528, 0xd8)
 unsigned char type_AI_spellcaster::isLastAction() const
 {
     const army* current = g_combatManager->getCurrentArmy();
@@ -725,7 +732,7 @@ unsigned char type_AI_spellcaster::isLastAction() const
     return 1;
 }
 
-VA(0x00436c60, 0x1C4)  // dc 0x3d838
+VA(0x00436c60, 0x1C4) MAC_ADDRESS(0x03e600, 0x1d4)  // dc 0x3d838
 unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
@@ -755,7 +762,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
     return 1;
 }
 
-VA(0x00436e30, 0x125)  // dc 0x3d96c
+VA(0x00436e30, 0x125) MAC_ADDRESS(0x03e7d4, 0x234)  // dc 0x3d96c
 long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target) const
 {
     if (target->is(creatureImmobilized) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -781,7 +788,7 @@ long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const h
     return value;
 }
 
-VA(0x00436f60, 0x45)  // dc 0x3da7c
+VA(0x00436f60, 0x45) MAC_ADDRESS(0x03ea08, 0x84)  // dc 0x3da7c
 long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_data caster) const
 {
     long baseDamage = g_spellTraits[caster.m_spell].m_powerFactor * caster.m_power
@@ -820,7 +827,7 @@ long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
     return value;
 }
 
-VA(0x00436fb0, 0x8A)  // dc 0x3db2c
+VA(0x00436fb0, 0x8A) MAC_ADDRESS(0x03eb24, 0xc4)  // dc 0x3db2c
 long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDamage) const
 {
     if (enemyDamage <= 0)
@@ -838,7 +845,7 @@ long type_AI_spellcaster::getMassDamageEffect(long enemyDamage, long friendlyDam
     return enemyDamage - friendlyDamage;
 }
 
-VA(0x00437040, 0x141)  // dc 0x3db84
+VA(0x00437040, 0x141) MAC_ADDRESS(0x03ebe8, 0x100)  // dc 0x3db84
 long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSkillMastery mastery, long hex) const
 {
     long friendlyDamage = 0;
@@ -864,6 +871,7 @@ long type_AI_spellcaster::getAreaEffectValue(SpellID spell, long baseDamage, TSk
 // already guarantees. DC1039/1042 name getMasteryValue and
 // InInvisibleColumn: retain those nested calls inside the ordinary helper.
 
+MAC_ADDRESS(0x03ece8, 0x100)
 void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
 {
     long baseDamage = g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
@@ -886,7 +894,7 @@ void type_AI_spellcaster::considerAreaEffect(type_spell_choice& choice) const
 // next hex, and stop the moment it answers off-field. DC
 // ai_tactical.cpp:1081 calls ValidHex for that boundary. ClearEffects
 // wipes the marks before the walk starts.
-VA(0x00437190, 0x17D)  // dc 0x3dcc4
+VA(0x00437190, 0x17D) MAC_ADDRESS(0x03ede8, 0x148)  // dc 0x3dcc4
 long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery mastery, army* target) const
 {
     long count = g_chainLightningTargets[mastery];
@@ -912,7 +920,7 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
     return getMassDamageEffect(enemyDamage, friendlyDamage);
 }
 
-VA(0x00437310, 0xD1)  // dc 0x3dde8
+VA(0x00437310, 0xD1) MAC_ADDRESS(0x03ef30, 0xe8)  // dc 0x3dde8
 void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) const
 {
     long targetSide = 1 - m_side;
@@ -942,6 +950,7 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) cons
 // boundary family preserves all five TUs' scores; flattening only that mastery
 // call while leaving the effect unpinned lowers considerSpell 98.1927 ->
 // 80.5073. Ordinary group/mass/summon helpers preserve every old code section.
+MAC_ADDRESS(0x03f018, 0xc0)
 void type_AI_spellcaster::considerMassDamage(
     type_spell_choice& choice) const
 {
@@ -956,7 +965,7 @@ void type_AI_spellcaster::considerMassDamage(
     choice.m_castNow = 1;
 }
 
-VA(0x004373f0, 0x34)  // dc 0x3df28
+VA(0x004373f0, 0x34) MAC_ADDRESS(0x03f0d8, 0x58)  // dc 0x3df28
 long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely)
@@ -968,6 +977,7 @@ long type_AI_spellcaster::getAgeValue(const army* enemy, type_enchant_data caste
 // DC ai_tactical.cpp:1158/1186.
 // Ordinary const overloads: callers expand them in retail; /OPT:REF drops
 // unreferenced retained bodies. Keep their source order before the callers.
+MAC_ADDRESS(0x03f130, 0x148)
 long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     const army* enemy, long oldDamage, long duration, double increase) const
 {
@@ -985,6 +995,7 @@ long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     return static_cast<long>((sqrt(increase) - 1.0) * total * modifier);
 }
 
+MAC_ADDRESS(0x03f278, 0x9c)
 long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     const army* enemy, long duration, double increase) const
 {
@@ -993,7 +1004,7 @@ long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     return getAttackBoostValue(ourArmy, enemy, oldDamage, duration, increase);
 }
 
-VA(0x00437430, 0x198)  // dc 0x3e17c
+VA(0x00437430, 0x198) MAC_ADDRESS(0x03f314, 0xe8)  // dc 0x3e17c
 long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
@@ -1038,7 +1049,7 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // meaningful reuse of newDamage, a reference-bound ratio and a named return
 // value also fail to reuse retail's divisor scratch (seven states, five
 // emitted objects). The named ratio and both early guards stay intact.
-VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
+VA(0x004375d0, 0x224) MAC_ADDRESS(0x03f3fc, 0x174)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
@@ -1059,7 +1070,7 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
     return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
-VA(0x00437800, 0x1F5)  // dc 0x3e3bc
+VA(0x00437800, 0x1F5) MAC_ADDRESS(0x03f570, 0x598)  // dc 0x3e3bc
 long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* enemy, long duration, long bonus) const
 {
     if (m_winLikely)
@@ -1073,7 +1084,7 @@ long type_AI_spellcaster::getAttackSkillValue(const army* ourArmy, const army* e
     return getAttackBoostValue(ourArmy, enemy, duration, increase);
 }
 
-VA(0x00438100, 0x64)  // dc 0x3e4a0
+VA(0x00438100, 0x64) MAC_ADDRESS(0x03fc4c, 0xd0)  // dc 0x3e4a0
 long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (!ourArmy->canShoot(0)) {
@@ -1087,7 +1098,7 @@ long type_AI_spellcaster::getBloodLustValue(const army* ourArmy, type_enchant_da
     return 0;
 }
 
-VA(0x00438170, 0x142)  // dc 0x3e50c
+VA(0x00438170, 0x142) MAC_ADDRESS(0x03fd1c, 0x14c)  // dc 0x3e50c
 long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (ourArmy->is(creatureNoMorale))
@@ -1102,7 +1113,7 @@ long type_AI_spellcaster::getMirthValue(const army* ourArmy, type_enchant_data c
     return static_cast<long>(total * scale * effect);
 }
 
-VA(0x004382c0, 0x1C6)  // dc 0x3e658
+VA(0x004382c0, 0x1C6) MAC_ADDRESS(0x03fe68, 0x1e8)  // dc 0x3e658
 long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data caster) const
 {
     if (enemy->is(creatureNoMorale))
@@ -1136,7 +1147,7 @@ long type_AI_spellcaster::getSorrowValue(const army* enemy, type_enchant_data ca
 // weighted by how many luck points that arm actually moves and
 // divided by 24, which is the per-point chance a lucky strike fires.
 
-VA(0x00438490, 0x32B)  // dc 0x3e87c
+VA(0x00438490, 0x32B) MAC_ADDRESS(0x040050, 0x1a0)  // dc 0x3e87c
 long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
@@ -1173,7 +1184,7 @@ long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data
     return value;
 }
 
-VA(0x004387c0, 0x14A)  // dc 0x3e9d8
+VA(0x004387c0, 0x14A) MAC_ADDRESS(0x0401f0, 0x1d0)  // dc 0x3e9d8
 long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* enemy, long duration, double increase) const
 {
     long damage = enemy->getAverageDamage(ourArmy, enemy->canShoot(0),
@@ -1201,7 +1212,7 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
     return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
 }
 
-VA(0x00438910, 0xFB)  // dc 0x3ec10
+VA(0x00438910, 0xFB) MAC_ADDRESS(0x0403c0, 0x5a0)  // dc 0x3ec10
 long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duration, long bonus) const
 {
     const army* enemy = m_worstEnemies[ourArmy->m_bitIndex].m_enemy;
@@ -1223,7 +1234,7 @@ long type_AI_spellcaster::getDefenseSkillValue(const army* ourArmy, long duratio
 //     long creature_cast = creature_spell != 0;
 //     ... SpellCastWorkChance(spell, side, enemy, 0, 1, creature_cast)
 
-VA(0x00438a10, 0xAD)  // dc 0x3ed34
+VA(0x00438a10, 0xAD) MAC_ADDRESS(0x040960, 0x174)  // dc 0x3ed34
 long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
@@ -1243,7 +1254,7 @@ long type_AI_spellcaster::getDiseaseValue(const army* enemy, type_enchant_data c
     return value;
 }
 
-VA(0x00438ac0, 0x85)  // dc 0x3eea8
+VA(0x00438ac0, 0x85) MAC_ADDRESS(0x040ad4, 0xcc)  // dc 0x3eea8
 long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data caster) const
 {
     long bonus = g_spellTraits[SPELL_PRAYER].m_masteryBonus[caster.m_mastery];
@@ -1256,7 +1267,7 @@ long type_AI_spellcaster::getPrayerValue(const army* ourArmy, type_enchant_data 
     return value;
 }
 
-VA(0x00438b50, 0x64)  // dc 0x3ef24
+VA(0x00438b50, 0x64) MAC_ADDRESS(0x040ba0, 0xd0)  // dc 0x3ef24
 long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (ourArmy->canShoot(0)) {
@@ -1270,7 +1281,7 @@ long type_AI_spellcaster::getPrecisionValue(const army* ourArmy, type_enchant_da
     return 0;
 }
 
-VA(0x00438bc0, 0x99)  // dc 0x3ef90
+VA(0x00438bc0, 0x99) MAC_ADDRESS(0x040c70, 0xd4)  // dc 0x3ef90
 long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* enemy = m_attacks[ourArmy->m_bitIndex].m_enemy;
@@ -1284,7 +1295,7 @@ long type_AI_spellcaster::getAirShieldValue(const army* ourArmy, type_enchant_da
     return getDefenseBoostValue(ourArmy, enemy, caster.m_duration, increase);
 }
 
-VA(0x00438c60, 0x99)  // dc 0x3f080
+VA(0x00438c60, 0x99) MAC_ADDRESS(0x040d44, 0xd4)  // dc 0x3f080
 long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* enemy = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
@@ -1298,7 +1309,7 @@ long type_AI_spellcaster::getShieldValue(const army* ourArmy, type_enchant_data 
     return getDefenseBoostValue(ourArmy, enemy, caster.m_duration, increase);
 }
 
-VA(0x00438d00, 0x81)  // dc 0x3f158
+VA(0x00438d00, 0x81) MAC_ADDRESS(0x040e18, 0xe8)  // dc 0x3f158
 long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data caster) const
 {
     const army* target = ourArmy->getAITarget();
@@ -1316,14 +1327,14 @@ long type_AI_spellcaster::getSlayerValue(const army* ourArmy, type_enchant_data 
     return 0;
 }
 
-VA(0x00438d90, 0x25)  // dc 0x3f208
+VA(0x00438d90, 0x25) MAC_ADDRESS(0x040f00, 0x50)  // dc 0x3f208
 long type_AI_spellcaster::getToughSkinValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getDefenseSkillValue(ourArmy, caster.m_duration,
                                    g_spellTraits[SPELL_STONE_SKIN].m_masteryBonus[caster.m_mastery]);
 }
 
-VA(0x00438dc0, 0x109)  // dc 0x3f22c
+VA(0x00438dc0, 0x109) MAC_ADDRESS(0x040f50, 0x1c4)  // dc 0x3f22c
 long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const
 {
     const combatManager* combat = g_combatManager;
@@ -1351,7 +1362,7 @@ long type_AI_spellcaster::getDisruptiveRayValue(const army* enemy, type_enchant_
     return value;
 }
 
-VA(0x00438ed0, 0x8D)  // dc 0x3f408
+VA(0x00438ed0, 0x8D) MAC_ADDRESS(0x041114, 0x114)  // dc 0x3f408
 long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly) {
@@ -1371,7 +1382,7 @@ long type_AI_spellcaster::getWeaknessValue(const army* enemy, type_enchant_data 
     return 0;
 }
 
-VA(0x00438f60, 0x199)  // dc 0x3f5f0
+VA(0x00438f60, 0x199) MAC_ADDRESS(0x041228, 0x1c0)  // dc 0x3f5f0
 long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
@@ -1393,7 +1404,7 @@ long type_AI_spellcaster::getMisfortuneValue(const army* enemy, type_enchant_dat
     return static_cast<long>(total * scale * effect);
 }
 
-VA(0x00439100, 0x169)  // dc 0x3f7f0
+VA(0x00439100, 0x169) MAC_ADDRESS(0x0413e8, 0x1d8)  // dc 0x3f7f0
 long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) == 0)
@@ -1422,6 +1433,7 @@ long type_AI_spellcaster::getBlindValue(const army* enemy, type_enchant_data cas
 // Original: type_AI_spellcaster::get_move_order_change_value; ai_tactical.cpp:1767, dc 0x3f9d0.
 // The two exchange estimates and null-target return expand in both Complete
 // callers, getMuckAndMireValue and getSpeedValue.
+MAC_ADDRESS(0x0415c0, 0x8c)
 long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 {
     const army* enemy = ourArmy->getAITarget();
@@ -1466,7 +1478,7 @@ long type_AI_spellcaster::getMoveOrderChangeValue(const army* ourArmy) const
 // carries the hoisted form). Restoring the Dreamcast-authored Is and
 // cannot_attack calls preserves those inlined retail tests and restores VC6's
 // retail stack allocation and final combat-value expression order.
-VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
+VA(0x00439270, 0x28B) MAC_ADDRESS(0x04164c, 0x330)  // anchor-vtable, dc 0x3fa24
 long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_data caster) const
 {
     if (enemy->getAITarget() == 0)
@@ -1524,7 +1536,7 @@ long type_AI_spellcaster::getMuckAndMireValue(const army* enemy, type_enchant_da
     return value;
 }
 
-VA(0x00439500, 0x4C)  // dc 0x3fc20
+VA(0x00439500, 0x4C) MAC_ADDRESS(0x04197c, 0x8c)  // dc 0x3fc20
 long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely)
@@ -1536,7 +1548,7 @@ long type_AI_spellcaster::getPoisonValue(const army* enemy, type_enchant_data ca
                                         m_estimate.m_killsOnly);
 }
 
-VA(0x00439550, 0x153)  // dc 0x3fc80
+VA(0x00439550, 0x153) MAC_ADDRESS(0x041a08, 0x16c)  // dc 0x3fc80
 long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long duration) const
 {
     if (ourArmy->getAITarget() == 0)
@@ -1574,7 +1586,7 @@ long type_AI_spellcaster::getSpeedValue(const army* ourArmy, long increase, long
     return value;
 }
 
-VA(0x004396b0, 0x2E)  // dc 0x3fdb8
+VA(0x004396b0, 0x2E) MAC_ADDRESS(0x041b74, 0x64)  // dc 0x3fdb8
 long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getSpeedValue(ourArmy, caster.getMasteryValue(),
@@ -1585,7 +1597,7 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
 // closing odds ladder is the TU's usual double one.
 
-VA(0x004396e0, 0x2BC)  // dc 0x3fde4
+VA(0x004396e0, 0x2BC) MAC_ADDRESS(0x041bd8, 0x2d8)  // dc 0x3fde4
 long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     TSpellSchool school, long level, long duration, long amount) const
 {
@@ -1642,7 +1654,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
         * getDuration(duration, ourArmy->is(creatureDone)));
 }
 
-VA(0x004399a0, 0x29)  // dc 0x40060
+VA(0x004399a0, 0x29) MAC_ADDRESS(0x041eb0, 0x58)  // dc 0x40060
 long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getProtectionValue(
@@ -1650,7 +1662,7 @@ long type_AI_spellcaster::getAirProtectionValue(const army* ourArmy, type_enchan
         g_spellTraits[SPELL_PROTECTION_FROM_AIR].m_masteryBonus[caster.m_mastery]);
 }
 
-VA(0x004399d0, 0x29)  // dc 0x4008c
+VA(0x004399d0, 0x29) MAC_ADDRESS(0x041f08, 0x58)  // dc 0x4008c
 long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     return getProtectionValue(
@@ -1658,14 +1670,14 @@ long type_AI_spellcaster::getFireProtectionValue(const army* ourArmy, type_encha
         g_spellTraits[SPELL_PROTECTION_FROM_FIRE].m_masteryBonus[caster.m_mastery]);
 }
 
-VA(0x00439a00, 0x32)  // dc 0x400b8
+VA(0x00439a00, 0x32) MAC_ADDRESS(0x041f60, 0x6c)  // dc 0x400b8
 long type_AI_spellcaster::getEarthProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     long amount = caster.getMasteryValue();
     return getProtectionValue(ourArmy, eSchoolEarth, 5, caster.m_duration, amount);
 }
 
-VA(0x00439a40, 0x32)  // dc 0x400f4
+VA(0x00439a40, 0x32) MAC_ADDRESS(0x041fcc, 0x6c)  // dc 0x400f4
 long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_enchant_data caster) const
 {
     long amount = caster.getMasteryValue();
@@ -1676,6 +1688,7 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 // Complete expands it in the spell valuations. Mac retains direct calls
 // from mirth, sorrow, defense boost, misfortune, blind, curse and
 // forgetfulness, with defense boost passing zero for movedThisTurn.
+MAC_ADDRESS(0x042038, 0x94)
 double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
 {
     double result;
@@ -1691,7 +1704,7 @@ double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn)
     return result;
 }
 
-VA(0x00439a80, 0x135)  // dc 0x40248
+VA(0x00439a80, 0x135) MAC_ADDRESS(0x0420cc, 0x18c)  // dc 0x40248
 long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpellsOnly) const
 {
     long value = 0;
@@ -1723,7 +1736,7 @@ long type_AI_spellcaster::getCancelValue(army* currentArmy, unsigned char badSpe
     return value;
 }
 
-VA(0x00439bc0, 0x6E)  // dc 0x40348
+VA(0x00439bc0, 0x6E) MAC_ADDRESS(0x042258, 0x4f0)  // dc 0x40348
 long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
@@ -1732,7 +1745,7 @@ long type_AI_spellcaster::getDispelValue(const army* ourArmy, type_enchant_data 
 
 // DC ai_tactical.cpp:2199 names the by-value min wrapper; its parameter
 // copies reproduce retail's healed/damage stack slots.
-VA(0x00439c30, 0x10F)  // dc 0x403c0
+VA(0x00439c30, 0x10F) MAC_ADDRESS(0x042748, 0x61c)  // dc 0x403c0
 long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data caster) const
 {
     army currentArmy = *ourArmy;
@@ -1755,7 +1768,7 @@ long type_AI_spellcaster::getCureValue(const army* ourArmy, type_enchant_data ca
     return value;
 }
 
-VA(0x00439d40, 0x94)  // dc 0x40570
+VA(0x00439d40, 0x94) MAC_ADDRESS(0x042d64, 0x538)  // dc 0x40570
 long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
@@ -1766,7 +1779,7 @@ long type_AI_spellcaster::getAntimagicValue(const army* ourArmy, type_enchant_da
     return value;
 }
 
-VA(0x00439de0, 0x94)  // dc 0x405d4
+VA(0x00439de0, 0x94) MAC_ADDRESS(0x04329c, 0x520)  // dc 0x405d4
 long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_data caster) const
 {
     army testArmy = *ourArmy;
@@ -1794,7 +1807,7 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // of the deal than a shooter does.
 // Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
 
-VA(0x00439e80, 0x290)  // dc 0x40628
+VA(0x00439e80, 0x290) MAC_ADDRESS(0x0437bc, 0x20c)  // dc 0x40628
 long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
 {
     long mult = 1;
@@ -1832,7 +1845,7 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
 // is docked a flat 20 off the mastery row before the `<= 0` bail.
 // Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
 
-VA(0x0043a110, 0x222)  // dc 0x407e8
+VA(0x0043a110, 0x222) MAC_ADDRESS(0x0439c8, 0x1ac)  // dc 0x407e8
 long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (m_winLikely)
@@ -1858,7 +1871,7 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
-VA(0x0043a340, 0xBE)  // dc 0x40928
+VA(0x0043a340, 0xBE) MAC_ADDRESS(0x043b74, 0xf0)  // dc 0x40928
 long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target) const
 {
     unsigned char ranged = enemy->canShoot(0);
@@ -1879,7 +1892,7 @@ long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target)
                                                  m_estimate.m_killsOnly);
 }
 
-VA(0x0043a400, 0xF8)  // dc 0x40a08
+VA(0x0043a400, 0xF8) MAC_ADDRESS(0x043c64, 0xdc)  // dc 0x40a08
 long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data caster) const
 {
     std::vector<army*> targets;
@@ -1899,7 +1912,7 @@ long type_AI_spellcaster::getBerserkValue(const army* enemy, type_enchant_data c
 // the two stack temporaries around each reference-returning selector. Clang
 // cannot choose between this project's int and double overloads for Win32
 // long, but VC6 selects the int wrapper and reproduces retail exactly.
-VA(0x0043a500, 0x16E)  // dc 0x40ac0
+VA(0x0043a500, 0x16E) MAC_ADDRESS(0x043d40, 0x228)  // dc 0x40ac0
 long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data caster) const
 {
     if (m_winLikely || enemy->cannotAttack())
@@ -1926,7 +1939,7 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
     return total;
 }
 
-VA(0x0043a670, 0x291)  // dc 0x40bb8
+VA(0x0043a670, 0x291) MAC_ADDRESS(0x043f68, 0x2cc)  // dc 0x40bb8
 void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group) const
 {
     TEnchantValue valueFunc = getEnchantmentFunction(choice->m_spell);
@@ -1974,7 +1987,7 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
 // Complete expands their Army.h bodies in this loop. The +0x198 row is
 // read HERE by spell id, which is what the split of army.h's spell-row
 // view out of the round view exists for.
-VA(0x0043a910, 0x150)  // dc 0x40dc8
+VA(0x0043a910, 0x150) MAC_ADDRESS(0x044234, 0x1dc)  // dc 0x40dc8
 void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group) const
 {
     if (spellTargetsASingleArmy(choice->m_spell, choice->m_mastery)) {
@@ -2020,7 +2033,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // all 32 retail blocks, 23 branches and five calls now agree. Restoring the
 // direct loop bound in isLastAction closes the remaining stack-slot difference.
 
-VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
+VA(0x0043aa60, 0x235) MAC_ADDRESS(0x044410, 0x218)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 {
     unsigned char moved = 0;
@@ -2085,7 +2098,7 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 // blocks, 29 branches and nine calls agree. The remaining byte difference
 // is a loop-counter stack home at -0x8 rather than retail's -0xc. Earlier
 // named-local and volatile probes on the expanded tail were flat or worse.
-VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
+VA(0x0043aca0, 0x2AE) MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 {
     const army* ourArmy = g_combatManager->m_armies[m_side];
@@ -2155,7 +2168,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
 // the ordinary helper here: all 35 retail blocks, 24 branches and five calls
 // match exactly.
 
-VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
+VA(0x0043af50, 0x284) MAC_ADDRESS(0x044908, 0x274)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const army* healedArmy, long targetHex) const
 {
     const army* victim = g_combatManager->m_armies[m_side];
@@ -2203,7 +2216,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice, const arm
     }
 }
 
-VA(0x0043b1e0, 0xF2)  // dc 0x414a0
+VA(0x0043b1e0, 0xF2) MAC_ADDRESS(0x044b7c, 0x134)  // dc 0x414a0
 void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 {
     const army* candidateHealedArmy = g_combatManager->m_armies[m_side];
@@ -2231,7 +2244,7 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
     }
 }
 
-VA(0x0043b2e0, 0x85)  // dc 0x41558
+VA(0x0043b2e0, 0x85) MAC_ADDRESS(0x044cb0, 0xe4)  // dc 0x41558
 long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data caster) const
 {
     if (!m_winLikely) {
@@ -2251,7 +2264,7 @@ long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data c
     return 0;
 }
 
-VA(0x0043b370, 0x18E)  // dc 0x41624
+VA(0x0043b370, 0x18E) MAC_ADDRESS(0x044d94, 0x1f8)  // dc 0x41624
 long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data caster) const
 {
     if ((m_enemyCanAttack & (1 << enemy->m_bitIndex)) != 0 && !m_estimate.m_killsOnly && !m_winLikely) {
@@ -2276,7 +2289,7 @@ long type_AI_spellcaster::getCurseValue(const army* enemy, type_enchant_data cas
     return 0;
 }
 
-VA(0x0043b500, 0x17D)  // dc 0x41890
+VA(0x0043b500, 0x17D) MAC_ADDRESS(0x044f8c, 0x1e0)  // dc 0x41890
 long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_data caster) const
 {
     if (enemy->canShoot(0)) {
@@ -2301,14 +2314,14 @@ long type_AI_spellcaster::getForgetfulnessValue(const army* enemy, type_enchant_
     return 0;
 }
 
-VA(0x0043b680, 0x10)  // dc 0x41a74
+VA(0x0043b680, 0x10) MAC_ADDRESS(0x04516c, 0x8)  // dc 0x41a74
 long type_AI_spellcaster::unimplemented(const army* enemy,
                                         type_enchant_data caster) const
 {
     return 0;
 }
 
-VA(0x0043b690, 0x251)  // dc 0x41a7c
+VA(0x0043b690, 0x251) MAC_ADDRESS(0x045174, 0x500)  // dc 0x41a7c
 type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(SpellID spell) const
 {
     switch (spell) {
@@ -2406,7 +2419,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // segment is already at zero strength - which is what the running
 // minimum is for.
 
-VA(0x0043b8f0, 0x224)  // dc 0x41c30
+VA(0x0043b8f0, 0x224) MAC_ADDRESS(0x045674, 0x330)  // dc 0x41c30
 void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
 {
     if (m_side == 1)
@@ -2470,6 +2483,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
 // DC 0x41e5c and dispatcher line 3167 prove this ordinary helper boundary.
 // Line 3098 calls get_mastery_value; line 3107 writes cast_now after the split.
 
+MAC_ADDRESS(0x0459a4, 0xb0)
 void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 {
     if (m_winLikely)
@@ -2486,7 +2500,7 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
     choice.m_castNow = 1;
 }
 
-VA(0x0043bb20, 0x3FC)  // dc 0x41ed4
+VA(0x0043bb20, 0x3FC) MAC_ADDRESS(0x045a54, 0x22c)  // dc 0x41ed4
 void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 {
     switch (choice->m_spell) {
@@ -2545,7 +2559,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
-VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
+VA(0x0043bf20, 0x119) MAC_ADDRESS(0x045c80, 0x190)  // anchor-global, dc 0x420ac
 void type_AI_spellcaster::setMeleeEnemies()
 {
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];
@@ -2565,6 +2579,7 @@ void type_AI_spellcaster::setMeleeEnemies()
 }
 
 // Original: type_AI_spellcaster::set_worst_enemies; ai_tactical.cpp:3221, dc 0x42170.
+MAC_ADDRESS(0x045e10, 0x84)
 void type_AI_spellcaster::setWorstEnemies()
 {
     for (long i = 0; i < g_combatManager->m_numArmies[m_side]; i++) {
@@ -2575,6 +2590,7 @@ void type_AI_spellcaster::setWorstEnemies()
 }
 
 // Original: type_AI_spellcaster::add_enemy; ai_tactical.cpp:3237, dc 0x42220.
+MAC_ADDRESS(0x045e94, 0xa0)
 void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
                                  const army* enemy, unsigned char ranged)
 {
@@ -2602,7 +2618,7 @@ void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
 // definitions preserve the source calls and the reference parameter used
 // for each enemy-data accumulator.
 
-VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
+VA(0x0043c040, 0x2E6) MAC_ADDRESS(0x045f34, 0x244)  // anchor-global, dc 0x4227c
 void type_AI_spellcaster::findEnemyAttacks()
 {
     m_canBeAttacked = 0;
@@ -2644,7 +2660,7 @@ void type_AI_spellcaster::findEnemyAttacks()
 
 // DC ai_tactical.cpp:3312 names GetSpellTime for the Bloodlust guard;
 // Complete expands its spell-influence accessor.
-VA(0x0043c330, 0x16C)  // dc 0x423f4
+VA(0x0043c330, 0x16C) MAC_ADDRESS(0x046178, 0xd8)  // dc 0x423f4
 long type_AI_spellcaster::getOgreMageValue(const army* target) const
 {
     if (target->getSpellTime(SPELL_BLOODLUST))
@@ -2660,7 +2676,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
     return choice.m_value;
 }
 
-VA(0x0043c4a0, 0x180)  // dc 0x424c4
+VA(0x0043c4a0, 0x180) MAC_ADDRESS(0x046250, 0x140)  // dc 0x424c4
 long type_AI_spellcaster::getCaliphValue(const army* target) const
 {
     long total = 0;
@@ -2689,7 +2705,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
     return total / count;
 }
 
-VA(0x0043c620, 0x1DD)
+VA(0x0043c620, 0x1DD) MAC_ADDRESS(0x046390, 0x198)
 long type_AI_spellcaster::getFaerieDragonSpellValue(
         long hex, long power, SpellID spell)
 {
@@ -2740,6 +2756,7 @@ long type_AI_spellcaster::getFaerieDragonSpellValue(
 // act (creature bit 6 clear). The walk is the TU's `count-- > 0`
 // pointer form, the same one consider_teleport carries.
 
+MAC_ADDRESS(0x046528, 0xb0)
 void type_AI_spellcaster::checkSimulation()
 {
     const army* enemy = g_combatManager->m_armies[m_enemySide];
@@ -2762,6 +2779,7 @@ void type_AI_spellcaster::checkSimulation()
 // at line 3436. Complete also excludes Arrow Towers. Retail expands this
 // ordinary helper into 0x43c800; the bracket has no retained body for it.
 
+MAC_ADDRESS(0x0465d8, 0x8c)
 unsigned char type_AI_spellcaster::spellsNotRequired() const
 {
     if (!m_winLikely)
@@ -2789,7 +2807,7 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 // traits bits: bit 0 gates it at all, and bit 9 marks the spells that
 // still make sense while RETREATING.
 
-VA(0x0043c800, 0x308)  // dc 0x426b0
+VA(0x0043c800, 0x308) MAC_ADDRESS(0x046664, 0x350)  // dc 0x426b0
 unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
 {
     type_spell_choice best;

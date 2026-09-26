@@ -24,7 +24,7 @@ extern "C" {
 DATA(0x006ab15c) int errno;
 }
 
-VA(0x004d6c50, 0x76)
+VA(0x004d6c50, 0x76) MAC_ADDRESS(0x221b9c, 0x7c)
 TGzFile::TGzFile(const char* path, const char* mode)
     : m_file(gzopen(path, mode))
 {
@@ -37,19 +37,19 @@ VA_COMPGEN(0x004d6d00, 0x5, IMPLICIT_DTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d10, 0x1C, IMPLICIT_COPY_CTOR, TOpenFailure)
 VA_COMPGEN(0x004d6d30, 0x21, SCALAR_DELETING_DTOR, TOpenFailure)
 
-VA(0x004d6d60, 0x19)
+VA(0x004d6d60, 0x19) MAC_ADDRESS(0x221c6c, 0x6c)
 TGzFile::~TGzFile()
 {
     gzclose(m_file);
 }
 
-VA(0x004d6d80, 0x16)
+VA(0x004d6d80, 0x16) MAC_ADDRESS(0x221cd8, 0x24)
 int TGzFile::read(void* data, int size)
 {
     return gzread(m_file, data, size);
 }
 
-VA(0x004d6da0, 0x16)
+VA(0x004d6da0, 0x16) MAC_ADDRESS(0x221cfc, 0x24)
 int TGzFile::write(const void* data, int size)
 {
     return gzwrite(m_file, const_cast<void*>(data), size);

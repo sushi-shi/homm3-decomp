@@ -70,7 +70,7 @@ public:
         addWidget(w, -1);
     }
 
-    VA(0x00575430, 0x8f)  // dc 0x12ef28
+    VA(0x00575430, 0x8f) MAC_ADDRESS(0x160ca4, 0x68)  // dc 0x12ef28
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {

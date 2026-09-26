@@ -25,7 +25,7 @@ static long ftol(double d)
 
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
-VA(0x0044df70, 0xA3)
+VA(0x0044df70, 0xA3) MAC_ADDRESS(0x05be20, 0xc4)
 Bitmap16Bit::Bitmap16Bit(int w, int h)
     : resource(0, RESOURCE_TYPE_NONE),
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2)
@@ -40,7 +40,7 @@ Bitmap16Bit::Bitmap16Bit(int w, int h)
     }
 }
 
-VA(0x0044e050, 0xA5)  // in-span, name/type base ctor + vftable 0x63b9c8
+VA(0x0044e050, 0xA5) MAC_ADDRESS(0x05bee4, 0xc0)  // in-span, name/type base ctor + vftable 0x63b9c8
 Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
     : resource(name, RESOURCE_TYPE_BITMAP16),
       m_imageSize(w * h * 2), m_width(w), m_height(h), m_pitch(w * 2),
@@ -81,7 +81,7 @@ Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
     m_referenced = 0;
 }
 
-VA(0x0044e100, 0x29)  // dc 0x50ebc
+VA(0x0044e100, 0x29) MAC_ADDRESS(0x05bfa4, 0x7c)  // dc 0x50ebc
 Bitmap16Bit::~Bitmap16Bit()
 {
     if (m_map && !m_referenced)
@@ -139,7 +139,7 @@ void Bitmap16Bit::remap(int oldGreenBits)
     }
 }
 
-VA(0x0044e240, 0x07)  // vtable slot 2: fixed object extent + pixel bytes
+VA(0x0044e240, 0x07) MAC_ADDRESS(0x05c020, 0xc)  // vtable slot 2: fixed object extent + pixel bytes
 unsigned int Bitmap16Bit::getSize() const
 {
     return sizeof(*this) + m_dataSize;
@@ -160,7 +160,7 @@ void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
         memcpy(m_map, data, m_dataSize);
 }
 
-VA(0x0044e250, 0x5D)  // dc 0x51154
+VA(0x0044e250, 0x5D) MAC_ADDRESS(0x05c02c, 0x68)  // dc 0x51154
 void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 {
     clear();
@@ -177,6 +177,7 @@ void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
 // Complete inlines its scalar resets and borrowed-buffer release; the DC-only
 // surface-release arm has no corresponding field or operation in retail.
 
+MAC_ADDRESS(0x05c094, 0x64)
 void Bitmap16Bit::clear()
 {
     m_width = 0;
@@ -236,7 +237,7 @@ int Bitmap16Bit::importPCXFile(const char* filename)
         static_cast<const unsigned char*>(static_cast<const void*>(pointer)) \
         + offset))
 
-VA(0x0044e2b0, 0x139)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
+VA(0x0044e2b0, 0x139) MAC_ADDRESS(0x05c0f8, 0x158)  // order-map(DC bitmap16.obj, immediately before Grab), dc 0x51378
 void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
                        unsigned short* dst, int dstX, int dstY, int dstWidth,
                        int dstHeight, int dstPitch, bool flipped) const
@@ -288,7 +289,7 @@ void Bitmap16Bit::draw(int srcX, int srcY, int srcWidth, int srcHeight,
 #undef BITMAP16_BYTE_OFFSET
 
 // E:\gamedcs\bitmap16.cpp:625
-VA(0x0044e3f0, 0xC9)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
+VA(0x0044e3f0, 0xC9) MAC_ADDRESS(0x05c250, 0xf8)  // order-map(DC bitmap16.obj, between Draw and FillRect), dc 0x51468
 void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
                        int srcWidth, int srcHeight, int srcPitch)
 {
@@ -338,7 +339,7 @@ void Bitmap16Bit::grab(const unsigned short* src, int srcX, int srcY,
 // pixel offset 17, beyond one-past 16. The allocation does not include padding
 // that would make this valid portable C++. The earlier guarded repair scored
 // 82.1964%; tested integral offsets and zero-column origins do not match.
-VA(0x0044e4c0, 0x7D)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
+VA(0x0044e4c0, 0x7D) MAC_ADDRESS(0x05c348, 0xec)  // anchor-caller(textWidget::Draw, FadeToBlack) + order-map(DC bitmap16.obj), dc 0x5150c
 void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 {
     if (w > m_width - x)
@@ -364,7 +365,7 @@ void Bitmap16Bit::fillRect(int x, int y, int w, int h, unsigned short color)
 // Row-boundary residual (95.2113%): step only on a visited following row.
 // The last-row guard scores 94.3662%, visited-row offsets 70.2113%; original
 // 100% forms end+x at the bottom edge and fails the native pointer control.
-VA(0x0044e540, 0xA3)
+VA(0x0044e540, 0xA3) MAC_ADDRESS(0x05c434, 0x11c)
 void Bitmap16Bit::frameRect(int x, int y, int w, int h,
                             unsigned short color)
 {
@@ -396,7 +397,7 @@ void Bitmap16Bit::frameRect(int x, int y, int w, int h,
 // Row-boundary residual (82.6377%): an integral byte displacement advances
 // after each row, but the pointer is formed only on a visit. Next-row guards
 // score 77.4203%, last-row guards 64.5072%; the DC pixel/mask work is retained.
-VA(0x0044E5F0, 0xA4)
+VA(0x0044E5F0, 0xA4) MAC_ADDRESS(0x05c550, 0x1a8)
 void Bitmap16Bit::darken(int x, int y, int w, int h)
 {
     if (w > m_width - x)
@@ -433,7 +434,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 // Dreamcast line 808 and retail both advance the mask and bitmap row pointers
 // after the inner pixel loop. Keep DC GetMap/GetPitch and their different
 // pitch meanings (dc 0x52570/0x5256c), not a width-to-pitch substitution.
-VA(0x0044e6a0, 0xE0)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
+VA(0x0044e6a0, 0xE0) MAC_ADDRESS(0x05c6f8, 0x10c)  // anchor-caller(UpdateGrid, seven pushes) + order-map(DC bitmap16.obj), dc 0x516a8
 void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
                          int sx, int sy)
 {
@@ -468,7 +469,7 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
     }
 }
 
-VA(0x0044e780, 0x1BF)  // dc 0x5177c
+VA(0x0044e780, 0x1BF) MAC_ADDRESS(0x05c804, 0x1b0)  // dc 0x5177c
 void Bitmap16Bit::colorize(int x, int y, int width, int height,
                            unsigned short color)
 {
@@ -525,7 +526,7 @@ void Bitmap16Bit::colorize(int x, int y, int width, int height,
 // Sixteen source states / eight reproduced objects isolate this from the
 // caller's early-return scope (DC 884/885), plain ushort row/pixel pointers,
 // and the helper's ordinary declaration; those source restorations are flat.
-VA(0x0044e940, 0x3B8)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
+VA(0x0044e940, 0x3B8) MAC_ADDRESS(0x05c9b4, 0x328)  // anchor-caller(the 16-bit Colorize tail call) + order-map(DC bitmap16.obj), dc 0x519c4
 void Bitmap16Bit::colorize(int x, int y, int w, int h, float hue,
                            float saturation)
 {

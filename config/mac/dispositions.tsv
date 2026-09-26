@@ -1,0 +1,4 @@
+# MANUALLY MANAGED - evidenced Mac dispositions for source functions
+# without a MAC_ADDRESS. identity is a `homm3 mac parity` identity;
+# disposition is inlined_only, mac_only, windows_only, folded, platform_rewritten.
+identity	disposition	evidence

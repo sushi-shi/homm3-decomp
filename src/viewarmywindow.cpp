@@ -97,7 +97,7 @@ DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
 // constructor really does use assignment. No union is needed to work
 // around a de-inlined enum adapter once the owning member is typed.
 // E:\gamedcs\viewarmywindow.cpp:55
-VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
+VA(0x005f3360, 0x7B5) MAC_ADDRESS(0x1ff748, 0x650)  // direct caller + CrStkPU.pcx, dc 0x190abc
 TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
@@ -237,7 +237,7 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 //    !show_ok early clean-up rewrites its incoming value first.
 
 // E:\gamedcs\viewarmywindow.cpp:140
-VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
+VA(0x005f3b50, 0x6B2) MAC_ADDRESS(0x1ffd98, 0x4f8)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                                  const hero* thisHero, const town* thisTown,
                                  int x0, int y0, int upgrade,
@@ -337,7 +337,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     }
 }
 
-VA(0x005f4210, 0x3C1)  // dc 0x19148c
+VA(0x005f4210, 0x3C1) MAC_ADDRESS(0x200290, 0x2a4)  // dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
                                  unsigned char showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
@@ -390,7 +390,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     }
 }
 
-VA(0x005f45e0, 0xD5)  // dc 0x191660
+VA(0x005f45e0, 0xD5) MAC_ADDRESS(0x200534, 0xc4)  // dc 0x191660
 TViewArmyWindow::~TViewArmyWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -399,7 +399,7 @@ TViewArmyWindow::~TViewArmyWindow()
     }
 }
 
-VA(0x005f46c0, 0x12C)  // dc 0x1916d4
+VA(0x005f46c0, 0x12C) MAC_ADDRESS(0x2005f8, 0x198)  // dc 0x1916d4
 int TViewArmyWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
@@ -437,12 +437,13 @@ int TViewArmyWindow::convertID2HelpID(int id) const
 
 // Original: TViewArmyWindow::QuickView; viewarmywindow.cpp:366, dc 0x191764.
 // HillFortWindow's right-click path invokes the common quick-view wrapper.
+MAC_ADDRESS(0x200790, 0x2c)
 void TViewArmyWindow::quickView()
 {
     g_windowManager->doQuickView(this);
 }
 
-VA(0x005f47f0, 0x5C)  // dc 0x1917a4
+VA(0x005f47f0, 0x5C) MAC_ADDRESS(0x2007bc, 0xa8)  // dc 0x1917a4
 void TViewArmyWindow::doModal()
 {
     g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
@@ -485,7 +486,7 @@ DATA(0x0068c660) static int g_lastViewArmyHoverId = -1;
 // it. Exit-flag declaration and upgrade-input lifetime controls are flat;
 // the source operators and their shared text lifetime stay canonical.
 // E:\gamedcs\viewarmywindow.cpp:404
-VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
+VA(0x005f4850, 0x7D7) MAC_ADDRESS(0x200864, 0x814)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::windowHandler(message& msg)
 {
     unsigned char exitFlag;
@@ -658,7 +659,7 @@ int TViewArmyWindow::windowHandler(message& msg)
 // the five NOPs before the next function at 0x5f5060 are padding, so the
 // missing retail inventory row owns 43 bytes. The authored fastcall
 // message-reference body reproduces all 43 bytes without relocations.
-VA(0x005f5030, 0x2B)  // Complete-only callback: address taken by battle constructor
+VA(0x005f5030, 0x2B) MAC_ADDRESS(0x201078, 0x40)  // Complete-only callback: address taken by battle constructor
 int viewArmyCastSpellHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT
@@ -678,6 +679,7 @@ int viewArmyCastSpellHandler(message& msg)
 // viewarmywindow score unchanged. VC6 also emits standalone bodies in its
 // object; their absence from retail does not establish an inline declaration.
 
+MAC_ADDRESS(0x2010b8, 0x118)
 void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
 {
     bitmapBorder* plate = new bitmapBorder(
@@ -696,6 +698,7 @@ void TViewArmyWindow::createBackgroundWidget(const hero* thisHero)
     m_widgets.push_back(plate);
 }
 
+MAC_ADDRESS(0x2011d0, 0xfc)
 void TViewArmyWindow::createNameWidget(const char* name)
 {
     m_widgets.push_back(new textWidget(
@@ -709,7 +712,7 @@ void TViewArmyWindow::createNameWidget(const char* name)
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
 // E:\gamedcs\viewarmywindow.cpp:646
-VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
+VA(0x005f5060, 0x2D6) MAC_ADDRESS(0x2012cc, 0x27c)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
 void TViewArmyWindow::createPortraitWidget(const char* spriteName,
                                              int townType, int count)
 {
@@ -731,7 +734,7 @@ void TViewArmyWindow::createPortraitWidget(const char* spriteName,
     }
 }
 
-VA(0x005f5340, 0x28E)  // widget IDs + primary-skill table + format literals
+VA(0x005f5340, 0x28E) MAC_ADDRESS(0x201548, 0x1f0)  // widget IDs + primary-skill table + format literals
 void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
                                            int currentAttackSkill)
 {
@@ -749,7 +752,7 @@ void TViewArmyWindow::createAttackWidget(int normalAttackSkill,
         font::PRIMARY, ATTACK_ID, 6, 0, 8));
 }
 
-VA(0x005f55d0, 0x28E)  // widget IDs + primary-skill table + format literals
+VA(0x005f55d0, 0x28E) MAC_ADDRESS(0x201738, 0x1f0)  // widget IDs + primary-skill table + format literals
 void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
                                             int currentDefenseSkill)
 {
@@ -784,7 +787,7 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 // reference/accessor evidence at rows 735/738 and preserves its 669 bytes.
 //
 // E:\gamedcs\viewarmywindow.cpp:707
-VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
+VA(0x005f5860, 0x2C2) MAC_ADDRESS(0x201928, 0x270)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
                                            const hero* ourHero)
 {
@@ -817,7 +820,7 @@ void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
 // gets neither the label nor the count. Inside, the base/modified pair is
 // the same presentation the primary skills use, on one shared y.
 // E:\gamedcs\viewarmywindow.cpp:735
-VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
+VA(0x005f5b30, 0x29D) MAC_ADDRESS(0x201b98, 0x210)  // widget IDs + text-record field + format literals, dc 0x1923c0
 void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
                                           int normalShots, int currentShots)
 {
@@ -838,7 +841,7 @@ void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
     }
 }
 
-VA(0x005f5dd0, 0x297)  // widget IDs + text-record field + format literals
+VA(0x005f5dd0, 0x297) MAC_ADDRESS(0x201da8, 0x204)  // widget IDs + text-record field + format literals
 void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
                                               int currentHitpoints)
 {
@@ -857,7 +860,7 @@ void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
         font::PRIMARY, HEALTH_ID, 6, 0, 8));
 }
 
-VA(0x005f6070, 0x27D)  // widget IDs + text-record field + integer format
+VA(0x005f6070, 0x27D) MAC_ADDRESS(0x201fac, 0x1e0)  // widget IDs + text-record field + integer format
 void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 {
     m_widgets.push_back(new textWidget(
@@ -872,7 +875,7 @@ void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
         font::PRIMARY, HEALTH_REMAINING_ID, 6, 0, 8));
 }
 
-VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
+VA(0x005f62f0, 0x2BE) MAC_ADDRESS(0x20218c, 0x240)  // widget IDs + text-record field + clamped formats
 void TViewArmyWindow::createSpeedWidget(int normalSpeed,
                                           int currentSpeed)
 {
@@ -897,6 +900,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 // limit. Retail's battle constructor likewise reloads +0x68 after allocation.
 // The helper owns this store; caching the getter result in each caller loses
 // that reload. The group constructor uses the same canonical helper.
+MAC_ADDRESS(0x2023cc, 0x130)
 void TViewArmyWindow::createMoraleWidget(int newMorale)
 {
     m_morale = newMorale;
@@ -908,6 +912,7 @@ void TViewArmyWindow::createMoraleWidget(int newMorale)
 
 // DC 0x1928a2/0x1928ae and retail's battle +0x7c access prove the same
 // store-then-reload ownership as createMoraleWidget.
+MAC_ADDRESS(0x2024fc, 0x130)
 void TViewArmyWindow::createLuckWidget(int newLuck)
 {
     m_luck = newLuck;
@@ -921,7 +926,7 @@ void TViewArmyWindow::createLuckWidget(int newLuck)
 // subscripting and separate advances of the widget id, queue index and x.
 // Retail confirms the same two adjacent three-int member rows.
 // E:\gamedcs\viewarmywindow.cpp:837
-VA(0x005f65b0, 0x2B5)  // queue iterator arithmetic + SpellInt.def + widget ids
+VA(0x005f65b0, 0x2B5) MAC_ADDRESS(0x20262c, 0x1b0)  // queue iterator arithmetic + SpellInt.def + widget ids
 void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
@@ -946,7 +951,7 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
     }
 }
 
-VA(0x005f6870, 0x264)  // dc 0x192a28
+VA(0x005f6870, 0x264) MAC_ADDRESS(0x2027dc, 0x1c4)  // dc 0x192a28
 void TViewArmyWindow::createOkWidget()
 {
     m_widgets.push_back(new bitmapBorder(
@@ -963,7 +968,7 @@ void TViewArmyWindow::createOkWidget()
     m_widgets.push_back(accept);
 }
 
-VA(0x005f6ae0, 0x265)  // dc 0x192ad8
+VA(0x005f6ae0, 0x265) MAC_ADDRESS(0x2029a0, 0x1ac)  // dc 0x192ad8
 void TViewArmyWindow::createUpgradeWidget()
 {
     m_widgets.push_back(new bitmapBorder(
@@ -979,7 +984,7 @@ void TViewArmyWindow::createUpgradeWidget()
     m_widgets.push_back(upgrade);
 }
 
-VA(0x005f6d50, 0x265)  // dc 0x192b40
+VA(0x005f6d50, 0x265) MAC_ADDRESS(0x202b4c, 0x1ac)  // dc 0x192b40
 void TViewArmyWindow::createDismissWidget()
 {
     m_widgets.push_back(new bitmapBorder(
@@ -995,6 +1000,7 @@ void TViewArmyWindow::createDismissWidget()
     m_widgets.push_back(dismiss);
 }
 
+MAC_ADDRESS(0x202cf8, 0xec)
 void TViewArmyWindow::createRolloverWidget()
 {
     m_rolloverWidget = new bitmapBackedTextWidget(

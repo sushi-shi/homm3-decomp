@@ -219,7 +219,7 @@ DATA(0x00679c80)
 const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
     g_heroSpecificAbilitiesImp;
 
-VA(0x004d71a0, 0x71)  // dc 0xca728
+VA(0x004d71a0, 0x71) MAC_ADDRESS(0x0f1cac, 0xec)  // dc 0xca728
 unsigned char initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
@@ -247,7 +247,7 @@ const char* hero::getSpecificAbilityText()
     return g_heroSpecificAbilities[m_id].m_longText;
 }
 
-VA(0x004d7220, 0x11)  // dc 0xca7d4
+VA(0x004d7220, 0x11) MAC_ADDRESS(0x0f1d98, 0x1c)  // dc 0xca7d4
 const char* hero::getSpecificAbilityTextShort()
 {
     return g_heroSpecificAbilities[m_id].m_shortText;
@@ -257,6 +257,7 @@ const char* hero::getSpecificAbilityTextShort()
 // Source-private in the Dreamcast roster and called only as the successful
 // tail of initialize_ballistics_table. Complete keeps that helper boundary
 // in source but /Ob2 expands it into the caller and emits no separate body.
+MAC_ADDRESS(0x0f1db4, 0x294)
 static unsigned char initializeMoveConstants()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -292,7 +293,7 @@ static unsigned char initializeMoveConstants()
     return 1;
 }
 
-VA(0x004d7240, 0x223)  // dc 0xca984
+VA(0x004d7240, 0x223) MAC_ADDRESS(0x0f2048, 0x1cc)  // dc 0xca984
 // DC public ?initialize_ballistics_table@@YA_NXZ is bool, but its
 // initialize_move_constants callee returns unsigned char. VC6 normalizes that
 // tail call for bool; Complete forwards the byte unchanged, proving the
@@ -329,7 +330,7 @@ unsigned char initializeBallisticsTable()
     return initializeMoveConstants();
 }
 
-VA(0x004d7470, 0x1F)  // dc 0xcaaa0
+VA(0x004d7470, 0x1F) MAC_ADDRESS(0x0f2214, 0x30)  // dc 0xcaaa0
 type_obscuring_object::type_obscuring_object()
 {
     initialize();
@@ -343,7 +344,7 @@ mine* type_obscuring_object::getObscuredMine() const
     return 0;
 }
 
-VA(0x004d7490, 0x35)  // dc 0xcab04
+VA(0x004d7490, 0x35) MAC_ADDRESS(0x0f2244, 0x60)  // dc 0xcab04
 town* type_obscuring_object::getObscuredTown() const
 {
     if (m_valid && m_obscuredType == TOWN && m_wasTrigger)
@@ -351,7 +352,7 @@ town* type_obscuring_object::getObscuredTown() const
     return 0;
 }
 
-VA(0x004d74d0, 0x1D)  // dc 0xcab3c
+VA(0x004d74d0, 0x1D) MAC_ADDRESS(0x0f22a4, 0x3c)  // dc 0xcab3c
 void type_obscuring_object::initialize()
 {
     m_x = -1;
@@ -363,7 +364,7 @@ void type_obscuring_object::initialize()
     m_extraInfo = 0;
 }
 
-VA(0x004d74f0, 0xD6)  // dc 0xcab54
+VA(0x004d74f0, 0xD6) MAC_ADDRESS(0x0f22e0, 0x194)  // dc 0xcab54
 bool type_obscuring_object::load(void* inputHandle)
 {
     TAbstractFile* infile = static_cast<TAbstractFile*>(inputHandle);
@@ -391,7 +392,7 @@ bool type_obscuring_object::load(void* inputHandle)
 
 // Dreamcast hero.cpp:445/449 calls get_location and game::get_cell.
 // Retail VC6 expands both header helpers at this site.
-VA(0x004d75d0, 0x10A)  // dc 0xcac58
+VA(0x004d75d0, 0x10A) MAC_ADDRESS(0x0f2474, 0x170)  // dc 0xcac58
 void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
 {
     if (!m_valid) {
@@ -411,7 +412,7 @@ void type_obscuring_object::obscureCell(TAdventureObjectType newType, long id)
 }
 
 // Dreamcast hero.cpp:475 calls game::get_cell; retail expands it.
-VA(0x004d76e0, 0xD0)  // dc 0xcacfc
+VA(0x004d76e0, 0xD0) MAC_ADDRESS(0x0f25e4, 0x104)  // dc 0xcacfc
 void type_obscuring_object::restoreCell()
 {
     if (m_valid) {
@@ -426,7 +427,7 @@ void type_obscuring_object::restoreCell()
     }
 }
 
-VA(0x004d77b0, 0xD6)  // dc 0xcad80
+VA(0x004d77b0, 0xD6) MAC_ADDRESS(0x0f26e8, 0x194)  // dc 0xcad80
 bool type_obscuring_object::save(void* outputHandle)
 {
     TAbstractFile* outfile = static_cast<TAbstractFile*>(outputHandle);
@@ -452,7 +453,7 @@ bool type_obscuring_object::save(void* outputHandle)
     return success;
 }
 
-VA(0x004d7890, 0x64)  // dc 0xcae60
+VA(0x004d7890, 0x64) MAC_ADDRESS(0x0f287c, 0xac)  // dc 0xcae60
 void hero::hire(int playerId, type_point point)
 {
     playerData* player = &g_game->m_players[playerId];
@@ -468,7 +469,7 @@ void hero::hire(int playerId, type_point point)
 
 // Dreamcast hero.cpp:569 calls Hero.h's obscure_cell wrapper; retail
 // expands that wrapper to the base obscuring-object call.
-VA(0x004d7900, 0x11B)  // dc 0xcaedc
+VA(0x004d7900, 0x11B) MAC_ADDRESS(0x0f2928, 0x18c)  // dc 0xcaedc
 void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 {
     playerData* player = &g_game->m_players[playerId];
@@ -532,7 +533,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // not apply and the depth lever (spelling the site one wrapper deeper)
 // has no shallower or deeper form to choose from here.
 
-VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
+VA(0x004d7a20, 0x69F) MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
     unsigned int uintBuffer;
@@ -695,7 +696,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 // Dinkumware's c_str() null fallback inlined, the same expansion
 // HeroFn_004D8FB0 carries.
 
-VA(0x004d80c0, 0x526)  // dc 0xcb698
+VA(0x004d80c0, 0x526) MAC_ADDRESS(0x0f34b8, 0x974)  // dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
     if (!type_obscuring_object::save(outfile))
@@ -842,7 +843,7 @@ int hero::save(TAbstractFile* outfile)
 // (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
 // default-ctor pair) where retail keeps all of those expanded, and only
 // customName's _Tidy out of line.
-VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
+VA(0x004d85f0, 0x12E) MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
     HOMM3_RELEASE_VERIFY(m_townSpecialGrantedMask.size());
@@ -906,7 +907,7 @@ hero::hero()
 // to 92.81%; entry-tested for loops gave 44 CFG blocks and 85.67%. Mac-only
 // fill_n/unsigned-for artifact controls do not reproduce retail's in-loop
 // TOC load of the empty artifact ID, so those controls are not retained.
-VA(0x004d8720, 0x410)  // anchor-bracket + layout, dc 0xcbe80
+VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
     const int& initialSex = g_heroTraits[index].m_sex;
@@ -1060,7 +1061,7 @@ void hero::initialize(short index)
 // The equipped-slot probe reads m_equipped directly in Mac and compiles to
 // the same VC6 bytes as the canonical getArtifact accessor call. Using the
 // direct field removes one extra CodeWarrior call in this body.
-VA(0x004d8b30, 0x434)  // Complete member interface, ret 4
+VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
     m_order = setup->m_objRef;
@@ -1200,7 +1201,7 @@ void hero::initialize(const HeroExtra* setup)
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
 // (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
 // the 64-byte-stride class record at 0x67dcec.
-VA(0x004d8f70, 0x3E)
+VA(0x004d8f70, 0x3E) MAC_ADDRESS(0x0f4a74, 0x84)
 const char* hero::heroFn004D8F70()
 {
     if (m_id == CLASS_NAME_OVERRIDE_HERO_ID && g_inCampaign &&
@@ -1214,7 +1215,7 @@ const char* hero::heroFn004D8F70()
 // 0x63a608), otherwise strcmp's the +0x23 name band against
 // akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
 // only while the live name still equals its default.
-VA(0x004d8fb0, 0xA0)
+VA(0x004d8fb0, 0xA0) MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::heroFn004D8FB0()
 {
     const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
@@ -1235,7 +1236,7 @@ const char* hero::heroFn004D8FB0()
     return heroName;
 }
 
-VA(0x004d9050, 0x20)  // dc 0xcc0bc
+VA(0x004d9050, 0x20) MAC_ADDRESS(0x0f4bc0, 0x5c)  // dc 0xcc0bc
 unsigned char hero::belongsToHuman() const
 {
     if (m_owner < 0)
@@ -1243,7 +1244,7 @@ unsigned char hero::belongsToHuman() const
     return g_game->isHuman(m_owner) != 0;
 }
 
-VA(0x004d9070, 0x45)  // dc 0xcc0e4
+VA(0x004d9070, 0x45) MAC_ADDRESS(0x0f4c1c, 0x68)  // dc 0xcc0e4
 long hero::getEquippedArtifacts(unsigned char countWarMachines) const
 {
     long count = 0;
@@ -1257,7 +1258,7 @@ long hero::getEquippedArtifacts(unsigned char countWarMachines) const
     return count;
 }
 
-VA(0x004d90c0, 0x4A)  // dc 0xcc138
+VA(0x004d90c0, 0x4A) MAC_ADDRESS(0x0f4c84, 0x6c)  // dc 0xcc138
 long hero::getNumberInBackpack(unsigned char countWarMachines) const
 {
     long count = 0;
@@ -1272,7 +1273,7 @@ long hero::getNumberInBackpack(unsigned char countWarMachines) const
     return count;
 }
 
-VA(0x004d9110, 0x4C)  // dc 0xcc1b0
+VA(0x004d9110, 0x4C) MAC_ADDRESS(0x0f4cf0, 0x50)  // dc 0xcc1b0
 hero_seqid hero::getStandSequence()
 {
     switch (m_facing) {
@@ -1290,7 +1291,7 @@ hero_seqid hero::getStandSequence()
     return hs_stand_e;
 }
 
-VA(0x004d9160, 0x4C)  // dc 0xcc1e8
+VA(0x004d9160, 0x4C) MAC_ADDRESS(0x0f4d40, 0x54)  // dc 0xcc1e8
 hero_seqid boat::getStandSequence()
 {
     switch (m_facing) {
@@ -1308,7 +1309,7 @@ hero_seqid boat::getStandSequence()
     return hs_stand_e;
 }
 
-VA(0x004d91b0, 0x3F)  // dc 0xcc220
+VA(0x004d91b0, 0x3F) MAC_ADDRESS(0x0f4d94, 0x68)  // dc 0xcc220
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
@@ -1322,7 +1323,7 @@ unsigned char hero::hasArtifact(int whichArtifact) const
     return 0;
 }
 
-VA(0x004d91f0, 0x70)  // dc 0xcc26c
+VA(0x004d91f0, 0x70) MAC_ADDRESS(0x0f4dfc, 0xc4)  // dc 0xcc26c
 unsigned char hero::isWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
@@ -1346,7 +1347,7 @@ unsigned char hero::isWieldingArtifact(int whichArtifact) const
 // register assignment. Prior switch-head, case-order, loop-form and local-type
 // variants were byte-flat with that fallback; initializing artifact before
 // the switch and reversing the equipped compare measured worse.
-VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
+VA(0x004d9260, 0x68) MAC_ADDRESS(0x0f4ec0, 0x8c)  // dc-bracket forced, dc 0xcc2a8
 void hero::destroySiegeWeaponArtifact(int creatureType)
 {
     int artifact;
@@ -1374,7 +1375,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
     }
 }
 
-VA(0x004d92d0, 0x59)  // dc 0xcc300
+VA(0x004d92d0, 0x59) MAC_ADDRESS(0x0f4f4c, 0xa0)  // dc 0xcc300
 void hero::useSpell(int cost)
 {
     int remainingMana = max(m_mana - cost, 0);
@@ -1383,7 +1384,7 @@ void hero::useSpell(int cost)
         g_currentPlayer->isLocalHuman())
         g_advManager->m_advWindow->updateHeroLocator(-1, 1, 1);
 }
-VA(0x004d9330, 0x1A)  // dc 0xcc348
+VA(0x004d9330, 0x1A) MAC_ADDRESS(0x0f4fec, 0x1c)  // dc 0xcc348
 void hero::addSpell(int whichSpell)
 {
     m_inSpellbook[whichSpell] = 1;
@@ -1396,6 +1397,7 @@ void hero::addSpell(int whichSpell)
 // grants in a returned bitset: retail 0x4d9386..0x4d93d2 constructs a
 // separate three-dword result, tests akSpellTraits.schoolBits, and copies
 // it into the artifact result. The other three Tome arms repeat this.
+MAC_ADDRESS(0x0f5008, 0xb4)
 std::bitset<70> markSpells(TSpellSchool school)
 {
     std::bitset<70> granted(0);
@@ -1442,7 +1444,7 @@ std::bitset<70> markSpells(TSpellSchool school)
 // 84.86% before the level helper); its call shape is identical to the
 // `(0)` ctor's at all five sites, so no byte is given up by spelling it
 // this way.
-VA(0x004d9350, 0x272)  // retail artifact-id dispatch + bitset return, retail-only
+VA(0x004d9350, 0x272) MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<70> markArtifactSpells(int artifactId)
 {
     std::bitset<70> result(0);
@@ -1482,7 +1484,7 @@ std::bitset<70> markArtifactSpells(int artifactId)
     return result;
 }
 
-VA(0x004d95d0, 0x212)  // dc 0xcc38c
+VA(0x004d95d0, 0x212) MAC_ADDRESS(0x0f52d0, 0x298)  // dc 0xcc38c
 void hero::updateSpellList()
 {
     std::copy(m_inSpellbook, m_inSpellbook + NUM_SPELLS, m_availableSpells);
@@ -1527,6 +1529,7 @@ void hero::updateSpellList()
 }
 
 // Original: THeroScreenWindow::HeroMessageUpdate; hero.cpp:1594, dc 0xcc49c
+MAC_ADDRESS(0x0f5568, 0xb4)
 void THeroScreenWindow::heroMessageUpdate(char* text)
 {
     message msg;
@@ -1540,6 +1543,7 @@ void THeroScreenWindow::heroMessageUpdate(char* text)
 }
 
 // Original: hero::HeroScreenUpdate; hero.cpp:1606, dc 0xcc4e0
+MAC_ADDRESS(0x0f561c, 0x9c)
 void hero::heroScreenUpdate()
 {
     // DC1607 constructs this message before UpdateArmies at1609, although
@@ -1578,7 +1582,7 @@ void hero::heroScreenUpdate()
 // army cursor improved score but contradicted the DC loop source shape.
 // Mac retains the same body/call shape but binds its three global pointers
 // to r28/r29/r30 in a different order (97.7431%).
-VA(0x004d97f0, 0x1A0)  // source-shape + retail body, dc 0xcc540
+VA(0x004d97f0, 0x1A0) MAC_ADDRESS(0x0f56b8, 0x240)  // source-shape + retail body, dc 0xcc540
 void hero::updateArmies()
 {
     message msg;
@@ -1639,7 +1643,7 @@ void hero::updateArmies()
 // plus the quick/normal dialog type to NormalDialog. DC confirms the same
 // calls and arguments; the old HeroScreenUpdate association was positional.
 // E:\gamedcs\hero.cpp:1709, dc 0xcc708
-VA(0x004d9990, 0x65)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
+VA(0x004d9990, 0x65) MAC_ADDRESS(0x0f58f8, 0xd0)  // stat-dialog semantics and two-argument ABI, dc 0xcc708
 void hero::viewStat(int whichStat, int isQuickView)
 {
     unsigned short statValue = getPrimarySkill(whichStat);
@@ -1653,7 +1657,7 @@ void hero::viewStat(int whichStat, int isQuickView)
 }
 
 // the same dialog-type pair viewStat uses (4 quick, 1 normal),
-VA(0x004d9a00, 0x128)  // dc 0xcc75c
+VA(0x004d9a00, 0x128) MAC_ADDRESS(0x0f59c8, 0x124)  // dc 0xcc75c
 void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
 {
     if (artifact->m_artifactId == ARTIFACT_SPELL_SCROLL) {
@@ -1671,7 +1675,7 @@ void hero::viewArtifact(const type_artifact* artifact, int isQuickView)
     }
 }
 
-VA(0x004d9b30, 0x18D)  // combination-artifact caller + settled retail ABI
+VA(0x004d9b30, 0x18D) MAC_ADDRESS(0x0f5aec, 0x104)  // combination-artifact caller + settled retail ABI
 int hero::heroFn004D9B30(int artifact)
 {
     // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
@@ -1701,7 +1705,7 @@ int hero::heroFn004D9B30(int artifact)
 // Residual (94.2%): prologue instruction SCHEDULING only - the same
 // instructions, permuted around the two pushes - plus the unwind-table
 // addend in the frame push, which is a relocation and not a state count.
-VA(0x004d9cc0, 0x200)  // retail body + settled arity; old DC bracket retired
+VA(0x004d9cc0, 0x200) MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
 int hero::heroFn004D9CC0(int artifact)
 {
     int assembled =
@@ -1723,7 +1727,7 @@ int hero::heroFn004D9CC0(int artifact)
 // retail VC6 expands the Hero.h point helper at that call site.
 // Complete releases the visited town slot before broadcasting death;
 // the older Dreamcast source does those operations in reverse order.
-VA(0x004d9ec0, 0x4D3)  // dc 0xcc800
+VA(0x004d9ec0, 0x4D3) MAC_ADDRESS(0x0f5d3c, 0x554)  // dc 0xcc800
 void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
 {
     unsigned char freedTownVisitor = 0;
@@ -1820,7 +1824,7 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         g_game->setRandomHeroArmies(m_id, 0, 1);
 }
 
-VA(0x004da3a0, 0x76)  // dc 0xccb80
+VA(0x004da3a0, 0x76) MAC_ADDRESS(0x0f6290, 0xb8)  // dc 0xccb80
 int hero::getExperience(int level)
 {
     if (level <= 12)
@@ -1835,7 +1839,7 @@ int hero::getExperience(int level)
     return total;
 }
 
-VA(0x004da420, 0xE4)  // dc 0xccc68
+VA(0x004da420, 0xE4) MAC_ADDRESS(0x0f6348, 0x48)  // dc 0xccc68
 int hero::getExperienceIncrement(int level)
 {
     return getExperience(level + 1) - getExperience(level);
@@ -1850,6 +1854,7 @@ int hero::getExperienceIncrement(int level)
 // Dreamcast retain a callable GetLevel body; Mac giveExperience calls it at
 // 0x1041f4. VC6 expands this body in giveExperience and has no retained row.
 
+MAC_ADDRESS(0x0f6390, 0xd0)
 int hero::getLevel(int experience)
 {
     int heroLevel = 1;
@@ -1872,7 +1877,7 @@ int hero::getLevel(int experience)
     return heroLevel - 1;
 }
 
-VA(0x004da510, 0x1F1)  // dc 0xccd9c
+VA(0x004da510, 0x1F1) MAC_ADDRESS(0x0f6460, 0x220)  // dc 0xccd9c
 void hero::applyBattleWinTemps()
 {
     m_moraleBonus = m_luckBonus = 0;
@@ -1922,7 +1927,7 @@ void hero::applyBattleWinTemps()
         m_flags -= 0x200000;
 }
 
-VA(0x004da710, 0x5)  // dc 0xccf68
+VA(0x004da710, 0x5) MAC_ADDRESS(0x0f6680, 0x20)  // dc 0xccf68
 void hero::applyBattleLossTemps()
 {
     applyBattleWinTemps();
@@ -2039,6 +2044,7 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // spelling reaches retail's four separately scheduled calls.
 // Mac retains this ordinary member at 0:f66a0..f66f0 and calls it from
 // both level-up selection paths. Its original source spelling is unknown.
+MAC_ADDRESS(0x0f66a0, 0x50)
 bool hero::isLevelUpCampaignOverride() const
 {
     if (!g_inCampaign)
@@ -2048,7 +2054,7 @@ bool hero::isLevelUpCampaignOverride() const
     return m_id == LEVEL_UP_OVERRIDE_HERO_ID;
 }
 
-VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
+VA(0x004da720, 0x5DD) MAC_ADDRESS(0x0f6ac0, 0x664)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::checkLevel()
 {
     int newLevel = getLevel(m_experience);
@@ -2221,7 +2227,7 @@ void hero::checkLevel()
 // controls. The remaining Mac school-loop accumulator/index register choice
 // begins at +0x184; changing the enum local to int or widening the
 // accumulator declaration scope was byte-flat at 74.1803%.
-VA(0x004dad00, 0x283)  // anchor-caller + arity, dc 0xccf78
+VA(0x004dad00, 0x283) MAC_ADDRESS(0x0f66f0, 0x3d0)  // anchor-caller + arity, dc 0xccf78
 TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, TSkillMastery maxLevel, TSecondarySkill excluded)
 {
     const THeroClassTraits& classTraits =
@@ -2347,6 +2353,7 @@ TSecondarySkill getSkillAward(const hero* currentHero, TSkillMastery minLevel, T
 // owns zero initialization; lines 2349/2358 set WIDGET_DRAWN inside each arm.
 // Keep both source stores and let VC6 decide which expansions share them.
 
+MAC_ADDRESS(0x0f7124, 0xc8)
 void updateArtifactSlot(long id, TArtifact artifact)
 {
     message msg;
@@ -2365,7 +2372,7 @@ void updateArtifactSlot(long id, TArtifact artifact)
     g_heroScreenWindow->broadcastMessage(msg);
 }
 
-VA(0x004daf90, 0x23A)  // dc 0xcd6e8
+VA(0x004daf90, 0x23A) MAC_ADDRESS(0x0f71ec, 0x124)  // dc 0xcd6e8
 void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 {
     TArtifact artifact = TArtifact(g_currentHero->getArtifact(slot).m_artifactId);
@@ -2408,7 +2415,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 // expansion in SetupHeroView, which retail DOES inline, and the ratchet
 // caught the cost (WindowHandler 71.10 -> 72.89 but SetupHeroView 99.53
 // -> 98.69). A per-call-site lever would be needed; VC6 has none.
-VA(0x004db1d0, 0x17)  // dc 0xcd740
+VA(0x004db1d0, 0x17) MAC_ADDRESS(0x0f7310, 0x50)  // dc 0xcd740
 void THeroScreenWindow::updateAllSlots()
 {
     for (long slot = ARTIFACT_SLOT_FIRST;
@@ -2421,13 +2428,14 @@ void THeroScreenWindow::updateAllSlots()
 // UpdateBackpack, and `inline` reproduces the absence (the
 // strip::DrawNumber precedent).
 
+MAC_ADDRESS(0x0f7360, 0x38)
 inline void updateBackpackItem(int i)
 {
     updateArtifactSlot(i + 0x28,
                        TArtifact(g_currentHero->getBackpack(i).m_artifactId));
 }
 
-VA(0x004db1f0, 0x160)  // dc 0xcd790
+VA(0x004db1f0, 0x160) MAC_ADDRESS(0x0f7398, 0x13c)  // dc 0xcd790
 void updateBackpack()
 {
     message arrows;
@@ -2462,7 +2470,7 @@ void updateBackpack()
     g_heroScreenWindow->broadcastMessage(arrows);
 }
 
-VA(0x004db350, 0x86)  // dc 0xcd86c
+VA(0x004db350, 0x86) MAC_ADDRESS(0x0f74d4, 0x7c)  // dc 0xcd86c
 void type_artifact::getRolloverText(char* buffer) const
 {
     if (m_artifactId == ARTIFACT_NONE)
@@ -2489,7 +2497,7 @@ void type_artifact::getRolloverText(char* buffer) const
 // statement positions closes retail VC6 from 88.4025% to 100%: 33/33 CFG
 // blocks, 21 branches, and all 13 named calls agree.
 
-VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
+VA(0x004db3e0, 0x277) MAC_ADDRESS(0x0f7550, 0x15c)  // anchor-bracket, dc 0xcd8b8
 std::string type_artifact::getDescription() const
 {
     if (m_artifactId != ARTIFACT_SPELL_SCROLL)
@@ -2559,7 +2567,7 @@ std::string type_artifact::getDescription() const
 // nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
          // row 32
 
-VA(0x004db660, 0x728)  // dc 0xcd9c4
+VA(0x004db660, 0x728) MAC_ADDRESS(0x0f76ac, 0x7b8)  // dc 0xcd9c4
 void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE)
@@ -2759,6 +2767,7 @@ void THeroScreenWindow::updateHeroScreenStatusBar(message* msg)
 // else-chain and positive combined/nested drag guards are score-flat; the
 // combined guard follows both tests attributed to DC 2765.
 // Dreamcast procedure: dc 0xcdf30.
+MAC_ADDRESS(0x0f7e64, 0x42c)
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact, spell_book_window.
@@ -2857,7 +2866,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
 }
 
 
-VA(0x004dbd90, 0x1E)  // dc 0xce140
+VA(0x004dbd90, 0x1E) MAC_ADDRESS(0x0f8290, 0x38)  // dc 0xce140
 long hero::getLastBackpackIndex() const
 {
     for (long slot = 64; slot--; ) {
@@ -2867,7 +2876,7 @@ long hero::getLastBackpackIndex() const
     return -1;
 }
 
-VA(0x004dbdb0, 0x57)  // dc 0xce168
+VA(0x004dbdb0, 0x57) MAC_ADDRESS(0x0f82c8, 0x94)  // dc 0xce168
 void hero::rotateBackpackLeft()
 {
     long last = getLastBackpackIndex();
@@ -2879,7 +2888,7 @@ void hero::rotateBackpackLeft()
     m_backpack[0] = saved;
 }
 
-VA(0x004dbe10, 0x68)  // dc 0xce1cc
+VA(0x004dbe10, 0x68) MAC_ADDRESS(0x0f835c, 0x90)  // dc 0xce1cc
 void hero::rotateBackpackRight()
 {
     long last = getLastBackpackIndex();
@@ -2891,7 +2900,7 @@ void hero::rotateBackpackRight()
     m_backpack[last] = saved;
 }
 
-VA(0x004dbe80, 0xA4)
+VA(0x004dbe80, 0xA4) MAC_ADDRESS(0x0f83ec, 0xc8)
 // Complete's shared combination predicate: proxy assignment keeps this retained
 // body exact while recovering set/any boundaries in its expanded callers.
 // Mac 0:0xf83ec calls bitset<144> set and none through a two-word proxy.
@@ -2907,7 +2916,7 @@ unsigned char hero::heroFn004DBE80(int combination)
     return missingComponents.none();
 }
 
-VA(0x004dbf30, 0x133)
+VA(0x004dbf30, 0x133) MAC_ADDRESS(0x0f84b4, 0x184)
 unsigned char hero::heroFn004DBF30(int combination, long slot)
 {
     std::bitset<144> components =
@@ -2935,7 +2944,7 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
         -1);
 }
 
-VA(0x004dc070, 0x87)
+VA(0x004dc070, 0x87) MAC_ADDRESS(0x0f8638, 0xb4)
 void hero::heroFn004DC070(long slot)
 {
     int combination =
@@ -2997,7 +3006,7 @@ void hero::heroFn004DC070(long slot)
 // is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
 // repeating the global player lookup gives 72.5198%. Neither recovers the
 // entry register choices or first bitset-write scheduling.
-VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
+VA(0x004dc100, 0x217) MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
@@ -3048,7 +3057,7 @@ void hero::heroFn004DC100(long slot)
 // spelling scored 90.55%; restoring this higher-level operation matches
 // Windows exactly while preserving HasBuilding and the other helpers.
 
-VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
+VA(0x004dc320, 0x793) MAC_ADDRESS(0x0f88cc, 0x5dc)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::getMoraleDescription() const
 {
     int morale = 0;
@@ -3211,7 +3220,7 @@ std::string hero::getMoraleDescription() const
 // DC hero.cpp:3028 and :3149 name the text and town helpers. Preserve both.
 // The mist rung uses append(const char*); its explicit strlen/append expansion
 // scored 79.96%. The ordinary overload restores Windows exact bytes.
-VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
+VA(0x004dcac0, 0x7E0) MAC_ADDRESS(0x0f8ea8, 0x5d4)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::string hero::getLuckDescription() const
 {
     int luck = 0;
@@ -3336,6 +3345,7 @@ std::string hero::getLuckDescription() const
 // Together these recover WindowHandler 80.8337 -> 88.6383%; order alone
 // gives 87.9454%, helpers + order without the named msg gives 88.5720%.
 // Dreamcast procedure: dc 0xcea3c.
+MAC_ADDRESS(0x0f947c, 0x208)
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact and msg.
@@ -3389,7 +3399,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
 // {0x200, 10, 10}, matching `int ExitDialog(message*)`.
 // Retail emits it AFTER the two description bodies, where the DC source
 // has it before the console-only ShowWidgets page switch (reviewed below).
-VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
+VA(0x004dd2a0, 0x2C) MAC_ADDRESS(0x0f9684, 0x2c)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
 int THeroScreenWindow::exitDialog(message& msg)
 {
     g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
@@ -3567,7 +3577,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // move: it is still the last block, at fn+0x1291.  So the `else` is not the
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
-VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
+VA(0x004dd2d0, 0x143E) MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::windowHandler(message& msg)
 {
     int exitFlag = 0;
@@ -3944,7 +3954,7 @@ int THeroScreenWindow::windowHandler(message& msg)
 // instead creates eight skill icon/name/mastery triples in four rows here;
 // setupHeroView (0x4e1a50) fills all eight without moving their positions.
 // Complete has no skill-scroll arrows or adventure-manager scroll_offset.
-VA(0x004de710, 0x2C52)  // dc 0xd0184
+VA(0x004de710, 0x2C52) MAC_ADDRESS(0x0fa5f0, 0x78b4)  // dc 0xd0184
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
 {
@@ -4377,7 +4387,7 @@ VA_COMPGEN(0x004e1520, 0x21, SCALAR_DELETING_DTOR, THeroScreenWindow)
 
 #endif  // @carcass
 
-VA(0x004e1550, 0xA2)  // dc 0xd2be8
+VA(0x004e1550, 0xA2) MAC_ADDRESS(0x101ea4, 0xfc)  // dc 0xd2be8
 THeroScreenWindow::~THeroScreenWindow()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
@@ -4393,7 +4403,7 @@ THeroScreenWindow::~THeroScreenWindow()
     }
 }
 
-VA(0x004e1600, 0xCB)  // dc 0xd2c80
+VA(0x004e1600, 0xCB) MAC_ADDRESS(0x101fa0, 0x110)  // dc 0xd2c80
 void THeroScreenWindow::updateHeroLocator(int which)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
@@ -4421,6 +4431,7 @@ void THeroScreenWindow::updateHeroLocator(int which)
 }
 
 // E:\gamedcs\hero.cpp:4231
+MAC_ADDRESS(0x1020b0, 0x5c)
 void THeroScreenWindow::updateHeroLocators()
 {
     widgetClearStatus(0x8a,
@@ -4429,7 +4440,7 @@ void THeroScreenWindow::updateHeroLocators()
         updateHeroLocator(locator);
 }
 
-VA(0x004e16d0, 0x130)  // dc 0xd2d58
+VA(0x004e16d0, 0x130) MAC_ADDRESS(0x10210c, 0x224)  // dc 0xd2d58
 void hero::updateStats()
 {
     message msg;
@@ -4460,7 +4471,7 @@ void hero::updateStats()
     g_heroScreenWindow->broadcastMessage(msg);
 }
 
-VA(0x004e1800, 0x24F)  // dc 0xd2e80
+VA(0x004e1800, 0x24F) MAC_ADDRESS(0x102330, 0x27c)  // dc 0xd2e80
 int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickView)
 {
     g_heroScreenNoDismiss = noDismiss;
@@ -4511,7 +4522,7 @@ int heroView(int heroID, int noDismiss, int alreadyFaded, unsigned char quickVie
     return 0;
 }
 
-VA(0x004e1a50, 0x7BB)  // dc 0xd30b0
+VA(0x004e1a50, 0x7BB) MAC_ADDRESS(0x1025ac, 0x918)  // dc 0xd30b0
 void THeroScreenWindow::setupHeroView()
 {
     int noDismiss = g_heroScreenNoDismiss;
@@ -4755,7 +4766,7 @@ int hero::takeSS(int whichSS, int numLevelsToTake)
     return oldLevel - m_skillLevel[whichSS];
 }
 
-VA(0x004e22d0, 0x61)  // dc 0xd37c0
+VA(0x004e22d0, 0x61) MAC_ADDRESS(0x102ec4, 0x98)  // dc 0xd37c0
 int hero::giveSS(int whichSS, int numLevelsToGive)
 {
     HOMM3_RELEASE_VERIFY(whichSS >= 0
@@ -4778,12 +4789,13 @@ int hero::giveSS(int whichSS, int numLevelsToGive)
 // The DC formal type is non-const, and its source body tests skillOrder.
 // SetupHeroView calls this ordinary TU helper; no header force-inline view.
 // E:\gamedcs\hero.cpp:4689, dc 0xd38d8
+MAC_ADDRESS(0x103018, 0x20)
 unsigned char hero::hasSecondarySkill(int whichSkill)
 {
     return m_skillOrder[whichSkill] > 0;
 }
 
-VA(0x004e2340, 0x2A)  // dc 0xd3830
+VA(0x004e2340, 0x2A) MAC_ADDRESS(0x102f5c, 0x4c)  // dc 0xd3830
 int hero::creatureTypeCount(int creatureType)
 {
     int count = 0;
@@ -4794,7 +4806,7 @@ int hero::creatureTypeCount(int creatureType)
     return count;
 }
 
-VA(0x004e2370, 0x26)  // dc 0xd3874
+VA(0x004e2370, 0x26) MAC_ADDRESS(0x102fa8, 0x38)  // dc 0xd3874
 void hero::upgradeCreatures(int sourceCreatureType, int destCreatureType)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
@@ -4803,7 +4815,7 @@ void hero::upgradeCreatures(int sourceCreatureType, int destCreatureType)
     }
 }
 
-VA(0x004e23a0, 0x27)  // dc 0xd38b0
+VA(0x004e23a0, 0x27) MAC_ADDRESS(0x102fe0, 0x38)  // dc 0xd38b0
 int hero::getNthSS(int which)
 {
     for (int skill = 0; skill < 28; skill++) {
@@ -4813,7 +4825,7 @@ int hero::getNthSS(int which)
     return -1;
 }
 
-VA(0x004e23d0, 0x176)  // dc 0xd38ec
+VA(0x004e23d0, 0x176) MAC_ADDRESS(0x103038, 0x198)  // dc 0xd38ec
 void hero::transferArtifacts(hero* src)
 {
     if (!src)
@@ -4893,7 +4905,7 @@ void hero::transferArtifacts(hero* src)
 // Testing the exhausted component index instead loses 1.2018 points. This
 // predicate is Complete-only; the retail capacity checks and one spared
 // component establish the result, without inventing a source helper.
-VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
+VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
     if (g_game->m_gameVersion < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
@@ -5048,7 +5060,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
 // _Eos direction is a confirmed OVER-inline (base 0 calls vs retail 1),
 // whose doctrinal lever is caller-shrink, and a 437-byte body with no
 // liftable block and no DC-named helper has no dose to give.
-VA(0x004e2840, 0x1B5)  // retail-only, hero member, ret 8; size absorbs the
+VA(0x004e2840, 0x1B5) MAC_ADDRESS(0x1034d8, 0x124)  // retail-only, hero member, ret 8; size absorbs the
 unsigned char hero::heroFn004E2840(long artifact, long slot)
 {
     if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
@@ -5070,7 +5082,7 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
     return accepted;
 }
 
-VA(0x004e2a00, 0x1C7)  // dc 0xd39d8
+VA(0x004e2a00, 0x1C7) MAC_ADDRESS(0x1035fc, 0x258)  // dc 0xd39d8
 unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 {
     if (slot == -1) {
@@ -5153,7 +5165,7 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 // previously byte-flat under a different TU context; the latter now closes
 // the Windows register order. A local equipped-slot reference shortened only
 // one index.
-VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
+VA(0x004e2bd0, 0x174) MAC_ADDRESS(0x103854, 0x200)  // anchor-bracket, dc 0xd3ad0
 void hero::removeArtifact(long slot)
 {
     type_artifact artifact = m_equipped[slot];
@@ -5195,7 +5207,7 @@ void hero::removeArtifact(long slot)
         updateSpellList();
 }
 
-VA(0x004e2d50, 0x7E)  // dc 0xd3b74
+VA(0x004e2d50, 0x7E) MAC_ADDRESS(0x103a54, 0xb0)  // dc 0xd3b74
 void hero::removeBackpackArtifact(short slot)
 {
     if (m_backpack[slot].m_artifactId == -1)
@@ -5209,7 +5221,7 @@ void hero::removeBackpackArtifact(short slot)
     m_backpackCount--;
 }
 
-VA(0x004e2dd0, 0xFC)  // dc 0xd3bec
+VA(0x004e2dd0, 0xFC) MAC_ADDRESS(0x103b04, 0xd4)  // dc 0xd3bec
 unsigned char hero::removeArtifact(TArtifact artifact)
 {
     if (artifact == ARTIFACT_SPELL_SCROLL)
@@ -5231,7 +5243,7 @@ unsigned char hero::removeArtifact(TArtifact artifact)
     return 0;
 }
 
-VA(0x004e2ed0, 0xB2)  // dc 0xd3c64
+VA(0x004e2ed0, 0xB2) MAC_ADDRESS(0x103bd8, 0x9c)  // dc 0xd3c64
 std::string hero::getBackpackError(TArtifact artifact) const
 {
     if (m_backpackCount >= 64) {
@@ -5241,7 +5253,7 @@ std::string hero::getBackpackError(TArtifact artifact) const
                          g_artifactTraits[artifact].m_name);
 }
 
-VA(0x004e2f90, 0xD1)  // dc 0xd3cfc
+VA(0x004e2f90, 0xD1) MAC_ADDRESS(0x103c74, 0x134)  // dc 0xd3cfc
 unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 {
     if (m_backpackCount >= 64)
@@ -5314,7 +5326,7 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 // string/EH callees still take a different inlining path. Mac is 93.8830%,
 // with entry register assignment the first difference. Prompt copy and
 // destructor call order already agree on Mac; retain their source lifetime.
-VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
+VA(0x004e3070, 0x339) MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global, dc 0xd3de4
 unsigned char hero::giveArtifact(const type_artifact* artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
@@ -5384,7 +5396,7 @@ int hero::giveRandomArtifact()
 // getExperience result. The one-run why-reg model classifies it as C1 handle
 // order and proposes no source-local edit. Mac 95.7071%, same 396-byte size
 // and all 11 calls; remaining bytes schedule normalDialog's literal arguments.
-VA(0x004e33b0, 0x24A)  // dc 0xd3e88
+VA(0x004e33b0, 0x24A) MAC_ADDRESS(0x104098, 0x18c)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
                          unsigned char showCapWindow)
 {
@@ -5417,7 +5429,7 @@ int hero::giveExperience(int howMuch, int checkForLevelUp,
     return newLevel - entryLevel;
 }
 
-VA(0x004e3600, 0xB2)  // dc 0xd3fb8
+VA(0x004e3600, 0xB2) MAC_ADDRESS(0x104224, 0x128)  // dc 0xd3fb8
 void hero::giveResource(int whichRes, int howMuch)
 {
     if (whichRes >= 0 && whichRes <= NUM_RESOURCES - 1) {
@@ -5433,7 +5445,7 @@ void hero::giveResource(int whichRes, int howMuch)
     g_game->isHuman(m_owner);
 }
 
-VA(0x004e36c0, 0x2E8)  // dc 0xd4070
+VA(0x004e36c0, 0x2E8) MAC_ADDRESS(0x10434c, 0x300)  // dc 0xd4070
 int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
                   unsigned char applyLimits) const
 {
@@ -5484,7 +5496,7 @@ int hero::getLuck(const hero* otherHero, unsigned char onCursedGround,
     return applyLimits ? limit(-3, luck, 3) : luck;
 }
 
-VA(0x004e39b0, 0x2A9)  // dc 0xd41fc
+VA(0x004e39b0, 0x2A9) MAC_ADDRESS(0x10464c, 0x2b8)  // dc 0xd41fc
 int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
                     unsigned char applyLimits) const
 {
@@ -5530,7 +5542,7 @@ int hero::getMorale(const hero* otherHero, unsigned char onCursedGround,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-VA(0x004e3c60, 0x70)
+VA(0x004e3c60, 0x70) MAC_ADDRESS(0x104904, 0x84)
 TCreatureType hero::getNecromancyCreature()
 {
     if (isWieldingArtifact(ARTIFACT_CLOAK_OF_THE_UNDEAD_KING)) {
@@ -5546,7 +5558,7 @@ TCreatureType hero::getNecromancyCreature()
 
 // Dreamcast hero.cpp:5364 calls town::HasBuilding for the Necropolis
 // bonus; retail and Mac expand the Town.h active-mask accessor.
-VA(0x004e3cd0, 0x268)  // dc 0xd4390
+VA(0x004e3cd0, 0x268) MAC_ADDRESS(0x104988, 0x280)  // dc 0xd4390
 float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
     float factor = g_necromancyFactors[m_skillLevel[eSecSkillNecromancy]];
@@ -5584,7 +5596,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
     return factor;
 }
 
-VA(0x004e3f40, 0x12F)  // dc 0xd44a4
+VA(0x004e3f40, 0x12F) MAC_ADDRESS(0x104c08, 0x138)  // dc 0xd44a4
 int hero::getMysticismBonus() const
 {
     int bonus = g_mysticismBonuses[m_skillLevel[eSecSkillMysticism]];
@@ -5604,7 +5616,7 @@ int hero::getMysticismBonus() const
     return bonus;
 }
 
-VA(0x004e4070, 0xEF)  // dc 0xd4560
+VA(0x004e4070, 0xEF) MAC_ADDRESS(0x104d40, 0x11c)  // dc 0xd4560
 int hero::getVisibility() const
 {
     int visibility = g_scoutingVisibility[m_skillLevel[eSecSkillScouting]];
@@ -5620,7 +5632,7 @@ int hero::getVisibility() const
     return visibility;
 }
 
-VA(0x004e4160, 0x143)  // dc 0xd45d8
+VA(0x004e4160, 0x143) MAC_ADDRESS(0x104e5c, 0x114)  // dc 0xd45d8
 float hero::getArcheryFactor() const
 {
     float factor = g_archeryFactors[m_skillLevel[eSecSkillArchery]];
@@ -5638,7 +5650,7 @@ float hero::getArcheryFactor() const
     return factor;
 }
 
-VA(0x004e42b0, 0x60)  // dc 0xd4664
+VA(0x004e42b0, 0x60) MAC_ADDRESS(0x104f70, 0x90)  // dc 0xd4664
 float hero::getOffenseFactor() const
 {
     float factor = g_offenseFactors[m_skillLevel[eSecSkillOffense]];
@@ -5650,7 +5662,7 @@ float hero::getOffenseFactor() const
     return factor;
 }
 
-VA(0x004e4310, 0x7D)  // dc 0xd46a8
+VA(0x004e4310, 0x7D) MAC_ADDRESS(0x105000, 0xa8)  // dc 0xd46a8
 float hero::getDefenseFactor() const
 {
     float factor = g_defenseFactors[m_skillLevel[eSecSkillDefense]];
@@ -5664,7 +5676,7 @@ float hero::getDefenseFactor() const
     return 1.0f - factor;
 }
 
-VA(0x004e4390, 0x89)  // dc 0xd46f8
+VA(0x004e4390, 0x89) MAC_ADDRESS(0x1050a8, 0xf8)  // dc 0xd46f8
 int hero::getEstatesBonus() const
 {
     int bonus = g_estatesGold[m_skillLevel[eSecSkillEstates]];
@@ -5681,7 +5693,7 @@ int hero::getEstatesBonus() const
     return bonus;
 }
 
-VA(0x004e4420, 0x15A)  // dc 0xd4768
+VA(0x004e4420, 0x15A) MAC_ADDRESS(0x1051a0, 0x124)  // dc 0xd4768
 float hero::getEagleEyeChance() const
 {
     float factor = g_eagleEyeFactors[m_skillLevel[eSecSkillEagleEye]];
@@ -5701,7 +5713,7 @@ float hero::getEagleEyeChance() const
     return factor;
 }
 
-VA(0x004e4580, 0x15C)  // dc 0xd482c
+VA(0x004e4580, 0x15C) MAC_ADDRESS(0x1052c4, 0x128)  // dc 0xd482c
 float hero::getSurrenderCostFactor() const
 {
     float factor = g_diplomacyFactors[m_skillLevel[eSecSkillDiplomacy]];
@@ -5721,7 +5733,7 @@ float hero::getSurrenderCostFactor() const
     return 1.0f - factor;
 }
 
-VA(0x004e46e0, 0x15C)  // dc 0xd48c8
+VA(0x004e46e0, 0x15C) MAC_ADDRESS(0x1053ec, 0x128)  // dc 0xd48c8
 float hero::getMagicResistanceFactor() const
 {
     float factor = g_magicResistanceFactors[m_skillLevel[eSecSkillMagicResistance]];
@@ -5741,7 +5753,7 @@ float hero::getMagicResistanceFactor() const
     return 1.0f - factor;
 }
 
-VA(0x004e4840, 0x66)  // dc 0xd4960
+VA(0x004e4840, 0x66) MAC_ADDRESS(0x105514, 0x98)  // dc 0xd4960
 float hero::getExperienceBonusFactor() const
 {
     float factor = g_learningFactors[m_skillLevel[eSecSkillLearning]];
@@ -5759,6 +5771,7 @@ static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // E:\gamedcs\hero.cpp:5709.
+MAC_ADDRESS(0x1055ac, 0x98)
 float hero::getLogisticsFactor() const
 {
     float factor = g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
@@ -5771,6 +5784,7 @@ float hero::getLogisticsFactor() const
 }
 
 // E:\gamedcs\hero.cpp:5734.
+MAC_ADDRESS(0x105644, 0x8c)
 long hero::getNavigationFactor() const
 {
     long movement = g_moveConstants.m_sea[m_skillLevel[eSecSkillNavigation]];
@@ -5783,6 +5797,7 @@ long hero::getNavigationFactor() const
 }
 
 // Original: hero::GetSorceryFactor; hero.cpp:5758, dc 0xd4a40
+MAC_ADDRESS(0x1056d0, 0x98)
 float hero::getSorceryFactor() const
 {
     float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
@@ -5795,7 +5810,7 @@ float hero::getSorceryFactor() const
     return factor + 1.0f;
 }
 
-VA(0x004e48b0, 0x66)  // dc 0xd4a88
+VA(0x004e48b0, 0x66) MAC_ADDRESS(0x105768, 0x98)  // dc 0xd4a88
 float hero::getIntelligenceFactor() const
 {
     float factor = g_intelligenceFactors[m_skillLevel[eSecSkillIntelligence]];
@@ -5807,7 +5822,7 @@ float hero::getIntelligenceFactor() const
     return factor + 1.0f;
 }
 
-VA(0x004e4920, 0x66)  // dc 0xd4b08
+VA(0x004e4920, 0x66) MAC_ADDRESS(0x105800, 0x98)  // dc 0xd4b08
 float hero::getFirstAidFactor() const
 {
     float factor = g_firstAidFactors[m_skillLevel[eSecSkillFirstAid]];
@@ -5819,7 +5834,7 @@ float hero::getFirstAidFactor() const
     return factor + 1.0f;
 }
 
-VA(0x004e4990, 0x3F6)  // dc 0xd4b50
+VA(0x004e4990, 0x3F6) MAC_ADDRESS(0x105898, 0x348)  // dc 0xd4b50
 int hero::getMobility(unsigned char seaMovement) const
 {
     if (m_flags & 0x1000000)
@@ -5884,13 +5899,13 @@ int hero::getMobility(unsigned char seaMovement) const
     return mobility;
 }
 
-VA(0x004e4d90, 0x12)  // dc 0xd4d60
+VA(0x004e4d90, 0x12) MAC_ADDRESS(0x105be0, 0x38)  // dc 0xd4d60
 int hero::getMobility() const
 {
     return getMobility((m_flags >> 18) & 1);
 }
 
-VA(0x004e4db0, 0x10D)  // dc 0xd4db0
+VA(0x004e4db0, 0x10D) MAC_ADDRESS(0x105c18, 0x94)  // dc 0xd4db0
 int hero::getSpellDurationBonus() const
 {
     int bonus = 0;
@@ -5905,7 +5920,7 @@ int hero::getSpellDurationBonus() const
     return bonus;
 }
 
-VA(0x004e4ec0, 0xD6)
+VA(0x004e4ec0, 0xD6) MAC_ADDRESS(0x105cac, 0x1b0)
 TAdventureObjectType hero::heroFn004E4EC0()
 {
     type_point point = getLocation();
@@ -5919,7 +5934,7 @@ TAdventureObjectType hero::heroFn004E4EC0()
     return cell->getSpecialTerrain();
 }
 
-VA(0x004e4fa0, 0xD7)  // dc 0xd4df0
+VA(0x004e4fa0, 0xD7) MAC_ADDRESS(0x105e5c, 0x1b0)  // dc 0xd4df0
 inline int hero::getSpecialTerrain() const
 {
     type_point location = getLocation();
@@ -5929,7 +5944,7 @@ inline int hero::getSpecialTerrain() const
     return cell->getMagicTerrainType();
 }
 
-VA(0x004e5080, 0x7D)  // dc 0xd4e4c
+VA(0x004e5080, 0x7D) MAC_ADDRESS(0x10600c, 0x84)  // dc 0xd4e4c
 TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
 {
     if (spell == SPELL_ARMAGEDDON
@@ -5938,7 +5953,7 @@ TSkillMastery hero::getSpellLevel(SpellID spell, int magicTerrain) const
     return getSpellSchoolLevel(g_spellTraits[spell].m_school, magicTerrain);
 }
 
-VA(0x004e5100, 0xBC)  // dc 0xd4e68
+VA(0x004e5100, 0xBC) MAC_ADDRESS(0x106090, 0xf8)  // dc 0xd4e68
 // Mac PEF code 0+0x106090: the shared return closes its 248-byte CodeWarrior
 // body exactly; the same spelling remains byte-exact in retail VC6.
 TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
@@ -5988,7 +6003,7 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
 }
 
 // E:\gamedcs\hero.cpp:6025
-VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
+VA(0x004e51c0, 0x73) MAC_ADDRESS(0x106188, 0x94)  // anchor-global, dc 0xd4ed0
 TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
 {
     int bestLevel = -1;
@@ -6017,7 +6032,7 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
 }
 
 // Complete adds the Armageddon's Blade mastery override before indexing the mana row.
-VA(0x004e5240, 0xEF)  // dc 0xd4f64
+VA(0x004e5240, 0xEF) MAC_ADDRESS(0x10621c, 0xec)  // dc 0xd4f64
 int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     int magicTerrain) const
 {
@@ -6037,7 +6052,7 @@ int hero::getManaCost(int whichSpell, const armyGroup* enemy,
     return cost;
 }
 
-VA(0x004e5330, 0x43)  // dc 0xd4fe0
+VA(0x004e5330, 0x43) MAC_ADDRESS(0x106308, 0x70)  // dc 0xd4fe0
 int hero::getMobilityFrame() const
 {
     int frame;
@@ -6052,7 +6067,7 @@ int hero::getMobilityFrame() const
     return frame;
 }
 
-VA(0x004e5380, 0x3E)  // dc 0xd5024
+VA(0x004e5380, 0x3E) MAC_ADDRESS(0x106378, 0x60)  // dc 0xd5024
 int hero::getManaFrame() const
 {
     short currentMana = m_mana;
@@ -6066,13 +6081,13 @@ int hero::getManaFrame() const
     return frame;
 }
 
-VA(0x004e53c0, 0x1E)  // dc 0xd5060
+VA(0x004e53c0, 0x1E) MAC_ADDRESS(0x1063d8, 0x28)  // dc 0xd5060
 bool hero::visitedArena(const NewmapCell* cell) const
 {
     return (m_arenaFlags & (1 << cell->m_extraInfo)) != 0;
 }
 
-VA(0x004e53e0, 0x18)  // dc 0xd5074
+VA(0x004e53e0, 0x18) MAC_ADDRESS(0x106400, 0x1c)  // dc 0xd5074
 void hero::setVisitedArena(const NewmapCell* cell)
 {
     m_arenaFlags |= 1 << cell->m_extraInfo;
@@ -6080,7 +6095,7 @@ void hero::setVisitedArena(const NewmapCell* cell)
 
 // Dreamcast hero.cpp:6173 calls GetPrimarySkill for attack and defense;
 // retail expands the same Hero.h clamp twice.
-VA(0x004e5400, 0x93)  // dc 0xd50a0
+VA(0x004e5400, 0x93) MAC_ADDRESS(0x10641c, 0xec)  // dc 0xd50a0
 float hero::getCombatValueModifier() const
 {
     int attackValue = getPrimarySkill(0);
@@ -6089,7 +6104,7 @@ float hero::getCombatValueModifier() const
                                    * (defenseValue * 0.05 + 1.0)));
 }
 
-VA(0x004e54a0, 0xAA)  // dc 0xd519c
+VA(0x004e54a0, 0xAA) MAC_ADDRESS(0x106508, 0x10c)  // dc 0xd519c
 boat* hero::findSummonableBoat() const
 {
     boat* result = g_game->getHeroBoat(m_id, 0);
@@ -6112,7 +6127,7 @@ boat* hero::findSummonableBoat() const
     return result;
 }
 
-VA(0x004e5550, 0x15E)  // dc 0xd524c
+VA(0x004e5550, 0x15E) MAC_ADDRESS(0x106614, 0xd0)  // dc 0xd524c
 unsigned char hero::canSummonBoat() const
 {
     if (!spellIsAvailable(SPELL_SUMMON_BOAT))
@@ -6131,7 +6146,7 @@ unsigned char hero::canSummonBoat() const
     return g_game->getNewBoatId() != -1;
 }
 
-VA(0x004e56b0, 0x21)  // dc 0xd52b0
+VA(0x004e56b0, 0x21) MAC_ADDRESS(0x1066e4, 0x38)  // dc 0xd52b0
 playerData* hero::getPlayer() const
 {
     if (m_owner < 0)
@@ -6139,7 +6154,7 @@ playerData* hero::getPlayer() const
     return &g_game->m_players[m_owner];
 }
 
-VA(0x004e56e0, 0x7C)  // dc 0xd52d0
+VA(0x004e56e0, 0x7C) MAC_ADDRESS(0x10671c, 0xd0)  // dc 0xd52d0
 // Mac code 0+0x10671c retains both abs calls; -O1 -proc 750 plus linked
 // reload-slot collapse matches the complete 208-byte body. DC names distance.
 unsigned char hero::isInPatrolRadius(type_point point) const
@@ -6152,7 +6167,7 @@ unsigned char hero::isInPatrolRadius(type_point point) const
     return distance <= m_patrolRadius;
 }
 
-VA(0x004e5760, 0x1F2)  // dc 0xd53a0
+VA(0x004e5760, 0x1F2) MAC_ADDRESS(0x1067ec, 0x15c)  // dc 0xd53a0
 long hero::modifySpellDamage(SpellID spell, int damage,
                                const class army* targetArmy) const
 {
@@ -6172,7 +6187,7 @@ long hero::modifySpellDamage(SpellID spell, int damage,
     return static_cast<long>(value);
 }
 
-VA(0x004e5960, 0x38)  // dc 0xd544c
+VA(0x004e5960, 0x38) MAC_ADDRESS(0x106948, 0x88)  // dc 0xd544c
 short hero::getPrimarySkillTotal() const
 {
     short total = 0;
@@ -6182,14 +6197,14 @@ short hero::getPrimarySkillTotal() const
     return total;
 }
 
-VA(0x004e59a0, 0xF8)  // dc 0xd5488
+VA(0x004e59a0, 0xF8) MAC_ADDRESS(0x1069d0, 0x50)  // dc 0xd5488
 void hero::fly(int level)
 {
     m_flightLevel = level;
     useSpell(getManaCost(SPELL_FLY));
 }
 
-VA(0x004e5aa0, 0xE0)  // dc 0xd54ac
+VA(0x004e5aa0, 0xE0) MAC_ADDRESS(0x106a20, 0x9c)  // dc 0xd54ac
 long hero::getCombatSpeedBonus() const
 {
     long bonus = 0;
@@ -6204,7 +6219,7 @@ long hero::getCombatSpeedBonus() const
     return bonus;
 }
 
-VA(0x004e5b80, 0x15C)  // dc 0xd5508
+VA(0x004e5b80, 0x15C) MAC_ADDRESS(0x106abc, 0xdc)  // dc 0xd5508
 long hero::getHitPointBonus(int creatureType) const
 {
     long bonus = 0;
@@ -6221,7 +6236,7 @@ long hero::getHitPointBonus(int creatureType) const
 }
 
 // DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
-VA(0x004e5ce0, 0xE7)  // dc 0xd5548
+VA(0x004e5ce0, 0xE7) MAC_ADDRESS(0x106b98, 0x140)  // dc 0xd5548
 unsigned char hero::canLand() const
 {
     NewmapCell* cell = g_game->getCell(getLocation());
@@ -6236,13 +6251,13 @@ unsigned char hero::canLand() const
     return 1;
 }
 
-VA(0x004e5dd0, 0x10)  // dc 0xd55b8
+VA(0x004e5dd0, 0x10) MAC_ADDRESS(0x106cd8, 0x8)  // dc 0xd55b8
 void hero::walkOnWater(int level)
 {
     m_waterWalkLevel = level;
 }
 
-VA(0x004e5de0, 0x2D)
+VA(0x004e5de0, 0x2D) MAC_ADDRESS(0x106ce0, 0x54)
 int hero::heroFn004E5DE0() const
 {
     if (m_visionsPower < 3 && m_army.getCreatureTotal(CREATURE_ROGUE) != 0)
@@ -6250,7 +6265,7 @@ int hero::heroFn004E5DE0() const
     return m_visionsPower;
 }
 
-VA(0x004e5e10, 0x11C)  // dc 0xd55c0
+VA(0x004e5e10, 0x11C) MAC_ADDRESS(0x106d34, 0x138)  // dc 0xd55c0
 unsigned char hero::isInIdentifyRange(const type_point* location) const
 {
     int identifyLevel = heroFn004E5DE0();
@@ -6275,7 +6290,7 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
 
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
 // get_secondary_skill accessor. Both header helpers expand in retail.
-VA(0x004e5f30, 0xBF)  // dc 0xd5644
+VA(0x004e5f30, 0xBF) MAC_ADDRESS(0x106e6c, 0x12c)  // dc 0xd5644
 unsigned char hero::isMobile() const
 {
     NewmapCell* cell = g_advManager->getCell(getLocation());
@@ -6293,7 +6308,7 @@ unsigned char hero::isMobile() const
     return m_movePoints >= cost;
 }
 
-VA(0x004e5ff0, 0x123)  // dc 0xd5710
+VA(0x004e5ff0, 0x123) MAC_ADDRESS(0x106f98, 0x108)  // dc 0xd5710
 int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 {
     HOMM3_RELEASE_VERIFY(m_id >= 0);
@@ -6329,7 +6344,7 @@ int hero::getHeroSpellBonus(SpellID spellId, int targetLevel, int value) const
 }
 
 // E:\gamedcs\hero.cpp:6493
-VA(0x004e6120, 0x39E)
+VA(0x004e6120, 0x39E) MAC_ADDRESS(0x1070a0, 0x3b0)
 void hero::heroFn004E6120(int creatureType,
                            TCreatureTypeTraits* traits) const
 {

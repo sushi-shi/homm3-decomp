@@ -87,7 +87,7 @@ TSpellSchool TSpellbookWindow::getSchoolFromPosition(int position)
                         : eSchoolAll;
 }
 
-VA(0x0059ba80, 0x1D)  // dc 0x14bc58
+VA(0x0059ba80, 0x1D) MAC_ADDRESS(0x18ad78, 0x2c)  // dc 0x14bc58
 void TSpellbookWindow::reset()
 {
     s_lastSchool = const_invalid_school;
@@ -100,6 +100,7 @@ void TSpellbookWindow::reset()
 // Mac retains it immediately after reset at code0+0x18ada4. Complete /Ob2
 // folds it into getSpellDescription. The five adjacent TextResource rows and
 // the guarded pointer array are byte-proven by retail.
+MAC_ADDRESS(0x18ada4, 0xec)
 static const char* getLevelString(SpellID spell)
 {
     static const char* levelStrings[] = {
@@ -128,7 +129,7 @@ static const char* getLevelString(SpellID spell)
 // replay had root cb=388, budget=1000 and return-copy nested budget=152,
 // exactly _Tidy's cost. Meaningful helper value bindings recover the
 // caller boundary without changing its source or the other unit scores.
-VA(0x0059baa0, 0x341)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c; dc 0x14bcf4
+VA(0x0059baa0, 0x341) MAC_ADDRESS(0x18ae90, 0x21c)  // retail widens DC's magic-plains byte to the Complete magic-terrain field at +0x6c; dc 0x14bcf4
 std::string TSpellbookWindow::getSpellDescription(
     SpellID spell, const hero* currentHero, unsigned char rollover)
 {
@@ -163,7 +164,7 @@ std::string TSpellbookWindow::getSpellDescription(
 }
 
 // E:\gamedcs\spellbookwindow.cpp:180, dc 0x14be88
-VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
+VA(0x0059bdf0, 0xAC9) MAC_ADDRESS(0x18b0ac, 0x1424)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
 TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magicTerrain)
     : CAdvPopup(90, 2, 620, 595, 0x12),
       m_allowedContext(context),
@@ -372,7 +373,7 @@ VA_COMPGEN(0x0059c8c0, 0x21, SCALAR_DELETING_DTOR, TSpellbookWindow)
 // EXACTLY over all 368 bytes against the COMDAT this object already emits.
 VA_COMPGEN(0x0059def0, 0x170, INSERTION_SORT_1, TSpellbookEntry)
 
-VA(0x0059c8f0, 0x75)  // dc 0x14c864
+VA(0x0059c8f0, 0x75) MAC_ADDRESS(0x18c4d0, 0xb4)  // dc 0x14c864
 TSpellbookWindow::~TSpellbookWindow()
 {
     g_spellbookWindow = 0;
@@ -382,13 +383,13 @@ TSpellbookWindow::~TSpellbookWindow()
     }
 }
 
-VA(0x0059c970, 0x1B)  // dc 0x14c8d4
+VA(0x0059c970, 0x1B) MAC_ADDRESS(0x18c584, 0x34)  // dc 0x14c8d4
 int TSpellbookWindow::open(int newPriority, unsigned char update)
 {
     return heroWindow::open(newPriority, update) ? 3 : 0;
 }
 
-VA(0x0059c990, 0x10)  // dc 0x14c8f0
+VA(0x0059c990, 0x10) MAC_ADDRESS(0x18c5b8, 0x20)  // dc 0x14c8f0
 void TSpellbookWindow::close(unsigned char update)
 {
     heroWindow::close(update);
@@ -399,7 +400,7 @@ void TSpellbookWindow::close(unsigned char update)
 // formerly exact with direct insert). Conditional or single-value school
 // selection does not recover it. Retail retains getSpellLevel here; DC's
 // older caller uses GetSpellSchoolLevel, so keep Complete's spell-id contract.
-VA(0x0059c9a0, 0x691)  // dc 0x14c904
+VA(0x0059c9a0, 0x691) MAC_ADDRESS(0x18c5d8, 0x5c4)  // dc 0x14c904
 void TSpellbookWindow::gotoPage(int page)
 {
     if (page < 0)
@@ -530,6 +531,7 @@ void TSpellbookWindow::gotoPage(int page)
             ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
+MAC_ADDRESS(0x18cc00, 0xec)
 void TSpellbookWindow::displayNewSchool(int position)
 {
     if (getSchool() == getSchoolFromPosition(position))
@@ -544,6 +546,7 @@ void TSpellbookWindow::displayNewSchool(int position)
 }
 
 // E:\gamedcs\spellbookwindow.cpp:702, dc 0x14ce68.
+MAC_ADDRESS(0x18ccec, 0xcc)
 int TSpellbookWindow::convertID2HelpID(int id) const
 {
     if (id < 0)
@@ -577,7 +580,7 @@ DATA(0x00641db8) static const int g_tabToSchool[] = {0, 3, 1, 2, 4};
 // lookup pools are required because their addends affect the function bytes.
 // Failed controls: dialogReturn-before-id changed the shared exit tail;
 // early return on a rollover cache hit changed the lifetime/return paths.
-VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
+VA(0x0059d040, 0xBA0) MAC_ADDRESS(0x18cdb8, 0xaa0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
 int TSpellbookWindow::windowHandler(message& msg)
 {
     int exitFlag = 0;
@@ -796,7 +799,7 @@ int TSpellbookWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x0059dbe0, 0x84)  // dc 0x14d290
+VA(0x0059dbe0, 0x84) MAC_ADDRESS(0x18d858, 0xa8)  // dc 0x14d290
 bool TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookEntry& y) const
 {
     const SSpellTraits* traits = &g_spellTraits[m_id];

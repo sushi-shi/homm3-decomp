@@ -31,6 +31,7 @@ import csv
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 from dataclasses import dataclass, replace
@@ -196,6 +197,19 @@ def _definition_text(raw: str, masked: str, after: int) -> str | None:
     return raw[start:i] if depth == 0 else None
 
 
+_MAC_ADDRESS_TAIL = re.compile(r"[ \t]*MAC_(?:COMPGEN_)?ADDRESS\s*\([^()\n]*\)")
+
+
+def _after_windows_claim(masked: str, end: int) -> int:
+    """Offset after a VA claim and the Mac address written on its line.
+
+    The Mac address is a second target's location, not part of the function's
+    implementation, so adding or correcting it must not reset MAX.
+    """
+    match = _MAC_ADDRESS_TAIL.match(masked, end + 1)
+    return match.end() if match else end + 1
+
+
 def _canonical_definition_text(raw: str, masked: str, after: int,
                                fn: str) -> str | None:
     """Resolve an annotated definition or its RVA-ordered redeclaration.
@@ -257,7 +271,7 @@ def _source_definitions(*, source_root: Path | None = None,
                 continue
             for key in keys:
                 definition = _canonical_definition_text(
-                    raw, masked, end + 1, key[1])
+                    raw, masked, _after_windows_claim(masked, end), key[1])
                 if definition is None:
                     continue
                 yield key, definition
@@ -276,7 +290,8 @@ def _source_definitions(*, source_root: Path | None = None,
                 continue
             rva = source.rva_of(args[0], str(path))
             for key in keys_by_rva.get(rva, ()):
-                definition = _canonical_definition_text(raw, masked, end + 1, key[1])
+                definition = _canonical_definition_text(
+                    raw, masked, _after_windows_claim(masked, end), key[1])
                 if definition is not None:
                     yield key, definition
 

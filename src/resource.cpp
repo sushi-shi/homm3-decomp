@@ -7,7 +7,7 @@
 
 #include "terrain.h"
 
-VA(0x00558720, 0x4E)  // dc 0x120934
+VA(0x00558720, 0x4E) MAC_ADDRESS(0x151400, 0x7c)  // dc 0x120934
 resource::resource(const char* newName, EResourceType newType)
 {
     if (newName) {
@@ -24,7 +24,7 @@ resource::resource(const char* newName, EResourceType newType)
 
 VA_COMPGEN(0x00558770, 0x23, SCALAR_DELETING_DTOR, resource)
 
-VA(0x005587a0, 0x7)  // dc 0x12099c
+VA(0x005587a0, 0x7) MAC_ADDRESS(0x15147c, 0x48)  // dc 0x12099c
 resource::~resource()
 {
 }
