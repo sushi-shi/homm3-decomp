@@ -130,7 +130,9 @@ DATA(0x006912ec) char g_completeDrawFpsText[100];
 DATA(0x006976d8) int g_gameCommand;
 // Original DC name: gbInViewWorld; ViewWorld owns its set/reset lifetime.
 DATA(0x006aac3c) int g_inViewWorld;
-DATA(0x00691674) unsigned long g_lastMapScrollTime;
+// Mac stores this file-local scalar in its TOC; every Windows reference is
+// in ScreenScroll or CheckScreenScroll.
+DATA(0x00691674) static unsigned long g_lastMapScrollTime;
 DATA(0x0065f690) int g_completeDrawFpsFrame = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
@@ -8472,17 +8474,17 @@ void advManager::checkScreenScroll()
         if (x < 16) {
             if (y < 16)
                 dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+            else if (y > WINDOW_SCREEN_HEIGHT - 16)
+                dir = ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
             else
-                dir = y <= WINDOW_SCREEN_HEIGHT - 16
-                           ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
-                           : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+                dir = ADV_SCROLL_WEST - ADV_SCROLL_POINTER;
         } else if (x > WINDOW_SCREEN_WIDTH - 16) {
             if (y < 16)
                 dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+            else if (y > WINDOW_SCREEN_HEIGHT - 16)
+                dir = ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER;
             else
-                dir = y > WINDOW_SCREEN_HEIGHT - 16
-                           ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
-                           : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+                dir = ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
         } else if (y < 16) {
             dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
         } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
