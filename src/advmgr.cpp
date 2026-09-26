@@ -8606,6 +8606,8 @@ void popupPlayerTurnInfo()
                     ShowWindow(g_hwndApp, SW_RESTORE);
                 SetForegroundWindow(g_hwndApp);
                 Sleep(500);
+                // Windows replays the notification after a timed-out dialog.
+                // Mac 0x1a348 has only the initial loadPlaySample call.
                 sample2 = loadPlaySample("SysMsg.wav");
             }
         } while (dialogReturn == DIALOG_RETURN_TIMEOUT
