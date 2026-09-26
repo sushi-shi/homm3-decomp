@@ -4298,15 +4298,11 @@ void game::randomizeUniversity(NewmapCell* cell)
 // /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
 // operations as calls. DC proves the TSecondarySkill local but predates
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
-// A 16-state constructor/type/unpin control produced 10 reproduced objects.
-// Removing the loop pin gives about 82% for RandomizeEvents; removing the
-// setter pin also loses the exact retained SetWitchSkill body. Both remain
-// unresolved debt. Default construction of the inverted zero temporary
-// preserves retail's _Tidy(0) boundary instead of a value-constructor call.
+// Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
+// and no-available-skill branches. Keep both source calls at those boundaries.
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
 {
-#pragma inline_depth(0)
     std::bitset<28> possibleSkills(cell->m_extraInfo);
     cell->m_extraInfo = 0;
     if (!possibleSkills.any())
@@ -4319,8 +4315,10 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->m_extraInfo));
     if (count < 1) {
-        skill = eSecSkillNone;
+        info->setWitchSkill(eSecSkillNone);
     }
     else {
         int choice = random(1, count);
@@ -4329,13 +4327,8 @@ static void randomizeWitchHut(NewmapCell* cell)
             if (possibleSkills[skill] && --choice < 1)
                 break;
         }
+        info->setWitchSkill(skill);
     }
-#pragma inline_depth()
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-#pragma inline_depth(0)
-    info->setWitchSkill(skill);
-#pragma inline_depth()
 }
 
 VA(0x004c0870, 0x22A) MAC_ADDRESS(0x0d6dec, 0x270)  // dc 0xac1a4
