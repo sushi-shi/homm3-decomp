@@ -134,11 +134,13 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         try {
             if (magic != g_gzMagic[0])
                 throw false;
-            magic = getByte();
-            if (magic == -1)
+            // Mac preserves the first byte in r20 for the catch below;
+            // the second byte in r19 is passed to ungetByte at 0x220d0c.
+            int nextMagic = getByte();
+            if (nextMagic == -1)
                 throw false;
-            if (magic != g_gzMagic[1]) {
-                ungetByte(static_cast<signed char>(magic));
+            if (nextMagic != g_gzMagic[1]) {
+                ungetByte(static_cast<signed char>(nextMagic));
                 throw false;
             }
         } catch (bool) {
@@ -189,7 +191,9 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
 // 0x4d65e0: the message-less form. `std::runtime_error`'s inline string
 // constructor expands into it, which is the whole 175-byte body.
 // Mac expands this constructor: its retained 0x221994 body is the
-// runtime_error(string) base constructor, followed by our derived vptr store.
+// runtime_error(string) base constructor: r4 is a prebuilt string, copied
+// at 0x2219c0. Callers destroy the temporary then install the derived vptr
+// (e.g. 0x221660 -> 0x22166c -> 0x22167c).
 VA(0x004d65e0, 0xAF)
 TGzInflateBuf::TDataError::TDataError()
     : std::runtime_error(std::string())
