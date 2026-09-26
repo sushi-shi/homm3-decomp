@@ -137,6 +137,7 @@ void game::initNewGame(int difficulty, int version,
 
 // Complete uses the nine-town alignment mask for both helpers.
 // E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
+MAC_ADDRESS(0x17e364, 0x30)
 TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 {
     do {
@@ -150,6 +151,7 @@ TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 }
 
 // E:\gamedcs\newgame.cpp:368, dc 0x10380c.
+MAC_ADDRESS(0x17e394, 0x30)
 TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
