@@ -10,13 +10,12 @@
 #include "kbwin.h"
 #include "prefs.h"
 #include "wingraph.h"
-#include "winmm_thunks.h"
 
 // Initial contents recovered from the pinned Complete image.
 
 // Use the timer during video playback so the game RNG sequence stays unchanged.
-// Mac calls GameTime::get at 0:0x130cc0; Windows retail calls timeGetTime
-// directly here, so this platform-specific timing path remains separate.
+// Mac retains GameTime::get at 0:0x130cc0. Its Windows implementation
+// returns timeGetTime(), the operation expanded by retail at this caller.
 VA(0x0050b1d0, 0x54) MAC_ADDRESS(0x130c68, 0x8c)  // dc 0xfd81c
 int safeRandom(int min, int max)
 {
@@ -27,7 +26,7 @@ int safeRandom(int min, int max)
         return max;
     if (max < min)
         return min;
-    return min + static_cast<int>(timeGetTime()
+    return min + static_cast<int>(GameTime::get()
                                   % static_cast<unsigned>(max - min + 1));
 }
 
