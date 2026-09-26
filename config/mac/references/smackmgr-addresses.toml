@@ -197,30 +197,3 @@ mac_offset = 0x25fd40
 mac_size = 0x44
 target_sha256 = "8b402863692fc292a8b9aa25577e2c21042f50a37417b17e35ab08d626e98f7d"
 evidence = "NEW: gotoSmackerFrame forwards requested frame to SmackGoto0x297774 on active Smacker handle. Adjacent boundaries and full span SHA verified."
-
-[[helpers]]
-source_helper = "SmackManager::restartSmacker"
-unit = "smackmgr"
-mac_section = 0
-mac_offset = 0x25fa10
-mac_size = 0x44
-target_sha256 = "74bdd0aceacf12af583e52621d878ab31b74d55cbacb64e5da37b6eab16e161a"
-evidence = "Null-checks g_smackVideo, calls SmackGoto297774(handle,1), reloads handle then SmackDoFrame2970d0. videoRestart retains sole whole-PEF direct xref25e954; Windows597900 expands same guard/two SDK calls before BinkManager::restartBink. BLR25fa50,nextSmackerFrame begins25fa54."
-
-[[helpers]]
-source_helper = "SmackManager::playSmacker"
-unit = "smackmgr"
-mac_section = 0
-mac_offset = 0x25fcec
-mac_size = 0x54
-target_sha256 = "47ad5570bcc1f58f4579921692b062f3b1705a6972d070258498e90772b1eb56"
-evidence = "Sets sound play1,calls playSmackerCore25fd84 at25fd08,clears paused/playing flags and returns byte result. WholePEF sole direct caller videoPlay25e5d0. BLR25fd3c,next goto frame25fd40."
-
-[[helpers]]
-source_helper = "SmackManager::playSmackerCore"
-unit = "smackmgr"
-mac_section = 0
-mac_offset = 0x25fd84
-mac_size = 0x24c
-target_sha256 = "ceae906fad6f0fab520668fbcfa8ab241604fd292642d43ec641363ab6c4757c"
-evidence = "Modal Smacker loop owns showVideo,centering,SmackToBuffer,input polling/abort,dirty updates,close/fade/redraw/mouse restore. Windows videoPlay contained same body,now canonical helper. Sole direct caller25fd08. BLR25ffcc,next entry25ffd0."
