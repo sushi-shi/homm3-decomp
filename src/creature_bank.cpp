@@ -25,6 +25,8 @@ const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
 // E:\gamedcs\creature_bank.cpp:25, dc 0x7152c
+// Mac array-construction descriptor at TOC-0x75bc names this member ctor.
+MAC_ADDRESS(0x089fe4, 0x30)
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25
