@@ -1409,8 +1409,8 @@ int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasu
 {
     game::loadString(infile, thisTreasure.m_message);
 
-    unsigned char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    signed char value;
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     thisTreasure.m_hasCustomGuardians = value != 0;
     if (thisTreasure.m_hasCustomGuardians)
@@ -2548,14 +2548,12 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 
     for (int i = 0; i < 7; ++i) {
         int value;
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        if (readValue(infile, value) < sizeof(value))
             return -1;
         thisMonster.m_resQty[i] = value;
     }
 
-    int artifact;
-    infile->read(&artifact, sizeof(unsigned char));
-    thisMonster.m_artifact = artifact & 0xff;
+    thisMonster.m_artifact = readValue<unsigned char>(infile);
     if (thisMonster.m_artifact == (ARTIFACT_NONE & 0xff))
         thisMonster.m_artifact = ARTIFACT_NONE;
     return 0;
