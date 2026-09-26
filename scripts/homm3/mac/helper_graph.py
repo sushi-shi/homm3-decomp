@@ -50,6 +50,8 @@ def build(root, index, source, *, complete_source_scope):
         ids = sorted(by_mac.get(offset, []))
         return {'mac': address(offset), 'size': spans.get(offset),
                 'observation': observations.get(offset),
+                'runtime_label': {'name': runtime[offset].name, 'owner': runtime[offset].owner,
+                                  'evidence': runtime[offset].evidence} if offset in runtime else None,
                 'source_ids': ids, 'claims': owners.get(offset, []),
                 'deferred': any(Path(c['file']).stem in deferred or
                     Path(c['file']).stem.startswith('rmg_') and 'rmg' in deferred
@@ -200,10 +202,11 @@ def write_queues(report, output):
     """Compact worker inputs alongside the full graph; regenerate after edits."""
     for suffix, fields, rows in (
         ('calls', ['caller', 'callee', 'site', 'state', 'mac_count', 'source_count', 'deferred',
-                   'callee_operation', 'callee_category'],
+                   'callee_name', 'callee_operation', 'callee_category'],
          ({'caller': r['caller']['mac'], 'callee': r['callee']['mac'], 'site': r['site'],
            'state': r['state'], 'mac_count': r['mac_call_count'], 'source_count': r['source_call_count'],
            'deferred': r['caller']['deferred'],
+           'callee_name': r['callee']['name'] or '',
            'callee_operation': (r['callee'].get('observation') or {}).get('operation', ''),
            'callee_category': (r['callee'].get('observation') or {}).get('category', '')}
           for r in report['queue'])),

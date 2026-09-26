@@ -501,6 +501,8 @@ def main(argv=None) -> int:
                 if observation:
                     print(f"[mac] observed operation: {observation['operation']} ({observation['category']})")
                     print(f"[mac] evidence: {observation['evidence']}")
+                elif result['target'].get('runtime_label'):
+                    print(f"[mac] evidence: {result['target']['runtime_label']['evidence']}")
                 for row in result['caller_comparisons']:
                     print(f"  {row['site']} {row['caller']['name'] or row['caller']['mac']}: "
                           f"{row['state']} (Mac {row['mac_call_count']}, source {row['source_call_count']})")

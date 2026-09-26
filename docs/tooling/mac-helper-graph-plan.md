@@ -88,7 +88,12 @@ reference maps and freshness guards.
 
 ## Identified operations without a source mapping
 
-`config/mac/target-observations.tsv` records reviewed binary operations while
+Established library/platform identities belong in `config/mac/runtime-map.tsv`
+and their extents in `config/mac/functions.tsv`. The audit carries their label,
+owner and evidence; the calls TSV exports `callee_name`. `mac_platform` labels
+identify platform-support bodies without claiming a Windows source mapping.
+
+`config/mac/target-observations.tsv` records source-recovery leads while
 source identity is still unresolved. The audit verifies each extent and byte
 hash, attaches an `observation` to the function/callee record, and exports
 `callee_operation` / `callee_category` in the calls TSV. Address queries display

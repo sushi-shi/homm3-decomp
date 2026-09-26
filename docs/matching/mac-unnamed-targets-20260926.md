@@ -14,13 +14,22 @@ Windows sources; no workers, compiler runs or matching searches were used.
 | Shared string-helper candidates | 2 |
 | Total | 111 |
 
-The findings live in [target-observations.tsv](../../config/mac/target-observations.tsv).
-Each observation has a verified code extent, SHA-256, category, descriptive
-operation and concrete evidence. `homm3 mac helper-audit` attaches them to
-function records and call sites; its calls TSV includes `callee_operation` and
-`callee_category`. Selecting a Mac address displays the evidence. Names and
-source identities still come from ordinary source declarations and address
-claims. An observation does not supply a compiler linkage symbol.
+The 102 library/platform identities and their evidence live in the existing
+[runtime-map.tsv](../../config/mac/runtime-map.tsv). Extents live in
+[functions.tsv](../../config/mac/functions.tsv), as for every other mapped
+Mac function. Platform support uses the explicit `mac_platform` owner; working
+labels do not pretend to recover original linkage spellings.
+
+The remaining nine source-recovery leads live in
+[target-observations.tsv](../../config/mac/target-observations.tsv). They describe
+operations without claiming a source declaration or compiler symbol. Ordinary
+source declarations and address annotations will own their names when recovered.
+
+`homm3 mac helper-audit` reads both tables, includes map names and evidence in
+function records, and exports `callee_name`, `callee_operation` and
+`callee_category` in its calls TSV. A map label alone never establishes a
+Windows source correspondence or closes a caller. This document is a summary;
+the tracked config tables are the machine-readable findings.
 
 ## Leads for the next pass
 
@@ -65,8 +74,8 @@ that erroneous interior entry.
 
 ## Validation and limits
 
-All observation hashes and spans validate against the pinned PEF; the Mac table
-validator reports no defects. Ten focused tooling tests pass, including the
+The observation hashes and all mapped extents validate against the pinned PEF;
+the Mac table validator reports no defects. Focused tooling tests cover the
 requirement that an observed operation cannot invent a source identity or close
 an unavailable-source call. Game C++ and matching scores were not changed.
 
