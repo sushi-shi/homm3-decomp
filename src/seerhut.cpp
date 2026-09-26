@@ -643,6 +643,19 @@ void type_defeat_hero_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
+// Retail vtable 0x641800 slot 12 shares 0x56edf0 with the experience and
+// monster quests: each reads a four-byte payload into its first derived field.
+// Mac retains this separate body before save at 0x165854.
+MAC_ADDRESS(0x165854, 0x68)
+void type_defeat_hero_quest::loadFromMap(TAbstractFile* file)
+{
+    int mapHero;
+
+    file->read(&mapHero, sizeof(mapHero));
+    m_mapHero = mapHero;
+    type_quest::loadFromMap(file);
+}
+
 VA(0x0056e5f0, 0xF4) MAC_ADDRESS(0x1658bc, 0x8c)
 void type_defeat_hero_quest::save(TAbstractFile* file)
 {
@@ -761,6 +774,18 @@ void type_monster_quest::load(TAbstractFile* file, int version)
         m_defeatedBy = killer;
     }
     type_quest::load(file, version);
+}
+
+// Retail vtable 0x64183c slot 12 also points to the folded 0x56edf0 body.
+// Mac retains the distinct monster reader at 0x165f38.
+MAC_ADDRESS(0x165f38, 0x68)
+void type_monster_quest::loadFromMap(TAbstractFile* file)
+{
+    int mapMonster;
+
+    file->read(&mapMonster, sizeof(mapMonster));
+    m_mapMonster = mapMonster;
+    type_quest::loadFromMap(file);
 }
 
 VA(0x0056edf0, 0x2B) MAC_ADDRESS(0x164a1c, 0x68)
@@ -1589,6 +1614,18 @@ void type_belong_to_player_quest::load(TAbstractFile* file, int version)
     file->read(&owner, sizeof(owner));
     m_requiredOwner = owner;
     type_quest::load(file, version);
+}
+
+// Retail vtable 0x641968 slot 12 shares the 0x572230 one-byte reader with
+// type_be_hero_quest; Mac emits this own body at 0x168f88.
+MAC_ADDRESS(0x168f88, 0x64)
+void type_belong_to_player_quest::loadFromMap(TAbstractFile* file)
+{
+    unsigned char owner;
+
+    file->read(&owner, sizeof(owner));
+    m_requiredOwner = owner;
+    type_quest::loadFromMap(file);
 }
 
 VA(0x00572860, 0xE0) MAC_ADDRESS(0x168fec, 0x64)
