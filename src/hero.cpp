@@ -540,58 +540,36 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     unsigned short ushortBuffer;
     int intBuffer;
     short shortBuffer;
-    unsigned char ucharBuffer;
-    char charBuffer;
 
     if (!type_obscuring_object::load(infile))
         return -1;
 
     if (saveVersion >= 25) {
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_sex = static_cast<signed char>(charBuffer);
-        infile->read(&ucharBuffer, sizeof(ucharBuffer));
-        m_hasCustomName = ucharBuffer != 0;
+        m_sex = static_cast<signed char>(readValue<char>(infile));
+        m_hasCustomName = readValue<unsigned char>(infile) != 0;
         m_customName = readLengthPrefixedString(infile);
     }
 
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_owner = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_patrolRadius = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_moraleBonus = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_luckBonus = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_backpackCount = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_disguiseLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_flightLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_waterWalkLevel = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_dWalkSpellsCast = charBuffer;
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_visionsPower = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_id = static_cast<signed char>(charBuffer);
-    infile->read(&charBuffer, sizeof(charBuffer));
-    m_heroClass = static_cast<signed char>(charBuffer);
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_portrait = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_patrolX = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_patrolY = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_facing = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_formation = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_levelSeed = ucharBuffer;
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_lastWisdom = ucharBuffer;
+    m_owner = readValue<char>(infile);
+    m_patrolRadius = readValue<char>(infile);
+    m_moraleBonus = readValue<char>(infile);
+    m_luckBonus = readValue<char>(infile);
+    m_backpackCount = readValue<char>(infile);
+    m_disguiseLevel = static_cast<signed char>(readValue<char>(infile));
+    m_flightLevel = static_cast<signed char>(readValue<char>(infile));
+    m_waterWalkLevel = static_cast<signed char>(readValue<char>(infile));
+    m_dWalkSpellsCast = readValue<char>(infile);
+    m_visionsPower = static_cast<signed char>(readValue<char>(infile));
+    // Both retails zero-extend the serialized id (Windows 0x4d7bc1, Mac 0xf2d18).
+    m_id = readValue<unsigned char>(infile);
+    m_heroClass = static_cast<signed char>(readValue<char>(infile));
+    m_portrait = readValue<unsigned char>(infile);
+    m_patrolX = readValue<unsigned char>(infile);
+    m_patrolY = readValue<unsigned char>(infile);
+    m_facing = readValue<unsigned char>(infile);
+    m_formation = readValue<unsigned char>(infile);
+    m_levelSeed = readValue<unsigned char>(infile);
+    m_lastWisdom = readValue<unsigned char>(infile);
 
     infile->read(&intBuffer, sizeof(intBuffer));
     m_pathTargetX = intBuffer;
@@ -668,8 +646,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion >= 32)
         infile->read(m_artifactSlotCounts, sizeof(m_artifactSlotCounts));
 
-    infile->read(&ucharBuffer, sizeof(ucharBuffer));
-    m_isSleeping = ucharBuffer != 0;
+    m_isSleeping = readValue<unsigned char>(infile) != 0;
 
     std::bitset<48> granted;
     unsigned char inBuf[6];
