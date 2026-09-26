@@ -33,7 +33,12 @@ enum ETileDirection {
     TILE_DIR_COUNT = 8
 };
 
+#if defined(HOMM3_TARGET_MAC)
+// CodeWarrior (ISO) rejects an array of incomplete element type; VC6 does not.
+#include "rmg.h"
+#else
 struct TPoint;
+#endif
 extern TPoint g_tileDirections[TILE_DIR_COUNT];
 
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
