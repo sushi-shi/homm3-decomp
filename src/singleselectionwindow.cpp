@@ -7559,6 +7559,8 @@ bool TSingleSelectionWindow::beginNewGame()
 
     if (g_remoteOn) {
         CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
+        // Retail 0x58c77d calls the player-recipient overload with toWho=0.
+        // Mac 0x183f80 calls the separate DPID overload with dpid=-1.
         int returnValue = mapHeaderMsg.remoteFn00512D40(0, 0, 1);
         if (!sendPlayerPositions(0))
             return 0;
