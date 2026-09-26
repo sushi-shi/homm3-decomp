@@ -5344,27 +5344,23 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     int count;
     char charBuffer;
 
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     m_victoryCondition.m_allowNormalVictory = charBuffer != 0;
-    count = infile->read(&charBuffer, sizeof(charBuffer));
+    count = readValue(infile, charBuffer);
     m_victoryCondition.m_appliesToComputer = charBuffer != 0;
 
     switch (type) {
     case VICTORY_CONDITION_ARTIFACT: {
-        int artifact;
-        infile->read(&artifact, sizeof(char));
+        unsigned char artifact = readValue<unsigned char>(infile);
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(artifact & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+            static_cast<TArtifact>(artifact); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         return 0;
     }
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
-        int creature;
-        infile->read(&creature, sizeof(char));
-        {
-            m_victoryCondition.m_creatureType = TCreatureType(creature & 0xff);
-        }
-        count = infile->read(&intBuffer, sizeof(intBuffer));
+        unsigned char creature = readValue<unsigned char>(infile);
+        m_victoryCondition.m_creatureType = TCreatureType(creature);
+        count = readValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_numCreatures = intBuffer;
@@ -5373,11 +5369,11 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
 
     case VICTORY_CONDITION_TOTAL_RESOURCES: {
         char resourceType;
-        count = infile->read(&resourceType, sizeof(resourceType));
+        count = readValue(infile, resourceType);
         if (count < sizeof(resourceType))
             return -1;
         m_victoryCondition.m_resourceType = resourceType;
-        count = infile->read(&intBuffer, sizeof(intBuffer));
+        count = readValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_resourceAmount = intBuffer;
@@ -5385,18 +5381,15 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_UPGRADE_TOWN: {
-        int townValue;
-        char hallLevel;
         char castleLevel;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townX = townValue & 0xff;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townY = townValue & 0xff;
-        infile->read(&townValue, sizeof(char));
-        m_victoryCondition.m_townZ = townValue & 0xff;
-        infile->read(&hallLevel, sizeof(hallLevel));
-        m_victoryCondition.m_hallLevel = hallLevel;
-        count = infile->read(&castleLevel, sizeof(castleLevel));
+        unsigned char townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = townValue;
+        townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = townValue;
+        townValue = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = townValue;
+        m_victoryCondition.m_hallLevel = readValue<char>(infile);
+        count = readValue(infile, castleLevel);
         if (count < sizeof(castleLevel))
             return -1;
         m_victoryCondition.m_castleLevel = castleLevel;
@@ -5404,17 +5397,16 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_BUILD_GRAIL: {
-        int grailTown;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townX = grailTown & 0xff;
+        unsigned char grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = grailTown;
         if (m_victoryCondition.m_townX == g_savedMapCoordinateNone)
             m_victoryCondition.m_townX = -1;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townY = grailTown & 0xff;
+        grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = grailTown;
         if (m_victoryCondition.m_townY == g_savedMapCoordinateNone)
             m_victoryCondition.m_townY = -1;
-        infile->read(&grailTown, sizeof(char));
-        m_victoryCondition.m_townZ = grailTown & 0xff;
+        grailTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = grailTown;
         if (m_victoryCondition.m_townZ == g_savedMapCoordinateNone)
             m_victoryCondition.m_townZ = -1;
         return 0;
@@ -5427,45 +5419,40 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_CAPTURE_TOWN: {
-        int capturedTown;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townX = capturedTown & 0xff;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townY = capturedTown & 0xff;
-        infile->read(&capturedTown, sizeof(char));
-        m_victoryCondition.m_townZ = capturedTown & 0xff;
+        unsigned char capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = capturedTown;
+        capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = capturedTown;
+        capturedTown = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = capturedTown;
         return 0;
     }
 
     case VICTORY_CONDITION_DEFEAT_MONSTER: {
-        int monster;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterX = monster & 0xff;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterY = monster & 0xff;
-        infile->read(&monster, sizeof(char));
-        m_victoryCondition.m_monsterZ = monster & 0xff;
+        unsigned char monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterX = monster;
+        monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterY = monster;
+        monster = readValue<unsigned char>(infile);
+        m_victoryCondition.m_monsterZ = monster;
         return 0;
     }
 
     case VICTORY_CONDITION_SURVIVE_TIME: {
-        int days;
-        infile->read(&days, sizeof(days));
-        m_victoryCondition.m_numDays = days;
+        m_victoryCondition.m_numDays = readValue<int>(infile);
         return 0;
     }
 
     case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
-        int transport;
-        infile->read(&transport, sizeof(char));
+        unsigned char transport = readValue<unsigned char>(infile);
         m_victoryCondition.m_artifactNum =
-            static_cast<TArtifact>(transport & 0xff); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townX = transport & 0xff;
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townY = transport & 0xff;
-        infile->read(&transport, sizeof(char));
-        m_victoryCondition.m_townZ = transport & 0xff;
+            static_cast<TArtifact>(transport); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townX = transport;
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townY = transport;
+        transport = readValue<unsigned char>(infile);
+        m_victoryCondition.m_townZ = transport;
         return 0;
     }
     }
@@ -5477,28 +5464,21 @@ VA(0x004c3c80, 0x10B) MAC_ADDRESS(0x0da274, 0x16c)
 int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 {
     short shortValue;
-    int value;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN:
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townZ = value & 0xff;
+        m_lossCondition.m_townX = readValue<unsigned char>(infile);
+        m_lossCondition.m_townY = readValue<unsigned char>(infile);
+        m_lossCondition.m_townZ = readValue<unsigned char>(infile);
         return 0;
 
     case LOSS_CONDITION_LOSE_HERO:
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_heroZ = value & 0xff;
+        m_lossCondition.m_heroX = readValue<unsigned char>(infile);
+        m_lossCondition.m_heroY = readValue<unsigned char>(infile);
+        m_lossCondition.m_heroZ = readValue<unsigned char>(infile);
         return 0;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (infile->read(&shortValue, sizeof(shortValue))
+        if (readValue(infile, shortValue)
             < sizeof(shortValue))
             return -1;
         m_lossCondition.m_numDays = shortValue;
@@ -5540,25 +5520,17 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
     short timeLimit;
     switch (type) {
     case LOSS_CONDITION_LOSE_TOWN: {
-        int value;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townX = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townY = value & 0xff;
-        infile->read(&value, sizeof(char));
-        m_lossCondition.m_townZ = value & 0xff;
+        m_lossCondition.m_townX = readValue<unsigned char>(infile);
+        m_lossCondition.m_townY = readValue<unsigned char>(infile);
+        m_lossCondition.m_townZ = readValue<unsigned char>(infile);
         return 0;
     }
 
     case LOSS_CONDITION_LOSE_HERO:
         if (saveVersion == g_saveVersionLossHeroCoordinates) {
-            int value;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroX = value & 0xff;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroY = value & 0xff;
-            infile->read(&value, sizeof(char));
-            m_lossCondition.m_heroZ = value & 0xff;
+            m_lossCondition.m_heroX = readValue<unsigned char>(infile);
+            m_lossCondition.m_heroY = readValue<unsigned char>(infile);
+            m_lossCondition.m_heroZ = readValue<unsigned char>(infile);
             return 0;
         } else {
             m_lossCondition.m_heroId = loadHeroIdShort(infile, saveVersion);
@@ -5566,7 +5538,7 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
         }
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (infile->read(&timeLimit, sizeof(timeLimit)) < sizeof(timeLimit))
+        if (readValue(infile, timeLimit) < sizeof(timeLimit))
             return -1;
         m_lossCondition.m_numDays = timeLimit;
         return 0;
@@ -5585,58 +5557,39 @@ VA(0x004c3ef0, 0x498) MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read 
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     TAbstractFile* infile, int mapVersion)
 {
-    {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_canBeHuman = charBuffer != 0;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_canBeComputer = charBuffer != 0;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_aiStrategy = charBuffer;
+    m_canBeHuman = readValue<signed char>(infile) != 0;
+    m_canBeComputer = readValue<signed char>(infile) != 0;
+    m_aiStrategy = readValue<signed char>(infile);
 
-        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_legalAlignments = static_cast<unsigned char>(charBuffer);
-        } else {
-            if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
-                infile->read(&charBuffer, sizeof(charBuffer));
-            unsigned short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_legalAlignments = shortBuffer;
-        }
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        m_legalAlignments = readValue<unsigned char>(infile);
+    } else {
+        if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
+            readValue<signed char>(infile);
+        m_legalAlignments = readValue<unsigned short>(infile);
     }
 
-    {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_hasRandomAlignment = charBuffer != 0;
-        if (m_hasRandomAlignment)
-            m_legalAlignments |= 0x100;
-        if (!g_gameContextFeatures[*g_videoGameState].test(1))
-            m_legalAlignments &= 0xfeff;
+    m_hasRandomAlignment = readValue<signed char>(infile) != 0;
+    if (m_hasRandomAlignment)
+        m_legalAlignments |= 0x100;
+    if (!g_gameContextFeatures[*g_videoGameState].test(1))
+        m_legalAlignments &= 0xfeff;
 
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_hasMainTown = charBuffer != 0;
-        m_mainTownType = -1;
-        if (!m_hasMainTown) {
-            m_generateHero = 0;
+    m_hasMainTown = readValue<signed char>(infile) != 0;
+    m_mainTownType = -1;
+    if (!m_hasMainTown) {
+        m_generateHero = 0;
+    } else {
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_generateHero = 1;
         } else {
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                m_generateHero = 1;
-            } else {
-                infile->read(&charBuffer, sizeof(charBuffer));
-                m_generateHero = charBuffer != 0;
-                infile->read(&charBuffer, sizeof(charBuffer));
-                m_mainTownType = charBuffer;
-            }
-
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_x = static_cast<unsigned char>(charBuffer);
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_y = static_cast<unsigned char>(charBuffer);
-            infile->read(&charBuffer, sizeof(charBuffer));
-            m_castleLoc.m_z = static_cast<unsigned char>(charBuffer);
+            m_generateHero = readValue<signed char>(infile) != 0;
+            m_mainTownType = readValue<signed char>(infile);
         }
+
+        m_castleLoc.m_x = readValue<unsigned char>(infile);
+        m_castleLoc.m_y = readValue<unsigned char>(infile);
+        m_castleLoc.m_z = readValue<unsigned char>(infile);
     }
 
     infile->read(&m_hasRandomHero, sizeof(m_hasRandomHero));
@@ -5657,14 +5610,9 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
         return;
 
-    {
-        unsigned long byteValue;
-        infile->read(&byteValue, sizeof(unsigned char));
-        m_defaultPlaceholders = byteValue & 0xff;
-    }
+    m_defaultPlaceholders = readValue<unsigned char>(infile);
 
-    int heroCount;
-    infile->read(&heroCount, sizeof(heroCount));
+    int heroCount = readValue<int>(infile);
     m_heroes.resize(heroCount);
     if (heroCount > 0) {
         int heroIndex = 0;
