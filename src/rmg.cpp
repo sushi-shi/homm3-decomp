@@ -875,7 +875,7 @@ void type_random_map::setOverlay(const TRmgGridPoint& point, int value)
 // contracts by copying from the returned reference, not the named temporary.
 VA(0x00532240, 0x15) MAC_ADDRESS(0x22eb84, 0x14)
 #if defined(HOMM3_TARGET_MAC)
-// Mac 0x22eb84 stores both dimensions through the hidden result pointer.
+// Mac 0x22eb84 returns the size through a hidden result pointer.
 TRmgGridPoint type_random_map::getSize()
 {
     return TRmgGridPoint(m_mapWidth, m_mapHeight);
@@ -982,8 +982,7 @@ int TRmgRoadMapAdapter::getOverlay(const TRmgGridPoint& point)
 TRmgGridPoint TRmgRoadMapAdapter::getSize()
 {
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0x22f2e4 forwards its own hidden result to the value-returning slot.
-    return m_map->getSize();
+    return m_map->getSize();  // Mac 0x22f2e4
 #else
     return m_map->getSize(TRmgGridPoint());
 #endif
@@ -1073,8 +1072,7 @@ VA(0x00532790, 0x27) MAC_ADDRESS(0x22f2e4, 0x3c) // vtable 0x640a3c slot 3, ICF 
 TRmgGridPoint TRmgMapAdapter::getSize()
 {
 #if defined(HOMM3_TARGET_MAC)
-    // Mac 0x22f2e4 forwards its own hidden result to the value-returning slot.
-    return m_map->getSize();
+    return m_map->getSize();  // Mac 0x22f2e4
 #else
     return m_map->getSize(TRmgGridPoint());
 #endif
@@ -2895,8 +2893,7 @@ void TRmgGeneratorBase::readObjectPlacementRules()
     sheet->dispose();
 
 #if defined(HOMM3_TARGET_MAC)
-    // CodeWarrior caps a frame at 32K: Mac 0x23486c news one 0xd980-byte
-    // block holding both tables and deletes it after the binding loop.
+    // CodeWarrior's 32K frame limit: Mac 0x23486c news both tables in one 0xd980 block.
     struct TPlacementTables {
         std::vector<TRmgObjectPlacementRule*> rulesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];
         std::vector<int> subtypesByType[ADVENTURE_OBJECT_TRAIT_COUNT][10];

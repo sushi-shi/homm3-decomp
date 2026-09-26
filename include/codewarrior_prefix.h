@@ -30,14 +30,10 @@
 
 /* 3. VC6 standard-library behaviour MSL differs in. */
 #include <extras.h>
-// VC6's <math.h> declares only the C double forms; MSL's C++ float and
-// integral overloads (ansi_prefix.mac.h) make mixed float/double calls
-// ambiguous.
+// VC6 <math.h> has only the double forms; MSL's overloads make fmod(float, double) ambiguous.
 #undef __ANSI_OVERLOAD__
 #undef _MSL_INTEGRAL_MATH
-// VC6's standard headers reach <cstdio>, <cstring> and <string>
-// transitively (<stdexcept> through <xstring>, <string> through <xlocale>);
-// MSL's reach basic_string only through <stringfwd>.
+// VC6's standard headers include these transitively; MSL's do not.
 #include <stdio.h>
 #include <string.h>
 #if defined(__cplusplus)

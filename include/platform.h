@@ -30,8 +30,7 @@
 #include <mmsystem.h>
 #include <dsound.h>
 #include <Mss.h>
-// WIN32_LEAN_AND_MEAN drops shellapi.h, which VC6 TUs reach through the full
-// windows.h (multiplayerwindow's ShellExecuteA); declarations only.
+// ShellExecuteA; WIN32_LEAN_AND_MEAN drops it from windows.h.
 #include <shellapi.h>
 #undef __declspec
 #undef __unaligned

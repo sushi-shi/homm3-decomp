@@ -1116,7 +1116,7 @@ public:
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
 #if defined(HOMM3_TARGET_MAC)
-    // Mac slot 3 (0x22eb84) fills a hidden value result and returns nothing.
+    // Mac slot 3 (0x22eb84) returns by value.
     virtual TRmgGridPoint getSize() = 0;
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;

@@ -8,8 +8,7 @@
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
 #include "va.h"
 
-// DC S_LPROC32 identifies this ordinary callback as TU-local. Declare it
-// ahead of the header so TMainMenu's friend binds to the static function.
+// DC S_LPROC32: TU-local. Declared before the header so the friend binds to it.
 class message;
 static int mainMenuHandler(message& msg);
 #include "mainmenu.h"
