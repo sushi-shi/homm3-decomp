@@ -52,11 +52,6 @@
 // enumerator in artifact.h and reaches here through hero.h.
 const int g_artifactRecantersCloak = 0x53;
 
-// Mirror Image's random target search excludes the one battlefield cell
-// retail singles out in addition to war-machine stacks. The semantic reason
-// for that particular cell is not yet proven, so keep the name conservative.
-const int g_mirrorImageExcludedHex = 149;
-
 int handleSacrificeBeneficiary(message& msg);
 int handleCastSacrifice(message& msg);
 int handleCastSpell(message& msg);
@@ -354,12 +349,13 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                     && target->getMirrorEffect() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
                 int picked;
+                // Both retail builds test creature type (+0x34), not hex (+0x38).
                 do {
                     picked = picker.pick();
                 } while (picked >= 0
                          && (m_armies[m_currentSide][picked].is(creatureImmobilized)
-                             || m_armies[m_currentSide][picked].m_gridIndex
-                                    == g_mirrorImageExcludedHex));
+                             || m_armies[m_currentSide][picked].m_creatureType
+                                    == army::ARMY_CREATURE_ARROW_TOWER));
                 m_nextActionGridIndex2 = m_armies[m_currentSide][picked].m_gridIndex;
             }
         }
