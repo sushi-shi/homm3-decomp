@@ -1181,11 +1181,10 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
         currentHero, 0, currentGarrison->m_garrisonArmy, 0, cell);
 }
 
-// E:\\gamedcs\\philai.cpp:2250. The shared Idol helper rejects the two
-// visited flags and an unaffordable trip, values both morale and luck on
-// Sunday, and otherwise selects one from the low flag bit. Complete expands
-// that shared shape into AI_value_of_event. Dreamcast's final fallback after
-// the same movement rejection is dc-only; retail has no corresponding edge.
+// Mac 0x142dd8 retains this helper. Its non-Sunday choice tests the day
+// low bit; this Windows reconstruction tests hero flags. Mac also retains
+// an unreachable third morale/luck path at 0x142ef4. Both differences remain
+// unresolved; do not add dead calls merely to equalize the call inventory.
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
