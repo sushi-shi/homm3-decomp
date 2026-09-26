@@ -4187,7 +4187,7 @@ static void randomizePyramid(NewmapCell* cell)
     for (i = 0; i < 70; ++i) {
         if (g_spellTraits[i].m_school != const_invalid_school
             && g_spellTraits[i].m_level == g_pyramidSpellLevel
-            && !g_game->m_ssDisabled[i])
+            && !g_game->m_spellDisabledInfo[i])
             possibleSpells.push_back(i);
     }
 
