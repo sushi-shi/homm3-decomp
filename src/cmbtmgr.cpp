@@ -3123,6 +3123,10 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // Its true arm permits the common frame body; only the false arm skips it.
 // The inverted continue guard still scores 96.2378%, so guard polarity and
 // scope matter here even though the source operations are otherwise equal.
+// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
+// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
+// same separate stores; its range comparison compression remains different.
+// A switch and named frame snapshot do not reproduce that compression.
 VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -3133,19 +3137,22 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                stack.m_showRangeFrames = static_cast<unsigned char>(
-                    stack.m_currFrameType == cs_range_ur
+                if (stack.m_currFrameType == cs_range_ur
                     || stack.m_currFrameType == cs_range_r
-                    || stack.m_currFrameType == cs_range_dr);
+                    || stack.m_currFrameType == cs_range_dr)
+                    stack.m_showRangeFrames = 1;
+                else
+                    stack.m_showRangeFrames = 0;
                 stack.m_nextFrameType = -1;
                 if (stack.m_someUnitsDamaged || stack.m_showAttackFrames) {
                     if (stack.m_showAttackFrames)
                         stack.m_nextFrameType = stack.m_showAttackFrameType;
                     else if (stack.m_allUnitsKilled)
                         stack.m_nextFrameType = cs_death;
+                    else if (stack.is(creatureDefending))
+                        stack.m_nextFrameType = cs_defend;
                     else
-                        stack.m_nextFrameType = static_cast<signed char>(
-                            cs_wince + (stack.is(creatureDefending)));
+                        stack.m_nextFrameType = cs_wince;
                     stack.m_remainingFramesToPlay = static_cast<signed char>(
                         stack.m_stdIcon->getNumFrames(stack.m_nextFrameType));
                     if (stack.m_nextFrameType == stack.m_currFrameType)
