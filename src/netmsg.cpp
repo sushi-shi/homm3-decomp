@@ -53,12 +53,14 @@ public:
         m_capacity = 100;
         m_position = 0;
     }
+    // Mac loads capacity from netMsg+0xc inside this retained constructor;
+    // Windows expands that same load at 0x512e25.
     MAC_ADDRESS(0x2231cc, 0x2c)
-    t_memory_file(char* buffer, unsigned int capacity)
+    t_memory_file(CNetMsg* netMsg)
     {
         m_ownsBuffer = 0;
-        m_buffer = buffer;
-        m_capacity = capacity;
+        m_buffer = static_cast<char*>(static_cast<void*>(netMsg));
+        m_capacity = netMsg->m_size;
         m_position = 0;
     }
     virtual ~t_memory_file();
@@ -154,8 +156,7 @@ unsigned char t_complex_net_message::remoteFn00512D40(
 VA(0x00512e00, 0xBF) MAC_ADDRESS(0x223554, 0x84)
 unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
 {
-    t_memory_file infile(static_cast<char*>(static_cast<void*>(netMsg)),
-                         netMsg->m_size);
+    t_memory_file infile(netMsg);
     infile.read(&m_netmsg, sizeof(CNetMsg));
     if (!read(&infile)) {
         return 0;
