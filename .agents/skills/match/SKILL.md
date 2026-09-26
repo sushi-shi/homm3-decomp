@@ -44,6 +44,9 @@ scores. Inspect a failing command's actual exit status and cause before continui
    Compare unmasked `sema disasm <selector>` and `--base` when immediates or
    relocation masking obscure the difference. For large functions, narrow the
    comparison with `--base-range` and `--target-range`.
+   For a switch dispatcher whose cases may reach the wrong arms, run
+   `homm3 sema switchmap <selector>`; use `--all` for a broad screen. A hit
+   is a lead: inspect the named retail table and both arms before changing C++.
 4. **Recover the source model.** Preserve proven types, layout, ABI, declaration
    ownership and one canonical definition of each helper. Match retained helper
    bodies and caller expansions separately. Returned objects and temporary
@@ -102,6 +105,12 @@ dip with held MAX is not a lost match, a regression, or a reason to reject a
 candidate. Rank searches by projected MAX from the ledger's source-hash rules;
 use CUR only to diagnose emitted code and verify reproduction. Check actual
 MAX changes before claiming collateral losses, including for shared helpers.
+Before integrating a lane, compare its compiled report with main's committed
+ledger using `homm3 status check --baseline-ref REF`. RESET means the edited
+source left banked CUR unchanged while resetting MAX; CHANGED-CUR means emitted
+bytes moved and need review. Both remain observational. If a rebase conflicts
+in `config/match_baseline.tsv`, run `homm3 status merge-baseline`, inspect its
+per-row result and stage it; never take one entire side of the generated ledger.
 Do not edit or inflate scores manually. Preserve recoverable candidate evidence
 under ignored build output or Git history. A source-supported combined model
 may temporarily lower scores: investigate its concrete predictions rather than

@@ -12,7 +12,7 @@ from unittest import mock
 
 from homm3.match.banked_rows import missing_rows, parse_history, selftest
 from homm3.match.status import (_canonical_definition_text, _definition_text,
-                                MatchRow, checkpoint_drops, cmd_check,
+                                MatchRow, checkpoint_drops, checkpoint_events, cmd_check,
                                 overall_line, projected_rows, seed_historical_maxima, update_rows)
 
 
@@ -46,6 +46,7 @@ class ReadmeUniverseTest(unittest.TestCase):
             readme.write_text(status.RM_START + '\n' + status.RM_END + '\n')
             with mock.patch.object(status, 'README_PATH', readme), \
                  mock.patch.object(status, 'load_baseline', return_value={}), \
+                 mock.patch.object(status, 'source_hash_pair', return_value=({}, {})), \
                  mock.patch.object(status, 'function_rvas', return_value=rvas), \
                  mock.patch('homm3.match.universe.summary', return_value=summary), \
                  mock.patch('homm3.build.configure.load_manifest', return_value=({}, {}, units)), \
@@ -59,7 +60,7 @@ class ReadmeUniverseTest(unittest.TestCase):
             self.assertEqual(rows['`codec`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`victor`'][0:2], ['1', '1 / 1 (100.0%)'])
             self.assertEqual(rows['`zlib-1.1.3`'][0:2], ['1', '1 / 1 (100.0%)'])
-            self.assertIn('6 / 6 functions exact', text)
+            self.assertIn('6 / 6 current implementations', text)
 
 
 class UpdateRowsTest(unittest.TestCase):
@@ -218,9 +219,36 @@ class UpdateRowsTest(unittest.TestCase):
                             return_value=({key: "new"}, {})), \
                 contextlib.redirect_stdout(output):
             self.assertEqual(cmd_check(report), 0)
-        self.assertIn("MAX DROP unit function: 98.00% -> 75.00% "
-                      "(HIST held at 99.00%)",
+        self.assertIn("CHANGED-CUR SOURCE-EDIT MAX DROP unit function: "
+                      "98.00% -> 75.00% (banked CUR 80.00%; "
+                      "HIST held at 99.00%)",
                       output.getvalue())
+
+    def test_check_distinguishes_byte_neutral_reset_from_changed_cur(self):
+        reset, changed = ("unit", "reset"), ("unit", "changed")
+        rows = {reset: MatchRow(80, 98, 100, 1, "old"),
+                changed: MatchRow(80, 98, 100, 2, "old")}
+        events = checkpoint_events(
+            {reset: 80, changed: 85}, {reset: "new", changed: "new"},
+            rows, {reset: 1, changed: 2})
+        self.assertEqual([event[0] for event in events],
+                         ["CHANGED-CUR", "RESET"])
+
+    def test_check_can_compare_with_ref_after_lane_banked(self):
+        key = ("unit", "function")
+        report = {"units": [{"name": "unit", "functions": [
+            {"name": "function", "fuzzy_match_percent": 80}]}]}
+        prior = {key: MatchRow(80, 98, 100, 1, "old")}
+        output = io.StringIO()
+        with mock.patch.object(status, "baseline_at_ref", return_value=prior) as ref, \
+                mock.patch.object(status, "load_baseline") as local, \
+                mock.patch.object(status, "function_rvas", return_value={key: 1}), \
+                contextlib.redirect_stdout(output):
+            self.assertEqual(cmd_check(report, fingerprint_pair=({key: "new"}, {}),
+                                       baseline_ref="origin/main"), 0)
+        ref.assert_called_once_with("origin/main")
+        local.assert_not_called()
+        self.assertIn("RESET SOURCE-EDIT", output.getvalue())
 
     def test_unknown_fingerprint_is_not_mistaken_for_an_edit(self):
         key = ("unit", "function")
