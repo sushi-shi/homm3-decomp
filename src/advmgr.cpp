@@ -3358,30 +3358,23 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     strcpy(buffer, g_constCreatureBankTraits[type].m_name.c_str());
     strcat(buffer, separator);
 
-    const char* armyName;
     if (!cell->playerKnowsCell(playerId)) {
-        armyName = (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT];
+        strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
     } else {
         unsigned long testFlag = cell->m_extraInfo;
         if ((testFlag & 0x02000000)
             || !cell->getCreatureBank().m_guards.hasCreatures()) {
-            armyName = (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT];
+            strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+        } else if (showFullList) {
+            strcat(buffer,
+                getArmyHelpText(&cell->getCreatureBank().m_guards, 1).c_str());
         } else {
-            if (showFullList) {
-                std::string result = getArmyHelpText(
-                    &cell->getCreatureBank().m_guards, 1);
-                strcat(buffer, result.c_str());
-                return;
-            } else {
-                strcat(buffer, "(");
-                std::string result = getArmyHelpText(
-                    &cell->getCreatureBank().m_guards, 0);
-                strcat(buffer, result.c_str());
-                armyName = ")";
-            }
+            strcat(buffer, "(");
+            strcat(buffer,
+                getArmyHelpText(&cell->getCreatureBank().m_guards, 0).c_str());
+            strcat(buffer, ")");
         }
     }
-    strcat(buffer, armyName);
 }
 
 // RETAIL-RECONSTRUCTED (97.3418%): no distinct Dreamcast row survives, but the
@@ -3402,10 +3395,10 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
     int owner = currentMine->m_playerOwner;
     int mineType = currentMine->m_type;
-    const char* description = g_mineDescriptions[7];
-    if (!currentMine->m_isAbandoned)
-        description = g_mineDescriptions[mineType];
-    strcpy(buffer, description);
+    if (currentMine->m_isAbandoned)
+        strcpy(buffer, g_mineDescriptions[7]);
+    else
+        strcpy(buffer, g_mineDescriptions[mineType]);
 
     if (owner != -1) {
         strcat(buffer, separator);
@@ -6129,12 +6122,12 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     if (currHero) {
                         testFlag = 1UL << (testCell->m_extraInfo & 0x1f);
                         visited = testFlag & currHero->m_arenaFlags;
-                        sprintf(tempText, visitFormat,
-                            visited
-                                ? g_generalText->getText(
-                                      GENERAL_TEXT_VISITED_OBJECT)
-                                : g_generalText->getText(
-                                      GENERAL_TEXT_UNVISITED_OBJECT));
+                        if (visited)
+                            sprintf(tempText, visitFormat,
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+                        else
+                            sprintf(tempText, visitFormat,
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
