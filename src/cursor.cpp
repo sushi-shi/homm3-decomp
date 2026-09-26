@@ -493,7 +493,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     enteredBoat = 0;
     if ((!curr->isFlying(0) || curr->getTarget() == triggerPoint)
         && destCell->m_isTrigger
-        && validMoveWithEvent(curr, direction)) {
+        && g_advManager->validMoveWithEvent(curr, direction)) {
         switch (destCell->m_type) {
         case BOAT:
             if (curr->m_flags & 0x40000)
@@ -567,8 +567,12 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                              foughtBattle);
     }
 
-    CMCMoveHero msg(curr->m_id, direction, standEnd, curr->getLocation());
-    sendMapChange(&msg);
+    if (!isRemoteMove) {
+        CMCMoveHero msg(curr->m_id, direction, standEnd, curr->getLocation());
+        sendMapChange(&msg);
+    }
+    if (isRemoteMove && !g_followPlayerMode)
+        curr->restoreCell();
 
     if (!becameBoat)
         g_game->recordMove(curr, direction, triggerPoint);
@@ -593,17 +597,6 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         return 0;
     }
 
-    // Retail sequences this AFTER the network early-return block, not
-    // before record_move as Dreamcast does (dc 0x7b5a2 precedes
-    // record_move at 0x7b5c2): retail's `mov al,[gbFollowPlayerMode] /
-    // test al,al / jne / call restore_cell` sits between
-    // DemobilizeCurrHero's `ret 0x1c` and the animate_move argument
-    // build. Moving it here pairs the last stray call (base-only
-    // restore_cell at +0xa06 against retail's +0xb81) and raises
-    // 89.5139 -> 89.8315.
-    if (isRemoteMove && !g_followPlayerMode)
-        curr->restoreCell();
-
     animateMove(curr, direction, xInc, yInc);
 
     curr->m_movePoints -= curMoveCost;
@@ -615,8 +608,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     unsigned char hasEvent = !isRemoteMove && destCell->hasTriggerableEvent();
     if (!computerMove && hasEvent)
         standEnd = 1;
-    if (standEnd)
-        stopCursor(1);
+    stopCursor(standEnd);
     if (computerMove && standEnd && g_completeDrawEnabled) {
         completeDraw(0);
         updateScreen(0, 0);
@@ -627,19 +619,19 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-    }
 
-    sample* walkSample = m_heroSamples[
-        getCell(curr->getLocation())->m_groundSet];
-    if (curr->isFlying(0))
-        walkSample = m_heroSamples[10];
-    walkSample->m_memSample.m_memLooping = 0;
-    if (m_cursorFrameCount) {
-        g_newWalkSample = walkSample;
-    } else {
-        g_newWalkSample = 0;
-        g_soundManager->stopSample(g_walkSample);
-        g_walkSample = g_soundManager->memorySample(walkSample);
+        sample* walkSample = m_heroSamples[
+            getCell(curr->getLocation())->m_groundSet];
+        if (curr->isFlying(0))
+            walkSample = m_heroSamples[10];
+        walkSample->m_memSample.m_memLooping = 0;
+        if (m_cursorFrameCount) {
+            g_newWalkSample = walkSample;
+        } else {
+            g_newWalkSample = 0;
+            g_soundManager->stopSample(g_walkSample);
+            g_walkSample = g_soundManager->memorySample(walkSample);
+        }
     }
 
     point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
