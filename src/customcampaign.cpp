@@ -1767,7 +1767,8 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
             artifact = artifacts[itemIndex];
             if (artifact.m_artifactId == ARTIFACT_NONE)
                 continue;
-            if (!m_crossoverArtifacts.at(artifact.m_artifactId))
+            // Mac 0x095cbc: MSL's reference proxy calls test().
+            if (!m_crossoverArtifacts[artifact.m_artifactId])
                 continue;
             offerArtifactToPlayerHeroes(artifact, player);
         }
