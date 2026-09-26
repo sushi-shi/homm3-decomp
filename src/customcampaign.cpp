@@ -2561,6 +2561,18 @@ const int g_campaignOrdinal18 = 18;
 const int g_campaignMapOrdinal06 = 6;
 const int g_campaignMapOrdinal07 = 7;
 
+// Complete retains this vector scan and oldmain calls it across translation
+// units. The older Dreamcast inline header body scans fixed arrays instead.
+VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)  // dc 0xe6ef8
+bool SCampaign::campaignComplete()
+{
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (!m_mapScores[i].m_completed)
+            return 0;
+    }
+    return 1;
+}
+
 // PRICED 2026-09-06 - do not spend a lane on the /Ob2 side of this row. An
 // `if (0)` mass titration over N = 1,2,4,8,16,32,64 inert statements is flat
 // at 78.6801 to the digit through N=16, peaks at 79.2549 (N=32) and falls to
