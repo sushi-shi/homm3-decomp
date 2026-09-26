@@ -3672,16 +3672,8 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
         like = CREATURE_NONE;
     } else {
         like = g_game->upgradedCreatureType(creature);
-        if (like == CREATURE_NONE) {
-            if (!g_game->m_gameVersion
-                && (creature == CREATURE_ICE_ELEMENTAL
-                    || creature == CREATURE_STORM_ELEMENTAL
-                    || creature == CREATURE_MAGMA_ELEMENTAL
-                    || creature == CREATURE_ENERGY_ELEMENTAL))
-                like = CREATURE_NONE;
-            else
-                like = downgradedCreatureType(creature);
-        }
+        if (like == CREATURE_NONE)
+            like = g_game->downgradedCreatureType(creature);
     }
 
     for (int i = 0; i < 7; i++) {
@@ -5479,10 +5471,7 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     {
         int storage;
         storage = monType;
-        if ((g_game->m_gameVersion
-             || !isBaseElemental(monType))
-            && static_cast<unsigned char>(
-                   isBaseCreature(TCreatureType(storage)))
+        if (g_game->isBaseCreature(TCreatureType(storage))
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE

@@ -1465,12 +1465,32 @@ public:
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
+    // Mac expands this version-aware wrapper before the retained global
+    // isBaseCreature call in combatMonsterEvent and the hill-fort guards.
+    unsigned char isBaseCreature(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0 && isBaseElemental(creature))
+            return false;
+        return static_cast<unsigned char>(::isBaseCreature(creature));
+    }
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
         if (m_gameVersion == 0 && isBaseElemental(creature))
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
+    }
+    // Mac getLikeModifier expands this counterpart before calling the
+    // retained global downgradedCreatureType at 0:0xb44b4.
+    TCreatureType downgradedCreatureType(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0
+            && (creature == CREATURE_ICE_ELEMENTAL
+                || creature == CREATURE_STORM_ELEMENTAL
+                || creature == CREATURE_MAGMA_ELEMENTAL
+                || creature == CREATURE_ENERGY_ELEMENTAL))
+            return CREATURE_NONE;
+        return ::downgradedCreatureType(creature);
     }
 // Dreamcast Game.h:839-850, IsHumanTeam (dc 0x37f64): reject a negative
 // team, scan its eight player slots, and call gpGame->IsHuman on a member.
