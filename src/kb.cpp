@@ -965,6 +965,9 @@ int oldmain()
         g_config.m_binkVideo = 0;
         videoPlay(27, 0, 0, 800, 600);
 
+#if !defined(HOMM3_TARGET_MAC)
+        // Windows Bink benchmark summary; the Mac build (a VC6 steering aid)
+        // does not model the RAD SDK, so Bink video stays off there.
         g_testDecomp = static_cast<int>(
             static_cast<float>(g_binkSummary.TotalDecompTime * 100)
             / static_cast<float>(g_binkSummary.TotalTime));
@@ -983,6 +986,7 @@ int oldmain()
             && g_testBlit < 25
             && g_testRead < 10)
             g_config.m_binkVideo = 1;
+#endif
 
         if (g_lobbyLaunched)
             writePrefs();
