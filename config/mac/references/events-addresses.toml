@@ -1,11 +1,11 @@
 # Reviewed address identities; compiler linkage names remain unbound.
 [[functions]]
 mac_section = 0x0
-mac_offset = 0xa936c
-mac_size = 0x44
+mac_offset = 0xa9368
+mac_size = 0x48
 unit = "events"
-target_sha256 = "264e303082547a4675a24ca9f1258b944c34e021d90067f230ad05cb25f9545a"
-evidence = "Unique advevent.txt loader pointer/use, getText0x153ad8 and stored resource global. Complete span ends in return; next independent entry excluded. TU order is supporting evidence."
+target_sha256 = "facd1a752f313cd5f09c08674f76b905009141d1c3fe0cf06fff6c3762f25395"
+evidence = "advevent.txt TOC-minus5c08 loads resource through getText153ad8 and stores global TOC-minus74d0. Entry mflr at a9368 follows BLR a9364; own BLR a93ac precedes next entry a93b0. Both kb calls115fc8/1160f4 target a9368, correcting prior four-byte-short claim."
 retail_va = 0x49e0e0
 
 [[functions]]
