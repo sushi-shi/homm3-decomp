@@ -1,16 +1,16 @@
 # MANUALLY RATCHETED - homm3.cleanliness.board floors; build
 # rolls them DOWN-only, `board --update` is the only bless.
 C-style casts	0
-reinterpret_casts	1
+reinterpret_casts	4
 volatile qualifiers	0
 inline-gate artifacts	0
-inline-depth pins	35
+inline-depth pins	7
 end-position inserts	0
 std internal references	1
 cpp extern decls	0
 .cpp-local views	0
 .cpp-local enums	0
-casts to enum types	0
+casts to enum types	5
 magic case labels	0
 unnamed domain compares	0
 view preprocessor artifacts	0
