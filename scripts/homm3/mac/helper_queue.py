@@ -169,11 +169,15 @@ def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
 
 
 def leads(report: dict, unit: str | None = None,
-          include_deferred: bool = False) -> list[dict]:
+          include_deferred: bool = False,
+          include_other_named: bool = False) -> list[dict]:
     """Group actionable call leads by destination instead of repeating sites."""
     groups = {}
+    states = {"review_missing_helper_call", "identify_target"}
+    if include_other_named:
+        states.add("review_other_named_call")
     for row in report["calls"]:
-        if row["state"] not in ("review_missing_helper_call", "identify_target"):
+        if row["state"] not in states:
             continue
         if unit and row["unit"] != unit:
             continue
@@ -193,7 +197,9 @@ def leads(report: dict, unit: str | None = None,
         group["caller_count"] = len(group.pop("callers"))
         group["unit_count"] = len(group.pop("units"))
         result.append(group)
+    rank = {"review_missing_helper_call": 0,
+            "review_other_named_call": 1, "identify_target": 2}
     return sorted(result, key=lambda group: (
-        group["state"] != "review_missing_helper_call",
+        rank[group["state"]],
         -group["caller_count"], -group["sites"], -group["unit_count"],
         group["mac_target"]))

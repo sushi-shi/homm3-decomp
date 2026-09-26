@@ -31,7 +31,10 @@ without crowding the displayed helper leads.
 The command display groups repeated call sites by destination and orders them
 by distinct Windows callers. `--limit` counts destinations; the TSV
 keeps every individual call site. The display skips user-deferred modules unless
-`--include-deferred` is supplied; the JSON and TSV retain them.
+`--include-deferred` is supplied; the JSON and TSV retain them. Use
+`--include-named` to show named Mac callees absent textually from the immediate
+caller. These often come from an authored nested helper, default argument, or
+implicit constructor; inspect that path before editing the caller.
 
 Use `--owner worker=game,townmgr` when owner labels help coordinate parallel
 work. Unassigned rows remain visible. The `rmg`, `zlib-1.1.3`, `codec`, and

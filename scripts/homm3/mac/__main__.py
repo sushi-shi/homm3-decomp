@@ -97,6 +97,8 @@ def main(argv=None) -> int:
     p.add_argument("--include-deferred", action="store_true", help="display user-deferred modules too")
     p.add_argument("--all-functions", action="store_true",
                    help="include exact Windows callers in a separate whole-corpus helper inventory")
+    p.add_argument("--include-named", action="store_true",
+                   help="display other named Mac callees for transitive helper review")
     p.add_argument("--json", action="store_true", help="print the full structured helper queue")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
@@ -230,7 +232,8 @@ def main(argv=None) -> int:
                       f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
-                for lead in helper_queue.leads(report, args.unit, args.include_deferred)[:args.limit]:
+                for lead in helper_queue.leads(report, args.unit, args.include_deferred,
+                                               args.include_named)[:args.limit]:
                     example = lead["example"]
                     print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
                           f"{lead['sites']} sites in {lead['caller_count']} callers / "
