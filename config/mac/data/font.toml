@@ -1,0 +1,7 @@
+[[constants]]
+units = ["font"]
+mac_section = 1
+mac_offset = 0x4ab8
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Empty string: native font object emits anonymous @419 as one NUL byte. All eight fillLinesVector empty-string strlen/assign operands at 0xc9ba8, 0xc9bb8, 0xc9c04, 0xc9c14, 0xc9cb0, 0xc9cc0, 0xc9d3c and 0xc9d4c use addi r3/r4,r2,-0x3548; the loader-proven TOC base is section 1+0x8000, so their target is section 1+0x4ab8, whose pinned payload is NUL."
