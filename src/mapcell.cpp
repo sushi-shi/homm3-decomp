@@ -3641,7 +3641,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     unsigned char packed[6];
     int i;
 
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     infile->read(imageName, value);
@@ -3711,7 +3711,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     // the typed member, exactly as the trait fixup below copies into it: a
     // separate TAdventureObjectType local takes its own frame slot and pushes
     // every later displacement by four (99.9633 against retail's 0x8c frame).
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     memcpy(&tempObjectType.m_objectType, &value,
@@ -3729,15 +3729,15 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
            &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
-    count = infile->read(&value, sizeof(value));
+    count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;
     tempObjectType.m_extra = value;
 
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
-    count = infile->read(&byteValue, sizeof(byteValue));
+    count = readValue(infile, byteValue);
     if (count < sizeof(byteValue))
         return -1;
     tempObjectType.m_suppressDraw = byteValue != 0;
@@ -3758,10 +3758,10 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
     game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
-    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
+    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
         return -1;
     value = tempObjectType->m_height;
-    if (static_cast<unsigned>(outfile->write(&value, 1)) < 1)
+    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
         return -1;
 
     unsigned char packed[6];
@@ -3800,15 +3800,15 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     short typeValue = tempObjectType->m_objectType;
-    if (static_cast<unsigned>(outfile->write(&typeValue, 2)) < 2)
+    if (static_cast<unsigned>(writeValue(outfile, typeValue)) < 2)
         return -1;
 
     int extra = tempObjectType->m_extra;
-    if (static_cast<unsigned>(outfile->write(&extra, 4)) < 4)
+    if (static_cast<unsigned>(writeValue(outfile, extra)) < 4)
         return -1;
 
     value = tempObjectType->m_suppressDraw;
-    return static_cast<unsigned>(outfile->write(&value, 1)) < 1 ? -1 : 1;
+    return static_cast<unsigned>(writeValue(outfile, value)) < 1 ? -1 : 1;
 }
 
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
@@ -3821,10 +3821,10 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     game::loadString(infile, tempObjectType->m_imageName);
 
     char value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObjectType->m_width = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObjectType->m_height = value;
 
@@ -3860,16 +3860,16 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     }
 
     unsigned short typeValue;
-    if (infile->read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
+    if (readValue(infile, typeValue) < sizeof(typeValue))
         return -1;
     tempObjectType->m_objectType = TAdventureObjectType(typeValue);
 
     int extra;
-    if (infile->read(&extra, sizeof(extra)) < sizeof(extra))
+    if (readValue(infile, extra) < sizeof(extra))
         return -1;
     tempObjectType->m_extra = extra;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    if (readValue(infile, value) < sizeof(value))
         return -1;
     tempObjectType->m_suppressDraw = value != 0;
     return 1;
