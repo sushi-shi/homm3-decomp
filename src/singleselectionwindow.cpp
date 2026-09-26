@@ -3260,7 +3260,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         startMouseThread();
         drawWindow(0, 0xffff0001, 0xffff);
         g_smallFont->drawBoundedString(
-            g_generalText->getText(GENERAL_TEXT_SCENARIO_READING_MAP_FILES), g_windowManager->m_screenBitmap,
+            (*g_generalText)[GENERAL_TEXT_SCENARIO_READING_MAP_FILES], g_windowManager->m_screenBitmap,
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
