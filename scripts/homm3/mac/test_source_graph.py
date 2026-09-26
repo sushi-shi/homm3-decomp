@@ -211,6 +211,38 @@ inline double min(double left, double right) { return left < right ? left : righ
                              {'clang_long_min_as_int'})
             self.assertFalse(any(node.get('analysis_alias') for node in result['nodes']))
 
+    def test_deque_overlay_recovers_calls_through_iterator(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            header = root / 'build/gen/msvc-include/deque'
+            header.parent.mkdir(parents=True)
+            original = '''template<class T> class deque {
+public:
+    class const_iterator {
+    protected:
+        T* _First; T* _Last; T* _Next; T** _Map;
+    };
+    class iterator : public const_iterator {
+    public:
+        iterator& operator++() { ++_First; return *this; }
+    };
+};
+'''.replace('    class iterator : public const_iterator {\n    public:',
+            'class iterator : public const_iterator {\n\tpublic:')
+            header.write_text(original)
+            source = root / 'src/test.cpp'
+            source.parent.mkdir()
+            source.write_text('''#include "deque"
+void helper();
+void caller(deque<int>::iterator& it) { ++it; helper(); }
+''')
+            result = source_graph.scan(self.ci, source,
+                                       ['-xc++', '-std=c++98', '-I' + str(header.parent)], root)
+            self.assertEqual(result['diagnostics'], [])
+            self.assertEqual(header.read_text(), original)
+            self.assertEqual(result['inputs'][str(header)], source_graph.digest(header))
+            self.assertTrue(any(edge['expression'] == 'helper()' for edge in result['edges']))
+
 
 if __name__ == '__main__':
     unittest.main()

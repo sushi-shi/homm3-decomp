@@ -79,6 +79,20 @@ def _vc6_functional_overlays(root: Path):
              'typename _Bfn::second_argument_type(_Y)'))]
 
 
+def _deque_overlays(root: Path):
+    """Expose VC6 deque's dependent base members to Clang."""
+    header = root / 'build/gen/msvc-include/deque'
+    if not header.is_file():
+        return []
+    original = header.read_text()
+    marker = 'class iterator : public const_iterator {\n\tpublic:'
+    if original.count(marker) != 1:
+        return []
+    declarations = ''.join(f'\n\t\tusing const_iterator::{member};'
+                           for member in ('_First', '_Last', '_Next', '_Map'))
+    return [(str(header), original.replace(marker, marker + declarations, 1))]
+
+
 def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     """Keep exact declaration USRs, including overload and const distinctions."""
     k = ci.CursorKind
@@ -89,7 +103,8 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
     tu = ci.Index.create().parse(str(source), args=args,
                                  unsaved_files=[*_vendor_asm_overlays(root),
                                                 *_min_overlays(root),
-                                                *_vc6_functional_overlays(root)])
+                                                *_vc6_functional_overlays(root),
+                                                *_deque_overlays(root)])
     nodes, edges, gaps = {}, [], []
     texts = {}
 
