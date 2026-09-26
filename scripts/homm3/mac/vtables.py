@@ -54,8 +54,8 @@ def external_bindings(root: Path, pef, loader, code, hunks,
                       *, unit: str | None, retail_va: int | None) -> dict[str, Address]:
     """Return only source-proven vtables with complete loader-verified entries.
 
-    The candidate must leave the vtable external. This never constructs or
-    compares a candidate initializer using bytes from the retail PEF.
+    The candidate leaves the vtable external or defines it with the reviewed
+    slot layout; its initializer is never compared against the retail PEF.
     """
     if not unit or retail_va is None:
         return {}
@@ -85,12 +85,19 @@ def external_bindings(root: Path, pef, loader, code, hunks,
                 raise ObjectError("invalid reviewed vtable declaration")
             _class_body(root, declaration)
         cells = [h for h in hunks if h.name == name and h.storage_class == "TC"]
-        if (len([h for h in hunks if h.name == name and h.storage_class in ("RW", "RO", "TD")])
-                or len(cells) != 1 or cells[0].data != bytes(4)
+        if (len(cells) != 1 or cells[0].data != bytes(4)
                 or cells[0].xrefs != ((0, "HUNK_XREF_32BIT", name),)
                 or not any(kind == "HUNK_XREF_16BIT_IL" and symbol == name
                            for _, kind, symbol in code.xrefs)):
-            raise ObjectError(f"reviewed external vtable {name!r} has no sole external TC cell")
+            raise ObjectError(f"reviewed external vtable {name!r} has no sole TC cell")
+        # A full TU may define the table itself: RTTI at +0, then one slot per entry.
+        defined = [h for h in hunks if h.name == name and h.storage_class in ("RW", "RO", "TD")]
+        if defined and (len(defined) != 1 or defined[0].data is None
+                        or len(defined[0].data) != row.get("mac_size")
+                        or sorted(at for at, _kind, _symbol in defined[0].xrefs)
+                        != [0, *range(8, 8 + 4 * len(slots), 4)]
+                        or not str(dict((at, s) for at, _k, s in defined[0].xrefs).get(0)).startswith("__RTTI__")):
+            raise ObjectError(f"same-TU vtable {name!r} does not have the reviewed slot layout")
         try:
             toc_at = Address(row["toc_section"], row["toc_offset"])
             target = Address(row["mac_section"], row["mac_offset"])

@@ -228,7 +228,8 @@ def bindings(root: Path, pef: PEF, code: CodeHunk,
                 raise ObjectError(f"emitted function descriptor differs: {name!r}")
             value = descriptor_values[0]
         elif external:
-            if values or not indirect:
+            # A reviewed vtable may be defined in this TU; its slot layout was checked.
+            if not indirect or (values and name not in external_vtables):
                 raise ObjectError(f"external TOC symbol {name!r} must have an IL reference and no emitted initializer")
             value = None
         elif len(values) != 1 or values[0].xrefs:
