@@ -6613,6 +6613,8 @@ int TTavernWindow::windowHandler(message& msg)
                         videoResume();
                     }
                 }
+                // Mac additionally calls videoRestart at 0:0x1d5b74.
+                // Windows 0x5d7dac calls videoOpen then draws directly.
                 if (!videoPlaying())
                     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
                 drawWindow(1, WINDOW_ALL_WIDGETS_LOW,

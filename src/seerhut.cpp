@@ -1736,6 +1736,9 @@ std::string type_belong_to_player_quest::getRequirementText()
 VA(0x00572670, 0x19D) MAC_ADDRESS(0x168e58, 0xb4)
 std::string type_belong_to_player_quest::getQuestDescription()
 {
+    // Mac copies into a stack buffer with the ASCII-lowercase routine at
+    // 0:0x26afe8; Windows keeps a string and calls CRT tolower (0x572761).
+    // setDefaultText has the same port difference (Windows 0x5729d2).
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);

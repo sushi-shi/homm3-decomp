@@ -2,6 +2,15 @@
 
 [[helpers]]
 unit = "seerhut"
+source_helper = "type_artifact_quest::type_artifact_quest(unsigned char flags)"
+mac_section = 0
+mac_offset = 0x1664dc
+mac_size = 0x5c
+target_sha256 = "67e42e5e81264a9ba1cb10753b713bdca1ada91b327ca4b754ff5c434e6d4a40"
+evidence = "createQuest case QUEST_ARTIFACTS calls this body at 0x169800. It forwards flags to type_quest at 0x163ff4, installs the artifact-quest vtable through TOC -0x70c8, and constructs its artifact vector at +0x1c. The existing one-argument constructor and factory new-expression already preserve this boundary. BLR at 0x166534 precedes the vector storage constructor at 0x166538; this is distinct from the three-argument legacy-reader constructor at 0x1665b8."
+
+[[helpers]]
+unit = "seerhut"
 source_helper = "type_artifact_quest::type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow)"
 mac_section = 0
 mac_offset = 0x1665b8
