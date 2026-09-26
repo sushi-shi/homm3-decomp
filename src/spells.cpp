@@ -2642,7 +2642,7 @@ void combatManager::markAreaEffect(long hex, long radius,
     for (point.x = center.x - radius; point.x <= center.x + radius; point.x++) {
         for (point.y = center.y - radius; point.y <= center.y + radius;
              point.y++) {
-            if (getDistance(center, point) > radius)
+            if (getDistance(point, center) > radius)
                 continue;
             long marked = pointToHex(point);
             if (!validHex(marked))
@@ -2673,7 +2673,7 @@ void combatManager::markBerserkAreaEffect(long hex, long mastery,
          point.x <= center.x + g_berserkRadius[mastery]; point.x++) {
         for (point.y = center.y - g_berserkRadius[mastery];
              point.y <= center.y + g_berserkRadius[mastery]; point.y++) {
-            if (getDistance(center, point) > g_berserkRadius[mastery])
+            if (getDistance(point, center) > g_berserkRadius[mastery])
                 continue;
             long marked = pointToHex(point);
             if (!validHex(marked))
