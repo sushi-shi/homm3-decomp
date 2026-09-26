@@ -965,14 +965,21 @@ int TCampaignStartCrossoverOption::getCount() const
     return m_choices.size();
 }
 
+// Mac code+0x93878 precedes the crossover option's virtual methods and
+// is called by getIconDefName at +0x938e0. Windows expands this pool lookup.
+hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
+    SCampaign* campaign, int which) const
+{
+    std::vector<hero>& pool = campaign->m_carryOverHeroes
+        [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
+    return pool.size() != 0 ? &pool[0] : 0;
+}
+
 VA(0x004854c0, 0x6E)
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
 {
-    SCampaign* campaign = static_cast<SCampaign*>(campaignRecord);
-    std::vector<hero>& pool = campaign->m_carryOverHeroes
-        [campaign->m_mapScores[m_choices[which].m_scenario].m_index];
-    hero* first = pool.size() != 0 ? &pool[0] : 0;
+    hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
     if (first == 0)
         return "hpl000kn.pcx";
     return g_heroTraits[first->m_portrait].m_largePortraitName;

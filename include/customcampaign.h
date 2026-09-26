@@ -421,6 +421,7 @@ struct TCampaignCrossoverChoice {
 // Read's `new` site, so no declarator is needed here.
 class TCampaignStartCrossoverOption : public TCampaignStartOption {
 public:
+    hero* getFirstCrossoverHero(SCampaign* campaign, int which) const;
     virtual bool isBuildingBonus(int which) const;
     virtual int getCount() const;
     virtual const char* getIconDefName(void* campaign, int which) const;
