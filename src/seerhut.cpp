@@ -29,13 +29,6 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
 void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
                             int amount);
 
-// The retail factory is frameless under /GX even though its new-expressions
-// construct vector-owning classes, so this TU saw the nothrow deallocator
-// declaration used by the other frameless-construction compilands.
-#if defined(_MSC_VER)
-__declspec(nothrow) void __cdecl operator delete(void* value);
-#endif
-
 // DC dialog ownership changed with the quest representation. In the old
 // TSeerHut (dc0x12d238..0x12d4dc), one artifact and text-row byte drive
 // progress/proposal, acceptance/refusal and immediate-reward prompts.

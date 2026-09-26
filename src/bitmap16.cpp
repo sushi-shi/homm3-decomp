@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <math.h>
+#include <new>
 #include <string.h>
 
 #include "bitmap16.h"
@@ -9,12 +10,6 @@
 #include "bitmap816.h"
 #include "hsv.h"
 #include "pcx.h"
-
-// Retail's destructor is frameless under /GX, proving that this TU saw the
-// deallocator as nothrow (the same header contract established by sample.obj).
-#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
-__declspec(nothrow) void __cdecl operator delete(void* p);
-#endif
 
 // Convert using the low word of the biased double representation.
 // Original: ftol; bitmap16.cpp:59, dc 0x50a9c

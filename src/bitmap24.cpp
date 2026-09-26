@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <math.h>
+#include <new>
 #include <string.h>
 
 #include "bitmap24.h"
@@ -10,12 +11,6 @@
 #include "bitmap16.h"
 #include "hsv.h"
 #include "pcx.h"
-
-// The retail destructor is frameless under /GX, so this compiland saw the
-// same nothrow deallocator contract as bitmap16.obj and sample.obj.
-#if defined(_MSC_VER) // MSL <new> already declares operator delete(void*) throw()
-__declspec(nothrow) void __cdecl operator delete(void* value);
-#endif
 
 // Dreamcast exposes these three source helpers as standalone bitmap24.cpp
 // functions. Complete retains each call boundary in source but VC6 expands all

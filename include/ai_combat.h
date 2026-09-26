@@ -12,18 +12,6 @@ class hero;
 class town;
 class NewmapCell;
 
-// VC6's <new> declares `operator delete` WITHOUT an exception
-// specification, so under /GX the scope-exit destructor sequence has
-// to keep the EH state variable live across each call
-// (`mov [ebp-4], 0` / `mov [ebp-4], -1`). Retail emits neither store
-// in AI_quick_combat (0x4274a2..0x4274bd) or AI_auto_combat - its
-// operator delete was visible as nothrow. Declaring it so here is what
-// makes those two byte-exact; the retail target is the 11-byte free
-// thunk at 0x60ab30, which indeed cannot throw.
-#if defined(_MSC_VER)
-__declspec(nothrow) void __cdecl operator delete(void* p);
-#endif
-
 // The AI's quick-combat speed bands. Retail compares the band against
 // type_monster_data::catagory as a plain signed int (get_attack
 // 0x4263d5 / inflict_melee_damage 0x426207); band 0 is the ranged band
