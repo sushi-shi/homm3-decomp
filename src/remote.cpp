@@ -91,7 +91,7 @@ void dpsd(int dpErr, char* file, int line)
     g_inside = 0;
 }
 
-VA(0x005522d0, 0x1E)  // dc order-map (DPSD, calc_crc_long, CDPlayHeroes::CDPlayHeroes) + anchor-callee @crc32@12 twice, dc 0x11b940
+VA(0x005522d0, 0x1E) MAC_ADDRESS(0x210260, 0x50)  // Mac and retail both call crc32 twice; dc 0x11b940
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len)
 {
     unsigned long seed = crc32(0, 0, 0);
@@ -120,11 +120,13 @@ CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
+// Mac 0x210868 retains destroyMsg for each packet drained from the queue.
+MAC_ADDRESS(0x210814, 0x80)
 void CDPlayHeroes::destroyMsgQueue()
 {
     while (!m_msgQueue.empty()) {
         CNetMsg* netMsg = m_msgQueue.front();
-        delete netMsg;
+        destroyMsg(netMsg);
         m_msgQueue.pop_front();
     }
 }
@@ -313,7 +315,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 // Assigning the result before setting wasCompressed recovers the remaining
 // four instruction differences and reaches 100%; the reversed ordering is
 // the 98.62% negative control. Both helper and caller boundaries stay natural.
-VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
+VA(0x00553040, 0x1D1) MAC_ADDRESS(0x210b84, 0x14c)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
 {
@@ -345,7 +347,7 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
     return netMsg;
 }
 
-VA(0x00553220, 0x89)
+VA(0x00553220, 0x89) MAC_ADDRESS(0x210cd0, 0x58)
 bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
                                       bool compressMsg, bool guaranteed)
 {
@@ -360,13 +362,15 @@ bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
         msg, dpidTo, compressMsg, guaranteed);
 }
 
-VA(0x005532b0, 0xB9)
+// Mac 0x210dcc and 0x210e00 retain destroyMsg for both failed-compression
+// exits; keep the same cleanup boundary when VC6 expands it.
+VA(0x005532b0, 0xB9) MAC_ADDRESS(0x210d28, 0x100)
 CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 {
     HOMM3_RELEASE_VERIFY(netMsg != 0 && netMsg->m_size >= sizeof(CNetMsg));
     unsigned long compressedSize =
         static_cast<unsigned long>(netMsg->m_size * 1.2) + 12;
-    void* storage = ::operator new(compressedSize);
+    void* storage = new char[compressedSize];
     CNetMsg* compressedMsg = static_cast<CNetMsg*>(storage);
     memcpy(compressedMsg, netMsg, sizeof(CNetMsg));
 
@@ -377,7 +381,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
             static_cast<const unsigned char*>(
                 static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
             netMsg->m_size - sizeof(CNetMsg), 6)) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
 
@@ -385,7 +389,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     unsigned long originalSize = netMsg->m_size;
     compressedMsg->m_uncompressedSize = originalSize;
     if (compressedMsg->m_size >= originalSize) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
     return compressedMsg;
@@ -393,10 +397,11 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 
 // Original: CDPlayHeroes::UncompressMsg; remote.cpp:463, dc 0x11bf40
 // GetRemoteData (0x553040) expands this header copy, zlib call and cleanup.
+MAC_ADDRESS(0x210e28, 0xbc)
 CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
 {
     unsigned long destSize = netMsg->m_uncompressedSize + sizeof(CNetMsg);
-    CNetMsg* result = static_cast<CNetMsg*>(::operator new(destSize));
+    CNetMsg* result = reinterpret_cast<CNetMsg*>(new char[destSize]);
     *result = *netMsg;
     destSize -= sizeof(CNetMsg);
     if (uncompress(static_cast<unsigned char*>(static_cast<void*>(result)) + sizeof(CNetMsg),
@@ -410,7 +415,9 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-VA(0x00553370, 0x5C)
+// Mac 0x210f50/0x210f78 retain separate compressed/original sends;
+// 0x210f60 releases the temporary compressed packet through destroyMsg.
+VA(0x00553370, 0x5C) MAC_ADDRESS(0x210ee4, 0xb4)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
                                           bool compressMsg, bool guaranteed)
@@ -418,15 +425,16 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     msg->m_from = g_localGamePos;
     CNetMsg* compressedMsg = 0;
     msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
-    if (compressMsg) {
+    if (compressMsg)
         compressedMsg = this->compressMsg(msg);
-        if (compressedMsg)
-            msg = compressedMsg;
-    }
 
-    bool result = sendIt(msg, dpidTo, guaranteed);
-    if (compressedMsg)
-        delete compressedMsg;
+    bool result;
+    if (compressedMsg) {
+        result = sendIt(compressedMsg, dpidTo, guaranteed);
+        destroyMsg(compressedMsg);
+    } else {
+        result = sendIt(msg, dpidTo, guaranteed);
+    }
     return result;
 }
 
@@ -542,9 +550,10 @@ void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 // allocation/copy into both member drop paths; the standalone handler also
 // expands Dinkumware's push_back internals, while SendIt's nested occurrence
 // stops at that template boundary.
+MAC_ADDRESS(0x211088, 0x64)
 void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 {
-    void* storage = ::operator new(netMsg->m_size);
+    void* storage = new char[netMsg->m_size];
     memcpy(storage, netMsg, netMsg->m_size);
     m_msgQueue.push_back(static_cast<CNetMsg*>(storage));
 }
@@ -996,6 +1005,8 @@ void CChatEdit::updateScreen()
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Mac 0x212430..0x212794 retains each function-key virtual call with
+// its literal recipient, rather than one call after key arithmetic.
 VA(0x00554240, 0xEA) MAC_ADDRESS(0x212248, 0x59c)  // dc 0x11cc2c
 int CChatEdit::onKeyPress(message* msg)
 {
@@ -1006,14 +1017,21 @@ int CChatEdit::onKeyPress(message* msg)
         case KEYCODE_ESCAPE:
             return onEscape(*msg);
         case KEYCODE_F1:
+            return onFunctionKey(*msg, 0);
         case KEYCODE_F2:
+            return onFunctionKey(*msg, 1);
         case KEYCODE_F3:
+            return onFunctionKey(*msg, 2);
         case KEYCODE_F4:
+            return onFunctionKey(*msg, 3);
         case KEYCODE_F5:
+            return onFunctionKey(*msg, 4);
         case KEYCODE_F6:
+            return onFunctionKey(*msg, 5);
         case KEYCODE_F7:
+            return onFunctionKey(*msg, 6);
         case KEYCODE_F8:
-            return onFunctionKey(*msg, key - KEYCODE_F1);
+            return onFunctionKey(*msg, 7);
     }
 
     int result = textEntryWidget::onKeyPress(msg);
@@ -1073,7 +1091,7 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
     return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
 
-VA(0x00554410, 0x93)
+VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)
 unsigned char initRemote(eNetGameType mpType, const char* userName)
 {
     CNetPlayerInfo playerInfo;
@@ -1137,7 +1155,7 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
     return 0;
 }
 
-VA(0x005546b0, 0x103)
+VA(0x005546b0, 0x103) MAC_ADDRESS(0x212c58, 0x118)
 void pollRemote()
 {
     if (g_gameOver || !g_remoteOn || !g_dPlay)
@@ -1150,7 +1168,8 @@ void pollRemote()
                    > g_playerActiveUpdateInterval) {
             g_lastActiveUpdate = GameTime::get();
             CPlayerActiveMsg msg;
-            transmitRemoteDataDPID(&msg, 0, false, false);
+            // Mac 0x212d40 retains the player-recipient broadcast wrapper.
+            transmitRemoteData(&msg, NET_MESSAGE_RECIPIENT_ALL, false, false);
         }
     } else {
         g_lastActiveUpdate = 0;
@@ -1238,7 +1257,7 @@ CAnimatedDlg::~CAnimatedDlg()
         m_sprite->dispose();
 }
 
-VA(0x00554b10, 0x20)  // dc 0x11d290
+VA(0x00554b10, 0x20) MAC_ADDRESS(0x2130b4, 0x28)  // dc 0x11d290
 unsigned char CAnimatedDlg::setup(
     const char* text, font* textFont, const char* spriteName, int sequence)
 {
@@ -1247,7 +1266,7 @@ unsigned char CAnimatedDlg::setup(
     return CTextDialog::setup(text, textFont);
 }
 
-VA(0x00554b30, 0xF5)  // dc 0x11d2b0
+VA(0x00554b30, 0xF5) MAC_ADDRESS(0x2130dc, 0x10c)  // dc 0x11d2b0
 void CAnimatedDlg::calcSpriteDimensions(
     CSprite* sprite, int& maxWidth, int& maxHeight, int& minY)
 {
@@ -1281,7 +1300,7 @@ void CAnimatedDlg::calcSpriteDimensions(
     maxHeight = height - minY;
 }
 
-VA(0x00554c30, 0xB8)  // dc 0x11d394
+VA(0x00554c30, 0xB8) MAC_ADDRESS(0x2131e8, 0xfc)  // dc 0x11d394
 void CAnimatedDlg::calcDimensions(
     const char* text, font* textFont, int& winX, int& winY,
     int& winWidth, int& winHeight)
@@ -1307,7 +1326,7 @@ void CAnimatedDlg::calcDimensions(
     winY = (600 - winHeight) / 2;
 }
 
-VA(0x00554cf0, 0x94)  // dc 0x11d490
+VA(0x00554cf0, 0x94) MAC_ADDRESS(0x2132e4, 0xd8)  // dc 0x11d490
 void CAnimatedDlg::drawSprite()
 {
     int s0x = m_sprite->getCroppedX(m_seq, m_spriteFrame);
@@ -1342,7 +1361,7 @@ void CAnimatedDlg::tickAnimation()
     }
 }
 
-VA(0x00554e90, 0x7D)  // dc 0x11d5dc
+VA(0x00554e90, 0x7D) MAC_ADDRESS(0x2134d0, 0xc4)  // dc 0x11d5dc
 void CAnimatedDlg::drawWindow(unsigned char update, int lowID, int highID)
 {
     if (!m_palUpdated) {
@@ -1379,14 +1398,9 @@ void CWaitForReadyPlayersDlg::wait()
     m_startTime = GameTime::get();
     sRand(m_startTime);
 
-    int creature;
-    do {
-        // DC 1723 and the Mac wait-dialog body both retain SRandom. Windows
-        // retail branches to random at 0x50b230; its body is byte-identical
-        // to sRandom's VC6 body, so the symbol identity remains a link lead.
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
@@ -1400,6 +1414,7 @@ void CWaitForReadyPlayersDlg::wait()
 
 // E:\gamedcs\remote.cpp:1798. Dreamcast's `_N` return mangling proves bool;
 // retail independently proves the eight-entry human/ready scan when inlined.
+MAC_ADDRESS(0x216110, 0x7c)
 bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
     for (int i = 0; i < 8; ++i) {
@@ -1445,7 +1460,7 @@ void waitForReadyToPlayMsg()
     dlg.wait();
 }
 
-VA(0x00555190, 0x319)  // dc 0x11f9f0
+VA(0x00555190, 0x319) MAC_ADDRESS(0x215e2c, 0x2e4)  // dc 0x11f9f0
 int CWaitForReadyPlayersDlg::handleMessage(message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
@@ -2092,11 +2107,9 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
     m_fromWho = fromWho;
     sRand(GameTime::get());
 
-    int creature;
-    do {
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
         creature = sRandom(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
@@ -2260,7 +2273,7 @@ int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
     return 0;
 }
 
-VA(0x005572e0, 0x2D)  // dc 0x11eb40
+VA(0x005572e0, 0x2D) MAC_ADDRESS(0x214eec, 0x48)  // dc 0x11eb40
 CSaveScreen::CSaveScreen(int w, int h)
     : Bitmap16Bit(w, h)
 {
@@ -2272,7 +2285,7 @@ CSaveScreen::CSaveScreen(int w, int h)
 VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 VA_COMPGEN(0x00557340, 0x05, IMPLICIT_DTOR, CSaveScreen)
 
-VA(0x00557350, 0x3A)  // dc 0x11eb9c
+VA(0x00557350, 0x3A) MAC_ADDRESS(0x214f34, 0x54)  // dc 0x11eb9c
 void CSaveScreen::save(int x, int y)
 {
     m_x = x;
@@ -2281,7 +2294,7 @@ void CSaveScreen::save(int x, int y)
     grab(g_windowManager->m_screenBitmap, x, y);
 }
 
-VA(0x00557390, 0x69)  // dc 0x11ebc8
+VA(0x00557390, 0x69) MAC_ADDRESS(0x214f88, 0xb8)  // dc 0x11ebc8
 void CSaveScreen::restore(unsigned char update)
 {
     if (m_screenSaved) {
@@ -2300,7 +2313,7 @@ unsigned char CSaveScreen::isSaved()
 
 void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 
-VA(0x00557410, 0x1E)  // dc 0x11ec64
+VA(0x00557410, 0x1E) MAC_ADDRESS(0x215048, 0x2c)  // dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
 {
     m_x = 0;
@@ -2312,14 +2325,15 @@ CGameTransferSmack::CGameTransferSmack()
     m_drawText = 1;
 }
 
-VA(0x00557430, 0x22)  // dc 0x11ec88
+VA(0x00557430, 0x22) MAC_ADDRESS(0x215074, 0x84)  // dc 0x11ec88
 CGameTransferSmack::~CGameTransferSmack()
 {
-    stop();
+    if (m_started)
+        stop();
     delete m_saveScreen;
 }
 
-VA(0x00557460, 0x1E)  // dc 0x11ecbc
+VA(0x00557460, 0x1E) MAC_ADDRESS(0x2150f8, 0x14)  // dc 0x11ecbc
 void CGameTransferSmack::setup(int x, int y, unsigned char sending,
                                unsigned char drawText)
 {
@@ -2329,7 +2343,7 @@ void CGameTransferSmack::setup(int x, int y, unsigned char sending,
     m_drawText = drawText;
 }
 
-VA(0x00557480, 0x25)  // dc 0x11ecd8
+VA(0x00557480, 0x25) MAC_ADDRESS(0x21510c, 0x4c)  // dc 0x11ecd8
 void CGameTransferSmack::start()
 {
     m_started = 1;
@@ -2338,7 +2352,9 @@ void CGameTransferSmack::start()
 
 // DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
 // helper below calls the current-handle video wrapper at 0x598e80.
-VA(0x005574b0, 0x12D)  // dc 0x11ece4
+// Mac additionally clamps NaN progress to zero through MathLib::__fpclassifyf
+// at 0x215184; Windows proceeds directly to the frame calculation.
+VA(0x005574b0, 0x12D) MAC_ADDRESS(0x215158, 0x160)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
@@ -2367,13 +2383,14 @@ void CGameTransferSmack::setPercentage(float pct)
 // DC retains an empty body on the console; retail SetPercentage calls the
 // Windows video draw wrapper through this source helper.
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
+MAC_ADDRESS(0x2152b8, 0x24)
 inline void CGameTransferSmack::drawCurrentFrame()
 {
     SmackManager::drawSmackerFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789
-VA(0x005575e0, 0x15)  // dc 0x11edec
+VA(0x005575e0, 0x15) MAC_ADDRESS(0x2152dc, 0x40)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
     if (m_started) {
@@ -2382,7 +2399,7 @@ void CGameTransferSmack::stop()
     }
 }
 
-VA(0x00557600, 0xAB)  // dc 0x11ee04
+VA(0x00557600, 0xAB) MAC_ADDRESS(0x21531c, 0x70)  // dc 0x11ee04
 void CGameTransferSmack::saveScreen()
 {
     if (!m_saveScreen)
@@ -2390,14 +2407,14 @@ void CGameTransferSmack::saveScreen()
     m_saveScreen->save(m_x, m_y);
 }
 
-VA(0x005576b0, 0x61)  // dc 0x11ee3c
+VA(0x005576b0, 0x61) MAC_ADDRESS(0x21538c, 0x30)  // dc 0x11ee3c
 void CGameTransferSmack::restoreScreen()
 {
     if (m_saveScreen)
         m_saveScreen->restore(1);
 }
 
-VA(0x00557720, 0x3C)  // dc 0x11ee54
+VA(0x00557720, 0x3C) MAC_ADDRESS(0x2153bc, 0x54)  // dc 0x11ee54
 CGameTransferDlg::CGameTransferDlg(unsigned char sending)
     : CTextDialog(0x12)
 {
@@ -2406,7 +2423,7 @@ CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 
 VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 
-VA(0x00557790, 0x51)  // dc 0x11eed8
+VA(0x00557790, 0x51) MAC_ADDRESS(0x215410, 0x74)  // dc 0x11eed8
 void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
                                       int& winX, int& winY,
                                       int& winWidth, int& winHeight)
@@ -2448,7 +2465,7 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
         m_abortPopupMsg = 0;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = g_dPlay->getRemoteData(1, 0);
+    CNetMsg* netMsg = getRemoteData(1, 0);
     if (netMsg == 0)
         return 0;
     if (msgReceived)
@@ -2464,7 +2481,7 @@ CNetMsgHandler::~CNetMsgHandler()
 }
 
 // E:\gamedcs\remote.cpp:2875
-VA(0x00557910, 0xD)  // dc 0x11efcc
+VA(0x00557910, 0xD) MAC_ADDRESS(0x2155f4, 0x8)  // dc 0x11efcc
 void CNetMsgHandler::setAbortPopupMsg(CNetMsg* netMsg)
 {
     m_abortPopupMsg = netMsg;
@@ -2555,7 +2572,7 @@ unsigned char CTurnDuration::isExpired()
 // The two Get() calls really are two calls - retail saves the first in EBX
 // for the m_lastWarned store and prices the gap with the second.
 // E:\gamedcs\remote.cpp:2950
-VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
+VA(0x00557af0, 0x208) MAC_ADDRESS(0x2157b8, 0x284)  // anchor-global, dc 0x11f108
 void CTurnDuration::checkForWarning()
 {
     if (!isOn())
@@ -2740,7 +2757,7 @@ CHourGlass::CHourGlass(unsigned char thread)
     start();
 }
 
-VA(0x00557fc0, 0x1A)  // dc 0x11f4e8
+VA(0x00557fc0, 0x1A) MAC_ADDRESS(0x215d40, 0x54)  // dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
     stop();
