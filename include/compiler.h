@@ -18,6 +18,8 @@
 // through <xlocale>); MSL's do not, so the prefix supplies them.
 #include <stdio.h>
 #include <string.h>
+// VC6 keeps a for-init declaration in the enclosing scope (pre-ISO rule).
+#pragma ARM_scoping on
 // Native MSL provides the equivalent CRT entry under this spelling.
 #define _strcmpi _stricmp
 // The file API keeps Microsoft's names in shared source; MSL supplies the
