@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import json
 import sys
 from types import SimpleNamespace
@@ -100,6 +101,11 @@ def main(argv=None) -> int:
     p.add_argument("--include-named", action="store_true",
                    help="display other named Mac callees for transitive helper review")
     p.add_argument("--json", action="store_true", help="print the full structured helper queue")
+    p = sub.add_parser("helper-audit", help="generate resolved source/Mac caller and callee graphs")
+    p.add_argument("selector", nargs="?", help="exact helper name, Windows VA or Mac offset for all its references")
+    p.add_argument("--unit", action="append", help="parse only these units (explicitly partial source coverage)")
+    p.add_argument("--fresh", action="store_true", help="reparse instead of using dependency-checked AST caches")
+    p.add_argument("--json", action="store_true")
     p = sub.add_parser("campaign", help="prepare disjoint worker packets from the current action queue")
     p.add_argument("--workers", type=int, default=6)
     p.add_argument("--unit", action="append", help="select an initial unit; repeat for distinct workers")
@@ -464,6 +470,53 @@ def main(argv=None) -> int:
                           f"(Mac sites {example['mac_target_calls']}, "
                           f"source mentions {example['source_call_mentions']})")
                 print(f"[mac] complete queue: build/mac/{stem}.json and {stem}-*.tsv")
+            return 0
+        if args.command == "helper-audit":
+            from homm3 import manifest
+            from homm3.mac import helper_graph, source_graph
+            root = common.HOMM3_DIR
+            units = [u for u in manifest.units(root / "config/units.toml")
+                     if u['source'].startswith('src/')]
+            if args.unit:
+                requested = set(args.unit)
+                unknown = requested - {Path(u['source']).stem for u in units}
+                if unknown:
+                    raise ValueError(f"unknown units: {sorted(unknown)}")
+                units = [u for u in units if Path(u['source']).stem in requested]
+            graph = source_graph.collect(root, units, fresh=args.fresh)
+            index = discovery.Index(_image())
+            report = helper_graph.build(root, index, graph, complete_source_scope=not args.unit)
+            stem = 'helper-audit-partial' if args.unit else 'helper-audit'
+            output = root / 'build/mac' / (stem + '.json')
+            temporary = output.with_suffix('.tmp')
+            temporary.write_text(json.dumps(report, indent=2) + '\n')
+            temporary.replace(output)
+            helper_graph.write_queues(report, output)
+            result = helper_graph.xrefs(report, index, args.selector) if args.selector else report
+            if args.json:
+                print(json.dumps(result, indent=2))
+            elif args.selector:
+                print(f"[mac] {result['target']['mac']} {result['target']['name'] or args.selector}")
+                for row in result['caller_comparisons']:
+                    print(f"  {row['site']} {row['caller']['name'] or row['caller']['mac']}: "
+                          f"{row['state']} (Mac {row['mac_call_count']}, source {row['source_call_count']})")
+                for row in result['callee_comparisons']:
+                    print(f"  calls {row['site']} -> {row['callee']['name'] or row['callee']['mac']}: "
+                          f"{row['state']} (Mac {row['mac_call_count']}, source {row['source_call_count']})")
+                for edge in result['direct_source_uses']:
+                    loc = edge['location']
+                    print(f"  source {loc['file']}:{loc['line']} {edge['caller_name']}: {edge['expression']}")
+                print(f"[mac] {len(result['mac_references'])} Mac code references; "
+                      f"{len(result['direct_source_uses'])} resolved source uses; "
+                      f"{len(result['loader_pointers'])} loader pointers")
+            else:
+                print(json.dumps(report['coverage'], indent=2))
+            if not args.json:
+                print(f"[mac] source scope: {'partial' if args.unit else 'all admitted game units'}; report: {output}")
+                print(f"[mac] {report['coverage']['units_with_errors']} units have parse errors; "
+                      f"{report['coverage']['source_body_variants']} functions have differing TU call views; "
+                      "implicit cleanup coverage is incomplete")
+                print(f"[mac] {report['caution']}")
             return 0
         if args.command in ("find", "xrefs", "census"):
             index = discovery.Index(_image())

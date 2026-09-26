@@ -83,20 +83,36 @@ caller or silently exclude callers outside your assigned TU.
 
 ## Tools and queue
 
-- `homm3 mac show <Windows-VA>` and `homm3 mac disasm <Windows-VA>` identify
-  and inspect the Mac caller.
-- `homm3 mac xrefs mac:0:0xOFFSET` finds callers of a recovered helper.
-- `homm3 mac helper-queue --all-functions --include-named` supplies leads;
-  its textual presence flags and old unit-wide review flags do not prove closure.
-- `rg` locates Windows source callers and equivalent expansions. Inspect the
-  actual source body and nested definitions for each count mismatch.
-- `homm3 mac calls` compares Mac retail with compiled Mac candidates; it does
-  not replace the Mac-assembly-versus-Windows-source comparison in this skill.
+Generate the caller inventory with `homm3 mac helper-audit`. It writes the full
+resolved graph plus `build/mac/helper-audit-calls.tsv` and
+`build/mac/helper-audit-source.tsv`. Use these generated queues for both passes.
 
-Record each caller/call-site disposition with concrete evidence and maintain
-unresolved identities and cross-worker follow-ups in the queue. Distinguish new
-helper bodies, restored helper uses, and address mappings in progress reports.
-Honor explicitly deferred modules and report them separately.
+- `homm3 mac helper-audit <Windows-VA-or-Mac-offset> --json` supplies Mac callers,
+  source users, callees, exact declaration identities, expressions, nested paths,
+  loader/TOC references, and missing mappings. After a helper edit, regenerate
+  this report and follow every caller comparison and reverse source comparison.
+- `--unit <TU>` is useful for local iteration, but its output is explicitly
+  partial. Run the full graph before claiming all xrefs were propagated.
+- `homm3 mac show <Windows-VA>` and `homm3 mac disasm <Windows-VA>` provide the
+  assembly needed to decide each generated discrepancy and verify expansions.
+- `homm3 mac xrefs mac:0:0xOFFSET` gives raw binary references independently.
+- The older `helper-queue` uses textual presence leads. Do not use its counts or
+  old unit-wide review flags as resolved source xrefs or completion evidence.
+- `homm3 mac calls` compares compiled Mac candidates to retail; it does not
+  replace this Mac-assembly-versus-authored-Windows-source audit.
+
+Do not manually enumerate caller sets or maintain a duplicate call inventory.
+Record semantic findings and unresolved questions against generated site/target
+identities; regenerate the inventory after source changes. A resolved direct
+count or reachable nested path is a lead, not automatic closure. Parse errors,
+unpaired library identities, differing header views, indirect dispatch and
+implicit lifetime gaps remain open. Inspect the graph's diagnostics and gaps;
+use source/assembly review for operations the AST cannot expose. See
+[the graph guide](../../../docs/tooling/mac-helper-graph-plan.md).
+
+Distinguish new helper bodies, restored uses and address mappings in reports.
+Honor deferred modules. The strict Mac-inline-only boundary rule above still
+applies, including when a generated report finds equal counts.
 
 Batch source edits. Do not run per-helper builds, score searches, or a Dreamcast
 dossier pass. Use a focused compiler probe only for a concrete unresolved

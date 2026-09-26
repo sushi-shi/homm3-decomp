@@ -12,6 +12,9 @@ non-exact game functions, and Windows matching is underway. Ordinary-header
 compilation status is recorded in the
 [native-header status](mac-native-headers.md).
 
+For the broad helper recovery pass, [generated source/Mac reference graphs](mac-helper-graph-plan.md)
+provide caller and callee queues without a game build.
+
 ## Required end state
 
 - `homm3 build --fast <TU>` compiles shared authored C++ for VC6 and CodeWarrior
