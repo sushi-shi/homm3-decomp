@@ -8466,31 +8466,32 @@ void advManager::checkScreenScroll()
     int y;
     g_mouseManager->mouseCoords(x, y);
 
-    int dir;
-    if (x < 0 || x >= WINDOW_SCREEN_WIDTH || y < 0
-        || y >= WINDOW_SCREEN_HEIGHT) {
-        g_lastMapScrollTime = GameTime::get();
-        return;
+    // Mac initializes the no-scroll sentinel before testing the coordinates;
+    // both outside-window and central-window paths reach the same clock call.
+    int dir = 100;
+    if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
+        && y < WINDOW_SCREEN_HEIGHT) {
+        if (x < 16) {
+            if (y < 16)
+                dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+            else
+                dir = y <= WINDOW_SCREEN_HEIGHT - 16
+                           ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
+                           : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+        } else if (x > WINDOW_SCREEN_WIDTH - 16) {
+            if (y < 16)
+                dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+            else
+                dir = y > WINDOW_SCREEN_HEIGHT - 16
+                           ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
+                           : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+        } else if (y < 16) {
+            dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
+        } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
+            dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
+        }
     }
-    if (x < 16) {
-        if (y < 16)
-            dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
-        else
-            dir = y <= WINDOW_SCREEN_HEIGHT - 16
-                       ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
-                       : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
-    } else if (x > WINDOW_SCREEN_WIDTH - 16) {
-        if (y < 16)
-            dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
-        else
-            dir = y > WINDOW_SCREEN_HEIGHT - 16
-                       ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
-                       : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
-    } else if (y < 16) {
-        dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
-    } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
-        dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
-    } else {
+    if (dir == 100) {
         g_lastMapScrollTime = GameTime::get();
         return;
     }

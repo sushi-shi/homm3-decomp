@@ -2164,12 +2164,9 @@ void hero::checkLevel()
                     }
                     if (g_windowManager->m_dialogReturn ==
                         DIALOG_RETURN_TIMEOUT) {
-                        if (!g_inSetup && m_owner >= 0)
-                            giveSS(aiChooseSecondarySkill(
-                                       this, skills[0], skills[1], 1), 1);
-                        else
-                            giveSS(aiChooseSecondarySkill(
-                                       this, skills[0], skills[1], 0), 1);
+                        giveSS(aiChooseSecondarySkill(
+                                   this, skills[0], skills[1],
+                                   !g_inSetup && m_owner >= 0), 1);
                     } else if (g_windowManager->m_dialogReturn ==
                                TLevelUpWindow::SKILLICON_1_ID) {
                         giveSS(skills[0], 1);
@@ -2181,12 +2178,10 @@ void hero::checkLevel()
             } else if (skills[0] != eSecSkillNone) {
                 if (skills[1] == eSecSkillNone)
                     giveSS(skills[0], 1);
-                else if (!g_inSetup && m_owner >= 0)
-                    giveSS(aiChooseSecondarySkill(
-                               this, skills[0], skills[1], 1), 1);
                 else
                     giveSS(aiChooseSecondarySkill(
-                               this, skills[0], skills[1], 0), 1);
+                               this, skills[0], skills[1],
+                               !g_inSetup && m_owner >= 0), 1);
             }
         }
         m_level = newLevel;
@@ -2771,7 +2766,8 @@ MAC_ADDRESS(0x0f7e64, 0x42c)
 static void handleArtifactClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact, spell_book_window.
-    long slot = code;
+    // Mac f7e6c decodes the widget id here; its caller passes codeY unchanged.
+    long slot = code - THeroScreenWindow::ARTIFACT_SLOT_0_ID;
     type_artifact oldArtifact = g_currentHero->getArtifact(TArtifactSlot(slot));
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
@@ -2814,8 +2810,10 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                             return;
                         }
                     }
+                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
+                } else {
+                    g_currentHero->viewArtifact(&oldArtifact, rightMouse);
                 }
-                g_currentHero->viewArtifact(&oldArtifact, rightMouse);
             } else if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
                 TSpellbookWindow spellBookWindow(
                     *g_currentHero, 0, TSpellbookWindow::eContextNeither,
@@ -3349,7 +3347,8 @@ MAC_ADDRESS(0x0f947c, 0x208)
 static void handleBackpackClick(long code, unsigned char rightMouse)
 {
     // DC locals: old_artifact and msg.
-    long index = code;
+    // Mac f94a0 decodes the widget id inside this retained helper.
+    long index = code - THeroScreenWindow::BACKPACK_SLOT_0_ID;
     type_artifact oldArtifact = g_currentHero->getBackpack(index);
 
     if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
@@ -3825,15 +3824,13 @@ int THeroScreenWindow::windowHandler(message& msg)
         case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
         case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
         case ARTIFACT_SLOT_18_ID:
-            handleArtifactClick(msg.m_codeY - ARTIFACT_SLOT_0_ID,
-                                  rightMouse);
+            handleArtifactClick(msg.m_codeY, rightMouse);
             break;
 
         case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
         case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
         case BACKPACK_SLOT_4_ID:
-            handleBackpackClick(msg.m_codeY - BACKPACK_SLOT_0_ID,
-                                  rightMouse);
+            handleBackpackClick(msg.m_codeY, rightMouse);
             break;
 
         case HERO_LOCATOR_0_ID: case HERO_LOCATOR_1_ID:

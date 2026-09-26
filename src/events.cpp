@@ -3246,19 +3246,13 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 
 // E:\gamedcs\events.cpp:3377. The gold-or-experience offer shared by the
 // treasure chest and the campfire-style pickups.
-// A shared choice result with the gold arm first removes both experience
-// joins and raises 83.0357% to 94.4643%. The separate CHOICE_1 resource
-// return remains, as do the canonical experience/resource and AI helpers.
-// Bool, unsigned char and int choice results reproduce the same winner;
-// reversing the final two arms is neutral at the old 83.0357%. A single
-// breakable choice scope is also neutral, while either individual copied
-// GiveExperience/return exit lowers the match. This 44-state family checks
-// all event siblings; the witch-hut refusal alternatives remain lower.
+// Mac b31cc..b3208 selects the human or AI choice before one giveResource
+// call at b321c or one giveExperience call at b3234.
 VA(0x004a6440, 0xD8) MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
 {
-    bool takeExperience = 0;
+    bool takeGold;
     int experience = static_cast<int>(currentHero->getExperienceBonusFactor()
                                       * (amount - 500));
 
@@ -3267,19 +3261,14 @@ void advManager::doTreasureDialog(hero* currentHero, int amount,
         updBottomView(0, 1, 1);
         normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_GOLD_OR_EXPERIENCE], 7, -1, -1, GOLD,
                      amount, 0x11, experience, 1, 0, -1, 0);
-        if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT) {
-            if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
-                currentHero->giveResource(GOLD, amount);
-                return;
-            }
-            takeExperience = 1;
-        }
-    } else if (!aiChooseResourceOrExperience(currentHero, GOLD, amount,
-                                                 experience)) {
-        takeExperience = 1;
+        takeGold = g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT
+            || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1;
+    } else {
+        takeGold = aiChooseResourceOrExperience(currentHero, GOLD, amount,
+                                                experience);
     }
 
-    if (!takeExperience)
+    if (takeGold)
         currentHero->giveResource(GOLD, amount);
     else
         currentHero->giveExperience(experience, 0, 1);
