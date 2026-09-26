@@ -445,6 +445,7 @@ public:
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    virtual void save(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getQuestDescription();

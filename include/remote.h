@@ -411,7 +411,7 @@ void destroyMsg(CNetMsg* netMsg);
 class CMessageKill {
 public:
     CMessageKill(CNetMsg* netMsg) : m_netMsg(netMsg) {}
-    VA(0x00474680, 0xC)  // exact selected header COMDAT, dc 0x70ad0
+    VA(0x00474680, 0xC) MAC_ADDRESS(0x0827b4, 0x5c)  // exact selected header COMDAT, dc 0x70ad0
     ~CMessageKill()
     {
         if (m_netMsg)

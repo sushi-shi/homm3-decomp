@@ -52,6 +52,7 @@ public:
 
 private:
     int getByte();              // 0x4d5fd0
+    void ungetByte(signed char value); // Mac 0x220ac8
     int readByte();             // 0x4d6ba0
 };
 SIZE(TGzInflateBuf, 0x84);

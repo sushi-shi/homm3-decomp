@@ -186,7 +186,7 @@ public:
     // The retained vtable body and GenerateRandomMap's expanded final step
     // share this operation. Header visibility is inferred from retail; this
     // Complete-only class has no Dreamcast source-location evidence.
-    VA(0x00577320, 0x31)
+    VA(0x00577320, 0x31) MAC_ADDRESS(0x16dba8, 0x58)
     virtual void advance(int amount)
     {
         m_done = min(m_done + amount, m_steps);
