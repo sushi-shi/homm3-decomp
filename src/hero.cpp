@@ -479,7 +479,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     player->m_heroes[player->m_numHeroes] = m_id;
     ++player->m_numHeroes;
     g_game->m_heroAvailability[m_id] = static_cast<char>(playerId);
-    g_game->m_heroPoolMap[m_id].set(playerId);
+    g_game->m_heroPoolMap[m_id][playerId] = true;
 
     m_owner = static_cast<signed char>(playerId);
     m_x = point.m_x;
@@ -1441,7 +1441,7 @@ std::bitset<70> markArtifactSpells(int artifactId)
     case ARTIFACT_SPELLBINDERS_HAT: {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_fifthLevelSpell)
-                result.set(spell, true);
+                result[spell] = true;
         }
         break;
     }
