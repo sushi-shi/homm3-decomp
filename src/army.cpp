@@ -2239,8 +2239,8 @@ inline void army::checkLuck()
 {
     m_luckStatus = 0;
     if (getController() && m_luck > 0) {
-        // Dreamcast names SRandom here; Complete's expanded callers call random.
-        if (random(1, 24) <= min(m_luck, 3)) {
+        // Mac 0x4e084 calls sRandom; Windows folds its body with random.
+        if (sRandom(1, 24) <= min(m_luck, 3)) {
             m_luckStatus = 1;
             if (!static_cast<const combatManager*>(g_combatManager)
                      ->isQuickCombat()) {
@@ -3901,7 +3901,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
         long distance = abs(targets[i] - wall);
         if (distance > best)
             continue;
-        if (distance == best && random(1, 100) > 50)
+        if (distance == best && sRandom(1, 100) > 50)
             continue;
         best = distance;
         chosen = targets[i];
