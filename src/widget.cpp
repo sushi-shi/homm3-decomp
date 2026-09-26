@@ -49,9 +49,9 @@ widget::~widget()
         s_lastHoverWidget = 0;
     if (m_freeText) {
         if (m_rightClick)
-            delete m_rightClick;
+            delete[] m_rightClick;
         if (m_rollOver)
-            delete m_rollOver;
+            delete[] m_rollOver;
     }
 }
 
@@ -201,12 +201,12 @@ void widget::setHelpText(const char* text, const char* rclick, unsigned char cop
 {
     if (m_rollOver) {
         if (m_freeText)
-            delete m_rollOver;
+            delete[] m_rollOver;
         m_rollOver = 0;
     }
     if (m_rightClick) {
         if (m_freeText)
-            delete m_rightClick;
+            delete[] m_rightClick;
         m_rightClick = 0;
     }
     if (copyText) {

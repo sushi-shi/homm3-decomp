@@ -301,13 +301,15 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     getWidget(BACK_ID)->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
+// Mac dialog reads at 0x219b04, 0x219cdc and 0x21ce48 expand
+// textWidget::getText through the widget string and its character buffer.
 // DC keeps this source helper out of line and OnWidgetDeselect calls it.
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
 inline unsigned char CMPInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             return 0;
     }
     return 1;
@@ -337,7 +339,7 @@ int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
+        if (strlen(m_edit[i]->getText()))
             ++players;
     }
     return players;
@@ -367,31 +369,14 @@ CHeroSessions::CHeroSessions()
 {
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1005
-// Slider callback for the session list; scrolls the displayed window of games.
-void sliderGames(int state, heroWindow* parentWindow)
-{
-    static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
-}
+void sliderGames(int state, heroWindow* parentWindow);
 
+// Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
+// helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
 VA(0x0050de50, 0x8F) MAC_ADDRESS(0x219a1c, 0xc4)  // dc 0xffac0
 int CMPInputEdit::onKeyPress(message* msg)
 {
-    int handled;
-
-    if (!m_hasFocus) {
-        handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
-               || msg->m_codeX == KEYCODE_KP_8) {
-        onPrevEdit();
-        handled = 1;
-    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
-               || msg->m_codeX == KEYCODE_KP_2) {
-        onNextEdit();
-        handled = 1;
-    } else {
-        handled = textEntryWidget::onKeyPress(msg);
-    }
+    int handled = CMPEdit::onKeyPress(msg);
 
     static_cast<CMPInputDlg*>(m_parentWindow)->updateOK();
     return handled;
@@ -554,6 +539,17 @@ VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// The retail slider constructor passes 0x50ee10. Both builds use the global
+// window, store its index, redraw, then call update; the parent is unused.
+VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
+void sliderGames(int state, heroWindow* parentWindow)
+{
+    g_multiPlayerWindow->m_currentIndex = state;
+    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_multiPlayerWindow->update();
+}
+
 VA(0x0050ee40, 0xAB) MAC_ADDRESS(0x21ab78, 0x94)  // dc 0x100430
 TMultiPlayerWindow::~TMultiPlayerWindow()
 {
@@ -564,7 +560,7 @@ TMultiPlayerWindow::~TMultiPlayerWindow()
     delete m_sessions;
 }
 
-VA(0x0050eef0, 0xC9) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x100498
+VA(0x0050eef0, 0xC9)  // dc 0x100498
 void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
@@ -585,7 +581,7 @@ void TMultiPlayerWindow::goSessionList()
     m_sessNameHeader->show();
 }
 
-VA(0x0050efc0, 0x12B)  // dc 0x10051c
+VA(0x0050efc0, 0x12B) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x10051c
 void TMultiPlayerWindow::goMainMenu()
 {
     m_inSessionList = 0;
@@ -766,7 +762,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 inline unsigned char TMultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
-    if (::initRemote(MP_IPX, m_playerName->m_text.c_str()) &&
+    if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(0, 0)) {
         DPCAPS caps;
         g_dPlay->getCaps(&caps, 1);
@@ -787,6 +783,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
     return 0;
 }
 
+MAC_ADDRESS(0x21c67c, 0x94)
 inline unsigned char TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
@@ -800,6 +797,8 @@ inline unsigned char TMultiPlayerWindow::onModem()
     return 1;
 }
 
+// Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
+// cleanup/menu/redraw/update calls separately in the host and join arms.
 VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
@@ -864,17 +863,25 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             exitFlag = 1;
             return 1;
         }
-        goto check_host_join_screen;
+        if (m_hostJoinScreen) {
+            remoteCleanup();
+            goMainMenu();
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            update();
+        }
+        break;
 
     case JOIN_ID:
         if (onJoin()) {
             exitFlag = 1;
             return 1;
         }
-
-check_host_join_screen:
-        if (m_hostJoinScreen)
-            goto return_to_main_menu;
+        if (m_hostJoinScreen) {
+            remoteCleanup();
+            goMainMenu();
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            update();
+        }
         break;
 
     case SEARCH_ID:
@@ -966,6 +973,10 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
     return 1;
 }
 
+// Mac 0x21b18c calls initRemote (0x21297c), then its Mac transport setup
+// (0x2137ec). Windows retail hosts through DirectPlay in this method. The
+// missing Mac call in the source audit reflects this different implementation;
+// the shared-call reconciliation for this pair remains open.
 VA(0x0050fab0, 0x106) MAC_ADDRESS(0x21b18c, 0x7c)  // dc 0x100d0c
 unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
@@ -1005,7 +1016,7 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
     DPCAPS dpCaps;
 
     g_mpNetProtocol = netGameType;
-    if (!::initRemote(netGameType, m_playerName->m_text.c_str()))
+    if (!::initRemote(netGameType, m_playerName->getText()))
         return 0;
     if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
@@ -1082,10 +1093,10 @@ unsigned char TMultiPlayerWindow::onHost()
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
 
-    const char* password = sessDlg.m_field2->m_text.c_str();
+    const char* password = sessDlg.m_field2->getText();
     if (!strlen(password))
         password = 0;
-    if (!hostSession(sessDlg.m_field1->m_text.c_str(), password))
+    if (!hostSession(sessDlg.m_field1->getText(), password))
         return 0;
     return 1;
 }
@@ -1182,7 +1193,7 @@ VA(0x00510980, 0x5D) MAC_ADDRESS(0x219ae0, 0xb8)  // dc 0x1027f4
 void CMPInputDlg::updateOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             getWidget(OKAY_ID)->enable(0);
         else
             getWidget(OKAY_ID)->enable(1);
@@ -1587,8 +1598,8 @@ unsigned char CHotSeatDlg::onOK()
     g_hotSeatMan = new CHotSeatMan;
 
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
-            g_hotSeatMan->addPlayer(m_edit[i]->m_text.c_str());
+        if (strlen(m_edit[i]->getText()))
+            g_hotSeatMan->addPlayer(m_edit[i]->getText());
     }
 
     return 1;

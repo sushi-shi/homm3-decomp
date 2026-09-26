@@ -714,8 +714,19 @@ inline void recruitUnit::setRolloverText(int codeY)
         g_recruitWindow->m_y + 0x172, 0x1d4, 0x12);
 }
 
+// Mac 0x14fb24 is retained at both timeout/remote-abort call sites
+// (0x14fb94 and 0x14fc10). Ordinary completion only changes id/codeX.
 MAC_ADDRESS(0x14fb24, 0x30)
 int exitRecruitUnit(message& msg)
+{
+    g_windowManager->m_dialogReturn = 0x7800;
+    msg.m_id = MESSAGE_EXECUTIVE;
+    msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
+    msg.m_codeY = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
+}
+
+int finishRecruitUnit(message& msg)
 {
     msg.m_id = MESSAGE_EXECUTIVE;
     msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
@@ -744,13 +755,6 @@ int exitRecruitUnit(message& msg)
 // non-include Gruntz state families; every candidate remained at 99.0924%.
 // Those sampled states did not recover the 99.1111% HIST island; no
 // synthetic declaration or unsupported local is kept.
-// Timeout and remote-popup rejection share one abortDialog result and the
-// existing dialog-routing tail. An unsigned-char result preserves 99.0924%
-// and removes the jump; bool/int forms score 98.6908/98.7979%. Duplicating
-// the tail, including a copy using exitRecruitUnit, scores 95.0161%.
-// DC lines 707/723 call ExitRecruitUnit, but its older four-store body also
-// sets the dialog result and codeY: retail's other three helper expansions
-// write only id/codeX, so those PC routing differences remain explicit.
 // Current 99.95% build has 119/119 exact CFG blocks. Retail reuses one
 // TViewArmyWindow stack slot for the first three arms and gives the fourth a
 // second slot; VC6 currently reuses one for all four. DC and the bounded Mac
@@ -763,24 +767,17 @@ int exitRecruitUnit(message& msg)
 VA(0x00550940, 0xA08) MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    unsigned char abortDialog = g_turnDuration.isExpired();
+    if (g_turnDuration.isExpired())
+        return exitRecruitUnit(msg);
 
-    if (!abortDialog && g_remoteOn) {
+    if (g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
             if (msgReceived && handler->getAbortPopupMsg())
-                abortDialog = 1;
+                return exitRecruitUnit(msg);
         }
-    }
-
-    if (abortDialog) {
-        g_windowManager->m_dialogReturn = 0x7800;
-        msg.m_id = MESSAGE_EXECUTIVE;
-        msg.m_codeX = EXECUTIVE_COMMAND_RETURN_RESULT;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        return MESSAGE_DISPATCH_FORWARD;
     }
 
     long elapsed = GameTime::get()
@@ -921,7 +918,7 @@ int recruitUnit::main(message& msg)
                 if (exitFlag)
                     break;
                 if (m_numberToBuy == 0 && m_monType2 == CREATURE_NONE)
-                    return exitRecruitUnit(msg);
+                    return finishRecruitUnit(msg);
 
                 if (g_creatureTypeTraits[m_monsterType].m_attributes
                     & g_ctaSiegeWeapon) {
@@ -972,7 +969,7 @@ int recruitUnit::main(message& msg)
 
                 if (m_monType2 == CREATURE_NONE
                     || m_type == RECRUIT_SOURCE_TOWN)
-                    return exitRecruitUnit(msg);
+                    return finishRecruitUnit(msg);
 
                 update(1, m_selectedPosition);
                 g_advManager->updBottomView(1, 1, 1);
@@ -985,7 +982,7 @@ int recruitUnit::main(message& msg)
                     break;
                 m_numberToBuy = 0;
                 g_recruitWindow->m_acceptButton->enable(0);
-                return exitRecruitUnit(msg);
+                return finishRecruitUnit(msg);
             }
             break;
 

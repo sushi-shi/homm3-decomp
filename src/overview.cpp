@@ -296,16 +296,16 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
 
             for (item = 0; item < 7; item++) {
-                if (static_cast<const town*>(currTown)->getArmy()
+                if (currTown->getArmy()
                             .m_armies[item] != CREATURE_NONE
-                        && static_cast<const town*>(currTown)->getArmy()
+                        && currTown->getArmy()
                                .m_numTroops[item] > 0) {
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
                         monsterX[item] + 336,
                         monsterY[item] + row * 116 + 27,
                         32, 32, rowWidgetId + item + 5,
                         "cprsmall.def",
-                        static_cast<const town*>(currTown)->getArmy()
+                        currTown->getArmy()
                                 .m_armies[item] + 2,
                         0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
                     if (!g_iconWidgetDynamic[slot + curBitmap])
@@ -315,7 +315,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                     curBitmap++;
 
                     sprintf(g_text, "%d",
-                            static_cast<const town*>(currTown)->getArmy()
+                            currTown->getArmy()
                                 .m_numTroops[item]);
                     g_textWidgetDynamic[slot + curText] = new textWidget(
                         monsterX[item] + 347,
@@ -1454,8 +1454,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6: {
                 hero* garrison = g_game->getHero(currTown->m_garrisonHeroId);
                 g_game->viewArmy(
-                    const_cast<armyGroup&>(
-                        static_cast<const town*>(currTown)->getArmy()),
+                    currTown->getArmy(),
                     codeY - 5, 0, currTown, 119, 20,
                     !garrison || garrison->m_army.getNumArmies() > 1,
                     rightMouse);
@@ -1536,8 +1535,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                                      &currTown->m_summoningPopulation);
                 } else {
                     recruitUnit* recruit = new recruitUnit(
-                        &const_cast<armyGroup&>(
-                            static_cast<const town*>(currTown)->getArmy()),
+                        &currTown->getArmy(),
                         1, currTown->m_summoningType,
                         &currTown->m_summoningPopulation,
                         CREATURE_NONE, 0, CREATURE_NONE, 0,
@@ -2103,8 +2101,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreen[1],
-                        getArmyName(static_cast<const town*>(currTown)
-                                        ->getArmy().m_armies[
+                        getArmyName(currTown->getArmy().m_armies[
                             codeY
                             - OVERVIEW_TOWN_GARRISON_ARMY_SECOND_ROW_FIRST_ID],
                                     2));
@@ -2118,8 +2115,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 5:
             case OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID + 6:
                 sprintf(g_text, g_heroScreen[1],
-                        getArmyName(static_cast<const town*>(currTown)
-                                        ->getArmy().m_armies[
+                        getArmyName(currTown->getArmy().m_armies[
                             codeY - OVERVIEW_TOWN_GARRISON_ARMY_FIRST_ID],
                                     2));
                 break;

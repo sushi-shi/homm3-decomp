@@ -259,31 +259,15 @@ int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
 VA(0x005feed0, 0x8E) MAC_ADDRESS(0x20b504, 0x30)  // dc 0x197570
 int heroWindow::widgetSetStatus(int id, int status)
 {
-    message msg;
-    msg.m_codeY = id;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = status;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_STATUS;
-    return broadcastMessage(msg);
+    return broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                            id, status);
 }
 
 VA(0x005fef60, 0x8E) MAC_ADDRESS(0x20b534, 0x30)  // dc 0x19758c
 int heroWindow::widgetClearStatus(int id, int status)
 {
-    message msg;
-    msg.m_codeY = id;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = status;
-    msg.m_window = 0;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
-    return broadcastMessage(msg);
+    return broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                            id, status);
 }
 
 VA(0x005feff0, 0x22) MAC_ADDRESS(0x20b564, 0x28)  // dc 0x1975a8
