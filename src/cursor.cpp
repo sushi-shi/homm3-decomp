@@ -178,7 +178,7 @@ void advManager::drawCursorAlpha()
             if (m_radarOrigin.m_y + 9 >= g_mapHeight)
                 bottomClip = abs((g_mapHeight - m_radarOrigin.m_y - 9) * 32);
 
-            hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+            hero* curr = g_game->getCurrHero();
 
             if (curr->m_flags & 0x40000) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
