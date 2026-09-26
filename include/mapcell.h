@@ -1125,7 +1125,9 @@ public:
     // The retained vector-construction callback belongs to this header body;
     // mapcell.obj is its retail emission site, after NewfullMap::Init.
     // E:\gamedcs\MapCell.h:685, dc 0xf49a4
-    VA(0x004fd650, 0x3E)  // dc 0xf49a4
+    // Mac NewfullMap::init passes this retained constructor through the
+    // array-construction callback at 0x11f28c.
+    VA(0x004fd650, 0x3E) MAC_ADDRESS(0x11f354, 0x80)  // dc 0xf49a4
     NewmapCell()
     {
         m_groundSet = 0;
