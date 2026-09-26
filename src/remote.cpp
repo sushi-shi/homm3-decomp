@@ -1002,6 +1002,8 @@ void CChatEdit::updateScreen()
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+// Mac 0x212430..0x212794 retains each function-key virtual call with
+// its literal recipient, rather than one call after key arithmetic.
 VA(0x00554240, 0xEA) MAC_ADDRESS(0x212248, 0x59c)  // dc 0x11cc2c
 int CChatEdit::onKeyPress(message* msg)
 {
@@ -1012,14 +1014,21 @@ int CChatEdit::onKeyPress(message* msg)
         case KEYCODE_ESCAPE:
             return onEscape(*msg);
         case KEYCODE_F1:
+            return onFunctionKey(*msg, 0);
         case KEYCODE_F2:
+            return onFunctionKey(*msg, 1);
         case KEYCODE_F3:
+            return onFunctionKey(*msg, 2);
         case KEYCODE_F4:
+            return onFunctionKey(*msg, 3);
         case KEYCODE_F5:
+            return onFunctionKey(*msg, 4);
         case KEYCODE_F6:
+            return onFunctionKey(*msg, 5);
         case KEYCODE_F7:
+            return onFunctionKey(*msg, 6);
         case KEYCODE_F8:
-            return onFunctionKey(*msg, key - KEYCODE_F1);
+            return onFunctionKey(*msg, 7);
     }
 
     int result = textEntryWidget::onKeyPress(msg);
