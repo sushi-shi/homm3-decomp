@@ -516,7 +516,7 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
         if (target < 0)
             break;
         long value = targetData.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, targetData.m_currentHero, damage);
+            choice.m_spell, m_currentHero, targetData.getHero(), damage);
         value = targetData.m_creatures[target].takeDamage(value);
         targetData.m_totalCombatValue -= value;
         excluded |= 1 << target;
@@ -1221,9 +1221,7 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
     if (m_currentHero)
         m_currentHero->m_mana = static_cast<short>(m_mana);
     if (defeatedHero)
-        // Retail reads the low word directly here; the long-returning getter
-        // makes VC6 issue a dword load. Keep getMana for its other callers.
-        defeatedHero->m_mana = static_cast<short>(defender.m_mana);
+        defeatedHero->m_mana = static_cast<short>(defender.getMana());
 
     if (m_totalCombatValue > 0) {
         if (m_currentHero) {

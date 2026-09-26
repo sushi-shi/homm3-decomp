@@ -2382,32 +2382,10 @@ unsigned char army::isEnemy(const army* arg) const
     return 1;
 }
 
-//   spelling                          can_shoot  AI_target_time  berserk
-//   `inline`, every site expands         (none)      100.0000    92.5170
-//   no keyword anywhere                  92.0000      27.8667     0.0000
-//   `inline` on the army.h declarator    (none)      100.0000    92.5170
-//   `inline` + ONE rejected site         92.0000      100.0000    92.5170
-
-// Mac keeps this body at code0+0x4e840, between isEnemy and
-// enemyIsAdjacent in the army function sequence. Its 55 direct callers
-// include other units, but retained Mac calls do not locate a definition.
-// Windows has 53 direct calls to 0x4428f0; surveyed cross-TU callers in
-// ai_tactical and combatcontrolsubwindow retain the call and match their
-// retail instruction shape. No cross-TU expansion presently proves header
-// body visibility. The current explicit `inline` spelling is a VC6 emission
-// control in the current reconstruction, not a recovered source keyword.
-
-// UNTIL 0x447a80 IS RECONSTRUCTED the rejected site is supplied by a
-// SCAFFOLD: `#pragma inline_depth(0)` around get_total_combat_value
-// below, which is un-carcassed for exactly this purpose and stays
-// UNCLAIMED because the pragma makes its own body the 49.64 call-form
-// where retail expands. The scaffold buys the 92.0000 row here and
-// costs nothing in the ledger. RETIRE IT when 0x447a80 lands: drop
-// the pragma, and get_total_combat_value's own 81.97 becomes
-// claimable in the same change.
-
+// Mac retains this ordinary body at 0x4e840 between isEnemy and
+// enemyIsAdjacent; its cross-TU callers retain the same helper boundary.
 VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
-inline unsigned char army::canShoot(const army* excluded) const
+unsigned char army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
