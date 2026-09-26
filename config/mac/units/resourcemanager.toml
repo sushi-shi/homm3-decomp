@@ -4,4 +4,4 @@ mode = "paired_bodies"
 # r21-r31 save set plus r27/r28 vector-field cursor setup.
 flags = ["-O3", "-proc", "750", "-nolink"]
 helpers = []
-source_helpers = ["ResourceManager::loadPaletteData", "ResourceManager::loadPalette24Data", "ResourceManager::loadTextData", "ResourceManager::loadSpreadsheetData", "openArchiveResource", "addPal16", "addPal24"]
+source_helpers = ["ResourceManager::loadPaletteData", "ResourceManager::loadPalette24Data", "ResourceManager::loadTextData", "ResourceManager::loadSpreadsheetData", "openArchiveResource", "findSpriteResource", "findBitmapResource", "addPal16", "addPal24"]

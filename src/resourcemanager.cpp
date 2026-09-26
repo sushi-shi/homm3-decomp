@@ -443,6 +443,45 @@ static bool openArchiveResource(int archiveIndex)
     return opened;
 }
 
+// Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
+// Resource loaders call them directly; the public pointTo* wrappers near
+// the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
+static LODFile* findSpriteResource(const char* name)
+{
+    TResourceArchiveList& archives =
+        g_resourceArchiveContexts[*g_videoGameState].m_sprites;
+    int remaining = archives.m_count;
+    int* archive = archives.m_indices;
+    LODFile* file = &g_resourceLodSlots[*archive].m_file;
+
+    while (!file->pointAt(name)) {
+        ++archive;
+        if (!--remaining)
+            return 0;
+        file = &g_resourceLodSlots[*archive].m_file;
+    }
+
+    return file;
+}
+
+static LODFile* findBitmapResource(const char* name)
+{
+    TResourceArchiveList& archives =
+        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+    int remaining = archives.m_count;
+    int* archive = archives.m_indices;
+    LODFile* file = &g_resourceLodSlots[*archive].m_file;
+
+    while (!file->pointAt(name)) {
+        ++archive;
+        if (!--remaining)
+            return 0;
+        file = &g_resourceLodSlots[*archive].m_file;
+    }
+
+    return file;
+}
+
 // Complete's loader adds an error-code output and two nested handlers around
 // the simpler Dreamcast archive walk. Retail reserves an eight-entry cleanup
 // vector but never appends to it; preserve that shipped behavior. The inner
@@ -602,7 +641,7 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
-// Mac 0:0x152df8..0x152fc8 calls the retained pointToBitmapResource helper
+// Mac 0:0x152df8..0x152fc8 calls the retained findBitmapResource helper
 // for name and default.pcx. The same two ordinary source calls auto-inline in
 // Complete. Dreamcast names the anonymous bmpHeader local but cannot fix its
 // scope; retail keeps its stack home live across the loose FILE branch. Its
@@ -637,7 +676,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     }
 
     {
-        LODFile* lodFile = pointToBitmapResource(name);
+        LODFile* lodFile = findBitmapResource(name);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -647,7 +686,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x0064108c, defaultBitmap816Name, "default.pcx");
-            lodFile = pointToBitmapResource(fallbackName);
+            lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
                 reportMissingTypedResource(
@@ -721,7 +760,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                      result, 0, 0);
         return result;
     } else {
-        LODFile* lodFile = pointToBitmapResource(name);
+        LODFile* lodFile = findBitmapResource(name);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -731,7 +770,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
 
             const char* fallbackName = DATA_COMPGEN(
                 0x006410a8, defaultBitmap24Name, "dfault24.pcx");
-            lodFile = pointToBitmapResource(fallbackName);
+            lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
                 reportMissingTypedResource(
@@ -821,7 +860,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
         }
     }
 
-    LODFile* lodFile = pointToBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -831,7 +870,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 
         const char* fallbackName = DATA_COMPGEN(
             0x006410b8, defaultPalette16Name, "default.pal");
-        lodFile = pointToBitmapResource(fallbackName);
+        lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -881,11 +920,11 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 }
 
 // Mac 0:0x1534dc..0x153560 is this loader's archive-only port. Its caller at
-// 0x10fdf0 passes Players.pal; it calls pointToBitmapResource for the requested
+// 0x10fdf0 passes Players.pal; it calls findBitmapResource for the requested
 // name and default.pal, then calls the retained loadPalette24Data operation at
 // 0x153434 through an 8-byte LOD stream adapter. Complete also opens loose
 // FILE resources and reports missing resources. Two source calls to the
-// ordinary pointToBitmapResource and loadPalette24Data helpers auto-inline in
+// ordinary findBitmapResource and loadPalette24Data helpers auto-inline in
 // VC6, matching all 0x2d1 retail bytes and its 22 ordered call sites. The
 // latter helper owns the header/RGBA locals recorded in Dreamcast's older
 // direct-reader function; its recovered lifetime closes the former 8-byte
@@ -909,7 +948,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
         }
     }
 
-    LODFile* lodFile = pointToBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -918,7 +957,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
 
         const char* fallbackName =
             DATA_COMPGEN(0x006410c4, defaultPaletteName, "default.pal");
-        lodFile = pointToBitmapResource(fallbackName);
+        lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -974,12 +1013,12 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
 }
 
 // Mac 0:0x1538a8..0x153944 is this named loader's archive-only port: the
-// font getter calls it at 0x15396c, and it calls pointToBitmapResource for
+// font getter calls it at 0x15396c, and it calls findBitmapResource for
 // name/default.fnt before getItemIndex(name) and Mac loadFontData at 0x153560.
 // The latter reads through the same 8-byte LOD stream adapter and performs
 // endian conversion of the font records. Complete also opens loose FILE
 // resources and uses its separate Windows loadFontData body at 0x55b750. Two
-// ordinary source calls to pointToBitmapResource auto-inline in VC6 and close
+// ordinary source calls to findBitmapResource auto-inline in VC6 and close
 // this 0x229-byte Windows body exactly, preserving all 18 ordered calls.
 VA(0x0055b8d0, 0x229) MAC_ADDRESS(0x1538a8, 0x9c)
 font* ResourceManager::loadFont(const char* name)
@@ -1005,7 +1044,7 @@ font* ResourceManager::loadFont(const char* name)
         }
     }
 
-    LODFile* lodFile = pointToBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -1014,7 +1053,7 @@ font* ResourceManager::loadFont(const char* name)
 
         const char* fallbackName =
             DATA_COMPGEN(0x006410d0, defaultFontName, "default.fnt");
-        lodFile = pointToBitmapResource(fallbackName);
+        lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
             reportMissingTypedResource(
@@ -1085,7 +1124,7 @@ TTextResource* ResourceManager::loadText(const char* name)
         }
     }
 
-    LODFile* lodFile = pointToBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -1151,7 +1190,7 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
         }
     }
 
-    LODFile* lodFile = pointToBitmapResource(name);
+    LODFile* lodFile = findBitmapResource(name);
 
     if (!lodFile) {
         reportMissingTypedResource(
@@ -1374,7 +1413,7 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // Dreamcast GetSprite (dc 0x122320) proves GetFromCache, SpriteDefHeader
 // Sdef, the archive load and AddToCache. Complete adds DEF sequence/frame
 // parsing and a cache lookup for each frame name. Mac 0:0x153fcc..0x1545e4
-// calls pointToSpriteResource twice and expands addPal16/24 in place. The
+// calls findSpriteResource twice and expands addPal16/24 in place. The
 // ordinary Mac -O3 probe emitted two separate 136-byte helpers; explicit
 // inline expands them and admits the paired byte diff. Windows has all 46
 // calls in retail order, but the DEF loop has a different register and
@@ -1405,7 +1444,7 @@ CSprite* ResourceManager::getSprite(const char* name)
     if (cached)
         return cached;
 
-    LODFile* lodFile = pointToSpriteResource(name);
+    LODFile* lodFile = findSpriteResource(name);
 
     if (!lodFile) {
 #ifdef _WIN32
@@ -1415,7 +1454,7 @@ CSprite* ResourceManager::getSprite(const char* name)
             RESOURCE_TYPE_SPRITE, name);
 #endif
 
-        lodFile = pointToSpriteResource(name);
+        lodFile = findSpriteResource(name);
 
         if (!lodFile) {
 #ifdef _WIN32
@@ -1606,39 +1645,13 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 VA(0x0055cf50, 0x83) MAC_ADDRESS(0x1522ec, 0x88)
 LODFile* ResourceManager::pointToSpriteResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_sprites;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
-    LODFile* file = &g_resourceLodSlots[*archive].m_file;
-
-    while (!file->pointAt(name)) {
-        ++archive;
-        if (!--remaining)
-            return 0;
-        file = &g_resourceLodSlots[*archive].m_file;
-    }
-
-    return file;
+    return findSpriteResource(name);
 }
 
 VA(0x0055cfe0, 0x83) MAC_ADDRESS(0x152374, 0x88)  // bitmap-field twin of PointToSpriteResource
 LODFile* ResourceManager::pointToBitmapResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
-    LODFile* file = &g_resourceLodSlots[*archive].m_file;
-
-    while (!file->pointAt(name)) {
-        ++archive;
-        if (!--remaining)
-            return 0;
-        file = &g_resourceLodSlots[*archive].m_file;
-    }
-
-    return file;
+    return findBitmapResource(name);
 }
 
 // Dreamcast's direct method (dc 0x1224e4) is one source statement with no

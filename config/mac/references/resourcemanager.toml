@@ -14,11 +14,11 @@ evidence = "The authored addToCache at Windows 0x005594b0 inserts the resource a
 retail_va = 0x0055cf50
 unit = "resourcemanager"
 mac_section = 0
-mac_offset = 0x1522ec
-mac_size = 0x88
+mac_offset = 0x154660
+mac_size = 0x20
 mac_symbol = ".pointToSpriteResource__15ResourceManagerFPCc"
-target_sha256 = "16a996c37a7c458054eaf260475b27544c2d367df5457a4d9971e4b14a330985"
-evidence = "The sprite-list twin of the admitted pointToBitmapResource walks archive indices in 0x1d8-byte LOD slots and calls LODFile::pointAt. The Mac body starts at 0:0x1522ec after the preceding blr at 0x1522e8, ends with blr at 0x152370 and is followed by pointToBitmapResource at 0x152374. Reference identity only."
+target_sha256 = "f5ee5d738626b9aab47dcaa677ddfc60f812d7cf13c9e6c87de2ca2e3a9b1718"
+evidence = "Public pointToSpriteResource wrapper forwards unchanged name to internal findSpriteResource at 0x1522ec. Windows expands that helper into the retained public body. Mac final BLR at0x15467c; next body at0x154680."
 
 [[functions]]
 retail_va = 0x004fa610
@@ -174,11 +174,11 @@ evidence = "ResourceManager::open rollback calls LODFile::clear at 0:0x11b598 on
 retail_va = 0x0055cfe0
 unit = "resourcemanager"
 mac_section = 0
-mac_offset = 0x152374
-mac_size = 0x88
+mac_offset = 0x154680
+mac_size = 0x20
 mac_symbol = ".pointToBitmapResource__15ResourceManagerFPCc"
-target_sha256 = "52118662a7225959974897f15ec10414bff3e4a09d1e3ad1e54ee8c8a6bb1b52"
-evidence = "Both bodies select the active context's bitmap list (+8 count, +12 indices), walk 0x1d8-byte Mac LOD slots with the file at +4, call LODFile::pointAt with the name, return that file on success, and return null after the list count is exhausted. Mac 0:0x152374 starts with mflr after the preceding blr at 0x152370; it ends at blr 0x1523f8 before the next prologue at 0x1523fc. CodeWarrior emitted this source-owned symbol in the resourcemanager probe."
+target_sha256 = "06909f413ba5476d074359907d8c2f679e72ad242e4b413de9a9651fb6912758"
+evidence = "Public pointToBitmapResource wrapper forwards unchanged name to internal findBitmapResource at 0x152374. Windows expands that helper into the retained public body. Mac final BLR at0x15469c; next body at0x1546a0."
 
 [[helpers]]
 unit = "resourcemanager"
@@ -239,3 +239,21 @@ mac_size = 0x70
 mac_symbol = ".openArchiveResource__Fi"
 target_sha256 = "bba62d67eaec15a880e1c0935457dd68b512a35bd34882cb98b878fd23b7c5a9"
 evidence = "Mac ResourceManager::open at 0:0x152924 calls this retained helper twice, for sprite and bitmap archive indices. The helper takes the index in r3, multiplies by the 0x1d8 slot stride, loads archiveName at +0 and passes it with the source-owned g_resourcePath to the string-concatenation helper at 0:0x152280, calls LODFile::open at 0:0x11ba00 on slot+4 with zero flags, destroys the pathname, and returns whether open succeeded. The preceding function ends with blr at 0:0x15220c; this body ends with blr at 0:0x15227c before the next prologue at 0:0x152280. CodeWarrior emits the canonical ordinary source body as .openArchiveResource__Fi."
+
+[[helpers]]
+source_helper = "findSpriteResource"
+unit = "resourcemanager"
+mac_section = 0
+mac_offset = 0x1522ec
+mac_size = 0x88
+target_sha256 = "16a996c37a7c458054eaf260475b27544c2d367df5457a4d9971e4b14a330985"
+evidence = "Internal archive search walks the active context sprite list, calls LODFile::pointAt(name), returns selected file or null. Resource loaders call this early-TU helper directly; public wrapper at0x154660 retains the same call. Names are descriptive; full ordinary helper extracted from previous collapsed public implementation."
+
+[[helpers]]
+source_helper = "findBitmapResource"
+unit = "resourcemanager"
+mac_section = 0
+mac_offset = 0x152374
+mac_size = 0x88
+target_sha256 = "52118662a7225959974897f15ec10414bff3e4a09d1e3ad1e54ee8c8a6bb1b52"
+evidence = "Internal archive search walks the active context bitmap list, calls LODFile::pointAt(name), returns selected file or null. Resource loaders call this early-TU helper directly; public wrapper at0x154680 retains the same call. Names are descriptive; full ordinary helper extracted from previous collapsed public implementation."
