@@ -693,14 +693,14 @@ bitmap816	??0Bitmap816@@QAE@PBD0HHHHHH@Z	100.0000	100.0000	100.0000	0x4f8d0	toke
 bitmap816	??0Bitmap816@@QAE@PBDHHPAEPAVTPalette16@@H@Z	100.0000	100.0000	100.0000	0x4f800	tokens1:46d3c99f860b
 bitmap816	??1Bitmap816@@UAE@XZ	100.0000	100.0000	100.0000	0x4f9d0	tokens1:35c9792db18e
 bitmap816	??_GBitmap816@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4f7d0	-
-bitmap816	?draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x4fc70	tokens1:f2556fca0176
+bitmap816	?draw@Bitmap816@@QBEXHHHHPAGHHHHH_N@Z	100.0000	100.0000	100.0000	0x4fc70	tokens1:83f3d2f1191e
 bitmap816	?draw@Bitmap816@@QBEXHHHHPAVBitmap16Bit@@HH_N@Z	100.0000	100.0000	100.0000	0x4fdb0	tokens1:e737556ed28f
 bitmap816	?getSize@Bitmap816@@UBEIXZ	100.0000	100.0000	100.0000	0x4fe30	tokens1:15ca159f1130
 bitmap816	?importPCXFile@Bitmap816@@AAEHPBDHHHHHH@Z	100.0000	100.0000	100.0000	0x4fa40	tokens1:71c0df2b1683
 bitmap816	?resetPalette@Bitmap816@@QAEXXZ	100.0000	100.0000	100.0000	0x4fe80	tokens1:136b7c8c2103
 bitmap816	?setPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	100.0000	100.0000	100.0000	0x4fe60	tokens1:aebfe45f65f5
 bitmap816	?setPalette@Bitmap816@@QAEXPBG@Z	100.0000	100.0000	100.0000	0x4fe40	tokens1:d55cfe92a716
-bitmap816	?zBufferDraw@Bitmap816@@QBEXHHHHPAGHHHHHH@Z	100.0000	100.0000	100.0000	0x4fba0	tokens1:9976c6a8d2b8
+bitmap816	?zBufferDraw@Bitmap816@@QBEXHHHHPAGHHHHHH@Z	100.0000	100.0000	100.0000	0x4fba0	tokens1:51426f42ad70
 bitmap816	?zBufferDraw@Bitmap816@@UBEXHHHHPAGHHH@Z	100.0000	100.0000	100.0000	0x4fdf0	tokens1:e08e84456034
 border	??0bitmapBorder16@@QAE@HHHHHPBDH@Z	100.0000	100.0000	100.0000	0x50690	tokens1:6e10f9106ac5
 border	??0bitmapBorder@@QAE@HHHHHPBDH@Z	100.0000	100.0000	100.0000	0x502d0	tokens1:d810b2d4fa3b
@@ -987,7 +987,7 @@ cmbtmgr	?removeArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100
 cmbtmgr	?removeObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30	tokens1:216cf680c70a
 cmbtmgr	?resetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	tokens1:67f4e025aa86
 cmbtmgr	?setNextArmy@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x65330	tokens1:864d9ec7d1d1
-cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:80c1d5e08ec1
+cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:c5ebe3df5946
 cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	98.6392	98.6392	100.0000	0x66290	tokens1:561be05acab1
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
 cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	100.0000	100.0000	100.0000	0x67db0	tokens1:77d8f171765d
@@ -3077,7 +3077,7 @@ remote	?getAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100
 remote	?getNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0	tokens1:cdaa4027ee26
 remote	?getRemoteData@@YIPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x154400	tokens1:ac3d06ae9aaf
 remote	?getRemoteData@CDPlayHeroes@@QAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x153040	tokens1:c3ddb103e21f
-remote	?handleLowLevelMsg@CDPlayHeroes@@IAEEPAVCNetMsg@@@Z	82.7763	100.0000	100.0000	0x152db0	tokens1:404315d1943b
+remote	?handleLowLevelMsg@CDPlayHeroes@@IAEEPAVCNetMsg@@@Z	74.9726	74.9726	100.0000	0x152db0	tokens1:0b5dc6e1eec8
 remote	?handleMPlayerLaunch@@YIEXZ	96.6361	96.6361	100.0000	0x155aa0	tokens1:0d7c85c1fbe2
 remote	?handleMessage@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90	tokens1:b64e2255c13d
 remote	?handleMessage@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20	tokens1:d030f325da73
@@ -4546,8 +4546,8 @@ tradpost	??_GTGiveResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e3690	
 tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0	-
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80	-
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620	-
-tradpost	?computeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	tokens1:c1b7fcf4a057
-tradpost	?computeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ece80	tokens1:d4ae79c74a0e
+tradpost	?computeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0	tokens1:7a91270503d1
+tradpost	?computeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ece80	tokens1:179032283214
 tradpost	?doArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20	tokens1:ed0a1a6ae5a1
 tradpost	?doBlackMarket@@YIXPAVhero@@PAW4TArtifact@@@Z	100.0000	100.0000	100.0000	0x1ea100	tokens1:63b8d3e9d4f7
 tradpost	?doFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60	tokens1:6e0913a290fc
@@ -4556,7 +4556,7 @@ tradpost	?doMarket@@YIXXZ	94.6104	94.6104	94.6104	0x1ea130	tokens1:d6c83d18345d
 tradpost	?doMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0	tokens1:6bdae8e09a3d
 tradpost	?doTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0	tokens1:c5cc98c8cc49
 tradpost	?getMarketValue@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10	tokens1:202f477e7751
-tradpost	?getTradeRatio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20	tokens1:c3a567f5a4dd
+tradpost	?getTradeRatio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20	tokens1:60117958ce97
 tradpost	?giveResourceSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e3670	tokens1:62301da864bf
 tradpost	?sellCreatureSlider@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1e9c60	tokens1:9c6e66244823
 tradpost	?setRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0	tokens1:28cae532baa7
@@ -4637,7 +4637,7 @@ victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NP
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	99.8429	99.8429	100.0000	0x1f2e40	tokens1:6f4fb69ab4ab
 victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	tokens1:1f9a93765f5b
 victorylossconditions	?checkForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720	tokens1:31acedd0dd70
-victorylossconditions	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1ef0	tokens1:c64a1689a95a
+victorylossconditions	?checkForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	40.7372	40.7372	100.0000	0x1f1ef0	tokens1:7011515cc7f3
 victorylossconditions	?checkForHeroDefeatWin@VictoryConditionStruct@@QAE_NHPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2100	tokens1:4e89e3a7415c
 victorylossconditions	?checkForTimeLimitExpired@LossConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2f20	tokens1:0d6270e834b5
 victorylossconditions	?checkForTimeSurvival@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2810	tokens1:083567ed6832
