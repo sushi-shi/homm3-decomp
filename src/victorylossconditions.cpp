@@ -225,16 +225,21 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
+    // Mac 0x1fde18 constructs the target before the loop; DC records
+    // the target and wildcard locals at the same outer lifetime.
+    type_point anyTownLoc(-1, -1, -1);
+    type_point grailTownLoc(m_townX, m_townY, m_townZ);
     int player = 0;
     for (;;) {
         if (g_game->onSameTeam(player, g_netLocalGamePos)) {
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
                 town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
+                type_point thisTownLoc = thisTown->getLocation();
                 bool hasGrail = false;
                 // Mac 0x1fdf0c..0x1fe024 expands the same coordinate and
                 // wildcard comparison as isGrailTarget at 0x1fe124.
-                if (isGrailTarget(thisTown))
+                if (isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc))
                     hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
                     m_playerWinner = thisTown->m_owner;
@@ -271,12 +276,9 @@ unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
     type_point thisTownLoc = thisTown->getLocation();
-
-    if (thisTownLoc == grailTownLoc
-        || anyTownLoc == grailTownLoc)
-        return 1;
-    return 0;
+    return isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc);
 }
+
 
 VA(0x005f2260, 0x34) MAC_ADDRESS(0x1fe2a8, 0x6c)  // dc 0x190340
 bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)

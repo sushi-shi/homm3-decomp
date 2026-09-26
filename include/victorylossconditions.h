@@ -95,6 +95,16 @@ public:
     unsigned char checkForArtifactTransportWin(const hero* thisHero,
                                                const type_point townLoc);
     unsigned char isGrailTarget(town* thisTown);
+    // Shared comparison expanded in Mac 0x1fdf0c and retained 0x1fe124.
+    // Callers own the point lifetimes; no instance state is needed here.
+    static unsigned char isGrailTarget(const type_point& thisTownLoc,
+                                       const type_point& grailTownLoc,
+                                       const type_point& anyTownLoc)
+    {
+        if (thisTownLoc == grailTownLoc || anyTownLoc == grailTownLoc)
+            return 1;
+        return 0;
+    }
     unsigned char checkForTimeSurvival();
     unsigned char checkForArtifactWin();
     unsigned char checkForGrailBuildingWin();
