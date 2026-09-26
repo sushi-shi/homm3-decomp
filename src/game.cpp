@@ -3750,11 +3750,7 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                         ++numHumanTeams;
                 }
                 if (numHumanTeams <= 1) {
-                    int team = getTeam(m_heroes[i].m_owner);
-                    unsigned char humanTeam = 0;
-                    if (team >= 0)
-                        humanTeam = isHumanTeam(team);
-                    if (team < 0 || humanTeam) {
+                    if (!isComputerTeam(getTeam(m_heroes[i].m_owner))) {
                         loss.m_heroId = i;
                         break;
                     }
@@ -3782,12 +3778,8 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
                 continue;
             owner = thisTown->m_owner;
             townTeam = getTeam(owner);
-            if (townTeam >= 0) {
-                unsigned char humanTeam =
-                    isHumanTeam(townTeam);
-                if (!humanTeam)
-                    continue;
-            }
+            if (isComputerTeam(townTeam))
+                continue;
             if (owner != -1)
                 return;
         } while (0);
