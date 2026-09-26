@@ -2464,7 +2464,7 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
         m_abortPopupMsg = 0;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = g_dPlay->getRemoteData(1, 0);
+    CNetMsg* netMsg = getRemoteData(1, 0);
     if (netMsg == 0)
         return 0;
     if (msgReceived)
