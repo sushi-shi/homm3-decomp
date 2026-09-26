@@ -5350,7 +5350,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
+                        } else if (!player.isHuman()) {
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
