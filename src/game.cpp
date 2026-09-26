@@ -10058,11 +10058,28 @@ bool loadObjectVector(TAbstractFile* infile,
 }
 #endif
 
-// The retained template instances are claimed in retail address order.
-// Their one active implementation appears at the DC source-order boundary.
+// The retained template instances share the active definitions above.
 #if 0  // @carcass -- claim-only template instances
+MAC_ADDRESS(0x0e7494, 0xbc)  // game::save m_generators; elements call generator::save
+bool saveObjectVector(TAbstractFile* outfile, std::vector<generator>& srcVector)
+{
+    // @stub
+}
+
 VA(0x004d2ac0, 0x60) MAC_ADDRESS(0x0e7550, 0x9c)  // point instance; retail folds long here
 bool saveVector(TAbstractFile* outfile, std::vector<type_point>& srcVector)
+{
+    // @stub
+}
+
+MAC_ADDRESS(0x0e75ec, 0x9c)  // type_creature_bank artifact tail
+bool loadVector(TAbstractFile* infile, std::vector<TArtifact>& destVector)
+{
+    // @stub
+}
+
+MAC_ADDRESS(0x0e7860, 0x9c)  // type_creature_bank artifact tail
+bool saveVector(TAbstractFile* outfile, std::vector<TArtifact>& srcVector)
 {
     // @stub
 }
