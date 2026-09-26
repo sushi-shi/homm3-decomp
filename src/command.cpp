@@ -616,12 +616,17 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.
 // Mac 0x82ebc retains this wrapper at all thirteen command/drawing call sites.
+// Naming the current-army argument preserves the exact retained wrapper in
+// both builds and restores the retail register setup in its expanded callers:
+// getControl, resetRound and automateFirstAidTent become exact together.
+// The nested expression is the measured control; it loses those three matches.
 VA(0x00474ba0, 0x4A) MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::isComputerAction()
 {
     if (static_cast<const combatManager*>(this)->isQuickCombat())
         return 1;
-    return isComputerAction(getCurrentArmy());
+    army* currentArmy = getCurrentArmy();
+    return isComputerAction(currentArmy);
 }
 
 // Complete adds this one-argument policy overload. CodeView's full class
