@@ -3962,6 +3962,8 @@ VA(0x004a8080, 0x1A5)  // dc 0x97dc8
 void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
                                     bool humanPlayer)
 {
+    // Guard clauses preserve all four dialogs while matching retail
+    // 0x4a8080 exactly with getSecondarySkill and getText retained.
     // Mac retains separate dialogs for no skill, known skill, full skills,
     // and learned skill at 0:0xb55b4, 0:0xb5634, 0:0xb56b0, 0:0xb5724.
     int skill = cell->getWitchSkill();
@@ -3973,41 +3975,43 @@ void advManager::doEventWitchHut(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog(g_adventureEventText->getText(
                              ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                normalDialog(g_text, 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
-            }
-        } else if (currentHero->m_skillCount >= 8) {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                normalDialog(g_text, 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
-            }
-        } else {
-            if (humanPlayer) {
-                sprintf(g_text,
-                        g_adventureEventText->getText(
-                            ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
-                        g_sSkillTraits[skill].m_name);
-                // iResType1 20 is the secondary-skill picture class and the
-                // extra is the icon slot: three mastery frames per skill, the
-                // basic one being 3*skill + 3.
-                normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
-                             -1, 0, -1, 0, -1, 0);
-            }
-            currentHero->giveSS(skill, 1);
-            return;
-        }
+        return;
     }
+    if (currentHero->getSecondarySkill(TSecondarySkill(skill))) {
+        if (humanPlayer) {
+            sprintf(g_text,
+                    g_adventureEventText->getText(
+                        ADV_EVENT_TEXT_WITCH_HUT_KNOWN_FORMAT),
+                    g_sSkillTraits[skill].m_name);
+            normalDialog(g_text, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+    if (currentHero->m_skillCount >= 8) {
+        if (humanPlayer) {
+            sprintf(g_text,
+                    g_adventureEventText->getText(
+                        ADV_EVENT_TEXT_WITCH_HUT_FULL_FORMAT),
+                    g_sSkillTraits[skill].m_name);
+            normalDialog(g_text, 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+    if (humanPlayer) {
+        sprintf(g_text,
+                g_adventureEventText->getText(
+                    ADV_EVENT_TEXT_WITCH_HUT_LEARN_FORMAT),
+                g_sSkillTraits[skill].m_name);
+        // iResType1 20 is the secondary-skill picture class and the
+        // extra is the icon slot: three mastery frames per skill, the
+        // basic one being 3*skill + 3.
+        normalDialog(g_text, 1, -1, -1, 20, skill * 3 + 3,
+                     -1, 0, -1, 0, -1, 0);
+    }
+    currentHero->giveSS(skill, 1);
+    return;
 }
 
 VA(0x004a8230, 0x154)  // dc 0x97fa4
