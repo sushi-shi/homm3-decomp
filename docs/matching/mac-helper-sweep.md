@@ -21,7 +21,12 @@ Run `homm3 mac helper-queue --all-functions` for the broad sweep. It writes
 `build/mac/helper-queue-all.json`, `helper-queue-all-functions.tsv`, and
 `helper-queue-all-calls.tsv`. The function file includes exact and unfinished
 Windows targets and marks whether each has a reviewed Mac span. The call file
-lists every direct Mac branch in those spans. Without `--all-functions`, the
+lists every direct Mac branch in those spans. With `--all-functions`, mapped
+source helpers without a standalone Windows VA are callers too; their stable
+`caller_id` is a source identity and `retail_va` remains empty. New standalone
+`MAC_ADDRESS` helpers are read directly without requiring a duplicate TOML row.
+Windows function and source-helper caller counts remain separate in coverage.
+Without `--all-functions`, the
 command retains its smaller unfinished-function matching queue.
 `review_missing_helper_call` means a reviewed
 source helper is absent from the caller's authored body; `identify_target`

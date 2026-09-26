@@ -446,7 +446,7 @@ def main(argv=None) -> int:
                 print(json.dumps(report, indent=2))
             else:
                 coverage = report["coverage"]
-                print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows functions in scope; "
+                print(f"[mac] helper queue: {coverage['functions_in_scope']} Windows source functions in scope; "
                       f"{coverage['helper_reviewed_functions']} helper-reviewed from Mac calls; "
                       f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
@@ -458,7 +458,7 @@ def main(argv=None) -> int:
                     example = lead["example"]
                     print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
                           f"{lead['sites']} sites in {lead['caller_count']} callers / "
-                          f"{lead['unit_count']} units; e.g. {example['retail_va']} "
+                          f"{lead['unit_count']} units; e.g. {example['caller_id']} "
                           f"[{example['unit']}] at {example['mac_call_site']} "
                           f"(Mac sites {example['mac_target_calls']}, "
                           f"source mentions {example['source_call_mentions']})")

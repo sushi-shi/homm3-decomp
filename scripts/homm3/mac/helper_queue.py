@@ -8,15 +8,17 @@ from __future__ import annotations
 from bisect import bisect_right
 from collections import Counter, defaultdict
 import csv
+import hashlib
 import io
 import json
 from pathlib import Path
 import re
 import tomllib
 
-from homm3.mac import glue, references, reports
+from homm3.mac import addresses, glue, references, reports, tables
 from homm3.mac.discovery import Index
-from homm3.mac.source import _masked_source, extract_body, load_pairs, source_helper
+from homm3.mac.source import (_masked_source, class_header_helper, extract_body,
+                              load_pairs, source_helper)
 
 
 def _address(section: int, offset: int) -> str:
@@ -51,6 +53,46 @@ def _call_text(authored: str) -> str:
     raise ValueError("source function has an unterminated parameter list")
 
 
+def _helper_body(caller) -> str:
+    text = caller.source.read_text()
+    finder = class_header_helper if caller.source.suffix == ".h" else source_helper
+    try:
+        return finder(text, caller.source_helper, caller.source)[2]
+    except ValueError:
+        if finder is class_header_helper:
+            raise
+        # Ordinary classes can also be defined inside their owning .cpp.
+        return class_header_helper(text, caller.source_helper, caller.source)[2]
+
+
+def _source_helpers(root: Path, refs: list, pairs: list, pef) -> list:
+    """Include new source-only annotations even without a legacy TOML row."""
+    claims, _, problems = addresses.scan(root)
+    if problems:
+        raise ValueError("invalid Mac source claims: " + "; ".join(problems))
+    known = {(ref.mac_section, ref.mac_offset) for ref in [*refs, *pairs]}
+    source_units = {ref.source: ref.unit for ref in [*refs, *pairs]}
+    additions = []
+    spans = tables.read_functions(root) if (root / "config/mac/functions.tsv").exists() else None
+    for claim in claims:
+        if claim.windows_va is not None or claim.compgen is not None:
+            continue
+        if (tables.CODE_SECTION, claim.offset) in known:
+            continue
+        if spans is not None and spans.get(claim.offset) != claim.size:
+            raise ValueError(f"{claim.where}: source helper has no matching verified Mac span")
+        source = root / claim.path
+        unit = source_units.get(source)
+        if unit is None:
+            unit = addresses.unit_of(root, claim.path)
+        additions.append(references.Reference(
+            None, unit, source, claim.label, tables.CODE_SECTION, claim.offset,
+            claim.size, None, hashlib.sha256(pef.code(tables.CODE_SECTION, claim.offset,
+                                                     claim.size)).hexdigest(),
+            f"source MAC_ADDRESS at {claim.where}", claim.label + claim.parameters))
+    return additions
+
+
 def _owner(unit: str, assignments: dict[str, str]) -> str:
     return assignments.get(unit, "unassigned")
 
@@ -73,11 +115,11 @@ def generate(root: Path, action_queue: dict, index: Index,
                 or row["windows_max"] < 100 - 1e-6}
     refs = references.load(root)
     pairs = load_pairs(root)
+    refs = [*refs, *_source_helpers(root, refs, pairs, index.pef)]
     by_va = {ref.retail_va: ref for ref in refs if ref.retail_va is not None}
     by_va.update({pair.retail_va: pair for pair in pairs})
     by_target = {(ref.mac_section, ref.mac_offset): ref for ref in refs}
     by_target.update({(pair.mac_section, pair.mac_offset): pair for pair in pairs})
-    from homm3.mac import addresses, tables
     runtime_by_target = {(tables.CODE_SECTION, label.offset): label.name
                          for label in tables.read_runtime(root)}
     for item in addresses.legacy_runtime(root):
@@ -96,12 +138,21 @@ def generate(root: Path, action_queue: dict, index: Index,
 
     calls = []
     functions = []
-    for va, row in sorted(selected.items()):
-        caller = by_va.get(va)
+    callers = [(f"0x{va:08x}", row, by_va.get(va)) for va, row in sorted(selected.items())]
+    if all_functions:
+        deferred_units = {row.get("unit") for row in action_queue["rows"]
+                          if row.get("state") == "deferred"}
+        for ref in refs:
+            if ref.retail_va is None and ref.source_helper:
+                callers.append((ref.identity, {"unit": ref.unit, "function": ref.signature,
+                    "windows_max": None,
+                    "state": "deferred" if ref.unit in deferred_units else "review_calls"}, ref))
+    for identity, row, caller in callers:
+        va_text = identity if identity.startswith("0x") else None
         owner = _owner(row.get("unit") or "", assignments)
         helper_reviewed = caller is not None and row.get("unit") in reviewed_units
         deferred = row.get("state") == "deferred"
-        entry = {"owner": owner, "unit": row.get("unit"), "retail_va": f"0x{va:08x}",
+        entry = {"owner": owner, "unit": row.get("unit"), "retail_va": va_text, "caller_id": identity,
                  "function": row["function"], "windows_max": row.get("windows_max"),
                  "deferred": deferred, "helper_reviewed": helper_reviewed,
                  "reviewed_mac_span": caller is not None,
@@ -114,7 +165,8 @@ def generate(root: Path, action_queue: dict, index: Index,
         if caller is None:
             continue
         try:
-            authored = extract_body(caller)
+            authored = (_helper_body(caller) if getattr(caller, "source_helper", None)
+                        else extract_body(caller))
             if authored.rstrip().endswith(";"):
                 # Some VA claims preserve retail order on a forward declaration.
                 # Inspect the canonical definition before reporting a missing
@@ -155,7 +207,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                      "source_call_present" if source_call else
                      "review_missing_helper_call" if getattr(target, "source_helper", None) else
                      "review_other_named_call")
-            calls.append({"owner": owner, "unit": entry["unit"], "retail_va": entry["retail_va"],
+            calls.append({"owner": owner, "unit": entry["unit"], "retail_va": entry["retail_va"], "caller_id": identity,
                           "deferred": deferred,
                           "function": entry["function"], "mac_call_site": _address(caller.mac_section, at),
                           "mac_target": _address(section, offset),
@@ -168,13 +220,15 @@ def generate(root: Path, action_queue: dict, index: Index,
             entry["missing_named_calls"] += state == "review_missing_helper_call"
             entry["unreviewed_targets"] += state == "identify_target"
     coverage = {"functions_in_scope": len(functions),
+                "windows_functions_in_scope": len(selected),
+                "source_helper_callers": sum(row["retail_va"] is None for row in functions),
                 "helper_reviewed_functions": sum(row["helper_reviewed"] for row in functions),
                 "unfinished_windows_functions": sum(
                     row.get("windows_max") is None or row["windows_max"] < 100 - 1e-6
                     for row in selected.values()),
                 "reviewed_mac_callers": sum(row["reviewed_mac_span"] for row in functions),
                 "direct_mac_calls": len(calls),
-                "call_count_review_groups": len({(row["retail_va"], row["mac_target"])
+                "call_count_review_groups": len({(row["caller_id"], row["mac_target"])
                                                  for row in calls if row["state"] == "review_call_count"}),
                 "source_unavailable_functions": sum(bool(row["source_parse_error"]) for row in functions),
                 "missing_named_source_calls": sum(row["state"] == "review_missing_helper_call" for row in calls),
@@ -192,10 +246,10 @@ def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
     out.mkdir(parents=True, exist_ok=True)
     reports.atomic_text(out / f"{stem}.json", json.dumps(report, indent=2) + "\n")
     for name, fields in (
-        ("functions", ("owner", "unit", "retail_va", "function", "windows_max", "deferred",
+        ("functions", ("owner", "unit", "retail_va", "caller_id", "function", "windows_max", "deferred",
                        "helper_reviewed", "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
                        "unreviewed_targets", "direct_mac_calls", "source_parse_error", "state")),
-        ("calls", ("owner", "unit", "retail_va", "deferred", "mac_call_site", "mac_target",
+        ("calls", ("owner", "unit", "retail_va", "caller_id", "deferred", "mac_call_site", "mac_target",
                    "target_name", "target_unit", "source_call_present", "source_call_mentions",
                    "mac_target_calls", "source_parse_error", "state")),
     ):
@@ -228,7 +282,7 @@ def leads(report: dict, unit: str | None = None,
                                         "sites": 0, "callers": set(), "units": set(),
                                         "example": row})
         group["sites"] += 1
-        group["callers"].add(row["retail_va"])
+        group["callers"].add(row["caller_id"])
         group["units"].add(row["unit"])
     result = []
     for group in groups.values():

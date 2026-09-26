@@ -8469,6 +8469,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 
 // Mac 0x18640c retains this helper between setNewPlayerSlot and
 // getCommonGameVersion; onPlayerDroppedMsg calls it at 0x181944.
+MAC_ADDRESS(0x18640c, 0x3c)
 void TSingleSelectionWindow::removePlayer(unsigned long dpid)
 {
     m_players.deletePlayer(dpid);
