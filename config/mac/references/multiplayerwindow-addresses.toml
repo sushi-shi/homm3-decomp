@@ -61,7 +61,7 @@ mac_section = 0x0
 mac_offset = 0x219ee8
 mac_size = 0xc3c
 target_sha256 = "96981d2912078a2e4bb020d7ac11519ccf68d52cfc09aac2defd6486c6aa1a20"
-evidence = "TMultiPlayerWindow ctor called by KB doMultiPlayerWindow0x111808, invokes CHeroWindowEx ctor0x20be70 and constructs multiplayer widgets; tail calls goSessionList0x21ac0c."
+evidence = "TMultiPlayerWindow ctor called by KB doMultiPlayerWindow0x111808, invokes CHeroWindowEx ctor0x20be70 and constructs multiplayer widgets; tail calls goMainMenu0x21ac0c."
 
 [[functions]]
 retail_va = 0x50ee40
@@ -73,13 +73,13 @@ target_sha256 = "e119b04f132ca3b9d987c976b39437924e405a282efef6339018f7bbc886345
 evidence = "TMultiPlayerWindow RTTI/vtable1+0x5b474/0x5b4a4 slot0 resolves destructor0x21ab78; it deletes widgets0x20bc50 and calls heroWindow base destructor0x20aebc."
 
 [[functions]]
-retail_va = 0x50eef0
+retail_va = 0x50efc0
 unit = "multiplayerwindow"
 mac_section = 0x0
 mac_offset = 0x21ac0c
 mac_size = 0xd8
 target_sha256 = "6275459e5bcbf623ce91ef8ded52358d43e4cca7f1a813c9983ce7d523c48065"
-evidence = "GoSessionList writes inSessionList=1 at +0x50, clears splash flag +0x60, sends repeated WIDGET_CLEAR_STATUS5/SET_STATUS6 to widgets and gets ID126."
+evidence = "goMainMenu shows splash, hot-seat and protocol widgets via WIDGET_SET_STATUS(5,6), hides host/join and getWidget(126) via WIDGET_CLEAR_STATUS(6,6), and clears hostJoinScreen at +0x60. Constructor calls this main-menu transition; goSessionList instead expands into dispatcher protocol arms. Mac has fewer protocol widgets than Windows."
 
 [[functions]]
 retail_va = 0x50f0f0
