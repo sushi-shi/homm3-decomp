@@ -20,6 +20,9 @@
 #include <string.h>
 // VC6 keeps a for-init declaration in the enclosing scope (pre-ISO rule).
 #pragma ARM_scoping on
+// VC6 types string literals as char arrays, so a conditional of literals
+// converts to char*; CodeWarrior's const_strings default makes it const.
+#pragma const_strings off
 // Native MSL provides the equivalent CRT entries under these spellings.
 #define _strcmpi _stricmp
 #define stricmp _stricmp
