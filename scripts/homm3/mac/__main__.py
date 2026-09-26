@@ -451,13 +451,17 @@ def main(argv=None) -> int:
                       f"{coverage['reviewed_mac_callers']} paired Mac caller spans")
                 print(f"[mac] {coverage['missing_named_source_calls']} reviewed helper calls absent from source; "
                       f"{coverage['unreviewed_direct_targets']} distinct direct targets need identity review")
+                print(f"[mac] {coverage['call_count_review_groups']} caller/target count discrepancies; "
+                      f"{coverage['source_unavailable_functions']} source bodies unavailable")
                 for lead in helper_queue.leads(report, args.unit, args.include_deferred,
                                                args.include_named)[:args.limit]:
                     example = lead["example"]
                     print(f"  {lead['mac_target']} {lead['target_name']} [{lead['state']}] "
                           f"{lead['sites']} sites in {lead['caller_count']} callers / "
                           f"{lead['unit_count']} units; e.g. {example['retail_va']} "
-                          f"[{example['unit']}] at {example['mac_call_site']}")
+                          f"[{example['unit']}] at {example['mac_call_site']} "
+                          f"(Mac sites {example['mac_target_calls']}, "
+                          f"source mentions {example['source_call_mentions']})")
                 print(f"[mac] complete queue: build/mac/{stem}.json and {stem}-*.tsv")
             return 0
         if args.command in ("find", "xrefs", "census"):

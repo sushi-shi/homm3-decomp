@@ -27,6 +27,15 @@ command retains its smaller unfinished-function matching queue.
 source helper is absent from the caller's authored body; `identify_target`
 means the destination has no reviewed identity. Other named targets get
 `review_other_named_call`, since constructors and destructors can be implicit.
+`review_call_count` flags a named target whose Mac assembly call-site count
+and Windows source call mentions differ, even when that helper already appears
+in the source. JSON/TSV retain both counts. The function declarator and its
+parameters are excluded; constructor initializers are retained. These lexical
+counts require review of overloads, implicit lifetimes, and nested source helpers.
+`source_unavailable` records an extraction gap rather than counting zero calls.
+After restoring a helper, follow all its Mac xrefs and reconcile every Windows
+source caller using the temporary
+[helper-sweep skill](../../.agents/skills/mac-helper-sweep/SKILL.md).
 These are leads for human review, not proof of an inline qualifier or even a
 game helper. A Mac inlined operation may have no retained call and therefore
 needs a body-shape review too. A textual `source_call_present` check also needs

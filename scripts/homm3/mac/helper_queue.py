@@ -6,7 +6,7 @@ neither a branch nor a textual call search proves the original inline qualifier.
 from __future__ import annotations
 
 from bisect import bisect_right
-from collections import defaultdict
+from collections import Counter, defaultdict
 import csv
 import io
 import json
@@ -28,6 +28,27 @@ def _leaf(item) -> str:
     if helper:
         return helper.split("(", 1)[0].rsplit("::", 1)[-1]
     return item.signature.split("(", 1)[0].rsplit(" ", 1)[-1].rsplit("::", 1)[-1]
+
+
+def _call_text(authored: str) -> str:
+    """Mask noise and remove the owning declarator, retaining ctor initializers.
+
+    These are lexical call leads, not resolved AST calls. In particular the
+    definition of Derived::save must not count as a call to Base::save.
+    """
+    text = _masked_source(authored)
+    opening = text.find("(")
+    if opening < 0:
+        raise ValueError("source function has no parameter list")
+    depth = 0
+    for index in range(opening, len(text)):
+        if text[index] == "(":
+            depth += 1
+        elif text[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return text[index + 1:]
+    raise ValueError("source function has an unterminated parameter list")
 
 
 def _owner(unit: str, assignments: dict[str, str]) -> str:
@@ -85,6 +106,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                  "deferred": deferred, "helper_reviewed": helper_reviewed,
                  "reviewed_mac_span": caller is not None,
                  "reviewed_calls": 0, "missing_named_calls": 0,
+                 "direct_mac_calls": None, "source_parse_error": "",
                  "unreviewed_targets": 0,
                  "state": ("helper_reviewed" if helper_reviewed else
                            "review_calls" if caller else "pair_mac_address")}
@@ -105,22 +127,31 @@ def generate(root: Path, action_queue: dict, index: Index,
                     _, _, authored = source_helper(source_text, name + parameters, caller.source)
                 except ValueError:
                     _, _, authored = source_helper(source_text, name, caller.source)
-            body = _masked_source(authored)
+            body = _call_text(authored)
             source_error = ""
         except (OSError, ValueError) as exc:
             body = ""
             source_error = str(exc)
         sites = branches.get(caller.mac_section, [])
         lo = bisect_right(starts.get(caller.mac_section, []), caller.mac_offset - 1)
-        for at, section, offset in sites[lo:]:
-            if at >= caller.mac_offset + caller.mac_size:
-                break
+        hi = bisect_right(starts.get(caller.mac_section, []),
+                          caller.mac_offset + caller.mac_size - 1)
+        caller_sites = sites[lo:hi]
+        target_counts = Counter((section, offset) for _, section, offset in caller_sites)
+        entry["direct_mac_calls"] = len(caller_sites)
+        entry["source_parse_error"] = source_error
+        for at, section, offset in caller_sites:
             target = by_target.get((section, offset))
             runtime_name = runtime_by_target.get((section, offset), "")
             name = _leaf(target) if target else ""
-            source_call = bool(name and body and re.search(r"\b" + re.escape(name) + r"\s*\(", body))
+            source_count = (len(re.findall(r"(?<![\w])" + re.escape(name) + r"\s*\(", body))
+                            if name and not source_error else None)
+            source_call = source_count is not None and source_count > 0
+            mac_count = target_counts[(section, offset)]
             state = ("runtime_call" if target is None and runtime_name else
                      "identify_target" if target is None else
+                     "source_unavailable" if source_error else
+                     "review_call_count" if source_call and source_count != mac_count else
                      "source_call_present" if source_call else
                      "review_missing_helper_call" if getattr(target, "source_helper", None) else
                      "review_other_named_call")
@@ -131,6 +162,7 @@ def generate(root: Path, action_queue: dict, index: Index,
                           "target_name": name or runtime_name,
                           "target_unit": target.unit if target else "",
                           "source_call_present": source_call, "source_parse_error": source_error,
+                          "source_call_mentions": source_count, "mac_target_calls": mac_count,
                           "state": state})
             entry["reviewed_calls"] += target is not None
             entry["missing_named_calls"] += state == "review_missing_helper_call"
@@ -142,10 +174,13 @@ def generate(root: Path, action_queue: dict, index: Index,
                     for row in selected.values()),
                 "reviewed_mac_callers": sum(row["reviewed_mac_span"] for row in functions),
                 "direct_mac_calls": len(calls),
+                "call_count_review_groups": len({(row["retail_va"], row["mac_target"])
+                                                 for row in calls if row["state"] == "review_call_count"}),
+                "source_unavailable_functions": sum(bool(row["source_parse_error"]) for row in functions),
                 "missing_named_source_calls": sum(row["state"] == "review_missing_helper_call" for row in calls),
                 "unreviewed_direct_targets": len({row["mac_target"] for row in calls
                                                   if row["state"] == "identify_target"})}
-    return {"schema": 1,
+    return {"schema": 2,
             "scope": ("all_mac_retained_game_helper_recovery" if all_functions
                       else "mac_retained_helper_recovery"),
             "target_sha256": action_queue.get("target_sha256"),
@@ -159,9 +194,10 @@ def write(root: Path, report: dict, *, stem: str = "helper-queue") -> None:
     for name, fields in (
         ("functions", ("owner", "unit", "retail_va", "function", "windows_max", "deferred",
                        "helper_reviewed", "reviewed_mac_span", "reviewed_calls", "missing_named_calls",
-                       "unreviewed_targets", "state")),
+                       "unreviewed_targets", "direct_mac_calls", "source_parse_error", "state")),
         ("calls", ("owner", "unit", "retail_va", "deferred", "mac_call_site", "mac_target",
-                   "target_name", "target_unit", "source_call_present", "state")),
+                   "target_name", "target_unit", "source_call_present", "source_call_mentions",
+                   "mac_target_calls", "source_parse_error", "state")),
     ):
         stream = io.StringIO()
         writer = csv.DictWriter(stream, fieldnames=fields, delimiter="\t", extrasaction="ignore")
@@ -175,7 +211,7 @@ def leads(report: dict, unit: str | None = None,
           include_other_named: bool = False) -> list[dict]:
     """Group actionable call leads by destination instead of repeating sites."""
     groups = {}
-    states = {"review_missing_helper_call", "identify_target"}
+    states = {"review_missing_helper_call", "review_call_count", "source_unavailable", "identify_target"}
     if include_other_named:
         states.add("review_other_named_call")
     for row in report["calls"]:
@@ -200,7 +236,8 @@ def leads(report: dict, unit: str | None = None,
         group["unit_count"] = len(group.pop("units"))
         result.append(group)
     rank = {"review_missing_helper_call": 0,
-            "review_other_named_call": 1, "identify_target": 2}
+            "review_call_count": 1, "review_other_named_call": 2,
+            "source_unavailable": 3, "identify_target": 4}
     return sorted(result, key=lambda group: (
         rank[group["state"]],
         -group["caller_count"], -group["sites"], -group["unit_count"],
