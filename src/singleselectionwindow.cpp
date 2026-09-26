@@ -3207,7 +3207,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     drawWindow(0, 0xffff0001, 0xffff);
     update();
 
-    if (g_remoteOn && g_dPlay->isHost())
+    if (g_remoteOn && isHost())
         sendPlayerPositions(0);
 }
 
@@ -3227,7 +3227,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_randomMapMode = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                if (g_remoteOn && !g_dPlay->isHost()) {
+                if (g_remoteOn && !isHost()) {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
                     transmitRemoteDataDPID(&msg, 0, false, true);
                 } else {
@@ -3246,10 +3246,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
     m_fileSlider->show();
     m_fileSlider->setResolution(
         m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
-    if (!g_remoteOn)
-        randomMaps = true;
-    else
-        randomMaps = g_dPlay->isHost();
+    randomMaps = isHost();
     m_fileSlider->enable(randomMaps);
     m_fileSlider->setState(m_currentIndex);
 
@@ -3273,7 +3270,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (g_remoteOn && !g_dPlay->isHost() && !m_saveMode)
+        if (!isHost() && !m_saveMode)
             g_game->setupOrigData();
         else
             getHeaders(&m_headersA);
@@ -3324,7 +3321,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
 
             if (!static_cast<const std::bitset<4>&>(
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-                if (g_remoteOn && !g_dPlay->isHost())
+                if (!isHost())
                     return;
                 const TTextResource* text;
                 const char* gameType;
@@ -3351,7 +3348,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                 mapVersionClass = g_game->m_mapHeader.m_version > 14;
 
             if (m_commonGameVersion < mapVersionClass) {
-                if (!g_dPlay->isHost())
+                if (!isHost())
                     return;
                 const TTextResource* text;
                 const char* gameType;
@@ -4334,9 +4331,7 @@ VA(0x00584550, 0x698) MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTrans
 int TSingleSelectionWindow::update()
 {
     if (m_receivedMaps == 0) {
-        if (g_remoteOn == 0)
-            return 1;
-        if (g_dPlay->isHost())
+        if (isHost())
             return 1;
         g_smallFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
@@ -4894,15 +4889,15 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             break;
         }
         broadcastMessage(msg);
-        if (!g_remoteOn || g_dPlay->isHost())
+        if (isHost())
             updateAllyEnemyFlags(update);
-        if (g_remoteOn && !m_saveMode && g_dPlay->isHost()
+        if (g_remoteOn && !m_saveMode && isHost()
                 && !m_randomMapSelected) {
             CScrollMsg scrollMsg(m_currentMap, m_currentIndex);
             transmitRemoteDataDPID(&scrollMsg, 0, false, true);
         }
     }
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         widget* w = getWidget(186);
         if (w) {
             if (!m_loadMode && !m_saveMode
@@ -4959,7 +4954,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             }
         }
     }
-    if (g_remoteOn && g_dPlay->isHost() && m_mapChanged) {
+    if (g_remoteOn && isHost() && m_mapChanged) {
         sendPlayerPositions(0);
     }
 }
@@ -5019,7 +5014,7 @@ void TSingleSelectionWindow::setFilter(int size)
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
-    if (g_remoteOn != 0 && g_dPlay->isHost()) {
+    if (g_remoteOn != 0 && isHost()) {
         CSetFilterMsg filterMsg(size);
         transmitRemoteDataDPID(&filterMsg, 0, false, true);
     }
@@ -6044,7 +6039,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
                         drawHeroAdvancedOption(
                             g_lastImHoverId - 0x107, 1, -1);
                     }
-                    if (!g_remoteOn || g_dPlay->isHost()) {
+                    if (isHost()) {
                         widget* hovered = getWidget(id);
                         hovered->sendMessage(
                             widget::WIDGET_SET_STATUS, 0x10);
@@ -6802,7 +6797,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
     g_logFile.log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
                              "OnNewPlayerMsg (%d)"),
                 msg->m_playerInfo.m_dpid);
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         if (!isVersionCompatible(msg->m_version)) {
             g_logFile.log(
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
@@ -6818,7 +6813,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         setNewPlayerSlot(&msg->m_playerInfo);
     if (m_chatShowing)
         turnChatOn(1);
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
             if (assignPlayerToOpenHumanSlot(netMsg->m_dpidFrom)) {
