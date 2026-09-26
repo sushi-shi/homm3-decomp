@@ -719,7 +719,7 @@ VA(0x004b9070, 0x1B3) MAC_ADDRESS(0x0cb1f0, 0x118)  // dc 0xa3c68
 int game::loadSignPool(TAbstractFile* infile)
 {
     signed char count;
-    if (infile->read(&count, sizeof(count)) < sizeof(count))
+    if (readValue(infile, count) < sizeof(count))
         return -1;
 
     m_signs.resize(count);
@@ -727,7 +727,7 @@ int game::loadSignPool(TAbstractFile* infile)
         if (loadString(infile, m_signs[i].m_signText) < 0)
             return -1;
 
-        if (infile->read(&count, sizeof(count)) < sizeof(count))
+        if (readValue(infile, count) < sizeof(count))
             return -1;
         m_signs[i].m_hasText = count != 0;
     }
@@ -742,10 +742,9 @@ int game::saveSignPool(TAbstractFile* outfile)
     // Complete uses the abstract-file write in place of DC's gzwrite.
     int count;
     int x;
-    char charBuffer;
-    charBuffer = static_cast<char>(m_signs.size());
-    count = outfile->write(&charBuffer, sizeof(charBuffer));
-    if (count < sizeof(charBuffer))
+
+    count = writeValue<char>(outfile, m_signs.size());
+    if (count < sizeof(char))
         return -1;
 
     for (x = 0; x < m_signs.size(); ++x) {
@@ -753,9 +752,8 @@ int game::saveSignPool(TAbstractFile* outfile)
         if (count < 0)
             return -1;
 
-        charBuffer = m_signs[x].m_hasText;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_signs[x].m_hasText);
+        if (count < sizeof(char))
             return -1;
     }
     return 0;
@@ -772,20 +770,20 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
     unsigned char count;
     int x;
     char charBuffer;
-    if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+    if (readValue(infile, count) < sizeof(unsigned char))
         return -1;
     m_mines.resize(static_cast<unsigned char>(count));
 
     for (x = 0; x < m_mines.size(); ++x) {
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_playerOwner = charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_type = charBuffer;
-        if (infile->read(&charBuffer, sizeof(charBuffer))
+        if (readValue(infile, charBuffer)
             < sizeof(charBuffer))
             return -1;
         m_mines[x].m_isAbandoned = charBuffer != 0;
@@ -801,13 +799,13 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
                 guards->add(typeValue, amountValue, -1);
         }
 
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapX = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapY = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_mines[x].m_mapZ = static_cast<unsigned char>(count);
     }
@@ -817,31 +815,31 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 VA(0x004b9580, 0x165) MAC_ADDRESS(0x0cb6a8, 0x214)  // dc 0xa410c
 int game::saveMinePool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(m_mines.size());
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<unsigned char>(outfile, m_mines.size())
+        < sizeof(unsigned char))
         return -1;
 
     for (unsigned int i = 0; i < m_mines.size(); ++i) {
-        unsigned char value = m_mines[i].m_playerOwner;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_playerOwner)
+            < sizeof(unsigned char))
             return -1;
-        value = m_mines[i].m_type;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_type)
+            < sizeof(unsigned char))
             return -1;
-        value = m_mines[i].m_isAbandoned;
-        if (outfile->write(&value, sizeof(value)) < sizeof(value))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_isAbandoned)
+            < sizeof(unsigned char))
             return -1;
 
         m_mines[i].m_guards.save(outfile);
 
-        count = m_mines[i].m_mapX;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapX)
+            < sizeof(unsigned char))
             return -1;
-        count = m_mines[i].m_mapY;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapY)
+            < sizeof(unsigned char))
             return -1;
-        count = m_mines[i].m_mapZ;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_mines[i].m_mapZ)
+            < sizeof(unsigned char))
             return -1;
     }
     return 0;
@@ -850,35 +848,34 @@ int game::saveMinePool(TAbstractFile* outfile)
 VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
-    int count;
-    if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+    unsigned char count;
+    if (readValue(infile, count) < sizeof(unsigned char))
         return -1;
 
-    m_garrisons.resize(count & 0xff);
+    m_garrisons.resize(count);
     for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
         unsigned char owner;
-        if (infile->read(&owner, sizeof(owner)) < sizeof(owner))
+        if (readValue(infile, owner) < sizeof(owner))
             return -1;
         m_garrisons[i].m_playerOwner = owner;
 
         m_garrisons[i].m_garrisonArmy.load(infile);
 
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapX = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapY = static_cast<unsigned char>(count);
-        if (infile->read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        if (readValue(infile, count) < sizeof(unsigned char))
             return -1;
         m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
             m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_garrisons[i].m_removableTroops = value != 0;
+            m_garrisons[i].m_removableTroops =
+                readValue<unsigned char>(infile) != 0;
         }
     }
     return 0;
@@ -887,29 +884,28 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 VA(0x004b98c0, 0x139) MAC_ADDRESS(0x0cbab4, 0x1c8)  // dc 0xa4548
 int game::saveGarrisonPool(TAbstractFile* outfile)
 {
-    unsigned char count = static_cast<unsigned char>(m_garrisons.size());
-    if (outfile->write(&count, sizeof(count)) < sizeof(count))
+    if (writeValue<unsigned char>(outfile, m_garrisons.size())
+        < sizeof(unsigned char))
         return -1;
 
     for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
-        unsigned char owner = m_garrisons[i].m_playerOwner;
-        if (outfile->write(&owner, sizeof(owner)) < sizeof(owner))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_playerOwner)
+            < sizeof(unsigned char))
             return -1;
 
         m_garrisons[i].m_garrisonArmy.save(outfile);
 
-        count = m_garrisons[i].m_mapX;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapX)
+            < sizeof(unsigned char))
             return -1;
-        count = m_garrisons[i].m_mapY;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapY)
+            < sizeof(unsigned char))
             return -1;
-        count = m_garrisons[i].m_mapZ;
-        if (outfile->write(&count, sizeof(count)) < sizeof(count))
+        if (writeValue<unsigned char>(outfile, m_garrisons[i].m_mapZ)
+            < sizeof(unsigned char))
             return -1;
 
-        unsigned char last = m_garrisons[i].m_removableTroops;
-        outfile->write(&last, sizeof(last));
+        writeValue<unsigned char>(outfile, m_garrisons[i].m_removableTroops);
     }
     return 0;
 }
@@ -923,41 +919,41 @@ int game::loadBoatPool(TAbstractFile* infile)
     unsigned char ucharBuffer;
     char charBuffer;
 
-    count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+    count = readValue(infile, ucharBuffer);
     if (count < sizeof(ucharBuffer))
         return -1;
 
     m_boats.resize(ucharBuffer);
     for (x = 0; x < m_boats.size(); ++x) {
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_allocated = charBuffer != 0;
 
-        count = infile->read(&ucharBuffer, sizeof(ucharBuffer));
+        count = readValue(infile, ucharBuffer);
         if (count < sizeof(ucharBuffer))
             return -1;
         m_boats[x].m_id = ucharBuffer;
 
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_type = charBuffer;
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_facing = charBuffer;
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_playerOwner = charBuffer;
 
-        count = infile->read(&ushortBuffer, sizeof(ushortBuffer));
+        count = readValue(infile, ushortBuffer);
         if (count < sizeof(ushortBuffer))
             return -1;
         m_boats[x].m_occupyingHero = ushortBuffer;
 
-        count = infile->read(&charBuffer, sizeof(charBuffer));
+        count = readValue(infile, charBuffer);
         if (count < sizeof(charBuffer))
             return -1;
         m_boats[x].m_occupied = charBuffer != 0;
@@ -970,47 +966,36 @@ int game::loadBoatPool(TAbstractFile* infile)
 VA(0x004b9c40, 0x1AD) MAC_ADDRESS(0x0cbf08, 0x260)  // dc 0xa4980
 int game::saveBoatPool(TAbstractFile* outfile)
 {
-    unsigned short ushortBuffer;
     int count;
     int x;
-    unsigned char ucharBuffer;
-    char charBuffer;
 
-    ucharBuffer = static_cast<unsigned char>(m_boats.size());
-    count = outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-    if (count < sizeof(ucharBuffer))
+    count = writeValue<unsigned char>(outfile, m_boats.size());
+    if (count < sizeof(unsigned char))
         return -1;
 
     for (x = 0; x < m_boats.size(); ++x) {
-        charBuffer = m_boats[x].m_allocated;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_allocated);
+        if (count < sizeof(char))
             return -1;
-        ucharBuffer = m_boats[x].m_id;
-        count = outfile->write(&ucharBuffer, sizeof(ucharBuffer));
-        if (count < sizeof(ucharBuffer))
+        count = writeValue<unsigned char>(outfile, m_boats[x].m_id);
+        if (count < sizeof(unsigned char))
             return -1;
-        charBuffer = m_boats[x].m_type;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_type);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_boats[x].m_facing;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_facing);
+        if (count < sizeof(char))
             return -1;
-        charBuffer = m_boats[x].m_playerOwner;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_playerOwner);
+        if (count < sizeof(char))
             return -1;
 
-        ushortBuffer = static_cast<unsigned short>(m_boats[x].m_occupyingHero);
-        count = outfile->write(&ushortBuffer, sizeof(ushortBuffer));
-        if (count < sizeof(ushortBuffer))
+        count = writeValue<unsigned short>(outfile, m_boats[x].m_occupyingHero);
+        if (count < sizeof(unsigned short))
             return -1;
 
-        charBuffer = m_boats[x].m_occupied;
-        count = outfile->write(&charBuffer, sizeof(charBuffer));
-        if (count < sizeof(charBuffer))
+        count = writeValue<char>(outfile, m_boats[x].m_occupied);
+        if (count < sizeof(char))
             return -1;
         if (!m_boats[x].save(outfile))
             return -1;
