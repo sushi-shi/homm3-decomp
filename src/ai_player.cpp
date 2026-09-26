@@ -4728,7 +4728,7 @@ long type_shooter_bonus_artifact::getValue(const hero* owner, unsigned char, uns
 
 VA(0x00433130, 0x26f) MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
-    const hero* owner, unsigned char, unsigned char exact) const
+    const hero* owner, unsigned char equipped, unsigned char exact) const
 {
     std::bitset<9> alliedAlignments = armyGrpFn0044A460();
     playerData* player = &g_game->m_players[owner->m_owner];
@@ -4769,13 +4769,9 @@ long type_angelic_alliance_artifact::getValue(
         }
     }
 
-    long ownArmyValue;
-    if (exact) {
-        ownArmyValue = 0;
-    } else {
-        ownArmyValue = owner->m_army.getAIValue() * m_bonus / 40;
-    }
-    return ownArmyValue + total * 5 / 100;
+    // Mac 0x3846c retains the might-artifact base evaluator at 0x36df0.
+    return type_might_artifact::getValue(owner, equipped, exact)
+        + total * 5 / 100;
 }
 
 // Mac calls the shared base evaluator twice, once for each mastery path.
