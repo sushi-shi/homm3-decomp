@@ -1339,7 +1339,8 @@ build build/mac/obj/palette.o: mwcc src/palette.cpp | $
 build mac$:palette: phony build/mac/obj/palette.o
 build build/mac/obj/army.o: mwcc src/army.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    config/mac/units/army.toml config/mac/units.toml
   unit = army
 build mac$:army: phony build/mac/obj/army.o
 build build/mac/obj/adventuremapwindow.o: mwcc src/adventuremapwindow.cpp | $
@@ -1559,7 +1560,8 @@ build build/mac/obj/puzzlewindow.o: mwcc src/puzzlewindow.cpp | $
 build mac$:puzzlewindow: phony build/mac/obj/puzzlewindow.o
 build build/mac/obj/remote.o: mwcc src/remote.cpp | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
-    config/mac/toolchain.toml config/mac/sdk.toml config/mac/units.toml
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    config/mac/units/remote.toml config/mac/units.toml
   unit = remote
 build mac$:remote: phony build/mac/obj/remote.o
 build build/mac/obj/university_window.o: mwcc src/university_window.cpp | $
