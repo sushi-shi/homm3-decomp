@@ -150,32 +150,92 @@ BUILTINS = {
 }
 
 
-def encode(spelling: str) -> str | None:
+def _base_code(base: str) -> str | None:
+    """Encode supported names and MSL templates, including their SDK defaults."""
+    aliases = {"std::string": "std::basic_string<char>",
+               "std::wstring": "std::basic_string<wchar_t>"}
+    base = aliases.get(base, base)
+    code = BUILTINS.get(base)
+    if code is not None:
+        return code
+    if "<" in base:
+        match = re.fullmatch(r"(std::(?:basic_string|vector|allocator|char_traits))\s*<(.*)>", base)
+        if match is None:
+            return None
+        name, arguments = match.groups()
+        args, start, depth = [], 0, 0
+        for index, char in enumerate(arguments):
+            if char == "<":
+                depth += 1
+            elif char == ">":
+                depth -= 1
+                if depth < 0:
+                    return None
+            elif char == "," and depth == 0:
+                args.append(arguments[start:index].strip())
+                start = index + 1
+        args.append(arguments[start:].strip())
+        if depth or not all(args):
+            return None
+        # Pinned MSL string/stringfwd and vector declarations supply these defaults.
+        if name == "std::basic_string" and 1 <= len(args) <= 3:
+            if len(args) == 1:
+                args.append(f"std::char_traits<{args[0]}>")
+            if len(args) == 2:
+                args.append(f"std::allocator<{args[0]}>")
+        elif name == "std::vector" and 1 <= len(args) <= 2:
+            if len(args) == 1:
+                args.append(f"std::allocator<{args[0]}>")
+        elif name in ("std::allocator", "std::char_traits") and len(args) == 1:
+            pass
+        else:
+            return None
+        codes = [encode(argument, _template_argument=True) for argument in args]
+        if any(code is None for code in codes):
+            return None
+        part = name.split("::")[-1] + "<" + ",".join(codes) + ">"
+        return f"Q23std{len(part)}{part}"
+    if not re.fullmatch(r"\w+(?:::\w+)*", base) or base.startswith("std::"):
+        return None
+    parts = base.split("::")
+    names = "".join(f"{len(part)}{part}" for part in parts)
+    return names if len(parts) == 1 else f"Q{len(parts)}{names}"
+
+
+def encode(spelling: str, *, _template_argument: bool = False) -> str | None:
     """ARM code of a clang parameter spelling; None when the form is not modelled."""
     text = re.sub(r"\b(?:struct|class|enum|union)\s+", "", spelling).strip()
-    if "(" in text or "[" in text or "<" in text or "volatile" in text.split():
+    if "(" in text or "[" in text or "volatile" in text.split():
         return None
-    split = re.search(r"[*&]", text)
-    base = (text[:split.start()] if split else text).split()
-    declarators = text[split.start():] if split else ""
+    depth, boundary = 0, len(text)
+    for index, char in enumerate(text):
+        if char == "<":
+            depth += 1
+        elif char == ">":
+            depth -= 1
+            if depth < 0:
+                return None
+        elif char in "*&" and depth == 0:
+            boundary = index
+            break
+    if depth:
+        return None
+    base, declarators = text[:boundary].strip(), text[boundary:]
     if not base or re.sub(r"[*&\s]|\bconst\b", "", declarators):
         return None
-    const = "const" in base
-    base = " ".join(word for word in base if word not in ("const", "volatile"))
-    code = BUILTINS.get(base)
+    const = base.startswith("const ") or base.endswith(" const")
+    base = re.sub(r"^const\s+|\s+const$", "", base).strip()
+    code = _base_code(base)
     if code is None:
-        if not re.fullmatch(r"\w+(?:::\w+)*", base) or base.startswith("std::"):
-            return None
-        parts = base.split("::")
-        names = "".join(f"{len(part)}{part}" for part in parts)
-        code = names if len(parts) == 1 else f"Q{len(parts)}{names}"
+        return None
     for token in re.findall(r"\*|&|const", declarators):
         if token == "const":
             const = True
             continue
         code = ("P" if token == "*" else "R") + ("C" if const else "") + code
         const = False
-    return code  # a by-value parameter's top-level const is not mangled
+    return ("C" if _template_argument and const else "") + code
+    # A by-value parameter's top-level const is not mangled.
 
 
 def fit(definition, symbol: str) -> int | None:

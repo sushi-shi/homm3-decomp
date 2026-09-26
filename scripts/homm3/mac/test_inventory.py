@@ -211,6 +211,27 @@ class TestParameterJoin(unittest.TestCase):
         self.assertEqual(emitted.encode("A::B &"), "RQ21A1B")
         self.assertIsNone(emitted.encode("int (*)(message &)"))
 
+    def test_msl_string_and_nested_vector_use_exact_parameter_codes(self):
+        string = "Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
+        vector = "Q23std162vector<" + string + ",Q23std78allocator<" + string + ">>"
+        self.assertEqual(emitted.encode("const std::string &"), "RC" + string)
+        self.assertEqual(emitted.encode("std::vector<std::string> &"), "R" + vector)
+        self.assertEqual(emitted.encode("std::vector<std::basic_string<char> > &"), "R" + vector)
+        symbol = ".fillLinesVector__4fontFPCciR" + vector
+        self.assertEqual(emitted.parameters(symbol), (False, ("PCc", "i", "R" + vector)))
+
+    def test_template_pointer_and_const_arguments_preserve_type_identity(self):
+        self.assertEqual(emitted.encode("std::allocator<const int *> &"),
+                         "RQ23std14allocator<PCi>")
+        self.assertNotEqual(emitted.encode("std::vector<int *> &"),
+                            emitted.encode("std::vector<int> &"))
+        self.assertNotEqual(emitted.encode("std::basic_string<char, MyTraits> &"),
+                            emitted.encode("std::string &"))
+        for spelling in ("std::map<int, int> &", "std::vector<> &",
+                         "std::vector<int, int, int> &", "std::vector<int>> &",
+                         "std::vector<int (*)(int)> &"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
     def test_owner_picks_the_one_fitting_overload(self):
         from homm3.match.source_ownership import Definition
         short = Definition("src/hero.cpp", 1, 0, 1, "hero::initialize", "void (short)", 1, True,
