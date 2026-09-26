@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import sys
 
-SCHEMA = 1
+SCHEMA = 2
 
 
 def digest(path):
@@ -65,7 +65,17 @@ def scan(ci, source: Path, args: list[str], root: Path) -> dict:
         annotations = [c.spelling for c in cursor.get_children() if c.kind == k.ANNOTATE_ATTR]
         item = nodes.setdefault(usr, {'id': usr, 'name': name, 'type': cursor.type.spelling,
             'mangled': cursor.mangled_name, 'location': loc, 'definition': False,
-            'mac': [], 'windows': [], 'project': project(cursor)})
+            'mac': [], 'windows': [], 'project': project(cursor),
+            'declaration_prefixes': []})
+        # Clang drops annotate attributes on some redeclarations after a
+        # definition. Keep the source span before the declarator so reviewed
+        # VA/MAC_ADDRESS claims can still join to this exact overload.
+        extent = cursor.extent
+        if (extent.start.file and extent.start.file == cursor.location.file
+                and extent.start.offset <= cursor.location.offset):
+            prefix = [loc['file'], extent.start.offset, cursor.location.offset]
+            if prefix not in item['declaration_prefixes']:
+                item['declaration_prefixes'].append(prefix)
         for annotation in annotations:
             match = re.fullmatch(r'(mac|va):(0x[0-9a-fA-F]+|\d+) size:(0x[0-9a-fA-F]+|\d+)', annotation)
             if match:
@@ -196,6 +206,8 @@ def merge(records):
             current['units'].append(unit)
             for field in ('mac', 'windows'):
                 current[field] = sorted({tuple(x) for x in current[field] + item[field]})
+            current['declaration_prefixes'] = sorted({tuple(x) for x in
+                current.get('declaration_prefixes', []) + item.get('declaration_prefixes', [])})
             if item['definition']:
                 current['definition'] = True
                 current['location'] = item['location']

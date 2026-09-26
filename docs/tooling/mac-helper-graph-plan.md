@@ -81,6 +81,14 @@ legacy source or expose implicit lifetime calls. Inspect `source.diagnostics`
 and `source.gaps`; selecting every TU is a scope statement, not a claim that all
 operations were parsed. No count or path automatically closes a recovery item.
 
+For address annotations on redeclarations after a definition, Clang can omit the
+annotation attribute from its cursor. The graph also joins a reviewed
+`MAC_ADDRESS` claim to one exact declaration prefix in that source file. The
+prefix ends at the declarator, so an address inside a function body cannot
+claim that function. Ambiguous prefixes stay unpaired. This recovers the two
+`aiResourceCost` overload identities at Mac `0x140d40` and `0x140db8` without
+equating their types or accepting a call correspondence.
+
 The binary index now records indirect branches during the same instruction scan
 and serves reverse xrefs from address indexes. For the separate compile/compare
 path, [Mac build reuse](mac-build-performance.md) describes shared unit objects,

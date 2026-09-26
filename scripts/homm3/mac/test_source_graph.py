@@ -52,6 +52,19 @@ class SourceGraphTests(unittest.TestCase):
         self.assertFalse(truncated)
         self.assertFalse(graph['implicit_operations_complete'])
 
+    def test_redeclaration_prefix_keeps_exact_overload_location(self):
+        graph = self.graph('''
+            int cost(int x) { return x; }
+            int cost(float x) { return int(x); }
+            __attribute__((annotate("mac:0x100 size:0x20"))) int cost(int x);
+        ''')
+        nodes = [n for n in graph['nodes'].values() if n['name'] == 'cost']
+        self.assertEqual(len(nodes), 2)
+        declared = next(n for n in nodes if 'float' not in n['type'])
+        self.assertTrue(any(start < end for _, start, end in declared['declaration_prefixes']))
+        self.assertNotEqual(declared['declaration_prefixes'],
+                            next(n for n in nodes if 'float' in n['type'])['declaration_prefixes'])
+
     def test_virtual_and_function_pointer_are_not_direct_paths(self):
         graph = self.graph('struct A { virtual void f(); }; void caller(A& a, void (*p)()) { a.f(); p(); }')
         self.assertEqual([e['dispatch'] for e in graph['edges']], ['virtual', 'unresolved'])

@@ -35,6 +35,20 @@ def build(root, index, source, *, complete_source_scope):
         for offset, size in node['mac']:
             if spans.get(offset) == size:
                 by_mac[offset].add(node['id'])
+    prefixes = defaultdict(list)
+    for node in source['nodes'].values():
+        for path, start, end in node.get('declaration_prefixes', []):
+            prefixes[path].append((start, end, node['id']))
+    for claim in claims:
+        if spans.get(claim.offset) != claim.size or claim.offset in by_mac:
+            continue
+        anchor = getattr(claim, 'anchor', None)
+        if anchor is None:
+            continue
+        matches = {identity for start, end, identity in prefixes[claim.path]
+                   if start <= anchor <= end}
+        if len(matches) == 1:
+            by_mac[claim.offset].update(matches)
     runtime = {r.offset: r for r in tables.read_runtime(root)}
     indirect = {address(o) for o, r in runtime.items() if r.call_kind == 'indirect_tvector'}
 

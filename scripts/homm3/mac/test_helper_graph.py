@@ -24,7 +24,7 @@ class HelperGraphTests(unittest.TestCase):
     def report(self, edges, branches, code=b'', observations=None, runtime=None):
         source = {'nodes': {'f': node('f', 0x100), 'g': node('g', 0x200), 'wrapper': node('wrapper')},
                   'edges': edges, 'units': ['test'], 'diagnostics': {'test': []}, 'gaps': []}
-        claims = [SimpleNamespace(offset=o, path='src/test.cpp', line=1, windows_va=o + 0x400000,
+        claims = [SimpleNamespace(offset=o, size=0x20, path='src/test.cpp', line=1, windows_va=o + 0x400000,
                                   label=n, identity=n) for n, o in [('f', 0x100), ('g', 0x200)]]
         index = SimpleNamespace(branches=[(Address(0, at), Address(0, target), kind) for at, target, kind in branches],
                                 indirect_branches=[Address(0, 0)] if code else [],
@@ -70,6 +70,27 @@ class HelperGraphTests(unittest.TestCase):
                     with output.with_name('helper-audit-calls.tsv').open() as stream:
                         saved = next(csv.DictReader(stream, delimiter='\t'))
                     self.assertEqual(saved['callee_name'], '.mac_close_file')
+
+    def test_reviewed_claim_joins_dropped_redeclaration_annotation(self):
+        source = {'nodes': {'exact': {**node('aiResourceCost'), 'id': 'exact', 'mac': [],
+                             'declaration_prefixes': [('src/test.cpp', 90, 120)]},
+                            'other': {**node('aiResourceCost'), 'id': 'other', 'mac': [],
+                             'declaration_prefixes': [('src/test.cpp', 130, 160)]}},
+                  'edges': [], 'units': ['test'], 'diagnostics': {'test': []}, 'gaps': []}
+        claim = SimpleNamespace(offset=0x300, size=0x20, path='src/test.cpp',
+                                anchor=101, line=1, windows_va=0x400300,
+                                label='aiResourceCost', identity='exact')
+        index = SimpleNamespace(branches=[(Address(0, 0x104), Address(0, 0x300),
+                                           'linked_branch')], indirect_branches=[],
+                                pef=SimpleNamespace(data=b'fixture', sections=[],
+                                                    instantiated=1, contents=lambda _: b''))
+        with patch.object(helper_graph.tables, 'read_functions', return_value={0x100: 0x20, 0x300: 0x20}), \
+             patch.object(helper_graph.target_observations, 'read', return_value={}), \
+             patch.object(helper_graph.tables, 'read_runtime', return_value=[]), \
+             patch.object(helper_graph.addresses, 'scan', return_value=([claim], [], [])):
+            report = helper_graph.build(Path('.'), index, source, complete_source_scope=False)
+        self.assertEqual(report['functions']['mac:0:0x300']['source_ids'], ['exact'])
+        self.assertEqual(report['functions']['mac:0:0x300']['name'], 'aiResourceCost')
 
     def test_nested_wrapper_is_review_lead_not_closure(self):
         report = self.report([edge('f', 'wrapper', 1), edge('wrapper', 'g', 2)], [(0x104, 0x200, 'linked_branch')])
