@@ -66,6 +66,7 @@ def main(argv=None) -> int:
     print(f"[build] CUR diagnostic report: {status.REPORT.relative_to(ROOT)}")
 
     from homm3.mac import build as mac_build
+    selected = set()
     try:
         # Ninja accepts manifest unit names as its positional build targets.
         # Options (and explicit non-unit targets) leave the Mac scope broad so
@@ -83,6 +84,7 @@ def main(argv=None) -> int:
         mac_failed = False
 
     if fast:
+        status.fast_max_movements(report, selected or None, fingerprint_pair)
         from homm3.mac import queue as mac_queue
         try:
             mac_queue.refresh(ROOT, source_hashes=fingerprint_pair[0])

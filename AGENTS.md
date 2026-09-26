@@ -47,7 +47,9 @@ per-TU compiler profiles in `config/units.toml`.
 
 Use `homm3 build --fast <TU>` (for example, `homm3 build --fast cursor`) for the
 inner loop. Normally supply the active TU so shared-header edits rebuild only
-that TU during iteration. Admitted Mac counterparts in that TU are compiled
+that TU during iteration. It reports the selected TU's per-function projected
+MAX movements without banking them; unchanged-source CUR dips stay silent.
+Admitted Mac counterparts in that TU are compiled
 with CodeWarrior and compared in the same loop. Run `homm3 build` for the final
 checkpoint: it rebuilds affected TUs, refreshes retail targets through delinking,
 checks every admitted Mac pair, and runs the gates.

@@ -87,6 +87,60 @@ class UpdateRowsTest(unittest.TestCase):
                          (80.0, 98.0, 99.0))
         self.assertEqual(stats["reset"], 0)
 
+    def test_fast_loop_reports_only_selected_max_movement(self):
+        rows = {
+            ("cursor", "up"): MatchRow(90, 90, 90, 1, "same"),
+            ("cursor", "dip"): MatchRow(100, 100, 100, 2, "same"),
+            ("cursor", "reset"): MatchRow(80, 98, 100, 3, "old"),
+            ("cursor", "changed"): MatchRow(80, 98, 100, 4, "old"),
+            ("cursor", "oldLabel"): MatchRow(70, 70, 70, 5, "same"),
+            ("hero", "other"): MatchRow(90, 90, 90, 6, "same"),
+        }
+        scores = {("cursor", "up"): 100, ("cursor", "dip"): 50,
+                  ("cursor", "reset"): 80, ("cursor", "changed"): 75,
+                  ("cursor", "newLabel"): 80, ("cursor", "new"): 100,
+                  ("hero", "other"): 100}
+        hashes = {key: ("new" if key[1] in ("reset", "changed") else "same")
+                  for key in scores}
+        rvas = {("cursor", "up"): 1, ("cursor", "dip"): 2,
+                ("cursor", "reset"): 3, ("cursor", "changed"): 4,
+                ("cursor", "newLabel"): 5, ("cursor", "new"): 8,
+                ("hero", "other"): 6}
+        report = {"units": [{"name": unit, "functions": [
+            {"name": fn, "fuzzy_match_percent": value}
+            for (owner, fn), value in scores.items() if owner == unit]}
+            for unit in ("cursor", "hero")]}
+        output = io.StringIO()
+        with mock.patch.object(status, "load_baseline", return_value=rows), \
+                mock.patch.object(status, "function_rvas", return_value=rvas), \
+                mock.patch.object(status, "write_baseline") as write, \
+                contextlib.redirect_stdout(output):
+            status.fast_max_movements(report, {"cursor", "empty"}, (hashes, {}))
+        text = output.getvalue()
+        self.assertIn("cursor: 3/6 at MAX 100", text)
+        self.assertIn("90.00% -> 100.00% MAX  up [UP]", text)
+        self.assertIn("98.00% -> 80.00% MAX  reset [RESET; CUR held", text)
+        self.assertIn("98.00% -> 75.00% MAX  changed [CHANGED-CUR;", text)
+        self.assertIn("70.00% -> 80.00% MAX  newLabel [UP]", text)
+        self.assertIn("new -> 100.00% MAX  new [NEW]", text)
+        self.assertIn("empty: no paired functions in report", text)
+        self.assertNotIn("dip [", text)
+        self.assertNotIn("hero:", text)
+        write.assert_not_called()
+
+    def test_unscoped_fast_loop_suppresses_unchanged_unit_rows(self):
+        key = ("unit", "held")
+        report = {"units": [{"name": "unit", "functions": [
+            {"name": "held", "fuzzy_match_percent": 50}]}]}
+        output = io.StringIO()
+        with mock.patch.object(status, "load_baseline", return_value={
+                key: MatchRow(100, 100, 100, 1, "same")}), \
+                mock.patch.object(status, "function_rvas", return_value={key: 1}), \
+                contextlib.redirect_stdout(output):
+            status.fast_max_movements(report, None, ({key: "same"}, {}))
+        self.assertEqual(output.getvalue(),
+                         "[build] no per-function MAX change across this fast build\n")
+
     def test_summary_uses_projected_max_without_writing_ledger(self):
         report = {"units": [{"name": "unit", "functions": [
             {"name": "held", "size": 10, "fuzzy_match_percent": 20},

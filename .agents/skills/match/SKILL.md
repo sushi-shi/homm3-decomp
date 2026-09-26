@@ -17,10 +17,13 @@ inside the build shell. The shell can inherit paths to the main checkout;
 changing cwd alone does not select the worktree. Keep build outputs separate
 between workers and do not edit inputs another worker is compiling.
 
-Establish a full `homm3 build` checkpoint before searching and after integration.
-It refreshes targets, scores and gates. After source, header, profile, claim or
-merge changes, establish a fresh search context; do not reuse stale snapshots or
-scores. Inspect a failing command's actual exit status and cause before continuing.
+Start from the existing retail targets and checkpoint; establish one full
+`homm3 build` if they are missing or stale. Use `homm3 build --fast <TU>` for
+routine iterations: it compiles and compares the selected Windows TU and
+admitted Mac counterparts, then reports per-function projected MAX movement
+without banking the ledger. After source, header, profile, claim or merge
+changes, refresh the affected TU before reusing its score. Run the full build
+for final integration and gates. Inspect a failing command's actual cause.
 
 ## Evidence and reconstruction
 
@@ -84,8 +87,8 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families \
   under ignored `build/`. Reuse existing helpers when useful; do not commit a
   generator, fixture or experiment diary for every function or follow-up.
 
-Manual `homm3 build --fast <TU>` and `homm3 sema diff` are useful for bootstrapping
-and focused diagnostics. Adopt supported source deliberately: the search does
+`homm3 sema diff` is useful for focused diagnostics. Adopt supported source
+deliberately: the search does
 not adopt candidates or update the score ledger.
 
 ## Validation and completion
