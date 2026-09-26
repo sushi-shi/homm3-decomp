@@ -380,24 +380,12 @@ void sliderGames(int state, heroWindow* parentWindow)
     g_multiPlayerWindow->update();
 }
 
+// Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
+// helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
 VA(0x0050de50, 0x8F) MAC_ADDRESS(0x219a1c, 0xc4)  // dc 0xffac0
 int CMPInputEdit::onKeyPress(message* msg)
 {
-    int handled;
-
-    if (!m_hasFocus) {
-        handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
-               || msg->m_codeX == KEYCODE_KP_8) {
-        onPrevEdit();
-        handled = 1;
-    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
-               || msg->m_codeX == KEYCODE_KP_2) {
-        onNextEdit();
-        handled = 1;
-    } else {
-        handled = textEntryWidget::onKeyPress(msg);
-    }
+    int handled = CMPEdit::onKeyPress(msg);
 
     static_cast<CMPInputDlg*>(m_parentWindow)->updateOK();
     return handled;
