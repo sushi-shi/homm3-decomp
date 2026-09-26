@@ -1,3 +1,4 @@
 # Reviewed source-before-caller placement where retail linker emission differs.
 file	va	previous_va	reason
 src/smackmgr.cpp	0x00597740	0x00598e80	Mac calls drawSmackerFrame at code0+0x25e788 from videoDrawCurrentFrame and retains its body at code0+0x25f948. Windows expands the canonical source call, requiring body visibility before the caller. Its out-of-line Windows body links later at 0x598e80, so this exact VA inversion reflects retained helper emission rather than a misplaced definition.
+src/game.cpp	0x004bc350	0x004be3f0	Windows and Mac both retain SavedGameHeader::reset and save as calls from game::save. The canonical ordinary bodies follow that caller in the shared TU so VC6 preserves the retail call boundaries; Windows links the helper emissions earlier at 0x4bc350/0x4bc5d0. Keep the source call shape and review this exact VA inversion.
