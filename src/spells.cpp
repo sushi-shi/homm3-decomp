@@ -3373,10 +3373,10 @@ void combatManager::addBolt(SBolt* bolt, int sourceX, int sourceY,
         bolt->m_shallow = abs(destX - sourceX) > abs(destY - sourceY);
     }
 
+    long dx = abs(destX - sourceX);
+    long dy = abs(destY - sourceY);
     bolt->m_totalLength = static_cast<long>(
-        sqrt(static_cast<double>(
-            abs(destY - sourceY) * abs(destY - sourceY)
-            + abs(destX - sourceX) * abs(destX - sourceX))));
+        sqrt(static_cast<double>(dx * dx + dy * dy)));
     resetBoltAngle(bolt);
 }
 
