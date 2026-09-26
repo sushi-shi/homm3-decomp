@@ -82,9 +82,9 @@ VA(0x004b1500, 0x2F) MAC_ADDRESS(0x0c4830, 0xb0)  // dc 0x9eee8
 void searchArray::close()
 {
     if (m_cellData)
-        delete m_cellData;
+        delete[] m_cellData;
     if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
+        delete[] m_isMoatSlowed;
     m_cellData = 0;
     m_isMoatSlowed = 0;
 }
