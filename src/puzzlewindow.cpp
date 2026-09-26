@@ -327,6 +327,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
 
+MAC_ADDRESS(0x147d08, 0x178)
 unsigned char type_AI_puzzle_tile::operator==(
     const type_AI_puzzle_tile* arg) const
 {

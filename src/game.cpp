@@ -8005,6 +8005,7 @@ SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
 
 // Mac 0:e07f4 constructs the level mask, sets level-1, and calls the
 // bitset overload at 0:e0610. It follows that overload in the same TU.
+MAC_ADDRESS(0x0e07f4, 0x68)
 SpellID game::getRandomSpell(int level)
 {
     std::bitset<5> spellLevels;

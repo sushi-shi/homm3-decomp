@@ -47,6 +47,10 @@ concrete evidence and leave that item unresolved for an explicit decision;
 do not force a semantic change or silently declare the discrepancy handled.
 Reopen older dispositions that relied solely on those excluded explanations.
 
+A call through virtual-dispatch glue is still a source operation to identify.
+Resolve its receiver, slot and arguments; a runtime-glue label does not close
+the item.
+
 Counts locate work; compare the actual operations to resolve it. Equal totals
 can hide a wrong target, and one textual occurrence does not account for several
 Mac sites. Exclude the function's own declarator from source-call counts: a
@@ -65,9 +69,10 @@ missing uses, extra uses and repeated sites. A helper reached through another
 canonical helper is represented through that source path.
 
 Repeat this pass for newly discovered nested helpers. Keep the caller worklist
-open until all applicable xrefs are implemented, already represented through an evidenced Mac-inline path. Keep conflicting
-or unidentified operations open with concrete evidence. Unknown names or uncertain header/source
-placement do not block recovery. Use the helper-placement skill when placement
+open until every applicable xref is implemented or already represented through
+an evidenced Mac-inline path. Keep conflicting or unidentified operations open
+with concrete evidence. Unknown names or uncertain header/source placement do
+not block recovery. Use the helper-placement skill when placement
 needs investigation; keep one ordinary definition and revise its location later
 if stronger evidence appears.
 

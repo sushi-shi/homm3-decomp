@@ -637,6 +637,7 @@ static void deleteMainClasses()
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
 // parameter names and SetupCDRom call sites survive in CodeView. Retail's
 // corresponding paths inline the Win32 MessageBoxA body and then exit.
+MAC_ADDRESS(0x10f0c4, 0x30)
 static void earlyShutdown(const char* title, const char* body)
 {
     MessageBoxA(g_hwndApp, body, title, MB_ICONHAND);
@@ -646,6 +647,7 @@ static void earlyShutdown(const char* title, const char* body)
 // E:\gamedcs\kb.cpp:580. This is source-static in CodeView and retail has no
 // standalone body: VC6 /Ob2 folds it into oldmain at +0xd7..+0x245. Keep the
 // helper real so its source boundary participates in the inliner naturally.
+MAC_ADDRESS(0x10f0f4, 0x158)
 static void setupCDRom()
 {
     int oldNoSound = g_noSound;
@@ -3039,6 +3041,7 @@ void game::showLuckInfo(hero* thisHero, int mbType)
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
 // LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+MAC_ADDRESS(0x11505c, 0xe0)
 static void initVars()
 {
     g_nullSample2.m_resSample = 0;

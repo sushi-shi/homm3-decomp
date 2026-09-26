@@ -815,6 +815,7 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // inline address and a named damage result remain 98.1927. Mass-result
 // declaration/argument lifetimes do not change either outcome.
 
+MAC_ADDRESS(0x03ea8c, 0x98)
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
                                                         long group, hero* targetHero) const
 {

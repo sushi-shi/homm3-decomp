@@ -708,8 +708,7 @@ void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
     }
 }
 
-VA(0x00484d50, 0x3)
-MAC_ADDRESS(0x092ed0, 0x8)
+VA(0x00484d50, 0x3) MAC_ADDRESS(0x092ed0, 0x8)
 bool TCampaignResourceBonus::isBuildingBonus() const
 {
     return false;

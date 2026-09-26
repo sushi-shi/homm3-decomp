@@ -1446,7 +1446,7 @@ void waitForReadyToPlayMsg()
     dlg.wait();
 }
 
-VA(0x00555190, 0x319)  // dc 0x11f9f0
+VA(0x00555190, 0x319) MAC_ADDRESS(0x215e2c, 0x2e4)  // dc 0x11f9f0
 int CWaitForReadyPlayersDlg::handleMessage(message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
@@ -2407,7 +2407,7 @@ CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 
 VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 
-VA(0x00557790, 0x51)  // dc 0x11eed8
+VA(0x00557790, 0x51) MAC_ADDRESS(0x215410, 0x74)  // dc 0x11eed8
 void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
                                       int& winX, int& winY,
                                       int& winWidth, int& winHeight)
@@ -2465,7 +2465,7 @@ CNetMsgHandler::~CNetMsgHandler()
 }
 
 // E:\gamedcs\remote.cpp:2875
-VA(0x00557910, 0xD)  // dc 0x11efcc
+VA(0x00557910, 0xD) MAC_ADDRESS(0x2155f4, 0x8)  // dc 0x11efcc
 void CNetMsgHandler::setAbortPopupMsg(CNetMsg* netMsg)
 {
     m_abortPopupMsg = netMsg;
@@ -2556,7 +2556,7 @@ unsigned char CTurnDuration::isExpired()
 // The two Get() calls really are two calls - retail saves the first in EBX
 // for the m_lastWarned store and prices the gap with the second.
 // E:\gamedcs\remote.cpp:2950
-VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
+VA(0x00557af0, 0x208) MAC_ADDRESS(0x2157b8, 0x284)  // anchor-global, dc 0x11f108
 void CTurnDuration::checkForWarning()
 {
     if (!isOn())

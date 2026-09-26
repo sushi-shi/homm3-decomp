@@ -1433,7 +1433,7 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 
 // The body is the base list. RTTI proves the empty TDebugBreak base;
 // its default constructor is declared in exceptions.h. The
-VA(0x0049a0c0, 0xF9)
+VA(0x0049a0c0, 0xF9) MAC_ADDRESS(0x2207bc, 0x94)
 TRuntimeError::TRuntimeError(const char* text)
     : std::runtime_error(text)
 {
@@ -1441,6 +1441,7 @@ TRuntimeError::TRuntimeError(const char* text)
 
 // The retained empty-base calls at 0x41b62a and 0x514dbd reach a body
 // folded with philAI::philAI at 0x524360. Its original TU is unknown.
+MAC_ADDRESS(0x2207b8, 0x4)
 TDebugBreak::TDebugBreak()
 {
 }
