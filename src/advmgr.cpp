@@ -3380,17 +3380,9 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     }
 }
 
-// RETAIL-RECONSTRUCTED (97.3418%): no distinct Dreamcast row survives, but the
-// two retail callers fix this five-parameter /Gr ABI and the MINE case role.
-// The body reads the byte-proven mine pool, chooses the ordinary/abandoned
-// description, adds owner and allied-resource text, then appends the guard-army
-// description. The direct string temporary raised 91.0717% to 96.3924%; the
-// symmetric player/owner OnSameTeam order raises it to the retained score and
-// makes every instruction from that comparison onward exact. Both sides have
-// the same 17 blocks, 10 branches and two returns. The residue is only the
-// earlier owner/player EAX<->EDI homing: the guided nine-mutation register
-// sweep found no improvement, while the allocator model reports identical
-// first definitions and therefore no source-addressable minimum slice.
+// Retail callers fix this five-parameter /Gr ABI and the mine-help role.
+// Mac expands onSameTeam(owner, playerId), including its two validity checks;
+// keeping that canonical call also reproduces the Windows comparison loads.
 VA(0x0040d670, 0x253) MAC_ADDRESS(0x00b444, 0x184)
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
@@ -3408,15 +3400,13 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
         strcat(buffer, g_ownedByColor[owner]);
     }
 
-    if (owner >= 0) {
-        if (playerId >= 0 && g_game->onSameTeam(playerId, owner)) {
-            strcat(buffer, separator);
-            strcat(buffer, DATA_COMPGEN(
-                0x00660354, mineResourceOpen, "("));
-            strcat(buffer, g_resourceNames[mineType]);
-            strcat(buffer, DATA_COMPGEN(
-                0x00660350, mineResourceClose, ")"));
-        }
+    if (g_game->onSameTeam(owner, playerId)) {
+        strcat(buffer, separator);
+        strcat(buffer, DATA_COMPGEN(
+            0x00660354, mineResourceOpen, "("));
+        strcat(buffer, g_resourceNames[mineType]);
+        strcat(buffer, DATA_COMPGEN(
+            0x00660350, mineResourceClose, ")"));
     }
 
     armyGroup* guards = &currentMine->m_guards;
