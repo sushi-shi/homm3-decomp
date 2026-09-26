@@ -1522,7 +1522,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     ++g_game->m_players[currentHero->m_owner].m_numHeroes;
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
     int heroId = currentHero->m_id;
@@ -1599,7 +1599,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     ++g_game->m_players[currentHero->m_owner].m_numHeroes;
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
-    g_game->m_heroPoolMap[currentHero->m_id].set(currentHero->m_owner);
+    g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
 }
