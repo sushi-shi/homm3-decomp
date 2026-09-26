@@ -1,0 +1,18 @@
+
+[[functions]]
+retail_va = 0x0049a0c0
+unit = "dxplay"
+mac_section = 0
+mac_offset = 0x2207bc
+mac_size = 0x94
+target_sha256 = "f9aaab211c4e84a4d06091d5a7f9923b8bf8fdf2b71d8be299422f48303bcc5a"
+evidence = "TRuntimeError message constructor calls empty TDebugBreak at2207b8, installs exception/runtime-error tables, expands MSL char-pointer message storage strlen/new/strcpy, and installs final derived vtable. objnames allocation-error throw calls it at21d978. Source now passes text directly to runtime_error; CodeWarrior selects char-pointer overload while VC6 implicitly constructs its required string. Final BLR at 0x22084c."
+
+[[helpers]]
+source_helper = "TDebugBreak::TDebugBreak"
+unit = "dxplay"
+mac_section = 0
+mac_offset = 0x2207b8
+mac_size = 0x4
+target_sha256 = "f332ea5b5437103cbb6f1508679da89eec9288ad775c96c439a17fccabe3de8e"
+evidence = "Empty base constructor called by both default and message TRuntimeError construction; source canonical empty TDebugBreak constructor already exists after message constructor. Final BLR at 0x2207b8."
