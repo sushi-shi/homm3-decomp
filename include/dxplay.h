@@ -235,7 +235,10 @@ public:
         m_data = 0;
         m_dataSize = 0;
     }
-    VA(0x00497790, 0x21) MAC_ADDRESS(0x046ef8, 0x5c)  // annotation-only anchor for the active header-inline COMDAT
+    // Mac 0x46ef8 is a deleting destructor called from CDPlayHeroes, but it
+    // reads its data pointer at +0x0c; this Windows wrapper stores it at +0.
+    // The Mac class identity is unresolved, so it is not an exact source pair.
+    VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
     ~CDPlayMsg()
     {
         destroy();
