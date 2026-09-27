@@ -798,6 +798,7 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     g_advManager->demobilizeCurrHero(0, 1);
 }
 
+VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
 int aiResourceCost(const playerData* player, const int* resources)
 {
     int value = 0;
@@ -806,6 +807,7 @@ int aiResourceCost(const playerData* player, const int* resources)
     return value;
 }
 
+VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // paired native overload; claim owns the definition
 int aiResourceCost(long playerId, const int* resources)
 {
     return aiResourceCost(&g_game->m_players[playerId], resources);
@@ -2294,12 +2296,6 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 
 VA(0x00526a90, 0x1d4) MAC_ADDRESS(0x1408f0, 0x270)  // dc 0x10eeb0
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
-
-VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // dc 0x10f22c
-int aiResourceCost(const playerData* player, const int* resources);
-
-VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // dc 0x10f2f8
-int aiResourceCost(long playerId, const int* resources);
 
 // Complete's computer-owner purchase wrapper; its declaration belongs to
 // philai.h with this definition. Retail buy_building calls it at 0x5bf476,

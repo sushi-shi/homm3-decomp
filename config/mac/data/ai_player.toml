@@ -30,13 +30,14 @@ evidence = "The source-owned static six-long threshold table at Windows 0x660500
 
 [[data]]
 retail_va = 0x00692950
-source = "include/ai_player.h"
-declaration_only = true
+source = "src/ai_player.cpp"
+same_tu_definition = true
+same_tu_array = true
 mac_section = 1
 mac_offset = 0x64090
 mac_size = 0x4a0
 sha256 = "7081ba3d8887be22551f56b5f50da675bda7dd02f40e9fcb150ac84fccbe387f"
-evidence = "Windows doBestPurchase relocates the eight-record AI array at 0x692950 and computes its 0x98-byte record stride; Mac doBestPurchase code 0:0x30a10 loads loader-backed TOC 1+0x848 -> data 1:0x64090 and code 0:0x30a9c multiplies the player index by its 0x94-byte stride. All eight Mac records occupy this zero-filled 0x4a0-byte span. Source owner and initializer are unlocated; address binding only."
+evidence = "Windows doBestPurchase relocates the eight-record AI array at 0x692950 and computes its 0x98-byte record stride; Mac doBestPurchase code 0:0x30a10 loads loader-backed TOC 1+0x848 -> data 1:0x64090 and code 0:0x30a9c multiplies the player index by its 0x94-byte stride. All eight Mac records occupy this zero-filled 0x4a0-byte span. The ordinary ai_player.cpp DATA0x692950 owns its eight records. CodeWarrior emits a unique nonrelocatable uninitialized 0x4a0-byte payload; all bytes match the bounded native zero storage. The definition binds its same-unit TC reference; other units retain the external IL reference."
 
 [[data]]
 retail_va = 0x006747b4
