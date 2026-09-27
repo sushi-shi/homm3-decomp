@@ -2363,17 +2363,9 @@ void combatManager::initializeArchers()
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
 
-// Generated scheduling search (2026-08-27): moving the width capture before
-// `y` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
-// depth-1 variants found that winner; all 218 depth-2 interactions around
-// the retained body were flat or worse. Post-helper structure is 38/39
-// blocks exact; the extent-capture block alone is 14 versus 16 instructions.
-// Retail still captures y and x before computing either extent, reloads y
-// for the height subtraction, and consequently assigns the four SaveFizzle
-// arguments to a different caller-saved ordering. Enabling drawing.h's
-// SLimitData view to spell Width/Height is not a local lever: it changes the
-// whole consumer view and makes existing `.values` consumers ill-formed.
-// A partial view conversion is therefore rejected rather than retained.
+// Mac 0x73178..0x7319c captures both origins before computing the extents.
+// The same order with the canonical width/height calls restores Windows
+// exact bytes; the earlier raw-member scheduling controls are superseded.
 VA(0x00466e00, 0x323) MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global, dc 0x60ce0
 void combatManager::makeCreaturesVanish()
 {
@@ -2394,8 +2386,8 @@ void combatManager::makeCreaturesVanish()
         }
         computeMaxExtent();
         x = m_drawbridgeBounds.m_minX;
-        width = m_drawbridgeBounds.width();
         y = m_drawbridgeBounds.m_minY;
+        width = m_drawbridgeBounds.width();
         height = m_drawbridgeBounds.height();
     }
 
