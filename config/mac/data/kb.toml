@@ -124,23 +124,25 @@ evidence = "The Mac secondary-skill arm loads TOC 1+0x6c0 -> pointer cell 1+0x49
 
 [[data]]
 retail_va = 0x00699260
-source = "include/mousemgr.h"
-declaration_only = true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x528950
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Windows showCongrats reads retail mouseManager pointer 0x699260 at its hide/show call sites; Mac reads TOC 1+0x5f0 -> pointer storage 1+0x528950 at 0x115c44 and 0x115e94. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only."
+evidence = "Windows showCongrats reads retail mouseManager pointer 0x699260 at its hide/show call sites; Mac reads TOC 1+0x5f0 -> pointer storage 1+0x528950 at 0x115c44 and 0x115e94. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only. Full ordinary KB object confirms source-owned g_mouseManager RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va = 0x006993c4
-source = "include/soundmgr.h"
-declaration_only = true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x528948
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Windows showCongrats reads retail soundManager pointer 0x6993c4 before startMP3; Mac reads TOC 1+0x738 -> pointer storage 1+0x528948 at 0x115e38. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only."
+evidence = "Windows showCongrats reads retail soundManager pointer 0x6993c4 before startMP3; Mac reads TOC 1+0x738 -> pointer storage 1+0x528948 at 0x115e38. Canonical header extern is annotated; no owning definition is located. Four zero-filled BSS bytes bind external address only. Full ordinary KB object confirms source-owned g_soundManager RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va = 0x006993cc

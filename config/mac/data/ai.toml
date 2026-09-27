@@ -11,13 +11,14 @@ evidence = "Retail chooseMeleeTarget indexes the source-declared castle-wall col
 
 [[data]]
 retail_va = 0x00699284
-source = "include/findpath.h"
-declaration_only = true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x528930
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "External search-array pointer storage at retail 0x699284. Mac findAITargets loads the zero-filled pointer through loader-relocated TOC 1+0x720 -> 1+0x528930; address binding only, no initializer comparison."
+evidence = "External search-array pointer storage at retail 0x699284. Mac findAITargets loads the zero-filled pointer through loader-relocated TOC 1+0x720 -> 1+0x528930; Full ordinary KB object confirms source-owned g_searchArray RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 # Numeric pool directly read by Mac aiCheckRetreat at code 0+0x1f874..0x20058.
 # Each row is a uniquely bounded payload in the retained AI literal pool.
