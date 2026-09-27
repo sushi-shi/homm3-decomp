@@ -5958,7 +5958,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
         if (count > 0) {
             do {
                 x = readValue<unsigned char>(infile);
-                m_placeholders.push_back(x);
+                m_placeholders.push_back(H3_ENUM_DECODE(HeroId, x));
             } while (--count != 0);
         }
     }

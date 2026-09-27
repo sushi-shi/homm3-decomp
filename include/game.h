@@ -455,7 +455,9 @@ public:
     int m_size;
     unsigned char m_hasTwoLayers;
     // +0x1d..+0x1f: alignment hole (0x5904f0 goes +0x1c byte -> +0x20 vector).
-    std::vector<int> m_placeholders;
+    // Native Mac clears the hero IDs through the element walk at 0x68f40;
+    // the enum preserves that boundary instead of MSL's integer POD path.
+    std::vector<HeroId> m_placeholders;
     VictoryConditionStruct m_victoryCondition;
     LossConditionStruct m_lossCondition;
     TPlayerSlotAttributes m_playerSlotAttributes[8];

@@ -149,7 +149,9 @@ static int increaseCampaignDifficulty(message& msg)
 }
 
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData) MAC_COMPGEN_ADDRESS(0x064044, 0x228, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
-VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
+// The placeholder enum vector keeps this retained four-byte capacity body
+// byte-identical; the old int enrollment predated the element-type evidence.
+VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, HeroId)
 
 // Both native Mac body order and DC lines 392/437/452 put these helpers
 // after Select. VC6 still expands both; all Windows TU scores are unchanged.

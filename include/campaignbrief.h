@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "window.h"
+#include "hero.h"
 
 class game;
-class hero;
 class NewSMapHeader;
 class TAbstractFile;
 struct HeroPlaceholderData;
@@ -113,7 +113,9 @@ public:
         // heroesStatus starts at +0x4c. These three bytes align the integer array.
         char m_paddingBeforeHeroesStatus[3];
         int m_heroesStatus[8];
-        std::vector<int> m_heroPlaceholders;
+        // Copied from CMapHeaderData; native 0x941e4 uses the same enum-vector
+        // cleanup. The installed MSL HeroId clear matches all 56 native bytes.
+        std::vector<HeroId> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
         TCampaignStartOption* m_options;
