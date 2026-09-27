@@ -956,9 +956,9 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 // Slot 5 calls that same helper with the full artifact payload. The direct
 // expression below matches all 21 Mac instructions in order after relocation
 // masking, including all three calls; no Dreamcast counterpart exists. VC6
-// expands the helper and currently scores 81.0118% (12/12 CFG blocks align).
-// The earlier copied loop reached 89.8471%, but Mac's retained helper and the
-// two proposal call sites establish a stronger source boundary.
+// expands the same helper and is exact when the picture kind is assigned
+// inside its loop, matching Mac 0x166b74. The earlier copied loop reached
+// only 89.8471%; preserve the retained helper and both proposal call sites.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6) MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
@@ -972,8 +972,9 @@ void type_artifact_quest::showArtifactProgress(
 {
     std::vector<type_dialog_resource> dialogResources;
     type_dialog_resource resource;
-    resource.m_resource = 8;
+    // Both retail loops assign the descriptor kind on each iteration.
     for (unsigned i = 0; i < artifacts.size(); ++i) {
+        resource.m_resource = 8;
         resource.m_qualifier = artifacts[i];
         dialogResources.push_back(resource);
     }
