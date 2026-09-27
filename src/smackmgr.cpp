@@ -474,6 +474,11 @@ bool videoPlaying()
 // predicted register and frame recovery; retain the ordered expressions.
 // Separate arm-local signed scalars likewise preserve the CFG/calls but fall
 // to 89.6347%, so the shared SDK rectangle remains the strongest model.
+// Mac 0x25ea64 additionally consumes an incoming redraw flag and uses
+// native display-point/blit helpers. Its platform body cannot determine
+// the Windows Smack/Bink union-loop locals or DirectDraw frame.
+// Naming Unlock's HRESULT at branch/function scope is likewise byte-flat
+// or worse; it does not recover the missing union-loop register homes.
 VA(0x005979d0, 0x294) MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global, dc 0x14ac60
 void videoDrawRects()
 {

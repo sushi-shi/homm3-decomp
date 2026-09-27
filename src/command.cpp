@@ -80,6 +80,8 @@ static const int g_combatActionFirstAid = 11;
 // Full native comparison now matches all 1016 Mac bytes: name the controller,
 // keep the typed mastery and signed four-wall count, and reuse one index
 // across the wall-array scans. Windows remains 98.6842%; every helper stays.
+// A temporary bool return on validWallTarget is byte-flat in this caller
+// and Mac; keep its CodeView-proven unsigned-char boundary unchanged.
 VA(0x00473c00, 0x29F) MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {

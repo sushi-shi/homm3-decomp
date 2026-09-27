@@ -428,6 +428,8 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 VA(0x0059a030, 0x87) MAC_ADDRESS(0x218b48, 0xac)
 // Combining the three early guards is not a callback fix: the retained
 // helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
+// Moving its zero-result initialization across the early guards also loses
+// the retained exact body without improving the callback.
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)
