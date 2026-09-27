@@ -2030,12 +2030,14 @@ static long g_castWallIndexToCastOn = -1;
 // string teardown are its body.
 // Dreamcast attributes the failure-text lookup to TTextResource::operator[];
 // getText() is the readable wrapper and emits the same retail bytes.
-// Residual (99.97026%): all 37 CFG blocks, all 21 branches, and every
-// instruction byte agree. The sole real relocation difference is the
-// vector<long>::insert growth call at +0x182: retail's linker selected the
-// byte-identical vector<int>::insert COMDAT emitted by rmg. Dreamcast names
-// vector<long> in both scoped `hexes` objects, so retain the source-proven
-// type rather than rewriting an interface to chase the folded owner label.
+// Residual (99.97026%): all 37 CFG blocks and 21 branches agree. Eight
+// stack displacements swap the failure-text temporary and the refusal-arm
+// vector between EBP-0x2c and EBP-0x3c. The folded vector<int>/vector<long>
+// growth-call owner is ignored by the matching report; it is not this gap.
+// Keep the recorded vector<long> objects and the failure-message helper.
+// Naming the helper's string result (mutable or const) was reproduced and
+// rejected: its retained body falls from 100% to 94.53%, and this caller
+// moves from 99.9703% to 99.9294% without recovering the native slot pairing.
 VA(0x005a3250, 0x31C) MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {
