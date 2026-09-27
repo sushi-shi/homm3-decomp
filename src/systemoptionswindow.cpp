@@ -359,6 +359,8 @@ void TSystemOptionsWindow::doModal()
 VA(0x005b3140, 0x61E) MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
+    // DC records one procedure-local save; Mac reuses r24 in both slider arms.
+    int save;
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
@@ -514,7 +516,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                             ->setVisible(1);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
-                        int save = g_soundManager->m_playSounds;
+                        save = g_soundManager->m_playSounds;
                         g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
                         g_soundManager->adjustMusicVolumes();
                         g_soundManager->m_playSounds = save;
@@ -550,7 +552,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                             ->setVisible(1);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
-                        int save = g_soundManager->m_playSounds;
+                        save = g_soundManager->m_playSounds;
                         g_soundManager->m_playSounds = MESSAGE_DISPATCH_CONSUME;
                         g_soundManager->adjustSoundVolumes();
                         g_soundManager->m_playSounds = save;
