@@ -714,6 +714,8 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // retains the call. Its retail enrollment remains at the link-order position.
 // DC records current_hero and skill_sum at procedure scope; town ID row 1210
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
+// Mac0x1409c4 adds the accessor's int result directly; an extra short
+// temporary inserts a narrowing instruction absent from that native loop.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -730,10 +732,8 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
             if (selectedHero)
                 *isLastHero = 0;
             skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill) {
-                short skillValue = currentHero->getPrimarySkill(skill);
-                skillSum += skillValue;
-            }
+            for (short skill = 0; skill < 4; ++skill)
+                skillSum += currentHero->getPrimarySkill(skill);
             if (selectedHero) {
                 if (currentHero->m_patrolX != hero::kPatrolNone
                     && selectedHero->m_patrolX == hero::kPatrolNone)
