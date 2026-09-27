@@ -2758,17 +2758,21 @@ static bool usesCrossoverPool(TCampaignBrief::ScenarioStruct& scenario, int pool
         && scenario.m_options->slot12(&scenario, pool);
 }
 
+// Native keeps the empty-scenario early return and initializes its best
+// result before that guard. Counter-before-result declaration matches all
+// register choices; only the two max argument homes remain four bytes off.
 MAC_ADDRESS(0x095ea8, 0x108)
 static int getMaxCrossoverHeroes(TCampaignBrief::ScenarioStruct& scenario)
 {
+    int option;
     int best = 0;
-    if (scenario.m_inflatedSize > 0) {
-        if (scenario.m_options->getCount() == 0)
-            best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
-        else
-            for (int option = scenario.m_options->getCount(); option--;)
-                best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
-    }
+    if (scenario.m_inflatedSize <= 0)
+        return best;
+    if (scenario.m_options->getCount() == 0)
+        best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
+    else
+        for (option = scenario.m_options->getCount(); option--;)
+            best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
     return best;
 }
 
