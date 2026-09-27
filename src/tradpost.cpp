@@ -3411,6 +3411,11 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // command; subtype 0xe right-clicks a slot into its info popup. Hover copies
 // the rollover string.
 
+// Mac 0x1f99a4/0x1f99d8 and widget defaults reach the common flag phase;
+// mouse movement returns separately at 0x1f9c98. Arrow arms set update before
+// setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
+// helper path. Two separate viewArtifact source calls remain separate on Mac;
+// keep its shared call. Widget-local flags lower both compiler comparisons.
 VA(0x005edf60, 0x75f) MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::windowHandler(message& msg)
 {
@@ -3431,7 +3436,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_BUY_GOLD_ID: {
                 int destination = msg.m_codeY - MARKET_BUY_WOOD_ID;
                 if (destination == g_leftResource)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 g_leftResource = destination;
                 updateFlag = 1;
                 if (g_selectedArtifact != -1) {
@@ -3451,7 +3456,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
                 int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
                 if (artifactSlot == g_selectedArtifact)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 g_selectedArtifact = artifactSlot;
                 updateFlag = 1;
                 if (g_leftResource != -1)
@@ -3464,10 +3469,10 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_17_ID:
                 normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
 
             default:
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
             }
             break;
 
@@ -3498,16 +3503,16 @@ int TSellArtifactWindow::windowHandler(message& msg)
                            % numInBackpack;
                 artifact = g_marketHero->getBackpack(slot);
             }
-            // Mac 0x1f9b10: equipment and backpack paths share this call.
+            // Mac retains one view call shared by both artifact sources.
             g_marketHero->viewArtifact(&artifact, 1);
-            return MESSAGE_DISPATCH_CONSUME;
+            break;
         }
 
         case MARKET_WIDGET_ACTIVATE:
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID:
                 if (g_rightAmount == 0)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 if (g_ratioInverted) {
                     g_currentPlayer->m_resources[g_leftResource] +=
                         g_giveQuantity * g_rightAmount;
@@ -3516,8 +3521,8 @@ int TSellArtifactWindow::windowHandler(message& msg)
                     } else {
                         int numInBackpack =
                             g_marketHero->getNumberInBackpack(1);
-                        int slot = ((g_backpackStart & 0xff)
-                                    + g_selectedArtifact - 18)
+                        int slot = (g_selectedArtifact - 18
+                                    + (g_backpackStart & 0xff))
                                    % numInBackpack;
                         g_marketHero->removeBackpackArtifact(slot);
                     }
@@ -3530,14 +3535,14 @@ int TSellArtifactWindow::windowHandler(message& msg)
 
             case MARKET_ARTIFACT_LEFT_ARROW_ID:
                 decrementBackpackStart();
-                setupNewTrade();
                 updateFlag = 1;
+                setupNewTrade();
                 break;
 
             case MARKET_ARTIFACT_RIGHT_ARROW_ID:
                 incrementBackpackStart();
-                setupNewTrade();
                 updateFlag = 1;
+                setupNewTrade();
                 break;
 
             case MARKET_LEFT_COUNT_ID:
@@ -3553,12 +3558,12 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 break;
 
             default:
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
             }
             break;
 
         default:
-            return MESSAGE_DISPATCH_CONSUME;
+            break;
         }
         break;
 
@@ -3568,7 +3573,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             m_lastHoverId = msg.m_codeY;
             setRolloverText(msg.m_codeY);
         }
-        break;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
     if (updateFlag)
