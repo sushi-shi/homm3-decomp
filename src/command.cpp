@@ -401,6 +401,10 @@ process_action:
 // spurious entry guard. Both controls are VC6 byte-flat (90.8259%).
 // Rotating attack/index/group declarations is flat on Windows but worsens
 // native bindings; keep the proven local types and their supported roles.
+// Guard both validity results together: VC6 rises 90.8259 -> 91.3686%;
+// either guard alone falls to 87.28/87.23%. Mac moves 40.9468 -> 38.2601%,
+// so the combined declaration/flag-lifetime model remains open. All CanFit,
+// IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
 VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
@@ -440,10 +444,11 @@ void combatManager::setCombatDirections(int hex)
         firstHex = m_adjacentCells[hex][targetIndex];
         if (!validHex(firstHex))
             continue;
-        firstIsValid =
-            m_cells[firstHex].m_validMove
-            && currentArmy->canFit(firstHex, 0, 0)
-            && !g_searchArray->isMoat(firstHex);
+        firstIsValid = 0;
+        if (m_cells[firstHex].m_validMove
+                && currentArmy->canFit(firstHex, 0, 0)
+                && !g_searchArray->isMoat(firstHex))
+            firstIsValid = 1;
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     firstHex + currentArmy->offsetToFront(-1)))
@@ -459,10 +464,11 @@ void combatManager::setCombatDirections(int hex)
             continue;
 
         secondHex = firstHex - currentArmy->offsetToFront(-1);
-        secondIsValid =
-            m_cells[secondHex].m_validMove
-            && currentArmy->canFit(secondHex, 0, 0)
-            && !g_searchArray->isMoat(secondHex);
+        secondIsValid = 0;
+        if (m_cells[secondHex].m_validMove
+                && currentArmy->canFit(secondHex, 0, 0)
+                && !g_searchArray->isMoat(secondHex))
+            secondIsValid = 1;
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
                     secondHex + currentArmy->offsetToFront(-1)))
