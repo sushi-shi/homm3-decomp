@@ -565,23 +565,27 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Windows; the paired Mac compilation still has unresolved references.
 // Mac preserves (gridX - 1)*44 + 58 and the split 86/26 vertical
 // border terms: these equal the Windows 14/112 offsets. This shared
-// decomposition raises Mac from 35.25% to 92.01% and is Windows-flat.
+// decomposition is Windows-flat. yDifference preceding direction, named
+// float ratio components, and separate x-border subtraction recover every
+// Mac byte (488 bytes); Windows remains 98.5874% at its x87 scheduling wall.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
+    int yDifference;
     int direction;
     float slope;
 
     if (isComputerAction())
         return 0;
-    int xDifference = x - (gridX(hex) - 1) * 44 - 58;
+    int xDifference = x - (gridX(hex) - 1) * 44;
+    xDifference -= 58;
     int row = gridY(hex);
     if (!rowIsOdd(row))
         xDifference -= 22;
     xDifference -= 22;
-    int yDifference = y - row * 42 - 86;
+    yDifference = y - 86 - row * 42;
     yDifference -= 26;
 
     direction = 0;
@@ -600,19 +604,22 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     yDifference = abs(yDifference);
     if (yDifference == 0)
         slope = 100.0f;
-    else
-        slope = static_cast<float>(xDifference) / static_cast<float>(yDifference);
+    else {
+        float horizontal = static_cast<float>(xDifference);
+        float vertical = static_cast<float>(yDifference);
+        slope = horizontal / vertical;
+    }
 
-    if (direction != COMBAT_ATTACK_ANGLE_0
-            && direction != COMBAT_ATTACK_ANGLE_6) {
-        if (slope < 0.58)
-            direction += 2;
-        else if (slope < 1.73)
-            direction++;
-    } else {
+    if (direction == COMBAT_ATTACK_ANGLE_0
+            || direction == COMBAT_ATTACK_ANGLE_6) {
         if (slope > 1.73)
             direction += 2;
         else if (slope > 0.58)
+            direction++;
+    } else {
+        if (slope < 0.58)
+            direction += 2;
+        else if (slope < 1.73)
             direction++;
     }
 
