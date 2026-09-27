@@ -63,13 +63,7 @@ DATA(0x0069cc4c) static button** g_buttonDynamic;
 DATA(0x0069cc50) static textButton** g_textButtonDynamic;
 DATA(0x0069cc54) static int g_overviewType;
 DATA(0x0069cc58) static int g_overviewTop[2];
-// One Dreamcast-attested array: indices 0..1 and 3..5 are the two title
-// groups, 6..7 describe the overview selector buttons, 8..10 their
-// right-click help, 11..12 their rollover text, and 13..15 describe the
-// three hero-artifact pages on rollover. Complete accesses all sixteen
-// cells.
 DATA(0x0069cbe8) static int g_lastDynamicType;
-DATA(0x006a7ec0) static const char* g_overviewText[16];
 
 // Complete keeps the first visible entry in the constructor-built
 // flaggable-item vector here. Dreamcast has the same top/count/array
@@ -84,7 +78,9 @@ DATA(0x0069873c) int g_overviewReturnActionExtra;
 // The compiler emits this eight-dword source table immediately before the
 // TOverviewWindow vtable. Both overview help bands use its first seven rows;
 // the first band alone reaches the eighth.
-static const int g_overviewHelpIds[8] = {
+// ProcessIconSelect reaches retail 0x640300 through the biased operands
+// 0x63f35c / 0x63f33c; Mac TOC 1+0x29a8 targets code 0+0x2a6364.
+DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
@@ -1936,10 +1932,12 @@ VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map +
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
-        // DC records iSlot; both retail bodies compute its quotient before
-        // looking up the current overview page's top row.
-        int slot = (codeY - 200) / 200;
-        int top = g_overviewTop[g_overviewType];
+        // Keep the quotient and page top separate, as retained in Mac.
+        // Initializing the page top first recovers the Windows slot lifetime.
+        int slot;
+        int top;
+        top = g_overviewTop[g_overviewType];
+        slot = (codeY - 200) / 200;
         if (top + slot
                 > g_overviewItemCounts[g_overviewType])
             return;
