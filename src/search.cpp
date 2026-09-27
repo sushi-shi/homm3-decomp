@@ -632,7 +632,8 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
     }
 
     g_advManager->m_seedingValid = 1;
-    type_point monster(-1, -1, -1);
+    // Both retail builds store 255 in X/Y and -1 in the four-bit Z field.
+    type_point monster(0xff, 0xff, -1);
     pathCell cell;
 
     if (!seedContinuation) {
@@ -730,6 +731,8 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                                maxMobility, adjacentMonster, monster,
                                pathfinding, searchType, nativeTerrain);
 
+        // Retail retains separate obscureCell expansions for this exit and
+        // the exhausted queue; six natural guard forms leave VC6 sharing them.
         if (target.isValid() && getCell(target, false)->m_visited) {
             if (wasOnMap)
                 currentHero->obscureCell();
