@@ -1042,7 +1042,7 @@ public:
     signed char m_numDeadPlayers;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.
-    unsigned char m_playerDisabled[8];  // +0x1f636
+    signed char m_playerDisabled[8];  // +0x1f636; DC playerDead is signed char[8].
     // Unsigned word gate used by calculate_demand: from value five on,
     // current dwelling population is augmented by one growth cycle.
     // Its wider calendar role is not yet attested, so the name remains
@@ -1071,7 +1071,7 @@ public:
     // Castle-Griffin-Tower special case that drops the Blacksmith
     // requirement; it sits four bytes past f_1f698 in the same band.
     // Role unattested - ordinal placeholder.
-    char m_isTutorial;
+    unsigned char m_isTutorial;  // DC is_tutorial; Mac compares without sign extension.
     // Dreamcast bIsCheater/is_tutorial are adjacent bytes; retail
     // places them at +0x1f69c/d before setup at +0x1f6a0. This gap aligns it.
     char m_paddingBeforeSetup[2];
