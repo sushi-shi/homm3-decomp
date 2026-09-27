@@ -1203,8 +1203,8 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
                 < ourArmy->m_monInfo.m_hitPoints)
             return 0;
     }
-    if ((m_attacks[ourArmy->m_bitIndex].m_totalDamage
-                + m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
+    if ((m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage
+                + m_attacks[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
             + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.m_hitPoints)
         return 0;
     double scale = getDuration(duration, 0);
