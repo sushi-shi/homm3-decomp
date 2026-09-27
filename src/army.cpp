@@ -1690,6 +1690,8 @@ void army::doFireShield(long damageAmount)
 // Native Windows forms the missing troop count before the first min, then
 // multiplies by HP for the second min (DC1907/1909/1912). Keeping that
 // count rather than an early missing-life product improves 97.08 -> 98.49%.
+// Separating Thunderbird base damage from ModifySpellDamage (DC2006/2011)
+// restores the remaining source lifetime and reaches Windows100%.
 VA(0x00440bc0, 0xA41) MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global, dc 0x46658
 void army::doPostAttack(army* target, int attackDamage, int killedCount,
                           int totalLife)
@@ -1788,9 +1790,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
             if (g_combatManager->spellCastWorks(SPELL_LIGHTNING_BOLT,
                                                 getControllingSide(),
                                                 target, 1, 1)) {
-                long damage = g_combatManager->modifySpellDamage(
-                    m_numTroops * 10, SPELL_LIGHTNING_BOLT, 0, 0, target,
-                    0);
+                long damage = m_numTroops * 10;
+                damage = g_combatManager->modifySpellDamage(
+                    damage, SPELL_LIGHTNING_BOLT, 0, 0, target, 0);
                 if (damage > 0) {
                     std::string text;
                     SAMPLE2 sample;
