@@ -9,6 +9,10 @@ typedef DateTimeRec FileTime;
 
 // Mac retail 0:0x277b60..0x2781ec: state, fork handle and FSSpec.
 // This platform adapter has no Windows game-class counterpart.
+// open's directory argument is a native FSSpec: 0x277c34/0x277c38
+// read vRefNum at +2 and parID at +4 before calling FSMakeFSSpec.
+// Selection's native directory getter (0x175674) returns one of three
+// runtime-populated pointer cells at 1:0x553500/0x553504/0x553510.
 class MacFileAdapter {
 public:
     unsigned char m_open;
