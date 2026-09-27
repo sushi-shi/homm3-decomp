@@ -999,43 +999,17 @@ void hero::initialize(short index)
 // hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
 // The expanded HeroExtra adds primary skills, spells, custom name and sex;
 // fixed DC campaign-trait carryover is handled by Complete's campaign owner.
-// Keep basic_string::assign out of line at the customName assignment.
-
-// Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
-// "bindings agree at every first definition, the divergence is past the
-// first defs", i.e. not the B1 minimum slice and no creation-order edit
-// reaches it. The schedule is aligned and flow-distance is 0; what is left
-// is edi->ecx x7 / ecx->edx x5 over 54 register-visible slots.
-// 94.6716 -> 97.5836 (2026-09-06), three source facts read straight off the
-// retail bytes.  All 65 blocks, 37 branches and 13 out-of-line calls now
-// agree.
-//   * the patrol else-arm writes patrolY BEFORE patrolX.  Written the other
-//     way both arms end with the same store and the cross-jumper merges it
-//     into a shared block; retail keeps both stores duplicated per arm, in
-//     opposite orders, which is exactly what stops the merge (+0.33);
-//   * the custom-name assignment is the THREE-argument
-//     `assign(const basic_string&, size_type, size_type)` with npos loaded
-//     from its out-of-line definition, not `operator=` (+1.78 under the
-//     existing pin);
-//   * the troop count is NAMED once per iteration.  Retail widens it, tests
-//     the widened value and stores it (`movsx ecx,word[edx] / test ecx,ecx /
-//     mov [eax+0x1c],ecx`); re-reading the member for the comparison costs
-//     the register and re-reads memory.  `int` is the type - `short` scores
-//     95.5204 (+0.80).
-// Four source-level pointer/countdown zeroing loops match Mac's branch shape
-// and replace VC6's four inline memset expansions in the same source. They
-// move the Windows match from 97.5836% to 99.4036%, preserving its 65 blocks
-// and 13 named calls. An indexed MEMSET probe instead counted upward on Mac.
-// An explicit backpack cursor/countdown then moves `lea eax,[esi+0x1d4]`
-// between the two sentinel setups. In the current TU, spelling the empty
-// record through the existing TArtifact constructor assigns its two -1 fields
-// in retail register order and closes the last four Windows rows at 100%.
-// A named empty-artifact temporary lost a CFG block (92.81%). The Mac shape
-// remains 117/330 aligned instructions with either constructor spelling;
-// its wider HeroExtra layout and other code differences preclude a verdict.
-// The equipped-slot probe reads m_equipped directly in Mac and compiles to
-// the same VC6 bytes as the canonical getArtifact accessor call. Using the
-// direct field removes one extra CodeWarrior call in this body.
+// Retail writes patrolY before patrolX in the else arm and widens each troop
+// count once before storing and testing it. Mac's counted byte clears load
+// fill values through the TOC, as MSL std::fill_n does in initialize(short).
+// Use those library fills and the canonical clearSpells helper here too.
+// This recovers Windows 60.20 -> 74.69% with ordinary string assignment.
+// Remaining string::assign expansion differs from retail's retained call.
+// Explicit assign with the old cursors reached only 61.17%; sharing a single
+// function-scope int/long loop index did not improve the recovered version.
+// The backpack loop constructs each empty artifact inside the loop in Mac;
+// a preconstructed fill value changes that lifetime. Its equipped-slot test
+// reads the field directly, without an additional getArtifact helper call.
 VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
@@ -1069,12 +1043,8 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customSecondarySkills) {
-        signed char* skillLevel = m_skillLevel;
-        for (int skillLevelCount = sizeof(m_skillLevel); skillLevelCount != 0; --skillLevelCount)
-            *skillLevel++ = 0;
-        unsigned char* skillOrder = m_skillOrder;
-        for (int skillOrderCount = sizeof(m_skillOrder); skillOrderCount != 0; --skillOrderCount)
-            *skillOrder++ = 0;
+        std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
+        std::fill_n(m_skillOrder, sizeof(m_skillOrder), static_cast<unsigned char>(0));
         m_skillCount = 0;
         for (int i = 0; i < setup->m_numSecondarySkills; i++)
             giveSS(setup->m_secondarySkill[i], setup->m_secondarySkillLevel[i]);
@@ -1092,12 +1062,7 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customSpells) {
-        unsigned char* inSpellbook = m_inSpellbook;
-        for (int spellbookCount = sizeof(m_inSpellbook); spellbookCount != 0; --spellbookCount)
-            *inSpellbook++ = 0;
-        unsigned char* availableSpells = m_availableSpells;
-        for (int availableCount = sizeof(m_availableSpells); availableCount != 0; --availableCount)
-            *availableSpells++ = 0;
+        clearSpells();
         for (int i = 0; i < NUM_SPELLS; i++) {
             if (setup->m_spells.test(i))
                 addSpell(i);
