@@ -341,6 +341,51 @@ class UpdateRowsTest(unittest.TestCase):
         self.assertEqual(rows, {})
         self.assertEqual(stats["retired"], 1)
 
+    def test_separate_overload_claim_selects_unique_parameter_arity(self):
+        from homm3.retail_labels.source import mask_lexical_noise
+
+        raw = ("VA(0x00401000, 4)\nlong helper(int renamed, int other, long& result);\n"
+               "long helper(int x, int y) { return x + y; }\n"
+               "long helper(int x, int y, long& out) { return out + x + y; }\n")
+
+        def resolve(text):
+            return _canonical_definition_text(
+                text, mask_lexical_noise(text), text.index(")") + 1,
+                "?helper@@YAJHHAAJ@Z")
+
+        body = resolve(raw)
+        self.assertEqual(body,
+                         "long helper(int x, int y, long& out) { return out + x + y; }")
+        self.assertEqual(resolve(raw.replace("return x + y;", "return x - y;")), body)
+        self.assertNotEqual(resolve(raw.replace("return out + x", "return out - x")), body)
+
+    def test_separate_same_arity_overloads_remain_unresolved(self):
+        from homm3.retail_labels.source import mask_lexical_noise
+
+        raw = ("VA(0x00401000, 4)\nlong helper(int value);\n"
+               "long helper(int x) { return x; }\n"
+               "long helper(long x) { return x + 1; }\n")
+        self.assertIsNone(_canonical_definition_text(
+            raw, mask_lexical_noise(raw), raw.index(")") + 1, "?helper@@YAJH@Z"))
+
+    def test_parameter_arity_respects_nested_declarations(self):
+        from homm3.match.status import _parameter_arity
+
+        self.assertEqual(_parameter_arity("std::map<int, long>& x, void (*f)(int, int)"), 2)
+        self.assertEqual(_parameter_arity("void"), 0)
+        self.assertEqual(_parameter_arity(""), 0)
+        self.assertIsNone(_parameter_arity("int x = less(1, 2)"))
+        self.assertIsNone(_parameter_arity("std::map<int, long"))
+
+    def test_unsupported_overload_cannot_create_false_unique_owner(self):
+        from homm3.retail_labels.source import mask_lexical_noise
+
+        raw = ("VA(0x00401000, 4)\nlong helper(int value);\n"
+               "long helper(int x) { return x; }\n"
+               "long helper(long x = 0) { return x + 1; }\n")
+        self.assertIsNone(_canonical_definition_text(
+            raw, mask_lexical_noise(raw), raw.index(")") + 1, "?helper@@YAJH@Z"))
+
     def test_canonical_header_hash_preserves_comment_cleanup_history(self):
         import tempfile
         from pathlib import Path

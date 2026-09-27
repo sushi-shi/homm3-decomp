@@ -210,6 +210,29 @@ def _after_windows_claim(masked: str, end: int) -> int:
     return match.end() if match else end + 1
 
 
+def _parameter_arity(parameters: str) -> int | None:
+    """Count simple declaration parameters, refusing ambiguous expressions."""
+    parameters = parameters.strip()
+    if parameters in ("", "void"):
+        return 0
+    # Defaults and expressions can use angle brackets as operators. Leave
+    # those signatures unresolved rather than guessing their ownership.
+    if any(token in parameters for token in ("=", "...", "{", "}")):
+        return None
+    stack: list[str] = []
+    closers = {"(": ")", "[": "]", "<": ">"}
+    count = 1
+    for char in parameters:
+        if char in closers:
+            stack.append(closers[char])
+        elif char in ")]>":
+            if not stack or stack.pop() != char:
+                return None
+        elif char == "," and not stack:
+            count += 1
+    return None if stack else count
+
+
 def _canonical_definition_text(raw: str, masked: str, after: int,
                                fn: str) -> str | None:
     """Resolve an annotated definition or its RVA-ordered redeclaration.
@@ -226,6 +249,30 @@ def _canonical_definition_text(raw: str, masked: str, after: int,
     from homm3.vc6 import _source
 
     definitions = _source.find_definitions(raw, fn)
+    if len(definitions) > 1:
+        # A separately annotated overload still owns its body when the
+        # declaration's arity identifies exactly one active definition.
+        # Same-arity overloads remain unknown; this is not a type resolver.
+        declaration_end = masked.find(";", after)
+        arities: set[int] = set()
+        if declaration_end >= 0:
+            for name in {definition.name for definition in definitions}:
+                pattern = re.compile(r"(?<![\w:])" + re.escape(name) + r"\s*\(")
+                for match in pattern.finditer(masked, after, declaration_end):
+                    opening = match.end() - 1
+                    closing = _source._match_paren(masked, opening)
+                    if closing is not None and closing < declaration_end:
+                        arity = _parameter_arity(masked[opening + 1:closing])
+                        if arity is not None:
+                            arities.add(arity)
+        if len(arities) == 1:
+            arity = next(iter(arities))
+            candidates = [(_parameter_arity(masked[definition.par_open + 1:
+                                                  definition.par_close]), definition)
+                          for definition in definitions]
+            if all(count is not None for count, _ in candidates):
+                definitions = [definition for count, definition in candidates
+                               if count == arity]
     if len(definitions) != 1:
         return None
     definition = definitions[0]
