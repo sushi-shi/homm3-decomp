@@ -2381,18 +2381,12 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // source - a fresh `short count` from MaxBuyableCreatures, and `short count =
 // best_number` after the assignment - are byte-flat at 97.2740, so the extra
 // slot is the allocator's, not a source local.
-// Mac O3 agrees on all nine named calls and unrolls the resource deduction.
-// The Mac declaration view now follows MSL vector's data()+index access;
-// this raised the score from 61.01% to 81.10%. Declaring function-scope slot
-// before resourceCost raises Mac to 81.25%, restores retail's 0xf0 frame and
-// moves the first mismatch from +0x2b to +0x77. Windows stays at 97.29%.
-// Mac still places resourceCost and slot four bytes earlier than retail.
-// Moving sourceIndex after the initialized best-state locals regresses Mac
-// to 78.72%, so that order was not retained.
-// Putting bestSlot before bestValue lowers Mac to 79.17%. A final-loop int counter
-// raises Mac to 81.25% and matches the 0xf0 frame, but lowers VC6 to 96.74%;
-// the retail dword counter is also emitted from this short spelling, so the
-// type is not independently proved.
+// Native Mac retains all nine named calls and unrolls resource deduction.
+// An int resource counter restores resourceCost at SP+0x98 and slot at
+// SP+0xb4: the first 0x164 bytes now agree. Windows moves 97.29 ->96.76;
+// keep the native local model while resolving the final register roles.
+// A separate final quantity is byte-flat; a shared function-scope creature
+// type changes the already-matching prefix, so neither probe is retained.
 VA(0x0042d420, 0x264) MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::doBestPurchase(
     unsigned char tradeAllowed)
@@ -2453,7 +2447,7 @@ long type_AI_creature_purchaser::doBestPurchase(
             getMonsterCost(type, resourceCost);
             bestNumber = maxBuyableCreatures(
                 m_funds, type, m_creatures[bestSource].m_number);
-            for (short resource = 0; resource < 7; ++resource)
+            for (int resource = 0; resource < 7; ++resource)
                 m_funds[resource] -= resourceCost[resource] * bestNumber;
             m_creatures[bestSource].m_number -= bestNumber;
         }
