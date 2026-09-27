@@ -1284,12 +1284,14 @@ unsigned char CNetPlayerHandler::setComputer(int pos)
     return 1;
 }
 
+// Mac 0x16f250..264 materializes the byte-valued isHuman result before
+// testing the unassigned seat. Preserve that existing predicate boundary.
 // E:\gamedcs\singleselectionwindow.cpp:1214
 MAC_ADDRESS(0x16f240, 0x58)
 int CNetPlayerHandler::getUnassignedPlayerPos()
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (m_humanPlayers[i].m_dpid != 0 && m_humanPlayers[i].m_playerPos == -1)
+        if (m_humanPlayers[i].isHuman() && m_humanPlayers[i].m_playerPos == -1)
             return i;
     }
     return -1;
