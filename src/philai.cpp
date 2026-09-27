@@ -1029,18 +1029,17 @@ static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 MAC_ADDRESS(0x1422c4, 0x2d8)
 static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
 {
-    BlackBoxData* blackBox = cell->getBlackBox();
+    // Both native builds initialize value before the retained data accessor.
     int value = 0;
+    BlackBoxData* blackBox = cell->getBlackBox();
 
     if (blackBox->m_hasCustomGuardians)
         value = aiValueOfCombat(
             currentHero, 0, blackBox->m_guardians, 0, cell);
 
     if (blackBox->m_experienceBonus > 0) {
-        value = static_cast<int>(
-            static_cast<float>(value)
-            + static_cast<float>(blackBox->m_experienceBonus)
-                * currentHero->m_turnExperienceToRvRatio);
+        value += blackBox->m_experienceBonus
+            * currentHero->m_turnExperienceToRvRatio;
     }
 
     // Mac 0:0x142378 retains the player-id wrapper.
@@ -1067,10 +1066,8 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
             value += (level - currentLevel) * primarySkillValue;
     }
 
-    value = static_cast<int>(
-        static_cast<float>(value)
-        + static_cast<float>(blackBox->m_artifacts.size())
-            * g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
+    value += blackBox->m_artifacts.size()
+        * g_currentPlayer->m_ai.m_turnValueOfAvgArtifact;
 
     if (currentHero->isWieldingArtifact(
             ARTIFACT_SPELLBOOK)) {
