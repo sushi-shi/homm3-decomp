@@ -4394,7 +4394,7 @@ town	?getPortraitFrame@town@@QBEH_N@Z	100.0000	100.0000	100.0000	0x1bd700	tokens
 town	?getPrimarySkill@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x1bde40	tokens1:3f23609cc735
 town	?getSiloIncome@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280	tokens1:32a1c2e5c6ff
 town	?getTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450	tokens1:5327a64312cd
-town	?giveEventReward@town@@QAEXPBVTTownEvent@@@Z	90.8986	90.8986	90.8986	0x1bfeb0	tokens1:bf7388f489c0
+town	?giveEventReward@town@@QAEXPBVTTownEvent@@@Z	94.9825	94.9825	94.9825	0x1bfeb0	tokens1:0bcbe87dbd3b
 town	?giveSpells@town@@QBEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1be030	tokens1:c6d77840248c
 town	?hasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0	tokens1:b50503afce0b
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0	tokens1:d2853d2508f6

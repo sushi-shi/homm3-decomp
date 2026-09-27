@@ -1349,16 +1349,13 @@ void showCreatureRewards(const town* thisTown,
 static const int g_rewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Still open: branch topology #12 lands one block off (the D3
-// jump-threading class - why-branch's catalog found no applicable
-// lever). Restoring the two source-proven HasBuilding calls is byte-flat
-// after inlining. A shared-tail `bool has_reward` keeps 20 branches but
-// falls to 78.6294, so it is not the route to retail's cross-jump.
-// `why-reg --model --il-order` agrees on every first register definition;
-// the divergence starts after the B1 minimum slice. Also rejected: an
-// `unsigned short growth` used only by the zero test (byte-flat - VC6
-// folds it back into the memory compare), the eligible mask hoisted into
-// a local (85.7), and resource-store reordering (neutral).
+// Mac 0x1b5e68..0x1b5f2c updates population before writing each reward
+// and checks the eight-row dialog flush after every dwelling iteration,
+// including a zero-bonus iteration. Preserve both hasBuilding calls and
+// the canonical reward-display helpers.
+// Residual: dwelling-loop register homes differ; all 38 CFG blocks and
+// branch topology align. Commuting dwelling indices and packed creature
+// operands produced eight source states with identical VC6 objects.
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1411,9 +1408,9 @@ void town::giveEventReward(const TTownEvent* thisEvent)
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->m_generatorBonuses[i] != 0) {
             if (hasBuilding(DWELLING_0_UPG_ID + i, true)) {
-                reward.m_resource = 0x15;
                 m_population[i + TOWN_DWELLING_COUNT] +=
                     thisEvent->m_generatorBonuses[i];
+                reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
                           g_townDwellingCreatures[
@@ -1421,17 +1418,17 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                               + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (hasBuilding(DWELLING_0_ID + i, true)) {
-                reward.m_resource = 0x15;
                 m_population[i] += thisEvent->m_generatorBonuses[i];
+                reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
                           g_townDwellingCreatures[
                               m_type * (2 * TOWN_DWELLING_COUNT) + i]);
                 rewards.push_back(reward);
             }
-            if (rewards.size() == g_rewardDialogBatch)
-                showCreatureRewards(this, rewards);
         }
+        if (rewards.size() == g_rewardDialogBatch)
+            showCreatureRewards(this, rewards);
     }
     if (rewards.size() > 0)
         showCreatureRewards(this, rewards);
