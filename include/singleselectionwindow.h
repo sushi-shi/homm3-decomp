@@ -172,9 +172,6 @@ enum ESingleSelectionLaunchContext {
 struct SHeaderRequest {
 public:
     unsigned char m_flag;
-    // Retail stores the preceding flag as one byte; these three bytes
-    // align the following integer payload to a four-byte boundary.
-    char m_paddingBeforeNumber[3];
     int m_number;
 };
 
