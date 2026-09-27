@@ -587,20 +587,20 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             }
             break;
         }
+        // Mac 0x1ff0bc..0x1ff13c continues through three independent map
+        // predicates; VC6 propagates the known map into direct failure exits.
         case g_lossCampaign15:
             map = g_game->m_campaign.m_currentMap;
-            if (map == 1) {
-                if (loser->m_id == g_lossHero22)
-                    return 1;
-            } else if (map == g_map2) {
-                if (loser->m_id == g_lossHero22
-                    || loser->hasArtifact(ARTIFACT_VAMPIRES_COWL))
-                    return 1;
-            } else if (map == g_map3) {
-                if (loser->m_id == g_lossHero22
-                    || loser->hasArtifact(ARTIFACT_DEAD_MANS_BOOTS))
-                    return 1;
-            }
+            if (map == 1 && loser->m_id == g_lossHero22)
+                return 1;
+            if (map == g_map2
+                && (loser->m_id == g_lossHero22
+                    || loser->hasArtifact(ARTIFACT_VAMPIRES_COWL)))
+                return 1;
+            if (map == g_map3
+                && (loser->m_id == g_lossHero22
+                    || loser->hasArtifact(ARTIFACT_DEAD_MANS_BOOTS)))
+                return 1;
             break;
         case g_lossCampaign17:
             if ((g_game->m_campaign.m_currentMap == g_map2
