@@ -2740,9 +2740,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getWidth(),
                 g_windowManager->m_screenBitmap->getHeight(),
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
-            int right = x + width - 1;
-            int bottom = y + height - 1;
-            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
