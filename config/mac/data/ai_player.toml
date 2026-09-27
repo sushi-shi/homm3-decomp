@@ -67,3 +67,13 @@ mac_offset = 0x5b6a4
 mac_size = 4
 sha256 = "a4f8f8686439ea65c2b0d82c00347b1c0c2e92a24f3595ea46535dc043091fcc"
 evidence = "src/objnames.cpp owns DATA(0x660428) g_adventureObjectTraits, the pointer to canonical 16-byte trait rows. Mac netValueOfLocation loads its cell address from TOC1+0x6b8 at code0+0x32aa4; dereference0x32af0 followed by type*16 at0x32af4 and landing-veto byte load0x32af8 matches the shared row's m_blocksLanding at+0. PEF loader binds TOC1+0x6b8 -> data1+0x5b6a4 and that four-byte pointer cell -> data1+0x553ef0. This reviewed external-consumer storage binding does not compare the owner's pointer initializer."
+
+[[data]]
+retail_va = 0x0069ccc4
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c085
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "src/game.cpp owns DATA(0x69ccc4) unsigned char g_curPlayerBit. Mac netValueOfLocation reads its byte through loader TOC1+0x78c -> zero-filled data1+0x52c085 at code0+0x32b34/0x32b3c, then intersects it with the getMapExtra result at0x32b40 before refunding the final movement step. This external-consumer storage binding preserves the one-byte current-player visibility mask."
