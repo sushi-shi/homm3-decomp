@@ -2599,6 +2599,10 @@ TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
 // scans restores the early coordinate loads and object-kind register home:
 // all 505 retail bytes now match. The scalar origin remains at 98.8042%.
 // Scan order, first-failure joins and placement helper calls are unchanged.
+// Native Mac 0x2337b4, 0x233858 and 0x233978 query only the
+// surface XY plane. Using the existing surface overload preserves the map
+// lookup helper and avoids a spurious 3D constructor/lookup expansion.
+// Both compilers accept the ordinary call; Windows recovers all 505 bytes.
 VA(0x005355E0, 0x1F9) MAC_ADDRESS(0x2336d0, 0x374) // anchor-callee 0x535ab9; thiscall, ret 0x10
 unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* properties,
     TRmgMapPosition position)
@@ -2612,14 +2616,14 @@ unsigned char TRmgTreasureGroup::canFitObject(TRmgObjectPropertiesRef* propertie
     if (!g_adventureObjectTraits[objectType].m_trait1) {
         for (int direction = 5; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
-            if (m_map.getMapItem(nearby.m_x, nearby.m_y, 0)->isRoadEntrance())
+            if (m_map.getMapItem(nearby.m_x, nearby.m_y)->isRoadEntrance())
                 goto placementFailure;
         }
     }
     {
         for (int direction = 0; direction < 5; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
-            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (item->isRoadEntrance()) {
                 int neighborType = item->m_objects[0]->m_properties->m_prototype->m_objectType;
                 if (!g_adventureObjectTraits[neighborType].m_trait2
@@ -2639,7 +2643,7 @@ placementFailure:
         int direction;
         for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
-            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
                 && item->m_tile.m_landType != eTerrainRock && !item->hasBorderObject())
                 break;
