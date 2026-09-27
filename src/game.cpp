@@ -3786,7 +3786,8 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
         m_worldMap.m_mapObjectData[mapDataIndex]->newMapVFn38();
     }
 
-    memset(m_playerDisabled, 0, sizeof(m_playerDisabled));
+    // Mac expands the constant-reference fill; VC6 folds its eight stores.
+    std::fill_n(m_playerDisabled, 8, false);
     for (int disabledPlayer = 0; disabledPlayer < 8; ++disabledPlayer)
         m_playerDisabled[disabledPlayer] =
             m_players[disabledPlayer].m_numHeroes == 0
