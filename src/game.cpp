@@ -100,6 +100,9 @@ DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCram
 DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
 DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
 DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+// Retail newMap copies this independent seven-resource tutorial row.
+DATA(0x006779c8) const int g_tutorialStartingResources[NUM_RESOURCES] =
+    { 50, 50, 50, 50, 50, 50, 50000 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
 DATA(0x0069fb24) int g_startingHeroOverrides[8];
 
@@ -3813,7 +3816,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                    sizeof(m_players[setupPlayer].m_resources));
             if (m_isTutorial)
                 memcpy(m_players[setupPlayer].m_resources,
-                       g_neutralTownLevelWeights + 6,
+                       g_tutorialStartingResources,
                        sizeof(m_players[setupPlayer].m_resources));
         } else {
             m_players[setupPlayer].m_personality = random(0, 2);

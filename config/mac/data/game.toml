@@ -77,3 +77,12 @@ mac_offset = 0x4be0
 mac_size = 8
 sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
 evidence = "Mac matchUndergroundGates at code 0:0xd7220 loads the signed-integer conversion bias through loader-relocated TOC 1+0x2534 -> data 1+0x4be0. The eight big-endian bytes are 0x4330000080000000, and the CodeWarrior candidate emits that exact anonymous double payload while converting dx*dx+dy*dy before MathLib sqrt."
+
+[[data]]
+retail_va = 0x006779c8
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x426dc
+mac_size = 28
+sha256 = "5e13954fb8aef90443816943ff5b0d1a9c211c9cd573314cbf2e9896b40ea9d0"
+evidence = "newMap copies seven tutorial resources from Windows 0x6779c8. Mac data1+0x426dc uniquely contains the same six 50s followed by 50000; loader TOC1+0x24f0 resolves this table. Mac newMap code0+0xd5ab4 loads that pointer into r26; after the tutorial flag at 0xd5fb0, 0xd5fbc passes it as the source for the 28-byte copy at 0xd5fc8. The adjacent six neutral-town weights are a distinct array."

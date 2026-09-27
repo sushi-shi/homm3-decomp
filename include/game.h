@@ -1766,6 +1766,7 @@ extern int g_mineProduction[7];
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 extern double g_productionHandicap[];
 extern const int g_neutralTownLevelWeights[6];
+extern const int g_tutorialStartingResources[NUM_RESOURCES];
 // NewMap's seven-resource rows, indexed by setup.difficulty.  The first
 // address is also the seven-int tutorial row immediately following the
 // neutral-town weights above.
