@@ -1143,6 +1143,53 @@ static void updateArtifacts(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
+// Mac and older DC place these retained helpers before backpack scrolling.
+VA(0x00522470, 0x15E) MAC_ADDRESS(0x136cb0, 0x1cc)  // dc 0x107668
+void updateBackpack(int slot)
+{
+    int i = 0;
+    int slotOff = slot * 200 + 200;
+    int heroNumber = g_overviewTop[g_overviewType] + slot;
+    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
+    type_artifact artifact;
+    // DC 0x1076c4 calls the default message constructor at 0x2d58.
+    // Retail 0x522470 initializes the same zero fields before id/codeX.
+    message msg;
+
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+
+    for (; i < 8 && i < lastBackpackIndex; ++i) {
+        msg.m_codeY = i + slotOff + 130;
+        artifact = currHero->getBackpack(
+            (g_overviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
+        msg.m_extra = artifact.m_artifactId;
+        g_overWin->broadcastMessage(msg);
+
+        if (artifact.m_artifactId == -1)
+            g_overWin->widgetClearStatus(i + slotOff + 130, 4);
+        else
+            g_overWin->widgetSetStatus(i + slotOff + 130, 4);
+    }
+
+    g_overWin->drawWindow(1, 0xffff0001, 0xffff);
+    g_overWin->drawWindow(0, slotOff + 130, slotOff + 137);
+    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
+}
+
+// Complete retains this body even though its same-TU callers expand it.
+// External linkage reproduces that emission; Dreamcast labels the older body static.
+VA(0x005225d0, 0x55) MAC_ADDRESS(0x136e7c, 0x90)  // dc 0x1078e8
+long getLastBackpackIndex(long heroNumber)
+{
+    if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
+        return 0;
+    hero* currHero = g_game->getHero(
+        g_game->getLocalPlayer()->m_heroes[heroNumber]);
+    return currHero->getLastBackpackIndex();
+}
+
 // Dreamcast proves these as two ordinary static source helpers, each with the
 // selected hero index, one backpack-bound query and one conditional refresh.
 // Complete emits no standalone copies: VC6 expands every call below, while
@@ -2633,50 +2680,4 @@ int TOverviewWindow::windowHandler(message& msg)
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
-}
-
-VA(0x00522470, 0x15E) MAC_ADDRESS(0x136cb0, 0x1cc)  // dc 0x107668
-void updateBackpack(int slot)
-{
-    int i = 0;
-    int slotOff = slot * 200 + 200;
-    int heroNumber = g_overviewTop[g_overviewType] + slot;
-    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
-    int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
-    type_artifact artifact;
-    // DC 0x1076c4 calls the default message constructor at 0x2d58.
-    // Retail 0x522470 initializes the same zero fields before id/codeX.
-    message msg;
-
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-
-    for (; i < 8 && i < lastBackpackIndex; ++i) {
-        msg.m_codeY = i + slotOff + 130;
-        artifact = currHero->getBackpack(
-            (g_overviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
-        msg.m_extra = artifact.m_artifactId;
-        g_overWin->broadcastMessage(msg);
-
-        if (artifact.m_artifactId == -1)
-            g_overWin->widgetClearStatus(i + slotOff + 130, 4);
-        else
-            g_overWin->widgetSetStatus(i + slotOff + 130, 4);
-    }
-
-    g_overWin->drawWindow(1, 0xffff0001, 0xffff);
-    g_overWin->drawWindow(0, slotOff + 130, slotOff + 137);
-    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
-}
-
-// Complete retains this body even though its same-TU callers expand it.
-// External linkage reproduces that emission; Dreamcast labels the older body static.
-VA(0x005225d0, 0x55) MAC_ADDRESS(0x136e7c, 0x90)  // dc 0x1078e8
-long getLastBackpackIndex(long heroNumber)
-{
-    if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
-        return 0;
-    hero* currHero = g_game->getHero(
-        g_game->getLocalPlayer()->m_heroes[heroNumber]);
-    return currHero->getLastBackpackIndex();
 }
