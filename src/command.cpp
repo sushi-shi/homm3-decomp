@@ -563,6 +563,9 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Initializing the vertical default before the guard scores 96.07%.
 // Separate numerator assignment followed by /= is also byte-flat in
 // Windows; the paired Mac compilation still has unresolved references.
+// Mac preserves (gridX - 1)*44 + 58 and the split 86/26 vertical
+// border terms: these equal the Windows 14/112 offsets. This shared
+// decomposition raises Mac from 35.25% to 92.01% and is Windows-flat.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
@@ -571,58 +574,56 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
     int direction;
     float slope;
 
-    do {
-        if (isComputerAction())
-            break;
-        int xDifference = x - gridX(hex) * 44 - 14;
-        int row = gridY(hex);
-        if (!rowIsOdd(row))
-            xDifference -= 22;
+    if (isComputerAction())
+        return 0;
+    int xDifference = x - (gridX(hex) - 1) * 44 - 58;
+    int row = gridY(hex);
+    if (!rowIsOdd(row))
         xDifference -= 22;
-        int yDifference = y - row * 42 - 112;
+    xDifference -= 22;
+    int yDifference = y - row * 42 - 86;
+    yDifference -= 26;
 
-        direction = 0;
-        if (xDifference < 0) {
-            if (yDifference < 0)
-                direction = 9;
-            else
-                direction = 6;
-        } else if (yDifference >= 0) {
-            direction = 3;
-        }
-
-        // Mac retains abs(x) then abs(y), once each, before the zero guard.
-        // Its combat viewport origin differs; the shared arithmetic remains.
-        xDifference = abs(xDifference);
-        yDifference = abs(yDifference);
-        if (yDifference == 0)
-            slope = 100.0f;
+    direction = 0;
+    if (xDifference < 0) {
+        if (yDifference < 0)
+            direction = 9;
         else
-            slope = static_cast<float>(xDifference) / static_cast<float>(yDifference);
+            direction = 6;
+    } else if (yDifference >= 0) {
+        direction = 3;
+    }
 
-        if (direction != COMBAT_ATTACK_ANGLE_0
-                && direction != COMBAT_ATTACK_ANGLE_6) {
-            if (slope < 0.58)
-                direction += 2;
-            else if (slope < 1.73)
-                direction++;
-        } else {
-            if (slope > 1.73)
-                direction += 2;
-            else if (slope > 0.58)
-                direction++;
-        }
+    // Mac retains abs(x) then abs(y), once each, before the zero guard.
+    // Its coordinate subtraction is retained as separate grid/border terms.
+    xDifference = abs(xDifference);
+    yDifference = abs(yDifference);
+    if (yDifference == 0)
+        slope = 100.0f;
+    else
+        slope = static_cast<float>(xDifference) / static_cast<float>(yDifference);
 
-        m_lastMoveToIndex = m_combatDirections[1][direction];
-        if (m_combatDirections[0][direction] == m_lastAttackCursor)
-            return 0;
+    if (direction != COMBAT_ATTACK_ANGLE_0
+            && direction != COMBAT_ATTACK_ANGLE_6) {
+        if (slope < 0.58)
+            direction += 2;
+        else if (slope < 1.73)
+            direction++;
+    } else {
+        if (slope > 1.73)
+            direction += 2;
+        else if (slope > 0.58)
+            direction++;
+    }
 
-        m_lastAttackCursor = m_combatDirections[0][direction];
-        g_mouseManager->setPointer(m_combatDirections[0][direction],
-                                   mouseManager::COMBAT_SET);
-        return 1;
-    } while (0);
-    return 0;
+    m_lastMoveToIndex = m_combatDirections[1][direction];
+    if (m_combatDirections[0][direction] == m_lastAttackCursor)
+        return 0;
+
+    m_lastAttackCursor = m_combatDirections[0][direction];
+    g_mouseManager->setPointer(m_combatDirections[0][direction],
+                               mouseManager::COMBAT_SET);
+    return 1;
 }
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.
