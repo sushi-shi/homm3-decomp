@@ -1953,7 +1953,10 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
 // Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
 // caller is main, where Windows expands the decision between first aid and
 // catapult automation. An ordinary definition leaves an extra VC6 call;
-// this inline definition restores main's 42-call sequence and 77-block CFG.
+// this inline definition restores its retail expansion boundary.
+// Mac exits on a false computer-action policy before the AI/resetMouse tail.
+// That early guard restores main from 97.17% to an exact Windows body; the
+// positive-action if followed by return0 merges three retail false exits.
 // Mac places this body between turnOffHighlighter and checkGetAIMove;
 // restoring that source order is byte-flat in both compiler controls.
 MAC_ADDRESS(0x08627c, 0x10c)
@@ -1984,12 +1987,11 @@ inline unsigned char combatManager::automateTower()
         m_nextAction = 12;
         return 1;
     }
-    if (isComputerAction()) {
-        unnamed465f20();
-        resetMouse();
-        return 1;
-    }
-    return 0;
+    if (!isComputerAction())
+        return 0;
+    unnamed465f20();
+    resetMouse();
+    return 1;
 }
 
 // E:\gamedcs\command.cpp:3038. Retail's command-order bracket leaves one
