@@ -232,6 +232,10 @@ TGzInflateBuf::~TGzInflateBuf()
 
 // 0x4d6920: drain the source into the output half, either
 // through inflate or, for a non-gzip member, by straight copy.
+// Constructor visibility probes are Windows-flat. A temporary explicit
+// inline readByte suppresses its required Windows body and is rejected.
+// CW auto/deferred/depth controls change the native retained-call pattern;
+// no source qualifier or compiler override is inferred from those controls.
 // Mac 0x221574..0x221588 dispatches inflate status with a range tree:
 // compare -3, skip larger values, compare -4, then select the exceptions.
 // A switch reproduces that tree at candidate +0xc0..+0xd4; sequential
