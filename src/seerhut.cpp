@@ -2331,14 +2331,11 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // guard's reader does; the only difference from TQuestGuard::read is the
 // flags argument, which is 1 here and 0 there.
 
-// The reward. One type byte, then a jump-table switch whose ten arms are the
-// TSeerRewardType roster; the two-byte artifact and creature ordinals narrow
-// to one byte on Restoration of Erathia maps, which is why those two arms
-// re-read gpGame->mapHeader.version. Retail reads all of them through ONE
-// four-byte stack slot addressed at three widths - [ebp+8] as an int,
-// [ebp+0xa] as a short and [ebp+0xb] as a signed char - so the three buffers
-// below are function-scoped and let VC6 coalesce them the same way. The two
-// bytes read straight after the switch are read and discarded.
+// The reward uses typed scalar readers: unsigned bytes for the reward kind
+// and positive bonuses, signed bytes for skill/resource selectors, signed
+// artifact/creature shorts, and an unsigned creature count. These preserve
+// the native conversions without reading partial values into uninitialized
+// integers. The two trailing reserved bytes are still consumed.
 
 // The name. Every hut takes an unused entry from gpSeerHutNames: a byte per
 // name, all set, then cleared for each name the map's existing huts already
@@ -2350,31 +2347,11 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // carries NO unwind action because nothing between its construction and its
 // destruction can throw - rand() is extern "C" and nothrow under /GX.
 
-// BLOCK SCOPE ON THE READ BUFFERS IS WORTH +6.07 (76.6567 -> 82.7295).
-// Retail addresses every scalar read through the dead `infile` parameter
-// home at three widths; function-scoped buffers get slots of their own at
-// [ebp-1] and below and the whole frame walks. One declaration per arm is
-// what puts them back.
-
-// Residual (94.24%, raised from 86.81%): the one-byte Morale, Luck and Primary
-// bonuses are unsigned-char conversions, and the two-byte creature count is an
-// unsigned-short conversion. Those four source types recover the entire switch
-// and tail: all 58 CFG blocks and 22 branches align, 56 blocks are byte-exact,
-// and every post-constructor opcode agrees apart from the resulting eight-byte
-// frame displacement. The two size-only blocks are the legacy artifact arm:
-// retail expands the shared three-argument constructor but calls its nested
-// type_quest(flags), while this caller expands both. The exact load sibling
-// needs both expansions. Plain `inline`, moving the definition ahead of the
-// base constructor, and caller inline-depth(1) are byte-flat. A constructor-level
-// inline-depth(0) is the negative control: read falls to 91.86%, exact load to
-// 82.72%, and is not retained. Naming the artifact falls to 93.70%; an explicit
-// signed comparison is byte-flat. Keep the canonical shared constructor and
-// caller-specific natural inliner state rather than pinning either caller.
-// Keeping the canonical SetRandomName definition inline lets the Complete
-// caller expand its revised allocation/random-selection body while preserving
-// the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
-// its nested type_quest construction where retail retains that call; the extra
-// inline budget also leaves the name vector's element construction as a call.
+// The shared value-reader model keeps load() exact and raises read() from
+// 86.19 to 86.49%, with every other TU row unchanged. It restores the retained
+// type_quest constructor call in the legacy arm. The remaining boundaries are
+// its vector constructor (expanded) and setRandomName's vector fill (called).
+// The factory and random-name helpers remain canonical source calls.
 // Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
@@ -2394,8 +2371,7 @@ void TSeerHut::read(TAbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         int textRow = rand() % 3;
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
+        signed char charBuffer = readValue<signed char>(infile);
         if (charBuffer == -1) {
             m_quest = 0;
         } else {
@@ -2407,114 +2383,83 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     m_completedByPlayer = 0;
-    {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        m_reward.m_rewardType = intBuffer & 0xff;
-    }
+    m_reward.m_rewardType = readValue<unsigned char>(infile);
 
     switch (m_reward.m_rewardType) {
     case eRewardExperience: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_dwords[0] = intBuffer;
+        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardMana: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_dwords[0] = intBuffer;
+        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardMorale: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
         m_reward.m_value.m_signedLow.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardLuck: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
         m_reward.m_value.m_signedLow.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardResource: {
-        signed char charBuffer;
-        int intBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_resource.m_resourceType = charBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_resource.m_quantity = intBuffer;
+        m_reward.m_value.m_resource.m_resourceType =
+            readValue<signed char>(infile);
+        m_reward.m_value.m_resource.m_quantity =
+            readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardPrimarySkill: {
-        signed char charBuffer;
-        int intBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_primarySkill.m_skillType = charBuffer;
-        infile->read(&intBuffer, 1);
+        m_reward.m_value.m_primarySkill.m_skillType =
+            readValue<signed char>(infile);
         m_reward.m_value.m_primarySkill.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardSecondarySkill: {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_secondarySkill.m_skillType = charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_secondarySkill.m_bonus = charBuffer;
+        m_reward.m_value.m_secondarySkill.m_skillType =
+            readValue<signed char>(infile);
+        m_reward.m_value.m_secondarySkill.m_bonus =
+            readValue<signed char>(infile);
         break;
     }
 
     case eRewardArtifact:
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, 1);
-            m_reward.m_value.m_dwords[0] = intBuffer & 0xff;
+            m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_reward.m_value.m_dwords[0] = shortBuffer;
+            m_reward.m_value.m_dwords[0] = readLittleEndianValue<short>(infile);
         }
         break;
 
     case eRewardSpell: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        m_reward.m_value.m_dwords[0] = intBuffer & 0xff;
+        m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardCreature: {
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, 1);
-            m_reward.m_value.m_creature.m_creatureType = intBuffer & 0xff;
+            m_reward.m_value.m_creature.m_creatureType =
+                readValue<unsigned char>(infile);
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_reward.m_value.m_creature.m_creatureType = shortBuffer;
+            m_reward.m_value.m_creature.m_creatureType =
+                readLittleEndianValue<short>(infile);
         }
-        int countBuffer;
-        infile->read(&countBuffer, 2);
         m_reward.m_value.m_creature.m_count =
-            static_cast<unsigned short>(countBuffer);
+            readLittleEndianValue<unsigned short>(infile);
         break;
     }
     }
 
-    {
-        short shortBuffer;
-        infile->read(&shortBuffer, sizeof(shortBuffer));
-    }
+    readValue<short>(infile);  // reserved bytes
 
     setRandomName(*this);
 }
