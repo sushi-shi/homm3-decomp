@@ -259,6 +259,35 @@ mac_size=1
 sha256="{sha256(bytes(1)).hexdigest()}"
 evidence="externally linked zero storage with reviewed owner"
 ''')
+            from homm3.mac.source import load_data, SourceError
+            manifest = root / "config/mac/data.toml"
+            ordinary_manifest = manifest.read_text()
+            constructed_manifest = ordinary_manifest.replace(
+                "same_tu_external=true", "same_tu_external=true\nsame_tu_constructed=true")
+            manifest.write_text(constructed_manifest)
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) Bounds flag(0, 0, 799, 555);\n")
+            pair, = load_data(root)
+            self.assertEqual(pair.name, "flag")
+            self.assertIn("(0, 0, 799, 555)", pair.definition)
+            bindings(root, pef, code, (cell, storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            for bad_manifest in (
+                    ordinary_manifest,
+                    constructed_manifest.replace("same_tu_external=true", "same_tu_external=false"),
+                    constructed_manifest.replace("same_tu_constructed=true", 'same_tu_constructed="true"')):
+                manifest.write_text(bad_manifest)
+                with self.subTest(manifest=bad_manifest), self.assertRaises(SourceError):
+                    load_data(root)
+            manifest.write_text(constructed_manifest)
+            for declaration in ("Bounds flag(helper());", "Bounds flag(int arg);",
+                                "Bounds flag(1)[2];", "static Bounds flag(1);",
+                                "extern Bounds flag;"):
+                (root / "source.cpp").write_text("DATA(0x00400100) " + declaration)
+                with self.subTest(declaration=declaration), self.assertRaises(SourceError):
+                    load_data(root)
+            manifest.write_text(ordinary_manifest)
+            (root / "source.cpp").write_text("DATA(0x00400100) unsigned char flag;\n")
             owner = bindings(root, pef, code, (cell, storage), unit="owner")
             consumer = bindings(root, pef, code, (cell,), unit="consumer")
             self.assertEqual(owner["flag"].target, consumer["flag"].target)

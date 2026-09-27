@@ -137,6 +137,10 @@ def load_data(root: Path) -> list[DataPair]:
         if (not isinstance(same_tu_external, bool)
                 or (same_tu_external and (not same_tu_definition or same_tu_array))):
             raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires scalar same-TU storage")
+        constructed = row.get("same_tu_constructed", False)
+        if (not isinstance(constructed, bool)
+                or (constructed and (not same_tu_external or same_tu_array))):
+            raise SourceError(f"{source}: DATA({va:#x}) same_tu_constructed requires externally linked scalar same-TU storage")
         local_owner = row.get("owner_va")
         local_signature = None
         if local_owner is not None:
@@ -185,7 +189,18 @@ def load_data(root: Path) -> list[DataPair]:
                     r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*'
                     r'(?P<array>(?:\[[^\[\];]*\]\s*)*);',
                     declaration, re.DOTALL)
-                if match and bool(match.group("array").strip()) != same_tu_array:
+                if constructed:
+                    # This binds zero storage, not the runtime constructor's
+                    # result. Keep the authored constructor and its arguments.
+                    # Admit only a scalar with literal integer arguments;
+                    # expressions, references and function declarators need
+                    # a separate reviewed contract.
+                    match = re.fullmatch(
+                        r'\s*\w+(?:::\w+)*(?:\s+)(\w+)\s*'
+                        r'\(\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)'
+                        r'(?:\s*,\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+))*\s*\)\s*;',
+                        declaration, re.DOTALL)
+                if match and not constructed and bool(match.group("array").strip()) != same_tu_array:
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_array differs from its declaration")
                 if match and same_tu_external and re.match(r'\s*static\b', declaration):
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires external linkage")
@@ -304,5 +319,4 @@ def _function_end(text: str, brace: int) -> int:
             state = "code"
         index += 1
     raise SourceError("unterminated function body")
-
 

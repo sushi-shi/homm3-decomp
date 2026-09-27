@@ -103,6 +103,12 @@ uses its direct TOC address, set `same_tu_definition = true` instead of
 definition such as `DATA(...) std::string g_resourcePath;`. The reviewed Mac
 storage bytes and emitted candidate storage still have to agree. This option does not create a second source definition or claim a
 runtime initializer match.
+For externally linked scalar storage, add `same_tu_external = true`: the
+owning TU must emit the reviewed zero-filled RW storage, while other TUs
+must use an external indirect TOC reference. A constructed scalar with literal
+integer arguments can also set `same_tu_constructed = true`. Its ordinary
+constructor declaration and arguments remain in source; the binding compares
+zero storage only, without claiming that the startup constructor matches.
 Use `units = ["<TU>"]` on literals when their equal payloads occur in distinct
 linked pools; ambiguity remains an error. Identical worker data entries
 coalesce and conflicting entries fail validation.
