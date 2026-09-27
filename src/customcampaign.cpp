@@ -1216,22 +1216,28 @@ void TCampaignBonus::setTown(int)
 // 0x485dc5 zeros the read word explicitly; do not discard that initialization.
 // A function-scope, uninitialized-word/count-arm model failed that fact and
 // gave Mac 33.90%, versus 55.17% here. Buffer lifetime placement was flat.
+// Native 0x93f8c copies decoded count into remaining before constructing
+// the string; the loop then reuses count, with separate conditional arms.
+// That lifetime reproduces its r31/r30/r29 count/remaining/destination roles
+// and branch sequence; Windows remains 95.1988% with the same calls.
 VA(0x00485d90, 0x1BB) MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
-    unsigned int remaining;
+    unsigned int count;
     {
         unsigned int length = 0;
-        infile->read(&length, sizeof(unsigned int));
-        remaining = LITTLE_ENDIAN_LONG(length);
+        infile->read(&length, sizeof(length));
+        count = LITTLE_ENDIAN_LONG(length);
     }
+    unsigned int remaining = count;
     std::string text;
-    text.resize(remaining);
+    text.resize(count);
     std::string::iterator dest = text.begin();
     while (remaining > 0) {
         char chunk[512];
-        unsigned int count = remaining;
-        if (count >= sizeof(chunk))
+        if (remaining < sizeof(chunk))
+            count = remaining;
+        else
             count = sizeof(chunk);
         infile->read(chunk, count);
         std::copy(chunk, chunk + count, dest);
