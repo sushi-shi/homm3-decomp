@@ -756,12 +756,14 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             m_armies[side][slot].initClean();
         }
         m_numArmies[side] = 0;
-        int placed = 0;
         hero* combatHero = m_heroes[side];
         armyGroup* group = m_armyGroups[side];
         const unsigned char grouped =
             combatHero && (combatHero->m_formation & 1) && m_sideIsAi[side];
         const int layout = group->getNumArmies() - 1;
+        // Mac0x6ed50 initializes the placement counter after the layout call.
+        // This order also restores Windows' known-zero comparison.
+        int placed = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (m_armyGroups[side]->m_armies[i] == CREATURE_NONE)
                 continue;
