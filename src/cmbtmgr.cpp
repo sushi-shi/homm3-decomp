@@ -2736,7 +2736,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     if (nframes > 0) {
         int travelX = 0;
         int remaining = nframes;
-        for (; step < nframes; step++) {
+        // Retail advances step before the remaining-frame decrement.
+        // Keep both real induction variables in the loop increment.
+        for (; step < nframes; step++, --remaining) {
             unsigned long nextFrameTime = GameTime::get() + missileperiod;
             if (step != 0) {
                 // Mac 0x73e24 copies a four-word rectangle temporary here.
@@ -2773,7 +2775,6 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 frame = 0;
             GameTime::delayTil(nextFrameTime);
             travelX += deltaX;
-            --remaining;
         }
     }
 }
