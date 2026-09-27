@@ -5185,9 +5185,9 @@ bool game::loadMap(TAbstractFile* mapFile)
 // expressing the map format directly, that is the source shape which gives
 // retail's `movsx / store / or -1 / store` loop. The custom name likewise
 // assigns the complete returned string. No Dreamcast counterpart is known
-// for this Complete-only reader. Whole-string operator= currently gives
-// 44.0213% versus 52.0030% with explicit assign; a named return-value temporary
-// only reaches 44.7652%. String and bitset helper expansion remains unresolved.
+// for this Complete-only reader. Mac uses lwbrx for experience/skill count
+// and lhbrx plus extsh for artifact IDs/backpack count; retain those scalar
+// reader semantics through the shared little-endian helper. Windows is exact.
 VA(0x004c2ce0, 0x3A8) MAC_ADDRESS(0x0d8ec0, 0x460)  // sole caller LoadMap + HeroExtra field-offset walk
 void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 {
@@ -5199,12 +5199,12 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customExperience = 1;
-            heroRecord->m_experience = readValue<int>(mapFile);
+            heroRecord->m_experience = readLittleEndianValue<int>(mapFile);
         }
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customSecondarySkills = 1;
-            heroRecord->m_numSecondarySkills = readValue<int>(mapFile);
+            heroRecord->m_numSecondarySkills = readLittleEndianValue<int>(mapFile);
             for (int skill = 0;
                  skill < heroRecord->m_numSecondarySkills; ++skill) {
                 heroRecord->m_secondarySkill[skill] = readValue<char>(mapFile);
@@ -5218,16 +5218,16 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             for (int equipped = 0; equipped < 19; ++equipped) {
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_numInBackpack =
-                static_cast<unsigned char>(readValue<short>(mapFile));
+                static_cast<unsigned char>(readLittleEndianValue<short>(mapFile));
             for (int carried = 0;
                  carried < heroRecord->m_numInBackpack; ++carried) {
                 heroRecord->m_backpack[carried] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
