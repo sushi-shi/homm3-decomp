@@ -3343,6 +3343,8 @@ long markDestinations(hero* currentHero, long maxDistance,
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
+    // DC records one function-scope point; use it for the friend's target
+    // and fallback location. This lifetime spelling is byte-flat in VC6.
     type_point point;
     heroDanger = currentSearchArray->getDangerValue(
         currentHero->getLocation());
@@ -3362,10 +3364,10 @@ long markDestinations(hero* currentHero, long maxDistance,
         if (!friendCell->m_visited)
             continue;
 
-        type_point target = friendly->getTarget();
+        point = friendly->getTarget();
         unsigned short extraCost;
-        if (!target.isValid()) {
-            target = friendly->getLocation();
+        if (!point.isValid()) {
+            point = friendly->getLocation();
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;
@@ -3375,10 +3377,10 @@ long markDestinations(hero* currentHero, long maxDistance,
                 extraCost -= friendly->m_movePoints;
         }
 
-        NewmapCell* targetCell = g_advManager->getCell(target);
+        NewmapCell* targetCell = g_advManager->getCell(point);
         g_advManager->m_advWindow->animateBottomView(0);
         friendlySearch.seedPosition(
-            friendly, target, type_point(-1, -1, -1),
+            friendly, point, type_point(-1, -1, -1),
             friendly->m_maxMovePoints,
             targetCell->m_groundSet == eTerrainWater, const_AI_allied_search,
             friendly->m_maxMovePoints, 0);
