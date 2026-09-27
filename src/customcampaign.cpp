@@ -1199,6 +1199,11 @@ void TCampaignBonus::setTown(int)
 // code and call decisions otherwise align. The passive inline trace shows
 // default construction, resize/append, begin/Freeze, copy and destruction
 // expanding with the retained Grow/Eos/assign calls. No Dreamcast counterpart.
+// Mac 0x93f80 loads the file length with lwbrx; the shared platform macro
+// supplies that byte order while leaving Windows unchanged. Windows
+// 0x485dc5 zeros the read word explicitly; do not discard that initialization.
+// A function-scope, uninitialized-word/count-arm model failed that fact and
+// gave Mac 33.90%, versus 55.17% here. Buffer lifetime placement was flat.
 VA(0x00485d90, 0x1BB) MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
@@ -1206,7 +1211,7 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
     {
         unsigned int length = 0;
         infile->read(&length, sizeof(unsigned int));
-        remaining = length;
+        remaining = LITTLE_ENDIAN_LONG(length);
     }
     std::string text;
     text.resize(remaining);
