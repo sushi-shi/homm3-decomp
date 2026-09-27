@@ -39,6 +39,10 @@ static const int g_angelicAllianceSecondMap = 9;
 // Native retains the campaign base across the special artifact-vector path.
 // The shared reference restores those +2/+4 member accesses; Windows remains
 // 86.10% versus the prior86.11%, with exact siblings unchanged.
+// Retail's isHuman call belongs to an expanded isHumanTeam loop inside
+// isHumanAlly; replacing the wrapper with a direct call removes that loop.
+// The retained Mac isHumanTeam body matches all148bytes. Live VC6 budget
+// capture instead leaves39 after GetTeam46, below the scan's93 cost.
 VA(0x005f1610, 0x4FE) MAC_ADDRESS(0x1fd3cc, 0x44c)  // dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
