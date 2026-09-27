@@ -36,6 +36,9 @@
 //            combat, video subtitles, town outlines, spell book
 //            animation; 578 is shared with the combat options dialog)
 
+// Text subscripts keep the public operator[] -> getText -> vector[] chain.
+// Native Mac 0x1ab964 onward retains the vector indexer; DC names the
+// outer operator on the corresponding label and confirmation statements.
 // E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588
 VA(0x005b1790, 0x187C) MAC_ADDRESS(0x1aa2ec, 0x2534)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
@@ -193,44 +196,44 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         ANIMATE_SPELLBOOK_ID, "sysopchk.def", 0, 0, 0, 0, 0x10));
 
     m_widgets.push_back(new textWidget(
-        26, 19, 432, 28, g_generalText->getText(GENERAL_TEXT_SYSTEM_OPTIONS), "bigfont.fnt",
+        26, 19, 432, 28, (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS], "bigfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 56, 193, 20, g_generalText->getText(GENERAL_TEXT_HERO_SPEED), "medfont.fnt",
+        26, 56, 193, 20, (*g_generalText)[GENERAL_TEXT_HERO_SPEED], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 122, 193, 20, g_generalText->getText(GENERAL_TEXT_ENEMY_SPEED), "medfont.fnt",
+        26, 122, 193, 20, (*g_generalText)[GENERAL_TEXT_ENEMY_SPEED], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 188, 193, 20, g_generalText->getText(GENERAL_TEXT_MAP_SCROLL_SPEED), "medfont.fnt",
+        26, 188, 193, 20, (*g_generalText)[GENERAL_TEXT_MAP_SCROLL_SPEED], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 254, 193, 20, g_generalText->getText(GENERAL_TEXT_VIDEO_QUALITY), "medfont.fnt",
+        26, 254, 193, 20, (*g_generalText)[GENERAL_TEXT_VIDEO_QUALITY], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 339, 193, 20, g_generalText->getText(GENERAL_TEXT_MUSIC_VOLUME), "medfont.fnt",
+        26, 339, 193, 20, (*g_generalText)[GENERAL_TEXT_MUSIC_VOLUME], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
     m_widgets.push_back(new textWidget(
-        26, 406, 193, 20, g_generalText->getText(GENERAL_TEXT_EFFECTS_VOLUME), "medfont.fnt",
+        26, 406, 193, 20, (*g_generalText)[GENERAL_TEXT_EFFECTS_VOLUME], "medfont.fnt",
         font::HEADING, -1, 5, 0, 8));
 
     m_widgets.push_back(new textWidget(
-        282, 55, 182, 24, g_generalText->getText(GENERAL_TEXT_SHOW_MOVE_PATH), "medfont.fnt",
+        282, 55, 182, 24, (*g_generalText)[GENERAL_TEXT_SHOW_MOVE_PATH], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 87, 182, 24, g_generalText->getText(GENERAL_TEXT_SHOW_HERO_REMINDER), "medfont.fnt",
+        282, 87, 182, 24, (*g_generalText)[GENERAL_TEXT_SHOW_HERO_REMINDER], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 119, 182, 24, g_generalText->getText(GENERAL_TEXT_QUICK_COMBAT), "medfont.fnt",
+        282, 119, 182, 24, (*g_generalText)[GENERAL_TEXT_QUICK_COMBAT], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 151, 182, 24, g_generalText->getText(GENERAL_TEXT_VIDEO_SUBTITLES), "medfont.fnt",
+        282, 151, 182, 24, (*g_generalText)[GENERAL_TEXT_VIDEO_SUBTITLES], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 183, 182, 24, g_generalText->getText(GENERAL_TEXT_TOWN_BUILDING_OUTLINES), "medfont.fnt",
+        282, 183, 182, 24, (*g_generalText)[GENERAL_TEXT_TOWN_BUILDING_OUTLINES], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
     m_widgets.push_back(new textWidget(
-        282, 215, 182, 24, g_generalText->getText(GENERAL_TEXT_SPELL_BOOK_ANIMATION), "medfont.fnt",
+        282, 215, 182, 24, (*g_generalText)[GENERAL_TEXT_SPELL_BOOK_ANIMATION], "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
     // DC121 initializes the pointer iterator from begin, checks end at
@@ -471,7 +474,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     id == TMainMenu::QUIT_ID)
                 {
                     normalDialog(
-                        g_generalText->getText(GENERAL_TEXT_UNSAVED_GAME_COMMAND_CONFIRM),
+                        (*g_generalText)[GENERAL_TEXT_UNSAVED_GAME_COMMAND_CONFIRM],
                         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
                         exitFlag = 1;
@@ -569,7 +572,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         if (!g_config.m_musicVolume && !g_soundManager->m_ds)
                         {
                             normalDialog(
-                                g_generalText->getText(GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
+                                (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE],
                                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                             return MESSAGE_DISPATCH_CONSUME;
                         }
@@ -603,7 +606,7 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         if (!g_config.m_soundVolume && !g_soundManager->m_ds)
                         {
                             normalDialog(
-                                g_generalText->getText(GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
+                                (*g_generalText)[GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE],
                                 MESSAGE_DISPATCH_CONSUME, -1, -1, -1, 0, -1, 0, -1, 0,
                                 -1, 0);
                             return MESSAGE_DISPATCH_CONSUME;
