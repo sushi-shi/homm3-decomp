@@ -641,6 +641,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e140, 0x8C0) MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global, dc 0x444a8
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
+    // DC records both effect coordinates as procedure-scope ints.
+    int powX;
+    int powY;
     if (g_combatManager->m_battleOver != 0)
         return;
     if (static_cast<const combatManager*>(g_combatManager)
@@ -809,38 +812,36 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             // time read back unsigned for the >>8 below).
             x = g_spellEffectTraits[g_combatManager->m_powSpellEffect]
                     .m_flags;
-            long ex;
-            long ey;
             switch (x & 0xf) {
             case SPELL_EFFECT_PLACE_OVERHEAD:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = bottomY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = bottomY() - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = topY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = topY() - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_FLANK:
-                ex = frontX();
+                powX = frontX();
                 if (m_facing == 0)
-                    ex -= g_combatManager->m_powSprite->getWidth();
-                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                    powX -= g_combatManager->m_powSprite->getWidth();
+                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             default:
                 // Faithful artifact: the fallback aims BOTH coordinates
                 // at the recycled x slot (retail reads [ebp+8] twice -
                 // the second read is not y).
-                ex = x;
-                ey = x;
+                powX = x;
+                powY = x;
                 break;
             }
             g_combatManager->drawSpellEffect(
                 g_combatManager->m_powSprite,
-                g_combatManager->m_powFrameIndex, ex, ey, m_facing == 0,
+                g_combatManager->m_powFrameIndex, powX, powY, m_facing == 0,
                 (static_cast<unsigned long>(x) >> 8) & 1);
         }
     }
@@ -1299,7 +1300,7 @@ void army::rangeAttack(army* armyToAttack)
             spr->dispose();
         }
         g_combatManager->clearEffects();
-        long killed = 0;
+        int killed = 0;
         long damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
@@ -1319,7 +1320,7 @@ void army::rangeAttack(army* armyToAttack)
             // AHEAD of the `movsx ebx,al` that reuses the already-tested
             // armySide byte.  Worth +2.08 here and +2.32 in the Lich loop
             // below.
-            long slot = cell->m_armySlot;
+            const int slot = cell->m_armySlot;
             long side = cell->m_armySide;
             army* a = cell->getArmy();
             if (g_combatManager->m_effected[side][slot] != 0)
@@ -1364,8 +1365,8 @@ void army::rangeAttack(army* armyToAttack)
             spr->dispose();
         }
         g_combatManager->clearEffects();
-        long killed = 0;
-        long damage = 0;
+        int killed = 0;
+        int damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
         int dmg;
@@ -1379,8 +1380,8 @@ void army::rangeAttack(army* armyToAttack)
             hexcell* cell = &g_combatManager->m_cells[hex];
             if (!g_combatManager->validHex(hex) || !cell->hasArmy())
                 continue;
-            long slot = cell->m_armySlot;
-            long side = cell->m_armySide;
+            const int slot = cell->m_armySlot;
+            const int side = cell->m_armySide;
             army* a = cell->getArmy();
             if (i != COMBAT_DIRECTION_COUNT && !a->is(creatureAlive))
                 continue;
