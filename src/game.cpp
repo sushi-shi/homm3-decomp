@@ -3848,6 +3848,9 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 int heroId = g_game->m_setup.m_startingHero[setupPlayer];
                 if (heroId == -1)
                     heroId = m_players[setupPlayer].m_heroes[0];
+                // Mac exits before the retained getHero sentinel guard.
+                if (heroId == -1)
+                    break;
                 hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
                     type_artifact artifact(getRandomArtifactId(2));
