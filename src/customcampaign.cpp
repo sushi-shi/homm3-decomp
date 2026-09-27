@@ -1891,14 +1891,18 @@ void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(unsigned char* wanted)
 // A named proxy in the shared readPackedBits changes the nested code generation
 // in all three expansions (87.4222 -> 89.4456); the proxy-call boundary itself
 // remains unfinished.
+// Native Mac +0x28/+0x40 addresses distinct byte locals (SP+0x3d/0x3c).
+// The shared-buffer spelling aliases these fields; keep their independent
+// read lifetimes. A readValue-return wrapper retains two extra Mac calls.
 MAC_ADDRESS(0x093ea0, 0xa8)
 void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 {
-    unsigned char value;
-    infile->read(&value, sizeof(unsigned char));
-    m_video = value;
-    infile->read(&value, sizeof(unsigned char));
-    m_audio = value;
+    unsigned char video;
+    infile->read(&video, sizeof(video));
+    m_video = video;
+    unsigned char audio;
+    infile->read(&audio, sizeof(audio));
+    m_audio = audio;
     m_subtitles = readLengthPrefixedString(infile);
 }
 
