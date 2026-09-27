@@ -768,6 +768,9 @@ VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global, dc 0x16686
 // Naming the hide-message hero id and reusing or predeclaring the roster
 // counter leave the constructor register residual unresolved (nine VC6
 // combinations, four objects). Keep CMCHideHero's attested assignment order.
+// Removing the receiver alias (implicit/explicit this) or copy-initializing
+// the message adds no gain: four states, three reproduced objects, best
+// 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
 void town::swapHeroes()
 {
     town* currentTown = this;
