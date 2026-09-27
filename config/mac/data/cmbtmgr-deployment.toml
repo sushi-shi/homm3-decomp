@@ -1,0 +1,37 @@
+# Complete combat deployment tables shared by the two native builds.
+
+[[data]]
+retail_va = 0x0063d0a8
+source = "src/cmbtmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a40ac
+mac_size = 56
+sha256 = "fd09cf53a4308fd5431e61a970c7534500bfb5b804636cac64c809c6930f1527"
+evidence = "Native loadArmies 0:0x6ec6c loads this table at 0x6ec7c, through loader-relocated TOC 1+0x2100 -> 0+0x2a40ac. All 56 bytes of the ordinary const int initializer match the unique big-endian payload across the instantiated PEF sections. The four adjacent deployment tables have exact 56/56/196/196-byte spans in declaration order; native indexing distinguishes grouped/spread slot maps from the two side/hex maps. Source-owned initializer comparison, no declaration-only binding."
+
+[[data]]
+retail_va = 0x0063d0e0
+source = "src/cmbtmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a40e4
+mac_size = 56
+sha256 = "ba0a558e116df3ad7be78a1945c5657b49d44eb952b839ce439cdf5f8984f178"
+evidence = "Native loadArmies 0:0x6ec6c loads this table at 0x6ec78, through loader-relocated TOC 1+0x2104 -> 0+0x2a40e4. All 56 bytes of the ordinary const int initializer match the unique big-endian payload across the instantiated PEF sections. The four adjacent deployment tables have exact 56/56/196/196-byte spans in declaration order; native indexing distinguishes grouped/spread slot maps from the two side/hex maps. Source-owned initializer comparison, no declaration-only binding."
+
+[[data]]
+retail_va = 0x0063d118
+source = "src/cmbtmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a411c
+mac_size = 196
+sha256 = "12a0042eb2fbe39cf638a8cb4702cb8e9eab890600cfb62378dd89c8b9bf70b5"
+evidence = "Native loadArmies 0:0x6ec6c loads this table at 0x6ed40, through loader-relocated TOC 1+0x20f8 -> 0+0x2a411c. All 196 bytes of the ordinary const int initializer match the unique big-endian payload across the instantiated PEF sections. The four adjacent deployment tables have exact 56/56/196/196-byte spans in declaration order; native indexing distinguishes grouped/spread slot maps from the two side/hex maps. Source-owned initializer comparison, no declaration-only binding."
+
+[[data]]
+retail_va = 0x0063d1dc
+source = "src/cmbtmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a41e0
+mac_size = 196
+sha256 = "397ce799d8d6539bbf4fed1265592732feae58f1be1138ff73a369aaa1795de8"
+evidence = "Native loadArmies 0:0x6ec6c loads this table at 0x6ed28, through loader-relocated TOC 1+0x20fc -> 0+0x2a41e0. All 196 bytes of the ordinary const int initializer match the unique big-endian payload across the instantiated PEF sections. The four adjacent deployment tables have exact 56/56/196/196-byte spans in declaration order; native indexing distinguishes grouped/spread slot maps from the two side/hex maps. Source-owned initializer comparison, no declaration-only binding."
