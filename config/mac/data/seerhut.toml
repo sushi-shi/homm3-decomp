@@ -27,3 +27,27 @@ mac_offset = 0x54de58
 mac_size = 36
 sha256 = "6db65fd59fd356f6729140571b5bcd6bb3b83492a16e1bf0a3884442fc3c8a0e"
 evidence = "Ordinary text.cpp owns the nine-pointer g_directions array; text loading fills it at runtime. Native getVictoryConditionText loads TOC1+0xba8 -> zero-filled section1+0x54de58 at0x132a74, computes direction indices0..8, and passes indexed pointers to sprintf at0x1330c8 and0x133120. Loader address and full36-byte zero payload are pinned. This declaration-only external-consumer binding preserves the authored array and its text-loader initialization; the same direction lookups occur in the monster quest caption."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6cc
+mac_size = 6
+sha256 = "41cdb73097d572754b1c79a41f5ff01eeebabe3f32b02d467e1bf21a0fc31c23"
+evidence = "The ordinary skillRequirementText helper formats each positive skill as the stat name and required value with its authored %s %i literal. Native helper0x1652d8 loads TOC1+0x2d1c -> section1+0x4d6cc into r30, passes that pointer as formatString's format at0x165328, and calls the formatter at0x165334. The loader pointer and full six-byte NUL-terminated payload %s %i are pinned; no anonymous ordinal is admitted."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6d2
+mac_size = 13
+sha256 = "fde61d0f8ba05453cbb723c04fa7b94619474fbc7d3f90c4d572398b670715a4"
+evidence = "Monster quest caption at 0x16605c loads TOC1+0x2d18 to section1+0x4d6d2. Its underground suffix is passed through strlen at0x1663c0 and appended at0x1663cc/0x1663d4; the full thirteen-byte authored suffix including NUL is pinned."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x559d
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Monster quest caption expands the canonical getArmyName guard: invalid creature type selects the one-byte empty string at section1+0x559d via TOC-relative addi at0x16616c; the valid path reads pluralName at0x166184. This exact pool address is independently pinned, without an ordinal alias."
