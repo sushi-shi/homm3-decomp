@@ -51,3 +51,11 @@ mac_offset = 0x559d
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
 evidence = "Monster quest caption expands the canonical getArmyName guard: invalid creature type selects the one-byte empty string at section1+0x559d via TOC-relative addi at0x16616c; the valid path reads pluralName at0x166184. This exact pool address is independently pinned, without an ordinal alias."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6df
+mac_size = 6
+sha256 = "9e1e6b266dafae0b5861bc2cbd82f4eac16f907c76d447dc285317098dbe3181"
+evidence = "Native creature progress dialog 0x1676cc loads TOC1+0x2d14 -> section1+0x4d6df into r29, preserving the authored %d %s format. The full six-byte NUL-terminated payload is pinned; the same literal is used by its retained requirement formatter."
