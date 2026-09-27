@@ -1100,19 +1100,12 @@ void army::walk(int direction, unsigned char endWalk,
 // the update rect seeded from gCombatAreaLimits, clamped to
 // gCombatDrawLimits694f18, stepped dx/nframes at a
 // gCombatSpeedFactors-scaled 33ms beat. The /GX frame covers `saved`.
-// Residual (93.1695%): a two-slot rotation and its ripple - retail
-// homes startY at -0x30 and targetY at -0x34 (missile_frame -0x58)
-// where ours swaps the pair, and the GetMissileStartingPosition
-// argument schedule moves with it; a declaration reorder is
-// byte-inert. The EH-prologue push, the combatSpeed reloc addend and
-// the bolt-table displacements are the documented masked cosmetics
-// (PlayAnimation, EXACT, carries the identical combatSpeed read).
-// DC type/source audit (2026-08-21): its destX, total-frame count and
-// per-frame addX/addY locals are `int`, and ARROW_PERIOD is `const int`.
-// Restoring those types, plus the symmetric targetY type, is byte-flat at
-// 93.169495%. Conventional release VERIFY is also byte-flat both at entry
-// (`armyToAttack != 0`) and immediately before the rotated argument set
-// (`missileIcon != 0`). The slot swap is therefore not a missing invariant.
+// DC lines 1258/1259 read sprite width/height before the frame count at 1262.
+// Both Windows and Mac use (distance + 20) / 40 (signed multiply-high
+// 0x66666667 followed by a shift of 4), not the earlier /20 reconstruction.
+// DC line 1322 calls the Bitmap16Bit overload of CSprite::Draw; its ordinary
+// wrapper reproduces Windows' argument expansion. These three corrections
+// reach Windows 100% while retaining all bitmap and rectangle helpers.
 VA(0x0043f2c0, 0x63B) MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket, dc 0x453c8
 void army::animateMissile(army* armyToAttack)
 {
@@ -1183,7 +1176,10 @@ void army::animateMissile(army* armyToAttack)
         return;
     }
 
-    int nframes = (arrowtraveldist + 20) / 20;
+    int width = m_missileIcon->getWidth();
+    int height = m_missileIcon->getHeight();
+
+    int nframes = (arrowtraveldist + 20) / 40;
     int stepX;
     int stepY;
     if (nframes > 0) {
@@ -1193,8 +1189,6 @@ void army::animateMissile(army* armyToAttack)
         stepX = deltaX;
         stepY = deltaY;
     }
-    int width = m_missileIcon->getWidth();
-    int height = m_missileIcon->getHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -1223,13 +1217,9 @@ void army::animateMissile(army* armyToAttack)
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch());
-            bool flipped = targetX < startX;
             m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
-                              g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                              g_windowManager->m_screenBitmap->getWidth(),
-                              g_windowManager->m_screenBitmap->getHeight(),
-                              g_windowManager->m_screenBitmap->getPitch(),
-                              flipped, 1);
+                              g_windowManager->m_screenBitmap, x, y,
+                              targetX < startX, 1);
             // DC army.cpp:1326-1327 constructs this rectangle, then calls
             // SLimitData::Include and Clip; VC6 expands both methods.
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
