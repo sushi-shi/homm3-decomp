@@ -42,9 +42,6 @@ public:
     virtual int windowHandler(message& msg);
 
     unsigned char m_prefsChanged;   // +0x60
-    // The preceding byte field and following four-byte field establish
-    // this alignment gap; the reference layout retains the same boundary.
-    char m_paddingBeforeQuickCombatSave[3];
 
     void updateSystemOptions(unsigned char firstUpdate);
 
