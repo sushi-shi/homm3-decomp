@@ -3773,7 +3773,10 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             currentHero, 0x80, 400, moveCost);
     case OBELISK:
         return valueOfObelisk(cell, currentHero->m_owner);
+    // Windows maps object58 and60 to one arm at0x529134. Mac's
+    // data1+0x4b7dc table also shares their aiValueOfObservatory call.
     case OBSERVATORY:
+    case PILLAR_OF_FIRE:
         return
             aiValueOfObservatory(point, currentHero->m_owner, 20);
     case POWER_SCHOOL:
