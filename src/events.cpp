@@ -3254,7 +3254,7 @@ VA(0x004a6440, 0xD8) MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
 {
-    bool takeGold;
+    unsigned char takeGold;
     int experience = static_cast<int>(currentHero->getExperienceBonusFactor()
                                       * (amount - 500));
 
@@ -5459,11 +5459,13 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     {
         int storage;
         storage = monType;
+        // Complete calls random here; the older DC and Mac builds call
+        // sRandom at the corresponding decision.
         if (g_game->isBaseCreature(TCreatureType(storage))
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
-            && sRandom(1, 100) <= 50) {
+            && random(1, 100) <= 50) {
             TCreatureType upgraded = g_game->upgradedCreatureType(
                 H3_ENUM_DECODE(TCreatureType, monType));
             currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;

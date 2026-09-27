@@ -1646,7 +1646,7 @@ events	?_Sort_0@std@@YIXPAH0Uspell_level_order@@0@Z	100.0000	100.0000	100.0000	0
 events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0350	-
 events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	100.0000	100.0000	100.0000	0xb0400	-
 events	?clear@?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x14c120	-
-events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	tokens1:e7ade5845dac
+events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580	tokens1:9c95b00710b2
 events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.4530	85.4530	91.5889	0xabdc0	tokens1:eb98533fad85
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	88.6133	88.6133	99.9911	0xa84f0	tokens1:1baf4185da03
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
@@ -1712,7 +1712,7 @@ events	?doEventWateringHole@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.000
 events	?doEventWindmill@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	tokens1:731f15049868
 events	?doEventWitchHut@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa8080	tokens1:99f619850163
 events	?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0xacd70	tokens1:26e8032f9d1a
-events	?doTreasureDialog@advManager@@AAEXPAVhero@@H_N@Z	97.6191	97.6191	97.6191	0xa6440	tokens1:273a15247ffc
+events	?doTreasureDialog@advManager@@AAEXPAVhero@@H_N@Z	100.0000	100.0000	100.0000	0xa6440	tokens1:ba9c1ee8fa08
 events	?doWanderingMonsterResult@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa7740	tokens1:e32686bd83b1
 events	?doWhirlpool@advManager@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0xacaa0	tokens1:8ab552051fdc
 events	?eraseAndFizzle@advManager@@QAEXPAVNewmapCell@@Utype_point@@H@Z	100.0000	100.0000	100.0000	0x9e170	tokens1:04022634f0f6
