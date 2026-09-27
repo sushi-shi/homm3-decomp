@@ -2899,8 +2899,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     // DC records flipped as a lowered byte; retail forwards it directly to
     // CSprite's public _N parameter. An unsigned char adds test/setne.
     bool flipped = deltaX < 0;
-    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
-                       deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
+    int distance = static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX)));
+    const int nframes = (distance + 20) / 40;
     int addX;
     int addY;
     if (nframes > 0) {
