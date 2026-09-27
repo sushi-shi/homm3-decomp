@@ -1317,6 +1317,9 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // Mac 0x84798..0x847c0 independently keeps the cell receiver in r28 and
 // index in r27. A matching pointer-local model also scores 92.4978% on
 // Windows; neither local spelling restores its EBX receiver allocation.
+// Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
+// non-null hero returns. These four guard controls are VC6 byte-flat;
+// retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
 
 VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
@@ -1325,21 +1328,21 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_NONE;
 
     if (g_remoteOn && m_thisNetHasControl == 0)
-        return !m_cells[newIndex].hasArmy() ? COMBAT_COMMAND_HOVER
-                                            : COMBAT_COMMAND_VIEW_ARMY;
+        return m_cells[newIndex].hasArmy() ? COMBAT_COMMAND_VIEW_ARMY
+                                           : COMBAT_COMMAND_HOVER;
 
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
-        if (m_heroes[1] == 0)
-            return COMBAT_COMMAND_NONE;
-        return m_currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
-                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        if (m_heroes[1])
+            return m_currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
+                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        return COMBAT_COMMAND_NONE;
     }
 
     if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
-        if (m_heroes[0] == 0)
-            return COMBAT_COMMAND_NONE;
-        return m_currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
-                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        if (m_heroes[0])
+            return m_currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
+                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        return COMBAT_COMMAND_NONE;
     }
 
     army* currentArmy = getCurrentArmy();
