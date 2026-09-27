@@ -267,7 +267,7 @@ public:
     long getFaerieDragonSpellValue(long hex, long power, SpellID spell);
 
 protected:
-    void considerChainLightning(type_spell_choice* choice) const;
+    void considerChainLightning(type_spell_choice& choice) const;
     long getAgeValue(const army* enemy, type_enchant_data caster) const;
     long getAirProtectionValue(const army* ourArmy,
                                   type_enchant_data caster) const;
@@ -355,18 +355,18 @@ public:
 
 protected:
     void considerAreaEffect(type_spell_choice& choice) const;
-    void considerEarthquake(type_spell_choice* choice) const;
-    void considerEnchantment(type_spell_choice* choice, long group) const;
-    void considerResurrect(type_spell_choice* choice) const;
+    void considerEarthquake(type_spell_choice& choice) const;
+    void considerEnchantment(type_spell_choice& choice, long group) const;
+    void considerResurrect(type_spell_choice& choice) const;
     void considerSacrifice(type_spell_choice& choice,
                             const army* candidateHealedArmy, long candidateTargetHex) const;
     void considerSacrifice(type_spell_choice& choice) const;
-    void considerSingleEnchantment(type_spell_choice* choice, long group) const;
-    void considerSpell(type_spell_choice* choice) const;
+    void considerSingleEnchantment(type_spell_choice& choice, long group) const;
+    void considerSpell(type_spell_choice& choice) const;
     void considerSummon(type_spell_choice& choice) const;
     // DC 0x3de90: const member with a writable type_spell_choice reference.
     void considerMassDamage(type_spell_choice& choice) const;
-    void considerTeleport(type_spell_choice* choice) const;
+    void considerTeleport(type_spell_choice& choice) const;
     void findEnemyAttacks();
     TEnchantValue getEnchantmentFunction(SpellID spell) const;
     // These pricers expand into consider_spell (0x43bb20), and the carve
