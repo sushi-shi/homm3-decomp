@@ -8349,7 +8349,9 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates.
 // Direct field-test controls omit those Boolean results; the class-defined
 // shared predicate reproduces them. Windows currently falls 93.3047% to
-// 75.6133%; keep both helper calls while recovering the surrounding lowering.
+// 75.6328%; keep both helper calls while recovering the surrounding lowering.
+// Native 0x24aa6c..0x24aacc copies the full position and local point before
+// translating them; retain the shared position-plus-point operation.
 VA(0x005469B0, 0x2B4) MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)
@@ -8371,8 +8373,7 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TPoint point;
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
-            TRmgMapItem* destination = m_map.getMapItem(
-                TRmgMapPosition(point.m_x + position.m_x, point.m_y + position.m_y, position.m_z));
+            TRmgMapItem* destination = m_map.getMapItem(position + point);
             unsigned char border = destination->hasBorderObject();
             unsigned char gate = destination->hasSubterraneanGate();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
@@ -8446,6 +8447,8 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // Restore the same shared calls and surface-map queries here; Windows
 // currently falls 96.8953% to 81.0773%. Byte/bool result types and seven
 // ordinary predicate return forms do not recover the caller lowering.
+// Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
+// preserve that canonical addition as well (byte-flat with these predicates).
 VA(0x00546C70, 0x452) MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -8465,8 +8468,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     }
     if (group->m_hasGuard) {
         TPoint localGuard = group->m_guardPosition;
-        workingPosition = TRmgMapPosition(localGuard.m_x + position.m_x,
-            localGuard.m_y + position.m_y, position.m_z);
+        workingPosition = position + localGuard;
         if (workingPosition.m_x < 1 || workingPosition.m_x + 1 >= m_map.m_mapWidth
             || workingPosition.m_y < 1 || workingPosition.m_y + 1 >= m_map.m_mapHeight)
             return 0;
@@ -8551,6 +8553,9 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
 // not improve this peak. Every batch reproduced ten finalists; this body
 // preserves all other 339 RMG scores. Native controls cover ordered lookups,
 // live post-fit score reads, cached bounds/zone identity and random tie order.
+// Native 0x24b514..0x24b590 copies a 3D position and the center point, then
+// queries the translated position. Calling that canonical addition directly
+// improves Windows 87.0168% to 90.2731%; a named result reaches 90.1891%.
 VA(0x005470D0, 0x286) MAC_ADDRESS(0x24b3d8, 0x310) // anchor-callee 0x5475b2/0x5476aa; thiscall, ret 0xc
 unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* group,
     TRmgZone* zone, int spacing)
@@ -8570,9 +8575,7 @@ unsigned char type_random_map_generator::placeTreasureGroup(TRmgTreasureGroup* g
     center.m_y = (groupBounds.m_minimumY + groupBounds.m_maximumY) / 2;
     for (; position.m_y < bounds.m_maximumY; ++position.m_y) {
         for (position.m_x = bounds.m_minimumX; position.m_x < bounds.m_maximumX; ++position.m_x) {
-            TPoint queryPoint = center;
-            queryPoint += TRmgVector(position.m_x, position.m_y);
-            TRmgMapItem* item = m_map.getMapItem(queryPoint.m_x, queryPoint.m_y, position.m_z);
+            TRmgMapItem* item = m_map.getMapItem(position + center);
             if (item->m_zoneState.m_zone == zoneIndex && item->m_zoneState.m_score >= spacing
                 && canPlaceTreasureGroup(group, position, zone)) {
                 if (item->m_zoneState.m_score > spacing) {
