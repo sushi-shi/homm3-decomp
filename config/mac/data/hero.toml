@@ -31,12 +31,13 @@ evidence = "Mac initialize at 0xf456c reads TOC 1+0x5e0 -> pointer cell 1+0x49ed
 [[data]]
 retail_va = 0x0069774c
 source = "src/game.cpp"
-declaration_only = true
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x5270a4
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
-evidence = "Mac campaign predicate at 0xf66a0 reads TOC 1+0x614 -> zero-filled flag at 1+0x5270a4. Same flag is tested in hero initialization at 0xf4960. Source-owned bool g_inCampaign is address-bound only."
+evidence = "Mac campaign predicate at 0xf66a0 reads TOC 1+0x614 -> zero-filled flag at 1+0x5270a4. Same flag is tested in hero initialization at 0xf4960. Source-owned bool g_inCampaign has reviewed zero storage in game.cpp; other translation units bind its external address."
 
 [[data]]
 retail_va = 0x00679ca0

@@ -232,6 +232,46 @@ evidence="same-TU direct zero byte"
             with self.assertRaises(ObjectError):
                 bindings(root, container(bytes(changed), (0x4600, 0x4200)), code, (hunk,))
 
+    def test_external_udata_checks_owner_storage_and_consumer_reference(self):
+        data = bytearray(128)
+        struct.pack_into(">II", data, 0, 0, 0x40)
+        pef = container(bytes(data), (0x4600, 0x4200))
+        code = CodeHunk(".reader", bytes.fromhex("806200004e800020"),
+                        ((0, "HUNK_XREF_16BIT_IL", "flag"),))
+        cell = DataHunk("flag", "TC", bytes(4),
+                        ((0, "HUNK_XREF_32BIT", "flag"),))
+        storage, = parse_data_hunks(
+            'Hunk: Kind=HUNK_GLOBAL_UDATA Align=1 Class=RW Name="flag"(1) Size=1\n')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text(
+                '[[unit]]\nunit="owner"\nsource="source.cpp"\n')
+            (root / "source.cpp").write_text("DATA(0x00400100) unsigned char flag;\n")
+            (root / "config/mac/data.toml").write_text(f'''[[data]]
+retail_va=0x00400100
+source="source.cpp"
+same_tu_definition=true
+same_tu_external=true
+mac_section=1
+mac_offset=0x50
+mac_size=1
+sha256="{sha256(bytes(1)).hexdigest()}"
+evidence="externally linked zero storage with reviewed owner"
+''')
+            owner = bindings(root, pef, code, (cell, storage), unit="owner")
+            consumer = bindings(root, pef, code, (cell,), unit="consumer")
+            self.assertEqual(owner["flag"].target, consumer["flag"].target)
+            for unit, hunks in (("owner", (cell,)),
+                                ("consumer", (cell, storage)),
+                                ("owner", (cell, DataHunk("flag", "RW", b"\0", ())))):
+                with self.subTest(unit=unit, hunks=hunks), self.assertRaises(ObjectError):
+                    bindings(root, pef, code, hunks, unit=unit)
+            direct = CodeHunk(code.name, code.data,
+                              ((0, "HUNK_XREF_16BIT", "flag"),))
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, direct, (cell,), unit="consumer")
+
     def test_address_only_source_owners_and_worker_manifest_conflicts(self):
         from homm3.mac.source import SourceError, load_data
         with tempfile.TemporaryDirectory() as directory:
@@ -392,7 +432,8 @@ evidence = "fixture"
         data[0x70] = 0x0a
         code_bytes = bytearray(256)
         struct.pack_into(">I", code_bytes, 0x20, 0x80620020)  # lwz r3,0x20(r2)
-        relocations = (0x4600, 0x4200, 0x8057, 0x4200)
+        # The first relocation leaves the cursor at 12; skip 84 bytes to 0x60.
+        relocations = (0x4600, 0x4200, 0x8053, 0x4200)
         pef = container(bytes(data), relocations, code=bytes(code_bytes))
         code = CodeHunk(".clear", bytes.fromhex("80620000"),
                         ((0, "HUNK_XREF_16BIT_IL", "@22"),))

@@ -282,10 +282,11 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
         if any(value.data is None for value in values):
             raise ObjectError(f"TOC symbol {name!r} has a truncated MWLink data listing; payload unavailable")
         external = (name in named and named[name][2]) or name in external_vtables
-        if (name in named and not named[name][2] and not named[name][3]
+        if (name in named and not named[name][2]
+                and (not named[name][3] or named[name][5])
                 and named[name][4] is not None and unit != named[name][4]
                 and not values and indirect):
-            # A reviewed initializer can live in its original owning TU while
+            # Reviewed externally linked storage can live in its owning TU while
             # another candidate TU refers to it through the indirect TOC.
             # If this object emits the datum, its payload is checked below.
             external = True
@@ -307,7 +308,7 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
             raise ObjectError(f"TOC symbol {name!r} needs one nonrelocatable emitted data payload")
         else:
             value = values[0]
-        if name in named and named[name][5]:
+        if name in named and named[name][5] and not external:
             # CodeWarrior gives source-owned uninitialized arrays and globals
             # with external linkage RW storage and an indirect TOC load.
             # Require exact zero payload and the original owning TU.
@@ -316,7 +317,7 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
                     or value.storage_class != "RW" or not indirect
                     or len(value.data) != len(expected) or value.data != expected):
                 raise ObjectError(f"same-TU indirect UDATA {name!r} lacks its reviewed zero storage")
-        elif name in named and named[name][3]:
+        elif name in named and named[name][3] and not external:
             # The authored source owns uninitialized same-TU storage. A
             # CodeWarrior UDATA hunk and a direct TOC reference are required;
             # accepting IDATA here would invent an initializer.
