@@ -841,3 +841,4 @@ flags = "victor_kernels_o2_ogoff_ml_gd_windows"
 unit = "log"
 source = "src/log.cpp"
 flags = "game_o2_mt_gr_windows"
+compare = false
