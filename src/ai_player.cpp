@@ -618,6 +618,9 @@ void type_AI_player::endTurn()
 // reaches 87.31% and fixes the entry register roles previously described as
 // an unreachable compiler-state wall.
 
+// Both retail bodies load the sender quantity before the recipient quantity
+// in the initial difference. Keep the ordinary resource expression instead
+// of preloading a recipient local; VC6 improves 86.52 -> 88.02.
 VA(0x00429110, 0x6AC) MAC_ADDRESS(0x02bf4c, 0x6e0)  // linkorder, dc 0x2ea20
 void type_AI_player::makeGift(long playerId)
 {
@@ -629,10 +632,10 @@ void type_AI_player::makeGift(long playerId)
         surplus[resource] = m_resourceSupply[resource]
             - m_resourceDemand[resource];
         if (surplus[resource] > 0) {
-            long recipientAmount = g_game->m_players[playerId].m_resources[resource];
             surplus[resource] = min(
                 surplus[resource],
-                (player.m_resources[resource] - recipientAmount) / 2L);
+                (player.m_resources[resource]
+                    - g_game->m_players[playerId].m_resources[resource]) / 2L);
             if (resource == GOLD)
                 surplus[resource] = min(
                     surplus[resource], player.m_resources[resource] - 10000L);
@@ -647,7 +650,7 @@ void type_AI_player::makeGift(long playerId)
             } else if (surplus[resource] < 5) {
                 surplus[resource] = 0;
             }
-            if (surplus[resource] < 5 * recipientAmount)
+            if (surplus[resource] < 5 * g_game->m_players[playerId].m_resources[resource])
                 surplus[resource] = 0;
             surplus[resource] = max(surplus[resource], 0L);
         }
