@@ -3417,7 +3417,9 @@ long markDestinations(hero* currentHero, long maxDistance,
 // _ftol without storing a float result. Mac0x32dd4..0x32e20 likewise converts
 // each branch directly back into the integer accumulator before adding20.
 // Removing the extra float result assignment restores that arithmetic and
-// raises Windows84.96 ->86.32; all seven canonical calls stay intact.
+// raises Windows 84.96 -> 86.32. DC's monster and point locals both belong
+// to function scope; restoring monster's lifetime reaches 86.50 with all
+// seven canonical calls intact and no remaining control-flow difference.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3430,6 +3432,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
+    type_point monsterPos;
     type_point point = destination.m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
@@ -3452,7 +3455,6 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
         value += currentPathCell->m_dangerValue;
 
     if (!g_adventureObjectTraits[type].m_blocksLanding) {
-        type_point monsterPos;
         if (g_advManager->findAdjacentMonster(destination.m_point,
                                               &monsterPos,
                                               destination.m_point)) {
