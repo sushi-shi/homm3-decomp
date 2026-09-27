@@ -1076,11 +1076,7 @@ static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
             ARTIFACT_SPELLBOOK)) {
         for (unsigned int spell = 0;
              spell < blackBox->m_spells.size(); ++spell) {
-            SpellID spellId;
-            {
-                int ordinal = blackBox->m_spells[spell];
-                memcpy(&spellId, &ordinal, sizeof spellId);
-            }
+            SpellID spellId = blackBox->m_spells[spell];
             value += valueOfLearning(currentHero, spellId);
         }
     }
@@ -1485,11 +1481,7 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
         * g_currentPlayer->m_ai.m_resourceValue[GOLD]);
 
     for (int i = WOOD; i < GOLD; i++) {
-        EGameResource resource;
-        {
-            int ordinal = i;
-            memcpy(&resource, &ordinal, sizeof resource);
-        }
+        EGameResource resource = H3_ENUM_DECODE(EGameResource, i);
         long amount = price * 2 / getMarketValue(resource);
         if (amount <= g_currentPlayer->m_resources[i]) {
             long value = static_cast<long>(static_cast<double>(amount)
@@ -2372,13 +2364,8 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery maste
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
         int creature = m_ourHero->m_army.m_armies[i];
         if (creature != CREATURE_NONE) {
-            double chance;
-            {
-                TCreatureType creatureType;
-                int ordinal = creature;
-                memcpy(&creatureType, &ordinal, sizeof creatureType);
-                chance = getSpellWorkChance(spell, creatureType, m_ourHero, 0);
-            }
+            TCreatureType creatureType = H3_ENUM_DECODE(TCreatureType, creature);
+            double chance = getSpellWorkChance(spell, creatureType, m_ourHero, 0);
             total = static_cast<long>(
                 static_cast<double>(g_creatureTypeTraits[creature].m_aiValue)
                 * static_cast<double>(m_ourHero->m_army.m_numTroops[i])
@@ -3134,11 +3121,7 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
 VA(0x0052a700, 0x10) MAC_ADDRESS(0x144718, 0x2c)  // dc 0x1121b8
 int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 {
-    TCreatureType creature;
-    {
-        int ordinal = cell->m_objectIndex;
-        memcpy(&creature, &ordinal, sizeof creature);
-    }
+    TCreatureType creature = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
     return valueOfRecruiting(currentHero, creature,
         static_cast<short>(cell->m_extraInfo));
 }

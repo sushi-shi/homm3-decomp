@@ -228,7 +228,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
 {
     initClean();
-    memcpy(&m_creatureType, &type, sizeof(m_creatureType));
+    m_creatureType = type;
     m_numTroops = number;
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;

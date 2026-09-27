@@ -373,9 +373,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
         catagory = const_slow;
     if (m_wallSpeedLimit > catagory && !(attributes & g_ctaFlying))
         catagory = m_wallSpeedLimit;
-    type_speed_catagory result;
-    memcpy(&result, &catagory, sizeof result);
-    return result;
+    return H3_ENUM_DECODE(type_speed_catagory, catagory);
 }
 
 VA(0x00424880, 0xDB) MAC_ADDRESS(0x026c54, 0x130)  // dc 0x2a588
