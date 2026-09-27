@@ -3984,12 +3984,9 @@ int type_garrison_base_window::windowHandler(message& msg)
     return 1;
 }
 
-// One text widget over the base window, titled either with the generic
-// join prompt (the flags arm) or with the offered stack's own creature
-// name - singular when exactly one is offered, plural otherwise, and the
-// empty string when the slot scan falls off the end. The scan is
-// retail's verbatim, including the fact that it can leave i at 7 and
-// read one past the type array.
+// Mac 0x1ccc20 uses a bounded slot scan; 0x1ccc58 expands getArmyName
+// before formatString. DC line 5149 also names GetArmyName. Preserve the
+// retail scan's i == 7 fallthrough when no occupied slot is found.
 
 // The third parameter is a BYTE: retail tests it with `test al,al` off
 // [ebp+0x10], which an int parameter does not produce, and both entry
@@ -4007,21 +4004,15 @@ type_monster_join_window::type_monster_join_window(hero* inHero,
     if (flags) {
         title = g_generalText->getText(GENERAL_TEXT_LEAVE_GUARDS);
     } else {
-        int i = 0;
-        while (monsters->m_armies[i] == CREATURE_NONE) {
-            if (++i >= 7)
+        int i;
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            if (monsters->m_armies[i] != CREATURE_NONE)
                 break;
         }
 
-        const char* name;
-        int type = monsters->m_armies[i];
-        if (type < 0 || type > 150)
-            name = "";
-        else if (monsters->m_numTroops[i] == 1)
-            name = g_creatureTypeTraits[type].m_name;
-        else
-            name = g_creatureTypeTraits[type].m_pluralName;
-        title = formatString(g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT), name);
+        title = formatString(
+            g_generalText->getText(GENERAL_TEXT_TOWN_GARRISON_MAKE_ROOM_FORMAT),
+            getArmyName(monsters->m_armies[i], monsters->m_numTroops[i]));
     }
 
     widget* newWidget = new textWidget(0, 20, m_width, 30, title.c_str(),

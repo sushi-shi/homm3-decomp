@@ -4439,7 +4439,7 @@ townmgr	??0TTownScreenWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1c34d0	tokens1
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310	tokens1:62210385965e
 townmgr	??0townObject@@QAE@HHPBD@Z	100.0000	100.0000	100.0000	0x1c2ea0	tokens1:eddd00493913
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HAAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1ce830	tokens1:2e718fe4759e
-townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40	tokens1:31dea5f98224
+townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	100.0000	100.0000	100.0000	0x1d0b40	tokens1:0048b3a46992
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30	tokens1:63f1cbf80e20
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70	tokens1:02813a922992
 townmgr	??1TCastleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1dcb80	tokens1:500ddb2f1f86
