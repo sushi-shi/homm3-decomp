@@ -409,6 +409,8 @@ process_action:
 // either guard alone falls to 87.28/87.23%. Mac moves 40.9468 -> 38.2601%,
 // so the combined declaration/flag-lifetime model remains open. All CanFit,
 // IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
+// Nesting firstHex assignment in ValidHex is Windows-flat and moves Mac
+// 38.2601 -> 38.0912%; keep the separate assignment and canonical check.
 VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
@@ -595,6 +597,8 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Six const/order/implicit/one-component ratio controls are Windows-flat.
 // Computing both components before the zero guard drops Windows to 86.91%
 // and Mac to 87.70%; the native conversion lifetime stays inside that arm.
+// Double or mixed-precision ratio components lower VC6 to 95.31..95.65%;
+// keep the float components that already reproduce the exact Mac body.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
