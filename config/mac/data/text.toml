@@ -19,3 +19,13 @@ mac_offset = 0x550054
 mac_size = 440
 sha256 = "360d579dbd14759b41afdf7fb5e80c0101e15150ae401d59f92a1e32d129f7cb"
 evidence = "text.cpp owns Windows g_specialBuildingNames[10][11] at 0x6a53d4. Native overview doRollover loads TOC 1+0x984 -> zero-filled table 1+0x550054 into r9 at 0x13a024, then uses first faction entries zero and three at 0x13ab24 and 0x13ab78 for the same special-building rollover cases. This binds external storage only; the loader initializes the pointer table later."
+
+[[data]]
+retail_va = 0x006a74d0
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x550324
+mac_size = 32
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "text.cpp owns Windows g_mineDescriptions[8] at 0x6a74d0, populated by initializeMineNames from the mine text resource. Native overview doRollover loads TOC 1+0x6d0 -> initially zero pointer table 1+0x550324 into r8 at 0x13a028 and loads entry seven at 0x13ab68 for the same mine-description rollover arm. External storage binding only."
