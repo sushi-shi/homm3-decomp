@@ -7183,6 +7183,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
         drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
 }
 
+// Mac 0x182e84..0x182e98 expands isHuman before excluding our own DPID.
 VA(0x0058B120, 0x3E8) MAC_ADDRESS(0x182d78, 0x218)  // dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
@@ -7199,7 +7200,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     setCurrentMap(0, 0);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0
+        if (m_players.m_humanPlayers[i].isHuman()
                 && m_players.m_humanPlayers[i].m_dpid
                        != g_thisNetPlayerInfo.m_dpid)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
@@ -7321,6 +7322,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
 // The host's authoritative roster lands: clear every seat, merge each
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
+// Mac 0x1833cc..0x1833e0 retains isHuman's byte-result boundary here.
 VA(0x0058BA40, 0x175) MAC_ADDRESS(0x183374, 0x1c8)  // dc 0x1421a8
 void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
@@ -7331,7 +7333,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* rec = &msg->m_netPlayer[i];
-        if (rec->m_dpid != 0) {
+        if (rec->isHuman()) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayer(rec->m_dpid);
             if (!p) {
                 setNewPlayerSlot(rec);
@@ -7639,6 +7641,7 @@ bool TSingleSelectionWindow::isMultiPlayer()
     return 0;
 }
 
+// Both name-column loops expand isHuman (Mac 0x184100/0x18417c).
 VA(0x0058C960, 0x11C) MAC_ADDRESS(0x1840cc, 0x128)  // dc 0x142cc0
 void TSingleSelectionWindow::updateNameLists()
 {
@@ -7648,7 +7651,7 @@ void TSingleSelectionWindow::updateNameLists()
 
     names[0] = 0;
     for (i = 0; i < 4; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+        if (m_players.m_humanPlayers[i].isHuman()) {
             sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
@@ -7656,7 +7659,7 @@ void TSingleSelectionWindow::updateNameLists()
     m_nameList1->setText(names);
     names[0] = 0;
     for (i = 4; i < 8; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+        if (m_players.m_humanPlayers[i].isHuman()) {
             sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
