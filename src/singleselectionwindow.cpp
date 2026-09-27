@@ -6818,7 +6818,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
                 msg->m_version);
-            const char* errText = g_generalText->getText(GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT);
+            const char* errText = (*g_generalText)[GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT];
             CBadVersionMsg reply(m_gameVersion, errText);
             transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
@@ -6841,7 +6841,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         sendPlayerPositions(0);
     }
     makeHeroFilter();
-    g_chatMan.playerEnterMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT),
+    g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -7827,8 +7827,11 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
+// This ordinary TU helper auto-expands under VC6 /Ob2. Removing the
+// unproven inline keyword leaves Windows unchanged and restores the
+// retained Mac call at setNewPlayerSlot 0:0x1863b8.
 MAC_ADDRESS(0x184ae4, 0xb0)
-inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
+TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     if (!player)
@@ -8439,9 +8442,8 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     if (level == m_commonGameVersion)
         return;
 
-    unsigned char rebuild = m_randomMapSelected;
     m_commonGameVersion = level;
-    if (rebuild)
+    if (m_randomMapSelected)
         rebuildFilteredPlayerSetup();
     if (!m_inAdvancedOptions)
         return;
@@ -8474,7 +8476,8 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                     player = m_players.getCompPlayerInPos(pos);
                 if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
                     player->m_townIndex = eTownNeutral;
-                    updateTown(pos, eTownNeutral, 0);
+                    // Mac 0:0x1863d8 passes the stored town, not a literal.
+                    updateTown(pos, static_cast<TTownType>(player->m_townIndex), 0);
                 }
             }
         }

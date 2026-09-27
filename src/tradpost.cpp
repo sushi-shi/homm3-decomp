@@ -2505,9 +2505,9 @@ void TSellCreatureWindow::update(bool update)
             leftQty = 1;
             rightQty = g_giveQuantity;
         }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_CREATURE_FOR_RESOURCE_FORMAT), leftQty,
-                leftQty > 1 ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                             : g_generalText->getText(GENERAL_TEXT_UNIT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_CREATURE_FOR_RESOURCE_FORMAT], leftQty,
+                leftQty > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                             : (*g_generalText)[GENERAL_TEXT_UNIT],
                 g_resourceNames[g_leftResource], rightQty,
                 rightQty > 1
                     ? g_creatureTypeTraits[
@@ -2534,10 +2534,10 @@ void TSellCreatureWindow::update(bool update)
     broadcastMessage(msg);
 
     msg.m_codeY = 14;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_CREATURES_FORMAT), g_marketHero->m_name);
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_CREATURES_FORMAT], g_marketHero->m_name);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = 3;
     msg.m_codeY = 15;
     msg.m_extraText = g_text;
