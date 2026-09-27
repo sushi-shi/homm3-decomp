@@ -3428,6 +3428,8 @@ void TMageGuildWindow::setRolloverText(int codeY)
 // retail computes it with the `neg / sbb / and 3 / inc` chain off the
 // masked qualifier at both sites.
 
+// Residual 97.3926%: delayed EBX save/restore and one SIB operand order.
+// A common return and direct message-id reads are flat in four controls.
 VA(0x005ce370, 0x1F0) MAC_ADDRESS(0x1c90ec, 0x2f0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
 int TMageGuildWindow::windowHandler(message& msg)
 {
@@ -6878,6 +6880,9 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // why every group of eight ends in the same if/else and why the else
 // arm's x is the midpoint of the pair it replaces.
 
+// Residual 99.7962%: one nested vector::insert remains at the single-value
+// overload where retail expands it into the counted overload. A while-form
+// final widget traversal does not recover that boundary. Keep push_back.
 VA(0x005d86f0, 0x445A) MAC_ADDRESS(0x1d6668, 0xa4e0)  // dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)

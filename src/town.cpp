@@ -801,6 +801,9 @@ void town::swapHeroes()
     currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
+// Residual 99.9356%: one fixed-spell store swaps the level/slot sum
+// registers. Reusing totalWeight for the draw is flat; sharing the spell
+// counter across the initial mask and selection loops lowers this to 98.0947.
 VA(0x005be600, 0x32A) MAC_ADDRESS(0x1b3abc, 0x298)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {
