@@ -1318,17 +1318,6 @@ void SCampaign::doPreLoadCustomization()
     }
 }
 
-// Complete-only helper hypothesis, name provisional. At 0x486590 the
-// retained-spellbook arm zeroes hero's two 70-byte tables before AddSpell
-// rebuilds them from the source hero. The DC method roster predates this
-// campaign path, so it supplies neither this name nor an inline keyword.
-// Keep the ordinary body visible before its caller for VC6 auto-inlining.
-void hero::clearSpells()
-{
-    memset(m_inSpellbook, 0, sizeof(m_inSpellbook));
-    memset(m_availableSpells, 0, sizeof(m_availableSpells));
-}
-
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
 // artifact source boundaries. Retail independently proves the ScenarioStruct
