@@ -232,6 +232,22 @@ class TestParameterJoin(unittest.TestCase):
                          "int (*)(int)", "volatile int (&)[4]"):
             self.assertIsNone(emitted.encode(spelling), spelling)
 
+    def test_bitset_value_parameters_preserve_the_non_type_extent(self):
+        from homm3.match.source_ownership import Definition
+        self.assertEqual(emitted.encode("const std::bitset<5>"), "Q23std9bitset<5>")
+        self.assertEqual(emitted.encode("const std::bitset<48> &"), "RCQ23std10bitset<48>")
+        definition = Definition("src/game.cpp", 7693, 0, 1,
+                                "game::getRandomSpell", "int (const std::bitset<5>)", 1,
+                                True, False, 0x4c95a0, "",
+                                argument_types=("const std::bitset<5>",))
+        symbol = ".getRandomSpell__4gameFQ23std9bitset<5>"
+        self.assertEqual(emitted.select(definition, [symbol,
+                         ".getRandomSpell__4gameFQ23std9bitset<8>",
+                         ".getRandomSpell__4gameFRCQ23std9bitset<5>",
+                         ".getRandomSpell__4gameFi"]), symbol)
+        for spelling in ("std::bitset<N>", "std::bitset<-1>", "std::bitset<5, int>"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
     def test_msl_string_and_nested_vector_use_exact_parameter_codes(self):
         string = "Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
         vector = "Q23std162vector<" + string + ",Q23std78allocator<" + string + ">>"

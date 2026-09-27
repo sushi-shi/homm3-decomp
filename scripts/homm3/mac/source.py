@@ -14,6 +14,13 @@ class SourceError(ValueError):
     pass
 
 
+# Only simple reviewed template storage declarations; nested templates and
+# expressions require an explicit parser contract rather than a name guess.
+_STORAGE_TYPE = (r'(?:std::bitset\s*<\s*(?:0|[1-9]\d*)\s*>'
+                 r'|std::vector\s*<\s*(?:(?:signed|unsigned)\s+)?\w+(?:::\w+)*\s*>'
+                 r'|\w+(?:::\w+)*)')
+
+
 @lru_cache(maxsize=64)
 def _masked_source(text: str) -> str:
     """Reuse lexical scans by complete contents, never by path or timestamp.
@@ -172,7 +179,7 @@ def load_data(root: Path) -> list[DataPair]:
             head = declaration.split("=", 1)[0].rstrip("; \n\t")
             match = re.fullmatch(
                 r'\s*(?:(?:extern|static)\s+)?(?:(?:const|volatile|unsigned|signed|long|short)\s+)*'
-                r'\w+(?:::\w+)*(?:\s+|\s*\*\s*(?:const\s+)?)'
+                + _STORAGE_TYPE + r'(?:\s+|\s*\*\s*(?:const\s+)?)'
                 r'(?:(?P<plain>\w+(?:::\w+)*)|\(\s*&\s*(?P<reference>\w+)\s*\))'
                 r'\s*(?:\[[^\[\];]*\]\s*)*', head, re.DOTALL)
             name = (match.group("plain") or match.group("reference")) if match else None
@@ -186,7 +193,7 @@ def load_data(root: Path) -> list[DataPair]:
                 # arrays only; no initializer, reference, or qualified member.
                 match = re.fullmatch(
                     r'\s*(?:static\s+)?(?:(?:unsigned|signed)\s+)?'
-                    r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*'
+                    + _STORAGE_TYPE + r'(?:\s*\*\s*|\s+)(\w+)\s*'
                     r'(?P<array>(?:\[[^\[\];]*\]\s*)*);',
                     declaration, re.DOTALL)
                 if constructed:

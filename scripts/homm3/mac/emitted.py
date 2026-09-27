@@ -158,6 +158,10 @@ def _base_code(base: str) -> str | None:
     code = BUILTINS.get(base)
     if code is not None:
         return code
+    bitset = re.fullmatch(r"std::bitset\s*<\s*(0|[1-9]\d*)\s*>", base)
+    if bitset:
+        part = "bitset<" + bitset.group(1) + ">"
+        return f"Q23std{len(part)}{part}"
     if "<" in base:
         match = re.fullmatch(r"(std::(?:basic_string|vector|allocator|char_traits))\s*<(.*)>", base)
         if match is None:

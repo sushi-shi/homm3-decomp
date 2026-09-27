@@ -171,6 +171,29 @@ declaration_only=true
             with self.assertRaises(ObjectError):
                 bindings(root, pef, code, (*hunks, DataHunk("pointer", "RW", bytes(4), ())))
 
+    def test_external_bitset_binding_preserves_its_source_owner(self):
+        from homm3.mac.source import load_data, SourceError
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            owner = root / "globals.h"
+            declaration = "DATA(0x00400100) std::bitset<48> removed;\n"
+            owner.write_text(declaration)
+            (root / "config/mac/data.toml").write_text(
+                '[[data]]\nretail_va=0x00400100\nsource="globals.h"\n'
+                'declaration_only=true\nmac_section=1\nmac_offset=16\nmac_size=8\n'
+                f'sha256="{sha256(bytes(8)).hexdigest()}"\n'
+                'evidence="reviewed external two-word bitset storage"\n')
+            row, = load_data(root)
+            self.assertEqual(row.mac_symbol, "removed")
+            self.assertTrue(row.declaration_only)
+            self.assertEqual(owner.read_text(), declaration)
+            for invalid in ("std::bitset<N>", "std::bitset<48, int>"):
+                owner.write_text(declaration.replace("std::bitset<48>", invalid))
+                with self.assertRaises(SourceError):
+                    load_data(root)
+
     def test_same_tu_udata_requires_zero_storage_and_direct_toc(self):
         listing = '''Hunk: Kind=HUNK_LOCAL_UDATA Align=1 Class=TD Name="viewFlag"(1) Size=1
 '''
@@ -262,6 +285,24 @@ evidence="externally linked zero storage with reviewed owner"
             from homm3.mac.source import load_data, SourceError
             manifest = root / "config/mac/data.toml"
             ordinary_manifest = manifest.read_text()
+            vector_manifest = ordinary_manifest.replace("mac_size=1", "mac_size=12").replace(
+                sha256(bytes(1)).hexdigest(), sha256(bytes(12)).hexdigest())
+            manifest.write_text(vector_manifest)
+            (root / "source.cpp").write_text("DATA(0x00400100) std::vector<int> flag;\n")
+            vector_storage, = parse_data_hunks(
+                'Hunk: Kind=HUNK_GLOBAL_UDATA Align=4 Class=RW Name="flag"(1) Size=12\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.owner_unit, "owner")
+            self.assertIn("std::vector<int>", pair.definition)
+            bindings(root, pef, code, (cell, vector_storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, storage), unit="owner")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, vector_storage), unit="consumer")
+            (root / "source.cpp").write_text("DATA(0x00400100) extern std::vector<int> flag;\n")
+            with self.assertRaises(SourceError):
+                load_data(root)
             constructed_manifest = ordinary_manifest.replace(
                 "same_tu_external=true", "same_tu_external=true\nsame_tu_constructed=true")
             manifest.write_text(constructed_manifest)
