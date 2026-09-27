@@ -2385,11 +2385,10 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // best_number` after the assignment - are byte-flat at 97.2740, so the extra
 // slot is the allocator's, not a source local.
 // Native Mac retains all nine named calls and unrolls resource deduction.
-// An int resource counter restores resourceCost at SP+0x98 and slot at
-// SP+0xb4: the first 0x164 bytes now agree. Windows moves 97.29 ->96.76;
-// keep the native local model while resolving the final register roles.
+// The short resource counter gives Windows 97.29%; int lowers it to96.76.
+// Mac stack-slot agreement alone does not establish the Windows local type.
 // A separate final quantity is byte-flat; a shared function-scope creature
-// type changes the already-matching prefix, so neither probe is retained.
+// type changes the native prefix, so neither probe is retained.
 VA(0x0042d420, 0x264) MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::doBestPurchase(
     unsigned char tradeAllowed)
@@ -2450,7 +2449,7 @@ long type_AI_creature_purchaser::doBestPurchase(
             getMonsterCost(type, resourceCost);
             bestNumber = maxBuyableCreatures(
                 m_funds, type, m_creatures[bestSource].m_number);
-            for (int resource = 0; resource < 7; ++resource)
+            for (short resource = 0; resource < 7; ++resource)
                 m_funds[resource] -= resourceCost[resource] * bestNumber;
             m_creatures[bestSource].m_number -= bestNumber;
         }
