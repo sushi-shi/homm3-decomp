@@ -2633,8 +2633,10 @@ placementFailure:
 // A successful random choice transfers the object to the group and stamps
 // its footprint on surface level zero. Names describe Complete-only roles.
 // Mac retains addObject at 0x233cf0 and reuses the candidate position for
-// the final choice. Restoring that call, position lifetime and selection
-// index reaches 83.4524%; coordinate copies and vector cleanup remain.
+// the final choice. The copied trigger subtraction and two returned point
+// sums at 0x233b70..0x233c18 recover the ordinary -=/+ calls and reach
+// 87.9333%, beyond the compound-only 83.4524%. Coordinate homes and vector
+// cleanup remain; the object-vector insert folds to the retail widget alias.
 VA(0x00535970, 0x240) MAC_ADDRESS(0x233a44, 0x2d4) // anchor-callee 0x546680; thiscall, ret 4
 unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
 {
@@ -2653,8 +2655,8 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = existing->getPosition();
-        entrance.m_x -= existingPrototype->m_triggerCell.m_x;
-        entrance.m_y -= existingPrototype->m_triggerCell.m_y;
+        entrance -= TPoint(existingPrototype->m_triggerCell.m_x,
+            existingPrototype->m_triggerCell.m_y);
         int end;
         int first;
         if (g_adventureObjectTraits[existingPrototype->m_objectType].m_trait1) {
@@ -2665,9 +2667,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
             first = 1;
         }
         for (int direction = end; direction-- > first; ) {
-            position = entrance;
-            position += g_rmgDirections[direction];
-            position += trigger;
+            position = entrance + g_rmgDirections[direction] + trigger;
             if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
                 && position.m_y >= bounds.m_minimumY && position.m_y < bounds.m_maximumY
                 && canFitObject(properties, position))
@@ -7996,6 +7996,8 @@ void type_random_map_generator::placeMines()
 // Naming the selected pointer is neutral. Named random indices/counts change
 // the result register lifetime (94.13% or lower), without settling the range
 // and terrain allocation; preserve the direct result expression.
+// The const terrain query expands to native bitset::test (0x24a004);
+// reusing the shared isRecommendedTerrain helper is byte-neutral.
 // A focused 60-case lifetime matrix (counter initialization, prototype-range
 // binding order and enum/mask-index captures) also remains at 99.6581%.
 // Sixty filter/receiver/insertion variants do not improve it either. Conditional
@@ -8014,14 +8016,14 @@ TRmgObjectPropertiesRef* type_random_map_generator::selectObjectPrototype(
     std::vector<TRmgObjectPropertiesRef*> candidates;
     for (unsigned int index = 0; index < m_objectPrototypes[objectType].size(); ++index) {
         TRmgObjectPropertiesRef* properties = m_objectPrototypes[objectType][index];
-        TObjectType* prototype = properties->m_prototype;
+        const TObjectType* prototype = properties->m_prototype;
         if (prototype->m_subtype != subtype)
             continue;
         if (prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_4
             || prototype->m_slotCategory == TObjectType::SLOT_CATEGORY_5) {
             if (terrain == eTerrainWater)
                 continue;
-        } else if (!prototype->m_recommendedTerrainMask.test(terrain)) {
+        } else if (!prototype->isRecommendedTerrain(terrain)) {
             continue;
         }
         candidates.push_back(properties);
