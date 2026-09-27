@@ -4782,7 +4782,9 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     case SPELL_CURE:
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
-        return static_cast<unsigned char>(~target->is(creatureDone)) & 1;
+        // Mac 0x543e4..0x543f0 negates the attribute test; the normal
+        // boolean expression is byte-identical to the former mask in VC6.
+        return !target->is(creatureDone);
     case SPELL_SLAYER:
         return groupHasDragons(1 - side);
     case SPELL_SHIELD:
