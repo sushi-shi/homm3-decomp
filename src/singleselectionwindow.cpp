@@ -7392,9 +7392,10 @@ void TSingleSelectionWindow::sendPlayerFaces()
 
 // Native Mac 0x183764/0x183794 passes m_localHeader directly to both
 // canonical helpers. Removing the inferred cached header pointer restores
-// Windows' shared failure cleanup and reaches 98.3265%. The separate
-// generation/read failure guards and helper calls remain unchanged.
-// Earlier pointer/cleanup controls predated the recovered text helpers.
+// Windows' shared failure cleanup. Naming each version-message template
+// after its edition-name selection preserves Mac 0x183870's lookup phase
+// and closes the remaining Windows text loads at 100%. The generation/read
+// failure guards and all canonical lookup/formatting helpers remain intact.
 // E:\gamedcs\singleselectionwindow.cpp:7698
 // Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
 // branch-local lookups preserve those calls and recover Windows 92.87%
@@ -7437,7 +7438,8 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             } else {
                 gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
+            const char* versionMessage = (*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT];
+            normalDialog(formatString(versionMessage, gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7456,7 +7458,8 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             } else {
                 gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
+            const char* versionMessage = (*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT];
+            normalDialog(formatString(versionMessage, gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
