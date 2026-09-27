@@ -972,6 +972,15 @@ DEFENDER first, no if/else ordering reproduces it: 69.3 / 74.5);
 - probe: `d09_switch_source_order.cpp` (PASS — bodies emitted 3333, 1111,
   2222, 4444 in source order under a 4-entry value-mapped jump table)
 
+`advManager::getSoundId` (0x418620) supplies a native cross-architecture
+control: Mac keeps separate equal-valued return arms that the reconstructed
+source had grouped. Restoring their order and separate returns raises Windows
+96.9031 → 99.3202. Mac also keeps creature case 6 at 0x191fc apart from the
+default at 0x19204, although both return 42. Restoring that explicit case
+reproduces the compact selector table and reaches 100%; the full build loses
+no MAX. Equal case results do not establish shared source labels, and a case
+equal to the default can still affect VC6 table construction.
+
 ### D10. Loop induction and index-type forms
 `ai_combat` 89.8 → 100.0: the Dismiss loop's index is a SHORT consumed 32-bit
 — VC6 carries the trip count separately (`mov edi,7 / dec edi / jne` beside
