@@ -1763,7 +1763,10 @@ static int g_useWaveout;
 // measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
 // byte-flat at 99.6273 and moved to its foot is 99.5983. Restoring the
 // Dreamcast-proven `bool` declaration (and spelling the value `false`) also
-// leaves this one-byte encoding choice unchanged.
+// leaves this one-byte encoding choice unchanged. Starting showUsage at the
+// scan instead of entry introduces a second zeroing move (98.29%); making
+// that local bool changes register assignments (99.47%). Neither reproduces
+// the native register use, so the entry declaration remains.
 VA(0x004f0690, 0x238) MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int interpretCommandLine()
 {
