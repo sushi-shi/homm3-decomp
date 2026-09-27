@@ -163,7 +163,10 @@ void soundManager::initializeSamples()
 // Separate initial/bottom guards in a do/while score 91.79%; a failure-first
 // nested preference arm scores 77.34%. Neither restores the shared tail.
 // A direct-call condition plus while(1) scores 82.85%; the SDK S32 result
-// local is byte-flat. Keep the measured loop and named status lifetime.
+// local is byte-flat. The guarded do loop with a shared driverReady join
+// restores all 31 blocks and reaches 95.21%. A common retry label is flat;
+// branch-local preference tails score 87.94%. The same driver join inside
+// an infinite loop returns to 94.32%; its common rate guard is shared.
 VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
@@ -180,58 +183,57 @@ int soundManager::open(int newPriority)
 
             HDIGDRIVER driver;
             HDIGDRIVER result;
-            for (;;) {
-                if (g_soundSampleRate < 11025) {
-                    result = 0;
-                    break;
-                }
+            if (g_soundSampleRate >= 11025) {
+                do {
+                    g_soundWaveFormat.wf.wFormatTag = 1;
+                    g_soundWaveFormat.wf.nChannels =
+                        static_cast<unsigned short>(g_soundOutputChannels);
+                    g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                    g_soundWaveFormat.wf.nAvgBytesPerSec =
+                        (g_soundBitsPerSample / 8) * g_soundOutputChannels
+                        * g_soundSampleRate;
+                    g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
+                        (g_soundBitsPerSample / 8) * g_soundOutputChannels);
+                    g_soundWaveFormat.wBitsPerSample =
+                        static_cast<unsigned short>(g_soundBitsPerSample);
 
-                g_soundWaveFormat.wf.wFormatTag = 1;
-                g_soundWaveFormat.wf.nChannels =
-                    static_cast<unsigned short>(g_soundOutputChannels);
-                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
-                g_soundWaveFormat.wf.nAvgBytesPerSec =
-                    (g_soundBitsPerSample / 8) * g_soundOutputChannels
-                    * g_soundSampleRate;
-                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
-                    (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                g_soundWaveFormat.wBitsPerSample =
-                    static_cast<unsigned short>(g_soundBitsPerSample);
-
-                AIL_HWND();
-                int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat.wf);
-                if (!openResult) {
-                    char description[128];
-                    strcpy(description, DATA_COMPGEN(
-                        0x00684b28, soundDevicePrefix, "Device: "));
-                    AIL_digital_configuration(
-                        driver, 0, 0, description + strlen(description));
-                    if (AIL_get_preference(15)) {
-                        result = driver;
-                        break;
+                    AIL_HWND();
+                    int openResult = AIL_waveOutOpen(
+                        &driver, 0, -1, &g_soundWaveFormat.wf);
+                    if (!openResult) {
+                        char description[128];
+                        strcpy(description, DATA_COMPGEN(
+                            0x00684b28, soundDevicePrefix, "Device: "));
+                        AIL_digital_configuration(
+                            driver, 0, 0, description + strlen(description));
+                        if (AIL_get_preference(15)) {
+                            result = driver;
+                            goto driverReady;
+                        }
+                        if (!strstr(description, DATA_COMPGEN(
+                                0x00684b1c, emulatedDeviceMarker,
+                                "Emulated"))) {
+                            result = driver;
+                            goto driverReady;
+                        }
+                        AIL_waveOutClose(driver);
+                        AIL_set_preference(15, 1);
+                    } else if (AIL_get_preference(15)) {
+                        g_soundSampleRate /= 2;
+                        if (g_soundSampleRate >= 11025)
+                            continue;
+                        if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
+                            g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
+                            g_soundSampleRate = 22050;
+                            continue;
+                        }
+                        continue;
                     }
-                    if (!strstr(description, DATA_COMPGEN(
-                            0x00684b1c, emulatedDeviceMarker,
-                            "Emulated"))) {
-                        result = driver;
-                        break;
-                    }
-                    AIL_waveOutClose(driver);
                     AIL_set_preference(15, 1);
-                } else if (AIL_get_preference(15)) {
-                    g_soundSampleRate /= 2;
-                    if (g_soundSampleRate >= 11025)
-                        continue;
-                    if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
-                        g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
-                        g_soundSampleRate = 22050;
-                        continue;
-                    }
-                    continue;
-                }
-                AIL_set_preference(15, 1);
+                } while (g_soundSampleRate >= 11025);
             }
+            result = 0;
+        driverReady:
             m_ds = result;
         }
 
