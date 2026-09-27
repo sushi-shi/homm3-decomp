@@ -564,11 +564,14 @@ static long getDayBonus(EGameResource resource, long weekBonus, long day)
 // E:\gamedcs\game.cpp:643. Complete's calculateProduction has 71/71
 // CFG blocks and 13/13 calls in retail order. Its two Rampart
 // hasBuilding(..., true) expansions differ in bitNumber/active-mask load
-// scheduling; reversing the true arm's commutative operands in the canonical
-// hasBuilding helper is byte-flat for this caller and its exact retained body.
-// Mac 0:0xca978..0xcb1f0 has the same seven artifact-count calls followed by
-// daily gold; the proposed pair remains in ignored build/mac/notes until the
-// wider game declaration view is supported.
+// scheduling; reversing the true arm's commutative operands or naming the
+// loaded building mask is byte-flat for this caller and the exact retained
+// helper. The named-mask probe reproduces across game, town and townmgr.
+// The call-stream diagnostic's getArmy difference is the mutable/const
+// overload label at the same folded Windows entry, not an absent helper.
+// Mac 0:0xca978..0xcb1f0 is compared from the ordinary shared headers and has
+// the same seven artifact-count calls followed by daily gold. Its remaining
+// zeroing, stack and register differences require source-model recovery.
 VA(0x004b8af0, 0x573) MAC_ADDRESS(0x0ca978, 0x878)  // mine/town/player production consumers, dc 0xa3474
 void game::calculateProduction()
 {
@@ -2240,6 +2243,9 @@ void generateStandardFileName(char* longName, char* retName)
     strcpy(retName + charCount, period);
 }
 
+// Function-entry versus block-owned buffer declarations produce identical
+// game-unit VC6 objects with the canonical endian writer; this lifetime
+// spelling does not explain the retained saveString calls in retail callers.
 VA(0x004bbb60, 0xBB) MAC_ADDRESS(0x0ced3c, 0xf0)  // dc 0xa750c
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
@@ -2262,6 +2268,12 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
     return length;
 }
 
+// Native Mac retains saveString at 0xcee68 and 0xcef18; Windows also
+// retains both calls. Current C2 admits cb174 at budgets939/723 (flags106),
+// then expands the canonical endian/scalar writer chain. Its constructor
+// chain instead rejects string::assign(pointer,length), cb69 at budget67.
+// Direct versus copy string initialization and function-owned buffer locals
+// are object-identical controls; neither explains these compiler decisions.
 VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)  // dc 0xa75d0
 int game::saveRumours(TAbstractFile* outfile)
 {
