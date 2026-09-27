@@ -65,93 +65,24 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     m_widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
-    // The two slider loops (LANDED 2026-08-14, 97.6237 -> 98.1326). Retail's
-    // loop variable is the SLOT, not the x - `for (slot = 0; slot < 10;
-    // ++slot)` with the x as a derived, linear-function-test-replaced
-    // induction variable, which emits `xor ebx,ebx` + `lea edx,[ebx+0xc9]`
-    // where the old x-stepped spelling emitted `mov ebx,0xc9` + `push ebx`.
-    // That rewrite reproduces retail's loop bodies EXACTLY and fixes the
-    // ecx/edx parity of the following temps, but on its own it was measured
-    // NEGATIVE three separate times (88.2908 against 88.3182, operands
-    // reversed 88.2908, x carried in the for-update 88.1660) because it
-    // removes front-end mass and `budget = 2 * cb(caller)`. It only becomes a
-    // win once the constructor's inline-candidate site count is right AND the
-    // mass it costs is given back: the named `musicX`/`effectsX` per iteration
-    // is that mass. Measured on top of the registration guard: bare slot-IV
-    // 97.6868, slot-IV + a named x 98.1326, + a named id as well 98.1326, and
-    // the same plateau under 2..12 dead-store pad statements, so this spelling
-    // sits inside the window rather than on its edge (16 pad statements
-    // 97.7430). The twin in combatoptionswindow.cpp carries the same form.
-
-    // RE-MEASURED 2026-08-14 after the family's other three constructors
-    // closed, in case their fixes had moved this budget: unchanged, 88.26%
-    // -> 88.24%, so the rewrite still costs exactly what it cost. Two other
-    // leads were ruled out at the same time. The DC roster for this
-    // compiland was re-checked for a carcassed helper of the kind that paid
-    // twice in combatoptionswindow - there is none left; convertID2HelpID
-    // and UpdateSystemOptions are both already spelled as the header
-    // inlines they are. And the divergence is NOT one-directional
-    // starvation: the reserve expansion CALLS size() where retail inlines
-    // it, but a few statements later the y=87 label's push_back is expanded
-    // INLINE here where retail calls vector<widget*>::insert. The budget is
-    // consumed in source order and we are out of PHASE with retail rather
-    // than uniformly short of it, so the fix has to be real missing
-    // statements - and nothing in the retail body evidences any.
-
-    // 2026-08-14, RE-TITRATED AT THE LANDED SPELLING, single-step this time.
-    // The remaining residual is the same one levelupwindow carries: the LAST
-    // `Widgets.push_back`'s inlined `insert` calls `size()` where retail
-    // expands it (`_First==0 ? 0 : (_Last-_First)>>2`), and everything after
-    // that in the grow path is one divergence propagating through registers.
-    // It is a pure MASS wall - the window is 7..8 pad units (98.2455), with 5
-    // and 6 at 97.7430, 9 at 98.2163 and 10+ collapsing to 89.3196. That
-    // 98.2455 cell is +0.11 over the landed 98.1326.
-    // NO HONEST SUPPLY FOUND, and two informative negatives:
-    //   - Naming widgets in locals (the spelling that carried levelupwindow's
-    //     mass) DOES move cb here and reaches the ceiling at 19..21 names -
-    //     all 19 buttons 98.2455, the 6 checkboxes + 13 texts 98.2455, all
-    //     icons + texts 98.2455, 22..25 names 98.2163, all 40 names 89.3196.
-    //     But it is mass BY ACCIDENT, not reconstruction: at any of those
-    //     cells the frame gains a spurious local and every slot below
-    //     [ebp-0x10] shifts by 4 against retail. Higher fuzzy score, worse
-    //     structure - do not land it.
-    //   - Binding each `GetWidget(id)` to a `widget*` local before the
-    //     `send_message` (the lever that moved TLevelUpWindow::WindowHandler)
-    //     is EXACTLY byte-flat here at all 46 sites, and negative at every
-    //     partial count (4 -> 96.97, 8 -> 96.09, 12 -> 95.08, 24 -> 85.67).
-    //     Naming a value that is already a temp adds no front-end mass;
-    //     splitting `push_back(new X(...))` into two statements does.
-    // A release-elided call-shaped diagnostic sweep (2026-08-21) also does
-    // not supply the missing mass: one, two and four dead `MemError()` arms
-    // at function entry are byte-flat at 98.1326, while eight regress to
-    // 97.7430. The branch census stays 105 against retail's 107 throughout.
-    // Unlike the artifact/THall optimizer ghosts, this caller does not price
-    // that carrier in its winning window.
-    // Conventional release VERIFY is bounded separately (2026-08-21).
-    // Combined and split pure range checks over the two 0..9 volume indices
-    // are byte-flat at 98.1326%; they disappear before the relevant budget
-    // accounting. `VERIFY(!Widgets.empty())` after the last push_back is a
-    // real accessor candidate and therefore overshoots to 96.33699%. The
-    // branch analyzer's only improving structural mutation, a `short` music
-    // status induction variable, also loses by the byte verdict (97.47005%).
-    // Thus neither VERIFY carrier class nor loop width supplies retail's two
-    // missing size() branches at the retained source phase.
-    // The DC xref census for this constructor otherwise MATCHES ours exactly
-    // once the Dreamcast platform delta is subtracted (DC has no window-scroll
-    // group: DC 16 buttons / 12 texts / 12 TTextResource::operator[] / 25
-    // GetWidget / 24 send_message against our 19 / 13 / 13 / 27 / 26). The one
-    // real disagreement is the registration guard - DC records begin x1 and
-    // end x1, i.e. no guard - but the guard is worth +9.3 here and is
-    // therefore standing in for two sites retail has and the DC port does not.
+    // Retail indexes both slider rows by slot and derives the x coordinate.
+    // Keep each real coordinate as a local before allocation: with the
+    // canonical widget helpers this recovers 76.1093 -> 76.5135; folding
+    // either coordinate into its constructor argument loses that gain.
+    // The remaining differences are nested vector expansions. Historical
+    // inline-depth and dead-code diagnostics did not recover those sites;
+    // no artificial caller work belongs here.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
+        int musicX = 29 + musicSlot * 19;
         m_widgets.push_back(new iconWidget(
-            29 + musicSlot * 19, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
+            musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
     }
 
     for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
+        int effectsX = 29 + effectsSlot * 19;
         m_widgets.push_back(new iconWidget(
-            29 + effectsSlot * 19, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
+            effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
             "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
