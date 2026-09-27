@@ -1815,10 +1815,10 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
 
 // DC records const numFrames; a conditional initializer preserves that lifetime.
-// Windows improves from 95.0344% to 98.2722%, with every helper retained.
-// The missile-frame output lives in the animation branch that consumes it;
-// this reproduces retail's -0x28 home. The remaining difference is scheduling
-// the int-to-double damage conversion around the retained reduction call.
+// The missile-frame output lives in its animation branch, reproducing
+// retail's -0x28 home. Naming the staged double before the retained reduction
+// call, then directly converting the product, is Windows exact. Assigning
+// that product back to the double introduces a redundant /Op rounding spill.
 
 // Mac 0x719e8..0x719f8 orders the lower/keep/upper arms; its facing
 // decision merges an integer before the field store at0x71a70. VC6
@@ -1904,8 +1904,16 @@ void combatManager::keepAttack(int towerPos)
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
         damage += sRandom(2, 4);
+    // The shared reduction helper is dual exact. This caller differs:
+    // Mac 0x71c20 divides by that multiplier, Windows multiplies it.
+    double scaledDamage = damage;
+#ifdef HOMM3_TARGET_MAC
     damage = static_cast<int>(
-        damage * target->computeDefenderDamageReduction(1));
+        scaledDamage / target->computeDefenderDamageReduction(1));
+#else
+    damage = static_cast<int>(
+        scaledDamage * target->computeDefenderDamageReduction(1));
+#endif
     if (damage <= 0)
         damage = 1;
 
