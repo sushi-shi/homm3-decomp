@@ -221,8 +221,10 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 // the branch sequences now AGREE). `while (str[pos] != ' ' &&
 // pos >= lineStart)` scores the same; `pos <= lineStart` as the break
 // condition is worse (96.59).
-// The source-faithful plain bottom-justification `total` is retained at
-// 96.8123. A prior volatile probe raised the banked MAX to 98.7864 by
+// The plain bottom-justification `total` is retained. Overflow-only recovery
+// locals and initialization after the null guard reach 98.49%; all remaining
+// Windows differences are in the prologue/null-check zero initialization.
+// A prior volatile probe raised the banked MAX to 98.7864 by
 // aligning the scratch-register family, but retail keeps `total` in EAX;
 // the qualifier itself forces three non-retail stack-memory instructions.
 // Reusing the later-overwritten iHeight or width local is byte-identical
@@ -238,19 +240,18 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              font::TColor colorScheme, unsigned justification,
                              int cursorPos)
 {
-    int pos = 0;
+    int pos;
     int limit;
     int currY;
     int lineStart;
-    int okWidthIndex;
-    int origPixelWidth;
     int height;
     int width;
 
     if (!str)
         return;
-    currY = 0;
+    pos = 0;
     limit = strlen(str);
+    currY = 0;
     if (limit == 0) {
         if (cursorPos != -1) {
             drawCursor(bitmap, x, y, getColor(colorScheme, false),
@@ -308,8 +309,8 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         if (pos > 0 && m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
             width -= m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC;
         if (width > boxWidth) {
-            origPixelWidth = width;
-            okWidthIndex = 0;
+            int origPixelWidth = width;
+            int okWidthIndex = 0;
             if (m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
                 width += m_fs.m_abc[str[k]].m_abcC;
             pos = k;
@@ -320,7 +321,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
                     width -= getCharacterWidth(str[pos]);
-                    if (height * 2 + currY > boxHeight && width < boxWidth)
+                    if (currY + 2 * height > boxHeight && width < boxWidth)
                         break;
                     if (okWidthIndex == 0 && width < boxWidth)
                         okWidthIndex = pos;
