@@ -1811,23 +1811,23 @@ void TTradeResourceWindow::update(unsigned char update)
         setWidgetDisabled(6);
     }
 
-    if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
-        g_marketSource != MARKET_SOURCE_FREELANCER &&
-        (g_townManager->m_townToView->m_type == TOWN_TOWER ||
-         g_townManager->m_townToView->m_type == TOWN_DUNGEON) &&
-        g_townManager->m_townToView->hasBuilding(17, false)) {
-        setWidgetOn(MARKET_RIGHT_LABEL_ID);
-    } else {
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+        g_marketSource == MARKET_SOURCE_FREELANCER ||
+        (g_townManager->m_townToView->m_type != TOWN_TOWER &&
+         g_townManager->m_townToView->m_type != TOWN_DUNGEON) ||
+        !g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOff(MARKET_RIGHT_LABEL_ID);
+    } else {
+        setWidgetOn(MARKET_RIGHT_LABEL_ID);
     }
 
-    if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
-        g_marketSource != MARKET_SOURCE_FREELANCER &&
-        g_townManager->m_townToView->m_type == TOWN_STRONGHOLD &&
-        g_townManager->m_townToView->hasBuilding(21, false)) {
-        setWidgetOn(MARKET_TITLE_ID);
-    } else {
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+        g_marketSource == MARKET_SOURCE_FREELANCER ||
+        g_townManager->m_townToView->m_type != TOWN_STRONGHOLD ||
+        !g_townManager->m_townToView->hasBuilding(21, false)) {
         setWidgetOff(MARKET_TITLE_ID);
+    } else {
+        setWidgetOn(MARKET_TITLE_ID);
     }
 
     for (int side = 0; side < 2; ++side) {
