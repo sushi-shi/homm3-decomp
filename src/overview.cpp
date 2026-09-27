@@ -2489,8 +2489,41 @@ int TOverviewWindow::windowHandler(message& msg)
                 setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
                     OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
                     OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
@@ -2505,17 +2538,6 @@ int TOverviewWindow::windowHandler(message& msg)
                 }
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2528,17 +2550,6 @@ int TOverviewWindow::windowHandler(message& msg)
                 }
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2550,17 +2561,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
