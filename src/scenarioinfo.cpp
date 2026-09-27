@@ -145,8 +145,11 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     NewSMapHeader& mapHeader = g_game->m_mapHeader;
     // DC locals and lines 299..300 prove pointers, with initialization
     // before the map-name widget. Retail keeps both addresses until icons.
-    VictoryConditionStruct* vc = &mapHeader.m_victoryCondition;
-    LossConditionStruct* lc = &mapHeader.m_lossCondition;
+    // Initialize from the game fields independently of the map-header alias:
+    // retail +0x5b8..+0x5c9 materializes both addresses here. Deriving them
+    // from mapHeader postpones that work and drops 98.2671% to 98.0916%.
+    VictoryConditionStruct* vc = &g_game->m_mapHeader.m_victoryCondition;
+    LossConditionStruct* lc = &g_game->m_mapHeader.m_lossCondition;
 
     widgets.push_back(new textWidget(
         419, 39, 324, 30, mapHeader.m_mapName.c_str(),
