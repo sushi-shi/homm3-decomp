@@ -1900,9 +1900,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 } while (remaining > 0);
                             }
 
-                        line += m_pitch;
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -1948,9 +1948,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 run = (packet & 31) + 1;
                                 ++src;
                             } while (remaining);
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
-                            }
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                        }
                     }
                 } else {
                     unsigned short* lineDst =
@@ -1993,9 +1993,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 } while (remaining > 0);
                             }
 
-                        line += m_pitch;
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                            line += m_pitch;
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2041,9 +2041,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 run = (packet & 31) + 1;
                                 ++src;
                             } while (remaining);
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
-                            }
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) + dpitch));
+                        }
                     }
                 }
             } else {
@@ -2088,9 +2088,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 } while (remaining > 0);
                             }
 
-                        line += m_pitch;
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2136,9 +2136,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 run = (packet & 31) + 1;
                                 ++src;
                             } while (remaining);
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
-                            }
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                        }
                     }
                 } else {
                     unsigned short* lineDst =
@@ -2181,9 +2181,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 } while (remaining > 0);
                             }
 
-                        line += m_pitch;
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                            line += m_pitch;
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
                         } while (--sh > 0);
                     } else {
                         for (int y = sy; y < sy + sh; ++y) {
@@ -2229,9 +2229,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                                 run = (packet & 31) + 1;
                                 ++src;
                             } while (remaining);
-                        lineDst = static_cast<unsigned short*>(static_cast<void*>(
-                            static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
-                            }
+                            lineDst = static_cast<unsigned short*>(static_cast<void*>(
+                                static_cast<unsigned char*>(static_cast<void*>(lineDst)) - dpitch));
+                        }
                     }
                 }
             }

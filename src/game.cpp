@@ -3560,7 +3560,8 @@ void game::giveTroopsToNeutralTowns()
 // Mac 0xd5290..0xd53bc tests each campaign/scenario pair in order and
 // joins them at one disabled-normal-victory store (0xd53c8). Preserve that
 // disjunction rather than a nested per-campaign assignment chain. VC6
-// factors the comparisons and raises 91.1630% to 93.9000%; helpers remain.
+// factors the comparisons and raises 91.1630% to 93.9000%. Direct named
+// coordinate arguments to the canonical point constructor reach 94.8833%.
 // The final valid-town path can return directly at unchanged 90.0315%.
 // Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
 // result flag gives 89.2426%; these used break as the failure-scope exit.
@@ -3622,10 +3623,8 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
     if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
-        int* victoryHeroLocation = &victory.m_heroX;
-        type_point vcheroLoc(victoryHeroLocation[0],
-                              victoryHeroLocation[1],
-                              victoryHeroLocation[2]);
+        type_point vcheroLoc(victory.m_heroX, victory.m_heroY,
+                            victory.m_heroZ);
         victory.m_heroId = -1;
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
