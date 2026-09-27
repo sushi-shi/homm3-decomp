@@ -2060,6 +2060,8 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //   * the placement loop is `while (placed < budget)` with `placed`
 //     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
 //     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
+//     The guarded retry preserves that call in CodeWarrior while VC6 rotates
+//     it into the retail initial/retry sites; a do/while misses the rotation.
 
 VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
@@ -2181,12 +2183,15 @@ void combatManager::setupAndLoadObstacles()
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
         int obstacleId;
-        do {
+        for (;;) {
             obstacleId = obstaclePicker.pick();
-        } while (obstacleId >= 0
-               && !(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-               && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask));
+            if (obstacleId < 0)
+                break;
+            if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
+                || (s_obstacleInfo[obstacleId].m_specialTerrainMask
+                    & specialTerrainMask))
+                break;
+        }
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
