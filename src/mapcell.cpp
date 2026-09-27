@@ -692,11 +692,16 @@ int NewfullMap::saveSeerList(TAbstractFile* outfile)
 }
 
 // Mac retains this sibling at 0x11f798; Complete VC6 expands it in save.
+// Its count is the endian-aware exception among these list writers:
+// Mac 0x11f7c4 zero-extends the short, then sthbrx encodes it at 0x11f7c8.
+// Keep the size as an int and narrow it at the serialization boundary.
+// This shared writer restores Windows save from 83.80 to 95.76%.
 MAC_ADDRESS(0x11f798, 0x9c)
 void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
 {
-    writeValue<short>(outfile, static_cast<short>(m_questGuardList.size()));
-    for (unsigned int i = 0; i < m_questGuardList.size(); ++i)
+    int count = m_questGuardList.size();
+    writeLittleEndianValue<unsigned short>(outfile, count);
+    for (int i = 0; i < m_questGuardList.size(); ++i)
         m_questGuardList[i].save(outfile);
 }
 
@@ -1921,6 +1926,9 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
 // reads; DC records one int_buffer and char_buffer. Sharing those readers
 // and the existing index raises Windows MAX 91.44 -> 96.15.
+// Routing all checked reads through the reference reader instead drops
+// this caller to 83.64% by changing nested vector expansion; retain its
+// shared scalar homes while investigating that remaining library boundary.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
