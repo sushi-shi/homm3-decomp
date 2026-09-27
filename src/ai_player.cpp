@@ -5429,6 +5429,8 @@ void aiInitialize()
 // moves its bonus store before the derived vptr, contradicting retained
 // Windows order (constructor 100 -> 96.12). Explicit base initialization
 // with the original body assignment is byte-flat for constructor and caller.
+// Six vector-reference/pointer and effect-local lifetime combinations emit
+// identical objects at 97.50%; these do not change the Alliance inline budget.
 VA(0x00434100, 0x490) MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initializeArtifactEffects()
 {
