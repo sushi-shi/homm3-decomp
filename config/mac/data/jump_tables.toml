@@ -60,3 +60,13 @@ mac_size = 68
 reference_offset = 0x54
 sha256 = "75aef871ea9f14449259aa1725c512be29fed23a9685ecef223071a9b8644e9f"
 evidence = "Mac checkForDefeatedHeroLoss subtracts three from the campaign ID and bounds the result to 0..16. Code 0:0x1feeb0 loads TOC 1+0x3498 -> data 1+0x58af0, whose 17 loader-relocated words select campaign 3..19 arms inside owner 0x1fee5c..0x1ff2a4. Unhandled campaigns select the final loss-condition guard 0x1ff25c; campaigns 3,7,9,10,12,14,15,17,18,19 select their source-backed arms. Candidate emits one 68-byte local table with 17 relocations to its owning function; candidate destinations remain byte-scored after reload rebasing."
+
+[[jump_tables]]
+owner_va = 0x004bfe70
+unit = "game"
+mac_section = 1
+mac_offset = 0x426f8
+mac_size = 36
+reference_offset = 0x6d0
+sha256 = "5b5e7f79686c5ce55154bd8f2ef5f3321908b16c0fccc927e26dd9fd193fa70d"
+evidence = "newMap's resource-bonus town switch bounds alignment0..8 at Mac code0+0xd6164 and loads TOC1+0x24ec at0xd616c -> this nine-word table. All nine loader-relocated labels lie inside the admitted0xd5a9c..0xd6350 owner; Inferno3 and Conflux8 share the Mercury arm. Candidate emits one36-byte switch table with nine owner-function relocations. Candidate labels stay independently rebased and byte-scored."

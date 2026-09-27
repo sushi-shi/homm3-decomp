@@ -114,3 +114,30 @@ mac_offset = 0x43170
 mac_size = 140
 sha256 = "0eb9e90c75be19e035eb96784d3b2646661e40d3679b236db1f7d348ee5f479c"
 evidence = "The five seven-resource computer difficulty rows exactly match the source-owned Windows initializer. Mac newMap loads loader TOC1+0xbec -> data1+0x43170 into r25; its computer branch scales difficulty by28 and copies that row at code0+0xd6000. All35 big-endian signed-int values are verified, including the distinct gold amounts."
+
+[[data]]
+retail_va = 0x0069fbf8
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x54d30c
+mac_size = 32
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "Source game.cpp owns eight uninitialized signed-int starting bonuses. Mac newMap code0+0xd5f3c loads loader TOC1+0x92c -> 32-byte zero storage1+0x54d30c into r23; 0xd6014 reads the current player's bonus and 0xd604c compares it with random-bonus3 before the same hero-dependent random choices. The loop advances this pointer four bytes for each of eight players. The source definition stays in its owning TU, with external consumers address-bound."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bd0
+mac_size = 8
+sha256 = "0a03e37f385d6df93ff35a87c7ffed7e6d1f9c425041ca587cf552867878364b"
+evidence = "Mac newMap handicap resource multiplication loads the big-endian double 0.85 directly from TOC data1+0x4bd0 at code0+0xd62c4; the candidate emits the same eight-byte anonymous scalar payload."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bc8
+mac_size = 8
+sha256 = "98cf842bb9d3a4708bd0f6e9f2e13b85a4591177462716ae809f77862b7aaf42"
+evidence = "Mac newMap handicap resource multiplication loads the big-endian double 0.7 directly from TOC data1+0x4bc8 at code0+0xd62cc; the candidate emits the same eight-byte anonymous scalar payload."
