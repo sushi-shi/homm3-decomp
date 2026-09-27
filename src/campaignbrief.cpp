@@ -66,55 +66,56 @@ static int increaseCampaignDifficulty(message& msg);
 // the in-game view), the WHICHMAP frame chosen by the map's Size, the OK
 // button enable when the scenario's options record has no choice to
 // make, and the difficulty-button refresh. Both native builds store the
-// WHICHMAP target before its SET_ICON_FRAME action.
+// WHICHMAP target before its SET_ICON_FRAME action. DC keeps the whole
+// available-scenario path inside its 0x587e8..0x5892a lexical scope; the
+// positive guard is byte-flat to the former early return in VC6.
 VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
 void TCampaignBrief::select(int which)
 {
-    if (!m_scenarios[which].m_available)
-        return;
+    if (m_scenarios[which].m_available) {
+        clearSelected();
+        getWidget(MAP_SELECTED_1_ID + which)->show();
+        m_selectedScenario = which;
+        resetMapAndDescription(which);
 
-    clearSelected();
-    getWidget(MAP_SELECTED_1_ID + which)->show();
-    m_selectedScenario = which;
-    resetMapAndDescription(which);
+        if (!g_campaignBriefViewFromGame) {
+            g_game->m_setup = m_scenarios[which].m_gameSetup;
+            g_game->m_mapHeader = m_scenarios[which];
+        }
 
-    if (!g_campaignBriefViewFromGame) {
-        g_game->m_setup = m_scenarios[which].m_gameSetup;
-        g_game->m_mapHeader = m_scenarios[which];
+        message msg;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = WHICHMAP_ID;
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        switch (m_scenarios[which].m_size) {
+        case MAP_SIZE_SMALL:
+            msg.m_extra = 0;
+            break;
+        case MAP_SIZE_MEDIUM:
+            msg.m_extra = 1;
+            break;
+        case MAP_SIZE_LARGE:
+            msg.m_extra = 2;
+            break;
+        case MAP_SIZE_EXTRA_LARGE:
+            msg.m_extra = 3;
+            break;
+        default:
+            msg.m_extra = 4;
+            break;
+        }
+        broadcastMessage(msg);
+
+        if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
+            widget* ok = getWidget(DIALOG_RETURN_OK);
+            if (ok)
+                ok->enable(1);
+        }
+        updateBonusIcons();
+        updateDifficultyButtons();
+        updateAllyEnemyFlags();
+        drawWindow(1, 0xffff0001, 0xffff);
     }
-
-    message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = WHICHMAP_ID;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-    switch (m_scenarios[which].m_size) {
-    case MAP_SIZE_SMALL:
-        msg.m_extra = 0;
-        break;
-    case MAP_SIZE_MEDIUM:
-        msg.m_extra = 1;
-        break;
-    case MAP_SIZE_LARGE:
-        msg.m_extra = 2;
-        break;
-    case MAP_SIZE_EXTRA_LARGE:
-        msg.m_extra = 3;
-        break;
-    default:
-        msg.m_extra = 4;
-        break;
-    }
-    broadcastMessage(msg);
-
-    if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
-        widget* ok = getWidget(DIALOG_RETURN_OK);
-        if (ok)
-            ok->enable(1);
-    }
-    updateBonusIcons();
-    updateDifficultyButtons();
-    updateAllyEnemyFlags();
-    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
