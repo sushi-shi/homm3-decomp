@@ -4237,11 +4237,10 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 
 // Dreamcast attributes the name lookup to army::GetName; its inline body
 // expands to the global getArmyName call in retail and Mac.
-// Residual (90.6%): scheduling only, no shape difference. Retail forms
-// `raised` and tests it against 1 BEFORE loading creatureType for the
-// name lookup where our CL loads the type first, and the arithmetic
-// block's three scratch registers are rotated (ecx/edi/eax against
-// edi/ecx/eax). Every instruction, immediate and call pairs.
+// Mac 0x198a0c/0x198a10 calculates deathFrames - i - 1 in the loop.
+// VC6 strength-reduces that expression into the retained back-frame induction
+// variable; spelling the induction manually misplaced its initialization.
+// Recovering the expression raises Windows 89.54 -> 92.70 with helpers kept.
 VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
@@ -4300,19 +4299,17 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long frames = max(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
         playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
-        long back = deathFrames - 1;
         { for (long i = 0; i < frames; i++) {
             m_powFrameIndex = i;
             if (targetArmy->m_currFrameType == cs_death) {
                 if (i < deathFrames) {
-                    targetArmy->m_currFrameIndex = back;
+                    targetArmy->m_currFrameIndex = deathFrames - i - 1;
                 } else {
                     targetArmy->m_currFrameType = cs_wait;
                     targetArmy->m_currFrameIndex = 0;
                 }
             }
             drawFrame(1, 0, 0, 100, 1, 1);
-            back--;
         } }
     }
 
