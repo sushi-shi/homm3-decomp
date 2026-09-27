@@ -160,6 +160,8 @@ void soundManager::initializeSamples()
 // chiefly the shared preference/exit tails; helper calls are preserved.
 // A conditional while-loop with a preinitialized null result scores 92.07%;
 // the guarded infinite loop retains the stronger 94.32% comparison.
+// Separate initial/bottom guards in a do/while score 91.79%; a failure-first
+// nested preference arm scores 77.34%. Neither restores the shared tail.
 VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
