@@ -50,3 +50,13 @@ mac_size = 32
 reference_offset = 0xa0
 sha256 = "42956ac188e2eaad23fefcd1427ab8d1081b72da13159151b6f113fcaebfe6a0"
 evidence = "Mac screenScroll at code 0+0x19cdc bounds unsigned dir to 0..7, then code 0+0x19ce8 reads TOC 1+0x1c18 -> data 1+0x2902c and branches through its eight loader-relocated words. They point in order to 0+0x19cfc, 0x19d04, 0x19d10, 0x19d18, 0x19d24, 0x19d2c, 0x19d38, 0x19d40, all inside the 0+0x19c48..0x19e50 owner. The candidate emits one eight-word local switch table whose entry relocs target its own function; all 32 entry bytes remain scored after rebasing."
+
+[[jump_tables]]
+owner_va = 0x005f2a40
+unit = "victorylossconditions"
+mac_section = 1
+mac_offset = 0x58af0
+mac_size = 68
+reference_offset = 0x54
+sha256 = "75aef871ea9f14449259aa1725c512be29fed23a9685ecef223071a9b8644e9f"
+evidence = "Mac checkForDefeatedHeroLoss subtracts three from the campaign ID and bounds the result to 0..16. Code 0:0x1feeb0 loads TOC 1+0x3498 -> data 1+0x58af0, whose 17 loader-relocated words select campaign 3..19 arms inside owner 0x1fee5c..0x1ff2a4. Unhandled campaigns select the final loss-condition guard 0x1ff25c; campaigns 3,7,9,10,12,14,15,17,18,19 select their source-backed arms. Candidate emits one 68-byte local table with 17 relocations to its owning function; candidate destinations remain byte-scored after reload rebasing."
