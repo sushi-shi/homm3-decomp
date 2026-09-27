@@ -70,3 +70,13 @@ mac_size = 36
 reference_offset = 0x6d0
 sha256 = "5b5e7f79686c5ce55154bd8f2ef5f3321908b16c0fccc927e26dd9fd193fa70d"
 evidence = "newMap's resource-bonus town switch bounds alignment0..8 at Mac code0+0xd6164 and loads TOC1+0x24ec at0xd616c -> this nine-word table. All nine loader-relocated labels lie inside the admitted0xd5a9c..0xd6350 owner; Inferno3 and Conflux8 share the Mercury arm. Candidate emits one36-byte switch table with nine owner-function relocations. Candidate labels stay independently rebased and byte-scored."
+
+[[jump_tables]]
+owner_va = 0x005139e0
+unit = "newgame"
+mac_section = 1
+mac_offset = 0x4b440
+mac_size = 44
+reference_offset = 0x48
+sha256 = "e6d7bddb353a613ef7c6fa8712ac5d827cd002cad286d685611e0fcbbe2fb5f5"
+evidence = "Native getVictoryConditionText sign-extends the condition byte, handles -1 separately, bounds the remaining selector to0..10 at0x132aa8, and loads TOC1+0x2970 -> table1+0x4b440 at0x132ab0. All eleven loader-relocated words select source-backed condition arms inside owner0x132a68..0x133288. Candidate anonymous RW@1549 is one44-byte table with eleven relocations to this owner, not an external global. Existing owner/extent/xref matching identifies it without pinning the anonymous ordinal; destinations remain independently rebased and scored."
