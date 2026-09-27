@@ -3871,15 +3871,17 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // putting the constant in a register are byte-flat at 96.3708: writing the
 // guard `0 >= stack.numTroops`, and naming one `int resetFrame = 0` shared by
 // the compare and the store (VC6 folds it back to an immediate either way).
+// DC records the non-const array reference. Mac 0x1976f0 reloads
+// m_powSprite after loadSpellEffect; these recoveries leave Windows bytes flat.
 VA(0x005a67c0, 0x4AC) MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity, dc 0x155b28
-void combatManager::showMassSpell(const unsigned char (*effected)[20],
+void combatManager::showMassSpell(unsigned char (&effected)[2][20],
                                   int spellEffect, unsigned char showWince)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-        CSprite* effectSprite = loadSpellEffect(spellEffect);
+        loadSpellEffect(spellEffect);
         int frames;
-        if (effectSprite)
-            frames = effectSprite->getNumFrames(cs_walk);
+        if (m_powSprite)
+            frames = m_powSprite->getNumFrames(cs_walk);
         else
             frames = 0;
         for (int side = 0; side < 2; side++) {
@@ -4527,6 +4529,8 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
+    // DC records damage[8] at procedure scope; initialization follows the shake.
+    int counts[WALL_TARGET_COUNT];
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         g_mouseManager->hidePointer();
         m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap->getMap(0, 0), 0, 0,
@@ -4555,7 +4559,6 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    int counts[WALL_TARGET_COUNT];
     memset(counts, 0, sizeof counts);
     int remaining = g_spellTraits[SPELL_EARTHQUAKE].m_masteryBonus[level];
     int drawn = 0;
