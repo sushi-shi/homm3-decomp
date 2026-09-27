@@ -70,6 +70,13 @@ static const int g_combatActionFirstAid = 11;
 // forms are neutral, as are two single-pass selection scopes. Copying the
 // final order stores and return into the keep arm scores 95.9569%. Preserve
 // the named calls and their conditional random draw.
+// Mac 0x81dc4..0x81df8 rejects manual positive-skill control first, then
+// tests the keep independently. Restoring that early guard raises Windows
+// 92.18% to 98.68% while preserving validWallTarget and every other helper.
+// A common-order jump is Windows byte-flat and matches Mac's direct keep
+// edge with target in r27 and saves starting at r26. The chosen-result flag
+// adds three CW instructions and an r25 save absent from native; remove that
+// provisional state while retaining the shared order stores.
 VA(0x00473c00, 0x29F) MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
@@ -100,70 +107,67 @@ unsigned char combatManager::automateCatapult()
     long count;
     long skill = currentArmy->getController()->getSecondarySkill(
         eSecSkillSiegeBallistics);
-    bool targetChosen = 0;
-    if (isComputerAction()) {
-        if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
-            target = WALL_TARGET_3;
-            targetChosen = 1;
-        }
-    } else if (skill > 0) {
+    if (!isComputerAction() && skill > 0)
         return 0;
+    if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
+        target = WALL_TARGET_3;
+        goto issueCatapultOrder;
     }
 
-    if (!targetChosen) {
+    count = 0;
+    { for (long i = 0; i < 4; i++) {
+            if (getWallStrength(walls[i]) > 0)
+                count++;
+        }
+    }
+
+    if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
+        long weakest = 100;
         count = 0;
         { for (long i = 0; i < 4; i++) {
-                if (getWallStrength(walls[i]) > 0)
-                    count++;
+                long strength = getWallStrength(walls[i]);
+                if (strength <= 0 || strength > weakest)
+                    continue;
+                if (strength < weakest)
+                    count = 0;
+                count++;
+                weakest = strength;
             }
         }
 
-        if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
-            long weakest = 100;
-            count = 0;
-            { for (long i = 0; i < 4; i++) {
-                    long strength = getWallStrength(walls[i]);
-                    if (strength <= 0 || strength > weakest)
-                        continue;
-                    if (strength < weakest)
-                        count = 0;
-                    count++;
-                    weakest = strength;
-                }
-            }
+        // Dreamcast and Mac retain sRandom here. Complete binds its
+        // identical body to the shared random implementation.
+        long choice = sRandom(1, count);
+        long index = 0;
+        for (; index < 4; index++) {
+            long strength = getWallStrength(walls[index]);
+            if (strength == weakest && --choice == 0)
+                break;
+        }
+        target = walls[index];
+    } else {
+        DATA(0x00670198) static TWallTargetId towers[4] = {
+            WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
+        };
 
-            // Dreamcast and Mac retain sRandom here. Complete binds its
-            // identical body to the shared random implementation.
-            long choice = sRandom(1, count);
-            long index = 0;
-            for (; index < 4; index++) {
-                long strength = getWallStrength(walls[index]);
-                if (strength == weakest && --choice == 0)
-                    break;
-            }
-            target = walls[index];
+        long index;
+        for (index = 0; index < 4; index++) {
+            if (validWallTarget(towers[index]))
+                break;
+        }
+        if (index < 4) {
+            target = towers[index];
         } else {
-            DATA(0x00670198) static TWallTargetId towers[4] = {
-                WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
-            };
-
-            long index;
-            for (index = 0; index < 4; index++) {
-                if (validWallTarget(towers[index]))
+            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+                    target = TWallTargetId(target + 1)) {
+                if (validWallTarget(target))
                     break;
-            }
-            if (index < 4) {
-                target = towers[index];
-            } else {
-                for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-                        target = TWallTargetId(target + 1)) {
-                    if (validWallTarget(target))
-                        break;
-                }
             }
         }
     }
 
+
+issueCatapultOrder:
     m_nextAction = 9;
     m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
     m_nextActionExtra = -1;
