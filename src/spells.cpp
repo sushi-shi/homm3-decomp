@@ -4180,13 +4180,15 @@ void combatManager::removeCorpse(army* corpse)
 }
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
-// stack takes its cell.
+// stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
+// combat skips its initialization; a zero-initialized ternary adds absent
+// stores and changes the POD return-object path. Keep the conditional load.
 VA(0x005a7390, 0x1CB) MAC_ADDRESS(0x1984ec, 0x200)  // dc 0x1566f8
 void combatManager::demonicResurrection(const army* caster, army* target)
 {
-    SAMPLE2 sample;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-        sample = loadPlaySample(
+    SAMPLE2 sound;
+    if (!isQuickCombat())
+        sound = loadPlaySample(
             DATA_COMPGEN(0x00660af4, resurrectSampleName, "Resurect.wav"));
 
     removeCorpse(target);
@@ -4198,7 +4200,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
                            target->m_gridIndex, 0, 1);
     demons->m_originalIndex = origPosition;
     resetLimitCreature();
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
         if (raised != 1)
@@ -4208,7 +4210,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
                     demons->getName(raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
-        waitEndSample(sample, -1);
+        waitEndSample(sound, -1);
     }
 }
 
