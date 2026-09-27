@@ -4616,8 +4616,11 @@ void hero::transferArtifacts(hero* src)
 // predicate is Complete-only; the retail capacity checks and one spared
 // component establish the result, without inventing a source helper.
 // Mac loads the component count before counting classSlots. Naming that
-// reference and advancing slot before remaining raises Windows to 98.48%;
-// the residual is the empty-mask branch and outer-loop exit polarity.
+// reference and advancing slot before remaining raises Windows to 98.48%.
+// The initial mask test now uses the canonical artifactAllowedInSlot helper;
+// VC6 expands it byte-identically. A do/while spelling of the outer loop
+// drops to 95.24%, so retain the for shape while resolving its exit branch.
+// The residual is the empty-mask branch and outer-loop exit polarity.
 VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -4633,8 +4636,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
     for (; remaining != 0; slot++, remaining--) {
         if (m_equipped[slot].m_artifactId != ARTIFACT_NONE)
             continue;
-        if (!g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask]
-                 .test(slot))
+        if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
             continue;
 
         int slotClass = g_artifactSlotTraits[slot].m_type;

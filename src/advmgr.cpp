@@ -1888,7 +1888,7 @@ VA(0x0040a0c0, 0x50D) MAC_ADDRESS(0x00a240, 0x59c)  // dc 0xa168
 void advManager::processRadarSelect(const message* msg)
 {
     if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
-        normalDialog((*g_generalText)[GENERAL_TEXT_WORLD_MAP_HELP], 4, -1, -1, -1, 0, -1, 0,
+        normalDialog(g_generalText->getText(GENERAL_TEXT_WORLD_MAP_HELP), 4, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
         return;
     }
@@ -3351,8 +3351,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // retail control flow. Sibling full/compact scopes now share retail's -0x14
 // result-string home and 0x14-byte frame; the residual is register allocation
 // and the associated cleanup-tail scheduling.
-// DC 2767/2773 and Mac 0xb348/0xb390 use TTextResource::operator[] for the
-// unvisited/visited labels. Restoring those calls is byte-flat in VC6.
+// DC 2767/2773 and Mac 0xb348/0xb390 access the unvisited/visited labels.
+// Keep the existing Complete getText helper; the spelling is VC6 byte-flat.
 // DC 2771/2778 and Mac 0xb370/0xb3b0/0xb3f4 call the retained
 // ExtraInfoUnion::getCreatureBank helper. VC6 expands all three calls here.
 
@@ -3969,8 +3969,8 @@ void advManager::reseed(int targetX, int targetY)
 // The CheckDimNextHeroBut tail already uses its canonical source call. DC
 // line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
 // the current 96.5199%.
-// DC 4853/4863/4893/4899/4920/4934/4947 uses TTextResource::operator[]
-// for all seven messages. Restoring those calls is Windows byte-flat.
+// DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
+// Keep the existing Complete getText calls; they are Windows byte-flat.
 VA(0x0040ec90, 0x5AD) MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -6026,9 +6026,8 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
 // data/accessor surface; the audit retains that ownership gap, including
 // GetItemId. It is not evidence for a copied helper body in this caller.
-// DC records TTextResource::operator[] throughout the quick-info text arms;
-// keep those canonical indexed calls. The retail comparison determines
-// whether each access expands or calls in this compiler context.
+// DC records text lookups throughout the quick-info arms. Preserve the
+// Complete getText helper at those sites while checking retail call shape.
 VA(0x004137c0, 0x25A0) MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {
@@ -6059,16 +6058,14 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     mapPoint.m_z = z;
 
     if (!mapPoint.isValid()) {
-        strcpy(g_text, (*g_generalText)[
-            GENERAL_TEXT_MAP_BORDER]);
+        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MAP_BORDER));
     } else {
         // DC names GetCell here; its ordinary retained body owns the
         // validity branch and canonical map indexing.
         testCell = getCell(mapPoint);
 
         if (!(getMapExtra(mapPoint) & playerBit)) {
-            strcpy(g_text, (*g_generalText)[
-                GENERAL_TEXT_QUICK_INFO_SHROUDED]);
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_QUICK_INFO_SHROUDED));
         } else {
             type_cell_adjuster adjuster;
             testCell = adjuster.getTriggerCell(testCell, cellX, cellY);
@@ -6109,7 +6106,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->isDiggable()) {
                     result += '\n';
                     result +=
-                        (*g_generalText)[GENERAL_TEXT_QUICK_INFO_DIGGABLE];
+                        g_generalText->getText(GENERAL_TEXT_QUICK_INFO_DIGGABLE);
                 }
                 strcpy(g_text, result.c_str());
                 break;
@@ -6122,10 +6119,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = testFlag & currHero->m_arenaFlags;
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                (*g_generalText)[GENERAL_TEXT_VISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                (*g_generalText)[GENERAL_TEXT_UNVISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6147,12 +6144,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         testCell->m_objectIndex] & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_VISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_UNVISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6169,12 +6164,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = currHero->m_flags & 0x4;
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6192,12 +6185,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x8);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6248,12 +6239,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6272,12 +6261,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6320,12 +6307,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x2000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6348,12 +6333,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             + (currHero->m_flags & 0x20000000UL);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6371,12 +6354,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x4000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6395,12 +6376,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6433,12 +6412,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & 0x02000000UL) + (currHero->m_flags & 0x10UL));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6451,12 +6428,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f));
                         if (visited)
                             sprintf(tempText, leanToFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, leanToFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6475,12 +6450,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6511,12 +6484,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6535,12 +6506,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6558,12 +6527,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x1);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6582,12 +6549,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6605,12 +6570,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x8000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6626,12 +6589,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_VISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_UNVISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6648,12 +6609,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x80);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6665,12 +6624,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_VISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                (*g_generalText)[
-                                    GENERAL_TEXT_UNVISITED_OBJECT]);
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6688,12 +6645,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6714,12 +6669,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x10000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6752,12 +6705,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x100000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6769,12 +6720,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x2);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6793,12 +6742,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & 0x100UL) + (currHero->m_flags & 0x04000000UL));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6817,12 +6764,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6859,12 +6804,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6888,12 +6831,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x40);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_VISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    (*g_generalText)[
-                                        GENERAL_TEXT_UNVISITED_OBJECT]);
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }

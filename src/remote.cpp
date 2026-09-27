@@ -264,8 +264,8 @@ static const long g_playerActiveUpdateInterval = 600000;
 
 // Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
 // its native transport supplies the incoming message. DC remote.cpp:318/331
-// names TTextResource::operator[] at the ping reply and destroyed-session
-// messages; restoring those calls leaves the Windows body at 98.3470%.
+// names text lookups at the ping reply and destroyed-session messages;
+// Complete keeps the existing getText calls at 98.3470%.
 VA(0x00552db0, 0x28F) MAC_ADDRESS(0x2109e4, 0x1a0)  // dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
@@ -290,7 +290,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             char tempText[256];
             sprintf(tempText,
-                    (*g_generalText)[GENERAL_TEXT_CHAT_PING_RESULT_FORMAT],
+                    g_generalText->getText(GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
                     GameTime::elapsedSince(
                         static_cast<CPingMsg*>(netMsg)->m_pingTime));
             receiveChat(tempText, netMsg->m_from);
@@ -310,7 +310,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
             if (dpid == g_thisNetPlayerInfo.m_dpid) {
                 remoteCleanup();
                 normalDialog(
-                    (*g_generalText)[GENERAL_TEXT_REMOTE_SESSION_DESTROYED],
+                    g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 shutDown(0);
             }

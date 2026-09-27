@@ -418,8 +418,8 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // Current residual (83.43%): DeleteTempSaveGame and CHeroSessions expand,
 // including the proven DeleteFileA path. Nested widget-vector insert/copy
 // operations still over-expand; retail retains fourteen additional call sites.
-// DC multiplayerwindow.cpp:926/927 calls TTextResource::operator[] for the
-// session and user headers; restoring them is byte-flat under VC6.
+// DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
+// Complete's existing getText helper is byte-flat under VC6 here.
 VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
@@ -455,10 +455,10 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
 
     m_sessNameHeader = new textWidget(216 - m_x, 146 - m_y, 127, 18,
-                                    (*g_generalText)[GENERAL_TEXT_SESSION_NAME], "smalfont.fnt",
+                                    g_generalText->getText(GENERAL_TEXT_SESSION_NAME), "smalfont.fnt",
                                     font::PRIMARY, 127, 1, 0, 8);
     m_userNameHeader = new textWidget(346 - m_x, 146 - m_y, 127, 18,
-                                    (*g_generalText)[GENERAL_TEXT_USER_NAME], "smalfont.fnt",
+                                    g_generalText->getText(GENERAL_TEXT_USER_NAME), "smalfont.fnt",
                                     font::PRIMARY, 128, 1, 0, 8);
     m_playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
                                             g_config.m_networkDefaultName, "smalfont.fnt",
@@ -1417,7 +1417,7 @@ unsigned char TMultiPlayerWindow::onTCP()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
-// DC lines 1947/1948 call TTextResource::operator[] for the two headers.
+// DC lines 1947/1948 look up the two headers; keep Complete's getText calls.
 // Complete expands CMPInputDlg's constructor at this site, asks for a TCP
 // address, tears down the browser's current DirectPlay connection, and runs
 // one bounded session enumeration. The four failure dialogs are pinned by
@@ -1441,8 +1441,8 @@ unsigned char TMultiPlayerWindow::onSearch()
     // sentinel is copy-propagated byte-flat, as the register model predicts;
     // the remaining role swap is not a statement-level lever.
     CMPInputDlg searchDlg(20, 20);
-    searchDlg.m_header1->setText((*g_generalText)[GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT]);
-    searchDlg.m_header2->setText((*g_generalText)[GENERAL_TEXT_PASSWORD_OPTIONAL]);
+    searchDlg.m_header1->setText(g_generalText->getText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
+    searchDlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD_OPTIONAL));
     searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
     searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
     searchDlg.disableOK();
@@ -1525,9 +1525,10 @@ CHotSeatDlg::CHotSeatDlg()
     m_widgets.reserve(19);
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "muhotsea.pcx", 0x800));
-    // DC multiplayerwindow.cpp:637 names the text resource indexer here.
+    // DC multiplayerwindow.cpp:637 looks up this text through its indexer.
+    // Complete keeps the existing getText helper.
     m_widgets.push_back(new textWidget(0, 30, m_width, 150,
-                                     (*g_generalText)[GENERAL_TEXT_HOTSEAT_NAME_PROMPT], "bigfont.fnt",
+                                     g_generalText->getText(GENERAL_TEXT_HOTSEAT_NAME_PROMPT), "bigfont.fnt",
                                      font::WHITE, HEADER_ID, 1, 0, 8));
 
     int sy = 178;

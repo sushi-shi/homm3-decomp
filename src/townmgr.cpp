@@ -1516,8 +1516,8 @@ void TTownScreenWindow::updateTownLocators()
 // preassignment without a default arm, and the two split bonus locals
 // were each structural wins (83.53 -> 87.93 combined). No local
 // spelling reached the EBX/EDI tie-break.
-// DC names GetArmyName twice and TTextResource::operator[] six times;
-// restoring those shared calls lifts Windows from 87.70778% to 88.50%.
+// DC names GetArmyName twice and six text lookups. Complete keeps its
+// existing getText calls; the army-name calls lift Windows to 88.50%.
 // DC places get_horde before get_legion_bonus, but Complete calls them
 // in the opposite order, so the Windows source follows retail.
 // E:\gamedcs\townmgr.cpp:2562
@@ -4254,8 +4254,8 @@ int TBlacksmithWindow::windowHandler(message& msg)
 // harmless because a war machine costs gold and nothing else, so the
 // other six terms are zero - but it is what the bytes say, and the
 // fixed +0xb4 displacement inside the loop is the proof.
-// Dreamcast lines 5364 and 5378 prove the authored TTextResource::operator[]
-// and game::GetHero calls. Their canonical inline boundaries restore retail's
+// Dreamcast lines 5364 and 5378 prove a text lookup and game::GetHero call.
+// Complete keeps getText; the canonical hero call restores retail's
 // purchase-arm argument and creature-table register schedule.
 
 // E:\gamedcs\townmgr.cpp:5361
@@ -5867,8 +5867,8 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // own refusal lines; a building the town can never build gets the generic
 // refusal; otherwise the assembled list (or GetText(220) when nothing is
 // missing) becomes the rollover text.
-// DC calls TTextResource::operator[] for both text lines; restored here
-// without changing VC6 bytes. Its is_legal_building check is older game
+// DC calls a text lookup for both lines; Complete keeps getText without
+// changing VC6 bytes. Its is_legal_building check is older game
 // logic: Complete retains a call to canEverBuild, which also checks dock,
 // capitol and hierarchy conditions.
 
@@ -6647,8 +6647,7 @@ void doMapTavern(type_point point)
 // widget 0xc). Human-only text is gated on IsLocalHuman for network play.
 // Capturing every roster read changed the portrait lookup semantics. Keep
 // the native id captures only for the selected-hero assignments below.
-// DC records TTextResource::operator[] for both text formats; those
-// shared calls are VC6 byte-flat here and clear the source audit.
+// DC records text lookups for both formats; Complete keeps getText.
 // E:\gamedcs\townmgr.cpp:8055
 // Mac captures each offered id at 0x1d5e50/0x1d5f0c and retains it
 // for the selected-hero assignment; portrait lookups still read the roster.
@@ -8102,7 +8101,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                 if (bestHero) {
                     m_widgets.push_back(new textWidget(
                         66 * column + 0x102, 0x18c, 0x35, 0x2c,
-                        (*g_generalText)[GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS],
+                        g_generalText->getText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, -1, 0, 0, 8));
                     addWidget(m_widgets.back(), -1);
