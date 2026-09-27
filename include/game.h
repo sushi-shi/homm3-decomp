@@ -20,6 +20,7 @@
 #include "customcampaign.h"
 #include "campaignbrief.h"
 #include "hero.h"
+#include "DC_precompiledheaders.h"
 #include "mapcell.h"
 #include "netmsg.h"
 #include "savegame.h"
@@ -2036,25 +2037,20 @@ private:
 };
 SIZE(TCheatCode, 200);
 
+// Mac 0x9dc..0xa10 selects one of two operand addresses for the minimum
+// of strlen and the buffer bound. Use the shared reference selector rather
+// than spelling its expansion here; the Windows encoder remains exact.
 // E:\gamedcs\Game.h:1439
 VA(0x00402a30, 0xA1) MAC_ADDRESS(0x000958, 0xdc)
 inline void TCheatCode::encode(const char* value)
 {
-    int i = 0;
-    const int maximum = 199;
-    for (;;) {
-        int length = static_cast<int>(strlen(value));
-        const int* limit = &maximum;
-        if (length <= maximum)
-            limit = &length;
-        if (i >= *limit)
-            break;
-
+    int i;
+    for (i = 0; i < cppMin<int>(static_cast<int>(strlen(value)),
+                               static_cast<int>(sizeof m_code) - 1); i++) {
         if (isalpha(value[i]))
             m_code[i] = s_b[tolower(value[i]) - 'a'];
         else
             m_code[i] = value[i];
-        i++;
     }
     m_code[i] = 0;
 }
