@@ -1939,6 +1939,7 @@ game	?computeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0	tokens1:9820a687c2
 game	?convertObject@game@@QAEXPAVNewmapCell@@@Z	99.9756	99.9756	99.9756	0xc9990	tokens1:025975e450e4
 game	?copy@std@@YIPAUtype_map_hero_identity@@PAU2@00@Z	100.0000	100.0000	100.0000	0xd2e50	-
 game	?copy_backward@std@@YIPAVtown@@PAV2@00@Z	100.0000	100.0000	100.0000	0xd32e0	-
+game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0	-
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010	-
 game	?createBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250	tokens1:72eeb4a2177f
 game	?createTownHeroes@game@@QAEXPAH@Z	100.0000	100.0000	100.0000	0xca040	tokens1:6637ca20a9dd
@@ -2049,7 +2050,7 @@ game	?perWeek@game@@QAEXXZ	96.9467	96.9467	99.8370	0xc8780	tokens1:1041d282a786
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	95.8113	95.8113	100.0000	0xcaa70	tokens1:52f8f601bcf2
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97
-game	?randomizeEvents@game@@QAEXXZ	79.7950	79.7950	88.9117	0xc0cc0	tokens1:bea3e646815f
+game	?randomizeEvents@game@@QAEXXZ	80.0549	80.0549	88.9117	0xc0cc0	tokens1:cca3cda1a082
 game	?randomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870	tokens1:2e45d059a363
 game	?randomizeUniversity@game@@AAEXPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xc06f0	tokens1:c24257370ff1
 game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	57.5232	57.5232	95.2598	0xc4390	tokens1:d3fd8e698c41
@@ -2123,7 +2124,6 @@ game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9
 game	?validateVictoryLossConditions@game@@QAEXE@Z	91.1630	91.1630	92.9019	0xbf780	tokens1:041a5f26b1cc
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.0000	100.0000	0xc6c50	tokens1:ad7644e5de3f
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	tokens1:2f41bc5ced6d
-game	__h3cg$game$bitset_count$Bitset28	0.0000	100.0000	100.0000	0xcf8d0	-
 game	__h3cg$game$bitset_ctor$Bitset28	0.0000	100.0000	100.0000	0xcf870	-
 game	__h3cg$game$bitset_reference_assign$Bitset129	0.0000	100.0000	100.0000	0x8ead0	-
 game	__h3cg$game$bitset_reference_assign$Bitset28	0.0000	100.0000	100.0000	0xcf8f0	-

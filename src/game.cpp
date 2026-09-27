@@ -4512,6 +4512,10 @@ void game::matchUndergroundGates()
 // across the whole TU and has been removed. The rest of this body's
 // roster costs -100 (x2, two helper rows stop existing as separate
 // symbols), -10.85, -5.13, -1.01 and -0.88.
+// DC records int new_owner; Mac 0xd7f08..0xd7f50 widens the saved byte
+// before passing it to claimShipyard. Keep that procedure local and the
+// point constructors as call-argument temporaries at the recorded push_back
+// and claim sites; all canonical helper calls remain intact.
 VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
 void game::randomizeEvents()
 {
@@ -4543,6 +4547,7 @@ void game::randomizeEvents()
     int luckBonus;
     unsigned char resQty;
     EGameResource resType;
+    int newOwner;
     NewmapCell::TObjectCell* thisObj;
 
     const unsigned long poolIndexBits = 0x03ffe000;
@@ -4768,16 +4773,14 @@ void game::randomizeEvents()
                         std::vector<type_point>* pool =
                             &m_lithExitPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
-                        pool->push_back(point);
+                        pool->push_back(type_point(x, y, z));
                     }
                     break;
 
                 case UNDERGROUND_GATE:
                     {
                         tempCell->m_extraInfo = m_undergroundGateExits.size();
-                        type_point point(x, y, z);
-                        m_undergroundGateExits.push_back(point);
+                        m_undergroundGateExits.push_back(type_point(x, y, z));
                         m_undergroundGatePairs.push_back(-1);
                     }
                     break;
@@ -4787,8 +4790,7 @@ void game::randomizeEvents()
                         std::vector<type_point>* pool =
                             &m_lithPools[tempCell->m_objectIndex];
                         tempCell->m_extraInfo = pool->size();
-                        type_point point(x, y, z);
-                        pool->push_back(point);
+                        pool->push_back(type_point(x, y, z));
                     }
                     break;
 
@@ -4895,13 +4897,12 @@ void game::randomizeEvents()
 
                 case SHIPYARD:
                     {
-                        signed char oldOwner =
+                        newOwner =
                             static_cast<signed char>(tempCell->m_extraInfo);
-                        if (oldOwner != -1) {
+                        if (newOwner != -1) {
                             tempCell->m_extraInfo =
                                 (tempCell->m_extraInfo & 0xffffff00) | 0xff;
-                            type_point location(x, y, z);
-                            claimShipyard(location, oldOwner);
+                            claimShipyard(type_point(x, y, z), newOwner);
                         }
                     }
                     break;
