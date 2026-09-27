@@ -2027,7 +2027,7 @@ game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:8314
 game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	93.4277	93.4277	100.0000	0xb96f0	tokens1:efb5d21641fa
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:bf5f7ffde2a2
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:d2b3b45296b0
-game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	58.0267	58.0267	83.1646	0xc2450	tokens1:245ff157b06d
+game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	60.2827	60.2827	83.1646	0xc2450	tokens1:ba09313e7f49
 game	?loadMinePool@game@@AAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb9340	tokens1:482dcfd473ff
 game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870	tokens1:0c896143b823
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:924659d84747

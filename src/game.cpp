@@ -5060,7 +5060,10 @@ bool game::loadMap(TAbstractFile* mapFile)
         m_artifactDisabled[artifact] = g_artifactTraits[artifact].m_disabled;
 
     if (m_gameVersion < 2) {
-        artifact = (((m_gameVersion >= 1) - 1) & -2) + 129;
+        if (m_gameVersion < 1)
+            artifact = 127;
+        else
+            artifact = 129;
         memset(m_artifactDisabled + artifact, 1,
                sizeof(m_artifactDisabled) - artifact);
     }
@@ -5121,7 +5124,7 @@ bool game::loadMap(TAbstractFile* mapFile)
               m_spellDisabledInfo + sizeof(m_spellDisabledInfo), m_spellAllocInfo);
 
     int rumourListSize;
-    if (mapFile->read(&rumourListSize, sizeof(rumourListSize))
+    if (readLittleEndianValue(mapFile, rumourListSize)
         < sizeof(rumourListSize)) {
         return false;
     }
