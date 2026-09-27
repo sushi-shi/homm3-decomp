@@ -304,9 +304,75 @@ SIZE(type_quest_creature_def, 0x1c);
 SIZE(type_quest_experience_def, 0x18);
 SIZE(type_quest_gold_def, 0x18);
 
-struct TRmgMapPosition {
+struct TRmgVector {
     int m_x;
     int m_y;
+
+    TRmgVector() {}
+    TRmgVector(int newX, int newY) : m_x(newX), m_y(newY) {}
+
+    int length() const;
+    TRmgVector operator+(TRmgVector other) const;
+    TRmgVector operator*(int scale) const;
+    TRmgVector operator/(int divisor) const;
+    // The analogous Graphics Gems vector dot is a tiny header inline. Retail
+    // likewise expands both calls in buildVertices and retains no separate
+    // body; the by-value operand also recovers that caller's register homes.
+    int dot(TRmgVector other) const
+    {
+        return m_y * other.m_y + m_x * other.m_x;
+    }
+};
+
+// Retail's common direction table contains eight consecutive two-dword
+// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
+// the absence of an atexit registration proves that destruction is trivial.
+// The comparator is independently used by the RMG set cluster.
+struct TPoint {
+    int m_x;
+    int m_y;
+
+    TPoint() {}
+    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
+
+    TPoint& operator+=(const TRmgVector& offset)
+    {
+        m_x += offset.m_x;
+        m_y += offset.m_y;
+        return *this;
+    }
+    bool operator==(const TPoint& other) const
+    {
+        return m_x == other.m_x && m_y == other.m_y;
+    }
+    bool operator!=(const TPoint& other) const
+    {
+        return !(*this == other);
+    }
+
+    bool operator<(const TPoint& other) const
+    {
+        return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
+    }
+    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
+    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
+    // TPoint copy of a grid point with a tile direction. Declared last so
+    // the earlier member handles are unchanged.
+    // Coordinate accessors, used by the terrain painter's diagonal checks
+    // for the same site-count reason as the grid point's; declared after
+    // the data so the earlier member handles are unchanged. Adding them
+    // also returned rmg's quest-creature generate to 100% (include-set
+    // state, 99.73% before).
+    int getX() const { return m_x; }
+    int getY() const { return m_y; }
+    TPoint& operator+=(const TPoint& offset);
+};
+
+// The native distance callers pass the position's XY subobject as a TPoint
+// value, without constructing another point. This shared base reproduces
+// that conversion; the retained Windows constructor keeps offsets 0/4/8
+// and the same twelve-byte position layout.
+struct TRmgMapPosition : TPoint {
     int m_z;
 
     TRmgMapPosition() {}
@@ -428,70 +494,6 @@ enum ERmgDirectionLimits {
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
 // are free calls. All carry two signed dwords; names remain provisional.
-struct TRmgVector {
-    int m_x;
-    int m_y;
-
-    TRmgVector() {}
-    TRmgVector(int newX, int newY) : m_x(newX), m_y(newY) {}
-
-    int length() const;
-    TRmgVector operator+(TRmgVector other) const;
-    TRmgVector operator*(int scale) const;
-    TRmgVector operator/(int divisor) const;
-    // The analogous Graphics Gems vector dot is a tiny header inline. Retail
-    // likewise expands both calls in buildVertices and retains no separate
-    // body; the by-value operand also recovers that caller's register homes.
-    int dot(TRmgVector other) const
-    {
-        return m_y * other.m_y + m_x * other.m_x;
-    }
-};
-
-// Retail's common direction table contains eight consecutive two-dword
-// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
-// the absence of an atexit registration proves that destruction is trivial.
-// The comparator is independently used by the RMG set cluster.
-struct TPoint {
-    int m_x;
-    int m_y;
-
-    TPoint() {}
-    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
-
-    TPoint& operator+=(const TRmgVector& offset)
-    {
-        m_x += offset.m_x;
-        m_y += offset.m_y;
-        return *this;
-    }
-    bool operator==(const TPoint& other) const
-    {
-        return m_x == other.m_x && m_y == other.m_y;
-    }
-    bool operator!=(const TPoint& other) const
-    {
-        return !(*this == other);
-    }
-
-    bool operator<(const TPoint& other) const
-    {
-        return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
-    }
-    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
-    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
-    // TPoint copy of a grid point with a tile direction. Declared last so
-    // the earlier member handles are unchanged.
-    // Coordinate accessors, used by the terrain painter's diagonal checks
-    // for the same site-count reason as the grid point's; declared after
-    // the data so the earlier member handles are unchanged. Adding them
-    // also returned rmg's quest-creature generate to 100% (include-set
-    // state, 99.73% before).
-    int getX() const { return m_x; }
-    int getY() const { return m_y; }
-    TPoint& operator+=(const TPoint& offset);
-};
-
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 

@@ -42,6 +42,16 @@
 #include "textresource.h"
 #include "town.h"
 
+// Mac 0x22cef0 retains the shared two-point integer distance calculation.
+// Its by-value point arguments are spilled as two adjacent coordinate pairs.
+MAC_ADDRESS(0x22cef0, 0x84)
+int getRmgDistance(TPoint first, TPoint second)
+{
+    return static_cast<int>(sqrt(static_cast<double>(
+        (first.m_x - second.m_x) * (first.m_x - second.m_x)
+        + (first.m_y - second.m_y) * (first.m_y - second.m_y))));
+}
+
 // Complete-only shared land predicate; original name is unknown. Nine
 // placement/decoration sites use this same road-passable, non-rock test.
 // Keeping its ordinary helper boundary restores decorateMap's retail branch
@@ -1246,40 +1256,19 @@ void TRmgZone::setLevelPosition(TRmgMapPosition position)
 // FilterZonePositions calls this predicate at 0x53b4b7 and 0x53b5ae.
 // The two center coordinates, template sizes and map-level comparison prove
 // its role independently of the provisional name. Return value is in al.
-// Residual: otherSize and combinedSize exchange ECX/EBX (96.38%).
-// A separate branch-local minimum reproduces the value-select sequence;
-// min(otherSize, thisSize) and _cpp_min force addressable operands instead
-// (84.74/87.06%). A conditional minimum, clamping thisSize in place, or
-// extending minimumSize outside the level branch loses that sequence.
-// Swapping size initialization order, reading fields again in the minimum,
-// reversing the sum operands and giving the sum a branch-local lifetime
-// do not settle the remaining register assignment.
-// Generated arithmetic lifetimes reach 96.43% with dy before dx and an
-// in-place clearance subtraction. Named squares and comparison results do
-// not improve the remaining allocation; keep the signed sqrt/ftol boundary.
-// Two size-ownership batches (60 states each, 10/14 distinct objects) keep
-// every sibling score unchanged. Binding only otherSize as const int& gets
-// retail's ECX/EBX homes and reaches 97.7922%, but adds `add ecx,8` then
-// `mov ecx,[ecx]` where retail has one `mov ecx,[ecx+8]`, and reverses the
-// LEA operands. Const values and references to copied scalar temporaries
-// do not remove that residual. No binding is adopted on score alone.
-// Canonical getSize calls at either receiver, crossed with bindings and
-// minimum selection, retain the same reference/address-add residual.
-// Vector-length construction/lifetime models also fail: hiding the ordinary
-// length body adds a call absent here; exposing it removes six retail calls
-// across five other callers, including three exact functions. Arithmetic
-// local variants do not restore those boundaries. Keep one support-TU body.
-// Earlier size declarations and a two-element size array also leave 96.4286%.
-// Binding either template owner by pointer/reference, with or without named
-// scalar sizes, does not improve the remaining register assignment.
+// Mac 0x22fdec calls the shared two-point distance helper. The point base,
+// this-size-before-other-size declarations and direct clearance difference
+// reproduce all 50 native instructions apart from that named call relocation.
+// Windows rises from 96.4286% to 99.5455%; the remaining size-register exchange
+// affects five instructions. Declaration-lifetime, canonical minimum/accessor
+// and reference-binding controls do not improve it. Keep the shared helper
+// and the native source order through that compiler-allocation residual.
 VA(0x00532BD0, 0xA8) MAC_ADDRESS(0x22fdc0, 0xc8) // anchor-callee 0x53b4b7/0x53b5ae; thiscall, ret 4
 unsigned char TRmgZone::canConnect(const TRmgZone* other) const
 {
-    int dy = m_levelPosition.m_y - other->m_levelPosition.m_y;
-    int dx = m_levelPosition.m_x - other->m_levelPosition.m_x;
-    int distance = static_cast<int>(sqrt(static_cast<double>(dx * dx + dy * dy)));
-    int otherSize = other->m_slot->m_size;
+    int distance = getRmgDistance(m_levelPosition, other->m_levelPosition);
     int thisSize = m_slot->m_size;
+    int otherSize = other->m_slot->m_size;
     int combinedSize = thisSize + otherSize;
     if (other->m_levelPosition.m_z != m_levelPosition.m_z) {
         if (combinedSize < distance)
@@ -1287,8 +1276,7 @@ unsigned char TRmgZone::canConnect(const TRmgZone* other) const
         int minimumSize = thisSize;
         if (otherSize < minimumSize)
             minimumSize = otherSize;
-        combinedSize -= distance;
-        return combinedSize > minimumSize / 2;
+        return combinedSize - distance > minimumSize / 2;
     }
     return 11 * combinedSize >= 10 * distance;
 }
@@ -2537,7 +2525,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
 // link-order tables and a synthetic PDB cannot independently establish it.
 VA(0x005355C0, 0x1A)
 TRmgMapPosition::TRmgMapPosition(int newX, int newY, int newZ)
-    : m_x(newX), m_y(newY), m_z(newZ)
+    : TPoint(newX, newY), m_z(newZ)
 {
 }
 
@@ -3768,24 +3756,9 @@ void type_random_map_generator::initializeObjectGenerators()
 // Player zones placed underground require an underground town alignment;
 // same-level zones with different template IDs must keep 80% of the sum of
 // their nominal radii. The whole-position copies are retained retail evidence.
-// Residual: the subtraction/square temporaries exchange registers (98.04%).
-// Keeping the input slot before its position restores the first source group;
-// naming dy before dx restores the trailing sqrt/size sequence. A constructed
-// TPoint delta is 95.36% and changes that sequence; independent initial
-// field reads were 90.05%. No DC counterpart establishes the math boundary.
-// The signed-distance family also varied named/in-place squares, running
-// sums and subtraction temporaries; none exceeded the 98.04% baseline.
-// A further 60-case declaration/copy matrix is also flat: separating dx/dy
-// declarations from evaluation and assigning the returned position do not
-// recover the extra retail register move. No candidate raised collateral MAX.
-// Sixty signed int/long, result-value and position-copy lifetime forms give
-// six code identities (91.50..98.04%); forty-four point/vector displacement
-// forms plus the unchanged control give six more (81.91..98.04%). Neither
-// family raises any tracked score. All 104 distinct bodies preserve the
-// bounded integer-distance/ordered-sqrt oracle; the scalar source stays put.
-// Exposing the canonical squared-distance helper and calling it with two
-// point values, direct or named, leaves this body at 98.0374%; its retained
-// support callers keep their calls. This does not explain the extra retail move.
+// Mac 0x23bf6c retains getRmgDistance on the XY bases of these owned
+// positions. Restoring that shared call reproduces every Windows byte;
+// its source partner TRmgZone::canConnect uses the same helper.
 VA(0x0053AD60, 0x113) MAC_ADDRESS(0x23be70, 0x14c) // anchor-callee 0x53e2ea/0x53af04; thiscall, ret 4
 unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
 {
@@ -3804,9 +3777,7 @@ unsigned char type_random_map_generator::canPlaceZone(TRmgZone* zone)
             otherZone->m_slot->m_zoneIndex == zoneIndex)
             continue;
         TRmgMapPosition otherPosition = otherZone->getLevelPosition();
-        int dy = otherPosition.m_y - position.m_y;
-        int dx = otherPosition.m_x - position.m_x;
-        int distance = static_cast<int>(sqrt(static_cast<double>(dx * dx + dy * dy)));
+        int distance = getRmgDistance(otherPosition, position);
         if (10 * distance < 8 * (otherZone->m_slot->m_size + size))
             return 0;
     }
