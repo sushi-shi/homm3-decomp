@@ -799,6 +799,8 @@ inline unsigned char TMultiPlayerWindow::onModem()
 // Case-local exits also restore Windows' shared failure cleanup without
 // synthetic join labels (86.75% -> 91.57%). Return placement and nested
 // inlining still differ; all protocol and menu helpers remain canonical.
+// Coupling CANCEL/IPX branch exits with HOST/SEARCH/HOTSEAT returns in
+// 36 natural variants produced three reproduced objects and no gain.
 VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {

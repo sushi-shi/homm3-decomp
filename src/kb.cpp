@@ -3299,6 +3299,9 @@ int gameUnsaved()
 // Located by the call-graph lane: sole caller is AppCommand's default
 // arm (retail 0x4f8060, homm2 lineage), size 0x7f2 vs DC Cb 0x79c.
 // Promoted to the live retail claim below.
+// Naming the current hero, army reference/pointer, or common game receiver
+// in the army command does not recover retail's combined address calculation;
+// six lifetime variants preserve the helpers but do not improve 99.3051%.
 int handleAppSpecificMenuCommands(int idItem)
 {
     // @stub
