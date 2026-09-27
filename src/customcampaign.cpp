@@ -129,7 +129,17 @@ DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusi
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
-DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
+// Pinned Windows 0x63d8c8 and Mac code 0x2a4698 contain the same
+// seven four-entry rows; these are initialized ordinals, not BSS.
+DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4] = {
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0}
+};
 
 // Retail .data 0x66c218 is a reference cell (the akHeroTraits pattern)
 // holding the campaign music table at 0x66c090; only StartMusic and
