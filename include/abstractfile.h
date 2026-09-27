@@ -94,10 +94,13 @@ int readLittleEndianValue(TAbstractFile* infile, T& value)
 {
     int count = readValue(infile, value);
 #if defined(__POWERPC__)
-    if (sizeof(T) == 2)
-        value = static_cast<T>(__lhbrx(&value, 0));
-    else if (sizeof(T) == 4)
-        value = static_cast<T>(__lwbrx(&value, 0));
+    // Retail tests the byte count before loading the complete scalar.
+    if (count >= sizeof(value)) {
+        if (sizeof(T) == 2)
+            value = static_cast<T>(__lhbrx(&value, 0));
+        else if (sizeof(T) == 4)
+            value = static_cast<T>(__lwbrx(&value, 0));
+    }
 #endif
     return count;
 }
@@ -105,14 +108,14 @@ int readLittleEndianValue(TAbstractFile* infile, T& value)
 // Mac saveString 0xced70..0xced8c encodes an owned short while retaining the
 // original length for its later checks. Windows passes the caller slot.
 template <class T>
-int writeLittleEndianValue(TAbstractFile* outfile, T& value)
+int writeLittleEndianValue(TAbstractFile* outfile, const T& value)
 {
 #if defined(__POWERPC__)
     T encoded = value;
     if (sizeof(T) == 2)
-        encoded = static_cast<T>(__lhbrx(&value, 0));
+        encoded = static_cast<T>(__lhbrx(&encoded, 0));
     else if (sizeof(T) == 4)
-        encoded = static_cast<T>(__lwbrx(&value, 0));
+        encoded = static_cast<T>(__lwbrx(&encoded, 0));
     return writeValue(outfile, encoded);
 #else
     return writeScalar(outfile, value);
