@@ -3716,6 +3716,9 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 }
 
 // E:\gamedcs\game.cpp:4236
+// DC hasHero is an unsigned byte. Mac retains separate resource-bonus
+// arms in town enumeration order; restoring that order gives VC6 EXACT.
+// The Mac comparison remains nonexact, with all helper paths retained.
 VA(0x004bfe70, 0x6A8) MAC_ADDRESS(0x0d5a9c, 0x8b4)  // dc 0xaada4
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                   TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
@@ -3726,9 +3729,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     m_numPlayers = 8;
     m_numDeadPlayers = 0;
-    if (gameVersion != -1 && !g_inCampaign) {
-        m_gameVersion = gameVersion;
-    } else {
+    if (gameVersion == -1 || g_inCampaign) {
         m_gameVersion = 2;
         if (g_inCampaign) {
             if (m_campaign.m_currentCampaign < g_firstArmageddonsBladeCampaign)
@@ -3736,6 +3737,8 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             else if (m_campaign.m_currentCampaign < 13)
                 m_gameVersion = 1;
         }
+    } else {
+        m_gameVersion = gameVersion;
     }
 
     if (playerHeroFaces != NULL) {
@@ -3827,7 +3830,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
         if (!g_inCampaign) {
             int bonus = g_newMapStartingBonus[setupPlayer];
-            bool hasHero = true;
+            unsigned char hasHero = true;
             if (getHero(m_players[setupPlayer].m_heroes[0]) == NULL)
                 hasHero = false;
             if (bonus == NEW_MAP_BONUS_RANDOM) {
@@ -3865,12 +3868,25 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
+                case TOWN_RAMPART:
+                    m_players[setupPlayer].m_resources[CRYSTAL] += amount;
+                    break;
+                case TOWN_TOWER:
+                    m_players[setupPlayer].m_resources[GEMS] += amount;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_CONFLUX:
+                    m_players[setupPlayer].m_resources[MERCURY] += amount;
+                    break;
                 case TOWN_NECROPOLIS: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
+                case TOWN_DUNGEON:
+                    m_players[setupPlayer].m_resources[SULFUR] += amount;
+                    break;
                 case TOWN_STRONGHOLD: {
                     amount = random(5, 10);
                     m_players[setupPlayer].m_resources[WOOD] += amount;
@@ -3883,19 +3899,6 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                     m_players[setupPlayer].m_resources[ORE] += amount;
                     break;
                 }
-                case TOWN_RAMPART:
-                    m_players[setupPlayer].m_resources[CRYSTAL] += amount;
-                    break;
-                case TOWN_TOWER:
-                    m_players[setupPlayer].m_resources[GEMS] += amount;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_CONFLUX:
-                    m_players[setupPlayer].m_resources[MERCURY] += amount;
-                    break;
-                case TOWN_DUNGEON:
-                    m_players[setupPlayer].m_resources[SULFUR] += amount;
-                    break;
                 }
                 break;
             }
