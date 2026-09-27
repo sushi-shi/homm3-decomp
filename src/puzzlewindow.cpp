@@ -273,18 +273,19 @@ struct type_AI_puzzle_tile {
     char m_tailPadding[3];
 
     // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
-    // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4
+    // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4. Both DC line281
+    // and Mac0x147ad0 clear visibility immediately after object type.
     MAC_ADDRESS(0x147ab8, 0x70)
     type_AI_puzzle_tile()
     {
         m_objectType = 0;
+        m_visible = 0;
         m_objectX = -1;
         m_objectY = -1;
         m_terrain = -1;
         m_river = 0;
         m_road = 0;
         m_diggable = 1;
-        m_visible = 0;
     }
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
     unsigned char operator==(const type_AI_puzzle_tile* arg) const;
