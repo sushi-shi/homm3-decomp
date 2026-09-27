@@ -495,10 +495,10 @@ void town::setSummoningGenerator()
 }
 
 VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)  // dc 0x165ea0
-// Outer mana/experience local lifetimes are byte-flat in both compilers.
-// A shared bitset reference lowers both comparisons; keep the ordinary
-// member expressions. Mac currently emits the native 1792-byte extent,
-// with a 0x30 stack-frame difference and dialog-argument scheduling debt.
+// Comparing the bitset proxy with zero preserves its conversion helper and
+// reproduces retail's first test expansion; negation keeps an extra call.
+// Both == 0 and == false reproduce Windows 100%. Shared bitset references
+// and outer mana/experience lifetimes do not recover that decision.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
@@ -524,7 +524,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -534,7 +534,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -543,7 +543,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -555,7 +555,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
@@ -565,7 +565,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords

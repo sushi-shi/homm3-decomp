@@ -4364,7 +4364,7 @@ textwdgt	?main@textWidget@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bc44
 textwdgt	?zBufferDraw@textWidget@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x1bc7e0	tokens1:89ce1d414a2f
 tiles	?buildTileNeighbourMask@@YIXHHHHPAE@Z	100.0000	100.0000	100.0000	0x1bc910	tokens1:ad8ac122ec1a
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80	tokens1:25f98d68a395
-town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	97.4786	97.4786	100.0000	0x1bd8e0	tokens1:7fb0c0f15187
+town	?applySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0	tokens1:86dcd3989769
 town	?buildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	97.5599	99.5794	99.5794	0x1bede0	tokens1:3d4087a52cab
 town	?buyBuilding@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0	tokens1:ccec8fc3d1e5
 town	?calcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0	tokens1:78e51c358e7d

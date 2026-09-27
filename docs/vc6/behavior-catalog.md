@@ -167,6 +167,15 @@ over-inlines.
   depth-2 leaf either — the one-pass inliner folds leaves into callers'
   stored bodies bottom-up, measured on an f→g→h chain)
 
+A concrete proxy-expression control: in `town::applySpecialBuildingEffect`
+(`0x5bd8e0`), `!bitset[index]` keeps the first Dinkumware bit-test call while
+`bitset[index] == 0` expands it as retail does. `== false` emits the same exact
+Windows body: 55 CFG blocks and 30 calls agree, raising 97.4786% to 100%.
+All forms retain `operator[]` and the proxy conversion; no helper was bypassed.
+The three-state whole-TU control produced two distinct objects and reproduced
+both. This establishes an expression-sensitive inline decision for this proxy,
+not a general rule for types with overloaded comparison or negation operators.
+
 ### A9. Budget runs out MID-function — `ai_combat::do_general_melee`, 94.8% (was 79.6)
 `kill()` inlines twice; retail expands `get_total` inside BOTH copies; our
 CL's budget runs out after the first, and every register downstream of the
