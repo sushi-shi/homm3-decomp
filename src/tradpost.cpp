@@ -2934,17 +2934,13 @@ void TSellCreatureWindow::setupNewTrade()
 }
 
 // E:\gamedcs\tradpost.cpp:2327
+// Mac 0x1f8958..0x1f89a8 constructs the zeroed message, then sets its
+// id and codeX; the shared message constructor owns the zero fields.
 MAC_ADDRESS(0x1f892c, 0xf4)
 void TSellArtifactWindow::updateMarketBackpack()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     message icon;
-    icon.m_codeY = 0;
-    icon.m_qualifier = 0;
-    icon.m_mouseX = 0;
-    icon.m_mouseY = 0;
-    icon.m_extra = 0;
-    icon.m_window = 0;
     icon.m_id = MESSAGE_WIDGET;
     icon.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     for (int k = 0; k < 5 && k < numInBackpack; ++k) {
