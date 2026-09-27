@@ -7933,6 +7933,10 @@ void advManager::checkLoadSample(e_looping_sound_id idNum)
 // je / dec` because a jump table needs the index sign-extended. Equality
 // against a short compares at 16 bits; a switch cannot.
 
+// Mac switch targets retain source case order and separate equal-valued
+// returns. In particular, creature 6 has its own return-42 arm at 0x191fc
+// before the default at 0x19204. Restoring those arms and their order
+// reproduces the Windows code and compact dispatch tables exactly.
 VA(0x00418620, 0x5E4) MAC_ADDRESS(0x018d38, 0x55c)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -7963,7 +7967,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             switch (type) {
             case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
             case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
-            case GET_SOUND_MINE_2:
+            case GET_SOUND_MINE_2: return LOOPING_SOUND_40;
             case GET_SOUND_MINE_3: return LOOPING_SOUND_40;
             case GET_SOUND_MINE_4: return LOOPING_SOUND_47;
             case GET_SOUND_MINE_5: return LOOPING_SOUND_17;
@@ -7983,6 +7987,8 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_67;
         case THIEVES_DEN:
             return LOOPING_SOUND_49;
+        case GARDEN_OF_REVELATION:
+            return LOOPING_SOUND_54;
         case ARENA:
             return LOOPING_SOUND_2;
         case SIREN:
@@ -7993,20 +7999,42 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_6;
         case UNDERGROUND_GATE:
             return LOOPING_SOUND_55;
+        case SEPULCHER:
+            return LOOPING_SOUND_8;
+        case DRAGON_CITY:
+            return LOOPING_SOUND_11;
+        case WAR_MACHINE_FACTORY:
+            return LOOPING_SOUND_12;
         case FOUNTAIN_OF_YOUTH:
             return LOOPING_SOUND_13;
+        case PILLAR_OF_FIRE:
+            return LOOPING_SOUND_14;
         case RALLY_FLAG:
             return LOOPING_SOUND_15;
+        case FOUNTAIN_OF_FORTUNE:
+            return LOOPING_SOUND_16;
+        case MAGIC_SPRING:
+            return LOOPING_SOUND_16;
+        case STABLES:
+            return LOOPING_SOUND_21;
+        case TRAINING_GROUNDS:
+            return LOOPING_SOUND_23;
+        case SHIPYARD:
+            return LOOPING_SOUND_24;
         case MYSTICAL_GARDEN:
             return LOOPING_SOUND_57;
+        case MAGIC_SCHOOL:
+            return LOOPING_SOUND_25;
         case FAERIE_RING:
             return LOOPING_SOUND_53;
         case BLACK_MARKET:
+            return LOOPING_SOUND_26;
         case TRADING_POST:
             return LOOPING_SOUND_26;
         case TAVERN:
             return LOOPING_SOUND_64;
         case MERC_CAMP:
+            return LOOPING_SOUND_27;
         case REFUGEE_CAMP:
             return LOOPING_SOUND_27;
         case WATER_WHEEL:
@@ -8016,72 +8044,83 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_30;
         case LITH_TWOWAY:
             return LOOPING_SOUND_31;
+        case SANCTUARY:
+            return LOOPING_SOUND_37;
+        case TEMPLE:
+            return LOOPING_SOUND_37;
         case SHRINE1:
         case SHRINE2:
         case SHRINE3:
             return LOOPING_SOUND_38;
         case POWER_SCHOOL:
             return LOOPING_SOUND_39;
+        case WAR_SCHOOL:
+            return LOOPING_SOUND_41;
+        case DEFENSE_TOWER:
+            return LOOPING_SOUND_41;
+        case HILL_FORT:
+            return LOOPING_SOUND_41;
         case CREATURE_GENERATOR_1:
             switch (g_creatureGenerator1Types[thisCell->m_objectIndex]) {
-            case GET_SOUND_CREATURE_106:
-            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
+            case GET_SOUND_CREATURE_106: return LOOPING_SOUND_33;
             case GET_SOUND_CREATURE_096: return LOOPING_SOUND_3;
-            case GET_SOUND_CREATURE_010:
+            case GET_SOUND_CREATURE_074: return LOOPING_SOUND_7;
+            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_068: return LOOPING_SOUND_11;
+            case GET_SOUND_CREATURE_010: return LOOPING_SOUND_21;
             case GET_SOUND_CREATURE_014: return LOOPING_SOUND_21;
             case GET_SOUND_CREATURE_112: return LOOPING_SOUND_46;
             case GET_SOUND_CREATURE_012: return LOOPING_SOUND_37;
+            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_054: return LOOPING_SOUND_9;
             case GET_SOUND_CREATURE_104: return LOOPING_SOUND_23;
             case GET_SOUND_CREATURE_016: return LOOPING_SOUND_50;
             case GET_SOUND_CREATURE_113: return LOOPING_SOUND_51;
-            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
-            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
-            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
-            case GET_SOUND_CREATURE_044:
             case GET_SOUND_CREATURE_052: return LOOPING_SOUND_65;
+            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
+            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
+            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
+            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
+            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
+            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
+            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
+            case GET_SOUND_CREATURE_044: return LOOPING_SOUND_65;
+            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
+            case GET_SOUND_CREATURE_026: return LOOPING_SOUND_11;
+            case GET_SOUND_CREATURE_004: return LOOPING_SOUND_19;
             case GET_SOUND_CREATURE_072: return LOOPING_SOUND_20;
             case GET_SOUND_CREATURE_046: return LOOPING_SOUND_10;
             case GET_SOUND_CREATURE_110: return LOOPING_SOUND_22;
+            case GET_SOUND_CREATURE_042: return LOOPING_SOUND_14;
+            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
+            case GET_SOUND_CREATURE_034: return LOOPING_SOUND_25;
             case GET_SOUND_CREATURE_080: return LOOPING_SOUND_58;
             case GET_SOUND_CREATURE_076: return LOOPING_SOUND_59;
-            case GET_SOUND_CREATURE_078:
-            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
+            case GET_SOUND_CREATURE_078: return LOOPING_SOUND_0;
             case GET_SOUND_CREATURE_008: return LOOPING_SOUND_32;
             case GET_SOUND_CREATURE_038: return LOOPING_SOUND_60;
+            case GET_SOUND_CREATURE_048: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_090: return LOOPING_SOUND_61;
-            case GET_SOUND_CREATURE_088:
-            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
-            case GET_SOUND_CREATURE_042:
-            case GET_SOUND_CREATURE_050:
-            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_026:
-            case GET_SOUND_CREATURE_068:
+            case GET_SOUND_CREATURE_088: return LOOPING_SOUND_34;
+            case GET_SOUND_CREATURE_050: return LOOPING_SOUND_14;
             case GET_SOUND_CREATURE_082: return LOOPING_SOUND_11;
             case GET_SOUND_CREATURE_092: return LOOPING_SOUND_4;
             case GET_SOUND_CREATURE_028: return LOOPING_SOUND_18;
+            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
             case GET_SOUND_CREATURE_022: return LOOPING_SOUND_54;
+            case GET_SOUND_CREATURE_070: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_115: return LOOPING_SOUND_16;
+            case GET_SOUND_CREATURE_060: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
             case GET_SOUND_CREATURE_020: return LOOPING_SOUND_35;
             case GET_SOUND_CREATURE_024: return LOOPING_SOUND_44;
+            case GET_SOUND_CREATURE_064: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_062: return LOOPING_SOUND_8;
             case GET_SOUND_CREATURE_056: return LOOPING_SOUND_63;
-            case GET_SOUND_CREATURE_058:
-            case GET_SOUND_CREATURE_060:
-            case GET_SOUND_CREATURE_062:
-            case GET_SOUND_CREATURE_064:
-            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_058: return LOOPING_SOUND_8;
             case GET_SOUND_CREATURE_000: return LOOPING_SOUND_36;
-            case GET_SOUND_CREATURE_002:
-            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
-            case GET_SOUND_CREATURE_004:
-            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
-            case GET_SOUND_CREATURE_034:
-            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
-            case GET_SOUND_CREATURE_048:
-            case GET_SOUND_CREATURE_070:
-            case GET_SOUND_CREATURE_074:
-            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
+            case GET_SOUND_CREATURE_002: return LOOPING_SOUND_1;
+            case GET_SOUND_CREATURE_006: return LOOPING_SOUND_42;
             default: return LOOPING_SOUND_42;
             }
         case CREATURE_GENERATOR_4:
@@ -8090,34 +8129,6 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
             break;
-        case DEFENSE_TOWER:
-        case HILL_FORT:
-        case WAR_SCHOOL:
-            return LOOPING_SOUND_41;
-        case DRAGON_CITY:
-            return LOOPING_SOUND_11;
-        case FOUNTAIN_OF_FORTUNE:
-        case MAGIC_SPRING:
-            return LOOPING_SOUND_16;
-        case GARDEN_OF_REVELATION:
-            return LOOPING_SOUND_54;
-        case MAGIC_SCHOOL:
-            return LOOPING_SOUND_25;
-        case PILLAR_OF_FIRE:
-            return LOOPING_SOUND_14;
-        case SANCTUARY:
-        case TEMPLE:
-            return LOOPING_SOUND_37;
-        case SEPULCHER:
-            return LOOPING_SOUND_8;
-        case SHIPYARD:
-            return LOOPING_SOUND_24;
-        case STABLES:
-            return LOOPING_SOUND_21;
-        case TRAINING_GROUNDS:
-            return LOOPING_SOUND_23;
-        case WAR_MACHINE_FACTORY:
-            return LOOPING_SOUND_12;
         default:
             return LOOPING_SOUND_INVALID;
         }

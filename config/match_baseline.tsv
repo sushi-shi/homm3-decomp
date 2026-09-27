@@ -120,7 +120,7 @@ advmgr	?getCreatureBankHelpText@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@
 advmgr	?getFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20	tokens1:8cb9c56010c5
 advmgr	?getNormalCursor@advManager@@AAE?AW4type_adventure_cursor@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe280	tokens1:0dd991cbce4a
 advmgr	?getRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010	tokens1:f6d2f7ddaa95
-advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	96.9031	96.9031	96.9031	0x18620	tokens1:14e923f0e716
+advmgr	?getSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	100.0000	100.0000	100.0000	0x18620	tokens1:13ee36693597
 advmgr	?getTriggerCell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0	tokens1:9c7343c8f261
 advmgr	?getUniversity@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10	tokens1:48d75bcdfe11
 advmgr	?get_mouse_map_point@advManager@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x7b10	tokens1:167d654cf1e5
