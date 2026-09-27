@@ -418,6 +418,8 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // the Miles volume and operation 4 reduces the status to the playing bit;
 // every other operation retains the initialized zero result.
 VA(0x0059a030, 0x87) MAC_ADDRESS(0x218b48, 0xac)
+// Combining the three early guards is not a callback fix: the retained
+// helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)
@@ -606,6 +608,9 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 }
 
 // E:\gamedcs\soundmgr.cpp:911
+// A counted for-loop with its timer initialized inside the eligibility
+// guard scores 87.32% versus 92%; retail initializes that timer before
+// the guard. Preserve the original helper query and body update order.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {
