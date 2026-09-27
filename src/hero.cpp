@@ -4615,6 +4615,9 @@ void hero::transferArtifacts(hero* src)
 // Testing the exhausted component index instead loses 1.2018 points. This
 // predicate is Complete-only; the retail capacity checks and one spared
 // component establish the result, without inventing a source helper.
+// Mac loads the component count before counting classSlots. Naming that
+// reference and advancing slot before remaining raises Windows to 98.48%;
+// the residual is the empty-mask branch and outer-loop exit polarity.
 VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -4627,7 +4630,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
         remaining = 19;
     }
 
-    for (; remaining != 0; remaining--, slot++) {
+    for (; remaining != 0; slot++, remaining--) {
         if (m_equipped[slot].m_artifactId != ARTIFACT_NONE)
             continue;
         if (!g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask]
@@ -4675,10 +4678,11 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                     keptSlot = true;
                     continue;
                 }
+                int& componentCount = counts[componentClass];
                 std::bitset<19> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
-                if (counts[componentClass] >= capacity) {
+                if (componentCount >= capacity) {
                     slotFits = false;
                     break;
                 }
@@ -4691,12 +4695,12 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
-                    if (counts[componentClass] >= capacity - occupied) {
+                    if (componentCount >= capacity - occupied) {
                         slotFits = false;
                         break;
                     }
                 }
-                counts[componentClass]++;
+                componentCount++;
             } while (++component < 144);
             if (!slotFits)
                 continue;
