@@ -52,14 +52,13 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 #else
 #define GZ_WINDOW_SIZE 512
 #endif
-// 0x4d5fd0: refill next_in from the source streambuf when it is empty and
-// hand back the next byte, or -1 at end of source. Mac's remaining three
-// differences are solely its 0x60 frame versus the candidate's 0x50 frame.
-// Early or const byte/count declarations are neutral; -O4 is unchanged, while
-// -O1/-O2 emit a longer body and a smaller frame. The native streambuf
-// traits_type::to_int_type(c) conversion is also byte-flat in both compilers.
-// traits_type::eof() is likewise flat; widening c to int is Mac-flat but
-// changes the retained Windows byte reader from 100% to 70.90%.
+// Refill from the source streambuf and return a stream-traits integer byte.
+// Capturing that converted value before separately advancing next_in preserves
+// this retained body's 100% and recovers the constructor from 91.0739% to
+// 98.9360%. A byte local converted only at return leaves 97.0985%; folding the
+// pointer increment into the conversion argument leaves 94.9951%.
+// The native Mac 0x220a18 frame is also reproduced; its byte load is scheduled
+// after the pointer advance, leaving a separate compiler-order residual.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
@@ -76,7 +75,8 @@ int TGzInflateBuf::getByte()
         if (m_stream.avail_in == 0)
             return -1;
     }
-    unsigned char c = *m_stream.next_in++;
+    int_type c = traits_type::to_int_type(*m_stream.next_in);
+    ++m_stream.next_in;
     --m_stream.avail_in;
     return c;
 }
@@ -109,8 +109,9 @@ void TGzInflateBuf::ungetByte(signed char)
 // the missing guards as surplus calls. Mac retains one checked read per
 // loop (0x2210dc/0x221154), then tests the decoded byte at 0x221140/0x2211b8;
 // CodeWarrior does not peel these conditions. Both forms keep the canonical
-// readByte helper. Windows currently scores 91.0739% versus the older 92.2931%
-// peak; exception temporary homes and the comment-loop _Tidy decision remain.
+// readByte helper. The stream-traits byte snapshot below recovers 98.9360%:
+// all 61 CFG blocks and the exception expansion sequence agree. The two
+// initial magic-byte reads retain pointer/register scheduling differences.
 
 VA(0x004d6050, 0x58A) MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
