@@ -58,6 +58,8 @@ TEXT_PAD_TRIM_LIMIT = 15
 ASSOCIATIVE_COMDAT = 5
 UNWIND_OWNER = re.compile(r"(?:^|_)unwind[0-9]+$")
 SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+FUNCLETS = common.HOMM3_DIR / "config/retail/funclets.tsv"
+FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
 
 
 @dataclass(frozen=True)
@@ -95,6 +97,33 @@ def _retail_symbol_rvas(path: Path = SYMBOL_NAMES) -> dict[str, tuple[int, str]]
                     f"conflicting retail addresses for symbol {name}: "
                     f"{previous} vs {value}")
     return result
+
+
+def _retail_funclet_owners() -> dict[int, tuple[int, int]]:
+    """Admitted cleanup RVA -> (parent RVA, independently admitted size)."""
+    if not FUNCLETS.is_file() or not FUNCTIONS.is_file():
+        return {}
+
+    def rows(path):
+        with path.open(newline="") as stream:
+            yield from csv.DictReader(
+                (line for line in stream if not line.startswith("#")),
+                delimiter="\t")
+
+    sizes = {}
+    for row in rows(FUNCTIONS):
+        rva, size = int(row["rva"], 0), int(row["size"], 0)
+        if sizes.setdefault(rva, size) != size:
+            raise ValueError(f"conflicting retail function size at {rva:#x}")
+    owners = {}
+    for row in rows(FUNCLETS):
+        rva, parent = int(row["rva"], 0), int(row["parent_rva"], 0)
+        if rva not in sizes:
+            continue
+        value = (parent, sizes[rva])
+        if owners.setdefault(rva, value) != value:
+            raise ValueError(f"conflicting retail funclet owner at {rva:#x}")
+    return owners
 
 
 def _site_context_matches(base_bytes: bytes, base_site: int,
@@ -712,7 +741,8 @@ def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrit
 
 
 def _canonicalize_matching_eh_handler_owners(
-        base_payload: bytes, target_payload: bytes,
+        base_payload: bytes, target_payload: bytes, *,
+        symbol_rvas=None, funclet_owners=None,
         ) -> tuple[bytes, tuple[EhHandlerOwnerRewrite, ...]]:
     """Mirror retail's proved ``last funclet + size`` EH relocation form.
 
@@ -752,12 +782,22 @@ def _canonicalize_matching_eh_handler_owners(
             continue
         target_owner = target.symbols[target_relocation.symbol_index]
         if (target_owner.section != 0 or target_owner.typ != FUNCTION_TYPE or
-                target_owner.storage_class != EXTERNAL_STORAGE or
-                not UNWIND_OWNER.search(target_owner.name)):
+                target_owner.storage_class != EXTERNAL_STORAGE):
             continue
         target_addend, = struct.unpack_from("<I", target_bytes, target_site)
         if target_addend != rewrite.funclet_size:
             continue
+        if not UNWIND_OWNER.search(target_owner.name):
+            # Generic names carry no ownership evidence. Require the existing
+            # retail inventories to identify both functions and the cleanup's
+            # parent and full extent before accepting this relocation form.
+            owner_address = (symbol_rvas or {}).get(target_owner.name)
+            parent_address = (symbol_rvas or {}).get(rewrite.function)
+            if (owner_address is None or parent_address is None or
+                    owner_address[1] != "func" or parent_address[1] != "func" or
+                    (funclet_owners or {}).get(owner_address[0]) !=
+                    (parent_address[0], target_addend)):
+                continue
 
         base_section = base.sections[rewrite.parent_section - 1]
         operand_offset = base_section.raw_offset + rewrite.relocation_site
@@ -1016,6 +1056,11 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
         "project": common.HOMM3_DIR / "config/project.toml",
         "raw": target_obj, "base": base_obj, "symbol_names": SYMBOL_NAMES,
     }
+    for label, inventory in (("retail_funclets", FUNCLETS),
+                             ("retail_functions", FUNCTIONS)):
+        if inventory.is_file():
+            stamp_inputs[label] = inventory
+            target_stamp_inputs[label] = inventory
     stamp_inputs.update(canon.anon_ns_stamp_inputs())
     target_stamp_inputs.update(canon.anon_ns_stamp_inputs())
     if COMPGEN_MANIFEST.is_file():
@@ -1042,7 +1087,8 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
     counts["literal"] += literal_count
     counts["aggregate"] += aggregate_count
     normalized, rewrites = _canonicalize_matching_eh_handler_owners(
-        paired_base, paired_target)
+        paired_base, paired_target, symbol_rvas=symbol_rvas,
+        funclet_owners=_retail_funclet_owners())
     counts["eh"] += len(rewrites)
     if count or base_literal_count or rewrites:
         normalized_base.write_bytes(normalized)
