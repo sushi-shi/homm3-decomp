@@ -2952,8 +2952,6 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
-    int bottom = y + height - 1;
-    int right = x + width - 1;
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowdelay;
         if (step != 0) {
@@ -2962,12 +2960,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch(), false);
-            // Mac 0x749f8 constructs and copies the four-word bounds.
-            updateArea = TDrawbridgeBounds(x, y, right, bottom);
+            // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
+            // Retaining those expressions also matches the Windows loop schedule.
+            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
             x += addX;
-            right += addX;
             y += addY;
-            bottom += addY;
         }
         saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                    g_windowManager->m_screenBitmap->getWidth(),
@@ -2982,7 +2979,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getWidth(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
-        updateArea.include(SLimitData(x, y, right, bottom));
+        updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         updateArea.clip(g_combatDrawLimits);
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
