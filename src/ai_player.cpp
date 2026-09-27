@@ -442,11 +442,7 @@ void type_AI_player::calculateDemand()
     std::vector<type_creature_value> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
-        {
-            int value = creatureIndex;
-            memcpy(&creatures[creatureIndex].m_type, &value,
-                   sizeof creatures[creatureIndex].m_type);
-        }
+        creatures[creatureIndex].m_type = static_cast<TCreatureType>(creatureIndex);
         creatures[creatureIndex].m_amount = 0;
     }
 
@@ -1106,11 +1102,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
-            EGameResource resource;
-            {
-                int ordinal = i;
-                memcpy(&resource, &ordinal, sizeof resource);
-            }
+            EGameResource resource = static_cast<EGameResource>(i);
             marketValue = static_cast<long>(
                 getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
@@ -1201,21 +1193,9 @@ void type_AI_player::doResourceTrade(int* supply)
         for (int dest = 0; dest < 7; ++dest) {
             if (supply[dest] >= 0)
                 continue;
-            double ratio;
-            {
-                EGameResource sourceResource;
-                EGameResource destResource;
-                {
-                    int ordinal = source;
-                    memcpy(&sourceResource, &ordinal, sizeof sourceResource);
-                }
-                {
-                    int ordinal = dest;
-                    memcpy(&destResource, &ordinal, sizeof destResource);
-                }
-                ratio = getTradeRatio(sourceResource, destResource,
-                                      efficiency);
-            }
+            double ratio = getTradeRatio(static_cast<EGameResource>(source),
+                                         static_cast<EGameResource>(dest),
+                                         efficiency);
             long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
             long limit = static_cast<long>(
                 static_cast<long>(supply[source] / ratio) * ratio);
@@ -1390,13 +1370,8 @@ static __int64 getRequirements(const town* currentTown,
     int k = building;
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & g_bitNumber[k]) {
-            {
-                type_building_id buildingId;
-                int ordinal = k;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                if (!currentTown->isLegalBuilding(buildingId))
-                    return 0;
-            }
+            if (!currentTown->isLegalBuilding(static_cast<type_building_id>(k)))
+                return 0;
             seen |= g_bitNumber[k];
             requirements |= g_hierarchyMask[currentTown->m_type][k];
             requirements &= ~currentTown->getBuildingMask();
@@ -1418,13 +1393,8 @@ static void getFullCost(const town* currentTown, int* result,
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
         if (requirements & g_bitNumber[k]) {
-            int* costs;
-            {
-                type_building_id buildingId;
-                int ordinal = k;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                costs = currentTown->getBuildCostArray(buildingId);
-            }
+            int* costs = currentTown->getBuildCostArray(
+                static_cast<type_building_id>(k));
             for (int i = 0; i < 7; ++i)
                 result[i] += costs[i];
         }
@@ -1467,6 +1437,9 @@ static void markValues(long* fullValue, long totalValue,
 // Restoring these canonical calls moves the current Windows comparison from
 // 84.31% to 84.78% and raises exact CFG blocks from 8 to 30; the changed
 // inliner state additionally retains game::getHero in valueOfBuilding.
+// The same direct conversions in getRequirements/getFullCost raise this
+// caller further to 94.1381%; canTradeResources remains byte-identical when
+// its ordinary named resource local is retained.
 // Mac passes building IDs directly: the prior memcpy conversions and their
 // temporary-only scopes were reconstruction scaffolding. Ordinary enum casts
 // retain all game helper calls and recover Windows 84.7770% -> 93.6425%.
