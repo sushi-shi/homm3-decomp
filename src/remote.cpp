@@ -270,9 +270,13 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
     switch (netMsg->m_subType) {
     case RS_PING:
         {
-            // Mac 0x210a40 retains CLogFile::log before sending the reply;
-            // its format string is at PEF data section 1:0x591f0.
+#if defined(HOMM3_TARGET_MAC)
+            // Mac 0x210a40 retains this diagnostic; the Windows snapshot lacks
+            // its call and string. VC6 does not save this variadic inline body
+            // (flags 0xaa), so ordinary inline elimination cannot explain it.
+            // See docs/vc6/variadic-members.md.
             g_logFile.log("Recieved RS_PING from %d", netMsg->m_dpidFrom);
+#endif
             transmitRemoteDataDPID(
                 &CPingResponseMsg(
                     static_cast<CPingMsg*>(netMsg)->m_pingTime, RS_PING_REPLY),
@@ -296,10 +300,12 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             unsigned long dpid =
                 static_cast<CDestroyPlayerMsg*>(netMsg)->m_dpid;
-            // Mac 0x210adc records the sender and dropped player IDs; its
-            // format string is at PEF data section 1:0x59209.
+#if defined(HOMM3_TARGET_MAC)
+            // Same logging snapshot difference at Mac 0x210adc; both the call
+            // and the RS_DESTROY_PLAYER format string are absent on Windows.
             g_logFile.log("Recieved RS_DESTROY_PLAYER from %d [kill %d]",
                           netMsg->m_dpidFrom, dpid);
+#endif
             if (dpid == g_thisNetPlayerInfo.m_dpid) {
                 remoteCleanup();
                 normalDialog(

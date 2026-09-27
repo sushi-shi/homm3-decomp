@@ -30,3 +30,23 @@ also present in the debug parameter records. Their x86 stack convention does
 not contradict those facts. Restore the canonical member and its source
 calls before diagnosing caller-budget or register-allocation differences;
 do not hide the body behind an alternate free declaration.
+
+## Empty variadic logging calls
+
+The release `CLogFile::log(char*, ...)` body is empty. In the live
+`CDPlayHeroes::handleLowLevelMsg` trace its flags are `0xaa`, lacking the
+`0x40` body-saved bit required by C2's candidate collector. These calls never
+reach the inline-budget decision.
+
+A disposable control compiled with the current game profile
+(`/O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS`) retains all six variadic calls:
+zero, one and two arguments; a call before another operation; and two switch
+arms. An otherwise identical fixed-arity empty member disappears completely.
+Thus an empty body alone does not explain the omitted Windows logging sites.
+
+Mac retains the PING and DESTROY_PLAYER diagnostics at `0x210a40` and
+`0x210adc`. Pinned Windows contains neither `RS_PING` nor `RS_DESTROY_PLAYER`
+format text and emits neither call, while its ordinary player-drop and
+MPlayer diagnostic strings and calls remain. Together with the compiler
+control, this supports the narrow logging snapshot guards in `remote.cpp`.
+The common logger and all gameplay helper calls remain unchanged.
