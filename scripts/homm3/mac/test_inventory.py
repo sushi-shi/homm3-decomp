@@ -211,6 +211,27 @@ class TestParameterJoin(unittest.TestCase):
         self.assertEqual(emitted.encode("A::B &"), "RQ21A1B")
         self.assertIsNone(emitted.encode("int (*)(message &)"))
 
+    def test_fixed_array_reference_preserves_extent_and_element_identity(self):
+        from homm3.match.source_ownership import Definition
+        symbol = ".skillRequirementText__16type_skill_questFRA4_CSc"
+        self.assertEqual(emitted.parameters(symbol), (False, ("RA4_CSc",)))
+        self.assertEqual(emitted.encode("const signed char (&)[4]"), "RA4_CSc")
+        self.assertEqual(emitted.encode("int (*)[4]"), "PA4_i")
+        self.assertEqual(emitted.encode("const int (&)[2][3]"), "RA2_A3_Ci")
+        definition = Definition("src/seerhut.cpp", 527, 0, 1,
+                                "type_skill_quest::skillRequirementText",
+                                "std::string (const signed char (&)[4])", 1,
+                                True, False, 0x56dfa0, "",
+                                argument_types=("const signed char (&)[4]",))
+        alternatives = [symbol,
+                        ".skillRequirementText__16type_skill_questFRA5_CSc",
+                        ".skillRequirementText__16type_skill_questFRA4_Sc",
+                        ".skillRequirementText__16type_skill_questFPCSc"]
+        self.assertEqual(emitted.select(definition, alternatives), symbol)
+        for spelling in ("int (&)[]", "int (&)[0]", "int (&)[n]",
+                         "int (*)(int)", "volatile int (&)[4]"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
     def test_msl_string_and_nested_vector_use_exact_parameter_codes(self):
         string = "Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
         vector = "Q23std162vector<" + string + ",Q23std78allocator<" + string + ">>"

@@ -205,6 +205,15 @@ def _base_code(base: str) -> str | None:
 def encode(spelling: str, *, _template_argument: bool = False) -> str | None:
     """ARM code of a clang parameter spelling; None when the form is not modelled."""
     text = re.sub(r"\b(?:struct|class|enum|union)\s+", "", spelling).strip()
+    array = re.fullmatch(r"(.+?)\s*\(\s*([&*])\s*\)\s*((?:\[\s*[1-9]\d*\s*\]\s*)+)", text)
+    if array:
+        element, declarator, dimensions = array.groups()
+        code = encode(element, _template_argument=True)
+        if code is None:
+            return None
+        for extent in reversed(re.findall(r"\[\s*([1-9]\d*)\s*\]", dimensions)):
+            code = "A" + str(int(extent)) + "_" + code
+        return ("R" if declarator == "&" else "P") + code
     if "(" in text or "[" in text or "volatile" in text.split():
         return None
     depth, boundary = 0, len(text)
