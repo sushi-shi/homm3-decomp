@@ -613,6 +613,9 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 // A counted for-loop with its timer initialized inside the eligibility
 // guard scores 87.32% versus 92%; retail initializes that timer before
 // the guard. Preserve the original helper query and body update order.
+// An explicit infinite loop with the same query/time exit is byte-flat;
+// the residual is the expanded query's receiver/zero-result path, not
+// the named AIL_end_sample import's extra underscore in delinked labels.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {
