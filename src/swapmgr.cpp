@@ -1480,6 +1480,10 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // and raise Windows 84.0502% to 86.82% without changing other scored rows.
 // The current CodeWarrior compile still retains the packet constructor;
 // its expansion and message/flag register choices remain to be recovered.
+// A temporary inline-constructor control is Windows byte-flat and makes CW
+// schedule packet stores before GetOtherHero, as native does. This confirms
+// that execution order alone does not distinguish one full expression from
+// two statements; the control does not prove the original inline qualifier.
 // Combining the sixteen left/right skill case labels and selecting hero
 // plus skill index in one scope removes the shared-skill jump, but scores
 // 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
