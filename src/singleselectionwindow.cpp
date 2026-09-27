@@ -785,12 +785,12 @@ public:
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
-    FILETIME m_fileTime;          // +0x7c
+    FileTime m_fileTime;          // +0x7c
 
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
     // E:\gamedcs\singleselectionwindow.cpp:587, dc 0x147c78
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FILETIME fileTime)
+                    int* townTypes, FileTime fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
@@ -3972,6 +3972,16 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 
     if (dir[0])
         _chdir(dir);
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
+    // Its directory argument is a native FSSpec; the current Windows
+    // directory/chdir model above remains a platform comparison gap.
+    MacFileAdapter file;
+    if (file.open(0, filename, 0, 0, false) == 0) {
+        file.getModificationDate(&header->m_fileTime);
+        file.close();
+    }
+#else
     HANDLE fileHandle = CreateFileA(
         filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
@@ -3979,6 +3989,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
         GetFileTime(fileHandle, 0, 0, &header->m_fileTime);
         CloseHandle(fileHandle);
     }
+#endif
     if (dir[0])
         _chdir("..");
 
@@ -4270,6 +4281,14 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                                  422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_loadMode != 0 || m_saveMode != 0 || m_randomMapMode != 0)) {
+#if defined(HOMM3_TARGET_MAC)
+        char dateBuf[100];
+        FileTime& st = m_headersA[m_currentMap].m_fileTime;
+        sprintf(dateBuf,
+                DATA_COMPGEN(0x006837c0, saveDateFormat,
+                             "%d/%d/%d - %d:%02d"),
+                st.month, st.day, st.year, st.hour, st.minute);
+#else
         _FILETIME localTime;
         _SYSTEMTIME st;
         char dateBuf[100];
@@ -4280,6 +4299,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                 DATA_COMPGEN(0x006837c0, saveDateFormat,
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
+#endif
         g_smallFont->drawBoundedString(dateBuf,
             g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
     }
