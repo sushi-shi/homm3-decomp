@@ -2628,8 +2628,8 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     scenario.m_days = g_game->getCurrentTurn();
     scenario.m_completed = true;
-    scenario.m_completeOrder = 0;
     scenario.m_score = g_game->getMapScore();
+    scenario.m_completeOrder = 0;
 
     if (scenario.m_index < 0) {
         scenario.m_index = m_carryOverHeroes.size();
