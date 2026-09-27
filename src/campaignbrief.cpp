@@ -61,35 +61,6 @@ DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 static int decreaseCampaignDifficulty(message& msg);
 static int increaseCampaignDifficulty(message& msg);
 
-// E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
-// description as a second widget message; Complete hands it to the
-// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
-
-MAC_ADDRESS(0x06439c, 0xb0)
-void TCampaignBrief::resetMapAndDescription(int which)
-{
-    message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = MAP_NAME_ID;
-    msg.m_extraText = m_scenarios[which].m_mapName.c_str();
-    broadcastMessage(msg);
-    m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
-}
-
-// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
-// helper and ResetMapAndDescription. Retail retains vector::size at the loop
-// tests (0x423110); expansion does not establish an inline source specifier.
-
-MAC_ADDRESS(0x06444c, 0x88)
-void TCampaignBrief::clearSelected()
-{
-    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
-        if (m_scenarios[i].m_available)
-            getWidget(MAP_SELECTED_1_ID + i)->hide();
-    }
-}
-
 // E:\gamedcs\campaignbrief.cpp:392
 // Complete adds the game-setup / map-header copy into gpGame (skipped in
 // the in-game view), the WHICHMAP frame chosen by the map's Size, the OK
@@ -177,6 +148,37 @@ static int increaseCampaignDifficulty(message& msg)
 
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData) MAC_COMPGEN_ADDRESS(0x064044, 0x228, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
 VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
+
+// Both native Mac body order and DC lines 392/437/452 put these helpers
+// after Select. VC6 still expands both; all Windows TU scores are unchanged.
+// E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
+// description as a second widget message; Complete hands it to the
+// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
+
+MAC_ADDRESS(0x06439c, 0xb0)
+void TCampaignBrief::resetMapAndDescription(int which)
+{
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = MAP_NAME_ID;
+    msg.m_extraText = m_scenarios[which].m_mapName.c_str();
+    broadcastMessage(msg);
+    m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
+}
+
+// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
+// helper and ResetMapAndDescription. Retail retains vector::size at the loop
+// tests (0x423110); expansion does not establish an inline source specifier.
+
+MAC_ADDRESS(0x06444c, 0x88)
+void TCampaignBrief::clearSelected()
+{
+    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
+        if (m_scenarios[i].m_available)
+            getWidget(MAP_SELECTED_1_ID + i)->hide();
+    }
+}
 
 // Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462, dc 0x58a28.
 // Complete moves currentTerritory into the window and availability/setup into
