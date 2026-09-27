@@ -3725,11 +3725,8 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
-            TArtifact artifactId;
-            {
-                artifactId = TArtifact(idItem - APP_MENU_ARTIFACT_FIRST);
-            }
-            type_artifact artifact(artifactId);
+            type_artifact artifact(
+                TArtifact(idItem - APP_MENU_ARTIFACT_FIRST));
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
@@ -3744,9 +3741,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 if (g_inCampaign)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                    {
-                        artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
-                    }
+                    artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
 
