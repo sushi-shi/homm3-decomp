@@ -192,7 +192,7 @@ def load_data(root: Path) -> list[DataPair]:
                 # Keep this narrow: plain pointers and explicitly reviewed
                 # arrays only; no initializer, reference, or qualified member.
                 match = re.fullmatch(
-                    r'\s*(?:static\s+)?(?:(?:unsigned|signed)\s+)?'
+                    r'\s*(?:static\s+)?(?:const\s+)?(?:(?:unsigned|signed)\s+)?'
                     + _STORAGE_TYPE + r'(?:\s*\*\s*|\s+)(\w+)\s*'
                     r'(?P<array>(?:\[[^\[\];]*\]\s*)*);',
                     declaration, re.DOTALL)

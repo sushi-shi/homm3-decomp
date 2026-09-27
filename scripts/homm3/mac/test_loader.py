@@ -303,6 +303,23 @@ evidence="externally linked zero storage with reviewed owner"
             (root / "source.cpp").write_text("DATA(0x00400100) extern std::vector<int> flag;\n")
             with self.assertRaises(SourceError):
                 load_data(root)
+            manifest.write_text(vector_manifest.replace(
+                "same_tu_external=true", "same_tu_external=false\nsame_tu_array=true"))
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) const char* flag[3];\n")
+            pair, = load_data(root)
+            self.assertTrue(pair.same_tu_array)
+            self.assertIn("const char*", pair.definition)
+            bindings(root, pef, code, (cell, vector_storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, storage), unit="owner")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, vector_storage), unit="consumer")
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) extern const char* flag[3];\n")
+            with self.assertRaises(SourceError):
+                load_data(root)
             constructed_manifest = ordinary_manifest.replace(
                 "same_tu_external=true", "same_tu_external=true\nsame_tu_constructed=true")
             manifest.write_text(constructed_manifest)

@@ -1,0 +1,12 @@
+# Source-owned text pointer arrays.
+
+[[data]]
+retail_va = 0x006a79ec
+source = "src/text.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x55036c
+mac_size = 928
+sha256 = "202115097d1bee389d4d4d81db00117252be97d5691af316941f3843ef7a05f5"
+evidence = "Text owns 232 initially null const-char pointers for quick-view object names, 928 bytes with both compilers' four-byte pointers. Mac readMapObjects loads loader TOC1+0x6dc -> zero storage1+0x55036c at code0+0x1272a0, then indexes it by object-type*4 at0x127624..0x127628 when formatting its invalid-object warning. The ordinary source definition and pointer-to-const type remain unchanged; actual owner UDATA and external consumer TOC references are checked separately."
