@@ -798,6 +798,9 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     g_advManager->demobilizeCurrHero(0, 1);
 }
 
+// Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
+// A != bound is byte-flat; pointer traversal and a short counter do not
+// recover that native loop. Keep the indexed helper and its exact VC6 callers.
 VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
 int aiResourceCost(const playerData* player, const int* resources)
 {
