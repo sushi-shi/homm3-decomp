@@ -767,6 +767,9 @@ hero::hero()
 // 95.87 -> 97.36%; retain the canonical helpers through the residual scheduling.
 // Mac 0xf40ac/0xf4114/0xf413c loads integer zero values for the byte fills;
 // byte-typed fill values instead compile to lbz and omit the signed conversion.
+// All current differences begin in the custom-name string assignment. Moving
+// initialSex to its use or reading the trait directly falls to 81.3926%;
+// commuting the aggression product is flat (six states, three objects).
 VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
