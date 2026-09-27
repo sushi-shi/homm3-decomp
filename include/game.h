@@ -1767,9 +1767,7 @@ extern int g_mineProduction[7];
 extern double g_productionHandicap[];
 extern const int g_neutralTownLevelWeights[6];
 extern const int g_tutorialStartingResources[NUM_RESOURCES];
-// NewMap's seven-resource rows, indexed by setup.difficulty.  The first
-// address is also the seven-int tutorial row immediately following the
-// neutral-town weights above.
+// NewMap's seven-resource rows, indexed by setup.difficulty.
 extern const int g_initResourcesHuman[][NUM_RESOURCES];
 // NewMap reads one dword per player here before narrowing the selected value
 // into setup.startingBonus.  The other known readers do not yet prove a
