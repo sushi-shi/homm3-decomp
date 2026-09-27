@@ -4821,14 +4821,8 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
             return 0;
         if (!equipped && owner->spellIsAvailable(artifact.m_extra))
             return 0;
-        // The ordinal copy belongs to this scroll appraisal. Keep memcpy
-        // so the bridge preserves bits without an out-of-range enum cast.
-        SpellID spell;
-        {
-            int ordinal = artifact.m_extra;
-            memcpy(&spell, &ordinal, sizeof spell);
-        }
-        return aiGetSpellValue(owner, spell);
+        return aiGetSpellValue(
+            owner, H3_ENUM_DECODE(SpellID, artifact.m_extra));
     }
 
     case ARTIFACT_HOLY_GRAIL:
