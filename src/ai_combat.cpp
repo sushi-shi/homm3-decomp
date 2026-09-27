@@ -791,6 +791,9 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 // homing. Named mutable/const locals for defender.getArmy() leave 99.7461%
 // unchanged in a reproduced three-state family. Header getter-body order is
 // also flat across all 60 emitted function code sections.
+// Mac retains the same 18 direct game calls in the same order, including both
+// getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
+// register probe on this body found no closer binding than the current one.
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593) MAC_ADDRESS(0x027b88, 0x3c0)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::castSpell(

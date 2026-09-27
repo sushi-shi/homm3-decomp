@@ -223,6 +223,12 @@ calls. Do not replace them with direct fields, array indexing, or pasted
 statements for a higher score. An outer helper may replace a call when its
 implementation contains that recovered helper call; preserve the complete path.
 
+When a mismatching block resembles a helper already implemented elsewhere,
+treat a call to that helper as the leading source hypothesis. Compare its body
+and cross-references with the Mac and retail callers, then test the call and
+related caller structure under VC6. Try source-backed alternatives through a
+temporary score dip before concluding the caller has reached a local limit.
+
 Preserve one canonical helper and its source calls. Preserve proven types and
 inline qualifiers; choose a clear name where the original is unknown. Match
 its retained retail body and each caller's call/expansion decision separately:

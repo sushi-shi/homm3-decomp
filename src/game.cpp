@@ -715,21 +715,30 @@ void game::calculateProduction()
     }
 }
 
+// DC game.cpp:838..864 records int count, int x and char char_buffer.
+// Complete reads through TAbstractFile in place of the older gzread stream.
+// The source-shaped locals preserve the same current VC6 body (86.4753%).
 VA(0x004b9070, 0x1B3) MAC_ADDRESS(0x0cb1f0, 0x118)  // dc 0xa3c68
 int game::loadSignPool(TAbstractFile* infile)
 {
-    signed char count;
-    if (readValue(infile, count) < sizeof(count))
+    int count;
+    int x;
+    char charBuffer;
+
+    count = readValue(infile, charBuffer);
+    if (count < sizeof(charBuffer))
         return -1;
 
-    m_signs.resize(count);
-    for (unsigned int i = 0; i < m_signs.size(); ++i) {
-        if (loadString(infile, m_signs[i].m_signText) < 0)
+    m_signs.resize(charBuffer);
+    for (x = 0; x < m_signs.size(); ++x) {
+        count = loadString(infile, m_signs[x].m_signText);
+        if (count < 0)
             return -1;
 
-        if (readValue(infile, count) < sizeof(count))
+        count = readValue(infile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        m_signs[i].m_hasText = count != 0;
+        m_signs[x].m_hasText = charBuffer != 0;
     }
     return 0;
 }
@@ -862,38 +871,49 @@ int game::saveMinePool(TAbstractFile* outfile)
     return 0;
 }
 
-// Mac 0xcba68..0xcba80 sign-extends the independently read removable byte
-// before testing it. Keep that signed value reader and its own temporary.
+// DC game.cpp:1024..1068 records int count, int x and separate unsigned/signed
+// byte staging locals for the five shared reads. Complete adds saveVersion's
+// removable-troops branch; Mac 0xcba68..0xcba80 sign-extends its independent
+// by-value read, so retain that separate helper. Restoring the four DC locals
+// moves VC6 from 93.4277% to 93.39%; the vector-resize CFG remains unresolved.
 VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
-    unsigned char count;
-    if (readValue(infile, count) < sizeof(unsigned char))
+    int count;
+    int x;
+    unsigned char ucharBuffer;
+    char charBuffer;
+
+    count = readValue(infile, ucharBuffer);
+    if (count < sizeof(ucharBuffer))
         return -1;
 
-    m_garrisons.resize(count);
-    for (unsigned int i = 0; i < m_garrisons.size(); ++i) {
-        unsigned char owner;
-        if (readValue(infile, owner) < sizeof(owner))
+    m_garrisons.resize(ucharBuffer);
+    for (x = 0; x < m_garrisons.size(); ++x) {
+        count = readValue(infile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        m_garrisons[i].m_playerOwner = owner;
+        m_garrisons[x].m_playerOwner = charBuffer;
 
-        m_garrisons[i].m_garrisonArmy.load(infile);
+        m_garrisons[x].m_garrisonArmy.load(infile);
 
-        if (readValue(infile, count) < sizeof(unsigned char))
+        count = readValue(infile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        m_garrisons[i].m_mapX = static_cast<unsigned char>(count);
-        if (readValue(infile, count) < sizeof(unsigned char))
+        m_garrisons[x].m_mapX = ucharBuffer;
+        count = readValue(infile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        m_garrisons[i].m_mapY = static_cast<unsigned char>(count);
-        if (readValue(infile, count) < sizeof(unsigned char))
+        m_garrisons[x].m_mapY = ucharBuffer;
+        count = readValue(infile, ucharBuffer);
+        if (count < sizeof(ucharBuffer))
             return -1;
-        m_garrisons[i].m_mapZ = static_cast<unsigned char>(count);
+        m_garrisons[x].m_mapZ = ucharBuffer;
 
         if (saveVersion < 28) {
-            m_garrisons[i].m_removableTroops = !g_inCampaign;
+            m_garrisons[x].m_removableTroops = !g_inCampaign;
         } else {
-            m_garrisons[i].m_removableTroops =
+            m_garrisons[x].m_removableTroops =
                 readValue<char>(infile) != 0;
         }
     }

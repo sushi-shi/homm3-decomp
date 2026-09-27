@@ -769,6 +769,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                 w->m_width = mx;
                 my = w->getRealHeight();
                 w->m_height = my;
+                // DC line 970 names set_visible in the older UI. Complete
+                // sends CLEAR_STATUS with ACTIVE|DRAWN here (6, 6);
+                // setVisible(0) sends DRAWN alone (4, 6).
                 w->hide();
 
                 w = getWidget(MAP_ENABLED_1_ID + drawIndex);

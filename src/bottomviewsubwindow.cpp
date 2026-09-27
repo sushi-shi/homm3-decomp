@@ -35,7 +35,7 @@
 // absence, only its entries are evidence of presence.
 
 // THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
-// The four constructors below plateau on inline-depth divergence, and
+// The four constructors below formerly plateaued on inline-depth divergence, and
 // the standing hypothesis was that C1XX front-end state (the symbol
 // handle numbering of docs/vc6/handle-order.md, delivered through the
 // IL) carried it, so that matching retail's include closure would move
@@ -52,7 +52,7 @@
 //     headers last, and adding hero.h / town.h / castle.h.
 
 // Every one is byte-flat: TBottomViewHero 96.52, Town 94.31, Kingdom
-// 94.06, ResourceMessage 91.30, and the whole-tree fuzzy figure
+// 94.06, ResourceMessage 91.30 at that point, and the whole-tree fuzzy figure
 // unchanged to four decimals. The probes are NOT null - `homm3 vc6
 // il-diff` confirms each reaches the front end (nine `extern int` move
 // the gl high-water 0xf63c -> 0xf645 and perturb the ex stream across
@@ -259,48 +259,11 @@ void TBottomViewNewTurn::animate()
 //     byte its height, both read through the same global font pointer
 //     in two separate loads. str() is therefore called TWICE, and both
 //     expansions carry their own freeze(true);
-//   * the sprite is released through vtable slot 1 - CSprite::Dispose -
-//     at the end of the guarded block.
-
-// Residual (91.30%): THE FIRST TWO push_backs STOP ONE INLINE LEVEL
-// SHORT IN RETAIL. Retail reaches the backdrop and the message through
-// 0x422f50 - the TWO-argument `insert(iterator, const widget*&)`, kept
-// out of line - while the icon and the quantity reach 0x54d120, the
-// three-argument `insert(iterator, size_type, const widget*&)` that
-// every other constructor in this file produces. Our CL expands the
-// two-argument insert at all four sites and so always emits the
-// three-argument call. This is NOT a spelling: `push_back(w)` and
-// `Widgets.insert(Widgets.end(), w)` were measured byte-identical here,
-// both giving the three-argument form, so the divergence is inline
-// DEPTH and nothing else - the same class as TBottomViewKingdom's
-// out-of-line vector::size(). The rest of the delta is downstream
-// scheduling: retail lets the sprite's register die across the icon's
-// argument list because it reads both sprite fields first.
-
-// SAME LEVER AS TBottomViewKingdom, DIFFERENT THRESHOLD. Read that
-// function's note first for the mechanism. Padding this body with free
-// (cb <= 0x28) inline candidates traces a single-peaked curve - 1 and 2
-// sites 91.30, 3 sites 91.30, FIVE sites 93.21, 8 sites 92.80, 12 sites
-// 91.26, 20 sites 87.19 - so retail's own body carries roughly five
-// more inline candidates than this reconstruction and the two-argument
-// insert falls out of the nested budget once it does. That is a large
-// enough deficit to be a real reconstruction gap rather than one
-// unnoticed accessor, so the probe is not landed and the gap is left
-// named for the next lane. The include set is NOT the cause - see the
-// TU-level note at the top of this file.
-
-// A LEAD FOR THAT GAP, FROM THE DREAMCAST CODEVIEW. The DC build of
-// this constructor (dc 0x554ac) names exactly one stack local, and it
-// sits inside the nested blocks that are the `res >= 0` guard: `str`,
-// whose type index resolves to LF_ARRAY of T_RCHAR length 20 - a plain
-// `char str[20]`, not a stream object. This reconstruction has no such
-// buffer. The obvious reading, `std::ostrstream(char*, streamsize)`
-// over a caller-supplied buffer, was BUILT AND REJECTED: that ctor is
-// _CRTIMP (out of line, where the default ctor is inline) and both
-// `sizeof(str)` and a literal 20 score 86.62, nearly five points BELOW
-// the default-ctor spelling. So the buffer is real evidence and the
-// buffered stream is not its explanation; what `str` is remains open,
-// and it is the first place to look for the five missing candidates.
+//   * the sprite is released through ResourceManager::Dispose; its
+//     inline wrapper owns the virtual CSprite::Dispose call. Restoring
+//     that call lifts the Complete constructor from 98.09% to exact.
+// DC also records `char str[20]` inside the resource guard; it has no
+// corresponding live storage in this optimized Complete body.
 VA(0x00451220, 0x393) MAC_ADDRESS(0x05f7a4, 0x41c)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
 TBottomViewResourceMessage::TBottomViewResourceMessage(
     heroWindow* parent, int res, int quantity,
@@ -334,7 +297,8 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
             1, 0, 8));
 
         quantityText.freeze(false);
-        sprite->dispose();
+        // DC bottomviewsubwindow.cpp:176 names the canonical Dispose wrapper.
+        ResourceManager::dispose(sprite);
     }
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {

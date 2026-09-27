@@ -24,12 +24,9 @@
 // All four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox),
 // similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 
-// CreateWin family status: the two CBonusDlg::CreateWin overloads are
-// reconstructed (98.00 / 95.51) and cap on the register-homing family - the
-// schedule is aligned (why-reg flow-distance 0) but retail binds `this` to edi
-// and the per-widget temp to esi where our CL binds them the other way, a swap
-// the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
-// remain @stub; CTeamAlignmentDlg is reconstructed below.
+// The CreateWin family is reconstructed below. CTownDlg retains the Complete
+// sprite widget and direct dwelling lookup where Dreamcast's older source
+// names a button and GetBaseCreature.
 #include "va.h"
 #include "includes.h"
 
@@ -47,6 +44,7 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "townmgr.h"
 #include "winmgr.h"
 
 // ============================================================================
@@ -308,7 +306,10 @@ CTownDlg::CTownDlg(unsigned char newGameMode)
 
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
 
-// E:\gamedcs\singleselectionpopups.cpp:302
+// E:\gamedcs\singleselectionpopups.cpp:302. DC lines 304/311 use
+// TTextResource::operator[] for both captions and GetTownTypeName for the
+// label. Their canonical calls preserve Complete's table loads. The two
+// GetBaseCreature calls and button ctor belong to the older popup.
 VA(0x00575e60, 0x670) MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
@@ -316,14 +317,14 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         return 0;
 
     add(new textWidget(10, 26, m_width - 20, 36,
-        g_generalText->getText(GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION), "medfont.fnt", font::PRIMARY,
+        (*g_generalText)[GENERAL_TEXT_SCENARIO_TOWN_ALIGNMENT_CAPTION], "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
-        g_townTypeNames[townType + 1], "smalfont.fnt", font::PRIMARY,
+        townManager::getTownTypeName(townType), "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
-        g_generalText->getText(GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION), "medfont.fnt", font::PRIMARY,
+        (*g_generalText)[GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION], "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
 
     int centerX = m_width / 2;
@@ -376,7 +377,8 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
 
 VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 
-// E:\gamedcs\singleselectionpopups.cpp:365
+// E:\gamedcs\singleselectionpopups.cpp:365. DC lines 376/383 use
+// TTextResource::operator[] for the heading and team-number format.
 // Residual (99.11%): all 41 CFG blocks and their edges agree; only B14/B17/B36
 // differ in size because C2 promotes xStart through EDI here while retail
 // stores it in one stack slot and reloads it through EAX/EDX. Dreamcast names
@@ -397,12 +399,12 @@ unsigned char CTeamAlignmentDlg::createWin()
         return 0;
 
     add(new textWidget(10, 20, m_width - 20, 36,
-        g_generalText->getText(GENERAL_TEXT_TEAM_ALIGNMENTS_CAPTION), "medfont.fnt", font::PRIMARY,
+        (*g_generalText)[GENERAL_TEXT_TEAM_ALIGNMENTS_CAPTION], "medfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
 
     for (int team = 0; team < m_numTeams; ++team) {
         int y = team * 50 + 56;
-        sprintf(tempText, g_generalText->getText(GENERAL_TEXT_TEAM_NUMBER_FORMAT), team + 1);
+        sprintf(tempText, (*g_generalText)[GENERAL_TEXT_TEAM_NUMBER_FORMAT], team + 1);
         add(new textWidget(10, y, m_width - 20, 18, tempText,
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
 

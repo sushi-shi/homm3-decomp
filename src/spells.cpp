@@ -2364,6 +2364,9 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // its native address lifetime: 72.70% -> 73.55%. Nested and conditional
 // return variants remain worse when combined with that reference; the
 // canonical findSpellTarget call still expands more than retail.
+// Mac retains findSpellTarget, validSpellTargetArmy and getSpellWallHex in
+// the same order as this source. DC's ValidHex, InInvisibleColumn and GridY
+// audit leads are the lowercase canonical calls in the obstacle arms below.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
@@ -4199,6 +4202,10 @@ void combatManager::removeCorpse(army* corpse)
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
 // stores and changes the POD return-object path. Keep the conditional load.
+// DC spells.cpp:4858..4859 calls get_resurrection_size before loading the
+// corpse's original index. Mac 0x198540..0x19854c retains that order too.
+// Swapping the adjacent locals improves a VC6 register-distance probe but
+// contradicts both source-order witnesses, so keep the authored order.
 VA(0x005a7390, 0x1CB) MAC_ADDRESS(0x1984ec, 0x200)  // dc 0x1566f8
 void combatManager::demonicResurrection(const army* caster, army* target)
 {

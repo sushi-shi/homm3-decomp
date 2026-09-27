@@ -601,6 +601,9 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // keep the float components that already reproduce the exact Mac body.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
+// Direct and compound float division are also Windows-flat: retail loads the
+// numerator between the two integer-to-float conversions, while VC6 loads it
+// after both. Keep the Mac-exact named components until that lifetime is found.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {

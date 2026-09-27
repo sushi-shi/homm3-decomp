@@ -4956,20 +4956,25 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     checkEndGame(0);
 }
 
+// DC events.cpp:5397 retains game::GetMine. Naming its result in the mine
+// arm keeps that source call and gives VC6 the retail 52-block, 29-call body.
+// Mac's paired comparison is currently unscored (unbound TOC literal @6813).
 VA(0x004ab410, 0x632) MAC_ADDRESS(0x0b85a8, 0x36c)  // dc 0x9a288
 void advManager::eventSound(int eventID, int extraInfo)
 {
     std::string sampleName;
 
     switch (eventID) {
-    case MINE:
-        if (g_game->getMine(extraInfo)->m_guards.hasCreatures())
+    case MINE: {
+        mine* currentMine = g_game->getMine(extraInfo);
+        if (currentMine->m_guards.hasCreatures())
             sampleName = DATA_COMPGEN(0x00677898, mineGuardSampleName,
                                       "mystery.wav");
         else
             sampleName = DATA_COMPGEN(0x00677888, flagMineSampleName,
                                       "flagmine.wav");
         break;
+    }
     case FLOTSAM:
     case LEAN_TO:
     case WAGON:

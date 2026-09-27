@@ -4991,6 +4991,10 @@ void type_random_map_generator::buildZoneBoundaries(
     joinExtraZones(originalZones, &diagram);
 }
 
+// The first getMapItem is retained by VC6 but expanded by retail. A named
+// plane pointer before the level-map constructor was byte-flat at 89.24%
+// CUR, below the held 95.17% MAX. Keep the canonical lookup and constructor.
+// Mac retains the view-map constructor at 0x22d320 and expands that lookup.
 VA(0x0053E6A0, 0x337) MAC_ADDRESS(0x2400bc, 0x354)
 void type_random_map_generator::paintZoneTerrain()
 {
@@ -6597,6 +6601,10 @@ unsigned char type_random_map_generator::createSubterraneanGate(
 // Loop forms, snapshot/declaration lifetimes, public vector insertion and
 // allocator ownership do not resolve that scheduling difference. Named cell
 // and predicate values, nested conditions and continue guards also stay flat.
+// A further 50-state outer/inner-loop and insertion family emitted 29
+// distinct objects without improving MAX; a named maximum-X was byte-flat.
+// Mac's 0x22dfd8 vector initializer is a two-instruction zero store, not a
+// missing game helper. Its canPlaceObject call is already in this source.
 VA(0x00542930, 0x1C6) MAC_ADDRESS(0x245624, 0x24c) // anchor-callee 0x540e81; thiscall, ret 8; retail-only
 unsigned char type_random_map_generator::placeObjectInZone(type_object* object, TRmgZone* zone)
 {

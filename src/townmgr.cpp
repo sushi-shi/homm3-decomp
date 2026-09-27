@@ -29,6 +29,7 @@
 #include "quicktownwindow.h"
 #include "recruit.h"
 #include "remote.h"
+#include "resourcemanager.h"
 #include "resourcedisplay.h"
 #include "sacrifice_window.h"
 #include "smackmgr.h"
@@ -615,17 +616,6 @@ long aiApproximateStrength(const hero* currentHero,
 // them can call both.
 void getCategoryStats(int whichCat, long* value, signed char* index);
 void sortStats(long* value, signed char* index);
-
-// resourcemanager.h's two entry points this compiland needs, declared
-// file-locally rather than by including that header: BuyBuild and
-// townObject's constructor are their sole consumers here and
-// townmgr.obj's include closure is load-bearing for the rest of the
-// file (the initialize_game_data precedent).
-class CSprite;
-namespace ResourceManager {
-CSprite* getSprite(const char* name);
-Bitmap816* getBitmap816(const char* name);
-}
 
 // Original: townManager::TownNativeTerrains. Complete's full table is
 // {-1,2,2,3,7,0,6,5,4,2}; GetNativeTerrain biases town type -1 by one.
@@ -5954,6 +5944,9 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 }
 
 // E:\gamedcs\townmgr.cpp:7354
+// DC locals iThisWidth, resourceIcon and resources name the icon width,
+// cached sprite and resource-type array. Its line 7429 calls the canonical
+// ResourceManager::Dispose wrapper after adding the last icon.
 VA(0x005d5f30, 0x8DA) MAC_ADDRESS(0x1d35a4, 0x53c)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
 int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 {
@@ -5975,12 +5968,12 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         { 303, 303, 303, 377, 377, 377,   0 },
         { 303, 303, 303, 303, 377, 377, 377 }
     };
-    EGameResource types[7];
+    EGameResource resources[7];
     int amounts[7];
     int i;
 
     int numResources = m_townToView->getBuildCost(
-        (type_building_id)buildingId, types, amounts);
+        (type_building_id)buildingId, resources, amounts);
 
     TBuyBuildWindow* window = new TBuyBuildWindow(0xca, 0x28, buildingId);
     if (window == 0)
@@ -5993,8 +5986,8 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     msg.m_extra = g_game->getLocalPlayerGamePos();
     window->broadcastMessage(msg);
 
-    CSprite* icons = ResourceManager::getSprite("Resource.def");
-    int iconWidth = icons->getWidth();
+    CSprite* resourceIcon = ResourceManager::getSprite("Resource.def");
+    int thisWidth = resourceIcon->getWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
         widget* amountText = new textWidget(
@@ -6008,14 +6001,14 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
 
         widget* icon = new iconWidget(
             resourceX[numResources - 1][i] + 18,
-            resourceY[numResources - 1][i], iconWidth, 32, -1,
-            "Resource.def", types[i], 0, 0, 0, 0x10);
+            resourceY[numResources - 1][i], thisWidth, 32, -1,
+            "Resource.def", resources[i], 0, 0, 0, 0x10);
         if (icon == 0)
             memError();
         window->m_widgets.push_back(icon);
         window->addWidget(icon, -1);
     }
-    icons->dispose();
+    ResourceManager::dispose(resourceIcon);
 
     m_objToBuild = -1;
     if (quickView) {
@@ -6043,7 +6036,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         if (g_windowManager->m_dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID) {
             m_objToBuild = buildingId;
             for (i = 0; i < numResources; i++)
-                g_currentPlayer->m_resources[types[i]] -= amounts[i];
+                g_currentPlayer->m_resources[resources[i]] -= amounts[i];
         }
     }
 
@@ -7990,6 +7983,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         { 1, 1, 1, 1, 5, 5, 5, 5 }
     };
 
+    // DC line 9243 constructs the original `msg` before the player/stat passes.
+    message msg;
+
     int gamePos = g_game->getLocalPlayerGamePos();
     if (thievesGuilds == -1)
         thievesGuilds = g_game->getNumThievesGuilds(gamePos);
@@ -8062,7 +8058,6 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         }
     }
 
-    message textMessage;
     int bestStrength;
     hero* bestHero;
     int bestCreature;
@@ -8078,9 +8073,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
         m_owners[column] = who;
         strcpy(g_text, g_playerFlagSprites[who]);
-        textMessage.m_extraText = g_text;
+        msg.m_extraText = g_text;
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-                         column + 0x384, textMessage.m_extra);
+                         column + 0x384, msg.m_extra);
 
         bestHero = 0;
         if (thievesGuilds >= 1) {
@@ -8107,7 +8102,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                 if (bestHero) {
                     m_widgets.push_back(new textWidget(
                         66 * column + 0x102, 0x18c, 0x35, 0x2c,
-                        g_generalText->getText(GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS),
+                        (*g_generalText)[GENERAL_TEXT_PRIMARY_SKILL_ABBREVIATIONS],
                         DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
                         font::PRIMARY, -1, 0, 0, 8));
                     addWidget(m_widgets.back(), -1);

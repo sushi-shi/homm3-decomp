@@ -1476,6 +1476,10 @@ unsigned char combatManager::unnamed464f50(
     return incumbent->m_bitIndex < candidate->m_bitIndex;
 }
 
+// DC cmbtmgr.cpp:2349 calls CheckCastleAttack after this selection loop.
+// Neither retail target retains that call: Mac has only the five ordered
+// game calls below, and Windows ends after returning the selection result.
+// The two DC GetSpeed calls belong to unnamed464f50, not this body.
 VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)  // dc 0x5f518
 unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 {

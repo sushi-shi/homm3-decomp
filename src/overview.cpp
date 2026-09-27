@@ -1680,6 +1680,9 @@ VA(0x0051fa40, 0x1311) MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callbac
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    // DC overview.cpp:2018 calls the cache sweep before widget setup.
+    // Complete's canonical helper is empty and release-elided.
+    ResourceManager::delSprFromCache();
     m_widgets.reserve(100);
 
     m_widgets.push_back(new bitmapBorder(

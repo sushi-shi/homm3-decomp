@@ -3225,11 +3225,12 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_randomMapMode = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                if (g_remoteOn && !isHost()) {
+                // Mac 0x178c30 calls getHeaders before the request arm.
+                if (!g_remoteOn || isHost()) {
+                    getHeaders(&m_transferHeaders);
+                } else {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
                     transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
-                } else {
-                    getHeaders(&m_transferHeaders);
                 }
             }
         }
@@ -3268,10 +3269,11 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (!isHost() && !m_saveMode)
-            g_game->setupOrigData();
-        else
+        // Mac 0x178e84 places getHeaders before setupOrigData.
+        if (isHost() || m_saveMode)
             getHeaders(&m_headersA);
+        else
+            g_game->setupOrigData();
         m_scenarioOptionsStarted = 1;
         stopMouseThread();
     }

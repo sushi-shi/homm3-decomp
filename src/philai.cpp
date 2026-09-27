@@ -360,8 +360,11 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
 // and Complete expands it into AI_value_of_event's BLACK_MARKET arm: reject
 // a full backpack, select the cell's seven-artifact market record, and sum
 // the five-marketplace purchase value of every slot.
+// Mac aiValueOfEvent retains this helper and the Campfire, Defense Tower,
+// Flotsam, Garden and Skeleton helpers. Ordinary definitions restore their
+// candidate call boundaries; VC6 still expands them in the Windows dispatcher.
 MAC_ADDRESS(0x13ddec, 0xac)
-inline long valueOfBlackMarket(const hero* currentHero,
+long valueOfBlackMarket(const hero* currentHero,
                                   const NewmapCell* cell)
 {
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
@@ -1125,7 +1128,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 // AI_value_of_event's CAMPFIRE arm; retail proves the 100-gold unit and the
 // same left-to-right double expression.
 MAC_ADDRESS(0x1426c8, 0x6c)
-inline int valueOfCampfire(playerData* player, NewmapCell* cell)
+int valueOfCampfire(playerData* player, NewmapCell* cell)
 {
     int size = cell->getCampfireSize();
     return static_cast<int>(
@@ -1138,7 +1141,7 @@ inline int valueOfCampfire(playerData* player, NewmapCell* cell)
 // through the hero's turn ratio. Complete expands the helper and the no-arg
 // experience accessor into the DEFENSE_TOWER arm.
 MAC_ADDRESS(0x142b14, 0x84)
-inline int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
+int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_defenseTowerFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1209,7 +1212,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
 // FLOTSAM arm; retail's literal pool fixes the expected haul at 175 gold and
 // five wood.
 MAC_ADDRESS(0x142f5c, 0x28)
-inline int valueOfFlotsam(playerData* player)
+int valueOfFlotsam(playerData* player)
 {
     return static_cast<int>(
         player->m_ai.m_resourceValue[GOLD] * 175.0
@@ -1220,7 +1223,7 @@ inline int valueOfFlotsam(playerData* player)
 // nothing; otherwise its one knowledge point is worth the hero's cached
 // knowledge value. Complete expands both the helper and accessor.
 MAC_ADDRESS(0x142f84, 0x28)
-inline int valueOfGarden(const hero* currentHero, NewmapCell* cell)
+int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_gardenOfRevelationFlags & (1UL << cell->m_extraInfo))
         return 0;
@@ -1408,7 +1411,9 @@ inline int valueOfMercenaryCamp(const hero* currentHero,
         * currentHero->m_turnExperienceToRvRatio);
 }
 
-inline int valueOfMoveSource(const hero* currentHero, long flag,
+// Mac retains this ordinary helper at 0:0x1440a0 at all three event sites;
+// VC6 keeps the same Windows dispatcher bytes with its natural call decisions.
+int valueOfMoveSource(const hero* currentHero, long flag,
                                 short increase, long& moveCost)
 {
     if (currentHero->m_flags & flag)
@@ -1436,7 +1441,7 @@ inline long valueOfMagusHut(long playerId)
 // fixes the later constants as one fifth of an average artifact, or 200 gold
 // when the backpack is full.
 MAC_ADDRESS(0x1449a0, 0xb4)
-inline int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
+int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));

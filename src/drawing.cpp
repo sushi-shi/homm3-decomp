@@ -823,6 +823,9 @@ void combatManager::drawBackground()
 
 // E:\gamedcs\drawing.cpp:982
 VA(0x00493ea0, 0x4ca) MAC_ADDRESS(0x0a581c, 0x5d8)  // dc 0x849c4
+// At the retained UpdateCombatArea call, passing m_drawbridgeBounds directly
+// or adding a short-lived SLimitData copy leaves Windows at 96.403%; naming
+// width/height inside the canonical helper also leaves the call byte-flat.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
