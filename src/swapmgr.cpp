@@ -2353,16 +2353,13 @@ void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 }
 
 // E:\gamedcs\swapmgr.cpp:2165
-// Dreamcast places each real message construction before GetOtherHero on the
-// same source row.  Retail schedules the accessor first, but that optimized
-// order does not justify reversing the recovered source boundary.  Keeping
-// constructor-first source banked 99.97% before the later coherent helper
-// reconstruction changed this TU's optimizer state.  The current dip still
-// has all 35 CFG flows, 15 branches, five returns and call counts exact;
-// candidate reuses one 0x14-byte message home while Complete gives the two
-// inlined cases distinct homes in a 0x28 frame.  Accessor-first spelling is
-// the source-false negative control and the banked MAX prevents that local
-// scheduling artifact from overriding the positive Dreamcast fact.
+// DC attributes each packet construction, GetOtherHero and transmission
+// to one source row and records no named locals. Mac constructs before
+// GetOtherHero, while Windows retail schedules the accessor first.
+// Unnamed full-expression packets preserve both allowed argument orders.
+// Applying this to the trade case and canonical onReceiveFromAlly restores
+// Windows' separate 0x14-byte packet homes (0x28 frame) and the entire body
+// from 88.4550% to 100%; all other scored Windows/Mac rows stay unchanged.
 VA(0x005b10d0, 0x2A8) MAC_ADDRESS(0x1a9998, 0x234)  // switch ids/callees + ret 8, dc 0x15ec58
 void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 {
@@ -2423,9 +2420,7 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
             && g_currentPlayer->isLocalHuman()
             && m_humanPlayerTrade)
         {
-            CTradeRequestDoneMsg requestDone;
-            hero* otherHero = getOtherHero();
-            transmitRemoteData(&requestDone, otherHero->m_owner, 0, 1);
+            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
         }
         exitFlag = 1;
         break;
@@ -2498,9 +2493,8 @@ void swapManager::onReceiveFromAlly()
     m_parent->updateArrows();
     drawSwapWin();
 
-    CGiveMeStuffMsg giveMeStuff;
-    hero* otherHero = getOtherHero();
-    transmitRemoteData(&giveMeStuff, otherHero->m_owner, 0, 1);
+    // DC line 2294 is one ctor/GetOtherHero/transmit statement, with no locals.
+    transmitRemoteData(&CGiveMeStuffMsg(), getOtherHero()->m_owner, 0, 1);
 }
 
 // E:\gamedcs\swapmgr.cpp:2298
