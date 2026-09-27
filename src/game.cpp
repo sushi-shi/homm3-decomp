@@ -7609,7 +7609,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     monsterOk.set();
 
     if (!m_gameVersion) {
-        std::fill(bitset_iterator<CREATURE_CATAPULT>(monsterOk) + CREATURE_PIXIE,
+        std::fill(bitset_iterator<CREATURE_CATAPULT>::fromOffset(monsterOk, CREATURE_PIXIE),
                   bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_CATAPULT),
                   false);
     } else {

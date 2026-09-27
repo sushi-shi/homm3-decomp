@@ -206,3 +206,14 @@ mac_offset = 0x4bd8
 mac_size = 4
 sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
 evidence = "Native setupPuzzlePieces loads the direct TOC float at1+0x4bd8 with lfs at0xcde14 and uses it for the quadratic percentage factor. The complete four-byte big-endian payload is3f000000, exactly0.5f, the reciprocal of the authored division by2.0f. Bind the reviewed literal payload and address without any anonymous compiler-ordinal identity."
+
+[[constants]]
+units = ["game"]
+owner_va = 0x004c92c0
+candidate_offset = 0xa8
+target_offset = 0xa0
+mac_section = 1
+mac_offset = 0x4b2d
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Native getRandomMonster at0xdff74 loads its fill value through direct TOC data1+0x4b2d. The emitted fill loop at raw candidate+0xa8 loads the same anonymous one-byte false payload. Pin this owner's actual use instead of reusing newMap's separately reviewed false literal at1+0x4b24; all anonymous-symbol use sites are checked by the resolver."

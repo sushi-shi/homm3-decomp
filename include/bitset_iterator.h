@@ -31,6 +31,16 @@ public:
         return result;
     }
 
+    // Native getRandomMonster constructs a zero-position local, advances it
+    // and returns the two-word value before fill copies its range argument.
+    // This value factory models that nested local without mutating a caller.
+    static bitset_iterator fromOffset(std::bitset<N>& bits, size_t offset)
+    {
+        bitset_iterator result(bits);
+        result.m_position += offset;
+        return result;
+    }
+
     // Windows retains this dereference body; the Mac caller expands the
     // adapter before constructing its two-word bit reference.
     // VA instance: bitset_iterator<144>::operator*
