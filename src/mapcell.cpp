@@ -2615,6 +2615,9 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // below are retained.
 // Mac 0x124674 and 0x12470c construct bitset reference proxies before the
 // retained assignments at 0x1246b4 and 0x12474c.
+// Map scalars are little endian: native 0x124330 decodes the identifier,
+// 0x124468 the troop count, and 0x124798 the event count. Shared decoding
+// reproduces these CodeWarrior operations and is byte-flat under VC6.
 VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2637,7 +2640,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         tempTown.m_objRef = 0;
     } else {
         readValue(infile, intBuffer);
-        tempTown.m_objRef = intBuffer;
+        tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
     }
 
     if (readValue(infile, charBuffer) < sizeof(charBuffer))
@@ -2661,6 +2664,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             if (readValue(infile, shortBuffer)
                 < sizeof(shortBuffer))
                 return -1;
+            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
@@ -2705,6 +2709,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (readValue(infile, numTownEvents)
         < sizeof(numTownEvents))
         return -1;
+
+    numTownEvents = LITTLE_ENDIAN_LONG(numTownEvents);
 
     // Native Mac 0x1247a4..0x124804 caches the read count across event calls
     // and increments a separate index; CodeWarrior reproduces that lifetime.

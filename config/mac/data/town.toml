@@ -1,4 +1,35 @@
 [[data]]
+retail_va = 0x00698a94
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528240
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Native applySpecialBuildingEffect loads TOC 1+0xb10 -> 1+0x528240 into r27. Its Castle/stables arm at 0x1b2d28..0x1b2d44 reads this same four-byte scalar twice and adds it to the hero's maximum/current movement fields at +0x49/+0x4d. The source uses g_stablesMovementBonus at both matching stores; src/hero.cpp owns retail DATA(0x00698a94) and loads its runtime value from hero traits. The pinned initial storage is four zero bytes. External address-only binding; no runtime value or initializer verdict."
+
+[[data]]
+retail_va = 0x006887a0
+source = "src/town.cpp"
+declaration_only = false
+mac_symbol = "s_constHordeEffects__4town"
+mac_section = 1
+mac_offset = 0x53e2c
+mac_size = 0x120
+sha256 = "04bc8d78c11fa7c41a3484999df04873cc38b9e0017edfd98a9f2a86f9e772f0"
+evidence = "Native getGrowthRate loads TOC 1+0x1120 -> 1+0x53e2c, indexes 32-byte town rows and eight-byte horde entries, reads dwelling at +6 and bonus at +4. The entire 288-byte native table matches the ordinary CodeWarrior s_constHordeEffects__4town initializer: nine rows of four enum/short/short records. src/town.cpp owns retail DATA(0x006887a0); require the complete emitted payload to match."
+
+[[data]]
+retail_va = 0x00642e20
+source = "src/town.cpp"
+declaration_only = false
+mac_section = 0
+mac_offset = 0x2a6d74
+mac_size = 0x10
+sha256 = "1dd074b95d6512190524867e8cf0f92cc4cb24192899965ad9d7404b4625f615"
+evidence = "Native getGrowthRate loads TOC 1+0x31e8 -> code-section data 0+0x2a6d74 and walks four words as HasBuilding IDs. All 16 bytes match the ordinary initialized g_hordeBuildings array: 18,19,24,25 in big-endian order. src/town.cpp owns retail DATA(0x00642e20); require the complete emitted payload to match."
+
+[[data]]
 retail_va = 0x0066cd98
 source = "src/town.cpp"
 declaration_only = false

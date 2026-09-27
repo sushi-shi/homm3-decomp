@@ -213,7 +213,7 @@ def load_data(root: Path) -> list[DataPair]:
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires external linkage")
             else:
                 match = re.fullmatch(r'\s*(?:(?:static|const|unsigned|signed|long|short)\s+)*'
-                                     r'\w+\s+(\w+)\s*(?:\[[^\]]*\]\s*)*=.*;',
+                                     r'\w+\s+(\w+(?:::\w+)*)\s*(?:\[[^\]]*\]\s*)*=.*;',
                                      declaration, re.DOTALL)
             name = match.group(1) if match else None
             definition = raw[start:end + 1].strip()
@@ -224,11 +224,14 @@ def load_data(root: Path) -> list[DataPair]:
                 raise SourceError(f"{source}: scoped DATA claim {va:#x} must be an ordinary static member")
             name = "::".join((*scope, name))
         if "::" in name:
-            if not declaration_only:
-                raise SourceError(f"{source}: qualified DATA initializers need additional matching support")
-            # The member declaration belongs inside its canonical class view.
-            # An out-of-class extern would define storage or be invalid C++.
-            definition = ""
+            if local_owner is not None:
+                raise SourceError(f"{source}: qualified DATA initializers require file scope")
+            # Keep a source-owned out-of-class initializer as authored. Its
+            # complete emitted payload follows the ordinary initialized-data
+            # contract. An address-only member binding emits no extern: the
+            # declaration already belongs to the canonical class header.
+            if declaration_only:
+                definition = ""
             if not isinstance(row.get("mac_symbol"), str) or not row["mac_symbol"].strip():
                 raise SourceError(f"{source}: qualified DATA claim {va:#x} needs its emitted mac_symbol")
         symbol = row.get("mac_symbol", name)

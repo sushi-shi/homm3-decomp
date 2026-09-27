@@ -8,6 +8,39 @@ from homm3.mac.source import SourceError, load_data
 
 
 class TestFragmentData(unittest.TestCase):
+    def test_qualified_initializer_preserves_owner_and_requires_emitted_symbol(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (root / "src").mkdir()
+            declaration = "DATA(0x00400100) int Town::values[2] = {3, 7};"
+            (root / "src/owner.cpp").write_text(declaration + "\n")
+            manifest = root / "config/mac/data.toml"
+            body = f'''[[data]]
+retail_va = 0x00400100
+source = "src/owner.cpp"
+mac_section = 1
+mac_offset = 0x40
+mac_size = 8
+sha256 = "{sha256(bytes(8)).hexdigest()}"
+evidence = "Complete reviewed static-member initializer and consumer."
+'''
+            manifest.write_text(body)
+            with self.assertRaisesRegex(SourceError, "needs its emitted mac_symbol"):
+                load_data(root)
+            manifest.write_text(body + 'mac_symbol = "values__4Town"\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.name, "Town::values")
+            self.assertEqual(pair.mac_symbol, "values__4Town")
+            self.assertEqual(pair.definition, "int Town::values[2] = {3, 7};")
+            self.assertFalse(pair.declaration_only)
+            manifest.write_text(body + 'mac_symbol = "values__4Town"\n'
+                                + 'declaration_only = true\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.definition, "")
+            self.assertTrue(pair.declaration_only)
+
     def test_registered_file_scope_const_table_and_duplicate_rejection(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

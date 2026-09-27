@@ -853,10 +853,15 @@ void town::initializeSpells(const TownExtra* townSetup)
         }
     }
 
-    int guildLevel = 5;
-    while (guildLevel > 0
-           && !hasBuilding(guildLevel - 1, false))
-        --guildLevel;
+    // Native Mac 0x1b3ce4..0x1b3d2c uses a five-iteration counted search
+    // with an early exit on HasBuilding. VC6 restores its expanded bitset
+    // constructor with this ordinary loop. Current CodeWarrior unrolls the
+    // loop; retain the helper while recovering that compiler-state boundary.
+    int guildLevel;
+    for (guildLevel = 5; guildLevel > 0; --guildLevel) {
+        if (hasBuilding(guildLevel - 1, false))
+            break;
+    }
     m_mageLevel = static_cast<signed char>(guildLevel);
     setSpellsAvailable();
 }
@@ -1323,10 +1328,13 @@ void extendedDialog(const char* text,
                      long x, long y, long timeout);
 const char* getBuildingName(int townType, int buildingId);
 
+// DC retains vector-reference parameters; both native caller ABIs agree.
+// Pointer-to-reference recovery leaves both complete VC6 bodies and their
+// relocations unchanged, and the ordinary CodeWarrior bodies are byte-flat.
 void showBuildingRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<type_dialog_resource>& rewards);
 void showCreatureRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<type_dialog_resource>& rewards);
 
 // The reward dialog flushes in batches of eight rows (the extended
 // dialog's row capacity); named per the kStartLevelCampaign precedent.
@@ -1386,11 +1394,11 @@ void town::giveEventReward(const TTownEvent* thisEvent)
             reward.m_qualifier = i;
             rewards.push_back(reward);
             if (rewards.size() == g_rewardDialogBatch)
-                showBuildingRewards(this, &rewards);
+                showBuildingRewards(this, rewards);
         }
     }
     if (rewards.size() > 0)
-        showBuildingRewards(this, &rewards);
+        showBuildingRewards(this, rewards);
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->m_generatorBonuses[i] != 0) {
@@ -1414,33 +1422,33 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                 rewards.push_back(reward);
             }
             if (rewards.size() == g_rewardDialogBatch)
-                showCreatureRewards(this, &rewards);
+                showCreatureRewards(this, rewards);
         }
     }
     if (rewards.size() > 0)
-        showCreatureRewards(this, &rewards);
+        showCreatureRewards(this, rewards);
 }
 
 VA(0x005c0220, 0x1DA) MAC_ADDRESS(0x1b57d8, 0x198)  // dc 0x167958
 void showBuildingRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<type_dialog_resource>& rewards)
 {
     std::string text;
-    for (int i = 0; i < rewards->size(); i++) {
+    for (int i = 0; i < rewards.size(); i++) {
         if (i > 0) {
-            if (i == rewards->size() - 1)
+            if (i == rewards.size() - 1)
                 text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 text += ", ";
         }
-        text += getBuildingName(thisTown->m_type, (*rewards)[i].m_qualifier);
+        text += getBuildingName(thisTown->m_type, rewards[i].m_qualifier);
     }
     text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(text.c_str(), *rewards, -1, -1, 0);
-    rewards->clear();
+        extendedDialog(text.c_str(), rewards, -1, -1, 0);
+    rewards.clear();
 }
 
 // E:\gamedcs\town.cpp:1760
@@ -1456,14 +1464,14 @@ void showBuildingRewards(const town* thisTown,
 // reward's count.
 VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<type_dialog_resource>& rewards)
 {
     std::string msg;
-    for (int i = 0; i < rewards->size(); i++) {
-        long count = (*rewards)[i].m_qualifier >> 16;
-        int creature = static_cast<unsigned short>((*rewards)[i].m_qualifier);
+    for (int i = 0; i < rewards.size(); i++) {
+        long count = rewards[i].m_qualifier >> 16;
+        int creature = static_cast<unsigned short>(rewards[i].m_qualifier);
         if (i > 0) {
-            if (i == rewards->size() - 1)
+            if (i == rewards.size() - 1)
                 msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 msg += ", ";
@@ -1471,13 +1479,13 @@ void showCreatureRewards(const town* thisTown,
         msg += formatString("%d ", count);
         msg += getArmyName(creature, count);
     }
-    long firstCount = (*rewards)[0].m_qualifier >> 16;
+    long firstCount = rewards[0].m_qualifier >> 16;
     msg = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(msg.c_str(), *rewards, -1, -1, 0);
-    rewards->clear();
+        extendedDialog(msg.c_str(), rewards, -1, -1, 0);
+    rewards.clear();
 }
 
 // Forward declarations for the two bodies that follow their callers in
