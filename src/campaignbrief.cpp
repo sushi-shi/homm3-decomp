@@ -65,7 +65,8 @@ static int increaseCampaignDifficulty(message& msg);
 // Complete adds the game-setup / map-header copy into gpGame (skipped in
 // the in-game view), the WHICHMAP frame chosen by the map's Size, the OK
 // button enable when the scenario's options record has no choice to
-// make, and the difficulty-button refresh.
+// make, and the difficulty-button refresh. Both native builds store the
+// WHICHMAP target before its SET_ICON_FRAME action.
 VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
 void TCampaignBrief::select(int which)
 {
@@ -84,8 +85,8 @@ void TCampaignBrief::select(int which)
 
     message msg;
     msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     msg.m_codeY = WHICHMAP_ID;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     switch (m_scenarios[which].m_size) {
     case MAP_SIZE_SMALL:
         msg.m_extra = 0;
