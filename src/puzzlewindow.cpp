@@ -447,6 +447,8 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 // E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
 // Mac 0x148b4c..0x148b8c initializes the result at this first-use boundary;
 // direct construction keeps its canonical point constructor and avoids a copy.
+// Retail loads current before storing best; DC 668/669 spans support the
+// point assignment before that scalar update (Windows 99.22 -> 100).
 VA(0x0052c9b0, 0x55B) MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {
@@ -490,8 +492,8 @@ type_point aiAttemptPuzzleGuess(long player)
                         int distance = abs(guess.m_y - current.m_y)
                                        + abs(guess.m_x - current.m_x);
                         if (result.m_x < 0 || distance < best) {
-                            best = distance;
                             result = current;
+                            best = distance;
                         }
                     }
                 }
