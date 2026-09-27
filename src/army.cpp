@@ -641,7 +641,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e140, 0x8C0) MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global, dc 0x444a8
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
-    // DC records both effect coordinates as procedure-scope ints.
+    // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
+    // Restoring the latter four local types is Windows byte-flat at 99.18%.
+    // Delaying the step initializer until after facing selection is worse.
     int powX;
     int powY;
     if (g_combatManager->m_battleOver != 0)
@@ -653,7 +655,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     y += m_ySpecialMod;
     x += m_xSpecialMod;
     if (m_currFrameType == cs_walk && !is(creatureFlyingArmy)) {
-        long frames = m_stdIcon->getNumFrames(0);
+        int frames = m_stdIcon->getNumFrames(0);
         long stepY = m_currFrameIndex * 42 / frames;
         long stepX = m_currFrameIndex * 44 / frames;
         switch (m_walkDirection) {
@@ -695,7 +697,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     }
 
     if (numBoxOnly == 0) {
-        long highlight = 0;
+        int highlight = 0;
         if (g_combatManager->m_highlighterOn != 0
             && m_gridIndex == g_combatManager->m_highlighterIndex)
             highlight = 0x70;
@@ -733,7 +735,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             restore = 1;
         }
 
-        long drawX =
+        int drawX =
             m_facing == 0 ? x - m_stdIcon->getWidth() + 196 : x - 196;
         long drawY = y - 267;
         g_combatManager->drawCreature(
@@ -748,7 +750,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         || (!is(creatureImmobilized) && !is(creatureSiegeWeapon) && !m_isMoving
             && (m_currFrameType == cs_wait
                 || m_currFrameType == cs_fidget))) {
-        long step = 1;
+        int step = 1;
         long xoff;
         int yoff;
         if (m_facing == 0) {
