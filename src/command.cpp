@@ -290,7 +290,10 @@ int combatManager::main(message& msg)
     if (!m_creaturePlacement && m_nextAction == 0 && m_thisNetHasControl) {
         automaticTurn = automateFirstAidTent();
 
-        automaticTurn |= automateTower() | automateCatapult();
+        // Mac accumulates the tower result before calling the catapult.
+        // A combined OR expression instead calls catapult first under CW.
+        automaticTurn |= automateTower();
+        automaticTurn |= automateCatapult();
     }
 
     if (checkWin(&msg))
