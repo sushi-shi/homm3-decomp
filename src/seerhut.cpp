@@ -452,16 +452,22 @@ void type_skill_quest::showSkillRequirementsDialog(
 // indexed/cursor forms give 73.9279/68.3423%, and progress falls to 94.2360%.
 // Removing all six pins with direct push_back gives 53.0360%; the earlier
 // 90.6577% control removed constructor/cleanup pins, not both insertion pins.
+// Mac 0x164f28..0x164ff4 stores either the required byte or zero in
+// separate arms. Direct member reads reproduce that loop exactly; the
+// earlier reference/conditional expression introduced extra byte conversions.
+// Natural c_str arguments avoid extended pointer lifetimes. Mac now 96.11%
+// (592 bytes on both sides), with string stack homes and format registers left.
+// Windows 68.33% versus the previous 70.53% remains a recovery obligation.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
-        // The actual requirement is a signed byte. The old const int& bound
-        // a converted temporary; it never referred back to the byte field.
-        const signed char& required = m_requiredSkills[i];
-        missing[i] = required > have ? required : 0;
+        if (m_requiredSkills[i] > have)
+            missing[i] = m_requiredSkills[i];
+        else
+            missing[i] = 0;
     }
 
     if (m_progressText.length() > 0) {
@@ -470,13 +476,11 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
         showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
-        const char* requirementPointer = requirement.c_str();
         const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts.m_text1.c_str(), requirementPointer);
+            texts.m_text1.c_str(), requirement.c_str());
         text += getTimeLimitText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        showSkillRequirementsDialog(text.c_str(), missing);
     }
 }
 
