@@ -1,5 +1,16 @@
 # Source-owned mapcell data.
 
+[[data]]
+retail_va = 0x00699690
+source = "src/mapcell.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x528b84
+mac_size = 12
+sha256 = "15ec7bf0b50732b49f8228e07d24365338f9e3ab994b00af08e5a3bffe55fd8b"
+evidence = "Mapcell owns the zero-initialized MSL vector<int> storage for invalid object-type indices. Loader TOC1+0xd84 resolves to data1+0x528b84; readMapObjects at code0+0x127280 loads this address into r27, clears the vector size at +4 at 0x1272b8, and passes entries to push_back after readObjectType returns the default-mask status. Candidate g_invalidPlacementList is the same 12-byte MSL vector storage; its ordinary Windows DATA claim is 0x699690. This binds the source-owned address and zero storage, preserving the vector constructor and all caller operations."
+
 [[constants]]
 units = ["mapcell"]
 mac_section = 1
