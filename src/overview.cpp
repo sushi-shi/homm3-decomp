@@ -667,11 +667,10 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 int lastBackpackIndex =
                     currHero->getLastBackpackIndex() + 1;
                 offsetToMon = 316;
-                // Retail enters this loop with a bare `jmp` to the
-                // lastBackpackIndex test (no zero-trip pre-guard) and
-                // strength-reduces the constant half onto iOffsetToMon at the
-                // back edge (`cmp eax,0x2bc` at 0x51de62) - the operand order
-                // that puts the constant conjunct second.
+                // Mac 0x135634 tests the eight-slot limit before the
+                // backpack extent. Retail strength-reduces the bound onto
+                // offsetToMon; commuting the source guards does not recover
+                // that output (91.9880 -> 91.6571). Keep the native order.
                 for (item = 0; item < 8 && item < lastBackpackIndex;
                      item++) {
                     artifact = currHero->getBackpack(
