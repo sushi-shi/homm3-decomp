@@ -8633,12 +8633,17 @@ bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
 
 // BY_SIZE has NO out-of-line row: retail expands `header.Size` (+0x18) at
 // every site, including the two inside _Sort_0 BY_SIZE (0x591310).
+// Retail loads both size operands before selecting direction (0x592f3b).
+// Named values preserve that source evaluation order and close the three
+// size-sort algorithms without changing their library bodies.
 bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
+    int sizeA = a.m_header.m_size;
+    int sizeB = b.m_header.m_size;
     if (m_direction)
-        return b.m_header.m_size < a.m_header.m_size;
-    return a.m_header.m_size < b.m_header.m_size;
+        return sizeB < sizeA;
+    return sizeA < sizeB;
 }
 
 VA(0x00591cb0, 0x33)
