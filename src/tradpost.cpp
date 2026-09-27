@@ -1288,13 +1288,20 @@ DATA(0x006aaaa0) static int g_marketWindowY;
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
 // the char* caption it copies into the left-column label. Referenced only by
 // TSellCreatureWindow::Update; names provisional, addresses byte-proven.
-DATA(0x0068c4c0) static int g_creatureRowY[7];
+// Complete's seven initialized row positions agree on both architectures.
+DATA(0x0068c4c0) static int g_creatureRowY[7] = {
+    191, 191, 191, 289, 289, 289, 387
+};
 DATA(0x006a54ec) static char* g_sellCreatureColumnLabel;
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
 // each value widget (WIDGET_SET_Y), and the subtitle pointer the Buy/SellArt
 // Updates copy for the marketplace-mode caption. Provisional names.
-DATA(0x0068c4a0) static int g_resourceValueWidgetY[7];
+// Both retail tables contain 230,230,230,309,309,309,388; the Mac
+// resource-column loop loads them from section 1+0x583e0.
+DATA(0x0068c4a0) static int g_resourceValueWidgetY[7] = {
+    230, 230, 230, 309, 309, 309, 388
+};
 DATA(0x006a542c) static char* g_marketSubtitle;
 
 // The seven per-resource market values; get_market_value and the resource-trade
@@ -1305,9 +1312,15 @@ DATA(0x0068c492) static unsigned short g_artifactMarketValues[7];
 // The three consecutive eleven-float market-efficiency rows. The first name
 // is retail-public; the latter two preserve the established cross-TU names
 // used by philai and the reconstructed artifact/creature sale paths.
-DATA(0x00678344) float g_tradingPostEfficency[11];
-DATA(0x00678370) float g_artifactPurchaseEfficency[11];
-DATA(0x0067839c) float g_creatureSaleEfficency[11];
+DATA(0x00678344) float g_tradingPostEfficency[11] = {
+    0.0f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.5f
+};
+DATA(0x00678370) float g_artifactPurchaseEfficency[11] = {
+    0.0f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.6f
+};
+DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
+    0.0f, 0.3f, 0.45f, 0.5f, 0.65f, 0.7f, 0.85f, 0.9f, 1.0f, 1.0f, 1.0f
+};
 
 // The char* title the Trade/Give Updates copy for the freelancer-guild source
 // (gMarketSource == 3); runtime-set, single-use. Provisional name.
