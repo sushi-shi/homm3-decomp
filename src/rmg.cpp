@@ -1176,6 +1176,29 @@ TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
     memset(m_objectCountByType, 0, sizeof(m_objectCountByType));
 }
 
+// Native 0x22f9d8 retains this selection; initializeZones calls it at
+// 0x23d1b4. Both builds retain the unusual OR condition in the town scan.
+MAC_ADDRESS(0x22f9d8, 0xcc)
+void TRmgZone::chooseTownType(unsigned char expanded)
+{
+    if (m_alignment != -1) {
+        m_townType2 = m_alignment;
+    } else {
+        int count = 0;
+        // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
+        // expanded, then on != 8. Preserve this observed condition,
+        // even though no table entry can satisfy both equalities.
+        while (count < 4 &&
+            (g_rmgTerrainTownChoices[m_terrain][count] != -1 || expanded ||
+             g_rmgTerrainTownChoices[m_terrain][count] != TOWN_CONFLUX))
+            ++count;
+        if (count == 0)
+            m_townType2 = -1;
+        else
+            m_townType2 = g_rmgTerrainTownChoices[m_terrain][rand() % count];
+    }
+}
+
 VA(0x00532AB0, 0x96) MAC_ADDRESS(0x22faa4, 0x130)
 void TRmgZone::chooseTerrain()
 {
@@ -4080,6 +4103,8 @@ void type_random_map_generator::calculateZoneBounds()
 // (77.40%). Named scaled-width/height locals leave the score flat. Remaining
 // deltas: vector erase expands here but is retained in retail, and the
 // dimension products / bounds normalization exchange operand scheduling.
+// Restoring the retained chooseTownType call raises this to 96.6803%;
+// the remaining vector/dimension differences preserve both zone helpers.
 VA(0x0053BCB0, 0x33B) MAC_ADDRESS(0x23cd84, 0x458)
 void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
 {
@@ -4122,24 +4147,7 @@ void type_random_map_generator::initializeZones(TRmgTemplate* mapTemplate)
         m_zones[zoneIndex]->setLevelPosition(position);
         m_zones[zoneIndex]->m_boundaryRoughness = m_zones[zoneIndex]->m_slot->m_size * size / span;
         m_zones[zoneIndex]->chooseTerrain();
-        unsigned char expanded = m_mapVersion >= 0;
-        TRmgZone* zone = m_zones[zoneIndex];
-        if (zone->m_alignment != -1) {
-            zone->m_townType2 = zone->m_alignment;
-        } else {
-            int count = 0;
-            // Retail 0x53bf8c..0x53bf98 continues on != -1, then on
-            // expanded, then on != 8. Preserve this observed condition,
-            // even though no table entry can satisfy both equalities.
-            while (count < 4 &&
-                (g_rmgTerrainTownChoices[zone->m_terrain][count] != -1 || expanded ||
-                 g_rmgTerrainTownChoices[zone->m_terrain][count] != TOWN_CONFLUX))
-                ++count;
-            if (count == 0)
-                zone->m_townType2 = -1;
-            else
-                zone->m_townType2 = g_rmgTerrainTownChoices[zone->m_terrain][rand() % count];
-        }
+        m_zones[zoneIndex]->chooseTownType(m_mapVersion >= 0);
     }
 }
 

@@ -1556,6 +1556,7 @@ struct TRmgZone {
 
     TRmgZone(TRmgTownSlot* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
+    void chooseTownType(unsigned char expanded);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const
