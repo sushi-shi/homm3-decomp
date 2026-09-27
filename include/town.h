@@ -375,14 +375,15 @@ public:
     }
     void calcNumLevelArchers(int* numArchers, int* archerLevel);
 
+    // Town.h:325-327 records the active-mask guard then the built-mask return.
+    // This early-return form preserves the retained body and lets Windows
+    // expand all three isCastle predicates in getVictoryConditionText.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
-        if (checkIncluded) {
+        if (checkIncluded)
             return (m_active & g_bitNumber[buildingId]) != 0;
-        } else {
-            return (m_built & g_bitNumber[buildingId]) != 0;
-        }
+        return (m_built & g_bitNumber[buildingId]) != 0;
     }
     // Original: town::set_mask; Town.h:331, dc 0x168dfc.
     void setMask(__int64 newMask)
