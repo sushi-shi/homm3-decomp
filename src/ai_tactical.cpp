@@ -428,7 +428,13 @@ long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 VA(0x00436300, 0x31C) MAC_ADDRESS(0x03dcec, 0x384)  // dc 0x3d1e4
 void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
 {
-    for (long direction = startDirection; direction < stopDirection; direction++) {
+    // DC records enemy_value, direction, checked and attack_time at
+    // procedure scope. Restoring those lifetimes is byte-flat in VC6.
+    long threat;
+    long direction;
+    long checked;
+    long turns;
+    for (direction = startDirection; direction < stopDirection; direction++) {
         long hex = g_combatManager->m_adjacentCells[enemyHex][direction];
         if (!g_combatManager->validHex(hex))
             continue;
@@ -437,12 +443,12 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             continue;
         if (cell->m_flightCost > 0)
             continue;
-        long turns = getAttackTime(cell);
+        turns = getAttackTime(cell);
         if (m_bestHex >= 0) {
             if (m_bestAttackTime < turns)
                 continue;
         }
-        long checked = 0;
+        checked = 0;
         long value = getHexAttackValue(hex, checked);
         if (g_game->m_setup.m_difficulty > 0
                 || g_combatManager->m_sideIsAi[m_data->getGroup()]) {
@@ -471,7 +477,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                                               m_attackArmy, hex, m_data);
             }
         }
-        long threat = m_enemyAttackArray[hex];
+        threat = m_enemyAttackArray[hex];
         if (m_attackArmy->is(creatureDoubleWide)) {
             long otherHex = hex + m_attackArmy->offsetToFront(-1);
             value += getHexAttackValue(otherHex, checked);

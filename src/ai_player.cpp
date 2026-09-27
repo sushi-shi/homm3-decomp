@@ -410,6 +410,12 @@ float type_AI_player::getAttackBonus(short player)
 VA(0x00428740, 0x68E) MAC_ADDRESS(0x02b43c, 0x704)  // linkorder, dc 0x2e188
 void type_AI_player::calculateDemand()
 {
+    // DC records these temporaries at procedure scope. Their restored
+    // lifetimes preserve the Windows 93.40% body and its by-value copy.
+    __int64 buildMask;
+    double totalValue;
+    type_creature_value creatureInfo;
+    int* buildCost;
     playerData* player = &g_game->m_players[m_team];
     memset(m_resourceSupply, 0, sizeof(m_resourceSupply));
     memset(m_resourceDemand, 0, sizeof(m_resourceDemand));
@@ -424,11 +430,11 @@ void type_AI_player::calculateDemand()
          buildingTownIndex++) {
         town* currentTown = g_game->getTown(
             player->m_townIds[buildingTownIndex]);
-        __int64 buildMask = currentTown->getBuildableMask();
+        buildMask = currentTown->getBuildableMask();
         int building;
         for (building = 0; building < 44; building++) {
             if (g_bitNumber[building] & buildMask) {
-                int* buildCost = currentTown->getBuildCostArray(
+                buildCost = currentTown->getBuildCostArray(
                     type_building_id(building));
                 int buildResource;
                 for (buildResource = 0; buildResource < 7; buildResource++)
@@ -477,7 +483,7 @@ void type_AI_player::calculateDemand()
     for (valuableCreature = 0;
          valuableCreature < 3 && valuableCreature < creatures.size();
          valuableCreature++) {
-        type_creature_value creatureInfo = creatures[valuableCreature];
+        creatureInfo = creatures[valuableCreature];
         int costResource;
         for (costResource = 0; costResource < 7; costResource++)
             m_resourceDemand[costResource] +=
@@ -500,7 +506,6 @@ void type_AI_player::calculateDemand()
     int valueResource;
     for (valueResource = 0; valueResource < 7;
          valueResource++) {
-        double totalValue;
         if (m_resourceDemand[valueResource] == 0) {
             totalValue = efficiency;
         } else {
@@ -1077,6 +1082,8 @@ VA(0x0042a580, 0x5BE) MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          std::vector<long>& tradeQty)
 {
+    // DC's on_hand is a procedure-scope quantity; VC6 is byte-flat.
+    long onHand;
     long markets = 0;
     unsigned char canBuildMarket = 0;
     playerData* player = &g_game->m_players[m_team];
@@ -1113,7 +1120,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
                 getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
         } else if (supply[i] != 0) {
-            long onHand = player->m_resources[i];
+            onHand = player->m_resources[i];
             int resourceValue;
             resourceValue = i;
             long value = getMarketValue(EGameResource(resourceValue));
@@ -3342,9 +3349,10 @@ long markDestinations(hero* currentHero, long maxDistance,
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
-    // DC records one function-scope point; use it for the friend's target
-    // and fallback location. This lifetime spelling is byte-flat in VC6.
+    // DC records point and map_cell at function scope. Reuse the point
+    // for the friend's target and fallback; these lifetimes are VC6-flat.
     type_point point;
+    NewmapCell* targetCell;
     heroDanger = currentSearchArray->getDangerValue(
         currentHero->getLocation());
     g_advManager->m_advWindow->animateBottomView(0);
@@ -3376,7 +3384,7 @@ long markDestinations(hero* currentHero, long maxDistance,
                 extraCost -= friendly->m_movePoints;
         }
 
-        NewmapCell* targetCell = g_advManager->getCell(point);
+        targetCell = g_advManager->getCell(point);
         g_advManager->m_advWindow->animateBottomView(0);
         friendlySearch.seedPosition(
             friendly, point, type_point(-1, -1, -1),

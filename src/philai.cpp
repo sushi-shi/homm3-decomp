@@ -320,6 +320,8 @@ VA(0x00524400, 0x149) MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global, dc 0x10da3
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount)
 {
+    // DC records the resource output at function scope; VC6 stays 98.13%.
+    EGameResource resource;
     long bestArtifact;
     do {
         if (currentHero->getNumberInBackpack(1)
@@ -342,7 +344,6 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
         }
 
         if (bestArtifact >= 0) {
-            EGameResource resource;
             long price = getArtifactPurchasePrice(
                 artifactList[bestArtifact], marketCount, &resource);
             g_currentPlayer->m_resources[resource] -= price;
