@@ -2737,12 +2737,8 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 // +0x96060, getMaxCrossoverHeroes at +0x95ea8, and collectCrossoverArtifacts
 // at +0x95a78. Mac pruneCrossoverHeroes (+0x98934) calls all four. VC6 expands
 // them into this caller; the flattened spelling has 91 CFG blocks against
-// retail's 62. getCampaignScenarioCount remains a Windows-side inference.
-static int getCampaignScenarioCount(TCampaignBrief::CampaignHeaderStruct& header)
-{
-    return header.m_scenarios.size();
-}
-
+// retail's 62. The signed getScenarioCount boundary shared with briefing
+// selection remains a Windows-side inference.
 MAC_ADDRESS(0x096cd8, 0x8c)
 static void markRequiredCampaignHeroes(TCampaignBrief::CampaignHeaderStruct& header, unsigned char* wanted)
 {
@@ -2812,7 +2808,7 @@ void SCampaign::pruneCrossoverHeroes(void* campaignHeader)
 
         int keepCount = 0;
         for (int scenarioIndex = 0;
-             scenarioIndex < getCampaignScenarioCount(*header);
+             scenarioIndex < header->getScenarioCount();
              ++scenarioIndex) {
             TCampaignBrief::ScenarioStruct* scenario =
                 header->m_scenarios[scenarioIndex];

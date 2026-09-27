@@ -174,7 +174,7 @@ void TCampaignBrief::resetMapAndDescription(int which)
 MAC_ADDRESS(0x06444c, 0x88)
 void TCampaignBrief::clearSelected()
 {
-    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
+    for (int i = 0; i < m_campaign->getScenarioCount(); i++) {
         if (m_scenarios[i].m_available)
             getWidget(MAP_SELECTED_1_ID + i)->hide();
     }
