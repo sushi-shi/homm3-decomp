@@ -9,7 +9,7 @@ evidence = "initializeCrossoverHero native0x94ef0 loads the signed-int to double
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x530
+candidate_offset = 0x52c
 target_offset = 0x508
 mac_section = 1
 mac_offset = 0x47a9
@@ -20,7 +20,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x538
+candidate_offset = 0x534
 target_offset = 0x510
 mac_section = 1
 mac_offset = 0x47a9
@@ -31,7 +31,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x540
+candidate_offset = 0x53c
 target_offset = 0x518
 mac_section = 1
 mac_offset = 0x47a9
@@ -42,7 +42,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x548
+candidate_offset = 0x544
 target_offset = 0x520
 mac_section = 1
 mac_offset = 0x47a9
@@ -53,7 +53,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x550
+candidate_offset = 0x54c
 target_offset = 0x528
 mac_section = 1
 mac_offset = 0x47a9
@@ -64,7 +64,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x558
+candidate_offset = 0x554
 target_offset = 0x530
 mac_section = 1
 mac_offset = 0x47a9
@@ -75,7 +75,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x560
+candidate_offset = 0x55c
 target_offset = 0x538
 mac_section = 1
 mac_offset = 0x47a9
@@ -86,7 +86,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x568
+candidate_offset = 0x564
 target_offset = 0x540
 mac_section = 1
 mac_offset = 0x47a9
@@ -97,7 +97,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x570
+candidate_offset = 0x56c
 target_offset = 0x548
 mac_section = 1
 mac_offset = 0x47a9
@@ -108,7 +108,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x578
+candidate_offset = 0x574
 target_offset = 0x550
 mac_section = 1
 mac_offset = 0x47a9
@@ -119,7 +119,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x594
+candidate_offset = 0x590
 target_offset = 0x56c
 mac_section = 1
 mac_offset = 0x47aa
@@ -130,7 +130,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x59c
+candidate_offset = 0x598
 target_offset = 0x574
 mac_section = 1
 mac_offset = 0x47aa
@@ -141,7 +141,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5a4
+candidate_offset = 0x5a0
 target_offset = 0x57c
 mac_section = 1
 mac_offset = 0x47aa
@@ -152,7 +152,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5ac
+candidate_offset = 0x5a8
 target_offset = 0x584
 mac_section = 1
 mac_offset = 0x47aa
@@ -163,7 +163,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5b4
+candidate_offset = 0x5b0
 target_offset = 0x58c
 mac_section = 1
 mac_offset = 0x47aa
@@ -174,7 +174,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5bc
+candidate_offset = 0x5b8
 target_offset = 0x594
 mac_section = 1
 mac_offset = 0x47aa
@@ -185,7 +185,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5c4
+candidate_offset = 0x5c0
 target_offset = 0x59c
 mac_section = 1
 mac_offset = 0x47aa
@@ -196,7 +196,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5cc
+candidate_offset = 0x5c8
 target_offset = 0x5a4
 mac_section = 1
 mac_offset = 0x47aa
@@ -207,7 +207,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5d4
+candidate_offset = 0x5d0
 target_offset = 0x5ac
 mac_section = 1
 mac_offset = 0x47aa
@@ -218,7 +218,7 @@ evidence = "Spell-table zero fill: this native byte load uses the direct TOC zer
 [[constants]]
 units = ["customcampaign"]
 owner_va = 0x00486590
-candidate_offset = 0x5dc
+candidate_offset = 0x5d8
 target_offset = 0x5b4
 mac_section = 1
 mac_offset = 0x47aa

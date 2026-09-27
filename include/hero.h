@@ -47,6 +47,15 @@ enum THeroClass {
     kNumHeroClasses = 18
 };
 
+// Dreamcast names the hero-ID domain THeroID; Complete uses 156 hero slots.
+// The -1 sentinel is serialized as0xff; hero.cpp independently identifies
+// Xeron as0x9b. Other admitted IDs retain their existing corpus constants.
+// The remaining original enumerator names are not yet recovered.
+enum HeroId {
+    heroIdNone = -1,
+    heroIdXeron = 0x9b
+};
+
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
 // csprite.h). Retail proves the five STAND values and their order

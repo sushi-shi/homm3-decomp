@@ -1324,6 +1324,9 @@ void SCampaign::doPreLoadCustomization()
 // receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
 // code also proves the pointer-end artifact fill, custom-name flag order,
 // guarded west-adjacent TOWN test, and the final hero-id value lifetime.
+// Native binds the campaign base before the hero stores, and its final
+// append retains the four-byte non-POD hero-ID vector operation. Preserve
+// that typed local and ordinary source call; no trait override is needed.
 // The custom-name assignment still lacks retail's out-of-line _Eos;
 // spelling it as string::assign is byte-flat at 94.5908%.
 VA(0x00486590, 0xA84) MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
@@ -1332,9 +1335,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 {
     CObject* object = placeholder->m_object;
     hero* currentHero = g_game->getHero(sourceHero->m_id);
+    SCampaign* currentCampaign = &g_game->m_campaign;
     currentHero->m_order = 0;
     currentHero->m_id = sourceHero->m_id;
-    SCampaign* currentCampaign = &g_game->m_campaign;
     int slot;
 
     if (currentCampaign->m_currentCampaign == g_crossoverSplitCampaign
@@ -1525,7 +1528,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    int heroId = currentHero->m_id;
+    HeroId heroId = static_cast<HeroId>(currentHero->m_id);
     g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
@@ -2938,7 +2941,8 @@ static void readAssignedCampaignHeroes(TAbstractFile* infile,
     int count = readValue<unsigned char>(infile);
     campaign.m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        campaign.m_assignedCarryover[assignedIndex] = readValue<short>(infile);
+        campaign.m_assignedCarryover[assignedIndex] =
+            static_cast<HeroId>(readValue<short>(infile));
     }
 }
 

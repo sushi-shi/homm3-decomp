@@ -117,8 +117,10 @@ public:
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
-    // is a std::vector over a 4-byte element whose identity is unproven.
-    std::vector<int> m_assignedCarryover;
+    // is a four-byte hero-ID vector. Mac retains the non-POD append path;
+    // an enum reproduces that path and preserves the Windows bytes. The
+    // original element spelling remains unproven.
+    std::vector<HeroId> m_assignedCarryover;
     SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
     // nameable before the campaign-brief declarations; the receiver,
