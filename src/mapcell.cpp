@@ -3623,17 +3623,21 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // reproduced objects; these locals and the reference call leave the retained
 // reader/caller bytes unchanged. A short or byte buffer does not explain the
 // remaining int_buffer/enum-owner stack displacements.
+// Mac zeroes the100-byte image-name buffer through bzero before reading.
+// Numeric, character and empty-string array initializers all copy static
+// zero data in the real compiler; keep the explicit zeroing operation.
 VA(0x00503780, 0x4C0) MAC_ADDRESS(0x126478, 0x528)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(TAbstractFile* infile,
                                CObjectType& tempObjectType)
 {
-    char imageName[100] = { 0 };
+    char imageName[100];
     int value;
     int count;
     char byteValue;
     unsigned char packed[6];
     int i;
 
+    ZeroMemory(imageName, sizeof(imageName));
     count = readValue(infile, value);
     if (count < sizeof(value))
         return -1;

@@ -2008,12 +2008,13 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // E:\gamedcs\game.cpp:2275
 // Mac counterpart 0:0xce398 has five ordered zero-fill/bitset/random calls;
 // the 18-class and 156-hero loops identify its full 1932-byte span. Its
-// zero-fill is the two-argument bzero ABI; the ordinary candidate calls
-// three-argument memset. The deleted Mac declaration view rewrote memset
-// to bzero, so its earlier call agreement was not compiler evidence. A
-// counted std::fill_n emits constant-reference stores, while aggregate
-// zero initialization copies a static 72-byte zero array; neither explains
-// the retained bzero operation. Keep this platform reference gap explicit.
+// zero-fill is the two-argument bzero ABI. ZeroMemory preserves the ordinary
+// Windows SDK zeroing operation and selects only this Mac zero-fill routine;
+// nonzero memset fills are untouched. The real shared-header candidate now
+// has the same five ordered calls, Mac18.37 -> 27.90%, Windows98.98 flat.
+// The deleted declaration view had rewritten all memset fills to bzero, so
+// its older agreement was not compiler evidence. std::fill_n emits stores
+// and aggregate initialization copies a static72-byte array instead.
 // Restoring DC's THeroClass induction local raises CodeWarrior O3 20.96% to
 // 27.59% without changing Windows 98.98% or its exact CFG/call sequence. O2
 // falls to 10.30%, O4 and swapping array declarations are flat. The Windows
@@ -2042,7 +2043,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     else
         alignment = -1;
 
-    memset(counts, 0, sizeof(counts));
+    ZeroMemory(counts, sizeof(counts));
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
         weights[heroClass] =

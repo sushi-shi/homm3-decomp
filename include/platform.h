@@ -58,6 +58,12 @@
 #undef _WIN32
 #pragma pop
 
+// Mac retail zero filling uses its two-argument byte-zero routine.
+// Keep the Windows SDK zeroing operation's semantics; no nonzero fill is lost.
+extern "C" void bzero(void* destination, unsigned long count);
+#undef ZeroMemory
+#define ZeroMemory(destination, count) bzero(destination, count)
+
 // Mac retail error dialogs take only the message and title strings.
 extern "C" void showMacPlatformMessage(const char* message, const char* title);
 #define MessageBoxA(window, message, title, flags) \
