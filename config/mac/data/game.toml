@@ -2,6 +2,24 @@
 # gate-pairing body. The anonymous candidate pool name is context-dependent.
 
 [[data]]
+retail_va = 0x006779b0
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x426c4
+mac_size = 24
+sha256 = "69debb2e596ccf7ba59ff4eaee264cefedb7be9659e443eee54c376c5e69c535"
+evidence = "Mac giveTroopsToNeutralTown loads TOC 1+0x24f4 at code0+0xd4df4 and walks successive four-byte weights at 0xd4e00..0xd4e20 until the level reaches six. The loader resolves that pointer to initialized data1+0x426c4; all six big-endian integers {2,3,4,5,4,3} match the complete source-owned DATA(0x006779b0) table."
+
+[[data]]
+retail_va = 0x00677998
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x42628
+mac_size = 24
+sha256 = "3ac9c8619d58266d41c50896956051384cc620442b8f4b4533ae0d0bda132bfb"
+evidence = "Mac calculateProduction loads TOC 1+0x2538 at code0+0xca984 into r25, then indexes that pointer with the signed handicap byte times eight at 0xcb0d8..0xcb0e4. The loader resolves it to initialized data1+0x42628. All three big-endian doubles are {0.0, 0.15, 0.3}, exactly the source-owned DATA(0x00677998) table; the complete 24-byte payload is verified."
+
+[[data]]
 retail_va = 0x0063e668
 source = "src/game.cpp"
 mac_section = 0

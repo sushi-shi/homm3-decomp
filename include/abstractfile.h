@@ -96,9 +96,9 @@ int readLittleEndianValue(TAbstractFile* infile, T& value)
 #if defined(__POWERPC__)
     // Retail tests the byte count before loading the complete scalar.
     if (count >= sizeof(value)) {
-        if (sizeof(T) == 2)
+        if (sizeof(T) == sizeof(unsigned short))
             value = static_cast<T>(__lhbrx(&value, 0));
-        else if (sizeof(T) == 4)
+        else if (sizeof(T) == sizeof(unsigned long))
             value = static_cast<T>(__lwbrx(&value, 0));
     }
 #endif
@@ -112,9 +112,9 @@ int writeLittleEndianValue(TAbstractFile* outfile, const T& value)
 {
 #if defined(__POWERPC__)
     T encoded = value;
-    if (sizeof(T) == 2)
+    if (sizeof(T) == sizeof(unsigned short))
         encoded = static_cast<T>(__lhbrx(&encoded, 0));
-    else if (sizeof(T) == 4)
+    else if (sizeof(T) == sizeof(unsigned long))
         encoded = static_cast<T>(__lwbrx(&encoded, 0));
     return writeValue(outfile, encoded);
 #else

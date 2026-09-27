@@ -739,8 +739,10 @@ int game::saveSignPool(TAbstractFile* outfile)
     // Complete uses the abstract-file write in place of DC's gzwrite.
     int count;
     int x;
+    char charBuffer;
 
-    count = writeValue<char>(outfile, m_signs.size());
+    charBuffer = m_signs.size();
+    count = writeValue<char&>(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
@@ -749,7 +751,8 @@ int game::saveSignPool(TAbstractFile* outfile)
         if (count < 0)
             return -1;
 
-        count = writeValue<char>(outfile, m_signs[x].m_hasText);
+        charBuffer = m_signs[x].m_hasText;
+        count = writeValue<char&>(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
     }
@@ -2240,10 +2243,8 @@ VA(0x004bbb60, 0xBB) MAC_ADDRESS(0x0ced3c, 0xf0)  // dc 0xa750c
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
     HOMM3_RELEASE_VERIFY(outfile != 0);
-    int count;
-    short length = s.length();
-
-    count = writeScalar(outfile, length);
+    short length = s.size();
+    int count = writeLittleEndianValue(outfile, length);
     if (count < sizeof(length))
         return -1;
 
@@ -3437,6 +3438,9 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     }
 }
 
+// DC records townArmy as armyGroup&; Mac 0xd4e30 retains the mutable
+// getArmy call. Keep that reference and all army helper calls. The early
+// getTown sentinel guard remains an unresolved caller-shape difference.
 VA(0x004bf570, 0x203) MAC_ADDRESS(0x0d4d2c, 0x2d4)
 void game::giveTroopsToNeutralTown(int townId)
 {
@@ -3454,7 +3458,7 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 
     int townType = currentTown->m_type;
-    armyGroup* townArmy = &currentTown->getArmy();
+    armyGroup& townArmy = currentTown->getArmy();
     TCreatureType creature;
     TCreatureType upgradedCreature;
     TCreatureType upgradedValue = (g_townDwellingCreatures + TOWN_DWELLING_COUNT)[
@@ -3462,16 +3466,16 @@ void game::giveTroopsToNeutralTown(int townId)
     creature = g_townDwellingCreatures[
         townType * TOWN_DWELLING_SLOTS + monsterLevel];
     upgradedCreature = upgradedValue;
-    if (townArmy->getCreatureTotal(upgradedCreature))
+    if (townArmy.getCreatureTotal(upgradedCreature))
         creature = upgradedCreature;
 
     long amount = g_creatureTypeTraits[creature].m_growthRate;
-    if (!townArmy->canJoin(creature)) {
+    if (!townArmy.canJoin(creature)) {
         long worstArmy = -1;
         long worstValue = g_creatureTypeTraits[creature].m_aiValue * amount;
         for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            long value = g_creatureTypeTraits[townArmy->m_armies[slot]].m_aiValue
-                       * townArmy->m_numTroops[slot];
+            long value = g_creatureTypeTraits[townArmy.m_armies[slot]].m_aiValue
+                       * townArmy.m_numTroops[slot];
             if (value < worstValue) {
                 worstArmy = slot;
                 worstValue = value;
@@ -3479,10 +3483,10 @@ void game::giveTroopsToNeutralTown(int townId)
         }
         if (worstArmy < 0)
             return;
-        townArmy->dismiss(worstArmy);
+        townArmy.dismiss(worstArmy);
     }
 
-    townArmy->add(creature, amount, -1);
+    townArmy.add(creature, amount, -1);
     if (currentTown->m_population[monsterLevel] < amount)
         currentTown->m_population[monsterLevel] = 0;
     else
@@ -3496,8 +3500,8 @@ void game::giveTroopsToNeutralTown(int townId)
 
     if (creature != upgradedCreature && random(1, 100) <= 5) {
         for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            if (townArmy->m_armies[slot] == creature)
-                townArmy->m_armies[slot] = upgradedCreature;
+            if (townArmy.m_armies[slot] == creature)
+                townArmy.m_armies[slot] = upgradedCreature;
         }
     }
 }
@@ -8082,26 +8086,28 @@ void game::processRandomObjects()
 // (startingHeroIds[i] and setup.alignment[i]) at compile time, while the retail
 // structure remains 29/29 exact blocks; no legal B14 mutation remains.
 // DC line 9464 passes GetTownId directly to GetTown and records thisTown.
-// Restoring that canonical accessor and local name is byte-flat at 98.6076%;
-// the remaining difference is inside GetTownId's coordinate comparison.
-// Mac 0xe1490 retains playerData::isHuman here; VC6 expands the restored
-// source call and leaves the Windows score unchanged.
+// Its HeroID/index/town declaration order is retained. Mac 0xe1578..0xe1580
+// computes the bonus hero address in two stages: the canonical getHero
+// expansion reproduces that boundary and closes Windows at 100%, with the
+// original less-than loop and all helpers preserved. Mac reaches 99.37%;
+// only its larger stack frame remains different. Do not invent frame padding.
+// Mac 0xe1490 retains playerData::isHuman; Windows expands that source call.
 VA(0x004ca040, 0x1F1) MAC_ADDRESS(0x0e13f0, 0x1dc)  // linkorder, dc 0xb5cdc
 void game::createTownHeroes(int* startingHeroIds)
 {
-    // MAX 99.6203 is NOT reachable as written: it was measured with this
-    // loop spelled `i != 8`, an unnamed domain compare that fails the
-    // cleanliness floor (docs/vc6/behavior-catalog.md D24).
-    for (int i = 0; i < 8; i++) {
+    int heroId;
+    int i;
+    town* thisTown;
+
+    for (i = 0; i < 8; i++) {
         if (!m_mapHeader.m_playerSlotAttributes[i].m_generateHero)
             continue;
 
-        town* thisTown = getTown(
+        thisTown = getTown(
             getTownId(m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_x,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_y,
                       m_mapHeader.m_playerSlotAttributes[i].m_castleLoc.m_z));
 
-        int heroId;
         if (startingHeroIds != NULL && m_players[i].isHuman()
             && startingHeroIds[i] != -1)
             heroId = startingHeroIds[i];
@@ -8120,7 +8126,7 @@ void game::createTownHeroes(int* startingHeroIds)
             && g_game->m_campaign.m_currentCampaign == g_startLevelCampaign
             && g_game->m_campaign.m_currentMap == g_startLevelScenario)
             m_heroes[heroId].giveExperience(
-                hero::getExperience(g_game->m_heroes[g_startLevelHeroId].m_level
+                hero::getExperience(g_game->getHero(g_startLevelHeroId)->m_level
                                     + g_startLevelBonus),
                 1, 0);
     }
@@ -9288,12 +9294,16 @@ int game::getBoatsBuilt()
     return count;
 }
 
+// Both retail bodies index the town list without the mutable getTown's -1
+// sentinel arm. A read-only game view selects the existing const overload;
+// Mac matches all 196 bytes, with both hasBuilding expansions preserved.
 VA(0x004cce30, 0xB8) MAC_ADDRESS(0x0e42ec, 0xc4)  // dc 0xb9a34
 int game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
     for (int i = 0; i < m_players[whichPlayer].m_numTowns; i++) {
-        town* currentTown = g_game->getTown(m_players[whichPlayer].m_townIds[i]);
+        const game& gameState = *g_game;
+        const town* currentTown = gameState.getTown(m_players[whichPlayer].m_townIds[i]);
         if (currentTown->hasBuilding(TAVERN_ID, false) ||
             (currentTown->m_type == TOWN_CASTLE &&
              currentTown->hasBuilding(EXTRA_1_ID, false))) {

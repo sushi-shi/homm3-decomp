@@ -8472,7 +8472,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                 if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
                     player->m_townIndex = eTownNeutral;
                     // Mac 0:0x1863d8 passes the stored town, not a literal.
-                    updateTown(pos, static_cast<TTownType>(player->m_townIndex), 0);
+                    updateTown(pos, H3_ENUM_DECODE(TTownType, player->m_townIndex), 0);
                 }
             }
         }
