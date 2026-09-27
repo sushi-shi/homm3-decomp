@@ -7809,10 +7809,17 @@ void game::randomizeHeroPool()
     }
 }
 
+// Mac 0xe0928 retains one hero receiver for the army and both artifact arms.
+// Keep getHero and reuse its result; repeating direct hero indexing splits
+// that lifetime in VC6. Reuse restores both retained giveArtifact calls
+// (all seven named calls agree), raising Windows 65.72 -> 73.43%. Named
+// artifacts versus call temporaries are byte-flat. The accessor sentinel
+// remains a retail-shape residual; do not bypass getHero to erase it.
 VA(0x004c9730, 0x159) MAC_ADDRESS(0x0e0910, 0x1c4)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
-    armyGroup* currentArmy = &getHero(hero)->m_army;
+    ::hero* currentHero = getHero(hero);
+    armyGroup* currentArmy = &currentHero->m_army;
     const THeroTraits* traits = &g_heroTraits[hero];
 
     if (g_inCampaign
@@ -7840,10 +7847,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(&artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(&artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;
             currentArmy->m_numTroops[i] = random(traits->m_secondStackLow,
