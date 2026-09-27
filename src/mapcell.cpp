@@ -120,16 +120,25 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// DC records separate int_buffer/count/x/err locals. Mac 0x11d89c..0x11d8b0
+// reverses the four-byte event count before writing; keep the shared endian
+// helper and the retained TTimedEvent::save call.
 VA(0x004fc390, 0xA5) MAC_ADDRESS(0x11d874, 0xc4)  // dc 0xeb9a0
 int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 {
-    int count = m_timedEventList.size();
-    if (static_cast<unsigned>(writeValue(outfile, count))
-        < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+    int err;
+
+    intBuffer = m_timedEventList.size();
+    count = writeLittleEndianValue(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
-        if (m_timedEventList[i].save(outfile) < 0)
+    for (x = 0; x < m_timedEventList.size(); ++x) {
+        err = m_timedEventList[x].save(outfile);
+        if (err < 0)
             return -1;
     }
     return 0;
@@ -217,16 +226,25 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
     return 0;
 }
 
+// DC records int_buffer/count/x/err separately. Mac 0x11df38..0x11df50
+// writes the native count without the timed-event writer's byte reversal.
+// Keep caller-owned scalar storage and the retained TTownEvent::save helper.
 VA(0x004fc770, 0xFA) MAC_ADDRESS(0x11df10, 0xbc)  // dc 0xebd24
 int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 {
-    int count = m_townEventList.size();
-    if (static_cast<unsigned>(writeValue(outfile, count))
-        < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+    int err;
+
+    intBuffer = m_townEventList.size();
+    count = writeScalar(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_townEventList.size(); ++i) {
-        if (m_townEventList[i].save(outfile) < 0)
+    for (x = 0; x < m_townEventList.size(); ++x) {
+        err = m_townEventList[x].save(outfile);
+        if (err < 0)
             return -1;
     }
     return 0;

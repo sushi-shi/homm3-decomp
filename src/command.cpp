@@ -128,7 +128,7 @@ unsigned char combatManager::automateCatapult()
         }
     }
 
-    if (count > 0 && (skill == 0 || count == 4)) {
+    if (count > 0 && (skill == 0 || count == static_cast<long>(sizeof(walls) / sizeof(walls[0])))) {
         long weakest = 100;
         count = 0;
         { for (index = 0; index < 4; index++) {

@@ -1354,6 +1354,14 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // is unconditional.
 // DC records four scalar staging buffers besides count/x; Mac separates
 // unsigned-long/int slots +0x40/+0x44 and unsigned/signed bytes +0x48/+0x49.
+// Native Mac 0xcd1f0..0xcd208 loads the const zero value twice into its
+// packed byte output. std::fill_n reproduces those loads; memset instead
+// retains an absent CRT call. Native 0xcd220..0xcd234 compounds the integer
+// shift directly; an explicit byte cast adds a mask before the OR. These
+// paired operations preserve all scalar writers and the bitset test helper.
+// Windows currently scores98.7604; the earlier99.9557 peak remains a lead.
+// Four declaration-order controls are object-identical, so they do not fix
+// the remaining scalar-buffer/loop-counter stack-home permutation.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
@@ -1465,10 +1473,10 @@ int playerData::save(TAbstractFile* outfile)
     unsigned char bits[2];
     const std::bitset<12>* combinations = &m_assembledCombinations;
     unsigned int bit = 0;
-    memset(bits, 0, sizeof(bits));
+    std::fill_n(bits, sizeof(bits), 0);
     for (; bit < 12; bit++) {
         if (combinations->test(bit))
-            bits[bit >> 3] |= static_cast<unsigned char>(1 << (bit & 7));
+            bits[bit >> 3] |= 1 << (bit & 7);
     }
     outfile->write(bits, sizeof(bits));
     return 0;
