@@ -1635,7 +1635,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                 long value = traits.m_aiValue
                     * ourHero->m_army.m_numTroops[group];
                 armyValue += value;
-                if (g_creatureTypeTraits[creature].m_attributes & creatureShootingArmy)
+                if (traits.m_attributes & creatureShootingArmy)
                     rangedValue += value;
             }
         }
@@ -2584,7 +2584,7 @@ void philAI::getTurnAIVars(int whichPlayer)
             ++artifactCount;
             // The loop walks ordinal storage; type_artifact consumes the
             // artifact enum at this revision boundary.
-            type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            type_artifact artifact(H3_ENUM_DECODE(TArtifact, artifactId));
             totalArtifactValue +=
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }

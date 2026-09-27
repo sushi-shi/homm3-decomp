@@ -474,6 +474,9 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
     }
 }
 
+// The remaining size() branch layout differs from its exact sibling expansions
+// in getAttack/getFinalMeleeValue, despite the same native vector template.
+// Loop-index declaration/initialization order leaves that frontier unchanged.
 VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)  // dc 0x2a868
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
