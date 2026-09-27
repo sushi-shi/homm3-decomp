@@ -26,3 +26,11 @@ mac_offset = 0x4b28c
 mac_size = 7
 sha256 = "2917841e5f52fdd208c069c5fd0871bc20f5bd3a3dcee317568e6c3e3c6ab597"
 evidence = "Mac readMapObjects loads loader-resolved TOC string data1+0x4b28c before its invalid-object warning. Every byte including the terminator matches the ordinary source error caption literal; no platform dialog implementation is inferred."
+
+[[constants]]
+units = ["mapcell"]
+mac_section = 1
+mac_offset = 0x4f88
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "readMapObjects passes the same four-byte null default value by reference to both vector<CSprite*>::resize calls: Mac code0+0x1273fc and0x127450 form r5=TOC-0x3078, data1+0x4f88, before retained resize0xa11f0. The complete zero payload matches the candidate's anonymous four-byte resize default; this records the library default value without changing either authored resize call."
