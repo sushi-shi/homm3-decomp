@@ -9360,19 +9360,12 @@ void type_random_map_generator::createRivers()
 // Retail 0x54bf60 calls this Complete-only coordinator. Preserve the player
 // ordering, separate town passes, two connection-cost passes, and final
 // coastal/decorative/road/river order. No Dreamcast counterpart exists.
-// Residual (99.9357%): selected-index EDI vs retail EBX across string assign.
-// Sixty buffer/fill and 41 index-type/sum-order forms reached 99.9228%.
-// A further 60 states cross paired record/two-row/separate slot arrays with
-// initialization and selection lifetimes. Two ordinary byte-fill loops restore
-// both retail human/computer count-load orders; aggregate ownership is neutral.
-// String assignment/receiver APIs and shared or typed slot-zeroing loops
-// also fail to settle the selected-index register; keep the current source.
-// All 69 blocks, 39 branches and ordered calls agree; only four selected-index
-// instructions differ. Named random/count values and a template-name owner
-// (21 states, 12 objects) leave 99.9357% as the peak. Reusing the selected
-// index for later zone loops also emits the same object.
-// The 116-form native oracle preserves player mapping,
-// ordered callbacks and callback mutations, rejecting seven negative controls.
+// Mac 0x24e37c reloads the selected template through m_templates on each
+// loop test; 0x24e320 consumes that same indexed receiver for the town slot.
+// Keeping those ordinary indexed accesses (rather than a cached template
+// pointer) recovers the selected-index lifetime across string assignment.
+// All 69 Windows CFG blocks and ordered calls now reproduce exactly. Slot
+// initialization, callbacks and canonical container helpers stay intact.
 VA(0x00549930, 0x37B) MAC_ADDRESS(0x24e294, 0x41c)
 unsigned char type_random_map_generator::generate()
 {
@@ -9386,9 +9379,8 @@ unsigned char type_random_map_generator::generate()
     char allSlots[8];
     int allSlotByte;
     MEMSET(allSlots, 0, sizeof(allSlots), allSlotByte);
-    TRmgTemplate* mapTemplate = m_templates[selected];
-    for (unsigned int zone = 0; zone < mapTemplate->m_zones.size(); ++zone) {
-        TRmgTownSlot* slot = mapTemplate->m_zones[zone];
+    for (unsigned int zone = 0; zone < m_templates[selected]->m_zones.size(); ++zone) {
+        TRmgTownSlot* slot = m_templates[selected]->m_zones[zone];
         if (slot->m_kind == RMG_TEMPLATE_HUMAN) {
             humanSlots[slot->m_playerIndex] = 1;
             allSlots[slot->m_playerIndex] = 1;
