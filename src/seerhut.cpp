@@ -472,9 +472,9 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     }
 
     if (m_progressText.length() > 0) {
-        std::string text = getProposalDialogText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        // Windows consumes the returned string directly; Mac 0x165014..0x165028
+        // keeps that same temporary alive through the dialog, without a copy.
+        showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
         const char* requirementPointer = requirement.c_str();
