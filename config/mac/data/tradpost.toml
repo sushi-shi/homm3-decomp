@@ -1,0 +1,7 @@
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5856a
+mac_size = 5
+sha256 = "6ba9e98ee41d90eead55775f37c624d3b16ab8f1783fb400ee5e8fd09d1914d0"
+evidence = "Native TBuyArtifactWindow::update loads TOC 1+0x33d4 -> 1+0x5856a into r29 at 0x1f6b88 and passes it as the reciprocal-price sprintf format at 0x1f7194. Its complete five-byte payload is 1/%d followed by NUL, exactly the candidate local literal @7458. This is the only full occurrence in the initialized section."
