@@ -523,23 +523,29 @@ static const int g_lossPortrait146 = 0x92;
 // executable bytes and reference targets across this TU, including nineteen
 // exact siblings. Their three object identities differ only in local label
 // and temporary numbering; none repairs the return layout at 82.0170%.
+// Mac keeps one campaign base pointer and retains map across the artifact
+// checks before independently admitting maps 2..4. Keep that lifetime rather
+// than borrowing the known-map fact from an else arm. Its component loop
+// assigns the index to r28 and the component reference to r29; a loop-local
+// index reproduces those homes. The full source model raises Mac to 55.6973%
+// (previous recorded peak 51.2799%); Windows 81.15% vs 82.02% is recovery debt.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8) MAC_ADDRESS(0x1fee5c, 0x448)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
     if (g_inCampaign) {
         int map;
-        int i;
-        switch (g_game->m_campaign.m_currentCampaign) {
+        const SCampaign& campaign = g_game->m_campaign;
+        switch (campaign.m_currentCampaign) {
         case g_lossCampaign3:
-            if (g_game->m_campaign.m_currentMap == g_map2
+            if (campaign.m_currentMap == g_map2
                 && (loser->m_id == g_lossHero4
                     || loser->m_portrait == g_lossPortrait146))
                 return 1;
             break;
         case g_lossCampaign7:
-            if ((g_game->m_campaign.m_currentMap == g_map6
-                 || g_game->m_campaign.m_currentMap == g_map7)
+            if ((campaign.m_currentMap == g_map6
+                 || campaign.m_currentMap == g_map7)
                 && (loser->m_id == g_lossHero148 || loser->m_id == g_lossHero152
                     || loser->m_id == g_lossHero146))
                 return 1;
@@ -547,8 +553,8 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
         case g_lossCampaign10:
             if (loser->m_id == g_lossHero149)
                 return 1;
-            if ((g_game->m_campaign.m_currentMap == 1
-                 || g_game->m_campaign.m_currentMap == g_map2)
+            if ((campaign.m_currentMap == 1
+                 || campaign.m_currentMap == g_map2)
                 && (loser->m_id == g_lossHero104 || loser->m_id == g_lossHero97
                     || loser->m_id == g_lossHero110))
                 return 1;
@@ -564,7 +570,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
         case g_lossCampaign14: {
             if (loser->m_id == g_lossHero45)
                 return 1;
-            map = g_game->m_campaign.m_currentMap;
+            map = campaign.m_currentMap;
             if (map == g_map2) {
                 if (loser->hasArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)
@@ -573,24 +579,24 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_INHIBITION)
                     || loser->hasArtifact(ARTIFACT_SWORD_OF_HELLFIRE))
                     return 1;
-            } else if (map != g_map3 && map != g_map4) {
-                break;
             }
-            if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
-                return 1;
-            const std::bitset<144>& components =
-                g_combinationArtifacts[0].m_components;
-            for (i = 0; i < 0x90; ++i) {
-                if (components.test(i)
-                    && loser->hasArtifact(i))
+            if (map >= g_map2 && map <= g_map4) {
+                if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
                     return 1;
+                const std::bitset<144>& components =
+                    g_combinationArtifacts[0].m_components;
+                for (int i = 0; i < 0x90; ++i) {
+                    if (components.test(i)
+                        && loser->hasArtifact(i))
+                        return 1;
+                }
             }
             break;
         }
         // Mac 0x1ff0bc..0x1ff13c continues through three independent map
         // predicates; VC6 propagates the known map into direct failure exits.
         case g_lossCampaign15:
-            map = g_game->m_campaign.m_currentMap;
+            map = campaign.m_currentMap;
             if (map == 1 && loser->m_id == g_lossHero22)
                 return 1;
             if (map == g_map2
@@ -603,13 +609,13 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                 return 1;
             break;
         case g_lossCampaign17:
-            if ((g_game->m_campaign.m_currentMap == g_map2
-                 || g_game->m_campaign.m_currentMap == g_map3)
+            if ((campaign.m_currentMap == g_map2
+                 || campaign.m_currentMap == g_map3)
                 && (loser->m_id == g_lossHero74 || loser->m_id == g_lossHero76))
                 return 1;
             break;
         case g_lossCampaign18:
-            map = g_game->m_campaign.m_currentMap;
+            map = campaign.m_currentMap;
             if (map == g_map4) {
                 if (loser->m_id == g_lossHero96)
                     return 1;
@@ -630,8 +636,8 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             }
             break;
         case g_lossCampaign19:
-            if ((g_game->m_campaign.m_currentMap == 0
-                 || g_game->m_campaign.m_currentMap == g_map2)
+            if ((campaign.m_currentMap == 0
+                 || campaign.m_currentMap == g_map2)
                 && loser->m_id == g_lossHero74)
                 return 1;
             break;
