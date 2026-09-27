@@ -1292,22 +1292,27 @@ DATA(0x006aaaa0) static int g_marketWindowY;
 DATA(0x0068c4c0) static int g_creatureRowY[7] = {
     191, 191, 191, 289, 289, 289, 387
 };
-DATA(0x006a54ec) static char* g_sellCreatureColumnLabel;
+// 0x6a54ec aliases g_specialBuildingNames[6][4], not independent storage.
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
-// each value widget (WIDGET_SET_Y), and the subtitle pointer the Buy/SellArt
-// Updates copy for the marketplace-mode caption. Provisional names.
+// each value widget (WIDGET_SET_Y). Provisional name.
 // Both retail tables contain 230,230,230,309,309,309,388; the Mac
 // resource-column loop loads them from section 1+0x583e0.
 DATA(0x0068c4a0) static int g_resourceValueWidgetY[7] = {
     230, 230, 230, 309, 309, 309, 388
 };
-DATA(0x006a542c) static char* g_marketSubtitle;
+// The former subtitle cell at 0x6a542c is g_specialBuildingNames[2][0]:
+// 0x6a53d4 + 22*sizeof(char*). Both retail builds use that table entry;
+// it is not separately allocated market storage.
 
-// The seven per-resource market values; get_market_value and the resource-trade
-// math read gMarketValues, the buy-artifact price math the second row.
-DATA(0x0068c482) static unsigned short g_marketValues[7];
-DATA(0x0068c492) static unsigned short g_artifactMarketValues[7];
+// Both retail rows start with the zero sentinel before their seven values.
+// Windows folds the +1 index into +2-byte addresses; Mac keeps the +2 load.
+DATA(0x0068c480) static unsigned short g_marketValues[8] = {
+    0, 250, 500, 250, 500, 500, 500, 1
+};
+DATA(0x0068c490) static unsigned short g_artifactMarketValues[8] = {
+    0, 125, 250, 125, 250, 250, 250, 1
+};
 
 // The three consecutive eleven-float market-efficiency rows. The first name
 // is retail-public; the latter two preserve the established cross-TU names
@@ -1322,9 +1327,9 @@ DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
     0.0f, 0.3f, 0.45f, 0.5f, 0.65f, 0.7f, 0.85f, 0.9f, 1.0f, 1.0f, 1.0f
 };
 
-// The char* title the Trade/Give Updates copy for the freelancer-guild source
-// (gMarketSource == 3); runtime-set, single-use. Provisional name.
-DATA(0x006a7d40) static char* g_marketSource3Name;
+// Freelancer-guild captions read quick-view entry 213: Windows
+// 0x6a7d40 = 0x6a79ec + 213*sizeof(char*), Mac base +0x354.
+// This table cell is not separately allocated market storage.
 
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
@@ -1788,7 +1793,7 @@ void TTradeResourceWindow::update(unsigned char update)
         strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADING_POST]);
         break;
     case MARKET_SOURCE_FREELANCER:
-        strcpy(g_text, g_marketSource3Name);
+        strcpy(g_text, g_quickViewText[213]);
         break;
     }
     msg.m_codeY = 1;
@@ -1974,7 +1979,7 @@ void TGiveResourceWindow::update(bool update)
         strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADING_POST));
         break;
     case MARKET_SOURCE_FREELANCER:
-        strcpy(g_text, g_marketSource3Name);
+        strcpy(g_text, g_quickViewText[213]);
         break;
     }
     msg.m_codeY = 1;
@@ -2174,7 +2179,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, g_marketSubtitle);
+        strcpy(g_text, g_specialBuildingNames[2][0]);
         break;
     case MARKET_SOURCE_BLACK_MARKET:
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_BLACK_MARKET]);
@@ -2367,7 +2372,7 @@ void TSellArtifactWindow::update(unsigned char update)
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    strcpy(g_text, g_marketSubtitle);
+    strcpy(g_text, g_specialBuildingNames[2][0]);
     msg.m_codeY = 1;
     broadcastMessage(msg);
 
@@ -2543,7 +2548,9 @@ void TSellCreatureWindow::update(bool update)
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    strcpy(g_text, g_sellCreaHelpText[0].m_text);
+    // Windows 0x5ec69f addresses 0x6a54ec; Mac 0x1f7b58
+    // loads the same entry at building-name base +0x118.
+    strcpy(g_text, g_specialBuildingNames[6][4]);
     msg.m_codeY = 1;
     broadcastMessage(msg);
 
@@ -2726,7 +2733,7 @@ void TSellCreatureWindow::update(bool update)
 VA(0x005ecd10, 0x0B) MAC_ADDRESS(0x1f8144, 0x14)
 long getMarketValue(EGameResource resource)
 {
-    return g_marketValues[resource];
+    return g_marketValues[resource + 1];
 }
 
 VA(0x005ecd20, 0x94) MAC_ADDRESS(0x1f8158, 0xe4)  // dc 0x18ab9c
@@ -2787,7 +2794,7 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     int* inMaxUnitsToTrade)
 {
     *inLeftDenominated = 0;
-    float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource])
+    float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource + 1])
         * g_artifactPurchaseEfficency[g_marketCount];
     float artifactValue = static_cast<float>(
         g_artifactTraits[g_marketArtifacts[inRightResource]].m_cost);

@@ -29,3 +29,13 @@ mac_offset = 0x550324
 mac_size = 32
 sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
 evidence = "text.cpp owns Windows g_mineDescriptions[8] at 0x6a74d0, populated by initializeMineNames from the mine text resource. Native overview doRollover loads TOC 1+0x6d0 -> initially zero pointer table 1+0x550324 into r8 at 0x13a028 and loads entry seven at 0x13ab68 for the same mine-description rollover arm. External storage binding only."
+
+[[data]]
+retail_va = 0x006a79ec
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x55036c
+mac_size = 928
+sha256 = "202115097d1bee389d4d4d81db00117252be97d5691af316941f3843ef7a05f5"
+evidence = "text.cpp owns g_quickViewText[232] at Windows0x6a79ec. Native Trade/Give Update loads TOC1+0x6dc -> pointer table1+0x55036c then entry213 at0x1f5d44/0x1f65b0 (offset0x354), agreeing with Windows0x6a7d40. Overview rollover independently uses entry33 at0x13ab58 (offset0x84). This binds initially zero external storage populated by the text loader, not runtime string contents."

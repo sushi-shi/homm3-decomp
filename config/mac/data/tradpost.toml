@@ -140,3 +140,21 @@ mac_offset = 0x5a80
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
 evidence = "Source-owned static g_marketCount is the index capped at ten by countMarkets. Native TBuyArtifactWindow::computeTradeRatios reads direct zero-initialized storage1+0x5a80 at0x1f83b4, shifts it by two at0x1f83c0 and selects one float from the eleven-element artifact-purchase efficiency table at0x1f83d4. Same-TU UDATA identity only."
+
+[[data]]
+retail_va = 0x68c480
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x583c0
+mac_size = 16
+sha256 = "77b2f33dc7d4cb7e6debedb72e7c624c7ef6187044e76f5c154ff3bebbb3cdbc"
+evidence = "Both retail payloads prove g_marketValues has a zero sentinel followed by seven unsigned-short resource values. Native getMarketValue0x1f8144/0x1f8150 loads the table base then the index*2+2 element. Windows folds +2 into the absolute operand (the retained getMarketValue body uses0x68c482). The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
+
+[[data]]
+retail_va = 0x68c490
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x583d0
+mac_size = 16
+sha256 = "4eb1dfec3d4fec3cea740ded71a1f15f1e2497b92a6b8eea55a4f42631e4bb3b"
+evidence = "Both retail payloads prove g_artifactMarketValues has a zero sentinel followed by seven unsigned-short resource values. Native TBuyArtifactWindow::computeTradeRatios0x1f8378/0x1f8388 loads the table base then the index*2+2 element. Windows folds +2 into the absolute operand (the retained getMarketValue body uses0x68c482). The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
