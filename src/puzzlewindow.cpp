@@ -293,7 +293,7 @@ type_AI_puzzle_tile::type_AI_puzzle_tile()
     m_diggable = 1;
 }
 
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
+static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17]);
 
 VA(0x0052c770, 0x140) MAC_ADDRESS(0x147b28, 0x1e0)  // dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
@@ -521,7 +521,7 @@ type_point aiAttemptPuzzleGuess(long player)
 MAC_ADDRESS(0x148248, 0x240)
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
-                        type_AI_puzzle_tile (*puzzleMap)[17])
+                        type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
     long playerMask = 1 << player;
     origin.m_x = origin.m_x - firstX;
@@ -550,24 +550,25 @@ static long checkMatch(long player, long firstX, long firstY,
     return matches;
 }
 
-// E:\gamedcs\puzzlewindow.cpp:520. The one AI/puzzle helper retail keeps out
-// of line, called from AI_attempt_puzzle_guess above; the declaration lives
-// in puzzlewindow.h so both sides of that call agree.
+// E:\gamedcs\puzzlewindow.cpp:520. DC proves a file-static helper and a
+// reference to the whole puzzle board, also used by check_match. Complete
+// increases that board to 19x17. The declaration and caller share this TU.
 
 // DC puzzlewindow.cpp:523-579 names first, result, point, and the two RECT
 // locals extents/rect. Lines 547-550 update left/right/top/bottom in that
-// order; lines 560-577 clamp each rect member through the shared min/max
-// wrappers. Their by-value operands explain retail's temporary copies.
+// order; lines 560-577 clamp each rect member through min/max. Native Mac
+// selectors take references to the census counters and RECT members; long
+// counters expose that overload while VC6 retains its integer wrappers.
 // Complete scans 19x17 cells instead of DC's 13x12. Retail and DC both use
 // map width in the Y window's first upper bound; preserve that asymmetry.
 // Restoring the rectangles, point constructors and map-level accessor gives
 // 95.3093%, from 92.4089% with scalar carriers and explicit long selectors.
 // Omitting DC's unused first-tile snapshot gives the same score. The remaining
 // differences are four size-only blocks with matching branch/call structure.
-// VC6 resolves the RECT LONG/LONG min calls to the integer wrapper; Clang
-// considers the integer/double overloads ambiguous, leaving an audit gap.
+// Whole-board references, long census counters and uncast RECT bounds retain
+// Windows 95.1081%; Mac reference selectors remain a non-exact source lead.
 VA(0x0052cf10, 0x5B4) MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
+static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
     type_AI_puzzle_tile first;
     unsigned char found = 0;
@@ -580,8 +581,8 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     extents.top = 17;
     extents.bottom = 0;
 
-    for (int x = 0; x < 19; ++x) {
-        for (int y = 0; y < 17; ++y) {
+    for (long x = 0; x < 19; ++x) {
+        for (long y = 0; y < 17; ++y) {
             if (puzzleMap[x][y].m_visible) {
                 if (!found) {
                     first = puzzleMap[x][y];
@@ -609,14 +610,14 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     rect.left = max(rect.left, firstX - extents.left);
     rect.left = max(rect.left, 0);
     rect.right = g_mapWidth + firstX - 9;
-    rect.right = min(static_cast<int>(rect.right),
+    rect.right = min(rect.right,
                      g_mapWidth - extents.right + firstX);
     rect.right = min(rect.right, g_mapWidth);
     rect.top = firstY - 8;
     rect.top = max(rect.top, firstY - extents.top);
     rect.top = max(rect.top, 0);
     rect.bottom = g_mapHeight + firstY - 8;
-    rect.bottom = min(static_cast<int>(rect.bottom),
+    rect.bottom = min(rect.bottom,
                       g_mapWidth - extents.bottom + firstY);
     rect.bottom = min(rect.bottom, g_mapHeight);
 
