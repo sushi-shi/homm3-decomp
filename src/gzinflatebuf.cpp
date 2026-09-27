@@ -272,6 +272,8 @@ TGzInflateBuf::~TGzInflateBuf()
 // A success-first readByte return and swapping the refill member assignments
 // are separately byte-flat under both compilers; neither restores VC6
 // exception-slot separation or the retained trailer calls.
+// Binding m_stream through a local reference or pointer is not the missing
+// receiver lifetime: both controls fall 81.9005 -> 73.1728% in VC6.
 VA(0x004d6920, 0x251) MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
