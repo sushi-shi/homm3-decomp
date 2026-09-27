@@ -3671,9 +3671,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             int displayFace = getDisplayFace(gamePos);
             if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
-                dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION), m_randomHeroBmp,
-                              g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                              g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION));
+                dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION], m_randomHeroBmp,
+                              (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                              (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION]);
                 dlg.doModal(0);
             } else {
                 int heroId = getHeroInPos(gamePos);
@@ -3714,9 +3714,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         if (townType == -1) {
             CBonusDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION), m_randomTownBmp,
-                          g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                          g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION));
+            dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION], m_randomTownBmp,
+                          (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                          (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION]);
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
@@ -3764,17 +3764,17 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            header = g_generalText->getText(GENERAL_TEXT_ARTIFACT_BONUS);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION);
+            header = (*g_generalText)[GENERAL_TEXT_ARTIFACT_BONUS];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = g_generalText->getText(GENERAL_TEXT_GOLD_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_GOLD_BONUS];
             sprite = 8;
-            bonusEx = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_RANGE);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_DESCRIPTION);
+            bonusEx = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_RANGE];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
@@ -3784,9 +3784,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = g_generalText->getText(GENERAL_TEXT_RANDOM_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             sprite = 10;
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION);
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION];
             break;
         }
 
