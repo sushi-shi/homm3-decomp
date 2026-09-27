@@ -1921,6 +1921,7 @@ public:
         std::vector<TRmgMapItem*>* borderItems,
         std::vector<TRmgMapPosition>* borderPositions);
     void floodConnectionRegion(TRmgMapPosition position);
+    void floodShipyardWater(type_object* shipyard);
     // Earlier provisional name: CreateBorderConnection/createBorderConnection.
     // Retail 0x541ad0 selects objectPrototypes[SHIPYARD] and places it beside
     // reachable water. No Dreamcast RMG name is available.

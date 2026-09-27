@@ -6152,17 +6152,12 @@ void type_random_map_generator::floodConnectionRegion(TRmgMapPosition position)
 // side must be in bounds and non-water. Footprint x validity is a caller
 // precondition: retail checks only y+1 here, and only x for the side offsets.
 // Preserve its ordered water/entrance/passability/rock tests and byte queries.
-// Source-family result: copy the side offset after the position assignment,
-// and preserve the terrain enum through both snapshots (83.4060 -> 90.7594).
-// Narrow byte locals retain sign-extension shifts absent from retail; the
-// enum snapshots instead fold to and/cmp byte. A conditional opposite-x is
-// byte-neutral. Returned-point translation and keeping only the old z do
-// not recover the remaining coordinate homes/registers or side-branch shape.
-// Named row bounds and origin snapshots do not improve this. A TPoint cursor
-// with positive-default opposite-side selection recovers all 25 branch blocks,
-// but loses stack stores and leaves four block sizes different (89.7970%).
-// Mutating the by-value parameter behind a saved origin is lower still.
-// Existing terrain/entrance accessors and scalar lookup forms do not improve it.
+// The native 0x2443cc coordinate copy uses the same returned-offset operation
+// as both shipyard water scans. Calling that helper restores all retail bytes;
+// splitting the coordinate into assignment and += retained only 90.7594%.
+static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
+    int waterOffset);
+
 VA(0x00541960, 0x16C) MAC_ADDRESS(0x244288, 0x2f4) // anchor-callee 0x541c94; thiscall, ret 0x0c
 unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition position)
 {
@@ -6182,9 +6177,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
     }
     int waterOffset;
     for (waterOffset = 0; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        nearby = position;
-        TPoint offset = g_rmgShipyardWaterOffsets[waterOffset];
-        nearby += offset;
+        nearby = getRmgShipyardWaterPosition(position, waterOffset);
         if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth)
             continue;
         TRmgMapItem* item = m_map.getMapItem(nearby);
@@ -6205,13 +6198,10 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
     return terrain != eTerrainWater;
 }
 
-// Both shipyard paths translate the same four offsets through the canonical
-// position addition. This returned coordinate preserves the retained ctor in
-// connectZones at 0x54378a; that caller owns its origin snapshot and scan.
-// The placement caller keeps the complete findRmgShipyardWater operation.
-// Complete-only source boundaries/names are inferred from these repeated
-// operations; no independent retained address or Dreamcast name is claimed.
-static TRmgMapPosition getRmgShipyardWaterPosition(const TRmgMapPosition& shipyardPosition,
+// The three water scans share the copied origin plus a by-value offset.
+// Native 0x2445b0 copies both inputs before writing the returned coordinate.
+// Keep this inner operation beneath the retained floodShipyardWater helper.
+static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset)
 {
     return shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
@@ -6230,6 +6220,17 @@ static bool findRmgShipyardWater(type_random_map* map,
     return waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT;
 }
 
+// Native 0x24457c owns the shipyard's water scan and successful flood.
+// Both retained callers pass the generator and the shipyard object. Their
+// remaining Windows differences are nested coordinate/lookup expansions;
+// keep this boundary while recovering those calls (connectZones 95.2240%).
+MAC_ADDRESS(0x24457c, 0x130)
+void type_random_map_generator::floodShipyardWater(type_object* shipyard)
+{
+    TRmgMapPosition waterPosition;
+    if (findRmgShipyardWater(&m_map, shipyard->getPosition(), waterPosition))
+        floodConnectionRegion(waterPosition);
+}
 
 // Complete-only shipyard connection pass. connectZones calls this at
 // 0x54356a and 0x5437f8 after a failed ground connection. Retail selects
@@ -6362,9 +6363,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
         source->m_entrances.push_back(TPoint(nearby.m_x, nearby.m_y));
     }
 
-    TRmgMapPosition waterPosition;
-    if (findRmgShipyardWater(&m_map, shipyard->getPosition(), waterPosition))
-        floodConnectionRegion(waterPosition);
+    floodShipyardWater(shipyard);
 
     int guardValue;
     if (connection->m_unguarded)
@@ -6925,17 +6924,7 @@ void type_random_map_generator::connectZones()
             if (object->m_properties->m_prototype->m_objectType == SHIPYARD) {
                 position = object->getPosition();
                 if (m_map.getMapItem(position)->m_zoneState.m_zone == zoneIndex) {
-                    TRmgMapPosition shipyardPosition = position;
-                    TRmgMapPosition waterPosition;
-                    int waterOffset = 0;
-                    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-                        waterPosition = getRmgShipyardWaterPosition(shipyardPosition, waterOffset);
-                        if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.getWidth()
-                            && m_map.getMapItem(waterPosition)->getLandType() == eTerrainWater)
-                            break;
-                    }
-                    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
-                        floodConnectionRegion(waterPosition);
+                    floodShipyardWater(object);
                 }
             }
         }
