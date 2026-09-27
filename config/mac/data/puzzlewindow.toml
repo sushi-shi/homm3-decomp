@@ -23,3 +23,11 @@ mac_size = 8
 sha256 = "55be67ea770b0baab0f80a5c5f3cb2e49ae7d6bacfe5780c323c49b3795ff142"
 evidence = "48.0 divisor loaded directly at native aiAttemptPuzzleGuess0x148a58 before fdiv0x148a68. Full pinned eight-byte payload agrees with the compiler-emitted anonymous literal; source operation is the existing found/48.0 calculation."
 
+[[data]]
+retail_va = 0x6822c8
+source = "src/puzzlewindow.cpp"
+mac_section = 1
+mac_offset = 0x4c428
+mac_size = 40
+sha256 = "2735f5b407e5fafeaedfffa559ee7d660dd863b61fc99ccd0b54974e7933e2a8"
+evidence = "Native aiAttemptPuzzleGuess0x148a50/60/64/6c reads the setup difficulty byte, loads the threshold table through TOC1+0x2a58 and indexes by difficulty*8 before comparison. Both complete pinned five-double payloads are1.1,0.5,0.25,0,0, agreeing with the ordinary initialized source table."
