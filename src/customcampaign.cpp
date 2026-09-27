@@ -1032,8 +1032,10 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // +0x93a58 calls CampaignHeaderStruct::loadScenario (+0x96c64), ignoring
 // its result. Complete expands both; the retained Windows loadScenario
 // body (0x488810) is exact and its expansion calls loadMapHeader.
-// With both canonical calls, VC6 currently gives 64.62% and 14 blocks
-// against retail's 19: constructor and nested inflater calls diverge.
+// Binding the campaign base once, as native +0x93950..+0x93974 does,
+// gives 75.97% in VC6 (14 blocks against retail's 19). Constructor and
+// nested inflater calls still diverge. The Mac body compiles but needs
+// the generated player-slot destructor descriptor for a complete verdict.
 // The old flattened source gave 86.04%, but omitted both Mac helpers.
 VA(0x00485530, 0x260) MAC_ADDRESS(0x093924, 0x1cc)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
@@ -1041,8 +1043,9 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
 {
     TCampaignBrief::CampaignHeaderStruct* campaign =
         static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignRecord);
-    int slot = g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
-    int source = g_game->m_campaign.findLatestCrossoverScenario(slot);
+    SCampaign& currentCampaign = g_game->m_campaign;
+    int slot = currentCampaign.m_mapScores[m_choices[which].m_scenario].m_index;
+    int source = currentCampaign.findLatestCrossoverScenario(slot);
 
     NewSMapHeader mapHeader;
     campaign->loadScenario(source, &mapHeader);
