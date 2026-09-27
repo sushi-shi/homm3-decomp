@@ -2198,13 +2198,15 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
+    // Windows' -0x20 local and Mac 0x972e8 retain the selected record across
+    // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
-        m_scenarios[scenario2]->m_offset = mapOffset;
-        if (m_scenarios[scenario2]->m_inflatedSize > 0) {
-            mapOffset += m_scenarios[scenario2]->m_inflatedSize;
-            m_scenarios[scenario2]->loadMapHeader(m_stream, &mapHeader,
-                                                 scenario2);
-            applyCampaignMapHeader(*m_scenarios[scenario2], mapHeader);
+        ScenarioStruct* scenario = m_scenarios[scenario2];
+        scenario->m_offset = mapOffset;
+        if (scenario->m_inflatedSize > 0) {
+            mapOffset += scenario->m_inflatedSize;
+            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
+            applyCampaignMapHeader(*scenario, mapHeader);
         }
     }
     return true;
