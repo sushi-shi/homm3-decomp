@@ -5258,30 +5258,12 @@ void TSingleSelectionWindow::openRandomMapOptions()
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
 
-// MATCHING (2026-09-04): 91.22 -> 94.49. The PLAYERS_ANY and TEAMS_ANY arms
-// end in RebuildFilteredPlayerSetup() like their non-ANY siblings (retail
-// f91b/f982 both jump into the f98c tail that calls it; HUMANS_ANY does
-// not). Removing GetDisplayTown's inline_depth(0) pin let /Ob2 reproduce
-// retail's split - HasMultipleTowns CALLED inside the TOWN_PREV/NEXT
-// expansions, EXPANDED inside the BONUS_PREV/NEXT ones (the dead
-// `test al,al` re-test there is its inlined HasRandomAlignment check) -
-// and returned CanChooseHero to its exact row. The FILE_ROW double-click
-// reads clickTime into a local before GameTime::Get() (retail holds it in
-// ESI across the call).
-// MATCHING (2026-09-05): 94.4890 -> 97.3769, and (a) below is CLOSED - the
-// second OnBeginGame call site came back once the file-row bounds guards
-// were written retail's way (see the note at that arm). Residual: retail
-// CALLS the GetRandomMapName() temporary's basic_string::_Tidy and the
-// CNewSetupInfoMsg expansion's CNetMsg base constructor, both depth-2
-// sites whose nested budget (budget / sites-remaining) is smaller in
-// retail; that is the last three branches (144 against 141). The earlier
-// prediction here - that the residual would lift once OnBeginGame and
-// RebuildFilteredPlayerSetup stopped being carcass stubs and became /Ob2
-// candidates in this TU - is REFUTED: both landed on 2026-09-05 and this
-// row did not move by a digit. One more instruction pair is
-// pick_next_alignment's `cmp 8 / jg` against retail's `cmp 9 / jge`;
-// spelling it `>= TOWN_CONFLUX + 1` in newgame.h does produce retail's
-// encoding and costs 0.25 overall, so it stays.
+// Complete keeps both alignment helpers in this TU. Their ordinary expansion,
+// the >= nine-town bound and the save arm's stored-index reread recover every
+// executable block. The first switch also broadcasts the teams label (306):
+// retail's byte at function+0x1217 is zero, selecting its broadcast arm, and
+// Mac 0x17e6ec..0x17e700 routes 306 there too. Including that case closes the
+// final table byte; all 276 blocks and 94 calls agree at 100%.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA) MAC_ADDRESS(0x17e644, 0xd5c)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::onWidgetDeselect(message* msg,
@@ -5324,6 +5306,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         case SSW_FILTER_HUMANS_FIRST + 6:
         case SSW_FILTER_HUMANS_LAST:
         case SSW_FILTER_HUMANS_ANY:
+        // Both native dispatchers also broadcast the teams label (306).
+        case SSW_FILTER_TEAMS_LABEL:
         case SSW_FILTER_TEAMS_FIRST:
         case SSW_FILTER_TEAMS_FIRST + 1:
         case SSW_FILTER_TEAMS_FIRST + 2:
