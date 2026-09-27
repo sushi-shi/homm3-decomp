@@ -724,71 +724,26 @@ int hero::save(TAbstractFile* outfile)
 // HeroView news up and 0x697738 the selected army slot, and this is the
 // only reference to either outside the hero-screen block.
 
-// CURRENT (89.27957%, from 70.98925%): the missing /Ob2 candidate is a
-// conventional release VERIFY invariant. `bitset<48>::size()` is a real
-// inline accessor and therefore enters C2's site budget, but returns a
-// compile-time nonzero capacity, so `(void)size()` emits no check. That
-// single source-history carrier makes VC6 retain retail's out-of-line
-// `basic_string::_Tidy` from the inlined default string constructor. Both
-// sides now emit two calls and flow-distance is zero.
-
-// The exact macro name and original invariant are unattested; the spelling
-// below is explicitly provisional. Its carrier class is source-plausible and
-// distinguished by compiler evidence: release-elided TRACE-shaped printf
-// sites at doses 1/3/5 are byte-flat at 70.98925%; VERIFY(bitset.none())
-// reaches the right two-call phase but emits two excess runtime branches and
-// scores 80.03226%; VERIFY(!bitset.test(0)) and VERIFY(!bitset[0]) emit no
-// excess flow but select a worse register phase at 74.95699%. The constant
-// size invariant alone reproduces the previously synthetic ceiling.
-
-// Residual (89.27957%): one instruction and a whole-body EBX/EDI role swap
-// over 53 register-visible slots. why-reg's complete mutation set finds no
-// improving declaration/store-order edit; the call and branch structures are
-// already retail's.
-// THE BUDGET THRESHOLD IS MEASURED (2026-08-19). Adding N byte-inert
-// user-defined inline sites to the body (`_cpp_max(i, i);`, the
-// armygrp probe idiom) moves the row:
-//     N=0 -> 70.99    N=1..5 -> 89.28    N=6 -> 83.63    N=8 -> 68.00
-// i.e. ONE more inline candidate site denies `_Tidy` its nested share of
-// the /Ob2 budget (`budget / sites-remaining`, docs/vc6/inliner.md) and
-// the call comes back. So retail's body carries one to five candidate
-// sites this reconstruction does not, and the window is wide enough that
-// a single statement accounts for it. The DC call census CANNOT name it:
-// dc 0xcbdb8's callee list is exactly what is already written here -
-// type_obscuring_object::type_obscuring_object x1, armyGroup::armyGroup
-// x1, bitset<48>::bitset x1, bitset<48>::reset x1, type_artifact's
-// default-constructor closure x2 and the vector-constructor iterator x2 -
-// with NO std::string at all, because the DC record has no customName.
-// The member that creates this wall is precisely the one the Dreamcast
-// build does not have. The release VERIFY below is the minimum honest
-// replacement for that old instrument.
-// MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` spanning the
-// member-initialiser expansion, to chase retail's out-of-line
-// basic_string::_Tidy (base x0 vs retail x1), costs 70.99 -> 53.99. The
-// pin DOES reach a member-init - which is worth knowing, the eh-cleanup
-// doc's caveat notwithstanding - but it de-inlines the whole init closure
-// (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
-// default-ctor pair) where retail keeps all of those expanded, and only
-// customName's _Tidy out of line.
+// Mac 0xf3f08/0xf3f70 constructs an artifact inside each counted fill from
+// an enum loaded through the TOC. Passing ARTIFACT_NONE to std::fill_n
+// preserves that per-element conversion; passing a prebuilt type_artifact
+// changes its lifetime. Together with Mac's identity-before-coordinate
+// assignments these fills reproduce Windows exactly. The former provisional
+// bitset-size VERIFY is unnecessary.
 VA(0x004d85f0, 0x12E) MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
-    HOMM3_RELEASE_VERIFY(m_townSpecialGrantedMask.size());
-
+    m_id = -1;
+    m_owner = -1;
     m_x = 0;
     m_y = 0;
     m_heroClass = 0;
     m_portrait = 0;
     m_name[0] = 0;
-    m_id = -1;
-    m_owner = -1;
 
-    int i;
-    for (i = 0; i < 19; i++)
-        m_equipped[i] = type_artifact();
-    memset(m_artifactSlotCounts, 0, sizeof(m_artifactSlotCounts));
-    for (i = 0; i < 64; i++)
-        m_backpack[i] = type_artifact();
+    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
+    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
+    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_townSpecialGrantedMask.reset();
 
     g_heroScreenWindow = 0;
@@ -805,35 +760,11 @@ hero::hero()
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
 
-// DC hero.cpp:1260-1262 calls SetPrimarySkill from a signed-short loop;
-// the increment at dc 0xcbf44 truncates/sign-extends it, as does the army
-// loop at 0xcc054. Restoring the canonical call and short i reproduces the
-// entire retail stats loop (+0x15f..+0x17f), raising 82.8591 -> 85.6745%.
-// Standard artifact fills then restore both retained string::_Tidy calls
-// without changing the string assignment, reaching 91.0235%. The remaining
-// early differences are the fills' pointer-end guards versus retail's
-// countdown loops, plus memset/trait-load scheduling. The old diagnosis of
-// an unavoidable string-inliner wall was false: these preceding source
-// operations determine that nested boundary.
-// A shared function-scope int index with per-element artifact loops was
-// independently measured at 89.67%; a fresh int index gives 82.5336%.
-// Controls: short skill-only index 85.6409%;
-// literal empty-name assignment and explicit ARTIFACT_NONE construction were
-// byte-flat against the old 85.6745% loop candidate. With the current shared
-// constructors, explicit ARTIFACT_NONE in both loops restores the previous
-// 95.8658% MAX from 95.2819% CUR. fill_n emits an overlapping
-// rep-movsd fill instead of retail's two-store loops (79.5302%). Older string
-// assign/operator= wrappers and inline_depth 2/3/4 were byte-flat; a zero-depth
-// assign pin lost to 62.31%. Synthetic invariant carriers were also byte-flat
-// and are not retained.
-// Mac uses counted, direct-TOC zero fills for the five byte arrays. The pinned
-// MSL std::fill_n template makes all five counted and matches the first two
-// Mac loops byte-for-byte. It raises VC6 from 92.81%
-// (with explicit zero loops) to 95.87% while preserving 40 CFG blocks/10 calls.
-// Explicit do/while artifact cursors bring VC6 from the older std::fill 91.02%
-// to 92.81%; entry-tested for loops gave 44 CFG blocks and 85.67%. Mac-only
-// fill_n/unsigned-for artifact controls do not reproduce retail's in-loop
-// TOC load of the empty artifact ID, so those controls are not retained.
+// DC hero.cpp:1260-1262 calls SetPrimarySkill from a signed-short loop.
+// Mac keeps counted std::fill_n loops, including per-element construction
+// from ARTIFACT_NONE for the two artifact arrays. A preconstructed artifact
+// changes that lifetime and VC6's stores. Enum-valued fills raise Windows
+// 95.87 -> 97.36%; retain the canonical helpers through the residual scheduling.
 VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -843,18 +774,10 @@ void hero::initialize(short index)
     clearSpells();
 
     short i;
-    type_artifact* equipped = m_equipped;
-    int equippedRemaining = 19;
-    do {
-        *equipped++ = type_artifact(ARTIFACT_NONE);
-    } while (--equippedRemaining);
+    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
 
     std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
-    type_artifact* backpack = m_backpack;
-    int backpackRemaining = 64;
-    do {
-        *backpack++ = type_artifact(ARTIFACT_NONE);
-    } while (--backpackRemaining);
+    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_backpackCount = 0;
     std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
     std::fill_n(m_skillOrder, sizeof(m_skillOrder), static_cast<unsigned char>(0));
@@ -958,8 +881,8 @@ void hero::initialize(short index)
 // Remaining string::assign expansion differs from retail's retained call.
 // Explicit assign with the old cursors reached only 61.17%; sharing a single
 // function-scope int/long loop index did not improve the recovered version.
-// The backpack loop constructs each empty artifact inside the loop in Mac;
-// a preconstructed fill value changes that lifetime. Its equipped-slot test
+// The enum-valued backpack fill constructs each empty artifact inside the
+// loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
 VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
@@ -1030,9 +953,7 @@ void hero::initialize(const HeroExtra* setup)
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(&setup->m_artifacts[i], i);
         }
-        type_artifact* backpack = m_backpack;
-        for (int remaining = 64; remaining != 0; --remaining)
-            *backpack++ = type_artifact(ARTIFACT_NONE);
+        std::fill_n(m_backpack, 64, ARTIFACT_NONE);
         for (i = 0; i < 64; i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(&setup->m_backpack[i], -1);

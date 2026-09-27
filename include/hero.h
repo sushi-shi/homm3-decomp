@@ -231,7 +231,9 @@ public:
     int m_extra;
     // DC Hero.h:211-212 and the Windows/Mac sacrifice-window constructors store
     // the artifact ID before the -1 payload, including default construction.
-    explicit type_artifact(TArtifact id = ARTIFACT_NONE)
+    // Mac hero initialization converts enum fill values into artifact
+    // temporaries inside each iteration, requiring this converting form.
+    type_artifact(TArtifact id = ARTIFACT_NONE)
     {
         m_artifactId = id;
         m_extra = -1;
