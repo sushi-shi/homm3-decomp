@@ -269,6 +269,15 @@ callers: `doCustomArtifact` 98.2381 → 100 and `doCustomSpellScroll`
 forms produced three reproduced TU objects; naming the pool before the index
 only partially recovered the artifact caller.
 
+For `type_record_hide_boat`, Mac reloads the stored `m_currentBoat` before
+reading each previous-state field. Using those member reads instead of the
+constructor parameter restores `game::recordHideBoat` from 88.9253 to 100
+without changing its source call or nested vector helpers. Member initializers
+with the same reads reach 99.2701; body assignments match the Windows caller.
+The three pointer/form variants produced three reproduced TU objects.
+The ordinary CodeWarrior constructor matches all 32 native instructions after
+relocation masking; this is shape evidence, not a linked Mac exact verdict.
+
 ### A16. Retail's inline copies of one body disagree with each other
 `game::GetPlayerName` 99.5: retail's two copies disagree on registers; ours
 agree — the tell that the difference is allocation order, not shape.

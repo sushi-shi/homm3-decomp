@@ -1591,7 +1591,7 @@ event_record	?playRecordedEvents@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d7a0
 event_record	?recordClaimMine@game@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x9bf90	tokens1:26424e08e8ed
 event_record	?recordClaimTown@game@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x9c190	tokens1:e104ad33e0c6
 event_record	?recordEraseObject@game@@QAEXPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x9c390	tokens1:08a2d648bb52
-event_record	?recordHideBoat@game@@QAEXPAVboat@@EH@Z	88.9253	88.9253	88.9253	0x9c560	tokens1:6fb8cd0492cb
+event_record	?recordHideBoat@game@@QAEXPAVboat@@EH@Z	100.0000	100.0000	100.0000	0x9c560	tokens1:6fb8cd0492cb
 event_record	?recordHideHero@game@@QAEXPAVhero@@DE@Z	100.0000	100.0000	100.0000	0x9c720	tokens1:e32e9abd5e97
 event_record	?recordMove@game@@QAEXPAVhero@@HUtype_point@@@Z	100.0000	100.0000	100.0000	0x9cd50	tokens1:f47a7d3fba3a
 event_record	?recordShowBoat@game@@QAEXPAVboat@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x9c900	tokens1:0ebd7ca9a0ce
