@@ -4254,7 +4254,11 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // VC6 strength-reduces that expression into the retained back-frame induction
 // variable; spelling the induction manually misplaced its initialization.
 // Recovering the expression and the conditional total raises Windows
-// 89.54 -> 94.26 with all helpers kept.
+// 89.54 -> 94.26 with all helpers kept. Mac 0x198724 selects the empty
+// arm first, then adds the recovered HP at 0x198740. The same conditional
+// sum removes Windows' redundant zero/jump path: 94.26 -> 96.78%.
+// A named creature-name temporary or shared sprintf format selection
+// changes the retained message branches; neither improves this source.
 VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
@@ -4263,8 +4267,8 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
     long oldCount = targetArmy->m_numTroops;
     // Mac 0x198728 explicitly selects zero for an empty stack; VC6 reuses
     // oldCount on that path, where the value is already zero.
-    long total = oldCount ? targetArmy->getTotalHitPoints(0) : 0;
-    total += hitPointsResurrected;
+    long total = hitPointsResurrected
+                 + (oldCount == 0 ? 0 : targetArmy->getTotalHitPoints(0));
     targetArmy->m_numTroops =
         (targetArmy->m_monInfo.m_hitPoints + total - 1) / targetArmy->m_monInfo.m_hitPoints;
     targetArmy->m_topCreatureDamage =
