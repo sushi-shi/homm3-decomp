@@ -60,3 +60,12 @@ mac_offset = 0x4514
 mac_size = 4
 sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
 evidence = "Mac shootMissile and shootAnimatedMissile load binary32 0.5 directly from TOC1+0x4514 at code0+0x74844 and0x74278 for the adjacent-angle midpoint. The candidate emits identical four-byte literals."
+
+[[data]]
+retail_va = 0x0063cf7c
+source = "src/cmbtmgr.cpp"
+mac_section = 0
+mac_offset = 0x2a40a0
+mac_size = 12
+sha256 = "e247b9e03b4c5d5cc6d3bbe536fb8a617aefc61d1ad7ec0d6e195c3c82048575"
+evidence = "Mac shootMissile code0+0x7496c loads TOC1+0x874, whose loader pointer identifies this code-section immutable float table. Ballistic and animated missile readers use the same cell at0x73d80 and0x74350. All three binary32 factors exactly match the source-owned initializer and the candidate RO hunk."
