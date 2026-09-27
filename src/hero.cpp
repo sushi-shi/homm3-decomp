@@ -1763,68 +1763,16 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // destructor runs BEFORE the dialogReturn chain, where the second arm's
 // GiveSS runs INSIDE its window's lifetime.
 
-// Residual (87.13%): three source facts landed 2026-09-05, in this order.
-// (1) The SRand seed constant is 154079 (0x259df), read straight off
-// retail's `lea ecx,[eax+ecx+0x259df]`; the tree had 153567 (0x257df).
-// (2) VC6 lowers `signed * 214013` with `imul r,r,0x343fd` but expands the
-// SAME constant into retail's seven-step lea/shift chain when the
-// multiplicand is UNSIGNED (`lea [eax+2*eax]` 3x, `lea [eax+4*ecx]` 13x,
-// `shl 4` 208x, `add` 209x, `shl 8` 53504x, `sub` 53503x,
-// `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
-// 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
-// retail keeps its `imul` there, which corroborates the split.
-// (3) `int roll = SRandom(1,100);` is declared BEFORE `int stat = 0;` -
-// retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
-// `cmp cx,9` operand loads, after the SRandom call (84.18 -> 85.17); and
-// both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
-// <plain>; else <10P>`, which is the fall-through polarity retail has
-// (`jg` to the 10P arm), worth 83.44 -> 84.18.
-// Rejected at the new plateau: reordering the SRand sum (byte-flat three
-// ways) and a nested `if` with an `unsigned char isOverrideHero` local for
-// retail's `sete dl` (85.41, WORSE).
-
-// Earlier history: closed from 46.28 by pinning hero::GiveSS with
-// `#pragma auto_inline(off)` - `predict-inline` named it the sole
-// OVER-inline, expanded at all six sites here where retail keeps a real
-// call at the two that survive cross-jumping, worth 23 conditional
-// branches. Tried and rejected since, one compile each: the campaign
-// gate's third operand bound to an `unsigned char` local to chase
-// retail's `sete dl` (81.23, WORSE - the branch-kind report names the
-// symptom, not the lever, exactly as it did on UpdateStats); and
-// `SRandom(1, chances[1] + chances[0])` for the load order (byte-flat).
-// hero::GetLevel is deliberately left as a pointer walk - it already
-// emits retail's signed `jle`, so the pointer-compare rule does not
-// apply and respelling would risk the now-exact GiveExperience.
-
-// THE AI_choose_secondary_skill x1-vs-x4 IS OUR CROSS-JUMP, and the bytes
-// name the mechanism (2026-08-20). Retail keeps `call
-// AI_choose_secondary_skill / push eax` inside each of the four arms and
-// merges only at the shared `mov ecx,ebx / call GiveSS`; the arms are at
-// fn+0x533, +0x547, +0x5b7 and +0x5cb. Our CL merges one step earlier, at
-// the AI_choose call itself, so the four arms become four two-push stubs
-// jumping into one call site.
-// What DIFFERS between retail's arms - and is presumably why its
-// cross-jumper declined - is the SCHEDULE, not the content: the true arms
-// materialise the constant into EAX and push it twice
-// (`mov eax,1 / mov edx,esi / push eax / push eax / push edi`), sharing
-// one register between GiveSS's second argument and complex_choice, while
-// the false arms push the 1 as an immediate and take the 0 from
-// `xor eax,eax`. That puts `mov edx,<second>` in FRONT of the pushes in
-// the true arms and AFTER them in the false arms, so no two arm tails are
-// identical. Ours pushes two immediates in every arm and schedules
-// `mov edx,<second>` identically, which is exactly what a cross-jumper
-// wants.
-// MEASURED NEGATIVE, do not retry: binding the flag to an
-// `unsigned char complexChoice` local in each of the four arms, to chase
-// that shared-register materialisation, is BYTE-FLAT on this row (83.4342
-// either way) and costs hero 92.1826 -> 92.1392 fuzzy elsewhere.
-// The integer variants are now bounded too (2026-08-21): scoped `int one`
-// in the true arms and scoped `int zero` in the false arms are each
-// byte-flat at 83.4342, with AI_choose_secondary_skill still x1 against
-// retail's x4.  Two force-inlined source-context helpers, one per polarity,
-// also emit the baseline bytes and no helper bodies.  C1 normalises all
-// three forms before C2 chooses this cross-jump set; no scalar/helper
-// spelling reaches retail's four separately scheduled calls.
+// The seed uses unsigned level multiplication (retail's lea/shift chain)
+// and signed levelSeed multiplication (imul), with the constant 154079.
+// Preserve all three window lifetimes and the canonical helper calls.
+// Mac 0xf709c tests for a second skill, performs the AI choice first, and
+// falls back to the sole skill at 0xf70ec. That source branch order also
+// recovers Windows' separate chooser call sites (86.26 -> 98.04%).
+// Mac 0xf6c18 assigns the chance sum to roll before passing it to sRandom;
+// preserving that assignment closes Windows to 100% with the same helpers.
+// Implicit boolean and explicit integer-conditional chooser arguments emit
+// identical Windows bytes; they do not control the call-site duplication.
 // Mac retains this ordinary member at 0:f66a0..f66f0 and calls it from
 // both level-up selection paths. Its original source spelling is unknown.
 MAC_ADDRESS(0x0f66a0, 0x50)
@@ -1866,7 +1814,8 @@ void hero::checkLevel()
                 else
                     chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
-                roll = sRandom(1, chances[0] + chances[1]);
+                roll = chances[0] + chances[1];
+                roll = sRandom(1, roll);
             }
             while (roll > chances[stat]) {
                 roll -= chances[stat];
@@ -1959,12 +1908,12 @@ void hero::checkLevel()
                     }
                 }
             } else if (skills[0] != eSecSkillNone) {
-                if (skills[1] == eSecSkillNone)
-                    giveSS(skills[0], 1);
-                else
+                if (skills[1] != eSecSkillNone)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1],
                                !g_inSetup && m_owner >= 0), 1);
+                else
+                    giveSS(skills[0], 1);
             }
         }
         m_level = newLevel;

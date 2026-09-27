@@ -2187,7 +2187,7 @@ hero	?applyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510	tokens
 hero	?belongsToHuman@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xd9050	tokens1:acfddbab0bf7
 hero	?canLand@hero@@ABEEXZ	100.0000	100.0000	100.0000	0xe5ce0	tokens1:5c77fafa377a
 hero	?canSummonBoat@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5550	tokens1:20cee7b44e0b
-hero	?checkLevel@hero@@QAEXXZ	86.2588	86.2588	87.1338	0xda720	tokens1:22eca660166a
+hero	?checkLevel@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda720	tokens1:9f1f0b5ba2af
 hero	?creatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340	tokens1:028c27339605
 hero	?deallocate@hero@@QAEXEE@Z	100.0000	100.0000	100.0000	0xd9ec0	tokens1:9611a94c0088
 hero	?destroySiegeWeaponArtifact@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9260	tokens1:e67bc24afbd7
