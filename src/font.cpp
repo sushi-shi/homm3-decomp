@@ -222,8 +222,10 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 // pos >= lineStart)` scores the same; `pos <= lineStart` as the break
 // condition is worse (96.59).
 // The plain bottom-justification `total` is retained. Overflow-only recovery
-// locals and initialization after the null guard reach 98.49%; all remaining
-// Windows differences are in the prologue/null-check zero initialization.
+// locals preserve the canonical wrapping helpers. Separately initialize
+// currY before strlen and pos after it: Windows is exact (2026-09-27).
+// Twelve declaration/lifetime spellings reproduce Windows exact; this order
+// also improves the unresolved Mac comparison (30.20 -> 30.71%, 980/968 bytes).
 // A prior volatile probe raised the banked MAX to 98.7864 by
 // aligning the scratch-register family, but retail keeps `total` in EAX;
 // the qualifier itself forces three non-retail stack-memory instructions.
@@ -240,18 +242,18 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              font::TColor colorScheme, unsigned justification,
                              int cursorPos)
 {
+    int currY;
     int pos;
     int limit;
-    int currY;
     int lineStart;
     int height;
     int width;
 
     if (!str)
         return;
-    pos = 0;
-    limit = strlen(str);
     currY = 0;
+    limit = strlen(str);
+    pos = 0;
     if (limit == 0) {
         if (cursorPos != -1) {
             drawCursor(bitmap, x, y, getColor(colorScheme, false),
