@@ -1848,46 +1848,6 @@ inline int combatManager::doSurrender()
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
 }
 
-// Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
-// caller is main, where Windows expands the decision between first aid and
-// catapult automation. An ordinary definition leaves an extra VC6 call;
-// this inline definition restores main's 42-call sequence and 77-block CFG.
-MAC_ADDRESS(0x08627c, 0x10c)
-inline unsigned char combatManager::automateTower()
-{
-    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
-        return 0;
-
-    army* currentArmy = getCurrentArmy();
-    if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER)
-        return 0;
-
-    int wall;
-    switch (currentArmy->m_gridIndex) {
-    case COMBAT_HEX_LOWER_TOWER:
-        wall = 13;
-        break;
-    case COMBAT_HEX_KEEP:
-        wall = 14;
-        break;
-    case COMBAT_HEX_UPPER_TOWER:
-        wall = 5;
-        break;
-    }
-
-    if (m_wallStrength[wall] == 0) {
-        currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
-        m_nextAction = 12;
-        return 1;
-    }
-    if (isComputerAction()) {
-        unnamed465f20();
-        resetMouse();
-        return 1;
-    }
-    return 0;
-}
-
 VA(0x00477ac0, 0x95) MAC_ADDRESS(0x085d6c, 0xcc)  // dc 0x6ea10
 void combatManager::checkChangeSelector()
 {
@@ -1988,6 +1948,48 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
     m_highlighterIndex = -1;
     if (drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
+}
+
+// Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
+// caller is main, where Windows expands the decision between first aid and
+// catapult automation. An ordinary definition leaves an extra VC6 call;
+// this inline definition restores main's 42-call sequence and 77-block CFG.
+// Mac places this body between turnOffHighlighter and checkGetAIMove;
+// restoring that source order is byte-flat in both compiler controls.
+MAC_ADDRESS(0x08627c, 0x10c)
+inline unsigned char combatManager::automateTower()
+{
+    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        return 0;
+
+    army* currentArmy = getCurrentArmy();
+    if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER)
+        return 0;
+
+    int wall;
+    switch (currentArmy->m_gridIndex) {
+    case COMBAT_HEX_LOWER_TOWER:
+        wall = 13;
+        break;
+    case COMBAT_HEX_KEEP:
+        wall = 14;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        wall = 5;
+        break;
+    }
+
+    if (m_wallStrength[wall] == 0) {
+        currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
+        m_nextAction = 12;
+        return 1;
+    }
+    if (isComputerAction()) {
+        unnamed465f20();
+        resetMouse();
+        return 1;
+    }
+    return 0;
 }
 
 // E:\gamedcs\command.cpp:3038. Retail's command-order bracket leaves one
