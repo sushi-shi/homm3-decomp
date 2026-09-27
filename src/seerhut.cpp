@@ -15,6 +15,7 @@
 #include "game.h"
 #include "hero.h"
 #include "herospec.h"
+#include "kb.h"
 #include "quest.h"
 #include "resourcemanager.h"
 #include "seerhuttext.h"
@@ -89,17 +90,6 @@ std::string formatString(const char* format, ...);
 // Retail reaches every cell directly from the initializer below; their
 // clockwise order is north, north-east, east, south-east, south, south-west,
 // west, north-west, then centre.
-
-// kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
-// quest dialog bodies below are this compiland's only consumers of that
-// header and the include-set residual class makes a one-line declaration
-// the cheaper edge, exactly as format_string above.
-void normalDialog(const char* text, int mbType, int x, int y,
-    int resType1, int resExtra1, int resType2, int resExtra2,
-    int special, int timeout, int resType3, int resExtra3);
-void extendedDialog(const char* text,
-    std::vector<type_dialog_resource>& resources,
-    long x, long y, long timeout);
 
 // Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
 // three-column tables from it, then walk every row
