@@ -1766,6 +1766,10 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
+// Retail expands the nested CNetMsg constructor in the scenario arm and
+// retains it in the filter arm; our object reverses those two choices.
+// All other blocks agree. In-class bodies, ordinary member initializers
+// and the equivalent nested/flat option chains are byte-flat controls.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA) MAC_ADDRESS(0x170950, 0x240)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
 void CNewPlayerUpdateProc::finish()
