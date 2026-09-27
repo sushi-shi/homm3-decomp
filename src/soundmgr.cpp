@@ -152,20 +152,12 @@ void soundManager::initializeSamples()
 // because it uses ds_engine; Complete performs the PC waveOut preference
 // fallback, Smacker/Bink binding and twelve-handle allocation here.
 
-// Residual (84.53%): the best source has retail's 17 branches, one return,
-// complete middleware call/data flow and 703-byte target extent. Two retry
-// branches still target blocks in the opposite physical order, and C2 keeps
-// `this` in EBX while retail keeps it in ESI (homed while ESI carries the
-// channel count) and holds AIL_set_preference in EBX. Four grounded shapes
-// were exhausted: structured retry plus a post-loop driver test (83.56%, one
-// extra branch), explicit-goto retry (67.80%, wrong block order), the direct
-// result-carrier loop below (84.53%), and an explicit long-lived
-// set-preference pointer (same bytes). The remaining layout/RA choice is not
-// source-addressable without distorting the proven retry semantics.
-// The pointer probe is removed: five direct AIL_set_preference source calls
-// preserve 84.5280% and clear the audit's five unresolved indirect-call gaps.
-// Retail's cached import pointer is an optimizer result, not source proof of
-// a local function pointer. Further source hypotheses remain possible.
+// Retail retry at +0x1ba returns to the common sample-rate test instead of
+// exiting directly. Continuing through the existing rate guard restores
+// that edge and raises Open from 84.5280% to 94.32%. All middleware calls
+// and initializeSamples remain canonical; the Mac channel setup is a
+// platform rewrite. The remaining Windows difference is 30 vs 31 blocks,
+// chiefly the shared preference/exit tails; helper calls are preserved.
 VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
@@ -230,8 +222,7 @@ int soundManager::open(int newPriority)
                         g_soundSampleRate = 22050;
                         continue;
                     }
-                    result = 0;
-                    break;
+                    continue;
                 }
                 AIL_set_preference(15, 1);
             }
