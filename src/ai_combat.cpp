@@ -475,15 +475,16 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // The remaining size() branch layout differs from its exact sibling expansions
 // in getAttack/getFinalMeleeValue, despite the same native vector template.
 // Loop-index declaration/initialization order leaves that frontier unchanged.
-// Native Mac matches all 300 bytes with target stored before value. A reverse-
-// index loop, split damage initialization, or a self getHero call each changes
-// native instructions; keep this model while resolving VC6's size expansion.
+// Mac stores target before value and retains the reverse traversal. Testing
+// predecrement against zero improves Windows 84.5863 -> 86.8514; the paired
+// source-family probe keeps every helper and reproduces all emitted objects.
+// Mac instruction scheduling is supporting evidence, not a separate objective.
 VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)  // dc 0x2a868
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    for (long i = defender.m_creatures.size(); i-- > 0; ) {
+    for (long i = defender.m_creatures.size(); --i >= 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.getHero(), damage);
         if (value > choice.m_value) {
