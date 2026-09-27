@@ -2024,7 +2024,7 @@ game	?load@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260	tokens1:37a874cc2880
 game	?loadBoatPool@game@@AAEHPAVTAbstractFile@@@Z	86.7462	86.7462	100.0000	0xb9a00	tokens1:bfe65ee74d1d
 game	?loadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330	tokens1:8314f9ed1234
-game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	93.4277	93.4277	100.0000	0xb96f0	tokens1:0516a65f8cc6
+game	?loadGarrisonPool@game@@AAEHPAVTAbstractFile@@H@Z	93.4277	93.4277	100.0000	0xb96f0	tokens1:efb5d21641fa
 game	?loadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210	tokens1:bf5f7ffde2a2
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90	tokens1:d2b3b45296b0
 game	?loadMap@game@@QAE_NPAVTAbstractFile@@@Z	58.0267	58.0267	83.1646	0xc2450	tokens1:245ff157b06d

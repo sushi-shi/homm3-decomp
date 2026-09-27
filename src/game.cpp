@@ -862,6 +862,8 @@ int game::saveMinePool(TAbstractFile* outfile)
     return 0;
 }
 
+// Mac 0xcba68..0xcba80 sign-extends the independently read removable byte
+// before testing it. Keep that signed value reader and its own temporary.
 VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
@@ -892,7 +894,7 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
             m_garrisons[i].m_removableTroops = !g_inCampaign;
         } else {
             m_garrisons[i].m_removableTroops =
-                readValue<unsigned char>(infile) != 0;
+                readValue<char>(infile) != 0;
         }
     }
     return 0;
