@@ -7,3 +7,27 @@ mac_offset = 0x528938
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
 evidence = "src/kb.cpp owns DATA(0x6993d0) combatManager* g_combatManager. Mac army::animateMissile loads its pointer-cell address through TOC 1+0x7b8 at code0+0x4afa8, dereferences it at 0x4afd0, then calls the paired combatManager::isQuickCombat at 0x4afd4. The same cell supplies the named combat-manager accesses at 0x4affc, 0x4b014 and the animation drawFrame call at 0x4b124. PEF loader relocations bind TOC 1+0x7b8 to zero-filled four-byte pointer storage 1+0x528938; this external-consumer declaration mapping does not require an emitted owner payload."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4148
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Mac animateMissile code0+0x4b168 loads TOC1+0x1e90 -> data1+0x4148, then lfd at0x4b178 subtracts this signed-int-to-double bias from the squared-distance conversion before sqrt. The emitted @2202 TD hunk has identical 4330000080000000 bytes."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4144
+mac_size = 4
+sha256 = "9d34e827aabe81eb5d45f0be088dbca972d09556b52ac6867a7e9392df8c3f9b"
+evidence = "Mac animateMissile code0+0x4b1e8 reads binary32 115.0 directly from TOC1+0x4144 before multiplying the reviewed combatSpeedFactors entry for the ray delay. Candidate source owns the same 115.0f factor."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4140
+mac_size = 4
+sha256 = "51d4d5bbc213f5373660b7efe194963ed622f492821d049791880c830da51d20"
+evidence = "Mac animateMissile code0+0x4b378 reads binary32 33.0 directly from TOC1+0x4140 before multiplying the reviewed combatSpeedFactors entry for missileperiod. Candidate source owns the same 33.0f factor."
