@@ -5607,7 +5607,8 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
         return 0;
 
     case LOSS_CONDITION_TIME_LIMIT:
-        if (readValue(infile, shortValue)
+        // Mac 0xda3b8 decodes this short; Windows also checks the byte count.
+        if (readLittleEndianValue(infile, shortValue)
             < sizeof(shortValue))
             return -1;
         m_lossCondition.m_numDays = shortValue;
@@ -6385,13 +6386,14 @@ int NewSMapHeader::get(const char* path, const char* filename,
 }
 
 // DC NewSMapHeader::readString (0xb1110), static with a string reference.
+// Mac 0xdc8b0 checks the read count before decoding length at 0xdc8c4.
 VA(0x004c6010, 0x1CE) MAC_ADDRESS(0x0dc878, 0x114)  // dc 0xb1110
 int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
     int count;
     int length;
 
-    count = readValue(infile, length);
+    count = readLittleEndianValue(infile, length);
     if (count < sizeof(length))
         return -1;
 
