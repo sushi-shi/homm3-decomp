@@ -2425,10 +2425,10 @@ static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 
 // SOURCE-SHAPE LEDGER (84.9968 -> 96.5871): restoring the Dreamcast helper
 // vocabulary and its pointer loop takes the CFG from 14/71 to 69/71 exact
-// blocks, with all 38 branches and both returns exact. The two residual
-// size-only blocks are codegen: EAX/ECX scheduling while the two modifier
-// helpers inline, and retail materializing the 0.1 result in an existing
-// stack slot while this compiler selects the equivalent literal pool.
+// blocks, with all 38 branches and both returns exact. Mac 0x4ec84..0x4ecd4
+// joins both siege outcomes through result. Restoring that common source
+// return also recovers Windows' local 0.1 materialization: 96.5871 -> 97.4258,
+// 70/71 exact CFG blocks. Modifier-expansion register scheduling remains.
 VA(0x00442a50, 0x410) MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global, dc 0x47cf4
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
@@ -2478,11 +2478,10 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                 sum += group->getTotalHitPoints(0);
             }
         }
-        if (total == 0) {
+        if (total == 0)
             result = 0.1;
-            return result;
-        }
-        result = sum * result / (total + sum);
+        else
+            result = sum * result / (total + sum);
     }
     return result;
 }
