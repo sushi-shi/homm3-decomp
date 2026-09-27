@@ -1820,6 +1820,12 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // this reproduces retail's -0x28 home. The remaining difference is scheduling
 // the int-to-double damage conversion around the retained reduction call.
 
+// Mac 0x719e8..0x719f8 orders the lower/keep/upper arms; its facing
+// decision merges an integer before the field store at0x71a70. VC6
+// canonicalizes the source choices. Mac divides tower damage by the
+// retained reduction at0x71c20; Windows multiplies, so that port-specific
+// arithmetic is recorded separately from shared helper recovery.
+//
 // Two shapes the bytes forced and that are worth not re-litigating:
 // the damage accumulator is a DOWN-counted loop over a copy of
 // numTroops (retail spills the count and steps it with dec/jne, which
@@ -1833,11 +1839,11 @@ void combatManager::keepAttack(int towerPos)
     army* tower = getCurrentArmy();
     int archerIndex;
     switch (tower->m_gridIndex) {
-    case COMBAT_HEX_KEEP:
-        archerIndex = 0;
-        break;
     case COMBAT_HEX_LOWER_TOWER:
         archerIndex = 1;
+        break;
+    case COMBAT_HEX_KEEP:
+        archerIndex = 0;
         break;
     case COMBAT_HEX_UPPER_TOWER:
         archerIndex = 2;
@@ -1856,7 +1862,12 @@ void combatManager::keepAttack(int towerPos)
     if (!isQuickCombat()) {
         int destX = target->midX();
         const int destY = target->midY();
-        archer->m_facing = destX >= archer->m_x;
+        int facing;
+        if (destX < archer->m_x)
+            facing = 0;
+        else
+            facing = 1;
+        archer->m_facing = facing;
         int missileFrame;
         getMissileStartingPosition(archer->m_creatureType, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
