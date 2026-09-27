@@ -3972,10 +3972,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
         _chdir(dir);
 #if defined(HOMM3_TARGET_MAC)
     // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
-    // Its directory argument is a native FSSpec; the current Windows
-    // directory/chdir model above remains a platform comparison gap.
+    // Native open passes the incoming eight-byte directory adapter in r4;
+    // its shared pathname declaration/chdir model above remains a platform
+    // comparison gap. Preserve the incoming pointer at this boundary.
     MacFileAdapter file;
-    if (file.open(0, filename, 0, 0, false) == 0) {
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(dir)),
+                  filename, 0, 0, false) == 0) {
         file.getModificationDate(&header->m_fileTime);
         file.close();
     }
