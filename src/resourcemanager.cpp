@@ -32,8 +32,6 @@
 #include "smackmgr.h"
 #include "textresource.h"
 
-class LODFile;
-
 namespace ResourceManager {
 
 // Complete's resource readers adapt either an ordinary FILE or a selected
