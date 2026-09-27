@@ -224,7 +224,7 @@ unsigned char combatManager::automateFirstAidTent()
 VA(0x00474040, 0x8C) MAC_ADDRESS(0x0822b4, 0xd0)  // dc 0x6b268
 void combatManager::doAnimations()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     if (GameTime::isPast(g_timers[0])) {
@@ -255,7 +255,7 @@ void combatManager::finishCreaturePlacement()
     m_actingSide = 1;
     m_actingSlot = 0;
     m_turnNumber = 0;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+    if (!isQuickCombat())
         m_combatWindow->endPlacementPhase();
     resetRound();
 }
@@ -268,7 +268,7 @@ int combatManager::main(message& msg)
     doAnimations();
 
     unsigned char automaticTurn = 0;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
         if (isComputerAction()) {
             while (msg.m_id != MESSAGE_KEY_DOWN
@@ -296,7 +296,7 @@ int combatManager::main(message& msg)
     if (checkWin(&msg))
         return MESSAGE_DISPATCH_FORWARD;
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!isQuickCombat()
             && !automaticTurn) {
         // The retail command header retains the Dreamcast two-argument
         // prototype even though remote.cpp's Complete wrapper ignores the
@@ -623,7 +623,7 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 VA(0x00474ba0, 0x4A) MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::isComputerAction()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return 1;
     army* currentArmy = getCurrentArmy();
     return isComputerAction(currentArmy);
@@ -670,7 +670,7 @@ unsigned char combatManager::isComputerAction()
 VA(0x00474bf0, 0x188) MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return 1;
 
     hero* owner = currentArmy->getController();
@@ -1145,7 +1145,7 @@ void combatManager::resetRound()
     }
 
     if (!m_creaturePlacement
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !isQuickCombat()) {
         m_combatWindow->combatMessage(
             (*g_generalText)[GENERAL_TEXT_COMBAT_ROUND], 1, 0);
     }
@@ -1188,7 +1188,7 @@ void combatManager::autoResolveCombat()
 VA(0x004762f0, 0xF6) MAC_ADDRESS(0x0842bc, 0x15c)  // dc 0x6d430
 int combatManager::checkWin(message* msg)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
+    if (isQuickCombat()
             && m_turnNumber > 30)
         autoResolveCombat();
 
@@ -1760,12 +1760,12 @@ void combatManager::doVictory(int winningGroup)
     }
 
     freeArmies();
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+    if (!isQuickCombat())
         m_combatWindow->combatMessage("", 0, 0);
     g_mouseManager->m_noChangePointer = 0;
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -1888,7 +1888,7 @@ inline unsigned char combatManager::automateTower()
 VA(0x00477ac0, 0x95) MAC_ADDRESS(0x085d6c, 0xcc)  // dc 0x6ea10
 void combatManager::checkChangeSelector()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     army* currentArmy = getCurrentArmy();
@@ -1926,7 +1926,7 @@ void combatManager::turnOffSelector(unsigned char drawIt)
 VA(0x00477c20, 0x1E4) MAC_ADDRESS(0x085f28, 0x258)  // dc 0x6ebbc
 void combatManager::checkChangeHighlighter(int currentIndex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
     if (m_battleOver)
         return;
@@ -2095,7 +2095,7 @@ void combatManager::getControl()
         g_inputManager->flush();
 
     if (m_status == STATUS_ACTIVE
-            && !static_cast<const combatManager*>(this)->isQuickCombat())
+            && !isQuickCombat())
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 
     checkChangeSelector();
@@ -2217,7 +2217,7 @@ void combatManager::getControl()
 VA(0x00478890, 0x6E) MAC_ADDRESS(0x086cf8, 0xb4)  // dc 0x6f5f4
 void combatManager::resetMouse()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
@@ -2296,7 +2296,7 @@ void combatManager::processFirstAid(army* currentArmy)
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= creatureDone;
 
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             SAMPLE2 sample = loadPlaySample(
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
@@ -2323,7 +2323,7 @@ void combatManager::processFirstAid(army* currentArmy)
 VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
         m_combatWindow->m_heroSubWindows[0]->unShow();
         m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -2334,7 +2334,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     }
 
     g_processingCombatAction = 1;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         if (m_nextAction)
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         updateMouseGrid(-1, 1);
@@ -2677,7 +2677,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         m_numArmies[side]++;
 
     if (fizzleItIn
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !isQuickCombat()) {
         resetLimitCreature();
         markCreatureEffect(side, slot);
         computeMaxExtent();
