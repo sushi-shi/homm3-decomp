@@ -7358,12 +7358,13 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 VA(0x0058BBC0, 0xAC) MAC_ADDRESS(0x18353c, 0x9c)  // dc 0x142534
 void TSingleSelectionWindow::checkFaces()
 {
+    // DC 7673 gates the player; 7675 separately tests the occupied face.
     for (int i = 7; i >= 0; --i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
-        if (p && p->m_heroIndex != -1
-                && m_players.isFaceTaken(
-                       p->m_availableHeroes[p->m_heroIndex], i))
-            getHeroFace(1, p);
+        if (p && p->m_heroIndex != -1) {
+            if (m_players.isFaceTaken(p->m_availableHeroes[p->m_heroIndex], i))
+                getHeroFace(1, p);
+        }
     }
 }
 
