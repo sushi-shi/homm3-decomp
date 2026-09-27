@@ -206,11 +206,7 @@ void type_quest::load(TAbstractFile* file, int version)
         file->read(&row, sizeof(row));
         m_textVariant = row;
     }
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);
@@ -245,11 +241,7 @@ void type_quest::load(TAbstractFile* file, int version)
 VA(0x0056ce50, 0x11E) MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);

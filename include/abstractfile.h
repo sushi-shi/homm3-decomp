@@ -105,6 +105,22 @@ int readLittleEndianValue(TAbstractFile* infile, T& value)
     return count;
 }
 
+// Value readers intentionally discard the native byte count, like readValue<T>.
+// Mac quest load/loadFromMap decode their deadline immediately after read;
+// neither native caller tests the count before lwbrx.
+template <class T>
+T readLittleEndianValue(TAbstractFile* infile)
+{
+    T value = readValue<T>(infile);
+#if defined(__POWERPC__)
+    if (sizeof(T) == sizeof(unsigned short))
+        value = static_cast<T>(__lhbrx(&value, 0));
+    else if (sizeof(T) == sizeof(unsigned long))
+        value = static_cast<T>(__lwbrx(&value, 0));
+#endif
+    return value;
+}
+
 // Mac saveString 0xced70..0xced8c encodes an owned short while retaining the
 // original length for its later checks. Windows passes the caller slot.
 template <class T>
