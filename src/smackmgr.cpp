@@ -395,6 +395,8 @@ void videoPause()
 }
 
 VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)  // dc 0x14ac50
+// Splitting the pause-count early guards is byte-flat in the retained
+// Windows body and showVideo; it does not recover their nested call choices.
 void videoResume()
 {
     if (g_videoPauseCount == 0 || --g_videoPauseCount != 0)

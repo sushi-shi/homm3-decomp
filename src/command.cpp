@@ -568,6 +568,7 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // decomposition is Windows-flat. yDifference preceding direction, named
 // float ratio components, and separate x-border subtraction recover every
 // Mac byte (488 bytes); Windows remains 98.5874% at its x87 scheduling wall.
+// Six const/order/implicit/one-component ratio controls are Windows-flat.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
