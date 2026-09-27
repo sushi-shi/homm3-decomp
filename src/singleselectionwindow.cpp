@@ -3124,7 +3124,9 @@ void TSingleSelectionWindow::setupFilterOptions()
 // gpGame repeats UpdateGameVars' field_37F arm verbatim (retail duplicates
 // those statements rather than sharing the guarded body). The tail resets
 // every seat's hero/town choice, redraws, and mirrors the new positions to
-// the other machines through SendPlayerPositions.
+// the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
+// address the member directly; avoid an inferred cached local-header reference.
+// This restores Windows's local-header frame and destructor frontier (97.69%).
 
 VA(0x00580430, 0x63B) MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
@@ -3134,9 +3136,9 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     NewSMapHeader header;
     header.m_lossCondition.m_type = -1;
     header.m_victoryCondition.m_type = -1;
-    header.m_isPlayable = 1;
-    header.m_difficulty = 1;
     header.m_hasTwoLayers = m_randomMapOptions[1] > 1;
+    header.m_difficulty = 1;
+    header.m_isPlayable = 1;
     if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
             || m_commonGameVersion == SINGLE_SELECTION_CONTEXT_3)
         header.m_version = 28;
@@ -3174,14 +3176,13 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
            sizeof(m_localHeader.m_heroAvailability));
     strcpy(m_localHeader.m_title, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME]);
     strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
-    GameSelectionHeadersStruct& localHeader = m_localHeader;
-    localHeader.m_header = header;
+    m_localHeader.m_header = header;
 
     g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, 0);
-    localHeader.m_setup = g_game->m_setup;
-    m_currentHeader = &localHeader;
+    m_localHeader.m_setup = g_game->m_setup;
+    m_currentHeader = &m_localHeader;
 
-    applyHeaderToGame(&localHeader);
+    applyHeaderToGame(&m_localHeader);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;
