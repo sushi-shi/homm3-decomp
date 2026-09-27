@@ -56,12 +56,13 @@ enum ECampaignOrdinal {
 };
 
 // The sort columns SortMaps' jump table dispatches (`how`), in the file
-// list's column order. Values are the RS_SORT_MAPS payload rungs.
+// list's column order. Retail table 0x5852e0 routes 1 to Size and 3 to
+// Players. These values are carried in RS_SORT_MAPS messages.
 enum ESortMapsColumn {
     SORT_MAPS_BY_NAME = 0,
-    SORT_MAPS_BY_PLAYERS = 1,
+    SORT_MAPS_BY_SIZE = 1,
     SORT_MAPS_BY_VERSION = 2,
-    SORT_MAPS_BY_SIZE = 3,
+    SORT_MAPS_BY_PLAYERS = 3,
     SORT_MAPS_BY_VICTORY = 4,
     SORT_MAPS_BY_LOSS = 5
 };
@@ -92,8 +93,9 @@ enum ESingleSelectionWidgetId {
     SSW_FILE_ROW_LAST = 159,
     SSW_BEGIN = 186,
     SSW_BACK = 188,
-    SSW_SORT_SIZE = 190,
-    SSW_SORT_PLAYERS = 191,
+    // Retail OnWidgetDeselect sends request 3 for 190 and request 1 for 191.
+    SSW_SORT_PLAYERS = 190,
+    SSW_SORT_SIZE = 191,
     SSW_SORT_VERSION = 192,
     SSW_SORT_NAME = 193,
     SSW_SORT_VICTORY = 194,

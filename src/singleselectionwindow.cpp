@@ -5695,14 +5695,14 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_SORT_NAME:
         onSortMaps(SORT_MAPS_BY_NAME);
         break;
-    case SSW_SORT_SIZE:
-        onSortMaps(SORT_MAPS_BY_SIZE);
+    case SSW_SORT_PLAYERS:
+        onSortMaps(SORT_MAPS_BY_PLAYERS);
         break;
     case SSW_SORT_VERSION:
         onSortMaps(SORT_MAPS_BY_VERSION);
         break;
-    case SSW_SORT_PLAYERS:
-        onSortMaps(SORT_MAPS_BY_PLAYERS);
+    case SSW_SORT_SIZE:
+        onSortMaps(SORT_MAPS_BY_SIZE);
         break;
     case SSW_SORT_VICTORY:
         onSortMaps(SORT_MAPS_BY_VICTORY);
