@@ -1736,8 +1736,9 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // Native message phases retain the icon command before the side split,
 // the status command in each resource arm, and the text pointer before its
 // command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
-// Three size-only blocks remain; all54 Windows named calls agree. Earlier
-// word-order controls were flat; volatile scratch aliases remain unsupported.
+// Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
+// widget ID before its status mask (99.78% Windows). All 54 named calls agree.
+// Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1889,8 +1890,8 @@ void TTradeResourceWindow::update(unsigned char update)
         for (int i = 0; i < 7; ++i) {
             if (side == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 broadcastMessage(msg);
@@ -1912,8 +1913,8 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x2a + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_BUY_WOOD_ID + i;
                 broadcastMessage(msg);
@@ -2151,7 +2152,9 @@ void TGiveResourceWindow::update(bool update)
 // Mac's vector-index accessor frontier. Mac 0x1f6ca0..0x1f6cf0 retains
 // separate sprintf calls for the two idle titles; Windows merges their tails.
 // Mac 0x1f7014..0x1f708c also puts the resource message fields before
-// formatting its count. Preserve both phases (99.68% Windows). Removing qty
+// formatting its count. Mac 0x1f6f28 and 0x1f6fa4 preserve the common icon
+// command before the column split and its repeated second-column assignment.
+// These phases reproduce Windows exactly. Removing qty
 // re-evaluates its condition across calls, unlike Mac's retained r24 value.
 VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
@@ -2237,8 +2240,8 @@ void TBuyArtifactWindow::update(unsigned char update)
 
     for (int col = 0; col < 2; ++col) {
         if (g_selectedArtifact != -1 && g_leftResource != -1) {
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             if (col == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_extra = g_selectedArtifact;
                 msg.m_codeY = 3;
                 broadcastMessage(msg);
