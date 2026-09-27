@@ -1492,6 +1492,11 @@ static int doNewGame()
 // the second discards it. Complete expands both calls and adds a campaign
 // set to the window constructor; the overload's second parameter is inferred
 // from those retail arguments. Keep the two modal-object lifetimes here.
+// Mac 0x10fd08 returns zero on chooser cancellation; 0x10fd44 retries
+// only a cancelled brief and otherwise returns one. These direct exits
+// restore the Windows front end to 99.8872% (30 blocks, 44 calls); a
+// common recomputed return adds two comparison blocks. Its remaining
+// four-byte frame difference is independent of an int/byte return probe.
 MAC_ADDRESS(0x10fca0, 0xc8)
 static int doCampaignWindow(bool newGame, int campaignSet)
 {
@@ -1504,15 +1509,14 @@ static int doCampaignWindow(bool newGame, int campaignSet)
         openCampaignVideo();
         videoPause();
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-            break;
+            return 0;
         {
             TCampaignBrief campaignBrief(newGame, false);
             campaignBrief.doModal();
         }
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
-            break;
+            return 1;
     }
-    return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
 // Mac retains doCampaignWindow(true, set) in all three campaign-set arms
