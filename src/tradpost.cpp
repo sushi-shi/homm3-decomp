@@ -1711,15 +1711,12 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // enable-dim state, the Artifact-Merchant and Freelancer's-Guild tab gates, and
 // the two-column loop over the sell and buy resources (icon, stock, exchange
 // ratio, highlight). The final repaint is bUpdate-gated.
-// Match plateau: 86.6466 (was 86.1010 before the ctor reconstruction moved
-// the TU closure); calls are 49/49 and branches are 38/38. The two remaining
-// branch differences are early jle cross-jumps (77 vs 76 blocks): the
-// then-arm wordLeft ternary emits a third `mov esi, ecx` block where retail
-// cross-jumps into the else arm's `mov edx, [eax+0x288]` - the word values'
-// register assignment differs, so the shareable copy does not exist in our
-// else arm. Generated AST/flow/register searches found no source-backed
-// improvement; word decl-order swap measured byte-flat (2026-08-27). The
-// why-reg volatile proposal is intentionally rejected as a compiler hack.
+// Mac 0x1f5b80..0x1f5c04 chooses both quantities before the word lookups;
+// 0x1f5c78/0x1f5c9c and 0x1f6100/0x1f6114 retain the two formatting arms.
+// Restoring that complete source model and the signed side counter raises
+// Windows 90.22 -> 98.73%; its 38 branches and 54 named calls agree.
+// Remaining stores/registers differ in four blocks. Earlier word-order
+// controls were flat; volatile scratch aliases remain unsupported.
 // DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1747,22 +1744,22 @@ void TTradeResourceWindow::update(unsigned char update)
         if (g_ratioInverted) {
             qtyLeft = g_giveQuantity;
             qtyRight = 1;
-            wordRight = g_generalText->getText(GENERAL_TEXT_UNIT);
-            wordLeft = (qtyLeft > 1) ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                                     : g_generalText->getText(GENERAL_TEXT_UNIT);
         } else {
             qtyRight = g_giveQuantity;
-            wordRight = (qtyRight > 1) ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                                       : g_generalText->getText(GENERAL_TEXT_UNIT);
             qtyLeft = 1;
-            wordLeft = g_generalText->getText(GENERAL_TEXT_UNIT);
         }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT),
+        wordRight = qtyRight > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                                : (*g_generalText)[GENERAL_TEXT_UNIT];
+        wordLeft = qtyLeft > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                              : (*g_generalText)[GENERAL_TEXT_UNIT];
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT],
                 qtyLeft, wordLeft, g_resourceNames[g_leftResource],
                 qtyRight, wordRight, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
-                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
+        if (g_leftDenominated)
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
+        else
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1772,10 +1769,10 @@ void TTradeResourceWindow::update(unsigned char update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MARKETPLACE));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_MARKETPLACE]);
         break;
     case MARKET_SOURCE_TRADING_POST:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADING_POST));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADING_POST]);
         break;
     case MARKET_SOURCE_FREELANCER:
         strcpy(g_text, g_marketSource3Name);
@@ -1785,10 +1782,10 @@ void TTradeResourceWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_KINGDOM_RESOURCES));
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_KINGDOM_RESOURCES]);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -1833,7 +1830,7 @@ void TTradeResourceWindow::update(unsigned char update)
         setWidgetOff(MARKET_TITLE_ID);
     }
 
-    for (unsigned int side = 0; side < 2; ++side) {
+    for (int side = 0; side < 2; ++side) {
         if (g_selectedArtifact != -1 && g_leftResource != -1 &&
             g_selectedArtifact != g_leftResource) {
             if (side == 0) {
@@ -1855,8 +1852,12 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_codeY = 0xb;
                 msg.m_extra = g_leftResource;
                 broadcastMessage(msg);
-                sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        g_ratioInverted ? g_rightAmount * g_giveQuantity : g_rightAmount);
+                if (g_ratioInverted)
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            g_rightAmount * g_giveQuantity);
+                else
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            g_rightAmount);
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
@@ -1901,7 +1902,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_extraText = g_text;
                 if (g_selectedArtifact != -1) {
                     if (g_selectedArtifact == i) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_NOT_AVAILABLE));
+                        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_NOT_AVAILABLE]);
                     } else {
                         computeTradeRatios(g_selectedArtifact, i,
                             &tempTradeRatio, &tempLeftDenominated,
