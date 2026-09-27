@@ -2394,6 +2394,19 @@ void TRmgTreasureGroup::reset()
     }
 }
 
+// Native 0x233d18 tests each group's object trait before the caller checks
+// its separate guard flag. The only retained caller is 0x24b22c.
+MAC_ADDRESS(0x233d18, 0x60)
+unsigned char TRmgTreasureGroup::objectsAllowEntrances() const
+{
+    for (unsigned int index = 0; index < m_objects.size(); ++index) {
+        int objectType = m_objects[index]->m_properties->m_prototype->m_objectType;
+        if (!g_adventureObjectTraits[objectType].m_trait2)
+            return 0;
+    }
+    return 1;
+}
+
 // Mac keeps this shared group insertion at 0x233d78. Its four callers
 // pass one object and a two-dimensional point; map storage uses level zero.
 MAC_ADDRESS(0x233d78, 0xd4)
@@ -8422,15 +8435,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // The second frontier can also move the unchanged header writer by -0.0078;
 // no body is adopted. Both canonical helper calls and snapshot order remain
 // intact across the 170-body native oracle, including live object-list growth.
-// Goto audit: the policy's final 1/0 assignment is an ordinary if/else,
-// neutral across the TU. A scan-result flag loses 3.5760 points and a
-// post-loop exhaustion test loses 2.6708, so the search exit remains.
-// Separate entrance-policy result controls remain lower: int 96.1471%,
-// unsigned char 96.7905%, against 99.9850%. Both preserve the source's
-// object/guard policy but change the emitted branch structure.
-// A separate blocked-entrance result reaches 98.2893%; head-tested scans
-// whose exhaustion arm owns the guard-policy assignment reach 99.2993%
-// with for/while/do headers. Both remain below 99.9850%.
+// Native retains objectsAllowEntrances before the caller's guard check.
+// Recovering that boundary removes the synthetic search-exit goto. Keeping
+// the conjunction as one result expression preserves 96.8953%; initializing
+// the result to zero then conditionally assigning one lowers it to 94.6633%.
 // These peaks precede the constructor visibility recovery. Current 96.8953%
 // expands the constructor retained at retail +0xbd (live C2 cost 47 versus
 // direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
@@ -8504,18 +8512,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     }
     if (direction == lastDirection)
         return 0;
-    int allowEntrances;
-    for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex) {
-        int objectType = group->m_objects[objectIndex]->m_properties->m_prototype->m_objectType;
-        if (!g_adventureObjectTraits[objectType].m_trait2)
-            goto disallowEntrances;
-    }
-    if (!group->m_hasGuard) {
-        allowEntrances = 1;
-    } else {
-disallowEntrances:
-        allowEntrances = 0;
-    }
+    int allowEntrances = group->objectsAllowEntrances() && !group->m_hasGuard;
     if (!m_map.hasConnectedOutline(group->m_outline, position, allowEntrances, zone, 1))
         return 0;
     TPoint point;
