@@ -167,3 +167,42 @@ mac_offset = 0x4b24
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
 evidence = "Mac newMap clears its eight disabled flags through eight byte load/store pairs at code0+0xd5d74..0xd5dbc. Every load uses direct TOC1+0x4b24, whose byte is zero; this pins the constant-reference value used by the expanded fill operation."
+
+[[data]]
+retail_va = 0x00677978
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x4260c
+mac_size = 28
+sha256 = "f4ba13bd6c3c88e4de754d7e3402cd38deb5bf03d6f836d41548cb84d716beb1"
+evidence = "Mac calculateProduction loads TOC1+0x253c -> section1+0x4260c at0xca99c and indexes four-byte mine production values at0xcaaf0 after checking mine type below GOLD. All seven big-endian integers are2,1,2,1,1,1,1000, identical to the ordinary game.cpp definition. Loader destination and full28-byte payload are verified."
+
+[[data]]
+retail_va = 0x00697750
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x527e20
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Ordinary game.cpp owns the uninitialized int g_weekType. Native perWeek loads TOC1+0x654 -> zero storage1+0x527e20, then stores the corresponding week value at0xdf514. Four-byte zero payload and loader destination are verified; owner UDATA and external consumer references remain checked separately."
+
+[[data]]
+retail_va = 0x006983fc
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x527e1c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Ordinary game.cpp owns the uninitialized int g_weekTypeExtra. Native perWeek loads TOC1+0x650 -> zero storage1+0x527e1c, then stores the corresponding week value at0xdf51c. Four-byte zero payload and loader destination are verified; owner UDATA and external consumer references remain checked separately."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bd8
+mac_size = 4
+sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
+evidence = "Native setupPuzzlePieces loads the direct TOC float at1+0x4bd8 with lfs at0xcde14 and uses it for the quadratic percentage factor. The complete four-byte big-endian payload is3f000000, exactly0.5f, the reciprocal of the authored division by2.0f. Bind the reviewed literal payload and address without any anonymous compiler-ordinal identity."

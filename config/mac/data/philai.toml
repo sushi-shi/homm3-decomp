@@ -65,7 +65,6 @@ evidence = "Windows MoveHero passes the DATA-claimed g_mapVisibilityBit to mapEx
 [[data]]
 retail_va = 0x006783c8
 source = "src/game.cpp"
-declaration_only = true
 mac_section = 1
 mac_offset = 0x432f4
 mac_size = 4
@@ -75,7 +74,6 @@ evidence = "Windows DATA 0x6783c8 is g_mapWidth. Mac convertObject loads TOC 1+0
 [[data]]
 retail_va = 0x006783cc
 source = "src/game.cpp"
-declaration_only = true
 mac_section = 1
 mac_offset = 0x432f8
 mac_size = 4

@@ -536,7 +536,7 @@ army	?computeAttackerBonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43
 army	?computeAttackerDamageBonuses@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43840	tokens1:c45a91a32a77
 army	?computeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90	tokens1:bcd3c4623a99
 army	?computeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160	tokens1:3ae0d0a327ac
-army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90	tokens1:25c4b873675e
+army	?computeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90	tokens1:055a0ef26c2d
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:8c1c623cdd39
 army	?cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500	tokens1:43a8e7b6a274
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:770cc2dcfdf8
@@ -575,7 +575,7 @@ army	?getSecondGridIndex@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0	tokens1
 army	?getSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0	tokens1:43dc625732bf
 army	?getTotalCombatValue@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60	tokens1:1a7070f6bcae
 army	?getTotalHitPoints@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080	tokens1:221c6ee42e49
-army	?getUnitCombatValue@army@@QBENJJEPBV1@@Z	84.2839	84.2839	96.5871	0x42a50	tokens1:0c5238895c40
+army	?getUnitCombatValue@army@@QBENJJEPBV1@@Z	96.5871	96.5871	96.5871	0x42a50	tokens1:4006207f78d7
 army	?goBerserk@army@@QAEXXZ	100.0000	100.0000	100.0000	0x456d0	tokens1:9c9cb0a0dbc7
 army	?init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0	tokens1:c2dbe8434e40
 army	?initClean@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3d5c0	tokens1:6acaeb2c4b06
@@ -1878,8 +1878,8 @@ game	??4reference@?$bitset@$0JM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	
 game	??4town@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd3df0	-
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260	-
 game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80	-
-game	??D?$bitset_iterator@$0JA@@@QBE?AVreference@?$bitset@$0JA@@std@@XZ	100.0000	100.0000	100.0000	0x8eb40	tokens1:da8206fc07eb
-game	??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ	0.0000	100.0000	100.0000	0xd4ca0	tokens1:713e7f976a23
+game	??D?$bitset_iterator@$0JA@@@QBE?AVreference@?$bitset@$0JA@@std@@XZ	100.0000	100.0000	100.0000	0x8eb40	tokens1:ad5f7e8d46ef
+game	??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ	100.0000	100.0000	100.0000	0xd4ca0	tokens1:cb8ac4f3f128
 game	??_G?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x5fec0	-
 game	??_G?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x5fe60	-
 game	??_Ghero@@QAEPAXI@Z	100.0000	100.0000	100.0000	0x5ff00	-
@@ -1968,7 +1968,7 @@ game	?getLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9
 game	?getLocalPlayerGamePos@game@@QBEHXZ	100.0000	100.0000	100.0000	0xcea20	tokens1:d2e8c94f6e83
 game	?getName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0	tokens1:bf2771b92546
 game	?getNewBoatId@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170	tokens1:6f31c69308b5
-game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:6f121e478d3a
+game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:371107adcb1d
 game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	tokens1:7a28b072a3b1
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	tokens1:2de015befc74
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	tokens1:f8f6c8621fd3
@@ -1977,7 +1977,7 @@ game	?getRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	100.0000	100.0000	100.0000
 game	?getRandomLith@game@@QBEEABV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@AAUtype_point@@JJ@Z	100.0000	100.0000	100.0000	0xcdb80	tokens1:8c6f806f3294
 game	?getRandomLith@game@@QBEEJJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0	tokens1:b820b496cb6c
 game	?getRandomLithExit@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0	tokens1:66aad5f580c1
-game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	92.6331	92.6331	92.6331	0xc92c0	tokens1:eae92651f499
+game	?getRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	84.7515	84.7515	92.6331	0xc92c0	tokens1:a3b8e13d6c07
 game	?getRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0	tokens1:92d6b83898ad
 game	?getRandomWhirlpool@game@@QBEEJAAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20	tokens1:93afd59e5fdc
 game	?getStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400	tokens1:cf79e7378aab
@@ -2045,7 +2045,7 @@ game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12
 game	?numOfGivenArtifact@playerData@@QBEHH@Z	100.0000	100.0000	100.0000	0xbabd0	tokens1:6f2acc104950
 game	?perDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	tokens1:250677db0bd7
 game	?perMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40	tokens1:0851f3c91c9c
-game	?perWeek@game@@QAEXXZ	96.6652	96.6652	99.8370	0xc8780	tokens1:ef1c16ff99ce
+game	?perWeek@game@@QAEXXZ	96.9467	96.9467	99.8370	0xc8780	tokens1:1041d282a786
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	95.8113	95.8113	100.0000	0xcaa70	tokens1:52f8f601bcf2
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97
@@ -2080,8 +2080,8 @@ game	?saveGame@game@@QAEEPBDEEEE@Z	100.0000	100.0000	100.0000	0xbeea0	tokens1:93
 game	?saveGarrisonPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0	tokens1:fa73bce530bb
 game	?saveMinePool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580	tokens1:474978e47f01
 game	?saveObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	71.4685	100.0000	100.0000	0xd2b80	tokens1:e0471117be93
-game	?saveRumours@game@@AAEHPAVTAbstractFile@@@Z	27.1850	98.0900	100.0000	0xbbc20	tokens1:e2910f432412
-game	?saveSignPool@game@@AAEHPAVTAbstractFile@@@Z	6.5000	6.5000	100.0000	0xb9270	tokens1:4e6da6f5518f
+game	?saveRumours@game@@AAEHPAVTAbstractFile@@@Z	27.5900	27.5900	100.0000	0xbbc20	tokens1:785bab67a386
+game	?saveSignPool@game@@AAEHPAVTAbstractFile@@@Z	6.5000	6.5000	100.0000	0xb9270	tokens1:282f8552d61c
 game	?saveString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60	tokens1:22de4f9cceb9
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	69.2553	100.0000	100.0000	0xd2ac0	tokens1:64620643cde0
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	69.2553	100.0000	100.0000	0xd2b20	tokens1:87263ad46aca
@@ -2243,7 +2243,7 @@ hero	?getStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110	tokens1:4b11cd54c3cc
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
-hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	94.8057	95.4534	95.4534	0xe3070	tokens1:780b67f8c67f
+hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	94.7166	95.4534	95.4534	0xe3070	tokens1:780b67f8c67f
 hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	97.6632	100.0000	0xe33b0	tokens1:bf106b3792bf
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
@@ -2483,7 +2483,7 @@ mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0	tokens1:384a505
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660	tokens1:611413673225
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630	-
 mainmenu	?doModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0	tokens1:fc35791ff738
-mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	94.0761	94.0761	94.0845	0xfb710	tokens1:6988981fafbc
+mainmenu	?mainMenuHandler@@YIHAAVmessage@@@Z	94.0761	94.0761	94.0845	0xfb710	tokens1:cb708b2fb2a5
 mapcell	??0CObjectType@@QAE@PAUTObjectType@@@Z	46.7818	46.7818	62.3455	0x106080	tokens1:af997d4c852c
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060	tokens1:574a07e264d6
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650	tokens1:b1e785855074
@@ -2599,7 +2599,7 @@ mapcell	?readMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@H@Z	99.5485	99.5485	10
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020	tokens1:706e9138dbe0
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	98.4017	98.4017	98.4017	0x1013b0	tokens1:efb7d792bbca
 mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	97.4390	97.4390	97.4390	0x102e00	tokens1:d29f002d4d84
-mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780	tokens1:630c059807c7
+mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@AAVCObjectType@@@Z	98.4449	98.4449	100.0000	0x103780	tokens1:515b9584600d
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff4d0	tokens1:716431395207
 mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x100b30	tokens1:b9bfb1ffd2c5
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270	tokens1:abcb8e413b4f
@@ -2848,7 +2848,7 @@ overview	?setupNewOverviewType@game@@QAEXHE@Z	100.0000	100.0000	100.0000	0x11e33
 overview	?updateBackpack@@YIXH@Z	100.0000	100.0000	100.0000	0x122470	tokens1:6dfc82a6a0f1
 overview	?updateFlaggableIcon@TOverviewWindow@@AAEXH@Z	100.0000	100.0000	100.0000	0x11e670	tokens1:202b825929ea
 overview	?updateFlaggableIcons@TOverviewWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x11e7c0	tokens1:64d0f3ddc246
-overview	?windowHandler@TOverviewWindow@@UAEHAAVmessage@@@Z	93.4841	93.4841	93.4841	0x121960	tokens1:162b504dc37d
+overview	?windowHandler@TOverviewWindow@@UAEHAAVmessage@@@Z	93.4841	93.4841	93.4841	0x121960	tokens1:e3b16bf6a92e
 palette	??0TPalette16@@QAE@ABVTPalette24@@@Z	100.0000	100.0000	100.0000	0x122810	tokens1:04a0b1df9f7d
 palette	??0TPalette16@@QAE@ABVTPalette24@@HHHHHH@Z	100.0000	100.0000	100.0000	0x1226d0	tokens1:6fa33c9b695c
 palette	??0TPalette16@@QAE@PBDABVTPalette24@@HHHHHH@Z	100.0000	100.0000	100.0000	0x122770	tokens1:0062157a9089
@@ -2922,8 +2922,8 @@ philai	?getEnchantmentValue@type_spellvalue@@IBEJHW4TSkillMastery@@J@Z	100.0000	
 philai	?getMassDamageSpellValue@type_spellvalue@@IBEJHW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x1271c0	tokens1:475788dccb3f
 philai	?getRawSpellValue@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0	tokens1:322be96c7ade
 philai	?getSchoolValue@@YIJPBVhero@@W4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0x124d20	tokens1:72c56d2caaa6
-philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	86.5040	86.5040	86.5040	0x124690	tokens1:025617b49a6c
-philai	?getTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960	tokens1:14092dad77f5
+philai	?getSkillValue@@YIJPBVhero@@W4TSecondarySkill@@E@Z	86.5040	86.5040	86.5040	0x124690	tokens1:3c84e8ca2ffb
+philai	?getTurnAIVars@philAI@@QAEXH@Z	97.8723	97.8723	97.8723	0x127960	tokens1:8f8c8044a65f
 philai	?getValueOfSpring@@YIJPBVhero@@PBVNewmapCell@@G@Z	100.0000	100.0000	100.0000	0x12b810	tokens1:b37c030714bd
 philai	?getValueOfWell@@YIJPBVhero@@G@Z	100.0000	100.0000	100.0000	0x12a510	tokens1:2a5d5e8035f3
 philai	?luckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80	tokens1:ef10e07752b8
@@ -3619,7 +3619,7 @@ rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule	100.0000	100.00
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSwampRule	100.0000	100.0000	100.0000	0x1b3c60	-
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgWaterRule	100.0000	100.0000	100.0000	0x1b3d60	-
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0	tokens1:67245d1e3527
-sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	100.0000	0x1654f0	tokens1:06d21bbe90b8
+sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	100.0000	0x1654f0	tokens1:4be6d30016d2
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0	tokens1:2485fecfa941
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	tokens1:dede5a341820
 sacrifice_window	??1type_transformer_slot@@UAE@XZ	100.0000	100.0000	100.0000	0x1654b0	-
@@ -3813,7 +3813,7 @@ seerhut	?save@type_creature_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	10
 seerhut	?save@type_defeat_hero_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16e5f0	tokens1:b8c34dabfe44
 seerhut	?save@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16d630	tokens1:3e718d76e1cf
 seerhut	?save@type_monster_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16ee20	tokens1:17011a401807
-seerhut	?save@type_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16cf70	tokens1:163508587fa7
+seerhut	?save@type_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16cf70	tokens1:956db4cb2310
 seerhut	?save@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171be0	tokens1:7c67a0cf1026
 seerhut	?save@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16dec0	tokens1:864a9c173199
 seerhut	?seerHutFn005741B0@TSeerHut@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1741b0	tokens1:0f5e9a48c1c1
@@ -4028,7 +4028,7 @@ singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNet
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:bf1a460a6489
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
-singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	85.9369	85.9369	93.0332	0x189710	tokens1:f52c80fc7d7e
+singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	85.9369	85.9369	93.0332	0x189710	tokens1:a603182dec18
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:3d37b3843298
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:dfdc0dd1eca7
 singleselectionwindow	?onNewPlayerMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.0807	99.0807	99.0807	0x189fa0	tokens1:838168a6ea1e
@@ -4569,7 +4569,7 @@ tradpost	?update@TBuyArtifactWindow@@QAEXE@Z	95.4601	95.4601	96.3889	0x1eb6a0	to
 tradpost	?update@TGiveResourceWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1eaf50	tokens1:8921a5cc1d19
 tradpost	?update@TSellArtifactWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ebe80	tokens1:d07d95ec1e25
 tradpost	?update@TSellCreatureWindow@@QAEX_N@Z	98.7947	98.7947	98.7947	0x1ec550	tokens1:91154c60055c
-tradpost	?update@TTradeResourceWindow@@QAEXE@Z	90.2166	90.2166	90.3876	0x1ea6e0	tokens1:3c559a6498cc
+tradpost	?update@TTradeResourceWindow@@QAEXE@Z	98.7280	98.7280	98.7280	0x1ea6e0	tokens1:d77e861b677b
 tradpost	?updateSellArtifactWidget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0	tokens1:4098b94ea55d
 tradpost	?windowHandler@TBuyArtifactWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	tokens1:e9e8888ce2fc
 tradpost	?windowHandler@TGiveResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	tokens1:38e667e0b51f
@@ -4784,10 +4784,10 @@ winmgr	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	1
 winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520	tokens1:749dcd930a7e
 winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0	tokens1:b1f11a38d949
 winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40	tokens1:3a644994fac8
-winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	90.8518	90.8518	90.8518	0x2032e0	tokens1:0cb98a90157c
+winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	90.8518	90.8518	90.8518	0x2032e0	tokens1:e45ca570444b
 winmgr	?fadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	tokens1:7798457daf06
-winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	90.5872	90.5872	90.5872	0x2030e0	tokens1:27e44c8e4e80
-winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	94.8392	94.8392	94.8392	0x202dc0	tokens1:7b14606e6941
+winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	90.5872	90.5872	90.5872	0x2030e0	tokens1:46080d584be3
+winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	94.8392	94.8392	94.8392	0x202dc0	tokens1:0ef93bcd16a4
 winmgr	?main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	tokens1:0baa2348f7dc
 winmgr	?open@heroWindowManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x2021b0	tokens1:50317853feb2
 winmgr	?releaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0	tokens1:8308343fbc6b

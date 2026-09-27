@@ -246,3 +246,12 @@ mac_offset = 0x4c97
 mac_size = 3
 sha256 = "a8e67ffbebdefe933162b435dc6a64f4a32e299ba550e8ad96b15215afdcdf7b"
 evidence = "Candidate @785 is the three-byte source literal '+3\\0' at a direct TOC addi xref +0x328 with the pinned MSL allocator constructor visible. Target body at 0xf9150 (+0x2a8) forms TOC 1+0x4c97, whose pinned bytes are 2b3300, for the fourth signed formatString argument."
+[[data]]
+retail_va = 0x00679c80
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x44b64
+mac_size = 4
+sha256 = "fcac34d659465c20a9de8ef14d723709eb41b87122e1eaa4c6b0f2f09ff425c9"
+evidence = "Mac calculateProduction loads TOC1+0xc18 -> reference cell1+0x44b64 at0xca98c. Its four-byte payload and loader relocation address the specialty array at1+0x43304. The hero loop dereferences that cell at0xcae5c, reads type+0/resource+4, advances row offset by0x28 at0xcaeb4 and stops after156 heroes at0xcaeb8. Ordinary hero.cpp owns the same const reference to156 forty-byte records at Windows DATA0x679c80; this external consumer binding preserves the indirection without claiming identical backing initializers."

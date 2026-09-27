@@ -742,7 +742,7 @@ int game::saveSignPool(TAbstractFile* outfile)
     char charBuffer;
 
     charBuffer = m_signs.size();
-    count = writeValue<char&>(outfile, charBuffer);
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
@@ -752,7 +752,7 @@ int game::saveSignPool(TAbstractFile* outfile)
             return -1;
 
         charBuffer = m_signs[x].m_hasText;
-        count = writeValue<char&>(outfile, charBuffer);
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
     }
@@ -2265,25 +2265,32 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)  // dc 0xa75d0
 int game::saveRumours(TAbstractFile* outfile)
 {
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
-        currentRumour(m_currentRumour);
-    int saveResult = saveString(outfile, currentRumour);
-    if (0 > saveResult)
+    int rumourListSize;
+    int count;
+    TRumour* rit;
+    std::string currentRumour(m_currentRumour);
+    char boolBuffer;
+
+    count = saveString(outfile, currentRumour);
+    if (count < 0)
         return -1;
 
-    if (outfile->write(m_rumourState, sizeof(m_rumourState)) < sizeof(int))
+    count = outfile->write(m_rumourState, sizeof(m_rumourState));
+    if (count < sizeof(int))
         return -1;
 
-    int rumourListSize = m_rumours.size();
-    if (writeValue<int>(outfile, rumourListSize)
-        < sizeof(rumourListSize))
+    rumourListSize = m_rumours.size();
+    count = writeScalar(outfile, rumourListSize);
+    if (count < sizeof(rumourListSize))
         return -1;
 
-    for (TRumour* rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
-        if (saveString(outfile, rit->m_text) < 0)
+    for (rit = m_rumours.begin(); rit != m_rumours.end(); ++rit) {
+        count = saveString(outfile, rit->m_text);
+        if (count < 0)
             return -1;
-        if (writeValue<unsigned char>(outfile, rit->m_unavailable)
-            < sizeof(unsigned char))
+        boolBuffer = rit->m_unavailable;
+        count = writeScalar(outfile, boolBuffer);
+        if (count < sizeof(boolBuffer))
             return -1;
     }
     return 1;
@@ -7297,7 +7304,6 @@ void game::perWeek()
 
     bonusCreature = CREATURE_NONE;
     alternateBonus = CREATURE_NONE;
-    i = 0;
 
     g_weekType = g_weekTypeNormal;
     g_weekTypeExtra = random(0, g_weekNameLast);
@@ -7306,6 +7312,9 @@ void game::perWeek()
     if (m_week != g_weeksPerMonth
         && random(1, g_specialWeekRollMax) == 1) {
         g_weekType = g_weekTypeCreature;
+        // Mac 0xdf54c starts the creature census here; the older DC body
+        // initializes i at entry. Both paths overwrite i before later uses.
+        i = 0;
 
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
@@ -7390,19 +7399,20 @@ void game::perWeek()
                     break;
 
                 case MONSTER: {
-                    if (!(mapCell->m_extraInfo & 0x40000)) {
-                        count = ((mapCell->m_extraInfo & 0xfff) << 4)
-                                + ((mapCell->m_extraInfo >> 27) & 0xf);
+                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                        static_cast<void*>(&mapCell->m_extraInfo));
+                    if (!info->m_monsterInfo.m_dontGrow) {
+                        count = (info->m_monsterInfo.m_qty << 4)
+                                + info->m_monsterInfo.m_unused27;
                         increase = count / 10;
                         count += increase;
                         if (count > 64000)
                             count = 64000;
-                        // Retail reloads the packed dword before replacing
-                        // its split count lanes.
-                        mapCell->m_extraInfo =
-                            ((count >> 4) & 0xfff)
-                            | ((count & 0xf) << 27)
-                            | (mapCell->m_extraInfo & 0x87fff000);
+                        // Windows reloads the packed dword between lanes;
+                        // Mac 0xdf93c..0xdf954 stores the same qty and high
+                        // nibble through the existing monster bitfields.
+                        info->m_monsterInfo.m_qty = count >> 4;
+                        info->m_monsterInfo.m_unused27 = count;
                     }
                     break;
                 }
@@ -7578,18 +7588,15 @@ void game::perMonth()
 // bitset retail rolls Random(0, -1) and walks off the end. Transcribed
 // faithfully.
 
-// Residual (92.6331%, unpinned): retail's 0x4d4ca0 dereference copies the
-// iterator's two words into a bitset::reference. VC6 instead expands that
-// helper here, retaining operator[]/set and shrinking the frame to 0x1c
-// (retail 0x24). The old pin gave 92.2308%, not an exact reconstruction.
-// std::fill with temporary/named iterator bounds gives 85.2781/85.2840% and
-// does not recover the retail expansion. This Complete-only range has no
-// direct statement counterpart in DC's older GetRandomMonster body.
-// Mac 0:0xdfed4 retains bitset_iterator<145>::operator* at 0xe026c in the
-// same call position as Windows retail's 0x4d4ca0 helper. The isolated O3
-// shape has the same 24 ordered direct calls as Mac retail, including all
-// 18 bitset::set calls, count, random, and test. The Windows difference is
-// VC6's call/expansion choice at this evidenced source helper boundary.
+// Retail retains the receiver-based iterator dereference at 0x4d4ca0.
+// Mac 0xe026c instead constructs the nested MSL bit reference from owner
+// and index; these have different ABIs and are not paired helper bodies.
+// The shared in-class dereference exposes that nested constructor to CW.
+// Native 0xdff14..0xdff6c constructs the end first, then adds CREATURE_PIXIE
+// to a zero-offset iterator; its fill loop reads a referenced false value.
+// Keep the canonical iterator and fill helpers. Windows currently retains
+// two extra inequality calls and one extra subscript call (84.75%); the
+// Complete range has no direct statement counterpart in the older DC body.
 VA(0x004c92c0, 0x202) MAC_ADDRESS(0x0dfed4, 0x398)  // anchor-global, dc 0xb4b58
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
@@ -7602,12 +7609,9 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     monsterOk.set();
 
     if (!m_gameVersion) {
-        bitset_iterator<CREATURE_CATAPULT> it;
-        it = bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
-        bitset_iterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
-        for (; it != end; ++it) {
-            *it = false;
-        }
+        std::fill(bitset_iterator<CREATURE_CATAPULT>(monsterOk) + CREATURE_PIXIE,
+                  bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_CATAPULT),
+                  false);
     } else {
         monsterOk[CREATURE_AZURE_DRAGON] = false;
         monsterOk[CREATURE_CRYSTAL_DRAGON] = false;

@@ -6472,7 +6472,7 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
     // The directory helper's shared char* signature predates recovery of
     // its native FSSpec return view; the pointer value is passed unchanged.
     MacFileAdapter file;
-    if (file.open(reinterpret_cast<const FSSpec*>(getHeaderDirectory()),
+    if (file.open(static_cast<const FSSpec*>(static_cast<const void*>(getHeaderDirectory())),
                   mapFileNameMsg->m_fileName, 0, 0, false) == 0)
 #else
     _chdir(getHeaderDirectory());
