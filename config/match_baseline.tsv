@@ -4530,7 +4530,7 @@ townmgr	?windowHandler@TMageGuildWindow@@UAEHAAVmessage@@@Z	97.3926	97.3926	97.3
 townmgr	?windowHandler@TShipWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d25a0	tokens1:1cc13f22aa13
 townmgr	?windowHandler@TTavernWindow@@UAEHAAVmessage@@@Z	88.2028	88.2028	89.7235	0x1d7b30	tokens1:89754215be23
 townmgr	?windowHandler@TThievesGuildWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c9930	tokens1:edc83f393794
-townmgr	?windowHandler@type_garrison_base_window@@MAEHAAVmessage@@@Z	96.6450	96.6450	96.6450	0x1d0910	tokens1:d5b3ef4d16a8
+townmgr	?windowHandler@type_garrison_base_window@@MAEHAAVmessage@@@Z	98.8000	98.8000	98.8000	0x1d0910	tokens1:d5b3ef4d16a8
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e3730	tokens1:3ce6c5260965
 tradpost	??0TGiveResourceWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e16c0	tokens1:04b90b8943bd
 tradpost	??0TSellArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e5730	tokens1:b3632aa3441e
