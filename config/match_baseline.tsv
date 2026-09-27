@@ -2056,7 +2056,7 @@ game	?read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	57.5232	57.5232	95.2598	0xc4
 game	?readHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0	tokens1:7de0f752df5f
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80	tokens1:022d7d70889d
 game	?readMapHeroSetups@game@@QAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc2ce0	tokens1:7f4733df1992
-game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	69.5258	69.5258	95.7136	0xc3ef0	tokens1:5e23933754b0
+game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	74.0587	74.0587	95.7136	0xc3ef0	tokens1:98faa9961f86
 game	?readString@NewSMapHeader@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010	tokens1:3a97ae5c7c5a
 game	?readVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3200	tokens1:e458f33858b8
 game	?receiveSaveGame@game@@QAEHHHHEE@Z	100.0000	100.0000	100.0000	0xcbd40	tokens1:48d5d1c5a8a3

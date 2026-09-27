@@ -5675,6 +5675,9 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // PC-only main-town fields occupy the eight-byte extension absent from the DC
 // record.  Player heroes are resized from a dword count after the separate
 // one-byte default-placeholder count; their ids use only 0xff as a sentinel.
+// Mac 0xdaa84 decodes the count once; 0xdaafc..0xdab08 increments an
+// independent index against it. Preserve that counted loop and the scalar
+// readers; counting the saved total down changes the Windows inline frontier.
 
 VA(0x004c3ef0, 0x498) MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
@@ -5689,7 +5692,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     } else {
         if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
             readValue<signed char>(infile);
-        m_legalAlignments = readValue<unsigned short>(infile);
+        m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
     }
 
     m_hasRandomAlignment = readValue<signed char>(infile) != 0;
@@ -5735,19 +5738,14 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 
     m_defaultPlaceholders = readValue<unsigned char>(infile);
 
-    int heroCount = readValue<int>(infile);
+    int heroCount = readLittleEndianValue<int>(infile);
     m_heroes.resize(heroCount);
-    if (heroCount > 0) {
-        int heroIndex = 0;
-        do {
-            // The version-14 return above makes readHeroId's legacy
-            // remapping unreachable here; Windows expands only its sentinel
-            // check, while Mac retains the call at 0xdaac0.
-            m_heroes[heroIndex].m_heroId = readHeroId(infile, mapVersion);
-            m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
-            ++heroIndex;
-            --heroCount;
-        } while (heroCount != 0);
+    for (int heroIndex = 0; heroIndex < heroCount; ++heroIndex) {
+        // The version-14 return above makes readHeroId's legacy
+        // remapping unreachable here; Windows expands only its sentinel
+        // check, while Mac retains the call at 0xdaac0.
+        m_heroes[heroIndex].m_heroId = readHeroId(infile, mapVersion);
+        m_heroes[heroIndex].m_name = readLengthPrefixedString(infile);
     }
 }
 
