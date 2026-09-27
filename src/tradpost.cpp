@@ -2507,14 +2507,10 @@ void TSellArtifactWindow::update(unsigned char update)
 // panels and slider, and, in a two-pane loop, each army slot (creature icon +
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
-// Residual (MAX 98.7947%, current 98.7522%): all 52 CFG blocks and every edge
-// agree (48 blocks exact, four size-only). Dreamcast records precisely the six
-// locals below and the SetWidgetOn/Off/Disabled boundaries; retain both facts.
-// why-reg measured 37 residual slots in the B1/B2 register-pressure class.
-// Unnaming widgetOff, naming either side-test, all three adjacent declaration
-// swaps and the plausible message-store swaps were byte-flat; the remaining
-// store reorders added 2--6 slots and volatile-local controls added 83--298.
-// There is no evidence-backed carrier for the last callee-save tie.
+// Mac 0x1f7d3c sets the icon message before the column split and 0x1f7dcc
+// repeats that store in the resource column. Windows retains the same repeat
+// before the resource-column broadcast; preserving it also restores the
+// shared constant register choice.
 VA(0x005ec550, 0x7ba) MAC_ADDRESS(0x1f7964, 0x7e0)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::update(bool update)
 {
@@ -2624,8 +2620,9 @@ void TSellCreatureWindow::update(bool update)
                                          "%d"),
                             g_rightAmount * g_giveQuantity);
             } else {
-                msg.m_extra = g_leftResource;
+                msg.m_codeX = 4;
                 msg.m_codeY = 11;
+                msg.m_extra = g_leftResource;
                 broadcastMessage(msg);
                 if (g_ratioInverted)
                     sprintf(g_text,
