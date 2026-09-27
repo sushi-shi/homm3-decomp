@@ -4833,10 +4833,11 @@ long type_statue_of_legion_artifact::getValue(
 // the scroll and three war-machine appraisals from the ordinary effect-vector
 // path; Dreamcast independently names the function, its four parameters and
 // const_artifact_effects. The current ordinary-C++ reconstruction has retail's
-// 28/28 branch stream and all eight returns. Residual (92.7585%) is confined to
-// first-aid temporary homes and the two effect-vector loop schedules; 42 of 55
-// CFG blocks are instruction-exact. An authentic inline first-aid helper was
-// tested and rejected (88.3639%).
+// 26/26 branch stream and all eight returns. Mac 0x38a68 retains the
+// selected effects row across its loop, and 0x38b30 retains the component
+// bitset across nested virtual calls. Ordinary references recover those
+// same Windows lifetimes, including the first-aid temporary homes: 100%.
+// Either reference alone is insufficient; the complete source model closes.
 // DC line 5578 calls hero::get_secondary_skill(20). Mac's ballista arm
 // expands it to the skill byte at hero+0xdd; retain the canonical typed call.
 // DC line 5620 calls the by-value max(int,int), and both first-aid arms in
@@ -4909,6 +4910,8 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
     }
     }
 
+    const std::vector<type_artifact_effect*>& effects =
+        g_constArtifactEffects[artifact.m_artifactId];
     signed char victoryType = g_game->m_mapHeader.m_victoryCondition.m_type;
     if ((victoryType == VICTORY_CONDITION_ARTIFACT
          || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT)
@@ -4920,15 +4923,17 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
     }
 
     for (unsigned int i = 0;
-         i < g_constArtifactEffects[artifact.m_artifactId].size(); ++i) {
-        value += g_constArtifactEffects[artifact.m_artifactId][i]->getValue(
+         i < effects.size(); ++i) {
+        value += effects[i]->getValue(
             owner, equipped, exact);
     }
 
     int combination = g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combination != -1) {
+        const std::bitset<144>& components =
+            g_combinationArtifacts[combination].m_components;
         for (int component = 0; component < 144; ++component) {
-            if (g_combinationArtifacts[combination].m_components[component]) {
+            if (components[component]) {
                 std::vector<type_artifact_effect*>::iterator effect =
                     g_constArtifactEffects[component].begin();
                 while (effect != g_constArtifactEffects[component].end()) {
