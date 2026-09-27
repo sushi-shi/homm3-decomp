@@ -1816,7 +1816,8 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 
 // DC records const numFrames; a conditional initializer preserves that lifetime.
 // Windows improves from 95.0344% to 98.2722%, with every helper retained.
-// The remaining differences are one missile-frame home and the scheduling of
+// The missile-frame output lives in the animation branch that consumes it;
+// this reproduces retail's -0x28 home. The remaining difference is scheduling
 // the int-to-double damage conversion around the retained reduction call.
 
 // Two shapes the bytes forced and that are worth not re-litigating:
@@ -1851,12 +1852,12 @@ void combatManager::keepAttack(int towerPos)
     int delay;
     int startX;
     int startY;
-    int missileFrame;
 
     if (!isQuickCombat()) {
         int destX = target->midX();
         const int destY = target->midY();
         archer->m_facing = destX >= archer->m_x;
+        int missileFrame;
         getMissileStartingPosition(archer->m_creatureType, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
                                    destY, archer->m_shadowSprite,

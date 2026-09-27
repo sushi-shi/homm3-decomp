@@ -77,3 +77,21 @@ mac_offset = 0x4510
 mac_size = 4
 sha256 = "51d4d5bbc213f5373660b7efe194963ed622f492821d049791880c830da51d20"
 evidence = "Mac shootMissile and shootAnimatedMissile load binary32 33.0 directly from TOC1+0x4510 at code0+0x7497c and0x74360. The source multiplies the selected combat speed by33.0f for the frame delay; the candidate emits these exact four bytes."
+
+[[data]]
+retail_va = 0x0067ff24
+source = "src/monframeinfo.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x4b430
+mac_size = 4
+sha256 = "1882379909d45636287b3a947694a5c419ec03df0d789e115e9f2026572b9444"
+evidence = "The source-owned DATA(0x67ff24) is g_monFrameInfo's reference cell to its 150-element SMonFrameInfo table. Windows keepAttack indexes this view by the archer creature type. Mac keepAttack at0x71a00/0x71a08 loads TOC1+0x894 -> reference cell1+0x4b430, then at0x71a20/0x71a28 indexes its loaded table base by the same creature ID with0x54-byte records. PEF relocations send the cell to zero-filled table1+0x528e80. The four-byte cell payload is00528e80; this consumer declaration binding does not claim an initializer."
+
+[[constants]]
+units = ["cmbtmgr"]
+mac_section = 1
+mac_offset = 0x3980d
+mac_size = 11
+sha256 = "128b0f2b79dcd78bc789b042f1aa363ef523ecfef240fc56c0c5567afb308362"
+evidence = "Mac keepAttack at0x71ac0 loads the format address through TOC1+0x20cc before its sprintf at0x71ad0. PEF bytes1+0x3980d contain %sshot.82m followed byNUL, identical to the source-owned DATA_COMPGEN(0x66ffa4) format and its emitted eleven-byte RW literal."
