@@ -1936,8 +1936,10 @@ VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map +
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
-        int top = g_overviewTop[g_overviewType];
+        // DC records iSlot; both retail bodies compute its quotient before
+        // looking up the current overview page's top row.
         int slot = (codeY - 200) / 200;
+        int top = g_overviewTop[g_overviewType];
         if (top + slot
                 > g_overviewItemCounts[g_overviewType])
             return;

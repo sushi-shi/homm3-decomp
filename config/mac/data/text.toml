@@ -10,3 +10,12 @@ mac_offset = 0x55036c
 mac_size = 928
 sha256 = "202115097d1bee389d4d4d81db00117252be97d5691af316941f3843ef7a05f5"
 evidence = "Text owns 232 initially null const-char pointers for quick-view object names, 928 bytes with both compilers' four-byte pointers. Mac readMapObjects loads loader TOC1+0x6dc -> zero storage1+0x55036c at code0+0x1272a0, then indexes it by object-type*4 at0x127624..0x127628 when formatting its invalid-object warning. The ordinary source definition and pointer-to-const type remain unchanged; actual owner UDATA and external consumer TOC references are checked separately."
+[[data]]
+retail_va = 0x006a53d4
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x550054
+mac_size = 440
+sha256 = "360d579dbd14759b41afdf7fb5e80c0101e15150ae401d59f92a1e32d129f7cb"
+evidence = "text.cpp owns Windows g_specialBuildingNames[10][11] at 0x6a53d4. Native overview doRollover loads TOC 1+0x984 -> zero-filled table 1+0x550054 into r9 at 0x13a024, then uses first faction entries zero and three at 0x13ab24 and 0x13ab78 for the same special-building rollover cases. This binds external storage only; the loader initializes the pointer table later."
