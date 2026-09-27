@@ -2865,69 +2865,48 @@ DATA(0x006aa820) char g_infoText[400];
 // Its 0x84-byte object has owners[8] and the resource bar, without those
 // pagination arrays; windowHandler has no arrow-selection arms.
 
-// Residual (94.18%): the register-homing family plus the compressed-switch
-// encoding, and why-branch finds no source-addressable lever (all D9 case-order
-// mutations are byte-flat). The block SHAPE now matches retail (168 instrs both
-// sides); what remains is scratch-register choice that cascades from a handful
-// of independent VC6 scheduling decisions: rank3 loads its format into eax vs
-// retail's edx; the hero arm loads gpGame before the heroId*1170 scale where
-// retail loads it after; the creature arm computes the row (codeY-0x352) into a
-// fresh reg before the column load where retail repurposes eax for the row
-// after reading the column; and the tail's vtable load lands in eax vs retail's
-// edx, rotating the UpdateScreen argument regs. Named locals (col) and the
-// eval-order rewrites that fixed the block layout do not move the register
-// choice. The two jump-table dispatch instructions also differ only in whether
-// the table offset rides the displacement (retail) or the self-reloc (ours) -
-// the delinker folds the table into the function symbol, VC6 emits a $L label.
-// DC's GetHero and text-resource index calls are restored and VC6 byte-flat.
-// Its GetArmyName call in the creature arm changes the Windows CFG and drops
-// this row to 89.80%; Complete's explicit range/trait path is retained.
+// Mac 0x1c2bc0..0x1c2cd8 keeps the case bodies in source order: hero,
+// creature, four stat rows, exit and default. Its creature arm expands the
+// canonical getArmyName range check and plural lookup. The single switch
+// plus that helper reproduces Windows exactly; restoring only the helper
+// inside the old manually split dispatch does not.
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F) MAC_ADDRESS(0x1c2b20, 0x230)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
 void TThievesGuildWindow::setRolloverText(int codeY)
 {
-    if (codeY <= 37) {
-        if (codeY < 30) {
-            switch (codeY) {
-            case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
-            case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
-                sprintf(g_text, g_statNames[0]);
-                break;
-            case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
-            case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
-                sprintf(g_text, g_statNames[1]);
-                break;
-            case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
-            case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
-                sprintf(g_text, g_statNames[2]);
-                break;
-            default:
-                strcpy(g_text, "");
-                break;
-            }
-        } else {
-            sprintf(g_text, g_statNames[3]);
-        }
-    } else if (codeY <= 0x359) {
-        if (codeY < 0x352) {
-            if (codeY >= 0x2ee && codeY <= 0x2f5) {
-                int heroId = g_heroWidgetMap[codeY - HERO_P0];
-                hero* h = g_game->getHero(heroId);
-                strcpy(g_text, h->m_name);
-            } else {
-                strcpy(g_text, "");
-            }
-        } else {
-            int slot = g_creatureArmies[codeY - 0x352].m_armies[g_creatureWidgetMap1[codeY - CREATURE_P0]];
-            if (slot >= 0 && slot <= 0x96)
-                strcpy(g_text, g_creatureTypeTraits[slot].m_pluralName);
-            else
-                strcpy(g_text, "");
-        }
-    } else if (codeY != EXIT_BUTTON_ID) {
-        strcpy(g_text, "");
-    } else {
+    switch (codeY) {
+    case HERO_P0: case HERO_P1: case HERO_P2: case HERO_P3:
+    case HERO_P4: case HERO_P5: case HERO_P6: case HERO_P7:
+        strcpy(g_text, g_game->getHero(g_heroWidgetMap[codeY - HERO_P0])->m_name);
+        break;
+    case CREATURE_P0: case CREATURE_P1: case CREATURE_P2: case CREATURE_P3:
+    case CREATURE_P4: case CREATURE_P5: case CREATURE_P6: case CREATURE_P7:
+        strcpy(g_text, getArmyName(
+            g_creatureArmies[codeY - CREATURE_P0].m_armies[
+                g_creatureWidgetMap1[codeY - CREATURE_P0]], 2));
+        break;
+    case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
+    case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
+        sprintf(g_text, g_statNames[0]);
+        break;
+    case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
+    case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
+        sprintf(g_text, g_statNames[1]);
+        break;
+    case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
+    case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
+        sprintf(g_text, g_statNames[2]);
+        break;
+    case RANK_D0: case RANK_D1: case RANK_D2: case RANK_D3:
+    case RANK_D4: case RANK_D5: case RANK_D6: case RANK_D7:
+        sprintf(g_text, g_statNames[3]);
+        break;
+    case EXIT_BUTTON_ID:
         strcpy(g_text, (*g_generalText)[GENERAL_TEXT_EXIT]);
+        break;
+    default:
+        strcpy(g_text, "");
+        break;
     }
 
     message textMessage;
@@ -5923,6 +5902,8 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // logic: Complete retains a call to canEverBuild, which also checks dock,
 // capitol and hierarchy conditions.
 
+// Mac 0x1d33dc resets the line start after the heading; retaining that
+// assignment also recovers Windows' complete formatter at 0x5d5be0.
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C) MAC_ADDRESS(0x1d3224, 0x380)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
 void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
@@ -5949,6 +5930,7 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
             if (count == 0) {
                 strcpy(g_text, (*g_generalText)[GENERAL_TEXT_REQUIRES]);
                 strcat(g_text, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
+                lineStart = g_text;
             } else {
                 strcat(g_text, DATA_COMPGEN(0x00660db4, commaText, ","));
                 if (currentFont->getStringWidth(lineStart) > m_rolloverText->m_width) {
@@ -5972,7 +5954,8 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
             m_rolloverText->setText(g_hallInfo[0]);
             return;
         }
-    } else if (building == DOCK_ID) {
+    }
+    if (building == DOCK_ID) {
         if (!g_townManager->m_townToView->canBuildDock()) {
             m_rolloverText->setText(g_hallInfo[1]);
             return;

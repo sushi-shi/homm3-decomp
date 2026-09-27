@@ -1741,7 +1741,7 @@ events	?monstersFight@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	
 events	?monstersFlee@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0	tokens1:03fb1495e96e
 events	?monstersGiveReward@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6b30	tokens1:3504f30d45c0
 events	?monstersJoin@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000	tokens1:5a3d91531a51
-events	?monstersSellOut@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250	tokens1:56c6811ef08b
+events	?monstersSellOut@advManager@@AAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250	tokens1:56c6811ef08b
 events	?payForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50	tokens1:8d14cb5c61a5
 events	?read@CCombatInitMsg@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xad1f0	tokens1:b8c6d0c86fea
 events	?receiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHAAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	100.0000	100.0000	100.0000	0xaeee0	tokens1:79e9d94b9279
@@ -4505,13 +4505,13 @@ townmgr	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z	87.7078	87.7078	88.5
 townmgr	?setCommandAndText@townManager@@QAEXPAVmessage@@@Z	99.0300	99.0300	99.0300	0x1c77a0	tokens1:629d62f9c0fd
 townmgr	?setCommandAndText@type_garrison_base_window@@IAEXPAVmessage@@@Z	98.8384	98.8384	98.8384	0x1d05f0	tokens1:0d599e3d5a10
 townmgr	?setHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250	tokens1:af36c26ea9d4
-townmgr	?setPrerequisiteText@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0	tokens1:57be92cd9b9f
+townmgr	?setPrerequisiteText@TBuyBuildWindow@@QAEXPBVtown@@H@Z	100.0000	100.0000	100.0000	0x1d5be0	tokens1:62062d7e40a0
 townmgr	?setRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0	tokens1:f1b1608ff8d1
 townmgr	?setRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60	tokens1:9ec3fdb3a090
 townmgr	?setRolloverText@TCastleWindow@@AAEXPAVmessage@@@Z	97.7688	97.7688	97.7688	0x1dcbf0	tokens1:3c9cdd4d861f
 townmgr	?setRolloverText@TMageGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ce1c0	tokens1:6924f2ba231d
 townmgr	?setRolloverText@TTavernWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d7920	tokens1:ee3b081d015a
-townmgr	?setRolloverText@TThievesGuildWindow@@QAEXH@Z	96.7857	96.7857	96.7857	0x1c9710	tokens1:1b930cd46d8d
+townmgr	?setRolloverText@TThievesGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1c9710	tokens1:bb1a351c81d5
 townmgr	?setupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0	tokens1:6120db6b71ee
 townmgr	?setupMage@townManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1d6ef0	tokens1:4683f38cbe85
 townmgr	?setupThievesGuild@TThievesGuildWindow@@QAEXH@Z	93.4223	93.4223	95.5153	0x1dda10	tokens1:645210a19e34
