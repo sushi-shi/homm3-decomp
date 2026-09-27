@@ -1033,6 +1033,7 @@ int CChatEdit::onKeyPress(message* msg)
             return onEnter(*msg);
         case KEYCODE_ESCAPE:
             return onEscape(*msg);
+#if defined(HOMM3_TARGET_MAC)
         case KEYCODE_F1:
             return onFunctionKey(*msg, 0);
         case KEYCODE_F2:
@@ -1049,6 +1050,19 @@ int CChatEdit::onKeyPress(message* msg)
             return onFunctionKey(*msg, 6);
         case KEYCODE_F8:
             return onFunctionKey(*msg, 7);
+#else
+        // Windows and Dreamcast's contiguous F-key scan codes permit one
+        // recipient computation; Classic Mac's native codes above are sparse.
+        case KEYCODE_F1:
+        case KEYCODE_F2:
+        case KEYCODE_F3:
+        case KEYCODE_F4:
+        case KEYCODE_F5:
+        case KEYCODE_F6:
+        case KEYCODE_F7:
+        case KEYCODE_F8:
+            return onFunctionKey(*msg, key - KEYCODE_F1);
+#endif
     }
 
     int result = textEntryWidget::onKeyPress(msg);
