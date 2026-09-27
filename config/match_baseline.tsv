@@ -4632,7 +4632,7 @@ victor_pcx_kernels	?victorUnpackFourPlanes@@YAXPAEPBEHH@Z	100.0000	100.0000	100.
 victorylossconditions	?appliesToPlayer@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0	tokens1:e3386a8c7960
 victorylossconditions	?checkForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860	tokens1:c690b871c2f0
 victorylossconditions	?checkForArtifactWin@VictoryConditionStruct@@QAEEXZ	86.1101	86.1101	100.0000	0x1f1610	tokens1:88f7fddb2289
-victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	tokens1:e1832f315cbf
+victorylossconditions	?checkForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	82.0170	82.0170	82.0170	0x1f2a40	tokens1:af7c11e4193e
 victorylossconditions	?checkForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390	tokens1:78696b1d4c80
 victorylossconditions	?checkForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	99.8429	99.8429	100.0000	0x1f2e40	tokens1:6f4fb69ab4ab
 victorylossconditions	?checkForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600	tokens1:1f9a93765f5b
