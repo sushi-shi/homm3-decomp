@@ -4795,8 +4795,11 @@ static int waitHandler(message& msg)
 // by-value argument is built.
 // DC records the page index as long i; Mac 0x1194d8 advances it separately
 // from the eight-icon slot index. This restores the named local without a
-// VC6 byte change. Mac byte comparison awaits the MSL string constructor
-// relocation used by this body's TNormalDialogInfo construction.
+// VC6 byte change. Complete publishes timeout before the geometry:
+// native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
+// The same shared order is exact in both VC6 and CodeWarrior (596 Mac bytes).
+// The implicit icon and string copy identities remain ordinary generated
+// members; no authored constructor or helper call is substituted.
 VA(0x004f7690, 0x312) MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list, dc 0xe6cf0
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
@@ -4811,6 +4814,7 @@ void extendedDialog(const char* text,
 
         TNormalDialogInfo dialogInfo;
         dialogInfo.m_dialogText = text;
+        dialogInfo.m_timeout = timeout;
         dialogInfo.m_x = x;
         dialogInfo.m_y = y;
         dialogInfo.m_width = 256;
@@ -4819,7 +4823,6 @@ void extendedDialog(const char* text,
         dialogInfo.m_textWidgetY = 30;
         dialogInfo.m_mbType = NORMAL_DIALOG_DEFAULT;
         dialogInfo.m_special = -1;
-        dialogInfo.m_timeout = timeout;
 
         int icon;
         for (icon = 0; icon < count; ++icon) {
