@@ -6453,31 +6453,39 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 // E:\gamedcs\singleselectionwindow.cpp:6723
 // DC's body is a ten-byte return-1 stub (6723, 6769, 6770), so the
 // Windows transfer path is reconstructed from retail, not missing DC text.
-// Retail reuses the request-message slot at ebp-0x2c across both failure
-// arms. Making the missing-file arm an else removes the extra 0x1c slot
-// and raises 90.2193% to 90.31%. The assignment pin remains debt: direct
-// unpinned assignment with sibling scopes gives 71.50%; a shared final
-// return gives 67.06%, and a positive receiving guard gives 71.53%.
-// Moving the typed message binding to entry is byte-flat. The residual
-// includes the third operator= expansion, CNetMsg construction and
-// SavedGameHeader cleanup; the constructor's DC 605..608 has no missing
-// initialization to justify synthetic budget mass.
+// Windows reuses the request-message slot across both failure arms. The
+// shared transfer body now compiles for Mac using its evidenced fork adapter
+// and fourteen-byte DateTimeRec; Windows keeps its eight-byte FILETIME.
+// The native comparison currently retains SGameSetupOptions assignments
+// that retail expands, and splits the file-adapter destructor over two exits.
+// Those helper/lifetime frontiers remain explicit; no exact Mac claim is made.
 VA(0x00589710, 0x40F) MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
-#ifdef _WINDOWS
     if (m_headersA.size() == 0)
         return 1;
     if (!m_receivingMaps)
         return 1;
-    _chdir(getHeaderDirectory());
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
-    if (_access(mapFileNameMsg->m_fileName, 0) == 0) {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x180c68..0x180c98 opens through the native fork adapter.
+    // The directory helper's shared char* signature predates recovery of
+    // its native FSSpec return view; the pointer value is passed unchanged.
+    MacFileAdapter file;
+    if (file.open(reinterpret_cast<const FSSpec*>(getHeaderDirectory()),
+                  mapFileNameMsg->m_fileName, 0, 0, false) == 0)
+#else
+    _chdir(getHeaderDirectory());
+    if (_access(mapFileNameMsg->m_fileName, 0) == 0)
+#endif
+    {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         GameSelectionHeadersStruct temp;
         getHeader(getHeaderDirectory(),
                   mapFileNameMsg->m_fileName, &temp);
-        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, 8) == 0) {
+        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, sizeof(FileTime)) == 0) {
             memcpy(temp.m_setup.m_alignment, mapFileNameMsg->m_townTypes,
                    sizeof(mapFileNameMsg->m_townTypes));
             if (mapFileNameMsg->m_flag)
@@ -6504,13 +6512,13 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
         }
         return 1;
     } else {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
         transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         return 1;
     }
-#endif
-    return 1;
 }
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
