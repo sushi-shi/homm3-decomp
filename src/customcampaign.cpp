@@ -1328,9 +1328,11 @@ void SCampaign::doPreLoadCustomization()
 // guarded west-adjacent TOWN test, and the final hero-id value lifetime.
 // Native binds the campaign base before the hero stores, and its final
 // append retains the four-byte non-POD hero-ID vector operation. Preserve
-// that typed local and ordinary source call; no trait override is needed.
-// The custom-name assignment still lacks retail's out-of-line _Eos;
-// spelling it as string::assign is byte-flat at 94.5908%.
+// that enum-valued append and its call-scoped temporary. Mac 0x94740
+// constructs an artifact from ARTIFACT_NONE inside each fill iteration;
+// a preconstructed artifact extends the wrong temporary lifetime. Mac
+// 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
+// These lifetimes and ordering reproduce all Windows instructions (100%).
 VA(0x00486590, 0xA84) MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
@@ -1360,7 +1362,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         type_artifact savedArtifacts[g_crossoverPrimaryArtifactSlots];
         std::fill(savedArtifacts,
                   savedArtifacts + g_crossoverPrimaryArtifactSlots,
-                  type_artifact());
+                  ARTIFACT_NONE);
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
             type_artifact artifact = currentHero->getArtifact(TArtifactSlot(slot));
@@ -1506,8 +1508,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     currentHero->m_sex = sourceHero->m_sex;
     if (sourceHero->m_hasCustomName) {
+        const char* customName = sourceHero->heroFn004D8FB0();
         currentHero->m_hasCustomName = 1;
-        currentHero->m_customName = sourceHero->heroFn004D8FB0();
+        currentHero->m_customName = customName;
     }
 
     currentHero->m_mana = static_cast<short>(currentHero->getMaxMana());
@@ -1530,8 +1533,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    HeroId heroId = H3_ENUM_DECODE(HeroId, currentHero->m_id);
-    g_game->m_campaign.m_assignedCarryover.push_back(heroId);
+    g_game->m_campaign.m_assignedCarryover.push_back(
+        H3_ENUM_DECODE(HeroId, currentHero->m_id));
 }
 
 // Mac retains this artifact offer at code 0:0x951b0. Its only caller passes
