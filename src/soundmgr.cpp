@@ -162,6 +162,8 @@ void soundManager::initializeSamples()
 // the guarded infinite loop retains the stronger 94.32% comparison.
 // Separate initial/bottom guards in a do/while score 91.79%; a failure-first
 // nested preference arm scores 77.34%. Neither restores the shared tail.
+// A direct-call condition plus while(1) scores 82.85%; the SDK S32 result
+// local is byte-flat. Keep the measured loop and named status lifetime.
 VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
