@@ -1267,15 +1267,12 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // Dreamcast proves the two source locals and the get/view/remove/equip/
 // Update/SetPointer/Reset helper order. Complete retains that shared shape
 // and adds combination-artifact handling plus the campaign scenario guard.
-// The remaining 93.42% plateau is a layout wall in the Complete-only half:
-// candidate and retail both have 322 instructions, 56 blocks, 36 branches,
-// eight returns, and identical symbolic branch targets, but VC6 chooses the
-// opposite physical copy of the shared GetText(22)/NormalDialog return tail.
-// why-branch finds no applicable source mutation and why-reg's model finds no
-// binding divergence; restoring CanModHero's older direct returns is the
-// negative control and lowers this caller to 87.81%.
-// An explicit right-click/forbidden-slot/canModHero else-if action ladder
-// is byte-flat in both compilers and does not change the shared tail choice.
+// Windows closes from 93.4161% to 100% when the spellbook warning has
+// an explicit else for the remaining right-click actions, followed by the
+// shared right-click return. This selects retail's physical warning tail
+// without flattening any helper. Mac retains both viewArtifact calls at
+// 0x1a735c/0x1a7370; merging those into one source call is a separate control,
+// not the recovered branch model. A broader outer action ladder was flat.
 // DC lines 1118/1124 use TTextResource::operator[] for the two trade
 // warnings; those calls are restored and VC6 byte-flat.
 VA(0x005af590, 0x3F7) MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body, dc 0x15d150
@@ -1294,41 +1291,40 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
             if (oldArtifact.m_artifactId == ARTIFACT_SPELLBOOK) {
                 normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 4, -1, 28,
                              -1, 0, -1, 0, -1, 0, -1, 0);
-                return;
-            }
-
-            if (g_game->m_gameVersion >= 2) {
-                int targetCombo =
-                    g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
-                if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
-                    != -1) {
-                    if (ourHero->heroFn004D9B30(
-                            oldArtifact.m_artifactId)
-                        == DIALOG_RETURN_ACCEPT) {
-                        ourHero->heroFn004DC070(slot);
-                        this->update();
-                        drawSwapWin();
+            } else {
+                if (g_game->m_gameVersion >= 2) {
+                    int targetCombo =
+                        g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
+                    if (g_artifactTraits[oldArtifact.m_artifactId].m_comboType
+                        != -1) {
+                        if (ourHero->heroFn004D9B30(
+                                oldArtifact.m_artifactId)
+                            == DIALOG_RETURN_ACCEPT) {
+                            ourHero->heroFn004DC070(slot);
+                            this->update();
+                            drawSwapWin();
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                if (targetCombo != -1
-                    && ourHero->heroFn004DBE80(targetCombo)) {
-                    if (ourHero->heroFn004D9CC0(
-                            oldArtifact.m_artifactId)
-                        == DIALOG_RETURN_ACCEPT) {
-                        ourHero->heroFn004DBF30(targetCombo, slot);
-                        this->update();
-                        drawSwapWin();
+                    if (targetCombo != -1
+                        && ourHero->heroFn004DBE80(targetCombo)) {
+                        if (ourHero->heroFn004D9CC0(
+                                oldArtifact.m_artifactId)
+                            == DIALOG_RETURN_ACCEPT) {
+                            ourHero->heroFn004DBF30(targetCombo, slot);
+                            this->update();
+                            drawSwapWin();
+                        }
+                        return;
                     }
+
+                    ourHero->viewArtifact(&oldArtifact, rightClick);
                     return;
                 }
 
                 ourHero->viewArtifact(&oldArtifact, rightClick);
-                return;
             }
-
-            ourHero->viewArtifact(&oldArtifact, rightClick);
             return;
         }
 

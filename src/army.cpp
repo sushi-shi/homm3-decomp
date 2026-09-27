@@ -228,7 +228,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
 {
     initClean();
-    memcpy(&m_creatureType, &type, sizeof(m_creatureType));
+    m_creatureType = type;
     m_numTroops = number;
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
@@ -641,6 +641,11 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 VA(0x0043e140, 0x8C0) MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global, dc 0x444a8
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
+    // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
+    // Restoring the latter four local types is Windows byte-flat at 99.18%.
+    // Delaying the step initializer until after facing selection is worse.
+    int powX;
+    int powY;
     if (g_combatManager->m_battleOver != 0)
         return;
     if (static_cast<const combatManager*>(g_combatManager)
@@ -650,7 +655,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     y += m_ySpecialMod;
     x += m_xSpecialMod;
     if (m_currFrameType == cs_walk && !is(creatureFlyingArmy)) {
-        long frames = m_stdIcon->getNumFrames(0);
+        int frames = m_stdIcon->getNumFrames(0);
         long stepY = m_currFrameIndex * 42 / frames;
         long stepX = m_currFrameIndex * 44 / frames;
         switch (m_walkDirection) {
@@ -692,7 +697,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     }
 
     if (numBoxOnly == 0) {
-        long highlight = 0;
+        int highlight = 0;
         if (g_combatManager->m_highlighterOn != 0
             && m_gridIndex == g_combatManager->m_highlighterIndex)
             highlight = 0x70;
@@ -730,7 +735,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             restore = 1;
         }
 
-        long drawX =
+        int drawX =
             m_facing == 0 ? x - m_stdIcon->getWidth() + 196 : x - 196;
         long drawY = y - 267;
         g_combatManager->drawCreature(
@@ -745,7 +750,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
         || (!is(creatureImmobilized) && !is(creatureSiegeWeapon) && !m_isMoving
             && (m_currFrameType == cs_wait
                 || m_currFrameType == cs_fidget))) {
-        long step = 1;
+        int step = 1;
         long xoff;
         int yoff;
         if (m_facing == 0) {
@@ -809,38 +814,36 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             // time read back unsigned for the >>8 below).
             x = g_spellEffectTraits[g_combatManager->m_powSpellEffect]
                     .m_flags;
-            long ex;
-            long ey;
             switch (x & 0xf) {
             case SPELL_EFFECT_PLACE_OVERHEAD:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = bottomY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = bottomY() - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_CENTERED:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             case SPELL_EFFECT_PLACE_ABOVE:
-                ex = midX() - g_combatManager->m_powSprite->getWidth() / 2;
-                ey = topY() - g_combatManager->m_powSprite->getHeight();
+                powX = midX() - g_combatManager->m_powSprite->getWidth() / 2;
+                powY = topY() - g_combatManager->m_powSprite->getHeight();
                 break;
             case SPELL_EFFECT_PLACE_FLANK:
-                ex = frontX();
+                powX = frontX();
                 if (m_facing == 0)
-                    ex -= g_combatManager->m_powSprite->getWidth();
-                ey = midY() - g_combatManager->m_powSprite->getHeight() / 2;
+                    powX -= g_combatManager->m_powSprite->getWidth();
+                powY = midY() - g_combatManager->m_powSprite->getHeight() / 2;
                 break;
             default:
                 // Faithful artifact: the fallback aims BOTH coordinates
                 // at the recycled x slot (retail reads [ebp+8] twice -
                 // the second read is not y).
-                ex = x;
-                ey = x;
+                powX = x;
+                powY = x;
                 break;
             }
             g_combatManager->drawSpellEffect(
                 g_combatManager->m_powSprite,
-                g_combatManager->m_powFrameIndex, ex, ey, m_facing == 0,
+                g_combatManager->m_powFrameIndex, powX, powY, m_facing == 0,
                 (static_cast<unsigned long>(x) >> 8) & 1);
         }
     }
@@ -1097,19 +1100,14 @@ void army::walk(int direction, unsigned char endWalk,
 // the update rect seeded from gCombatAreaLimits, clamped to
 // gCombatDrawLimits694f18, stepped dx/nframes at a
 // gCombatSpeedFactors-scaled 33ms beat. The /GX frame covers `saved`.
-// Residual (93.1695%): a two-slot rotation and its ripple - retail
-// homes startY at -0x30 and targetY at -0x34 (missile_frame -0x58)
-// where ours swaps the pair, and the GetMissileStartingPosition
-// argument schedule moves with it; a declaration reorder is
-// byte-inert. The EH-prologue push, the combatSpeed reloc addend and
-// the bolt-table displacements are the documented masked cosmetics
-// (PlayAnimation, EXACT, carries the identical combatSpeed read).
-// DC type/source audit (2026-08-21): its destX, total-frame count and
-// per-frame addX/addY locals are `int`, and ARROW_PERIOD is `const int`.
-// Restoring those types, plus the symmetric targetY type, is byte-flat at
-// 93.169495%. Conventional release VERIFY is also byte-flat both at entry
-// (`armyToAttack != 0`) and immediately before the rotated argument set
-// (`missileIcon != 0`). The slot swap is therefore not a missing invariant.
+// DC lines 1258/1259 read sprite width/height before the frame count at 1262.
+// Both Windows and Mac use (distance + 20) / 40 (signed multiply-high
+// 0x66666667 followed by a shift of 4), not the earlier /20 reconstruction.
+// DC line 1322 calls the Bitmap16Bit overload of CSprite::Draw; its ordinary
+// wrapper reproduces Windows' argument expansion. These three corrections
+// reach Windows 100% while retaining all bitmap and rectangle helpers.
+// The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
+// also retain Windows 100%; keep their accessors nested in those helpers.
 VA(0x0043f2c0, 0x63B) MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket, dc 0x453c8
 void army::animateMissile(army* armyToAttack)
 {
@@ -1180,7 +1178,10 @@ void army::animateMissile(army* armyToAttack)
         return;
     }
 
-    int nframes = (arrowtraveldist + 20) / 20;
+    int width = m_missileIcon->getWidth();
+    int height = m_missileIcon->getHeight();
+
+    int nframes = (arrowtraveldist + 20) / 40;
     int stepX;
     int stepY;
     if (nframes > 0) {
@@ -1190,8 +1191,6 @@ void army::animateMissile(army* armyToAttack)
         stepX = deltaX;
         stepY = deltaY;
     }
-    int width = m_missileIcon->getWidth();
-    int height = m_missileIcon->getHeight();
     int x = startX - width / 2;
     int y = startY - height / 2;
 
@@ -1207,26 +1206,16 @@ void army::animateMissile(army* armyToAttack)
                 GameTime::get() + missileperiod;
             if (frame != 0) {
                 saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch(), false);
+                           g_windowManager->m_screenBitmap, x, y, false);
                 // Mac 0x4b3f4 constructs and copies the rectangle value.
                 updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
                 x += stepX;
                 y += stepY;
             }
-            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch());
-            bool flipped = targetX < startX;
+            saved.grab(g_windowManager->m_screenBitmap, x, y);
             m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
-                              g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                              g_windowManager->m_screenBitmap->getWidth(),
-                              g_windowManager->m_screenBitmap->getHeight(),
-                              g_windowManager->m_screenBitmap->getPitch(),
-                              flipped, 1);
+                              g_windowManager->m_screenBitmap, x, y,
+                              targetX < startX, 1);
             // DC army.cpp:1326-1327 constructs this rectangle, then calls
             // SLimitData::Include and Clip; VC6 expands both methods.
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
@@ -1238,10 +1227,7 @@ void army::animateMissile(army* armyToAttack)
             GameTime::delayTil(nextFrameTime);
         }
     }
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->getMap(0, 0),
-               x, y, g_windowManager->m_screenBitmap->getWidth(),
-               g_windowManager->m_screenBitmap->getHeight(),
-               g_windowManager->m_screenBitmap->getPitch(), false);
+    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, width, height);
 }
 
@@ -1265,8 +1251,9 @@ void army::animateMissile(army* armyToAttack)
 // assigned under `if (a)`, so an armyless hex adds the PREVIOUS
 // iteration's values into the totals.
 
-// What is genuinely left is the first shape, and the frame still says so
-// (0x24 against retail's 0x20).
+// DC1434/1435 clears the selected target before the Magog message. Reusing
+// first, as in the Lich arm, restores Windows100%; a separate reported alias
+// prevents the native branch/load arrangement. All canonical helpers remain.
 
 VA(0x0043f900, 0x7F9) MAC_ADDRESS(0x04b62c, 0x6e4)  // dc-bracket forced, dc 0x458a0
 void army::rangeAttack(army* armyToAttack)
@@ -1299,7 +1286,7 @@ void army::rangeAttack(army* armyToAttack)
             spr->dispose();
         }
         g_combatManager->clearEffects();
-        long killed = 0;
+        int killed = 0;
         long damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
@@ -1319,7 +1306,7 @@ void army::rangeAttack(army* armyToAttack)
             // AHEAD of the `movsx ebx,al` that reuses the already-tested
             // armySide byte.  Worth +2.08 here and +2.32 in the Lich loop
             // below.
-            long slot = cell->m_armySlot;
+            const int slot = cell->m_armySlot;
             long side = cell->m_armySide;
             army* a = cell->getArmy();
             if (g_combatManager->m_effected[side][slot] != 0)
@@ -1334,11 +1321,10 @@ void army::rangeAttack(army* armyToAttack)
             killed += killedNow;
         }
         if (damage > 0) {
-            army* reported = first;
             if (multiple)
-                reported = 0;
+                first = 0;
             g_combatManager->damageMessage(getName(),
-                                            m_numTroops, damage, reported,
+                                            m_numTroops, damage, first,
                                             killed);
             g_combatManager->powEffect(effect, 1);
         }
@@ -1364,8 +1350,8 @@ void army::rangeAttack(army* armyToAttack)
             spr->dispose();
         }
         g_combatManager->clearEffects();
-        long killed = 0;
-        long damage = 0;
+        int killed = 0;
+        int damage = 0;
         army* first = 0;
         unsigned char multiple = 0;
         int dmg;
@@ -1379,8 +1365,8 @@ void army::rangeAttack(army* armyToAttack)
             hexcell* cell = &g_combatManager->m_cells[hex];
             if (!g_combatManager->validHex(hex) || !cell->hasArmy())
                 continue;
-            long slot = cell->m_armySlot;
-            long side = cell->m_armySide;
+            const int slot = cell->m_armySlot;
+            const int side = cell->m_armySide;
             army* a = cell->getArmy();
             if (i != COMBAT_DIRECTION_COUNT && !a->is(creatureAlive))
                 continue;
@@ -1684,6 +1670,11 @@ void army::doFireShield(long damageAmount)
 // is now a four-byte frame difference plus nested GetName/GetArmyName inline
 // selection. Dreamcast's later Rust-message rows are not carried into
 // Complete: retail's relocation/call multiset directly rejects them.
+// Native Windows forms the missing troop count before the first min, then
+// multiplies by HP for the second min (DC1907/1909/1912). Keeping that
+// count rather than an early missing-life product improves 97.08 -> 98.49%.
+// Separating Thunderbird base damage from ModifySpellDamage (DC2006/2011)
+// restores the remaining source lifetime and reaches Windows100%.
 VA(0x00440bc0, 0xA41) MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global, dc 0x46658
 void army::doPostAttack(army* target, int attackDamage, int killedCount,
                           int totalLife)
@@ -1692,10 +1683,10 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
     case CREATURE_VAMPIRE_LORD:
         if (target->is(creatureAlive)) {
             long deadVampires = 0;
-            long missingLife =
-                m_monInfo.m_hitPoints * (m_origNumTroops - m_numTroops) + m_topCreatureDamage;
+            long missingTroops = m_origNumTroops - m_numTroops;
             long damageRecovered = min(attackDamage, totalLife);
-            damageRecovered = min(damageRecovered, missingLife);
+            damageRecovered = min(damageRecovered,
+                m_monInfo.m_hitPoints * missingTroops + m_topCreatureDamage);
             m_topCreatureDamage -= damageRecovered;
             if (m_topCreatureDamage < 0) {
                 deadVampires =
@@ -1782,9 +1773,9 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
             if (g_combatManager->spellCastWorks(SPELL_LIGHTNING_BOLT,
                                                 getControllingSide(),
                                                 target, 1, 1)) {
-                long damage = g_combatManager->modifySpellDamage(
-                    m_numTroops * 10, SPELL_LIGHTNING_BOLT, 0, 0, target,
-                    0);
+                long damage = m_numTroops * 10;
+                damage = g_combatManager->modifySpellDamage(
+                    damage, SPELL_LIGHTNING_BOLT, 0, 0, target, 0);
                 if (damage > 0) {
                     std::string text;
                     SAMPLE2 sample;
@@ -2237,12 +2228,15 @@ long army::getAdjustedAttack(const army* enemy,
     return attack;
 }
 
+// DC2624/2626 separates the adjusted call from the base-skill subtraction.
+// Its named result preserves both retained compiler bodies and restores
+// getUnitCombatValue's expanded register schedule with the defense counterpart.
 VA(0x00442550, 0x35) MAC_ADDRESS(0x04e2d4, 0x48)  // dc 0x477b8
 long army::getAttackModifier(const army* enemy,
                                unsigned char rangedAttack) const
 {
-    return getAdjustedAttack(enemy, rangedAttack)
-        - g_creatureTypeTraits[m_creatureType].m_attackSkill;
+    long adjusted = getAdjustedAttack(enemy, rangedAttack);
+    return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;
 }
 
 VA(0x00442590, 0xC2) MAC_ADDRESS(0x04e31c, 0x17c)  // dc 0x477e8
@@ -2274,8 +2268,8 @@ long army::getAdjustedDefense(const army* enemy,
 VA(0x00442660, 0x29) MAC_ADDRESS(0x04e498, 0x50)  // dc 0x478c8
 long army::getDefenseModifier() const
 {
-    return getAdjustedDefense(0, 1)
-        - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
+    long adjusted = getAdjustedDefense(0, 1);
+    return adjusted - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
 }
 
 // E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
@@ -2425,10 +2419,15 @@ static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 
 // SOURCE-SHAPE LEDGER (84.9968 -> 96.5871): restoring the Dreamcast helper
 // vocabulary and its pointer loop takes the CFG from 14/71 to 69/71 exact
-// blocks, with all 38 branches and both returns exact. The two residual
-// size-only blocks are codegen: EAX/ECX scheduling while the two modifier
-// helpers inline, and retail materializing the 0.1 result in an existing
-// stack slot while this compiler selects the equivalent literal pool.
+// blocks, with all 38 branches and both returns exact. Mac 0x4ec84..0x4ecd4
+// joins both siege outcomes through result. Restoring that common source
+// return also recovers Windows' local 0.1 materialization: 96.5871 -> 97.4258,
+// 70/71 exact CFG blocks. Naming each modifier helper's adjusted result
+// restores the remaining register schedule. Retail VA0x442deb and Mac
+// 0x4ec1c/0x4ec2c prove the side-mass exclusion mask is 0x600040:
+// siege, immobilized and summoned armies. The old 0x1d0 accidentally
+// matched a delinker addend on robAppBlit, not the pinned instruction.
+// Together these changes reproduce all Windows instructions at 100%.
 VA(0x00442a50, 0x410) MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global, dc 0x47cf4
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
@@ -2474,15 +2473,14 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
         army* group = g_combatManager->m_armies[m_combatSide];
         for (long i = 0; i < g_combatManager->m_numArmies[m_combatSide];
              i++, group++) {
-            if (!group->is(creatureAlive | creatureSiegeWeapon | creatureKing1 | creatureKing2)) {
+            if (!group->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
                 sum += group->getTotalHitPoints(0);
             }
         }
-        if (total == 0) {
+        if (total == 0)
             result = 0.1;
-            return result;
-        }
-        result = sum * result / (total + sum);
+        else
+            result = sum * result / (total + sum);
     }
     return result;
 }
@@ -2883,6 +2881,9 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
 // A 17-state original-damage capture family (two emitted objects) also
 // does not improve 98.5227%: int/long captures, const qualifiers, block
 // lifetimes and return-then-add all leave the add-register choice unresolved.
+// The natural `amount += attackerBonus(...) + defenderBonus(...)` grouping
+// also compiles to the same 98.5227% Windows body. Mac still retains the
+// defender-bonus call; keep both canonical calls while resolving allocation.
 VA(0x00443e30, 0x101) MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
 long army::getEstimatedDamage(const army* target, long amount,
@@ -3977,6 +3978,9 @@ void army::attackWall(TWallTargetId wall,
 // both for the wall-id domain at entry and `explosion != 0` immediately
 // before the bounds expressions. Neither source class creates retail's four
 // extra frame slots; the residual remains allocator state.
+// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload.
+// Its canonical call is Windows byte-flat at 89.908%; keep the nested
+// bitmap accessors inside that wrapper, as in animateMissile.
 VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -4087,12 +4091,9 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         explosion->draw(0, frame, 0, 0,
                         g_combatManager->m_drawbridgeBounds.width(),
                         g_combatManager->m_drawbridgeBounds.height(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         targetX - explosion->getWidth() / 2,
-                        targetY - explosion->getHeight() / 2,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 1);
+                        targetY - explosion->getHeight() / 2, 0, 1);
         g_windowManager->updateScreen(
             g_combatManager->m_drawbridgeBounds.m_minX,
             g_combatManager->m_drawbridgeBounds.m_minY,

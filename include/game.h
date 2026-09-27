@@ -20,6 +20,7 @@
 #include "customcampaign.h"
 #include "campaignbrief.h"
 #include "hero.h"
+#include "DC_precompiledheaders.h"
 #include "mapcell.h"
 #include "netmsg.h"
 #include "savegame.h"
@@ -454,7 +455,9 @@ public:
     int m_size;
     unsigned char m_hasTwoLayers;
     // +0x1d..+0x1f: alignment hole (0x5904f0 goes +0x1c byte -> +0x20 vector).
-    std::vector<int> m_placeholders;
+    // Native Mac clears the hero IDs through the element walk at 0x68f40;
+    // the enum preserves that boundary instead of MSL's integer POD path.
+    std::vector<HeroId> m_placeholders;
     VictoryConditionStruct m_victoryCondition;
     LossConditionStruct m_lossCondition;
     TPlayerSlotAttributes m_playerSlotAttributes[8];
@@ -476,12 +479,34 @@ SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
 
 
+// Shared method order is recorded by both DC class lists (0x2459/0x6d46).
 class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
     std::string m_mapDescription;
     std::bitset<156> m_availableHeroes;
+    int get(const char* path, const char* filename, int saveVersion);
+    // Complete's scenario reader consumes the abstract stream and the
+    // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
+    int read(TAbstractFile* infile, int campaignMap);
     int save(TAbstractFile* outfile);
+    // Retail carries the save-version argument absent from the Dreamcast
+    // declarator; the 0x4c5630 body returns with `ret 8`.
+    int load(TAbstractFile* infile, int saveVersion);
+    // DC game.cpp:7232 and the class method record name this static
+    // string-reference reader. Retail 0x4c6010 uses the same two-register
+    // ABI as game's short-length reader, with a dword map length instead.
+    static int __fastcall readString(TAbstractFile* infile, std::string& value);
+    int readVictoryCondition(char type, TAbstractFile* infile);
+    int readLossCondition(char type, TAbstractFile* infile);
+    int saveVictoryCondition(char type, TAbstractFile* outfile);
+    // Complete's saved-header reader carries the save version as a third
+    // argument so pre-25 campaign hero ids can be remapped.
+    int loadVictoryCondition(char type, TAbstractFile* infile,
+                             int saveVersion);
+    int saveLossCondition(char type, TAbstractFile* outfile);
+    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
+
     VA(0x0045a7a0, 0x1A3) MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
     NewSMapHeader()
     {
@@ -511,26 +536,6 @@ public:
         m_mapName = name;
         m_mapDescription = description;
     }
-    // Complete's scenario reader consumes the abstract stream and the
-    // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
-    int read(TAbstractFile* infile, int campaignMap);
-    // DC game.cpp:7232 and the class method record name this static
-    // string-reference reader. Retail 0x4c6010 uses the same two-register
-    // ABI as game's short-length reader, with a dword map length instead.
-    static int __fastcall readString(TAbstractFile* infile, std::string& value);
-    int readVictoryCondition(char type, TAbstractFile* infile);
-    int readLossCondition(char type, TAbstractFile* infile);
-    int saveVictoryCondition(char type, TAbstractFile* outfile);
-    int saveLossCondition(char type, TAbstractFile* outfile);
-    // Complete's saved-header reader carries the save version as a third
-    // argument so pre-25 campaign hero ids can be remapped.
-    int loadVictoryCondition(char type, TAbstractFile* infile,
-                             int saveVersion);
-    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
-    // Retail carries the save-version argument absent from the Dreamcast
-    // declarator; the 0x4c5630 body returns with `ret 8`.
-    int load(TAbstractFile* infile, int saveVersion);
-    int get(const char* path, const char* filename, int saveVersion);
 };
 SIZE(NewSMapHeader, 0x304);
 
@@ -1618,9 +1623,8 @@ public:
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
     hero* getHero(int which)
     {
-        if (which == -1) {
+        if (which == -1)
             return 0;
-        }
         return &m_heroes[which];
     }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
@@ -2036,25 +2040,20 @@ private:
 };
 SIZE(TCheatCode, 200);
 
+// Mac 0x9dc..0xa10 selects one of two operand addresses for the minimum
+// of strlen and the buffer bound. Use the shared reference selector rather
+// than spelling its expansion here; the Windows encoder remains exact.
 // E:\gamedcs\Game.h:1439
 VA(0x00402a30, 0xA1) MAC_ADDRESS(0x000958, 0xdc)
 inline void TCheatCode::encode(const char* value)
 {
-    int i = 0;
-    const int maximum = 199;
-    for (;;) {
-        int length = static_cast<int>(strlen(value));
-        const int* limit = &maximum;
-        if (length <= maximum)
-            limit = &length;
-        if (i >= *limit)
-            break;
-
+    int i;
+    for (i = 0; i < cppMin<int>(static_cast<int>(strlen(value)),
+                               static_cast<int>(sizeof m_code) - 1); i++) {
         if (isalpha(value[i]))
             m_code[i] = s_b[tolower(value[i]) - 'a'];
         else
             m_code[i] = value[i];
-        i++;
     }
     m_code[i] = 0;
 }

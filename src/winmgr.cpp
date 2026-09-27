@@ -675,6 +675,8 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // the complete lifetime model raises Windows94.84 ->99.91 (2026-09-27).
     // CFG27 blocks,14 branches and10 named calls agree; one pointer reload
     // order remains. Six cursor increment orders emit identical bytes.
+    // All six row-pointer declaration orders, with either column scope,
+    // produce only the current object or a lower-scoring register variant.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -939,24 +941,31 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // calls are platform paths, not missing helpers in the Windows fade.
 // DC names const unsigned pixel masks, a read-only pixel source and the
 // fade period; the ordinary Windows body retains those types and helpers.
+// DC locals: bmpFadeSource, red_mask_2, green_mask_2, blue_mask_2,
+// next_fade_time and time1. The spelling below normalizes the underscores.
 // Mac uses separate gamma/bitmap paths; these native comparisons remain
 // unavailable rather than pretending that the Windows body is a Mac port.
 VA(0x006030e0, 0x1F9) MAC_ADDRESS(0x20e634, 0x444)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
-    const unsigned int maskRed = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
-    const unsigned int maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
-    const unsigned int maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
+    const unsigned int redMask2 = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
+    const unsigned int greenMask2 = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
+    const unsigned int blueMask2 = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     const int fadePeriod = 50;
-    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+    Bitmap16Bit bmpFadeSource(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    bmpFadeSource.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
         m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
+    // DC winmgr.cpp:1793 calls mouseManager::Disable after Grab. That
+    // recovered header helper only reads the disable count, so VC6 elides
+    // this unused result in the Complete release build.
+    g_mouseManager->disable();
+
     for (int shift = 0; shift < 3; shift++) {
-        unsigned long deadline = GameTime::get() + fadePeriod;
-        unsigned long started = GameTime::get();
+        unsigned long nextFadeTime = GameTime::get() + fadePeriod;
+        unsigned long time1 = GameTime::get();
         unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.getMap(0, 0)));
+            static_cast<void*>(bmpFadeSource.getMap(0, 0)));
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
@@ -965,28 +974,28 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
             unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
-                unsigned long pair = *src++;
-                unsigned long blue = (pair & maskRed) >> shift;
-                unsigned long green = (pair & maskGreen) >> shift;
-                unsigned long red = (pair & maskBlue) >> shift;
-                dst[x] = (red & maskBlue) | (green & maskGreen)
-                    | (blue & maskRed);
+                const unsigned int r = *src++;
+                unsigned long blue = (r & redMask2) >> shift;
+                unsigned long green = (r & greenMask2) >> shift;
+                unsigned long red = (r & blueMask2) >> shift;
+                dst[x] = (red & blueMask2) | (green & greenMask2)
+                    | (blue & redMask2);
             }
-            sourceBytes += fadeFrom.getPitch();
+            sourceBytes += bmpFadeSource.getPitch();
             destinationBytes += m_screenBitmap->getPitch();
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);
-        if (GameTime::get() - started > fadePeriod)
+        if (GameTime::get() - time1 > fadePeriod)
             break;
-        GameTime::delayTil(deadline);
+        GameTime::delayTil(nextFadeTime);
     }
 
     m_screenBitmap->fillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
     blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                             WINDOW_SCREEN_HEIGHT);
     if (expectFadein) {
-        fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+        bmpFadeSource.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
             m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
             m_screenBitmap->getHeight(), m_screenBitmap->getPitch(), 0);
     }

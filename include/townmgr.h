@@ -365,9 +365,8 @@ public:
     };
     // The rank grid the rollover setter dispatches on: four category rows over
     // eight player columns, so the hovered cell id (codeY) is category*10 plus
-    // the column. Only the first three rows go through SetRolloverText's
-    // compressed switch; the fourth (30..37) is handled by a range test, and
-    // gaps 9/18/19 fall to the empty line.
+    // the column. All four rows belong to the same source switch; the
+    // compiler selects ranges and jump tables for its dispatch.
     enum {
         RANK_A0 = 1, RANK_A1, RANK_A2, RANK_A3,
         RANK_A4, RANK_A5, RANK_A6, RANK_A7,
@@ -375,6 +374,8 @@ public:
         RANK_B4, RANK_B5, RANK_B6, RANK_B7,
         RANK_C0 = 20, RANK_C1, RANK_C2, RANK_C3,
         RANK_C4, RANK_C5, RANK_C6, RANK_C7,
+        RANK_D0 = 30, RANK_D1, RANK_D2, RANK_D3,
+        RANK_D4, RANK_D5, RANK_D6, RANK_D7,
         // The two portrait rows the right-click opens into a detail view: one
         // hero and one creature cell per player column.
         HERO_P0 = 0x2ee, HERO_P1, HERO_P2, HERO_P3,
@@ -496,7 +497,7 @@ protected:
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d0910
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
-    void setCommandAndText(message* msg);
+    void setCommandAndText(message& msg);
     void showText();
     void viewArmy();
 };
@@ -720,7 +721,7 @@ private:
     // no .rdata cell image-wide, and its one caller (the page's own
     // WindowHandler at 0x5dd2f9) reaches it with a direct call.
     void showText();
-    void setRolloverText(message* msg);
+    void setRolloverText(message& msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void recruit(int i);
 };

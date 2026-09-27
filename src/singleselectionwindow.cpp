@@ -1284,12 +1284,14 @@ unsigned char CNetPlayerHandler::setComputer(int pos)
     return 1;
 }
 
+// Mac 0x16f250..264 materializes the byte-valued isHuman result before
+// testing the unassigned seat. Preserve that existing predicate boundary.
 // E:\gamedcs\singleselectionwindow.cpp:1214
 MAC_ADDRESS(0x16f240, 0x58)
 int CNetPlayerHandler::getUnassignedPlayerPos()
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (m_humanPlayers[i].m_dpid != 0 && m_humanPlayers[i].m_playerPos == -1)
+        if (m_humanPlayers[i].isHuman() && m_humanPlayers[i].m_playerPos == -1)
             return i;
     }
     return -1;
@@ -1376,11 +1378,12 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // back to +0x5e (past the initial guard), and the exhausted-list arm at
 // +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
 
-// Residual (89.8712%): all 21 blocks, 10 branches and three returns agree.
+// Residual (90.5767%): all 21 blocks, 10 branches and three returns agree.
 // The message constructor still schedules its row/FILETIME arguments
 // differently: frame 0xa0 vs retail 0xa4, saved alignment pointer vs saved
-// FILETIME high word. Both request-count tests use TEST -8 where retail
-// uses SAR 3. The flattened elapsed expression and wrong per-iteration
+// FILETIME high word. Native Mac tests the unsigned request count; using
+// size() > 0 also restores retail's SAR 3 count lowering. The flattened
+// elapsed expression and wrong per-iteration
 // count guard banked 71.8957%; restoring only ElapsedSince gives 73.25%.
 // The coherent base-like if/for/else shape, including conditional final
 // confirmation, reaches this peak. Extending the message scope through the
@@ -1402,14 +1405,14 @@ void t_map_list_update::tick()
                 g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_fileTime);
             transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
-            if (static_cast<int>(m_requests.size()) != 0)
+            if (m_requests.size() > 0)
                 handleRequests();
             if (m_nextHeader >= g_singleSelectionWindow->m_transferHeaders.size()) {
                 requestConfirmation();
                 break;
             }
         }
-    } else if (static_cast<int>(m_requests.size()) != 0) {
+    } else if (m_requests.size() > 0) {
         handleRequests();
         requestConfirmation();
     }
@@ -1480,10 +1483,11 @@ void CNewPlayerUpdateProc::go()
 // CGameHeaderInfoMsg/CMapFileNameMsg constructors, request-drain helper and
 // confirmation helper. Complete retail adds the list-select flag to both
 // message layouts but preserves that source control flow.
-// Residual (86.6723): all 32 aligned blocks, 16 branch sequences and their
+// Residual (87.1555): all 32 aligned blocks, 16 branch sequences and their
 // topology agree. The remaining bands are VC6 scheduling: ESI/EDI exchange
 // roles for zero/m_nextHeader, the CMapFileNameMsg arguments are pushed in a
-// different schedule, and vector count lowering differs. Several callees
+// different schedule. The unsigned positive request count restores retail's
+// count lowering, as in the transfer-list override. Several callees
 // also still have anonymous relocation names. An explicit pHeader local was
 // tested and rejected: DC lists only i/msg/msg and it lowered the score.
 // E:\gamedcs\singleselectionwindow.cpp:1282
@@ -1510,14 +1514,14 @@ void CNewPlayerUpdateProc::tick()
             }
 
             ++m_nextHeader;
-            if (static_cast<int>(m_requests.size()) != 0)
+            if (m_requests.size() > 0)
                 handleRequests();
             if (m_nextHeader >= g_singleSelectionWindow->m_headersA.size()) {
                 requestConfirmation();
                 break;
             }
         }
-    } else if (static_cast<int>(m_requests.size()) != 0) {
+    } else if (m_requests.size() > 0) {
         handleRequests();
         requestConfirmation();
     }
@@ -1764,6 +1768,10 @@ public:
     virtual unsigned char ignoreKey(message* msg);  // slot 16
 };
 
+// Retail expands the nested CNetMsg constructor in the scenario arm and
+// retains it in the filter arm; our object reverses those two choices.
+// All other blocks agree. In-class bodies, ordinary member initializers
+// and the equivalent nested/flat option chains are byte-flat controls.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA) MAC_ADDRESS(0x170950, 0x240)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
 void CNewPlayerUpdateProc::finish()
@@ -2571,6 +2579,9 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // has neither the eight random-map options nor these button arrays; its
 // mapFilter/filterSize members describe the existing scenario-file filter.
 // These desktop random-map helpers retain provisional semantic names.
+// Windows's six button loops and Mac 0x175f88/0x175f94/0x175fe8 reload
+// the array entry for each operation. Keep the pointer conversion temporary,
+// but do not cache the button across the two frame writes.
 
 VA(0x0057D170, 0x1DF7) MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createFilterWidgets()
@@ -2644,10 +2655,9 @@ void TSingleSelectionWindow::createFilterWidgets()
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountAButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountAButtons[i]->m_highlightedFrame = 2;
+        m_filterCountAButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountAButtons[i];
         widgets.push_back(added);
     }
 
@@ -2676,10 +2686,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountBButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountBButtons[i]->m_highlightedFrame = 2;
+        m_filterCountBButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountBButtons[i];
         widgets.push_back(added);
     }
 
@@ -2708,10 +2717,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountCButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountCButtons[i]->m_highlightedFrame = 2;
+        m_filterCountCButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountCButtons[i];
         widgets.push_back(added);
     }
 
@@ -2738,10 +2746,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        button* current = m_filterCountDButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountDButtons[i]->m_highlightedFrame = 2;
+        m_filterCountDButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountDButtons[i];
         widgets.push_back(added);
     }
 
@@ -2760,10 +2767,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterWaterButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterWaterButtons[i]->m_highlightedFrame = 2;
+        m_filterWaterButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterWaterButtons[i];
         widgets.push_back(added);
     }
 
@@ -2782,10 +2788,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterStrengthButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterStrengthButtons[i]->m_highlightedFrame = 2;
+        m_filterStrengthButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterStrengthButtons[i];
         widgets.push_back(added);
     }
 
@@ -3122,7 +3127,9 @@ void TSingleSelectionWindow::setupFilterOptions()
 // gpGame repeats UpdateGameVars' field_37F arm verbatim (retail duplicates
 // those statements rather than sharing the guarded body). The tail resets
 // every seat's hero/town choice, redraws, and mirrors the new positions to
-// the other machines through SendPlayerPositions.
+// the other machines through SendPlayerPositions. Mac 0x178a08/0x178a30
+// address the member directly; avoid an inferred cached local-header reference.
+// This restores Windows's local-header frame and destructor frontier (97.69%).
 
 VA(0x00580430, 0x63B) MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
 void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
@@ -3132,9 +3139,9 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     NewSMapHeader header;
     header.m_lossCondition.m_type = -1;
     header.m_victoryCondition.m_type = -1;
-    header.m_isPlayable = 1;
-    header.m_difficulty = 1;
     header.m_hasTwoLayers = m_randomMapOptions[1] > 1;
+    header.m_difficulty = 1;
+    header.m_isPlayable = 1;
     if (m_commonGameVersion == SINGLE_SELECTION_CONTEXT_2
             || m_commonGameVersion == SINGLE_SELECTION_CONTEXT_3)
         header.m_version = 28;
@@ -3172,14 +3179,13 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
            sizeof(m_localHeader.m_heroAvailability));
     strcpy(m_localHeader.m_title, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME]);
     strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
-    GameSelectionHeadersStruct& localHeader = m_localHeader;
-    localHeader.m_header = header;
+    m_localHeader.m_header = header;
 
     g_game->initNewGame(g_game->m_setup.m_difficulty, 0, &header, 0);
-    localHeader.m_setup = g_game->m_setup;
-    m_currentHeader = &localHeader;
+    m_localHeader.m_setup = g_game->m_setup;
+    m_currentHeader = &m_localHeader;
 
-    applyHeaderToGame(&localHeader);
+    applyHeaderToGame(&m_localHeader);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
         m_players.m_humanPlayers[j].m_heroIndex = -1;
@@ -3219,11 +3225,12 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         m_randomMapMode = randomMaps;
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
-                if (g_remoteOn && !isHost()) {
+                // Mac 0x178c30 calls getHeaders before the request arm.
+                if (!g_remoteOn || isHost()) {
+                    getHeaders(&m_transferHeaders);
+                } else {
                     CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
                     transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
-                } else {
-                    getHeaders(&m_transferHeaders);
                 }
             }
         }
@@ -3258,14 +3265,15 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         startMouseThread();
         drawWindow(0, 0xffff0001, 0xffff);
         g_smallFont->drawBoundedString(
-            g_generalText->getText(GENERAL_TEXT_SCENARIO_READING_MAP_FILES), g_windowManager->m_screenBitmap,
+            (*g_generalText)[GENERAL_TEXT_SCENARIO_READING_MAP_FILES], g_windowManager->m_screenBitmap,
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (!isHost() && !m_saveMode)
-            g_game->setupOrigData();
-        else
+        // Mac 0x178e84 places getHeaders before setupOrigData.
+        if (isHost() || m_saveMode)
             getHeaders(&m_headersA);
+        else
+            g_game->setupOrigData();
         m_scenarioOptionsStarted = 1;
         stopMouseThread();
     }
@@ -4535,6 +4543,8 @@ void TSingleSelectionWindow::doModal(bool fade)
 // exact rows; it was a misreading of the DC line table, not a source fact.
 // ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
+// All six orders of the three recorded entry locals emit identical VC6
+// bytes; the residual begins in expanded player-lookup branches.
 VA(0x00584C40, 0x40D) MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
 void TSingleSelectionWindow::setHumanSlot()
 {
@@ -5212,6 +5222,36 @@ void TSingleSelectionWindow::refreshFilterWidgets()
     this->update();
 }
 
+// Mac 0x17e364/0x17e394 places these ordinary helpers between the
+// selection handlers, although Dreamcast kept them in newgame.cpp.
+// Windows expands both in onWidgetDeselect; retain their TU visibility.
+// Complete uses the nine-town alignment mask for both helpers.
+// E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
+MAC_ADDRESS(0x17e364, 0x30)
+TTownType pickPrevAlignment(int legalAlignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type < -1)
+            type = TOWN_CONFLUX;
+        else if (type == -1)
+            break;
+    } while (!(legalAlignments & (1 << type)));
+    return type;
+}
+
+// E:\gamedcs\newgame.cpp:368, dc 0x10380c.
+MAC_ADDRESS(0x17e394, 0x30)
+TTownType pickNextAlignment(int legalAlignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type >= TOWN_CONFLUX + 1)
+            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    } while (type != -1 && !(legalAlignments & (1 << type)));
+    return type;
+}
+
 // Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
 // Its random-maps arm calls it; VC6 expands the three calls in that arm.
 MAC_ADDRESS(0x17e3c4, 0x60)
@@ -5226,30 +5266,12 @@ void TSingleSelectionWindow::openRandomMapOptions()
 // prove the shared arm order below.  It is source order, not numeric selector
 // order; keep msg->codeY direct because Dreamcast has no cached-id local.
 
-// MATCHING (2026-09-04): 91.22 -> 94.49. The PLAYERS_ANY and TEAMS_ANY arms
-// end in RebuildFilteredPlayerSetup() like their non-ANY siblings (retail
-// f91b/f982 both jump into the f98c tail that calls it; HUMANS_ANY does
-// not). Removing GetDisplayTown's inline_depth(0) pin let /Ob2 reproduce
-// retail's split - HasMultipleTowns CALLED inside the TOWN_PREV/NEXT
-// expansions, EXPANDED inside the BONUS_PREV/NEXT ones (the dead
-// `test al,al` re-test there is its inlined HasRandomAlignment check) -
-// and returned CanChooseHero to its exact row. The FILE_ROW double-click
-// reads clickTime into a local before GameTime::Get() (retail holds it in
-// ESI across the call).
-// MATCHING (2026-09-05): 94.4890 -> 97.3769, and (a) below is CLOSED - the
-// second OnBeginGame call site came back once the file-row bounds guards
-// were written retail's way (see the note at that arm). Residual: retail
-// CALLS the GetRandomMapName() temporary's basic_string::_Tidy and the
-// CNewSetupInfoMsg expansion's CNetMsg base constructor, both depth-2
-// sites whose nested budget (budget / sites-remaining) is smaller in
-// retail; that is the last three branches (144 against 141). The earlier
-// prediction here - that the residual would lift once OnBeginGame and
-// RebuildFilteredPlayerSetup stopped being carcass stubs and became /Ob2
-// candidates in this TU - is REFUTED: both landed on 2026-09-05 and this
-// row did not move by a digit. One more instruction pair is
-// pick_next_alignment's `cmp 8 / jg` against retail's `cmp 9 / jge`;
-// spelling it `>= TOWN_CONFLUX + 1` in newgame.h does produce retail's
-// encoding and costs 0.25 overall, so it stays.
+// Complete keeps both alignment helpers in this TU. Their ordinary expansion,
+// the >= nine-town bound and the save arm's stored-index reread recover every
+// executable block. The first switch also broadcasts the teams label (306):
+// retail's byte at function+0x1217 is zero, selecting its broadcast arm, and
+// Mac 0x17e6ec..0x17e700 routes 306 there too. Including that case closes the
+// final table byte; all 276 blocks and 94 calls agree at 100%.
 // E:\gamedcs\singleselectionwindow.cpp:5100
 VA(0x005865b0, 0x13EA) MAC_ADDRESS(0x17e644, 0xd5c)  // anchor-callee WindowHandler's id==0x200/codeX==13 arm calls it (msg, &redraw, 0) - the DC signature exactly; size 0.57x dc 0x22d4, dc 0x13c79c
 int TSingleSelectionWindow::onWidgetDeselect(message* msg,
@@ -5292,6 +5314,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         case SSW_FILTER_HUMANS_FIRST + 6:
         case SSW_FILTER_HUMANS_LAST:
         case SSW_FILTER_HUMANS_ANY:
+        // Both native dispatchers also broadcast the teams label (306).
+        case SSW_FILTER_TEAMS_LABEL:
         case SSW_FILTER_TEAMS_FIRST:
         case SSW_FILTER_TEAMS_FIRST + 1:
         case SSW_FILTER_TEAMS_FIRST + 2:
@@ -5679,14 +5703,14 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_SORT_NAME:
         onSortMaps(SORT_MAPS_BY_NAME);
         break;
-    case SSW_SORT_SIZE:
-        onSortMaps(SORT_MAPS_BY_SIZE);
+    case SSW_SORT_PLAYERS:
+        onSortMaps(SORT_MAPS_BY_PLAYERS);
         break;
     case SSW_SORT_VERSION:
         onSortMaps(SORT_MAPS_BY_VERSION);
         break;
-    case SSW_SORT_PLAYERS:
-        onSortMaps(SORT_MAPS_BY_PLAYERS);
+    case SSW_SORT_SIZE:
+        onSortMaps(SORT_MAPS_BY_SIZE);
         break;
     case SSW_SORT_VICTORY:
         onSortMaps(SORT_MAPS_BY_VICTORY);
@@ -5719,7 +5743,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         unsigned int map = msg->m_codeY - SSW_FILE_ROW_FIRST + m_currentIndex;
         if (m_saveMode) {
             m_textIndex = msg->m_codeY - SSW_FILE_ROW_FIRST;
-            setCurrentMap(map, 1);
+            // Mac 0x17f074 reloads both members; Windows adds after the store.
+            setCurrentMap(m_textIndex + m_currentIndex, 1);
         } else if (map < m_selectionHeaders.size()) {
             unsigned long lastClick = m_clickTime;
             if (GameTime::elapsedSince(lastClick) < 400) {
@@ -6613,9 +6638,12 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 // DC keeps these helpers out of line; retail VC6 expands them at the advanced-
 // options call sites. Keep the original cpp boundaries visible while allowing
 // the retail TU to reproduce that lowering.
+// Ordinary definition retains every Windows caller byte under /Ob2 and
+// restores Mac onPlayerPosClick's complete 336-byte match. The prior explicit
+// inline expanded this CPP-owned helper into that native-retained call site.
 // E:\gamedcs\singleselectionwindow.cpp:6980
 MAC_ADDRESS(0x181bac, 0xc4)
-inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
+unsigned char TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
     CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
@@ -6851,7 +6879,11 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0x1818b4 refreshes the hero filter here; Windows 0x589fa0
+    // proceeds directly from the roster broadcast to the join message.
     makeHeroFilter();
+#endif
     g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
                    msg->m_playerInfo.m_name);
     displayChat();
@@ -7153,6 +7185,7 @@ void TSingleSelectionWindow::onSetAGRMsg(
         drawHeroAdvancedOption(msg->m_gamePos, 1, -1);
 }
 
+// Mac 0x182e84..0x182e98 expands isHuman before excluding our own DPID.
 VA(0x0058B120, 0x3E8) MAC_ADDRESS(0x182d78, 0x218)  // dc 0x141b98
 unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
 {
@@ -7169,7 +7202,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     setCurrentMap(0, 0);
     m_fileSlider->setResolution(m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
     for (int i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0
+        if (m_players.m_humanPlayers[i].isHuman()
                 && m_players.m_humanPlayers[i].m_dpid
                        != g_thisNetPlayerInfo.m_dpid)
             m_newPlayerUpdateMan->newPlayer(m_players.m_humanPlayers[i].m_dpid);
@@ -7291,6 +7324,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
 // The host's authoritative roster lands: clear every seat, merge each
 // live human record (creating seats for newcomers), take the computer
 // block wholesale, then retitle the handicap labels and redraw.
+// Mac 0x1833cc..0x1833e0 retains isHuman's byte-result boundary here.
 VA(0x0058BA40, 0x175) MAC_ADDRESS(0x183374, 0x1c8)  // dc 0x1421a8
 void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
@@ -7301,7 +7335,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
         CNetPlayerHandlerPlayer* rec = &msg->m_netPlayer[i];
-        if (rec->m_dpid != 0) {
+        if (rec->isHuman()) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayer(rec->m_dpid);
             if (!p) {
                 setNewPlayerSlot(rec);
@@ -7334,12 +7368,13 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 VA(0x0058BBC0, 0xAC) MAC_ADDRESS(0x18353c, 0x9c)  // dc 0x142534
 void TSingleSelectionWindow::checkFaces()
 {
+    // DC 7673 gates the player; 7675 separately tests the occupied face.
     for (int i = 7; i >= 0; --i) {
         CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(i);
-        if (p && p->m_heroIndex != -1
-                && m_players.isFaceTaken(
-                       p->m_availableHeroes[p->m_heroIndex], i))
-            getHeroFace(1, p);
+        if (p && p->m_heroIndex != -1) {
+            if (m_players.isFaceTaken(p->m_availableHeroes[p->m_heroIndex], i))
+                getHeroFace(1, p);
+        }
     }
 }
 
@@ -7365,21 +7400,12 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // two seated players in a network game - before the pointer/session/progress
 // preamble hands off to BeginSavedGame or BeginNewGame.
 
-// Residual (78.9055% MAX, 2026-09-07): retail computes the local-header
-// address after successful generation. Separating the two failure checks
-// and declaring header between them raises 77.2669% to 78.9055%; the two
-// candidate cleanup exits remain separate where retail shares one. Controls
-// retaining a shared condition and naming header after it score 76.9959%;
-// assigning header in getHeader's argument scores 77.2669%.
-// Passive C2 trace corrects the old diagnosis: both AssignData string
-// operator= sites expand. Its first assign(ptr, size), cb 69, receives budget
-// 65 and remains a call, as in retail; the second receives 131 and expands
-// too far. bitset<4>::_Xran, cb 65, receives 84 and likewise expands where
-// retail calls it. The verified candidate is 1552 padded bytes with a 0x50
-// frame versus retail's 0x30. Preserve the canonical helper operations;
-// restoring removed pins would conceal these remaining inline decisions.
-// Earlier controls: removing the const bitset cast was byte-flat; .test()
-// scored 76.71% against the then-current 78.76% candidate.
+// Native Mac 0x183764/0x183794 passes m_localHeader directly to both
+// canonical helpers. Removing the inferred cached header pointer restores
+// Windows' shared failure cleanup. Naming each version-message template
+// after its edition-name selection preserves Mac 0x183870's lookup phase
+// and closes the remaining Windows text loads at 100%. The generation/read
+// failure guards and all canonical lookup/formatting helpers remain intact.
 // E:\gamedcs\singleselectionwindow.cpp:7698
 // Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
 // branch-local lookups preserve those calls and recover Windows 92.87%
@@ -7395,11 +7421,10 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         }
         if (!generateRandomMap(name.c_str()))
             return 0;
-        GameSelectionHeadersStruct* header = &m_localHeader;
         if (getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"),
-                      const_cast<char*>(name.c_str()), header))
+                      const_cast<char*>(name.c_str()), &m_localHeader))
             return 0;
-        applyHeaderToGame(header);
+        applyHeaderToGame(&m_localHeader);
     }
 
     if (!m_loadMode && g_game->m_mapHeader.m_version != MAP_FORMAT_SHADOW_OF_DEATH
@@ -7423,7 +7448,8 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             } else {
                 gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
+            const char* versionMessage = (*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT];
+            normalDialog(formatString(versionMessage, gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7442,7 +7468,8 @@ unsigned char TSingleSelectionWindow::onBeginGame()
             } else {
                 gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
+            const char* versionMessage = (*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT];
+            normalDialog(formatString(versionMessage, gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7616,6 +7643,7 @@ bool TSingleSelectionWindow::isMultiPlayer()
     return 0;
 }
 
+// Both name-column loops expand isHuman (Mac 0x184100/0x18417c).
 VA(0x0058C960, 0x11C) MAC_ADDRESS(0x1840cc, 0x128)  // dc 0x142cc0
 void TSingleSelectionWindow::updateNameLists()
 {
@@ -7625,7 +7653,7 @@ void TSingleSelectionWindow::updateNameLists()
 
     names[0] = 0;
     for (i = 0; i < 4; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+        if (m_players.m_humanPlayers[i].isHuman()) {
             sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
@@ -7633,7 +7661,7 @@ void TSingleSelectionWindow::updateNameLists()
     m_nameList1->setText(names);
     names[0] = 0;
     for (i = 4; i < 8; ++i) {
-        if (m_players.m_humanPlayers[i].m_dpid != 0) {
+        if (m_players.m_humanPlayers[i].isHuman()) {
             sprintf(line, "%s\n", m_players.m_humanPlayers[i].m_name);
             strcat(names, line);
         }
@@ -8548,7 +8576,7 @@ int TSingleSelectionWindow::getCommonGameVersion()
 #if 0  // @carcass: Dinkumware instantiations emitted by this compiland
 
 VA(0x0058fe80, 0x66)  // COMDAT pairing (unique 102 B in this obj)
-std::vector<int>::vector(const std::vector<int>& other)
+std::vector<HeroId>::vector(const std::vector<HeroId>& other)
 {
     // @stub
 }
@@ -8617,12 +8645,17 @@ bool TSortMapsByVersion::operator()(const GameSelectionHeadersStruct& a,
 
 // BY_SIZE has NO out-of-line row: retail expands `header.Size` (+0x18) at
 // every site, including the two inside _Sort_0 BY_SIZE (0x591310).
+// Retail loads both size operands before selecting direction (0x592f3b).
+// Named values preserve that source evaluation order and close the three
+// size-sort algorithms without changing their library bodies.
 bool TSortMapsBySize::operator()(const GameSelectionHeadersStruct& a,
                                  const GameSelectionHeadersStruct& b) const
 {
+    int sizeA = a.m_header.m_size;
+    int sizeB = b.m_header.m_size;
     if (m_direction)
-        return b.m_header.m_size < a.m_header.m_size;
-    return a.m_header.m_size < b.m_header.m_size;
+        return sizeB < sizeA;
+    return sizeA < sizeB;
 }
 
 VA(0x00591cb0, 0x33)
@@ -8667,7 +8700,7 @@ VA_COMPGEN(0x0058f480, 0x2C3, STD_CONSTRUCT, GameSelectionHeadersStruct)
 VA_COMPGEN(0x005904f0, 0x31B, IMPLICIT_COPY_CTOR, GameSelectionHeadersStruct)
 
 //   0x58fa60  ??0NewSMapHeader(const&)        0x58fc10  ??0SCampaign(const&)
-//   0x58fe40  _Ucopy<CampaignScenarioInfo>    0x58fe80  ??0vector<int>(const&)
+//   0x58fe40  _Ucopy<CampaignScenarioInfo>    0x58fe80  ??0vector<HeroId>(const&)
 //   0x58fef0  ??0vector<hero>(const&)         0x58ff80  ??0_Tree(const&)
 //   0x58ffc0  _Tree::_Init                    0x590810  ??0CMapHeaderData(const&)
 //   0x593f50  ??0SavedGameHeader(const&)      0x5941b0  ??0vector<vector<hero>>

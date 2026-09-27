@@ -74,38 +74,44 @@ def _has_pointer(pef: PEF, section: int, offset: int, size: int) -> bool:
 
 
 def _function_descriptors(root: Path, pef: PEF, loader: Loader, toc: Address,
-                          *, unit: str | None, retail_va: int | None) -> dict[str, tuple[Address, str]]:
-    """Pin compiler-generated function transition vectors used through the TOC."""
+                          references: set[str], *, unit: str | None) -> dict[str, tuple[Address, str]]:
+    """Resolve generated transition vectors from source claims and PEF relocations."""
+    from homm3.mac import addresses, emitted
+
+    names = {name for name in references
+             if name.startswith(("__ct__", "__dt__", "__defctor__"))}
+    if not names or unit is None:
+        return {}
+    claims, _windows, problems = _cached(("descriptor_claims", root),
+                                         lambda: addresses.scan(root))
+    if problems:
+        raise ObjectError("Mac source claims: " + "; ".join(problems[:3]))
     result = {}
-    for path in sorted((root / "config/mac/function_descriptors").glob("*.toml")):
-        for row in tomllib.loads(path.read_text()).get("descriptors", []):
-            owners = row.get("owner_vas")
-            if (not isinstance(owners, list) or not owners
-                    or any(not isinstance(va, int) or va <= 0 for va in owners)):
-                raise ObjectError(f"invalid function-descriptor owners in {path}")
-            if row.get("unit") != unit or retail_va not in owners:
-                continue
-            name, code_name = row["symbol"], row["code_symbol"]
-            if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z_][\w$]*", name)
-                    or code_name != "." + name or name in result
-                    or not isinstance(row.get("evidence"), str) or not row["evidence"].strip()
-                    or any(not isinstance(row.get(key), int) or row[key] < 0
-                           for key in ("mac_section", "mac_offset", "code_section", "code_offset", "code_size"))
-                    or row["code_size"] == 0 or row["mac_offset"] % 4 or row["code_offset"] % 4
-                    or any(not isinstance(row.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", row[key])
-                           for key in ("sha256", "code_sha256"))):
-                raise ObjectError(f"invalid reviewed function descriptor in {path}")
-            descriptor = Address(row["mac_section"], row["mac_offset"])
-            code_target = Address(row["code_section"], row["code_offset"])
-            if (pef.section(descriptor.section).kind not in (1, 2, 3)
-                    or pef.section(code_target.section).kind != 0
-                    or hashlib.sha256(pef.read(descriptor.section, descriptor.offset, 8)).hexdigest() != row["sha256"]
-                    or hashlib.sha256(pef.read(code_target.section, code_target.offset,
-                                               row["code_size"])).hexdigest() != row["code_sha256"]
-                    or loader.pointers.get(descriptor) != code_target
-                    or loader.pointers.get(Address(descriptor.section, descriptor.offset + 4)) != toc):
-                raise ObjectError(f"reviewed function descriptor changed: {name!r}")
-            result[name] = (descriptor, code_name)
+    inverse = _loader_entry(pef)[3]
+    for name in names:
+        qualified = emitted.demangle(name)
+        owner, _, method = qualified.partition("::")
+        if not method:
+            continue
+        kind = ("IMPLICIT_DTOR" if name.startswith("__dt__") else "CLASS_CTOR")
+        matches = [claim for claim in claims
+                   if claim.path == f"src/{unit}.cpp"
+                   and (claim.compgen == (kind, owner)
+                        or (claim.compgen is None and claim.label == qualified
+                            and (not name.endswith("Fv") or claim.parameters == "()")))]
+        if len(matches) != 1:
+            continue  # Leave an unclaimed or ambiguous symbol unavailable.
+        claim = matches[0]
+        target = Address(0, claim.offset)
+        pef.code(0, claim.offset, claim.size)
+        vectors = [at for at in inverse.get(target, ())
+                   if pef.section(at.section).kind in (1, 2, 3)
+                   and loader.pointers.get(Address(at.section, at.offset + 4)) == toc]
+        if len(vectors) != 1:
+            raise ObjectError(f"{name!r} has {len(vectors)} PEF transition vectors")
+        descriptor = vectors[0]
+        pef.read(descriptor.section, descriptor.offset, 8)
+        result[name] = (descriptor, "." + name)
     return result
 
 
@@ -135,7 +141,7 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
     loader = _loader(pef)
     toc = loader.toc()
     descriptors = _function_descriptors(root, pef, loader, toc,
-                                        unit=unit, retail_va=retail_va)
+                                        {name for _, name in references}, unit=unit)
     tables = jump_tables.bindings(root, pef, loader, code, hunks,
                                  unit=unit, retail_va=retail_va,
                                  owner=target_origin, owner_size=target_size)

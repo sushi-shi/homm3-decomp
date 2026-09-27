@@ -814,25 +814,20 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // statements rather than a loop, which is why their null stores sink past
 // the following Dispose calls into one batch.
 
-// Residual (86.37%): ONE over-inline, and the whole rest of the delta is
-// its cascade. predict-inline reports exactly one divergence - retail
-// emits an out-of-line call to the Dinkumware destroy-range helper that
-// clear() -> erase(begin(), end()) reaches (`mov ecx,ebx; push [ebx+8];
-// push edi; call`, the ICF-folded empty pointer-destroy body the delinked
-// object labels sample_vslot03), where this compile elides it entirely.
-// That call is what pins retail's EBX to `lea ebx,[esi+0xd0]`, which in
-// turn evicts the element counter into [ebp-4], frees EDI to walk
-// boatFlagIcons (so retail spells the movingObjectSprite null store as an
-// immediate where ours reuses the EDI zero), and flips the EAX/EDX scratch
-// parity for every `mov <scratch>,[ecx]; call [<scratch>+4]` pair after
-// it. Our body is eight bytes shorter than retail's, which is that one
-// call plus its argument setup. Same family as mainmenu's TMainMenu ctor
-// and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
-// knob is caller body mass, not a vector spelling.
-
+// DC records two signed int indices, i and j. Reusing them across the
+// cleanup loops preserves the native operations. Three index-scope/type
+// controls produced two objects without a MAX gain.
+// DC lines 1109..1192 use ResourceManager::Dispose for the sprite and
+// resource pointers. Keep the canonical inline wrapper at those source
+// calls; the two sample loops retain their retail virtual-call spelling.
+// The wrappers restore the retained destroy-range call and retail's loop
+// register allocation (86.37% -> 97.31%). Retail then proves an explicit
+// null guard on route-array deletion; together these recover exact VC6 bytes.
 VA(0x004077e0, 0x2D1) MAC_ADDRESS(0x007d0c, 0x3f4)  // anchor-vtable, dc 0x74ec
 void advManager::close()
 {
+    int i;
+    int j;
     clearBottomView();
     if (g_townViewActive == 0) {
         g_soundManager->switchAmbientMusic(-1);
@@ -842,78 +837,74 @@ void advManager::close()
     }
 
     if (g_adventureGraphicsPreserveMode <= 0) {
-        m_radarIcons->dispose();
+        ResourceManager::dispose(m_radarIcons);
         m_radarIcons = 0;
-        m_cloudIcons->dispose();
+        ResourceManager::dispose(m_cloudIcons);
         m_cloudIcons = 0;
-        for (int cursor = 0; cursor < 18; cursor++) {
-            m_cursorIcons[cursor]->dispose();
-            m_cursorIcons[cursor] = 0;
+        for (i = 0; i < 18; i++) {
+            ResourceManager::dispose(m_cursorIcons[i]);
+            m_cursorIcons[i] = 0;
         }
-        for (unsigned int cached = 0; cached < m_cachedGraphics.size(); cached++)
-            m_cachedGraphics[cached]->dispose();
-        // MEASURED BYTE-FLAT, do not retry: `#pragma inline_depth(2)`
-        // here, to keep clear()+erase() inline while forcing the
-        // destroy-range helper out of line the way retail has it, changes
-        // nothing (86.3656 either way). inline_depth only bites at 0 in
-        // VC6 - the same result hero.cpp records for depths 1/2/3/4 - so
-        // there is no way to spell "inline the parent, call the child".
+        for (i = 0; i < m_cachedGraphics.size(); i++)
+            ResourceManager::dispose(m_cachedGraphics[i]);
+        // The canonical dispose calls restore retail's destroy-range call.
         m_cachedGraphics.clear();
-        m_movingObjectSprite->dispose();
+        ResourceManager::dispose(m_movingObjectSprite);
         m_movingObjectSprite = 0;
-        for (int boat = 0; boat < 3; boat++) {
-            m_boatIcons[boat]->dispose();
-            m_boatIcons[boat] = 0;
-            m_boatFrothIcons[boat]->dispose();
-            m_boatFrothIcons[boat] = 0;
-            for (int boatOwner = 0; boatOwner < 8; boatOwner++) {
-                m_boatFlagIcons[boat][boatOwner]->dispose();
-                m_boatFlagIcons[boat][boatOwner] = 0;
+        for (i = 0; i < 3; i++) {
+            ResourceManager::dispose(m_boatIcons[i]);
+            m_boatIcons[i] = 0;
+            ResourceManager::dispose(m_boatFrothIcons[i]);
+            m_boatFrothIcons[i] = 0;
+            for (j = 0; j < 8; j++) {
+                ResourceManager::dispose(m_boatFlagIcons[i][j]);
+                m_boatFlagIcons[i][j] = 0;
             }
         }
-        for (int owner = 0; owner < 8; owner++) {
-            m_flagIcons[owner]->dispose();
-            m_flagIcons[owner] = 0;
+        for (i = 0; i < 8; i++) {
+            ResourceManager::dispose(m_flagIcons[i]);
+            m_flagIcons[i] = 0;
         }
     }
 
-    for (int looping = 0; looping < LOOPING_SOUND_COUNT; looping++) {
-        if (m_loopedSample[looping]) {
-            m_loopedSample[looping]->dispose();
-            m_loopedSample[looping] = 0;
+    for (i = 0; i < LOOPING_SOUND_COUNT; i++) {
+        if (m_loopedSample[i]) {
+            m_loopedSample[i]->dispose();
+            m_loopedSample[i] = 0;
         }
     }
-    for (int river = 1; river < 5; river++) {
-        m_riverTileset[river]->dispose();
-        m_riverTileset[river] = 0;
+    for (i = 1; i < 5; i++) {
+        ResourceManager::dispose(m_riverTileset[i]);
+        m_riverTileset[i] = 0;
     }
-    for (int road = 1; road < 4; road++) {
-        m_roadTileset[road]->dispose();
-        m_roadTileset[road] = 0;
+    for (i = 1; i < 4; i++) {
+        ResourceManager::dispose(m_roadTileset[i]);
+        m_roadTileset[i] = 0;
     }
-    m_borderTileset->dispose();
+    ResourceManager::dispose(m_borderTileset);
     m_borderTileset = 0;
-    m_arrowTileset->dispose();
+    ResourceManager::dispose(m_arrowTileset);
     m_arrowTileset = 0;
-    m_gemIcons[0]->dispose();
-    m_gemIcons[1]->dispose();
-    m_gemIcons[2]->dispose();
-    m_gemIcons[3]->dispose();
+    ResourceManager::dispose(m_gemIcons[0]);
+    ResourceManager::dispose(m_gemIcons[1]);
+    ResourceManager::dispose(m_gemIcons[2]);
+    ResourceManager::dispose(m_gemIcons[3]);
     m_gemIcons[0] = 0;
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
-    for (int ground = 0; ground < 10; ground++) {
-        m_groundTileset[ground]->dispose();
-        m_groundTileset[ground] = 0;
-        m_heroSamples[ground]->dispose();
-        m_heroSamples[ground] = 0;
+    for (i = 0; i < 10; i++) {
+        ResourceManager::dispose(m_groundTileset[i]);
+        m_groundTileset[i] = 0;
+        m_heroSamples[i]->dispose();
+        m_heroSamples[i] = 0;
     }
 
     g_windowManager->removeWindow(m_advWindow);
     delete m_advWindow;
     m_advWindow = 0;
-    delete[] m_routeArray;
+    if (m_routeArray)
+        delete[] m_routeArray;
     m_routeArray = 0;
     m_status = 0;
     if (m_netMsgHandler) {
@@ -3350,8 +3341,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
 // retail control flow. Sibling full/compact scopes now share retail's -0x14
 // result-string home and 0x14-byte frame; the residual is register allocation
 // and the associated cleanup-tail scheduling.
-// DC 2767/2773 and Mac 0xb348/0xb390 use TTextResource::operator[] for the
-// unvisited/visited labels. Restoring those calls is byte-flat in VC6.
+// DC 2767/2773 and Mac 0xb348/0xb390 access the unvisited/visited labels.
+// Keep the existing Complete getText helper; the spelling is VC6 byte-flat.
 // DC 2771/2778 and Mac 0xb370/0xb3b0/0xb3f4 call the retained
 // ExtraInfoUnion::getCreatureBank helper. VC6 expands all three calls here.
 
@@ -3968,8 +3959,8 @@ void advManager::reseed(int targetX, int targetY)
 // The CheckDimNextHeroBut tail already uses its canonical source call. DC
 // line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
 // the current 96.5199%.
-// DC 4853/4863/4893/4899/4920/4934/4947 uses TTextResource::operator[]
-// for all seven messages. Restoring those calls is Windows byte-flat.
+// DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
+// Keep the existing Complete getText calls; they are Windows byte-flat.
 VA(0x0040ec90, 0x5AD) MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -6025,6 +6016,8 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // ExtraInfoUnion's DC inheritance is represented by NewmapCell's existing
 // data/accessor surface; the audit retains that ownership gap, including
 // GetItemId. It is not evidence for a copied helper body in this caller.
+// DC records text lookups throughout the quick-info arms. Preserve the
+// Complete getText helper at those sites while checking retail call shape.
 VA(0x004137c0, 0x25A0) MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {
@@ -6055,16 +6048,14 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     mapPoint.m_z = z;
 
     if (!mapPoint.isValid()) {
-        strcpy(g_text, g_generalText->getText(
-            GENERAL_TEXT_MAP_BORDER));
+        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MAP_BORDER));
     } else {
         // DC names GetCell here; its ordinary retained body owns the
         // validity branch and canonical map indexing.
         testCell = getCell(mapPoint);
 
         if (!(getMapExtra(mapPoint) & playerBit)) {
-            strcpy(g_text, g_generalText->getText(
-                GENERAL_TEXT_QUICK_INFO_SHROUDED));
+            strcpy(g_text, g_generalText->getText(GENERAL_TEXT_QUICK_INFO_SHROUDED));
         } else {
             type_cell_adjuster adjuster;
             testCell = adjuster.getTriggerCell(testCell, cellX, cellY);
@@ -6143,12 +6134,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         testCell->m_objectIndex] & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6165,12 +6154,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = currHero->m_flags & 0x4;
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6188,12 +6175,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x8);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6244,12 +6229,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6268,12 +6251,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6316,12 +6297,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x2000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6344,12 +6323,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             + (currHero->m_flags & 0x20000000UL);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6367,12 +6344,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x4000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6391,12 +6366,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6429,12 +6402,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & 0x02000000UL) + (currHero->m_flags & 0x10UL));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6447,12 +6418,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f));
                         if (visited)
                             sprintf(tempText, leanToFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, leanToFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6471,12 +6440,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6507,12 +6474,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6531,12 +6496,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6554,12 +6517,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x1);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6578,12 +6539,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6601,12 +6560,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x8000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6622,12 +6579,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6644,12 +6599,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x80);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6661,12 +6614,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         & playerBit;
                     if (visited)
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_VISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                     else
                         sprintf(tempText, visitFormat,
-                                g_generalText->getText(
-                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                                g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(g_text, tempText);
                 }
                 break;
@@ -6684,12 +6635,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6710,12 +6659,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x10000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6748,12 +6695,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x100000);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6765,12 +6710,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x2);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6789,12 +6732,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & 0x100UL) + (currHero->m_flags & 0x04000000UL));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6813,12 +6754,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6855,12 +6794,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                             & (1UL << (testCell->m_extraInfo & 0x1f)));
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -6884,12 +6821,10 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                         visited = (currHero->m_flags & 0x40);
                         if (visited)
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_VISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
                         else
                             sprintf(tempText, visitFormat,
-                                    g_generalText->getText(
-                                        GENERAL_TEXT_UNVISITED_OBJECT));
+                                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(g_text, tempText);
                     }
                 }
@@ -7933,6 +7868,10 @@ void advManager::checkLoadSample(e_looping_sound_id idNum)
 // je / dec` because a jump table needs the index sign-extended. Equality
 // against a short compares at 16 bits; a switch cannot.
 
+// Mac switch targets retain source case order and separate equal-valued
+// returns. In particular, creature 6 has its own return-42 arm at 0x191fc
+// before the default at 0x19204. Restoring those arms and their order
+// reproduces the Windows code and compact dispatch tables exactly.
 VA(0x00418620, 0x5E4) MAC_ADDRESS(0x018d38, 0x55c)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::getSoundId(int x, int y, int z)
 {
@@ -7963,7 +7902,7 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             switch (type) {
             case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
             case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
-            case GET_SOUND_MINE_2:
+            case GET_SOUND_MINE_2: return LOOPING_SOUND_40;
             case GET_SOUND_MINE_3: return LOOPING_SOUND_40;
             case GET_SOUND_MINE_4: return LOOPING_SOUND_47;
             case GET_SOUND_MINE_5: return LOOPING_SOUND_17;
@@ -7983,6 +7922,8 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_67;
         case THIEVES_DEN:
             return LOOPING_SOUND_49;
+        case GARDEN_OF_REVELATION:
+            return LOOPING_SOUND_54;
         case ARENA:
             return LOOPING_SOUND_2;
         case SIREN:
@@ -7993,20 +7934,42 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_6;
         case UNDERGROUND_GATE:
             return LOOPING_SOUND_55;
+        case SEPULCHER:
+            return LOOPING_SOUND_8;
+        case DRAGON_CITY:
+            return LOOPING_SOUND_11;
+        case WAR_MACHINE_FACTORY:
+            return LOOPING_SOUND_12;
         case FOUNTAIN_OF_YOUTH:
             return LOOPING_SOUND_13;
+        case PILLAR_OF_FIRE:
+            return LOOPING_SOUND_14;
         case RALLY_FLAG:
             return LOOPING_SOUND_15;
+        case FOUNTAIN_OF_FORTUNE:
+            return LOOPING_SOUND_16;
+        case MAGIC_SPRING:
+            return LOOPING_SOUND_16;
+        case STABLES:
+            return LOOPING_SOUND_21;
+        case TRAINING_GROUNDS:
+            return LOOPING_SOUND_23;
+        case SHIPYARD:
+            return LOOPING_SOUND_24;
         case MYSTICAL_GARDEN:
             return LOOPING_SOUND_57;
+        case MAGIC_SCHOOL:
+            return LOOPING_SOUND_25;
         case FAERIE_RING:
             return LOOPING_SOUND_53;
         case BLACK_MARKET:
+            return LOOPING_SOUND_26;
         case TRADING_POST:
             return LOOPING_SOUND_26;
         case TAVERN:
             return LOOPING_SOUND_64;
         case MERC_CAMP:
+            return LOOPING_SOUND_27;
         case REFUGEE_CAMP:
             return LOOPING_SOUND_27;
         case WATER_WHEEL:
@@ -8016,72 +7979,83 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             return LOOPING_SOUND_30;
         case LITH_TWOWAY:
             return LOOPING_SOUND_31;
+        case SANCTUARY:
+            return LOOPING_SOUND_37;
+        case TEMPLE:
+            return LOOPING_SOUND_37;
         case SHRINE1:
         case SHRINE2:
         case SHRINE3:
             return LOOPING_SOUND_38;
         case POWER_SCHOOL:
             return LOOPING_SOUND_39;
+        case WAR_SCHOOL:
+            return LOOPING_SOUND_41;
+        case DEFENSE_TOWER:
+            return LOOPING_SOUND_41;
+        case HILL_FORT:
+            return LOOPING_SOUND_41;
         case CREATURE_GENERATOR_1:
             switch (g_creatureGenerator1Types[thisCell->m_objectIndex]) {
-            case GET_SOUND_CREATURE_106:
-            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
+            case GET_SOUND_CREATURE_106: return LOOPING_SOUND_33;
             case GET_SOUND_CREATURE_096: return LOOPING_SOUND_3;
-            case GET_SOUND_CREATURE_010:
+            case GET_SOUND_CREATURE_074: return LOOPING_SOUND_7;
+            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_068: return LOOPING_SOUND_11;
+            case GET_SOUND_CREATURE_010: return LOOPING_SOUND_21;
             case GET_SOUND_CREATURE_014: return LOOPING_SOUND_21;
             case GET_SOUND_CREATURE_112: return LOOPING_SOUND_46;
             case GET_SOUND_CREATURE_012: return LOOPING_SOUND_37;
+            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_054: return LOOPING_SOUND_9;
             case GET_SOUND_CREATURE_104: return LOOPING_SOUND_23;
             case GET_SOUND_CREATURE_016: return LOOPING_SOUND_50;
             case GET_SOUND_CREATURE_113: return LOOPING_SOUND_51;
-            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
-            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
-            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
-            case GET_SOUND_CREATURE_044:
             case GET_SOUND_CREATURE_052: return LOOPING_SOUND_65;
+            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
+            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
+            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
+            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
+            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
+            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
+            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
+            case GET_SOUND_CREATURE_044: return LOOPING_SOUND_65;
+            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
+            case GET_SOUND_CREATURE_026: return LOOPING_SOUND_11;
+            case GET_SOUND_CREATURE_004: return LOOPING_SOUND_19;
             case GET_SOUND_CREATURE_072: return LOOPING_SOUND_20;
             case GET_SOUND_CREATURE_046: return LOOPING_SOUND_10;
             case GET_SOUND_CREATURE_110: return LOOPING_SOUND_22;
+            case GET_SOUND_CREATURE_042: return LOOPING_SOUND_14;
+            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
+            case GET_SOUND_CREATURE_034: return LOOPING_SOUND_25;
             case GET_SOUND_CREATURE_080: return LOOPING_SOUND_58;
             case GET_SOUND_CREATURE_076: return LOOPING_SOUND_59;
-            case GET_SOUND_CREATURE_078:
-            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
+            case GET_SOUND_CREATURE_078: return LOOPING_SOUND_0;
             case GET_SOUND_CREATURE_008: return LOOPING_SOUND_32;
             case GET_SOUND_CREATURE_038: return LOOPING_SOUND_60;
+            case GET_SOUND_CREATURE_048: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_090: return LOOPING_SOUND_61;
-            case GET_SOUND_CREATURE_088:
-            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
-            case GET_SOUND_CREATURE_042:
-            case GET_SOUND_CREATURE_050:
-            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
-            case GET_SOUND_CREATURE_026:
-            case GET_SOUND_CREATURE_068:
+            case GET_SOUND_CREATURE_088: return LOOPING_SOUND_34;
+            case GET_SOUND_CREATURE_050: return LOOPING_SOUND_14;
             case GET_SOUND_CREATURE_082: return LOOPING_SOUND_11;
             case GET_SOUND_CREATURE_092: return LOOPING_SOUND_4;
             case GET_SOUND_CREATURE_028: return LOOPING_SOUND_18;
+            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
             case GET_SOUND_CREATURE_022: return LOOPING_SOUND_54;
+            case GET_SOUND_CREATURE_070: return LOOPING_SOUND_7;
             case GET_SOUND_CREATURE_115: return LOOPING_SOUND_16;
+            case GET_SOUND_CREATURE_060: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
             case GET_SOUND_CREATURE_020: return LOOPING_SOUND_35;
             case GET_SOUND_CREATURE_024: return LOOPING_SOUND_44;
+            case GET_SOUND_CREATURE_064: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_062: return LOOPING_SOUND_8;
             case GET_SOUND_CREATURE_056: return LOOPING_SOUND_63;
-            case GET_SOUND_CREATURE_058:
-            case GET_SOUND_CREATURE_060:
-            case GET_SOUND_CREATURE_062:
-            case GET_SOUND_CREATURE_064:
-            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_058: return LOOPING_SOUND_8;
             case GET_SOUND_CREATURE_000: return LOOPING_SOUND_36;
-            case GET_SOUND_CREATURE_002:
-            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
-            case GET_SOUND_CREATURE_004:
-            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
-            case GET_SOUND_CREATURE_034:
-            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
-            case GET_SOUND_CREATURE_048:
-            case GET_SOUND_CREATURE_070:
-            case GET_SOUND_CREATURE_074:
-            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
-            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
+            case GET_SOUND_CREATURE_002: return LOOPING_SOUND_1;
+            case GET_SOUND_CREATURE_006: return LOOPING_SOUND_42;
             default: return LOOPING_SOUND_42;
             }
         case CREATURE_GENERATOR_4:
@@ -8090,34 +8064,6 @@ e_looping_sound_id advManager::getSoundId(int x, int y, int z)
             if (thisCell->m_objectIndex == GET_SOUND_GENERATOR4_1)
                 return LOOPING_SOUND_12;
             break;
-        case DEFENSE_TOWER:
-        case HILL_FORT:
-        case WAR_SCHOOL:
-            return LOOPING_SOUND_41;
-        case DRAGON_CITY:
-            return LOOPING_SOUND_11;
-        case FOUNTAIN_OF_FORTUNE:
-        case MAGIC_SPRING:
-            return LOOPING_SOUND_16;
-        case GARDEN_OF_REVELATION:
-            return LOOPING_SOUND_54;
-        case MAGIC_SCHOOL:
-            return LOOPING_SOUND_25;
-        case PILLAR_OF_FIRE:
-            return LOOPING_SOUND_14;
-        case SANCTUARY:
-        case TEMPLE:
-            return LOOPING_SOUND_37;
-        case SEPULCHER:
-            return LOOPING_SOUND_8;
-        case SHIPYARD:
-            return LOOPING_SOUND_24;
-        case STABLES:
-            return LOOPING_SOUND_21;
-        case TRAINING_GROUNDS:
-            return LOOPING_SOUND_23;
-        case WAR_MACHINE_FACTORY:
-            return LOOPING_SOUND_12;
         default:
             return LOOPING_SOUND_INVALID;
         }
@@ -8540,12 +8486,15 @@ void advManager::setInitialMapOrigin()
                                  ? g_currentPlayer
                                  : g_game->getLocalPlayer();
         if (player->m_numHeroes > 0) {
-            hero* startHero = g_game->getHero(player->m_heroes[0]);
+            // Mac 0x1a174 indexes the hero pool directly; neither target
+            // executes getHero's -1 guard in this branch.
+            hero* startHero = &g_game->m_heroes[player->m_heroes[0]];
             m_radarOrigin.m_x = startHero->m_x - 9;
             m_radarOrigin.m_y = startHero->m_y - 8;
             m_radarOrigin.m_z = startHero->m_z;
         } else if (player->m_numTowns > 0) {
-            town* startTown = g_game->getTown(player->m_townIds[0]);
+            // Mac 0x1a1d8 likewise indexes the town pool without a guard.
+            town* startTown = &g_game->m_towns[player->m_townIds[0]];
             m_radarOrigin.m_x = startTown->m_mapX - 9;
             m_radarOrigin.m_y = startTown->m_mapY - 8;
             m_radarOrigin.m_z = startTown->m_mapZ;

@@ -167,6 +167,15 @@ over-inlines.
   depth-2 leaf either — the one-pass inliner folds leaves into callers'
   stored bodies bottom-up, measured on an f→g→h chain)
 
+A concrete proxy-expression control: in `town::applySpecialBuildingEffect`
+(`0x5bd8e0`), `!bitset[index]` keeps the first Dinkumware bit-test call while
+`bitset[index] == 0` expands it as retail does. `== false` emits the same exact
+Windows body: 55 CFG blocks and 30 calls agree, raising 97.4786% to 100%.
+All forms retain `operator[]` and the proxy conversion; no helper was bypassed.
+The three-state whole-TU control produced two distinct objects and reproduced
+both. This establishes an expression-sensitive inline decision for this proxy,
+not a general rule for types with overloaded comparison or negation operators.
+
 ### A9. Budget runs out MID-function — `ai_combat::do_general_melee`, 94.8% (was 79.6)
 `kill()` inlines twice; retail expands `get_total` inside BOTH copies; our
 CL's budget runs out after the first, and every register downstream of the
@@ -251,6 +260,23 @@ the epilogue); a `dealt` local (99.91).
 - status: explained-lever; the model must score callee spellings through the expansion
 - probe: none (the observable is the delta across a dozen retail call sites;
   the *ternary merge mechanism* itself is probed standalone — see D8)
+
+Another retained-body control is `advManager::getTreasureData` (`0x49f040`).
+A named unsigned index and a direct subscript both emit its exact 35-byte
+body, but the direct subscript restores interleaved pool/cell loads in its
+callers: `doCustomArtifact` 98.2381 → 100 and `doCustomSpellScroll`
+97.4451 → 100. No caller edits or helper removals are needed. Three natural
+forms produced three reproduced TU objects; naming the pool before the index
+only partially recovered the artifact caller.
+
+For `type_record_hide_boat`, Mac reloads the stored `m_currentBoat` before
+reading each previous-state field. Using those member reads instead of the
+constructor parameter restores `game::recordHideBoat` from 88.9253 to 100
+without changing its source call or nested vector helpers. Member initializers
+with the same reads reach 99.2701; body assignments match the Windows caller.
+The three pointer/form variants produced three reproduced TU objects.
+The ordinary CodeWarrior constructor matches all 32 native instructions after
+relocation masking; this is shape evidence, not a linked Mac exact verdict.
 
 ### A16. Retail's inline copies of one body disagree with each other
 `game::GetPlayerName` 99.5: retail's two copies disagree on registers; ours
@@ -971,6 +997,23 @@ DEFENDER first, no if/else ordering reproduces it: 69.3 / 74.5);
 - status: explained-lever
 - probe: `d09_switch_source_order.cpp` (PASS — bodies emitted 3333, 1111,
   2222, 4444 in source order under a 4-entry value-mapped jump table)
+
+`advManager::getSoundId` (0x418620) supplies a native cross-architecture
+control: Mac keeps separate equal-valued return arms that the reconstructed
+source had grouped. Restoring their order and separate returns raises Windows
+96.9031 → 99.3202. Mac also keeps creature case 6 at 0x191fc apart from the
+default at 0x19204, although both return 42. Restoring that explicit case
+reproduces the compact selector table and reaches 100%; the full build loses
+no MAX. Equal case results do not establish shared source labels, and a case
+equal to the default can still affect VC6 table construction.
+
+`townManager::setCommandAndText` (0x5c77a0) has another equal-default
+case group: Mac sends both no-hotspot (-1) and panorama (147) to 0x1bfe04,
+separate from default at 0x1c057c. Separating only -1 lowers the score;
+restoring both labels raises 99.03 → 99.7496. Native strip-before-index
+assignments then reach 99.9775. This illustrates why an incomplete label
+group can make a supported source model appear worse. Canonical helpers
+remain unchanged.
 
 ### D10. Loop induction and index-type forms
 `ai_combat` 89.8 → 100.0: the Dismiss loop's index is a SHORT consumed 32-bit

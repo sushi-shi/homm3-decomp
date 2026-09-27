@@ -289,6 +289,9 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     }
 }
 
+// These labels use the public text subscript, retaining its getText call.
+// Mac 0x1571b0/0x1572f0 and 0x157598/0x157850/0x157990 retain the
+// inner vector indexer; DC names operator[] in both widget builders.
 // E:\gamedcs\sacrifice_window.cpp:360
 VA(0x00560380, 0xD67) MAC_ADDRESS(0x155fc0, 0x1468)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
@@ -425,14 +428,14 @@ void type_sacrifice_window::createArtifactWidgets(
 
     currentTextWidget = new textWidget(
         317, 23, 256, 18,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_artifactWidgets.push_back(currentTextWidget);
 
     currentTextWidget = new textWidget(
         159, 415, 283, 18,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURES_TITLE],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_artifactWidgets.push_back(currentTextWidget);
@@ -453,7 +456,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(background);
 
     buffer = formatString(
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_HERO_NAME],
         m_currentHero->m_name);
 
     textWidget* currentTextWidget = new textWidget(
@@ -470,14 +473,14 @@ void type_sacrifice_window::createCreatureWidgets(
 
     currentTextWidget = new textWidget(
         317, 21, 256, 18,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
 
     currentTextWidget = new textWidget(
         318, 56, 256, 42,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8);
     m_widgets.push_back(currentTextWidget);
     m_creatureWidgets.push_back(currentTextWidget);
@@ -1157,7 +1160,8 @@ MAC_ADDRESS(0x15a3e0, 0xd4)
 unsigned char type_sacrifice_window::addArtifact(
     type_artifact artifact, long source)
 {
-    unsigned long i;
+    // DC 0x12681c records the offering index as signed long.
+    long i;
     for (i = 0; i < m_artifactOfferings.size(); ++i) {
         if (m_artifactOfferings[i].m_artifactId == ARTIFACT_NONE)
             break;

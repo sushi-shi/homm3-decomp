@@ -428,7 +428,13 @@ long type_AI_attack_hex_chooser::getAttackTime(const pathCell* cell) const
 VA(0x00436300, 0x31C) MAC_ADDRESS(0x03dcec, 0x384)  // dc 0x3d1e4
 void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDirection, long stopDirection)
 {
-    for (long direction = startDirection; direction < stopDirection; direction++) {
+    // DC records enemy_value, direction, checked and attack_time at
+    // procedure scope. Restoring those lifetimes is byte-flat in VC6.
+    long threat;
+    long direction;
+    long checked;
+    long turns;
+    for (direction = startDirection; direction < stopDirection; direction++) {
         long hex = g_combatManager->m_adjacentCells[enemyHex][direction];
         if (!g_combatManager->validHex(hex))
             continue;
@@ -437,12 +443,12 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             continue;
         if (cell->m_flightCost > 0)
             continue;
-        long turns = getAttackTime(cell);
+        turns = getAttackTime(cell);
         if (m_bestHex >= 0) {
             if (m_bestAttackTime < turns)
                 continue;
         }
-        long checked = 0;
+        checked = 0;
         long value = getHexAttackValue(hex, checked);
         if (g_game->m_setup.m_difficulty > 0
                 || g_combatManager->m_sideIsAi[m_data->getGroup()]) {
@@ -471,7 +477,7 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                                               m_attackArmy, hex, m_data);
             }
         }
-        long threat = m_enemyAttackArray[hex];
+        threat = m_enemyAttackArray[hex];
         if (m_attackArmy->is(creatureDoubleWide)) {
             long otherHex = hex + m_attackArmy->offsetToFront(-1);
             value += getHexAttackValue(otherHex, checked);
@@ -922,7 +928,7 @@ long type_AI_spellcaster::getChainLightningValue(long power, TSkillMastery maste
 }
 
 VA(0x00437310, 0xD1) MAC_ADDRESS(0x03ef30, 0xe8)  // dc 0x3dde8
-void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) const
+void type_AI_spellcaster::considerChainLightning(type_spell_choice& choice) const
 {
     long targetSide = 1 - m_side;
     for (long i = 0; i < g_combatManager->m_numArmies[targetSide]; ++i) {
@@ -932,12 +938,12 @@ void type_AI_spellcaster::considerChainLightning(type_spell_choice* choice) cons
                 && g_combatManager->validSpellTargetArmy(SPELL_CHAIN_LIGHTNING,
                                                    m_side, target, 1,
                                                    creatureCast)) {
-            long value = getChainLightningValue(choice->m_power,
-                                                    choice->m_mastery, target);
-            if (value > choice->m_value) {
-                choice->m_value = value;
-                choice->m_target = target->m_gridIndex;
-                choice->m_castNow = 1;
+            long value = getChainLightningValue(choice.m_power,
+                                                    choice.m_mastery, target);
+            if (value > choice.m_value) {
+                choice.m_value = value;
+                choice.m_target = target->m_gridIndex;
+                choice.m_castNow = 1;
             }
         }
     }
@@ -1943,42 +1949,42 @@ long type_AI_spellcaster::getHypnotizeValue(const army* enemy, type_enchant_data
 }
 
 VA(0x0043a670, 0x291) MAC_ADDRESS(0x043f68, 0x2cc)  // dc 0x40bb8
-void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, long group) const
+void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice& choice, long group) const
 {
-    TEnchantValue valueFunc = getEnchantmentFunction(choice->m_spell);
+    TEnchantValue valueFunc = getEnchantmentFunction(choice.m_spell);
     const army* best = 0;
     for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
         const army* target = &g_combatManager->m_armies[group][i];
         if (target->cannotAttack())
             continue;
         long creatureCast = m_isCreatureSpell != 0;
-        if (!g_combatManager->validSpellTargetArmy(choice->m_spell, m_side, target, 1,
+        if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, target, 1,
                                              creatureCast))
             continue;
-        if (target->getSpellTime(choice->m_spell))
+        if (target->getSpellTime(choice.m_spell))
             continue;
-        long value = (this->*valueFunc)(target, *choice);
+        long value = (this->*valueFunc)(target, choice);
         if (target->getSpellTime(SPELL_MAGIC_MIRROR)
                 && group != m_side && value > 0
-                && choice->m_spell != SPELL_DISPEL)
+                && choice.m_spell != SPELL_DISPEL)
             value = (50 - target->getMirrorEffect()) * value * 2 / 100;
-        if (value > choice->m_value) {
+        if (value > choice.m_value) {
             best = target;
-            choice->m_value = value;
-            choice->m_target = target->m_gridIndex;
+            choice.m_value = value;
+            choice.m_target = target->m_gridIndex;
         }
     }
     if (best == 0)
         return;
     if (group == m_side) {
-        choice->m_castNow = best == g_combatManager->getCurrentArmy()
+        choice.m_castNow = best == g_combatManager->getCurrentArmy()
                 || isLastAction()
-                || (g_spellTraits[choice->m_spell].m_flags & 0x4000);
+                || (g_spellTraits[choice.m_spell].m_flags & 0x4000);
     } else {
-        choice->m_castNow = shouldAttackNow(*best);
+        choice.m_castNow = shouldAttackNow(*best);
     }
-    if (choice->m_spell == SPELL_HASTE)
-        choice->m_castNow = 1;
+    if (choice.m_spell == SPELL_HASTE)
+        choice.m_castNow = 1;
 }
 
 // The per-stack value goes through get_enchantment_function's
@@ -1991,27 +1997,27 @@ void type_AI_spellcaster::considerSingleEnchantment(type_spell_choice* choice, l
 // read HERE by spell id, which is what the split of army.h's spell-row
 // view out of the round view exists for.
 VA(0x0043a910, 0x150) MAC_ADDRESS(0x044234, 0x1dc)  // dc 0x40dc8
-void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long group) const
+void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long group) const
 {
-    if (spellTargetsASingleArmy(choice->m_spell, choice->m_mastery)) {
+    if (spellTargetsASingleArmy(choice.m_spell, choice.m_mastery)) {
         considerSingleEnchantment(choice, group);
         return;
     }
-    TEnchantValue valueOf = getEnchantmentFunction(choice->m_spell);
+    TEnchantValue valueOf = getEnchantmentFunction(choice.m_spell);
     long value = 0;
     for (long i = 0; i < g_combatManager->m_numArmies[group]; i++) {
         const army* target = &g_combatManager->m_armies[group][i];
         if (target->cannotAttack())
             continue;
-        if (target->getSpellTime(choice->m_spell))
+        if (target->getSpellTime(choice.m_spell))
             continue;
         long creatureCast = m_isCreatureSpell != 0;
-        if (g_combatManager->validSpellTargetArmy(choice->m_spell, m_side, target, 1,
+        if (g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, target, 1,
                                             creatureCast))
-            value += (this->*valueOf)(target, *choice);
+            value += (this->*valueOf)(target, choice);
     }
-    choice->m_castNow = 1;
-    choice->m_value = value;
+    choice.m_castNow = 1;
+    choice.m_value = value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:2553
@@ -2037,7 +2043,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice* choice, long gr
 // direct loop bound in isLastAction closes the remaining stack-slot difference.
 
 VA(0x0043aa60, 0x235) MAC_ADDRESS(0x044410, 0x218)  // anchor-callee, dc 0x40ec0
-void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
+void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 {
     unsigned char moved = 0;
     const army* ourArmy = g_combatManager->m_armies[m_side];
@@ -2061,12 +2067,12 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
             continue;
         if (g_combatManager->m_nextActionGridIndex == ourArmy->m_gridIndex)
             continue;
-        if (gain <= choice->m_value)
+        if (gain <= choice.m_value)
             continue;
-        choice->m_value = gain;
-        choice->m_target = ourArmy->m_gridIndex;
-        choice->m_secondTargetHex = g_combatManager->m_nextActionExtra;
-        choice->m_castNow =
+        choice.m_value = gain;
+        choice.m_target = ourArmy->m_gridIndex;
+        choice.m_secondTargetHex = g_combatManager->m_nextActionExtra;
+        choice.m_castNow =
             ourArmy == g_combatManager->getCurrentArmy()
             || ourArmy->isIncapacitated()
             || isLastAction();
@@ -2098,31 +2104,32 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice* choice) const
 
 // DC lines 2674-2675 call get_current_army and is_last_action. Restoring
 // their short-circuit expression raises VC6 from 97.10% to 99.96%: all 44
-// blocks, 29 branches and nine calls agree. The remaining byte difference
-// is a loop-counter stack home at -0x8 rather than retail's -0xc. Earlier
-// named-local and volatile probes on the expanded tail were flat or worse.
+// blocks, 29 branches and nine calls agree. Clamping the existing healable
+// count through min, rather than introducing a second healed variable,
+// recovers the retail stack lifetimes and reaches Windows 100%. The native
+// Mac body likewise uses the selected count directly in combat valuation.
 VA(0x0043aca0, 0x2AE) MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee, dc 0x4101c
-void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
+void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 {
     const army* ourArmy = g_combatManager->m_armies[m_side];
     long count = g_combatManager->m_numArmies[m_side];
     for (; count-- > 0; ++ourArmy) {
         long creatureCast = m_isCreatureSpell != 0;
-        if (!g_combatManager->validSpellTargetArmy(choice->m_spell, m_side, ourArmy, 1,
+        if (!g_combatManager->validSpellTargetArmy(choice.m_spell, m_side, ourArmy, 1,
                                              creatureCast))
             continue;
         long hex = ourArmy->m_gridIndex;
-        if (g_combatManager->findResurrectionTarget(choice->m_spell, m_side, hex, 0)
+        if (g_combatManager->findResurrectionTarget(choice.m_spell, m_side, hex, 0)
                 != ourArmy) {
             if (!ourArmy->is(creatureDoubleWide))
                 continue;
             hex = ourArmy->getSecondGridIndex();
-            if (g_combatManager->findResurrectionTarget(choice->m_spell, m_side, hex, 0)
+            if (g_combatManager->findResurrectionTarget(choice.m_spell, m_side, hex, 0)
                     != ourArmy)
                 continue;
         }
-        long healable = (g_spellTraits[choice->m_spell].m_powerFactor * choice->m_power
-                         + g_spellTraits[choice->m_spell].m_masteryBonus[choice->m_mastery])
+        long healable = (g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power
+                         + g_spellTraits[choice.m_spell].m_masteryBonus[choice.m_mastery])
                         / ourArmy->m_monInfo.m_hitPoints;
         long dead = ourArmy->m_origNumTroops - ourArmy->m_numTroops;
         if (healable > dead) {
@@ -2131,24 +2138,24 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice* choice) const
                     continue;
             }
         }
-        long healed = min(healable, dead);
-        if (healed < 1)
+        healable = min(healable, dead);
+        if (healable < 1)
             continue;
-        if (choice->m_spell == SPELL_RESURRECTION
-                && choice->m_mastery < eMasteryAdvanced && m_winLikely)
+        if (choice.m_spell == SPELL_RESURRECTION
+                && choice.m_mastery < eMasteryAdvanced && m_winLikely)
             continue;
         long value = static_cast<long>(
             ourArmy->getUnitCombatValue(m_estimate.m_lowestAttack,
                                             m_estimate.m_lowestDefense,
                                             ourArmy->canShoot(0), 0)
-            * healed);
+            * healable);
         if (m_estimate.m_awakeFriendlyValue > m_estimate.m_awakeEnemyValue && m_estimate.m_roundsLeft <= 1)
             value += value;
-        if (value <= choice->m_value)
+        if (value <= choice.m_value)
             continue;
-        choice->m_value = value;
-        choice->m_target = hex;
-        choice->m_castNow =
+        choice.m_value = value;
+        choice.m_target = hex;
+        choice.m_castNow =
             ourArmy == g_combatManager->getCurrentArmy()
             || m_winLikely
             || isLastAction();
@@ -2423,7 +2430,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // minimum is for.
 
 VA(0x0043b8f0, 0x224) MAC_ADDRESS(0x045674, 0x330)  // dc 0x41c30
-void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
+void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
 {
     if (m_side == 1)
         return;
@@ -2455,7 +2462,7 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
         return;
     long value = 0;
     const army* ourArmy = g_combatManager->m_armies[m_side];
-    long damage = min(choice->getMasteryValue(), total);
+    long damage = min(choice.getMasteryValue(), total);
     long remaining = g_combatManager->m_numArmies[m_side];
     for (; remaining-- > 0; ++ourArmy) {
         // Retail tests immobilization before the three spell influences;
@@ -2478,8 +2485,8 @@ void type_AI_spellcaster::considerEarthquake(type_spell_choice* choice) const
                                                   m_estimate.m_lowestDefense)
                  * damage / (total * 3);
     }
-    choice->m_value = value;
-    choice->m_castNow = 1;
+    choice.m_value = value;
+    choice.m_castNow = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:3093
@@ -2504,9 +2511,9 @@ void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 }
 
 VA(0x0043bb20, 0x3FC) MAC_ADDRESS(0x045a54, 0x22c)  // dc 0x41ed4
-void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
+void type_AI_spellcaster::considerSpell(type_spell_choice& choice) const
 {
-    switch (choice->m_spell) {
+    switch (choice.m_spell) {
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
         considerResurrect(choice);
@@ -2517,16 +2524,16 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
     case SPELL_DEATH_RIPPLE:
     case SPELL_DESTROY_UNDEAD:
     case SPELL_ARMAGEDDON:
-        considerMassDamage(*choice);
+        considerMassDamage(choice);
         return;
     case SPELL_DISPEL: {
         considerEnchantment(choice, m_side);
-        if (choice->m_mastery == eMasteryAdvanced)
+        if (choice.m_mastery == eMasteryAdvanced)
             considerEnchantment(choice, m_enemySide);
-        if (choice->m_mastery == eMasteryExpert) {
-            type_spell_choice mirror = *choice;
-            considerEnchantment(&mirror, m_enemySide);
-            choice->m_value += mirror.m_value;
+        if (choice.m_mastery == eMasteryExpert) {
+            type_spell_choice mirror = choice;
+            considerEnchantment(mirror, m_enemySide);
+            choice.m_value += mirror.m_value;
         }
         break;
     }
@@ -2537,22 +2544,22 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
     case SPELL_FIREBALL:
     case SPELL_INFERNO:
     case SPELL_METEOR_SHOWER:
-        considerAreaEffect(*choice);
+        considerAreaEffect(choice);
         return;
     case SPELL_SACRIFICE:
-        considerSacrifice(*choice);
+        considerSacrifice(choice);
         return;
     case SPELL_SUMMON_FIRE_ELEMENTAL:
     case SPELL_SUMMON_EARTH_ELEMENTAL:
     case SPELL_SUMMON_WATER_ELEMENTAL:
     case SPELL_SUMMON_AIR_ELEMENTAL:
-        considerSummon(*choice);
+        considerSummon(choice);
         return;
     case SPELL_TELEPORT:
         considerTeleport(choice);
         return;
     }
-    const SSpellTraits* traits = &g_spellTraits[choice->m_spell];
+    const SSpellTraits* traits = &g_spellTraits[choice.m_spell];
     if ((traits->m_flags & 0x70) == 0)
         return;
     if (traits->m_karma >= 0)
@@ -2681,7 +2688,7 @@ long type_AI_spellcaster::getOgreMageValue(const army* target) const
     type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
     if (spellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
         return getBloodLustValue(target, choice);
-    considerEnchantment(&choice, m_side);
+    considerEnchantment(choice, m_side);
     return choice.m_value;
 }
 
@@ -2704,7 +2711,7 @@ long type_AI_spellcaster::getCaliphValue(const army* target) const
             if (spellTargetsASingleArmy(spell, mastery)) {
                 total += (this->*valueOf)(target, choice);
             } else {
-                considerEnchantment(&choice, m_side);
+                considerEnchantment(choice, m_side);
                 total += choice.m_value;
             }
         }
@@ -2864,7 +2871,7 @@ unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
                 continue;
         }
         type_spell_choice choice(spell, mastery, power, duration);
-        considerSpell(&choice);
+        considerSpell(choice);
         if (choice.m_value <= 0)
             continue;
         if (m_ourHero->m_mana >= cost * 7)

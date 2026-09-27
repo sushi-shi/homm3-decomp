@@ -358,6 +358,8 @@ void type_record_claim_town::undo()
 // two independent snapshot loads corroborate the revised constructor inputs.
 // DC retains this constructor at 0x8ce74 and Mac recordHideBoat calls 0xbfce0;
 // VC6 expands the ordinary same-TU helper in both Windows boat callers.
+// Mac reloads m_currentBoat before each snapshot. Keeping those member reads
+// also restores the retail vector expansion in recordHideBoat (88.9253 -> 100).
 MAC_ADDRESS(0x0bfce0, 0x80)
 type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
                                                     unsigned char occupied,
@@ -365,9 +367,9 @@ type_record_hide_boat::type_record_hide_boat(boat* currentBoat,
 {
     m_currentBoat = currentBoat;
     m_occupied = occupied;
-    m_previousOccupied = currentBoat->m_occupied;
+    m_previousOccupied = m_currentBoat->m_occupied;
     m_occupyingHero = occupyingHero;
-    m_previousOccupyingHero = currentBoat->m_occupyingHero;
+    m_previousOccupyingHero = m_currentBoat->m_occupyingHero;
 }
 
 VA(0x0049acc0, 0x27) MAC_ADDRESS(0x0bfd60, 0x48)  // dc 0x8ceb0

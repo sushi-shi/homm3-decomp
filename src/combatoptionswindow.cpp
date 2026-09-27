@@ -341,6 +341,8 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
 // Older flattened-dispatch measurements above do not describe this source.
 VA(0x0046f7b0, 0x72A) MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG, dc 0x67b7c
+// A named music widget before setVisible(0) is Windows byte-flat at 96.9432%:
+// VC6 still pushes the visible value after getWidget, unlike retail.
 int combatOptionsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;

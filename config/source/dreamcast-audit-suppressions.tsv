@@ -544,7 +544,6 @@ mapcell.obj	0xf36b0	690c3c64705a	9	Complete exact body materializes the signed c
 mapcell.obj	0xf43e8	690c3c64705a	9	Complete exact body materializes the signed char[8][6] local representation; Dreamcast records char [8][6], an older width, signedness, or domain choice.
 kb.obj	0xe3e48	7a0d92280c12	8	Dreamcast local association records SmackTag *, but Complete exact named calls and object use require Smack *; retain the Complete-specific body mapping.
 game.obj	0xa2da0	b9b55f9baefd	9	Complete exact body materializes the int local representation; Dreamcast records short, an older width, signedness, or domain choice.
-game.obj	0xa3c68	c4f2280e5385	9	Complete exact body materializes the signed char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa410c	0b2b9da603de	9	Complete exact body materializes the unsigned char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa4548	0b2b9da603de	9	Complete exact body materializes the unsigned char local representation; Dreamcast records int, an older width, signedness, or domain choice.
 game.obj	0xa6274	3921bb04fc72	9	Complete exact body materializes the unsigned int local representation; Dreamcast records int, an older width, signedness, or domain choice.

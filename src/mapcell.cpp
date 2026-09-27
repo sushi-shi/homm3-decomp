@@ -692,11 +692,16 @@ int NewfullMap::saveSeerList(TAbstractFile* outfile)
 }
 
 // Mac retains this sibling at 0x11f798; Complete VC6 expands it in save.
+// Its count is the endian-aware exception among these list writers:
+// Mac 0x11f7c4 zero-extends the short, then sthbrx encodes it at 0x11f7c8.
+// Keep the size as an int and narrow it at the serialization boundary.
+// This shared writer restores Windows save from 83.80 to 95.76%.
 MAC_ADDRESS(0x11f798, 0x9c)
 void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
 {
-    writeValue<short>(outfile, static_cast<short>(m_questGuardList.size()));
-    for (unsigned int i = 0; i < m_questGuardList.size(); ++i)
+    int count = m_questGuardList.size();
+    writeLittleEndianValue<unsigned short>(outfile, count);
+    for (int i = 0; i < m_questGuardList.size(); ++i)
         m_questGuardList[i].save(outfile);
 }
 
@@ -1921,6 +1926,9 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
 // reads; DC records one int_buffer and char_buffer. Sharing those readers
 // and the existing index raises Windows MAX 91.44 -> 96.15.
+// Routing all checked reads through the reference reader instead drops
+// this caller to 83.64% by changing nested vector expansion; retain its
+// shared scalar homes while investigating that remaining library boundary.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
@@ -4001,6 +4009,8 @@ void NewfullMap::rebuildObjectTypeIndex()
 // count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
 // scans invalid placements. This ownership and the two braced read guards
 // reproduce retail, including its distinct empty/nonempty vector cleanups.
+// Naming the canonical GetSprite result inside the sprite loop drops Windows
+// from 99.5485% to 98.34%; its direct vector assignment keeps the peak.
 VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
@@ -4594,6 +4604,8 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // terrainMask stay with the editor template.
 // Complete-only conversion constructor: retail 0x506080 constructs the
 // string and five masks, then copies the editor template's runtime fields.
+// Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
+// position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no TObjectType* overload.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only

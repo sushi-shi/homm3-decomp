@@ -1364,46 +1364,39 @@ public:
     void markMoat(const army* currentArmy, long* enemyAttacks,
                    type_AI_combat_parameters* estimate);  // 0x421590
     unsigned char chooseCyclopsAction(long bestValue, long side,
-                                        type_AI_combat_parameters* estimate);  // 0x41eea0
+                                        type_AI_combat_parameters& estimate);  // 0x41eea0
 
 private:
     unsigned char chooseCreatureSpell(const army* currentArmy,
-                                        long* bestValue,
-                                        type_AI_combat_parameters* estimate);  // 0x420d20
+                                        long& bestValue,
+                                        type_AI_combat_parameters& estimate);  // 0x420d20
     unsigned char chooseMeleeTarget(const army* currentArmy,
                                       unsigned char teleport,
                                       long* actionValue,
                                       type_AI_combat_parameters* estimate);  // 0x421680
     unsigned char chooseResurrectAction(
-        const army* currentArmy, long* bestValue,
-        type_AI_combat_parameters* estimate);  // 0x421000
+        const army* currentArmy, long& bestValue,
+        type_AI_combat_parameters& estimate);  // 0x421000
     long chooseShooterTarget(const army* currentArmy,
-                               type_AI_combat_parameters* data,
-                               long* bestValue) const;  // 0x41eb80
+                               type_AI_combat_parameters& data,
+                               long& bestValue) const;  // 0x41eb80
     unsigned char chooseSpellAction(const army* currentArmy,
                                       long* bestValue,
                                       type_AI_combat_parameters* estimate);
     long getAreaEffect(long side, const army* ourArmy,
                          long markedEnemies,
-                         const type_AI_combat_parameters* estimate) const;  // 0x41f920
-    // Non-const `estimate` for the same reason mark_multiheaded_enemy
-    // below is: this body calls that one and reaches
-    // get_simple_attack_effect itself.
+                         const type_AI_combat_parameters& estimate) const;  // 0x41f920
+    // Recorded const-reference interface; getSimpleAttackEffect is const.
     void markEnemyAttacks(const army* ourArmy, long* enemyAttacks,
-                            long* dangerousEnemies,
-                            type_AI_combat_parameters* estimate) const;  // 0x420260
+                            long& dangerousEnemies,
+                            const type_AI_combat_parameters& estimate) const;  // 0x420260
     void markFriendlyArmies(const army* ourArmy, long* enemyAttacks,
                               long markedEnemies,
-                              const type_AI_combat_parameters* estimate) const;  // 0x41fb60
-    // `estimate` is NON-const where the Dreamcast roster prints
-    // `const type_AI_combat_parameters*`, for the same reason the
-    // searchArray pair above is: the body reaches
-    // type_AI_combat_parameters::get_simple_attack_effect through it and
-    // ai_tactical.h declares that method non-const. Spelling only.
+                              const type_AI_combat_parameters& estimate) const;  // 0x41fb60
     void markMultiheadedEnemy(const army* ourArmy, const army* enemy,
                                 long* enemyAttacks, long limitValue,
                                 searchArray* currentSearchArray,
-                                type_AI_combat_parameters* estimate) const;  // 0x41fd60
+                                const type_AI_combat_parameters& estimate) const;  // 0x41fd60
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
     // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
@@ -1467,7 +1460,7 @@ private:
     void chooseShooterAction(const army* currentArmy,
                                unsigned char simulated, long side);  // 0x41f060
     unsigned char hasRangedAdvantage(
-        type_AI_combat_parameters* data);  // 0x420a80
+        type_AI_combat_parameters& data);  // 0x420a80
     void placeShooter(const army* currentArmy);  // 0x422060
     unsigned char shouldStayInCastle(
         type_AI_combat_parameters* estimate);
@@ -1606,7 +1599,7 @@ public:
     //     creature domain.
     //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
     //     for the number of wall sections to bring down.
-    void showMassSpell(const unsigned char (*effected)[20], int spellEffect,
+    void showMassSpell(unsigned char (&effected)[2][20], int spellEffect,
                        unsigned char showWince);  // 0x5a67c0
     void summonElemental(SpellID spell, TCreatureType monType,
                          int spellPower, int level);  // 0x5a7080

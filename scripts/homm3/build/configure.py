@@ -47,6 +47,8 @@ def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
         if "module" in unit and (not isinstance(unit["module"], str)
                                  or not unit["module"].strip()):
             raise SystemExit("[configure] module must be a nonempty string")
+        if type(unit.get("compare", True)) is not bool:
+            raise SystemExit("[configure] compare must be a boolean")
         name = unit["unit"]
         if name in seen:
             raise SystemExit("[configure] duplicate unit: " + name)
@@ -191,6 +193,10 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
         name = unit["unit"]
         norm_base = directory / "normalized/base" / (name + ".obj")
         norm_target = directory / "normalized/target" / (name + ".c.obj")
+        if unit.get("compare", True) is False:
+            if norm_target.is_file() or (directory / "target" / (name + ".c.obj")).is_file():
+                raise SystemExit("[configure] compile-only unit has a retail target: " + name)
+            continue
         entries.append({
             "name": name,
             # objdiff reads the NORMALIZED comparison copies when the

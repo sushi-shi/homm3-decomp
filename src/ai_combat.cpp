@@ -373,9 +373,7 @@ type_speed_catagory type_AI_combat_data::getCatagory(
         catagory = const_slow;
     if (m_wallSpeedLimit > catagory && !(attributes & g_ctaFlying))
         catagory = m_wallSpeedLimit;
-    type_speed_catagory result;
-    memcpy(&result, &catagory, sizeof result);
-    return result;
+    return H3_ENUM_DECODE(type_speed_catagory, catagory);
 }
 
 VA(0x00424880, 0xDB) MAC_ADDRESS(0x026c54, 0x130)  // dc 0x2a588
@@ -477,15 +475,16 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // The remaining size() branch layout differs from its exact sibling expansions
 // in getAttack/getFinalMeleeValue, despite the same native vector template.
 // Loop-index declaration/initialization order leaves that frontier unchanged.
-// Native Mac matches all 300 bytes with target stored before value. A reverse-
-// index loop, split damage initialization, or a self getHero call each changes
-// native instructions; keep this model while resolving VC6's size expansion.
+// Mac stores target before value and retains the reverse traversal. Testing
+// predecrement against zero improves Windows 84.5863 -> 86.8514; the paired
+// source-family probe keeps every helper and reproduces all emitted objects.
+// Mac instruction scheduling is supporting evidence, not a separate objective.
 VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)  // dc 0x2a868
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    for (long i = defender.m_creatures.size(); i-- > 0; ) {
+    for (long i = defender.m_creatures.size(); --i >= 0; ) {
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.getHero(), damage);
         if (value > choice.m_value) {
@@ -788,6 +787,13 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
     }
 }
 
+// All 92 Windows CFG blocks and 23 calls agree; the residual is register
+// homing. Named mutable/const locals for defender.getArmy() leave 99.7461%
+// unchanged in a reproduced three-state family. Header getter-body order is
+// also flat across all 60 emitted function code sections.
+// Mac retains the same 18 direct game calls in the same order, including both
+// getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
+// register probe on this body found no closer binding than the current one.
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593) MAC_ADDRESS(0x027b88, 0x3c0)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::castSpell(

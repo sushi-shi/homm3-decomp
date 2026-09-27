@@ -17,8 +17,8 @@ long getAlignmentCount(int legalAlignments);
 TTownType pickAlignment(int legalAlignments,
                          unsigned char getFirstAvail);
 
-// Definitions belong to newgame.cpp. Complete widens the alignment mask
-// for Conflux; the advanced-options click handler uses the nine-town loops.
+// Complete keeps these ordinary definitions in singleselectionwindow.cpp,
+// where the advanced-options handler expands the nine-town loops.
 TTownType pickPrevAlignment(int legalAlignments, TTownType type);
 
 TTownType pickNextAlignment(int legalAlignments, TTownType type);

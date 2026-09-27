@@ -1050,6 +1050,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // also what let VC6 cross-jump this arm's damage_message/CheckRebirth
     // tail into IMPLOSION's identical one - retail emits both copies.
     // 90.7105 -> 91.2759 on the one token.
+    // Retail's spell-10 selector maps17 and57 to the same arm;
+    // Mac's table at data1+0x5311c maps both to code0+0x191420.
+    case SPELL_TITANS_LIGHTNING_BOLT:
     case SPELL_LIGHTNING_BOLT: {
         spellEffect(1, target, 10, 0);
         int damage = computeSpellDamage(spellId, monsterPower,
@@ -2030,12 +2033,17 @@ static long g_castWallIndexToCastOn = -1;
 // string teardown are its body.
 // Dreamcast attributes the failure-text lookup to TTextResource::operator[];
 // getText() is the readable wrapper and emits the same retail bytes.
-// Residual (99.97026%): all 37 CFG blocks, all 21 branches, and every
-// instruction byte agree. The sole real relocation difference is the
-// vector<long>::insert growth call at +0x182: retail's linker selected the
-// byte-identical vector<int>::insert COMDAT emitted by rmg. Dreamcast names
-// vector<long> in both scoped `hexes` objects, so retain the source-proven
-// type rather than rewriting an interface to chase the folded owner label.
+// Residual (99.97026%): all 37 CFG blocks and 21 branches agree. Eight
+// stack displacements swap the failure-text temporary and the refusal-arm
+// vector between EBP-0x2c and EBP-0x3c. The folded vector<int>/vector<long>
+// growth-call owner is ignored by the matching report; it is not this gap.
+// Keep the recorded vector<long> objects and the failure-message helper.
+// Naming the helper's string result (mutable or const) was reproduced and
+// rejected: its retained body falls from 100% to 94.53%, and this caller
+// moves from 99.9703% to 99.9294% without recovering the native slot pairing.
+// VC6 predict-inline's apparent self-call mismatch is a local jump pairing:
+// the 17 Mac calls retain the same game targets and order. Their two differing
+// vector destructor labels are MSL template ownership, not this helper body.
 VA(0x005a3250, 0x31C) MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {
@@ -2351,6 +2359,17 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // slots) and the 6-instruction surplus follow from that one promotion.
 // A parameter's caching is C2's promotion choice, not a spelling; no
 // catalog mutation moves the branch shape (guided search exhausted).
+// Current helper-preserving form: 72.70%. Mac 0x194288..0x1942b8
+// normalizes the target/callee result to zero or one. Keeping that operation
+// in a nested `return callee(...) != 0` gives 69.32%; its conditional-expression
+// equivalent gives 67.11%. All three source-family controls reproduced.
+// Sharing the selected spell-traits row across the two flag tests restores
+// its native address lifetime: 72.70% -> 73.55%. Nested and conditional
+// return variants remain worse when combined with that reference; the
+// canonical findSpellTarget call still expands more than retail.
+// Mac retains findSpellTarget, validSpellTargetArmy and getSpellWallHex in
+// the same order as this source. DC's ValidHex, InInvisibleColumn and GridY
+// audit leads are the lowercase canonical calls in the obstacle arms below.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
@@ -2360,13 +2379,14 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
 {
     if (!validHex(targetIndex))
         return 0;
-    if (g_spellTraits[spellId].m_flags & 0x20070) {
+    const SSpellTraits& traits = g_spellTraits[spellId];
+    if (traits.m_flags & 0x20070) {
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
         return target && validSpellTargetArmy(spellId, castingSide, target,
                                               firstTarget, creatureSpell);
     }
-    if (g_spellTraits[spellId].m_flags & 0x100) {
+    if (traits.m_flags & 0x100) {
         if (m_cells[targetIndex].m_obstacleIndex >= 0) {
             switch (mastery) {
             case eMasteryNone:
@@ -3871,15 +3891,17 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // putting the constant in a register are byte-flat at 96.3708: writing the
 // guard `0 >= stack.numTroops`, and naming one `int resetFrame = 0` shared by
 // the compare and the store (VC6 folds it back to an immediate either way).
+// DC records the non-const array reference. Mac 0x1976f0 reloads
+// m_powSprite after loadSpellEffect; these recoveries leave Windows bytes flat.
 VA(0x005a67c0, 0x4AC) MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity, dc 0x155b28
-void combatManager::showMassSpell(const unsigned char (*effected)[20],
+void combatManager::showMassSpell(unsigned char (&effected)[2][20],
                                   int spellEffect, unsigned char showWince)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
-        CSprite* effectSprite = loadSpellEffect(spellEffect);
+        loadSpellEffect(spellEffect);
         int frames;
-        if (effectSprite)
-            frames = effectSprite->getNumFrames(cs_walk);
+        if (m_powSprite)
+            frames = m_powSprite->getNumFrames(cs_walk);
         else
             frames = 0;
         for (int side = 0; side < 2; side++) {
@@ -4183,6 +4205,10 @@ void combatManager::removeCorpse(army* corpse)
 // stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
 // combat skips its initialization; a zero-initialized ternary adds absent
 // stores and changes the POD return-object path. Keep the conditional load.
+// DC spells.cpp:4858..4859 calls get_resurrection_size before loading the
+// corpse's original index. Mac 0x198540..0x19854c retains that order too.
+// Swapping the adjacent locals improves a VC6 register-distance probe but
+// contradicts both source-order witnesses, so keep the authored order.
 VA(0x005a7390, 0x1CB) MAC_ADDRESS(0x1984ec, 0x200)  // dc 0x1566f8
 void combatManager::demonicResurrection(const army* caster, army* target)
 {
@@ -4243,7 +4269,11 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // VC6 strength-reduces that expression into the retained back-frame induction
 // variable; spelling the induction manually misplaced its initialization.
 // Recovering the expression and the conditional total raises Windows
-// 89.54 -> 94.26 with all helpers kept.
+// 89.54 -> 94.26 with all helpers kept. Mac 0x198724 selects the empty
+// arm first, then adds the recovered HP at 0x198740. The same conditional
+// sum removes Windows' redundant zero/jump path: 94.26 -> 96.78%.
+// A named creature-name temporary or shared sprintf format selection
+// changes the retained message branches; neither improves this source.
 VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
@@ -4252,8 +4282,8 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
     long oldCount = targetArmy->m_numTroops;
     // Mac 0x198728 explicitly selects zero for an empty stack; VC6 reuses
     // oldCount on that path, where the value is already zero.
-    long total = oldCount ? targetArmy->getTotalHitPoints(0) : 0;
-    total += hitPointsResurrected;
+    long total = hitPointsResurrected
+                 + (oldCount == 0 ? 0 : targetArmy->getTotalHitPoints(0));
     targetArmy->m_numTroops =
         (targetArmy->m_monInfo.m_hitPoints + total - 1) / targetArmy->m_monInfo.m_hitPoints;
     targetArmy->m_topCreatureDamage =
@@ -4524,15 +4554,17 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // rectangle operations in its lightly optimized body, while Windows
 // expands the calls. The remaining mismatch is register homing; 45 of 46
 // CFG blocks now have exact shape, with all 25 branches and calls aligned.
+// DC lines 5189, 5202 and 5288 retain the bitmap Grab/Draw and sprite
+// bitmap-forwarding overloads. Restoring all three canonical calls is
+// Windows byte-flat at 86.9157%; their bitmap accessors remain nested.
 VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
+    // DC records damage[8] at procedure scope; initialization follows the shake.
+    int counts[WALL_TARGET_COUNT];
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         g_mouseManager->hidePointer();
-        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap->getMap(0, 0), 0, 0,
-                         g_windowManager->m_screenBitmap->getWidth(),
-                         g_windowManager->m_screenBitmap->getHeight(),
-                         g_windowManager->m_screenBitmap->getPitch());
+        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
         long shakeDelay = static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
@@ -4541,12 +4573,9 @@ void combatManager::earthquake(int level)
                 unsigned long shakeTil = GameTime::get() + shakeDelay;
                 pollSound();
                 m_saveScreenPostGrid->draw(0, 0, m_saveScreenPostGrid->getWidth(), m_saveScreenPostGrid->getHeight(),
-                                 g_windowManager->m_screenBitmap->getMap(0, 0),
+                                 g_windowManager->m_screenBitmap,
                                  g_earthquakeShakeOffsets[step][0],
-                                 g_earthquakeShakeOffsets[step][1],
-                                 g_windowManager->m_screenBitmap->getWidth(),
-                                 g_windowManager->m_screenBitmap->getHeight(),
-                                 g_windowManager->m_screenBitmap->getPitch(), 0);
+                                 g_earthquakeShakeOffsets[step][1], 0);
                 updateCombatArea();
                 GameTime::delayTil(shakeTil);
             }
@@ -4555,7 +4584,6 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     }
 
-    int counts[WALL_TARGET_COUNT];
     memset(counts, 0, sizeof counts);
     int remaining = g_spellTraits[SPELL_EARTHQUAKE].m_masteryBonus[level];
     int drawn = 0;
@@ -4609,11 +4637,9 @@ void combatManager::earthquake(int level)
                 }
                 blast->draw(0, frame, 0, 0,
                             bounds->width(), bounds->height(),
-                            g_windowManager->m_screenBitmap->getMap(0, 0),
+                            g_windowManager->m_screenBitmap,
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
-                            g_windowManager->m_screenBitmap->getWidth(),
-                            g_windowManager->m_screenBitmap->getHeight(),
-                            g_windowManager->m_screenBitmap->getPitch(), 0, 1);
+                            0, 1);
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
                     bounds->width(), bounds->height());
@@ -4887,6 +4913,9 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 //   `int artifact = spellId;` with no default arm            88.90
 //   the three format_string calls written out per arm        70.97
 //   `int artifact;` hoisted to function scope       98.76 (neutral)
+// Nine typed-index/traits/name lifetimes give six objects, all flat or worse.
+// Reusing spellId as the artifact selector falls to 84.74%, despite the Mac
+// register reuse; that allocation does not establish the source variable.
 // The last one proved the promotion was global CSE rather than scope.
 
 // Everything else in the body is byte-exact, INCLUDING both /Ob2

@@ -304,22 +304,86 @@ SIZE(type_quest_creature_def, 0x1c);
 SIZE(type_quest_experience_def, 0x18);
 SIZE(type_quest_gold_def, 0x18);
 
-struct TRmgMapPosition {
+struct TRmgVector {
     int m_x;
     int m_y;
+
+    TRmgVector() {}
+    TRmgVector(int newX, int newY) : m_x(newX), m_y(newY) {}
+
+    int length() const;
+    TRmgVector operator+(TRmgVector other) const;
+    TRmgVector operator*(int scale) const;
+    TRmgVector operator/(int divisor) const;
+    // The analogous Graphics Gems vector dot is a tiny header inline. Retail
+    // likewise expands both calls in buildVertices and retains no separate
+    // body; the by-value operand also recovers that caller's register homes.
+    int dot(TRmgVector other) const
+    {
+        return m_y * other.m_y + m_x * other.m_x;
+    }
+};
+
+// Retail's common direction table contains eight consecutive two-dword
+// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
+// the absence of an atexit registration proves that destruction is trivial.
+// The comparator is independently used by the RMG set cluster.
+struct TPoint {
+    int m_x;
+    int m_y;
+
+    TPoint() {}
+    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
+
+    TPoint& operator+=(const TRmgVector& offset)
+    {
+        m_x += offset.m_x;
+        m_y += offset.m_y;
+        return *this;
+    }
+    bool operator==(const TPoint& other) const
+    {
+        return m_x == other.m_x && m_y == other.m_y;
+    }
+    bool operator!=(const TPoint& other) const
+    {
+        return !(*this == other);
+    }
+
+    bool operator<(const TPoint& other) const
+    {
+        return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
+    }
+    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
+    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
+    // TPoint copy of a grid point with a tile direction. Declared last so
+    // the earlier member handles are unchanged.
+    // Coordinate accessors, used by the terrain painter's diagonal checks
+    // for the same site-count reason as the grid point's; declared after
+    // the data so the earlier member handles are unchanged. Adding them
+    // also returned rmg's quest-creature generate to 100% (include-set
+    // state, 99.73% before).
+    int getX() const { return m_x; }
+    int getY() const { return m_y; }
+    TPoint& operator+=(const TPoint& offset);
+};
+
+// The native distance callers pass the position's XY subobject as a TPoint
+// value, without constructing another point. This shared base reproduces
+// that conversion; the retained Windows constructor keeps offsets 0/4/8
+// and the same twelve-byte position layout.
+struct TRmgMapPosition : TPoint {
     int m_z;
 
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
 
-    // ConnectZones constructs the translated coordinate as a returned
-    // temporary before consuming it.  This inline source operation restores
-    // retail's 0x98-byte frame and temporary lifetime; the RMG compiland is
-    // absent from Dreamcast, so the operator spelling remains provisional.
-    TRmgMapPosition operator+(TPoint offset) const;
     TRmgMapPosition& operator+=(const TPoint& offset);
     TRmgMapPosition& operator-=(const TPoint& offset);
 };
+
+// Native callers copy both operands before constructing the translated value.
+TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
 // the connection pass.  The first pointer identifies the opposite template
@@ -393,6 +457,7 @@ struct TRmgTownSlot {
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
+    int selectAllowedTown();
     TRmgZoneConnection* findConnection(int destinationZone);
 };
 SIZE(TRmgTownSlot, 0xd4);
@@ -428,70 +493,6 @@ enum ERmgDirectionLimits {
 // Voronoi's circumcenter arithmetic separates displacement vectors from
 // positions: vector+vector is a member call, point+vector and point-point
 // are free calls. All carry two signed dwords; names remain provisional.
-struct TRmgVector {
-    int m_x;
-    int m_y;
-
-    TRmgVector() {}
-    TRmgVector(int newX, int newY) : m_x(newX), m_y(newY) {}
-
-    int length() const;
-    TRmgVector operator+(TRmgVector other) const;
-    TRmgVector operator*(int scale) const;
-    TRmgVector operator/(int divisor) const;
-    // The analogous Graphics Gems vector dot is a tiny header inline. Retail
-    // likewise expands both calls in buildVertices and retains no separate
-    // body; the by-value operand also recovers that caller's register homes.
-    int dot(TRmgVector other) const
-    {
-        return m_y * other.m_y + m_x * other.m_x;
-    }
-};
-
-// Retail's common direction table contains eight consecutive two-dword
-// offsets.  Its cinit at 0x530da0 proves the user-provided constructor while
-// the absence of an atexit registration proves that destruction is trivial.
-// The comparator is independently used by the RMG set cluster.
-struct TPoint {
-    int m_x;
-    int m_y;
-
-    TPoint() {}
-    TPoint(int newX, int newY) : m_x(newX), m_y(newY) {}
-
-    TPoint& operator+=(const TRmgVector& offset)
-    {
-        m_x += offset.m_x;
-        m_y += offset.m_y;
-        return *this;
-    }
-    bool operator==(const TPoint& other) const
-    {
-        return m_x == other.m_x && m_y == other.m_y;
-    }
-    bool operator!=(const TPoint& other) const
-    {
-        return !(*this == other);
-    }
-
-    bool operator<(const TPoint& other) const
-    {
-        return m_y < other.m_y || (m_y == other.m_y && m_x < other.m_x);
-    }
-    // The retained 33-byte add at 0x4fa540 (rmg_terrain.cpp) is this
-    // operator: refresh 0x4f9f60 and line paintPoint 0x4fa571 call it on a
-    // TPoint copy of a grid point with a tile direction. Declared last so
-    // the earlier member handles are unchanged.
-    // Coordinate accessors, used by the terrain painter's diagonal checks
-    // for the same site-count reason as the grid point's; declared after
-    // the data so the earlier member handles are unchanged. Adding them
-    // also returned rmg's quest-creature generate to 100% (include-set
-    // state, 99.73% before).
-    int getX() const { return m_x; }
-    int getY() const { return m_y; }
-    TPoint& operator+=(const TPoint& offset);
-};
-
 TPoint operator+(TPoint point, TRmgVector offset);
 TRmgVector operator-(TPoint left, TPoint right);
 
@@ -1049,7 +1050,14 @@ struct TRmgMapItem {
         return m_tileData.m_subterraneanGate;
     }
 
-    unsigned char isPassableLand() const;
+    // Native Mac group callers expand this byte-valued predicate. The
+    // ordinary source-defined control retains calls; direct field tests
+    // omit its Boolean result. This class body reproduces that predicate
+    // shape; its seven-unit Windows control loses no exact functions.
+    unsigned char isPassableLand() const
+    {
+        return m_tileData.m_roadPassable && getLandType() != eTerrainRock;
+    }
 
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
@@ -1272,9 +1280,12 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    void markPlacementOutline();
     unsigned char addGuard(type_object* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char tryAddObject(type_object* object);
+    unsigned char objectsAllowEntrances() const;
+    void addObject(type_object* object, TPoint point);
     void updateBounds();
     void traceOutline();
 };
@@ -1552,6 +1563,7 @@ struct TRmgZone {
 
     TRmgZone(TRmgTownSlot* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
+    void chooseTownType(unsigned char expanded);
     void chooseTerrain();
     ~TRmgZone();
     int getTerrain() const
@@ -1916,6 +1928,7 @@ public:
         std::vector<TRmgMapItem*>* borderItems,
         std::vector<TRmgMapPosition>* borderPositions);
     void floodConnectionRegion(TRmgMapPosition position);
+    void floodShipyardWater(type_object* shipyard);
     // Earlier provisional name: CreateBorderConnection/createBorderConnection.
     // Retail 0x541ad0 selects objectPrototypes[SHIPYARD] and places it beside
     // reachable water. No Dreamcast RMG name is available.
@@ -1944,7 +1957,7 @@ public:
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
-    void placeGuard(TRmgMapPosition position, int value);
+    void placeGuard(int value, TRmgMapPosition position);
     int getMineGuardValue(int resource, const TRmgZone* zone) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(

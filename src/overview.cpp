@@ -15,6 +15,7 @@
 #include "game.h"
 #include "herospec.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
@@ -666,11 +667,10 @@ void game::setupDynamicStuff(int update, int forceUpdate)
                 int lastBackpackIndex =
                     currHero->getLastBackpackIndex() + 1;
                 offsetToMon = 316;
-                // Retail enters this loop with a bare `jmp` to the
-                // lastBackpackIndex test (no zero-trip pre-guard) and
-                // strength-reduces the constant half onto iOffsetToMon at the
-                // back edge (`cmp eax,0x2bc` at 0x51de62) - the operand order
-                // that puts the constant conjunct second.
+                // Mac 0x135634 tests the eight-slot limit before the
+                // backpack extent. Retail strength-reduces the bound onto
+                // offsetToMon; commuting the source guards does not recover
+                // that output (91.9880 -> 91.6571). Keep the native order.
                 for (item = 0; item < 8 && item < lastBackpackIndex;
                      item++) {
                     artifact = currHero->getBackpack(
@@ -1653,6 +1653,10 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
     return 0;
 }
 
+// Isolated -toc_data off reproduces all 68 native bytes while preserving
+// the static scalar declaration; default on emits its direct TD load.
+// This is not an engine flag: off breaks font::fillLinesVector (100 ->17%).
+// Scalar storage/profile provenance remains open; no linkage workaround.
 VA(0x0051fa20, 0x1C) MAC_ADDRESS(0x137e8c, 0x44)  // dc 0x1084a0
 void overviewSliderCallback(int state, heroWindow* parentWindow)
 {
@@ -1676,6 +1680,9 @@ VA(0x0051fa40, 0x1311) MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callbac
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    // DC overview.cpp:2018 calls the cache sweep before widget setup.
+    // Complete's canonical helper is empty and release-elided.
+    ResourceManager::delSprFromCache();
     m_widgets.reserve(100);
 
     m_widgets.push_back(new bitmapBorder(
@@ -2028,6 +2035,8 @@ void TOverviewWindow::doRollover(int codeY)
                 sprintf(g_text, g_heroScreen[22]);
                 break;
 
+            // Retail's compressed table and Mac 0x13a0f8/0x13a14c
+            // admit only IDs 158..165 to the secondary-skill rollover.
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 1:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 2:
@@ -2035,23 +2044,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 4:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 5:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 6:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 8:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 9:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 10:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 11:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 12:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 13:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 14:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 15:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 16:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 17:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 18:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 19:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 20:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 21:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 22:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 23: {
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7: {
                 int nth = codeY - OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID;
                 if (nth < currHero->m_skillCount) {
                     int skill = currHero->getNthSS(nth);
@@ -2339,7 +2332,12 @@ void TOverviewWindow::doRollover(int codeY)
                                g_creatureGenerator1Types[itemType]]
                                .m_pluralName);
                 } else {
+                    // Mac 0x13ab20 and Windows 0x521614 put lighthouse
+                    // before the two creature-generator label arms.
                     switch (itemType) {
+                    case 'R':
+                        strcpy(g_text, g_specialBuildingNames[0][0]);
+                        break;
                     case 'P':
                         strcpy(g_text, DATA_COMPGEN(
                             0x00681850, overviewElementalsText,
@@ -2348,9 +2346,6 @@ void TOverviewWindow::doRollover(int codeY)
                     case 'Q':
                         strcpy(g_text, DATA_COMPGEN(
                             0x00681848, overviewGolemsText, "Golems"));
-                        break;
-                    case 'R':
-                        strcpy(g_text, g_specialBuildingNames[0][0]);
                         break;
                     case 'S':
                     case 'T':
@@ -2647,14 +2642,17 @@ int TOverviewWindow::windowHandler(message& msg)
     }
 
     if (msg.m_id == MESSAGE_KEY_DOWN) {
+        // Retail 0x522444 dispatches the game's scan codes 0x47/49/4f/51,
+        // not Win32 virtual keys. Mac 0x13b200 uses its native key codes
+        // for the same page-up, page-down, home and end operations.
         switch (msg.m_codeX) {
-        case VK_PRIOR:
+        case KEYCODE_KP_9:
             g_overviewTop[g_overviewType] -= 4;
             if (g_overviewTop[g_overviewType] < 0)
                 g_overviewTop[g_overviewType] = 0;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_NEXT:
+        case KEYCODE_KP_3:
             g_overviewTop[g_overviewType] += 4;
             if (g_overviewTop[g_overviewType]
                     > g_overviewItemCounts[g_overviewType] - 4)
@@ -2662,11 +2660,11 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_overviewItemCounts[g_overviewType] - 4;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_HOME:
+        case KEYCODE_KP_7:
             g_overviewTop[g_overviewType] = 0;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_END:
+        case KEYCODE_KP_1:
             g_overviewTop[g_overviewType] =
                 g_overviewItemCounts[g_overviewType] - 4;
             g_game->setupDynamicStuff(1, 0);
