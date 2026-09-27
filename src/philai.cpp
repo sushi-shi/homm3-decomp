@@ -1457,8 +1457,7 @@ inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    SpellID spell = info->getShrineSpell();
-    return valueOfLearning(currentHero, spell);
+    return valueOfLearning(currentHero, info->getShrineSpell());
 }
 
 // The gold price has to be ONE reused local: the traits cost is read
