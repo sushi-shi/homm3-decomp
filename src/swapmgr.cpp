@@ -1274,6 +1274,8 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // why-branch finds no applicable source mutation and why-reg's model finds no
 // binding divergence; restoring CanModHero's older direct returns is the
 // negative control and lowers this caller to 87.81%.
+// An explicit right-click/forbidden-slot/canModHero else-if action ladder
+// is byte-flat in both compilers and does not change the shared tail choice.
 // DC lines 1118/1124 use TTextResource::operator[] for the two trade
 // warnings; those calls are restored and VC6 byte-flat.
 VA(0x005af590, 0x3F7) MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body, dc 0x15d150
