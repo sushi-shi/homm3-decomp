@@ -3122,6 +3122,11 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // subtype 0xd runs the give/max panels and the tab-command buttons. Executing
 // the gift moves the resource into the recipient's row and, when the recipient
 // is a networked human, transmits the gift message. Hover copies the rollover.
+// Mac initializes exit/update flags at 0x1f8f84/0x1f8f88, dispatches the
+// sparse message-ID switch at 0x1f8f8c, and sets update only in its five
+// successful arms before the common phase at 0x1f921c. Restore that complete
+// source model: Windows stays 97.00%; native ordered helper calls differ
+// only because the compiler expands the canonical playerData::isHuman here.
 VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
 int TGiveResourceWindow::windowHandler(message& msg)
 {
@@ -3130,11 +3135,10 @@ int TGiveResourceWindow::windowHandler(message& msg)
         return r;
 
     int exit = 0;
+    int updateFlag = 0;
 
-    if (msg.m_id != MESSAGE_MOUSE_MOVE) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 1;
-
+    switch (msg.m_id) {
+    case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
             switch (msg.m_codeY) {
@@ -3144,7 +3148,8 @@ int TGiveResourceWindow::windowHandler(message& msg)
             case MARKET_SELL_GOLD_ID: {
                 int res = msg.m_codeY - MARKET_SELL_WOOD_ID;
                 if (res == g_selectedArtifact)
-                    return 1;
+                    break;
+                updateFlag = 1;
                 g_selectedArtifact = res;
                 if (g_leftResource != -1) {
                     setupNewTrade();
@@ -3157,7 +3162,8 @@ int TGiveResourceWindow::windowHandler(message& msg)
             case GIVE_RECIPIENT_SLOT_6_ID: {
                 int recip = msg.m_codeY - GIVE_RECIPIENT_SLOT_0_ID;
                 if (recip == g_leftResource)
-                    return 1;
+                    break;
+                updateFlag = 1;
                 g_leftResource = recip;
                 if (g_selectedArtifact != -1) {
                     setupNewTrade();
@@ -3165,7 +3171,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 break;
             }
             default:
-                return 1;
+                break;
             }
             break;
 
@@ -3173,7 +3179,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID: {
                 if (g_rightAmount == 0)
-                    return 1;
+                    break;
                 g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
@@ -3182,17 +3188,20 @@ int TGiveResourceWindow::windowHandler(message& msg)
                                g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);
                 }
+                updateFlag = 1;
                 g_leftDenominated = 1;
                 g_leftResource = -1;
                 g_selectedArtifact = -1;
                 break;
             }
             case MARKET_RIGHT_PANEL_ID:
+                updateFlag = 1;
                 g_rightAmount = g_maxTradeUnits;
                 m_resourceSlider->setState(g_maxTradeUnits);
                 break;
             case MARKET_LEFT_COUNT_ID:
             case MARKET_RIGHT_LABEL_ID:
+                updateFlag = 1;
                 exit = 1;
                 g_windowManager->m_dialogReturn = msg.m_codeY - MARKET_LEFT_COUNT_ID;
                 g_leftResource = -1;
@@ -3200,26 +3209,33 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 g_leftDenominated = 0;
                 break;
             default:
-                return 1;
+                break;
             }
             break;
 
         default:
-            return 1;
+            break;
         }
 
-        update(1);
-        if (exit) {
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
-            return 2;
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         return 1;
+
+    default:
+        break;
     }
 
-    g_windowManager->convertToHover(msg);
-    if (msg.m_codeY != m_lastHoverId) {
-        m_lastHoverId = msg.m_codeY;
-        setRolloverText(msg.m_codeY);
+    if (updateFlag)
+        update(1);
+    if (exit) {
+        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        return 2;
     }
     return 1;
 }
