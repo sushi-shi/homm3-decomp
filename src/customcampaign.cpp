@@ -1034,8 +1034,7 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // body (0x488810) is exact and its expansion calls loadMapHeader.
 // Binding the campaign base once, as native +0x93950..+0x93974 does,
 // gives 75.97% in VC6 (14 blocks against retail's 19). Constructor and
-// nested inflater calls still diverge. The Mac body compiles but needs
-// the generated player-slot destructor descriptor for a complete verdict.
+// nested inflater calls still diverge; retain both canonical source calls.
 // The old flattened source gave 86.04%, but omitted both Mac helpers.
 VA(0x00485530, 0x260) MAC_ADDRESS(0x093924, 0x1cc)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
