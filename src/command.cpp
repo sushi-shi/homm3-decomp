@@ -1887,14 +1887,16 @@ void combatManager::doVictory(int winningGroup)
 // A named army-row base shared with checkGetAIMove is not the missing CSE:
 // it lowers this retained body from 100% to 86.44% and the caller from
 // 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
+// Native 0x85b44 reloads m_currentSide inside each scan iteration. Restoring
+// that field access keeps the retained Windows body exact and raises its
+// CheckGetAIMove expansion 94.4335 -> 99.3038%; Mac rises 17.5258 -> 83.2474%.
 VA(0x00477a00, 0xB2) MAC_ADDRESS(0x085b14, 0x184)  // dc 0x6e898
 long combatManager::getSurrenderCost()
 {
     long cost = 0;
-    int side = m_currentSide;
 
     for (int slot = 0; slot < 20; ++slot) {
-        army* currentArmy = &m_armies[side][slot];
+        army* currentArmy = &m_armies[m_currentSide][slot];
         if (currentArmy->isActive()
             && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
@@ -1905,7 +1907,7 @@ long combatManager::getSurrenderCost()
         }
     }
 
-    return static_cast<long>(m_heroes[side]->getSurrenderCostFactor()
+    return static_cast<long>(m_heroes[m_currentSide]->getSurrenderCostFactor()
                              * static_cast<float>(cost / 2));
 }
 
