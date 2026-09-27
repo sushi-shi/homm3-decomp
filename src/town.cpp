@@ -766,6 +766,9 @@ void town::removeGarrisonHero()
 // shared constructor closes this caller but contradicts netmsg.h:717-718 and
 // breaks exact playerData::add_garrison_hero, so that old 100% remains history.
 VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global, dc 0x166864
+// Naming the hide-message hero id and reusing or predeclaring the roster
+// counter leave the constructor register residual unresolved (nine VC6
+// combinations, four objects). Keep CMCHideHero's attested assignment order.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -979,6 +982,9 @@ void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427) MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global, dc 0x166fc8
+// Moving the result declaration after the fort/capitol snapshots and
+// grouping the special-effect guards did not recover the retained hasBuilding
+// call (six VC6 combinations, three objects). Keep the canonical helpers.
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)

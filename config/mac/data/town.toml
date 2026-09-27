@@ -84,3 +84,19 @@ mac_offset = 0x598c
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
 evidence = "The canonical getArmyName fallback emits one empty-string byte. Mac showCreatureRewards uses TOC 1+0x598c at 0x1b5a5c before creature trait-name selection."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x59c8
+mac_size = 4
+sha256 = "2412b43a42f11c1cb3ef7956d3e293016e671a9061fbb76a4282c8b15139cc48"
+evidence = "Native applySpecialBuildingEffect loads the complete big-endian float 1000.0 payload through TOC 1+0x59c8 at code0+0x1b2fe8, multiplies the returned hero experience bonus at 0x1b2ff0, and truncates it for the academy reward. This matches the ordinary source 1000.0f expression; no source call or data relocation is masked."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x59c0
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Native applySpecialBuildingEffect loads TOC 1+0x31ec -> 1+0x59c0 at code0+0x1b2c28 and reads its complete eight-byte 4330000080000000 signed-integer conversion bias at 0x1b2c34. The following xoris/stw/lfd/fsub sequence converts the maximum-mana calculation to floating point before the intelligence-factor multiplication. Compiler literal only; retain all source operations and helper calls."
