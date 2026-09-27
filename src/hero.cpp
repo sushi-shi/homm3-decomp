@@ -765,6 +765,8 @@ hero::hero()
 // from ARTIFACT_NONE for the two artifact arrays. A preconstructed artifact
 // changes that lifetime and VC6's stores. Enum-valued fills raise Windows
 // 95.87 -> 97.36%; retain the canonical helpers through the residual scheduling.
+// Mac 0xf40ac/0xf4114/0xf413c loads integer zero values for the byte fills;
+// byte-typed fill values instead compile to lbz and omit the signed conversion.
 VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -776,11 +778,11 @@ void hero::initialize(short index)
     short i;
     std::fill_n(m_equipped, 19, ARTIFACT_NONE);
 
-    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
+    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), 0);
     std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_backpackCount = 0;
-    std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
-    std::fill_n(m_skillOrder, sizeof(m_skillOrder), static_cast<unsigned char>(0));
+    std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
+    std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
 
     m_patrolY = kPatrolNone;
     m_patrolX = kPatrolNone;
@@ -873,9 +875,10 @@ void hero::initialize(short index)
 // hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
 // The expanded HeroExtra adds primary skills, spells, custom name and sex;
 // fixed DC campaign-trait carryover is handled by Complete's campaign owner.
-// Retail writes patrolY before patrolX in the else arm and widens each troop
-// count once before storing and testing it. Mac's counted byte clears load
-// fill values through the TOC, as MSL std::fill_n does in initialize(short).
+// Retail writes patrolY before patrolX in the else arm. Mac 0xf4740..0xf4748
+// stores each widened troop count and then tests the member again. Its byte
+// clears load integer zeros through the TOC (0xf4690/0xf46b8), as MSL
+// std::fill_n does in initialize(short).
 // Use those library fills and the canonical clearSpells helper here too.
 // This recovers Windows 60.20 -> 74.69% with ordinary string assignment.
 // Remaining string::assign expansion differs from retail's retained call.
@@ -917,8 +920,8 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customSecondarySkills) {
-        std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
-        std::fill_n(m_skillOrder, sizeof(m_skillOrder), static_cast<unsigned char>(0));
+        std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
+        std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
         m_skillCount = 0;
         for (int i = 0; i < setup->m_numSecondarySkills; i++)
             giveSS(setup->m_secondarySkill[i], setup->m_secondarySkillLevel[i]);
@@ -926,9 +929,8 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customArmies) {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int count = setup->m_numTroops[i];
-            m_army.m_numTroops[i] = count;
-            if (count > 0)
+            m_army.m_numTroops[i] = setup->m_numTroops[i];
+            if (m_army.m_numTroops[i] > 0)
                 m_army.m_armies[i] = setup->m_armies[i];
             else
                 m_army.m_armies[i] = CREATURE_NONE;

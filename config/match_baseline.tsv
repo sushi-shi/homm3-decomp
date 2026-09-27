@@ -2263,8 +2263,8 @@ hero	?heroFn004E5DE0@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5de0	tokens1:4e6
 hero	?heroFn004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120	tokens1:f3b05afc1287
 hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	tokens1:9e0149e3d34c
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1:06b0579ceb00
-hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:dcc64c74458e
-hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	76.4260	76.4260	100.0000	0xd8b30	tokens1:2901198cbcd5
+hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:fd67951950d8
+hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	76.4260	76.4260	100.0000	0xd8b30	tokens1:0c85d76db41d
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:aa1b6db957c1
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:0af5a57e3a5d
