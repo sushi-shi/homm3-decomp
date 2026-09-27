@@ -1,0 +1,29 @@
+[[data]]
+retail_va = 0x0068320c
+source = "src/seerhuttext.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5d914
+mac_size = 4
+sha256 = "19d3b0edc4853e6af34d7fc28370948bc735a7a126de9f363303703055bbc7f5"
+evidence = "Canonical questTextRow selects g_questTextA when m_seerHut is nonzero. Mac skill proposal at 0+0x165084 takes that arm and loads TOC1+0x5dc -> pointer storage1+0x5d914 at0x16508c, dereferences it at0x165094 and adds textVariant*0xd0. Loader relocates its pinned word0x555acc to section1+0x555acc, the B column array. The three-column arrays are0x27c apart (3*52*4-byte Mac strings), matching the ordinary A/B ownership and Windows initializer. This declaration-only consumer binding validates external pointer storage; seerhuttext.cpp remains the sole initializer owner."
+
+[[data]]
+retail_va = 0x00683210
+source = "src/seerhuttext.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5d918
+mac_size = 4
+sha256 = "a24cf915d5630fcbe66e4d825fec5a1781d8e2d27c698e937d8d45986ee80877"
+evidence = "Canonical questTextRow selects g_questTextB when m_seerHut is zero. Mac skill proposal at0x165084 selects0x1650a0; TOC1+0x5d8 -> pointer storage1+0x5d918 is loaded at0x1650a4 and dereferenced at0x1650ac before textVariant*0xd0. Loader relocates its pinned word0x555850 to section1+0x555850, the A column array preceding B by0x27c. This declaration-only binding preserves the ordinary source initializer and validates the external consumer's TOC address."
+
+[[data]]
+retail_va = 0x006a5c48
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54de58
+mac_size = 36
+sha256 = "6db65fd59fd356f6729140571b5bcd6bb3b83492a16e1bf0a3884442fc3c8a0e"
+evidence = "Ordinary text.cpp owns the nine-pointer g_directions array; text loading fills it at runtime. Native getVictoryConditionText loads TOC1+0xba8 -> zero-filled section1+0x54de58 at0x132a74, computes direction indices0..8, and passes indexed pointers to sprintf at0x1330c8 and0x133120. Loader address and full36-byte zero payload are pinned. This declaration-only external-consumer binding preserves the authored array and its text-loader initialization; the same direction lookups occur in the monster quest caption."
