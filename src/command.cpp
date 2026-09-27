@@ -1314,9 +1314,10 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
 // Mac 0x84798..0x847c0 keeps one cell receiver in r28 and index in r27;
 // the same receiver feeds HasArmy, GetArmy, side/slot and move flags.
-// Its pointer-local model improves the paired body to 85.11%, with a
-// small Windows dip 92.5357 -> 92.4978%; keep the native-supported source
-// while solving Windows' receiver allocation. The wall-target arm writes
+// Keep that receiver local to the army branch; native 0x84a64..0x84a74
+// recomputes the later move flags from the index. Combined with the
+// positive shot-penalty guard and side-first declaration, this improves
+// Windows 92.5357 -> 98.1429% and Mac 31.6621 -> 98.4765%. The wall arm writes
 // slot before side, as native 0x849cc/0x849d8 does.
 // Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
 // non-null hero returns. These four guard controls are VC6 byte-flat;
@@ -1383,8 +1384,9 @@ int combatManager::getCommand(int newIndex)
 
     if (cell->hasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
+        long targetSide;
         army* target = cell->getArmy();
-        long targetSide = target->getOwningSide();
+        targetSide = target->getOwningSide();
 
         if (m_creaturePlacement)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1409,11 +1411,11 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 return COMBAT_COMMAND_SHOOT;
-            if (!shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
-                                   newIndex)
-                    && !shotIsNotOptimal(currentArmy, target))
-                return COMBAT_COMMAND_SHOOT;
-            return COMBAT_COMMAND_SHOOT_PENALTY;
+            if (shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
+                                  newIndex)
+                    || shotIsNotOptimal(currentArmy, target))
+                return COMBAT_COMMAND_SHOOT_PENALTY;
+            return COMBAT_COMMAND_SHOOT;
         }
         if (currentArmy->validPath(newIndex, 0))
             return currentArmy->m_creatureType == CREATURE_BALLISTA
@@ -1455,7 +1457,7 @@ int combatManager::getCommand(int newIndex)
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                           currentArmy->m_monInfo.m_speed,
                                           m_creaturePlacement, -1);
-        if (cell->m_validMove || cell->m_frontMove)
+        if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
             return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
     }
