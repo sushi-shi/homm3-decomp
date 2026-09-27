@@ -813,15 +813,12 @@ int swapManager::drawSwapWin()
 // E:\gamedcs\swapmgr.cpp:665
 // Dreamcast proves the single message local, constructor/helper boundaries,
 // two-by-eight widget walk and final network-handler lifetime. Retail fixes
-// the Complete widget-id shifts and replaces the older swap_side() refresh
-// with Update(). The 930-byte retail body and 984-byte SH4 body otherwise
-// carry the same source statement roster. Passing the portrait pointer
-// directly through the retail message ABI removes the source-false union
-// store and raises the match from 91.66% to 96.32%; B0..B11 then agree byte
-// for byte. The residual has exact flow and is confined to VC6 moving the
-// common &msg push across the two skill arms (three size-only blocks) plus
-// downstream scratch-register choices. The bounded why-reg model found no
-// movable creation-order carrier.
+// the Complete widget-id shifts and replaces swap_side() with Update().
+// Retail passes the portrait pointer directly through the four-argument
+// broadcastMessage ABI; assigning it to msg.m_extraText adds an absent store
+// and changes downstream register allocation. The direct pointer-to-int ABI
+// cast restores this whole Windows body from 95.7482% to 100%; all other
+// Windows and scored Mac callers remain unchanged.
 // DC line 703 uses TTextResource::operator[] for the hero-name format;
 // restoring that source call is VC6 byte-flat.
 VA(0x005ae750, 0x3A2) MAC_ADDRESS(0x1a61d8, 0x478)  // full retail body + dc 0x15c66c dossier
@@ -852,11 +849,10 @@ int swapManager::open(int newPriority)
         // DC line 698 is one portrait-update statement. Retail passes the
         // portrait pointer directly to the five-argument overload; the local
         // message remains the sole object used by the surrounding updates.
-        msg.m_extraText =
-            g_heroTraits[m_heroes[hero]->m_portrait].m_largePortraitName;
         m_parent->broadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
-            msg.m_extra);
+            reinterpret_cast<int>(
+                g_heroTraits[m_heroes[hero]->m_portrait].m_largePortraitName));
 
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_NAME_LEVEL_CLASS_FORMAT],
                 m_heroes[hero]->m_name, m_heroes[hero]->m_level,
