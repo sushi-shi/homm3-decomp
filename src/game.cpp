@@ -9775,73 +9775,33 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 }
 
 // E:\gamedcs\game.cpp:11684
-// The mirror of ~game below: retail's body is almost entirely the
-// compiler-generated MEMBER CONSTRUCTION, in declaration order, and this
-// class's declaration order is already right - an EMPTY body scores
-// 74.6490% on its own. What lands verbatim from the header alone:
-// scenarioTowns' inline vector constructor, the `eh vector constructor
-// iterator' over heroSetup[156] with HeroExtra's 0x334 stride and the
-// 0x4ce4b0/0x4ce520 ctor/dtor pair, SCampaign, the load-event vector,
-// SGameSetupOptions' whole loop body (difficulty 0, turnDuration 10,
-// memset(filename,0,251) at +0x39 and memset(path,0,100) at +0x134, the
-// three bytes at +0x1a0..+0x1a2), NewSMapHeader with its three strings,
-// NewfullMap, players[8], towns, heroes[156] on the 0x492 stride, the
-// five object pools, rumours and both eight-element teleport-pool
-// arrays.
-
-// Residual (87.8496%, 2026-08-21): the explicit initialization is now
-// complete. The remaining structural delta is the compiler-generated
-// construction of heroPoolMap[156]. Retail emits a 156-trip loop calling
-// bitset<8>::_Tidy(0); our CL expands `_Tidy` and folds the loop to one
-// `rep stosd`, leaving us one branch and one call short.
-
-// A constructor-scoped `#pragma inline_depth(1)` proves that exact boundary:
-// it raises this body to 91.0059 and makes the 2-branch/1-ret CFG exact. It
-// cannot be retained because the same scope compiles the address-taken
-// HeroExtra constructor with its two type_artifact constructors out of line,
-// dropping that exact row to 64.4444. Restoring depth at the opening brace
-// preserves HeroExtra but is byte-flat here, and a game-TU forced-inline
-// on type_artifact cannot override the depth cap. A layout-identical derived
-// heroPoolMap element is also byte-flat here and regresses game::Load from
-// 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
-// without sacrificing an exact function.
-// The scalar array initialisations use MEMSET markers, which expand to counted
-// loops rather than CRT memset calls. Retail
-// sets EDI up before ECX at m_saveFileName, m_heroAvailability,
-// m_artifactUsed, m_artifactDisabled, m_obeliskFlags, m_currentRumour,
-// m_globalInfoFlags and m_rumourState, and ECX before EDI at m_setup: the
-// loop form and the memset form emit the same rep stosd (plus the stosw /
-// stosb tail for the odd bytes, and EAX = -1 for the -1 fill), and only that
-// setup order separates them (behavior-catalog D25). m_heroPoolMap keeps
-// ECX-first because its fill value is a variable, not a literal.
-// The eight loops moved this body 78.16 -> 80.60. Placing the unchanged
-// SCampaign constructor in customcampaign.cpp restores its retained call
-// here and raises the focused Windows comparison to 91.40, above HIST 88.86.
-// The remaining differences include EH state and initialization ordering.
+// Member construction follows the shared class declaration order; SCampaign's
+// ordinary constructor remains out of line. Mac 0xe5c2c..0xe60d4 repeatedly
+// loads the scalar fill arguments from constant storage. std::fill_n recovers
+// those reference-based fills, including their byte/int argument types, and
+// raises Windows 91.3953% -> 99.2861% without flattening member constructors.
+// Both retail builds clear cartographerFlags before assigning cartographerMask
+// (Mac 0xe605c..0xe607c); that final ordering makes Windows byte-exact.
+// The former counted-loop markers over-inlined bitset<8>'s default construction.
+// No inline-depth control is needed with the recovered library operations.
 VA(0x004cdf20, 0x585) MAC_ADDRESS(0x0e5784, 0x97c)  // anchor-global, dc 0xbb62c
 game::game()
 {
     m_difficultyRating = 0;
     m_newCampaignStarted = 0;
-    int nameByte;
-    MEMSET(m_saveFileName, 0, sizeof(m_saveFileName), nameByte);
+    std::fill_n(m_saveFileName, sizeof(m_saveFileName), static_cast<char>(0));
     memset(&m_setup, 0, sizeof(m_setup));
-    memset(m_playerDisabled, 0, sizeof(m_playerDisabled));
+    std::fill_n(m_playerDisabled, sizeof(m_playerDisabled), 0);
     m_day = 0;
     m_week = 0;
     m_month = 0;
-    int heroSlot;
-    MEMSET(m_heroAvailability, -1, sizeof(m_heroAvailability), heroSlot);
+    std::fill_n(m_heroAvailability, sizeof(m_heroAvailability), -1);
 
     std::bitset<8> allPlayers = ~std::bitset<8>();
-    for (int i = 0; i < HERO_COUNT; i++)
-        m_heroPoolMap[i] = allPlayers;
-    int usedArt;
-    MEMSET(m_artifactUsed, 0, sizeof(m_artifactUsed), usedArt);
-    int disabledArt;
-    MEMSET(m_artifactDisabled, 0, sizeof(m_artifactDisabled), disabledArt);
-    int obelisk;
-    MEMSET(m_obeliskFlags, 0, sizeof(m_obeliskFlags), obelisk);
+    std::fill_n(m_heroPoolMap, static_cast<int>(HERO_COUNT), allPlayers);
+    std::fill_n(m_artifactUsed, sizeof(m_artifactUsed), static_cast<unsigned char>(0));
+    std::fill_n(m_artifactDisabled, sizeof(m_artifactDisabled), static_cast<unsigned char>(0));
+    std::fill_n(m_obeliskFlags, sizeof(m_obeliskFlags), static_cast<signed char>(0));
     m_ultimateArtifactX = -1;
     m_ultimateArtifactY = -1;
     m_ultimateArtifactZ = -1;
@@ -9849,18 +9809,16 @@ game::game()
     m_ultimateArtifactPresent = 0;
     m_gameVersion = 0;
     m_isCheater = 0;
-    int rumourByte;
-    MEMSET(m_currentRumour, 0, sizeof(m_currentRumour), rumourByte);
+    std::fill_n(m_currentRumour, sizeof(m_currentRumour), static_cast<char>(0));
     m_numObelisks = 0;
-    int infoFlag;
-    MEMSET(m_globalInfoFlags, 0, sizeof(m_globalInfoFlags), infoFlag);
-    memset(m_borderTentVisitFlags, 0, sizeof(m_borderTentVisitFlags));
+    std::fill_n(m_globalInfoFlags, sizeof(m_globalInfoFlags), 0);
+    std::fill_n(m_borderTentVisitFlags, sizeof(m_borderTentVisitFlags), 0);
+    std::fill_n(m_cartographerFlags, sizeof(m_cartographerFlags), 0);
     m_cartographerMask[0] = 0x100;
     m_cartographerMask[1] = 0xbf;
     m_cartographerMask[2] = 0x40;
-    memset(m_cartographerFlags, 0, sizeof(m_cartographerFlags));
     initializeGameData();
-    memset(m_rumourState, 0, sizeof(m_rumourState));
+    std::fill_n(m_rumourState, sizeof(m_rumourState), static_cast<char>(0));
     m_isTutorial = 0;
     m_grailAsked = 0;
 }

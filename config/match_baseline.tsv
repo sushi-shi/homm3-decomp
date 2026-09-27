@@ -1840,7 +1840,7 @@ forcefeedback	__h3cg$forcefeedback$static_dtor$immMouse	100.0000	100.0000	100.00
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	tokens1:8e750f5fad30
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
 game	??0SavedGameHeader@@QAE@XZ	100.0000	100.0000	100.0000	0xbc0e0	tokens1:dc55999f0af0
-game	??0game@@QAE@XZ	91.3953	91.3953	91.3953	0xcdf20	tokens1:47b46b5b9fe8
+game	??0game@@QAE@XZ	100.0000	100.0000	100.0000	0xcdf20	tokens1:8a33ebfa6d00
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550	tokens1:e7daf55622b0
 game	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xc3090	-
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0	tokens1:0d78c045bd8d
