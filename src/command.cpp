@@ -1238,6 +1238,9 @@ unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
         < m_placementBoundaryDepth * 2 + 15;
 }
 
+// A positive/zero return ladder changes the retained Windows helper
+// from 100% to 88.97% and its catapult expansion to 91.17%; DC line1947
+// and Mac's branchless final result support the single comparison return.
 VA(0x00476440, 0x50) MAC_ADDRESS(0x0844b0, 0x84)  // dc 0x6d548
 unsigned char combatManager::validWallTarget(TWallTargetId wall)
 {
