@@ -1320,6 +1320,8 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
 // non-null hero returns. These four guard controls are VC6 byte-flat;
 // retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
+// Native 0x84684/0x846ec writes newIndex into both tower slots. Those
+// source assignments are VC6 byte-flat and improve Mac to 61.67%.
 
 VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
@@ -1352,7 +1354,7 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_0)) {
-            currentArmy->m_slot = COMBAT_HEX_UPPER_TOWER;
+            currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
@@ -1364,7 +1366,7 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_7)) {
-            currentArmy->m_slot = COMBAT_HEX_KEEP;
+            currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
