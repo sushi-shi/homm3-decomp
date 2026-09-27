@@ -244,3 +244,13 @@ mac_offset = 0x5af8
 mac_size = 4
 sha256 = "de620abd6d3615746360c1d15ce3a56291236d37424124054a49d25e947ffc4d"
 evidence = "Native TSellArtifactWindow::computeTradeRatios loads direct float1.0 at1f8530 and again1f8544 for the minimum output clamp. Its complete pinned4byte payload3f800000 matches the candidate emitted constant; no guessed destination."
+
+[[data]]
+retail_va = 0x006994fc
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528934
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical external town-manager pointer g_townManager, owned by KB. Native TTradeResourceWindow::update loads TOC1+978 -> storage1+528934 into r25 at1f5b10;1f5ef0/ef4 dereferences the cell and manager's townToView+38, then town type+4 is compared to2/5. The same manager/town chain feeds the building17 bitset check1f5f18..58 and building21 check in the following arm. Pinned external storage is four zero bytes; initializer and pointee are not scored."

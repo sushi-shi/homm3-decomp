@@ -1733,8 +1733,11 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // 0x1f5c78/0x1f5c9c and 0x1f6100/0x1f6114 retain the two formatting arms.
 // Restoring that complete source model and the signed side counter raises
 // Windows 90.22 -> 98.73%; its 38 branches and 54 named calls agree.
-// Remaining stores/registers differ in four blocks. Earlier word-order
-// controls were flat; volatile scratch aliases remain unsupported.
+// Native message phases retain the icon command before the side split,
+// the status command in each resource arm, and the text pointer before its
+// command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
+// Three size-only blocks remain; all54 Windows named calls agree. Earlier
+// word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1851,8 +1854,8 @@ void TTradeResourceWindow::update(unsigned char update)
     for (int side = 0; side < 2; ++side) {
         if (g_selectedArtifact != -1 && g_leftResource != -1 &&
             g_selectedArtifact != g_leftResource) {
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             if (side == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 3;
                 msg.m_extra = g_selectedArtifact;
                 broadcastMessage(msg);
@@ -1884,8 +1887,8 @@ void TTradeResourceWindow::update(unsigned char update)
         }
 
         for (int i = 0; i < 7; ++i) {
-            msg.m_codeX = widget::WIDGET_SET_STATUS;
             if (side == 0) {
+                msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
                 broadcastMessage(msg);
@@ -1893,9 +1896,9 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
+                msg.m_extraText = g_text;
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0x23 + i;
-                msg.m_extraText = g_text;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
                 broadcastMessage(msg);
@@ -1908,6 +1911,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             } else {
+                msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 msg.m_codeY = 0x2a + i;
                 broadcastMessage(msg);
