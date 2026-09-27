@@ -2830,16 +2830,18 @@ double army::computeAttackerDamageReduction(const army* defender,
     return reduction;
 }
 
+// Mac 0x4fd30/0x4fd48 multiplies the baseline by each shield factor.
+// VC6 folds the initial 1.0 product; retaining both products is dual exact.
 VA(0x00443d90, 0x9C) MAC_ADDRESS(0x04fd04, 0x88)  // dc 0x48fc4
 double army::computeDefenderDamageReduction(unsigned char isShooting) const
 {
     double reduction = getDefenseDamageModifier(isShooting);
     if (isShooting) {
         if (m_spellInfluence[28])
-            reduction = m_airShieldFactor;
+            reduction *= m_airShieldFactor;
     } else {
         if (m_spellInfluence[27])
-            reduction = m_shieldFactor;
+            reduction *= m_shieldFactor;
     }
     if (m_spellInfluence[70])
         reduction *= 0.5;
