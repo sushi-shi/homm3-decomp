@@ -3289,6 +3289,10 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // and an induction temporary. Naming the duration isHost result and declaring
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
 // seven catalog mutations were flat or worse; none reduced the divergence.
+// Direct ordinary text indexing restores the retail branch-local table loads;
+// caching the table across both message arms had lowered Windows to 97.24%.
+// Both authored message lifetimes remain; Windows recovers 99.80%, and Mac
+// retains the same 74 ordered call sites (exact references remain incomplete).
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897) MAC_ADDRESS(0x178ed0, 0x790)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::setupAdvancedOptions()
@@ -3315,16 +3319,13 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
                 if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3342,16 +3343,13 @@ void TSingleSelectionWindow::setupAdvancedOptions()
             if (m_commonGameVersion < mapVersionClass) {
                 if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
