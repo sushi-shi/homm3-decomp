@@ -27,6 +27,11 @@
 static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42, dc 0x69638
+// DC records only the TCheatCode local. Retail's extra four-byte frame slot
+// and string-cleanup call survive direct chatString use, string::assign, and
+// an int recognition flag: direct use slips to 90.26%, the others remain
+// 90.30%. Retain the current alias and assignment pending a source-backed
+// explanation of the cleanup lifetime.
 VA(0x00472010, 0x1C0) MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {

@@ -104,8 +104,9 @@ static long ftol(double d)
 // leave a separate copy of the origin untouched, which retail proves by
 // keeping x and y live in ESI/EDI across the whole clip block and pushing
 // those, never the clamped copies.
-// The reviewed Mac body retains adjusted x/y separately and updates frame
-// before the draw; that source shape aligns 99/107 Mac instructions at -O3.
+// The reviewed Mac body computes adjusted x before y, retains both separately,
+// and updates frame before the draw. That source shape aligns 99/107 Mac
+// instructions at -O3.
 // Its left clip computes width as 32 - tilex, while Windows retail emits
 // baseX + 24. Substituting the former here changed Windows control flow and
 // lowered its byte match, so the retail expression remains below.
@@ -113,8 +114,8 @@ VA(0x005f73b0, 0x14D) MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map i
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
     int offset = (32.0f - g_viewWorldScaleFloat) / 2.0f;
-    int drawY = y - offset;
     int drawX = x - offset;
+    int drawY = y - offset;
 
     int tilex = 0;
     int tiley = 0;
@@ -887,31 +888,17 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\viewwrld.cpp:1026
-// The scaled fog layer. advmgr.cpp's exact DrawShroud (0x412220) supplies
-// the whole cloud/star decision - the same gCompleteDrawAllCells bypass, the
-// same GetCloudLookup, the same >=100 flip offset and the two frame fixups -
-// and its `goto draw_stars` idiom is the spelling that reproduces retail's
-// block layout here too. Two things are this body's own: the shroud decision
-// is LATCHED in a flag rather than returned on, so the fog tile is reached
-// through a join the non-visible path jumps straight into, and the leading
-// GetCell result is discarded exactly as the full-size renderer discards its
-// own type_point.
-// The star arm is a POSITIVE `if (!lookup) { ...; return; }` block, not a
-// forward `goto adjust_cloud` over it. Both spellings describe the same CFG
-// - 54 blocks, 38 branches, 3 returns either way - but the goto leaves the
-// star block with two jump predecessors and VC6 SINKS it past the fog draw,
-// which cost 70.6 points (20.5312 -> 91.0938 on the inversion alone). With
-// the guard positive, B12 falls into the star block and every block lands
-// where retail put it: 49 of 54 exact, 0 target-shift, 0 flow-kind.
-// Residual (92.8835%): the size-only blocks left are inside the two
-// VWScaleToScreenBuffer expansions, not this body - one extra out-of-line
-// GetMap in the star expansion, which is a per-site /Ob2 decision inside
-// the helper and not a statement of this function.
+// Preserve the latched shroud decision and the star arm's early return;
+// moving that arm behind a forward goto changes VC6's block placement.
+// Mac 0x205b88/0x205ba4 explicitly assigns lookup in both branches, and
+// 0x205bc4/0x205d98 call the two-argument zeroing routine. ZeroMemory uses
+// the existing platform API while preserving Windows' inline zero fill.
+// These two source controls are Windows-flat at 88.3551% (four states,
+// two objects). Both ordinary CodeWarrior and retail retain eleven calls;
+// the remaining shape comparison is not an exact Mac verdict.
 VA(0x005f9940, 0x44A) MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    // Keep the two shroud-selection scopes and their common draw checks.
-    // An else arm removes the reconstructed join label at unchanged 97.9205%.
     if (srcX < 0 || srcY < 0 || srcX >= g_mapWidth)
         return;
     if (srcY >= g_mapHeight && !g_completeDrawAllCells)
@@ -937,10 +924,9 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
         drawShroud = false;
     } else {
         drawShroud = true;
-        if (!g_completeDrawAllCells)
-            lookup = getCloudLookup(srcX, srcY, z);
+        lookup = g_completeDrawAllCells ? 0 : getCloudLookup(srcX, srcY, z);
         if (!lookup) {
-            memset(g_memoryBuffer->getMap(0, 0), 0,
+            ZeroMemory(g_memoryBuffer->getMap(0, 0),
                    g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
             m_starTileset->drawShroudTile(
                 ((srcX * 85 ^ srcY * 85) / 64) & 3, 0, 0, 32, 32, g_memoryBuffer,
@@ -965,7 +951,7 @@ void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
     if (!drawShroud)
         return;
 
-    memset(g_memoryBuffer->getMap(0, 0), 0,
+    ZeroMemory(g_memoryBuffer->getMap(0, 0),
            g_memoryBuffer->getHeight() * g_memoryBuffer->getPitch());
     m_cloudIcons->drawShroudTile(
         lookup - 1, 0, 0, 32, 32, g_memoryBuffer, 0, 0, hflip, false);

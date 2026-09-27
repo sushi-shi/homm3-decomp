@@ -61,88 +61,61 @@ DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
 static int decreaseCampaignDifficulty(message& msg);
 static int increaseCampaignDifficulty(message& msg);
 
-// E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
-// description as a second widget message; Complete hands it to the
-// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
-
-MAC_ADDRESS(0x06439c, 0xb0)
-void TCampaignBrief::resetMapAndDescription(int which)
-{
-    message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_TEXT;
-    msg.m_codeY = MAP_NAME_ID;
-    msg.m_extraText = m_scenarios[which].m_mapName.c_str();
-    broadcastMessage(msg);
-    m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
-}
-
-// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
-// helper and ResetMapAndDescription. Retail retains vector::size at the loop
-// tests (0x423110); expansion does not establish an inline source specifier.
-
-MAC_ADDRESS(0x06444c, 0x88)
-void TCampaignBrief::clearSelected()
-{
-    for (int i = 0; i < static_cast<int>(m_campaign->m_scenarios.size()); i++) {
-        if (m_scenarios[i].m_available)
-            getWidget(MAP_SELECTED_1_ID + i)->hide();
-    }
-}
-
 // E:\gamedcs\campaignbrief.cpp:392
 // Complete adds the game-setup / map-header copy into gpGame (skipped in
 // the in-game view), the WHICHMAP frame chosen by the map's Size, the OK
 // button enable when the scenario's options record has no choice to
-// make, and the difficulty-button refresh.
+// make, and the difficulty-button refresh. Both native builds store the
+// WHICHMAP target before its SET_ICON_FRAME action. DC keeps the whole
+// available-scenario path inside its 0x587e8..0x5892a lexical scope; the
+// positive guard is byte-flat to the former early return in VC6.
 VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
 void TCampaignBrief::select(int which)
 {
-    if (!m_scenarios[which].m_available)
-        return;
+    if (m_scenarios[which].m_available) {
+        clearSelected();
+        getWidget(MAP_SELECTED_1_ID + which)->show();
+        m_selectedScenario = which;
+        resetMapAndDescription(which);
 
-    clearSelected();
-    getWidget(MAP_SELECTED_1_ID + which)->show();
-    m_selectedScenario = which;
-    resetMapAndDescription(which);
+        if (!g_campaignBriefViewFromGame) {
+            g_game->m_setup = m_scenarios[which].m_gameSetup;
+            g_game->m_mapHeader = m_scenarios[which];
+        }
 
-    if (!g_campaignBriefViewFromGame) {
-        g_game->m_setup = m_scenarios[which].m_gameSetup;
-        g_game->m_mapHeader = m_scenarios[which];
+        message msg;
+        msg.m_id = MESSAGE_WIDGET;
+        msg.m_codeY = WHICHMAP_ID;
+        msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+        switch (m_scenarios[which].m_size) {
+        case MAP_SIZE_SMALL:
+            msg.m_extra = 0;
+            break;
+        case MAP_SIZE_MEDIUM:
+            msg.m_extra = 1;
+            break;
+        case MAP_SIZE_LARGE:
+            msg.m_extra = 2;
+            break;
+        case MAP_SIZE_EXTRA_LARGE:
+            msg.m_extra = 3;
+            break;
+        default:
+            msg.m_extra = 4;
+            break;
+        }
+        broadcastMessage(msg);
+
+        if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
+            widget* ok = getWidget(DIALOG_RETURN_OK);
+            if (ok)
+                ok->enable(1);
+        }
+        updateBonusIcons();
+        updateDifficultyButtons();
+        updateAllyEnemyFlags();
+        drawWindow(1, 0xffff0001, 0xffff);
     }
-
-    message msg;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-    msg.m_codeY = WHICHMAP_ID;
-    switch (m_scenarios[which].m_size) {
-    case MAP_SIZE_SMALL:
-        msg.m_extra = 0;
-        break;
-    case MAP_SIZE_MEDIUM:
-        msg.m_extra = 1;
-        break;
-    case MAP_SIZE_LARGE:
-        msg.m_extra = 2;
-        break;
-    case MAP_SIZE_EXTRA_LARGE:
-        msg.m_extra = 3;
-        break;
-    default:
-        msg.m_extra = 4;
-        break;
-    }
-    broadcastMessage(msg);
-
-    if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
-        widget* ok = getWidget(DIALOG_RETURN_OK);
-        if (ok)
-            ok->enable(1);
-    }
-    updateBonusIcons();
-    updateDifficultyButtons();
-    updateAllyEnemyFlags();
-    drawWindow(1, 0xffff0001, 0xffff);
 }
 
 // Retail-only: codeX at +4, qualifier at +0xc, owning window at +0x1c.
@@ -176,7 +149,40 @@ static int increaseCampaignDifficulty(message& msg)
 }
 
 VA_COMPGEN(0x00457cb0, 0x2B8, IMPLICIT_COPY_ASSIGN, CMapHeaderData) MAC_COMPGEN_ADDRESS(0x064044, 0x228, IMPLICIT_COPY_ASSIGN, CMapHeaderData)
-VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, Int)
+// The placeholder enum vector keeps this retained four-byte capacity body
+// byte-identical; the old int enrollment predated the element-type evidence.
+VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, HeroId)
+
+// Both native Mac body order and DC lines 392/437/452 put these helpers
+// after Select. VC6 still expands both; all Windows TU scores are unchanged.
+// E:\gamedcs\campaignbrief.cpp:437. The Dreamcast broadcasts the map
+// description as a second widget message; Complete hands it to the
+// scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
+
+MAC_ADDRESS(0x06439c, 0xb0)
+void TCampaignBrief::resetMapAndDescription(int which)
+{
+    message msg;
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_TEXT;
+    msg.m_codeY = MAP_NAME_ID;
+    msg.m_extraText = m_scenarios[which].m_mapName.c_str();
+    broadcastMessage(msg);
+    m_scroller->setText(m_scenarios[which].m_mapDescription.c_str());
+}
+
+// E:\gamedcs\campaignbrief.cpp:452. Select expands this ordinary TU
+// helper and ResetMapAndDescription. Retail retains vector::size at the loop
+// tests (0x423110); expansion does not establish an inline source specifier.
+
+MAC_ADDRESS(0x06444c, 0x88)
+void TCampaignBrief::clearSelected()
+{
+    for (int i = 0; i < m_campaign->getScenarioCount(); i++) {
+        if (m_scenarios[i].m_available)
+            getWidget(MAP_SELECTED_1_ID + i)->hide();
+    }
+}
 
 // Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462, dc 0x58a28.
 // Complete moves currentTerritory into the window and availability/setup into
@@ -269,6 +275,8 @@ void TCampaignBrief::updateAllyEnemyFlags()
 // on the first arrow (72.43%), second arrow (71.91%), or both (76.12%), and
 // three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
 // changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
+// Naming m_widgets as one reference across all eight appends likewise moves
+// the inline frontier and scores 98.26%, so the member accesses stay direct.
 VA(0x00458120, 0xC1C) MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor), dc 0x58dac
 void TCampaignBrief::addBonusIcons()
 {
@@ -763,6 +771,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                 w->m_width = mx;
                 my = w->getRealHeight();
                 w->m_height = my;
+                // DC line 970 names set_visible in the older UI. Complete
+                // sends CLEAR_STATUS with ACTIVE|DRAWN here (6, 6);
+                // setVisible(0) sends DRAWN alone (4, 6).
                 w->hide();
 
                 w = getWidget(MAP_ENABLED_1_ID + drawIndex);

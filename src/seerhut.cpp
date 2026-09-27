@@ -15,6 +15,7 @@
 #include "game.h"
 #include "hero.h"
 #include "herospec.h"
+#include "kb.h"
 #include "quest.h"
 #include "resourcemanager.h"
 #include "seerhuttext.h"
@@ -90,28 +91,19 @@ std::string formatString(const char* format, ...);
 // clockwise order is north, north-east, east, south-east, south, south-west,
 // west, north-west, then centre.
 
-// kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
-// quest dialog bodies below are this compiland's only consumers of that
-// header and the include-set residual class makes a one-line declaration
-// the cheaper edge, exactly as format_string above.
-void normalDialog(const char* text, int mbType, int x, int y,
-    int resType1, int resExtra1, int resType2, int resExtra2,
-    int special, int timeout, int resType3, int resExtra3);
-void extendedDialog(const char* text,
-    std::vector<type_dialog_resource>& resources,
-    long x, long y, long timeout);
-
 // Retail 0x56c3e0. Pull seerhut.txt out of the resource cache, fill both
 // three-column tables from it, then walk every row
 
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
-// The name-row append is inferred from retail. Canonical push_back gives
+// The name-row append is inferred from retail. Canonical push_back gave
 // 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
 // Mac's lightly optimized build confirms the source-shaped temporary string:
 // its constructor, vector push_back, and destructor are retained in order
 // (8/8 direct calls in the full function). Explicit/named string construction,
-// positive validation and the cell accessor do not recover VC6 retail's
-// retained string::assign during that conversion.
+// positive validation and the cell accessor did not recover VC6 retail's
+// retained string::assign during that conversion. Releasing the sheet through
+// ResourceManager's canonical inline helper restores that decision and makes
+// the Windows body exact without changing the seven retained calls.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183) MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -136,7 +128,7 @@ unsigned char initializeSeerHutText()
         g_seerHutNames.push_back(name);
     }
 
-    sheet->dispose();
+    ResourceManager::dispose(sheet);
     return 1;
 }
 
@@ -196,16 +188,8 @@ unsigned char type_quest::hasExpired() const
 VA(0x0056cd00, 0x14F) MAC_ADDRESS(0x164178, 0x134)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::load(TAbstractFile* file, int version)
 {
-    {
-        unsigned char flag;
-        file->read(&flag, sizeof(flag));
-        m_seerHut = flag != 0;
-    }
-    {
-        unsigned char row;
-        file->read(&row, sizeof(row));
-        m_textVariant = row;
-    }
+    m_seerHut = readValue<unsigned char>(file) != 0;
+    m_textVariant = readValue<unsigned char>(file);
     m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
@@ -417,6 +401,9 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // Mac Complete retains this common skill-picture dialog at code0:0x164e44
 // (three callers), taking text and four signed skill values after `this`.
 // Windows Complete expands it in slot 5; preserve one ordinary source body.
+// The ordinary-header CodeWarrior body matches all 192 native bytes after
+// its three direct-call reload NOPs collapse. The reviewed constructor,
+// append, extendedDialog and vector cleanup destinations all agree.
 MAC_ADDRESS(0x164e44, 0xc0)
 void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
@@ -455,9 +442,10 @@ void type_skill_quest::showSkillRequirementsDialog(
 // Mac 0x164f28..0x164ff4 stores either the required byte or zero in
 // separate arms. Direct member reads reproduce that loop exactly; the
 // earlier reference/conditional expression introduced extra byte conversions.
-// Natural c_str arguments avoid extended pointer lifetimes. Mac now 96.11%
-// (592 bytes on both sides), with string stack homes and format registers left.
-// Windows 68.33% versus the previous 70.53% remains a recovery obligation.
+// Keep the table lookup in the format argument: native +0x1b4..+0x1c4
+// format-register order is now exact, with every named helper retained.
+// Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
+// bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
@@ -476,9 +464,8 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
         showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
-        const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts.m_text1.c_str(), requirement.c_str());
+            questTexts().m_text1.c_str(), requirement.c_str());
         text += getTimeLimitText();
         showSkillRequirementsDialog(text.c_str(), missing);
     }
@@ -685,12 +672,16 @@ type_monster_quest::type_monster_quest(unsigned char flags)
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
+// Explicit invalid-range branches reproduce all 84 Mac bytes; the ternary
+// materializes an extra boolean or reverses the two arms. Windows stays exact.
 VA(0x0056ea30, 0xF9) MAC_ADDRESS(0x165b7c, 0x54)
 std::string type_monster_quest::getRequirementText()
 {
-    const char* name = m_monsterId >= 0 && m_monsterId <= 0x96
-                           ? g_creatureTypeTraits[m_monsterId].m_pluralName
-                           : "";
+    const char* name;
+    if (m_monsterId < 0 || m_monsterId > 0x96)
+        name = "";
+    else
+        name = g_creatureTypeTraits[m_monsterId].m_pluralName;
     return name;
 }
 
@@ -2332,14 +2323,11 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // guard's reader does; the only difference from TQuestGuard::read is the
 // flags argument, which is 1 here and 0 there.
 
-// The reward. One type byte, then a jump-table switch whose ten arms are the
-// TSeerRewardType roster; the two-byte artifact and creature ordinals narrow
-// to one byte on Restoration of Erathia maps, which is why those two arms
-// re-read gpGame->mapHeader.version. Retail reads all of them through ONE
-// four-byte stack slot addressed at three widths - [ebp+8] as an int,
-// [ebp+0xa] as a short and [ebp+0xb] as a signed char - so the three buffers
-// below are function-scoped and let VC6 coalesce them the same way. The two
-// bytes read straight after the switch are read and discarded.
+// The reward uses typed scalar readers: unsigned bytes for the reward kind
+// and positive bonuses, signed bytes for skill/resource selectors, signed
+// artifact/creature shorts, and an unsigned creature count. These preserve
+// the native conversions without reading partial values into uninitialized
+// integers. The two trailing reserved bytes are still consumed.
 
 // The name. Every hut takes an unused entry from gpSeerHutNames: a byte per
 // name, all set, then cleared for each name the map's existing huts already
@@ -2351,39 +2339,18 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // carries NO unwind action because nothing between its construction and its
 // destruction can throw - rand() is extern "C" and nothrow under /GX.
 
-// BLOCK SCOPE ON THE READ BUFFERS IS WORTH +6.07 (76.6567 -> 82.7295).
-// Retail addresses every scalar read through the dead `infile` parameter
-// home at three widths; function-scoped buffers get slots of their own at
-// [ebp-1] and below and the whole frame walks. One declaration per arm is
-// what puts them back.
-
-// Residual (94.24%, raised from 86.81%): the one-byte Morale, Luck and Primary
-// bonuses are unsigned-char conversions, and the two-byte creature count is an
-// unsigned-short conversion. Those four source types recover the entire switch
-// and tail: all 58 CFG blocks and 22 branches align, 56 blocks are byte-exact,
-// and every post-constructor opcode agrees apart from the resulting eight-byte
-// frame displacement. The two size-only blocks are the legacy artifact arm:
-// retail expands the shared three-argument constructor but calls its nested
-// type_quest(flags), while this caller expands both. The exact load sibling
-// needs both expansions. Plain `inline`, moving the definition ahead of the
-// base constructor, and caller inline-depth(1) are byte-flat. A constructor-level
-// inline-depth(0) is the negative control: read falls to 91.86%, exact load to
-// 82.72%, and is not retained. Naming the artifact falls to 93.70%; an explicit
-// signed comparison is byte-flat. Keep the canonical shared constructor and
-// caller-specific natural inliner state rather than pinning either caller.
-// Keeping the canonical SetRandomName definition inline lets the Complete
-// caller expand its revised allocation/random-selection body while preserving
-// the Dreamcast-proven helper. The remaining legacy artifact-quest arm expands
-// its nested type_quest construction where retail retains that call; the extra
-// inline budget also leaves the name vector's element construction as a call.
+// The shared value-reader model keeps load() exact and raises read() from
+// 86.19 to 86.49%, with every other TU row unchanged. It restores the retained
+// type_quest constructor call in the legacy arm. The remaining boundaries are
+// its vector constructor (expanded) and setRandomName's vector fill (called).
+// The factory and random-name helpers remain canonical source calls.
 // Mac keeps this map-quest loader as a separate body at code0+0x16aa6c,
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
 static type_quest* readQuestFromMap(TAbstractFile* infile,
                                     unsigned char flags)
 {
-    unsigned char questType;
-    infile->read(&questType, sizeof(questType));
+    unsigned char questType = readValue<unsigned char>(infile);
     type_quest* quest = createQuest(questType, flags);
     if (quest)
         quest->loadFromMap(infile);
@@ -2395,8 +2362,7 @@ void TSeerHut::read(TAbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         int textRow = rand() % 3;
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
+        signed char charBuffer = readValue<signed char>(infile);
         if (charBuffer == -1) {
             m_quest = 0;
         } else {
@@ -2408,114 +2374,83 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     m_completedByPlayer = 0;
-    {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        m_reward.m_rewardType = intBuffer & 0xff;
-    }
+    m_reward.m_rewardType = readValue<unsigned char>(infile);
 
     switch (m_reward.m_rewardType) {
     case eRewardExperience: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_dwords[0] = intBuffer;
+        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardMana: {
-        int intBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_dwords[0] = intBuffer;
+        m_reward.m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardMorale: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
         m_reward.m_value.m_signedLow.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardLuck: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
         m_reward.m_value.m_signedLow.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardResource: {
-        signed char charBuffer;
-        int intBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_resource.m_resourceType = charBuffer;
-        infile->read(&intBuffer, sizeof(intBuffer));
-        m_reward.m_value.m_resource.m_quantity = intBuffer;
+        m_reward.m_value.m_resource.m_resourceType =
+            readValue<signed char>(infile);
+        m_reward.m_value.m_resource.m_quantity =
+            readLittleEndianValue<int>(infile);
         break;
     }
 
     case eRewardPrimarySkill: {
-        signed char charBuffer;
-        int intBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_primarySkill.m_skillType = charBuffer;
-        infile->read(&intBuffer, 1);
+        m_reward.m_value.m_primarySkill.m_skillType =
+            readValue<signed char>(infile);
         m_reward.m_value.m_primarySkill.m_bonus =
-            static_cast<unsigned char>(intBuffer);
+            readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardSecondarySkill: {
-        signed char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_secondarySkill.m_skillType = charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_reward.m_value.m_secondarySkill.m_bonus = charBuffer;
+        m_reward.m_value.m_secondarySkill.m_skillType =
+            readValue<signed char>(infile);
+        m_reward.m_value.m_secondarySkill.m_bonus =
+            readValue<signed char>(infile);
         break;
     }
 
     case eRewardArtifact:
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, 1);
-            m_reward.m_value.m_dwords[0] = intBuffer & 0xff;
+            m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_reward.m_value.m_dwords[0] = shortBuffer;
+            m_reward.m_value.m_dwords[0] = readLittleEndianValue<short>(infile);
         }
         break;
 
     case eRewardSpell: {
-        int intBuffer;
-        infile->read(&intBuffer, 1);
-        m_reward.m_value.m_dwords[0] = intBuffer & 0xff;
+        m_reward.m_value.m_dwords[0] = readValue<unsigned char>(infile);
         break;
     }
 
     case eRewardCreature: {
         if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            int intBuffer;
-            infile->read(&intBuffer, 1);
-            m_reward.m_value.m_creature.m_creatureType = intBuffer & 0xff;
+            m_reward.m_value.m_creature.m_creatureType =
+                readValue<unsigned char>(infile);
         } else {
-            short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            m_reward.m_value.m_creature.m_creatureType = shortBuffer;
+            m_reward.m_value.m_creature.m_creatureType =
+                readLittleEndianValue<short>(infile);
         }
-        int countBuffer;
-        infile->read(&countBuffer, 2);
         m_reward.m_value.m_creature.m_count =
-            static_cast<unsigned short>(countBuffer);
+            readLittleEndianValue<unsigned short>(infile);
         break;
     }
     }
 
-    {
-        short shortBuffer;
-        infile->read(&shortBuffer, sizeof(shortBuffer));
-    }
+    readValue<short>(infile);  // reserved bytes
 
     setRandomName(*this);
 }

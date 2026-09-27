@@ -318,6 +318,9 @@ void TCampaignWindow::doModal()
 // row and the campaign-filename table.
 DATA(0x0066cad8) static int g_lastCampaignHoverId;
 
+// Mac 0x6aea0/0x6aea8 retains separate exit assignments for selecting
+// a campaign and cancelling. Keeping the two switch breaks also reproduces
+// the Windows dispatcher (88.2203% to 100%); neither arm falls through.
 // E:\gamedcs\campaignwindow.cpp:291
 VA(0x0045f2f0, 0x26C) MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int campaignWindowHandler(message& msg)
@@ -359,7 +362,8 @@ int campaignWindowHandler(message& msg)
                         id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
                 BinkManager::g_playingBink.m_paused = 1;
                 BinkPause(BinkManager::g_playingBink.m_bink, 1);
-                // Fall through: selection and cancel both close the dialog.
+                exitFlag = 1;
+                break;
             case DIALOG_RETURN_CANCEL:
                 exitFlag = 1;
                 break;

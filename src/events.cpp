@@ -876,8 +876,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
 VA(0x0049f040, 0x23) MAC_ADDRESS(0x0aa36c, 0x20)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 {
-    unsigned index = (cell->m_extraInfo >> 19) & 0xfff;
-    return &m_fullMap->m_customTreasure[index];
+    return &m_fullMap->m_customTreasure[(cell->m_extraInfo >> 19) & 0xfff];
 }
 
 // E:\gamedcs\events.cpp:656.  The customised artifact: the editor record
@@ -889,14 +888,11 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // inline advManager::GiveArtifact whole and cross-jump onto one final
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
-// [2026-09-01] Dreamcast's breakpoint rows make the declaration order
-// positive source evidence: treasure is line 657 and artifactId line 659.
-// Keep that order even though this SP3 compile currently scores below the
-// old source-false local peak (current 98.24%, banked MAX 99.15%): retail
-// interleaves the fullMap/_First chain with the cell loads, while SP3
-// serializes the inlined accessor. Negative control: putting artifactId
-// first raises the byte score but contradicts those two named statement
-// rows, so it is not an admissible reconstruction.
+// Dreamcast places treasure on line 657 and artifactId on line 659.
+// Keeping that order and using the direct index expression in the canonical
+// getTreasureData helper reproduces retail's interleaved pool/cell loads.
+// Both this caller and doCustomSpellScroll are exact; a named helper index
+// preserves its retained body but changes these caller expansions.
 // Negative control: spelling DC's unsigned-char human_player literally changes
 // the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
 // Splitting artifactId's declaration from its accessor assignment is byte-flat.
@@ -1016,6 +1012,8 @@ void advManager::doArtifactSkillRequirement(
 // The canonical 752-byte caller expands GiveArtifact in the free arm at
 // cost/budget 113/113, retaining calls in the skill arms at budgets 6 and 4,
 // exactly the retail call decisions. MAX before this reconstruction: 78.1174.
+// Early returns versus full/partial nested dispatch reproduce three objects
+// with no MAX gain; branch nesting alone does not merge the skill-success tail.
 VA(0x0049f7e0, 0x2A4) MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
@@ -1605,6 +1603,9 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // after prompt construction, while this compile keeps it in EDI. The other
 // 114/115 blocks are an alignment cascade from this one allocator choice,
 // not evidence for a source control-flow rewrite.
+// Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
+// worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
+// is byte-flat. Keep the canonical calls and current reference lifetime.
 VA(0x004a18b0, 0x79A) MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
 void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                                           type_point point, bool humanPlayer)
@@ -2558,7 +2559,9 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     updateScreen(0, 0);
     eraseObj(cell, point, 1);
 
-    hero* prisoner = g_game->getHero(heroID);
+    // Mac 0xb0a30 indexes the hero pool directly; retail has no getHero
+    // sentinel guard at this call site.
+    hero* prisoner = &g_game->m_heroes[heroID];
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
@@ -3254,7 +3257,7 @@ VA(0x004a6440, 0xD8) MAC_ADDRESS(0x0b30e4, 0x174)  // dc-bracket forced, ret 0xc
 void advManager::doTreasureDialog(hero* currentHero, int amount,
                                   bool humanPlayer)
 {
-    bool takeGold;
+    unsigned char takeGold;
     int experience = static_cast<int>(currentHero->getExperienceBonusFactor()
                                       * (amount - 500));
 
@@ -4956,20 +4959,25 @@ void advManager::townEvent(NewmapCell* cell, type_point point,
     checkEndGame(0);
 }
 
+// DC events.cpp:5397 retains game::GetMine. Naming its result in the mine
+// arm keeps that source call and gives VC6 the retail 52-block, 29-call body.
+// Mac's paired comparison is currently unscored (unbound TOC literal @6813).
 VA(0x004ab410, 0x632) MAC_ADDRESS(0x0b85a8, 0x36c)  // dc 0x9a288
 void advManager::eventSound(int eventID, int extraInfo)
 {
     std::string sampleName;
 
     switch (eventID) {
-    case MINE:
-        if (g_game->getMine(extraInfo)->m_guards.hasCreatures())
+    case MINE: {
+        mine* currentMine = g_game->getMine(extraInfo);
+        if (currentMine->m_guards.hasCreatures())
             sampleName = DATA_COMPGEN(0x00677898, mineGuardSampleName,
                                       "mystery.wav");
         else
             sampleName = DATA_COMPGEN(0x00677888, flagMineSampleName,
                                       "flagmine.wav");
         break;
+    }
     case FLOTSAM:
     case LEAN_TO:
     case WAGON:
@@ -5459,11 +5467,13 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     {
         int storage;
         storage = monType;
+        // Complete calls random here; the older DC and Mac builds call
+        // sRandom at the corresponding decision.
         if (g_game->isBaseCreature(TCreatureType(storage))
             && numGroups > 1
             && monType2 == CREATURE_NONE
             && monType3 == CREATURE_NONE
-            && sRandom(1, 100) <= 50) {
+            && random(1, 100) <= 50) {
             TCreatureType upgraded = g_game->upgradedCreatureType(
                 H3_ENUM_DECODE(TCreatureType, monType));
             currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;

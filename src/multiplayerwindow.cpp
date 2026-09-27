@@ -418,6 +418,8 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // Current residual (83.43%): DeleteTempSaveGame and CHeroSessions expand,
 // including the proven DeleteFileA path. Nested widget-vector insert/copy
 // operations still over-expand; retail retains fourteen additional call sites.
+// DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
+// Complete's existing getText helper is byte-flat under VC6 here.
 VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
@@ -488,9 +490,9 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_gameSlider = gs;
     m_widgets.push_back(gs);
 
-    int sessionRowY = 112;
-    for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
-        m_widgets.push_back(new textWidget(18, sessionRowY, 317, 22, 0,
+    // Mac bounds the row index at twelve; DC line 956 retains 112 + i * 25.
+    for (int i = 0; i < 12; i++)
+        m_widgets.push_back(new textWidget(18, 112 + i * 25, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
@@ -634,41 +636,38 @@ void TMultiPlayerWindow::update()
             drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             if (count >= 12)
                 count = 12;
-            int row = 0;
-            if (count > 0) {
-                wy = wy + 0x70;
-                do {
-                    if (!m_sessions->getSessionInfo(
-                            row + m_currentIndex, nameBuf, userBuf, numPlayers,
-                            status))
-                        return;
+            for (int row = 0; row < count; ++row) {
+                if (!m_sessions->getSessionInfo(
+                        row + m_currentIndex, nameBuf, userBuf, numPlayers,
+                        status))
+                    return;
 
-                    int isSelected = m_currentGame == row + m_currentIndex;
-                    if (status != CHeroSessions::closed) {
-                        if (isSelected)
-                            anySelected = 1;
-                        shown++;
-                    }
+                int isSelected = m_currentGame == row + m_currentIndex;
+                if (status != CHeroSessions::closed) {
+                    if (isSelected)
+                        anySelected = 1;
+                    shown++;
+                }
 
-                    m_gameState->draw(0, status, 0, 0,
-                                    g_multiPlayerWindow->m_gameState->getWidth(),
-                                    g_multiPlayerWindow->m_gameState->getHeight(),
-                                    g_windowManager->m_screenBitmap, wx + 0x12,
-                                    wy, 0, 1);
-                    int fontColor = isSelected ? 5 : 1;
-                    g_smallFont->drawBoundedString(
-                        nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    g_smallFont->drawBoundedString(
-                        userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    sprintf(countBuf, "%d", numPlayers);
-                    g_smallFont->drawBoundedString(
-                        countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
-                        wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
-                    ++row;
-                    wy += 0x19;
-                } while (row < count);
+                // DC line 1125 computes the row coordinate; VC6 hoists its base
+                // and advances it by 25. Keep that reduction out of the source.
+                int rowY = wy + 0x70 + row * 0x19;
+                m_gameState->draw(0, status, 0, 0,
+                                g_multiPlayerWindow->m_gameState->getWidth(),
+                                g_multiPlayerWindow->m_gameState->getHeight(),
+                                g_windowManager->m_screenBitmap, wx + 0x12,
+                                rowY, 0, 1);
+                int fontColor = isSelected ? 5 : 1;
+                g_smallFont->drawBoundedString(
+                    nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, rowY,
+                    0x80, 0x16, font::TColor(fontColor), 5, -1);
+                g_smallFont->drawBoundedString(
+                    userBuf, g_windowManager->m_screenBitmap, wx + 0xad, rowY,
+                    0x80, 0x16, font::TColor(fontColor), 5, -1);
+                sprintf(countBuf, "%d", numPlayers);
+                g_smallFont->drawBoundedString(
+                    countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
+                    rowY, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
             }
 
             if (shown > 0 && haveName && anySelected)
@@ -800,22 +799,34 @@ inline unsigned char TMultiPlayerWindow::onModem()
 
 // Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
 // cleanup/menu/redraw/update calls separately in the host and join arms.
+// Case-local exits also restore Windows' shared failure cleanup without
+// synthetic join labels (86.75% -> 91.57%). Return placement and nested
+// inlining still differ; all protocol and menu helpers remain canonical.
+// Coupling CANCEL/IPX branch exits with HOST/SEARCH/HOTSEAT returns in
+// 36 natural variants produced three reproduced objects and no gain.
 VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
-    bool connectionFailed = 0;
     switch (id) {
     case CANCEL_ID:
         if (!m_inSessionList) {
-            connectionFailed = 1;
+            exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+            remoteCleanup();
             break;
         }
-        goto return_to_main_menu;
+        remoteCleanup();
+        goMainMenu();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        update();
+        break;
 
     case IPX_ID: {
         goSessionList();
         if (!onIPX()) {
-            connectionFailed = 1;
+            exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+            remoteCleanup();
             break;
         }
         return 1;
@@ -856,8 +867,10 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         return 1;
 
     case HOST_ID:
-        if (onHost())
-            goto exit_dialog;
+        if (onHost()) {
+            exitFlag = 1;
+            return 1;
+        }
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
@@ -886,13 +899,11 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
 
     case SEARCH_ID:
-        if (onSearch())
-            goto exit_dialog;
+        if (onSearch()) {
+            exitFlag = 1;
+            return 1;
+        }
         break;
-
-    exit_dialog:
-        exitFlag = 1;
-        return 1;
 
     case HOT_SEAT_ID:
         if (onHotSeat()) {
@@ -926,20 +937,6 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
     }
 
-    if (connectionFailed) {
-        exitFlag = 1;
-        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-        remoteCleanup();
-        return 1;
-    }
-
-    return 1;
-
-return_to_main_menu:
-    remoteCleanup();
-    goMainMenu();
-    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    update();
     return 1;
 }
 
@@ -1421,6 +1418,7 @@ unsigned char TMultiPlayerWindow::onTCP()
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:1944
+// DC lines 1947/1948 look up the two headers; keep Complete's getText calls.
 // Complete expands CMPInputDlg's constructor at this site, asks for a TCP
 // address, tears down the browser's current DirectPlay connection, and runs
 // one bounded session enumeration. The four failure dialogs are pinned by
@@ -1517,6 +1515,10 @@ unsigned char TMultiPlayerWindow::isNT()
 // for player-name edits. Complete vtable 0x6401d8 slot 9 uses the inherited
 // CHeroWindowEx::windowHandler (0x5ff820); CHotSeatEdit handles native keys.
 
+// Mac expands this constructor inside onHotSeat (0x21c710), retaining the
+// same reserve/push_back and widget calls. Windows' remaining difference is
+// the first vector::size expansion in the last push_back; sharing one loop
+// index across the edit/link/autodraw loops is byte-flat at 97.43%.
 VA(0x00511e20, 0x5A1)  // dc 0x1028c4
 CHotSeatDlg::CHotSeatDlg()
     : CHeroWindowEx(218, 96, 363, 407, 18)
@@ -1524,6 +1526,8 @@ CHotSeatDlg::CHotSeatDlg()
     m_widgets.reserve(19);
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, BACKGROUND_ID,
                                        "muhotsea.pcx", 0x800));
+    // DC multiplayerwindow.cpp:637 looks up this text through its indexer.
+    // Complete keeps the existing getText helper.
     m_widgets.push_back(new textWidget(0, 30, m_width, 150,
                                      g_generalText->getText(GENERAL_TEXT_HOTSEAT_NAME_PROMPT), "bigfont.fnt",
                                      font::WHITE, HEADER_ID, 1, 0, 8));

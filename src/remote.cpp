@@ -264,16 +264,22 @@ static const long g_playerActiveUpdateInterval = 600000;
 // stay outside compilation as this large TU is admitted incrementally.
 
 // Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
-// its native transport supplies the incoming message.
+// its native transport supplies the incoming message. DC remote.cpp:318/331
+// names text lookups at the ping reply and destroyed-session messages;
+// Complete keeps the existing getText calls at 98.3470%.
 VA(0x00552db0, 0x28F) MAC_ADDRESS(0x2109e4, 0x1a0)  // dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
     case RS_PING:
         {
-            // Mac 0x210a40 retains CLogFile::log before sending the reply;
-            // its format string is at PEF data section 1:0x591f0.
+#if defined(HOMM3_TARGET_MAC)
+            // Mac 0x210a40 retains this diagnostic; the Windows snapshot lacks
+            // its call and string. VC6 does not save this variadic inline body
+            // (flags 0xaa), so ordinary inline elimination cannot explain it.
+            // See docs/vc6/variadic-members.md.
             g_logFile.log("Recieved RS_PING from %d", netMsg->m_dpidFrom);
+#endif
             transmitRemoteDataDPID(
                 &CPingResponseMsg(
                     static_cast<CPingMsg*>(netMsg)->m_pingTime, RS_PING_REPLY),
@@ -285,8 +291,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             char tempText[256];
             sprintf(tempText,
-                    g_generalText->getText(
-                        GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
+                    g_generalText->getText(GENERAL_TEXT_CHAT_PING_RESULT_FORMAT),
                     GameTime::elapsedSince(
                         static_cast<CPingMsg*>(netMsg)->m_pingTime));
             receiveChat(tempText, netMsg->m_from);
@@ -297,15 +302,16 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             unsigned long dpid =
                 static_cast<CDestroyPlayerMsg*>(netMsg)->m_dpid;
-            // Mac 0x210adc records the sender and dropped player IDs; its
-            // format string is at PEF data section 1:0x59209.
+#if defined(HOMM3_TARGET_MAC)
+            // Same logging snapshot difference at Mac 0x210adc; both the call
+            // and the RS_DESTROY_PLAYER format string are absent on Windows.
             g_logFile.log("Recieved RS_DESTROY_PLAYER from %d [kill %d]",
                           netMsg->m_dpidFrom, dpid);
+#endif
             if (dpid == g_thisNetPlayerInfo.m_dpid) {
                 remoteCleanup();
                 normalDialog(
-                    g_generalText->getText(
-                        GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
+                    g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 shutDown(0);
             }
@@ -1123,16 +1129,16 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
     return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
 
-VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)
+// Mac 0x2129a8..0x2129d0 clears the mode flags before constructing the
+// assigned player record. Keep the constructor at its expression lifetime.
+VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)  // dc 0x11ce14
 unsigned char initRemote(eNetGameType mpType, const char* userName)
 {
-    CNetPlayerInfo playerInfo;
-
     g_gameMode = static_cast<unsigned char>(mpType);
     g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    g_thisNetPlayerInfo = playerInfo;
+    g_thisNetPlayerInfo = CNetPlayerInfo();
 
     strcpy(g_config.m_networkDefaultName, userName);
     strcpy(g_thisNetPlayerInfo.m_name,
@@ -1696,15 +1702,9 @@ bool testIfLobbyLaunched()
 // CAutoArray destructor is consequently redundant on the success path but
 // remains visible on the two failure exits.
 
-// Residual wall (98.3167%, 2026-08-22): all 24 branches and seven returns
-// agree.  Our VC6 retains the success-edge destructor's dead vptr store plus
-// three already-zero member stores (16 bytes); retail drops all four and
-// keeps only the EH-state close.  Constructor order, bool-vs-byte, chained
-// zeroing, inner-vs-outer deleteData guards, and the seven guided why-reg
-// mutations all plateau here.  The other two destructor exits, including
-// the redundant Destroy(1) call after failed JoinSession, match retail and
-// forbid changing the class lifetime merely to erase this one compiler
-// artifact.
+// VC6 also eliminates the redundant success-edge destructor stores with the
+// canonical value-temporary initialization in initRemote; all retail bytes
+// match without changing the session-array lifetime or its cleanup calls.
 VA(0x00555aa0, 0x443)  // anchor-IAT/vtable/data + dc-xref/order-map, dc 0x11d9ac
 unsigned char handleMPlayerLaunch()
 {

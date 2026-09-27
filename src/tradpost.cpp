@@ -1736,8 +1736,9 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // Native message phases retain the icon command before the side split,
 // the status command in each resource arm, and the text pointer before its
 // command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
-// Three size-only blocks remain; all54 Windows named calls agree. Earlier
-// word-order controls were flat; volatile scratch aliases remain unsupported.
+// Mac 0x1f6148..0x1f6164 and 0x1f6230..0x1f624c assign each resource
+// widget ID before its status mask (99.78% Windows). All 54 named calls agree.
+// Earlier word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1889,8 +1890,8 @@ void TTradeResourceWindow::update(unsigned char update)
         for (int i = 0; i < 7; ++i) {
             if (side == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 broadcastMessage(msg);
@@ -1912,8 +1913,8 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x2a + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_BUY_WOOD_ID + i;
                 broadcastMessage(msg);
@@ -2148,10 +2149,13 @@ void TGiveResourceWindow::update(bool update)
 // Mac 0x1f6bf8..0x1f6c44 first chooses qty, then performs one of two
 // singular/plural lookups; nested wording emits a third native lookup path.
 // Ordinary text indexing retains getText through operator[] and reproduces
-// Mac's vector-index accessor frontier. Windows currently 95.46 (prior 96.39):
-// 54 calls and 24 branches agree, 53/57 blocks exact; remaining register roles
-// differ. why-reg's qty removal reduces distance 94 -> 63 but re-evaluates the
-// condition across calls, unlike Mac's quantity retained in r24. Keep qty.
+// Mac's vector-index accessor frontier. Mac 0x1f6ca0..0x1f6cf0 retains
+// separate sprintf calls for the two idle titles; Windows merges their tails.
+// Mac 0x1f7014..0x1f708c also puts the resource message fields before
+// formatting its count. Mac 0x1f6f28 and 0x1f6fa4 preserve the common icon
+// command before the column split and its repeated second-column assignment.
+// These phases reproduce Windows exactly. Removing qty
+// re-evaluates its condition across calls, unlike Mac's retained r24 value.
 VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2172,8 +2176,10 @@ void TBuyArtifactWindow::update(unsigned char update)
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
-                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
+        if (g_leftDenominated)
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
+        else
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2234,8 +2240,8 @@ void TBuyArtifactWindow::update(unsigned char update)
 
     for (int col = 0; col < 2; ++col) {
         if (g_selectedArtifact != -1 && g_leftResource != -1) {
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             if (col == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_extra = g_selectedArtifact;
                 msg.m_codeY = 3;
                 broadcastMessage(msg);
@@ -2266,18 +2272,18 @@ void TBuyArtifactWindow::update(unsigned char update)
         for (int i = 0; i < 7; ++i) {
             if (col == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_extraText = g_text;
+                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeY = 0x23 + i;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
-                msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
                 msg.m_codeX = widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
@@ -2501,14 +2507,10 @@ void TSellArtifactWindow::update(unsigned char update)
 // panels and slider, and, in a two-pane loop, each army slot (creature icon +
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
-// Residual (MAX 98.7947%, current 98.7522%): all 52 CFG blocks and every edge
-// agree (48 blocks exact, four size-only). Dreamcast records precisely the six
-// locals below and the SetWidgetOn/Off/Disabled boundaries; retain both facts.
-// why-reg measured 37 residual slots in the B1/B2 register-pressure class.
-// Unnaming widgetOff, naming either side-test, all three adjacent declaration
-// swaps and the plausible message-store swaps were byte-flat; the remaining
-// store reorders added 2--6 slots and volatile-local controls added 83--298.
-// There is no evidence-backed carrier for the last callee-save tie.
+// Mac 0x1f7d3c sets the icon message before the column split and 0x1f7dcc
+// repeats that store in the resource column. Windows retains the same repeat
+// before the resource-column broadcast; preserving it also restores the
+// shared constant register choice.
 VA(0x005ec550, 0x7ba) MAC_ADDRESS(0x1f7964, 0x7e0)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::update(bool update)
 {
@@ -2618,8 +2620,9 @@ void TSellCreatureWindow::update(bool update)
                                          "%d"),
                             g_rightAmount * g_giveQuantity);
             } else {
-                msg.m_extra = g_leftResource;
+                msg.m_codeX = 4;
                 msg.m_codeY = 11;
+                msg.m_extra = g_leftResource;
                 broadcastMessage(msg);
                 if (g_ratioInverted)
                     sprintf(g_text,
@@ -2934,17 +2937,13 @@ void TSellCreatureWindow::setupNewTrade()
 }
 
 // E:\gamedcs\tradpost.cpp:2327
+// Mac 0x1f8958..0x1f89a8 constructs the zeroed message, then sets its
+// id and codeX; the shared message constructor owns the zero fields.
 MAC_ADDRESS(0x1f892c, 0xf4)
 void TSellArtifactWindow::updateMarketBackpack()
 {
     long numInBackpack = g_marketHero->getNumberInBackpack(1);
     message icon;
-    icon.m_codeY = 0;
-    icon.m_qualifier = 0;
-    icon.m_mouseX = 0;
-    icon.m_mouseY = 0;
-    icon.m_extra = 0;
-    icon.m_window = 0;
     icon.m_id = MESSAGE_WIDGET;
     icon.m_codeX = widget::WIDGET_SET_ICON_FRAME;
     for (int k = 0; k < 5 && k < numInBackpack; ++k) {
@@ -3131,6 +3130,8 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // successful arms before the common phase at 0x1f921c. Restore that complete
 // source model: Windows stays 97.00%; native ordered helper calls differ
 // only because the compiler expands the canonical playerData::isHuman here.
+// Thirteen natural recipient/flag lifetime models emit one identical VC6
+// object; changing those scopes does not recover the retained isHuman call.
 VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
 int TGiveResourceWindow::windowHandler(message& msg)
 {

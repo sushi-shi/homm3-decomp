@@ -34,6 +34,7 @@
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kbwin.h"
+#include "log.h"
 #include "mainmenu.h"
 #include "message.h"
 #include "misc.h"
@@ -202,9 +203,9 @@ VA(0x004ed450, 0x3D) MAC_ADDRESS(0x10ea70, 0x80)  // dc 0xdf2a4
 void unloadProgressBar()
 {
     if (g_loadBar)
-        g_loadBar->dispose();
+        ResourceManager::dispose(g_loadBar);
     if (g_progDots)
-        g_progDots->dispose();
+        ResourceManager::dispose(g_progDots);
     g_progressCount = 0;
     g_progDots = 0;
     g_loadBar = 0;
@@ -287,7 +288,6 @@ static palette* g_palette;
 // The remaining declarations below are the ordinary free functions whose
 // bodies are claimed elsewhere but whose owner headers carry them only as
 // CODEVIEW comments.
-void initLogFile(const char* path);
 unsigned char initializeRandomTavernText();
 unsigned char initializeCreatureBankTraits();
 unsigned char initializeCreatureGeneratorNames();
@@ -351,6 +351,8 @@ static int checkMem();
 // removes both CD-version exits at 99.5994%: 1251 compiled bytes and 122
 // references/addends agree. Bool, byte and int results are identical; the
 // older flag probe also changed the loop headers and is not this control.
+// The release logging hook belongs to a separate source unit: keeping its
+// empty body here incorrectly eliminates retail's call (99.0146 -> 99.5994).
 VA(0x004ed650, 0x4E8) MAC_ADDRESS(0x10f24c, 0x208)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
 int earlySetup()
 {
@@ -544,7 +546,7 @@ void creditsWait()
         delete credits;
     if (background)
         delete background;
-    creditsFont->dispose();
+    ResourceManager::dispose(creditsFont);
 }
 
 #if 0  // @carcass
@@ -899,6 +901,8 @@ void showCredits()
 // DC1462..1538 orders restart before high scores/credits. Moving those whole
 // arms in Complete scores 75.4381% and retains the campaign/progress inline
 // differences; retail's machine order supports the current arm order.
+// DC1113/1557 retains ResourceManager::Dispose at the bitmap cleanup sites.
+// Restoring that wrapper raises Windows oldmain from 88.0713% to 88.6306%.
 // A signed CampaignComplete index, suggested by DC's older scalar bound,
 // is byte-flat across all 64 header consumers and does not restore its
 // missing retained body. Complete's vector-bound counter type stays unresolved.
@@ -1192,9 +1196,9 @@ int oldmain()
             break;
         }
 
-        g_mainBack->dispose();
+        ResourceManager::dispose(g_mainBack);
         g_mainBack = 0;
-        g_gameSelectBack->dispose();
+        ResourceManager::dispose(g_gameSelectBack);
         g_gameSelectBack = 0;
         videoClose();
 
@@ -1491,6 +1495,11 @@ static int doNewGame()
 // the second discards it. Complete expands both calls and adds a campaign
 // set to the window constructor; the overload's second parameter is inferred
 // from those retail arguments. Keep the two modal-object lifetimes here.
+// Mac 0x10fd08 returns zero on chooser cancellation; 0x10fd44 retries
+// only a cancelled brief and otherwise returns one. These direct exits
+// restore the Windows front end to 99.8872% (30 blocks, 44 calls); a
+// common recomputed return adds two comparison blocks. Its remaining
+// four-byte frame difference is independent of an int/byte return probe.
 MAC_ADDRESS(0x10fca0, 0xc8)
 static int doCampaignWindow(bool newGame, int campaignSet)
 {
@@ -1503,15 +1512,14 @@ static int doCampaignWindow(bool newGame, int campaignSet)
         openCampaignVideo();
         videoPause();
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
-            break;
+            return 0;
         {
             TCampaignBrief campaignBrief(newGame, false);
             campaignBrief.doModal();
         }
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL)
-            break;
+            return 1;
     }
-    return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
 // Mac retains doCampaignWindow(true, set) in all three campaign-set arms
@@ -1756,7 +1764,10 @@ static int g_useWaveout;
 // measured 2026-09-06, `gbMPlayer = 0;` moved to the head of the run is
 // byte-flat at 99.6273 and moved to its foot is 99.5983. Restoring the
 // Dreamcast-proven `bool` declaration (and spelling the value `false`) also
-// leaves this one-byte encoding choice unchanged.
+// leaves this one-byte encoding choice unchanged. Starting showUsage at the
+// scan instead of entry introduces a second zeroing move (98.29%); making
+// that local bool changes register assignments (99.47%). Neither reproduces
+// the native register use, so the entry declaration remains.
 VA(0x004f0690, 0x238) MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int interpretCommandLine()
 {
@@ -2332,6 +2343,8 @@ void sendPlayerLost()
 // The remaining call-stream displacement is the shared TransmitRemoteData/
 // NormalDialog pair, still emitted twice on both sides. The apparent extra
 // self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
+// DC retains a text lookup in the older victory arms. Keep Complete's getText
+// helper; this spelling is Windows byte-flat here.
 VA(0x004f15e0, 0x1348) MAC_ADDRESS(0x113208, 0x154c)  // linkorder + anchor-string/callee, dc 0xe29a8
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& gameWon, int& gameLost, bool remoteCheck)
@@ -3289,6 +3302,9 @@ int gameUnsaved()
 // Located by the call-graph lane: sole caller is AppCommand's default
 // arm (retail 0x4f8060, homm2 lineage), size 0x7f2 vs DC Cb 0x79c.
 // Promoted to the live retail claim below.
+// Naming the current hero, army reference/pointer, or common game receiver
+// in the army command does not recover retail's combined address calculation;
+// six lifetime variants preserve the helpers but do not improve 99.3051%.
 int handleAppSpecificMenuCommands(int idItem)
 {
     // @stub
@@ -3893,9 +3909,14 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 VA(0x004f4eb0, 0xEC9) MAC_ADDRESS(0x1167a0, 0xa80)  // linkorder + anchor-callee, dc 0xe52b8
 void type_dialog_icon::set(EGameResource resource, long qualifier)
 {
-    // Residual (99.1667%): all 133 CFG blocks and all 64 branches agree.
-    // Retail retains two nested basic_string::_Eos calls in the two
-    // RES_EXPERIENCE char-pointer assignments (85 calls versus our 83).
+    // Residual (99.5366%): all 133 CFG blocks and all 64 branches agree.
+    // Dreamcast 4938/4952/5027 has text lookups and 5086 calls
+    // ResourceManager::Dispose. Restoring the latter canonical call raises
+    // Windows from 99.1667%; retail now retains one more nested
+    // basic_string::_Eos call in RES_EXPERIENCE (85 calls versus our 84).
+    // Mac's linked byte score is unavailable due to an unresolved native
+    // vector specialization.
+    // The probes below describe the earlier two-call plateau.
     // Statement-scoped inline_depth(0) is not the missing boundary: it also
     // de-inlines operator=, grows the CFG to 135 blocks, and scores 94.9238%.
     // The predictor's depth-1 midpoint, explicit assign(const char*), and
@@ -4123,7 +4144,7 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
     CSprite* image = ResourceManager::getSprite(m_spriteName.c_str());
     m_spriteWidth = image->getWidth() + 2;
     m_spriteHeight = image->getHeight() + 2;
-    image->dispose();
+    ResourceManager::dispose(image);
 
     if (!m_text.length())
         return;
@@ -4423,8 +4444,8 @@ TDialogBox* getCurrentNormalDialog()
 // declaration order, exactly as this header models them.
 VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
 
-VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
-VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)
+VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e68, 0x48, CLASS_CTOR, type_dialog_icon)
+VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e04, 0x64, IMPLICIT_DTOR, type_dialog_icon)
 
 VA(0x004f6530, 0x34) MAC_ADDRESS(0x117eb8, 0x58)  // dc 0xe5f68
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,
@@ -4854,13 +4875,4 @@ VA(0x004f79e0, 0x24) MAC_ADDRESS(0x119764, 0x38)  // decorated identity + map-ex
 unsigned short* getMapExtraPtr(int x, int y, int z)
 {
     return &g_mapExtra[(z * g_mapHeight + y) * g_mapWidth + x];
-}
-
-// EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
-// at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
-// Complete's directory-taking hook has no work in this release build. Mac
-// earlySetup retains its call to the same empty hook at code 0:0x221ee0.
-MAC_ADDRESS(0x221ee0, 0x4)
-void initLogFile(const char* path)
-{
 }

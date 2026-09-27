@@ -11,6 +11,10 @@ from __future__ import annotations
 
 import struct
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
+from homm3.build import normalize_objs
 from dataclasses import dataclass
 
 from homm3.build.canonicalize_data_symbols import CoffObject
@@ -105,13 +109,13 @@ def _base(*, handler_opcode: int = 0xB8,
     return _coff(sections, symbols)
 
 
-def _target(funclet_size: int = 11) -> bytes:
+def _target(funclet_size: int = 11, owner: str = "unwind13") -> bytes:
     text = bytearray(b"\x55\x8b\xec\x6a\xff\x68" + bytes(26))
     struct.pack_into("<I", text, 6, funclet_size)
     sections = (FixtureSection(".text", bytes(text), ((6, 1, DIR32),)),)
     symbols = (
         _symbol("ctor", 0, 1, FUNCTION_TYPE, 2),
-        _symbol("unwind13", 0, 0, FUNCTION_TYPE, 2),
+        _symbol(owner, 0, 0, FUNCTION_TYPE, 2),
     )
     return _coff(sections, symbols)
 
@@ -139,6 +143,47 @@ class EhHandlerNormalizationTest(unittest.TestCase):
                          normalized_owner.value + normalized_addend)
         ordinary = next(row for row in normalized.relocations if row.site == 20)
         self.assertEqual(ordinary.symbol_index, 7)
+
+    def test_admission_loader_requires_extent_and_rejects_conflicting_owners(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            funclets, functions = root / "funclets.tsv", root / "functions.tsv"
+            funclets.write_text("# provenance\nrva\tparent_rva\tstate\n"
+                                "0x1234\t0x1000\t2\n")
+            functions.write_text("rva\tsize\n")
+            with patch.object(normalize_objs, "FUNCLETS", funclets), \
+                    patch.object(normalize_objs, "FUNCTIONS", functions):
+                self.assertEqual(normalize_objs._retail_funclet_owners(), {})
+                functions.write_text("rva\tsize\n0x1234\t11\n")
+                self.assertEqual(normalize_objs._retail_funclet_owners(),
+                                 {0x1234: (0x1000, 11)})
+                with funclets.open("a") as stream:
+                    stream.write("0x1234\t0x2000\t2\n")
+                with self.assertRaisesRegex(ValueError, "conflicting.*owner"):
+                    normalize_objs._retail_funclet_owners()
+
+    def test_generic_owner_requires_admitted_parent_and_extent(self):
+        before = _base()
+        names = {"ctor": (0x1000, "func"), "fn_1234": (0x1234, "func")}
+        after, rewrites = _canonicalize_matching_eh_handler_owners(
+            before, _target(owner="fn_1234"), symbol_rvas=names,
+            funclet_owners={0x1234: (0x1000, 11)})
+        self.assertEqual(len(rewrites), 1)
+        self.assertEqual(rewrites[0].canonical_name, "fn_1234")
+        self.assertNotEqual(after, before)
+        for owners in ({}, {0x1234: (0x2000, 11)}, {0x1234: (0x1000, 8)}):
+            with self.subTest(owners=owners):
+                after, rewrites = _canonicalize_matching_eh_handler_owners(
+                    before, _target(owner="fn_1234"), symbol_rvas=names,
+                    funclet_owners=owners)
+                self.assertEqual((after, rewrites), (before, ()))
+        for missing in ("ctor", "fn_1234"):
+            after, rewrites = _canonicalize_matching_eh_handler_owners(
+                before, _target(owner="fn_1234"),
+                symbol_rvas={key: value for key, value in names.items()
+                             if key != missing},
+                funclet_owners={0x1234: (0x1000, 11)})
+            self.assertEqual((after, rewrites), (before, ()))
 
     def test_different_retail_funclet_size_stays_visible(self):
         before = _base()

@@ -823,6 +823,9 @@ void combatManager::drawBackground()
 
 // E:\gamedcs\drawing.cpp:982
 VA(0x00493ea0, 0x4ca) MAC_ADDRESS(0x0a581c, 0x5d8)  // dc 0x849c4
+// At the retained UpdateCombatArea call, passing m_drawbridgeBounds directly
+// or adding a short-lived SLimitData copy leaves Windows at 96.403%; naming
+// width/height inside the canonical helper also leaves the call byte-flat.
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     std::vector<long>& hexes,
                                     unsigned char forceUpdate)
@@ -882,11 +885,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                            m_combatShadowBitmap, 0, 0);
     }
 
-    SLimitData& extent =
-        *static_cast<SLimitData*>(static_cast<void*>(&m_drawbridgeBounds));
-    const SLimitData& combatDrawLimits =
-        *static_cast<const SLimitData*>(static_cast<const void*>(
-            &g_combatDrawLimits));
+    SLimitData& extent = m_drawbridgeBounds;
+    const SLimitData& combatDrawLimits = g_combatDrawLimits;
     SLimitData saveExtent = extent;
     int saveLimitToExtent = m_limitToExtent;
     m_drawbridgeBounds = g_combatAreaLimits;
@@ -973,6 +973,9 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // DC1205/1207 and1303/1305/1307 prove both walks, but do not name their
 // counters, so sharing is a retail-tested lifetime hypothesis.
 // DrawFrame's DC public symbol ends _N00H00: five native Boolean flags.
+// DC drawing.cpp:1207/1307 names GetHexIndex in both grid walks. The two
+// canonical lowercase calls remain in the authored loops below; the audit
+// does not resolve their spelling to the older decorated name.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5) MAC_ADDRESS(0x0a5f6c, 0x758)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::drawFrame(bool update,

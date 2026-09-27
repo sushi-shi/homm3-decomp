@@ -80,3 +80,9 @@ increasing and ratchets it down as natural source/compiler state replaces them.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact).
+
+A unit with only shared/ICF-folded retail bodies may set `compare = false` in
+`config/units.toml`. It still compiles and participates in the candidate link
+and source gates, but has no independent objdiff row. Configuration rejects
+this setting if a retail target exists; ordinary missing targets still fail
+comparison freshness checks.

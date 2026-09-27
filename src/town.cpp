@@ -495,10 +495,10 @@ void town::setSummoningGenerator()
 }
 
 VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)  // dc 0x165ea0
-// Outer mana/experience local lifetimes are byte-flat in both compilers.
-// A shared bitset reference lowers both comparisons; keep the ordinary
-// member expressions. Mac currently emits the native 1792-byte extent,
-// with a 0x30 stack-frame difference and dialog-argument scheduling debt.
+// Comparing the bitset proxy with zero preserves its conversion helper and
+// reproduces retail's first test expansion; negation keeps an extra call.
+// Both == 0 and == false reproduce Windows 100%. Shared bitset references
+// and outer mana/experience lifetimes do not recover that decision.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
@@ -524,7 +524,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -534,7 +534,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_INFERNO && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(2, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -543,7 +543,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_DUNGEON && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         int experience = static_cast<int>(
             townHero->getExperienceBonusFactor() * 1000.0f);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -555,7 +555,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_STRONGHOLD && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_HALL_OF_VALHALLA_VISIT], // Hall of Valhalla
@@ -565,7 +565,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_FORTRESS && hasBuilding(SPECIAL_BUILDING_ID, false)
-        && !townHero->m_townSpecialGrantedMask[m_id]) {
+        && townHero->m_townSpecialGrantedMask[m_id] == 0) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_CAGE_OF_WARLORDS_VISIT], // Cage of Warlords
@@ -768,6 +768,9 @@ VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global, dc 0x16686
 // Naming the hide-message hero id and reusing or predeclaring the roster
 // counter leave the constructor register residual unresolved (nine VC6
 // combinations, four objects). Keep CMCHideHero's attested assignment order.
+// Removing the receiver alias (implicit/explicit this) or copy-initializing
+// the message adds no gain: four states, three reproduced objects, best
+// 97.7744%. The CFG matches; the constructor scratch-register schedule differs.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -801,6 +804,12 @@ void town::swapHeroes()
     currentTown->placeInMap(garrisonHero->m_id, player, 0);
 }
 
+// Residual 99.9356%: one fixed-spell store swaps the level/slot sum
+// registers. Reusing totalWeight for the draw is flat; sharing the spell
+// counter across the initial mask and selection loops lowers this to 98.0947.
+// A typed pointer to the guild row and a named row index at that store are
+// also byte-flat: both keep VC6's ECX sum where retail uses EAX. Keep the
+// array access and the DC-attested bitset reference assignment.
 VA(0x005be600, 0x32A) MAC_ADDRESS(0x1b3abc, 0x298)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {
@@ -1346,16 +1355,13 @@ void showCreatureRewards(const town* thisTown,
 static const int g_rewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Still open: branch topology #12 lands one block off (the D3
-// jump-threading class - why-branch's catalog found no applicable
-// lever). Restoring the two source-proven HasBuilding calls is byte-flat
-// after inlining. A shared-tail `bool has_reward` keeps 20 branches but
-// falls to 78.6294, so it is not the route to retail's cross-jump.
-// `why-reg --model --il-order` agrees on every first register definition;
-// the divergence starts after the B1 minimum slice. Also rejected: an
-// `unsigned short growth` used only by the zero test (byte-flat - VC6
-// folds it back into the memory compare), the eligible mask hoisted into
-// a local (85.7), and resource-store reordering (neutral).
+// Mac 0x1b5e68..0x1b5f2c updates population before writing each reward
+// and checks the eight-row dialog flush after every dwelling iteration,
+// including a zero-bonus iteration. Preserve both hasBuilding calls and
+// the canonical reward-display helpers.
+// Residual: dwelling-loop register homes differ; all 38 CFG blocks and
+// branch topology align. Commuting dwelling indices and packed creature
+// operands produced eight source states with identical VC6 objects.
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1408,9 +1414,9 @@ void town::giveEventReward(const TTownEvent* thisEvent)
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->m_generatorBonuses[i] != 0) {
             if (hasBuilding(DWELLING_0_UPG_ID + i, true)) {
-                reward.m_resource = 0x15;
                 m_population[i + TOWN_DWELLING_COUNT] +=
                     thisEvent->m_generatorBonuses[i];
+                reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
                           g_townDwellingCreatures[
@@ -1418,17 +1424,17 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                               + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (hasBuilding(DWELLING_0_ID + i, true)) {
-                reward.m_resource = 0x15;
                 m_population[i] += thisEvent->m_generatorBonuses[i];
+                reward.m_resource = 0x15;
                 reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
                     | static_cast<unsigned short>(
                           g_townDwellingCreatures[
                               m_type * (2 * TOWN_DWELLING_COUNT) + i]);
                 rewards.push_back(reward);
             }
-            if (rewards.size() == g_rewardDialogBatch)
-                showCreatureRewards(this, rewards);
         }
+        if (rewards.size() == g_rewardDialogBatch)
+            showCreatureRewards(this, rewards);
     }
     if (rewards.size() > 0)
         showCreatureRewards(this, rewards);
@@ -1467,6 +1473,8 @@ void showBuildingRewards(const town* thisTown,
 // The creature twin emits "<count> <name>" per reward with the same separators,
 // selects singular/plural by count, and drives the outer format by the first
 // reward's count.
+// Feeding formatString a second direct reward-count expression scores 91.42%
+// instead of 99.0596%; the shared count local preserves its retail lifetime.
 VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
@@ -1503,15 +1511,19 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 // Complete expands the ordinary initializer into town::initialize. Its custom
 // army path additionally resolves the map format's negative random-tier IDs;
 // DC's older body copied those creature IDs directly. Both use getArmy's
-// canonical garrison/hero selection at every read and write.
+// canonical garrison/hero selection at every read and write. Complete's
+// read uses the retained const getArmy twin (0x5c1460); selecting
+// that overload for the troop-count test raises initialize from 89.77% to
+// 91.10% while preserving the mutable calls for writes.
 MAC_ADDRESS(0x1b648c, 0x1ac)
 static void initializeArmy(town* currentTown, const TownExtra* townSetup)
 {
+    const town* townView = currentTown;
     if (townSetup->m_customArmies) {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             currentTown->getArmy().m_numTroops[slot] =
                 townSetup->m_townArmy.m_numTroops[slot];
-            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+            if (townView->getArmy().m_numTroops[slot] > 0) {
                 int troop = townSetup->m_townArmy.m_armies[slot];
                 if (troop <= -2) {
                     int tier = (-2 - troop) / 2;

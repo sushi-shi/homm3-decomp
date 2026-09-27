@@ -24,12 +24,9 @@
 // All four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox),
 // similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 
-// CreateWin family status: the two CBonusDlg::CreateWin overloads are
-// reconstructed (98.00 / 95.51) and cap on the register-homing family - the
-// schedule is aligned (why-reg flow-distance 0) but retail binds `this` to edi
-// and the per-widget temp to esi where our CL binds them the other way, a swap
-// the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
-// remain @stub; CTeamAlignmentDlg is reconstructed below.
+// The CreateWin family is reconstructed below. CTownDlg retains the Complete
+// sprite widget and direct dwelling lookup where Dreamcast's older source
+// names a button and GetBaseCreature.
 #include "va.h"
 #include "includes.h"
 
@@ -47,6 +44,7 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "townmgr.h"
 #include "winmgr.h"
 
 // ============================================================================
@@ -71,14 +69,10 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // msg->id with the disabled DOWN/UP arms falling through to their right-button
 // twins. mouseX/mouseY are int (heroWindow::x/y are int, +8.9 over short).
 
-// Residual (94.28%): the SAME merged-return generation class border::Main
-// carries (its residual note quotes the identical DUP-EXIT). Retail merges
-// the RIGHT_BUTTON_UP not-selected exit into the shared return-0 block the
-// field_2C guard opens (backward `je`); this C2 duplicates it as a fifth
-// `ret`. Plain `return 0;` at every exit is the closest (94.28); a
-// `goto returnZero` from any later exit re-sinks the guard to `jg` and drops
-// it to 90.06 - the `--branches` DUP-EXIT with the guard block moved. Not
-// source-reachable, same as border::Main.
+// The right-button-up arm tests the selected state positively, performs
+// deselection inside that arm, then returns zero if unselected. This natural
+// branch form lets VC6 share the earlier zero-return epilogue: all 21 retail
+// blocks and four returns match. No goto or extra source operation is needed.
 VA(0x00575290, 0x179) MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4, dc 0x12dea8
 int CHotspotWidget::main(message& msg)
 {
@@ -120,13 +114,14 @@ int CHotspotWidget::main(message& msg)
             break;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(m_status & WIDGET_SELECTED))
-            return 0;
-        m_status &= ~WIDGET_SELECTED;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_DESELECT;
-        msg.m_codeY = m_id;
-        return 2;
+        if (m_status & WIDGET_SELECTED) {
+            m_status &= ~WIDGET_SELECTED;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = WIDGET_DESELECT;
+            msg.m_codeY = m_id;
+            return 2;
+        }
+        return 0;
     }
     return widget::main(msg);
 }
@@ -311,7 +306,10 @@ CTownDlg::CTownDlg(unsigned char newGameMode)
 
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
 
-// E:\gamedcs\singleselectionpopups.cpp:302
+// E:\gamedcs\singleselectionpopups.cpp:302. DC lines 304/311 use
+// text lookups for both captions and GetTownTypeName for the label.
+// Complete keeps its getText calls and the town-name helper. The two
+// GetBaseCreature calls and button ctor belong to the older popup.
 VA(0x00575e60, 0x670) MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
@@ -323,7 +321,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
         -1, 1, 0, 8));
     add(new CSpriteWidget((m_width - town->getWidth()) / 2, 60, town, frame));
     add(new textWidget(10, 95, m_width - 20, 18,
-        g_townTypeNames[townType + 1], "smalfont.fnt", font::PRIMARY,
+        townManager::getTownTypeName(townType), "smalfont.fnt", font::PRIMARY,
         -1, 1, 0, 8));
     add(new textWidget(10, 127, m_width - 20, 36,
         g_generalText->getText(GENERAL_TEXT_SCENARIO_ASSOCIATED_CREATURES_CAPTION), "medfont.fnt", font::PRIMARY,
@@ -379,7 +377,8 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
 
 VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 
-// E:\gamedcs\singleselectionpopups.cpp:365
+// E:\gamedcs\singleselectionpopups.cpp:365. DC lines 376/383 use
+// text lookups for the heading and team-number format; Complete keeps getText.
 // Residual (99.11%): all 41 CFG blocks and their edges agree; only B14/B17/B36
 // differ in size because C2 promotes xStart through EDI here while retail
 // stores it in one stack slot and reloads it through EAX/EDX. Dreamcast names

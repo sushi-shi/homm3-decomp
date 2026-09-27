@@ -53,8 +53,8 @@ public:
     // heroPortrait.  The store sits INSIDE the new-expression's
     // allocation-succeeded arm, so it is the constructor's, not the caller's.
     CScenarioPlayerInfoWidget(CSprite* town, int widgetId)
+        : m_townSprite(town)
     {
-        m_townSprite = town;
         m_townType = 0;
         m_panel = 0;
         m_flag = 0;
@@ -67,6 +67,34 @@ public:
         m_startingBonus = 4;
         m_startingHero = 0;
         m_id = widgetId;
+    }
+
+    // Windows 0x568168..0x568221 and Mac 0x15fa04..0x15fa84 capture all
+    // arguments before storing position/name/handicap/type/panel/flag/town/
+    // bonus/sprite/hero. The following portrait branch reads the stored hero.
+    // This inferred setter restores the Windows 0xa78 frame and argument
+    // homes; direct caller assignments miss that capture boundary. Original
+    // method name and parameter spellings are unknown; both builds inline it.
+    void setPlayerInfo(int playerPosition, const char* playerName,
+                       const char* handicapText, const char* playerTypeText,
+                       Bitmap816* panel, Bitmap816* flag, int townType,
+                       CSprite* bonusSprite, int startingBonus, hero* startingHero)
+    {
+        m_playerPosition = playerPosition;
+        m_playerName = playerName;
+        m_handicapText = handicapText;
+        m_playerTypeText = playerTypeText;
+        m_panel = panel;
+        m_flag = flag;
+        m_townType = townType;
+        m_startingBonus = startingBonus;
+        m_bonusSprite = bonusSprite;
+        m_startingHero = startingHero;
+        if (m_startingHero)
+            m_heroPortrait = ResourceManager::getBitmap816(
+                g_heroTraits[m_startingHero->m_portrait].m_smallPortraitName);
+        else
+            m_heroPortrait = ResourceManager::getBitmap816("hpsrand6.pcx");
     }
 
     virtual ~CScenarioPlayerInfoWidget();
@@ -84,6 +112,11 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     : CAdvPopup((WINDOW_SCREEN_WIDTH - 763) / 2,
                 (WINDOW_SCREEN_HEIGHT - 585) / 2, 763, 585, 2)
 {
+    // Residual: 98.7173%; the last two button appends retain one vector::size
+    // call each that retail expands. Before recovering the setter, all 24
+    // buffer declaration orders were byte-flat. Direct member-vector
+    // receivers add 14 call sites;
+    // moving the setter before the constructor is byte-flat.
     char tempText[256];
     char lossText[1024];
     char tempName[256];
@@ -145,8 +178,11 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     NewSMapHeader& mapHeader = g_game->m_mapHeader;
     // DC locals and lines 299..300 prove pointers, with initialization
     // before the map-name widget. Retail keeps both addresses until icons.
-    VictoryConditionStruct* vc = &mapHeader.m_victoryCondition;
-    LossConditionStruct* lc = &mapHeader.m_lossCondition;
+    // Initialize from the game fields independently of the map-header alias:
+    // retail +0x5b8..+0x5c9 materializes both addresses here. Deriving them
+    // from mapHeader postpones that work and drops 98.2671% to 98.0916%.
+    VictoryConditionStruct* vc = &g_game->m_mapHeader.m_victoryCondition;
+    LossConditionStruct* lc = &g_game->m_mapHeader.m_lossCondition;
 
     widgets.push_back(new textWidget(
         419, 39, 324, 30, mapHeader.m_mapName.c_str(),
@@ -265,25 +301,19 @@ CScenarioInfoDlg::CScenarioInfoDlg()
         else
             continue;
 
-        hero* startingHero = g_game->getHero(g_game->m_setup.m_startingHero[i]);
+        // Mac 0x15f96c initializes null before the outer -1 guard; 0x15f980
+        // still contains getHero's inner check. CodeWarrior -O3 reproduces
+        // that pair for this guarded call, unlike a plain call or ternary.
+        hero* startingHero = 0;
+        int startingHeroId = g_game->m_setup.m_startingHero[i];
+        if (startingHeroId != -1)
+            startingHero = g_game->getHero(startingHeroId);
         CScenarioPlayerInfoWidget* row = new CScenarioPlayerInfoWidget(
             m_townPix, i + SCENARIO_INFO_PLAYER_ROW_FIRST_ID);
-        row->m_panel = m_panels[i];
-        row->m_flag = m_flags[i];
-        row->m_townType = g_game->m_setup.m_alignment[i];
-        row->m_playerName = g_game->m_players[i].m_name;
-        row->m_handicapText = g_handiText[g_game->m_setup.m_handicap[i]];
-        row->m_playerTypeText = g_humanCpu[playerType];
-        row->m_playerPosition = rowPosition;
-        row->m_startingBonus = g_game->m_setup.m_startingBonus[i];
-        row->m_bonusSprite = m_bonusSprite;
-        row->m_startingHero = startingHero;
-        // Mac retains both bitmap calls and their stores at 0:0x15faa8/0x15fab8.
-        if (startingHero)
-            row->m_heroPortrait = ResourceManager::getBitmap816(
-                g_heroTraits[startingHero->m_portrait].m_smallPortraitName);
-        else
-            row->m_heroPortrait = ResourceManager::getBitmap816("hpsrand6.pcx");
+        row->setPlayerInfo(rowPosition, g_game->m_players[i].m_name,
+            g_handiText[g_game->m_setup.m_handicap[i]], g_humanCpu[playerType],
+            m_panels[i], m_flags[i], g_game->m_setup.m_alignment[i],
+            m_bonusSprite, g_game->m_setup.m_startingBonus[i], startingHero);
         widgets.push_back(row);
 
         int y = 124 + rowPosition * 50;

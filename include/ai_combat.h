@@ -120,7 +120,7 @@ SIZE(type_monster_data, 0x48);
 class type_AI_combat_data {
 public:
     // DC ai_combat.h:245-246, dc 0x2c6a4; retained const mana getter.
-    long getMana() const { return m_mana; }
+    long getMana() const;
     std::vector<type_monster_data> m_creatures;  // +0x00
     long m_terrain;  // +0x10
 
@@ -192,13 +192,13 @@ protected:
     void getAreaValue(type_spell_choice& choice,
                         const type_AI_combat_data& defender,
                         long damage, long extraTargets) const;
-    armyGroup* getArmy() const { return m_currentArmy; }
+    armyGroup* getArmy() const;
 
 public:
     // DC ai_combat.h:255-256, 0x2c6ac: load this+24 and return. Retail
     // expands the corresponding this+0x1c load in chooseMelee. Vector
     // cardinality is creatures.size(), not this game accessor.
-    long getTotal() const { return m_totalCombatValue; }
+    long getTotal() const;
 
 protected:
     long getAttack(type_speed_catagory speedLimit,
@@ -215,7 +215,7 @@ protected:
                                type_AI_combat_data& defender) const;
     long getFastestSpeed() const;
     long getFinalMeleeValue() const;
-    hero* getHero() const { return m_currentHero; }
+    hero* getHero() const;
     long getMassDamageValue(type_spell_choice& choice,
                                const hero* castingHero) const;
     void getMassDamageValue(type_spell_choice& choice,
@@ -230,6 +230,27 @@ protected:
     void initializeCreatures(double baseModifier, const hero* enemyHero);
     void kill();
 };
+
+// Getter body order recorded at ai_combat.h:245, 250, 255 and 260.
+inline long type_AI_combat_data::getMana() const
+{
+    return m_mana;
+}
+
+inline armyGroup* type_AI_combat_data::getArmy() const
+{
+    return m_currentArmy;
+}
+
+inline long type_AI_combat_data::getTotal() const
+{
+    return m_totalCombatValue;
+}
+
+inline hero* type_AI_combat_data::getHero() const
+{
+    return m_currentHero;
+}
 
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,

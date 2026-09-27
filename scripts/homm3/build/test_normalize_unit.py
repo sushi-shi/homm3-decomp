@@ -21,6 +21,8 @@ class NormalizeUnitTest(unittest.TestCase):
         self.enterContext(patch.object(normalize_objs, "retail_image_base", return_value=0x400000))
         self.dir = tempfile.TemporaryDirectory()
         root = Path(self.dir.name)
+        self.enterContext(patch.object(normalize_objs, "FUNCLETS", root / "funclets.tsv"))
+        self.enterContext(patch.object(normalize_objs, "FUNCTIONS", root / "functions.tsv"))
         self.objdiff = root / "objdiff"
         (self.objdiff / "base").mkdir(parents=True)
         (self.objdiff / "target").mkdir(parents=True)
@@ -62,6 +64,20 @@ class NormalizeUnitTest(unittest.TestCase):
         tree = self._normalized()
         for key, data in alone.items():
             self.assertEqual(tree[key], data, key)
+
+    def test_changed_funclet_inventory_invalidates_both_paired_stamps(self):
+        normalize_objs.FUNCLETS.write_text("rva\tparent_rva\tstate\n")
+        normalize_objs.FUNCTIONS.write_text("rva\tsize\n")
+        normalize_objs.normalize_unit("probe")
+        with patch.object(normalize_objs, "_retail_funclet_owners", return_value={}) as owners:
+            normalize_objs.normalize_unit("probe")
+            owners.assert_not_called()
+            for inventory in (normalize_objs.FUNCLETS, normalize_objs.FUNCTIONS):
+                with inventory.open("a") as stream:
+                    stream.write("# changed admission\n")
+                normalize_objs.normalize_unit("probe")
+                owners.assert_called_once()
+                owners.reset_mock()
 
     def test_unit_without_a_target_gets_only_its_base_copy(self):
         counts = normalize_objs.normalize_unit("lonely")

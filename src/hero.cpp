@@ -4,6 +4,7 @@
 #include "includes.h"
 #include "homm3_limit.h"
 #include "bitset_iterator.h"
+#include "packed_bits.h"
 
 #include <algorithm>
 #include <bitset>
@@ -508,37 +509,18 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // is unchecked. EH-bearing: the name assignment owns a string temporary
 // and the bitset's inlined set() carries its range throw.
 
-// Residual (87.9%): the /Ob2 budget inside the name assignment, nothing
-// source-local. `predict-inline` pairs 5 of the 13 out-of-line calls off
-// by COUNT (retail names its unclaimed basic_string callees, and the
-// 0x485d90 reader itself, with synth labels our side can never emit) and
-// leaves ONE real item, which it reports as `_Tidy` out of line 4 times
-// here against retail's 1.
-
-// READ THAT ROW THE OTHER WAY ROUND (2026-08-20, bytes). It is an
-// OVER-inline of basic_string::_Grow on OUR side, not an under-inline of
-// _Tidy. Both compiles inline std::bitset<48>::set AND its whole _Xran
-// throw at the granted-mask loop - our fn+0x652 and retail's fn+0x5e3
-// both carry the `invalid bitset<N> position` string construction inline.
-// Inside it, `assign(const char*, size_type)` calls `_Grow(_N, true)`,
-// and THAT is where the two diverge: retail leaves _Grow a CALL
-// (`push 1 / push ebx / lea ecx,[ebp-0x30] / call 0x4a90`), while our CL
-// expands _Grow and so exposes the `_Tidy` and `_Copy` calls that live
-// inside it. Same for the customName temporary at the head, where both
-// sides are already identical (`call assign(const basic_string&,
-// size_type, size_type)` then one `_Tidy`).
-// No statement in this body reaches _Grow - it is three levels down
-// inside an expansion both compiles agree to make - so the pin lever does
-// not apply and the depth lever (spelling the site one wrapper deeper)
-// has no shallower or deeper form to choose from here.
+// Mac 0xf3400 constructs a packed-bit result, decodes six bytes, then copies
+// through a second temporary at 0xf3478 before assigning the hero mask. The
+// ordinary readPackedBits return matches that lifetime and restores Windows
+// 79.07 -> 94.44%; using only decodePackedBits reached 81.32%. Both preserve
+// the bitset proxy operations and the stream read. Remaining nested string
+// expansions need separate inliner evidence; they are not register-only.
+// Typed scalar readers preserve every on-disk width while shortening the
+// staging lifetimes, bringing the same body to 94.93%.
 
 VA(0x004d7a20, 0x69F) MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
-    unsigned int uintBuffer;
-    unsigned short ushortBuffer;
-    int intBuffer;
-    short shortBuffer;
 
     if (!type_obscuring_object::load(infile))
         return -1;
@@ -570,59 +552,33 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_levelSeed = readValue<unsigned char>(infile);
     m_lastWisdom = readValue<unsigned char>(infile);
 
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_pathTargetX = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_pathTargetY = intBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_pathTargetZ = shortBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_lastMagicSchoolLevel = shortBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_maxMovePoints = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_movePoints = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_experience = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_skillCount = intBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_mana = shortBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_level = shortBuffer;
-    infile->read(&ushortBuffer, sizeof(ushortBuffer));
-    m_targetDistance = ushortBuffer;
+    m_pathTargetX = readValue<int>(infile);
+    m_pathTargetY = readValue<int>(infile);
+    m_pathTargetZ = readValue<short>(infile);
+    m_lastMagicSchoolLevel = readValue<short>(infile);
+    m_maxMovePoints = readValue<int>(infile);
+    m_movePoints = readValue<int>(infile);
+    m_experience = readValue<int>(infile);
+    m_skillCount = readValue<int>(infile);
+    m_mana = readValue<short>(infile);
+    m_level = readValue<short>(infile);
+    m_targetDistance = readValue<unsigned short>(infile);
 
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_trainingGroundsFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_defenseTowerFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_gardenOfRevelationFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_mercCampFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_powerSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_treeOfKnowledgeFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_libraryFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_arenaFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_magicSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_warSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_universityFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine1Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine2Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine3Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_flags = uintBuffer;
+    m_trainingGroundsFlags = readValue<unsigned int>(infile);
+    m_defenseTowerFlags = readValue<unsigned int>(infile);
+    m_gardenOfRevelationFlags = readValue<unsigned int>(infile);
+    m_mercCampFlags = readValue<unsigned int>(infile);
+    m_powerSchoolFlags = readValue<unsigned int>(infile);
+    m_treeOfKnowledgeFlags = readValue<unsigned int>(infile);
+    m_libraryFlags = readValue<unsigned int>(infile);
+    m_arenaFlags = readValue<unsigned int>(infile);
+    m_magicSchoolFlags = readValue<unsigned int>(infile);
+    m_warSchoolFlags = readValue<unsigned int>(infile);
+    m_universityFlags = readValue<unsigned int>(infile);
+    m_shrine1Flags = readValue<unsigned int>(infile);
+    m_shrine2Flags = readValue<unsigned int>(infile);
+    m_shrine3Flags = readValue<unsigned int>(infile);
+    m_flags = readValue<unsigned int>(infile);
 
     m_army.load(infile);
 
@@ -647,12 +603,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     m_isSleeping = readValue<unsigned char>(infile) != 0;
 
-    std::bitset<48> granted;
-    unsigned char inBuf[6];
-    infile->read(inBuf, sizeof(inBuf));
-    for (unsigned int i = 0; i < 48; i++)
-        granted[i] = (inBuf[i >> 3] & (1 << (i & 7))) != 0;
-    m_townSpecialGrantedMask = granted;
+    m_townSpecialGrantedMask = readPackedBits<48>(infile);
     return 0;
 }
 
@@ -773,71 +724,26 @@ int hero::save(TAbstractFile* outfile)
 // HeroView news up and 0x697738 the selected army slot, and this is the
 // only reference to either outside the hero-screen block.
 
-// CURRENT (89.27957%, from 70.98925%): the missing /Ob2 candidate is a
-// conventional release VERIFY invariant. `bitset<48>::size()` is a real
-// inline accessor and therefore enters C2's site budget, but returns a
-// compile-time nonzero capacity, so `(void)size()` emits no check. That
-// single source-history carrier makes VC6 retain retail's out-of-line
-// `basic_string::_Tidy` from the inlined default string constructor. Both
-// sides now emit two calls and flow-distance is zero.
-
-// The exact macro name and original invariant are unattested; the spelling
-// below is explicitly provisional. Its carrier class is source-plausible and
-// distinguished by compiler evidence: release-elided TRACE-shaped printf
-// sites at doses 1/3/5 are byte-flat at 70.98925%; VERIFY(bitset.none())
-// reaches the right two-call phase but emits two excess runtime branches and
-// scores 80.03226%; VERIFY(!bitset.test(0)) and VERIFY(!bitset[0]) emit no
-// excess flow but select a worse register phase at 74.95699%. The constant
-// size invariant alone reproduces the previously synthetic ceiling.
-
-// Residual (89.27957%): one instruction and a whole-body EBX/EDI role swap
-// over 53 register-visible slots. why-reg's complete mutation set finds no
-// improving declaration/store-order edit; the call and branch structures are
-// already retail's.
-// THE BUDGET THRESHOLD IS MEASURED (2026-08-19). Adding N byte-inert
-// user-defined inline sites to the body (`_cpp_max(i, i);`, the
-// armygrp probe idiom) moves the row:
-//     N=0 -> 70.99    N=1..5 -> 89.28    N=6 -> 83.63    N=8 -> 68.00
-// i.e. ONE more inline candidate site denies `_Tidy` its nested share of
-// the /Ob2 budget (`budget / sites-remaining`, docs/vc6/inliner.md) and
-// the call comes back. So retail's body carries one to five candidate
-// sites this reconstruction does not, and the window is wide enough that
-// a single statement accounts for it. The DC call census CANNOT name it:
-// dc 0xcbdb8's callee list is exactly what is already written here -
-// type_obscuring_object::type_obscuring_object x1, armyGroup::armyGroup
-// x1, bitset<48>::bitset x1, bitset<48>::reset x1, type_artifact's
-// default-constructor closure x2 and the vector-constructor iterator x2 -
-// with NO std::string at all, because the DC record has no customName.
-// The member that creates this wall is precisely the one the Dreamcast
-// build does not have. The release VERIFY below is the minimum honest
-// replacement for that old instrument.
-// MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` spanning the
-// member-initialiser expansion, to chase retail's out-of-line
-// basic_string::_Tidy (base x0 vs retail x1), costs 70.99 -> 53.99. The
-// pin DOES reach a member-init - which is worth knowing, the eh-cleanup
-// doc's caveat notwithstanding - but it de-inlines the whole init closure
-// (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
-// default-ctor pair) where retail keeps all of those expanded, and only
-// customName's _Tidy out of line.
+// Mac 0xf3f08/0xf3f70 constructs an artifact inside each counted fill from
+// an enum loaded through the TOC. Passing ARTIFACT_NONE to std::fill_n
+// preserves that per-element conversion; passing a prebuilt type_artifact
+// changes its lifetime. Together with Mac's identity-before-coordinate
+// assignments these fills reproduce Windows exactly. The former provisional
+// bitset-size VERIFY is unnecessary.
 VA(0x004d85f0, 0x12E) MAC_ADDRESS(0x0f3e2c, 0x1b8)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
-    HOMM3_RELEASE_VERIFY(m_townSpecialGrantedMask.size());
-
+    m_id = -1;
+    m_owner = -1;
     m_x = 0;
     m_y = 0;
     m_heroClass = 0;
     m_portrait = 0;
     m_name[0] = 0;
-    m_id = -1;
-    m_owner = -1;
 
-    int i;
-    for (i = 0; i < 19; i++)
-        m_equipped[i] = type_artifact();
-    memset(m_artifactSlotCounts, 0, sizeof(m_artifactSlotCounts));
-    for (i = 0; i < 64; i++)
-        m_backpack[i] = type_artifact();
+    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
+    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
+    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_townSpecialGrantedMask.reset();
 
     g_heroScreenWindow = 0;
@@ -854,35 +760,18 @@ hero::hero()
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
 
-// DC hero.cpp:1260-1262 calls SetPrimarySkill from a signed-short loop;
-// the increment at dc 0xcbf44 truncates/sign-extends it, as does the army
-// loop at 0xcc054. Restoring the canonical call and short i reproduces the
-// entire retail stats loop (+0x15f..+0x17f), raising 82.8591 -> 85.6745%.
-// Standard artifact fills then restore both retained string::_Tidy calls
-// without changing the string assignment, reaching 91.0235%. The remaining
-// early differences are the fills' pointer-end guards versus retail's
-// countdown loops, plus memset/trait-load scheduling. The old diagnosis of
-// an unavoidable string-inliner wall was false: these preceding source
-// operations determine that nested boundary.
-// A shared function-scope int index with per-element artifact loops was
-// independently measured at 89.67%; a fresh int index gives 82.5336%.
-// Controls: short skill-only index 85.6409%;
-// literal empty-name assignment and explicit ARTIFACT_NONE construction were
-// byte-flat against the old 85.6745% loop candidate. With the current shared
-// constructors, explicit ARTIFACT_NONE in both loops restores the previous
-// 95.8658% MAX from 95.2819% CUR. fill_n emits an overlapping
-// rep-movsd fill instead of retail's two-store loops (79.5302%). Older string
-// assign/operator= wrappers and inline_depth 2/3/4 were byte-flat; a zero-depth
-// assign pin lost to 62.31%. Synthetic invariant carriers were also byte-flat
-// and are not retained.
-// Mac uses counted, direct-TOC zero fills for the five byte arrays. The pinned
-// MSL std::fill_n template makes all five counted and matches the first two
-// Mac loops byte-for-byte. It raises VC6 from 92.81%
-// (with explicit zero loops) to 95.87% while preserving 40 CFG blocks/10 calls.
-// Explicit do/while artifact cursors bring VC6 from the older std::fill 91.02%
-// to 92.81%; entry-tested for loops gave 44 CFG blocks and 85.67%. Mac-only
-// fill_n/unsigned-for artifact controls do not reproduce retail's in-loop
-// TOC load of the empty artifact ID, so those controls are not retained.
+// DC hero.cpp:1260-1262 calls SetPrimarySkill from a signed-short loop.
+// Mac keeps counted std::fill_n loops, including per-element construction
+// from ARTIFACT_NONE for the two artifact arrays. A preconstructed artifact
+// changes that lifetime and VC6's stores. Enum-valued fills raise Windows
+// 95.87 -> 97.36%; retain the canonical helpers through the residual scheduling.
+// Mac 0xf40ac/0xf4114/0xf413c loads integer zero values for the byte fills;
+// byte-typed fill values instead compile to lbz and omit the signed conversion.
+// All current differences begin in the custom-name string assignment. Moving
+// initialSex to its use or reading the trait directly falls to 81.3926%;
+// commuting the aggression product is flat (six states, three objects).
+// Spelling the existing string operation as assign("") is byte-flat;
+// retain the ordinary assignment and its canonical library helpers.
 VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -892,21 +781,13 @@ void hero::initialize(short index)
     clearSpells();
 
     short i;
-    type_artifact* equipped = m_equipped;
-    int equippedRemaining = 19;
-    do {
-        *equipped++ = type_artifact(ARTIFACT_NONE);
-    } while (--equippedRemaining);
+    std::fill_n(m_equipped, 19, ARTIFACT_NONE);
 
-    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), static_cast<unsigned char>(0));
-    type_artifact* backpack = m_backpack;
-    int backpackRemaining = 64;
-    do {
-        *backpack++ = type_artifact(ARTIFACT_NONE);
-    } while (--backpackRemaining);
+    std::fill_n(m_artifactSlotCounts, sizeof(m_artifactSlotCounts), 0);
+    std::fill_n(m_backpack, 64, ARTIFACT_NONE);
     m_backpackCount = 0;
-    std::fill_n(m_skillLevel, sizeof(m_skillLevel), static_cast<signed char>(0));
-    std::fill_n(m_skillOrder, sizeof(m_skillOrder), static_cast<unsigned char>(0));
+    std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
+    std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
 
     m_patrolY = kPatrolNone;
     m_patrolX = kPatrolNone;
@@ -999,43 +880,18 @@ void hero::initialize(short index)
 // hero member: retail 0x4d8b30 receives this in ECX and returns with ret 4.
 // The expanded HeroExtra adds primary skills, spells, custom name and sex;
 // fixed DC campaign-trait carryover is handled by Complete's campaign owner.
-// Keep basic_string::assign out of line at the customName assignment.
-
-// Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
-// "bindings agree at every first definition, the divergence is past the
-// first defs", i.e. not the B1 minimum slice and no creation-order edit
-// reaches it. The schedule is aligned and flow-distance is 0; what is left
-// is edi->ecx x7 / ecx->edx x5 over 54 register-visible slots.
-// 94.6716 -> 97.5836 (2026-09-06), three source facts read straight off the
-// retail bytes.  All 65 blocks, 37 branches and 13 out-of-line calls now
-// agree.
-//   * the patrol else-arm writes patrolY BEFORE patrolX.  Written the other
-//     way both arms end with the same store and the cross-jumper merges it
-//     into a shared block; retail keeps both stores duplicated per arm, in
-//     opposite orders, which is exactly what stops the merge (+0.33);
-//   * the custom-name assignment is the THREE-argument
-//     `assign(const basic_string&, size_type, size_type)` with npos loaded
-//     from its out-of-line definition, not `operator=` (+1.78 under the
-//     existing pin);
-//   * the troop count is NAMED once per iteration.  Retail widens it, tests
-//     the widened value and stores it (`movsx ecx,word[edx] / test ecx,ecx /
-//     mov [eax+0x1c],ecx`); re-reading the member for the comparison costs
-//     the register and re-reads memory.  `int` is the type - `short` scores
-//     95.5204 (+0.80).
-// Four source-level pointer/countdown zeroing loops match Mac's branch shape
-// and replace VC6's four inline memset expansions in the same source. They
-// move the Windows match from 97.5836% to 99.4036%, preserving its 65 blocks
-// and 13 named calls. An indexed MEMSET probe instead counted upward on Mac.
-// An explicit backpack cursor/countdown then moves `lea eax,[esi+0x1d4]`
-// between the two sentinel setups. In the current TU, spelling the empty
-// record through the existing TArtifact constructor assigns its two -1 fields
-// in retail register order and closes the last four Windows rows at 100%.
-// A named empty-artifact temporary lost a CFG block (92.81%). The Mac shape
-// remains 117/330 aligned instructions with either constructor spelling;
-// its wider HeroExtra layout and other code differences preclude a verdict.
-// The equipped-slot probe reads m_equipped directly in Mac and compiles to
-// the same VC6 bytes as the canonical getArtifact accessor call. Using the
-// direct field removes one extra CodeWarrior call in this body.
+// Retail writes patrolY before patrolX in the else arm. Mac 0xf4740..0xf4748
+// stores each widened troop count and then tests the member again. Its byte
+// clears load integer zeros through the TOC (0xf4690/0xf46b8), as MSL
+// std::fill_n does in initialize(short).
+// Use those library fills and the canonical clearSpells helper here too.
+// This recovers Windows 60.20 -> 74.69% with ordinary string assignment.
+// Remaining string::assign expansion differs from retail's retained call.
+// Explicit assign with the old cursors reached only 61.17%; sharing a single
+// function-scope int/long loop index did not improve the recovered version.
+// The enum-valued backpack fill constructs each empty artifact inside the
+// loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
+// reads the field directly, without an additional getArtifact helper call.
 VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
@@ -1069,12 +925,8 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customSecondarySkills) {
-        signed char* skillLevel = m_skillLevel;
-        for (int skillLevelCount = sizeof(m_skillLevel); skillLevelCount != 0; --skillLevelCount)
-            *skillLevel++ = 0;
-        unsigned char* skillOrder = m_skillOrder;
-        for (int skillOrderCount = sizeof(m_skillOrder); skillOrderCount != 0; --skillOrderCount)
-            *skillOrder++ = 0;
+        std::fill_n(m_skillLevel, sizeof(m_skillLevel), 0);
+        std::fill_n(m_skillOrder, sizeof(m_skillOrder), 0);
         m_skillCount = 0;
         for (int i = 0; i < setup->m_numSecondarySkills; i++)
             giveSS(setup->m_secondarySkill[i], setup->m_secondarySkillLevel[i]);
@@ -1082,9 +934,8 @@ void hero::initialize(const HeroExtra* setup)
 
     if (setup->m_customArmies) {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int count = setup->m_numTroops[i];
-            m_army.m_numTroops[i] = count;
-            if (count > 0)
+            m_army.m_numTroops[i] = setup->m_numTroops[i];
+            if (m_army.m_numTroops[i] > 0)
                 m_army.m_armies[i] = setup->m_armies[i];
             else
                 m_army.m_armies[i] = CREATURE_NONE;
@@ -1092,12 +943,7 @@ void hero::initialize(const HeroExtra* setup)
     }
 
     if (setup->m_customSpells) {
-        unsigned char* inSpellbook = m_inSpellbook;
-        for (int spellbookCount = sizeof(m_inSpellbook); spellbookCount != 0; --spellbookCount)
-            *inSpellbook++ = 0;
-        unsigned char* availableSpells = m_availableSpells;
-        for (int availableCount = sizeof(m_availableSpells); availableCount != 0; --availableCount)
-            *availableSpells++ = 0;
+        clearSpells();
         for (int i = 0; i < NUM_SPELLS; i++) {
             if (setup->m_spells.test(i))
                 addSpell(i);
@@ -1114,9 +960,7 @@ void hero::initialize(const HeroExtra* setup)
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
                 equipArtifact(&setup->m_artifacts[i], i);
         }
-        type_artifact* backpack = m_backpack;
-        for (int remaining = 64; remaining != 0; --remaining)
-            *backpack++ = type_artifact(ARTIFACT_NONE);
+        std::fill_n(m_backpack, 64, ARTIFACT_NONE);
         for (i = 0; i < 64; i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
                 addToBackpack(&setup->m_backpack[i], -1);
@@ -1390,6 +1234,8 @@ std::bitset<70> markSpells(TSpellSchool school)
 
 // Mac f5034/f50e8 initializes each result through the no-argument
 // three-word zeroing body e7378, with no unsigned-long value argument.
+// Mac retains all 11 expected helpers, but direct Tome returns lower VC6
+// from 97.56% to 77.57%; keep the shared result assignment and clear tail.
 VA(0x004d9350, 0x272) MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<70> markArtifactSpells(int artifactId)
 {
@@ -1775,9 +1621,10 @@ int hero::getExperience(int level)
 {
     if (level <= 12)
         return g_experienceForLevel[level - 1];
+    int total = g_experienceForLevel[11];
     int increment = static_cast<int>(
-        (g_experienceForLevel[11] - g_experienceForLevel[10]) * 1.2);
-    int total = g_experienceForLevel[11] + increment;
+        (total - g_experienceForLevel[10]) * 1.2);
+    total += increment;
     for (int i = 13; i < level; i++) {
         increment *= 1.2;
         total += increment;
@@ -1803,13 +1650,9 @@ int hero::getExperienceIncrement(int level)
 MAC_ADDRESS(0x0f6390, 0xd0)
 int hero::getLevel(int experience)
 {
-    int heroLevel = 1;
-    // INDEX loop, not a pointer walk: retail closes this with `jle`, and a
-    // C++ pointer relational compare is UNSIGNED (`jbe`). VC6 strength-
-    // reduces the signed `i <= 11` into the pointer form retail emits while
-    // keeping the original compare's signedness.
-    for (int i = 0; i <= 11; i++, heroLevel++) {
-        if (experience < g_experienceForLevel[i])
+    int heroLevel;
+    for (heroLevel = 1; heroLevel <= 12; heroLevel++) {
+        if (experience < g_experienceForLevel[heroLevel - 1])
             return heroLevel - 1;
     }
     int total = g_experienceForLevel[11];
@@ -1926,68 +1769,16 @@ TSecondarySkill getSkillAward(const hero* currentHero,
 // destructor runs BEFORE the dialogReturn chain, where the second arm's
 // GiveSS runs INSIDE its window's lifetime.
 
-// Residual (87.13%): three source facts landed 2026-09-05, in this order.
-// (1) The SRand seed constant is 154079 (0x259df), read straight off
-// retail's `lea ecx,[eax+ecx+0x259df]`; the tree had 153567 (0x257df).
-// (2) VC6 lowers `signed * 214013` with `imul r,r,0x343fd` but expands the
-// SAME constant into retail's seven-step lea/shift chain when the
-// multiplicand is UNSIGNED (`lea [eax+2*eax]` 3x, `lea [eax+4*ecx]` 13x,
-// `shl 4` 208x, `add` 209x, `shl 8` 53504x, `sub` 53503x,
-// `lea [eax+4*edx]` 214013x). `static_cast<unsigned>(level)` is worth
-// 85.17 -> 87.13; the sibling `iLevelSeed * 156823` stays signed and
-// retail keeps its `imul` there, which corroborates the split.
-// (3) `int roll = SRandom(1,100);` is declared BEFORE `int stat = 0;` -
-// retail schedules `xor esi,esi / mov [ebp-0x14],esi` between the
-// `cmp cx,9` operand loads, after the SRandom call (84.18 -> 85.17); and
-// both `chances` selections are written `if (level <= LOW_LEVEL_LAST)
-// <plain>; else <10P>`, which is the fall-through polarity retail has
-// (`jg` to the 10P arm), worth 83.44 -> 84.18.
-// Rejected at the new plateau: reordering the SRand sum (byte-flat three
-// ways) and a nested `if` with an `unsigned char isOverrideHero` local for
-// retail's `sete dl` (85.41, WORSE).
-
-// Earlier history: closed from 46.28 by pinning hero::GiveSS with
-// `#pragma auto_inline(off)` - `predict-inline` named it the sole
-// OVER-inline, expanded at all six sites here where retail keeps a real
-// call at the two that survive cross-jumping, worth 23 conditional
-// branches. Tried and rejected since, one compile each: the campaign
-// gate's third operand bound to an `unsigned char` local to chase
-// retail's `sete dl` (81.23, WORSE - the branch-kind report names the
-// symptom, not the lever, exactly as it did on UpdateStats); and
-// `SRandom(1, chances[1] + chances[0])` for the load order (byte-flat).
-// hero::GetLevel is deliberately left as a pointer walk - it already
-// emits retail's signed `jle`, so the pointer-compare rule does not
-// apply and respelling would risk the now-exact GiveExperience.
-
-// THE AI_choose_secondary_skill x1-vs-x4 IS OUR CROSS-JUMP, and the bytes
-// name the mechanism (2026-08-20). Retail keeps `call
-// AI_choose_secondary_skill / push eax` inside each of the four arms and
-// merges only at the shared `mov ecx,ebx / call GiveSS`; the arms are at
-// fn+0x533, +0x547, +0x5b7 and +0x5cb. Our CL merges one step earlier, at
-// the AI_choose call itself, so the four arms become four two-push stubs
-// jumping into one call site.
-// What DIFFERS between retail's arms - and is presumably why its
-// cross-jumper declined - is the SCHEDULE, not the content: the true arms
-// materialise the constant into EAX and push it twice
-// (`mov eax,1 / mov edx,esi / push eax / push eax / push edi`), sharing
-// one register between GiveSS's second argument and complex_choice, while
-// the false arms push the 1 as an immediate and take the 0 from
-// `xor eax,eax`. That puts `mov edx,<second>` in FRONT of the pushes in
-// the true arms and AFTER them in the false arms, so no two arm tails are
-// identical. Ours pushes two immediates in every arm and schedules
-// `mov edx,<second>` identically, which is exactly what a cross-jumper
-// wants.
-// MEASURED NEGATIVE, do not retry: binding the flag to an
-// `unsigned char complexChoice` local in each of the four arms, to chase
-// that shared-register materialisation, is BYTE-FLAT on this row (83.4342
-// either way) and costs hero 92.1826 -> 92.1392 fuzzy elsewhere.
-// The integer variants are now bounded too (2026-08-21): scoped `int one`
-// in the true arms and scoped `int zero` in the false arms are each
-// byte-flat at 83.4342, with AI_choose_secondary_skill still x1 against
-// retail's x4.  Two force-inlined source-context helpers, one per polarity,
-// also emit the baseline bytes and no helper bodies.  C1 normalises all
-// three forms before C2 chooses this cross-jump set; no scalar/helper
-// spelling reaches retail's four separately scheduled calls.
+// The seed uses unsigned level multiplication (retail's lea/shift chain)
+// and signed levelSeed multiplication (imul), with the constant 154079.
+// Preserve all three window lifetimes and the canonical helper calls.
+// Mac 0xf709c tests for a second skill, performs the AI choice first, and
+// falls back to the sole skill at 0xf70ec. That source branch order also
+// recovers Windows' separate chooser call sites (86.26 -> 98.04%).
+// Mac 0xf6c18 assigns the chance sum to roll before passing it to sRandom;
+// preserving that assignment closes Windows to 100% with the same helpers.
+// Implicit boolean and explicit integer-conditional chooser arguments emit
+// identical Windows bytes; they do not control the call-site duplication.
 // Mac retains this ordinary member at 0:f66a0..f66f0 and calls it from
 // both level-up selection paths. Its original source spelling is unknown.
 MAC_ADDRESS(0x0f66a0, 0x50)
@@ -2029,7 +1820,8 @@ void hero::checkLevel()
                 else
                     chances = g_heroClasses[classBarbarian]
                                   .m_gainPrimarySkillChance10P;
-                roll = sRandom(1, chances[0] + chances[1]);
+                roll = chances[0] + chances[1];
+                roll = sRandom(1, roll);
             }
             while (roll > chances[stat]) {
                 roll -= chances[stat];
@@ -2122,12 +1914,12 @@ void hero::checkLevel()
                     }
                 }
             } else if (skills[0] != eSecSkillNone) {
-                if (skills[1] == eSecSkillNone)
-                    giveSS(skills[0], 1);
-                else
+                if (skills[1] != eSecSkillNone)
                     giveSS(aiChooseSecondarySkill(
                                this, skills[0], skills[1],
                                !g_inSetup && m_owner >= 0), 1);
+                else
+                    giveSS(skills[0], 1);
             }
         }
         m_level = newLevel;
@@ -4827,6 +4619,14 @@ void hero::transferArtifacts(hero* src)
 // Testing the exhausted component index instead loses 1.2018 points. This
 // predicate is Complete-only; the retail capacity checks and one spared
 // component establish the result, without inventing a source helper.
+// Mac loads the component count before counting classSlots. Naming that
+// reference and advancing slot before remaining raises Windows to 98.48%.
+// The initial mask test now uses the canonical artifactAllowedInSlot helper;
+// VC6 expands it byte-identically. Both a do/while spelling and a top-tested
+// for(;;) with an explicit break drop to 95.24%, so retain this for shape.
+// Mac retains six bitset test/count calls in the same order as this body;
+// its call census shows no missing callee at this boundary.
+// The residual is the empty-mask branch and outer-loop exit polarity.
 VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -4839,11 +4639,10 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
         remaining = 19;
     }
 
-    for (; remaining != 0; remaining--, slot++) {
+    for (; remaining != 0; slot++, remaining--) {
         if (m_equipped[slot].m_artifactId != ARTIFACT_NONE)
             continue;
-        if (!g_artifactSlotMasks[g_artifactTraits[artifact].m_allowableSlotMask]
-                 .test(slot))
+        if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
             continue;
 
         int slotClass = g_artifactSlotTraits[slot].m_type;
@@ -4887,10 +4686,11 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                     keptSlot = true;
                     continue;
                 }
+                int& componentCount = counts[componentClass];
                 std::bitset<19> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
-                if (counts[componentClass] >= capacity) {
+                if (componentCount >= capacity) {
                     slotFits = false;
                     break;
                 }
@@ -4903,12 +4703,12 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                             m_equipped[i].m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
-                    if (counts[componentClass] >= capacity - occupied) {
+                    if (componentCount >= capacity - occupied) {
                         slotFits = false;
                         break;
                     }
                 }
-                counts[componentClass]++;
+                componentCount++;
             } while (++component < 144);
             if (!slotFits)
                 continue;
@@ -5314,10 +5114,9 @@ int hero::giveRandomArtifact()
 // Complete VC6 and Dreamcast both declare showCapWindow as unsigned char.
 // The stripped Mac executable contains no giveExperience symbol; a candidate
 // mangled name does not establish a different source parameter type.
-// Current residual: VC6 97.66%, with the first ESI/EBX swap at the expanded
-// getExperience result. The one-run why-reg model classifies it as C1 handle
-// order and proposes no source-local edit. Mac 95.7071%, same 396-byte size
-// and all 11 calls; remaining bytes schedule normalDialog's literal arguments.
+// Both experience helpers expand here. Initializing getExperience's total
+// before its increment fixes the cap-result lifetime; getLevel's single
+// level counter (Mac 0xf6394..0xf63c0) closes the Windows caller to 100%.
 VA(0x004e33b0, 0x24A) MAC_ADDRESS(0x104098, 0x18c)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
                          unsigned char showCapWindow)
