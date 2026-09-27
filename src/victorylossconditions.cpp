@@ -661,19 +661,23 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     return 0;
 }
 
+// Mac is byte-exact with the early type guard, returned-location temporary
+// as the equality operand, and stored loss member as the result. A named
+// location local delays field extraction; an explicit result assignment
+// adds another copy. Windows stays 99.8429% with only the two stack homes
+// exchanged; keep the canonical constructor, getLocation and operator==.
 VA(0x005f2e40, 0xD9) MAC_ADDRESS(0x1ff304, 0x140)  // dc 0x19074c
 unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)
 {
-    if (m_type == LOSS_CONDITION_LOSE_TOWN) {
-        type_point target(m_townX, m_townY, m_townZ);
-        type_point lost = lostTown->getLocation();
+    if (m_type != LOSS_CONDITION_LOSE_TOWN)
+        return 0;
 
-        if (target == lost) {
-            m_playerLoser = static_cast<signed char>(oldOwner);
-            m_gameLost = 1;
-            return 1;
-        }
+    type_point target(m_townX, m_townY, m_townZ);
+    if (target == lostTown->getLocation()) {
+        m_playerLoser = static_cast<signed char>(oldOwner);
+        m_gameLost = 1;
+        return m_gameLost;
     }
     return 0;
 }
