@@ -519,7 +519,7 @@ army	?adjustDamage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40	t
 army	?animateMissile@army@@AAEXPAV1@@Z	93.0000	93.0000	94.2017	0x3f2c0	tokens1:0ffa390fd1a3
 army	?attackHex@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45a60	tokens1:e9a63bb4426f
 army	?attackWall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	tokens1:22ffeab0543b
-army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	88.7482	88.7482	91.4600	0x45fd0	tokens1:3067c8d60e0f
+army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	89.9080	89.9080	91.4600	0x45fd0	tokens1:fd662fbfc272
 army	?attackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30	tokens1:5ce27f36c494
 army	?canCastResurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	tokens1:b5e4534f2782
 army	?canCastSpell@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x476c0	tokens1:0219d4e5b76a
@@ -992,7 +992,7 @@ cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	98.6392	98.6392	100.0000	0x
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
 cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	100.0000	100.0000	100.0000	0x67db0	tokens1:77d8f171765d
 cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	97.3719	97.3719	97.3719	0x67a00	tokens1:eb0ba95c8b66
-cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	96.1539	96.1539	96.1539	0x68220	tokens1:b3f7e63d4bdb
+cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	100.0000	100.0000	100.0000	0x68220	tokens1:0ec65654d344
 cmbtmgr	?shotIsNotOptimal@combatManager@@QBEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	tokens1:84bb1e66fa9a
 cmbtmgr	?shotIsThroughWall@combatManager@@QBEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	tokens1:2b74d27c31da
 cmbtmgr	?shouldLowerDoor@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130	tokens1:d95fa6363bb4
@@ -1089,7 +1089,7 @@ command	?handleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.
 command	?isComputerAction@combatManager@@AAEEXZ	100.0000	100.0000	100.0000	0x74ba0	tokens1:248ceaaf5d64
 command	?isComputerAction@combatManager@@QAEEPBVarmy@@@Z	100.0000	100.0000	100.0000	0x74bf0	tokens1:4d1594e8beb3
 command	?isOutsidePlacementBoundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	tokens1:239b06678278
-command	?main@combatManager@@UAEHAAVmessage@@@Z	97.1718	97.1718	97.6611	0x740d0	tokens1:bca615e63bf2
+command	?main@combatManager@@UAEHAAVmessage@@@Z	97.1718	97.1718	97.6611	0x740d0	tokens1:96eb46bf70b4
 command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.0588	94.0588	94.0588	0x74d80	tokens1:2237d43e783c
 command	?processFirstAid@combatManager@@AAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	tokens1:9c46129a3fdc
 command	?processMoveThenAttack@combatManager@@AAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	tokens1:ab657c1f59b9
@@ -3107,7 +3107,7 @@ remote	?lobbyLaunchConnect@@YIEXZ	95.4558	100.0000	100.0000	0x155ef0	tokens1:de7
 remote	?onEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380	tokens1:af35f8802886
 remote	?onEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0	tokens1:b8c8c6ff6422
 remote	?onFunctionKey@CChatEdit@@UAEHVmessage@@H@Z	100.0000	100.0000	100.0000	0x154330	tokens1:92ba6ca6a8c1
-remote	?onKeyPress@CChatEdit@@UAEHPAVmessage@@@Z	69.5580	69.5580	100.0000	0x154240	tokens1:f7b26e977e71
+remote	?onKeyPress@CChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x154240	tokens1:1e0ca4ad3073
 remote	?onPlayerDropUpdateMsg@@YIXK@Z	98.7064	98.7064	98.7064	0x1565e0	tokens1:dba32f3f5337
 remote	?pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0	tokens1:9ab4e177b038
 remote	?pauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050	tokens1:b221a7583654
@@ -4224,10 +4224,10 @@ spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$l
 spells	?isValidTeleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	tokens1:a7bb22537fbe
 spells	?loadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0	tokens1:1a9149d08b33
 spells	?markAreaEffect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920	tokens1:ef4fc4dfc454
-spells	?markAreaEffect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	95.9617	95.9617	100.0000	0x1a4170	tokens1:dd503c588ea9
+spells	?markAreaEffect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4170	tokens1:dd503c588ea9
 spells	?markAreaEffect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0	tokens1:b98462db9f0c
 spells	?markAreaHighlights@@YIXHW4TSkillMastery@@J@Z	100.0000	100.0000	100.0000	0x19f8a0	tokens1:2952c25dce5b
-spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	95.4209	95.4209	100.0000	0x1a4430	tokens1:3a4ed65d36ed
+spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4430	tokens1:3a4ed65d36ed
 spells	?markBerserkAreaEffect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810	tokens1:a2ffaa3a71d4
 spells	?mirrorImage@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a6c70	tokens1:9077fc5e2bed
 spells	?modifySpellDamage@combatManager@@QBEJJHPBVhero@@0PBVarmy@@E@Z	92.1715	100.0000	100.0000	0x1a78e0	tokens1:22556a96800f
