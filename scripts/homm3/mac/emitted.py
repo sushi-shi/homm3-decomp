@@ -257,7 +257,14 @@ def fit(definition, symbol: str) -> int | None:
     if decoded is None:
         return None
     const, codes = decoded
-    wanted = [encode(spelling) for spelling in definition.argument_types]
+    # Typedef names do not appear in ARM linkage: SpellID (typedef int),
+    # for example, is `i`, while a real enum keeps its nominal name. The
+    # source inventory resolves aliases through Clang without altering the
+    # authored semantic spelling used by the source-fact audits.
+    spellings = definition.canonical_argument_types or definition.argument_types
+    if len(spellings) != len(definition.argument_types):
+        return None
+    wanted = [encode(spelling) for spelling in spellings]
     if definition.variadic:
         wanted.append("e")
     if len(codes) != len(wanted) or (definition.member and const != definition.const):

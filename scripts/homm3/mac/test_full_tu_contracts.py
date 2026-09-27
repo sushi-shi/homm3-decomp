@@ -60,6 +60,49 @@ class TestIdentity(unittest.TestCase):
             (obj / "foo.o").unlink()
             self.assertEqual(pairs._universe(root), set())
 
+    def test_typedef_linkage_keeps_authored_names_and_real_enum_identity(self):
+        alias = replace(self.definition("SpellID"), canonical_argument_types=("int",))
+        self.assertEqual(emitted.select(alias, [".f__3FooFi"]), ".f__3FooFi")
+        self.assertIs(emitted.owner(".f__3FooFi", [alias]), alias)
+        self.assertEqual(alias.argument_types, ("SpellID",))
+        enum = replace(self.definition("SpellID"),
+                       canonical_argument_types=("enum SpellID",))
+        self.assertIsNone(emitted.owner(".f__3FooFi", [enum]))
+        self.assertIs(emitted.owner(".f__3FooF7SpellID", [enum]), enum)
+
+    def test_typedef_resolution_preserves_constness_and_ambiguity(self):
+        alias = replace(self.definition("const SpellID *"),
+                        canonical_argument_types=("const int *",))
+        self.assertIs(emitted.owner(".f__3FooFPCi", [alias]), alias)
+        self.assertIsNone(emitted.owner(".f__3FooFPi", [alias]))
+        self.assertIsNone(emitted.owner(".f__3FooFPCi", [alias, alias]))
+        broken = replace(alias, canonical_argument_types=("int", "int"))
+        self.assertIsNone(emitted.owner(".f__3FooFi", [broken]))
+
+    def test_clang_collects_nested_aliases_without_erasing_the_source_type(self):
+        from homm3.match.source_ownership import scan_unit
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "config").mkdir()
+            (root / "config/units.toml").write_text(
+                '[build]\nincludes=["include"]\nanalysis_profile="test"\n'
+                '[flags]\ntest=["/Gr", "/GX", "/D_WINDOWS"]\n')
+            (root / "include").mkdir()
+            (root / "src").mkdir()
+            (root / "include/types.h").write_text(
+                "typedef int SpellID; typedef SpellID SpellAlias;\n"
+                "enum RealSpell { Fire };\n")
+            (root / "src/foo.cpp").write_text(
+                '#include "types.h"\n'
+                "int spell(const SpellAlias* id, RealSpell value) { return *id; }\n")
+            definitions, errors, _ = scan_unit({"source": "src/foo.cpp"}, root)
+            self.assertEqual(errors, [])
+            definition = definitions[0]
+            self.assertEqual(definition.argument_types, ("const SpellAlias *", "RealSpell"))
+            self.assertEqual(definition.canonical_argument_types, ("const int *", "RealSpell"))
+            self.assertIs(emitted.owner(".spell__FPCi9RealSpell", [definition]), definition)
+            self.assertIsNone(emitted.owner(".spell__FPCii", [definition]))
+
 
 class TestRefresh(unittest.TestCase):
     def test_ninja_infrastructure_failure_withholds_comparison_and_checkpoint(self):

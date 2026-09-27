@@ -62,6 +62,9 @@ class Definition:
     # MAC_ADDRESS(offset, size) on this definition: its pinned-PEF code span.
     mac_offset: int | None = None
     mac_size: int | None = None
+    # Clang-resolved declarator types for linkage identity only. Keep the
+    # authored spellings above for source facts and Dreamcast comparison.
+    canonical_argument_types: tuple[str, ...] = ()
 
 
 def definition_owner(definition: Definition) -> str:
@@ -808,7 +811,10 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None
                 internal=(cursor.kind == k.FUNCTION_DECL
                           and cursor.storage_class == cindex.StorageClass.STATIC),
                 mac_offset=macs[0][0] if len(macs) == 1 else None,
-                mac_size=macs[0][1] if len(macs) == 1 else None))
+                mac_size=macs[0][1] if len(macs) == 1 else None,
+                canonical_argument_types=tuple(
+                    c.type.get_canonical().spelling
+                    for c in cursor.get_children() if c.kind == k.PARM_DECL)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
