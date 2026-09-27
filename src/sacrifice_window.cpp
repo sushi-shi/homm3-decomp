@@ -1157,7 +1157,8 @@ MAC_ADDRESS(0x15a3e0, 0xd4)
 unsigned char type_sacrifice_window::addArtifact(
     type_artifact artifact, long source)
 {
-    unsigned long i;
+    // DC 0x12681c records the offering index as signed long.
+    long i;
     for (i = 0; i < m_artifactOfferings.size(); ++i) {
         if (m_artifactOfferings[i].m_artifactId == ARTIFACT_NONE)
             break;
