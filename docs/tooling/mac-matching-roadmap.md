@@ -88,8 +88,8 @@ Definitions, externs and reference-to-array declarations can own this identity.
 TU-static definitions can also bind external storage in the comparison group.
 For a class-static member, place DATA on its canonical declaration and supply
 the emitted `mac_symbol` in its declaration-only row. Its qualified source
-name is derived from the enclosing class; the Mac class view supplies the
-declaration, without injecting an out-of-class definition or initializer.
+name is derived from the enclosing class; the ordinary game header supplies
+the declaration, without injecting an out-of-class definition or initializer.
 An emitted candidate initializer cannot silently use this address-only path.
 A CodeWarrior vtable can use a reviewed `config/mac/vtables/<TU>.toml`
 binding. The binder checks the canonical and Mac virtual declarations, full

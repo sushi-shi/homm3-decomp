@@ -847,7 +847,7 @@ int swapManager::open(int newPriority)
 
     for (int hero = 0; hero < 2; hero++) {
         // DC line 698 is one portrait-update statement. Retail passes the
-        // portrait pointer directly to the five-argument overload; the local
+        // portrait pointer directly to the four-argument overload; the local
         // message remains the sole object used by the surrounding updates.
         m_parent->broadcastMessage(
             MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, hero + 1,
