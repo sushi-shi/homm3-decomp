@@ -9,10 +9,17 @@ typedef DateTimeRec FileTime;
 
 // Mac retail 0:0x277b60..0x2781ec: state, fork handle and FSSpec.
 // This platform adapter has no Windows game-class counterpart.
-// open's directory argument is a native FSSpec: 0x277c34/0x277c38
-// read vRefNum at +2 and parID at +4 before calling FSMakeFSSpec.
+// Native directory handles allocate eight bytes at 0x20f4e8/0x20f550/
+// 0x20f584. Their constructor (0x2782ec) clears the state byte; file open
+// reads their volume at +2 and directory ID at +4 before FSMakeFSSpec.
+struct MacDirectoryAdapter {
+    unsigned char m_open;
+    short m_volume;
+    long m_directoryId;
+};
+
 // Selection's native directory getter (0x175674) returns one of three
-// runtime-populated pointer cells at 1:0x553500/0x553504/0x553510.
+// runtime-populated adapter pointer cells at 1:0x553500/0x553504/0x553510.
 class MacFileAdapter {
 public:
     unsigned char m_open;
@@ -20,7 +27,7 @@ public:
     FSSpec m_spec;
     MacFileAdapter();
     ~MacFileAdapter();
-    OSErr open(const FSSpec* directory, const char* filename, OSType creator,
+    OSErr open(const MacDirectoryAdapter* directory, const char* filename, OSType creator,
                OSType type, bool create);
     int close();
     void getModificationDate(FileTime* date);

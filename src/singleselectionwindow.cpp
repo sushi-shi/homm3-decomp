@@ -6469,10 +6469,12 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
 #if defined(HOMM3_TARGET_MAC)
     // Mac 0:0x180c68..0x180c98 opens through the native fork adapter.
-    // The directory helper's shared char* signature predates recovery of
-    // its native FSSpec return view; the pointer value is passed unchanged.
+    // Native getHeaderDirectory returns an eight-byte directory adapter;
+    // its shared pathname declaration still needs the native pointer-cell
+    // model. Preserve the pointer value at this platform boundary.
     MacFileAdapter file;
-    if (file.open(static_cast<const FSSpec*>(static_cast<const void*>(getHeaderDirectory())),
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(getHeaderDirectory())),
                   mapFileNameMsg->m_fileName, 0, 0, false) == 0)
 #else
     _chdir(getHeaderDirectory());
