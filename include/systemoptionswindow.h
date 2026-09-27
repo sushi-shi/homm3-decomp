@@ -33,7 +33,24 @@ enum ESystemOptionsCommand {
     SYSOPT_COMMAND_111 = 111
 };
 
+// Existing declarations follow the recorded class order (DC type 0x1e87).
 class TSystemOptionsWindow : public CAdvPopup {
+public:
+    TSystemOptionsWindow();
+    virtual ~TSystemOptionsWindow();
+    void doModal();
+    virtual int windowHandler(message& msg);
+
+    unsigned char m_prefsChanged;   // +0x60
+    // The preceding byte field and following four-byte field establish
+    // this alignment gap; the reference layout retains the same boundary.
+    char m_paddingBeforeQuickCombatSave[3];
+
+    void updateSystemOptions(unsigned char firstUpdate);
+
+private:
+    int m_quickCombatSave;           // +0x64
+
 public:
     // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently
     // proves every range and preference mapping.
@@ -87,19 +104,7 @@ public:
 
     enum { NWIDGETS = 44 };
 
-    unsigned char m_prefsChanged;   // +0x60
-    // The preceding byte field and following four-byte field establish
-    // this alignment gap; the reference layout retains the same boundary.
-    char m_paddingBeforeQuickCombatSave[3];
-
-    TSystemOptionsWindow();
-    virtual ~TSystemOptionsWindow();
-    void doModal();
-    virtual int windowHandler(message& msg);
-    void updateSystemOptions(unsigned char firstUpdate);
-
 private:
-    int m_quickCombatSave;           // +0x64
     int convertID2HelpID(int id) const;
 };
 SIZE(TSystemOptionsWindow, 0x68);
