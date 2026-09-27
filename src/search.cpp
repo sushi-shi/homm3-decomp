@@ -122,29 +122,32 @@ unsigned char checkAdjacentMonster(const hero* currentHero,
 // standing on an exit is a target, a friendly one is skipped, and the
 // exit must be a live trigger of the entry's own type that is not the
 // entry itself. Whirlpools cost 16 per exit and a flat 500 of barrier
-// value; liths 100 per exit.
+// value; liths 100 per exit. DC records list and entry_point as references;
+// the three native callers pass their existing vector/cell addresses.
+// Native Mac 0x161a1c goes directly to the for-loop test; there is no
+// separate count guard outside it. Restore DC's post-count monster lifetime
+// and let the loop own its bounds test: the retained Windows body is exact.
 VA(0x0056a400, 0x32F) MAC_ADDRESS(0x161998, 0x3e4)  // exhaustive search.obj order-map, dc 0x12b4a8
 void searchArray::enterLith(const hero* currentHero,
-                             const std::vector<type_point>* list,
+                             const std::vector<type_point>& list,
                              long cellType, long excluded,
-                             pathCell* entryPoint, long limit,
+                             pathCell& entryPoint, long limit,
                              type_search_type searchType)
 {
-    type_point monster;
-    if (entryPoint->m_cost > 0
-        && checkAdjacentMonster(currentHero, entryPoint, searchType))
+    if (entryPoint.m_cost > 0
+        && checkAdjacentMonster(currentHero, &entryPoint, searchType))
         return;
-    int count = list->size();
+    int count = list.size();
+    type_point monster;
     long barrierValue = 0;
-    if (searchType >= const_AI_search && cellType != LITH_TWOWAY
-        && count > 0) {
+    if (searchType >= const_AI_search && cellType != LITH_TWOWAY) {
         for (int i = 0; i < count; i++) {
-            type_point exitPoint = (*list)[i];
+            type_point exitPoint = list[i];
             NewmapCell* cell = g_game->getCell(exitPoint);
             if (cell->m_type == cellType && cell->m_extraInfo != excluded
                 && cell->m_isTrigger) {
                 if (g_advManager->findAdjacentMonster(
-                        exitPoint, &monster, entryPoint->m_monster)) {
+                        exitPoint, &monster, entryPoint.m_monster)) {
                     long value = aiValueOfEvent(currentHero, monster);
                     if (value <= -500000000)
                         return;
@@ -154,9 +157,9 @@ void searchArray::enterLith(const hero* currentHero,
             }
         }
     }
-    pathCell exitCell = *entryPoint;
+    pathCell exitCell = entryPoint;
     for (int i = 0; i < count; i++) {
-        type_point exitPoint = (*list)[i];
+        type_point exitPoint = list[i];
         NewmapCell* cell = g_game->getCell(exitPoint);
         if (cell->m_type == HERO) {
             if (g_game->onSameTeam(g_game->getHero(cell->m_extraInfo)->m_owner,
@@ -166,23 +169,23 @@ void searchArray::enterLith(const hero* currentHero,
                    || !cell->m_isTrigger) {
             continue;
         }
-        monster = entryPoint->m_monster;
+        monster = entryPoint.m_monster;
         if (searchType >= const_AI_search && cellType != LITH_TWOWAY)
             g_advManager->findAdjacentMonster(exitPoint, &monster,
-                                              entryPoint->m_monster);
+                                              entryPoint.m_monster);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
         exitCell.m_point.m_z = exitPoint.m_z;
         if (cellType == WHIRLPOOL) {
             barrierValue -= 500;
             exitCell.m_adjustedCost =
-                entryPoint->m_adjustedCost + (count - 1) * 16;
+                entryPoint.m_adjustedCost + (count - 1) * 16;
         } else {
             exitCell.m_adjustedCost =
-                entryPoint->m_adjustedCost + (count - 1) * 100;
+                entryPoint.m_adjustedCost + (count - 1) * 100;
         }
-        pushPoint(*entryPoint, exitCell, entryPoint->m_direction, 0, limit,
-                  entryPoint->m_barrierValue + barrierValue, monster,
+        pushPoint(entryPoint, exitCell, entryPoint.m_direction, 0, limit,
+                  entryPoint.m_barrierValue + barrierValue, monster,
                   cell->m_type == HERO);
     }
 }
@@ -393,21 +396,21 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
     case LITH_ONEWAY_ENTRANCE:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->getLithExits(mapCell->m_objectIndex),
-                   LITH_ONEWAY_EXIT, -1, cell, limit, searchType);
+        enterLith(currentHero, g_game->getLithExits(mapCell->m_objectIndex),
+                   LITH_ONEWAY_EXIT, -1, *cell, limit, searchType);
         return 0;
     case LITH_TWOWAY:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->getLiths(mapCell->m_objectIndex),
-                   LITH_TWOWAY, mapCell->m_extraInfo, cell, limit,
+        enterLith(currentHero, g_game->getLiths(mapCell->m_objectIndex),
+                   LITH_TWOWAY, mapCell->m_extraInfo, *cell, limit,
                    searchType);
         return 0;
     case WHIRLPOOL:
         if (searchType < const_AI_enemy_search)
             return 0;
-        enterLith(currentHero, &g_game->getWhirlpools(), WHIRLPOOL,
-                   mapCell->m_extraInfo, cell, limit, searchType);
+        enterLith(currentHero, g_game->getWhirlpools(), WHIRLPOOL,
+                   mapCell->m_extraInfo, *cell, limit, searchType);
         return 0;
     case TOWN:
         if (searchType < const_AI_enemy_search)

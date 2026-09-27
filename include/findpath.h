@@ -232,8 +232,8 @@ private:
     // gate seeders; both parameter lists are the DC roster's
     // (search.cpp:155 and :244).
     void enterLith(const hero* currentHero,
-                    const std::vector<type_point>* list, long cellType,
-                    long excluded, pathCell* entryPoint, long limit,
+                    const std::vector<type_point>& list, long cellType,
+                    long excluded, pathCell& entryPoint, long limit,
                     type_search_type searchType);
     void enterTown(const hero* currentHero, long startTown,
                     const pathCell& currentPathCell, long limit,
