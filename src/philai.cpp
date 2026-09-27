@@ -3590,8 +3590,9 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    type_point path = currentHero->getTarget();
-    type_point target = path;
+    // DC dc0x11348c records one target local, and Mac0x145ec4 expands
+    // getTarget directly. The extra path-to-target copy was reconstruction.
+    type_point target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL
