@@ -5394,7 +5394,10 @@ void aiInitialize()
 // retail expands that nested base while VC6 gives the current natural source
 // 56 budget units for a 63-unit callee. In-class and ordinary constructor
 // definitions are byte-flat; inline_depth(255) is also flat. No synthetic
-// force-inline or pragma is retained.
+// force-inline or pragma is retained. A combat-artifact member initializer
+// moves its bonus store before the derived vptr, contradicting retained
+// Windows order (constructor 100 -> 96.12). Explicit base initialization
+// with the original body assignment is byte-flat for constructor and caller.
 VA(0x00434100, 0x490) MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initializeArtifactEffects()
 {
