@@ -2,6 +2,7 @@
 #define HOMM3_INPUTMGR_H
 
 #include "basemgr.h"
+#include "platform.h"
 #include "message.h"
 
 // Keyboard scan codes as message::codeX carries them (low byte for
@@ -9,13 +10,16 @@
 // row and smackmgr's video-abort filter read them). NH3API
 // interface/key_codes.hpp EKeyCodes spellings; only the byte-proven
 // consumers' values are listed - grow the roster as consumers land.
+// Mac CChatEdit::onKeyPress at 0x212248 proves Enter, Escape and F1..F8's
+// native values through its key dispatch and literal recipient arms. Other
+// rows currently retain their Windows values until a Mac consumer proves them.
 enum EKeyCodes {
     // The three keys textEntryWidget::IgnoreKey (0x5bba20) swallows
     // before its OnKeyPress ever sees them; its dec/sub/sub switch
     // descent fixes the values 1, 15 and 28 exactly.
-    KEYCODE_ESCAPE = 0x01,
+    KEYCODE_ESCAPE = H3_NATIVE_KEY_CODE(0x01, 0x35),
     KEYCODE_TAB = 0x0f,
-    KEYCODE_ENTER = 0x1c,
+    KEYCODE_ENTER = H3_NATIVE_KEY_CODE(0x1c, 0x24),
     KEYCODE_A = 0x1e,
     KEYCODE_C = 0x2e,
     // The nine letter/space rows advManager::ProcessKeyPress's byte-index
@@ -38,14 +42,14 @@ enum EKeyCodes {
     // The function-key band AsciiConvert singles out: F1..F10 are the
     // contiguous 0x3b..0x44 run, F11/F12 sit apart at 0x57/0x58 - all
     // four bounds byte-proven by its scan-table branch.
-    KEYCODE_F1 = 0x3b,
-    KEYCODE_F2 = 0x3c,
-    KEYCODE_F3 = 0x3d,
-    KEYCODE_F4 = 0x3e,
-    KEYCODE_F5 = 0x3f,
-    KEYCODE_F6 = 0x40,
-    KEYCODE_F7 = 0x41,
-    KEYCODE_F8 = 0x42,
+    KEYCODE_F1 = H3_NATIVE_KEY_CODE(0x3b, 0x7a),
+    KEYCODE_F2 = H3_NATIVE_KEY_CODE(0x3c, 0x78),
+    KEYCODE_F3 = H3_NATIVE_KEY_CODE(0x3d, 0x63),
+    KEYCODE_F4 = H3_NATIVE_KEY_CODE(0x3e, 0x76),
+    KEYCODE_F5 = H3_NATIVE_KEY_CODE(0x3f, 0x60),
+    KEYCODE_F6 = H3_NATIVE_KEY_CODE(0x40, 0x61),
+    KEYCODE_F7 = H3_NATIVE_KEY_CODE(0x41, 0x62),
+    KEYCODE_F8 = H3_NATIVE_KEY_CODE(0x42, 0x64),
     KEYCODE_F10 = 0x44,
     KEYCODE_KP_7 = 0x47,
     KEYCODE_KP_8 = 0x48,

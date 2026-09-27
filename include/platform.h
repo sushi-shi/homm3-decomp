@@ -61,6 +61,13 @@
 #include <windows.h>
 #endif
 
+// Keyboard scan codes differ between the Windows and Classic Mac input APIs.
+#if defined(HOMM3_TARGET_MAC)
+#define H3_NATIVE_KEY_CODE(windowsCode, macCode) (macCode)
+#else
+#define H3_NATIVE_KEY_CODE(windowsCode, macCode) (windowsCode)
+#endif
+
 // Game data files are little endian; PowerPC loads them byte-reversed.
 #if defined(__POWERPC__)
 #define LITTLE_ENDIAN_LONG(value) __lwbrx(&(value), 0)
