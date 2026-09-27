@@ -3557,24 +3557,10 @@ void game::giveTroopsToNeutralTowns()
 }
 
 // E:\gamedcs\game.cpp:4050
-// Retail's campaign chain cross-jumps every `AllowNormalVictory = 0` tail
-// into ONE store at 0x4bf835 and shares a single `je` at 0x4bf840, so each
-// arm ends `cmp eax,<last>` + `jmp <shared je>` and the `= 1` store is the
-// fall-through.  That is the polarity of `if (map != K) = 1; else = 0;`.
-// Spelling the CAMPAIGN_5/3 arm that way is worth 89.0407 -> 89.6120: it
-// deletes our odd `mov byte ptr [ecx+0x1f89d], al` (the `test eax,eax` zero
-// reused as the stored value) and puts retail's `test eax,eax` at the tail.
-// The same inversion on the multi-value arms (7, 14, 15, 16, 18) is
-// BYTE-FLAT - VC6 canonicalises `a||b||c` and `!a&&!b&&!c` to one shape - so
-// those stay in their positive form.  On the single-value arms (CAMPAIGN_2,
-// CAMPAIGN_8) it is a LOSS (89.61 -> 87.49 -> 86.15) and the whole-chain
-// inversion scores 86.15: dropping their stores removes a pseudo, and the
-// two `type_point` stack slots SWAP (retail and this compile both put
-// vchero_loc at [ebp-8] and poolhero_loc at [ebp-0x10]; after the extra
-// inversions they trade, which re-displaces ~50 downstream rows).  The
-// residual is therefore C2 cross-jump aggressiveness (4 `= 0` stores here
-// against retail's 1) plus retail's UNMERGED num_living_players store, and
-// no arm spelling reaches it without paying the slot swap.
+// Mac 0xd5290..0xd53bc tests each campaign/scenario pair in order and
+// joins them at one disabled-normal-victory store (0xd53c8). Preserve that
+// disjunction rather than a nested per-campaign assignment chain. VC6
+// factors the comparisons and raises 91.1630% to 93.9000%; helpers remain.
 // The final valid-town path can return directly at unchanged 90.0315%.
 // Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
 // result flag gives 89.2426%; these used break as the failure-scope exit.
@@ -3597,59 +3583,32 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
         }
 
         const int map = m_campaign.m_currentMap;
-        int campaignNumber = m_campaign.m_currentCampaign;
+        const int campaignNumber = m_campaign.m_currentCampaign;
         if (numLivingPlayers == 1) {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
         } else if (g_inCampaign) {
-            if (campaignNumber == GAME_CAMPAIGN_5
-                || campaignNumber == GAME_CAMPAIGN_3) {
-                if (map != GAME_SCENARIO_0)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-            } else if (campaignNumber == GAME_CAMPAIGN_2) {
-                if (map == GAME_SCENARIO_1)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_8) {
-                if (map == GAME_SCENARIO_2)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_7) {
-                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_3
-                    || map == GAME_SCENARIO_6)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_15) {
-                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_2
-                    || map == GAME_SCENARIO_3)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_18) {
-                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_8
-                    || map == GAME_SCENARIO_9)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_16) {
-                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_2
-                    || map == GAME_SCENARIO_3)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else if (campaignNumber == GAME_CAMPAIGN_14) {
-                if (map == GAME_SCENARIO_2 || map == GAME_SCENARIO_3
-                    || map == GAME_SCENARIO_4)
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
-                else
-                    m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            } else {
+            if ((campaignNumber == GAME_CAMPAIGN_5 && map == GAME_SCENARIO_0)
+                || (campaignNumber == GAME_CAMPAIGN_3 && map == GAME_SCENARIO_0)
+                || (campaignNumber == GAME_CAMPAIGN_2 && map == GAME_SCENARIO_1)
+                || (campaignNumber == GAME_CAMPAIGN_8 && map == GAME_SCENARIO_2)
+                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_1)
+                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_3)
+                || (campaignNumber == GAME_CAMPAIGN_7 && map == GAME_SCENARIO_6)
+                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_1)
+                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_2)
+                || (campaignNumber == GAME_CAMPAIGN_15 && map == GAME_SCENARIO_3)
+                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_1)
+                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_8)
+                || (campaignNumber == GAME_CAMPAIGN_18 && map == GAME_SCENARIO_9)
+                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_1)
+                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_2)
+                || (campaignNumber == GAME_CAMPAIGN_16 && map == GAME_SCENARIO_3)
+                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_2)
+                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_3)
+                || (campaignNumber == GAME_CAMPAIGN_14 && map == GAME_SCENARIO_4))
+                m_mapHeader.m_victoryCondition.m_allowNormalVictory = 0;
+            else
                 m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
-            }
         } else {
             m_mapHeader.m_victoryCondition.m_allowNormalVictory = 1;
         }
