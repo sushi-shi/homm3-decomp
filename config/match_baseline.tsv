@@ -394,7 +394,7 @@ ai_player	?hasBuilding@town@@QBE_NH_N@Z	100.0000	100.0000	100.0000	0x305a0	token
 ai_player	?hireHeroes@type_AI_player@@QAE_NXZ	100.0000	100.0000	100.0000	0x31360	tokens1:affdde797775
 ai_player	?initializeArtifactEffects@@YIXXZ	97.5044	97.5044	97.5044	0x34100	tokens1:7a8c9bae5473
 ai_player	?makeGift@type_AI_player@@IAEXJ@Z	86.5174	86.5174	86.5174	0x29110	tokens1:f478942c9afd
-ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	83.7284	83.7284	92.1885	0x2f570	tokens1:f85348f6a45a
+ai_player	?markDestinations@@YIJPAVhero@@JPAVsearchArray@@PAGW4type_search_type@@@Z	83.7284	83.7284	92.1885	0x2f570	tokens1:a7d16d0ef706
 ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580	tokens1:46e13fe43707
 ai_player	?markTown@type_town_threat_checker@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	tokens1:9d4afad7a374
 ai_player	?markTowns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	tokens1:89f6baebfcbc
@@ -1090,7 +1090,7 @@ command	?isComputerAction@combatManager@@AAEEXZ	100.0000	100.0000	100.0000	0x74b
 command	?isComputerAction@combatManager@@QAEEPBVarmy@@@Z	100.0000	100.0000	100.0000	0x74bf0	tokens1:270dbe927c9d
 command	?isOutsidePlacementBoundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0	tokens1:239b06678278
 command	?main@combatManager@@UAEHAAVmessage@@@Z	97.1718	97.1718	97.6611	0x740d0	tokens1:bd8f647a3b3b
-command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.0556	94.0556	94.0556	0x74d80	tokens1:2b4eeab8b1a7
+command	?processCombatMsg@combatManager@@QAEHAAVmessage@@@Z	94.0588	94.0588	94.0588	0x74d80	tokens1:2237d43e783c
 command	?processFirstAid@combatManager@@AAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90	tokens1:740244ecab80
 command	?processMoveThenAttack@combatManager@@AAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900	tokens1:ab657c1f59b9
 command	?processNextAction@combatManager@@QAEHAAVmessage@@E@Z	99.7272	99.7272	100.0000	0x78d80	tokens1:3ea4d9fc5d80
@@ -1789,12 +1789,12 @@ fly	?validFlight@army@@QBEEHE@Z	100.0000	100.0000	100.0000	0xb46c0	tokens1:2b947
 font	??0font@@QAE@PBDABUTFontSpec@0@HPAE@Z	100.0000	100.0000	100.0000	0xb5070	tokens1:42bb77495e29
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110	tokens1:b863e5aeb8a7
 font	??_Gfont@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb5040	-
-font	?drawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHW4TColor@1@IH@Z	96.8123	96.8123	98.7864	0xb5490	tokens1:51cea15c542d
+font	?drawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHW4TColor@1@IH@Z	98.4919	98.4919	98.7864	0xb5490	tokens1:bc74aa9bb997
 font	?drawCharacter@font@@QBEXHPAVBitmap16Bit@@HHH@Z	100.0000	100.0000	100.0000	0xb51a0	tokens1:abde05f68208
 font	?drawStringExecute@font@@AAEXPBDHPAVBitmap16Bit@@HHW4TColor@1@HHHHH@Z	100.0000	100.0000	100.0000	0xb5260	tokens1:8fd69d290f1f
 font	?erase@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@PAV32@0@Z	100.0000	100.0000	100.0000	0xb6010	-
 font	?fillLinesVector@font@@QAEXPBDHAAV?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@@Z	100.0000	100.0000	100.0000	0xb5b90	tokens1:fd2d2e23d8a1
-font	?getCharacterWidth@font@@QBEHE@Z	100.0000	100.0000	100.0000	0xb57a0	tokens1:26f8884fc96f
+font	?getCharacterWidth@font@@QBEHE@Z	100.0000	100.0000	100.0000	0xb57a0	tokens1:9eb6ef655fc6
 font	?getSize@font@@UBEIXZ	100.0000	100.0000	100.0000	0xb5250	tokens1:a0cbc5aadc58
 font	?getStringWidth@font@@QBEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0	tokens1:4a3935398fb8
 font	?lineLength@font@@QBEHPBDH@Z	100.0000	100.0000	100.0000	0xb5820	tokens1:596229e4dbc3
@@ -2038,7 +2038,7 @@ game	?makeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	token
 game	?matchUndergroundGates@game@@AAEXXZ	100.0000	100.0000	100.0000	0xc0b60	tokens1:3d42c24674c3
 game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	tokens1:0c895f50ab49
 game	?newMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	tokens1:c9ed53d1c02f
-game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	99.4132	99.4132	100.0000	0xbfe70	tokens1:a46ae3bb29d8
+game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	99.4132	99.4132	100.0000	0xbfe70	tokens1:6eebc1ce0331
 game	?nextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	tokens1:1467134bdb30
 game	?nextPlayer@game@@QAEXXZ	82.4458	82.4458	84.8614	0xc6fe0	tokens1:0017eef9b436
 game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12560d43ae3
