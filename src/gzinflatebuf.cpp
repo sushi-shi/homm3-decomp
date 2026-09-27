@@ -56,7 +56,10 @@ DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 // hand back the next byte, or -1 at end of source. Mac's remaining three
 // differences are solely its 0x60 frame versus the candidate's 0x50 frame.
 // Early or const byte/count declarations are neutral; -O4 is unchanged, while
-// -O1/-O2 emit a longer body and a smaller frame.
+// -O1/-O2 emit a longer body and a smaller frame. The native streambuf
+// traits_type::to_int_type(c) conversion is also byte-flat in both compilers.
+// traits_type::eof() is likewise flat; widening c to int is Mac-flat but
+// changes the retained Windows byte reader from 100% to 70.90%.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
