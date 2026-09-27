@@ -3413,11 +3413,6 @@ long markDestinations(hero* currentHero, long maxDistance,
 // Reference and pointer share the machine ABI. Retain the reference model
 // through its frame-allocation dip (0x10 versus retail0x18) and recover the
 // caller/callee lifetimes together; all seven named calls remain intact.
-// Residual (85.35%): flow-distance 0; why-reg v2 reports first defs agree
-// (ebx=destination, esi=point, edi=point) and the residual is a mid-body
-// edx<->ecx x15 / eax<->ebx x12 rename family plus retail's RMW
-// `add [dest+8], ecx` where we load-add-store - handle-state, no local
-// spelling reaches it (measured 2026-08-27).
 // Dreamcast line 3539 calls type_point::operator!= after FindAdjacentMonster;
 // Complete expands the same three-field inequality. Restoring that source
 // call clears the audit finding and is byte-flat at 85.34764% in VC6.
@@ -3427,7 +3422,9 @@ long markDestinations(hero* currentHero, long maxDistance,
 // Removing the extra float result assignment restores that arithmetic and
 // raises Windows 84.96 -> 86.32. DC's monster and point locals both belong
 // to function scope; restoring monster's lifetime reaches 86.50 with all
-// seven canonical calls intact and no remaining control-flow difference.
+// seven canonical calls intact. Reusing currentPathCell after the refund
+// restores the retail barrier/danger source and raises Windows 86.50% to
+// 96.97%; a separate lastCell pointer had preserved the wrong cell.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3450,8 +3447,11 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
             // movement refund at0x32b50..0x32b5c. Keep the same source order.
             point = currentPathCell->m_lastPoint;
             destination.m_moveCost -= currentPathCell->m_cost;
-            pathCell* lastCell = currentSearchArray->getCell(point, 0);
-            destination.m_moveCost += lastCell->m_cost;
+            // Windows keeps the returned cell in EBX for the following
+            // barrier/danger reads; Mac 0x32bcc likewise replaces r25.
+            // The refund changes the active path cell, not just its cost.
+            currentPathCell = currentSearchArray->getCell(point, 0);
+            destination.m_moveCost += currentPathCell->m_cost;
         }
     }
 
