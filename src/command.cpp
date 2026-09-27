@@ -1820,6 +1820,9 @@ void combatManager::doVictory(int winningGroup)
     g_dialogDeadline = 0;
 }
 
+// A named army-row base shared with checkGetAIMove is not the missing CSE:
+// it lowers this retained body from 100% to 86.44% and the caller from
+// 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
 VA(0x00477a00, 0xB2) MAC_ADDRESS(0x085b14, 0x184)  // dc 0x6e898
 long combatManager::getSurrenderCost()
 {
