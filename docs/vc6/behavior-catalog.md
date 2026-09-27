@@ -1007,6 +1007,14 @@ reproduces the compact selector table and reaches 100%; the full build loses
 no MAX. Equal case results do not establish shared source labels, and a case
 equal to the default can still affect VC6 table construction.
 
+`townManager::setCommandAndText` (0x5c77a0) has another equal-default
+case group: Mac sends both no-hotspot (-1) and panorama (147) to 0x1bfe04,
+separate from default at 0x1c057c. Separating only -1 lowers the score;
+restoring both labels raises 99.03 → 99.7496. Native strip-before-index
+assignments then reach 99.9775. This illustrates why an incomplete label
+group can make a supported source model appear worse. Canonical helpers
+remain unchanged.
+
 ### D10. Loop induction and index-type forms
 `ai_combat` 89.8 → 100.0: the Dismiss loop's index is a SHORT consumed 32-bit
 — VC6 carries the trip count separately (`mov edi,7 / dec edi / jne` beside

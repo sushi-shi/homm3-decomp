@@ -2366,27 +2366,12 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // (SetHeroCommand / SetArmyCommand / select_army). SetCommandAndText2
 // (dc 0x16ceb4) has no distinct retail carve row here. The tail is
 // the ordinary ShowText helper, which Complete expands at this call site.
-// Residual (96.53% after restoring source helpers): register-role transpositions
-// with the structure
-// exact - the CFG, the cluster tree (dword table -1-biased, two byte
-// maps, the range-tested resource/exit chain) and every arm's content
-// agree. Retail's dispatch keeps `code` in EDI and takes EAX for the
-// biased table index; ours indexes on EDI unbiased (the case -1 label
-// merged into default loses the -1 cluster bound - a SEPARATE case -1
-// arm restores the bias but costs 0.6 overall, measured and reverted).
-// Downstream every -1 materialisation (`or ecx,-1` vs `or eax,-1`) and
-// the hall/castle-icon mask tests swap scratch roles the same way.
-// Measured byte-flat: bitNumber[id] & built vs HasBuilding(id, 0) (the
-// & canonicalisation law). Measured wins banked in this shape: retail
-// arm order (72.74 -> 90.36 with the Duff-shared HALL/CASTLE labels
-// and case -1 on default), field_138/field_128 stored before their
-// strip partners in the crest arm, hero* locals for the two name
-// sprintfs, and the shared `field_19c = 0` after both (+1.68).
-// Restoring DC's three GetArmyName calls raises this row from 92.05097%
-// to 96.53%; the Complete-only second horde arm uses the same helper
-// without changing bytes. DC's GetTownName and text-resource index calls
-// are also restored and VC6 byte-flat. The remaining 103/105 block split
-// is in the dispatcher shape, with 42 versus 44 conditional branches.
+// Mac routes both no-hotspot (-1) and PANORAMA_ID (147) to 0:0x1bfe04,
+// separately from default at 0:0x1c057c. The complete label group restores
+// Windows' biased dispatch. With Mac's strip-before-index assignments,
+// this raises 99.03% to 99.9775%; separating -1 alone was incomplete.
+// Residual: town-id array address reassociation; four sum orders and named
+// slot/top or pointer-index forms did not improve it. Helpers stay canonical.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD) MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
 void townManager::setCommandAndText(message* msg)
@@ -2404,6 +2389,10 @@ void townManager::setCommandAndText(message* msg)
 
     m_command = -2;
     switch (code) {
+    case TTownScreenWindow::TOWN_HOTSPOT_NONE:
+    case TTownScreenWindow::PANORAMA_ID:
+        strcpy(m_statusText, "");
+        break;
     case MAGE_GUILD_ID:
     case MAGE_GUILD2_ID:
     case MAGE_GUILD3_ID:
@@ -2464,12 +2453,12 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::GARRISON_PORTRAIT_ID:
     case TTownScreenWindow::GARRISON_PORTRAIT_SELECTOR_ID:
         if (m_srcIndex == -1) {
-            m_destIndex = -1;
             m_destStrip = m_garrisonStrip;
+            m_destIndex = -1;
             setHeroCommand();
         } else {
-            m_currIndex = -1;
             m_currStrip = m_garrisonStrip;
+            m_currIndex = -1;
             if (m_townToView->m_garrisonHeroId == -1) {
                 strcpy(m_statusText, g_townCommand[11]);
                 m_command = -2;
@@ -2503,8 +2492,8 @@ void townManager::setCommandAndText(message* msg)
             strcpy(m_statusText, g_townCommand[11]);
         } else {
             hero* visiting;
-            m_currIndex = -1;
             m_currStrip = m_heroStrip;
+            m_currIndex = -1;
             visiting = (m_townToView->m_visitingHeroId == -1)
                            ? 0
                            : g_game->getHero(m_townToView->m_visitingHeroId);
@@ -2641,7 +2630,6 @@ void townManager::setCommandAndText(message* msg)
                g_adventureWindowHelp[g_resourceHelpIndices[
                    code - TResourceDisplay::RESOURCE_BORDER_0_ID]].m_text);
         break;
-    case TTownScreenWindow::TOWN_HOTSPOT_NONE:
     default:
         strcpy(m_statusText, "");
         break;

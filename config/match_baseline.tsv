@@ -4502,7 +4502,7 @@ townmgr	?resetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530	tok
 townmgr	?selectArmy@townManager@@AAEXPAVstrip@@JE@Z	100.0000	100.0000	100.0000	0x1c8080	tokens1:74e796513321
 townmgr	?setArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400	tokens1:44aa642f0fa3
 townmgr	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z	87.7078	87.7078	88.5007	0x1c5b40	tokens1:a1f3da4ec0b9
-townmgr	?setCommandAndText@townManager@@QAEXPAVmessage@@@Z	99.0300	99.0300	99.0300	0x1c77a0	tokens1:629d62f9c0fd
+townmgr	?setCommandAndText@townManager@@QAEXPAVmessage@@@Z	99.9775	99.9775	99.9775	0x1c77a0	tokens1:061a0ea48299
 townmgr	?setCommandAndText@type_garrison_base_window@@IAEXPAVmessage@@@Z	98.8384	98.8384	98.8384	0x1d05f0	tokens1:0d599e3d5a10
 townmgr	?setHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250	tokens1:af36c26ea9d4
 townmgr	?setPrerequisiteText@TBuyBuildWindow@@QAEXPBVtown@@H@Z	100.0000	100.0000	100.0000	0x1d5be0	tokens1:62062d7e40a0
