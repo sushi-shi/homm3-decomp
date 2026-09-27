@@ -157,4 +157,52 @@ mac_section = 1
 mac_offset = 0x583d0
 mac_size = 16
 sha256 = "4eb1dfec3d4fec3cea740ded71a1f15f1e2497b92a6b8eea55a4f42631e4bb3b"
-evidence = "Both retail payloads prove g_artifactMarketValues has a zero sentinel followed by seven unsigned-short resource values. Native TBuyArtifactWindow::computeTradeRatios0x1f8378/0x1f8388 loads the table base then the index*2+2 element. Windows folds +2 into the absolute operand (the retained getMarketValue body uses0x68c482). The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
+evidence = "Both retail payloads prove g_artifactMarketValues has a zero sentinel followed by seven unsigned-short resource values. Native TBuyArtifactWindow::computeTradeRatios0x1f8378/0x1f8388 loads the table base then the index*2+2 element. Windows uses the corresponding first resource cell at0x68c492. The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5a65
+mac_size = 3
+sha256 = "0b782fc3030dbdf3756f17e7adf2ce5808dfc513ca7589adeb679c7d25eaef6f"
+evidence = "Native Buy Update passes the decimal format through direct TOC1+0x5a65 at0x1f6f7c and0x1f6f98. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5b00
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Native Buy ComputeTradeRatios loads the signed int-to-double bias through TOC1+0x33c8 at0x1f83d8/0x1f83e8. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5b08
+mac_size = 8
+sha256 = "2b2979f362d94c89fe17a6e01637f14332de063fe7a544bdc5facfc046f4169f"
+evidence = "Native Buy ComputeTradeRatios loads the unsigned short-to-double bias through TOC1+0x33cc at0x1f836c/0x1f83ac. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5ae8
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Native Buy ComputeTradeRatios zero comparison loads float zero through direct TOC1+0x5ae8 at0x1f83e4. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5af0
+mac_size = 8
+sha256 = "ace5732151a42e3c2ce91e039d0bd2d3a86dce1bccb6b874852b1aaa7f01d3bd"
+evidence = "Native Buy ComputeTradeRatios rounding loads double0.5 through direct TOC1+0x5af0 at0x1f8420. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5a68
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Native TBuyArtifactWindow::update passes the empty NUL string through direct TOC1+0x5a68 at0x1f71a4 before sprintf0x1f71a8. The candidate anonymous literal @7459 is the same complete one-byte empty string."
