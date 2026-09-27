@@ -2082,27 +2082,14 @@ inline unsigned char combatManager::automateTower()
 // in the Dreamcast AICheckRetreat statement slot. Complete inlines the
 // already exact get_surrender_cost body here, while retaining its standalone
 // copy at 0x477a00.
-// RESIDUAL (94.43355%): the 53-block CFG is exact (49 blocks also have the
-// exact instruction count; four are size-only), including all 35 branches
-// and five returns. The remaining 110 register-visible slots are confined to
-// the two twenty-stack value loops; retail homes one extra four-byte scratch
-// and binds the row walk to EDI/ECX where this build uses EDX/EDI. A named
-// side is codegen-inert; explicit current-hero locals score 87.19%/80.53%;
-// and an earlier IsActive-call probe scored 84.86%. The current source keeps
-// IsActive (DC line 3085); the text lookups at 3058/3105 use the underlying
-// getText accessor here. FullUpdate after each dialog is DC-only here:
-// retail continues directly to the response checks without that redraw.
-// Keeping a named army-row base is the best measured natural spelling.
-// Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
-// .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
-// it between this loop and the inlined get_surrender_cost walk, and homes
-// `heroes[currentSide]` at [ebp-0x20] from the enclosing guard; ours
-// recomputes both.  Two spellings measured against 94.4335: dropping the
-// named row base so both loops spell `&armies[currentSide][slot]` scores
-// 94.3892, and the countdown pointer walk
-// `army* p = armies[currentSide]; for (int slot = 20; slot--; p++)` is
-// BYTE-FLAT.  The wall is the cross-inline CSE of the row base, not the
-// loop form.
+// Mac reloads currentSide within getSurrenderCost's retained body. Restoring
+// those loads and the accumulator's divide/multiply assignments closes that
+// helper on both compilers; direct army-row indexing here then closes Windows
+// too. Earlier row-index probes against the incomplete helper model lowered
+// the score, so their results did not refute this complete source model.
+// IsActive and the canonical surrender helper remain source calls. Mac keeps
+// the surrender call; Windows expands it. FullUpdate after each dialog is
+// DC-only: Windows retail continues directly to the response checks.
 VA(0x00477ee0, 0x3E5) MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph, dc 0x6ee60
 void combatManager::checkGetAIMove()
 {
@@ -2132,9 +2119,8 @@ void combatManager::checkGetAIMove()
         if (proceed) {
             long combatValue = 0;
             if (m_heroes[1 - m_currentSide] && m_heroes[m_currentSide]) {
-                army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
-                    army* currentArmy = &currentArmies[slot];
+                    army* currentArmy = &m_armies[m_currentSide][slot];
                     if (currentArmy->isActive()) {
                         combatValue +=
                             g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
