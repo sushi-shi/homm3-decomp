@@ -366,6 +366,34 @@ long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowes
     return total;
 }
 
+// DC ai.cpp:365 identifies this as a TU-local helper before the shooter
+// chooser; Mac retains the same order at 0x20180 and 0x20318. Ordinary
+// source placement keeps both Windows bodies and all 49 AI scores unchanged.
+// THE TWO-HEX SKIP is a four-term conjunction and its polarity is the
+// whole shape: an area effect is only DOUBLE-counted against a wide
+// stack when the centre hex is neither of the stack's two hexes, so
+// the body drops such a target and prices every other one.
+
+VA(0x0041eda0, 0xFD) MAC_ADDRESS(0x020180, 0x114)  // dc 0x2400c
+static long getAreaAttackValue(const army& currentArmy, long hex, long ourGroup, type_AI_combat_parameters& data)
+{
+    std::vector<army*> targets;
+    long total = 0;
+    g_combatManager->markAreaEffect(hex, 1, 1, targets);
+    for (unsigned i = targets.size(); i-- != 0; ) {
+        army* target = targets[i];
+        if (currentArmy.is(creatureUndead) && target->is(creatureUndead)
+                && target->m_gridIndex != hex
+                && target->getSecondGridIndex() != hex)
+            continue;
+        if (target->getOwningSide() == ourGroup)
+            total -= data.getSimpleAttackEffect(currentArmy, *(target), 1, 0);
+        else
+            total += data.getRangedAttackValue(currentArmy, *(target));
+    }
+    return total;
+}
+
 // The AI choice/effect helpers use their recorded reference interfaces.
 // Restoring these signatures preserves all 63 Windows function bodies and
 // 514 code relocations; native Mac callers pass the same object addresses.
@@ -426,30 +454,6 @@ long combatManager::chooseShooterTarget(const army* currentArmy, type_AI_combat_
     return bestTarget;
 }
 
-// THE TWO-HEX SKIP is a four-term conjunction and its polarity is the
-// whole shape: an area effect is only DOUBLE-counted against a wide
-// stack when the centre hex is neither of the stack's two hexes, so
-// the body drops such a target and prices every other one.
-
-VA(0x0041eda0, 0xFD) MAC_ADDRESS(0x020180, 0x114)  // dc 0x2400c
-long getAreaAttackValue(const army& currentArmy, long hex, long ourGroup, type_AI_combat_parameters& data)
-{
-    std::vector<army*> targets;
-    long total = 0;
-    g_combatManager->markAreaEffect(hex, 1, 1, targets);
-    for (unsigned i = targets.size(); i-- != 0; ) {
-        army* target = targets[i];
-        if (currentArmy.is(creatureUndead) && target->is(creatureUndead)
-                && target->m_gridIndex != hex
-                && target->getSecondGridIndex() != hex)
-            continue;
-        if (target->getOwningSide() == ourGroup)
-            total -= data.getSimpleAttackEffect(currentArmy, *(target), 1, 0);
-        else
-            total += data.getRangedAttackValue(currentArmy, *(target));
-    }
-    return total;
-}
 
 VA(0x0041eea0, 0x1B9) MAC_ADDRESS(0x0205c4, 0x3cc)  // dc 0x2429c
 unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type_AI_combat_parameters& estimate)
