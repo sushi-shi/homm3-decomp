@@ -383,75 +383,69 @@ inline long valueOfBlackMarket(const hero* currentHero,
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
-    if (currentHero->m_owner == currentTown->m_owner
-        && !g_game->townAlreadyBuiltOn(currentTown->m_id)) {
-        switch (currentTown->m_type) {
-        case TOWN_TOWER: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfKnowledge();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(owner, cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+    if (currentHero->m_owner != currentTown->m_owner
+        || g_game->townAlreadyBuiltOn(currentTown->m_id))
+        return;
+    switch (currentTown->m_type) {
+    case TOWN_TOWER: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_INFERNO: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfPower();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(owner, cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfKnowledge()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_INFERNO: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_DUNGEON: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int owner = currentHero->m_owner;
-            int resourceCost = aiResourceCost(owner, cost);
-            if (currentHero->m_turnExperienceToRvRatio * 1000.0f
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfPower()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_DUNGEON: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_STRONGHOLD: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->m_turnExperienceToRvRatio * 1000.0f
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_STRONGHOLD: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_FORTRESS: {
-            if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
-            long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_FORTRESS: {
+        if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
             break;
-        }
-        case TOWN_CONFLUX: {
-            if (!currentTown->canBuild(EXTRA_0_ID))
-                break;
-            type_university university;
-            university.initializeMagicSkills();
-            long value = valueOfUniversity(currentHero, &university, 0);
-            if (value > 0)
-                currentTown->buyBuilding(EXTRA_0_ID);
+        int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        break;
+    }
+    case TOWN_CONFLUX: {
+        if (!currentTown->canBuild(EXTRA_0_ID))
             break;
-        }
-        }
+        type_university university;
+        university.initializeMagicSkills();
+        long value = valueOfUniversity(currentHero, &university, 0);
+        if (value > 0)
+            currentTown->buyBuilding(EXTRA_0_ID);
+        break;
+    }
     }
 }
 
@@ -1962,9 +1956,13 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // at least 109, a 58-unit increase at that point. Removing three owner aliases
 // from buySpecialBuilding lowers its C1 cost 610->595 (budget 66); removing
 // Dungeon's resourceCost alias lowers it to 590 (budget 71), which expands
-// hasBuilding but then leaves only 3 for getHero. Both variants are Mac byte-
-// flat and regress Windows, so the original helper lifetime remains. A typed
-// spellbook-ID local in the DC line 768 gap is byte-flat in both compilers.
+// hasBuilding but then leaves only 3 for getHero. Those partial variants are
+// Mac byte-flat and regress Windows. The combined buySpecialBuilding rejection
+// guard and direct value/cost expressions recover both expansions: 99.930435%,
+// 73 exact CFG blocks and all 44 calls agree. Mac retains cost acquisition,
+// value/experience acquisition, resource valuation and optional purchase in
+// that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
+// local in the DC line 768 gap is byte-flat in both compilers.
 VA(0x005253d0, 0x60c) MAC_ADDRESS(0x13f8dc, 0x368)  // dc 0x10e3f8
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
