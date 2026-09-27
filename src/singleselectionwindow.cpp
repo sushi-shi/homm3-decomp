@@ -5072,6 +5072,8 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
+// Mac 0:0x17df38 and 0:0x17e114 expand isHuman's byte result;
+// its team bounds are independent checks, not else-if arms.
 VA(0x005860E0, 0x4CC) MAC_ADDRESS(0x17dee0, 0x428)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
@@ -5084,7 +5086,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         int seated = 0;
         for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(j);
-            if (p && p->m_dpid != 0)
+            if (p && p->isHuman())
                 ++seated;
         }
         humanPlayerCount = seated + rand() % (9 - seated);
@@ -5092,7 +5094,9 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
     if (humanTeamCount == -1)
         humanTeamCount = rand() % humanPlayerCount + 1;
-    if (humanTeamCount == 0 || humanTeamCount > humanPlayerCount)
+    if (humanTeamCount == 0)
+        humanTeamCount = humanPlayerCount;
+    if (humanTeamCount > humanPlayerCount)
         humanTeamCount = humanPlayerCount;
 
     if (humanPlayerCount == CNetPlayerHandler::MAX_PLAYERS) {
@@ -5103,16 +5107,14 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             computerPlayerCount = rand() % (9 - humanPlayerCount);
         if (computerPlayerCount + humanPlayerCount > 8)
             computerPlayerCount = 8 - humanPlayerCount;
-        if (computerPlayerCount == 0) {
+        if (computerPlayerCount == 0)
+            computerTeamCount = 0;
+        if (computerTeamCount == -1)
+            computerTeamCount = rand() % computerPlayerCount + 1;
+        if (computerTeamCount == 0)
             computerTeamCount = computerPlayerCount;
-        } else {
-            if (computerTeamCount == -1)
-                computerTeamCount = rand() % computerPlayerCount + 1;
-            if (computerTeamCount == 0)
-                computerTeamCount = computerPlayerCount;
-            else if (computerTeamCount > computerPlayerCount)
-                computerTeamCount = humanPlayerCount;
-        }
+        if (computerTeamCount > computerPlayerCount)
+            computerTeamCount = humanPlayerCount;
     }
 
     int waterContent = m_randomMapOptions[6];
@@ -5150,7 +5152,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
-            if (player->m_dpid != 0)
+            if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
             request.m_townType[i] = player->m_townIndex;
         }
