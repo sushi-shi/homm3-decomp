@@ -86,3 +86,31 @@ mac_offset = 0x426dc
 mac_size = 28
 sha256 = "5e13954fb8aef90443816943ff5b0d1a9c211c9cd573314cbf2e9896b40ea9d0"
 evidence = "newMap copies seven tutorial resources from Windows 0x6779c8. Mac data1+0x426dc uniquely contains the same six 50s followed by 50000; loader TOC1+0x24f0 resolves this table. Mac newMap code0+0xd5ab4 loads that pointer into r26; after the tutorial flag at 0xd5fb0, 0xd5fbc passes it as the source for the 28-byte copy at 0xd5fc8. The adjacent six neutral-town weights are a distinct array."
+
+[[data]]
+retail_va = 0x00698400
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527e3c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "newMap's setup guard is owned by DATA g_inSetup in hero.cpp and extern in game.h. Mac code0+0xd5aa4 loads r14 from loader TOC1+0xbf4 -> zero-filled storage1+0x527e3c; entry0xd5adc stores int1 and exit0xd6338 stores int0, matching Windows newMap's setup lifetime. External address binding only."
+
+[[data]]
+retail_va = 0x00678170
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x430e4
+mac_size = 140
+sha256 = "c5b4864a27c3ed3749b38dd3d607d7b12ea2de9c73a42e64c108ca154d361e7b"
+evidence = "The five seven-resource human difficulty rows exactly match the source-owned Windows initializer. Mac newMap loads loader TOC1+0xbf0 -> data1+0x430e4 into r17; its human branch scales difficulty by28 and copies that row at code0+0xd5fa8. All35 big-endian signed-int values are verified, including the distinct gold amounts."
+
+[[data]]
+retail_va = 0x006781fc
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x43170
+mac_size = 140
+sha256 = "0eb9e90c75be19e035eb96784d3b2646661e40d3679b236db1f7d348ee5f479c"
+evidence = "The five seven-resource computer difficulty rows exactly match the source-owned Windows initializer. Mac newMap loads loader TOC1+0xbec -> data1+0x43170 into r25; its computer branch scales difficulty by28 and copies that row at code0+0xd6000. All35 big-endian signed-int values are verified, including the distinct gold amounts."
