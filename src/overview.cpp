@@ -2033,6 +2033,8 @@ void TOverviewWindow::doRollover(int codeY)
                 sprintf(g_text, g_heroScreen[22]);
                 break;
 
+            // Retail's compressed table and Mac 0x13a0f8/0x13a14c
+            // admit only IDs 158..165 to the secondary-skill rollover.
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 1:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 2:
@@ -2040,23 +2042,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 4:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 5:
             case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 6:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 8:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 9:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 10:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 11:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 12:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 13:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 14:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 15:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 16:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 17:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 18:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 19:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 20:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 21:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 22:
-            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 23: {
+            case OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID + 7: {
                 int nth = codeY - OVERVIEW_HERO_SECONDARY_SKILL_FIRST_ID;
                 if (nth < currHero->m_skillCount) {
                     int skill = currHero->getNthSS(nth);
@@ -2344,7 +2330,12 @@ void TOverviewWindow::doRollover(int codeY)
                                g_creatureGenerator1Types[itemType]]
                                .m_pluralName);
                 } else {
+                    // Mac 0x13ab20 and Windows 0x521614 put lighthouse
+                    // before the two creature-generator label arms.
                     switch (itemType) {
+                    case 'R':
+                        strcpy(g_text, g_specialBuildingNames[0][0]);
+                        break;
                     case 'P':
                         strcpy(g_text, DATA_COMPGEN(
                             0x00681850, overviewElementalsText,
@@ -2353,9 +2344,6 @@ void TOverviewWindow::doRollover(int codeY)
                     case 'Q':
                         strcpy(g_text, DATA_COMPGEN(
                             0x00681848, overviewGolemsText, "Golems"));
-                        break;
-                    case 'R':
-                        strcpy(g_text, g_specialBuildingNames[0][0]);
                         break;
                     case 'S':
                     case 'T':
