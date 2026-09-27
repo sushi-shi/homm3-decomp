@@ -4213,6 +4213,8 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // do not help. All 45 exact kb siblings stayed exact.
 // Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
 // at 99.9762%; retain the DC5407 spriteX-first load order.
+// Paired control: separate icon/label zero statements leave Mac unchanged
+// at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
 VA(0x004f5d80, 0x51C) MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
 void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {

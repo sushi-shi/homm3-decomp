@@ -95,13 +95,12 @@ evidence = "The Mac artifact icon arm loads TOC 1+0x6b0 -> pointer cell 1+0x2ac2
 [[data]]
 retail_va = 0x006a7df8
 source = "src/text.cpp"
-mac_symbol = "g_playerColorNames"
 declaration_only = true
 mac_section = 1
 mac_offset = 0x550300
 mac_size = 0x20
 sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
-evidence = "Windows setter's g_playerColorNames relocation and retail address 0x006a7df8 identify the canonical g_colors[8] definition in src/text.cpp. The Mac player-color arm indexes eight pointer cells at TOC 1+0x77c -> BSS 1+0x550300. mac_symbol records the KB view's source alias while the DATA definition owns identity; only external storage is bound."
+evidence = "The ordinary setter uses canonical g_colors[8], defined by src/text.cpp at retail0x006a7df8; its earlier g_playerColorNames spelling was provisional. The Mac player-color arm indexes eight pointer cells at TOC 1+0x77c -> BSS 1+0x550300. The current full-TU object emits the same canonical g_colors IL reference; the source DATA definition owns its name and only external storage is bound."
 
 [[data]]
 retail_va = 0x006a7570
