@@ -1439,6 +1439,11 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // The retail second loop advances a sequence-record cursor by 0x10, but
 // spelling it as a separate C++ pointer regresses Windows 88.7694% to
 // 87.6710% and Mac 10.3846% to 10.3205%; the indexed reference is retained.
+// Mac 0x154230..0x15423c initializes both frame counters before the entry
+// jump. The ordinary for-loop restores that topology and removes eight CW
+// bytes versus the guarded do-loop; its retained helper sequence is unchanged.
+// In the integrated Windows context this probe is 88.2161% versus 88.2323%;
+// both still have 73/72 CFG blocks. Prior peaks remain historical controls.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
 VA(0x0055c7b0, 0x743) MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records, dc 0x122320; wall
@@ -1511,10 +1516,10 @@ CSprite* ResourceManager::getSprite(const char* name)
         TSpriteDataHeader& sequence = sequences[sequenceIndex];
         sprite->allocateSeq(sequence.m_sequenceNumber, sequence.m_numFrames);
 
-        int frameIndex = 0;
-        if (frameIndex < sequence.m_numFrames) {
-            int frameNameOffset = 0;
-            do {
+        int frameIndex;
+        int frameNameOffset = 0;
+        for (frameIndex = 0; frameIndex < sequence.m_numFrames;
+             ++frameIndex, frameNameOffset += 13) {
             TCompactSpriteFrameHeader compactHeader;
             TCroppedSpriteFrameHeader croppedHeader;
             unsigned char* frameData;
@@ -1576,9 +1581,6 @@ CSprite* ResourceManager::getSprite(const char* name)
 
             sprite->addFrame(sequence.m_sequenceNumber, frame);
             delete[] frameData;
-            ++frameIndex;
-            frameNameOffset += 13;
-            } while (frameIndex < sequence.m_numFrames);
         }
     }
 
