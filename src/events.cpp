@@ -1012,6 +1012,8 @@ void advManager::doArtifactSkillRequirement(
 // The canonical 752-byte caller expands GiveArtifact in the free arm at
 // cost/budget 113/113, retaining calls in the skill arms at budgets 6 and 4,
 // exactly the retail call decisions. MAX before this reconstruction: 78.1174.
+// Early returns versus full/partial nested dispatch reproduce three objects
+// with no MAX gain; branch nesting alone does not merge the skill-success tail.
 VA(0x0049f7e0, 0x2A4) MAC_ADDRESS(0x0aa91c, 0x260)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 void advManager::doEventArtifact(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)

@@ -573,6 +573,9 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // string temporary, 0x62e738 the exception object, and 0x62e743/5d/68 the
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
+// resize(count), an explicit TObjectType() argument and a named default
+// object reproduce three objects without improving 73.3263%. Keep the
+// canonical constructor; the residual starts in its nested bitset expansion.
 
 VA(0x00514d80, 0x284) MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
