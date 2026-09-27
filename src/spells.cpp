@@ -4240,21 +4240,17 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // Mac 0x198a0c/0x198a10 calculates deathFrames - i - 1 in the loop.
 // VC6 strength-reduces that expression into the retained back-frame induction
 // variable; spelling the induction manually misplaced its initialization.
-// Recovering the expression raises Windows 89.54 -> 92.70 with helpers kept.
+// Recovering the expression and the conditional total raises Windows
+// 89.54 -> 94.26 with all helpers kept.
 VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
 {
     long hex = targetArmy->m_gridIndex;
     long oldCount = targetArmy->m_numTroops;
-    // SEEDED FROM THE COUNT, not from a literal zero: retail loads
-    // numTroops once, keeps it as `old_count`, and lets that same
-    // register be the sum's starting value on the dead-stack path -
-    // which is only correct because the path is the one where it IS
-    // zero, and is what a literal 0 does not produce.
-    long total = oldCount;
-    if (oldCount)
-        total = targetArmy->getTotalHitPoints(0);
+    // Mac 0x198728 explicitly selects zero for an empty stack; VC6 reuses
+    // oldCount on that path, where the value is already zero.
+    long total = oldCount ? targetArmy->getTotalHitPoints(0) : 0;
     total += hitPointsResurrected;
     targetArmy->m_numTroops =
         (targetArmy->m_monInfo.m_hitPoints + total - 1) / targetArmy->m_monInfo.m_hitPoints;
