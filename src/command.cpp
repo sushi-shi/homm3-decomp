@@ -1312,11 +1312,12 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
 // Using those existing helpers moves current VC6 similarity 92.57143%
 // to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
-// A hovered-cell reference local does not recover retail's EBX receiver:
-// VC6 retains the index there and spills the receiver (92.50% control).
-// Mac 0x84798..0x847c0 independently keeps the cell receiver in r28 and
-// index in r27. A matching pointer-local model also scores 92.4978% on
-// Windows; neither local spelling restores its EBX receiver allocation.
+// Mac 0x84798..0x847c0 keeps one cell receiver in r28 and index in r27;
+// the same receiver feeds HasArmy, GetArmy, side/slot and move flags.
+// Its pointer-local model improves the paired body to 85.11%, with a
+// small Windows dip 92.5357 -> 92.4978%; keep the native-supported source
+// while solving Windows' receiver allocation. The wall-target arm writes
+// slot before side, as native 0x849cc/0x849d8 does.
 // Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
 // non-null hero returns. These four guard controls are VC6 byte-flat;
 // retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
@@ -1376,12 +1377,13 @@ int combatManager::getCommand(int newIndex)
     if (!validHex(newIndex) || inInvisibleColumn(newIndex))
         return COMBAT_COMMAND_NONE;
 
+    hexcell* cell = &m_cells[newIndex];
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
 
-    if (m_cells[newIndex].hasArmy()
+    if (cell->hasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
-        army* target = m_cells[newIndex].getArmy();
+        army* target = cell->getArmy();
         long targetSide = target->getOwningSide();
 
         if (m_creaturePlacement)
@@ -1401,8 +1403,8 @@ int combatManager::getCommand(int newIndex)
         if (targetSide == m_currentSide)
             return COMBAT_COMMAND_VIEW_ARMY;
 
-        currentArmy->m_side = m_cells[newIndex].m_armySide;
-        currentArmy->m_slot = m_cells[newIndex].m_armySlot;
+        currentArmy->m_side = cell->m_armySide;
+        currentArmy->m_slot = cell->m_armySlot;
 
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
@@ -1435,8 +1437,8 @@ int combatManager::getCommand(int newIndex)
                 wall = TWallTargetId(wall + 1)) {
             if (newIndex == s_wallTargets[wall].m_targetHex) {
                 if (validWallTarget(wall)) {
-                    currentArmy->m_side = -1;
                     currentArmy->m_slot = newIndex;
+                    currentArmy->m_side = -1;
                     return COMBAT_COMMAND_BOMBARD_WALL;
                 }
                 break;
@@ -1453,7 +1455,7 @@ int combatManager::getCommand(int newIndex)
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                           currentArmy->m_monInfo.m_speed,
                                           m_creaturePlacement, -1);
-        if (m_cells[newIndex].m_validMove || m_cells[newIndex].m_frontMove)
+        if (cell->m_validMove || cell->m_frontMove)
             return (currentArmy->is(creatureFlyingArmy)) ? COMBAT_COMMAND_FLY
                                             : COMBAT_COMMAND_WALK;
     }
