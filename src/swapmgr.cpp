@@ -1476,6 +1476,9 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // to one line at each of 1243, 1259 and 1291, with only exitFlag named.
 // Mac initializes three separate 0x14-byte packets before GetOtherHero;
 // Windows retail evaluates GetOtherHero before packet initialization.
+// Explicit if/else modifier assignments reproduce Mac's two true/false
+// branch pairs; a Boolean expression is branchless under CW, while an
+// initial zero plus an if has only one branch per flag. Windows is byte-flat.
 // Full-expression packet temporaries permit both argument evaluation orders
 // and raise Windows 84.0502% to 86.82% without changing other scored rows.
 // The current CodeWarrior compile still retains the packet constructor;
@@ -1496,10 +1499,16 @@ VA(0x005afdf0, 0xABB) MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + 
 int swapManager::main(message& msg)
 {
     int exitFlag = 0;
-    unsigned char rightMouse =
-        (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
-    unsigned char shift =
-        (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) != 0;
+    unsigned char rightMouse;
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
+        rightMouse = 1;
+    else
+        rightMouse = 0;
+    unsigned char shift;
+    if (msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS)
+        shift = 1;
+    else
+        shift = 0;
 
     if (g_turnDuration.isExpired())
     {
