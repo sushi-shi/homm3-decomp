@@ -670,7 +670,11 @@ VA(0x00602dc0, 0x2F7) MAC_ADDRESS(0x20e200, 0x3e0)  // anchor-import + exhaustiv
 void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
 {
-    // DC locals: DEFAULT_FADE_TIME, src/odst (read-only row pointers).
+    // DC locals: DEFAULT_FADE_TIME and factor are const int; src/odst
+    // are read-only row pointers. Initializing the writable map first,
+    // although suggested by both optimized assemblies, changes Windows
+    // allocation (94.84 -> 93.82) without resolving the native comparison.
+    // Retain the pointer phase until a complete lifetime model supports it.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -699,7 +703,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
 
             for (int frame = 0; frame < 8; frame++) {
                 unsigned long deadline = GameTime::get() + fadeTime;
-                int alpha = (frame << 16) / 8;
+                const int alpha = (frame << 16) / 8;
 
                 Bitmap16ConstMapPointer source;
                 source.m_pixels = m_bmpFizzleSource->getMap(0, 0);
