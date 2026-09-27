@@ -796,22 +796,32 @@ inline unsigned char TMultiPlayerWindow::onModem()
 
 // Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
 // cleanup/menu/redraw/update calls separately in the host and join arms.
+// Case-local exits also restore Windows' shared failure cleanup without
+// synthetic join labels (86.75% -> 91.57%). Return placement and nested
+// inlining still differ; all protocol and menu helpers remain canonical.
 VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
-    bool connectionFailed = 0;
     switch (id) {
     case CANCEL_ID:
         if (!m_inSessionList) {
-            connectionFailed = 1;
+            exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+            remoteCleanup();
             break;
         }
-        goto return_to_main_menu;
+        remoteCleanup();
+        goMainMenu();
+        drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        update();
+        break;
 
     case IPX_ID: {
         goSessionList();
         if (!onIPX()) {
-            connectionFailed = 1;
+            exitFlag = 1;
+            g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
+            remoteCleanup();
             break;
         }
         return 1;
@@ -852,8 +862,10 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         return 1;
 
     case HOST_ID:
-        if (onHost())
-            goto exit_dialog;
+        if (onHost()) {
+            exitFlag = 1;
+            return 1;
+        }
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL) {
             g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
             remoteCleanup();
@@ -882,13 +894,11 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
 
     case SEARCH_ID:
-        if (onSearch())
-            goto exit_dialog;
+        if (onSearch()) {
+            exitFlag = 1;
+            return 1;
+        }
         break;
-
-    exit_dialog:
-        exitFlag = 1;
-        return 1;
 
     case HOT_SEAT_ID:
         if (onHotSeat()) {
@@ -922,20 +932,6 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
         break;
     }
 
-    if (connectionFailed) {
-        exitFlag = 1;
-        g_windowManager->m_dialogReturn = DIALOG_RETURN_CANCEL;
-        remoteCleanup();
-        return 1;
-    }
-
-    return 1;
-
-return_to_main_menu:
-    remoteCleanup();
-    goMainMenu();
-    drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    update();
     return 1;
 }
 
