@@ -522,7 +522,10 @@ void type_AI_player::calculateDemand()
         player->m_ai.m_resourceValue[valueResource] = totalValue;
     }
 
-    double averageValue = 0;
+    // Retail converts each accumulated sum back to integer before the next
+    // resource (Windows final loop; Mac 0x2ba68..0x2baf4), then divides
+    // that integer by five. The older DC double local is not this build.
+    int averageValue = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
         averageValue += m_resourceValue[averageResource];
