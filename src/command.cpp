@@ -185,6 +185,10 @@ issueCatapultOrder:
 // The final two stores follow DC's separate statement groups: select and store
 // the target grid first, then clear field_40. Retail's Complete-only pointer
 // overload of is_computer_action is kept because its call relocation proves it.
+// Mac keeps a -1 creature-type register and regenerative-target checks at
+// 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
+// checks folds away in both current compilers (Windows remains exact, Mac
+// remains 396 vs 440 bytes); its initialization boundary is still unresolved.
 VA(0x00473ea0, 0x196) MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automateFirstAidTent()
 {
