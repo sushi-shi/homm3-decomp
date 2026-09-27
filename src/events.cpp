@@ -2556,7 +2556,9 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     updateScreen(0, 0);
     eraseObj(cell, point, 1);
 
-    hero* prisoner = g_game->getHero(heroID);
+    // Mac 0xb0a30 indexes the hero pool directly; retail has no getHero
+    // sentinel guard at this call site.
+    hero* prisoner = &g_game->m_heroes[heroID];
     g_game->recordShowHero(prisoner, currentHero->m_owner, point, 0);
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
