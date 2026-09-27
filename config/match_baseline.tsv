@@ -4694,7 +4694,7 @@ viewwrld	?vwDrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	95.3089	100.00
 viewwrld	?vwDrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	95.3089	100.0000	100.0000	0x1f7900	tokens1:804b04909d3f
 viewwrld	?vwDrawRiver@advManager@@QAEXHHHHH@Z	98.3763	98.3763	98.5412	0x1f9220	tokens1:f8fb24c46897
 viewwrld	?vwDrawRoad@advManager@@QAEXHHHHH@Z	98.4057	98.4057	99.5374	0x1f95b0	tokens1:5a18b7f95163
-viewwrld	?vwDrawShroud@advManager@@QAEXHHHHH@Z	88.3551	88.3551	97.9205	0x1f9940	tokens1:6f8167fa3297
+viewwrld	?vwDrawShroud@advManager@@QAEXHHHHH@Z	88.3551	88.3551	97.9205	0x1f9940	tokens1:8c29ea0989ab
 viewwrld	?vwDrawSprite@@YIXPAVCSprite@@PAVNewmapCell@@HHHH@Z	89.0084	89.0084	89.0084	0x1f73b0	tokens1:6fd876b4ba48
 viewwrld	?vwDrawSymbols@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f80e0	tokens1:96b8752ee8b0
 viewwrld	?vwDrawUnderlay@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f9ed0	tokens1:27ea8467fe74
