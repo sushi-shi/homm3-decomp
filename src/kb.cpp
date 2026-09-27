@@ -34,6 +34,7 @@
 #include "iconwdgt.h"
 #include "inputmgr.h"
 #include "kbwin.h"
+#include "log.h"
 #include "mainmenu.h"
 #include "message.h"
 #include "misc.h"
@@ -287,7 +288,6 @@ static palette* g_palette;
 // The remaining declarations below are the ordinary free functions whose
 // bodies are claimed elsewhere but whose owner headers carry them only as
 // CODEVIEW comments.
-void initLogFile(const char* path);
 unsigned char initializeRandomTavernText();
 unsigned char initializeCreatureBankTraits();
 unsigned char initializeCreatureGeneratorNames();
@@ -353,6 +353,8 @@ static int checkMem();
 // removes both CD-version exits at 99.5994%: 1251 compiled bytes and 122
 // references/addends agree. Bool, byte and int results are identical; the
 // older flag probe also changed the loop headers and is not this control.
+// The release logging hook belongs to a separate source unit: keeping its
+// empty body here incorrectly eliminates retail's call (99.0146 -> 99.5994).
 VA(0x004ed650, 0x4E8) MAC_ADDRESS(0x10f24c, 0x208)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
 int earlySetup()
 {
@@ -4859,13 +4861,4 @@ VA(0x004f79e0, 0x24) MAC_ADDRESS(0x119764, 0x38)  // decorated identity + map-ex
 unsigned short* getMapExtraPtr(int x, int y, int z)
 {
     return &g_mapExtra[(z * g_mapHeight + y) * g_mapWidth + x];
-}
-
-// EarlySetup at 0x4ed66a passes ".\\" in ECX to the shared release ret
-// at 0x5bc690. DC kb.cpp:648 calls the older CLogFile::InitLogFile() instead;
-// Complete's directory-taking hook has no work in this release build. Mac
-// earlySetup retains its call to the same empty hook at code 0:0x221ee0.
-MAC_ADDRESS(0x221ee0, 0x4)
-void initLogFile(const char* path)
-{
 }
