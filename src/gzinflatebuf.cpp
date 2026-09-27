@@ -97,20 +97,17 @@ void TGzInflateBuf::ungetByte(signed char)
 // array delete at 0x2212f4. Windows unwind 0x62c913 -> 0x4b7040 uses
 // the same flag/pointer pair; that body alone did not distinguish auto_ptr.
 
-// The header walk's two LOOP FORMS, 87.7808 -> 91.6008 in two doses, and
-// the second only pays after the first:
-//  - the six reserved bytes are a counted `for (int skip = 6; skip > 0;
-//    --skip)`, not `do { } while (--skip > 0)`. Measured: for-down 90.3211,
-//    for-up / while-up / braced-for 89.8207 all three to the digit,
-//    do-while(--skip != 0) 87.7038, six unrolled read_byte() calls 74.9020.
-//  - the two name/comment skips are then `while (1) { if (read_byte() == 0)
-//    break; }`. Written `while (read_byte() != 0) { }` VC6 PEELS the
-//    condition - it emits read_byte once as the guard and again at the
-//    bottom - which is why the call census carried one surplus get_byte.
-//    This is wingraph DDBlit's lever, and it MEASURED NEGATIVE before the
-//    skip loop moved (85.93 for both, 86.83/86.89 for either alone against
-//    an 87.78 baseline) and +1.28 after it: a rejected knob is only
-//    rejected for the inline structure it was measured in.
+// Retail's reserved-byte loop counts down from six. Its extra-field loop
+// tests the unsigned OLD count with jbe/ja, recovered by extra-- > 0.
+// The name/comment loops have peeled getByte sites at ctor+0x422/0x432
+// and +0x47b/0x48b; while(readByte()!=0) reproduces all twelve ordered
+// getByte references and the exact B38..B50 countdown/name-loop blocks.
+// The old while(1)/break model had ten references and incorrectly treated
+// the missing guards as surplus calls. Mac retains one checked read per
+// loop (0x2210dc/0x221154), then tests the decoded byte at 0x221140/0x2211b8;
+// CodeWarrior does not peel these conditions. Both forms keep the canonical
+// readByte helper. Windows currently scores 91.0739% versus the older 92.2931%
+// peak; exception temporary homes and the comment-loop _Tidy decision remain.
 
 VA(0x004d6050, 0x58A) MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
@@ -172,19 +169,15 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         if ((flags & 4) != 0) {
             int low = readByte();
             unsigned extra = (readByte() << 8) + low;
-            while (extra-- != 0)
+            while (extra-- > 0)
                 readByte();
         }
         if ((flags & 8) != 0) {
-            while (1) {
-                if (readByte() == 0)
-                    break;
+            while (readByte() != 0) {
             }
         }
         if ((flags & 0x10) != 0) {
-            while (1) {
-                if (readByte() == 0)
-                    break;
+            while (readByte() != 0) {
             }
         }
         if ((flags & 2) != 0) {
