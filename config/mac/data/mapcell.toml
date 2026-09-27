@@ -1,0 +1,17 @@
+# Source-owned mapcell data.
+
+[[constants]]
+units = ["mapcell"]
+mac_section = 1
+mac_offset = 0x4b293
+mac_size = 57
+sha256 = "3cefb6d6ef0b0ddefd6b4efffa3543922e25422fc34dc5af1ebe6af600a38c65"
+evidence = "Mac readMapObjects loads loader-resolved TOC string data1+0x4b293 before its invalid-object warning. Every byte including the terminator matches the ordinary source error format literal; no platform dialog implementation is inferred."
+
+[[constants]]
+units = ["mapcell"]
+mac_section = 1
+mac_offset = 0x4b28c
+mac_size = 7
+sha256 = "2917841e5f52fdd208c069c5fd0871bc20f5bd3a3dcee317568e6c3e3c6ab597"
+evidence = "Mac readMapObjects loads loader-resolved TOC string data1+0x4b28c before its invalid-object warning. Every byte including the terminator matches the ordinary source error caption literal; no platform dialog implementation is inferred."

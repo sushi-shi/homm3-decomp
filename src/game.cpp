@@ -2003,8 +2003,14 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 }
 
 // E:\gamedcs\game.cpp:2275
-// Mac counterpart 0:0xce398 has the same five ordered bzero/bitset/random
-// calls; the 18-class and 156-hero loops identify its full 1932-byte span.
+// Mac counterpart 0:0xce398 has five ordered zero-fill/bitset/random calls;
+// the 18-class and 156-hero loops identify its full 1932-byte span. Its
+// zero-fill is the two-argument bzero ABI; the ordinary candidate calls
+// three-argument memset. The deleted Mac declaration view rewrote memset
+// to bzero, so its earlier call agreement was not compiler evidence. A
+// counted std::fill_n emits constant-reference stores, while aggregate
+// zero initialization copies a static 72-byte zero array; neither explains
+// the retained bzero operation. Keep this platform reference gap explicit.
 // Restoring DC's THeroClass induction local raises CodeWarrior O3 20.96% to
 // 27.59% without changing Windows 98.98% or its exact CFG/call sequence. O2
 // falls to 10.30%, O4 and swapping array declarations are flat. The Windows
