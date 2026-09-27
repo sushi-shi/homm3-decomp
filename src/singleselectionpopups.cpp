@@ -71,14 +71,10 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // msg->id with the disabled DOWN/UP arms falling through to their right-button
 // twins. mouseX/mouseY are int (heroWindow::x/y are int, +8.9 over short).
 
-// Residual (94.28%): the SAME merged-return generation class border::Main
-// carries (its residual note quotes the identical DUP-EXIT). Retail merges
-// the RIGHT_BUTTON_UP not-selected exit into the shared return-0 block the
-// field_2C guard opens (backward `je`); this C2 duplicates it as a fifth
-// `ret`. Plain `return 0;` at every exit is the closest (94.28); a
-// `goto returnZero` from any later exit re-sinks the guard to `jg` and drops
-// it to 90.06 - the `--branches` DUP-EXIT with the guard block moved. Not
-// source-reachable, same as border::Main.
+// The right-button-up arm tests the selected state positively, performs
+// deselection inside that arm, then returns zero if unselected. This natural
+// branch form lets VC6 share the earlier zero-return epilogue: all 21 retail
+// blocks and four returns match. No goto or extra source operation is needed.
 VA(0x00575290, 0x179) MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4, dc 0x12dea8
 int CHotspotWidget::main(message& msg)
 {
@@ -120,13 +116,14 @@ int CHotspotWidget::main(message& msg)
             break;
         // fall through
     case MESSAGE_RIGHT_BUTTON_UP:
-        if (!(m_status & WIDGET_SELECTED))
-            return 0;
-        m_status &= ~WIDGET_SELECTED;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = WIDGET_DESELECT;
-        msg.m_codeY = m_id;
-        return 2;
+        if (m_status & WIDGET_SELECTED) {
+            m_status &= ~WIDGET_SELECTED;
+            msg.m_id = MESSAGE_WIDGET;
+            msg.m_codeX = WIDGET_DESELECT;
+            msg.m_codeY = m_id;
+            return 2;
+        }
+        return 0;
     }
     return widget::main(msg);
 }
