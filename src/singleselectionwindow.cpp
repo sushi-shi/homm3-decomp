@@ -7392,21 +7392,11 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // two seated players in a network game - before the pointer/session/progress
 // preamble hands off to BeginSavedGame or BeginNewGame.
 
-// Residual (78.9055% MAX, 2026-09-07): retail computes the local-header
-// address after successful generation. Separating the two failure checks
-// and declaring header between them raises 77.2669% to 78.9055%; the two
-// candidate cleanup exits remain separate where retail shares one. Controls
-// retaining a shared condition and naming header after it score 76.9959%;
-// assigning header in getHeader's argument scores 77.2669%.
-// Passive C2 trace corrects the old diagnosis: both AssignData string
-// operator= sites expand. Its first assign(ptr, size), cb 69, receives budget
-// 65 and remains a call, as in retail; the second receives 131 and expands
-// too far. bitset<4>::_Xran, cb 65, receives 84 and likewise expands where
-// retail calls it. The verified candidate is 1552 padded bytes with a 0x50
-// frame versus retail's 0x30. Preserve the canonical helper operations;
-// restoring removed pins would conceal these remaining inline decisions.
-// Earlier controls: removing the const bitset cast was byte-flat; .test()
-// scored 76.71% against the then-current 78.76% candidate.
+// Native Mac 0x183764/0x183794 passes m_localHeader directly to both
+// canonical helpers. Removing the inferred cached header pointer restores
+// Windows' shared failure cleanup and reaches 98.3265%. The separate
+// generation/read failure guards and helper calls remain unchanged.
+// Earlier pointer/cleanup controls predated the recovered text helpers.
 // E:\gamedcs\singleselectionwindow.cpp:7698
 // Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
 // branch-local lookups preserve those calls and recover Windows 92.87%
@@ -7422,11 +7412,10 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         }
         if (!generateRandomMap(name.c_str()))
             return 0;
-        GameSelectionHeadersStruct* header = &m_localHeader;
         if (getHeader(DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps"),
-                      const_cast<char*>(name.c_str()), header))
+                      const_cast<char*>(name.c_str()), &m_localHeader))
             return 0;
-        applyHeaderToGame(header);
+        applyHeaderToGame(&m_localHeader);
     }
 
     if (!m_loadMode && g_game->m_mapHeader.m_version != MAP_FORMAT_SHADOW_OF_DEATH
