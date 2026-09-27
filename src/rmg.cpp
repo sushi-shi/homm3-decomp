@@ -3247,14 +3247,12 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
 }
 
 // Flatten the level, row and column into one cell index. The scalar overload
-// delegates here. All 39 retained bytes still match. In the shared water-search
-// model, four staged indices kept an extra lookup call in connectZones;
-// the compact index permits that expansion without an inline pin.
+// delegates here. A direct index return preserves all 39 retained bytes and
+// restores repairWaterZoneBorders to 100%; a named index blocks that expansion.
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
-    int index = (point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x;
-    return m_mapItems + index;
+    return m_mapItems + ((point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x);
 }
 
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
