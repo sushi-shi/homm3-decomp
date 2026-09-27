@@ -3413,6 +3413,11 @@ long markDestinations(hero* currentHero, long maxDistance,
 // Dreamcast line 3539 calls type_point::operator!= after FindAdjacentMonster;
 // Complete expands the same three-field inequality. Restoring that source
 // call clears the audit finding and is byte-flat at 85.34764% in VC6.
+// Windows rounds the integer input to float, performs the scale, then calls
+// _ftol without storing a float result. Mac0x32dd4..0x32e20 likewise converts
+// each branch directly back into the integer accumulator before adding20.
+// Removing the extra float result assignment restores that arithmetic and
+// raises Windows84.96 ->86.32; all seven canonical calls stay intact.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3461,26 +3466,27 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
     if (destination.m_point.m_x == currentHero->m_pathTargetX
         && destination.m_point.m_y == currentHero->m_pathTargetY
         && destination.m_point.m_z == currentHero->m_pathTargetZ) {
-        float scaled = static_cast<float>(value);
         if (value < 0)
-            scaled = scaled / 1.5f;
+            value = static_cast<float>(value) / 1.5f;
         else
-            scaled = scaled * 1.5f;
-        int result = static_cast<int>(scaled) + 20;
+            value = static_cast<float>(value) * 1.5f;
+        value += 20;
         if (currentHero->m_targetIsCritical) {
             destination.m_isCritical = 1;
-            return result;
+            return value;
         }
-        return result;
+        return value;
     }
 
     int factor = random(1, 25) + 75;
     if (value <= 0)
-        return static_cast<int>(100.0 / factor * value);
-    int result = factor * value / 100;
-    if (result < 1)
-        result = 1;
-    return result;
+        value = 100.0 / factor * value;
+    else {
+        value = factor * value / 100;
+        if (value < 1)
+            value = 1;
+    }
+    return value;
 }
 
 void aiSetHeroBonuses(hero* ourHero);
