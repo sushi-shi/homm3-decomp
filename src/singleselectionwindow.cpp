@@ -4535,6 +4535,8 @@ void TSingleSelectionWindow::doModal(bool fade)
 // exact rows; it was a misreading of the DC line table, not a source fact.
 // ASSERT/TRACE audit: DC has no leading zero-emission line here, and the tested
 // carrier doses were byte-flat. No release-VERIFY carrier is evidenced.
+// All six orders of the three recorded entry locals emit identical VC6
+// bytes; the residual begins in expanded player-lookup branches.
 VA(0x00584C40, 0x40D) MAC_ADDRESS(0x17c9b0, 0x384)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
 void TSingleSelectionWindow::setHumanSlot()
 {

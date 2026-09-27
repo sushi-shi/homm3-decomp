@@ -675,6 +675,8 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
     // the complete lifetime model raises Windows94.84 ->99.91 (2026-09-27).
     // CFG27 blocks,14 branches and10 named calls agree; one pointer reload
     // order remains. Six cursor increment orders emit identical bytes.
+    // All six row-pointer declaration orders, with either column scope,
+    // produce only the current object or a lower-scoring register variant.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {

@@ -1653,6 +1653,10 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
     return 0;
 }
 
+// Isolated -toc_data off reproduces all 68 native bytes while preserving
+// the static scalar declaration; default on emits its direct TD load.
+// This is not an engine flag: off breaks font::fillLinesVector (100 ->17%).
+// Scalar storage/profile provenance remains open; no linkage workaround.
 VA(0x0051fa20, 0x1C) MAC_ADDRESS(0x137e8c, 0x44)  // dc 0x1084a0
 void overviewSliderCallback(int state, heroWindow* parentWindow)
 {

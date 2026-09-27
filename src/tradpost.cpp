@@ -3131,6 +3131,8 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // successful arms before the common phase at 0x1f921c. Restore that complete
 // source model: Windows stays 97.00%; native ordered helper calls differ
 // only because the compiler expands the canonical playerData::isHuman here.
+// Thirteen natural recipient/flag lifetime models emit one identical VC6
+// object; changing those scopes does not recover the retained isHuman call.
 VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
 int TGiveResourceWindow::windowHandler(message& msg)
 {
