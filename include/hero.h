@@ -3,6 +3,7 @@
 
 #include "va.h"
 
+#include <algorithm>
 #include <string>
 
 #include "advmgr_popup.h"
@@ -44,6 +45,15 @@ enum THeroClass {
     classPlanesWalker = 16,
     classElementalist = 17,
     kNumHeroClasses = 18
+};
+
+// Dreamcast names the hero-ID domain THeroID; Complete uses 156 hero slots.
+// The -1 sentinel is serialized as0xff; hero.cpp independently identifies
+// Xeron as0x9b. Other admitted IDs retain their existing corpus constants.
+// The remaining original enumerator names are not yet recovered.
+enum HeroId {
+    heroIdNone = -1,
+    heroIdXeron = 0x9b
 };
 
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
@@ -693,9 +703,15 @@ public:
     unsigned char hasArtifact(int whichArtifact) const;
     unsigned char hasSecondarySkill(int whichSkill);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
-    // Complete's campaign carry-over resets both spell tables together.
-    // No DC counterpart survives for that added path; name provisional.
-    void clearSpells();
+    // Native hero initialization and campaign carry-over both expand these
+    // counted byte clears. Share their body here; original name is unknown.
+    void clearSpells()
+    {
+        std::fill_n(m_inSpellbook, sizeof(m_inSpellbook),
+                    static_cast<unsigned char>(0));
+        std::fill_n(m_availableSpells, sizeof(m_availableSpells),
+                    static_cast<unsigned char>(0));
+    }
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long getEquippedArtifacts(unsigned char countWarMachines) const;
     long getNumberInBackpack(unsigned char countWarMachines) const;

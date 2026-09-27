@@ -32,8 +32,6 @@
 #include "smackmgr.h"
 #include "textresource.h"
 
-class LODFile;
-
 namespace ResourceManager {
 
 // Complete's resource readers adapt either an ordinary FILE or a selected
@@ -1236,12 +1234,6 @@ void ResourceManager::dispose(sample* value)
         value->dispose();
 }
 
-// E:\gamedcs\resourcemanager.cpp:2280, dc 0x1226d4.
-// Complete retains no work at the cache-sweep call sites.
-void ResourceManager::delSprFromCache()
-{
-}
-
 // Original: ResourceManager::Expunge; resourcemanager.cpp:2359, dc 0x1228ac
 MAC_ADDRESS(0x154748, 0x7c)
 void ResourceManager::expunge()
@@ -1258,6 +1250,10 @@ void ResourceManager::expunge()
 }
 
 // A cache hit adds a reference before returning the resource.
+// Mac 0x152194 calls a different cache backend at 0x1520e8: it searches
+// 16384 eight-byte hash/resource rows, using the name hash at 0x15216c.
+// Windows retains the typed std::map lookup below; its Mac backend cannot
+// be admitted as the same map storage solely through an address binding.
 MAC_ADDRESS(0x152194, 0x3c)
 resource* ResourceManager::getFromCache(const char* name)
 {

@@ -1,0 +1,33 @@
+[[data]]
+retail_va = 0x006976e8
+source = "src/puzzlewindow.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527020
+mac_size = 8
+sha256 = "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+evidence = "game::setupPuzzlePieces loads TOC1+0xc10 at code0+0xcddb0; the PEF loader relocates this cell to the eight zero bytes at section1+0x527020. The receiver survives in r31 and is passed to bitset<48>::set-all at0xcded0, reset at0xcdee0, test at0xcdf1c/0xcdf6c, and indexed set at0xcdf98. The retained reset clears receiver words0 and4, independently proving the eight-byte storage extent. This binds the external source-owned bitset address only; puzzlewindow.cpp remains the initializer owner."
+[[constants]]
+units = ["puzzlewindow"]
+mac_section = 1
+mac_offset = 0x5338
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Signed integer-to-double bias loaded through TOC1+0x2a54 at native aiAttemptPuzzleGuess0x148a30/48. Full pinned eight-byte payload agrees with the compiler-emitted anonymous literal; source operation is the existing found/48.0 calculation."
+
+[[constants]]
+units = ["puzzlewindow"]
+mac_section = 1
+mac_offset = 0x5340
+mac_size = 8
+sha256 = "55be67ea770b0baab0f80a5c5f3cb2e49ae7d6bacfe5780c323c49b3795ff142"
+evidence = "48.0 divisor loaded directly at native aiAttemptPuzzleGuess0x148a58 before fdiv0x148a68. Full pinned eight-byte payload agrees with the compiler-emitted anonymous literal; source operation is the existing found/48.0 calculation."
+
+[[data]]
+retail_va = 0x6822c8
+source = "src/puzzlewindow.cpp"
+mac_section = 1
+mac_offset = 0x4c428
+mac_size = 40
+sha256 = "2735f5b407e5fafeaedfffa559ee7d660dd863b61fc99ccd0b54974e7933e2a8"
+evidence = "Native aiAttemptPuzzleGuess0x148a50/60/64/6c reads the setup difficulty byte, loads the threshold table through TOC1+0x2a58 and indexes by difficulty*8 before comparison. Both complete pinned five-double payloads are1.1,0.5,0.25,0,0, agreeing with the ordinary initialized source table."

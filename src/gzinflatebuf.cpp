@@ -45,10 +45,21 @@ public:
 // table rather than two literals.
 DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
 
-// Mac uses two 4096-byte windows (8192-byte allocation); Windows uses two
-// 512-byte windows. Refill, output bounds and CRC spans follow that size.
+// Mac uses two 4096-byte windows; Windows uses two 512-byte windows.
+// Refill, output bounds, allocation and CRC spans all use the same capacity.
+#if defined(HOMM3_TARGET_MAC)
+#define GZ_WINDOW_SIZE 4096
+#else
+#define GZ_WINDOW_SIZE 512
+#endif
 // 0x4d5fd0: refill next_in from the source streambuf when it is empty and
-// hand back the next byte, or -1 at end of source.
+// hand back the next byte, or -1 at end of source. Mac's remaining three
+// differences are solely its 0x60 frame versus the candidate's 0x50 frame.
+// Early or const byte/count declarations are neutral; -O4 is unchanged, while
+// -O1/-O2 emit a longer body and a smaller frame. The native streambuf
+// traits_type::to_int_type(c) conversion is also byte-flat in both compilers.
+// traits_type::eof() is likewise flat; widening c to int is Mac-flat but
+// changes the retained Windows byte reader from 100% to 70.90%.
 VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
@@ -56,16 +67,16 @@ int TGzInflateBuf::getByte()
         if (m_sourceEof)
             return -1;
         int count = m_source->sgetn(
-            static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
-        if (count < 0x200)
+            static_cast<char*>(static_cast<void*>(m_buffer)), GZ_WINDOW_SIZE);
+        if (count < GZ_WINDOW_SIZE)
             m_sourceEof = 1;
         m_stream.next_in = m_buffer;
         m_stream.avail_in = count;
-        if (count == 0)
+        // Mac 0x220a80 reloads the unsigned stream member for this guard.
+        if (m_stream.avail_in == 0)
             return -1;
     }
-    unsigned char c = *m_stream.next_in;
-    ++m_stream.next_in;
+    unsigned char c = *m_stream.next_in++;
     --m_stream.avail_in;
     return c;
 }
@@ -89,20 +100,17 @@ void TGzInflateBuf::ungetByte(signed char)
 // array delete at 0x2212f4. Windows unwind 0x62c913 -> 0x4b7040 uses
 // the same flag/pointer pair; that body alone did not distinguish auto_ptr.
 
-// The header walk's two LOOP FORMS, 87.7808 -> 91.6008 in two doses, and
-// the second only pays after the first:
-//  - the six reserved bytes are a counted `for (int skip = 6; skip > 0;
-//    --skip)`, not `do { } while (--skip > 0)`. Measured: for-down 90.3211,
-//    for-up / while-up / braced-for 89.8207 all three to the digit,
-//    do-while(--skip != 0) 87.7038, six unrolled read_byte() calls 74.9020.
-//  - the two name/comment skips are then `while (1) { if (read_byte() == 0)
-//    break; }`. Written `while (read_byte() != 0) { }` VC6 PEELS the
-//    condition - it emits read_byte once as the guard and again at the
-//    bottom - which is why the call census carried one surplus get_byte.
-//    This is wingraph DDBlit's lever, and it MEASURED NEGATIVE before the
-//    skip loop moved (85.93 for both, 86.83/86.89 for either alone against
-//    an 87.78 baseline) and +1.28 after it: a rejected knob is only
-//    rejected for the inline structure it was measured in.
+// Retail's reserved-byte loop counts down from six. Its extra-field loop
+// tests the unsigned OLD count with jbe/ja, recovered by extra-- > 0.
+// The name/comment loops have peeled getByte sites at ctor+0x422/0x432
+// and +0x47b/0x48b; while(readByte()!=0) reproduces all twelve ordered
+// getByte references and the exact B38..B50 countdown/name-loop blocks.
+// The old while(1)/break model had ten references and incorrectly treated
+// the missing guards as surplus calls. Mac retains one checked read per
+// loop (0x2210dc/0x221154), then tests the decoded byte at 0x221140/0x2211b8;
+// CodeWarrior does not peel these conditions. Both forms keep the canonical
+// readByte helper. Windows currently scores 91.0739% versus the older 92.2931%
+// peak; exception temporary homes and the comment-loop _Tidy decision remain.
 
 VA(0x004d6050, 0x58A) MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
@@ -114,11 +122,11 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
       m_sourceEof(0),
       m_inflating(0)
 {
-    m_buffer = new unsigned char[0x400];
+    m_buffer = new unsigned char[2 * GZ_WINDOW_SIZE];
     if (m_buffer == 0)
         throw TAllocationFailure();
     TAutoArrayPtr<unsigned char> ownedBuffer(m_buffer);
-    m_outBuffer = m_buffer + 0x200;
+    m_outBuffer = m_buffer + GZ_WINDOW_SIZE;
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)));
@@ -126,7 +134,7 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     m_stream.next_out = m_outBuffer;
     m_stream.next_in = m_buffer;
     m_stream.avail_in = 0;
-    m_stream.avail_out = 0x200;
+    m_stream.avail_out = GZ_WINDOW_SIZE;
     m_stream.zalloc = 0;
     m_stream.zfree = 0;
     try {
@@ -164,19 +172,15 @@ TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
         if ((flags & 4) != 0) {
             int low = readByte();
             unsigned extra = (readByte() << 8) + low;
-            while (extra-- != 0)
+            while (extra-- > 0)
                 readByte();
         }
         if ((flags & 8) != 0) {
-            while (1) {
-                if (readByte() == 0)
-                    break;
+            while (readByte() != 0) {
             }
         }
         if ((flags & 0x10) != 0) {
-            while (1) {
-                if (readByte() == 0)
-                    break;
+            while (readByte() != 0) {
             }
         }
         if ((flags & 2) != 0) {
@@ -229,8 +233,17 @@ TGzInflateBuf::~TGzInflateBuf()
     delete[] m_buffer;
 }
 
-// 0x4d6920: drain the source into the 0x200-byte output half, either
+// 0x4d6920: drain the source into the output half, either
 // through inflate or, for a non-gzip member, by straight copy.
+// Constructor visibility probes are Windows-flat. A temporary explicit
+// inline readByte suppresses its required Windows body and is rejected.
+// CW auto/deferred/depth controls change the native retained-call pattern;
+// no source qualifier or compiler override is inferred from those controls.
+// Mac 0x221574..0x221588 dispatches inflate status with a range tree:
+// compare -3, skip larger values, compare -4, then select the exceptions.
+// A switch reproduces that tree at candidate +0xc0..+0xd4; sequential
+// equality guards do not. Windows 81.4346% -> 81.90%, with every trailer
+// readByte call preserved. Exception homes and expansion decisions remain.
 
 // The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
 // `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
@@ -255,6 +268,12 @@ TGzInflateBuf::~TGzInflateBuf()
 // The candidate also shares its 0x20 exception slot where retail reserves
 // 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
 // byte-count local scores 81.3560% and does not resolve the trailer calls.
+// Mac expands all eight checked byte reads without a visible group boundary.
+// A success-first readByte return and swapping the refill member assignments
+// are separately byte-flat under both compilers; neither restores VC6
+// exception-slot separation or the retained trailer calls.
+// Binding m_stream through a local reference or pointer is not the missing
+// receiver lifetime: both controls fall 81.9005 -> 73.1728% in VC6.
 VA(0x004d6920, 0x251) MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
@@ -263,8 +282,8 @@ int TGzInflateBuf::underflow()
             break;
         if (m_stream.avail_in == 0) {
             int count = m_source->sgetn(
-                static_cast<char*>(static_cast<void*>(m_buffer)), 0x200);
-            if (count < 0x200)
+                static_cast<char*>(static_cast<void*>(m_buffer)), GZ_WINDOW_SIZE);
+            if (count < GZ_WINDOW_SIZE)
                 m_sourceEof = 1;
             m_stream.avail_in = count;
             m_stream.next_in = m_buffer;
@@ -273,18 +292,22 @@ int TGzInflateBuf::underflow()
             if (m_ok) {
                 if (m_inflating) {
                     int status = inflate(&m_stream, Z_SYNC_FLUSH);
-                    if (status == Z_MEM_ERROR)
+                    switch (status) {
+                    case Z_MEM_ERROR:
                         throw TAllocationFailure();
-                    if (status == Z_DATA_ERROR)
+                    case Z_DATA_ERROR:
                         throw TDataError();
+                    default:
+                        break;
+                    }
                     // This is the live z_stream output window's beginning.
                     // Retail +0x9b..+0xb3 loads next_out/avail_out and forms
                     // their sum minus 512, rather than loading m_outBuffer.
                     // Preserve that stream-state dependency, not a guessed
                     // cancellation through the separately cached pointer.
                     m_crc = crc32(m_crc,
-                                m_stream.next_out + m_stream.avail_out - 0x200,
-                                0x200 - m_stream.avail_out);
+                                m_stream.next_out + m_stream.avail_out - GZ_WINDOW_SIZE,
+                                GZ_WINDOW_SIZE - m_stream.avail_out);
                     if (status == Z_STREAM_END) {
                         inflateEnd(&m_stream);
                         m_inflating = 0;
@@ -313,9 +336,9 @@ int TGzInflateBuf::underflow()
     setg(static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer)),
          static_cast<char*>(static_cast<void*>(m_outBuffer))
-             + 0x200 - m_stream.avail_out);
+             + GZ_WINDOW_SIZE - m_stream.avail_out);
     m_stream.next_out = m_outBuffer;
-    m_stream.avail_out = 0x200;
+    m_stream.avail_out = GZ_WINDOW_SIZE;
     if (egptr() > eback())
         return static_cast<unsigned char>(*gptr());
     return -1;

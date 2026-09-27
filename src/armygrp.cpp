@@ -628,20 +628,29 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
+// Naming the creature once preserves getAlignment and recovers Windows
+// 67.8644 -> 100. Mac reuses that same creature load through the census.
+// Its ten byte stores reload a reference-bound integer zero: counted
+// std::fill_n reproduces this leaf body (99.7368%) while remaining Windows
+// exact. The older DC body calls memset instead. Pointer-range std::fill
+// keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
+// The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
+// do not pad the array or remove getAlignment to chase that displacement.
 VA(0x0044abb0, 0x97) MAC_ADDRESS(0x05828c, 0x17c)  // dc 0x4ebf0
 int armyGroup::getAlignments(unsigned char* alignments) const
 {
     unsigned char local[10];
     if (!alignments)
         alignments = local;
-    memset(alignments, 0, sizeof(local));
+    std::fill_n(alignments, sizeof(local), 0);
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (m_armies[i] == CREATURE_NONE)
+        int creature = m_armies[i];
+        if (creature == CREATURE_NONE)
             continue;
-        const TCreatureTypeTraits& traits = g_creatureTypeTraits[m_armies[i]];
+        const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment = g_game->getAlignment(m_armies[i]);
+        int alignment = g_game->getAlignment(creature);
         alignments[alignment + 1]++;
     }
     int count = 0;

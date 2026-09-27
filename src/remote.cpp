@@ -428,8 +428,10 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-// Mac 0x210f50/0x210f78 retain separate compressed/original sends;
-// 0x210f60 releases the temporary compressed packet through destroyMsg.
+// Windows retains one sendIt join after choosing the packet, then releases
+// the compressed temporary through destroyMsg. Mac 0x210f50/0x210f78
+// instead retains separate compressed/original sends (cleanup at0x210f60);
+// the common helper paths are preserved, but that Mac flow is not yet exact.
 VA(0x00553370, 0x5C) MAC_ADDRESS(0x210ee4, 0xb4)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
@@ -441,13 +443,11 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     if (compressMsg)
         compressedMsg = this->compressMsg(msg);
 
-    bool result;
-    if (compressedMsg) {
-        result = sendIt(compressedMsg, dpidTo, guaranteed);
+    if (compressedMsg)
+        msg = compressedMsg;
+    bool result = sendIt(msg, dpidTo, guaranteed);
+    if (compressedMsg)
         destroyMsg(compressedMsg);
-    } else {
-        result = sendIt(msg, dpidTo, guaranteed);
-    }
     return result;
 }
 
@@ -1033,6 +1033,7 @@ int CChatEdit::onKeyPress(message* msg)
             return onEnter(*msg);
         case KEYCODE_ESCAPE:
             return onEscape(*msg);
+#if defined(HOMM3_TARGET_MAC)
         case KEYCODE_F1:
             return onFunctionKey(*msg, 0);
         case KEYCODE_F2:
@@ -1049,6 +1050,19 @@ int CChatEdit::onKeyPress(message* msg)
             return onFunctionKey(*msg, 6);
         case KEYCODE_F8:
             return onFunctionKey(*msg, 7);
+#else
+        // Windows and Dreamcast's contiguous F-key scan codes permit one
+        // recipient computation; Classic Mac's native codes above are sparse.
+        case KEYCODE_F1:
+        case KEYCODE_F2:
+        case KEYCODE_F3:
+        case KEYCODE_F4:
+        case KEYCODE_F5:
+        case KEYCODE_F6:
+        case KEYCODE_F7:
+        case KEYCODE_F8:
+            return onFunctionKey(*msg, key - KEYCODE_F1);
+#endif
     }
 
     int result = textEntryWidget::onKeyPress(msg);

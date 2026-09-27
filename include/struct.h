@@ -21,6 +21,11 @@
 //   z: dword @ +2, shl 2, movsx ax, sar 12     -> signed  4 bits @ 10..13
 // and can_take_town (0x428410) builds one the other way round, masking
 // the three source bytes with 0x3ff, 0x3ff and 0xf before packing.
+// Mac embeds this four-byte point at playerData+0x39. CodeWarrior
+// needs native type alignment because it ignores packing inside a class.
+#if defined(__MWERKS__)
+#pragma options align=packed
+#endif
 struct type_point {
 public:
     short m_x : 10;
@@ -64,6 +69,9 @@ public:
         return dx * dx + dy * dy;
     }
 };
+#if defined(__MWERKS__)
+#pragma options align=reset
+#endif
 
 // The shared inclusive rectangle used by the adventure and combat drawing
 // code. Dreamcast CodeView fixes the four names, offsets, and 16-byte extent;

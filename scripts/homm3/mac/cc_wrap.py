@@ -80,7 +80,7 @@ def _depfile(out: Path, source: Path) -> None:
 
 def compile_unit(unit: str, source: Path, out: Path, *, allow_compile_errors: bool = False) -> int:
     from homm3.mac import sdk, toolchain
-    from homm3.mac.object import parse_code_hunks, parse_data_hunks
+    from homm3.mac.object import parse_code_hunks, parse_data_hunks, restore_listing_names
     out.parent.mkdir(parents=True, exist_ok=True)
     log = out.with_suffix(".log")
     for stale in (out, out.with_suffix(".dis.txt"), out.with_suffix(".hunks.json")):
@@ -117,7 +117,7 @@ def compile_unit(unit: str, source: Path, out: Path, *, allow_compile_errors: bo
         sys.stderr.write(f"[mac] {unit}: MWLinkPPC -dis failed\n{listing.stdout}{listing.stderr}")
         out.unlink(missing_ok=True)
         return 1
-    text = listing.stdout + listing.stderr
+    text = restore_listing_names(listing.stdout + listing.stderr, out.read_bytes())
     out.with_suffix(".dis.txt").write_text(text)
     code_hunks = parse_code_hunks(text)
     data_hunks = parse_data_hunks(text)

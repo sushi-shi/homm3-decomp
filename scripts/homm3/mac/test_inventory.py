@@ -211,6 +211,64 @@ class TestParameterJoin(unittest.TestCase):
         self.assertEqual(emitted.encode("A::B &"), "RQ21A1B")
         self.assertIsNone(emitted.encode("int (*)(message &)"))
 
+    def test_fixed_array_reference_preserves_extent_and_element_identity(self):
+        from homm3.match.source_ownership import Definition
+        symbol = ".skillRequirementText__16type_skill_questFRA4_CSc"
+        self.assertEqual(emitted.parameters(symbol), (False, ("RA4_CSc",)))
+        self.assertEqual(emitted.encode("const signed char (&)[4]"), "RA4_CSc")
+        self.assertEqual(emitted.encode("int (*)[4]"), "PA4_i")
+        self.assertEqual(emitted.encode("const int (&)[2][3]"), "RA2_A3_Ci")
+        definition = Definition("src/seerhut.cpp", 527, 0, 1,
+                                "type_skill_quest::skillRequirementText",
+                                "std::string (const signed char (&)[4])", 1,
+                                True, False, 0x56dfa0, "",
+                                argument_types=("const signed char (&)[4]",))
+        alternatives = [symbol,
+                        ".skillRequirementText__16type_skill_questFRA5_CSc",
+                        ".skillRequirementText__16type_skill_questFRA4_Sc",
+                        ".skillRequirementText__16type_skill_questFPCSc"]
+        self.assertEqual(emitted.select(definition, alternatives), symbol)
+        for spelling in ("int (&)[]", "int (&)[0]", "int (&)[n]",
+                         "int (*)(int)", "volatile int (&)[4]"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
+    def test_bitset_value_parameters_preserve_the_non_type_extent(self):
+        from homm3.match.source_ownership import Definition
+        self.assertEqual(emitted.encode("const std::bitset<5>"), "Q23std9bitset<5>")
+        self.assertEqual(emitted.encode("const std::bitset<48> &"), "RCQ23std10bitset<48>")
+        definition = Definition("src/game.cpp", 7693, 0, 1,
+                                "game::getRandomSpell", "int (const std::bitset<5>)", 1,
+                                True, False, 0x4c95a0, "",
+                                argument_types=("const std::bitset<5>",))
+        symbol = ".getRandomSpell__4gameFQ23std9bitset<5>"
+        self.assertEqual(emitted.select(definition, [symbol,
+                         ".getRandomSpell__4gameFQ23std9bitset<8>",
+                         ".getRandomSpell__4gameFRCQ23std9bitset<5>",
+                         ".getRandomSpell__4gameFi"]), symbol)
+        for spelling in ("std::bitset<N>", "std::bitset<-1>", "std::bitset<5, int>"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
+    def test_msl_string_and_nested_vector_use_exact_parameter_codes(self):
+        string = "Q23std59basic_string<c,Q23std14char_traits<c>,Q23std12allocator<c>>"
+        vector = "Q23std162vector<" + string + ",Q23std78allocator<" + string + ">>"
+        self.assertEqual(emitted.encode("const std::string &"), "RC" + string)
+        self.assertEqual(emitted.encode("std::vector<std::string> &"), "R" + vector)
+        self.assertEqual(emitted.encode("std::vector<std::basic_string<char> > &"), "R" + vector)
+        symbol = ".fillLinesVector__4fontFPCciR" + vector
+        self.assertEqual(emitted.parameters(symbol), (False, ("PCc", "i", "R" + vector)))
+
+    def test_template_pointer_and_const_arguments_preserve_type_identity(self):
+        self.assertEqual(emitted.encode("std::allocator<const int *> &"),
+                         "RQ23std14allocator<PCi>")
+        self.assertNotEqual(emitted.encode("std::vector<int *> &"),
+                            emitted.encode("std::vector<int> &"))
+        self.assertNotEqual(emitted.encode("std::basic_string<char, MyTraits> &"),
+                            emitted.encode("std::string &"))
+        for spelling in ("std::map<int, int> &", "std::vector<> &",
+                         "std::vector<int, int, int> &", "std::vector<int>> &",
+                         "std::vector<int (*)(int)> &"):
+            self.assertIsNone(emitted.encode(spelling), spelling)
+
     def test_owner_picks_the_one_fitting_overload(self):
         from homm3.match.source_ownership import Definition
         short = Definition("src/hero.cpp", 1, 0, 1, "hero::initialize", "void (short)", 1, True,

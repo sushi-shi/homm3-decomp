@@ -383,75 +383,69 @@ inline long valueOfBlackMarket(const hero* currentHero,
 MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
-    if (currentHero->m_owner == currentTown->m_owner
-        && !g_game->townAlreadyBuiltOn(currentTown->m_id)) {
-        switch (currentTown->m_type) {
-        case TOWN_TOWER: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfKnowledge();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(owner, cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+    if (currentHero->m_owner != currentTown->m_owner
+        || g_game->townAlreadyBuiltOn(currentTown->m_id))
+        return;
+    switch (currentTown->m_type) {
+    case TOWN_TOWER: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_INFERNO: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfPower();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(owner, cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfKnowledge()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_INFERNO: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_DUNGEON: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int owner = currentHero->m_owner;
-            int resourceCost = aiResourceCost(owner, cost);
-            if (currentHero->m_turnExperienceToRvRatio * 1000.0f
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfPower()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_DUNGEON: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_STRONGHOLD: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->m_turnExperienceToRvRatio * 1000.0f
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_STRONGHOLD: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_FORTRESS: {
-            if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
-            long experience = currentHero->getExperienceIncrement();
-            int resourceCost = aiResourceCost(currentHero->m_owner, cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_FORTRESS: {
+        if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
             break;
-        }
-        case TOWN_CONFLUX: {
-            if (!currentTown->canBuild(EXTRA_0_ID))
-                break;
-            type_university university;
-            university.initializeMagicSkills();
-            long value = valueOfUniversity(currentHero, &university, 0);
-            if (value > 0)
-                currentTown->buyBuilding(EXTRA_0_ID);
+        int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        break;
+    }
+    case TOWN_CONFLUX: {
+        if (!currentTown->canBuild(EXTRA_0_ID))
             break;
-        }
-        }
+        type_university university;
+        university.initializeMagicSkills();
+        long value = valueOfUniversity(currentHero, &university, 0);
+        if (value > 0)
+            currentTown->buyBuilding(EXTRA_0_ID);
+        break;
+    }
     }
 }
 
@@ -720,6 +714,8 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // retains the call. Its retail enrollment remains at the link-order position.
 // DC records current_hero and skill_sum at procedure scope; town ID row 1210
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
+// Mac0x1409c4 adds the accessor's int result directly; an extra short
+// temporary inserts a narrowing instruction absent from that native loop.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -736,10 +732,8 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
             if (selectedHero)
                 *isLastHero = 0;
             skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill) {
-                short skillValue = currentHero->getPrimarySkill(skill);
-                skillSum += skillValue;
-            }
+            for (short skill = 0; skill < 4; ++skill)
+                skillSum += currentHero->getPrimarySkill(skill);
             if (selectedHero) {
                 if (currentHero->m_patrolX != hero::kPatrolNone
                     && selectedHero->m_patrolX == hero::kPatrolNone)
@@ -795,7 +789,8 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
+    hero* currentHero;
+    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;
@@ -803,6 +798,10 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     g_advManager->demobilizeCurrHero(0, 1);
 }
 
+// Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
+// A != bound is byte-flat; pointer traversal and a short counter do not
+// recover that native loop. Keep the indexed helper and its exact VC6 callers.
+VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
 int aiResourceCost(const playerData* player, const int* resources)
 {
     int value = 0;
@@ -811,6 +810,7 @@ int aiResourceCost(const playerData* player, const int* resources)
     return value;
 }
 
+VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // paired native overload; claim owns the definition
 int aiResourceCost(long playerId, const int* resources)
 {
     return aiResourceCost(&g_game->m_players[playerId], resources);
@@ -1462,8 +1462,7 @@ inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    SpellID spell = info->getShrineSpell();
-    return valueOfLearning(currentHero, spell);
+    return valueOfLearning(currentHero, info->getShrineSpell());
 }
 
 // The gold price has to be ONE reused local: the traits cost is read
@@ -1641,7 +1640,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                 long value = traits.m_aiValue
                     * ourHero->m_army.m_numTroops[group];
                 armyValue += value;
-                if (g_creatureTypeTraits[creature].m_attributes & creatureShootingArmy)
+                if (traits.m_attributes & creatureShootingArmy)
                     rangedValue += value;
             }
         }
@@ -1961,9 +1960,13 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // at least 109, a 58-unit increase at that point. Removing three owner aliases
 // from buySpecialBuilding lowers its C1 cost 610->595 (budget 66); removing
 // Dungeon's resourceCost alias lowers it to 590 (budget 71), which expands
-// hasBuilding but then leaves only 3 for getHero. Both variants are Mac byte-
-// flat and regress Windows, so the original helper lifetime remains. A typed
-// spellbook-ID local in the DC line 768 gap is byte-flat in both compilers.
+// hasBuilding but then leaves only 3 for getHero. Those partial variants are
+// Mac byte-flat and regress Windows. The combined buySpecialBuilding rejection
+// guard and direct value/cost expressions recover both expansions: 99.930435%,
+// 73 exact CFG blocks and all 44 calls agree. Mac retains cost acquisition,
+// value/experience acquisition, resource valuation and optional purchase in
+// that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
+// local in the DC line 768 gap is byte-flat in both compilers.
 VA(0x005253d0, 0x60c) MAC_ADDRESS(0x13f8dc, 0x368)  // dc 0x10e3f8
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
@@ -2101,10 +2104,12 @@ static long valueOfUniversity(const hero* currentHero,
     long total = 0;
     for (int i = 0; i < 4; i++) {
         int skill = university->m_skills[i];
-        if (traits->m_gainSecondarySkillChance[skill]
-            && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
-            && wantsSkill(currentHero, TSecondarySkill(skill), 1))
-            total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+        if (traits->m_gainSecondarySkillChance[skill]) {
+            if (currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0) {
+                if (wantsSkill(currentHero, TSecondarySkill(skill), 1))
+                    total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+            }
+        }
     }
     return total;
 }
@@ -2294,12 +2299,6 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 
 VA(0x00526a90, 0x1d4) MAC_ADDRESS(0x1408f0, 0x270)  // dc 0x10eeb0
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
-
-VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // dc 0x10f22c
-int aiResourceCost(const playerData* player, const int* resources);
-
-VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // dc 0x10f2f8
-int aiResourceCost(long playerId, const int* resources);
 
 // Complete's computer-owner purchase wrapper; its declaration belongs to
 // philai.h with this definition. Retail buy_building calls it at 0x5bf476,
@@ -2584,7 +2583,7 @@ void philAI::getTurnAIVars(int whichPlayer)
             ++artifactCount;
             // The loop walks ordinal storage; type_artifact consumes the
             // artifact enum at this revision boundary.
-            type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+            type_artifact artifact(H3_ENUM_DECODE(TArtifact, artifactId));
             totalArtifactValue +=
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }
@@ -2600,8 +2599,13 @@ void philAI::getTurnAIVars(int whichPlayer)
     }
 
     float difficultyValue = static_cast<float>(difficulty);
-    // Both expressions operate on an exact signed-byte difficulty value;
-    // compiler reassociation does not justify a platform-specific formula.
+    // Windows 0x527a67..0x527a7f computes (difficulty + 1) * 0.25
+    // for humans, then difficulty * 0.25 for computers. Mac 0x141d70
+    // shares one quarter product with the DC build. Naming that shared
+    // product changes the Windows instruction sequence (97.87 -> 91.28),
+    // while Mac reaches 88.70; neither proves a unique shared spelling.
+    // Signed-byte difficulty makes these formulas exactly equivalent, so
+    // keep the Windows expression without introducing a platform branch.
     float humanBonus = (difficultyValue + 1.0f) * 0.25f;
     float computerBonus = 0.75f - difficultyValue * 0.25f;
 
@@ -3590,8 +3594,9 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    type_point path = currentHero->getTarget();
-    type_point target = path;
+    // DC dc0x11348c records one target local, and Mac0x145ec4 expands
+    // getTarget directly. The extra path-to-target copy was reconstruction.
+    type_point target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL

@@ -785,12 +785,12 @@ public:
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
-    FILETIME m_fileTime;          // +0x7c
+    FileTime m_fileTime;          // +0x7c
 
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
     // E:\gamedcs\singleselectionwindow.cpp:587, dc 0x147c78
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FILETIME fileTime)
+                    int* townTypes, FileTime fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
@@ -3170,8 +3170,8 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     memset(m_localHeader.m_heroAvailability, -1,
            sizeof(m_localHeader.m_heroAvailability));
-    strcpy(m_localHeader.m_title, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME));
-    strcpy(m_localHeader.m_description, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION));
+    strcpy(m_localHeader.m_title, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME]);
+    strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
     GameSelectionHeadersStruct& localHeader = m_localHeader;
     localHeader.m_header = header;
 
@@ -3289,6 +3289,10 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // and an induction temporary. Naming the duration isHost result and declaring
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
 // seven catalog mutations were flat or worse; none reduced the divergence.
+// Direct ordinary text indexing restores the retail branch-local table loads;
+// caching the table across both message arms had lowered Windows to 97.24%.
+// Both authored message lifetimes remain; Windows recovers 99.80%, and Mac
+// retains the same 74 ordered call sites (exact references remain incomplete).
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897) MAC_ADDRESS(0x178ed0, 0x790)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::setupAdvancedOptions()
@@ -3315,16 +3319,13 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
                 if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3342,16 +3343,13 @@ void TSingleSelectionWindow::setupAdvancedOptions()
             if (m_commonGameVersion < mapVersionClass) {
                 if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3673,9 +3671,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             int displayFace = getDisplayFace(gamePos);
             if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
-                dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION), m_randomHeroBmp,
-                              g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                              g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION));
+                dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION], m_randomHeroBmp,
+                              (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                              (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION]);
                 dlg.doModal(0);
             } else {
                 int heroId = getHeroInPos(gamePos);
@@ -3716,9 +3714,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         if (townType == -1) {
             CBonusDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION), m_randomTownBmp,
-                          g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                          g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION));
+            dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION], m_randomTownBmp,
+                          (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                          (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION]);
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
@@ -3766,17 +3764,17 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            header = g_generalText->getText(GENERAL_TEXT_ARTIFACT_BONUS);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION);
+            header = (*g_generalText)[GENERAL_TEXT_ARTIFACT_BONUS];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = g_generalText->getText(GENERAL_TEXT_GOLD_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_GOLD_BONUS];
             sprite = 8;
-            bonusEx = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_RANGE);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_DESCRIPTION);
+            bonusEx = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_RANGE];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
@@ -3786,9 +3784,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = g_generalText->getText(GENERAL_TEXT_RANDOM_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             sprite = 10;
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION);
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION];
             break;
         }
 
@@ -3972,6 +3970,19 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 
     if (dir[0])
         _chdir(dir);
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
+    // Native open passes the incoming eight-byte directory adapter in r4;
+    // its shared pathname declaration/chdir model above remains a platform
+    // comparison gap. Preserve the incoming pointer at this boundary.
+    MacFileAdapter file;
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(dir)),
+                  filename, 0, 0, false) == 0) {
+        file.getModificationDate(&header->m_fileTime);
+        file.close();
+    }
+#else
     HANDLE fileHandle = CreateFileA(
         filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
@@ -3979,6 +3990,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
         GetFileTime(fileHandle, 0, 0, &header->m_fileTime);
         CloseHandle(fileHandle);
     }
+#endif
     if (dir[0])
         _chdir("..");
 
@@ -4270,6 +4282,14 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                                  422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_loadMode != 0 || m_saveMode != 0 || m_randomMapMode != 0)) {
+#if defined(HOMM3_TARGET_MAC)
+        char dateBuf[100];
+        FileTime& st = m_headersA[m_currentMap].m_fileTime;
+        sprintf(dateBuf,
+                DATA_COMPGEN(0x006837c0, saveDateFormat,
+                             "%d/%d/%d - %d:%02d"),
+                st.month, st.day, st.year, st.hour, st.minute);
+#else
         _FILETIME localTime;
         _SYSTEMTIME st;
         char dateBuf[100];
@@ -4280,6 +4300,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                 DATA_COMPGEN(0x006837c0, saveDateFormat,
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
+#endif
         g_smallFont->drawBoundedString(dateBuf,
             g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
     }
@@ -4319,6 +4340,8 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
+// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index;
+// this source shape also restores the Windows retail body.
 VA(0x00584550, 0x698) MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
 {
@@ -4341,8 +4364,8 @@ int TSingleSelectionWindow::update()
                 25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
-                int y = 123;
                 do {
+                    int y = 123 + i * 25;
                     int color = m_currentMap == m_currentIndex + i ? 5 : 4;
                     if (m_selectionHeaders.size()
                             > static_cast<unsigned int>(m_currentIndex + i)) {
@@ -4446,7 +4469,6 @@ int TSingleSelectionWindow::update()
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
-                    y += 25;
                 } while (i < rows);
             }
         }
@@ -5051,6 +5073,8 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
+// Mac 0:0x17df38 and 0:0x17e114 expand isHuman's byte result;
+// its team bounds are independent checks, not else-if arms.
 VA(0x005860E0, 0x4CC) MAC_ADDRESS(0x17dee0, 0x428)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
@@ -5063,7 +5087,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         int seated = 0;
         for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(j);
-            if (p && p->m_dpid != 0)
+            if (p && p->isHuman())
                 ++seated;
         }
         humanPlayerCount = seated + rand() % (9 - seated);
@@ -5071,7 +5095,9 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
     if (humanTeamCount == -1)
         humanTeamCount = rand() % humanPlayerCount + 1;
-    if (humanTeamCount == 0 || humanTeamCount > humanPlayerCount)
+    if (humanTeamCount == 0)
+        humanTeamCount = humanPlayerCount;
+    if (humanTeamCount > humanPlayerCount)
         humanTeamCount = humanPlayerCount;
 
     if (humanPlayerCount == CNetPlayerHandler::MAX_PLAYERS) {
@@ -5082,16 +5108,14 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             computerPlayerCount = rand() % (9 - humanPlayerCount);
         if (computerPlayerCount + humanPlayerCount > 8)
             computerPlayerCount = 8 - humanPlayerCount;
-        if (computerPlayerCount == 0) {
+        if (computerPlayerCount == 0)
+            computerTeamCount = 0;
+        if (computerTeamCount == -1)
+            computerTeamCount = rand() % computerPlayerCount + 1;
+        if (computerTeamCount == 0)
             computerTeamCount = computerPlayerCount;
-        } else {
-            if (computerTeamCount == -1)
-                computerTeamCount = rand() % computerPlayerCount + 1;
-            if (computerTeamCount == 0)
-                computerTeamCount = computerPlayerCount;
-            else if (computerTeamCount > computerPlayerCount)
-                computerTeamCount = humanPlayerCount;
-        }
+        if (computerTeamCount > computerPlayerCount)
+            computerTeamCount = humanPlayerCount;
     }
 
     int waterContent = m_randomMapOptions[6];
@@ -5129,7 +5153,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
-            if (player->m_dpid != 0)
+            if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
             request.m_townType[i] = player->m_townIndex;
         }
@@ -5479,7 +5503,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         // down BEFORE the `test bl,bl`, so only the expansion differs. Both
         // want a caller-shrink or a site pin and neither is available.
         if (generateRandomMap(getRandomMapName().c_str()))
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_CREATED),
+            normalDialog((*g_generalText)[GENERAL_TEXT_RANDOM_MAP_CREATED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -6432,31 +6456,41 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 // E:\gamedcs\singleselectionwindow.cpp:6723
 // DC's body is a ten-byte return-1 stub (6723, 6769, 6770), so the
 // Windows transfer path is reconstructed from retail, not missing DC text.
-// Retail reuses the request-message slot at ebp-0x2c across both failure
-// arms. Making the missing-file arm an else removes the extra 0x1c slot
-// and raises 90.2193% to 90.31%. The assignment pin remains debt: direct
-// unpinned assignment with sibling scopes gives 71.50%; a shared final
-// return gives 67.06%, and a positive receiving guard gives 71.53%.
-// Moving the typed message binding to entry is byte-flat. The residual
-// includes the third operator= expansion, CNetMsg construction and
-// SavedGameHeader cleanup; the constructor's DC 605..608 has no missing
-// initialization to justify synthetic budget mass.
+// Windows reuses the request-message slot across both failure arms. The
+// shared transfer body now compiles for Mac using its evidenced fork adapter
+// and fourteen-byte DateTimeRec; Windows keeps its eight-byte FILETIME.
+// The native comparison currently retains SGameSetupOptions assignments
+// that retail expands, and splits the file-adapter destructor over two exits.
+// Those helper/lifetime frontiers remain explicit; no exact Mac claim is made.
 VA(0x00589710, 0x40F) MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
-#ifdef _WINDOWS
     if (m_headersA.size() == 0)
         return 1;
     if (!m_receivingMaps)
         return 1;
-    _chdir(getHeaderDirectory());
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
-    if (_access(mapFileNameMsg->m_fileName, 0) == 0) {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x180c68..0x180c98 opens through the native fork adapter.
+    // Native getHeaderDirectory returns an eight-byte directory adapter;
+    // its shared pathname declaration still needs the native pointer-cell
+    // model. Preserve the pointer value at this platform boundary.
+    MacFileAdapter file;
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(getHeaderDirectory())),
+                  mapFileNameMsg->m_fileName, 0, 0, false) == 0)
+#else
+    _chdir(getHeaderDirectory());
+    if (_access(mapFileNameMsg->m_fileName, 0) == 0)
+#endif
+    {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         GameSelectionHeadersStruct temp;
         getHeader(getHeaderDirectory(),
                   mapFileNameMsg->m_fileName, &temp);
-        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, 8) == 0) {
+        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, sizeof(FileTime)) == 0) {
             memcpy(temp.m_setup.m_alignment, mapFileNameMsg->m_townTypes,
                    sizeof(mapFileNameMsg->m_townTypes));
             if (mapFileNameMsg->m_flag)
@@ -6483,13 +6517,13 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
         }
         return 1;
     } else {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
         transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         return 1;
     }
-#endif
-    return 1;
 }
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
@@ -6795,7 +6829,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
                 msg->m_version);
-            const char* errText = g_generalText->getText(GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT);
+            const char* errText = (*g_generalText)[GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT];
             CBadVersionMsg reply(m_gameVersion, errText);
             transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
@@ -6818,7 +6852,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         sendPlayerPositions(0);
     }
     makeHeroFilter();
-    g_chatMan.playerEnterMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT),
+    g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -7347,6 +7381,9 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // Earlier controls: removing the const bitset cast was byte-flat; .test()
 // scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
+// branch-local lookups preserve those calls and recover Windows 92.87%
+// without caching the table across the two compatibility-message arms.
 VA(0x0058BCE0, 0x5AF) MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::onBeginGame()
 {
@@ -7380,16 +7417,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
         if (!static_cast<const std::bitset<4>&>(
                 g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7402,16 +7436,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 > MAP_FORMAT_RESTORATION_OF_ERATHIA;
 
         if (m_commonGameVersion < mapVersionClass) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7422,14 +7453,14 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
 
     if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_NO_MAPS_TO_PLAY), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_NO_MAPS_TO_PLAY], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
     CNetPlayerHandlerPlayer* player = getThisPlayer();
     if (!m_loadMode && player->m_playerPos == -1) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
@@ -7437,7 +7468,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     // Mac retains the shared IsMultiPlayer call at 0x183adc.
     if (isMultiPlayer()) {
         if (m_players.getPlayerCount(1) < 2) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS], 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
         }
@@ -7804,8 +7835,11 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
+// This ordinary TU helper auto-expands under VC6 /Ob2. Removing the
+// unproven inline keyword leaves Windows unchanged and restores the
+// retained Mac call at setNewPlayerSlot 0:0x1863b8.
 MAC_ADDRESS(0x184ae4, 0xb0)
-inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
+TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     if (!player)
@@ -8416,9 +8450,8 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     if (level == m_commonGameVersion)
         return;
 
-    unsigned char rebuild = m_randomMapSelected;
     m_commonGameVersion = level;
-    if (rebuild)
+    if (m_randomMapSelected)
         rebuildFilteredPlayerSetup();
     if (!m_inAdvancedOptions)
         return;
@@ -8451,7 +8484,8 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                     player = m_players.getCompPlayerInPos(pos);
                 if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
                     player->m_townIndex = eTownNeutral;
-                    updateTown(pos, eTownNeutral, 0);
+                    // Mac 0:0x1863d8 passes the stored town, not a literal.
+                    updateTown(pos, H3_ENUM_DECODE(TTownType, player->m_townIndex), 0);
                 }
             }
         }

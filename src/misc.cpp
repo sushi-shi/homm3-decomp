@@ -65,6 +65,12 @@ void generateUniqueSystemID()
 // that shared source order lowers the Windows score from 99.1018% to
 // 93.7126%, while all 24 CFG blocks and six calls still agree. The old
 // score remains a compiler-scheduling lead, not a source-order verdict.
+// Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
+// A shared settings reference is also Windows-flat; its Mac comparison
+// remains unavailable, so the ordinary direct global access is retained.
+// Mac config storage also differs: First Time is inside it at +0x58,
+// army-info/name/combat-speed are +0x74/+0x94/+0x98 (Win +0x70/+0x90/+0x94).
+// The shared class is kept pending a reviewed platform-layout model.
 VA(0x0050b260, 0x26C) MAC_ADDRESS(0x130e60, 0x21c)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
@@ -783,11 +789,14 @@ std::string formatString(const char* format, ...)
     return std::string(g_formatStringBuffer);
 }
 
+// Both native constructors pass high-low+1 directly to vector<bool>;
+// reloading m_numbersLeft is an extra CodeWarrior load. The ordinary
+// declaration selects each standard library's own byte/packed storage.
 VA(0x0050c6e0, 0x55) MAC_ADDRESS(0x131590, 0x60)  // dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
     : m_low(lowBound),
       m_numbersLeft(high - lowBound + 1),
-      m_available(m_numbersLeft, 1)
+      m_available(high - lowBound + 1, 1)
 {
 }
 

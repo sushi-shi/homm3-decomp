@@ -240,7 +240,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
                            long maxDistance, unsigned char hiringHero,
                            unsigned char allowSpells,
                            unsigned char exploreMode);
-int netValueOfLocation(hero* currentHero, HeroDestination* destination,
+int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, struct pathCell* currentPathCell,
                           searchArray* currentSearchArray);
 int aiChooseDestination(hero* currentHero, long maxDistance,

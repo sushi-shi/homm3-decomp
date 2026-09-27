@@ -17,12 +17,40 @@ public:
     {
     }
 
-    bitset_iterator(std::bitset<N>& bits, size_t position)
+    bitset_iterator(std::bitset<N>& bits, size_t position = 0)
         : m_bits(&bits), m_position(position)
     {
     }
 
-    typename std::bitset<N>::reference operator*() const;
+    // Mac getRandomMonster 0xdff38..0xdff6c copies the zero-offset
+    // iterator, adds CREATURE_PIXIE and copies that value into the range.
+    bitset_iterator operator+(size_t offset) const
+    {
+        bitset_iterator result(*this);
+        result.m_position += offset;
+        return result;
+    }
+
+    // Native getRandomMonster constructs a zero-position local, advances it
+    // and returns the two-word value before fill copies its range argument.
+    // This value factory models that nested local without mutating a caller.
+    static bitset_iterator fromOffset(std::bitset<N>& bits, size_t offset)
+    {
+        bitset_iterator result(bits);
+        result.m_position += offset;
+        return result;
+    }
+
+    // Windows retains this dereference body; the Mac caller expands the
+    // adapter before constructing its two-word bit reference.
+    // VA instance: bitset_iterator<144>::operator*
+    VA(0x0048eb40, 0x14)
+    // VA instance: bitset_iterator<145>::operator*
+    VA(0x004d4ca0, 0x14)
+    typename std::bitset<N>::reference operator*() const
+    {
+        return (*m_bits)[m_position];
+    }
 
     bitset_iterator& operator++()
     {
@@ -39,18 +67,5 @@ private:
     std::bitset<N>* m_bits;
     size_t m_position;
 };
-
-template <size_t N>
-// VA instance: bitset_iterator<144>::operator*
-VA(0x0048eb40, 0x14)  // retained caller in ScenarioStruct::read
-// VA instance: bitset_iterator<145>::operator*
-VA(0x004d4ca0, 0x14)  // retained caller in game::getRandomMonster
-typename std::bitset<N>::reference bitset_iterator<N>::operator*() const
-{
-    // Named pointer/position aliases perturb this call's inlining, but lower
-    // NewSMapHeader::read and the RMG writer and suppress an exact game
-    // COMDAT. Keep the canonical direct dereference.
-    return (*m_bits)[m_position];
-}
 
 #endif

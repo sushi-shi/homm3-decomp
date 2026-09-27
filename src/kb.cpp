@@ -1,5 +1,4 @@
 #include "va.h"
-#include "homm3_minmax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -3726,11 +3725,8 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
-            TArtifact artifactId;
-            {
-                artifactId = TArtifact(idItem - APP_MENU_ARTIFACT_FIRST);
-            }
-            type_artifact artifact(artifactId);
+            type_artifact artifact(
+                TArtifact(idItem - APP_MENU_ARTIFACT_FIRST));
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
@@ -3745,9 +3741,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 if (g_inCampaign)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                    {
-                        artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
-                    }
+                    artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
 
@@ -4189,11 +4183,13 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // 5223 begins the count; 5284/5285 separates the line count and pixel height.
 // The 72-state family produced 21 objects and ten reproduced elites,
 // recovering 93.6558% from 87.1948% while preserving the seven local types.
-// DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
-// copies BOTH operands to fresh stack homes before selecting a reference:
-// the canonical by-value max wrapper in homm3_minmax.h supplies those homes.
-// Direct std::_cpp_max is the negative control and does not reproduce that
-// boundary. Keep the long locals; the audit intentionally reports std::max.
+// DC 5240/5242/5245 and Mac select std::max<long> by const reference.
+// VC6 has no public standard max: the ordinary unqualified calls reach
+// includes.h's by-value int wrapper, staging both 32-bit operands before
+// cppMax selects their address. Including the public-name compatibility
+// shim instead changes that boundary and drops this body to89.61%.
+// Native0x117330..0x117370 selects member/local addresses directly.
+// Keep the long locals and let each compiler's ordinary library resolve them.
 // DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past
 // the second predicate after the popup store. The 48-state follow-up has
 // two objects/two reproduced elites; the adopted equivalent also reproduced
@@ -4217,6 +4213,10 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // do not help. All 45 exact kb siblings stayed exact.
 // Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
 // at 99.9762%; retain the DC5407 spriteX-first load order.
+// Paired control: separate icon/label zero statements leave Mac unchanged
+// at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
+// Grouping numIcons before i while initializing it after the zero loop is
+// byte-flat in both compilers; the existing declaration lifetime stays.
 VA(0x004f5d80, 0x51C) MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
 void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
@@ -4799,8 +4799,11 @@ static int waitHandler(message& msg)
 // by-value argument is built.
 // DC records the page index as long i; Mac 0x1194d8 advances it separately
 // from the eight-icon slot index. This restores the named local without a
-// VC6 byte change. Mac byte comparison awaits the MSL string constructor
-// relocation used by this body's TNormalDialogInfo construction.
+// VC6 byte change. Complete publishes timeout before the geometry:
+// native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
+// The same shared order is exact in both VC6 and CodeWarrior (596 Mac bytes).
+// The implicit icon and string copy identities remain ordinary generated
+// members; no authored constructor or helper call is substituted.
 VA(0x004f7690, 0x312) MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list, dc 0xe6cf0
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
@@ -4815,6 +4818,7 @@ void extendedDialog(const char* text,
 
         TNormalDialogInfo dialogInfo;
         dialogInfo.m_dialogText = text;
+        dialogInfo.m_timeout = timeout;
         dialogInfo.m_x = x;
         dialogInfo.m_y = y;
         dialogInfo.m_width = 256;
@@ -4823,7 +4827,6 @@ void extendedDialog(const char* text,
         dialogInfo.m_textWidgetY = 30;
         dialogInfo.m_mbType = NORMAL_DIALOG_DEFAULT;
         dialogInfo.m_special = -1;
-        dialogInfo.m_timeout = timeout;
 
         int icon;
         for (icon = 0; icon < count; ++icon) {

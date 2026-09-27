@@ -250,11 +250,7 @@ int heroWindow::broadcastMessage(int id, int codeX, int codeY, int extra)
     msg.m_id = id;
     msg.m_codeX = codeX;
     msg.m_codeY = codeY;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
     msg.m_extra = extra;
-    msg.m_window = 0;
     return broadcastMessage(msg);
 }
 

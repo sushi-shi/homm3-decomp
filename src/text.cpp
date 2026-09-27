@@ -175,7 +175,12 @@ const char* g_colors[8];
 DATA(0x006a7e24)
 const char* g_buildingInfoNeutral[28];
 
-// 0x006a7ec0 - datum claimed at src/overview.cpp:71
+// One Dreamcast-attested array: indices 0..1 and 3..5 are the two title
+// groups, 6..7 describe the overview selector buttons, 8..10 their
+// right-click help, 11..12 their rollover text, and 13..15 describe the
+// three hero-artifact pages on rollover. Complete accesses all sixteen
+// cells.
+DATA(0x006a7ec0)
 const char* g_overviewText[16];
 
 DATA(0x006a7f00)

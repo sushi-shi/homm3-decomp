@@ -53,6 +53,14 @@ int writeValue(TAbstractFile* outfile, T value)
     return outfile->write(&value, sizeof(value));
 }
 
+// Caller-owned scalar storage: saveString's retail writer passes its length
+// slot directly, so the later length tests reload that same local.
+template <class T>
+int writeScalar(TAbstractFile* outfile, T& value)
+{
+    return writeValue<T&>(outfile, value);
+}
+
 // A native range preserves the actual byte count and the caller's guards.
 // Deducing Count retains each serialized count's signed source type: char for
 // black markets and short for vectors. This interface is inferred; it adds no
@@ -75,6 +83,59 @@ T readValue(TAbstractFile* infile)
     T value;
     readValue(infile, value);
     return value;
+}
+
+
+// Map records encode integer scalars little endian. The native scalar helper
+// still owns the read/count contract; PowerPC decodes the same caller slot.
+// Mac readMapObjects 0x1272bc..0x1272f0 reads four bytes and then uses lwbrx.
+template <class T>
+int readLittleEndianValue(TAbstractFile* infile, T& value)
+{
+    int count = readValue(infile, value);
+#if defined(__POWERPC__)
+    // Retail tests the byte count before loading the complete scalar.
+    if (count >= sizeof(value)) {
+        if (sizeof(T) == sizeof(unsigned short))
+            value = static_cast<T>(__lhbrx(&value, 0));
+        else if (sizeof(T) == sizeof(unsigned long))
+            value = static_cast<T>(__lwbrx(&value, 0));
+    }
+#endif
+    return count;
+}
+
+// Value readers intentionally discard the native byte count, like readValue<T>.
+// Mac quest load/loadFromMap decode their deadline immediately after read;
+// neither native caller tests the count before lwbrx.
+template <class T>
+T readLittleEndianValue(TAbstractFile* infile)
+{
+    T value = readValue<T>(infile);
+#if defined(__POWERPC__)
+    if (sizeof(T) == sizeof(unsigned short))
+        value = static_cast<T>(__lhbrx(&value, 0));
+    else if (sizeof(T) == sizeof(unsigned long))
+        value = static_cast<T>(__lwbrx(&value, 0));
+#endif
+    return value;
+}
+
+// Mac saveString 0xced70..0xced8c encodes an owned short while retaining the
+// original length for its later checks. Windows passes the caller slot.
+template <class T>
+int writeLittleEndianValue(TAbstractFile* outfile, const T& value)
+{
+#if defined(__POWERPC__)
+    T encoded = value;
+    if (sizeof(T) == sizeof(unsigned short))
+        encoded = static_cast<T>(__lhbrx(&encoded, 0));
+    else if (sizeof(T) == sizeof(unsigned long))
+        encoded = static_cast<T>(__lwbrx(&encoded, 0));
+    return writeValue(outfile, encoded);
+#else
+    return writeScalar(outfile, value);
+#endif
 }
 
 #endif  /* HOMM3_ABSTRACTFILE_H */

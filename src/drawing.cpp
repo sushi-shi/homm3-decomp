@@ -507,14 +507,7 @@ void combatManager::updateCombatArea()
 
 // Windows fixed-viewport extent helpers are defined once in cmbtmgr.h;
 // see their platform evidence comment.
-// The coordinate ScrollTo facade below retains its drawing.cpp ownership.
-
-// Original: combatManager::ScrollTo; drawing.cpp:666, dc 0x841d4.
-unsigned char combatManager::scrollTo(int x, int y, unsigned char draw,
-    unsigned char doscrollX, unsigned char doscrollY)
-{
-    return scrollTo(SLimitData(x, y, x + 1, y + 1), draw, doscrollX, doscrollY);
-}
+// The fixed-viewport coordinate facade is also visible there to army.cpp.
 
 // E:\gamedcs\drawing.cpp:679, dc 0x84248. ScrollTo's rectangle overload
 // constructs SLimitData(x, y, x + width, y + height) at line 680 and delegates

@@ -1,0 +1,31 @@
+[[constants]]
+units = ["newgame"]
+mac_section = 1
+mac_offset = 0x5068
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "CodeWarrior signed-int to double bias 0x4330000080000000: native victory caption at0x132e5c loads TOC1+0x296c -> section1+0x5068, then loads f3 at0x132e68 and subtracts it from the staged 0x4330/sign-bit-converted coordinate words. The complete eight-byte payload matches the candidate compiler constant; no anonymous ordinal is pinned."
+
+[[constants]]
+units = ["newgame"]
+mac_section = 1
+mac_offset = 0x5070
+mac_size = 8
+sha256 = "8fb68866bd4744208f6ce1a2d7c34e3e5dee3d0bea2ae6b98f52d39f6f6dd4ad"
+evidence = "Source geographic threshold0.66: native victory caption loads the big-endian double directly from TOC1+0x5070 at0x132ef8 and0x132f64, then multiplies map size for the upper coordinate tests. Full eight-byte payload0x3fe51eb851eb851f matches the authored double literal."
+
+[[constants]]
+units = ["newgame"]
+mac_section = 1
+mac_offset = 0x5078
+mac_size = 8
+sha256 = "3ef3dc2177527203f8f7f7404808305266ddc8570340b3924cba26f1a4da6b8a"
+evidence = "Source geographic threshold0.33: native victory caption loads the big-endian double directly from TOC1+0x5078 at0x132e70 and multiplies map size for the lower coordinate tests. Full eight-byte payload0x3fd51eb851eb851f matches the authored double literal."
+
+[[constants]]
+units = ["newgame"]
+mac_section = 1
+mac_offset = 0x5038
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Canonical getArmyName returns the empty creature-name literal on invalid type. Its native victory-caption expansion selects section1+0x5038 directly through TOC at0x133100 before formatting; the successful range path instead reads the plural-name field at0x133114. Full one-byte NUL payload matches the candidate empty literal without pinning its anonymous ordinal."

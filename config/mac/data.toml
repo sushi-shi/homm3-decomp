@@ -2,12 +2,13 @@
 [[data]]
 retail_va = 0x006994e8
 source = "src/kb.cpp"
-declaration_only = true
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x528940
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "External game pointer storage in zero-filled Mac data; loader proves TOC slot 1+0x630 -> 1+0x528940. getNextHumanPlayer and buyCreatures load this cell before Mac game member access. This binds the external address only, not an initializer or a data byte match."
+evidence = "External game pointer storage in zero-filled Mac data; loader proves TOC slot 1+0x630 -> 1+0x528940. getNextHumanPlayer and buyCreatures load this cell before Mac game member access. Full ordinary KB object confirms source-owned g_game RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va = 0x00679c88
@@ -124,13 +125,14 @@ evidence = "IEEE binary64 signed-int conversion bias 0x4330000080000000. Mac cho
 
 [[data]]
 retail_va=0x006973d8
-source="include/kb.h"
-declaration_only=true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_array = true
 mac_section=1
 mac_offset=0x527e6c
-mac_size=1
-sha256="6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
-evidence="Canonical unsized shared scratch buffer. Windows updateArmies pushes VA 0x6973d8 to sprintf and message extraText; Mac updateArmies reads TOC 1+0x5ec -> BSS 1+0x527e6c. One-byte anchor binds address only; does not establish full buffer extent or initializer match."
+mac_size = 768
+sha256 = "ef115a0e0c15cdc41958ca46b5b14b456115f4baec5e3ca68599d2a8f435e3b8"
+evidence="Mac updateArmies/displayVCWinLoss load TOC1+0x5ec -> BSS1+0x527e6c; next loader-addressed storage starts1+0x52816c,768bytes later. Full ordinary KB object confirms source-owned g_text RW768 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va=0x0069ccb0
@@ -144,10 +146,11 @@ evidence="Windows valueOfWarFactory gpCurrentPlayer DIR32 alias at RVA 0x29ccb0.
 
 [[data]]
 retail_va=0x00699280
-source="include/winmgr.h"
-declaration_only=true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section=1
 mac_offset=0x52894c
-mac_size=4
-sha256="df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence="Windows doSinglePlayerWindow gpWindowManager DIR32 alias at RVA 0x299280. Mac same modal-dialog return path reads TOC 1+0x5f4 -> BSS pointer storage 1+0x52894c; initializer not compared."
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence="Windows doSinglePlayerWindow gpWindowManager DIR32 alias at RVA 0x299280. Mac same modal-dialog return path reads TOC 1+0x5f4 -> BSS pointer storage 1+0x52894c; Full ordinary KB object confirms source-owned g_windowManager RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
