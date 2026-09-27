@@ -3034,6 +3034,9 @@ void combatManager::removeArmyFromGrid(const army& a)
     }
 }
 
+// Native Mac 0x74d4c/0x74dac selects integer 1/0 before narrowing;
+// Boolean assignments use branchless neg/cntlzw instead. VC6 is byte-flat.
+// getOwningSide and offsetToFront remain the canonical shared helpers.
 VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
@@ -3041,11 +3044,11 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        m_cells[hex].m_partOfDouble = a.m_facing == 0;
+        m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
         int second = hex + a.offsetToFront(-1);
         m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-        m_cells[second].m_partOfDouble = a.m_facing != 0;
+        m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
     }
 }
 
