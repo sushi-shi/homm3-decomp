@@ -1202,8 +1202,6 @@ void army::animateMissile(army* armyToAttack)
 
     long frame = 0;
     if (nframes > 0) {
-        long right = x + width - 1;
-        long bottom = y + height - 1;
         for (; frame < nframes; frame++) {
             unsigned long nextFrameTime =
                 GameTime::get() + missileperiod;
@@ -1214,11 +1212,9 @@ void army::animateMissile(army* armyToAttack)
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(), false);
                 // Mac 0x4b3f4 constructs and copies the rectangle value.
-                updateArea = TDrawbridgeBounds(x, y, right, bottom);
+                updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
                 x += stepX;
                 y += stepY;
-                right += stepX;
-                bottom += stepY;
             }
             saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -1233,7 +1229,7 @@ void army::animateMissile(army* armyToAttack)
                               flipped, 1);
             // DC army.cpp:1326-1327 constructs this rectangle, then calls
             // SLimitData::Include and Clip; VC6 expands both methods.
-            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
