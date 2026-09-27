@@ -199,21 +199,13 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Residual (98.17%): branches and the whole call multiset agree. Retail
-// reads the five position/dock bytes through a SECOND char local, homed
-// at [ebp-1], while the other twelve byte reads share charBuffer in the
-// dead `infile` parameter home at [ebp+0xb] - recovering that local moves
-// the spilled `this` to retail's [ebp-8]. What is left is one frame slot:
-// retail also homes the name length in the dead `saveVersion` parameter
-// home at [ebp+0xc] (it loads the dword and masks 0xffff), so its frame
-// stays 0x54 where ours takes a fourth slot at [ebp-0x10] and 0x58.
-// A 40-member source family over the local block, the length read and the
-// name assignment ceilings at this same 98.1694 with 14 distinct objects, so
-// the slot is not reachable from declaration order, scope or width: byte-flat
-// are nameLength at function top (int or unsigned short), spellBuf first,
-// posBuffer first, and an undeclared assignment; worse are an unsigned short
-// nameLength read (98.10), reading into `saveVersion` itself (97.60) and
-// hoisting `m_name = g_text` out of the two arms (88.68).
+// Retail reuses dead parameter homes for the byte-read buffer and town-name
+// length. Separating the address-taken length buffer from its decoded short
+// reaches 99.9718% in VC6; only the former buffer's home remains different.
+// Moving that buffer among the outer declarations or widening it to int/long
+// does not close the residual. The value-reader variant retains an extra Mac
+// call. Earlier local-order/width searches peaked at 98.1694%; hoisting the
+// name assignment across the version arms fell to 88.68%.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
 VA(0x005bcd60, 0x586) MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
@@ -268,8 +260,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        int nameLength = 0;
-        infile->read(&nameLength, sizeof(unsigned short));
+        // Keep the address-taken file buffer separate from the decoded
+        // length retained across the next virtual read (Mac 0x1b1f90..1b1fc0).
+        unsigned short storedNameLength;
+        infile->read(&storedNameLength, sizeof(storedNameLength));
+        unsigned short nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
         infile->read(g_text, nameLength & 0xffff);
         g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
@@ -500,6 +495,10 @@ void town::setSummoningGenerator()
 }
 
 VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)  // dc 0x165ea0
+// Outer mana/experience local lifetimes are byte-flat in both compilers.
+// A shared bitset reference lowers both comparisons; keep the ordinary
+// member expressions. Mac currently emits the native 1792-byte extent,
+// with a 0x30 stack-frame difference and dialog-argument scheduling debt.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull

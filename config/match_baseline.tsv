@@ -4406,7 +4406,7 @@ town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:1
 town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	99.9356	99.9356	100.0000	0x1be600	tokens1:e0ccf5eb7c70
 town	?isHumanTeam@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	tokens1:ba2d4954cbc3
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	tokens1:d9bc20285f48
-town	?load@town@@QAEHPAVTAbstractFile@@H@Z	95.4651	95.4651	98.1694	0x1bcd60	tokens1:44347df74c26
+town	?load@town@@QAEHPAVTAbstractFile@@H@Z	99.9718	99.9718	99.9718	0x1bcd60	tokens1:f64ab6c1c019
 town	?placeInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0	tokens1:fa81d59c5dda
 town	?removeGarrisonHero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390	tokens1:c73cc112a1b0
 town	?save@town@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x1bd2f0	tokens1:942849a31e6c
