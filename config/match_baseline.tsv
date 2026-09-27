@@ -1968,7 +1968,7 @@ game	?getLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9
 game	?getLocalPlayerGamePos@game@@QBEHXZ	100.0000	100.0000	100.0000	0xcea20	tokens1:d2e8c94f6e83
 game	?getName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0	tokens1:bf2771b92546
 game	?getNewBoatId@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170	tokens1:6f31c69308b5
-game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:371107adcb1d
+game	?getNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0	tokens1:e32526ad7ba4
 game	?getNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0	tokens1:7a28b072a3b1
 game	?getNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30	tokens1:2de015befc74
 game	?getPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60	tokens1:f8f6c8621fd3
@@ -2033,7 +2033,7 @@ game	?loadObjectVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_creature_bank@@V
 game	?loadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40	tokens1:924659d84747
 game	?loadSignPool@game@@AAEHPAVTAbstractFile@@@Z	86.4753	86.4753	100.0000	0xb9070	tokens1:312008a96b5e
 game	?loadString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990	tokens1:5237c684fd5b
-game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	99.2385	99.2385	99.8359	0xc3890	tokens1:29ef00a91b63
+game	?loadVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3890	tokens1:dbd414c4303d
 game	?makeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240	tokens1:5d472e69d000
 game	?matchUndergroundGates@game@@AAEXXZ	100.0000	100.0000	100.0000	0xc0b60	tokens1:3d42c24674c3
 game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	tokens1:0c895f50ab49
@@ -2085,7 +2085,7 @@ game	?saveSignPool@game@@AAEHPAVTAbstractFile@@@Z	6.5000	6.5000	100.0000	0xb9270
 game	?saveString@game@@SIHPAVTAbstractFile@@AAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60	tokens1:22de4f9cceb9
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	69.2553	100.0000	100.0000	0xd2ac0	tokens1:64620643cde0
 game	?saveVector@@YI_NPAVTAbstractFile@@AAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	69.2553	100.0000	100.0000	0xd2b20	tokens1:87263ad46aca
-game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	97.5911	97.5911	100.0000	0xc35a0	tokens1:b7712c464757
+game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0	tokens1:339f63159cd4
 game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0	-
 game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0	-
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60	-

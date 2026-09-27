@@ -2042,7 +2042,8 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     long totalCount;
     long choice = 0;
     long counts[18];
-    int heroId;
+    // CodeView records THeroID; Complete retains the same signed domain.
+    HeroId heroId;
     long weights[18];
     long alignedCount;
 
@@ -2061,7 +2062,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             g_heroClasses[heroClass].m_foundInTownType[alignment];
     }
 
-    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
+    for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])) {
             totalCount++;
@@ -2128,7 +2129,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     choice = random(1, counts[heroClass]);
-    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
+    for (heroId = HeroId(0); heroId < HERO_COUNT; heroId = HeroId(heroId + 1)) {
         if (m_heroAvailability[heroId] == -1
             && (playerPos == -1 || m_heroPoolMap[heroId][playerPos])
             && m_heroes[heroId].m_heroClass == heroClass
@@ -5349,16 +5350,24 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
     return 0;
 }
 
+// DC records int_buffer/count/char_buffer at procedure scope. Mac checked
+// writes reuse char storage at sp+0x53 and integer storage at sp+0x54;
+// unchecked writes have separate temporaries. Preserve those two lifetimes
+// through the canonical scalar helpers; Windows reproduces exactly.
 VA(0x004c35a0, 0x2E8) MAC_ADDRESS(0x0d98a8, 0x4cc)
 int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 {
+    int intBuffer;
     int count;
+    char charBuffer;
 
-    count = writeValue<char>(outfile, m_victoryCondition.m_allowNormalVictory);
+    charBuffer = m_victoryCondition.m_allowNormalVictory;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<char>(outfile, m_victoryCondition.m_appliesToComputer);
+    charBuffer = m_victoryCondition.m_appliesToComputer;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
@@ -5370,17 +5379,20 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 
     case VICTORY_CONDITION_TOTAL_CREATURES: {
         writeValue<char>(outfile, m_victoryCondition.m_creatureType);
-        count = writeValue<int>(outfile, m_victoryCondition.m_numCreatures);
+        intBuffer = m_victoryCondition.m_numCreatures;
+        count = writeLittleEndianValue(outfile, intBuffer);
         if (count < sizeof(int))
             return -1;
         break;
     }
 
     case VICTORY_CONDITION_TOTAL_RESOURCES:
-        count = writeValue<char>(outfile, m_victoryCondition.m_resourceType);
+        charBuffer = m_victoryCondition.m_resourceType;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        count = writeValue<int>(outfile, m_victoryCondition.m_resourceAmount);
+        intBuffer = m_victoryCondition.m_resourceAmount;
+        count = writeLittleEndianValue(outfile, intBuffer);
         if (count < sizeof(int))
             return -1;
         break;
@@ -5389,10 +5401,12 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
         writeValue<char>(outfile, m_victoryCondition.m_townX);
         writeValue<char>(outfile, m_victoryCondition.m_townY);
         writeValue<char>(outfile, m_victoryCondition.m_townZ);
-        count = writeValue<char>(outfile, m_victoryCondition.m_hallLevel);
+        charBuffer = m_victoryCondition.m_hallLevel;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
-        count = writeValue<char>(outfile, m_victoryCondition.m_castleLevel);
+        charBuffer = m_victoryCondition.m_castleLevel;
+        count = writeScalar(outfile, charBuffer);
         if (count < sizeof(char))
             return -1;
         break;
@@ -5445,12 +5459,10 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 // live retail record. The two common flags are normalized to bool; only the
 // creature/resource amounts, resource id and final upgraded-town byte retain
 // short-read checks. Saves before the Complete roster remap two campaign ids.
-// Residual (99.8359%, 2026-08-30): all 34 blocks, control flow and operations
-// agree. Raw NB11 proves the procedure-scope int_buffer/count/char_buffer
-// order, and both leading reads retain Dreamcast's count assignments even
-// though Complete removed their short-read guards. The five differing blocks
-// are only VC6 stack coloring. Shared DC buffers, shared post-flag case temps
-// and function-scope Complete temps all displaced otherwise-exact homes.
+// Mac uses separate value-read temporaries for the unchecked leading flags,
+// shared char storage at sp+0x81 for checked bytes, and int storage at sp+0x84
+// for checked little-endian amounts. Keep these lifetimes through the scalar
+// helpers; the combined source model reproduces Windows exactly.
 VA(0x004c3890, 0x3E4) MAC_ADDRESS(0x0d9d74, 0x500)  // sole Load caller + retail body; dc 0xaeb64
 int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
                                         int saveVersion)
@@ -5459,10 +5471,8 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     int count;
     char charBuffer;
 
-    count = readValue(infile, charBuffer);
-    m_victoryCondition.m_allowNormalVictory = charBuffer != 0;
-    count = readValue(infile, charBuffer);
-    m_victoryCondition.m_appliesToComputer = charBuffer != 0;
+    m_victoryCondition.m_allowNormalVictory = readValue<char>(infile) != 0;
+    m_victoryCondition.m_appliesToComputer = readValue<char>(infile) != 0;
 
     switch (type) {
     case VICTORY_CONDITION_ARTIFACT: {
@@ -5475,7 +5485,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     case VICTORY_CONDITION_TOTAL_CREATURES: {
         unsigned char creature = readValue<unsigned char>(infile);
         m_victoryCondition.m_creatureType = TCreatureType(creature);
-        count = readValue(infile, intBuffer);
+        count = readLittleEndianValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_numCreatures = intBuffer;
@@ -5483,12 +5493,11 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_TOTAL_RESOURCES: {
-        char resourceType;
-        count = readValue(infile, resourceType);
-        if (count < sizeof(resourceType))
+        count = readValue(infile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        m_victoryCondition.m_resourceType = resourceType;
-        count = readValue(infile, intBuffer);
+        m_victoryCondition.m_resourceType = charBuffer;
+        count = readLittleEndianValue(infile, intBuffer);
         if (count < sizeof(intBuffer))
             return -1;
         m_victoryCondition.m_resourceAmount = intBuffer;
@@ -5496,7 +5505,6 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_UPGRADE_TOWN: {
-        char castleLevel;
         unsigned char townValue = readValue<unsigned char>(infile);
         m_victoryCondition.m_townX = townValue;
         townValue = readValue<unsigned char>(infile);
@@ -5504,10 +5512,10 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
         townValue = readValue<unsigned char>(infile);
         m_victoryCondition.m_townZ = townValue;
         m_victoryCondition.m_hallLevel = readValue<char>(infile);
-        count = readValue(infile, castleLevel);
-        if (count < sizeof(castleLevel))
+        count = readValue(infile, charBuffer);
+        if (count < sizeof(charBuffer))
             return -1;
-        m_victoryCondition.m_castleLevel = castleLevel;
+        m_victoryCondition.m_castleLevel = charBuffer;
         return 0;
     }
 
@@ -5554,7 +5562,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     }
 
     case VICTORY_CONDITION_SURVIVE_TIME: {
-        m_victoryCondition.m_numDays = readValue<int>(infile);
+        m_victoryCondition.m_numDays = readLittleEndianValue<int>(infile);
         return 0;
     }
 
