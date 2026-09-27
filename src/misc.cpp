@@ -786,11 +786,14 @@ std::string formatString(const char* format, ...)
     return std::string(g_formatStringBuffer);
 }
 
+// Both native constructors pass high-low+1 directly to vector<bool>;
+// reloading m_numbersLeft is an extra CodeWarrior load. The ordinary
+// declaration selects each standard library's own byte/packed storage.
 VA(0x0050c6e0, 0x55) MAC_ADDRESS(0x131590, 0x60)  // dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
     : m_low(lowBound),
       m_numbersLeft(high - lowBound + 1),
-      m_available(m_numbersLeft, 1)
+      m_available(high - lowBound + 1, 1)
 {
 }
 
