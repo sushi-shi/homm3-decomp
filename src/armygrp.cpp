@@ -1145,6 +1145,8 @@ void armyGroup::mergeArmies(armyGroup& source)
 // result and eight explicit parameters. DC lines 1347..1451 retain result,
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
 // Complete's neutral alignment requires the ten-byte array below.
+// Replacing the terrain labels with ordinary switch-arm breaks gives 93.8743%
+// versus 97.3066%, with either explicit neutral arms or an else-if chain.
 
 VA(0x0044b960, 0x859) MAC_ADDRESS(0x059734, 0x714)  // retail-body signature, dc 0x4f708
 std::string armyGroup::getMoraleDescription(
