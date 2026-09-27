@@ -395,12 +395,20 @@ process_action:
 // 256 D2 ordinary-source trees were exhausted. Dreamcast lines 519 and 532
 // retain OffsetToFront calls. Restoring those canonical header-inline calls
 // is byte-flat under VC6; the third facing adjustment has no such attribution.
+// Native 0x8285c/0x82864 saves the prior side/slot in r23/r22. Declaring
+// these before the loop locals reproduces the full native prefix; an int
+// clear-loop index reproduces its initial eight-store unroll without the
+// spurious entry guard. Both controls are VC6 byte-flat (90.8259%).
+// Rotating attack/index/group declarations is flat on Windows but worsens
+// native bindings; keep the proven local types and their supported roles.
 VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
     if (isComputerAction())
         return;
 
+    int oldSide;
+    int oldSlot;
     unsigned char secondIsValid;
     long attackAngle;
     long firstHex;
@@ -412,15 +420,15 @@ void combatManager::setCombatDirections(int hex)
     long secondHex;
 
     currentArmy = getCurrentArmy();
-    int oldSide = currentArmy->m_side;
-    int oldSlot = currentArmy->m_slot;
+    oldSide = currentArmy->m_side;
+    oldSlot = currentArmy->m_slot;
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
 
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                      currentArmy->getSpeed(), 0, -1);
 
-    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
+    { for (int i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
             m_combatDirections[0][i] = 0;
             m_combatDirections[1][i] = -1;
         }
