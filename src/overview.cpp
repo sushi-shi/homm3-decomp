@@ -15,6 +15,7 @@
 #include "game.h"
 #include "herospec.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
@@ -2651,14 +2652,17 @@ int TOverviewWindow::windowHandler(message& msg)
     }
 
     if (msg.m_id == MESSAGE_KEY_DOWN) {
+        // Retail 0x522444 dispatches the game's scan codes 0x47/49/4f/51,
+        // not Win32 virtual keys. Mac 0x13b200 uses its native key codes
+        // for the same page-up, page-down, home and end operations.
         switch (msg.m_codeX) {
-        case VK_PRIOR:
+        case KEYCODE_KP_9:
             g_overviewTop[g_overviewType] -= 4;
             if (g_overviewTop[g_overviewType] < 0)
                 g_overviewTop[g_overviewType] = 0;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_NEXT:
+        case KEYCODE_KP_3:
             g_overviewTop[g_overviewType] += 4;
             if (g_overviewTop[g_overviewType]
                     > g_overviewItemCounts[g_overviewType] - 4)
@@ -2666,11 +2670,11 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_overviewItemCounts[g_overviewType] - 4;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_HOME:
+        case KEYCODE_KP_7:
             g_overviewTop[g_overviewType] = 0;
             g_game->setupDynamicStuff(1, 0);
             break;
-        case VK_END:
+        case KEYCODE_KP_1:
             g_overviewTop[g_overviewType] =
                 g_overviewItemCounts[g_overviewType] - 4;
             g_game->setupDynamicStuff(1, 0);
