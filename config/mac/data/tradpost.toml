@@ -206,3 +206,41 @@ mac_offset = 0x5a68
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
 evidence = "Native TBuyArtifactWindow::update passes the empty NUL string through direct TOC1+0x5a68 at0x1f71a4 before sprintf0x1f71a8. The candidate anonymous literal @7459 is the same complete one-byte empty string."
+
+[[data]]
+retail_va = 0x6aaa78
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a74
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned hero pointer g_marketHero. Native doFreelancersGuild(hero*) stores its incoming r3 at1f4d08 into direct TOC storage1+5a74; native SellArtifactWindow handler loads this same cell at1f9aa0 for equipped-artifact addressing and1f9ac0 as the receiver of hero::getNumberInBackpack. Both producer and receiver prove the four-byte pointer ABI; the pinned initial payload is zero."
+
+[[data]]
+retail_va = 0x6aaa70
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a70
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Source-owned unsigned byte g_backpackStart. Native SellArtifactWindow handler loads this direct byte at1f9acc and adds it to artifactSlot-18 before the backpack-count remainder at1f9adc; its separate retained arrow helpers update the same storage. This is the canonical scroll origin, not a synthesized pointer or table. Pinned initial payload is one zero byte."
+
+[[data]]
+retail_va = 0x6aaaa4
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a78
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned g_marketWindow. Native doFreelancersGuild(hero*) stores its window4 selector into direct TOC storage1+5a78 at1f4d0c immediately before doMarket1f4f84. It is distinct from adjacent source3 and count5 cells; selector is a four-byte int, with pinned zero initial payload."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5af8
+mac_size = 4
+sha256 = "de620abd6d3615746360c1d15ce3a56291236d37424124054a49d25e947ffc4d"
+evidence = "Native TSellArtifactWindow::computeTradeRatios loads direct float1.0 at1f8530 and again1f8544 for the minimum output clamp. Its complete pinned4byte payload3f800000 matches the candidate emitted constant; no guessed destination."
