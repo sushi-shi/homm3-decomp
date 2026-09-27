@@ -263,6 +263,10 @@ TGzInflateBuf::~TGzInflateBuf()
 // The candidate also shares its 0x20 exception slot where retail reserves
 // 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
 // byte-count local scores 81.3560% and does not resolve the trailer calls.
+// Mac expands all eight checked byte reads without a visible group boundary.
+// A success-first readByte return and swapping the refill member assignments
+// are separately byte-flat under both compilers; neither restores VC6
+// exception-slot separation or the retained trailer calls.
 VA(0x004d6920, 0x251) MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
