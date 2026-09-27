@@ -57,6 +57,14 @@
 #undef _M_PPC
 #undef _WIN32
 #pragma pop
+
+// Mac retail error dialogs take only the message and title strings.
+extern "C" void showMacPlatformMessage(const char* message, const char* title);
+#define MessageBoxA(window, message, title, flags) \
+    showMacPlatformMessage(message, title)
+#undef MessageBox
+#define MessageBox(window, message, title, flags) \
+    showMacPlatformMessage(message, title)
 #else
 #include <windows.h>
 #endif
