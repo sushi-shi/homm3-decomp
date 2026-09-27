@@ -6135,6 +6135,9 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     return 0;
 }
 
+// Mac native decodes the saved-header version/size at 0xdbf3c/0xdbfb8
+// after successful reads, and the unchecked wide-alignment value at 0xdc230.
+// Reuse the canonical endian readers; the Windows TU remains byte-flat.
 // Saved headers share the scenario header's scalar layout but add four
 // versioned migrations: max hero level, widened alignment masks, custom hero
 // records, and per-player availability masks.  The two old campaign hero ids
@@ -6154,7 +6157,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char boolBuffer;
     int x;
 
-    if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
+    if (readLittleEndianValue(infile, m_version) < sizeof(m_version))
         return -1;
 
     if (readValue(infile, boolBuffer)
@@ -6162,7 +6165,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
         return -1;
     m_isPlayable = boolBuffer != 0;
 
-    if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
+    if (readLittleEndianValue(infile, m_size) < sizeof(m_size))
         return -1;
 
     if (readValue(infile, boolBuffer)
@@ -6218,7 +6221,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             readValue(infile, ucharBuffer);
             player->m_legalAlignments = ucharBuffer;
         } else {
-            player->m_legalAlignments = readValue<unsigned short>(infile);
+            player->m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
         }
 
         if (readValue(infile, boolBuffer)
