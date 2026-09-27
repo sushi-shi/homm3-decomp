@@ -255,26 +255,23 @@ int TPuzzleWindow::updatePuzzle(int full)
 
 // Retail preserves the Dreamcast record's four packed allocation units:
 // a 10-bit object type, two signed four-bit object offsets, three terrain
-// descriptors, and the diggable/grail/visible flag trio.
+// descriptors, and the diggable/grail/visible flag trio. DC type0x3fbd
+// records the offset and flag fields as plain char bitfields. Alignment
+// padding is implicit; naming padding arrays emits extra copy helpers.
 struct type_AI_puzzle_tile {
     int m_objectType : 10;
-    int m_paddingAfterObjectType : 22;
-    signed char m_objectX : 4;
-    signed char m_objectY : 4;
-    char m_paddingBeforeTerrain[3];
+    char m_objectX : 4;
+    char m_objectY : 4;
     int m_terrain : 5;
     int m_river : 4;
     int m_road : 4;
-    int m_paddingAfterRoad : 19;
-    unsigned char m_diggable : 1;
-    unsigned char m_hasGrail : 1;
-    unsigned char m_visible : 1;
-    unsigned char m_paddingAfterVisible : 5;
-    char m_tailPadding[3];
+    char m_diggable : 1;
+    char m_hasGrail : 1;
+    char m_visible : 1;
 
     type_AI_puzzle_tile();
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
+    unsigned char operator==(const type_AI_puzzle_tile& arg) const;
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
@@ -334,15 +331,15 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 
 MAC_ADDRESS(0x147d08, 0x178)
 unsigned char type_AI_puzzle_tile::operator==(
-    const type_AI_puzzle_tile* arg) const
+    const type_AI_puzzle_tile& arg) const
 {
-    return m_objectType == arg->m_objectType
-        && m_objectX == arg->m_objectX
-        && m_objectY == arg->m_objectY
-        && m_terrain == arg->m_terrain
-        && m_river == arg->m_river
-        && m_road == arg->m_road
-        && m_diggable == arg->m_diggable;
+    return m_objectType == arg.m_objectType
+        && m_objectX == arg.m_objectX
+        && m_objectY == arg.m_objectY
+        && m_terrain == arg.m_terrain
+        && m_river == arg.m_river
+        && m_road == arg.m_road
+        && m_diggable == arg.m_diggable;
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
@@ -544,7 +541,7 @@ static long checkMatch(long player, long firstX, long firstY,
             if (!(getMapExtra(point) & playerMask))
                 continue;
             type_AI_puzzle_tile tile(g_game->getCell(point), point);
-            if (puzzleMap[firstX][firstY] == &tile)
+            if (puzzleMap[firstX][firstY] == tile)
                 ++matches;
             else
                 return 0;
