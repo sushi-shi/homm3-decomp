@@ -829,6 +829,8 @@ void type_AI_player::resetMagusHutValue()
 // .bzero port mapping at 0:0x26ad3c; reversing function-scope POD/vector
 // declarations matches the Mac local slots and is Windows byte-flat. A
 // dwelling-first index operand order is byte-flat, so it is not retained.
+// Sixteen town/dwelling scopes, population-pointer qualifiers and product
+// operand controls also produce one identical Windows object at 93.01%.
 VA(0x00429ad0, 0x280) MAC_ADDRESS(0x02c9d8, 0x2ac)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculateReserve()
 {
@@ -1767,6 +1769,8 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     // 29/29 Windows call sites and 42/42 CFG blocks now agree with retail.
     // Mac still has 22/22 ordered calls; its MSL vector destructor is a
     // separately unresolved library relocation in the current matcher.
+    // Twelve mask/bit const, value/reference and operand-order controls do
+    // not improve the remaining four 64-bit-mask load-register differences.
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty

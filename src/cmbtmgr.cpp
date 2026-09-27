@@ -3043,6 +3043,10 @@ void combatManager::removeArmyFromGrid(const army& a)
 // Mac's early load at +0x5c: 81.91 -> 85.64%, with Windows byte-flat.
 // The reversed offset/index sum is byte-flat on both compilers.
 // getOwningSide and offsetToFront remain the canonical shared helpers.
+// The Windows residual is two DWORD loads where retail reads a byte.
+// Twelve implicit/explicit narrowing and byte-local controls preserve the
+// helpers but do not improve 99.7727%; changing the helper's int return
+// would contradict its recorded interface.
 VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
