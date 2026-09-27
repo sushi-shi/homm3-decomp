@@ -561,6 +561,8 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // by abs(x)/abs(y) spelling; it does not merge the repeated library call.
 // Windows is 98.5874%; its residual is x87 ratio temporary scheduling.
 // Initializing the vertical default before the guard scores 96.07%.
+// A block-local float initialized with the equivalent conditional ratio
+// is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
@@ -1290,6 +1292,9 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
 // A hovered-cell reference local does not recover retail's EBX receiver:
 // VC6 retains the index there and spills the receiver (92.50% control).
+// Mac 0x84798..0x847c0 independently keeps the cell receiver in r28 and
+// index in r27. A matching pointer-local model also scores 92.4978% on
+// Windows; neither local spelling restores its EBX receiver allocation.
 
 VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
@@ -2329,7 +2334,10 @@ void combatManager::processFirstAid(army* currentArmy)
 // text-resource getters. Residual 99.7272%: the wait-arm string constructor
 // retains _Tidy where retail expands it. Naming the defend-bonus result is
 // flat; naming its percentage input is worse. Neither justifies flattening
-// max or changing the DC string lifetimes.
+// max or changing the DC string lifetimes. Mac default construction at
+// 0x87888 (defend) and 0x87a90 (wait) fixes both lifetimes independently;
+// pristine VC6 XSTRING calls _Tidy from that same default constructor.
+// The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
@@ -2656,6 +2664,11 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // right-left+1, bottom-top+1) - which is what fixes their roles as a
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
+// DC command.cpp:3906/3910 calls WinMgr.h's const-SLimitData-reference
+// overloads (dc 0x70b40/0x70af0), which contain Width/Height. Restoring
+// those existing higher-level calls makes Windows 94.1419% -> 100%.
+// CodeWarrior still expands both wrappers into the native scalar fizzle
+// call sequence; its scored body remains 21.4474%. No helper is flattened.
 VA(0x0047a100, 0x1CD) MAC_ADDRESS(0x088044, 0x2f0)  // dc 0x70474
 army* combatManager::addArmy(int side, int monType, int monQty,
                              int gridIndex, int setAttributes,
@@ -2692,15 +2705,9 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         resetLimitCreature();
         markCreatureEffect(side, slot);
         computeMaxExtent();
-        g_windowManager->saveFizzleSourceX(
-            m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.width(),
-            m_drawbridgeBounds.height());
+        g_windowManager->saveFizzleSourceX(m_drawbridgeBounds);
         drawFrame(0, 0, 0, 0, 1, 0);
-        g_windowManager->fizzleForwardX(
-            m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.width(),
-            m_drawbridgeBounds.height(), 75);
+        g_windowManager->fizzleForwardX(m_drawbridgeBounds, 75);
     }
     return newArmy;
 }
