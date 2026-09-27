@@ -442,7 +442,7 @@ void type_AI_player::calculateDemand()
     std::vector<type_creature_value> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
-        creatures[creatureIndex].m_type = static_cast<TCreatureType>(creatureIndex);
+        creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
         creatures[creatureIndex].m_amount = 0;
     }
 
@@ -1102,7 +1102,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
-            EGameResource resource = static_cast<EGameResource>(i);
+            EGameResource resource = H3_ENUM_DECODE(EGameResource, i);
             marketValue = static_cast<long>(
                 getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
@@ -1193,8 +1193,8 @@ void type_AI_player::doResourceTrade(int* supply)
         for (int dest = 0; dest < 7; ++dest) {
             if (supply[dest] >= 0)
                 continue;
-            double ratio = getTradeRatio(static_cast<EGameResource>(source),
-                                         static_cast<EGameResource>(dest),
+            double ratio = getTradeRatio(H3_ENUM_DECODE(EGameResource, source),
+                                         H3_ENUM_DECODE(EGameResource, dest),
                                          efficiency);
             long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
             long limit = static_cast<long>(
@@ -1370,7 +1370,7 @@ static __int64 getRequirements(const town* currentTown,
     int k = building;
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & g_bitNumber[k]) {
-            if (!currentTown->isLegalBuilding(static_cast<type_building_id>(k)))
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, k)))
                 return 0;
             seen |= g_bitNumber[k];
             requirements |= g_hierarchyMask[currentTown->m_type][k];
@@ -1394,7 +1394,7 @@ static void getFullCost(const town* currentTown, int* result,
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
         if (requirements & g_bitNumber[k]) {
             int* costs = currentTown->getBuildCostArray(
-                static_cast<type_building_id>(k));
+                H3_ENUM_DECODE(type_building_id, k));
             for (int i = 0; i < 7; ++i)
                 result[i] += costs[i];
         }
@@ -1466,14 +1466,14 @@ unsigned char type_AI_player::purchaseBuilding(
         memset(extraCosts, 0, sizeof(extraCosts));
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
-            if (!currentTown->isLegalBuilding(static_cast<type_building_id>(building))
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, building))
                 || currentTown->hasBuilding(building, true)
                 || building == HOLY_GRAIL_ID) {
                 basicValue[building] = -1;
                 continue;
             }
             basicValue[building] = valueOfBuilding(
-                currentTown, static_cast<type_building_id>(building),
+                currentTown, H3_ENUM_DECODE(type_building_id, building),
                 prohibitedCreatures, extraCosts[building]);
         }
 
@@ -1482,7 +1482,7 @@ unsigned char type_AI_player::purchaseBuilding(
             if (basicValue[building] <= 0)
                 continue;
             requirements = getRequirements(
-                currentTown, static_cast<type_building_id>(building));
+                currentTown, H3_ENUM_DECODE(type_building_id, building));
             if (requirements == 0)
                 continue;
             getFullCost(currentTown, extraCosts[building],
@@ -1508,7 +1508,7 @@ unsigned char type_AI_player::purchaseBuilding(
         return 0;
 
     int cost[7];
-    bestTown->getBuildCost(static_cast<type_building_id>(bestBuilding), cost);
+    bestTown->getBuildCost(H3_ENUM_DECODE(type_building_id, bestBuilding), cost);
     tradeResources(cost, 1);
     if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
@@ -1524,7 +1524,7 @@ unsigned char type_AI_player::purchaseBuilding(
                 return 0;
         }
     }
-    if (!bestTown->buyBuilding(static_cast<type_building_id>(bestBuilding)))
+    if (!bestTown->buyBuilding(H3_ENUM_DECODE(type_building_id, bestBuilding)))
         return 0;
     calculateDemand();
     return 1;
