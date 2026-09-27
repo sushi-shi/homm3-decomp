@@ -787,13 +787,16 @@ void TViewArmyWindow::createDefenseWidget(int normalDefenseSkill,
 // reference/accessor evidence at rows 735/738 and preserves its 669 bytes.
 //
 // E:\gamedcs\viewarmywindow.cpp:707
+// Label lookups retain operator[] -> getText -> vector[]: DC names the
+// public operator; Mac 0x20196c and the following four label builders
+// retain the vector indexer after expanding the outer accessors.
 VA(0x005f5860, 0x2C2) MAC_ADDRESS(0x201928, 0x270)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::createDamageWidget(const TCreatureTypeTraits& traits,
                                            const hero* ourHero)
 {
     m_widgets.push_back(new textWidget(
         154, 104, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE],
         "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
 
     int low = traits.m_damageLowBound;
@@ -827,7 +830,7 @@ void TViewArmyWindow::createShotsWidget(const TCreatureTypeTraits& traits,
     if (traits.m_attributes & g_ctaShooter) {
         m_widgets.push_back(new textWidget(
             154, 85, 122, 17,
-            g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
+            (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SHOTS],
             "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
 
         if (normalShots == currentShots)
@@ -847,7 +850,7 @@ void TViewArmyWindow::createHitpointsWidget(int normalHitpoints,
 {
     m_widgets.push_back(new textWidget(
         154, 123, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH],
         "smalfont.fnt", font::PRIMARY, HEALTH_LABEL_ID, 4, 0, 8));
 
     if (normalHitpoints == currentHitpoints)
@@ -865,7 +868,7 @@ void TViewArmyWindow::createHitpointsLeftWidget(int hitpointsLeft)
 {
     m_widgets.push_back(new textWidget(
         154, 142, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING],
         "smalfont.fnt", font::PRIMARY, HEALTH_REMAINING_LABEL_ID, 4, 0, 8));
 
     sprintf(g_text, "%d", hitpointsLeft);
@@ -881,7 +884,7 @@ void TViewArmyWindow::createSpeedWidget(int normalSpeed,
 {
     m_widgets.push_back(new textWidget(
         154, 161, 122, 17,
-        g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED),
+        (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED],
         "smalfont.fnt", font::PRIMARY, SPEED_LABEL_ID, 4, 0, 8));
 
     normalSpeed = max(0, normalSpeed);
