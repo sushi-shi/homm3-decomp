@@ -1625,8 +1625,7 @@ public:
     {
         if (which == -1)
             return 0;
-        hero* result = &m_heroes[which];
-        return result;
+        return &m_heroes[which];
     }
     // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
     // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's

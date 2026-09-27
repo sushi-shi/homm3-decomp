@@ -626,6 +626,10 @@ void type_AI_player::endTurn()
 // Both retail bodies load the sender quantity before the recipient quantity
 // in the initial difference. Keep the ordinary resource expression instead
 // of preloading a recipient local; VC6 improves 86.52 -> 88.02.
+// Use the indexed AI record directly in the recipient arm. Retaining a
+// reconstructed pointer/reference extends its lifetime across the transfer
+// loop; direct accesses reproduce all 100 retail CFG blocks at 100%. The
+// calculateDemand, min and player helper calls remain unchanged.
 VA(0x00429110, 0x6AC) MAC_ADDRESS(0x02bf4c, 0x6e0)  // linkorder, dc 0x2ea20
 void type_AI_player::makeGift(long playerId)
 {
@@ -670,13 +674,12 @@ void type_AI_player::makeGift(long playerId)
         return;
 
     if (!g_game->m_players[playerId].isHuman()) {
-        type_AI_player* recipientAi = &g_aiPlayers[playerId];
-        recipientAi->calculateDemand();
+        g_aiPlayers[playerId].calculateDemand();
         for (resource = 0; resource < 7; resource++) {
             surplus[resource] = min(
                 surplus[resource],
-                recipientAi->m_resourceDemand[resource]
-                    - recipientAi->m_resourceSupply[resource]);
+                g_aiPlayers[playerId].m_resourceDemand[resource]
+                    - g_aiPlayers[playerId].m_resourceSupply[resource]);
             if (surplus[resource] > 0) {
                 g_game->m_players[playerId].m_resources[resource] += surplus[resource];
                 player.m_resources[resource] -= surplus[resource];

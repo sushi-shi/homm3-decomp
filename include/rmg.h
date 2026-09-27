@@ -378,14 +378,12 @@ struct TRmgMapPosition : TPoint {
     TRmgMapPosition() {}
     TRmgMapPosition(int newX, int newY, int newZ);
 
-    // ConnectZones constructs the translated coordinate as a returned
-    // temporary before consuming it.  This inline source operation restores
-    // retail's 0x98-byte frame and temporary lifetime; the RMG compiland is
-    // absent from Dreamcast, so the operator spelling remains provisional.
-    TRmgMapPosition operator+(TPoint offset) const;
     TRmgMapPosition& operator+=(const TPoint& offset);
     TRmgMapPosition& operator-=(const TPoint& offset);
 };
+
+// Native callers copy both operands before constructing the translated value.
+TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset);
 
 // Complete's zone-connection records are walked at a 0x1c-byte stride by
 // the connection pass.  The first pointer identifies the opposite template
@@ -459,6 +457,7 @@ struct TRmgTownSlot {
     TRmgTreasureRange m_treasure[3];     // +0xa0
     std::vector<TRmgZoneConnection> m_connections; // +0xc4
 
+    int selectAllowedTown();
     TRmgZoneConnection* findConnection(int destinationZone);
 };
 SIZE(TRmgTownSlot, 0xd4);
@@ -1281,6 +1280,7 @@ struct TRmgTreasureGroup {
         reset();
     }
     void reset();
+    void markPlacementOutline();
     unsigned char addGuard(type_object* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
     unsigned char tryAddObject(type_object* object);
@@ -1957,7 +1957,7 @@ public:
         TRmgMapPosition position, int count, TRmgZone* zone);
     type_object* createGuard(int value, TRmgZone* zone);
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
-    void placeGuard(TRmgMapPosition position, int value);
+    void placeGuard(int value, TRmgMapPosition position);
     int getMineGuardValue(int resource, const TRmgZone* zone) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(

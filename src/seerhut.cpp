@@ -186,16 +186,8 @@ unsigned char type_quest::hasExpired() const
 VA(0x0056cd00, 0x14F) MAC_ADDRESS(0x164178, 0x134)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::load(TAbstractFile* file, int version)
 {
-    {
-        unsigned char flag;
-        file->read(&flag, sizeof(flag));
-        m_seerHut = flag != 0;
-    }
-    {
-        unsigned char row;
-        file->read(&row, sizeof(row));
-        m_textVariant = row;
-    }
+    m_seerHut = readValue<unsigned char>(file) != 0;
+    m_textVariant = readValue<unsigned char>(file);
     m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
@@ -2358,8 +2350,7 @@ MAC_ADDRESS(0x16aa6c, 0x7c)
 static type_quest* readQuestFromMap(TAbstractFile* infile,
                                     unsigned char flags)
 {
-    unsigned char questType;
-    infile->read(&questType, sizeof(questType));
+    unsigned char questType = readValue<unsigned char>(infile);
     type_quest* quest = createQuest(questType, flags);
     if (quest)
         quest->loadFromMap(infile);

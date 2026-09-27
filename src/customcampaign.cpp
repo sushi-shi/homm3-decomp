@@ -1035,6 +1035,9 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // Binding the campaign base once, as native +0x93950..+0x93974 does,
 // gives 75.97% in VC6 (14 blocks against retail's 19). Constructor and
 // nested inflater calls still diverge; retain both canonical source calls.
+// Native +0x93a64..+0x93a8c obtains the map-name pointer before the text
+// lookup and constructs the formatted string directly in the return slot.
+// A named string result adds two CodeWarrior copies absent from that body.
 // The old flattened source gave 86.04%, but omitted both Mac helpers.
 VA(0x00485530, 0x260) MAC_ADDRESS(0x093924, 0x1cc)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
@@ -1048,7 +1051,10 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
 
     NewSMapHeader mapHeader;
     campaign->loadScenario(source, &mapHeader);
-    return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT), mapHeader.m_mapName.c_str());
+    const char* mapName = mapHeader.m_mapName.c_str();
+    return formatString(
+        g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_MAP_HEROES_FORMAT),
+        mapName);
 }
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
@@ -1339,6 +1345,8 @@ void SCampaign::doPreLoadCustomization()
 // a preconstructed artifact extends the wrong temporary lifetime. Mac
 // 0x94e98 fetches the custom name before storing its flag at 0x94ea4.
 // These lifetimes and ordering reproduce all Windows instructions (100%).
+// CodeWarrior emits default-argument constructor glue for savedArtifacts[].
+MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
 VA(0x00486590, 0xA84) MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
@@ -1909,6 +1917,9 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
     m_subtitles = readLengthPrefixedString(infile);
 }
 
+// Byte versus promoted result locals for color, difficulty and retention flags,
+// coupled with the size result lifetime: 36 states / 24 objects reproduce no
+// improvement over 84.5181%. Preserve the actual serialized widths and helpers.
 VA(0x00487e40, 0x586) MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
@@ -1916,29 +1927,24 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
 {
     m_name = readLengthPrefixedString(infile);
 
-    int size;
-    infile->read(&size, sizeof(int));
+    // Native 0x9611c/0x96154 decode the size and zero-filled bit word.
+    int size = readLittleEndianValue<int>(infile);
     m_inflatedSize = size;
 
     int prerequisiteBits = 0;
     infile->read(&prerequisiteBits, (numScenarios + 7) / 8);
+    prerequisiteBits = LITTLE_ENDIAN_LONG(prerequisiteBits);
     for (int prereq = 0; prereq < numScenarios; ++prereq) {
         m_prerequisites.push_back((prerequisiteBits & (1 << prereq)) != 0);
     }
 
-    {
-        unsigned char value;
-        infile->read(&value, sizeof(unsigned char));
-        m_regionColor = value;
-        infile->read(&value, sizeof(unsigned char));
-        m_difficulty = value;
-    }
+    m_regionColor = readValue<unsigned char>(infile);
+    m_difficulty = readValue<unsigned char>(infile);
 
     m_regionDesc = readLengthPrefixedString(infile);
 
     {
-        unsigned char present;
-        infile->read(&present, sizeof(unsigned char));
+        unsigned char present = readValue<unsigned char>(infile);
         if (!present) {
             m_prologue = 0;
         } else {
@@ -1949,8 +1955,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     {
-        unsigned char present;
-        infile->read(&present, sizeof(unsigned char));
+        unsigned char present = readValue<unsigned char>(infile);
         if (!present) {
             m_epilogue = 0;
         } else {
@@ -1961,8 +1966,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
     }
 
     {
-        unsigned char flags;
-        infile->read(&flags, sizeof(unsigned char));
+        unsigned char flags = readValue<unsigned char>(infile);
         m_retainXp = flags & 1;
         m_retainPskills = (flags >> 1) & 1;
         m_retainSskills = (flags >> 2) & 1;
@@ -1982,8 +1986,7 @@ void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
             bitset_iterator<144>(m_crossoverArtifacts, 0));
     }
 
-    unsigned char optionType;
-    infile->read(&optionType, sizeof(unsigned char));
+    unsigned char optionType = readValue<unsigned char>(infile);
     TCampaignStartOption* record;
     switch (optionType) {
     case CAMPAIGN_START_OPTION_BONUS:
@@ -2188,28 +2191,24 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         // lets VC6 resolve the call statically and expand the one-line body,
         // which turns all six reads into direct sgetn calls on the inflater.
         TAbstractFile* file = &streamFile;
-        int intBuffer;
-        file->read(&intBuffer, 4);
-        m_campaignVersion = intBuffer;
+        // Mac 0x96fa4 decodes the version with lwbrx, then reads an
+        // unsigned region byte and separate signed difficulty/music bytes.
+        int version = readLittleEndianValue<int>(file);
+        m_campaignVersion = version;
         if (m_campaignVersion < 4) {
             m_fileError = CAMPAIGN_FILE_VERSION_UNSUPPORTED;
             return false;
         }
-        file->read(&intBuffer, 1);
-        m_regionMap = intBuffer & 0xff;
+        m_regionMap = readValue<unsigned char>(file);
         m_campaignName = readLengthPrefixedString(file);
         if (m_campaignName.length() == 0)
             m_campaignName = g_generalText->getText(GENERAL_TEXT_UNNAMED);
         m_campaignDesc = readLengthPrefixedString(file);
-        char charBuffer;
-        file->read(&charBuffer, 1);
-        m_variableDifficulty = charBuffer != 0;
+        m_variableDifficulty = readValue<signed char>(file) != 0;
         if (m_campaignVersion < 5)
             m_campaignMusic = 0x25;
-        else {
-            file->read(&charBuffer, 1);
-            m_campaignMusic = charBuffer;
-        }
+        else
+            m_campaignMusic = readValue<signed char>(file);
         numScenarios = g_campaignMapTraits[m_regionMap].m_numRegions;
         for (int newValue = 0; newValue < numScenarios; ++newValue)
             addCampaignScenario(*this, file, numScenarios);

@@ -157,23 +157,12 @@ Hunk: Kind=HUNK_LOCAL_IDATA Align=4 Class=TI Name="@13"(3) Size=4
                         ((0, "HUNK_XREF_32BIT", symbol),))
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            folder = root / "config/mac/function_descriptors"
+            folder = root / "src"
             folder.mkdir(parents=True)
+            (root / "config").mkdir()
             (root / "config/units.toml").write_text("")
-            (folder / "example.toml").write_text(f'''[[descriptors]]
-unit="example"
-owner_vas=[0x00400100]
-symbol="{symbol}"
-code_symbol="{code_symbol}"
-mac_section=1
-mac_offset=0x50
-sha256="{sha256(data[0x50:0x58]).hexdigest()}"
-code_section=0
-code_offset=0x20
-code_size=4
-code_sha256="{sha256(native[0x20:0x24]).hexdigest()}"
-evidence="independently encoded native constructor transition vector"
-''')
+            (folder / "example.cpp").write_text(
+                "MAC_COMPGEN_ADDRESS(0x000020, 0x4, CLASS_CTOR, Example)\n")
             for copies in (1, 2, 4):
                 with self.subTest(copies=copies):
                     result = bindings(root, pef, code,

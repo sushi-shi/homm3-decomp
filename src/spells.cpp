@@ -2360,6 +2360,10 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // normalizes the target/callee result to zero or one. Keeping that operation
 // in a nested `return callee(...) != 0` gives 69.32%; its conditional-expression
 // equivalent gives 67.11%. All three source-family controls reproduced.
+// Sharing the selected spell-traits row across the two flag tests restores
+// its native address lifetime: 72.70% -> 73.55%. Nested and conditional
+// return variants remain worse when combined with that reference; the
+// canonical findSpellTarget call still expands more than retail.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
@@ -2369,13 +2373,14 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
 {
     if (!validHex(targetIndex))
         return 0;
-    if (g_spellTraits[spellId].m_flags & 0x20070) {
+    const SSpellTraits& traits = g_spellTraits[spellId];
+    if (traits.m_flags & 0x20070) {
         army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
         return target && validSpellTargetArmy(spellId, castingSide, target,
                                               firstTarget, creatureSpell);
     }
-    if (g_spellTraits[spellId].m_flags & 0x100) {
+    if (traits.m_flags & 0x100) {
         if (m_cells[targetIndex].m_obstacleIndex >= 0) {
             switch (mastery) {
             case eMasteryNone:
@@ -4898,6 +4903,9 @@ void combatManager::spellTargetMessage(SpellID spellId, int targetIndex,
 //   `int artifact = spellId;` with no default arm            88.90
 //   the three format_string calls written out per arm        70.97
 //   `int artifact;` hoisted to function scope       98.76 (neutral)
+// Nine typed-index/traits/name lifetimes give six objects, all flat or worse.
+// Reusing spellId as the artifact selector falls to 84.74%, despite the Mac
+// register reuse; that allocation does not establish the source variable.
 // The last one proved the promotion was global CSE rather than scope.
 
 // Everything else in the body is byte-exact, INCLUDING both /Ob2

@@ -1538,6 +1538,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     std::string helpText;
     std::string rightText;
     TCreatureType creature;
+    int offsetToMon;
 
     int j;
     MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
@@ -1552,7 +1553,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
             creature = g_townDwellingCreatures[
                 currTown->m_type * (2 * TOWN_DWELLING_COUNT) + slot];
             long growth = g_creatureTypeTraits[creature].m_growthRate;
-            int offsetToMon = currTown->getGrowthRate(slot) - growth;
+            offsetToMon = currTown->getGrowthRate(slot) - growth;
             const char* name = getArmyName(creature, 1);
 
             helpText = formatString((*g_generalText)[GENERAL_TEXT_GROWTH_PER_WEEK_FORMAT], name);
@@ -3752,12 +3753,13 @@ type_garrison_base_window::~type_garrison_base_window()
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
 // DC's GetArmyName is restored in the divide status arm; VC6 still emits
 // the same 34 blocks and 10 retained calls at 98.838425%.
+// DC declares message&; Complete passes the same one-word address.
 VA(0x005d05f0, 0x31B) MAC_ADDRESS(0x1cc620, 0x1ac)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
-void type_garrison_base_window::setCommandAndText(message* msg)
+void type_garrison_base_window::setCommandAndText(message& msg)
 {
     g_townManager->m_command = -2;
 
-    switch (msg->m_codeY) {
+    switch (msg.m_codeY) {
     case TOP_SLOT_FIRST_ID + 0:
     case TOP_SLOT_FIRST_ID + 1:
     case TOP_SLOT_FIRST_ID + 2:
@@ -3766,8 +3768,8 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     case TOP_SLOT_FIRST_ID + 5:
     case TOP_SLOT_FIRST_ID + 6: {
         g_townManager->armyCommand(g_townManager->m_garrisonStrip,
-            msg->m_codeY - TOP_SLOT_FIRST_ID,
-            msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
+            msg.m_codeY - TOP_SLOT_FIRST_ID,
+            msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
 
@@ -3785,8 +3787,8 @@ void type_garrison_base_window::setCommandAndText(message* msg)
     case BOTTOM_SLOT_FIRST_ID + 5:
     case BOTTOM_SLOT_FIRST_ID + 6: {
         g_townManager->armyCommand(g_townManager->m_heroStrip,
-            msg->m_codeY - BOTTOM_SLOT_FIRST_ID,
-            msg->m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
+            msg.m_codeY - BOTTOM_SLOT_FIRST_ID,
+            msg.m_qualifier & MESSAGE_MODIFIER_SHIFT_KEYS, m_isJoinDialog);
         break;
     }
 
@@ -3904,7 +3906,7 @@ int type_garrison_base_window::windowHandler(message& msg)
             case BOTTOM_SLOT_FIRST_ID + 5:
             case BOTTOM_SLOT_FIRST_ID + 6:
                 g_townManager->doCommand(g_townManager->m_command, 1, win);
-                win->setCommandAndText(&msg);
+                win->setCommandAndText(msg);
                 return 1;
             }
             break;
@@ -3937,7 +3939,7 @@ int type_garrison_base_window::windowHandler(message& msg)
 
             case BOTTOM_OWNER_ID:
                 g_townManager->doCommand(g_townManager->m_command, 1, win);
-                win->setCommandAndText(&msg);
+                win->setCommandAndText(msg);
                 return 1;
 
             default:
@@ -3947,10 +3949,8 @@ int type_garrison_base_window::windowHandler(message& msg)
         case widget::WIDGET_DESELECT:
             if (msg.m_codeY == DIVIDE_BUTTON_ID) {
                 townManager* mgr = g_townManager;
-                enum TCreatureType creature;
-                {
-                    creature = TCreatureType(mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
-                }
+                TCreatureType creature = TCreatureType(
+                    mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex]);
                 mgr->m_divideStatus = 1;
                 g_townManager->m_garrisonStrip->draw(creature);
                 g_townManager->m_heroStrip->draw(creature);
@@ -3966,7 +3966,7 @@ int type_garrison_base_window::windowHandler(message& msg)
             || msg.m_qualifier != win->m_lastQualifier) {
             win->m_lastHover = msg.m_codeY;
             win->m_lastQualifier = msg.m_qualifier;
-            win->setCommandAndText(&msg);
+            win->setCommandAndText(msg);
         }
         return 1;
     }
@@ -5987,11 +5987,6 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         memError();
 
     message msg;
-    msg.m_qualifier = 0;
-    msg.m_mouseX = 0;
-    msg.m_mouseY = 0;
-    msg.m_extra = 0;
-    msg.m_window = 0;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
     msg.m_codeY = 1;
@@ -6002,7 +5997,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     int iconWidth = icons->getWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
-        textWidget* amountText = new textWidget(
+        widget* amountText = new textWidget(
             resourceX[numResources - 1][i],
             resourceY[numResources - 1][i] + 40, 68, 20, g_text,
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8);
@@ -6011,7 +6006,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         window->m_widgets.push_back(amountText);
         window->addWidget(amountText, -1);
 
-        iconWidget* icon = new iconWidget(
+        widget* icon = new iconWidget(
             resourceX[numResources - 1][i] + 18,
             resourceY[numResources - 1][i], iconWidth, 32, -1,
             "Resource.def", types[i], 0, 0, 0, 0x10);
@@ -6511,14 +6506,12 @@ void TTavernWindow::setRolloverText(int codeY)
 // afterwards whenever it stopped.
 
 // E:\gamedcs\townmgr.cpp
-// Residual (89.7235%): `player` is register-homed here and memory-homed in
-// retail. Both sides spill GetLocalPlayer's result to [ebp-0x10] straight
-// after the call, but this compile ALSO keeps it in EDI for the whole body -
-// which costs the `push edi` / `mov edi,eax` / `pop edi` triple retail does
-// not have and transposes eax<->ecx through every msg field read that
-// follows. Retail reaches `player` only through its stack home. No local
-// spelling reached it: the value is a call result, so why-reg's
-// creation-order lever does not apply.
+// Earlier register-only probes missed the retained recruit and hero locals.
+// Mac 0x1d59e0..0x1d5a58 keeps the recruit id across both broadcasts;
+// retail does likewise. Mac 0x1d5a60..0x1d5a78 and retail retain a saved
+// const hero receiver for the artifact counts (DC current_hero at line 7962).
+// Selection-scope count locals and successive count accumulation are byte-flat;
+// the remaining getHero expansion differs in its result-register choice.
 VA(0x005d7b30, 0x2E1) MAC_ADDRESS(0x1d5870, 0x3a4)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
 int TTavernWindow::windowHandler(message& msg)
 {
@@ -6555,7 +6548,8 @@ int TTavernWindow::windowHandler(message& msg)
         case widget::WIDGET_RIGHT_SELECT:
             if (msg.m_codeY >= RECRUIT_0_ID && msg.m_codeY <= RECRUIT_1_ID) {
                 m_selectedRecruit = msg.m_codeY - RECRUIT_0_ID;
-                if (player->m_recruits[m_selectedRecruit] != -1) {
+                int recruitId = player->m_recruits[m_selectedRecruit];
+                if (recruitId != -1) {
                     msg.m_codeX = widget::WIDGET_SET_STATUS;
                     msg.m_codeY = m_selectedRecruit + 8;
                     msg.m_extra = widget::WIDGET_DRAWN;
@@ -6565,10 +6559,11 @@ int TTavernWindow::windowHandler(message& msg)
                     msg.m_codeY = 9 - m_selectedRecruit;
                     broadcastMessage(msg);
 
-                    g_tavernHero = g_game->getHero(player->m_recruits[m_selectedRecruit]);
-                    long artifacts = g_tavernHero->getNumberInBackpack(0)
-                                     + g_tavernHero->getEquippedArtifacts(0);
-                    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT),
+                    g_tavernHero = g_game->getHero(recruitId);
+                    const hero* currentHero = g_tavernHero;
+                    int artifacts = currentHero->getNumberInBackpack(0)
+                                  + currentHero->getEquippedArtifacts(0);
+                    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT],
                             g_tavernHero->m_name, g_tavernHero->m_level,
                             g_tavernHero->heroFn004D8F70(), artifacts);
                     if (artifacts == 1) {
@@ -6657,17 +6652,14 @@ void doMapTavern(type_point point)
 // pointing at whichever hero the panel is showing so DoMapTavern/DoTownTavern
 // can hire it. Returns whether the player confirmed (dialogReturn == recruit
 // widget 0xc). Human-only text is gated on IsLocalHuman for network play.
-// Residual (96.48%): register-homing - retail keeps recruits[1] live in esi
-// across the second-hero block and re-materialises -1 as an immediate at
-// each `== -1`, while our CL CSEs -1 into esi and re-reads recruits[1];
-// forcing the recruits[1] CSE with a named local measured WORSE (95.59 ->
-// 91.19), so it is left as retail's allocator tie-break. Plus the EH
-// prologue `push <scopetable>` addend (a reloc addend, not a state count),
-// a deferred `push ebx`, and the singular-artifact `.`-append indexing
-// gText[len-2] off the end pointer rather than off gText's base.
+// Capturing every roster read changed the portrait lookup semantics. Keep
+// the native id captures only for the selected-hero assignments below.
 // DC records TTextResource::operator[] for both text formats; those
 // shared calls are VC6 byte-flat here and clear the source audit.
 // E:\gamedcs\townmgr.cpp:8055
+// Mac captures each offered id at 0x1d5e50/0x1d5f0c and retains it
+// for the selected-hero assignment; portrait lookups still read the roster.
+// The same local lifetimes recover Windows while preserving every getHero.
 VA(0x005d7ec0, 0x3EA) MAC_ADDRESS(0x1d5cdc, 0x4a4)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
 unsigned char doTavern()
 {
@@ -6702,11 +6694,12 @@ unsigned char doTavern()
     msg.m_codeY = 4;
     g_tavernWindow->broadcastMessage(msg);
 
-    if (player->m_recruits[0] == -1) {
+    int recruit = player->m_recruits[0];
+    if (recruit == -1) {
         g_tavernHero = 0;
         g_tavernWindow->widgetClearStatus(8, widget::WIDGET_DRAWN);
     } else {
-        g_tavernHero = g_game->getHero(player->m_recruits[0]);
+        g_tavernHero = g_game->getHero(recruit);
         g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
         msg.m_codeY = 5;
@@ -6716,7 +6709,8 @@ unsigned char doTavern()
         g_tavernWindow->broadcastMessage(msg);
     }
 
-    if (player->m_recruits[1] == -1) {
+    recruit = player->m_recruits[1];
+    if (recruit == -1) {
         g_tavernWindow->widgetClearStatus(9, widget::WIDGET_DRAWN);
     } else {
         msg.m_codeY = 6;
@@ -6725,7 +6719,7 @@ unsigned char doTavern()
                 .m_largePortraitName;
         g_tavernWindow->broadcastMessage(msg);
         if (g_tavernHero == 0)
-            g_tavernHero = g_game->getHero(player->m_recruits[1]);
+            g_tavernHero = g_game->getHero(recruit);
     }
 
     if (g_tavernHero) {
@@ -6754,7 +6748,8 @@ unsigned char doTavern()
         g_tavernWindow->broadcastMessage(msg);
     }
 
-    if (g_currentPlayer->isLocalHuman())
+    // Both retail builds disable recruitment for nonlocal players.
+    if (!g_currentPlayer->isLocalHuman())
         g_tavernWindow->getWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
     g_tavernWindow->doModal(0);
     delete g_tavernWindow;
@@ -7232,135 +7227,135 @@ TCastleWindow::TCastleWindow()
                                      font::PRIMARY, 0x87, 2, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 26, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 26, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x39, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 26, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 26, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 159, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 159, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 159, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 159, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 292, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 292, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 292, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 292, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 425, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 425, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x40, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 425, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_ATTACK_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 425, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_ATTACK_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x3f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 46, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 46, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x41, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 46, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 46, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x42, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 179, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 179, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x43, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 179, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 179, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x44, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 312, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 312, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x45, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 312, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 312, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x46, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 445, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 445, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x48, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 445, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_DEFENSE_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 445, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_DEFENSE_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x47, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 67, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 67, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x49, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 67, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 67, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 200, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 200, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 200, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 200, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 333, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 333, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 333, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 333, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 466, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 466, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x50, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 466, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_DAMAGE), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 466, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_DAMAGE], "smalfont.fnt",
                                      font::PRIMARY, 0x4f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 87, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 87, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x51, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 87, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 87, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x52, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 220, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 220, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x53, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 220, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 220, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x54, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 353, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 353, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x55, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 353, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 353, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x56, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 486, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 486, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x58, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 486, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_HEALTH), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 486, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_HEALTH], "smalfont.fnt",
                                      font::PRIMARY, 0x57, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 108, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 108, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x59, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 108, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 108, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5a, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 241, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 241, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5b, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 241, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 241, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5c, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 374, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 374, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5d, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 374, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 374, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5e, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 507, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 507, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x60, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 507, 91, 30, g_generalText->getText(GENERAL_TEXT_VIEW_ARMY_SPEED), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 507, 91, 30, (*g_generalText)[GENERAL_TEXT_VIEW_ARMY_SPEED], "smalfont.fnt",
                                      font::PRIMARY, 0x5f, 0, 0, 8));
     }
 
-    m_widgets.push_back(new textWidget(300, 128, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 128, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x61, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 128, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 128, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x62, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 261, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 261, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x63, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 261, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 261, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x64, 0, 0, 8));
-    m_widgets.push_back(new textWidget(300, 394, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(300, 394, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x65, 0, 0, 8));
-    m_widgets.push_back(new textWidget(694, 394, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+    m_widgets.push_back(new textWidget(694, 394, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x66, 0, 0, 8));
     if (m_use8) {
-        m_widgets.push_back(new textWidget(300, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(300, 527, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
-        m_widgets.push_back(new textWidget(694, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(694, 527, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x68, 0, 0, 8));
     } else {
-        m_widgets.push_back(new textWidget(496, 527, 91, 30, g_generalText->getText(GENERAL_TEXT_TOWN_GROWTH_LABEL), "smalfont.fnt",
+        m_widgets.push_back(new textWidget(496, 527, 91, 30, (*g_generalText)[GENERAL_TEXT_TOWN_GROWTH_LABEL], "smalfont.fnt",
                                      font::PRIMARY, 0x67, 0, 0, 8));
     }
 
@@ -7482,6 +7477,9 @@ void TCastleWindow::showText()
     g_windowManager->updateScreen(10, 0x22c, 0x2d6, 0x13);
 }
 
+// Mac 0x1e0df8..0x1e0e20 expands the plural GetArmyName guard;
+// DC townmgr.cpp:8788 names that helper and the public text accessor.
+// Keep both calls in the format expression, as in the retained source row.
 // E:\gamedcs\townmgr.cpp:8776
 // The fort page's rollover line. `msg->codeY` is the widget under the
 // cursor and each band of codes names a different thing: the six cost
@@ -7512,24 +7510,20 @@ void TCastleWindow::showText()
 // 97.77. (why-reg cannot be pointed at this row - given the mangled name
 // it resolves to TMageGuildWindow::SetRolloverText, the file's other row
 // of that name.)
+// DC declares message&; Complete passes the same one-word address.
 VA(0x005dcbf0, 0x25A) MAC_ADDRESS(0x1e0cc8, 0x238)  // anchor-bracket + `ret 4` arity + ShowText tail, dc 0x17f54c
-void TCastleWindow::setRolloverText(message* msg)
+void TCastleWindow::setRolloverText(message& msg)
 {
-    int code = msg->m_codeY;
+    int code = msg.m_codeY;
     if (code > 0x38 && code < 0x69) {
         strcpy(g_text, g_castleInfo[(code - 0x39) / 8]);
     } else if (code >= 0x11 && code <= 0x17) {
         int dwelling = g_townManager->m_currentDwellingIdOff[code - 0x11];
         if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
-            TCreatureType rowCreature =
-                g_townDwellingCreatures[g_townManager->m_townToView->m_type
-                                       * TOWN_DWELLING_SLOTS + dwelling];
-            const char* creatureName;
-            if (rowCreature >= 0 && rowCreature <= 150)
-                creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
-            else
-                creatureName = "";
-            sprintf(g_text, "%s %s", g_generalText->getText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
+            sprintf(g_text, "%s %s", (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE],
+                    getArmyName(g_townDwellingCreatures[
+                        g_townManager->m_townToView->m_type
+                        * TOWN_DWELLING_SLOTS + dwelling], 2));
         } else {
             strcpy(g_text, "");
         }
@@ -7760,7 +7754,7 @@ int TCastleWindow::windowHandler(message& msg)
             || msg.m_qualifier != g_townManager->m_lastQualifier) {
             g_townManager->m_lastHover = msg.m_codeY;
             g_townManager->m_lastQualifier = msg.m_qualifier;
-            setRolloverText(&msg);
+            setRolloverText(msg);
         }
         return 1;
     }
@@ -7967,6 +7961,10 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // retail image; the guild-count -> category-count ladder is the
 // 9/8/6/4/2 chain with the ==2 arm's sbb ternary.
 
+// DC records value/index, msg and the best-hero/creature workspace at
+// procedure scope; retain those lifetimes across the category/player passes.
+// DC also records i/index2 at procedure scope. Reuse the signed indices across
+// town and hero scans: Mac 0x1e2a9c/0x1e2ac0 and Windows both use signed bounds.
 // E:\gamedcs\townmgr.cpp:9296
 VA(0x005dda10, 0x145F) MAC_ADDRESS(0x1e1c44, 0x1140)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
@@ -8009,6 +8007,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
     int numDisabled = 0;
     int k;
+    int slot;
     for (k = 0; k < 8; k++) {
         if (g_game->m_playerDisabled[k])
             numDisabled++;
@@ -8024,9 +8023,9 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                          0x2bc + k + 0xc8, widget::WIDGET_DRAWN);
     }
 
+    long value[8];
+    signed char index[8];
     for (int category = 0; category < numCategories; category++) {
-        long value[8];
-        signed char index[8];
         getCategoryStats(category, value, index);
         sortStats(value, index);
 
@@ -8063,6 +8062,11 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
         }
     }
 
+    message textMessage;
+    int bestStrength;
+    hero* bestHero;
+    int bestCreature;
+    int bestValue;
     int playerIndex = 0;
     for (unsigned int column = 0; column < 8; column++) {
         int who = playerIndex;
@@ -8074,14 +8078,13 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
         m_owners[column] = who;
         strcpy(g_text, g_playerFlagSprites[who]);
-        message textMessage;
         textMessage.m_extraText = g_text;
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
                          column + 0x384, textMessage.m_extra);
 
-        hero* bestHero = 0;
+        bestHero = 0;
         if (thievesGuilds >= 1) {
-            long bestStrength = 0;
+            bestStrength = 0;
             for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
                 int id = g_game->m_players[who].m_heroes[k];
                 hero* h = g_game->getHero(id);
@@ -8151,12 +8154,12 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                         font::PRIMARY, -1, 1, 0, 8));
                     addWidget(m_widgets.back(), -1);
                     if (thievesGuilds >= 4) {
-                        int bestCreature = -1;
-                        long bestValue = 0;
-                        for (unsigned int n = 0; n < g_game->m_players[who].m_numTowns; n++) {
-                            int id = g_game->m_players[who].m_townIds[n];
+                        bestCreature = -1;
+                        bestValue = 0;
+                        for (k = 0; k < g_game->m_players[who].m_numTowns; k++) {
+                            int id = g_game->m_players[who].m_townIds[k];
                             town* t = g_game->getTown(id);
-                            for (unsigned int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (t->getArmy().m_armies[slot] != -1
                                     && t->getArmy().m_numTroops[slot] > 0
                                     && g_creatureTypeTraits[t->getArmy().m_armies[slot]]
@@ -8173,7 +8176,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                         for (k = 0; k < g_game->m_players[who].m_numHeroes; k++) {
                             int id = g_game->m_players[who].m_heroes[k];
                             hero* h = g_game->getHero(id);
-                            for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                            for (slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
                                 if (h->m_army.m_armies[slot] != -1
                                     && h->m_army.m_numTroops[slot] > 0
                                     && g_creatureTypeTraits[h->m_army.m_armies[slot]]

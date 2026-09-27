@@ -717,6 +717,9 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 // Mac0x1409c4 adds the accessor's int result directly; an extra short
 // temporary inserts a narrowing instruction absent from that native loop.
+// Current VC6 removes the first expanded getHero sentinel check, which
+// Windows retains. Five narrowed-ID lifetimes produce three objects with
+// no gain; equivalent shared-accessor returns do not restore that branch.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -3088,8 +3091,8 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
     if (currentHero->m_flags & 1)
         return 0;
 
-    type_point path = currentHero->getTarget();
-    type_point target = path;
+    // DC records one target local; use the returned point directly.
+    type_point target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
         NewmapCell* cell = g_game->getCell(target);
         if (cell->m_type != MAGIC_WELL && cell->m_type != MAGIC_SPRING)

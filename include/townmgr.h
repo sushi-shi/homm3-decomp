@@ -497,7 +497,7 @@ protected:
     virtual int windowHandler(message& msg) OVERRIDE;   // slot 9, 0x5d0910
     // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
     // town page's pending command with it.
-    void setCommandAndText(message* msg);
+    void setCommandAndText(message& msg);
     void showText();
     void viewArmy();
 };
@@ -721,7 +721,7 @@ private:
     // no .rdata cell image-wide, and its one caller (the page's own
     // WindowHandler at 0x5dd2f9) reaches it with a direct call.
     void showText();
-    void setRolloverText(message* msg);
+    void setRolloverText(message& msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void recruit(int i);
 };

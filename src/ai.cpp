@@ -675,6 +675,9 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
     return committed + bestOther;
 }
 
+// The remaining placement-boundary call loads the owner into EDX rather
+// than retail's EAX. Three named owner types lower the score; a named
+// conditional placement result is byte-flat. Keep the canonical accessor.
 VA(0x0041f580, 0x304) MAC_ADDRESS(0x0210f0, 0x3cc)  // dc 0x24b64
 unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
@@ -1430,24 +1433,11 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& 
 // positive ties do not replace an earlier choice. The local spellcaster
 // owns the one-state /GX frame visible in retail.
 
-// WALL 2026-08-22 (94.51765%, 251 bytes): control flow is exact - both
-// sides have 85 instructions, nine conditional branches, two returns and
-// thirteen blocks, with branch-shape distance zero. The remaining delta is
-// one EBX/EDI role swap: candidate keeps current_army in EBX and best_hex
-// in EDI, while retail does the reverse. why-reg v2 reports 28
-// register-visible slots with identical definition slots/order, classifying
-// the difference as C1/front-end handle state. Its model-selected adjacent
-// best_hex/value declaration swap is byte-flat; making best_hex volatile
-// regresses to 61 slots, and pre-creating an army pointer alias is also
-// byte-flat. The independently fixed address lets the cross-build symbol
-// contribute the private bool/reference declarator below, but that stronger
-// source typing is likewise byte-identical and does not change the wall.
-// Mac Complete's paired 0+0x22e64 body (0x130 bytes) has the same four
-// ordered calls. It stores bestValue before bestHex in the acceptance arm;
-// that source order raises the Mac match from 95.0658% to 97.6974% while
-// Windows stays 94.52% with the exact thirteen-block CFG and four calls.
-// The remaining Mac differences are caster stack/frame offsets; the
-// Windows residual remains the currentArmy/bestHex register-home swap.
+// Mac 0x22f00..0x22f14 retains the same spell/power valuation call and
+// stores bestValue before bestHex on acceptance. Naming its SpellID input
+// before that call reproduces Windows' argument preparation and register
+// lifetimes: 94.6353% -> 100%, all thirteen CFG blocks and four calls.
+// A separate power local alone reaches 95.16%; naming both reaches 94.93%.
 VA(0x00420f00, 0xFB) MAC_ADDRESS(0x022e64, 0x130)
 bool combatManager::sodChooseFaerieDragonSpell(
         const army* currentArmy, long& bestValue,
@@ -1458,9 +1448,10 @@ bool combatManager::sodChooseFaerieDragonSpell(
     for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (inInvisibleColumn(hex))
             continue;
+        SpellID spell = currentArmy->m_faerieDragonSpell;
         long value = caster.getFaerieDragonSpellValue(
                 hex, currentArmy->m_numTroops * 5,
-                currentArmy->m_faerieDragonSpell);
+                spell);
         if (value <= 0)
             continue;
         if (bestHex >= 0 && value <= bestValue)

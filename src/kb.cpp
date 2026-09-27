@@ -4436,8 +4436,8 @@ TDialogBox* getCurrentNormalDialog()
 // declaration order, exactly as this header models them.
 VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
 
-VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon)
-VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon)
+VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e68, 0x48, CLASS_CTOR, type_dialog_icon)
+VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e04, 0x64, IMPLICIT_DTOR, type_dialog_icon)
 
 VA(0x004f6530, 0x34) MAC_ADDRESS(0x117eb8, 0x58)  // dc 0xe5f68
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,

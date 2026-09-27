@@ -2104,9 +2104,10 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 
 // DC lines 2674-2675 call get_current_army and is_last_action. Restoring
 // their short-circuit expression raises VC6 from 97.10% to 99.96%: all 44
-// blocks, 29 branches and nine calls agree. The remaining byte difference
-// is a loop-counter stack home at -0x8 rather than retail's -0xc. Earlier
-// named-local and volatile probes on the expanded tail were flat or worse.
+// blocks, 29 branches and nine calls agree. Clamping the existing healable
+// count through min, rather than introducing a second healed variable,
+// recovers the retail stack lifetimes and reaches Windows 100%. The native
+// Mac body likewise uses the selected count directly in combat valuation.
 VA(0x0043aca0, 0x2AE) MAC_ADDRESS(0x044628, 0x2e0)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
 {
@@ -2137,8 +2138,8 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
                     continue;
             }
         }
-        long healed = min(healable, dead);
-        if (healed < 1)
+        healable = min(healable, dead);
+        if (healable < 1)
             continue;
         if (choice.m_spell == SPELL_RESURRECTION
                 && choice.m_mastery < eMasteryAdvanced && m_winLikely)
@@ -2147,7 +2148,7 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
             ourArmy->getUnitCombatValue(m_estimate.m_lowestAttack,
                                             m_estimate.m_lowestDefense,
                                             ourArmy->canShoot(0), 0)
-            * healed);
+            * healable);
         if (m_estimate.m_awakeFriendlyValue > m_estimate.m_awakeEnemyValue && m_estimate.m_roundsLeft <= 1)
             value += value;
         if (value <= choice.m_value)

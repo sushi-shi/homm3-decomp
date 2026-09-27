@@ -6004,6 +6004,8 @@ void game::applyMapHeaderAvailability()
 // hero name; Mac 0xdb804+0x40c retains that constructor call. Direct
 // construction raises VC6 from 89.9519% to 90.3579% and gives the Mac
 // candidate the same 1776-byte extent as retail, with one direct-call gap.
+// Native swaps version/size at 0xdb828/0xdb898, alignment at 0xdba40,
+// and name length at 0xdbe0c. Preserve the latter two owned value writes.
 VA(0x004c4f10, 0x71D) MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
 int NewSMapHeader::save(TAbstractFile* outfile)
 {
@@ -6012,14 +6014,14 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     int i;
     unsigned char ucharBuffer;
 
-    if (outfile->write(&m_version, sizeof(m_version)) < sizeof(m_version))
+    if (writeLittleEndianValue(outfile, m_version) < sizeof(m_version))
         return -1;
 
     if (writeValue<char>(outfile, m_isPlayable)
         < sizeof(char))
         return -1;
 
-    if (outfile->write(&m_size, sizeof(m_size)) < sizeof(m_size))
+    if (writeLittleEndianValue(outfile, m_size) < sizeof(m_size))
         return -1;
 
     if (writeValue<char>(outfile, m_hasTwoLayers)
@@ -6052,7 +6054,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
             < sizeof(enumBuffer))
             return -1;
 
-        writeValue<unsigned short>(outfile, player->m_legalAlignments);
+        writeValue<unsigned short>(outfile,
+            LITTLE_ENDIAN_SHORT(player->m_legalAlignments));
 
         if (writeValue<char>(outfile, player->m_hasRandomAlignment)
             < sizeof(char))
@@ -6120,7 +6123,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         writeValue<char>(outfile, it->second.m_portrait);
 
         count = it->second.m_name.length();
-        writeValue<int>(outfile, count);
+        writeValue<int>(outfile, LITTLE_ENDIAN_LONG(count));
         outfile->write(it->second.m_name.c_str(), count);
 
         ucharBuffer = 0;

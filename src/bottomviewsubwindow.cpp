@@ -599,7 +599,8 @@ static const int g_townArmyCoords[7][2] = {
 // bytes of this function and the teardown is the last thing before the
 // epilogue.
 
-// THE SILO ROW COLLECTS INDICES INTO A TWO-SLOT ARRAY. get_silo_income
+// The silo row collects resource indices. DC records EGameResource[3];
+// only the first two entries are displayed. get_silo_income
 // hands back a seven-entry row; the sweep records the position of each
 // non-zero entry and the display then has exactly two shapes - two
 // icons at y=75/87 when two resources are produced, one at y=81 when
@@ -689,6 +690,10 @@ static const int g_townArmyCoords[7][2] = {
 // operator=. The DC xref graph corroborates - this compiland reaches
 // basic_string's CONSTRUCTOR (plus an allocator<char> temporary) and no
 // assignment operator.
+// Retail retains the const getArmy overload at every town-army read.
+// A read-only town pointer restores those identities without changing bytes.
+// The DC three-resource array restores four bytes of the frame and raises
+// 94.8000 to 94.8201%; changing only its enum element type is byte-flat.
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
 VA(0x004521f0, 0x8D4) MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
@@ -700,7 +705,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
-    town* which = g_game->getCurrTown();
+    const town* which = g_game->getCurrTown();
 
     m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
         which->getPortraitFrame(false), 0, 0, 0, 0x10));
@@ -739,11 +744,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 
     if (which->hasBuilding(MARKETPLACE_SILO_ID, true)) {
         int* resource = which->getSiloIncome();
-        int slots[2];
+        EGameResource slots[3];
         int found = 0;
         for (int i = 0; i <= 6; i++) {
             if (resource[i] != 0)
-                slots[found++] = i;
+                slots[found++] = H3_ENUM_DECODE(EGameResource, i);
         }
         if (found == BOTTOM_VIEW_SILO_TWO_RESOURCES) {
             m_widgets.push_back(new iconWidget(6, 75, 20, 18, 0x7d7,

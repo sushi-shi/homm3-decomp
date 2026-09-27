@@ -2228,12 +2228,15 @@ long army::getAdjustedAttack(const army* enemy,
     return attack;
 }
 
+// DC2624/2626 separates the adjusted call from the base-skill subtraction.
+// Its named result preserves both retained compiler bodies and restores
+// getUnitCombatValue's expanded register schedule with the defense counterpart.
 VA(0x00442550, 0x35) MAC_ADDRESS(0x04e2d4, 0x48)  // dc 0x477b8
 long army::getAttackModifier(const army* enemy,
                                unsigned char rangedAttack) const
 {
-    return getAdjustedAttack(enemy, rangedAttack)
-        - g_creatureTypeTraits[m_creatureType].m_attackSkill;
+    long adjusted = getAdjustedAttack(enemy, rangedAttack);
+    return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;
 }
 
 VA(0x00442590, 0xC2) MAC_ADDRESS(0x04e31c, 0x17c)  // dc 0x477e8
@@ -2265,8 +2268,8 @@ long army::getAdjustedDefense(const army* enemy,
 VA(0x00442660, 0x29) MAC_ADDRESS(0x04e498, 0x50)  // dc 0x478c8
 long army::getDefenseModifier() const
 {
-    return getAdjustedDefense(0, 1)
-        - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
+    long adjusted = getAdjustedDefense(0, 1);
+    return adjusted - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
 }
 
 // E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
@@ -2419,7 +2422,12 @@ static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 // blocks, with all 38 branches and both returns exact. Mac 0x4ec84..0x4ecd4
 // joins both siege outcomes through result. Restoring that common source
 // return also recovers Windows' local 0.1 materialization: 96.5871 -> 97.4258,
-// 70/71 exact CFG blocks. Modifier-expansion register scheduling remains.
+// 70/71 exact CFG blocks. Naming each modifier helper's adjusted result
+// restores the remaining register schedule. Retail VA0x442deb and Mac
+// 0x4ec1c/0x4ec2c prove the side-mass exclusion mask is 0x600040:
+// siege, immobilized and summoned armies. The old 0x1d0 accidentally
+// matched a delinker addend on robAppBlit, not the pinned instruction.
+// Together these changes reproduce all Windows instructions at 100%.
 VA(0x00442a50, 0x410) MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global, dc 0x47cf4
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
@@ -2465,7 +2473,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
         army* group = g_combatManager->m_armies[m_combatSide];
         for (long i = 0; i < g_combatManager->m_numArmies[m_combatSide];
              i++, group++) {
-            if (!group->is(creatureAlive | creatureSiegeWeapon | creatureKing1 | creatureKing2)) {
+            if (!group->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
                 sum += group->getTotalHitPoints(0);
             }
         }

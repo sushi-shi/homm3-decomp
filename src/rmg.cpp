@@ -1135,29 +1135,34 @@ void TRmgMapItem::write(TAbstractFile* outfile)
 }
 VA_COMPGEN(0x005329A0, 0x32, IMPLICIT_DTOR, TRmgTownSlot) MAC_COMPGEN_ADDRESS(0x22f660, 0x68, IMPLICIT_DTOR, TRmgTownSlot)
 
+// Native 0x22f6c8 counts enabled town types and uniformly selects one.
+// It returns -1 for an empty set. Both the zone constructor (0x22f834)
+// and additional-town placement (0x248878) retain this shared selection.
+// Windows keeps the constructor exact and improves additional-town placement
+// from 76.6561% to 79.53% with the same helper and random-number consumption.
+MAC_ADDRESS(0x22f6c8, 0xb4)
+int TRmgTownSlot::selectAllowedTown()
+{
+    int available = 0;
+    for (int town = 0; town < 9; ++town) {
+        if (m_allowedTowns[town])
+            ++available;
+    }
+    if (!available)
+        return -1;
+    int selected = rand() % available;
+    for (town = 0; town < 9; ++town) {
+        if (m_allowedTowns[town] && --selected < 0)
+            return town;
+    }
+    return -1;
+}
+
 VA(0x005329E0, 0xCF) MAC_ADDRESS(0x22f7c4, 0xc0) // anchor-callee 0x53e149/0x53e45c; thiscall, ret 4
 TRmgZone::TRmgZone(TRmgTownSlot* newSlot)
 {
     m_slot = newSlot;
-    int available = 0;
-    for (int town = 0; town < 9; ++town) {
-        if (newSlot->m_allowedTowns[town])
-            ++available;
-    }
-    int selectedTown;
-    bool chosen = 0;
-    if (available) {
-        int selected = rand() % available;
-        for (selectedTown = 0; selectedTown < 9; ++selectedTown) {
-            if (newSlot->m_allowedTowns[selectedTown] && --selected < 0) {
-                chosen = 1;
-                break;
-            }
-        }
-    }
-    if (!chosen)
-        selectedTown = -1;
-    m_alignment = selectedTown;
+    m_alignment = newSlot->selectAllowedTown();
     m_boundaryRoughness = newSlot->m_size;
     m_bounds.m_minimumX = 32000;
     m_bounds.m_maximumX = -32000;
@@ -2406,6 +2411,20 @@ void TRmgTreasureGroup::reset()
         item->setTerrain(eTerrainDirt, 0, 0, 0);
         ++item;
     }
+}
+
+// Native 0x232fc4 marks the group ready and flags every surface-outline cell.
+// Its retained callers are assembleTreasureGroup, placeQuestArtifact and
+// placeKeyTentGuard; Windows expands the same shared loop in those callers.
+// Recovery improves the key-tent caller 71.2882% -> 78.1076%; assembly and
+// quest-artifact caller lowering still need recovery. Keep the shared body.
+MAC_ADDRESS(0x232fc4, 0x64)
+void TRmgTreasureGroup::markPlacementOutline()
+{
+    m_ready = 1;
+    for (unsigned int index = 0; index < m_outline.size(); ++index)
+        m_map.getMapItem(m_outline[index].m_x,
+            m_outline[index].m_y)->m_tileData.m_placementOutline = 1;
 }
 
 // Native 0x233d18 tests each group's object trait before the caller checks
@@ -5599,10 +5618,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 int nextCost = cost;
                 if (direction & 1)
                     ++nextCost;
-                TRmgMapPosition nextPosition;
-                nextPosition.m_x = currentPosition.m_x + g_rmgDirections[direction].m_x;
-                nextPosition.m_y = currentPosition.m_y + g_rmgDirections[direction].m_y;
-                nextPosition.m_z = currentPosition.m_z;
+                TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
                 if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
                     || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
                     continue;
@@ -5930,33 +5946,18 @@ void type_random_map_generator::markBorderObjectArea(
     }
 }
 
-// Provisional arithmetic boundary for the Complete-only position value.
-// CreateRiver supports a by-value direction. Ground connection retains the
-// original coordinate before translation at 0x54128c..0x5412be and
-// 0x5414cb..0x5414ff. Construct that value, apply the canonical compound
-// translation, then return it. This remains an ordinary helper.
-// With ground's source-slot locals, this reaches 81.81753%; the prior direct
-// translated construction reaches 78.071556%. Copying *this instead of
-// constructing the coordinate collapses the temporary (76.631485% without
-// the slot locals). The precise constructor expansion remains unresolved.
-// The map-position source family preserves implicit special members and
-// tests real copy/return/field orders. Direct-copy then returning += brings
-// CreateRiver's frame to retail 0xbc and 53 CFG blocks to exact shape
-// (75.6332%, versus 73.2613% and nine blocks with coordinate construction).
-// Ground/flood collateral CUR falls; their unchanged own-source MAX stays.
-// An explicit x/z/y copy constructor restores OpenConnectionPath's initial
-// lookup and 0x2c frame, but emits an extra lookup and disrupts retained STL
-// copies: do not infer that special member from its 82.0101% score alone.
-// New positive evidence: markRiverCoastTarget at 0x548a75/0x548b2c calls
-// the three-coordinate constructor on already translated x/y. Direct
-// translated construction restores both named calls; copy-plus-compound
-// omits both. Coast scores 65.57% -> 75.98%, then x/y compound order 76.72%.
-// Measured constructor collateral: GroundConnection 78.07%, ConnectZones
-// 93.62%, OpenConnectionPath 79.97%, CreateRiver 85.73%. Prior peaks stay
-// banked; lower scores do not refute these newly proven constructor calls.
-TRmgMapPosition TRmgMapPosition::operator+(TPoint offset) const
+// Native ground (0x243c40), road (0x24c18c), object-score (0x24288c)
+// and coast (0x24ced0) callers copy both the full position and planar offset
+// before forming the returned coordinate. A free by-value addition preserves
+// those operands; the former member did not copy its position receiver.
+// Keep the ordinary three-coordinate constructor in the canonical body.
+// Windows ground improves 81.8175% -> 90.8247%, shipyard 88.7664% -> 89.1042%,
+// and the road caller's restored addition reaches 83.9095% from 81.8701%.
+// The same call in object-score propagation still needs its surrounding
+// lowering recovered (71.7054% -> 68.0291%); do not flatten the addition.
+TRmgMapPosition operator+(TRmgMapPosition position, TPoint offset)
 {
-    return TRmgMapPosition(m_x + offset.m_x, m_y + offset.m_y, m_z);
+    return TRmgMapPosition(position.m_x + offset.m_x, position.m_y + offset.m_y, position.m_z);
 }
 
 // Y-before-X alters the exact fillIslandInterior expansion while leaving the
@@ -5975,13 +5976,12 @@ TRmgMapPosition& TRmgMapPosition::operator-=(const TPoint& offset)
     return *this;
 }
 
-// The ground, shipyard and gate paths share this placement sequence.
-// Shipyard retains an independent y/z coordinate copy at 0x541ff8/0x54200c,
-// consistent with this by-value helper boundary. Name and boundary are a
-// retail-only hypothesis. All five connection sites use this ordinary body;
-// flattening the ground copies loses its final retained map-item accesses.
-// Shipyard is byte-neutral versus a flat body with a separate position copy.
-void type_random_map_generator::placeGuard(TRmgMapPosition position, int value)
+// Native 0x243498 retains this guard-placement helper at all eight sites:
+// ground twice, shipyard once, gate twice, monolith twice and mine once.
+// The incoming value is r4 and the copied position is r5/r6/r7; preserve
+// that argument order. The corrected signature is Windows byte-flat.
+MAC_ADDRESS(0x243498, 0xd4)
+void type_random_map_generator::placeGuard(int value, TRmgMapPosition position)
 {
     TRmgMapItem* item = m_map.getMapItem(position);
     TRmgZone* zone = m_zones[item->m_zoneState.m_zone];
@@ -6014,6 +6014,10 @@ void type_random_map_generator::placeGuard(TRmgMapPosition position, int value)
 // Older controls: direct range erase expands further (71.29874%); naming
 // candidateCount before the empty test is 75.386406%. The two size calls
 // preserve retail's count reuse through min. No inline pin is retained.
+// With the copied-position addition, binding both input slots before their
+// zone indices follows the native 0x243b24..0x243b38 prefix and raises
+// Windows 90.8247% -> 91.9803%. The 0x5c frame now agrees; the remaining
+// difference includes the map query expanded inside both guard placements.
 VA(0x00541140, 0x63A) MAC_ADDRESS(0x243af8, 0x53c) // anchor-callee ConnectZones 0x543550; retail-only
 unsigned char type_random_map_generator::createGroundConnection(
     TRmgZone* source,
@@ -6022,8 +6026,8 @@ unsigned char type_random_map_generator::createGroundConnection(
     std::vector<TRmgMapPosition>* borderPositions)
 {
     TRmgTownSlot* sourceSlot = source->m_slot;
-    int sourceZone = sourceSlot->m_zoneIndex;
     TRmgTownSlot* destinationSlot = connection->m_destination;
+    int sourceZone = sourceSlot->m_zoneIndex;
     TRmgZone* destination = m_zones[destinationSlot->m_zoneIndex];
     int destinationZone = destination->m_slot->m_zoneIndex;
     if (source->getLevelPosition().m_z != destination->getLevelPosition().m_z)
@@ -6099,9 +6103,9 @@ unsigned char type_random_map_generator::createGroundConnection(
 
         if (guardValue > 0) {
             if (!(rand() & 1)) {
-                placeGuard(position, guardValue);
+                placeGuard(guardValue, position);
             } else {
-                placeGuard(otherPosition, guardValue);
+                placeGuard(guardValue, otherPosition);
             }
         }
     }
@@ -6382,7 +6386,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     if (guardValue > 0) {
         nearby = position + TPoint(0, 1);
         nearby.m_x = entranceX;
-        placeGuard(nearby, guardValue);
+        placeGuard(guardValue, nearby);
     }
     return 1;
 }
@@ -6573,8 +6577,8 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     }
 
     if (guardValue > 0) {
-        placeGuard(position, guardValue);
-        placeGuard(otherPosition, guardValue);
+        placeGuard(guardValue, position);
+        placeGuard(guardValue, otherPosition);
     }
 
     return 1;
@@ -6728,7 +6732,7 @@ void type_random_map_generator::createMonolithConnection(
             && placeMonolithBorder(object->getPosition(), destination)) {
             guardValue = 0;
         } else if (guardValue > 0) {
-            placeGuard(object->getPosition() + TPoint(0, 1), guardValue);
+            placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
         }
     }
     object = new type_object(properties);
@@ -6746,7 +6750,7 @@ void type_random_map_generator::createMonolithConnection(
         if (!connection->m_placeBorderObjects
             || !placeMonolithBorder(object->getPosition(), source)) {
             if (guardValue > 0)
-                placeGuard(object->getPosition() + TPoint(0, 1), guardValue);
+                placeGuard(guardValue, object->getPosition() + TPoint(0, 1));
         }
     }
     if (exitProperties) {
@@ -7549,20 +7553,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
 {
     TRmgTownSlot* slot = zone->m_slot;
     if ((player == -1 && !slot->m_neutralTownsMatchZone) || alignment == -1) {
-        int count = 0;
-        for (int town = 0; town < 9; ++town)
-            if (slot->m_allowedTowns[town])
-                ++count;
-        alignment = -1;
-        if (count) {
-            int selected = rand() % count;
-            for (town = 0; town < 9; ++town) {
-                if (slot->m_allowedTowns[town] && --selected < 0) {
-                    alignment = town;
-                    break;
-                }
-            }
-        }
+        alignment = slot->selectAllowedTown();
         if (alignment == -1)
             alignment = rand() % (8 + (m_mapVersion >= 1));
     }
@@ -7871,7 +7862,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
         item->m_tileData.m_subterraneanGate = 1;
     }
     if (guardValue > 0)
-        placeGuard(entrance, guardValue);
+        placeGuard(guardValue, entrance);
     int placed = 0;
     TRmgObjectPropertiesRef* resourceProperties = selectObjectPrototype(terrain, RESOURCE, resource);
     if (!resourceProperties)
@@ -8238,11 +8229,7 @@ unsigned char type_random_map_generator::assembleTreasureGroup(TRmgZone* zone,
         }
     }
     group->traceOutline();
-    group->m_ready = 1;
-    for (unsigned i = 0; i < group->m_outline.size(); ++i) {
-        group->m_map.getMapItem(group->m_outline[i].m_x,
-            group->m_outline[i].m_y)->m_tileData.m_placementOutline = 1;
-    }
+    group->markPlacementOutline();
     return 1;
 }
 
@@ -8780,11 +8767,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
         }
 
         while (direction--) {
-            TPoint* directionOffset = &g_rmgDirections[direction];
-            TRmgMapPosition nextPosition;
-            nextPosition.m_x = position.m_x + directionOffset->m_x;
-            nextPosition.m_y = position.m_y + directionOffset->m_y;
-            nextPosition.m_z = position.m_z;
+            TRmgMapPosition nextPosition = position + g_rmgDirections[direction];
 
             if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
                 || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
@@ -10119,11 +10102,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     group.addObject(questObject, position);
     group.updateBounds();
     group.traceOutline();
-    group.m_ready = 1;
-    for (unsigned int index = 0; index < group.m_outline.size(); ++index) {
-        group.m_map.getMapItem(group.m_outline[index].m_x,
-            group.m_outline[index].m_y, 0)->m_tileData.m_placementOutline = 1;
-    }
+    group.markPlacementOutline();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
         TRmgMapPosition originalPosition = object->m_position;
@@ -10185,10 +10164,7 @@ unsigned char type_random_map_generator::placeKeyTentGuard(type_object* object, 
     if (fillTreasureGroup(origin, &group, 0, maxValue) && group.addGuard(guard)) {
         group.updateBounds();
         group.traceOutline();
-        group.m_ready = 1;
-        for (unsigned int i = 0; i < group.m_outline.size(); ++i)
-            group.m_map.getMapItem(group.m_outline[i].m_x,
-                group.m_outline[i].m_y)->m_tileData.m_placementOutline = 1;
+        group.markPlacementOutline();
         if (placeQuestGroup(&group, origin))
             return 1;
     } else {
