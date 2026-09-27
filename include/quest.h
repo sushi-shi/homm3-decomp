@@ -65,6 +65,12 @@ enum EQuestType {
 // 0x40; nothing between the vptr and there is attested.
 class type_quest {
 public:
+    // Native Mac ctor 0x163ff4 places the vptr before selector +4 and texts
+    // +8/+c/+10. CodeWarrior follows the first virtual declaration's position;
+    // declaring this existing slot before fields restores that layout. Windows
+    // keeps its original vptr-first layout and all current byte matches.
+    virtual ~type_quest();
+
     // SLICED 2026-08-21 out of the family's slot-13 serializer, which
     // writes every one of these in this order and is the only body in
     // the image that touches all of them: a byte at +0x04, a byte
@@ -109,11 +115,6 @@ public:
     // nothing in this tree reaches them yet, so they are placeholders whose
     // only job is to hold the offsets - do NOT invent semantics for them.
 
-    // Slot 0: the destructor. Retail's slot-0 bodies are scalar deleting
-    // dtors - 0x571530 is `call <base dtor> / test [ebp+8],1 / call
-    // operator delete / mov eax,esi`, the standard `??_G` shape - so the
-    // source declared `virtual ~type_quest()`.
-    virtual ~type_quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
     virtual int getAIValue(int player) { return 0; }
