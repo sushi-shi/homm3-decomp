@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+import struct
 
 
 class ObjectError(ValueError):
@@ -16,6 +17,61 @@ class ObjectError(ValueError):
 _HUNK = re.compile(r'^Hunk:\s+Kind=(\S+).*Name="([^"]+)"\(\d+\)\s+Size=(\d+)')
 _WORD = re.compile(r'^([0-9A-Fa-f]{8}):\s+([0-9A-Fa-f]{8})(?:\s|$)')
 _XREF = re.compile(r'^XRef:\s+Kind=(\S+)\s+Offset=\$([0-9A-Fa-f]{8})(?:.*Name="([^"]+)")?')
+
+
+def native_symbol_names(data: bytes) -> dict[int, str]:
+    """Read the pinned MWOB PowerPC component's indexed name table.
+
+    MWLink's display buffer damages names longer than 190 characters. Native
+    names are NUL-terminated, preceded by a two-byte hash; index zero is absent.
+    This reads metadata only. MWLink still owns all code boundaries and bytes.
+    """
+    if len(data) < 48 or not data.startswith(b"MWOBPPC "):
+        raise ObjectError("not a native PowerPC object")
+    component = struct.unpack_from(">I", data, 40)[0]
+    if component + 20 > len(data) or data[component:component + 4] != b"POWR":
+        raise ObjectError("missing native PowerPC component")
+    strings, count = struct.unpack_from(">II", data, component + 12)
+    cursor = component + strings
+    if count < 1 or count > len(data) // 3 or cursor < component + 20:
+        raise ObjectError("invalid native symbol table extent")
+    names = {}
+    for index in range(1, count):
+        cursor += 2  # The hash is not a string length or symbol identity.
+        end = data.find(b"\0", cursor)
+        if cursor >= len(data) or end < 0:
+            raise ObjectError("truncated native symbol table")
+        try:
+            names[index] = data[cursor:end].decode("ascii")
+        except UnicodeDecodeError as exc:
+            raise ObjectError("unsupported native symbol encoding") from exc
+        cursor = end + 1
+    return names
+
+
+def restore_listing_names(output: str, data: bytes) -> str:
+    """Join each displayed name to its native index; reject inconsistent labels."""
+    names = native_symbol_names(data)
+
+    def verified(displayed, index):
+        full = names.get(int(index))
+        if full is None:
+            raise ObjectError(f"listing name index {index} is outside the native table")
+        if displayed != full and not (len(full) > 190 and len(displayed) == 191
+                                      and displayed[:190] == full[:190]):
+            raise ObjectError(f"listing name {index} disagrees with the native table")
+        return full
+
+    def field(match):
+        return f'Name="{verified(match[1], match[2])}"({match[2]})'
+
+    def entry(match):
+        return match[1] + verified(match[3], match[2])
+
+    output = re.sub(r'Name="([^"\n]*)"\((\d+)\)', field, output)
+    header, separator, hunks = output.partition("Hunk:")
+    header = re.sub(r'^([ \t]+(\d+): )(.*)$', entry, header, flags=re.MULTILINE)
+    return header + separator + hunks
 
 
 @dataclass(frozen=True)

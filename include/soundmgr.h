@@ -147,6 +147,7 @@ public:
     // baseManager's third pure slot. Declared so kb's InitMainClasses can
     // `new` this manager; the vftable at 0x63fe54 already carries the slot.
     virtual int main(message& msg);
+    void initializeSamples();
     ds_memsample* memorySample(sample* samplePointer);
     int getSampleInfo(ds_memsample* inSample, short operation);
     void switchAmbientMusic(int newMusicFileId);

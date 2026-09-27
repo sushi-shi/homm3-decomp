@@ -136,7 +136,7 @@ static int mainMenuHandler(message& msg)
 
     if (g_checkDiskSpace) {
         if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_MAIN_MENU_LOW_DISK),
+            normalDialog((*g_generalText)[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
             g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
@@ -145,22 +145,22 @@ static int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = g_generalText->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+        const char* fill = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
         if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
             g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? g_generalText->getText(GENERAL_TEXT_RESTORATION_OF_ERATHIA)
-                : g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                ? (*g_generalText)[GENERAL_TEXT_RESTORATION_OF_ERATHIA]
+                : (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_WRONG_CD_EDITION_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_WRONG_CD_EDITION_FORMAT],
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -198,7 +198,7 @@ static int mainMenuHandler(message& msg)
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_lobbyLaunched) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     videoResume();
@@ -214,7 +214,7 @@ static int mainMenuHandler(message& msg)
             }
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = g_mainMenu->findWidget(msg.m_mouseY, msg.m_mouseX);
+        int hoverID = g_mainMenu->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
             g_lastImHoverId = hoverID;

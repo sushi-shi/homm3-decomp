@@ -61,6 +61,8 @@ public:
     // the constructor: it lights CREATURE_INFO_VERBOSE_ID when the field is
     // 1 and CREATURE_INFO_COMPACT_ID when it is 2.
     enum ECreatureInfoLevel {
+        // Native processCombatMsg's zero arm leaves creature info hidden.
+        CREATURE_INFO_LEVEL_NONE = 0,
         CREATURE_INFO_LEVEL_VERBOSE = 1,
         CREATURE_INFO_LEVEL_COMPACT = 2
     };

@@ -8,6 +8,39 @@ from homm3.mac.source import SourceError, load_data
 
 
 class TestFragmentData(unittest.TestCase):
+    def test_qualified_initializer_preserves_owner_and_requires_emitted_symbol(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (root / "src").mkdir()
+            declaration = "DATA(0x00400100) int Town::values[2] = {3, 7};"
+            (root / "src/owner.cpp").write_text(declaration + "\n")
+            manifest = root / "config/mac/data.toml"
+            body = f'''[[data]]
+retail_va = 0x00400100
+source = "src/owner.cpp"
+mac_section = 1
+mac_offset = 0x40
+mac_size = 8
+sha256 = "{sha256(bytes(8)).hexdigest()}"
+evidence = "Complete reviewed static-member initializer and consumer."
+'''
+            manifest.write_text(body)
+            with self.assertRaisesRegex(SourceError, "needs its emitted mac_symbol"):
+                load_data(root)
+            manifest.write_text(body + 'mac_symbol = "values__4Town"\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.name, "Town::values")
+            self.assertEqual(pair.mac_symbol, "values__4Town")
+            self.assertEqual(pair.definition, "int Town::values[2] = {3, 7};")
+            self.assertFalse(pair.declaration_only)
+            manifest.write_text(body + 'mac_symbol = "values__4Town"\n'
+                                + 'declaration_only = true\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.definition, "")
+            self.assertTrue(pair.declaration_only)
+
     def test_registered_file_scope_const_table_and_duplicate_rejection(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -54,6 +87,46 @@ evidence = "Pinned source-owned table and TOC destination."
             owner.write_text('#include "../include/inline/table.inl"\n')
             registry.unlink()
             with self.assertRaisesRegex(SourceError, "expected one DATA"):
+                load_data(root)
+
+    def test_function_owned_mutable_initializer_and_owner_guards(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (root / "src").mkdir()
+            owner = root / "src/owner.cpp"
+            body = "VA(0x00400200, 32)\nvoid f() {\n%s\n}\n"
+            declaration = "DATA(0x00400100) static int towers[4] = {3,7,0,6};"
+            owner.write_text(body % declaration)
+            manifest = root / "config/mac/data.toml"
+            manifest.write_text(f'''[[data]]
+retail_va = 0x00400100
+owner_va = 0x00400200
+source = "src/owner.cpp"
+mac_section = 1
+mac_offset = 0x40
+mac_size = 16
+sha256 = "{sha256(bytes(16)).hexdigest()}"
+evidence = "Reviewed mutable local static array, complete payload and owner."
+''')
+            pair, = load_data(root)
+            self.assertEqual(pair.local_owner_va, 0x00400200)
+            self.assertEqual(pair.mac_symbol, "towers")
+            self.assertFalse(pair.read_only)
+            self.assertEqual(pair.definition, "")
+            owner.write_text(body % declaration.replace("static ", ""))
+            with self.assertRaisesRegex(SourceError, "canonical static initializer"):
+                load_data(root)
+            owner.write_text(body % declaration.replace(" = {3,7,0,6}", ""))
+            with self.assertRaisesRegex(SourceError, "unsupported Mac data definition"):
+                load_data(root)
+            owner.write_text(declaration + "\n" + body % "")
+            with self.assertRaisesRegex(SourceError, "outside its claimed function owner"):
+                load_data(root)
+            owner.write_text(body % declaration)
+            manifest.write_text(manifest.read_text() + 'mac_symbol = "towers$7"\n')
+            with self.assertRaisesRegex(SourceError, "counters must not be pinned"):
                 load_data(root)
 
 

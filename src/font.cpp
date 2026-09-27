@@ -27,11 +27,12 @@ font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
         memcpy(m_data, d, dsize);
 }
 
+// Mac 0:0xc8dc8 uses array delete for the new[] glyph buffer.
 VA(0x004b5110, 0x67) MAC_ADDRESS(0x0c8d94, 0x7c)  // dc 0xa1c94
 font::~font()
 {
     if (m_data)
-        delete m_data;
+        delete[] m_data;
 }
 
 // E:\gamedcs\font.cpp:56..76. Original name: GetColor.
@@ -220,8 +221,12 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 // the branch sequences now AGREE). `while (str[pos] != ' ' &&
 // pos >= lineStart)` scores the same; `pos <= lineStart` as the break
 // condition is worse (96.59).
-// The source-faithful plain bottom-justification `total` is retained at
-// 96.8123. A prior volatile probe raised the banked MAX to 98.7864 by
+// The plain bottom-justification `total` is retained. Overflow-only recovery
+// locals preserve the canonical wrapping helpers. Separately initialize
+// currY before strlen and pos after it: Windows is exact (2026-09-27).
+// Twelve declaration/lifetime spellings reproduce Windows exact; this order
+// also improves the unresolved Mac comparison (30.20 -> 30.71%, 980/968 bytes).
+// A prior volatile probe raised the banked MAX to 98.7864 by
 // aligning the scratch-register family, but retail keeps `total` in EAX;
 // the qualifier itself forces three non-retail stack-memory instructions.
 // Reusing the later-overwritten iHeight or width local is byte-identical
@@ -237,12 +242,10 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              font::TColor colorScheme, unsigned justification,
                              int cursorPos)
 {
-    int pos = 0;
-    int limit;
     int currY;
+    int pos;
+    int limit;
     int lineStart;
-    int okWidthIndex;
-    int origPixelWidth;
     int height;
     int width;
 
@@ -250,6 +253,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         return;
     currY = 0;
     limit = strlen(str);
+    pos = 0;
     if (limit == 0) {
         if (cursorPos != -1) {
             drawCursor(bitmap, x, y, getColor(colorScheme, false),
@@ -307,8 +311,8 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         if (pos > 0 && m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
             width -= m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC;
         if (width > boxWidth) {
-            origPixelWidth = width;
-            okWidthIndex = 0;
+            int origPixelWidth = width;
+            int okWidthIndex = 0;
             if (m_fs.m_abc[static_cast<unsigned char>(str[k])].m_abcC < 0)
                 width += m_fs.m_abc[str[k]].m_abcC;
             pos = k;
@@ -319,7 +323,7 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
                     width -= getCharacterWidth(str[pos]);
-                    if (height * 2 + currY > boxHeight && width < boxWidth)
+                    if (currY + 2 * height > boxHeight && width < boxWidth)
                         break;
                     if (okWidthIndex == 0 && width < boxWidth)
                         okWidthIndex = pos;
@@ -353,11 +357,12 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
+// The ordinary ABC sum order matches both retained retail bodies exactly.
 VA(0x004b57a0, 0x25) MAC_ADDRESS(0x0c9600, 0x28)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {
     const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
-    return record->m_abcB + record->m_abcC + record->m_abcA;
+    return record->m_abcA + record->m_abcB + record->m_abcC;
 }
 
 VA(0x004b57d0, 0x44) MAC_ADDRESS(0x0c9628, 0x68)  // dc 0xa2438
@@ -424,12 +429,14 @@ int font::lineWidth(const char* text) const
     return width;
 }
 
+// Ordinary len/pos/best declaration order matches both Windows and Mac;
+// the native difference was seven uses of the swapped best/pos registers.
 VA(0x004b5990, 0x76) MAC_ADDRESS(0x0c9888, 0xc4)  // dc 0xa25c8
 int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
-    int best = 0;
     int pos = 0;
+    int best = 0;
     while (pos < len && str[pos] != 0) {
         int lineWidth = 0;
         while (str[pos] != 0 && str[pos] != '\n') {
@@ -516,19 +523,29 @@ int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 // `result` at `boxWidth` pixels. Retail proves the receiver outright -
 // the space width is `fs.abc[' ']` read as this+0x1bc/0x1c0/0x1c4 - and
 // NH3API corroborates the name and the parameter shape only.
+// Mac 0xc9d04..0xc9d08 adds line width before subtracting word width;
+// 0xc9d74..0xc9d7c counts pending spaces down. Both source forms restore
+// the Windows retail body while retaining every string/vector helper.
+// Mac's local register order also fixes the entry declarations below: p,
+// wordEnd, wordWidth, lineWidth, spaceCount, spaceWidth. Windows stays exact.
 
 VA(0x004b5b90, 0x3A5) MAC_ADDRESS(0x0c9b78, 0x270)  // anchor-member (fs.abc[' '] at this+0x1bc), retail-only
 void font::fillLinesVector(const char* str, int boxWidth,
                            std::vector<std::string>& result)
 {
-    int lineWidth = 0;
+    const char* p;
+    const char* wordEnd;
+    int wordWidth;
     std::string line;
+    int lineWidth = 0;
+    int spaceCount;
+    int spaceWidth;
     line = "";
-    const char* p = str;
+    p = str;
     result.clear();
     while (*p != 0) {
-        int spaceWidth = 0;
-        int spaceCount = 0;
+        spaceWidth = 0;
+        spaceCount = 0;
         int blankWidth = getCharacterWidth(' ');
         while (*p == ' ' || *p == '\n') {
             if (*p == '\n') {
@@ -543,8 +560,8 @@ void font::fillLinesVector(const char* str, int boxWidth,
             }
             p++;
         }
-        int wordWidth = 0;
-        const char* wordEnd = p;
+        wordWidth = 0;
+        wordEnd = p;
         while (*wordEnd != 0 && *wordEnd != ' ' && *wordEnd != '\n') {
             wordWidth += getCharacterWidth(*wordEnd);
             wordEnd++;
@@ -563,8 +580,8 @@ void font::fillLinesVector(const char* str, int boxWidth,
                     if (lineWidth + charWidth > boxWidth)
                         break;
                     line += *p;
-                    wordWidth -= charWidth;
                     lineWidth += charWidth;
+                    wordWidth -= charWidth;
                     p++;
                 }
                 result.push_back(line);
@@ -572,7 +589,7 @@ void font::fillLinesVector(const char* str, int boxWidth,
                 lineWidth = 0;
             }
         }
-        for (int space = 0; space != spaceCount; space++)
+        while (spaceCount--)
             line += ' ';
         lineWidth += spaceWidth;
         while (p != wordEnd) {

@@ -282,20 +282,25 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
         if any(value.data is None for value in values):
             raise ObjectError(f"TOC symbol {name!r} has a truncated MWLink data listing; payload unavailable")
         external = (name in named and named[name][2]) or name in external_vtables
-        if (name in named and not named[name][2] and not named[name][3]
+        if (name in named and not named[name][2]
+                and (not named[name][3] or named[name][5])
                 and named[name][4] is not None and unit != named[name][4]
                 and not values and indirect):
-            # A reviewed initializer can live in its original owning TU while
+            # Reviewed externally linked storage can live in its owning TU while
             # another candidate TU refers to it through the indirect TOC.
             # If this object emits the datum, its payload is checked below.
             external = True
         if name in descriptors:
             target, code_name = descriptors[name]
             descriptor_values = [hunk for hunk in hunks if hunk.name == name and hunk.storage_class == "DS"]
-            if (not indirect or external or values or len(descriptor_values) != 1
-                    or descriptor_values[0].data != bytes(8)
-                    or descriptor_values[0].xrefs != ((0, "HUNK_XREF_32BIT", code_name),
-                                                     (4, "HUNK_XREF_32BIT", "TOC"))):
+            # MULTIDEF constructor glue can emit the same transition vector
+            # once per use. Every copy must name the reviewed code and TOC;
+            # differing copies are conflicts, never an arbitrary first choice.
+            expected_xrefs = ((0, "HUNK_XREF_32BIT", code_name),
+                              (4, "HUNK_XREF_32BIT", "TOC"))
+            if (not indirect or external or values or not descriptor_values
+                    or any(hunk.data != bytes(8) or hunk.xrefs != expected_xrefs
+                           for hunk in descriptor_values)):
                 raise ObjectError(f"emitted function descriptor differs: {name!r}")
             value = descriptor_values[0]
         elif external:
@@ -307,7 +312,7 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
             raise ObjectError(f"TOC symbol {name!r} needs one nonrelocatable emitted data payload")
         else:
             value = values[0]
-        if name in named and named[name][5]:
+        if name in named and named[name][5] and not external:
             # CodeWarrior gives source-owned uninitialized arrays and globals
             # with external linkage RW storage and an indirect TOC load.
             # Require exact zero payload and the original owning TU.
@@ -316,7 +321,7 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
                     or value.storage_class != "RW" or not indirect
                     or len(value.data) != len(expected) or value.data != expected):
                 raise ObjectError(f"same-TU indirect UDATA {name!r} lacks its reviewed zero storage")
-        elif name in named and named[name][3]:
+        elif name in named and named[name][3] and not external:
             # The authored source owns uninitialized same-TU storage. A
             # CodeWarrior UDATA hunk and a direct TOC reference are required;
             # accepting IDATA here would invent an initializer.
@@ -356,8 +361,10 @@ def _bindings(root: Path, pef: PEF, code: CodeHunk,
                         and -0x8000 <= target.offset - toc.offset < 0x8000)
         if indirect:
             cells = [hunk for hunk in hunks if hunk.name == name and hunk.storage_class == "TC"]
-            if (len(cells) != 1 or cells[0].data != bytes(4)
-                    or cells[0].xrefs != ((0, "HUNK_XREF_32BIT", name),)):
+            if (not cells or (name not in descriptors and len(cells) != 1)
+                    or any(cell.data != bytes(4)
+                           or cell.xrefs != ((0, "HUNK_XREF_32BIT", name),)
+                           for cell in cells)):
                 raise ObjectError(f"TOC symbol {name!r} lacks its MWOB pointer cell")
         if indirect and not address_load:
             sites = [at for at in _loader_entry(pef)[3].get(target, ())

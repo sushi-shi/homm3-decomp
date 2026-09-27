@@ -56,6 +56,25 @@
 #include <unistd.h>
 #define _INC_IO
 #define _INC_DIRECT
+// Windows directory enumeration is referenced by the shared map browser.
+// MSL has no equivalent declaration; these retain the VC6 CRT record/ABI.
+struct _finddata_t {
+    unsigned attrib;
+    long time_create;
+    long time_access;
+    long time_write;
+    unsigned long size;
+    char name[260];
+};
+#if defined(__cplusplus)
+extern "C" {
+#endif
+long _findfirst(const char*, struct _finddata_t*);
+int _findnext(long, struct _finddata_t*);
+int _findclose(long);
+#if defined(__cplusplus)
+}
+#endif
 
 #endif /* __MWERKS__ */
 

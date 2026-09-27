@@ -199,21 +199,13 @@ const int g_townNameFixedLength = 13;
 // generatorBonus, mageGuildSpellCounts, the three building masks, the
 // mage-guild spell grid, a 70-BYTE buffer unpacked one BIT at a time into
 // the bitset<70>, and a packed byte that splits three ways.
-// Residual (98.17%): branches and the whole call multiset agree. Retail
-// reads the five position/dock bytes through a SECOND char local, homed
-// at [ebp-1], while the other twelve byte reads share charBuffer in the
-// dead `infile` parameter home at [ebp+0xb] - recovering that local moves
-// the spilled `this` to retail's [ebp-8]. What is left is one frame slot:
-// retail also homes the name length in the dead `saveVersion` parameter
-// home at [ebp+0xc] (it loads the dword and masks 0xffff), so its frame
-// stays 0x54 where ours takes a fourth slot at [ebp-0x10] and 0x58.
-// A 40-member source family over the local block, the length read and the
-// name assignment ceilings at this same 98.1694 with 14 distinct objects, so
-// the slot is not reachable from declaration order, scope or width: byte-flat
-// are nameLength at function top (int or unsigned short), spellBuf first,
-// posBuffer first, and an undeclared assignment; worse are an unsigned short
-// nameLength read (98.10), reading into `saveVersion` itself (97.60) and
-// hoisting `m_name = g_text` out of the two arms (88.68).
+// Retail reuses dead parameter homes for the byte-read buffer and town-name
+// length. Separating the address-taken length buffer from its decoded short
+// reaches 99.9718% in VC6; only the former buffer's home remains different.
+// Moving that buffer among the outer declarations or widening it to int/long
+// does not close the residual. The value-reader variant retains an extra Mac
+// call. Earlier local-order/width searches peaked at 98.1694%; hoisting the
+// name assignment across the version arms fell to 88.68%.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
 VA(0x005bcd60, 0x586) MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
@@ -268,8 +260,11 @@ int town::load(TAbstractFile* infile, int saveVersion)
     m_isGrouped = charBuffer;
 
     if (saveVersion >= g_saveVersionTownNameString) {
-        int nameLength = 0;
-        infile->read(&nameLength, sizeof(unsigned short));
+        // Keep the address-taken file buffer separate from the decoded
+        // length retained across the next virtual read (Mac 0x1b1f90..1b1fc0).
+        unsigned short storedNameLength;
+        infile->read(&storedNameLength, sizeof(storedNameLength));
+        unsigned short nameLength = LITTLE_ENDIAN_SHORT(storedNameLength);
         infile->read(g_text, nameLength & 0xffff);
         g_text[nameLength & 0xffff] = 0;
         m_name = g_text;
@@ -297,8 +292,8 @@ int town::load(TAbstractFile* infile, int saveVersion)
     if (infile->read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
         return -1;
     for (int spell = 0; spell < 70; ++spell) {
-        m_spells.set(spell,
-                   (inBuf[spell / 8] & (1 << (spell % 8))) != 0);
+        m_spells[spell] =
+            (inBuf[spell / 8] & (1 << (spell % 8))) != 0;
     }
 
     if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
@@ -421,7 +416,7 @@ int town::save(TAbstractFile* outfile)
 
     memset(spellBuf, 0, sizeof(spellBuf));
     for (int spell = 0; spell < 70; ++spell) {
-        if (m_spells.test(spell))
+        if (m_spells[spell])
             spellBuf[spell / 8] |= 1 << (spell % 8);
     }
     if (outfile->write(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
@@ -500,6 +495,10 @@ void town::setSummoningGenerator()
 }
 
 VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)  // dc 0x165ea0
+// Outer mana/experience local lifetimes are byte-flat in both compilers.
+// A shared bitset reference lowers both comparisons; keep the ordinary
+// member expressions. Mac currently emits the native 1792-byte extent,
+// with a 0x30 stack-frame difference and dialog-argument scheduling debt.
 void town::applySpecialBuildingEffect(hero* townHero)
 {
     if (m_type == TOWN_DUNGEON && m_manaVortexFull
@@ -525,7 +524,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_TOWER && hasBuilding(EXTRA_2_ID, false)
-        && !townHero->m_townSpecialGrantedMask.test(m_id)) {
+        && !townHero->m_townSpecialGrantedMask[m_id]) {
         townHero->m_townSpecialGrantedMask[m_id] = 1;
         townHero->adjustPrimarySkill(3, 1);
         if (g_game->isLocalHuman(townHero->m_owner))
@@ -766,6 +765,9 @@ void town::removeGarrisonHero()
 // shared constructor closes this caller but contradicts netmsg.h:717-718 and
 // breaks exact playerData::add_garrison_hero, so that old 100% remains history.
 VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global, dc 0x166864
+// Naming the hide-message hero id and reusing or predeclaring the roster
+// counter leave the constructor register residual unresolved (nine VC6
+// combinations, four objects). Keep CMCHideHero's attested assignment order.
 void town::swapHeroes()
 {
     town* currentTown = this;
@@ -853,10 +855,15 @@ void town::initializeSpells(const TownExtra* townSetup)
         }
     }
 
-    int guildLevel = 5;
-    while (guildLevel > 0
-           && !hasBuilding(guildLevel - 1, false))
-        --guildLevel;
+    // Native Mac 0x1b3ce4..0x1b3d2c uses a five-iteration counted search
+    // with an early exit on HasBuilding. VC6 restores its expanded bitset
+    // constructor with this ordinary loop. Current CodeWarrior unrolls the
+    // loop; retain the helper while recovering that compiler-state boundary.
+    int guildLevel;
+    for (guildLevel = 5; guildLevel > 0; --guildLevel) {
+        if (hasBuilding(guildLevel - 1, false))
+            break;
+    }
     m_mageLevel = static_cast<signed char>(guildLevel);
     setSpellsAvailable();
 }
@@ -974,6 +981,9 @@ void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427) MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global, dc 0x166fc8
+// Moving the result declaration after the fort/capitol snapshots and
+// grouping the special-effect guards did not recover the retained hasBuilding
+// call (six VC6 combinations, three objects). Keep the canonical helpers.
 type_building_id town::buildBuilding(int buildingId,
                                      unsigned char setBuiltFlag,
                                      unsigned char applySpecialEffect)
@@ -1323,10 +1333,13 @@ void extendedDialog(const char* text,
                      long x, long y, long timeout);
 const char* getBuildingName(int townType, int buildingId);
 
+// DC retains vector-reference parameters; both native caller ABIs agree.
+// Pointer-to-reference recovery leaves both complete VC6 bodies and their
+// relocations unchanged, and the ordinary CodeWarrior bodies are byte-flat.
 void showBuildingRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<type_dialog_resource>& rewards);
 void showCreatureRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards);
+                           std::vector<type_dialog_resource>& rewards);
 
 // The reward dialog flushes in batches of eight rows (the extended
 // dialog's row capacity); named per the kStartLevelCampaign precedent.
@@ -1386,11 +1399,11 @@ void town::giveEventReward(const TTownEvent* thisEvent)
             reward.m_qualifier = i;
             rewards.push_back(reward);
             if (rewards.size() == g_rewardDialogBatch)
-                showBuildingRewards(this, &rewards);
+                showBuildingRewards(this, rewards);
         }
     }
     if (rewards.size() > 0)
-        showBuildingRewards(this, &rewards);
+        showBuildingRewards(this, rewards);
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->m_generatorBonuses[i] != 0) {
@@ -1414,33 +1427,33 @@ void town::giveEventReward(const TTownEvent* thisEvent)
                 rewards.push_back(reward);
             }
             if (rewards.size() == g_rewardDialogBatch)
-                showCreatureRewards(this, &rewards);
+                showCreatureRewards(this, rewards);
         }
     }
     if (rewards.size() > 0)
-        showCreatureRewards(this, &rewards);
+        showCreatureRewards(this, rewards);
 }
 
 VA(0x005c0220, 0x1DA) MAC_ADDRESS(0x1b57d8, 0x198)  // dc 0x167958
 void showBuildingRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<type_dialog_resource>& rewards)
 {
     std::string text;
-    for (int i = 0; i < rewards->size(); i++) {
+    for (int i = 0; i < rewards.size(); i++) {
         if (i > 0) {
-            if (i == rewards->size() - 1)
+            if (i == rewards.size() - 1)
                 text += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 text += ", ";
         }
-        text += getBuildingName(thisTown->m_type, (*rewards)[i].m_qualifier);
+        text += getBuildingName(thisTown->m_type, rewards[i].m_qualifier);
     }
     text = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_BUILDINGS_FORMAT),
                          thisTown->m_name.c_str(), text.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(text.c_str(), *rewards, -1, -1, 0);
-    rewards->clear();
+        extendedDialog(text.c_str(), rewards, -1, -1, 0);
+    rewards.clear();
 }
 
 // E:\gamedcs\town.cpp:1760
@@ -1456,14 +1469,14 @@ void showBuildingRewards(const town* thisTown,
 // reward's count.
 VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
-                           std::vector<type_dialog_resource>* rewards)
+                           std::vector<type_dialog_resource>& rewards)
 {
     std::string msg;
-    for (int i = 0; i < rewards->size(); i++) {
-        long count = (*rewards)[i].m_qualifier >> 16;
-        int creature = static_cast<unsigned short>((*rewards)[i].m_qualifier);
+    for (int i = 0; i < rewards.size(); i++) {
+        long count = rewards[i].m_qualifier >> 16;
+        int creature = static_cast<unsigned short>(rewards[i].m_qualifier);
         if (i > 0) {
-            if (i == rewards->size() - 1)
+            if (i == rewards.size() - 1)
                 msg += g_generalText->getText(GENERAL_TEXT_LIST_AND);
             else
                 msg += ", ";
@@ -1471,13 +1484,13 @@ void showCreatureRewards(const town* thisTown,
         msg += formatString("%d ", count);
         msg += getArmyName(creature, count);
     }
-    long firstCount = (*rewards)[0].m_qualifier >> 16;
+    long firstCount = rewards[0].m_qualifier >> 16;
     msg = formatString(g_generalText->getText(GENERAL_TEXT_EVENT_CREATURES_FORMAT),
                          firstCount, msg.c_str(), thisTown->m_name.c_str());
     if (g_currentPlayer->isLocalHuman()
         && g_netLocalGamePos == thisTown->m_owner)
-        extendedDialog(msg.c_str(), *rewards, -1, -1, 0);
-    rewards->clear();
+        extendedDialog(msg.c_str(), rewards, -1, -1, 0);
+    rewards.clear();
 }
 
 // Forward declarations for the two bodies that follow their callers in
@@ -1851,8 +1864,10 @@ const char* town::getTypeName() const
 
 // Original: town::get_army; town.cpp:2375, dc 0x168bd0.
 // This ordinary non-const twin returns the same selected army address as the
-// const overload. Complete callers of both interfaces share 0x5c1460.
-MAC_ADDRESS(0x1b7020, 0x44)
+// const overload. Complete callers of both interfaces share 0x5c1460. Mac
+// callers that mutate the selected army, including initializeArmy, retain the
+// first body at 0x1b6fdc; const town users call the twin at 0x1b7020.
+MAC_ADDRESS(0x1b6fdc, 0x44)
 armyGroup& town::getArmy()
 {
     if (m_garrisonHeroId < 0)
@@ -1860,7 +1875,7 @@ armyGroup& town::getArmy()
     return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
-VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b6fdc, 0x44)  // dc 0x168bf8
+VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b7020, 0x44)  // dc 0x168bf8
 const armyGroup& town::getArmy() const
 {
     if (m_garrisonHeroId < 0)

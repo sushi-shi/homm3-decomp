@@ -929,9 +929,10 @@ public:
     AI m_ai;  // +0xf0
     // Implicit destructor; CodeView dc 0xbd630 compgenx.
     int load(TAbstractFile* infile, int saveVersion);
-    // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
+    // town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
+    // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
@@ -1041,14 +1042,15 @@ public:
     signed char m_numDeadPlayers;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.
-    unsigned char m_playerDisabled[8];  // +0x1f636
+    signed char m_playerDisabled[8];  // +0x1f636; DC playerDead is signed char[8].
     // Unsigned word gate used by calculate_demand: from value five on,
     // current dwelling population is augmented by one growth cycle.
     // Its wider calendar role is not yet attested, so the name remains
     // ordinal rather than importing a semantic guess.
+    // DC game type variants record all three calendar words as unsigned short.
     unsigned short m_day;
-    short m_week;
-    short m_month;
+    unsigned short m_week;
+    unsigned short m_month;
     char m_uniqueSystemId[0x20];
     TArtifact m_marketArtifacts[7];
     // NH3API global.hpp confirms the PC vector at +0x1f680. Map loading
@@ -1070,7 +1072,7 @@ public:
     // Castle-Griffin-Tower special case that drops the Blacksmith
     // requirement; it sits four bytes past f_1f698 in the same band.
     // Role unattested - ordinal placeholder.
-    char m_isTutorial;
+    unsigned char m_isTutorial;  // DC is_tutorial; Mac compares without sign extension.
     // Dreamcast bIsCheater/is_tutorial are adjacent bytes; retail
     // places them at +0x1f69c/d before setup at +0x1f6a0. This gap aligns it.
     char m_paddingBeforeSetup[2];
@@ -1219,6 +1221,7 @@ public:
     int getLastHuman() const;
     int getLocalPlayerGamePos() const;  // 0x4cea20
     SpellID getRandomSpell(std::bitset<5> spellLevels);  // 0x4c95a0
+    SpellID getRandomSpell(int level);
     boat* getHeroBoat(int id, unsigned char occupied);  // 0x4ce900
     int getHeroId(type_point heroLocation);
     int getMineId(int x, int y, int z);
@@ -1465,16 +1468,32 @@ public:
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
+    // Mac expands this version-aware wrapper before the retained global
+    // isBaseCreature call in combatMonsterEvent and the hill-fort guards.
+    unsigned char isBaseCreature(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0 && isBaseElemental(creature))
+            return false;
+        return static_cast<unsigned char>(::isBaseCreature(creature));
+    }
     VA(0x00529710, 0x34)
     TCreatureType upgradedCreatureType(TCreatureType creature) const
     {
-        if (m_gameVersion == 0
-            && (creature == CREATURE_AIR_ELEMENTAL
-                || creature == CREATURE_EARTH_ELEMENTAL
-                || creature == CREATURE_FIRE_ELEMENTAL
-                || creature == CREATURE_WATER_ELEMENTAL))
+        if (m_gameVersion == 0 && isBaseElemental(creature))
             return CREATURE_NONE;
         return ::upgradedCreatureType(creature);
+    }
+    // Mac getLikeModifier expands this counterpart before calling the
+    // retained global downgradedCreatureType at 0:0xb44b4.
+    TCreatureType downgradedCreatureType(TCreatureType creature) const
+    {
+        if (m_gameVersion == 0
+            && (creature == CREATURE_ICE_ELEMENTAL
+                || creature == CREATURE_STORM_ELEMENTAL
+                || creature == CREATURE_MAGMA_ELEMENTAL
+                || creature == CREATURE_ENERGY_ELEMENTAL))
+            return CREATURE_NONE;
+        return ::downgradedCreatureType(creature);
     }
 // Dreamcast Game.h:839-850, IsHumanTeam (dc 0x37f64): reject a negative
 // team, scan its eight player slots, and call gpGame->IsHuman on a member.
@@ -1748,9 +1767,8 @@ extern int g_mineProduction[7];
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 extern double g_productionHandicap[];
 extern const int g_neutralTownLevelWeights[6];
-// NewMap's seven-resource rows, indexed by setup.difficulty.  The first
-// address is also the seven-int tutorial row immediately following the
-// neutral-town weights above.
+extern const int g_tutorialStartingResources[NUM_RESOURCES];
+// NewMap's seven-resource rows, indexed by setup.difficulty.
 extern const int g_initResourcesHuman[][NUM_RESOURCES];
 // NewMap reads one dword per player here before narrowing the selected value
 // into setup.startingBonus.  The other known readers do not yet prove a
@@ -1844,16 +1862,6 @@ unsigned char initializeRandomTavernText();
 void computeUALoc(int whichPlayer);                   // 0x4baed0
 
 // Canonical Game.h inline definitions after all referenced layouts/globals.
-
-// Complete save files use the H3SVG signature and version 42.
-// E:\gamedcs\Game.h:1301, dc 0xbceb4
-VA(0x004bc0e0, 0x251) MAC_ADDRESS(0x0cf490, 0x260)
-inline SavedGameHeader::SavedGameHeader()
-{
-    memset(m_id, 0, sizeof(m_id));
-    strcpy(m_id, "H3SVG");
-    m_version = 42;
-}
 
 // Complete reads versioned nested records through the abstract stream;
 // Dreamcast uses gzread directly and records the checked ID-read count.
@@ -1969,9 +1977,11 @@ inline NewmapCell* game::getCell(type_point point)
 
 // Game.h:1390 in the DC roster. Retail expands this short calendar
 // accessor at every game.obj call site and retains no standalone row.
+// DC and Mac completeCurrentMap preserve day + (week - 1) * 7 +
+// (month - 1) * 28 before the signed-short return.
 inline short game::getCurrentTurn() const
 {
-    return (m_month * 4 + m_week - 5) * 7 + m_day;
+    return m_day + (m_week - 1) * 7 + (m_month - 1) * 28;
 }
 
 // Original: game::get_liths; Game.h:1395, dc 0x12ca94.

@@ -2,6 +2,7 @@
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
 #include "va.h"
+#include "platform_file_time.h"
 
 #include <vector>
 
@@ -265,9 +266,10 @@ public:
     // operator= copies description's 0x12d bytes then stores fileTime's
     // two dwords directly (OnMapFileNameMsg's two expansions) - a named
     // pad array here adds a fourth byte-copy loop retail lacks.
-    // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
-    // its address to FileTimeToLocalFileTime.
-    _FILETIME m_fileTime;  // +0x6f8
+    // Windows uses FILETIME (+0x6f8, eight bytes). Mac serializers
+    // 0:0x16e4d4/0x16e5d0 use DateTimeRec (+0x6ba, fourteen bytes);
+    // the following SavedGameHeader starts at Mac +0x6c8.
+    FileTime m_fileTime;  // +0x6f8
     SavedGameHeader m_saved;  // +0x700
 
     VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
@@ -766,6 +768,7 @@ public:
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
+    void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
     void setupNewGameMode();
     int getCommonGameVersion();

@@ -9,10 +9,10 @@
 // `[src+0x1d]` byte copy exceptions.h already cites.
 #include "va.h"
 
-#include <memory>
 #include <string.h>
 
 #include "objnames.h"
+#include "autoarrayptr.h"
 
 #include "exceptions.h"
 #include "resourcemanager.h"
@@ -83,7 +83,7 @@ static const int g_adventureObjectTrait1Ids[] = {
 // literal and seeding nameRow with the row's own index), replays five
 // .rdata override tables over them, then loads objnames.txt, measures
 // the total length of its first 232 lines, buys ONE buffer for all of
-// them through a function-local std::auto_ptr<char> at 0x691688, and
+// them through a function-local TAutoArrayPtr<char> at 0x691688, and
 // re-points each row's name into it.
 
 // vftable - while keeping gzinflatebuf's 0x4d6b80 COMDAT. The shared header
@@ -93,7 +93,8 @@ static const int g_adventureObjectTrait1Ids[] = {
 VA(0x0041b500, 0x28B) MAC_ADDRESS(0x21d350, 0x6dc)
 void initializeAdventureObjectNames()
 {
-    static std::auto_ptr<char> nameBuffer;
+    // Mac 0:0x21d918/0x21d95c retains array-owner assignment/cleanup.
+    static TAutoArrayPtr<char> nameBuffer;
 
     int i;
     TAdvObjectTraits* row = g_adventureObjectTraitRows;
@@ -140,7 +141,7 @@ void initializeAdventureObjectNames()
     for (line = 0; line < ADVENTURE_OBJECT_TRAIT_COUNT; ++line)
         total += strlen(names->getText(line)) + 1;
 
-    nameBuffer = std::auto_ptr<char>(new char[total]);
+    nameBuffer = TAutoArrayPtr<char>(new char[total]);
     if (nameBuffer.get() == 0)
         throw TAllocationFailure();
 

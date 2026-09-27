@@ -370,13 +370,15 @@ int earlySetup()
     }
     ResourceManager::setPath(
         DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"));
-    if (!ResourceManager::open(1, 1, &openResult))
-        shutDown(openResult == 1
-                     ? DATA_COMPGEN(0x0067f64c, filesMissingMessage,
-                           "Files from Heroes III are missing.   "
-                           "Please reinstall Heroes III.")
-                     : DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
-                           "Unable to initialize resources - possible disk problem."));
+    if (!ResourceManager::open(1, 1, &openResult)) {
+        if (openResult == 1)
+            shutDown(DATA_COMPGEN(0x0067f64c, filesMissingMessage,
+                "Files from Heroes III are missing.   "
+                "Please reinstall Heroes III."));
+        else
+            shutDown(DATA_COMPGEN(0x0067f614, resourcesUnavailableMessage,
+                "Unable to initialize resources - possible disk problem."));
+    }
     if (!loadGameData())
         shutDown(DATA_COMPGEN(0x0067f5fc, remoteInitializationFailed,
             "Initialization failed!"));
@@ -429,7 +431,6 @@ int earlySetup()
     button::s_clickSample = ResourceManager::getSample(
         DATA_COMPGEN(0x0067f5d4, buttonClickSampleName, "button.wav"));
     initVars();
-    initializeCampaignMapTraitsTable();
     g_earlySetupDone = 1;
     return 1;
 }
@@ -634,6 +635,7 @@ static void deleteMainClasses()
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
 // parameter names and SetupCDRom call sites survive in CodeView. Retail's
 // corresponding paths inline the Win32 MessageBoxA body and then exit.
+MAC_ADDRESS(0x10f0c4, 0x30)
 static void earlyShutdown(const char* title, const char* body)
 {
     MessageBoxA(g_hwndApp, body, title, MB_ICONHAND);
@@ -643,6 +645,7 @@ static void earlyShutdown(const char* title, const char* body)
 // E:\gamedcs\kb.cpp:580. This is source-static in CodeView and retail has no
 // standalone body: VC6 /Ob2 folds it into oldmain at +0xd7..+0x245. Keep the
 // helper real so its source boundary participates in the inliner naturally.
+MAC_ADDRESS(0x10f0f4, 0x158)
 static void setupCDRom()
 {
     int oldNoSound = g_noSound;
@@ -1512,19 +1515,9 @@ static int doCampaignWindow(bool newGame, int campaignSet)
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
-// Complete's separate campaign-set/custom-campaign front end. Retail
-// oldmain+0x91c proves this zero-argument entry, not removal of the older
-// parameterized operation above. Its three new-game retry loops include an
-// additional cancel reopen. Sharing the older operation at these inferred
-// sites changes the retained call/expansion pattern; their ownership remains
-// unresolved, unlike oldmain's two positively identified calls.
-// Residual (99.8872%): all 30 blocks, 15 branches, 44 calls and opcodes are
-// exact. Retail leaves one four-byte allocator hole between exitCampaigns
-// (the exact byte at [ebp-0xd]) and the first 0x4c-byte TCampaignSetWindow,
-// shifting every later RAII object and the frame by four bytes. Restoring a
-// Complete-local `unsigned char newGame = 1` is byte-neutral; widening
-// exitCampaigns to int is worse (99.78%) and contradicts retail's byte
-// store/test. The proven class size and object scopes therefore stay intact.
+// Mac retains doCampaignWindow(true, set) in all three campaign-set arms
+// (0x111108, 0x111130, 0x111158). Each cancellation reopens the campaign
+// video after the helper returns; keep that caller operation separate.
 VA(0x004f00a0, 0x3EE) MAC_ADDRESS(0x111028, 0x264)
 static unsigned char doCampaignWindow()
 {
@@ -1543,88 +1536,25 @@ static unsigned char doCampaignWindow()
         switch (g_windowManager->m_dialogReturn) {
         case TCampaignSetWindow::CAMPAIGN_SET_SOD_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 2);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 2))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_AB_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 1);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 1))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
         case TCampaignSetWindow::CAMPAIGN_SET_ROE_ID: {
             videoPause();
-            g_inCampaign = 1;
-
-            while (1) {
-                {
-                    TCampaignWindow campaignWindow(1, 0);
-                    campaignWindow.doModal();
-                }
-
-                openCampaignVideo();
-                videoPause();
-                if (g_windowManager->m_dialogReturn
-                    == DIALOG_RETURN_CANCEL) {
-                    openCampaignVideo();
-                    break;
-                }
-
-                {
-                    TCampaignBrief campaignBrief(1, 0);
-                    campaignBrief.doModal();
-                }
-                if (g_windowManager->m_dialogReturn
-                    != DIALOG_RETURN_CANCEL)
-                    return 1;
-            }
+            if (doCampaignWindow(true, 0))
+                return 1;
+            openCampaignVideo();
             break;
         }
 
@@ -1964,6 +1894,7 @@ int normalDialogHandler(message& msg)
 }
 
 // E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
+MAC_ADDRESS(0x111ebc, 0x6c)
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
     EGameResource newResource, long newQualifier)
@@ -3099,8 +3030,11 @@ void game::showLuckInfo(hero* thisHero, int mbType)
     }
 
     std::string modifiers = thisHero->getLuckDescription();
-    strcat(g_text,
-           modifiers.length() == 0 ? g_luckInfo[18] : modifiers.c_str());
+    // Mac keeps separate append calls at 0x1153d8 and 0x1153e8.
+    if (modifiers.length() == 0)
+        strcat(g_text, g_luckInfo[18]);
+    else
+        strcat(g_text, modifiers.c_str());
 
     normalDialog(g_text, mbType, -1, 28, icon, 0,
                  -1, 0, -1, 0, -1, 0);
@@ -3108,6 +3042,7 @@ void game::showLuckInfo(hero* thisHero, int mbType)
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
 // LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+MAC_ADDRESS(0x11505c, 0xe0)
 static void initVars()
 {
     g_nullSample2.m_resSample = 0;
@@ -3127,6 +3062,8 @@ static void initVars()
         g_dfltMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x6e));
         g_gameMenu = LoadMenu(g_instance, MAKEINTRESOURCE(0x70));
     }
+    // Mac retains this call inside initVars at 0x11511c.
+    initializeCampaignMapTraitsTable();
 }
 
 VA(0x004f3690, 0x2A2) MAC_ADDRESS(0x115448, 0x1c4)  // dc 0xe3ce4
@@ -3788,11 +3725,8 @@ int handleAppSpecificMenuCommands(int idItem)
             g_game->m_isCheater = 1;
             if (g_inCampaign)
                 g_game->m_campaign.m_isCheater = 1;
-            TArtifact artifactId;
-            {
-                artifactId = TArtifact(idItem - APP_MENU_ARTIFACT_FIRST);
-            }
-            type_artifact artifact(artifactId);
+            type_artifact artifact(
+                TArtifact(idItem - APP_MENU_ARTIFACT_FIRST));
             if (currentHero)
                 currentHero->giveArtifact(&artifact, 0, 0);
         }
@@ -3807,9 +3741,7 @@ int handleAppSpecificMenuCommands(int idItem)
                 if (g_inCampaign)
                     g_game->m_campaign.m_isCheater = 1;
                 if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-                    {
-                        artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
-                    }
+                    artifact.m_artifactId = TArtifact(ARTIFACT_SPELLBOOK);
                     currentHero->giveArtifact(&artifact, 1, 1);
                 }
 
@@ -4251,11 +4183,13 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // 5223 begins the count; 5284/5285 separates the line count and pixel height.
 // The 72-state family produced 21 objects and ten reproduced elites,
 // recovering 93.6558% from 87.1948% while preserving the seven local types.
-// DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
-// copies BOTH operands to fresh stack homes before selecting a reference:
-// the canonical by-value max wrapper in includes.h supplies those homes.
-// Direct std::_cpp_max is the negative control and does not reproduce that
-// boundary. Keep the long locals; the audit intentionally reports std::max.
+// DC 5240/5242/5245 and Mac select std::max<long> by const reference.
+// VC6 has no public standard max: the ordinary unqualified calls reach
+// includes.h's by-value int wrapper, staging both 32-bit operands before
+// cppMax selects their address. Including the public-name compatibility
+// shim instead changes that boundary and drops this body to89.61%.
+// Native0x117330..0x117370 selects member/local addresses directly.
+// Keep the long locals and let each compiler's ordinary library resolve them.
 // DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past
 // the second predicate after the popup store. The 48-state follow-up has
 // two objects/two reproduced elites; the adopted equivalent also reproduced
@@ -4279,6 +4213,10 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // do not help. All 45 exact kb siblings stayed exact.
 // Reversing the commutative triple-row spriteX/spriteWidth operands was byte-flat
 // at 99.9762%; retain the DC5407 spriteX-first load order.
+// Paired control: separate icon/label zero statements leave Mac unchanged
+// at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
+// Grouping numIcons before i while initializing it after the zero loop is
+// byte-flat in both compilers; the existing declaration lifetime stays.
 VA(0x004f5d80, 0x51C) MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
 void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
@@ -4861,8 +4799,11 @@ static int waitHandler(message& msg)
 // by-value argument is built.
 // DC records the page index as long i; Mac 0x1194d8 advances it separately
 // from the eight-icon slot index. This restores the named local without a
-// VC6 byte change. Mac byte comparison awaits the MSL string constructor
-// relocation used by this body's TNormalDialogInfo construction.
+// VC6 byte change. Complete publishes timeout before the geometry:
+// native0x119574 stores timeout, then0x119584/0x119594 stores x/y.
+// The same shared order is exact in both VC6 and CodeWarrior (596 Mac bytes).
+// The implicit icon and string copy identities remain ordinary generated
+// members; no authored constructor or helper call is substituted.
 VA(0x004f7690, 0x312) MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list, dc 0xe6cf0
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
@@ -4877,6 +4818,7 @@ void extendedDialog(const char* text,
 
         TNormalDialogInfo dialogInfo;
         dialogInfo.m_dialogText = text;
+        dialogInfo.m_timeout = timeout;
         dialogInfo.m_x = x;
         dialogInfo.m_y = y;
         dialogInfo.m_width = 256;
@@ -4885,7 +4827,6 @@ void extendedDialog(const char* text,
         dialogInfo.m_textWidgetY = 30;
         dialogInfo.m_mbType = NORMAL_DIALOG_DEFAULT;
         dialogInfo.m_special = -1;
-        dialogInfo.m_timeout = timeout;
 
         int icon;
         for (icon = 0; icon < count; ++icon) {

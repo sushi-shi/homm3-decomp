@@ -746,7 +746,7 @@ void advManager::vwDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int de
                 || !g_adventureObjectTraits[objType->m_objectType].m_trait3))
             continue;
 
-        if (!objType->m_drawCells[
+        if (!objType->m_shadowCells[
                 CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY)]
             || objType->m_suppressDraw)
             continue;

@@ -71,8 +71,9 @@ TTextResource::TTextResource(const char* name, int size, const char* data)
 VA(0x005bbdd0, 0x4D) MAC_ADDRESS(0x1b0d8c, 0x8c)  // dc 0x1639a4
 TTextResource::~TTextResource()
 {
+    // Mac retains array delete (0x268c34) for the character buffer.
     if (m_data)
-        delete m_data;
+        delete[] m_data;
 }
 
 VA(0x005bbe20, 0x1B) MAC_ADDRESS(0x1b0e18, 0xc)
@@ -172,8 +173,9 @@ TSpreadsheetResource::~TSpreadsheetResource()
         if (*it)
             delete *it;
     }
+    // Mac retains array delete (0x268c34) for the character buffer.
     if (m_data)
-        delete m_data;
+        delete[] m_data;
 }
 
 // E:\gamedcs\textresource.cpp:298

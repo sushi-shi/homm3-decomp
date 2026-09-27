@@ -14,6 +14,13 @@ class SourceError(ValueError):
     pass
 
 
+# Only simple reviewed template storage declarations; nested templates and
+# expressions require an explicit parser contract rather than a name guess.
+_STORAGE_TYPE = (r'(?:std::bitset\s*<\s*(?:0|[1-9]\d*)\s*>'
+                 r'|std::vector\s*<\s*(?:(?:signed|unsigned)\s+)?\w+(?:::\w+)*\s*>'
+                 r'|\w+(?:::\w+)*)')
+
+
 @lru_cache(maxsize=64)
 def _masked_source(text: str) -> str:
     """Reuse lexical scans by complete contents, never by path or timestamp.
@@ -137,6 +144,10 @@ def load_data(root: Path) -> list[DataPair]:
         if (not isinstance(same_tu_external, bool)
                 or (same_tu_external and (not same_tu_definition or same_tu_array))):
             raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires scalar same-TU storage")
+        constructed = row.get("same_tu_constructed", False)
+        if (not isinstance(constructed, bool)
+                or (constructed and (not same_tu_external or same_tu_array))):
+            raise SourceError(f"{source}: DATA({va:#x}) same_tu_constructed requires externally linked scalar same-TU storage")
         local_owner = row.get("owner_va")
         local_signature = None
         if local_owner is not None:
@@ -149,8 +160,8 @@ def load_data(root: Path) -> list[DataPair]:
             owner_end = _function_end(raw, owner_brace)
             if not owner_brace < start < end < owner_end:
                 raise SourceError(f"{source}: DATA({va:#x}) is outside its claimed function owner")
-            if declaration_only or not re.match(r'\s*static\s+const\b', declaration):
-                raise SourceError(f"{source}: local DATA requires a canonical static const initializer")
+            if declaration_only or not re.match(r'\s*static\s+', declaration):
+                raise SourceError(f"{source}: local DATA requires a canonical static initializer")
             if "mac_symbol" in row:
                 raise SourceError(f"{source}: local DATA symbol counters must not be pinned")
             scope = ()
@@ -168,7 +179,7 @@ def load_data(root: Path) -> list[DataPair]:
             head = declaration.split("=", 1)[0].rstrip("; \n\t")
             match = re.fullmatch(
                 r'\s*(?:(?:extern|static)\s+)?(?:(?:const|volatile|unsigned|signed|long|short)\s+)*'
-                r'\w+(?:::\w+)*(?:\s+|\s*\*\s*(?:const\s+)?)'
+                + _STORAGE_TYPE + r'(?:\s+|\s*\*\s*(?:const\s+)?)'
                 r'(?:(?P<plain>\w+(?:::\w+)*)|\(\s*&\s*(?P<reference>\w+)\s*\))'
                 r'\s*(?:\[[^\[\];]*\]\s*)*', head, re.DOTALL)
             name = (match.group("plain") or match.group("reference")) if match else None
@@ -181,17 +192,28 @@ def load_data(root: Path) -> list[DataPair]:
                 # Keep this narrow: plain pointers and explicitly reviewed
                 # arrays only; no initializer, reference, or qualified member.
                 match = re.fullmatch(
-                    r'\s*(?:static\s+)?(?:(?:unsigned|signed)\s+)?'
-                    r'\w+(?:::\w+)*(?:\s*\*\s*|\s+)(\w+)\s*'
+                    r'\s*(?:static\s+)?(?:const\s+)?(?:(?:unsigned|signed)\s+)?'
+                    + _STORAGE_TYPE + r'(?:\s*\*\s*|\s+)(\w+)\s*'
                     r'(?P<array>(?:\[[^\[\];]*\]\s*)*);',
                     declaration, re.DOTALL)
-                if match and bool(match.group("array").strip()) != same_tu_array:
+                if constructed:
+                    # This binds zero storage, not the runtime constructor's
+                    # result. Keep the authored constructor and its arguments.
+                    # Admit only a scalar with literal integer arguments;
+                    # expressions, references and function declarators need
+                    # a separate reviewed contract.
+                    match = re.fullmatch(
+                        r'\s*\w+(?:::\w+)*(?:\s+)(\w+)\s*'
+                        r'\(\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)'
+                        r'(?:\s*,\s*[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+))*\s*\)\s*;',
+                        declaration, re.DOTALL)
+                if match and not constructed and bool(match.group("array").strip()) != same_tu_array:
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_array differs from its declaration")
                 if match and same_tu_external and re.match(r'\s*static\b', declaration):
                     raise SourceError(f"{source}: DATA({va:#x}) same_tu_external requires external linkage")
             else:
                 match = re.fullmatch(r'\s*(?:(?:static|const|unsigned|signed|long|short)\s+)*'
-                                     r'\w+\s+(\w+)\s*(?:\[[^\]]*\]\s*)*=.*;',
+                                     r'\w+\s+(\w+(?:::\w+)*)\s*(?:\[[^\]]*\]\s*)*=.*;',
                                      declaration, re.DOTALL)
             name = match.group(1) if match else None
             definition = raw[start:end + 1].strip()
@@ -202,11 +224,14 @@ def load_data(root: Path) -> list[DataPair]:
                 raise SourceError(f"{source}: scoped DATA claim {va:#x} must be an ordinary static member")
             name = "::".join((*scope, name))
         if "::" in name:
-            if not declaration_only:
-                raise SourceError(f"{source}: qualified DATA initializers need additional matching support")
-            # The member declaration belongs inside its canonical class view.
-            # An out-of-class extern would define storage or be invalid C++.
-            definition = ""
+            if local_owner is not None:
+                raise SourceError(f"{source}: qualified DATA initializers require file scope")
+            # Keep a source-owned out-of-class initializer as authored. Its
+            # complete emitted payload follows the ordinary initialized-data
+            # contract. An address-only member binding emits no extern: the
+            # declaration already belongs to the canonical class header.
+            if declaration_only:
+                definition = ""
             if not isinstance(row.get("mac_symbol"), str) or not row["mac_symbol"].strip():
                 raise SourceError(f"{source}: qualified DATA claim {va:#x} needs its emitted mac_symbol")
         symbol = row.get("mac_symbol", name)
@@ -304,5 +329,4 @@ def _function_end(text: str, brace: int) -> int:
             state = "code"
         index += 1
     raise SourceError("unterminated function body")
-
 

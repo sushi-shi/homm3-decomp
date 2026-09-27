@@ -35,20 +35,23 @@ class type_text_slider : public slider {
 public:
     type_text_scroller* m_owner;  // +0x68
 
-    type_text_slider(int x, int y, int w, int h, int id, int num,
-                     TSliderFunction func, EGraphics graphics, int page,
-                     unsigned char hotKey, type_text_scroller* scroller);
+    type_text_slider(type_text_scroller* scroller, int x, int y, int w, int h,
+                     int id, int num, EGraphics graphics, int page,
+                     unsigned char hotKey);
 
     virtual void close();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
 
 MAC_ADDRESS(0x25b0c4, 0x80)
-type_text_slider::type_text_slider(int x, int y, int w, int h, int id, int num,
-                                   TSliderFunction func, EGraphics graphics,
-                                   int page, unsigned char hotKey,
-                                   type_text_scroller* scroller)
-    : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
+// Mac saves the first argument (r4) as m_owner, forwards geometry from
+// r5..r10, and supplies a null callback to slider. Its caller at 0x25b40c
+// passes the owning scroller first; no callback parameter is present.
+type_text_slider::type_text_slider(type_text_scroller* scroller,
+                                   int x, int y, int w, int h, int id, int num,
+                                   EGraphics graphics, int page,
+                                   unsigned char hotKey)
+    : slider(x, y, w, h, id, num, 0, graphics, page, hotKey)
 {
     m_owner = scroller;
 }
@@ -93,9 +96,9 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     }
 
     m_textSlider = new type_text_slider(
-        this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
+        this, this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
         max(1, m_textLines.size() - m_lineImages.size() + 1),
-        0, graphics, m_lineImages.size(), 1, this);
+        graphics, m_lineImages.size(), 1);
     textFont->dispose();
 }
 

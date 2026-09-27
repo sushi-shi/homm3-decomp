@@ -1288,30 +1288,48 @@ DATA(0x006aaaa0) static int g_marketWindowY;
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
 // the char* caption it copies into the left-column label. Referenced only by
 // TSellCreatureWindow::Update; names provisional, addresses byte-proven.
-DATA(0x0068c4c0) static int g_creatureRowY[7];
-DATA(0x006a54ec) static char* g_sellCreatureColumnLabel;
+// Complete's seven initialized row positions agree on both architectures.
+DATA(0x0068c4c0) static int g_creatureRowY[7] = {
+    191, 191, 191, 289, 289, 289, 387
+};
+// 0x6a54ec aliases g_specialBuildingNames[6][4], not independent storage.
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
-// each value widget (WIDGET_SET_Y), and the subtitle pointer the Buy/SellArt
-// Updates copy for the marketplace-mode caption. Provisional names.
-DATA(0x0068c4a0) static int g_resourceValueWidgetY[7];
-DATA(0x006a542c) static char* g_marketSubtitle;
+// each value widget (WIDGET_SET_Y). Provisional name.
+// Both retail tables contain 230,230,230,309,309,309,388; the Mac
+// resource-column loop loads them from section 1+0x583e0.
+DATA(0x0068c4a0) static int g_resourceValueWidgetY[7] = {
+    230, 230, 230, 309, 309, 309, 388
+};
+// The former subtitle cell at 0x6a542c is g_specialBuildingNames[2][0]:
+// 0x6a53d4 + 22*sizeof(char*). Both retail builds use that table entry;
+// it is not separately allocated market storage.
 
-// The seven per-resource market values; get_market_value and the resource-trade
-// math read gMarketValues, the buy-artifact price math the second row.
-DATA(0x0068c482) static unsigned short g_marketValues[7];
-DATA(0x0068c492) static unsigned short g_artifactMarketValues[7];
+// Both retail rows start with the zero sentinel before their seven values.
+// Windows folds the +1 index into +2-byte addresses; Mac keeps the +2 load.
+DATA(0x0068c480) static unsigned short g_marketValues[8] = {
+    0, 250, 500, 250, 500, 500, 500, 1
+};
+DATA(0x0068c490) static unsigned short g_artifactMarketValues[8] = {
+    0, 125, 250, 125, 250, 250, 250, 1
+};
 
 // The three consecutive eleven-float market-efficiency rows. The first name
 // is retail-public; the latter two preserve the established cross-TU names
 // used by philai and the reconstructed artifact/creature sale paths.
-DATA(0x00678344) float g_tradingPostEfficency[11];
-DATA(0x00678370) float g_artifactPurchaseEfficency[11];
-DATA(0x0067839c) float g_creatureSaleEfficency[11];
+DATA(0x00678344) float g_tradingPostEfficency[11] = {
+    0.0f, 0.1f, 0.15f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.5f
+};
+DATA(0x00678370) float g_artifactPurchaseEfficency[11] = {
+    0.0f, 0.2f, 0.25f, 0.3f, 0.35f, 0.4f, 0.45f, 0.5f, 0.55f, 0.6f, 0.6f
+};
+DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
+    0.0f, 0.3f, 0.45f, 0.5f, 0.65f, 0.7f, 0.85f, 0.9f, 1.0f, 1.0f, 1.0f
+};
 
-// The char* title the Trade/Give Updates copy for the freelancer-guild source
-// (gMarketSource == 3); runtime-set, single-use. Provisional name.
-DATA(0x006a7d40) static char* g_marketSource3Name;
+// Freelancer-guild captions read quick-view entry 213: Windows
+// 0x6a7d40 = 0x6a79ec + 213*sizeof(char*), Mac base +0x354.
+// This table cell is not separately allocated market storage.
 
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
@@ -1711,15 +1729,15 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // enable-dim state, the Artifact-Merchant and Freelancer's-Guild tab gates, and
 // the two-column loop over the sell and buy resources (icon, stock, exchange
 // ratio, highlight). The final repaint is bUpdate-gated.
-// Match plateau: 86.6466 (was 86.1010 before the ctor reconstruction moved
-// the TU closure); calls are 49/49 and branches are 38/38. The two remaining
-// branch differences are early jle cross-jumps (77 vs 76 blocks): the
-// then-arm wordLeft ternary emits a third `mov esi, ecx` block where retail
-// cross-jumps into the else arm's `mov edx, [eax+0x288]` - the word values'
-// register assignment differs, so the shareable copy does not exist in our
-// else arm. Generated AST/flow/register searches found no source-backed
-// improvement; word decl-order swap measured byte-flat (2026-08-27). The
-// why-reg volatile proposal is intentionally rejected as a compiler hack.
+// Mac 0x1f5b80..0x1f5c04 chooses both quantities before the word lookups;
+// 0x1f5c78/0x1f5c9c and 0x1f6100/0x1f6114 retain the two formatting arms.
+// Restoring that complete source model and the signed side counter raises
+// Windows 90.22 -> 98.73%; its 38 branches and 54 named calls agree.
+// Native message phases retain the icon command before the side split,
+// the status command in each resource arm, and the text pointer before its
+// command fields. Restoring them raises Windows98.73 ->99.10 (2026-09-27).
+// Three size-only blocks remain; all54 Windows named calls agree. Earlier
+// word-order controls were flat; volatile scratch aliases remain unsupported.
 // DC 0x188fa4 line 1208 calls the ordinary private ComputeTradeRatios
 // helper (0x18ad48); lines 1210..1213 choose decimal versus inverse text
 // using its outputs. Restore those function-scope Temp locals and the
@@ -1747,22 +1765,22 @@ void TTradeResourceWindow::update(unsigned char update)
         if (g_ratioInverted) {
             qtyLeft = g_giveQuantity;
             qtyRight = 1;
-            wordRight = g_generalText->getText(GENERAL_TEXT_UNIT);
-            wordLeft = (qtyLeft > 1) ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                                     : g_generalText->getText(GENERAL_TEXT_UNIT);
         } else {
             qtyRight = g_giveQuantity;
-            wordRight = (qtyRight > 1) ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                                       : g_generalText->getText(GENERAL_TEXT_UNIT);
             qtyLeft = 1;
-            wordLeft = g_generalText->getText(GENERAL_TEXT_UNIT);
         }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT),
+        wordRight = qtyRight > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                                : (*g_generalText)[GENERAL_TEXT_UNIT];
+        wordLeft = qtyLeft > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                              : (*g_generalText)[GENERAL_TEXT_UNIT];
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_RESOURCE_OFFER_FORMAT],
                 qtyLeft, wordLeft, g_resourceNames[g_leftResource],
                 qtyRight, wordRight, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
-                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
+        if (g_leftDenominated)
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
+        else
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -1772,23 +1790,23 @@ void TTradeResourceWindow::update(unsigned char update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MARKETPLACE));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_MARKETPLACE]);
         break;
     case MARKET_SOURCE_TRADING_POST:
-        strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADING_POST));
+        strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADING_POST]);
         break;
     case MARKET_SOURCE_FREELANCER:
-        strcpy(g_text, g_marketSource3Name);
+        strcpy(g_text, g_quickViewText[213]);
         break;
     }
     msg.m_codeY = 1;
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_KINGDOM_RESOURCES));
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_KINGDOM_RESOURCES]);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -1814,30 +1832,30 @@ void TTradeResourceWindow::update(unsigned char update)
         setWidgetDisabled(6);
     }
 
-    if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
-        g_marketSource != MARKET_SOURCE_FREELANCER &&
-        (g_townManager->m_townToView->m_type == TOWN_TOWER ||
-         g_townManager->m_townToView->m_type == TOWN_DUNGEON) &&
-        g_townManager->m_townToView->hasBuilding(17, false)) {
-        setWidgetOn(MARKET_RIGHT_LABEL_ID);
-    } else {
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+        g_marketSource == MARKET_SOURCE_FREELANCER ||
+        (g_townManager->m_townToView->m_type != TOWN_TOWER &&
+         g_townManager->m_townToView->m_type != TOWN_DUNGEON) ||
+        !g_townManager->m_townToView->hasBuilding(17, false)) {
         setWidgetOff(MARKET_RIGHT_LABEL_ID);
-    }
-
-    if (g_marketSource != MARKET_SOURCE_TRADING_POST && g_marketHero != 0 &&
-        g_marketSource != MARKET_SOURCE_FREELANCER &&
-        g_townManager->m_townToView->m_type == TOWN_STRONGHOLD &&
-        g_townManager->m_townToView->hasBuilding(21, false)) {
-        setWidgetOn(MARKET_TITLE_ID);
     } else {
-        setWidgetOff(MARKET_TITLE_ID);
+        setWidgetOn(MARKET_RIGHT_LABEL_ID);
     }
 
-    for (unsigned int side = 0; side < 2; ++side) {
+    if (g_marketSource == MARKET_SOURCE_TRADING_POST || g_marketHero == 0 ||
+        g_marketSource == MARKET_SOURCE_FREELANCER ||
+        g_townManager->m_townToView->m_type != TOWN_STRONGHOLD ||
+        !g_townManager->m_townToView->hasBuilding(21, false)) {
+        setWidgetOff(MARKET_TITLE_ID);
+    } else {
+        setWidgetOn(MARKET_TITLE_ID);
+    }
+
+    for (int side = 0; side < 2; ++side) {
         if (g_selectedArtifact != -1 && g_leftResource != -1 &&
             g_selectedArtifact != g_leftResource) {
+            msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             if (side == 0) {
-                msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 3;
                 msg.m_extra = g_selectedArtifact;
                 broadcastMessage(msg);
@@ -1855,8 +1873,12 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_codeY = 0xb;
                 msg.m_extra = g_leftResource;
                 broadcastMessage(msg);
-                sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        g_ratioInverted ? g_rightAmount * g_giveQuantity : g_rightAmount);
+                if (g_ratioInverted)
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            g_rightAmount * g_giveQuantity);
+                else
+                    sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            g_rightAmount);
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
@@ -1865,8 +1887,8 @@ void TTradeResourceWindow::update(unsigned char update)
         }
 
         for (int i = 0; i < 7; ++i) {
-            msg.m_codeX = widget::WIDGET_SET_STATUS;
             if (side == 0) {
+                msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
                 broadcastMessage(msg);
@@ -1874,9 +1896,9 @@ void TTradeResourceWindow::update(unsigned char update)
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
+                msg.m_extraText = g_text;
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0x23 + i;
-                msg.m_extraText = g_text;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
                 broadcastMessage(msg);
@@ -1889,6 +1911,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_extra = widget::WIDGET_DRAWN;
                 broadcastMessage(msg);
             } else {
+                msg.m_codeX = widget::WIDGET_SET_STATUS;
                 msg.m_extra = 6;
                 msg.m_codeY = 0x2a + i;
                 broadcastMessage(msg);
@@ -1901,7 +1924,7 @@ void TTradeResourceWindow::update(unsigned char update)
                 msg.m_extraText = g_text;
                 if (g_selectedArtifact != -1) {
                     if (g_selectedArtifact == i) {
-                        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_NOT_AVAILABLE));
+                        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_NOT_AVAILABLE]);
                     } else {
                         computeTradeRatios(g_selectedArtifact, i,
                             &tempTradeRatio, &tempLeftDenominated,
@@ -1960,7 +1983,7 @@ void TGiveResourceWindow::update(bool update)
         strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADING_POST));
         break;
     case MARKET_SOURCE_FREELANCER:
-        strcpy(g_text, g_marketSource3Name);
+        strcpy(g_text, g_quickViewText[213]);
         break;
     }
     msg.m_codeY = 1;
@@ -2122,15 +2145,13 @@ void TGiveResourceWindow::update(bool update)
 // resources and the artifact-for-sale slots (icon, per-artifact price via the
 // inlined ratio math, selection highlight). The final repaint is bUpdate-gated.
 // The inlined SetWidgetOn/Off/Disabled helpers expand to the status broadcasts.
-// Current retail structure: all 52 calls and all 24 conditional branches agree;
-// 33/57 blocks are byte-identical. The remaining CFG delta is one cross-jumped
-// sprintf argument path (our shared block is forward, retail's is backward).
-// Six natural amount spellings compile byte-identically, and an 800-pair AST
-// sweep found only a +0.0087 equality-order allocator perturbation whose operand
-// order contradicts retail. Repeating msg.id at the retail store site is also a
-// measured loss (-0.39 raw), so both are intentionally left unbanked.
-// Keeping the singular/plural assignment inside its quantity arm removes
-// have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
+// Mac 0x1f6bf8..0x1f6c44 first chooses qty, then performs one of two
+// singular/plural lookups; nested wording emits a third native lookup path.
+// Ordinary text indexing retains getText through operator[] and reproduces
+// Mac's vector-index accessor frontier. Windows currently 95.46 (prior 96.39):
+// 54 calls and 24 branches agree, 53/57 blocks exact; remaining register roles
+// differ. why-reg's qty removal reduces distance 94 -> 63 but re-evaluates the
+// condition across calls, unlike Mac's quantity retained in r24. Keep qty.
 VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2141,20 +2162,13 @@ void TBuyArtifactWindow::update(unsigned char update)
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
-        int qty;
+        int qty = g_ratioInverted ? 1 : g_giveQuantity;
         const char* word;
-        if (g_ratioInverted) {
-            qty = 1;
-            word = g_generalText->getText(GENERAL_TEXT_UNIT);
-        } else {
-            qty = g_giveQuantity;
-            if (qty > 1) {
-                word = g_generalText->getText(GENERAL_TEXT_UNITS);
-            } else {
-                word = g_generalText->getText(GENERAL_TEXT_UNIT);
-            }
-        }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_ARTIFACT_FOR_RESOURCE_FORMAT),
+        if (qty > 1)
+            word = (*g_generalText)[GENERAL_TEXT_UNITS];
+        else
+            word = (*g_generalText)[GENERAL_TEXT_UNIT];
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ARTIFACT_FOR_RESOURCE_FORMAT],
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
@@ -2169,10 +2183,10 @@ void TBuyArtifactWindow::update(unsigned char update)
 
     switch (g_marketSource) {
     case MARKET_SOURCE_MARKETPLACE:
-        strcpy(g_text, g_marketSubtitle);
+        strcpy(g_text, g_specialBuildingNames[2][0]);
         break;
     case MARKET_SOURCE_BLACK_MARKET:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BLACK_MARKET));
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_BLACK_MARKET]);
         break;
     }
 
@@ -2180,10 +2194,10 @@ void TBuyArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_KINGDOM_RESOURCES));
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_KINGDOM_RESOURCES]);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
@@ -2234,7 +2248,6 @@ void TBuyArtifactWindow::update(unsigned char update)
                 else
                     sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                             g_rightAmount * g_giveQuantity);
-                broadcastMessage(msg);
             } else {
                 msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.m_codeY = 8;
@@ -2245,8 +2258,9 @@ void TBuyArtifactWindow::update(unsigned char update)
                 msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_codeY = 0xc;
                 msg.m_extraText = g_text;
-                broadcastMessage(msg);
             }
+            // Mac 0x1f7000: both columns share the quantity-text broadcast.
+            broadcastMessage(msg);
         }
 
         for (int i = 0; i < 7; ++i) {
@@ -2362,7 +2376,7 @@ void TSellArtifactWindow::update(unsigned char update)
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    strcpy(g_text, g_marketSubtitle);
+    strcpy(g_text, g_specialBuildingNames[2][0]);
     msg.m_codeY = 1;
     broadcastMessage(msg);
 
@@ -2514,9 +2528,9 @@ void TSellCreatureWindow::update(bool update)
             leftQty = 1;
             rightQty = g_giveQuantity;
         }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_CREATURE_FOR_RESOURCE_FORMAT), leftQty,
-                leftQty > 1 ? g_generalText->getText(GENERAL_TEXT_UNITS)
-                             : g_generalText->getText(GENERAL_TEXT_UNIT),
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_CREATURE_FOR_RESOURCE_FORMAT], leftQty,
+                leftQty > 1 ? (*g_generalText)[GENERAL_TEXT_UNITS]
+                             : (*g_generalText)[GENERAL_TEXT_UNIT],
                 g_resourceNames[g_leftResource], rightQty,
                 rightQty > 1
                     ? g_creatureTypeTraits[
@@ -2538,15 +2552,17 @@ void TSellCreatureWindow::update(bool update)
     msg.m_extraText = g_text;
     broadcastMessage(msg);
 
-    strcpy(g_text, g_sellCreaHelpText[0].m_text);
+    // Windows 0x5ec69f addresses 0x6a54ec; Mac 0x1f7b58
+    // loads the same entry at building-name base +0x118.
+    strcpy(g_text, g_specialBuildingNames[6][4]);
     msg.m_codeY = 1;
     broadcastMessage(msg);
 
     msg.m_codeY = 14;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_HERO_CREATURES_FORMAT), g_marketHero->m_name);
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_HERO_CREATURES_FORMAT], g_marketHero->m_name);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = 3;
     msg.m_codeY = 15;
     msg.m_extraText = g_text;
@@ -2573,10 +2589,12 @@ void TSellCreatureWindow::update(bool update)
     }
 
     if (g_marketSource == MARKET_SOURCE_FREELANCER) {
-        setWidgetDisabled(16);
-        setWidgetDisabled(17);
-        setWidgetDisabled(18);
-        setWidgetDisabled(19);
+        // Mac 0:0x1f7cec..0x1f7d10 retains SetWidgetOff; Windows
+        // 0x5ec91e..0x5ec969 likewise clears 0x1006 for these four tabs.
+        setWidgetOff(16);
+        setWidgetOff(17);
+        setWidgetOff(18);
+        setWidgetOff(19);
     }
 
     for (int side = 0; side < 2; ++side) {
@@ -2714,17 +2732,19 @@ void TSellCreatureWindow::update(bool update)
         drawWindow(1, -65535, 65535);
 }
 
+// Mac 0x1f8144 loads the indexed market value. The same load is expanded
+// in getTradeRatio and the resource, artifact, and creature trade callers.
 VA(0x005ecd10, 0x0B) MAC_ADDRESS(0x1f8144, 0x14)
 long getMarketValue(EGameResource resource)
 {
-    return g_marketValues[resource];
+    return g_marketValues[resource + 1];
 }
 
 VA(0x005ecd20, 0x94) MAC_ADDRESS(0x1f8158, 0xe4)  // dc 0x18ab9c
 double getTradeRatio(EGameResource source, EGameResource dest, double efficiency)
 {
-    double ratio = static_cast<double>(g_marketValues[dest])
-                 / (static_cast<double>(g_marketValues[source]) * efficiency);
+    double ratio = static_cast<double>(getMarketValue(dest))
+                 / (static_cast<double>(getMarketValue(source)) * efficiency);
     if (ratio >= 1.0)
         ratio = static_cast<double>(static_cast<long>(ratio + 0.999));
     else
@@ -2742,9 +2762,9 @@ void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
     int* inMaxUnitsToTrade)
 {
-    float leftValue = static_cast<float>(g_marketValues[inLeftResource])
+    float leftValue = static_cast<float>(getMarketValue(EGameResource(inLeftResource)))
         * g_tradingPostEfficency[g_marketCount];
-    float ratio = static_cast<float>(g_marketValues[inRightResource]) / leftValue;
+    float ratio = static_cast<float>(getMarketValue(EGameResource(inRightResource))) / leftValue;
     if (ratio >= 1.0f) {
         *inLeftDenominated = 0;
         *inTradeRatio = static_cast<long>(ratio + 0.5);
@@ -2778,7 +2798,7 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     int* inMaxUnitsToTrade)
 {
     *inLeftDenominated = 0;
-    float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource])
+    float leftValue = static_cast<float>(g_artifactMarketValues[inLeftResource + 1])
         * g_artifactPurchaseEfficency[g_marketCount];
     float artifactValue = static_cast<float>(
         g_artifactTraits[g_marketArtifacts[inRightResource]].m_cost);
@@ -2807,7 +2827,7 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
         static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
         * g_artifactPurchaseEfficency[g_marketCount];
     float result =
-        leftValue / static_cast<float>(g_marketValues[inRightResource]);
+        leftValue / static_cast<float>(getMarketValue(EGameResource(inRightResource)));
     if (result < 1.0f)
         result = 1.0f;
 
@@ -2828,7 +2848,7 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
     float denominator = static_cast<float>(g_creatureTypeTraits[
                             g_marketHero->m_army.m_armies[inLeftResource]].m_cost[6])
                       * g_creatureSaleEfficency[g_marketCount];
-    float ratio = static_cast<float>(g_marketValues[inRightResource]) / denominator;
+    float ratio = static_cast<float>(getMarketValue(EGameResource(inRightResource))) / denominator;
     if (ratio >= 1.0f) {
         *inLeftDenominated = 0;
         *inTradeRatio = static_cast<long>(ratio + 0.5);
@@ -3106,6 +3126,11 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // subtype 0xd runs the give/max panels and the tab-command buttons. Executing
 // the gift moves the resource into the recipient's row and, when the recipient
 // is a networked human, transmits the gift message. Hover copies the rollover.
+// Mac initializes exit/update flags at 0x1f8f84/0x1f8f88, dispatches the
+// sparse message-ID switch at 0x1f8f8c, and sets update only in its five
+// successful arms before the common phase at 0x1f921c. Restore that complete
+// source model: Windows stays 97.00%; native ordered helper calls differ
+// only because the compiler expands the canonical playerData::isHuman here.
 VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
 int TGiveResourceWindow::windowHandler(message& msg)
 {
@@ -3114,11 +3139,10 @@ int TGiveResourceWindow::windowHandler(message& msg)
         return r;
 
     int exit = 0;
+    int updateFlag = 0;
 
-    if (msg.m_id != MESSAGE_MOUSE_MOVE) {
-        if (msg.m_id != MESSAGE_WIDGET)
-            return 1;
-
+    switch (msg.m_id) {
+    case MESSAGE_WIDGET:
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
             switch (msg.m_codeY) {
@@ -3128,7 +3152,8 @@ int TGiveResourceWindow::windowHandler(message& msg)
             case MARKET_SELL_GOLD_ID: {
                 int res = msg.m_codeY - MARKET_SELL_WOOD_ID;
                 if (res == g_selectedArtifact)
-                    return 1;
+                    break;
+                updateFlag = 1;
                 g_selectedArtifact = res;
                 if (g_leftResource != -1) {
                     setupNewTrade();
@@ -3141,7 +3166,8 @@ int TGiveResourceWindow::windowHandler(message& msg)
             case GIVE_RECIPIENT_SLOT_6_ID: {
                 int recip = msg.m_codeY - GIVE_RECIPIENT_SLOT_0_ID;
                 if (recip == g_leftResource)
-                    return 1;
+                    break;
+                updateFlag = 1;
                 g_leftResource = recip;
                 if (g_selectedArtifact != -1) {
                     setupNewTrade();
@@ -3149,7 +3175,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 break;
             }
             default:
-                return 1;
+                break;
             }
             break;
 
@@ -3157,7 +3183,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID: {
                 if (g_rightAmount == 0)
-                    return 1;
+                    break;
                 g_currentPlayer->m_resources[g_selectedArtifact] -= g_rightAmount;
                 int color = m_slotPlayerColor[g_leftResource];
                 g_game->m_players[color].m_resources[g_selectedArtifact] += g_rightAmount;
@@ -3166,17 +3192,20 @@ int TGiveResourceWindow::windowHandler(message& msg)
                                g_selectedArtifact, g_rightAmount);
                     transmitRemoteData(&m, color, false, true);
                 }
+                updateFlag = 1;
                 g_leftDenominated = 1;
                 g_leftResource = -1;
                 g_selectedArtifact = -1;
                 break;
             }
             case MARKET_RIGHT_PANEL_ID:
+                updateFlag = 1;
                 g_rightAmount = g_maxTradeUnits;
                 m_resourceSlider->setState(g_maxTradeUnits);
                 break;
             case MARKET_LEFT_COUNT_ID:
             case MARKET_RIGHT_LABEL_ID:
+                updateFlag = 1;
                 exit = 1;
                 g_windowManager->m_dialogReturn = msg.m_codeY - MARKET_LEFT_COUNT_ID;
                 g_leftResource = -1;
@@ -3184,26 +3213,33 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 g_leftDenominated = 0;
                 break;
             default:
-                return 1;
+                break;
             }
             break;
 
         default:
-            return 1;
+            break;
         }
 
-        update(1);
-        if (exit) {
-            msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
-            return 2;
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        g_windowManager->convertToHover(msg);
+        if (msg.m_codeY != m_lastHoverId) {
+            m_lastHoverId = msg.m_codeY;
+            setRolloverText(msg.m_codeY);
         }
         return 1;
+
+    default:
+        break;
     }
 
-    g_windowManager->convertToHover(msg);
-    if (msg.m_codeY != m_lastHoverId) {
-        m_lastHoverId = msg.m_codeY;
-        setRolloverText(msg.m_codeY);
+    if (updateFlag)
+        update(1);
+    if (exit) {
+        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        return 2;
     }
     return 1;
 }
@@ -3407,6 +3443,11 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // command; subtype 0xe right-clicks a slot into its info popup. Hover copies
 // the rollover string.
 
+// Mac 0x1f99a4/0x1f99d8 and widget defaults reach the common flag phase;
+// mouse movement returns separately at 0x1f9c98. Arrow arms set update before
+// setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
+// helper path. Two separate viewArtifact source calls remain separate on Mac;
+// keep its shared call. Widget-local flags lower both compiler comparisons.
 VA(0x005edf60, 0x75f) MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::windowHandler(message& msg)
 {
@@ -3427,7 +3468,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_BUY_GOLD_ID: {
                 int destination = msg.m_codeY - MARKET_BUY_WOOD_ID;
                 if (destination == g_leftResource)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 g_leftResource = destination;
                 updateFlag = 1;
                 if (g_selectedArtifact != -1) {
@@ -3447,7 +3488,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
                 int artifactSlot = msg.m_codeY - MARKET_ARTIFACT_SLOT_00_ID;
                 if (artifactSlot == g_selectedArtifact)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 g_selectedArtifact = artifactSlot;
                 updateFlag = 1;
                 if (g_leftResource != -1)
@@ -3460,10 +3501,10 @@ int TSellArtifactWindow::windowHandler(message& msg)
             case MARKET_ARTIFACT_SLOT_17_ID:
                 normalDialog((*g_generalText)[GENERAL_TEXT_ITEM_CANNOT_BE_TRADED], 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
 
             default:
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
             }
             break;
 
@@ -3488,23 +3529,22 @@ int TSellArtifactWindow::windowHandler(message& msg)
             type_artifact artifact;
             if (artifactSlot < 18) {
                 artifact = g_marketHero->getArtifact(TArtifactSlot(artifactSlot));
-                g_marketHero->viewArtifact(&artifact, 1);
-                return MESSAGE_DISPATCH_CONSUME;
             } else {
                 int numInBackpack = g_marketHero->getNumberInBackpack(1);
                 int slot = ((g_backpackStart & 0xff) + artifactSlot - 18)
                            % numInBackpack;
                 artifact = g_marketHero->getBackpack(slot);
-                g_marketHero->viewArtifact(&artifact, 1);
-                return MESSAGE_DISPATCH_CONSUME;
             }
+            // Mac retains one view call shared by both artifact sources.
+            g_marketHero->viewArtifact(&artifact, 1);
+            break;
         }
 
         case MARKET_WIDGET_ACTIVATE:
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID:
                 if (g_rightAmount == 0)
-                    return MESSAGE_DISPATCH_CONSUME;
+                    break;
                 if (g_ratioInverted) {
                     g_currentPlayer->m_resources[g_leftResource] +=
                         g_giveQuantity * g_rightAmount;
@@ -3513,8 +3553,8 @@ int TSellArtifactWindow::windowHandler(message& msg)
                     } else {
                         int numInBackpack =
                             g_marketHero->getNumberInBackpack(1);
-                        int slot = ((g_backpackStart & 0xff)
-                                    + g_selectedArtifact - 18)
+                        int slot = (g_selectedArtifact - 18
+                                    + (g_backpackStart & 0xff))
                                    % numInBackpack;
                         g_marketHero->removeBackpackArtifact(slot);
                     }
@@ -3527,14 +3567,14 @@ int TSellArtifactWindow::windowHandler(message& msg)
 
             case MARKET_ARTIFACT_LEFT_ARROW_ID:
                 decrementBackpackStart();
-                setupNewTrade();
                 updateFlag = 1;
+                setupNewTrade();
                 break;
 
             case MARKET_ARTIFACT_RIGHT_ARROW_ID:
                 incrementBackpackStart();
-                setupNewTrade();
                 updateFlag = 1;
+                setupNewTrade();
                 break;
 
             case MARKET_LEFT_COUNT_ID:
@@ -3550,12 +3590,12 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 break;
 
             default:
-                return MESSAGE_DISPATCH_CONSUME;
+                break;
             }
             break;
 
         default:
-            return MESSAGE_DISPATCH_CONSUME;
+            break;
         }
         break;
 
@@ -3565,7 +3605,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
             m_lastHoverId = msg.m_codeY;
             setRolloverText(msg.m_codeY);
         }
-        break;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
     if (updateFlag)

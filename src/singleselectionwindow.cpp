@@ -532,8 +532,8 @@ void startMouseThread()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:344
-// Retail keeps this helper out of line at SetupScenarioOptions (its inline
-// budget is spent; see there) and expands it in GenerateRandomMap.
+// Retail keeps this helper out of line at SetupScenarioOptions and expands
+// it in GenerateRandomMap; retain its source boundary.
 VA(0x00577810, 0x61) MAC_ADDRESS(0x16e358, 0x30)  // dc 0x12fdd4
 void stopMouseThread()
 {
@@ -677,11 +677,11 @@ public:
     {
         m_forWho = forWho;
         sRand(GameTime::get());
-        int creature;
-        do {
+        int creature = sRandom(0, 111);
+        while (creature == WAIT_CREATURE_ARCH_DEVIL
+               || creature == WAIT_CREATURE_DEVIL) {
             creature = sRandom(0, 111);
-        } while (creature == WAIT_CREATURE_ARCH_DEVIL
-                 || creature == WAIT_CREATURE_DEVIL);
+        }
         setup(text, g_mediumFont,
               g_creatureTypeTraits[creature].m_spriteName, 0);
         doModal(0);
@@ -785,12 +785,12 @@ public:
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
     int m_townTypes[8];           // +0x5c
-    FILETIME m_fileTime;          // +0x7c
+    FileTime m_fileTime;          // +0x7c
 
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
     // E:\gamedcs\singleselectionwindow.cpp:587, dc 0x147c78
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FILETIME fileTime)
+                    int* townTypes, FileTime fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
@@ -1108,6 +1108,7 @@ bool initializeTurnDurationText()
 // Retail keeps no out-of-line copy - the 11.6 KB window constructor
 // expands it between its m_players and netMsgHandler member constructions
 // (0x579a2e..0x579a9a), which is where its statements sit in retail.
+MAC_ADDRESS(0x16ecc8, 0xd4)
 CNetPlayerHandler::CNetPlayerHandler()
 {
     m_playersCount = 0;
@@ -2474,7 +2475,7 @@ CChatWidget::~CChatWidget()
 VA(0x0057CC00, 0xF5) MAC_ADDRESS(0x186624, 0x2c)  // dc 0x149054
 void CSingleSelectionChatEdit::sendChat(const char* chat, int)
 {
-    g_singleSelectionWindow->sendChat(0, chat);
+    g_singleSelectionWindow->sendChat(NET_BROADCAST_DPID, chat);
 }
 
 VA(0x0057CD00, 0x85) MAC_ADDRESS(0x186650, 0x4c)  // dc 0x149080
@@ -2905,7 +2906,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
                 getWidget(179)->hide();
 
             CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
             g_dPlay->enumPlayers(&playerArray, 0, 0);
@@ -2967,7 +2968,7 @@ void TSingleSelectionWindow::setupNewGameMode()
                 getWidget(179)->hide();
 
             CNewPlayerMsg msg(&g_thisNetPlayerInfo, m_gameVersion);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
 
             CAutoArray<CDPlayPlayer> playerArray;
             g_dPlay->enumPlayers(&playerArray, 0, 0);
@@ -3169,8 +3170,8 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     memset(m_localHeader.m_heroAvailability, -1,
            sizeof(m_localHeader.m_heroAvailability));
-    strcpy(m_localHeader.m_title, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME));
-    strcpy(m_localHeader.m_description, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION));
+    strcpy(m_localHeader.m_title, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME]);
+    strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
     GameSelectionHeadersStruct& localHeader = m_localHeader;
     localHeader.m_header = header;
 
@@ -3198,17 +3199,13 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     drawWindow(0, 0xffff0001, 0xffff);
     update();
 
-    if (g_remoteOn && g_dPlay->isHost())
+    if (g_remoteOn && isHost())
         sendPlayerPositions(0);
 }
 
 VA(0x00580A70, 0x68B) MAC_ADDRESS(0x178b94, 0x33c)  // dc 0x135f04
 void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
-    // DC 2839 declares msg for Update(msg); Complete's Update takes none, but
-    // the constructor still spends the budget that keeps stopMouseThread a call.
-    message msg;
-
     if (m_inScenarioOptions) {
         turnOffScenarioOptions();
         return;
@@ -3223,8 +3220,8 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         if (randomMaps) {
             if (m_transferHeaders.size() == 0) {
                 if (g_remoteOn && !isHost()) {
-                    CNetMsg request(RS_HEADERS_REQUEST, sizeof(CNetMsg));
-                    transmitRemoteDataDPID(&request, 0, false, true);
+                    CNetMsg msg(RS_HEADERS_REQUEST, sizeof(CNetMsg));
+                    transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
                 } else {
                     getHeaders(&m_transferHeaders);
                 }
@@ -3241,7 +3238,8 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
     m_fileSlider->show();
     m_fileSlider->setResolution(
         m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
-    m_fileSlider->enable(isHost());
+    randomMaps = isHost();
+    m_fileSlider->enable(randomMaps);
     m_fileSlider->setState(m_currentIndex);
 
     showWidget(137);
@@ -3260,14 +3258,14 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         startMouseThread();
         drawWindow(0, 0xffff0001, 0xffff);
         g_smallFont->drawBoundedString(
-            (*g_generalText)[GENERAL_TEXT_SCENARIO_READING_MAP_FILES], g_windowManager->m_screenBitmap,
+            g_generalText->getText(GENERAL_TEXT_SCENARIO_READING_MAP_FILES), g_windowManager->m_screenBitmap,
             123, 122, 184, 25, font::WHITE, 5, -1);
         this->update();
         m_inScenarioOptions = 1;
-        if (isHost() || m_saveMode)
-            getHeaders(&m_headersA);
-        else
+        if (!isHost() && !m_saveMode)
             g_game->setupOrigData();
+        else
+            getHeaders(&m_headersA);
         m_scenarioOptionsStarted = 1;
         stopMouseThread();
     }
@@ -3291,6 +3289,10 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 // and an induction temporary. Naming the duration isHost result and declaring
 // compatibilityMessage before gameType symmetrically are byte-flat. why-reg's
 // seven catalog mutations were flat or worse; none reduced the divergence.
+// Direct ordinary text indexing restores the retail branch-local table loads;
+// caching the table across both message arms had lowered Windows to 97.24%.
+// Both authored message lifetimes remain; Windows recovers 99.80%, and Mac
+// retains the same 74 ordered call sites (exact references remain incomplete).
 // E:\gamedcs\singleselectionwindow.cpp:2933
 VA(0x00581100, 0x897) MAC_ADDRESS(0x178ed0, 0x790)  // anchor-callee OnWidgetDeselect 0x5865b0 calls it (site 0x586d43) - the DC edge; size 1.02x dc 0x86C, dc 0x136388
 void TSingleSelectionWindow::setupAdvancedOptions()
@@ -3315,18 +3317,15 @@ void TSingleSelectionWindow::setupAdvancedOptions()
 
             if (!static_cast<const std::bitset<4>&>(
                     g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-                if (g_remoteOn && !g_dPlay->isHost())
+                if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3342,18 +3341,15 @@ void TSingleSelectionWindow::setupAdvancedOptions()
                 mapVersionClass = g_game->m_mapHeader.m_version > 14;
 
             if (m_commonGameVersion < mapVersionClass) {
-                if (!g_dPlay->isHost())
+                if (!isHost())
                     return;
-                const TTextResource* text;
                 const char* gameType;
                 if (*g_videoGameState == 1) {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                    gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
                 } else {
-                    text = g_generalText;
-                    gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                    gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
                 }
-                const char* compatibilityMessage = text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT);
+                const char* compatibilityMessage = (*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT];
                 normalDialog(
                     formatString(
                         compatibilityMessage,
@@ -3675,9 +3671,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
             int displayFace = getDisplayFace(gamePos);
             if (player->m_heroIndex == -1 && displayFace == -1) {
                 CBonusDlg dlg(!m_saveMode && !m_loadMode);
-                dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION), m_randomHeroBmp,
-                              g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                              g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION));
+                dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_CAPTION], m_randomHeroBmp,
+                              (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                              (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_HERO_DESCRIPTION]);
                 dlg.doModal(0);
             } else {
                 int heroId = getHeroInPos(gamePos);
@@ -3718,9 +3714,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         if (townType == -1) {
             CBonusDlg dlg(!m_saveMode && !m_loadMode);
-            dlg.createWin(g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION), m_randomTownBmp,
-                          g_generalText->getText(GENERAL_TEXT_RANDOM_HERO),
-                          g_generalText->getText(GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION));
+            dlg.createWin((*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_CAPTION], m_randomTownBmp,
+                          (*g_generalText)[GENERAL_TEXT_RANDOM_HERO],
+                          (*g_generalText)[GENERAL_TEXT_SCENARIO_RANDOM_TOWN_DESCRIPTION]);
             dlg.doModal(0);
         } else {
             CTownDlg dlg(!m_saveMode && !m_loadMode);
@@ -3768,17 +3764,17 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
 
         switch (bonus) {
         case NEW_MAP_BONUS_ARTIFACT:
-            header = g_generalText->getText(GENERAL_TEXT_ARTIFACT_BONUS);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION);
+            header = (*g_generalText)[GENERAL_TEXT_ARTIFACT_BONUS];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_ARTIFACT_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_GOLD:
-            header = g_generalText->getText(GENERAL_TEXT_GOLD_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_GOLD_BONUS];
             sprite = 8;
-            bonusEx = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_RANGE);
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_GOLD_DESCRIPTION);
+            bonusEx = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_RANGE];
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_GOLD_DESCRIPTION];
             break;
         case NEW_MAP_BONUS_RESOURCE:
-            header = g_generalText->getText(GENERAL_TEXT_RESOURCE_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RESOURCE_BONUS];
             sprite = townType;
             if (sprite == TOWN_CONFLUX)
                 sprite = TOWN_INFERNO;
@@ -3788,9 +3784,9 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 sprite = 0;
             break;
         case NEW_MAP_BONUS_RANDOM:
-            header = g_generalText->getText(GENERAL_TEXT_RANDOM_BONUS);
+            header = (*g_generalText)[GENERAL_TEXT_RANDOM_BONUS];
             sprite = 10;
-            desc = g_generalText->getText(GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION);
+            desc = (*g_generalText)[GENERAL_TEXT_STARTING_RANDOM_BONUS_DESCRIPTION];
             break;
         }
 
@@ -3840,11 +3836,11 @@ int TSingleSelectionWindow::getFileSpecNbr()
 MAC_ADDRESS(0x175674, 0x48)
 char* TSingleSelectionWindow::getHeaderDirectory()
 {
-    return m_randomMapMode
+    return const_cast<char*>(m_randomMapMode
         ? DATA_COMPGEN(0x006836ac, randomMapsDir, "random_maps")
         : (m_loadMode || m_saveMode
                ? DATA_COMPGEN(0x00677d70, gamesDir, "games")
-               : DATA_COMPGEN(0x006772d0, mapsDir, "maps"));
+               : DATA_COMPGEN(0x006772d0, mapsDir, "maps")));
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3475
@@ -3974,6 +3970,19 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 
     if (dir[0])
         _chdir(dir);
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x17aec8 uses its native fork adapter and DateTimeRec.
+    // Native open passes the incoming eight-byte directory adapter in r4;
+    // its shared pathname declaration/chdir model above remains a platform
+    // comparison gap. Preserve the incoming pointer at this boundary.
+    MacFileAdapter file;
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(dir)),
+                  filename, 0, 0, false) == 0) {
+        file.getModificationDate(&header->m_fileTime);
+        file.close();
+    }
+#else
     HANDLE fileHandle = CreateFileA(
         filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, 0);
@@ -3981,6 +3990,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
         GetFileTime(fileHandle, 0, 0, &header->m_fileTime);
         CloseHandle(fileHandle);
     }
+#endif
     if (dir[0])
         _chdir("..");
 
@@ -4272,6 +4282,14 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                                  422, 45, 324, 30, font::HEADING_HIGHLIGHT, 0, -1);
     if (m_currentMap != -1
             && (m_loadMode != 0 || m_saveMode != 0 || m_randomMapMode != 0)) {
+#if defined(HOMM3_TARGET_MAC)
+        char dateBuf[100];
+        FileTime& st = m_headersA[m_currentMap].m_fileTime;
+        sprintf(dateBuf,
+                DATA_COMPGEN(0x006837c0, saveDateFormat,
+                             "%d/%d/%d - %d:%02d"),
+                st.month, st.day, st.year, st.hour, st.minute);
+#else
         _FILETIME localTime;
         _SYSTEMTIME st;
         char dateBuf[100];
@@ -4282,6 +4300,7 @@ void TSingleSelectionWindow::drawBasicMapInfo()
                 DATA_COMPGEN(0x006837c0, saveDateFormat,
                              "%d/%d/%d - %d:%02d"),
                 st.wMonth, st.wDay, st.wYear, st.wHour, st.wMinute);
+#endif
         g_smallFont->drawBoundedString(dateBuf,
             g_windowManager->m_screenBitmap, 422, 27, 278, 18, font::WHITE, 6, -1);
     }
@@ -4321,17 +4340,19 @@ void TSingleSelectionWindow::drawBasicMapInfo()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4239, dc 0xd84
+// Mac 0x17c1dc..0x17c1ec derives each row coordinate from its index;
+// this source shape also restores the Windows retail body.
 VA(0x00584550, 0x698) MAC_ADDRESS(0x17c0ac, 0x7b4)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::update()
 {
     if (m_receivedMaps == 0) {
-        if (g_remoteOn == 0)
-            return 1;
-        if (g_dPlay->isHost())
+        if (isHost())
             return 1;
         g_smallFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, font::WHITE, 4, -1);
+        g_windowManager->updateScreen(0, 0, 800, 600);
+        return 1;
     } else {
         drawBasicMapInfo();
         if (m_inScenarioOptions) {
@@ -4343,8 +4364,8 @@ int TSingleSelectionWindow::update()
                 25, 52, 132, 32, font::PRIMARY_HIGHLIGHT, 5, -1);
             int i = 0;
             if (rows > 0) {
-                int y = 123;
                 do {
+                    int y = 123 + i * 25;
                     int color = m_currentMap == m_currentIndex + i ? 5 : 4;
                     if (m_selectionHeaders.size()
                             > static_cast<unsigned int>(m_currentIndex + i)) {
@@ -4448,7 +4469,6 @@ int TSingleSelectionWindow::update()
                                 g_windowManager->m_screenBitmap, 342, y, 0, 1);
                     }
                     ++i;
-                    y += 25;
                 } while (i < rows);
             }
         }
@@ -4663,6 +4683,10 @@ inline void TSingleSelectionWindow::onSortMaps(int how)
 // Complete's vector/functor details therefore require retail evidence.
 // DC's message junk belongs to the older Update(message&) interface;
 // Complete calls the no-argument Update, so no unused message is invented.
+// Mac 0x17cea0 instead sorts a temporary pointer array with the adjacent-swap
+// helper 0x17cde8. Windows 0x5850c5 calls 0x590070 on the record vector;
+// its 16-element threshold and median/partition path prove Dinkumware sort.
+// This source-call difference remains unresolved; the Mac helper is not MSL.
 VA(0x00585050, 0x2A8) MAC_ADDRESS(0x17cea0, 0x338)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
 void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
                                       unsigned char update)
@@ -4706,7 +4730,7 @@ void TSingleSelectionWindow::sortMaps(int how, unsigned char sendSortMsg,
     }
     if (g_remoteOn != 0 && isHost() && sendSortMsg != 0) {
         CSortMapsMsg msg(how, m_sortDirection);
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
     if (m_selectionHeaders.size() != 0)
         updateGameVars();
@@ -4885,15 +4909,15 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             break;
         }
         broadcastMessage(msg);
-        if (!g_remoteOn || g_dPlay->isHost())
+        if (isHost())
             updateAllyEnemyFlags(update);
-        if (g_remoteOn && !m_saveMode && g_dPlay->isHost()
+        if (g_remoteOn && !m_saveMode && isHost()
                 && !m_randomMapSelected) {
             CScrollMsg scrollMsg(m_currentMap, m_currentIndex);
-            transmitRemoteDataDPID(&scrollMsg, 0, false, true);
+            transmitRemoteDataDPID(&scrollMsg, NET_BROADCAST_DPID, false, true);
         }
     }
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         widget* w = getWidget(186);
         if (w) {
             if (!m_loadMode && !m_saveMode
@@ -4950,7 +4974,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
             }
         }
     }
-    if (g_remoteOn && g_dPlay->isHost() && m_mapChanged) {
+    if (g_remoteOn && isHost() && m_mapChanged) {
         sendPlayerPositions(0);
     }
 }
@@ -5010,9 +5034,9 @@ void TSingleSelectionWindow::setFilter(int size)
     setCurrentMap(m_selectionHeaders.size() > 0 ? 0 : -1, 0);
     drawWindow(0, 0xffff0001, 0xffff);
     update();
-    if (g_remoteOn != 0 && g_dPlay->isHost()) {
+    if (g_remoteOn != 0 && isHost()) {
         CSetFilterMsg filterMsg(size);
-        transmitRemoteDataDPID(&filterMsg, 0, false, true);
+        transmitRemoteDataDPID(&filterMsg, NET_BROADCAST_DPID, false, true);
     }
 }
 
@@ -5044,10 +5068,13 @@ void TSingleSelectionWindow::setDifficultyHiLite()
 // progress bar advances one step; the generator's result code selects one of
 // three general-text failure dialogs.
 
-// Residual (97.66%): StopMouseThread now expands here as in retail.
+// Retail expands StopMouseThread here while keeping a call in
+// SetupScenarioOptions. Preserve the shared helper and both source calls.
 // Fixed here: the request/progress/path locals live in their OWN BLOCK,
 // which retail proves by destroying them once before StopMouseThread rather
 // than per switch arm - worth 80.8024 -> 91.9718 on the brace alone.
+// Mac 0:0x17df38 and 0:0x17e114 expand isHuman's byte result;
+// its team bounds are independent checks, not else-if arms.
 VA(0x005860E0, 0x4CC) MAC_ADDRESS(0x17dee0, 0x428)
 unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 {
@@ -5060,7 +5087,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
         int seated = 0;
         for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayerInPos(j);
-            if (p && p->m_dpid != 0)
+            if (p && p->isHuman())
                 ++seated;
         }
         humanPlayerCount = seated + rand() % (9 - seated);
@@ -5068,7 +5095,9 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
 
     if (humanTeamCount == -1)
         humanTeamCount = rand() % humanPlayerCount + 1;
-    if (humanTeamCount == 0 || humanTeamCount > humanPlayerCount)
+    if (humanTeamCount == 0)
+        humanTeamCount = humanPlayerCount;
+    if (humanTeamCount > humanPlayerCount)
         humanTeamCount = humanPlayerCount;
 
     if (humanPlayerCount == CNetPlayerHandler::MAX_PLAYERS) {
@@ -5079,16 +5108,14 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             computerPlayerCount = rand() % (9 - humanPlayerCount);
         if (computerPlayerCount + humanPlayerCount > 8)
             computerPlayerCount = 8 - humanPlayerCount;
-        if (computerPlayerCount == 0) {
+        if (computerPlayerCount == 0)
+            computerTeamCount = 0;
+        if (computerTeamCount == -1)
+            computerTeamCount = rand() % computerPlayerCount + 1;
+        if (computerTeamCount == 0)
             computerTeamCount = computerPlayerCount;
-        } else {
-            if (computerTeamCount == -1)
-                computerTeamCount = rand() % computerPlayerCount + 1;
-            if (computerTeamCount == 0)
-                computerTeamCount = computerPlayerCount;
-            else if (computerTeamCount > computerPlayerCount)
-                computerTeamCount = humanPlayerCount;
-        }
+        if (computerTeamCount > computerPlayerCount)
+            computerTeamCount = humanPlayerCount;
     }
 
     int waterContent = m_randomMapOptions[6];
@@ -5126,7 +5153,7 @@ unsigned char TSingleSelectionWindow::generateRandomMap(const char* name)
             CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(i);
             if (!player)
                 player = m_players.getCompPlayerInPos(i);
-            if (player->m_dpid != 0)
+            if (player->isHuman())
                 request.m_isHumanSeat[i] = 1;
             request.m_townType[i] = player->m_townIndex;
         }
@@ -5292,7 +5319,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         case SSW_FILTER_DURATION_ANY:
         case SSW_RANDOM_MAPS: {
             CClickMsg netMsg(msg->m_codeY);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             break;
         }
         }
@@ -5345,7 +5372,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             townType = pickPrevAlignment(legal, townType);
             thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
                        static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
@@ -5374,7 +5401,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
             townType = pickNextAlignment(legal, townType);
             thisPlayer->m_townIndex = townType;
             CTownUpdateMsg netMsg(i, townType);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
             updateTown(i,
                        static_cast<TTownType>(thisPlayer->m_townIndex) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
                        0);
@@ -5392,7 +5419,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_HERO_PREV_LAST: {
         if (!isHost()) {
             CRequestHeroFaceMsg netMsg(-1);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
         } else {
             int clickPos = msg->m_codeY - SSW_HERO_PREV_FIRST;
             CNetPlayerHandlerPlayer* thisPlayer =
@@ -5401,7 +5428,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 getHeroFace(-1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
                     thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
-                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
@@ -5417,7 +5444,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_HERO_NEXT_LAST: {
         if (!isHost()) {
             CRequestHeroFaceMsg netMsg(1);
-            transmitRemoteDataDPID(&netMsg, 0, false, true);
+            transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
         } else {
             int clickPos = msg->m_codeY - SSW_HERO_NEXT_FIRST;
             CNetPlayerHandlerPlayer* thisPlayer =
@@ -5426,7 +5453,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 getHeroFace(1, thisPlayer);
                 CRequestHeroFaceReplyMsg netMsg(
                     thisPlayer->m_playerPos, thisPlayer->m_heroIndex);
-                transmitRemoteDataDPID(&netMsg, 0, false, true);
+                transmitRemoteDataDPID(&netMsg, NET_BROADCAST_DPID, false, true);
                 drawHeroAdvancedOption(clickPos, 1, -1);
             }
         }
@@ -5476,7 +5503,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         // down BEFORE the `test bl,bl`, so only the expansion differs. Both
         // want a caller-shrink or a site pin and neither is available.
         if (generateRandomMap(getRandomMapName().c_str()))
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_CREATED),
+            normalDialog((*g_generalText)[GENERAL_TEXT_RANDOM_MAP_CREATED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -5736,7 +5763,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_GOLD;
             if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
-                transmitRemoteDataDPID(&msg, 0, false, true);
+                transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
             }
             drawHeroAdvancedOption(i, 1, -1);
         }
@@ -5768,7 +5795,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
                 thisPlayer->m_startBonusIndex = NEW_MAP_BONUS_RANDOM;
             if (g_remoteOn) {
                 CSetAGRMsg msg(i, thisPlayer->m_startBonusIndex);
-                transmitRemoteDataDPID(&msg, 0, false, true);
+                transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
             }
             drawHeroAdvancedOption(i, 1, -1);
         }
@@ -6026,7 +6053,7 @@ int TSingleSelectionWindow::windowHandler(message& msg)
                         drawHeroAdvancedOption(
                             g_lastImHoverId - 0x107, 1, -1);
                     }
-                    if (!g_remoteOn || g_dPlay->isHost()) {
+                    if (isHost()) {
                         widget* hovered = getWidget(id);
                         hovered->sendMessage(
                             widget::WIDGET_SET_STATUS, 0x10);
@@ -6063,7 +6090,8 @@ VA(0x00588330, 0x462) MAC_ADDRESS(0x17fba4, 0x44c)  // dc 0x13f770
 void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer)
 {
     g_numHumanPlayers = 0;
-    for (int i = 0; i < 8; ++i) {
+    int i;
+    for (i = 0; i < 8; ++i) {
         g_game->m_players[i].m_isLocal = 0;
         g_game->m_players[i].m_isHuman = 0;
     }
@@ -6204,6 +6232,10 @@ bool TSingleSelectionWindow::handleNetMsg(CNetMsg* netMsg, bool& cancel)
             return 1;
         }
     }
+        // Windows 0x588986..0x5889b9 shares normalDialog/shutDown with the
+        // lost-session arm. Mac 0x180284/0x18070c instead destroys the message,
+        // cleans up networking and sets cancel. Source-call correspondence
+        // for these conflicting exits remains unresolved.
         // fall through - a failed transfer is a lost session
     case RS_SESSION_LOST:
         normalDialog(g_generalText->getText(GENERAL_TEXT_REMOTE_SESSION_DESTROYED), 1, -1, -1,
@@ -6424,31 +6456,41 @@ unsigned char TSingleSelectionWindow::checkMissingHeaders(unsigned long dpidHost
 // E:\gamedcs\singleselectionwindow.cpp:6723
 // DC's body is a ten-byte return-1 stub (6723, 6769, 6770), so the
 // Windows transfer path is reconstructed from retail, not missing DC text.
-// Retail reuses the request-message slot at ebp-0x2c across both failure
-// arms. Making the missing-file arm an else removes the extra 0x1c slot
-// and raises 90.2193% to 90.31%. The assignment pin remains debt: direct
-// unpinned assignment with sibling scopes gives 71.50%; a shared final
-// return gives 67.06%, and a positive receiving guard gives 71.53%.
-// Moving the typed message binding to entry is byte-flat. The residual
-// includes the third operator= expansion, CNetMsg construction and
-// SavedGameHeader cleanup; the constructor's DC 605..608 has no missing
-// initialization to justify synthetic budget mass.
+// Windows reuses the request-message slot across both failure arms. The
+// shared transfer body now compiles for Mac using its evidenced fork adapter
+// and fourteen-byte DateTimeRec; Windows keeps its eight-byte FILETIME.
+// The native comparison currently retains SGameSetupOptions assignments
+// that retail expands, and splits the file-adapter destructor over two exits.
+// Those helper/lifetime frontiers remain explicit; no exact Mac claim is made.
 VA(0x00589710, 0x40F) MAC_ADDRESS(0x180c24, 0x668)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
 unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
 {
-#ifdef _WINDOWS
     if (m_headersA.size() == 0)
         return 1;
     if (!m_receivingMaps)
         return 1;
-    _chdir(getHeaderDirectory());
     CMapFileNameMsg* mapFileNameMsg = static_cast<CMapFileNameMsg*>(netMsg);
-    if (_access(mapFileNameMsg->m_fileName, 0) == 0) {
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0:0x180c68..0x180c98 opens through the native fork adapter.
+    // Native getHeaderDirectory returns an eight-byte directory adapter;
+    // its shared pathname declaration still needs the native pointer-cell
+    // model. Preserve the pointer value at this platform boundary.
+    MacFileAdapter file;
+    if (file.open(static_cast<const MacDirectoryAdapter*>(
+                      static_cast<const void*>(getHeaderDirectory())),
+                  mapFileNameMsg->m_fileName, 0, 0, false) == 0)
+#else
+    _chdir(getHeaderDirectory());
+    if (_access(mapFileNameMsg->m_fileName, 0) == 0)
+#endif
+    {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         GameSelectionHeadersStruct temp;
         getHeader(getHeaderDirectory(),
                   mapFileNameMsg->m_fileName, &temp);
-        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, 8) == 0) {
+        if (memcmp(&temp.m_fileTime, &mapFileNameMsg->m_fileTime, sizeof(FileTime)) == 0) {
             memcpy(temp.m_setup.m_alignment, mapFileNameMsg->m_townTypes,
                    sizeof(mapFileNameMsg->m_townTypes));
             if (mapFileNameMsg->m_flag)
@@ -6475,13 +6517,13 @@ unsigned char TSingleSelectionWindow::onMapFileNameMsg(CNetMsg* netMsg)
         }
         return 1;
     } else {
+#if !defined(HOMM3_TARGET_MAC)
         _chdir("..");
+#endif
         CMapHeaderRequestMsg msg(mapFileNameMsg->m_flag, mapFileNameMsg->m_number);
         transmitRemoteDataDPID(&msg, netMsg->m_dpidFrom, false, true);
         return 1;
     }
-#endif
-    return 1;
 }
 
 // DC source call and local lifetimes recovered in HandleNetMsg.
@@ -6543,8 +6585,7 @@ MAC_ADDRESS(0x181910, 0x12c)
 bool TSingleSelectionWindow::onPlayerDroppedMsg(CNetMsg* netMsg)
 {
     CNetPlayerInfo* player = m_players.getPlayer(netMsg->m_dpidFrom);
-    m_players.deletePlayer(netMsg->m_dpidFrom);
-    m_commonGameVersion = getCommonGameVersion();
+    removePlayer(netMsg->m_dpidFrom);
     m_newPlayerUpdateMan->playerDropped(netMsg->m_dpidFrom);
     if (player)
         g_chatMan.playerDropMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_LEFT_GAME_FORMAT), player->m_name);
@@ -6782,13 +6823,13 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
     g_logFile.log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
                              "OnNewPlayerMsg (%d)"),
                 msg->m_playerInfo.m_dpid);
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         if (!isVersionCompatible(msg->m_version)) {
             g_logFile.log(
                 DATA_COMPGEN(0x00683904, incompatibleVersionLog,
                              "New Player has incompatible version #%s"),
                 msg->m_version);
-            const char* errText = g_generalText->getText(GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT);
+            const char* errText = (*g_generalText)[GENERAL_TEXT_NETWORK_VERSION_MISMATCH_FORMAT];
             CBadVersionMsg reply(m_gameVersion, errText);
             transmitRemoteDataDPID(&reply, netMsg->m_dpidFrom, 0, 1);
             return 1;
@@ -6798,7 +6839,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         setNewPlayerSlot(&msg->m_playerInfo);
     if (m_chatShowing)
         turnChatOn(1);
-    if (!g_remoteOn || g_dPlay->isHost()) {
+    if (isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
             if (assignPlayerToOpenHumanSlot(netMsg->m_dpidFrom)) {
@@ -6811,7 +6852,7 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         sendPlayerPositions(0);
     }
     makeHeroFilter();
-    g_chatMan.playerEnterMsg(g_generalText->getText(GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT),
+    g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
                    msg->m_playerInfo.m_name);
     displayChat();
     return 1;
@@ -7057,7 +7098,7 @@ void TSingleSelectionWindow::onRequestHeroFaceMsg(
         return;
     getHeroFace(msg->m_which, player);
     CRequestHeroFaceReplyMsg reply(player->m_playerPos, player->m_heroIndex);
-    transmitRemoteDataDPID(&reply, 0, false, true);
+    transmitRemoteDataDPID(&reply, NET_BROADCAST_DPID, false, true);
     onRequestHeroFaceReplyMsg(&reply, inPopup);
 }
 
@@ -7118,7 +7159,7 @@ unsigned char TSingleSelectionWindow::onSetAsHostMsg(CNetMsg* netMsg)
     g_chatMan.systemMsg(g_generalText->getText(GENERAL_TEXT_LOCAL_PLAYER_IS_HOST));
     displayChat();
     CNewHostMsg msg(g_thisNetPlayerInfo.m_dpid);
-    transmitRemoteDataDPID(&msg, 0, false, true);
+    transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     m_scenarioOptionsStarted = 0;
     m_inScenarioOptions = 0;
     g_notifyNoSaved = 0;
@@ -7254,7 +7295,8 @@ VA(0x0058BA40, 0x175) MAC_ADDRESS(0x183374, 0x1c8)  // dc 0x1421a8
 void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
 {
     updateNameLists();
-    for (int i = 0; i < 8; ++i)
+    int i;
+    for (i = 0; i < 8; ++i)
         m_players.m_humanPlayers[i].m_playerPos = -1;
     CUpdatePlayerPosMsg* msg = static_cast<CUpdatePlayerPosMsg*>(netMsg);
     for (i = 0; i < 8; ++i) {
@@ -7309,7 +7351,7 @@ void TSingleSelectionWindow::sendPlayerFaces()
         if (player->isHuman() && player->m_playerPos != -1) {
             CRequestHeroFaceReplyMsg msg(player->m_playerPos,
                                          player->m_heroIndex);
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
         }
     }
 }
@@ -7339,6 +7381,9 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // Earlier controls: removing the const bitset cast was byte-flat; .test()
 // scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
+// branch-local lookups preserve those calls and recover Windows 92.87%
+// without caching the table across the two compatibility-message arms.
 VA(0x0058BCE0, 0x5AF) MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::onBeginGame()
 {
@@ -7346,7 +7391,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         std::string name = getRandomMapName();
         if (g_remoteOn) {
             CNetMsg msg(RS_GAME_TRANSMIT_PENDING, sizeof(CNetMsg));
-            transmitRemoteDataDPID(&msg, 0, false, true);
+            transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
         }
         if (!generateRandomMap(name.c_str()))
             return 0;
@@ -7372,16 +7417,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
         if (!static_cast<const std::bitset<4>&>(
                 g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7394,16 +7436,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 > MAP_FORMAT_RESTORATION_OF_ERATHIA;
 
         if (m_commonGameVersion < mapVersionClass) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7414,14 +7453,14 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
 
     if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_NO_MAPS_TO_PLAY), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_NO_MAPS_TO_PLAY], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
     CNetPlayerHandlerPlayer* player = getThisPlayer();
     if (!m_loadMode && player->m_playerPos == -1) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
@@ -7429,7 +7468,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     // Mac retains the shared IsMultiPlayer call at 0x183adc.
     if (isMultiPlayer()) {
         if (m_players.getPlayerCount(1) < 2) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS], 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
         }
@@ -7465,7 +7504,7 @@ unsigned char TSingleSelectionWindow::beginSavedGame()
 
     if (g_remoteOn) {
         CLaunchingGameMsg msg;
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
 
     int monthType = g_monthType;
@@ -7531,7 +7570,7 @@ bool TSingleSelectionWindow::beginNewGame()
 
     if (g_remoteOn) {
         CLaunchingGameMsg msg;
-        transmitRemoteDataDPID(&msg, 0, false, true);
+        transmitRemoteDataDPID(&msg, NET_BROADCAST_DPID, false, true);
     }
 
     g_game->setupOrigData();
@@ -7551,6 +7590,8 @@ bool TSingleSelectionWindow::beginNewGame()
 
     if (g_remoteOn) {
         CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
+        // Retail 0x58c77d calls the player-recipient overload with toWho=0.
+        // Mac 0x183f80 calls the separate DPID overload with dpid=-1.
         int returnValue = mapHeaderMsg.remoteFn00512D40(0, 0, 1);
         if (!sendPlayerPositions(0))
             return 0;
@@ -7794,8 +7835,11 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // directly proves that its shared helper returns the -1 instead. The named
 // boundary and its HasMultipleTowns call remain common source facts.
 // E:\gamedcs\singleselectionwindow.cpp:8166
+// This ordinary TU helper auto-expands under VC6 /Ob2. Removing the
+// unproven inline keyword leaves Windows unchanged and restores the
+// retained Mac call at setNewPlayerSlot 0:0x1863b8.
 MAC_ADDRESS(0x184ae4, 0xb0)
-inline TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
+TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
 {
     CNetPlayerHandlerPlayer* player = m_players.getPlayerInPos(gamePos);
     if (!player)
@@ -8226,6 +8270,7 @@ static int update(message& msg)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8758, dc 0x14514c
+MAC_ADDRESS(0x186028, 0x40)
 inline CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 {
     m_wasCompressed = 0;
@@ -8405,9 +8450,8 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     if (level == m_commonGameVersion)
         return;
 
-    unsigned char rebuild = m_randomMapSelected;
     m_commonGameVersion = level;
-    if (rebuild)
+    if (m_randomMapSelected)
         rebuildFilteredPlayerSetup();
     if (!m_inAdvancedOptions)
         return;
@@ -8440,11 +8484,21 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
                     player = m_players.getCompPlayerInPos(pos);
                 if (player && getDisplayTown(pos) == TOWN_CONFLUX) {
                     player->m_townIndex = eTownNeutral;
-                    updateTown(pos, eTownNeutral, 0);
+                    // Mac 0:0x1863d8 passes the stored town, not a literal.
+                    updateTown(pos, H3_ENUM_DECODE(TTownType, player->m_townIndex), 0);
                 }
             }
         }
     }
+}
+
+// Mac 0x18640c retains this helper between setNewPlayerSlot and
+// getCommonGameVersion; onPlayerDroppedMsg calls it at 0x181944.
+MAC_ADDRESS(0x18640c, 0x3c)
+void TSingleSelectionWindow::removePlayer(unsigned long dpid)
+{
+    m_players.deletePlayer(dpid);
+    m_commonGameVersion = getCommonGameVersion();
 }
 
 VA(0x0058ea00, 0x6E) MAC_ADDRESS(0x186448, 0xe0)
@@ -8459,7 +8513,7 @@ int TSingleSelectionWindow::getCommonGameVersion()
     }
 
     int level = 3;
-    while (!features.test(level))
+    while (!features[level])
         level--;
     return level;
 }

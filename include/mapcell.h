@@ -324,6 +324,14 @@ SIZE(ShipyardInfo, 4);
 // GATED: this is a type DEFINITION in a header that rides initialize.cpp's
 // include closure - see the cellFlags note inside the class for what an
 // ungated one costs there.
+// Native Mac readMonsterData keeps the same numeric bit positions: qty at
+// word bits 0..11 (halfword +2), disposition at 12..16, and custom at31.
+// CodeWarrior's default bitfield direction differs; scope its supported
+// layout setting to this numeric extra-info view. Other cell flags use the
+// default Mac direction. The declaration and Windows layout stay unchanged.
+#if defined(__MWERKS__)
+#pragma reverse_bitfields on
+#endif
 struct MonsterInfo {
 public:
     unsigned long m_qty : 12;
@@ -334,6 +342,9 @@ public:
     unsigned long m_unused27 : 4;
     unsigned long m_custom : 1;
 };
+#if defined(__MWERKS__)
+#pragma reverse_bitfields off
+#endif
 SIZE(MonsterInfo, 4);
 
 // The campfire's arm of the same dword. advManager::DoEventCampfire
@@ -1125,7 +1136,9 @@ public:
     // The retained vector-construction callback belongs to this header body;
     // mapcell.obj is its retail emission site, after NewfullMap::Init.
     // E:\gamedcs\MapCell.h:685, dc 0xf49a4
-    VA(0x004fd650, 0x3E)  // dc 0xf49a4
+    // Mac NewfullMap::init passes this retained constructor through the
+    // array-construction callback at 0x11f28c.
+    VA(0x004fd650, 0x3E) MAC_ADDRESS(0x11f354, 0x80)  // dc 0xf49a4
     NewmapCell()
     {
         m_groundSet = 0;

@@ -682,7 +682,7 @@ public:
     inline void setBackgroundAnimation(unsigned char enable);
     void setBottomView(class type_bottom_view_window* newView);
     void updateResourceDisplay(bool draw, bool update);
-    void setAdvWinButtonPalette(int id, int player);
+    static void setAdvWinButtonPalette(int id, int player);
     void drawChatText(unsigned char update);
     void updateButtons(unsigned char draw, unsigned char update);
 
@@ -1070,7 +1070,8 @@ private:
     void doEventBoat(class hero* currentHero, NewmapCell* cell);
     void doEventBorderGuard(type_point point, NewmapCell* cell,
                             unsigned char humanPlayer);
-    void doEventBorderGate(NewmapCell* cell, unsigned char humanPlayer);
+    void doEventBorderGate(type_point point, NewmapCell* cell,
+                           unsigned char humanPlayer);
     void doEventBorderTent(NewmapCell* cell, unsigned char humanPlayer);
     void doEventBouy(class hero* currentHero, NewmapCell* cell,
                      unsigned char humanPlayer);

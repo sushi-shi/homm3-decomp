@@ -3,7 +3,8 @@
 
 # One profile for every unit; -proc 750 scheduling is calibrated on hero.
 # -char unsigned scored lower: 3 hero/remote pairs, or 79 (3 exact) as a global flag.
-flags = ["-O3", "-proc", "750", "-nolink"]
+# -nomapcr preserves ASCII newline 10; font::fillLinesVector matches both targets.
+flags = ["-O3", "-proc", "750", "-nomapcr", "-nolink"]
 
 # A unit override replaces `flags`. A disposition accounts for a unit with no
 # Mac counterpart; it needs positive evidence from the Mac executable.

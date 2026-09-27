@@ -33,7 +33,7 @@
 class t_memory_file : public TAbstractFile {
 public:
     // Both constructors are defined inline in this module-local class.
-    // Retail expands
+    // Mac retains their bodies at 0x223168 and 0x2231cc; Windows expands
     // the owning form into 0x512c80 / 0x512d40 (vptr, ownsBuffer, the
     // hundred-byte allocation, capacity, position) and the borrowing form
     // into 0x512e00, over a buffer it must not free.
@@ -45,6 +45,7 @@ public:
     // Assigning in the body puts the two stores adjacent, VC6 drops the
     // base one, and what is left is retail's single `mov [this], 0x640264`
     // ahead of the flag.
+    MAC_ADDRESS(0x223168, 0x64)
     t_memory_file()
     {
         m_ownsBuffer = 1;
@@ -52,11 +53,14 @@ public:
         m_capacity = 100;
         m_position = 0;
     }
-    t_memory_file(char* buffer, unsigned int capacity)
+    // Mac loads capacity from netMsg+0xc inside this retained constructor;
+    // Windows expands that same load at 0x512e25.
+    MAC_ADDRESS(0x2231cc, 0x2c)
+    t_memory_file(CNetMsg* netMsg)
     {
         m_ownsBuffer = 0;
-        m_buffer = buffer;
-        m_capacity = capacity;
+        m_buffer = static_cast<char*>(static_cast<void*>(netMsg));
+        m_capacity = netMsg->m_size;
         m_position = 0;
     }
     virtual ~t_memory_file();
@@ -152,8 +156,7 @@ unsigned char t_complex_net_message::remoteFn00512D40(
 VA(0x00512e00, 0xBF) MAC_ADDRESS(0x223554, 0x84)
 unsigned char t_complex_net_message::remoteFn00512E00(CNetMsg* netMsg)
 {
-    t_memory_file infile(static_cast<char*>(static_cast<void*>(netMsg)),
-                         netMsg->m_size);
+    t_memory_file infile(netMsg);
     infile.read(&m_netmsg, sizeof(CNetMsg));
     if (!read(&infile)) {
         return 0;

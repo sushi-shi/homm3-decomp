@@ -157,7 +157,7 @@ unsigned char TNativeTerrainObjectFilter::accepts(const TObjectType* objectType)
 {
     if (objectType->m_slotCategory != 0)
         return 0;
-    return objectType->m_recommendedTerrainMask.test(m_terrain)
+    return objectType->isRecommendedTerrain(m_terrain)
         && objectType->m_recommendedTerrainMask.count() <= 3;
 }
 
@@ -474,7 +474,7 @@ TObjectType& TObjectType::setTriggerMask(const std::bitset<48>& mask)
     if (m_hasTrigger) {
         for (int y = 0;; ++y) {
             for (unsigned x = 0; x < 8; ++x) {
-                if (m_triggerMask.test(CObjectType::getBitPos(x, y))) {
+                if (m_triggerMask[CObjectType::getBitPos(x, y)]) {
                     m_triggerCell.m_x = x;
                     m_triggerCell.m_y = y;
                     return *this;
@@ -606,7 +606,7 @@ VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)
 // 0.915. The class's implicit constructor is already claimed at 0x514060 and
 // this is its mirror image - the vector at +0x10 freed, then _Tree::_Erase
 // over the head node - reached only through the two function-local statics.
-VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TObjectImageNameTable)
+VA_COMPGEN(0x00514130, 0x7E, IMPLICIT_DTOR, TObjectImageNameTable) MAC_COMPGEN_ADDRESS(0x223810, 0x88, IMPLICIT_DTOR, TObjectImageNameTable)
 
 // COMDAT pairing: basic_istream<char>'s streambuf constructor, agreement
 // 0.931 (the `_Bool` tie-parameter arm - the only istream ctor this object

@@ -7,6 +7,8 @@
 
 #include "terrain.h"
 
+// Mac embeds a native sound owner: 0x276464 decodes RIFF/WAVE or AIFF/AIFC
+// before playback; Windows Miles receives the copied file bytes directly.
 VA(0x00566da0, 0x8E) MAC_ADDRESS(0x15da8c, 0x84)  // dc 0x129b3c
 sample::sample(const char* newName, const void* src, long len,
                long channel, long volume, long loop)

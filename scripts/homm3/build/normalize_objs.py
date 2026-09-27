@@ -346,10 +346,14 @@ def _canonicalize_equivalent_relocations(
             continue
         observations.setdefault(base_relocation.symbol_index, set()).add(
             (authority[0], target_relocation.symbol_index))
-    inferred_anchors = {
-        symbol: next(iter(rows)) for symbol, rows in observations.items()
-        if len(rows) == 1
-    }
+    inferred_anchors = {}
+    for symbol, rows in observations.items():
+        # Delinked COFF can repeat the same undefined data symbol. Its
+        # symbol-table indices do not establish distinct retail owners.
+        identities = {(rva, target.symbols[index].name)
+                      for rva, index in rows}
+        if len(identities) == 1:
+            inferred_anchors[symbol] = min(rows, key=lambda row: row[1])
 
     # A reviewed reloc-alias owner is stronger than the equal-addend
     # heuristic and remains usable when one stripped object contains several

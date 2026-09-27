@@ -1,0 +1,9 @@
+# Compiler literals used by ordinary event bodies.
+
+[[constants]]
+units = ["events"]
+mac_section = 1
+mac_offset = 0x49d8
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Mac combatMonsterEvent loads loader TOC1+0x23ec -> data1+0x49d8 at code0+0xb95b4 and loads f3 from it at0xb95c8. The exact big-endian 0x4330000080000000 bias converts both signed combat values to double before division. Candidate CodeWarrior emits the identical anonymous eight-byte payload; its context-dependent ordinal is not pinned."

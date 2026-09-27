@@ -41,6 +41,9 @@ type_event_record::type_event_record()
 
 VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 
+// Seven derived Mac load/save prefixes reproduce these complete base bodies:
+// this+4, one byte, and read/write slot 0xc/0x10. Recover the base calls.
+// Loads retain the base failure check; saves discard its result.
 VA(0x0049a5e0, 0x1D) MAC_ADDRESS(0x0befc0, 0x48)  // dc 0x8c678
 unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
@@ -125,7 +128,7 @@ type_event_record_type type_record_move_hero::getType() const
 VA(0x0049a690, 0xB1) MAC_ADDRESS(0x0bf1f8, 0x148)  // dc 0x8c7ec
 unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
@@ -143,7 +146,7 @@ VA(0x0049a750, 0x63) MAC_ADDRESS(0x0bf340, 0xe4)  // dc 0x8c8bc
 unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
     int heroId = m_currentHero->m_id;
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     outfile->write(&heroId, sizeof(heroId));
     outfile->write(&m_direction, 1);
     outfile->write(&m_source, sizeof(m_source));
@@ -252,7 +255,7 @@ type_event_record* type_record_claim_mine::create()
 VA(0x0049aa70, 0x71) MAC_ADDRESS(0x0bf840, 0xec)  // dc 0x8cbb4
 unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     if (infile->read(&m_id, sizeof(m_id)) != sizeof(m_id))
         return 0;
@@ -265,7 +268,7 @@ unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 VA(0x0049aaf0, 0x4A) MAC_ADDRESS(0x0bf92c, 0xbc)  // dc 0x8cc1c
 unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     outfile->write(&m_id, sizeof(m_id));
     outfile->write(&m_oldOwner, 1);
     unsigned char ok = outfile->write(&m_newOwner, 1) == 1;
@@ -382,28 +385,19 @@ type_event_record_type type_record_hide_boat::getType() const
 VA(0x0049ad00, 0xE7) MAC_ADDRESS(0x0bfdb0, 0x1c0)  // dc 0x8cedc
 unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     signed char boatId;
     if (infile->read(&boatId, 1) != 1)
         return 0;
     if (version >= 0x12 && version != g_saveVersionBoatFieldsAbsent
         && (version <= 0x1e || version >= 0x23)) {
-        {
-            unsigned char flag;
-            infile->read(&flag, 1);
-            m_previousOccupied = flag != 0;
-            infile->read(&flag, 1);
-            m_occupied = flag != 0;
-        }
-        {
-            // These serialized values are hero IDs.
-            short heroId;
-            infile->read(&heroId, sizeof(heroId));
-            m_previousOccupyingHero = heroId;
-            infile->read(&heroId, sizeof(heroId));
-            m_occupyingHero = heroId;
-        }
+        m_previousOccupied = readValue<char>(infile) != 0;
+        m_occupied = readValue<char>(infile) != 0;
+        // Mac stages each short separately, then uses lhbrx; the conversion
+        // remains unresolved in the shared native scalar helper.
+        m_previousOccupyingHero = readValue<short>(infile);
+        m_occupyingHero = readValue<short>(infile);
     } else {
         m_previousOccupied = 0;
         m_occupied = 1;
@@ -417,25 +411,15 @@ unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 VA(0x0049adf0, 0x8A) MAC_ADDRESS(0x0bff70, 0x11c)  // dc 0x8cf2c
 unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     if (outfile->write(&m_currentBoat->m_id, 1) != 1)
         return 0;
-    {
-        unsigned char b = m_previousOccupied;
-        outfile->write(&b, 1);
-    }
-    {
-        unsigned char b = m_occupied;
-        outfile->write(&b, 1);
-    }
-    {
-        short s = m_previousOccupyingHero;
-        outfile->write(&s, sizeof(s));
-    }
-    {
-        short s = m_occupyingHero;
-        outfile->write(&s, sizeof(s));
-    }
+    writeValue<unsigned char>(outfile, m_previousOccupied);
+    writeValue<unsigned char>(outfile, m_occupied);
+    // Mac uses sthbrx in these scalar expansions; native helper byte order
+    // remains an unresolved comparison difference.
+    writeValue<short>(outfile, m_previousOccupyingHero);
+    writeValue<short>(outfile, m_occupyingHero);
     return 1;
 }
 
@@ -563,7 +547,7 @@ type_event_record_type type_record_erase::getType() const
 VA(0x0049b190, 0x8B) MAC_ADDRESS(0x0c05f8, 0x118)  // dc 0x8d2bc
 unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     if (infile->read(&m_location, sizeof(m_location)) != sizeof(m_location))
         return 0;
@@ -578,7 +562,7 @@ unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 VA(0x0049b220, 0x57) MAC_ADDRESS(0x0c0710, 0xd8)  // dc 0x8d338
 unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     outfile->write(&m_location, sizeof(m_location));
     outfile->write(&m_objectId, sizeof(m_objectId));
     outfile->write(&m_extraInfo, sizeof(m_extraInfo));
@@ -638,7 +622,7 @@ type_event_record* type_record_hide_hero::create()
 VA(0x0049b430, 0xC8) MAC_ADDRESS(0x0c0aac, 0x150)  // dc 0x8d52c
 unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     int heroId;
     if (infile->read(&heroId, sizeof(heroId)) != sizeof(heroId))
@@ -660,7 +644,7 @@ unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 VA(0x0049b500, 0x61) MAC_ADDRESS(0x0c0bfc, 0xdc)  // dc 0x8d5a0
 unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     outfile->write(&m_currentHero->m_id, sizeof(m_currentHero->m_id));
     outfile->write(&m_newOwner, 1);
     unsigned char packed = m_prevOwner;
@@ -822,7 +806,7 @@ type_event_record_type type_record_player_death::getType() const
 VA(0x0049ba40, 0x3D) MAC_ADDRESS(0x0c1424, 0x94)  // dc 0x8daec
 unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
     unsigned char ok = infile->read(&m_extra, 1) == 1;
     return ok;
@@ -831,7 +815,7 @@ unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 VA(0x0049ba80, 0x30) MAC_ADDRESS(0x0c14b8, 0x84)  // dc 0x8db2c
 unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     unsigned char ok = outfile->write(&m_extra, 1) == 1;
     return ok;
 }
@@ -854,6 +838,9 @@ MAC_ADDRESS(0x0c1630, 0x4)
 void type_record_player_death::undo()
 {
 }
+
+// Mac default construction calls the base, then initializes the change vector.
+MAC_COMPGEN_ADDRESS(0x0c1634, 0x5c, CLASS_CTOR, type_record_shroud)
 
 VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
 
@@ -878,7 +865,7 @@ type_event_record_type type_record_shroud::getType() const
 VA(0x0049bc90, 0x151) MAC_ADDRESS(0x0c16e0, 0xf4)  // dc 0x8dcd8
 unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {
-    if (infile->read(&m_playerId, 1) != 1)
+    if (!type_event_record::load(infile, version))
         return 0;
 
     short count;
@@ -900,7 +887,7 @@ unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 VA(0x0049bdf0, 0x66) MAC_ADDRESS(0x0c17d4, 0xcc)  // dc 0x8dd88
 unsigned char type_record_shroud::save(TAbstractFile* outfile)
 {
-    outfile->write(&m_playerId, 1);
+    type_event_record::save(outfile);
     short count = m_changes.size();
     outfile->write(&count, sizeof(count));
     for (int i = 0; i < count; ++i)

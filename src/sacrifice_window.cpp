@@ -487,7 +487,8 @@ void type_sacrifice_window::createCreatureWidgets(
     textWidget* newTextWidgets[7];
     long itemNumber = 0;
 
-    for (long defIndex = 0; defIndex < 2; ++defIndex) {
+    long defIndex;
+    for (defIndex = 0; defIndex < 2; ++defIndex) {
         count = createCreatureIcons(
             g_constCreatureSources[defIndex][0],
             g_constCreatureSources[defIndex][1],
@@ -1734,13 +1735,11 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
 
     createCreatureIcons(

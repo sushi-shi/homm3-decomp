@@ -1,0 +1,61 @@
+[[data]]
+retail_va = 0x0068320c
+source = "src/seerhuttext.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5d914
+mac_size = 4
+sha256 = "19d3b0edc4853e6af34d7fc28370948bc735a7a126de9f363303703055bbc7f5"
+evidence = "Canonical questTextRow selects g_questTextA when m_seerHut is nonzero. Mac skill proposal at 0+0x165084 takes that arm and loads TOC1+0x5dc -> pointer storage1+0x5d914 at0x16508c, dereferences it at0x165094 and adds textVariant*0xd0. Loader relocates its pinned word0x555acc to section1+0x555acc, the B column array. The three-column arrays are0x27c apart (3*52*4-byte Mac strings), matching the ordinary A/B ownership and Windows initializer. This declaration-only consumer binding validates external pointer storage; seerhuttext.cpp remains the sole initializer owner."
+
+[[data]]
+retail_va = 0x00683210
+source = "src/seerhuttext.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x5d918
+mac_size = 4
+sha256 = "a24cf915d5630fcbe66e4d825fec5a1781d8e2d27c698e937d8d45986ee80877"
+evidence = "Canonical questTextRow selects g_questTextB when m_seerHut is zero. Mac skill proposal at0x165084 selects0x1650a0; TOC1+0x5d8 -> pointer storage1+0x5d918 is loaded at0x1650a4 and dereferenced at0x1650ac before textVariant*0xd0. Loader relocates its pinned word0x555850 to section1+0x555850, the A column array preceding B by0x27c. This declaration-only binding preserves the ordinary source initializer and validates the external consumer's TOC address."
+
+[[data]]
+retail_va = 0x006a5c48
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54de58
+mac_size = 36
+sha256 = "6db65fd59fd356f6729140571b5bcd6bb3b83492a16e1bf0a3884442fc3c8a0e"
+evidence = "Ordinary text.cpp owns the nine-pointer g_directions array; text loading fills it at runtime. Native getVictoryConditionText loads TOC1+0xba8 -> zero-filled section1+0x54de58 at0x132a74, computes direction indices0..8, and passes indexed pointers to sprintf at0x1330c8 and0x133120. Loader address and full36-byte zero payload are pinned. This declaration-only external-consumer binding preserves the authored array and its text-loader initialization; the same direction lookups occur in the monster quest caption."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6cc
+mac_size = 6
+sha256 = "41cdb73097d572754b1c79a41f5ff01eeebabe3f32b02d467e1bf21a0fc31c23"
+evidence = "The ordinary skillRequirementText helper formats each positive skill as the stat name and required value with its authored %s %i literal. Native helper0x1652d8 loads TOC1+0x2d1c -> section1+0x4d6cc into r30, passes that pointer as formatString's format at0x165328, and calls the formatter at0x165334. The loader pointer and full six-byte NUL-terminated payload %s %i are pinned; no anonymous ordinal is admitted."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6d2
+mac_size = 13
+sha256 = "fde61d0f8ba05453cbb723c04fa7b94619474fbc7d3f90c4d572398b670715a4"
+evidence = "Monster quest caption at 0x16605c loads TOC1+0x2d18 to section1+0x4d6d2. Its underground suffix is passed through strlen at0x1663c0 and appended at0x1663cc/0x1663d4; the full thirteen-byte authored suffix including NUL is pinned."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x559d
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Monster quest caption expands the canonical getArmyName guard: invalid creature type selects the one-byte empty string at section1+0x559d via TOC-relative addi at0x16616c; the valid path reads pluralName at0x166184. This exact pool address is independently pinned, without an ordinal alias."
+
+[[constants]]
+units = ["seerhut"]
+mac_section = 1
+mac_offset = 0x4d6df
+mac_size = 6
+sha256 = "9e1e6b266dafae0b5861bc2cbd82f4eac16f907c76d447dc285317098dbe3181"
+evidence = "Native creature progress dialog 0x1676cc loads TOC1+0x2d14 -> section1+0x4d6df into r29, preserving the authored %d %s format. The full six-byte NUL-terminated payload is pinned; the same literal is used by its retained requirement formatter."

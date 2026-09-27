@@ -756,12 +756,14 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             m_armies[side][slot].initClean();
         }
         m_numArmies[side] = 0;
-        int placed = 0;
         hero* combatHero = m_heroes[side];
         armyGroup* group = m_armyGroups[side];
         const unsigned char grouped =
             combatHero && (combatHero->m_formation & 1) && m_sideIsAi[side];
         const int layout = group->getNumArmies() - 1;
+        // Mac0x6ed50 initializes the placement counter after the layout call.
+        // This order also restores Windows' known-zero comparison.
+        int placed = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (m_armyGroups[side]->m_armies[i] == CREATURE_NONE)
                 continue;
@@ -1071,9 +1073,9 @@ void combatManager::setupAdjacencyArray()
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
-            if (validHex(hex)
-                    && (column == 0
-                        || column == COMBAT_GRID_LAST_COLUMN)) {
+            // DC cmbtmgr.cpp:1541 names InInvisibleColumn here; Mac expands
+            // its bounds and edge-column tests in the call-free loop.
+            if (inInvisibleColumn(hex)) {
                 m_adjacentCells[hex][direction] = -1;
                 if (column == 0) {
                     if (direction >= COMBAT_DIRECTION_3)
@@ -1814,13 +1816,18 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
 // 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
 
-// Residual (95.0344%): FLOW-DISTANCE 0 and the call multisets agree
-// exactly, 17 against 17, so nothing structural is left. What remains
-// is register binding with the schedule already aligned - eax->ebx x11,
-// ecx->eax x8 - which is the register-homing family damage_message's
-// note also lands in. why-reg's B6/B14 naming knobs are the only route
-// the catalog offers and neither is source-addressable here.
+// DC records const numFrames; a conditional initializer preserves that lifetime.
+// The missile-frame output lives in its animation branch, reproducing
+// retail's -0x28 home. Naming the staged double before the retained reduction
+// call, then directly converting the product, is Windows exact. Assigning
+// that product back to the double introduces a redundant /Op rounding spill.
 
+// Mac 0x719e8..0x719f8 orders the lower/keep/upper arms; its facing
+// decision merges an integer before the field store at0x71a70. VC6
+// canonicalizes the source choices. Mac divides tower damage by the
+// retained reduction at0x71c20; Windows multiplies, so that port-specific
+// arithmetic is recorded separately from shared helper recovery.
+//
 // Two shapes the bytes forced and that are worth not re-litigating:
 // the damage accumulator is a DOWN-counted loop over a copy of
 // numTroops (retail spills the count and steps it with dec/jne, which
@@ -1834,11 +1841,11 @@ void combatManager::keepAttack(int towerPos)
     army* tower = getCurrentArmy();
     int archerIndex;
     switch (tower->m_gridIndex) {
-    case COMBAT_HEX_KEEP:
-        archerIndex = 0;
-        break;
     case COMBAT_HEX_LOWER_TOWER:
         archerIndex = 1;
+        break;
+    case COMBAT_HEX_KEEP:
+        archerIndex = 0;
         break;
     case COMBAT_HEX_UPPER_TOWER:
         archerIndex = 2;
@@ -1853,12 +1860,17 @@ void combatManager::keepAttack(int towerPos)
     int delay;
     int startX;
     int startY;
-    int missileFrame;
 
     if (!isQuickCombat()) {
         int destX = target->midX();
         const int destY = target->midY();
-        archer->m_facing = destX >= archer->m_x;
+        int facing;
+        if (destX < archer->m_x)
+            facing = 0;
+        else
+            facing = 1;
+        archer->m_facing = facing;
+        int missileFrame;
         getMissileStartingPosition(archer->m_creatureType, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
                                    destY, archer->m_shadowSprite,
@@ -1870,9 +1882,9 @@ void combatManager::keepAttack(int towerPos)
                 g_creatureTypeTraits[archer->m_creatureType].m_samplePrefix);
         sample = loadPlaySample(g_text);
 
-        int frames = info->m_attackFrames;
-        if (frames <= 0)
-            frames = archer->m_sprite->getNumFrames(armyDir);
+        const int frames = info->m_attackFrames > 0
+            ? info->m_attackFrames
+            : archer->m_sprite->getNumFrames(armyDir);
         archer->m_sequence = armyDir;
         delay = info->m_attackStartCycleTime / frames;
 
@@ -1894,8 +1906,16 @@ void combatManager::keepAttack(int towerPos)
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
         damage += sRandom(2, 4);
+    // The shared reduction helper is dual exact. This caller differs:
+    // Mac 0x71c20 divides by that multiplier, Windows multiplies it.
+    double scaledDamage = damage;
+#ifdef HOMM3_TARGET_MAC
     damage = static_cast<int>(
-        damage * target->computeDefenderDamageReduction(1));
+        scaledDamage / target->computeDefenderDamageReduction(1));
+#else
+    damage = static_cast<int>(
+        scaledDamage * target->computeDefenderDamageReduction(1));
+#endif
     if (damage <= 0)
         damage = 1;
 
@@ -2061,12 +2081,9 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     positive `!(a && b)` spelling emits those two swapped;
 //   * the placement loop is `while (placed < budget)` with `placed`
 //     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
-//     The inner re-draw is the ROTATED two-Pick shape PlaceLargeObstacle
-//     already carries - a leading `Pick()` and a second one at the foot
-//     of the reject loop, not a do/while with one site: retail emits two
-//     out-of-line Pick calls and a do/while can only ever emit one
-//     (89.8722 -> 91.5113 on that rewrite alone). The redundant
-//     `id < 0` re-test in front of place_obstacle survives it.
+//     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
+//     The guarded retry preserves that call in CodeWarrior while VC6 rotates
+//     it into the retail initial/retry sites; a do/while misses the rotation.
 
 VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
@@ -2187,12 +2204,16 @@ void combatManager::setupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId = obstaclePicker.pick();
-        while (obstacleId >= 0
-               && !(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-               && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
+        int obstacleId;
+        for (;;) {
             obstacleId = obstaclePicker.pick();
+            if (obstacleId < 0)
+                break;
+            if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
+                || (s_obstacleInfo[obstacleId].m_specialTerrainMask
+                    & specialTerrainMask))
+                break;
+        }
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2205,8 +2226,11 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    int obstacleId = picker.pick();
-    while (obstacleId >= 0) {
+    // Mac 0x72b0c keeps the pick at the loop head.
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return 0;
         if ((terrainMask & s_elevationOverlay[obstacleId].m_terrainMask)
                 || (magicTerrainMask
                     & s_elevationOverlay[obstacleId].m_specialTerrainMask)) {
@@ -2220,9 +2244,7 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             m_largeObstacleId = obstacleId;
             return count;
         }
-        obstacleId = picker.pick();
     }
-    return 0;
 }
 
 VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)  // dc 0x609d0
@@ -2278,11 +2300,11 @@ void combatManager::removeObstacle(int index)
         return;
     TObstacle* obstacle = &getObstacle(index);
     const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd =
-        static_cast<unsigned char>((obstacle->m_hex / 0x11) & 1);
+    // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
+    unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes &= ~hexcell::obstacleMask;
@@ -2310,12 +2332,8 @@ void combatManager::initializeArchers()
 
     archer->m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (archer->m_sprite)
-        archer->m_sprite->dispose();
     archer->m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (archer->m_shadowSprite)
-        archer->m_shadowSprite->dispose();
     archer->m_shadowSprite = locals.m_sprite;
     archer->m_x = info.m_positions[0].m_x;
     archer->m_y = info.m_positions[0].m_y;
@@ -2328,12 +2346,8 @@ void combatManager::initializeArchers()
 
     m_archers[1].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[1].m_sprite)
-        m_archers[1].m_sprite->dispose();
     m_archers[1].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[1].m_shadowSprite)
-        m_archers[1].m_shadowSprite->dispose();
     m_archers[1].m_shadowSprite = locals.m_sprite;
     m_archers[1].m_x = info.m_positions[1].m_x;
     m_archers[1].m_y = info.m_positions[1].m_y;
@@ -2343,12 +2357,8 @@ void combatManager::initializeArchers()
 
     m_archers[2].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[2].m_sprite)
-        m_archers[2].m_sprite->dispose();
     m_archers[2].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[2].m_shadowSprite)
-        m_archers[2].m_shadowSprite->dispose();
     m_archers[2].m_shadowSprite = locals.m_sprite;
     m_archers[2].m_x = info.m_positions[2].m_x;
     m_archers[2].m_y = info.m_positions[2].m_y;
@@ -2375,17 +2385,9 @@ void combatManager::initializeArchers()
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
 
-// Generated scheduling search (2026-08-27): moving the width capture before
-// `y` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
-// depth-1 variants found that winner; all 218 depth-2 interactions around
-// the retained body were flat or worse. Post-helper structure is 38/39
-// blocks exact; the extent-capture block alone is 14 versus 16 instructions.
-// Retail still captures y and x before computing either extent, reloads y
-// for the height subtraction, and consequently assigns the four SaveFizzle
-// arguments to a different caller-saved ordering. Enabling drawing.h's
-// SLimitData view to spell Width/Height is not a local lever: it changes the
-// whole consumer view and makes existing `.values` consumers ill-formed.
-// A partial view conversion is therefore rejected rather than retained.
+// Mac 0x73178..0x7319c captures both origins before computing the extents.
+// The same order with the canonical width/height calls restores Windows
+// exact bytes; the earlier raw-member scheduling controls are superseded.
 VA(0x00466e00, 0x323) MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global, dc 0x60ce0
 void combatManager::makeCreaturesVanish()
 {
@@ -2406,8 +2408,8 @@ void combatManager::makeCreaturesVanish()
         }
         computeMaxExtent();
         x = m_drawbridgeBounds.m_minX;
-        width = m_drawbridgeBounds.width();
         y = m_drawbridgeBounds.m_minY;
+        width = m_drawbridgeBounds.width();
         height = m_drawbridgeBounds.height();
     }
 
@@ -2514,19 +2516,19 @@ void combatManager::testRaiseDoor()
 VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)  // dc 0x61160
 unsigned char combatManager::inCastle(int index)
 {
-    return index >= g_castleWallColumns[index / 0x11];
+    return index >= g_castleWallColumns[gridY(index)];
 }
 
 VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)  // dc 0x61180
 unsigned char combatManager::leftOfMoat(int index)
 {
-    return index < g_moatHexes[index / 0x11];
+    return index < g_moatHexes[gridY(index)];
 }
 
 VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
 unsigned char combatManager::isAdjacent(int first, int second) const
 {
-    if (first >= 0 && first < 187 && second >= 0 && second < 187) {
+    if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
@@ -2736,7 +2738,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     if (nframes > 0) {
         int travelX = 0;
         int remaining = nframes;
-        for (; step < nframes; step++) {
+        // Retail advances step before the remaining-frame decrement.
+        // Keep both real induction variables in the loop increment.
+        for (; step < nframes; step++, --remaining) {
             unsigned long nextFrameTime = GameTime::get() + missileperiod;
             if (step != 0) {
                 // Mac 0x73e24 copies a four-word rectangle temporary here.
@@ -2757,9 +2761,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getWidth(),
                 g_windowManager->m_screenBitmap->getHeight(),
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
-            int right = x + width - 1;
-            int bottom = y + height - 1;
-            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
@@ -2775,7 +2777,6 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 frame = 0;
             GameTime::delayTil(nextFrameTime);
             travelX += deltaX;
-            --remaining;
         }
     }
 }
@@ -2916,8 +2917,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     // DC records flipped as a lowered byte; retail forwards it directly to
     // CSprite's public _N parameter. An unsigned char adds test/setne.
     bool flipped = deltaX < 0;
-    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
-                       deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
+    int distance = static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX)));
+    const int nframes = (distance + 20) / 40;
     int addX;
     int addY;
     if (nframes > 0) {
@@ -2969,8 +2971,6 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
-    int bottom = y + height - 1;
-    int right = x + width - 1;
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowdelay;
         if (step != 0) {
@@ -2979,12 +2979,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch(), false);
-            // Mac 0x749f8 constructs and copies the four-word bounds.
-            updateArea = TDrawbridgeBounds(x, y, right, bottom);
+            // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
+            // Retaining those expressions also matches the Windows loop schedule.
+            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
             x += addX;
-            right += addX;
             y += addY;
-            bottom += addY;
         }
         saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                    g_windowManager->m_screenBitmap->getWidth(),
@@ -2999,7 +2998,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getWidth(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
-        updateArea.include(SLimitData(x, y, right, bottom));
+        updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         updateArea.clip(g_combatDrawLimits);
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
@@ -3038,6 +3037,9 @@ void combatManager::removeArmyFromGrid(const army& a)
     }
 }
 
+// Native Mac 0x74d4c/0x74dac selects integer 1/0 before narrowing;
+// Boolean assignments use branchless neg/cntlzw instead. VC6 is byte-flat.
+// getOwningSide and offsetToFront remain the canonical shared helpers.
 VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
@@ -3045,11 +3047,11 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        m_cells[hex].m_partOfDouble = a.m_facing == 0;
+        m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
         int second = hex + a.offsetToFront(-1);
         m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-        m_cells[second].m_partOfDouble = a.m_facing != 0;
+        m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
     }
 }
 
@@ -3138,6 +3140,10 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // Its true arm permits the common frame body; only the false arm skips it.
 // The inverted continue guard still scores 96.2378%, so guard polarity and
 // scope matter here even though the source operations are otherwise equal.
+// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
+// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
+// same separate stores; its range comparison compression remains different.
+// A switch and named frame snapshot do not reproduce that compression.
 VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
@@ -3148,19 +3154,22 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                stack.m_showRangeFrames = static_cast<unsigned char>(
-                    stack.m_currFrameType == cs_range_ur
+                if (stack.m_currFrameType == cs_range_ur
                     || stack.m_currFrameType == cs_range_r
-                    || stack.m_currFrameType == cs_range_dr);
+                    || stack.m_currFrameType == cs_range_dr)
+                    stack.m_showRangeFrames = 1;
+                else
+                    stack.m_showRangeFrames = 0;
                 stack.m_nextFrameType = -1;
                 if (stack.m_someUnitsDamaged || stack.m_showAttackFrames) {
                     if (stack.m_showAttackFrames)
                         stack.m_nextFrameType = stack.m_showAttackFrameType;
                     else if (stack.m_allUnitsKilled)
                         stack.m_nextFrameType = cs_death;
+                    else if (stack.is(creatureDefending))
+                        stack.m_nextFrameType = cs_defend;
                     else
-                        stack.m_nextFrameType = static_cast<signed char>(
-                            cs_wince + (stack.is(creatureDefending)));
+                        stack.m_nextFrameType = cs_wince;
                     stack.m_remainingFramesToPlay = static_cast<signed char>(
                         stack.m_stdIcon->getNumFrames(stack.m_nextFrameType));
                     if (stack.m_nextFrameType == stack.m_currFrameType)
@@ -3443,13 +3452,14 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
+// Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
 VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
-    int sx = start % 0x11;
-    int sy = start / 0x11;
-    int tx = stop % 0x11;
-    int ty = stop / 0x11;
+    int sx = gridX(start);
+    int sy = gridY(start);
+    int tx = gridX(stop);
+    int ty = gridY(stop);
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))

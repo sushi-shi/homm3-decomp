@@ -22,6 +22,7 @@ extern const char* g_secondarySkillLevels[3];
 extern const char* g_quickViewText[232];
 extern char* g_highScoreStandardDefault[11][4];
 extern const char* g_heroScreen[33];
+extern const char* g_overviewText[16];
 extern THelpText g_adventureWindowHelp[27];
 extern THelpText g_combatWindowHelp[11];
 extern THelpText g_recruitHelp[3];

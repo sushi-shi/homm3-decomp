@@ -159,6 +159,9 @@ int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
     return 0;
 }
 
+// Bitmap816.h's const getMap helper (DC 0x19c5f0) owns the source-pixel
+// address calculation in both draw loops; Mac expands that field/pitch/index
+// operation in the two call-free bodies below.
 VA(0x0044fba0, 0xCB) MAC_ADDRESS(0x05dc3c, 0xf8)  // dc 0x53fe4
 void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
                             unsigned short* dst, int dx, int dy,
@@ -180,13 +183,13 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = m_map + sy * m_pitch + sx;
+        const unsigned char* src = getMap(sx, sy);
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
         for (int y = 0; y < sh; ++y) {
             unsigned short* out = dst;
-            unsigned char* in = src;
+            const unsigned char* in = src;
             for (int x = 0; x < sw; ++x) {
                 unsigned char pixel = *in++;
                 if (pixel)
@@ -222,14 +225,14 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         sh = dh - dy;
 
     if (sw > 0 && sh > 0) {
-        unsigned char* src = m_map + sy * m_pitch + sx;
+        const unsigned char* src = getMap(sx, sy);
         dst = static_cast<unsigned short*>(static_cast<void*>(
             static_cast<unsigned char*>(static_cast<void*>(dst))
             + dy * dpitch + dx * 2));
         if (tblit) {
             for (int y = 0; y < sh; ++y) {
                 unsigned short* out = dst;
-                unsigned char* in = src;
+                const unsigned char* in = src;
                 for (int x = 0; x < sw; ++x) {
                     unsigned char pixel = *in++;
                     if (pixel)
@@ -244,7 +247,7 @@ void Bitmap816::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
         } else {
             for (int y = 0; y < sh; ++y) {
                 unsigned short* out = dst;
-                unsigned char* in = src;
+                const unsigned char* in = src;
                 for (int x = 0; x < sw; ++x) {
                     *out++ = m_p16.m_data[*in++];
                 }

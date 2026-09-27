@@ -1,4 +1,35 @@
 [[data]]
+retail_va = 0x00698a94
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528240
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Native applySpecialBuildingEffect loads TOC 1+0xb10 -> 1+0x528240 into r27. Its Castle/stables arm at 0x1b2d28..0x1b2d44 reads this same four-byte scalar twice and adds it to the hero's maximum/current movement fields at +0x49/+0x4d. The source uses g_stablesMovementBonus at both matching stores; src/hero.cpp owns retail DATA(0x00698a94) and loads its runtime value from hero traits. The pinned initial storage is four zero bytes. External address-only binding; no runtime value or initializer verdict."
+
+[[data]]
+retail_va = 0x006887a0
+source = "src/town.cpp"
+declaration_only = false
+mac_symbol = "s_constHordeEffects__4town"
+mac_section = 1
+mac_offset = 0x53e2c
+mac_size = 0x120
+sha256 = "04bc8d78c11fa7c41a3484999df04873cc38b9e0017edfd98a9f2a86f9e772f0"
+evidence = "Native getGrowthRate loads TOC 1+0x1120 -> 1+0x53e2c, indexes 32-byte town rows and eight-byte horde entries, reads dwelling at +6 and bonus at +4. The entire 288-byte native table matches the ordinary CodeWarrior s_constHordeEffects__4town initializer: nine rows of four enum/short/short records. src/town.cpp owns retail DATA(0x006887a0); require the complete emitted payload to match."
+
+[[data]]
+retail_va = 0x00642e20
+source = "src/town.cpp"
+declaration_only = false
+mac_section = 0
+mac_offset = 0x2a6d74
+mac_size = 0x10
+sha256 = "1dd074b95d6512190524867e8cf0f92cc4cb24192899965ad9d7404b4625f615"
+evidence = "Native getGrowthRate loads TOC 1+0x31e8 -> code-section data 0+0x2a6d74 and walks four words as HasBuilding IDs. All 16 bytes match the ordinary initialized g_hordeBuildings array: 18,19,24,25 in big-endian order. src/town.cpp owns retail DATA(0x00642e20); require the complete emitted payload to match."
+
+[[data]]
 retail_va = 0x0066cd98
 source = "src/town.cpp"
 declaration_only = false
@@ -53,3 +84,19 @@ mac_offset = 0x598c
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
 evidence = "The canonical getArmyName fallback emits one empty-string byte. Mac showCreatureRewards uses TOC 1+0x598c at 0x1b5a5c before creature trait-name selection."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x59c8
+mac_size = 4
+sha256 = "2412b43a42f11c1cb3ef7956d3e293016e671a9061fbb76a4282c8b15139cc48"
+evidence = "Native applySpecialBuildingEffect loads the complete big-endian float 1000.0 payload through TOC 1+0x59c8 at code0+0x1b2fe8, multiplies the returned hero experience bonus at 0x1b2ff0, and truncates it for the academy reward. This matches the ordinary source 1000.0f expression; no source call or data relocation is masked."
+
+[[constants]]
+units = ["town"]
+mac_section = 1
+mac_offset = 0x59c0
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Native applySpecialBuildingEffect loads TOC 1+0x31ec -> 1+0x59c0 at code0+0x1b2c28 and reads its complete eight-byte 4330000080000000 signed-integer conversion bias at 0x1b2c34. The following xoris/stw/lfd/fsub sequence converts the maximum-mana calculation to floating point before the intelligence-factor multiplication. Compiler literal only; retain all source operations and helper calls."

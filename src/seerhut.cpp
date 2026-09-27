@@ -206,11 +206,7 @@ void type_quest::load(TAbstractFile* file, int version)
         file->read(&row, sizeof(row));
         m_textVariant = row;
     }
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);
@@ -245,16 +241,18 @@ void type_quest::load(TAbstractFile* file, int version)
 VA(0x0056ce50, 0x11E) MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);
 }
 
+// Mac retains this base writer at 0:0x16438c. All nine derived quest
+// writers call it after their own payload, including the folded be-hero save.
+// Mac swaps m_limit and each text length with stwbrx before writing;
+// writeLittleEndianValue supplies that file-format boundary while retaining
+// writeScalar/writeValue underneath. Windows remains exact. CodeWarrior
+// still retains this scalar wrapper where native expands the operation.
 VA(0x0056cf70, 0xCD) MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
@@ -268,23 +266,11 @@ void type_quest::save(TAbstractFile* file)
     }
     {
         int extra = m_limit;
-        file->write(&extra, sizeof(extra));
+        writeLittleEndianValue(file, extra);
     }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    writeText(file, m_proposalText);
+    writeText(file, m_progressText);
+    writeText(file, m_completionText);
 }
 
 // The base dialog getters append this deadline suffix. Retail reads the
@@ -380,33 +366,7 @@ void type_experience_quest::save(TAbstractFile* file)
     short level = m_requiredLevel;
     file->write(&level, sizeof(level));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056d720, 0x23E) MAC_ADDRESS(0x164aec, 0x14c)
 void type_experience_quest::setDefaultText()
@@ -492,31 +452,35 @@ void type_skill_quest::showSkillRequirementsDialog(
 // indexed/cursor forms give 73.9279/68.3423%, and progress falls to 94.2360%.
 // Removing all six pins with direct push_back gives 53.0360%; the earlier
 // 90.6577% control removed constructor/cleanup pins, not both insertion pins.
+// Mac 0x164f28..0x164ff4 stores either the required byte or zero in
+// separate arms. Direct member reads reproduce that loop exactly; the
+// earlier reference/conditional expression introduced extra byte conversions.
+// Natural c_str arguments avoid extended pointer lifetimes. Mac now 96.11%
+// (592 bytes on both sides), with string stack homes and format registers left.
+// Windows 68.33% versus the previous 70.53% remains a recovery obligation.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
-        // The actual requirement is a signed byte. The old const int& bound
-        // a converted temporary; it never referred back to the byte field.
-        const signed char& required = m_requiredSkills[i];
-        missing[i] = required > have ? required : 0;
+        if (m_requiredSkills[i] > have)
+            missing[i] = m_requiredSkills[i];
+        else
+            missing[i] = 0;
     }
 
     if (m_progressText.length() > 0) {
-        std::string text = getProposalDialogText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        // Windows consumes the returned string directly; Mac 0x165014..0x165028
+        // keeps that same temporary alive through the dialog, without a copy.
+        showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
-        const char* requirementPointer = requirement.c_str();
         const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts.m_text1.c_str(), requirementPointer);
+            texts.m_text1.c_str(), requirement.c_str());
         text += getTimeLimitText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        showSkillRequirementsDialog(text.c_str(), missing);
     }
 }
 
@@ -555,33 +519,7 @@ void type_skill_quest::save(TAbstractFile* file)
 {
     file->write(m_requiredSkills, sizeof(m_requiredSkills));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056dfa0, 0x124) MAC_ADDRESS(0x1652cc, 0xc4)
 std::string type_skill_quest::skillRequirementText(
@@ -693,6 +631,19 @@ void type_defeat_hero_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
+// Retail vtable 0x641800 slot 12 shares 0x56edf0 with the experience and
+// monster quests: each reads a four-byte payload into its first derived field.
+// Mac retains this separate body before save at 0x165854.
+MAC_ADDRESS(0x165854, 0x68)
+void type_defeat_hero_quest::loadFromMap(TAbstractFile* file)
+{
+    int mapHero;
+
+    file->read(&mapHero, sizeof(mapHero));
+    m_mapHero = mapHero;
+    type_quest::loadFromMap(file);
+}
+
 VA(0x0056e5f0, 0xF4) MAC_ADDRESS(0x1658bc, 0x8c)
 void type_defeat_hero_quest::save(TAbstractFile* file)
 {
@@ -703,33 +654,7 @@ void type_defeat_hero_quest::save(TAbstractFile* file)
         file->write(&mask, sizeof(mask));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x0056e6f0, 0x29E) MAC_ADDRESS(0x165948, 0x1e4)
 void type_defeat_hero_quest::setDefaultText()
@@ -839,6 +764,18 @@ void type_monster_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
+// Retail vtable 0x64183c slot 12 also points to the folded 0x56edf0 body.
+// Mac retains the distinct monster reader at 0x165f38.
+MAC_ADDRESS(0x165f38, 0x68)
+void type_monster_quest::loadFromMap(TAbstractFile* file)
+{
+    int mapMonster;
+
+    file->read(&mapMonster, sizeof(mapMonster));
+    m_mapMonster = mapMonster;
+    type_quest::loadFromMap(file);
+}
+
 VA(0x0056edf0, 0x2B) MAC_ADDRESS(0x164a1c, 0x68)
 void type_experience_quest::loadFromMap(TAbstractFile* file)
 {
@@ -862,33 +799,7 @@ void type_monster_quest::save(TAbstractFile* file)
         file->write(&killer, sizeof(killer));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 
 // Slot 14 does more than the other default-text initializers because a map
@@ -905,7 +816,9 @@ void type_monster_quest::save(TAbstractFile* file)
 // Residual 96.7191%: the middle-north assignment retains string::assign
 // where retail expands it. Moving the name declaration to its use is flat;
 // explicit inner returns in getArmyName worsen this caller to 73.8785% and
-// lower four other consumers, including two exact drawing functions.
+// lower four other consumers, including two exact drawing functions. Keeping
+// its invalid-range guard as an early return restores 96.7191%; the plural
+// selection remains the canonical shared helper's conditional expression.
 VA(0x0056ef20, 0x57C) MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
@@ -1047,9 +960,9 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 // Slot 5 calls that same helper with the full artifact payload. The direct
 // expression below matches all 21 Mac instructions in order after relocation
 // masking, including all three calls; no Dreamcast counterpart exists. VC6
-// expands the helper and currently scores 81.0118% (12/12 CFG blocks align).
-// The earlier copied loop reached 89.8471%, but Mac's retained helper and the
-// two proposal call sites establish a stronger source boundary.
+// expands the same helper and is exact when the picture kind is assigned
+// inside its loop, matching Mac 0x166b74. The earlier copied loop reached
+// only 89.8471%; preserve the retained helper and both proposal call sites.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6) MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
@@ -1063,8 +976,9 @@ void type_artifact_quest::showArtifactProgress(
 {
     std::vector<type_dialog_resource> dialogResources;
     type_dialog_resource resource;
-    resource.m_resource = 8;
+    // Both retail loops assign the descriptor kind on each iteration.
     for (unsigned i = 0; i < artifacts.size(); ++i) {
+        resource.m_resource = 8;
         resource.m_qualifier = artifacts[i];
         dialogResources.push_back(resource);
     }
@@ -1125,33 +1039,7 @@ void type_artifact_quest::save(TAbstractFile* file)
         file->write(&id, sizeof(id));
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x005701d0, 0x199) MAC_ADDRESS(0x166df4, 0x160)
 void type_artifact_quest::setDefaultText()
@@ -1388,33 +1276,7 @@ void type_creature_quest::save(TAbstractFile* file)
         writeValue<int>(file, m_counts[i]);
     }
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 VA(0x005713c0, 0x16A) MAC_ADDRESS(0x167ccc, 0x118)
 void type_creature_quest::setDefaultText()
@@ -1544,6 +1406,10 @@ void type_resource_quest::doProgressDialog()
     extendedDialog(m_proposalText.c_str(), dialogResources, -1, -1, 0);
 }
 
+// These three serializers differ between retails: Windows 0x571b94,
+// 0x571bc4 and 0x571bf4 transfer the whole 28-byte resource array. Mac
+// 0x1684ac, 0x168528 and 0x1685a8 transfer seven 4-byte scalars with
+// byte swapping. A shared serialization-helper boundary remains unresolved.
 VA(0x00571b80, 0x29) MAC_ADDRESS(0x168470, 0x80)
 void type_resource_quest::load(TAbstractFile* file, int version)
 {
@@ -1563,33 +1429,7 @@ void type_resource_quest::save(TAbstractFile* file)
 {
     file->write(m_resources, sizeof(m_resources));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
@@ -1679,6 +1519,18 @@ void type_be_hero_quest::loadFromMap(TAbstractFile* file)
     m_requiredHero = id;
     type_quest::loadFromMap(file);
 }
+
+// Mac 0:0x168b04 writes the hero id then calls type_quest::save at 0x168b50.
+// Windows vtable 0x64192c slot 13 folds onto the experience writer 0x56d630:
+// both save a short from the derived field at +0x40 before the base payload.
+MAC_ADDRESS(0x168b04, 0x68)
+void type_be_hero_quest::save(TAbstractFile* file)
+{
+    short id = m_requiredHero;
+    file->write(&id, sizeof(id));
+    type_quest::save(file);
+}
+
 VA(0x00572270, 0x276) MAC_ADDRESS(0x168b6c, 0x184)
 void type_be_hero_quest::setDefaultText()
 {
@@ -1729,6 +1581,9 @@ std::string type_belong_to_player_quest::getRequirementText()
 VA(0x00572670, 0x19D) MAC_ADDRESS(0x168e58, 0xb4)
 std::string type_belong_to_player_quest::getQuestDescription()
 {
+    // Mac copies into a stack buffer with the ASCII-lowercase routine at
+    // 0:0x26afe8; Windows keeps a string and calls CRT tolower (0x572761).
+    // setDefaultText has the same port difference (Windows 0x5729d2).
     std::string requirement = g_colors[m_requiredOwner];
     std::transform(requirement.begin(), requirement.end(),
                    requirement.begin(), ::tolower);
@@ -1752,39 +1607,25 @@ void type_belong_to_player_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
+// Retail vtable 0x641968 slot 12 shares the 0x572230 one-byte reader with
+// type_be_hero_quest; Mac emits this own body at 0x168f88.
+MAC_ADDRESS(0x168f88, 0x64)
+void type_belong_to_player_quest::loadFromMap(TAbstractFile* file)
+{
+    unsigned char owner;
+
+    file->read(&owner, sizeof(owner));
+    m_requiredOwner = owner;
+    type_quest::loadFromMap(file);
+}
+
 VA(0x00572860, 0xE0) MAC_ADDRESS(0x168fec, 0x64)
 void type_belong_to_player_quest::save(TAbstractFile* file)
 {
     unsigned char owner = static_cast<unsigned char>(m_requiredOwner);
     file->write(&owner, sizeof(owner));
 
-    {
-        unsigned char flag = m_seerHut;
-        file->write(&flag, sizeof(flag));
-    }
-    {
-        unsigned char row = static_cast<unsigned char>(m_textVariant);
-        file->write(&row, sizeof(row));
-    }
-    {
-        int extra = m_limit;
-        file->write(&extra, sizeof(extra));
-    }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    type_quest::save(file);
 }
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
@@ -1900,6 +1741,7 @@ std::string TQuestGuard::questGuardFn00573040(int player)
     return text;
 }
 
+MAC_ADDRESS(0x1664dc, 0x5c)
 type_artifact_quest::type_artifact_quest(unsigned char flags)
     : type_quest(flags)
 {
@@ -1909,10 +1751,11 @@ type_artifact_quest::type_artifact_quest(unsigned char flags)
 // construction. Retail 0x574610 and 0x574a90 keep the append, text-row
 // override, disabled-artifact store, and direct SetDefaultText call inside the
 // allocation-success arm. These support a shared single-artifact constructor.
+// Mac 0x1665b8 takes artifact/textRow in r4/r5 and supplies literal 1
+// to the base constructor; both legacy reader call sites use this overload.
 MAC_ADDRESS(0x1665b8, 0xb8)
-type_artifact_quest::type_artifact_quest(
-    unsigned char flags, TArtifact artifact, int textRow)
-    : type_quest(flags)
+type_artifact_quest::type_artifact_quest(TArtifact artifact, int textRow)
+    : type_quest(1)
 {
     m_artifacts.push_back(artifact);
     m_textVariant = textRow;
@@ -2034,7 +1877,7 @@ int TSeerHut::getValue(hero* currentHero)
     // The by-value max wrapper owns its argument temporaries only in this
     // arm; retail reuses that stack slot for the active quest below.
     if (!playerHasInfo(currentHero->m_owner))
-        return max(value, 20);
+        return ::max(value, 20);
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))
@@ -2560,7 +2403,7 @@ void TSeerHut::read(TAbstractFile* infile)
             m_quest = 0;
         } else {
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(charBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
         }
     } else {
         m_quest = readQuestFromMap(infile, 1);
@@ -2701,7 +2544,7 @@ void TSeerHut::load(TAbstractFile* infile, int saveVersion)
             m_quest = 0;
         else
             m_quest = new type_artifact_quest(
-                1, static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
+                static_cast<TArtifact>(intBuffer), textRow); /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */
     } else {
         type_quest* newQuest = createQuest(readValue<unsigned char>(infile), 1);
         m_quest = newQuest;

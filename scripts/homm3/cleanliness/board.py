@@ -183,9 +183,9 @@ def _regex_sites(pattern):
 # --- the other ratcheted shapes (gruntz spellings) --------------------------------
 _REINTERPRET = re.compile(r"\breinterpret_cast\s*<")
 _VOLATILE = re.compile(r"\bvolatile\b")
-_CPP_EXTERN = re.compile(
-    r'^[ \t]*extern\b(?![ \t]*"(?:C|C\+\+)"[ \t]*\{)',
-    re.MULTILINE)
+# _strip replaces the language-linkage string with spaces, leaving
+# `extern   {`; declarations inside that block belong to its linkage scope.
+_CPP_EXTERN = re.compile(r'^[ \t]*extern\b(?![ \t]*\{)', re.MULTILINE)
 # struct/class DEFINITION (name then body brace, optional base clause) -
 # not forward decls, not elaborated uses (`class TBar* p;`).
 _CPP_LOCAL_DEF = re.compile(

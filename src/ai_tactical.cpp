@@ -587,7 +587,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 checkAdjacentHexes(second, 0, 3);
         }
     }
-    return m_bestHex >= 0 && m_bestHex < 187;
+    return combatManager::validHex(m_bestHex);
 }
 
 // E:\gamedcs\ai_tactical.cpp:744 - dc 0x3d524. No retail slot: both
@@ -815,6 +815,7 @@ long type_AI_spellcaster::getDamageSpellValue(const army* enemy, type_enchant_da
 // inline address and a named damage result remain 98.1927. Mass-result
 // declaration/argument lifetimes do not change either outcome.
 
+MAC_ADDRESS(0x03ea8c, 0x98)
 long type_AI_spellcaster::getGroupDamageValue(SpellID spell, long baseDamage,
                                                         long group, hero* targetHero) const
 {
@@ -1202,14 +1203,13 @@ long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* 
                 < ourArmy->m_monInfo.m_hitPoints)
             return 0;
     }
-    if ((m_attacks[ourArmy->m_bitIndex].m_totalDamage
-                + m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
+    if ((m_meleeEnemies[ourArmy->m_bitIndex].m_totalDamage
+                + m_attacks[ourArmy->m_bitIndex].m_totalDamage) * m_estimate.m_roundsLeft
             + ourArmy->m_topCreatureDamage < ourArmy->m_monInfo.m_hitPoints)
         return 0;
     double scale = getDuration(duration, 0);
-    double total = static_cast<double>(ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
-                                                                        m_estimate.m_lowestDefense));
-    return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
+    return static_cast<long>(scale * ourArmy->getTotalCombatValue(m_estimate.m_lowestAttack,
+        m_estimate.m_lowestDefense) * (sqrt(increase) - 1.0));
 }
 
 VA(0x00438910, 0xFB) MAC_ADDRESS(0x0403c0, 0x5a0)  // dc 0x3ec10
@@ -1806,6 +1806,9 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // bit 2 (shoots) clear: a melee double-attacker gets one more swing out
 // of the deal than a shooter does.
 // Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
+// Mac 0x439f4/0x43a34/0x43a54 has three early refusals. Its first damage
+// result is stored before scaling and then replaced by min with our hitpoints.
+// DC names the melee count enemies; keep the same canonical damage helpers.
 
 VA(0x00439e80, 0x290) MAC_ADDRESS(0x0437bc, 0x20c)  // dc 0x40628
 long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
@@ -1857,17 +1860,17 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     if (amount <= 0)
         return 0;
     const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
-    if (target == 0)
+    if (!target || target->is(creatureImmuneToFireSpells))
         return 0;
-    if (target->is(creatureImmuneToFireSpells))
-        return 0;
-    long reflected = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 1, 0)
-                     * amount / 100;
-    long ourHits = ourArmy->getTotalHitPoints(0);
-    long capped = min(reflected, ourHits);
-    long oldDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
-    long combined = capped * count + oldDamage;
-    double increase = static_cast<double>(combined) / static_cast<double>(oldDamage);
+    long reflected = target->getAverageDamage(ourArmy, 0,
+        target->m_numTroops, 1, 0);
+    reflected = reflected * amount / 100;
+    reflected = min(reflected, ourArmy->getTotalHitPoints(0));
+    long oldDamage = ourArmy->getAverageDamage(target, 0,
+        ourArmy->m_numTroops, 1, 0);
+    long combined = count * reflected + oldDamage;
+    double increase = static_cast<double>(combined)
+                      / static_cast<double>(oldDamage);
     return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
@@ -2559,6 +2562,12 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
+// Both retail builds ask ourArmy for target time: Windows 0x43bfda/0x43bfe2
+// keeps the first army in ESI while the selected target is EDI; Mac
+// 0x45d88/0x45d94 passes the first army in r29 to speed and target-time calls.
+// This census intentionally reuses that same first army across iterations;
+// neither retail body increments its pointer. Preserve the helper calls.
+// Mac's zeroing entry is bzero; the Windows/DC spelling remains memset.
 VA(0x0043bf20, 0x119) MAC_ADDRESS(0x045c80, 0x190)  // anchor-global, dc 0x420ac
 void type_AI_spellcaster::setMeleeEnemies()
 {
@@ -2568,7 +2577,7 @@ void type_AI_spellcaster::setMeleeEnemies()
         if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_HYPNOTIZE))
             continue;
         const army* target = ourArmy->getAITarget();
-        if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)
+        if (!target || ourArmy->canShoot(0) || ourArmy->getAITargetTime() > 1)
             continue;
         m_meleeEnemies[i].m_enemy = target;
         long damage = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 0, 0);

@@ -1,0 +1,143 @@
+[[data]]
+retail_va = 0x00640300
+source = "src/overview.cpp"
+mac_section = 0
+mac_offset = 0x2a6364
+mac_size = 32
+sha256 = "d58f095e933bfe03878c71e64cba28ac3c6635721fb74b7239db5114f0d7fde2"
+evidence = "Source-owned immutable eight-int overview help-ID table. Windows ProcessIconSelect operands63f35c(-1001*4)/63f33c(-1009*4) both resolve to640300; full payload19,20,21,22,23,24,18,25. Native13710c loads TOC1+29a8 -> code0+2a6364; first/second help bands at137dd0/137d28 index the same32-byte big-endian table with identical biases. The read-only native payload is in the code section, not the packed data section."
+
+[[data]]
+retail_va = 0x006a56e0
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54e960
+mac_size = 208
+sha256 = "46f531b7ea0428fbf2c3ca2b60e8dc33d6bbfa000e0fd1b489c5e39140a47006"
+evidence = "External adventure-window help records. Native ProcessIconSelect137114 loads TOC1+5e8 ->storage1+54e960; both help bands137d34..44 and137ddc..ec index by an eight-byte record stride and read the right-click pointer at+4. The complete reviewed lookup table's highest index25 proves a26-record208-byte consumed prefix, not the total Mac array extent. Canonical Windows source owns THelpText[27] at6a56e0 in text.cpp. Initial external prefix is zero-filled; initializer and runtime text pointees are not scored."
+
+[[data]]
+retail_va = 0x00699500
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528958
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical external executive pointer. ProcessIconSelect137118 loads TOC1+b08 ->1+528958 into r20;137b80/137c2c dereference this cell as r3, pass separately constructed recruit managers in r4, and call already paired executive::doDialogc3af4. This proves the pointer receiver ABI at both independent dialog sites. KB owns the Windows pointer699500. Pinned storage is four zero bytes; initializer and pointee are not scored."
+
+[[data]]
+retail_va = 0x0069873c
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x5270ac
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned externally linked int g_overviewReturnActionExtra. Native137124 loads its pointer through TOC1+6e8. Town-exit1378c8..d0 stores the selected signed town ID; visiting-hero1378d8..e8 stores town+10 and reloads it for hero lookup and heroView137918..24. Independent town/hero producers prove the full-width result scalar. CodeWarrior emits global RW UDATA with an indirect pointer cell; four pinned zero bytes match the uninitialized canonical definition."
+
+[[data]]
+retail_va = 0x006985c0
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x5270b0
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned externally linked int g_overviewReturnAction. Native town-exit13789c loads TOC1+6ec, stores the source exit-town action2 at1378a4, writes its separate extra scalar and returns1. This is the overview result discriminator, distinct from the adjacent result payload. CodeWarrior emits global RW UDATA with an indirect pointer cell; four pinned zero bytes match the uninitialized canonical definition."
+
+[[data]]
+retail_va = 0x006a7ec0
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54f41c
+mac_size = 64
+sha256 = "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b"
+evidence = "Canonical sixteen-pointer overview text array populated by initializeOverviewText. Native ProcessIconSelect137124 and SetupNewOverviewType135d6c load TOC1+dac ->1+54f41c. Hero artifact-page help reads slots8/9/10 at1372d4/13731c/137364; selector help reads6/7. Native initializeOverviewText1ae434..46c writes sixteen pointers with count16 and four-byte stride; rollover13a1d0 reads slot15. These independent producer/consumer sites prove64 bytes. External storage begins zero-filled; runtime strings and initializer are not scored. The former overview-local static shadow has been removed so both reader and text loader use the ordinary shared declaration."
+
+[[data]]
+retail_va = 0x0069cc58
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x4b46c
+mac_size = 8
+sha256 = "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+evidence = "Overview scroll positions for the two screen types. SetupNewOverviewType135d84 loads TOC1+dd4;135dc8..df0 indexes by the selected type, clamps against roster size minus four, then zero. ProcessIconSelect137174 independently reads the same selected scroll position."
+
+[[data]]
+retail_va = 0x0069cbbc
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x52bfe0
+mac_size = 8
+sha256 = "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+evidence = "Overview per-type item counts. SetupNewOverviewType135df4..dfc loads TOC1+db8 and indexes the two-entry count array for slider range. ProcessIconSelect137164..18c independently compares selected scroll position plus slot against this count."
+
+[[data]]
+retail_va = 0x0069cc54
+source = "src/overview.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x52bfe8
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Overview hero/town discriminator. SetupNewOverviewType135d60 loads TOC1+de0;135d90 stores its incoming whichType. Subsequent consumers index both two-entry arrays with that scalar. Pinned storage is zero-filled."
+
+[[data]]
+retail_va = 0x006a8014
+source = "src/text.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x54f394
+mac_size = 132
+sha256 = "115bad14f1c9f2c027a84de21b107015722cb76be8d0abf3760ad8e00d6c24a5"
+evidence = "Shared hero-screen text array. Native initializeHeroText1ae4d4..50c loads TOC1+c50 and writes exactly33 four-byte pointers, count21 hex. Overview rollover13a030 independently loads the same pointer cell;13a248 reads the army-name format at slot1. These producer and consumer sites prove the132-byte initial zero storage. Runtime pointees and initializer are not scored."
+
+[[data]]
+retail_va = 0x0069cbec
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x52c010
+mac_size = 32
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "Overview hero roster. Native overview136418 loads TOC1+29ec;136738..780 enumerates local-player heroes from its eight-entry roster at+8 and stores each full-width ID through r19 with index*4. ProcessIconSelect1371b8..1c0 independently reads selectedIndex*4 from the same array and rejects IDminus1 before hero access. Native player roster capacity and source HERO_SLOT_COUNT prove eight four-byte entries; pinned storage starts zero-filled."
+
+[[constants]]
+units = ["overview"]
+mac_section = 1
+mac_offset = 0x5091
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Canonical empty string in overview invalid-army and absent-description arms. Native rollover13a230 directly addresses RTOC-2f6f, target1+5091, when the creature ID is below0 or above150; valid IDs select trait name+18 instead before sprintf. Candidate emits the identical one-byte NUL literal. Other overview uses share this reviewed immutable empty payload; compiler-local @numbers are not pinned."
+
+[[data]]
+retail_va = 0x0069cc10
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x52c038
+mac_size = 8
+sha256 = "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+evidence = "Per-hero overview artifact page bytes. Native overview136414 loads TOC1+29e8 into r15;1367b8..6810 zeroes byte slots0..7 via this base as the hero roster initializes. ProcessIconSelect1374bc..4cc independently loads the same base and reads a selected hero page with lbzx. Source retains its eight-byte HERO_SLOT_COUNT array and initial zero storage."
+
+[[data]]
+retail_va = 0x0069cbc4
+source = "src/overview.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x52c030
+mac_size = 8
+sha256 = "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+evidence = "Per-hero overview backpack start bytes. Native overview136410 loads TOC1+29cc into r16;1367bc..6810 clears the eight byte slots alongside the independently identified artifact-page array. ProcessIconSelect137530 reads this selected hero byte with lbzx before the backpack operation. Source retains its eight-byte HERO_SLOT_COUNT array and initial zero storage."
