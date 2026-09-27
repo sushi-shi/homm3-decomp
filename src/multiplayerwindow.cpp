@@ -633,41 +633,38 @@ void TMultiPlayerWindow::update()
             drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
             if (count >= 12)
                 count = 12;
-            int row = 0;
-            if (count > 0) {
-                wy = wy + 0x70;
-                do {
-                    if (!m_sessions->getSessionInfo(
-                            row + m_currentIndex, nameBuf, userBuf, numPlayers,
-                            status))
-                        return;
+            for (int row = 0; row < count; ++row) {
+                if (!m_sessions->getSessionInfo(
+                        row + m_currentIndex, nameBuf, userBuf, numPlayers,
+                        status))
+                    return;
 
-                    int isSelected = m_currentGame == row + m_currentIndex;
-                    if (status != CHeroSessions::closed) {
-                        if (isSelected)
-                            anySelected = 1;
-                        shown++;
-                    }
+                int isSelected = m_currentGame == row + m_currentIndex;
+                if (status != CHeroSessions::closed) {
+                    if (isSelected)
+                        anySelected = 1;
+                    shown++;
+                }
 
-                    m_gameState->draw(0, status, 0, 0,
-                                    g_multiPlayerWindow->m_gameState->getWidth(),
-                                    g_multiPlayerWindow->m_gameState->getHeight(),
-                                    g_windowManager->m_screenBitmap, wx + 0x12,
-                                    wy, 0, 1);
-                    int fontColor = isSelected ? 5 : 1;
-                    g_smallFont->drawBoundedString(
-                        nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    g_smallFont->drawBoundedString(
-                        userBuf, g_windowManager->m_screenBitmap, wx + 0xad, wy,
-                        0x80, 0x16, font::TColor(fontColor), 5, -1);
-                    sprintf(countBuf, "%d", numPlayers);
-                    g_smallFont->drawBoundedString(
-                        countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
-                        wy, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
-                    ++row;
-                    wy += 0x19;
-                } while (row < count);
+                // DC line 1125 computes the row coordinate; VC6 hoists its base
+                // and advances it by 25. Keep that reduction out of the source.
+                int rowY = wy + 0x70 + row * 0x19;
+                m_gameState->draw(0, status, 0, 0,
+                                g_multiPlayerWindow->m_gameState->getWidth(),
+                                g_multiPlayerWindow->m_gameState->getHeight(),
+                                g_windowManager->m_screenBitmap, wx + 0x12,
+                                rowY, 0, 1);
+                int fontColor = isSelected ? 5 : 1;
+                g_smallFont->drawBoundedString(
+                    nameBuf, g_windowManager->m_screenBitmap, wx + 0x2b, rowY,
+                    0x80, 0x16, font::TColor(fontColor), 5, -1);
+                g_smallFont->drawBoundedString(
+                    userBuf, g_windowManager->m_screenBitmap, wx + 0xad, rowY,
+                    0x80, 0x16, font::TColor(fontColor), 5, -1);
+                sprintf(countBuf, "%d", numPlayers);
+                g_smallFont->drawBoundedString(
+                    countBuf, g_windowManager->m_screenBitmap, wx + 0x130,
+                    rowY, 0x1e, 0x16, font::TColor(fontColor), 5, -1);
             }
 
             if (shown > 0 && haveName && anySelected)
