@@ -60,3 +60,21 @@ mac_offset = 0x2a4040
 mac_size = 96
 sha256 = "e590a254ab8e05c2500a4817a213c4aae0ab535ad7fb9e94268f0f06919d0c49"
 evidence = "automateCatapult loads TOC 1+0x7bc -> code 0+0x2a4040 at 0x81d18 and indexes eight 12-byte TWallTarget records to read m_wall at +8. All eight big-endian short/short/short/short/enum records match the source-owned DATA(0x63be60) initializer in cmbtmgr.cpp. This is external address binding; command does not emit or score the owning initializer."
+
+[[jump_tables]]
+owner_va = 0x004740d0
+unit = "command"
+mac_section = 1
+mac_offset = 0x39ff0
+mac_size = 44
+reference_offset = 0x1c4
+sha256 = "d28a156b57f82ca9cc6518a10cde0c1ec4525aa1f202953b6262d1f8586246aa"
+evidence = "combatManager::main subtracts remote subtype 1004 and bounds eleven entries at code0+0x825b4..0x825bc. TOC1+0x223c at0x825c0 selects this 44-byte table; all eleven loader-relocated entries are aligned within0x823fc..0x82798. Non-default entries select chat at0x8262c, combat main at0x825d4, placement end at0x8263c and dropped player at0x82654. The sole emitted 44-byte local table has eleven owner-function relocations. Its candidate targets are rebased and byte-scored, never replaced by retail entries."
+
+[[constants]]
+units = ["command"]
+mac_section = 1
+mac_offset = 0x39fcc
+mac_size = 35
+sha256 = "e34f6786b70133d5417409deccd028781feb2a1a3c67db8e2158953a00584707"
+evidence = "combatManager::main loads TOC1+0x2240 at code0+0x825e0 before the retained CLogFile::log call at0x8260c. The complete 35-byte NUL-terminated format Received action [%d]--> [%d,%d,%d] equals the authored DATA_COMPGEN(0x670218) format and the emitted anonymous literal; no neighboring alignment byte is admitted."
