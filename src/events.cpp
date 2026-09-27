@@ -876,8 +876,7 @@ void advManager::payForArtifact(hero* currentHero, NewmapCell* cell,
 VA(0x0049f040, 0x23) MAC_ADDRESS(0x0aa36c, 0x20)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 {
-    unsigned index = (cell->m_extraInfo >> 19) & 0xfff;
-    return &m_fullMap->m_customTreasure[index];
+    return &m_fullMap->m_customTreasure[(cell->m_extraInfo >> 19) & 0xfff];
 }
 
 // E:\gamedcs\events.cpp:656.  The customised artifact: the editor record
@@ -889,14 +888,11 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // inline advManager::GiveArtifact whole and cross-jump onto one final
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
-// [2026-09-01] Dreamcast's breakpoint rows make the declaration order
-// positive source evidence: treasure is line 657 and artifactId line 659.
-// Keep that order even though this SP3 compile currently scores below the
-// old source-false local peak (current 98.24%, banked MAX 99.15%): retail
-// interleaves the fullMap/_First chain with the cell loads, while SP3
-// serializes the inlined accessor. Negative control: putting artifactId
-// first raises the byte score but contradicts those two named statement
-// rows, so it is not an admissible reconstruction.
+// Dreamcast places treasure on line 657 and artifactId on line 659.
+// Keeping that order and using the direct index expression in the canonical
+// getTreasureData helper reproduces retail's interleaved pool/cell loads.
+// Both this caller and doCustomSpellScroll are exact; a named helper index
+// preserves its retained body but changes these caller expansions.
 // Negative control: spelling DC's unsigned-char human_player literally changes
 // the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
 // Splitting artifactId's declaration from its accessor assignment is byte-flat.

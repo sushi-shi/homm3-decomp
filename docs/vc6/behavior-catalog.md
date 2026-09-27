@@ -261,6 +261,14 @@ the epilogue); a `dealt` local (99.91).
 - probe: none (the observable is the delta across a dozen retail call sites;
   the *ternary merge mechanism* itself is probed standalone — see D8)
 
+Another retained-body control is `advManager::getTreasureData` (`0x49f040`).
+A named unsigned index and a direct subscript both emit its exact 35-byte
+body, but the direct subscript restores interleaved pool/cell loads in its
+callers: `doCustomArtifact` 98.2381 → 100 and `doCustomSpellScroll`
+97.4451 → 100. No caller edits or helper removals are needed. Three natural
+forms produced three reproduced TU objects; naming the pool before the index
+only partially recovered the artifact caller.
+
 ### A16. Retail's inline copies of one body disagree with each other
 `game::GetPlayerName` 99.5: retail's two copies disagree on registers; ours
 agree — the tell that the difference is allocation order, not shape.
