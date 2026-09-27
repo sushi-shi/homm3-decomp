@@ -301,13 +301,15 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     getWidget(BACK_ID)->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
+// Mac dialog reads at 0x219b04, 0x219cdc and 0x21ce48 expand
+// textWidget::getText through the widget string and its character buffer.
 // DC keeps this source helper out of line and OnWidgetDeselect calls it.
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
 inline unsigned char CMPInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             return 0;
     }
     return 1;
@@ -320,34 +322,37 @@ inline void CMPInputDlg::disableOK()
 }
 
 // The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount dc 0x102cf8,
-// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: they
-// expand into CHotSeatEdit's two overrides below. DC proves that UpdateOK only
-// updates widget 519; OnKillFocus performs the following full-window redraw.
-// Marked `inline` so the TU emits no COMDAT for bodies the image does not have.
+// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: VC6
+// expands them into CHotSeatEdit's two overrides below. DC proves that UpdateOK
+// only updates widget 519; OnKillFocus performs the full-window redraw.
+// Mac retains GetPlayerCount at 0x219cb8 but expands the other two helpers.
+// Ordinary same-TU definitions reproduce the exact Windows callers.
 // E:\gamedcs\multiplayerwindow.cpp:729, dc 0x102cc8
-inline void CHotSeatDlg::onKillFocus(int id)
+void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
-inline int CHotSeatDlg::getPlayerCount()
+MAC_ADDRESS(0x219cb8, 0x70)
+int CHotSeatDlg::getPlayerCount()
 {
     int players = 0;
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
+        if (strlen(m_edit[i]->getText()))
             ++players;
     }
     return players;
 }
 
-inline void CHotSeatDlg::updateOK()
+void CHotSeatDlg::updateOK()
 {
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
 }
 
 // Original: DeleteTempSaveGame; multiplayerwindow.cpp:872, dc 0xffb40.
 // DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
+MAC_ADDRESS(0x219e54, 0x94)
 void deleteTempSaveGame(const char* filename)
 {
     char buffer[450];
@@ -364,37 +369,20 @@ CHeroSessions::CHeroSessions()
 {
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1005
-// Slider callback for the session list; scrolls the displayed window of games.
-void sliderGames(int state, heroWindow* parentWindow)
-{
-    static_cast<TMultiPlayerWindow*>(parentWindow)->m_currentIndex = state;
-}
+void sliderGames(int state, heroWindow* parentWindow);
 
-VA(0x0050de50, 0x8F)  // dc 0xffac0
+// Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
+// helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
+VA(0x0050de50, 0x8F) MAC_ADDRESS(0x219a1c, 0xc4)  // dc 0xffac0
 int CMPInputEdit::onKeyPress(message* msg)
 {
-    int handled;
-
-    if (!m_hasFocus) {
-        handled = 0;
-    } else if ((HIWORD(GetKeyState(VK_SHIFT)) && msg->m_codeX == KEYCODE_TAB)
-               || msg->m_codeX == KEYCODE_KP_8) {
-        onPrevEdit();
-        handled = 1;
-    } else if (msg->m_codeX == KEYCODE_TAB || msg->m_codeX == KEYCODE_ENTER
-               || msg->m_codeX == KEYCODE_KP_2) {
-        onNextEdit();
-        handled = 1;
-    } else {
-        handled = textEntryWidget::onKeyPress(msg);
-    }
+    int handled = CMPEdit::onKeyPress(msg);
 
     static_cast<CMPInputDlg*>(m_parentWindow)->updateOK();
     return handled;
 }
 
-VA(0x0050dee0, 0x7F)  // dc 0xffaec
+VA(0x0050dee0, 0x7F) MAC_ADDRESS(0x219c18, 0xa0)  // dc 0xffaec
 void CHotSeatEdit::onKillFocus()
 {
     textEntryWidget::onKillFocus();
@@ -403,7 +391,7 @@ void CHotSeatEdit::onKillFocus()
 
 // share CMPEdit's ring layout and inherited navigation slots. Preserve the
 // qualified base call instead of casting between unrelated class copies.
-VA(0x0050df60, 0xEE)  // dc 0xffb0c
+VA(0x0050df60, 0xEE) MAC_ADDRESS(0x219d28, 0x12c)  // dc 0xffb0c
 int CHotSeatEdit::onKeyPress(message* msg)
 {
     int handled = CMPEdit::onKeyPress(msg);
@@ -430,7 +418,7 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // Current residual (83.43%): DeleteTempSaveGame and CHeroSessions expand,
 // including the proven DeleteFileA path. Nested widget-vector insert/copy
 // operations still over-expand; retail retains fourteen additional call sites.
-VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
+VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
@@ -534,7 +522,7 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     goMainMenu();
 }
 
-VA(0x0050ed60, 0x43)  // dc 0x101e98
+VA(0x0050ed60, 0x43) MAC_ADDRESS(0x21d044, 0x74)  // dc 0x101e98
 int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 {
     if (getCharPressed(msg) == KEYCODE_ENTER)
@@ -552,7 +540,18 @@ VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 
-VA(0x0050ee40, 0xAB)  // dc 0x100430
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// The retail slider constructor passes 0x50ee10. Both builds use the global
+// window, store its index, redraw, then call update; the parent is unused.
+VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
+void sliderGames(int state, heroWindow* parentWindow)
+{
+    g_multiPlayerWindow->m_currentIndex = state;
+    g_multiPlayerWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_multiPlayerWindow->update();
+}
+
+VA(0x0050ee40, 0xAB) MAC_ADDRESS(0x21ab78, 0x94)  // dc 0x100430
 TMultiPlayerWindow::~TMultiPlayerWindow()
 {
     g_multiPlayerWindow = 0;
@@ -567,50 +566,50 @@ void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
     m_showSplash = 0;
-    m_splash->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->hide();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->hide();
+    m_ipx->hide();
+    m_tcp->hide();
+    m_modem->hide();
+    m_direct->hide();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
+    m_search->hide();
+    m_online->hide();
+    m_userNameHeader->show();
+    m_sessNameHeader->show();
 }
 
-VA(0x0050efc0, 0x12B)  // dc 0x10051c
+VA(0x0050efc0, 0x12B) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x10051c
 void TMultiPlayerWindow::goMainMenu()
 {
     m_inSessionList = 0;
     m_showSplash = 1;
     m_sessTimer = 0;
     m_hostJoinScreen = 0;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_hotSeat)
-        m_hotSeat->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_ipx->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_tcp->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_modem->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_direct->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_hotSeat->show();
+    m_ipx->show();
+    m_tcp->show();
+    m_modem->show();
+    m_direct->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_search->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_online->sendMessage(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_userNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_sessNameHeader->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->hide();
+    m_join->hide();
+    m_search->hide();
+    m_online->show();
+    m_userNameHeader->hide();
+    m_sessNameHeader->hide();
     widget* w = getWidget(126);
     if (w)
-        w->sendMessage(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        w->hide();
     m_sessions->destroy();
 }
 
-VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
+VA(0x0050f0f0, 0x3E6) MAC_ADDRESS(0x21ace4, 0x184)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
 void TMultiPlayerWindow::update()
 {
     char userBuf[256];
@@ -625,7 +624,7 @@ void TMultiPlayerWindow::update()
     int shown = 0;
     unsigned char haveName = 0;
 
-    const char* pn = m_playerName->m_text.c_str();
+    const char* pn = m_playerName->getText();
     unsigned char anySelected = 0;
     if (pn && strlen(pn))
         haveName = 1;
@@ -764,7 +763,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 inline unsigned char TMultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
-    if (::initRemote(MP_IPX, m_playerName->m_text.c_str()) &&
+    if (::initRemote(MP_IPX, m_playerName->getText()) &&
         initConnection(0, 0)) {
         DPCAPS caps;
         g_dPlay->getCaps(&caps, 1);
@@ -773,11 +772,8 @@ inline unsigned char TMultiPlayerWindow::onIPX()
             m_sessionRefreshTimeout = 1000;
 
         if (m_host)
-            m_host->sendMessage(
-                widget::WIDGET_SET_STATUS,
-                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            m_host->show();
+        m_join->show();
         m_join->enable(0);
         refreshSessions();
         return 1;
@@ -788,23 +784,23 @@ inline unsigned char TMultiPlayerWindow::onIPX()
     return 0;
 }
 
+MAC_ADDRESS(0x21c67c, 0x94)
 inline unsigned char TMultiPlayerWindow::onModem()
 {
     g_mpNetProtocol = MP_MODEM;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;
 }
 
-VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
+// Mac 0x21b068..0x21b0a0 and 0x21b0d0..0x21b108 retain the
+// cleanup/menu/redraw/update calls separately in the host and join arms.
+VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     bool connectionFailed = 0;
@@ -868,17 +864,25 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
             exitFlag = 1;
             return 1;
         }
-        goto check_host_join_screen;
+        if (m_hostJoinScreen) {
+            remoteCleanup();
+            goMainMenu();
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            update();
+        }
+        break;
 
     case JOIN_ID:
         if (onJoin()) {
             exitFlag = 1;
             return 1;
         }
-
-check_host_join_screen:
-        if (m_hostJoinScreen)
-            goto return_to_main_menu;
+        if (m_hostJoinScreen) {
+            remoteCleanup();
+            goMainMenu();
+            drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            update();
+        }
         break;
 
     case SEARCH_ID:
@@ -939,7 +943,7 @@ return_to_main_menu:
     return 1;
 }
 
-VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
+VA(0x0050f940, 0xC5) MAC_ADDRESS(0x21b148, 0x44)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
 int TMultiPlayerWindow::windowHandler(message& msg)
@@ -970,7 +974,11 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
     return 1;
 }
 
-VA(0x0050fab0, 0x106)  // dc 0x100d0c
+// Mac 0x21b18c calls initRemote (0x21297c), then its Mac transport setup
+// (0x2137ec). Windows retail hosts through DirectPlay in this method. The
+// missing Mac call in the source audit reflects this different implementation;
+// the shared-call reconciliation for this pair remains open.
+VA(0x0050fab0, 0x106) MAC_ADDRESS(0x21b18c, 0x7c)  // dc 0x100d0c
 unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
     char fullName[256];
@@ -1009,7 +1017,7 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
     DPCAPS dpCaps;
 
     g_mpNetProtocol = netGameType;
-    if (!::initRemote(netGameType, m_playerName->m_text.c_str()))
+    if (!::initRemote(netGameType, m_playerName->getText()))
         return 0;
     if (!initConnection(const_cast<char*>(extra), comportInfo))
         return 0;
@@ -1026,13 +1034,10 @@ inline unsigned char TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
     m_hostJoinScreen = 1;
-    m_splash->sendMessage(widget::WIDGET_SET_STATUS,
-                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    m_splash->show();
     if (m_host)
-        m_host->sendMessage(widget::WIDGET_SET_STATUS,
-                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-    m_join->sendMessage(widget::WIDGET_SET_STATUS,
-                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        m_host->show();
+    m_join->show();
     m_join->enable(1);
     update();
     return 1;
@@ -1065,7 +1070,7 @@ unsigned char TMultiPlayerWindow::onDirectHost()
     return 1;
 }
 
-VA(0x0050fda0, 0x2B7)  // dc 0x101058
+VA(0x0050fda0, 0x2B7) MAC_ADDRESS(0x21b208, 0x4fc)  // dc 0x101058
 unsigned char TMultiPlayerWindow::onHost()
 {
     if (g_mpNetProtocol == MP_MODEM)
@@ -1089,10 +1094,10 @@ unsigned char TMultiPlayerWindow::onHost()
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
         return 0;
 
-    const char* password = sessDlg.m_field2->m_text.c_str();
+    const char* password = sessDlg.m_field2->getText();
     if (!strlen(password))
         password = 0;
-    if (!hostSession(sessDlg.m_field1->m_text.c_str(), password))
+    if (!hostSession(sessDlg.m_field1->getText(), password))
         return 0;
     return 1;
 }
@@ -1132,33 +1137,33 @@ int CMPEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
-VA(0x00510850, 0x1B)  // dc 0x10215c; m_nextEdit/status/id + parent SetFocus
+VA(0x00510850, 0x1B) MAC_ADDRESS(0x219b98, 0x40)  // dc 0x10215c; m_nextEdit/status/id + parent SetFocus
 void CMPEdit::onNextEdit()
 {
     if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_nextEdit->m_id);
 }
 
-VA(0x00510870, 0x1B)  // dc 0x102184; m_prevEdit/status/id + parent SetFocus
+VA(0x00510870, 0x1B) MAC_ADDRESS(0x219bd8, 0x40)  // dc 0x102184; m_prevEdit/status/id + parent SetFocus
 void CMPEdit::onPrevEdit()
 {
     if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_prevEdit->m_id);
 }
 
-VA(0x00510890, 0x10)  // dc 0x1021ac
+VA(0x00510890, 0x10) MAC_ADDRESS(0x21cf54, 0x20)  // dc 0x1021ac
 void CMPEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);
 }
 
-VA(0x005108a0, 0x4E)  // dc 0x102718
+VA(0x005108a0, 0x4E) MAC_ADDRESS(0x21c320, 0x78)  // dc 0x102718
 CMPInputDlg::~CMPInputDlg()
 {
     deleteWidgets();
 }
 
-VA(0x005108f0, 0x72)  // dc 0x10275c
+VA(0x005108f0, 0x72) MAC_ADDRESS(0x21ce04, 0xc0)  // dc 0x10275c
 int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
@@ -1179,17 +1184,17 @@ int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-VA(0x00510970, 0x4)  // dc 0x1027ec
+VA(0x00510970, 0x4) MAC_ADDRESS(0x21cec4, 0x8)  // dc 0x1027ec
 textWidget* CMPInputDlg::getRolloverWidget()
 {
     return m_rollover;
 }
 
-VA(0x00510980, 0x5D)  // dc 0x1027f4
+VA(0x00510980, 0x5D) MAC_ADDRESS(0x219ae0, 0xb8)  // dc 0x1027f4
 void CMPInputDlg::updateOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
-        if (!strlen(m_field1->m_text.c_str()))
+        if (!strlen(m_field1->getText()))
             getWidget(OKAY_ID)->enable(0);
         else
             getWidget(OKAY_ID)->enable(1);
@@ -1286,7 +1291,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
     return 1;
 }
 
-VA(0x00510f40, 0x380)  // dc 0x101510
+VA(0x00510f40, 0x380) MAC_ADDRESS(0x21c398, 0x50)  // dc 0x101510
 unsigned char TMultiPlayerWindow::onJoin()
 {
     if (g_mpNetProtocol == MP_MODEM)
@@ -1341,7 +1346,7 @@ unsigned char TMultiPlayerWindow::onJoin()
     return 0;
 }
 
-VA(0x005112e0, 0x101)  // dc 0x101780
+VA(0x005112e0, 0x101) MAC_ADDRESS(0x21c3e8, 0xc0)  // dc 0x101780
 unsigned char getIPAddress(char* ipAddress)
 {
     WSADATA wsaData;
@@ -1375,7 +1380,7 @@ unsigned char getIPAddress(char* ipAddress)
     return 1;
 }
 
-VA(0x005113f0, 0x263)  // dc 0x101784
+VA(0x005113f0, 0x263) MAC_ADDRESS(0x21c4a8, 0x1d4)  // dc 0x101784
 unsigned char TMultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
@@ -1484,7 +1489,7 @@ unsigned char TMultiPlayerWindow::onSearch()
     return 1;
 }
 
-VA(0x00511d40, 0xD1)  // dc 0x101c00
+VA(0x00511d40, 0xD1) MAC_ADDRESS(0x21c710, 0x55c)  // dc 0x101c00
 unsigned char TMultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
@@ -1551,7 +1556,7 @@ CHotSeatDlg::CHotSeatDlg()
     m_widgets.push_back(m_rollover);
 
     addWidgetsToMessageStream();
-    m_edit[0]->setText(g_multiPlayerWindow->m_playerName->m_text.c_str());
+    m_edit[0]->setText(g_multiPlayerWindow->m_playerName->getText());
     setFocus(m_edit[0]->m_id);
     for (j = 0; j < 8; j++)
         m_edit[j]->setAutoDraw(1);
@@ -1562,13 +1567,13 @@ CHotSeatDlg::CHotSeatDlg()
     w->setHelpText(g_dialogBackHelp, 0, 0);
 }
 
-VA(0x005123d0, 0x4E)  // dc 0x102c28
+VA(0x005123d0, 0x4E) MAC_ADDRESS(0x21cc6c, 0x78)  // dc 0x102c28
 CHotSeatDlg::~CHotSeatDlg()
 {
     deleteWidgets();
 }
 
-VA(0x00512420, 0x4D)  // dc 0x102c6c
+VA(0x00512420, 0x4D) MAC_ADDRESS(0x21cce4, 0x10c)  // dc 0x102c6c
 int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
@@ -1594,14 +1599,14 @@ unsigned char CHotSeatDlg::onOK()
     g_hotSeatMan = new CHotSeatMan;
 
     for (int i = 0; i < 8; ++i) {
-        if (strlen(m_edit[i]->m_text.c_str()))
-            g_hotSeatMan->addPlayer(m_edit[i]->m_text.c_str());
+        if (strlen(m_edit[i]->getText()))
+            g_hotSeatMan->addPlayer(m_edit[i]->getText());
     }
 
     return 1;
 }
 
-VA(0x00512530, 0x4)  // dc 0x102e1c
+VA(0x00512530, 0x4) MAC_ADDRESS(0x21cdfc, 0x8)  // dc 0x102e1c
 textWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;

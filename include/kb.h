@@ -70,9 +70,8 @@ struct TNormalDialogInfo {
     int m_textWidgetWidth;
     int m_textWidgetHeight;
     bool m_textExpansion;
-    // NH3API confirms the three-byte gap between text_expansion at
-    // +0x30 and icons at +0x34. Retail kb.cpp uses the one-byte flag.
-    char m_paddingBeforeIcons[3];
+    // The compiler supplies the three-byte alignment gap before icons.
+    // Retail's implicit record copy skips it on both x86 and PowerPC.
     type_dialog_icon m_icons[8];
     EMBType m_mbType;
     int m_special;
@@ -184,7 +183,7 @@ enum ECongratsColumn {
     CONGRATS_COLUMN_COUNT = 5
 };
 
-extern unsigned long g_timers[10];
+DATA(0x00698998) extern unsigned long g_timers[10];
 
 // Retail .bss pointer cell used by both map-extra accessors. The complete
 // linearization is ((z * height + y) * width + x), with 16-bit elements.
@@ -238,7 +237,7 @@ void fileError(const char* buf);                        // 0x4f3a60
 // The five .rdata score multipliers game::get_map_score indexes with
 // setup.difficulty. Owning TU not located; extern only (the gTownSizeNames
 // pattern).
-extern const float g_mapScoreDifficultyFactor[];          // 0x67f558
+DATA(0x0067f558) extern const float g_mapScoreDifficultyFactor[];
 int handleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void cleanUpMenus();                                     // 0x4f4b50
 int getNextHumanPlayer(int start);                       // 0x4f4ba0
@@ -312,7 +311,7 @@ int trueFalseDialogHandler(message* msg);
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,
 // strip's DrawIcons the troop counts).
-extern char g_text[];
+DATA(0x006973d8) extern char g_text[];
 
 // homm2 gbForegroundApp (KB.cpp) lineage: AppWndProc's WM_ACTIVATEAPP
 // arm stores the activation byte here. Retail address 0x6783d0 sits in

@@ -24,7 +24,7 @@ IDs they exercise:
   chain/split      `a = b = e;` <-> two separate stores, both orders (C4)
 
 Pipeline per candidate: compile via homm3.core.cc_wrap with the game
-profile (config/units.toml `game_o2_ml_gr_windows` + /GR-, the profile
+profile (config/units.toml `game_o2_mt_gr_windows` + /GR-, the profile
 every b*/c*/d* probe pins) + /FAs, slice fn F from the COFF object with
 homm3.sema._asm's llvm-objdump path, and score against the reference with
 _align.distance (unpaired register-visible masked-instruction slots; 0 =

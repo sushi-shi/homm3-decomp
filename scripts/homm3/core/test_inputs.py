@@ -13,6 +13,7 @@ from unittest.mock import patch
 from homm3 import cli
 from homm3.core import inputs
 from homm3.core.test_nb11 import fixture
+from homm3.mac import toolchain as mac_toolchain
 
 
 class InputsTest(unittest.TestCase):
@@ -22,36 +23,46 @@ class InputsTest(unittest.TestCase):
         self.root = Path(self.directory.name)
         self.retail_bytes = b"synthetic retail input"
         self.dc_bytes = fixture()
+        self.mac_bytes = b"synthetic Mac input"
         self.retail = replace(inputs.RETAIL, destination=self.root / "build/orig/HEROES3.EXE",
                               size=len(self.retail_bytes),
                               sha256=hashlib.sha256(self.retail_bytes).hexdigest())
         self.dc = replace(inputs.DREAMCAST, destination=self.root / "build/orig/dreamcast/H3.EXE",
                           size=len(self.dc_bytes), sha256=hashlib.sha256(self.dc_bytes).hexdigest())
+        self.mac = replace(inputs.MAC, destination=self.root / "build/orig/mac/game.pef",
+                           size=len(self.mac_bytes), sha256=hashlib.sha256(self.mac_bytes).hexdigest())
         self.retail_source = self.root / "user files/retail.EXE"
         self.dc_source = self.root / "user files/dreamcast.EXE"
+        self.mac_source = self.root / "user files/mac.pef"
         self.retail_source.parent.mkdir()
         self.retail_source.write_bytes(self.retail_bytes)
         self.dc_source.write_bytes(self.dc_bytes)
+        self.mac_source.write_bytes(self.mac_bytes)
         self.enterContext(patch.object(inputs, "RETAIL", self.retail))
         self.enterContext(patch.object(inputs, "DREAMCAST", self.dc))
+        self.enterContext(patch.object(inputs, "MAC", self.mac))
         self.enterContext(patch.dict("os.environ", {}, clear=True))
         self.enterContext(contextlib.redirect_stdout(io.StringIO()))
         self.enterContext(contextlib.redirect_stderr(io.StringIO()))
 
-    def test_environment_stages_both_inputs_then_sources_are_unneeded(self):
+    def test_environment_stages_three_inputs_then_sources_are_unneeded(self):
         with patch.dict("os.environ", {"HOMM3_EXE": str(self.retail_source),
-                                        "HOMM3_DREAMCAST_EXE": str(self.dc_source)}):
+                                        "HOMM3_DREAMCAST_EXE": str(self.dc_source),
+                                        "HOMM3_MAC_EXE": str(self.mac_source)}):
             inputs.stage_executable(self.retail)
             inputs.stage_executable(self.dc)
+            inputs.stage_executable(self.mac)
         before = self.dc.destination.stat().st_mtime_ns
         self.retail_source.unlink()
         self.dc_source.unlink()
+        self.mac_source.unlink()
         self.assertEqual(inputs.stage_executable(self.retail).read_bytes(), self.retail_bytes)
         self.assertIn(0x100, inputs.dreamcast_symbols().procedures)
         self.assertEqual(self.dc.destination.stat().st_mtime_ns, before)
+        self.assertEqual(inputs.stage_executable(self.mac).read_bytes(), self.mac_bytes)
 
     def test_no_implicit_directory_search(self):
-        for spec in (self.retail, self.dc):
+        for spec in (self.retail, self.dc, self.mac):
             with self.subTest(spec=spec.name), self.assertRaisesRegex(inputs.InputError, spec.env_var):
                 inputs.stage_executable(spec)
 
@@ -86,16 +97,30 @@ class InputsTest(unittest.TestCase):
         self.assertEqual(list(self.dc.destination.parent.iterdir()), [self.dc.destination])
 
     def test_init_cli_overrides_environment_and_reuses_staged_inputs(self):
-        with patch.object(cli, "ROOT", self.root), patch.object(cli, "run_module", return_value=0) as run:
-            with patch.dict("os.environ", {"HOMM3_EXE": "missing", "HOMM3_DREAMCAST_EXE": "missing"}):
+        with patch.object(cli, "ROOT", self.root), \
+                patch.object(cli, "run_module", return_value=0) as run, \
+                patch.object(mac_toolchain, "stage") as stage_mac:
+            with patch.dict("os.environ", {"HOMM3_EXE": "missing", "HOMM3_DREAMCAST_EXE": "missing",
+                                            "HOMM3_MAC_EXE": "missing"}):
                 self.assertEqual(cli.main(["init", "--exe", str(self.retail_source),
-                                           "--dreamcast-exe", str(self.dc_source), "--no-smoke"]), 0)
+                                           "--dreamcast-exe", str(self.dc_source),
+                                           "--mac-exe", str(self.mac_source),
+                                           "--mac-toolchain", "provided-tools", "--no-smoke"]), 0)
+            stage_mac.assert_called_once_with("provided-tools")
             self.assertEqual([call.args for call in run.call_args_list], [
                 ("homm3.build.configure",), ("homm3.init.toolchain", "--no-smoke"),
                 ("homm3.build.compilation_database",)])
             self.retail_source.unlink()
             self.dc_source.unlink()
+            self.mac_source.unlink()
             self.assertEqual(cli.main(["init", "--no-smoke"]), 0)
+            stage_mac.assert_called_with(None)
+
+    def test_mac_hash_is_checked_before_staging(self):
+        self.mac_source.write_bytes(b"x" * len(self.mac_bytes))
+        with self.assertRaisesRegex(inputs.InputError, "sha256"):
+            inputs.stage_executable(self.mac, self.mac_source)
+        self.assertFalse(self.mac.destination.exists())
 
     def test_init_rejects_missing_input_before_toolchain_or_configure(self):
         with patch.object(cli, "run_module") as run:

@@ -1,7 +1,7 @@
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 
-#include <windows.h>
+#include "platform.h"
 
 #include "basemgr.h"
 #include "csprite.h"
@@ -95,7 +95,7 @@ public:
     }
     // Dreamcast mousemgr.h:221. MoveHero and RestoreMouse retain this
     // source helper while Complete's /Ob2 lowers it to the field_68 test.
-    unsigned char isVis() const { return m_hideCount == 0; }
+unsigned char isVis() const { return m_hideCount == 0; }
 
 private:
     void saveAndDraw(IDirectDrawSurface* dstSurface,
@@ -118,7 +118,7 @@ private:
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
-extern mouseManager* g_mouseManager;
+DATA(0x00699260) extern mouseManager* g_mouseManager;
 
 // The three DirectDraw surfaces owned and loaded by mousemgr.cpp. The
 // wingraph lifecycle releases the same cells during graphics shutdown.

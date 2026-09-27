@@ -48,7 +48,7 @@ static unsigned char g_castleBuildOrder[18];
 DATA(0x0063BCC8)
 static const int g_hallHelpIndices[8] = {19, 20, 21, 22, 23, 24, 18, 25};
 
-VA(0x004610e0, 0x49)  // dc 0x5c1d8
+VA(0x004610e0, 0x49) MAC_ADDRESS(0x06c9b0, 0x70)  // dc 0x5c1d8
 const char* getBuildingName(int townType, int buildingId)
 {
     if (buildingId < BUILDING_ID_TOWN_FIRST) {
@@ -61,7 +61,7 @@ const char* getBuildingName(int townType, int buildingId)
     return g_dwellingNames[townType][buildingId - 30];
 }
 
-VA(0x00461130, 0x5C)  // dc 0x5c228
+VA(0x00461130, 0x5C) MAC_ADDRESS(0x06ca20, 0x108)  // dc 0x5c228
 int canBuy(const town* currTown, int buildingId)
 {
     int cost[NUM_RESOURCES];
@@ -76,7 +76,7 @@ int canBuy(const town* currTown, int buildingId)
 }
 
 // E:\gamedcs\castle.cpp:328
-VA(0x00461190, 0x91C)  // source-order + sole DoHall caller, dc 0x5c278
+VA(0x00461190, 0x91C) MAC_ADDRESS(0x06cb28, 0xa14)  // source-order + sole DoHall caller, dc 0x5c278
 void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 {
     int i;
@@ -251,13 +251,14 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
             g_castleWindow->broadcastMessage(msg);
             msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.m_extra = state;
+            g_castleWindow->broadcastMessage(msg);
         } else {
             msg.m_codeX = widget::WIDGET_CLEAR_STATUS;
             msg.m_codeY = CASTLE_BUILD_BUTTON_FIRST_ID + i;
             msg.m_extra = widget::WIDGET_DRAWN;
+            // Mac retains this clear-status call at 0:0x6d498.
+            g_castleWindow->broadcastMessage(msg);
         }
-        g_castleWindow->broadcastMessage(msg);
-
         msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
         msg.m_codeY = CASTLE_BUILD_FRAME_FIRST_ID + i;
         if (!state)
@@ -280,7 +281,7 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // arm laid out first, and the click-side help lookup is a fifteen-case
 // switch on the resource-bar ids.
 
-VA(0x00461AB0, 0x767)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
+VA(0x00461AB0, 0x767) MAC_ADDRESS(0x06d53c, 0x74c)  // THallWindow vtable 0x6437a0 slot 9, dc 0x5c884
 int THallWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -356,7 +357,8 @@ int THallWindow::windowHandler(message& msg)
             case DWELLING_5_UPG_ID:
             case DWELLING_6_UPG_ID:
                 if (g_game->townAlreadyBuiltOn(g_townManager->m_townToView->m_id)) {
-                    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TOWN_ALREADY_BUILT_THIS_TURN));
+                    // Dreamcast castle.cpp:654 names TTextResource::operator[].
+                    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TOWN_ALREADY_BUILT_THIS_TURN]);
                 } else if (g_townManager->m_townToView->hasBuilding(building, false)) {
                     sprintf(g_text, g_hallInfo[4],
                             getBuildingName(g_townManager->m_townToView->m_type, building));

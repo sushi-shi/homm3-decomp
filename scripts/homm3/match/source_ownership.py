@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import tomllib
 from typing import TypedDict
 
 from homm3.core import common, clang
@@ -56,6 +57,62 @@ class Definition:
     original_name: str = ""
     template: bool = False
     internal: bool = False
+    source_owner: str = ""
+    owner_include_offset: int | None = None
+    # MAC_ADDRESS(offset, size) on this definition: its pinned-PEF code span.
+    mac_offset: int | None = None
+    mac_size: int | None = None
+    # Clang-resolved declarator types for linkage identity only. Keep the
+    # authored spellings above for source facts and Dreamcast comparison.
+    canonical_argument_types: tuple[str, ...] = ()
+
+
+def definition_owner(definition: Definition) -> str:
+    return definition.source_owner or definition.file
+
+
+def definition_order(definition: Definition):
+    return (definition_owner(definition),
+            definition.owner_include_offset if definition.owner_include_offset is not None else definition.offset,
+            definition.offset if definition.source_owner else -1)
+
+
+def fragment_owners(root: Path) -> dict[str, tuple[str, int]]:
+    """Validate explicit source fragments at their canonical include positions.
+
+    This changes source-file attribution only. The physical body, signature,
+    duplicate-definition checks and ordering within the owner remain visible.
+    """
+    path = root / 'config/source/header-fragments.toml'
+    if not path.is_file():
+        return {}
+    from homm3.retail_labels.source import mask_lexical_noise
+    result = {}
+    for row in tomllib.loads(path.read_text()).get('fragments', []):
+        fragment, owner = row['fragment'], row['owner']
+        for name, directory in ((fragment, 'include'),
+                                (owner, 'src' if owner.startswith('src/') else 'include')):
+            location = root / name
+            if (not name.startswith(directory + '/') or not location.is_file()
+                    or not location.resolve().is_relative_to((root / directory).resolve())
+                    or (directory == 'src' and not name.endswith('.cpp'))):
+                raise ValueError(f'invalid source fragment path {name!r}')
+        if fragment == owner or fragment in result or not row['evidence'].strip():
+            raise ValueError(f'duplicate or unproven source fragment {fragment!r}')
+        text = (root / owner).read_text()
+        masked = mask_lexical_noise(text)
+        sites = []
+        for match in re.finditer(r'^\s*#\s*include\s+"([^"\n]+)"', text, re.MULTILINE):
+            at = text.index('#', match.start(), match.end())
+            if (masked[at] == '#' and
+                    (root / owner).parent.joinpath(match.group(1)).resolve() == (root / fragment).resolve()):
+                sites.append(at)
+        if len(sites) != 1:
+            raise ValueError(f'{fragment}: expected one literal include in source owner {owner}')
+        result[fragment] = (owner, sites[0])
+    if any(owner in result for owner, _ in result.values()):
+        raise ValueError('nested source fragment owners are unsupported')
+    return result
 
 
 @dataclass(frozen=True)
@@ -226,6 +283,10 @@ class LineIndex:
             yield self.lines[index]
 
 
+# Standalone Mac address lines sit between a definition and its comments.
+MAC_ANNOTATION_PREFIXES = ('MAC_ADDRESS(', 'MAC_COMPGEN_ADDRESS(')
+
+
 def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     # Only the attached comment/declarator prefix is eligible. Never carry an
     # origin across another definition (the old link-order parser did that).
@@ -237,7 +298,7 @@ def attached_prefix(raw: str | LineIndex, start: int) -> list[str]:
     for line in index.preceding(start):
         line = line.rstrip('\r\n')
         text = line.strip()
-        if text and not text.startswith(('//', '#', 'VA(')):
+        if text and not text.startswith(('//', '#', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         prefix.append(line)
     prefix.reverse()
@@ -395,7 +456,7 @@ def instance_annotations(raw: str, start: int, declaration: int, index: LineInde
     index = index or LineIndex(raw)
     for line in index.preceding(start):
         stripped = line.strip()
-        if stripped and not stripped.startswith(('//', 'VA(')):
+        if stripped and not stripped.startswith(('//', 'VA(', *MAC_ANNOTATION_PREFIXES)):
             break
         if stripped.startswith('VA(') and '{' in source.mask_lexical_noise(line):
             break  # a preceding one-line definition is not this claim's prefix
@@ -572,7 +633,42 @@ def resolve_instances(definitions, requests, unit, root, args):
     return definitions, errors
 
 
-def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Definition], list[str], list[str]]:
+def skip_conditional_signature_tail(masked: str, offset: int) -> int:
+    """Skip an inactive #else/#elif arm after Clang's active declarator."""
+    from homm3.vc6 import _source
+    offset = _source._skip_ws(masked, offset)
+    if offset >= len(masked) or masked[offset] != '#':
+        return offset
+    line_end = masked.find('\n', offset)
+    if line_end < 0:
+        return offset
+    directive = masked[offset:line_end]
+    if re.match(r'#[ \t]*endif\b', directive):
+        return _source._skip_ws(masked, line_end + 1)
+    if not re.match(r'#[ \t]*(?:else|elif)\b', directive):
+        return offset
+    # The remainder of this conditional arm is inactive in Clang's parsed
+    # declarator. Skip it only when a balanced closing #endif is followed
+    # immediately by the function body.
+    depth = 0
+    scan = line_end + 1
+    while scan < len(masked):
+        end = masked.find('\n', scan)
+        if end < 0:
+            end = len(masked)
+        line = masked[scan:end].lstrip()
+        if re.match(r'#[ \t]*(?:if|ifdef|ifndef)\b', line):
+            depth += 1
+        elif re.match(r'#[ \t]*endif\b', line):
+            if depth == 0:
+                after = _source._skip_ws(masked, end + 1)
+                return after if after < len(masked) and masked[after] == '{' else offset
+            depth -= 1
+        scan = end + 1
+    return offset
+
+
+def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None, fragment_map=None) -> tuple[list[Definition], list[str], list[str]]:
     """Fail visibly on parse errors; never turn an unreadable TU into no bodies."""
     from clang import cindex
     import ctypes
@@ -595,6 +691,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
         options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
     from homm3.vc6 import _source
     texts = {}
+    fragments = fragment_owners(root) if fragment_map is None else fragment_map
     raw_texts = {}
     byte_texts = {}
     line_indexes = {}
@@ -647,7 +744,7 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 # below use Python character offsets. Comments may be UTF-8.
                 return len(encoded[:offset].decode('utf-8'))
             masked = texts[relative]
-            opening = _source._skip_ws(masked, char_offset(cursor.extent.end.offset))
+            opening = skip_conditional_signature_tail(masked, char_offset(cursor.extent.end.offset))
             if opening < len(masked) and masked[opening] == ':':
                 opening = _source._skip_init_list(masked, opening)
             if opening is None or opening >= len(masked) or masked[opening] != '{':
@@ -660,6 +757,8 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                      if c.kind == k.ANNOTATE_ATTR]
             vas = [int(m.group(1), 16) for a in attrs
                    if (m := re.fullmatch(r'va:(0[xX][0-9a-fA-F]+) size:.*', a))]
+            macs = [(int(m.group(1), 16), int(m.group(2), 0)) for a in attrs
+                    if (m := re.fullmatch(r'mac:(0[xX][0-9a-fA-F]+) size:(0[xX][0-9a-fA-F]+|\d+)', a))]
             member = cursor.kind in {k.CXX_METHOD, k.CONSTRUCTOR, k.DESTRUCTOR,
                                      k.CONVERSION_FUNCTION}
             if cursor.kind == k.CXX_METHOD and cursor.is_static_method():
@@ -707,8 +806,15 @@ def scan_unit(unit: dict, root: Path = ROOT, *, profiles=None) -> tuple[list[Def
                 original_name=original_name_hint(
                     line_indexes[relative], char_offset(cursor.location.offset)),
                 template=template,
+                source_owner=fragments.get(relative, ('', None))[0],
+                owner_include_offset=fragments.get(relative, ('', None))[1],
                 internal=(cursor.kind == k.FUNCTION_DECL
-                          and cursor.storage_class == cindex.StorageClass.STATIC)))
+                          and cursor.storage_class == cindex.StorageClass.STATIC),
+                mac_offset=macs[0][0] if len(macs) == 1 else None,
+                mac_size=macs[0][1] if len(macs) == 1 else None,
+                canonical_argument_types=tuple(
+                    c.type.get_canonical().spelling
+                    for c in cursor.get_children() if c.kind == k.PARM_DECL)))
             if instances:
                 instance_requests.append((first, cursor.location.offset))
                 extras = []
@@ -773,7 +879,11 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                 relative = path.relative_to(root).as_posix()
                 content[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
                 digest.update(relative.encode())
-                if relative not in admitted:
+                # Mac reference settings do not configure this Windows AST.
+                # Keep names in the shared key (new includes), and hashes in
+                # content so an explicitly included TOML still tracks changes.
+                mac_metadata = relative.startswith('config/mac/') and path.suffix.lower() == '.toml'
+                if relative not in admitted and not mac_metadata:
                     digest.update(content[relative].encode())
     if mirror:
         for path in sorted(mirror.rglob('*')):
@@ -788,6 +898,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
     cache = root / 'build/source-ownership/units'
     cache.mkdir(parents=True, exist_ok=True)
     key = digest.hexdigest()
+    fragments = fragment_owners(root)
 
     def cached_scan(unit):
         source = unit['source']
@@ -803,7 +914,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
                             saved['errors'], saved['reached'])
             except (OSError, ValueError, KeyError, TypeError, AttributeError):
                 pass  # Disposable cache; a damaged entry must trigger a scan.
-        definitions, errors, reached = scan_unit(unit, root, profiles=profiles)
+        definitions, errors, reached = scan_unit(unit, root, profiles=profiles, fragment_map=fragments)
         dependencies = {os.path.normpath(p) for p in [*reached, source]}
         input_hashes = {p: content.get(p) for p in sorted(dependencies)}
         saved = dict(key=key, definitions=[asdict(d) for d in definitions],
@@ -838,7 +949,7 @@ def collect(root: Path = ROOT, jobs: int = 4, fresh: bool = False):
         reached.update(paths)
         for d in definitions:
             unique[(d.file, d.offset, d.name, d.signature)] = d
-    definitions = sorted(unique.values(), key=lambda d: (d.file, d.offset, d.signature))
+    definitions = sorted(unique.values(), key=lambda d: (*definition_order(d), d.signature))
     return definitions, errors, sorted(reached)
 
 
@@ -887,9 +998,26 @@ def read_win_filters(root: Path):
                               ('file', 'function', 'signature'))
 
 
+def read_owner_placements(root: Path):
+    """Review a source-location change without hiding the DC counterpart."""
+    return read_filter(root / 'config/source/owner_placements.tsv',
+                       ('file', 'function', 'signature', 'dc_file'))
+
+
+def read_order_placements(root: Path):
+    """Review an exact source-order inversion against the older DC roster."""
+    return read_filter(root / 'config/source/order_placements.tsv',
+                       ('file', 'function', 'signature', 'preceding_function', 'dc_file'))
+
+
 def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
-            win_only: dict, *, symbols=None, matched_out=None,
+            win_only: dict, *, owner_placements=None, order_placements=None,
+            symbols=None, matched_out=None,
             strict_names: bool = False) -> tuple[list[str], dict]:
+    owner_placements = owner_placements or {}
+    used_placements = set()
+    order_placements = order_placements or {}
+    used_order_placements = set()
     inline_errors = []
     if any(d.inline_origin for d in definitions):
         if symbols is None:
@@ -1030,17 +1158,21 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             continue
         if key in win_only:
             used_win.add(key)
-            # A declaration without a source body is not a Windows-only
-            # exemption. A reviewed, different return interface is distinct:
-            # e.g. Complete's pointer-changed result vs DC's void declaration.
-            # Require both parsed return types; old/partial inventories cannot
-            # authorize this distinction. An emitted DC body still needs its
-            # proper owner rather than this declaration-only exception.
+            # A reviewed overload with different formal types is distinct
+            # even when its name and arity match an older DC procedure.
+            # Require parsed formals: missing type data cannot authorize it.
+            different_formals = bool(written) and all(
+                o.argument_types is not None
+                and tuple(type_identity(t) for t in o.argument_types)
+                != tuple(type_identity(t) for t in definition_arguments)
+                for o in written)
+            # A declaration with a different return interface is also
+            # distinct. Require both parsed returns for that exception.
             changed_return = (written and d.return_type
                               and all(o.declaration_only and o.return_type
                                       and type_identity(o.return_type) != type_identity(d.return_type)
                                       for o in written))
-            if written and not changed_return:
+            if written and not (changed_return or different_formals):
                 errors.append(f'FILTER {where}: Windows-only exemption hides a CodeView counterpart')
             else:
                 counts['win_only'] += 1
@@ -1082,7 +1214,7 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         # Bind only the owning file before duplicate detection and before
         # exposing matches to the bidirectional inventory. Otherwise one local
         # helper can consume another TU's row or manufacture an ambiguity.
-        actual = d.file.split('/', 1)[1].lower()
+        actual = definition_owner(d).split('/', 1)[1].lower()
         owned = [o for o in candidates if o.file == actual]
         if owned:
             candidates = owned
@@ -1108,8 +1240,14 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         locations = {(o.file, o.line) for o in candidates}
         files = {f for f, _ in locations}
         if actual not in files:
-            errors.append(f'OWNER {where}: CodeView defines in {", ".join(sorted(files))}')
-            counts['owner'] += 1
+            placements = [(key, reason) for key, reason in owner_placements.items()
+                          if key[:3] == (d.file, d.name, d.signature)]
+            if (len(placements) == 1 and files == {placements[0][0][3]}):
+                used_placements.add(placements[0][0])
+                counts['reviewed_owner_placement'] += 1
+            else:
+                errors.append(f'OWNER {where}: CodeView defines in {", ".join(sorted(files))}')
+                counts['owner'] += 1
         else:
             lines = {line for f, line in locations if f == actual and line}
             if len(lines) == 1:
@@ -1121,6 +1259,8 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
             matched_out.append((d, tuple(candidates)))
     for key in win_only.keys() - used_win:
         errors.append(f'FILTER stale win_only.tsv/win_only_modules.tsv entry {key}')
+    for key in owner_placements.keys() - used_placements:
+        errors.append(f'FILTER stale owner_placements.tsv entry {key}')
     previous = {}
     for d, file, dc_line in matches:
         # Ordinary retained .cpp bodies follow retail RVA order, checked by
@@ -1130,12 +1270,19 @@ def compare(definitions: list[Definition], origins: list[Origin], dc_only: dict,
         # the source-line stream; an ordinary retail claim cannot advance it.
         if d.file.startswith('src/') and d.va is not None and not d.inline:
             continue
-        key = (d.file, file)
+        key = (definition_owner(d), file)
         prior = previous.get(key)
         if prior and dc_line < prior[1]:
-            errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')
-            counts['order'] += 1
+            order_key = (d.file, d.name, d.signature, prior[0].name, file)
+            if order_key in order_placements:
+                used_order_placements.add(order_key)
+                counts['reviewed_order_placement'] += 1
+            else:
+                errors.append(f'ORDER {d.file}:{d.line} {d.name} (DC {dc_line}) follows {prior[0].name} (DC {prior[1]})')
+                counts['order'] += 1
         previous[key] = (d, dc_line)
+    for key in order_placements.keys() - used_order_placements:
+        errors.append(f'FILTER stale order_placements.tsv entry {key}')
     return errors, dict(counts)
 
 
@@ -1182,9 +1329,15 @@ def audit(root: Path = ROOT, jobs: int = 4, fresh: bool = False, *, origins=None
     errors.extend(failures)
     win_only, failures = read_win_filters(root)
     errors.extend(failures)
+    owner_placements, failures = read_owner_placements(root)
+    errors.extend(failures)
+    order_placements, failures = read_order_placements(root)
+    errors.extend(failures)
     violations, counts = compare(definitions,
                                  read_dc(root, include_declarations=True, project=project) if origins is None else origins,
                                  dc_only, win_only,
+                                 owner_placements=owner_placements,
+                                 order_placements=order_placements,
                                  symbols=inputs.dreamcast_symbols(project)
                                  if any(d.inline_origin for d in definitions) else None)
     errors.extend(violations)

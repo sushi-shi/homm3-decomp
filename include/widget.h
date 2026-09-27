@@ -48,25 +48,6 @@ class message;
 //      onSleepChange describes the first-sleep/final-wake calls in sleep().
 class widget {
 public:
-    heroWindow* m_parentWindow;
-    widget* m_prevWidget;
-    widget* m_nextWidget;
-    short m_id;
-    short m_priority;
-    short m_style;
-    short m_status;
-    short m_x;
-    short m_y;
-    short m_width;
-    short m_height;
-
-protected:
-    char* m_rollOver;
-    char* m_rightClick;
-    unsigned char m_freeText;
-
-public:
-    int m_sleepCount;
     // Dreamcast widget::EStatusFlags, values byte-corroborated by the
     // retail ctor (status = WIDGET_ACTIVE | WIDGET_DRAWN) and enable
     // (WIDGET_DISABLED mask).
@@ -161,9 +142,9 @@ public:
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
     // These hooks write to the destination bitmap through its pointer.
     virtual void draw() const = 0;  // slot 4
-    VA(0x004021d0, 0x5)  // vtable slot 5 + exact height read, retail-only
+    VA(0x004021d0, 0x5) MAC_ADDRESS(0x0041b4, 0x8)  // vtable slot 5 + exact height read, retail-only
     virtual int getRealHeight() const { return m_height; }  // slot 5
-    VA(0x004021e0, 0x5)  // vtable slot 6 + exact width read, retail-only
+    VA(0x004021e0, 0x5) MAC_ADDRESS(0x0041bc, 0x8)  // vtable slot 6 + exact width read, retail-only
     virtual int getRealWidth() const { return m_width; }  // slot 6
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
@@ -171,7 +152,7 @@ public:
     void setHelpText(const char* text, const char* rclick, unsigned char copyText);
     int sendMessage(widget::ECommands command, int extra);
 
-    VA(0x00404df0, 0x1)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
+    VA(0x00404df0, 0x1) MAC_ADDRESS(0x05ef60, 0x4)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
     virtual void onSetFocus() {}  // slot 10
     virtual void onKillFocus() {}  // slot 11
 
@@ -225,6 +206,29 @@ public:
     // Original: widget::force_update; Widget.h:271, dc 0x56e20.
     // Bottom-view updates expand this same status message in Complete.
     void forceUpdate() { sendMessage(WIDGET_SET_STATUS, WIDGET_UPDATE); }
+
+    // DC field-list order puts the data after the methods; CodeWarrior then
+    // keeps the vptr at +0, as every Mac widget virtual call reads it.
+public:
+    heroWindow* m_parentWindow;
+    widget* m_prevWidget;
+    widget* m_nextWidget;
+    short m_id;
+    short m_priority;
+    short m_style;
+    short m_status;
+    short m_x;
+    short m_y;
+    short m_width;
+    short m_height;
+
+protected:
+    char* m_rollOver;
+    char* m_rightClick;
+    unsigned char m_freeText;
+
+public:
+    int m_sleepCount;
 
 protected:
     // Dreamcast: protected static widget* last_hover_widget

@@ -4,9 +4,13 @@
 
 #include "va.h"
 
-#include <windows.h>
+#include "platform.h"
 
 struct SoundHeaderStruct;
+
+extern HANDLE g_soundFile;
+extern HANDLE g_soundFileCd;
+extern HANDLE g_soundFileCampaign;
 
 // The four state-selected rows at retail 0x69e538 contain three
 // (count, LOD-index-list) pairs. The first serves sprites, the second

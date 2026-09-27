@@ -13,6 +13,9 @@
 
 #include <vector>
 
+// Unqualified min/max also reach std's templates (VC6's library has none).
+using namespace std;
+
 // E:\gamedcs\includes.h:97, dc 0x1ef28. The wrapper owns argument
 // copies, then dereferences the selector's returned argument address.
 inline int max(int left, int right)
@@ -49,7 +52,6 @@ inline const T& tLimit(const T& minimum, const T& value,
         return value;
     }
 }
-
 // E:\gamedcs\includes.h:134
 inline int limit(int minimum, int value, int maximum)
 {
@@ -57,9 +59,10 @@ inline int limit(int minimum, int value, int maximum)
 }
 
 // The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
-// VC6 generic vector<unsigned char> representation at +8: allocator
-// byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
-// vector<bool>, a platform-library divergence rather than x86 evidence.
+// The same vector<bool> declaration selects VC6's generic byte container
+// (allocator byte, _First, _Last, _End) and CodeWarrior's packed-bit
+// specialization (three words). Native Mac pick calls the word-mask
+// proxies at 0x99fb8/0xe73b8; no target-specific declaration is needed.
 // Original CodeView fields: Low, NumbersLeft, Available. Project spelling
 // follows the m_ scope prefix and lowerCamelCase convention.
 class TPickANumber {
@@ -68,7 +71,7 @@ protected:
 
 public:
     int m_numbersLeft;
-    std::vector<unsigned char> m_available;
+    std::vector<bool> m_available;
     TPickANumber(int lowBound, int high);
     // Original: TPickANumber::IsAvailable; includes.h:166, dc 0xfe374.
     unsigned char isAvailable(int number) const

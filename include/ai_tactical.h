@@ -185,6 +185,10 @@ protected:
 // same body. Interior fields past +0x4c stay padded.
 struct type_AI_spellcaster {
 public:
+    // CodeWarrior places the vptr at the first virtual declaration. Mac's
+    // constructor 0x3e444 stores it at +0, then builds m_estimate at +0x20;
+    // declaring this before the fields reproduces that layout naturally.
+    virtual ~type_AI_spellcaster();
     // +0x00 is the compiler's own vptr (vftable 0x63b7d8, one slot:
     // the scalar deleting destructor at 0x436bf0).
     hero* m_ourHero;  // +0x04 combat->[0x53cc + side*4]
@@ -235,7 +239,6 @@ public:
     // constructor; its definition is visible before that caller in the TU.
     type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
                         long side, unsigned char creatureSpell);
-    virtual ~type_AI_spellcaster();
     long getCaliphValue(const army* target) const;
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)

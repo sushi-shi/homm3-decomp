@@ -1,0 +1,3 @@
+# Reviewed source order differences against the older Dreamcast roster.
+file	function	signature	preceding_function	dc_file	reason
+src/philai.cpp	valueOfSpell	int (const hero *, SpellID) __attribute__((fastcall))	valueOfUniversity	philai.cpp	Mac retains the university adapter at code0+0x13ebfc before the spell helper at code0+0x1421e8, matching the Windows source and function sequence. Older Dreamcast line tables place ValueOfSpell at line 1945 before ValueOfUniversity at line 3708; preserve the later shared-source order supported by Mac and retail instead of moving either canonical helper.

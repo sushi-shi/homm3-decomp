@@ -40,6 +40,9 @@ public:
         m_array = 0;
     }
 
+    // Mac 0:0x177ad0 retains this CDPlayPlayer instantiation of destroy;
+    // updateCurrentPlayers calls it explicitly, and the single-selection
+    // setup modes reach it through their CAutoArray destructor.
     // Delegating to Destroy rather than writing the loop here is what keeps
     // retail's virtual Get(i) dispatch: in a destructor VC6 assumes the
     // exact type and devirtualizes, but inside the inlined Destroy - an

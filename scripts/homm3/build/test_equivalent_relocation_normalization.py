@@ -164,6 +164,40 @@ class EquivalentRelocationNormalizationTest(unittest.TestCase):
             next(row for row in original.relocations if row.site == 6),
             next(row for row in normalized.relocations if row.site == 6))
 
+    def test_inferred_owner_accepts_duplicate_indices_without_hiding_conflicts(self):
+        base_text = (b"\xa1" + struct.pack("<I", 4) +
+                     b"\xa1" + struct.pack("<I", 0) +
+                     b"\xa1" + struct.pack("<I", 0) + b"\xc3")
+        target_text = (b"\xa1" + struct.pack("<I", 0)) * 3 + b"\xc3"
+        base = _coff(
+            (FixtureSection(".text", base_text,
+                            ((1, 1, DIR32), (6, 1, DIR32), (11, 1, DIR32))),),
+            (_symbol("probe", 0, 1, FUNCTION_TYPE, 2),
+             _symbol("source", 0, 0, 0, 2)))
+        for duplicate_name, duplicate_rva, expected in (
+                ("owner", 0x2000, 1), ("other", 0x2000, 0),
+                ("other", 0x2100, 0)):
+            with self.subTest(name=duplicate_name, rva=duplicate_rva):
+                target = _coff(
+                    (FixtureSection(".text", target_text,
+                                    ((1, 1, DIR32), (6, 2, DIR32),
+                                     (11, 3, DIR32))),),
+                    (_symbol("probe", 0, 1, FUNCTION_TYPE, 2),
+                     _symbol("field", 0, 0, 0, 2),
+                     _symbol("owner", 0, 0, 0, 2),
+                     _symbol(duplicate_name, 0, 0, 0, 2)))
+                authority = {"field": (0x2004, "data"),
+                             "owner": (0x2000, "data")}
+                authority[duplicate_name] = (duplicate_rva, "data")
+                after, literals, aggregates = _canonicalize_equivalent_relocations(
+                    base, target, authority, image_base=0x400000)
+                self.assertEqual((literals, aggregates), (0, expected))
+                normalized = CoffObject(after)
+                section = normalized.section_bytes(normalized.sections[0])
+                self.assertEqual(struct.unpack_from("<I", section, 1)[0],
+                                 4 if expected else 0)
+                self.assertEqual(len(normalized.relocations), 3)
+
     def test_reviewed_owner_base_replaces_missing_equal_addend_anchor(self):
         authority = dict(AUTHORITY)
         authority["source"] = (0x2000, "data")

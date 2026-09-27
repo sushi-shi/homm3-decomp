@@ -47,7 +47,7 @@
 #define NOMINMAX
 #endif
 
-#include <windows.h>
+#include "platform.h"
 
 struct PcxData {
     int m_pcXvers;

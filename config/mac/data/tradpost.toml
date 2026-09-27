@@ -1,0 +1,256 @@
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5856a
+mac_size = 5
+sha256 = "6ba9e98ee41d90eead55775f37c624d3b16ab8f1783fb400ee5e8fd09d1914d0"
+evidence = "Native TBuyArtifactWindow::update loads TOC 1+0x33d4 -> 1+0x5856a into r29 at 0x1f6b88 and passes it as the reciprocal-price sprintf format at 0x1f7194. Its complete five-byte payload is 1/%d followed by NUL, exactly the candidate local literal @7458. This is the only full occurrence in the initialized section."
+
+[[data]]
+retail_va = 0x0068c4a0
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x583e0
+mac_size = 28
+sha256 = "45a7b14aafdbc7ce1ab5f5c8c159953f7ab65c1909e67c43699a101b48c31113"
+evidence = "The full seven-int resource value-widget Y table matches Windows initialized data at 0x68c4a0 and Mac data 1+0x583e0: 230,230,230,309,309,309,388. Native TBuyArtifactWindow::update loads TOC 1+0x33d8 into r28 at 0x1f6b8c and indexed entry at 0x1f70b0 before the WIDGET_SET_Y broadcast at 0x1f70b8. Candidate source owns the same initialized payload."
+
+[[data]]
+retail_va = 0x0068c4c0
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x58400
+mac_size = 28
+sha256 = "4d387946917e8e5a9d2751835b4a3a85c4c3be6dba188ed25b1e27d40de1cd91"
+evidence = "The initialized seven-int creature quantity-widget Y table agrees at Windows 0x68c4c0 and Mac 1+0x58400: 191,191,191,289,289,289,387. Native TSellCreatureWindow::update retains resource-row base 1+0x583e0 in r28 at 0x1f7984; its creature WIDGET_SET_Y arm adds index*4 at 0x1f7f74 and loads +0x20 at 0x1f7f78 before broadcast. This explicitly proves the adjacent second table rather than admitting a payload-only guess."
+
+[[data]]
+retail_va = 0x6aaa90
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5ab8
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static selected artifact/resource index has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5ab8: 0x1f6bb4 tests -1; 0x1f6c74 indexes the resource-name table. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaacc
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5ab4
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static left artifact slot has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5ab4: 0x1f6bec tests -1; 0x1f6c54 indexes the market-artifact list. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaa80
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a88
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static inverted trade ratio flag has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5a88: 0x1f6bf8 selects quantity one versus the give-quantity value. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaac0
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5aac
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static give quantity has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5aac: 0x1f6c0c retains the units-per-trade value in r24. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaab0
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5ab0
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static right trade amount has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5ab0: 0x1f6e14 gates the buy button; 0x1f6f74 passes it to the amount formatter. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaa74
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a6c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static market artifact-list pointer has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5a6c: 0x1f6c5c loads it before the left-slot artifact name lookup. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaaac
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a7c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static left-denominated ratio flag has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5a7c: 0x1f6ca0 selects accepted/instructions text IDs 163/164. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x6aaac4
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a84
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static market source enum has zero-initialized storage in tradpost.cpp. Native TBuyArtifactWindow::update uses direct TOC storage 1+0x5a84: 0x1f6d18 dispatches subtitle source cases zero, one and two. Same-TU UDATA identity only; this does not supply runtime values."
+
+[[data]]
+retail_va = 0x678344
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x43270
+mac_size = 44
+sha256 = "c9edb0dbebe5d1cd52fdb41a06d36122a4a62f61e02a22dccf5458c5e88f8f57"
+evidence = "All eleven float initializers agree with the Windows initialized-data payload at 0x678344 and pinned Mac payload1+0x43270. The owning retained computeTradeRatios helper loads this table through a reviewed TOC pointer at 0x1f8280 and indexes it by g_marketCount. Ordinary initialized storage, not a synthesized compiler-control literal."
+
+[[data]]
+retail_va = 0x678370
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x4329c
+mac_size = 44
+sha256 = "4fe572a6c80bb5eca020d18e335fd0f20e4061fc999ee8cf844292308efa3749"
+evidence = "All eleven float initializers agree with the Windows initialized-data payload at 0x678370 and pinned Mac payload1+0x4329c. The owning retained computeTradeRatios helper loads this table through a reviewed TOC pointer at 0x1f83c8 and indexes it by g_marketCount. Ordinary initialized storage, not a synthesized compiler-control literal."
+
+[[data]]
+retail_va = 0x67839c
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x432c8
+mac_size = 44
+sha256 = "4723b338c666efa694657313899949a90843c95cd391a88c880f167b8126e360"
+evidence = "All eleven float initializers agree with the Windows initialized-data payload at 0x67839c and pinned Mac payload1+0x432c8. The owning retained computeTradeRatios helper loads this table through a reviewed TOC pointer at 0x1f85f4 and indexes it by g_marketCount. Ordinary initialized storage, not a synthesized compiler-control literal."
+
+[[data]]
+retail_va = 0x006aaa98
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a80
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned static g_marketCount is the index capped at ten by countMarkets. Native TBuyArtifactWindow::computeTradeRatios reads direct zero-initialized storage1+0x5a80 at0x1f83b4, shifts it by two at0x1f83c0 and selects one float from the eleven-element artifact-purchase efficiency table at0x1f83d4. Same-TU UDATA identity only."
+
+[[data]]
+retail_va = 0x68c480
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x583c0
+mac_size = 16
+sha256 = "77b2f33dc7d4cb7e6debedb72e7c624c7ef6187044e76f5c154ff3bebbb3cdbc"
+evidence = "Both retail payloads prove g_marketValues has a zero sentinel followed by seven unsigned-short resource values. Native getMarketValue0x1f8144/0x1f8150 loads the table base then the index*2+2 element. Windows folds +2 into the absolute operand (the retained getMarketValue body uses0x68c482). The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
+
+[[data]]
+retail_va = 0x68c490
+source = "src/tradpost.cpp"
+mac_section = 1
+mac_offset = 0x583d0
+mac_size = 16
+sha256 = "4eb1dfec3d4fec3cea740ded71a1f15f1e2497b92a6b8eea55a4f42631e4bb3b"
+evidence = "Both retail payloads prove g_artifactMarketValues has a zero sentinel followed by seven unsigned-short resource values. Native TBuyArtifactWindow::computeTradeRatios0x1f8378/0x1f8388 loads the table base then the index*2+2 element. Windows uses the corresponding first resource cell at0x68c492. The source now owns the complete initialized sixteen-byte table and its ordinary +1 index."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5a65
+mac_size = 3
+sha256 = "0b782fc3030dbdf3756f17e7adf2ce5808dfc513ca7589adeb679c7d25eaef6f"
+evidence = "Native Buy Update passes the decimal format through direct TOC1+0x5a65 at0x1f6f7c and0x1f6f98. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5b00
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Native Buy ComputeTradeRatios loads the signed int-to-double bias through TOC1+0x33c8 at0x1f83d8/0x1f83e8. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5b08
+mac_size = 8
+sha256 = "2b2979f362d94c89fe17a6e01637f14332de063fe7a544bdc5facfc046f4169f"
+evidence = "Native Buy ComputeTradeRatios loads the unsigned short-to-double bias through TOC1+0x33cc at0x1f836c/0x1f83ac. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5ae8
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Native Buy ComputeTradeRatios zero comparison loads float zero through direct TOC1+0x5ae8 at0x1f83e4. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5af0
+mac_size = 8
+sha256 = "ace5732151a42e3c2ce91e039d0bd2d3a86dce1bccb6b874852b1aaa7f01d3bd"
+evidence = "Native Buy ComputeTradeRatios rounding loads double0.5 through direct TOC1+0x5af0 at0x1f8420. Complete pinned literal payload agrees with the corresponding emitted source/compiler literal."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5a68
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Native TBuyArtifactWindow::update passes the empty NUL string through direct TOC1+0x5a68 at0x1f71a4 before sprintf0x1f71a8. The candidate anonymous literal @7459 is the same complete one-byte empty string."
+
+[[data]]
+retail_va = 0x6aaa78
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a74
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned hero pointer g_marketHero. Native doFreelancersGuild(hero*) stores its incoming r3 at1f4d08 into direct TOC storage1+5a74; native SellArtifactWindow handler loads this same cell at1f9aa0 for equipped-artifact addressing and1f9ac0 as the receiver of hero::getNumberInBackpack. Both producer and receiver prove the four-byte pointer ABI; the pinned initial payload is zero."
+
+[[data]]
+retail_va = 0x6aaa70
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a70
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Source-owned unsigned byte g_backpackStart. Native SellArtifactWindow handler loads this direct byte at1f9acc and adds it to artifactSlot-18 before the backpack-count remainder at1f9adc; its separate retained arrow helpers update the same storage. This is the canonical scroll origin, not a synthesized pointer or table. Pinned initial payload is one zero byte."
+
+[[data]]
+retail_va = 0x6aaaa4
+source = "src/tradpost.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5a78
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Source-owned g_marketWindow. Native doFreelancersGuild(hero*) stores its window4 selector into direct TOC storage1+5a78 at1f4d0c immediately before doMarket1f4f84. It is distinct from adjacent source3 and count5 cells; selector is a four-byte int, with pinned zero initial payload."
+
+[[constants]]
+units = ["tradpost"]
+mac_section = 1
+mac_offset = 0x5af8
+mac_size = 4
+sha256 = "de620abd6d3615746360c1d15ce3a56291236d37424124054a49d25e947ffc4d"
+evidence = "Native TSellArtifactWindow::computeTradeRatios loads direct float1.0 at1f8530 and again1f8544 for the minimum output clamp. Its complete pinned4byte payload3f800000 matches the candidate emitted constant; no guessed destination."
+
+[[data]]
+retail_va = 0x006994fc
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528934
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Canonical external town-manager pointer g_townManager, owned by KB. Native TTradeResourceWindow::update loads TOC1+978 -> storage1+528934 into r25 at1f5b10;1f5ef0/ef4 dereferences the cell and manager's townToView+38, then town type+4 is compared to2/5. The same manager/town chain feeds the building17 bitset check1f5f18..58 and building21 check in the following arm. Pinned external storage is four zero bytes; initializer and pointee are not scored."

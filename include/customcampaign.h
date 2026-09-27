@@ -1,5 +1,5 @@
 // customcampaign.h - canonical campaign state and Complete campaign types.
-// CodeView places SCampaign's constructor and completion query in this header.
+// The older DC class owns header bodies; Complete placement follows its retail callers.
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
@@ -11,6 +11,7 @@
 #include "hero.h"
 
 class CMapHeaderData;
+class TAbstractFile;
 
 // The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
 // TCampaignWindow's constructor is the proof: `gpGame->campaign =
@@ -41,10 +42,13 @@ public:
     int m_score;
     int m_index;
     int m_completeOrder;
+    MAC_ADDRESS(0x097e50, 0x20)
     CampaignScenarioInfo()
         : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
     {
     }
+    void read(TAbstractFile* infile);
+    void write(TAbstractFile* outfile) const;
 };
 SIZE(CampaignScenarioInfo, 0x14);
 
@@ -113,21 +117,11 @@ public:
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
-    // is a std::vector over a 4-byte element whose identity is unproven.
-    std::vector<int> m_assignedCarryover;
-    // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
-    VA(0x00489500, 0x88)  // dc 0xbcd90
-    SCampaign()
-    {
-        m_isCheater = 0;
-        m_secretActive = 0;
-        m_currentMap = -1;
-        m_numMapRegions = -1;
-        m_briefingChoice = -1;
-        m_crossoverArrayIndex = -1;
-        m_currentCampaign = CAMPAIGN_NONE;
-        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
-    }
+    // is a four-byte hero-ID vector. Mac retains the non-POD append path;
+    // an enum reproduces that path and preserves the Windows bytes. The
+    // original element spelling remains unproven.
+    std::vector<HeroId> m_assignedCarryover;
+    SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
     // nameable before the campaign-brief declarations; the receiver,
     void playScenarioPrologue(void* campaignHeader);
@@ -140,6 +134,7 @@ public:
     // customcampaign.obj roster stops before them.
     void completeCurrentMap(void* campaignHeader);
     void pruneCrossoverHeroes(void* campaignHeader);
+    int findLatestCrossoverScenario(int slot) const;
     void playScenarioEpilogue(void* campaignHeader);
     void applyBriefingChoice(int option);
     void doPreLoadCustomization();
@@ -147,15 +142,7 @@ public:
     // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
     // DC's older fixed-array body also marks campaignCompleted. Retail's
     // 67-byte vector scan has no such store; preserve the Complete behavior.
-    VA(0x004897d0, 0x43)  // dc 0xe6ef8
-    bool campaignComplete()
-    {
-        for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
-            if (!m_mapScores[i].m_completed)
-                return 0;
-        }
-        return 1;
-    }
+    bool campaignComplete();
     int getScore() const;
     int getTotalTime() const;
     // Provisional name; PlaceCrossoverHeroes retains this lookup's nested
@@ -198,7 +185,7 @@ public:
     // Out of line at 0x485370, seven bytes of vftable restore; its
     // scalar deleting destructor is 0x484020.
     virtual ~TCampaignBonus();
-    virtual bool isBuildingBonus() const;
+    virtual bool isBuildingBonus() const = 0;
     virtual const char* getIconDefName() const = 0;
     virtual int getIconIndex() const = 0;
     virtual std::string getText() const = 0;
@@ -213,6 +200,7 @@ public:
 // word then an unsigned byte (0x484050).
 class TCampaignSpellBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const { return m_spell; }
     virtual std::string getText() const;
@@ -237,6 +225,7 @@ public:
 // (0x4844f0) - the first two signed, the count unsigned.
 class TCampaignCreatureBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -268,6 +257,7 @@ public:
 // Artifact: hero and artifact, both signed words (0x4848a0).
 class TCampaignArtifactBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const { return m_artifact; }
     virtual std::string getText() const;
@@ -284,6 +274,7 @@ public:
 // four ints).
 class TCampaignPrimarySkillBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -298,6 +289,7 @@ public:
 // as unsigned bytes (0x484cf0).
 class TCampaignSecondarySkillBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -314,6 +306,7 @@ public:
 // 7 and 8 (0x484d70).
 class TCampaignResourceBonus : public TCampaignBonus {
 public:
+    virtual bool isBuildingBonus() const;
     virtual const char* getIconDefName() const;
     virtual int getIconIndex() const;
     virtual std::string getText() const;
@@ -417,6 +410,7 @@ struct TCampaignCrossoverChoice {
 // Read's `new` site, so no declarator is needed here.
 class TCampaignStartCrossoverOption : public TCampaignStartOption {
 public:
+    hero* getFirstCrossoverHero(SCampaign* campaign, int which) const;
     virtual bool isBuildingBonus(int which) const;
     virtual int getCount() const;
     virtual const char* getIconDefName(void* campaign, int which) const;

@@ -27,7 +27,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <windows.h>
+#include "platform.h"
 
 // IFC20.dll 2.0.3 and the client vtables prove these active vendor layouts.
 SIZE(CImmDevice, 0x24);

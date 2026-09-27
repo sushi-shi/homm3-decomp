@@ -37,10 +37,13 @@ def module_name(value):
     return value.removesuffix('.obj')
 
 
-def reconcile(definitions, origins, dc_only, win_only, *, symbols=None):
+def reconcile(definitions, origins, dc_only, win_only, *, owner_placements=None,
+              order_placements=None, symbols=None):
     """Return evidence rows and hard errors; never infer an exemption from absence."""
     matches = []
     errors, _ = ownership.compare(definitions, origins, dc_only, win_only,
+                                  owner_placements=owner_placements,
+                                  order_placements=order_placements,
                                   symbols=symbols, matched_out=matches, strict_names=True)
     paired = defaultdict(list)
     matched_definitions = set()
@@ -76,7 +79,7 @@ def reconcile(definitions, origins, dc_only, win_only, *, symbols=None):
         if key not in dc_only:
             continue
         for definition in definitions_by_name[ownership.procedure_name(origin.name)]:
-            if ownership.source_file(definition.file.split('/', 1)[-1]) != origin.file:
+            if ownership.source_file(ownership.definition_owner(definition).split('/', 1)[-1]) != origin.file:
                 continue  # A platform shim can replace a same-signature external library API.
             arguments = tuple(definition.argument_types) + (('...',) if definition.variadic else ())
             if (origin.argument_types is not None
@@ -174,7 +177,13 @@ def audit(root=common.HOMM3_DIR, *, modules=(), jobs=4, fresh=False, origins=Non
     errors.extend(failures)
     win_only, failures = ownership.read_win_filters(root)
     errors.extend(failures)
+    owner_placements, failures = ownership.read_owner_placements(root)
+    errors.extend(failures)
+    order_placements, failures = ownership.read_order_placements(root)
+    errors.extend(failures)
     rows, failures = reconcile(definitions, origins, dc_only, win_only,
+                              owner_placements=owner_placements,
+                              order_placements=order_placements,
                               symbols=symbols if any(d.inline_origin for d in definitions) else None)
     errors.extend(failures)
     if modules:

@@ -1,0 +1,82 @@
+[[data]]
+retail_va = 0x006993d0
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528938
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "src/kb.cpp owns DATA(0x6993d0) combatManager* g_combatManager. Mac army::animateMissile loads its pointer-cell address through TOC 1+0x7b8 at code0+0x4afa8, dereferences it at 0x4afd0, then calls the paired combatManager::isQuickCombat at 0x4afd4. The same cell supplies the named combat-manager accesses at 0x4affc, 0x4b014 and the animation drawFrame call at 0x4b124. PEF loader relocations bind TOC 1+0x7b8 to zero-filled four-byte pointer storage 1+0x528938; this external-consumer declaration mapping does not require an emitted owner payload."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4148
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Mac animateMissile code0+0x4b168 loads TOC1+0x1e90 -> data1+0x4148, then lfd at0x4b178 subtracts this signed-int-to-double bias from the squared-distance conversion before sqrt. The emitted @2202 TD hunk has identical 4330000080000000 bytes."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4144
+mac_size = 4
+sha256 = "9d34e827aabe81eb5d45f0be088dbca972d09556b52ac6867a7e9392df8c3f9b"
+evidence = "Mac animateMissile code0+0x4b1e8 reads binary32 115.0 directly from TOC1+0x4144 before multiplying the reviewed combatSpeedFactors entry for the ray delay. Candidate source owns the same 115.0f factor."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4140
+mac_size = 4
+sha256 = "51d4d5bbc213f5373660b7efe194963ed622f492821d049791880c830da51d20"
+evidence = "Mac animateMissile code0+0x4b378 reads binary32 33.0 directly from TOC1+0x4140 before multiplying the reviewed combatSpeedFactors entry for missileperiod. Candidate source owns the same 33.0f factor."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4120
+mac_size = 8
+sha256 = "9e1f0ac02b2eff0a5ef099af56d4e496ab5575cb3fe11fa8249c14aa1cd02eee"
+evidence = "Mac getUnitCombatValue at code0+0x4ea60/0x4ea68 directly loads the double defense slope 0.05 from RTOC; data1+0x4120 contains the reviewed eight-byte 3fa999999999999a payload. These constants implement the shared adjusted-defense expression and match the corresponding CodeWarrior anonymous double literal."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4128
+mac_size = 8
+sha256 = "54ade53a579f5389ecae3af42df9e96aa30fcf3fc02a7475afc18c3e4835f6f7"
+evidence = "Mac getUnitCombatValue at code0+0x4ea60/0x4ea68 directly loads the double defense baseline 1.0 from RTOC; data1+0x4128 contains the reviewed eight-byte 3ff0000000000000 payload. These constants implement the shared adjusted-defense expression and match the corresponding CodeWarrior anonymous double literal."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4130
+mac_size = 8
+sha256 = "ace5732151a42e3c2ce91e039d0bd2d3a86dce1bccb6b874852b1aaa7f01d3bd"
+evidence = "Mac getUnitCombatValue loads the double 0.5 directly from RTOC at code 0x4ead4 and 0x4eb68 for its melee ranged-creature penalty and average base damage. Data1+0x4130 contains the reviewed eight-byte 3fe0000000000000 payload, matching the shared source's anonymous double literal."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4118
+mac_size = 8
+sha256 = "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994"
+evidence = "Mac getUnitCombatValue loads the double 2.0 directly from RTOC at code 0x4eb10 and 0x4eba8 for its Ballista mastery and two-shot attack doubling. Data1+0x4118 contains the reviewed eight-byte 4000000000000000 payload, matching the shared source's anonymous double literal."
+
+[[constants]]
+units = ["army"]
+mac_section = 1
+mac_offset = 0x4110
+mac_size = 8
+sha256 = "b9c11d2b41dd360b8100fd8173333b03b69a2d4d5ba2ca29c294d8f97e737613"
+evidence = "Mac getUnitCombatValue loads the double 0.1 directly from RTOC at code 0x4ec8c for its zero-hitpoint side valuation result. Data1+0x4110 contains the reviewed eight-byte 3fb999999999999a payload, matching the shared source's anonymous double literal."
+
+[[data]]
+retail_va = 0x0063b7f0
+source = "src/army.cpp"
+mac_section = 0
+mac_offset = 0x2a3eb8
+mac_size = 32
+sha256 = "8ed5e38010c86d8bc96e4ec0032b999ecf59d8d63430494c189bf434fcd55504"
+evidence = "Mac getUnitCombatValue loads TOC 1+0x1e78 at code 0x4eb24. The loader identifies this immutable four-double table; code 0x4eb20/0x4eb2c indexes it by the controller's Artillery skill with an eight-byte stride, then multiplies attack at 0x4eb34. All four big-endian values are 1.0, 1.5, 1.5, 2.0, matching the ordinary DATA-owned initializer and emitted candidate payload."

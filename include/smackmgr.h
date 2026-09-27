@@ -3,7 +3,13 @@
 
 #include "va.h"
 
+#if defined(HOMM3_TARGET_MAC)
+// Only opaque vendor handles are needed by the shared game declarations.
+struct SmackTag;
+typedef SmackTag Smack;
+#else
 #include <SMACK.H>
+#endif
 
 // DC CodeView independently proves the complete SDK record extent; retail
 // consumes Width, Height, Frames, FrameNum and the LastRect quartet.
@@ -15,6 +21,8 @@ extern bool g_updateScreen;
 extern bool g_needsUpdate;
 extern bool g_playingSmacker;
 void drawSmackerFrame();  // 0x598e80
+void restartSmacker();
+int playSmacker(int id, int x, int y, int w, int h);
 void gotoSmackerFrame(unsigned long frame);  // 0x5990a0
 void closeSmacker();                                     // 0x599050
 void setPixelFormat(unsigned long redMask, unsigned long greenMask,
@@ -34,9 +42,6 @@ struct SoundHeaderStruct {
 SIZE(SoundHeaderStruct, 0x30);
 
 // Shared sound archives; ResourceManager's descriptors refer to these cells.
-extern HANDLE g_soundFile;
-extern HANDLE g_soundFileCd;
-extern HANDLE g_soundFileCampaign;
 extern SoundHeaderStruct* g_soundHeader;
 extern SoundHeaderStruct* g_soundHeaderCd;
 extern SoundHeaderStruct* g_soundHeaderCampaign;

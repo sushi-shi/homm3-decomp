@@ -60,7 +60,7 @@ const float g_afUpgradeCostFactor[7] = {
     0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
 };
 
-VA(0x004e75f0, 0x7E9)  // dc 0xd641c
+VA(0x004e75f0, 0x7E9) MAC_ADDRESS(0x10843c, 0xe20)  // dc 0xd641c
 THillFortWindow::THillFortWindow()
     : heroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
 {
@@ -183,7 +183,7 @@ THillFortWindow::THillFortWindow()
 
 VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, THillFortWindow)
 
-VA(0x004e7e10, 0x75)  // dc 0xd6b2c
+VA(0x004e7e10, 0x75) MAC_ADDRESS(0x10925c, 0xb4)  // dc 0xd6b2c
 THillFortWindow::~THillFortWindow()
 {
     g_hillFortWindow = 0;
@@ -203,7 +203,7 @@ int THillFortWindow::convertID2HelpID(int id) const
     return id - BACKGROUND_ID;
 }
 
-VA(0x004e7e90, 0x1F)  // dc 0xd6bb0
+VA(0x004e7e90, 0x1F) MAC_ADDRESS(0x109310, 0x48)  // dc 0xd6bb0
 void THillFortWindow::doModal()
 {
     recalculate(0);
@@ -211,6 +211,7 @@ void THillFortWindow::doModal()
 }
 
 // E:\gamedcs\hillfortwindow.cpp:192
+MAC_ADDRESS(0x109358, 0xb0)
 inline bool canAfford(const long* cost, const long* playerRes)
 {
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
@@ -287,7 +288,7 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // `totalID` the same way in the totals loop below - 83.4988, so the lever is
 // specific to the loop whose derived id feeds six different widget bands.
 
-VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
+VA(0x004e7eb0, 0x64D) MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
     message msg;
@@ -323,16 +324,14 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
         sprintf(s.m_countText, "%d", s.m_count);
         memset(s.m_cost, 0, sizeof s.m_cost);
 
+        // Mac expands game::isBaseCreature here (0:0x109528), in the
+        // state check (0x10989c), and in upgradeSlot (0x109c70).
         TCreatureType type = s.m_type;
-        if ((g_game->m_gameVersion != 0
-             || (type != CREATURE_AIR_ELEMENTAL && type != CREATURE_EARTH_ELEMENTAL
-                 && type != CREATURE_FIRE_ELEMENTAL
-                 && type != CREATURE_WATER_ELEMENTAL))
-            && static_cast<unsigned char>(isBaseCreature(type))) {
+        if (g_game->isBaseCreature(type)) {
             upgradeAllValid = 1;
             allUpgraded = 0;
             if (s.m_level == 0) {
-                strcpy(s.m_goldCost, g_generalText->getText(GENERAL_TEXT_FREE));
+                strcpy(s.m_goldCost, (*g_generalText)[GENERAL_TEXT_FREE]);
                 strcpy(s.m_resourceCost, "");
             } else {
                 TCreatureType upgraded;
@@ -361,7 +360,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
                             s.m_cost[s.m_resourceIndex]);
             }
         } else {
-            strcpy(s.m_goldCost, g_generalText->getText(GENERAL_TEXT_UPGRADE_NOT_AVAILABLE));
+            strcpy(s.m_goldCost, (*g_generalText)[GENERAL_TEXT_UPGRADE_NOT_AVAILABLE]);
         }
 
         int portraitId = CREATURE_PORTRAIT_1_ID + i;
@@ -411,12 +410,7 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
             }
 
             TCreatureType stateType = s.m_type;
-            if ((g_game->m_gameVersion == 0
-                 && (stateType == CREATURE_AIR_ELEMENTAL
-                     || stateType == CREATURE_EARTH_ELEMENTAL
-                     || stateType == CREATURE_FIRE_ELEMENTAL
-                     || stateType == CREATURE_WATER_ELEMENTAL))
-                || !static_cast<unsigned char>(isBaseCreature(stateType))) {
+            if (!g_game->isBaseCreature(stateType)) {
                 s.m_state = UPGRADE_STATE_NONE;
             } else if (canAfford(s.m_cost, g_currentPlayer->m_resources)) {
                 s.m_state = UPGRADE_STATE_AFFORDABLE;
@@ -503,25 +497,20 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     broadcastMessage(msg);
 }
 
-VA(0x004e8500, 0x18F)  // dc 0xd7124
+VA(0x004e8500, 0x18F) MAC_ADDRESS(0x109b3c, 0x260)  // dc 0xd7124
 void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 {
     switch (m_slot[which].m_state) {
     case UPGRADE_STATE_NONE:
         if (showMessage)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_ALREADY_UPGRADED), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_ALREADY_UPGRADED], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
 
     case UPGRADE_STATE_AFFORDABLE:
         if (m_slot[which].m_type != CREATURE_NONE && m_slot[which].m_count > 0) {
             TCreatureType type = m_slot[which].m_type;
-            if ((g_game->m_gameVersion != 0
-                 || (type != CREATURE_AIR_ELEMENTAL
-                     && type != CREATURE_EARTH_ELEMENTAL
-                     && type != CREATURE_FIRE_ELEMENTAL
-                     && type != CREATURE_WATER_ELEMENTAL))
-                && static_cast<unsigned char>(isBaseCreature(type))) {
+            if (g_game->isBaseCreature(type)) {
                 TCreatureType upgraded;
                 {
                     TCreatureType baseType = m_slot[which].m_type;
@@ -537,7 +526,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 
     case UPGRADE_STATE_TOO_EXPENSIVE:
         if (showMessage)
-            normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ONE), 1, -1, -1,
+            normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ONE], 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -547,15 +536,16 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 // DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
 // calls. Retail expands this ordinary helper in the handler at 0x4e8944.
 // No retained retail row is required for the source boundary to exist.
+MAC_ADDRESS(0x109d9c, 0x11c)
 void THillFortWindow::upgradeAll()
 {
     switch (m_upgradeAllButtonState) {
     case UPGRADE_STATE_NONE:
-        normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_ALL_UPGRADED), 1, -1, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_ALL_UPGRADED], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case UPGRADE_STATE_TOO_EXPENSIVE:
-        normalDialog(g_generalText->getText(GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ALL), 1, -1, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_HILL_FORT_CANNOT_AFFORD_ALL], 1, -1, -1,
                      -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     case UPGRADE_STATE_AFFORDABLE:
@@ -565,7 +555,7 @@ void THillFortWindow::upgradeAll()
     }
 }
 
-VA(0x004e8690, 0x1B8)  // dc 0xd72f4
+VA(0x004e8690, 0x1B8) MAC_ADDRESS(0x109eb8, 0x210)  // dc 0xd72f4
 void THillFortWindow::handleClick(message& msg)
 {
     unsigned char rightClick =
@@ -615,7 +605,7 @@ void THillFortWindow::handleClick(message& msg)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:612
-VA(0x004e8850, 0x369)  // DoModal address-take, dc 0xd7458
+VA(0x004e8850, 0x369) MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take, dc 0xd7458
 int hillFortWindowHandler(message& msg)
 {
     pollSound();
@@ -670,13 +660,13 @@ int hillFortWindowHandler(message& msg)
         switch (hoverID) {
         case THillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
-                    g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                    (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                     g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
             msg.m_extraText = g_text;
             break;
 
         case THillFortWindow::UPGRADE_ALL_BUTTON_ID:
-            msg.m_extraText = g_generalText->getText(GENERAL_TEXT_UPGRADE_ALL_CREATURES);
+            msg.m_extraText = (*g_generalText)[GENERAL_TEXT_UPGRADE_ALL_CREATURES];
             break;
 
         case THillFortWindow::CREATURE_PORTRAIT_1_ID:
@@ -698,7 +688,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::UPGRADE_BUTTON_5_ID:
         case THillFortWindow::UPGRADE_BUTTON_6_ID:
         case THillFortWindow::UPGRADE_BUTTON_7_ID:
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UPGRADE_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_UPGRADE_FORMAT],
                     g_creatureTypeTraits[
                         g_hillFortWindow->getCreatureType(
                             hoverID - THillFortWindow::UPGRADE_BUTTON_1_ID)].m_pluralName);
@@ -736,6 +726,7 @@ int hillFortWindowHandler(message& msg)
 // and the handler's post-upgrade block in retail. The older note incorrectly
 // described this helper as constructing the window. It has no retail row:
 // 0x4e8fb0 belongs to hiscore, beyond this TU's end at 0x4e8bb9.
+MAC_ADDRESS(0x10a3f4, 0xb4)
 static void updateHillFort(unsigned char firstUpdate)
 {
     if (firstUpdate) {

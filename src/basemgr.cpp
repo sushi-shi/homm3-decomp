@@ -6,7 +6,7 @@
 #include "basemgr.h"
 // #include "basemgr.h"
 
-VA(0x0044d530, 0x45)  // dc 0x50a28
+VA(0x0044d530, 0x45) MAC_ADDRESS(0x05bc04, 0x5c)  // dc 0x50a28
 baseManager::baseManager()
     : m_nextManager(0),
       m_prevManager(0)

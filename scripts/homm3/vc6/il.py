@@ -48,9 +48,9 @@ from homm3.core import cc_wrap
 from homm3.vc6 import _common, _il, _toolchain
 
 IL_DIR = _common.REPO / "build/vc6/il"
-# The game C++ profile (config/units.toml game_o2_ml_gr_windows + /GR-, the
+# The game C++ profile (config/units.toml game_o2_mt_gr_windows + /GR-, the
 # catalog's profile-under-test; same list reg_model.GAME_FLAGS pins).
-DEFAULT_FLAGS = ["/c", "/nologo", "/O2", "/Ob2", "/Oy-", "/Op", "/ML",
+DEFAULT_FLAGS = ["/c", "/nologo", "/O2", "/Ob2", "/Oy-", "/Op", "/MT",
                  "/Gr", "/GX", "/GR-", "/D_WINDOWS"]
 TS_BYTES = range(4, 8)          # COFF TimeDateStamp mask (docs/vc6/shim.md)
 KILLER_SRC = _common.REPO / "src/initialize.cpp"

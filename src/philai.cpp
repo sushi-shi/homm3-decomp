@@ -95,6 +95,7 @@ DATA(0x006983f8) int g_specialHideCursor;
 #endif
 
 // E:\gamedcs\philai.cpp:58
+MAC_ADDRESS(0x13d554, 0x64)
 static int onMySide(int whichPlayer)
 {
     if (whichPlayer < 0)
@@ -102,7 +103,7 @@ static int onMySide(int whichPlayer)
     return g_game->onSameTeam(whichPlayer, g_netLocalGamePos);
 }
 
-VA(0x005242d0, 0x82)  // dc 0x10d47c
+VA(0x005242d0, 0x82) MAC_ADDRESS(0x13d5b8, 0xc8)  // dc 0x10d47c
 void checkDoMain(int forceMouseCheck, int mouseOnly)
 {
     if (!(g_mainLoopInitFlags & 1)) {
@@ -125,17 +126,19 @@ void checkDoMain(int forceMouseCheck, int mouseOnly)
 }
 
 // Original: ShowStatus; philai.cpp:102, dc 0x10d510.
-// The released DC hook is an empty return; it has no standalone retail claim.
-void showStatus()
+// The Mac body at 0:0x13d680 is also a single return, called by philAI::doAI.
+// Complete expands the empty internal helper at its sole call site.
+MAC_ADDRESS(0x13d680, 0x4)
+static void showStatus()
 {
 }
 
-VA(0x00524360, 0x3)  // dc 0x10d514
+VA(0x00524360, 0x3) MAC_ADDRESS(0x13d684, 0x4)  // dc 0x10d514
 philAI::philAI()
 {
 }
 
-VA(0x00524370, 0x73)  // dc 0x10d640
+VA(0x00524370, 0x73) MAC_ADDRESS(0x13d804, 0xd4)  // dc 0x10d640
 void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
 {
     if (currentHero->m_owner != ourGarrison->m_playerOwner)
@@ -156,7 +159,7 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount);
 
-VA(0x005243f0, 0x8)  // dc 0x10db64
+VA(0x005243f0, 0x8) MAC_ADDRESS(0x13de98, 0x24)  // dc 0x10db64
 void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 {
     buyArtifacts(currentHero, blackMarket->m_artifacts, 5);
@@ -166,6 +169,7 @@ void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 // Complete expands both known calls; the helper boundary is retained from
 // the Dreamcast source rather than flattening the phase adjustment twice.
 // DC marks IncrementHourGlass static; retail auto-inlines the ordinary helper.
+MAC_ADDRESS(0x13d688, 0x9c)
 static void incrementHourGlass()
 {
     int numHeroes = g_currentPlayer->m_numHeroes;
@@ -188,6 +192,7 @@ static void incrementHourGlass()
 // E:\gamedcs\philai.cpp:150
 // DC 0x10d57c is an ordinary static helper. Complete naturally expands it
 // at MoveHero's sole retail call site; no forced-inline declaration is needed.
+MAC_ADDRESS(0x13d724, 0x64)
 static void restoreMouse(unsigned char mouseWasVisible)
 {
     if (mouseWasVisible && !g_mouseManager->isVis()) {
@@ -201,6 +206,7 @@ static void restoreMouse(unsigned char mouseWasVisible)
 // E:\gamedcs\philai.cpp:165
 // DC 0x10d5b4 is an ordinary static helper. The 170/171 negative-ID return
 // closes before GetTown/AI_enter_town; Complete naturally expands this body.
+MAC_ADDRESS(0x13d788, 0x7c)
 static void checkForTown(hero* currentHero)
 {
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
@@ -210,11 +216,11 @@ static void checkForTown(hero* currentHero)
     aiEnterTown(currentHero, g_game->getTown(townId));
 }
 
-
 // E:\gamedcs\philai.cpp:207. Retail /Ob2 folds this source helper into
 // AI_enter_town. Dreamcast proves the helper boundary and its five named
 // locals; retail widens the two cost rows from short to int and proves the
 // seven-resource difference/debit loops directly.
+MAC_ADDRESS(0x13d8d8, 0x1d0)
 static void upgradeCreatures(hero* currentHero, const town* currentTown)
 {
     int difference[NUM_RESOURCES];
@@ -290,10 +296,70 @@ static long getArtifactPurchaseValue(
     return value;
 }
 
+// CHECKPOINT (93.7290 -> 98.1308): Dreamcast line 355 prices the tray entry,
+// then line 358 constructs the artifact from the tray again.  Removing the
+// source-false artifact-id cache restores retail's reload and, with it, every
+// register allocation and all 15 CFG blocks.  The sole residual is the
+// scheduler's placement of the constructor's independent `extra = -1` store:
+// retail hoists it across the resource debit while this build emits it after
+// the artifact-id store. why-reg classifies the two-slot distance as a pure
+// B16/C3/C4 schedule transpose; all nine catalog probes are flat or worse,
+// and copy-initializing an equivalent constructor temporary falls to 92.48%.
+// DC line 334 checks backpack capacity at the top of each iteration. Writing
+// that top check as an explicit exit guard also keeps CodeWarrior's backpack
+// call before the tray scan, agreeing with all five Mac retail call targets;
+// VC6 still reproduces all 15 retail CFG blocks at 98.13%.
+// DC line 361 tests the selected artifact again at the loop tail, then line
+// 362 equips on exit. The do/while spelling restores that Mac branch and
+// exact 264-byte span and five calls, while Windows stays 98.13%.
+// Declaring the seven-slot index before bestValue, then initializing it in
+// the for header, preserves Windows' 98.13% and matches Mac's GPR ownership
+// and initialization order (Mac 98.1061%). Its remaining five rows differ
+// only in the stack slots for the price output and local type_artifact.
+VA(0x00524400, 0x149) MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global, dc 0x10da30
+void buyArtifacts(hero* currentHero, TArtifact* artifactList,
+                   long marketCount)
+{
+    long bestArtifact;
+    do {
+        if (currentHero->getNumberInBackpack(1)
+                == HERO_BACKPACK_CAPACITY)
+            return;
+        bestArtifact = -1;
+        long i;
+        long bestValue = 0;
+
+        for (i = 0; i < 7; i++) {
+            if (artifactList[i] != ARTIFACT_NONE) {
+                long value = getArtifactPurchaseValue(
+                    artifactList[i], marketCount,
+                    g_currentPlayer->m_resources);
+                if (value > bestValue) {
+                    bestValue = value;
+                    bestArtifact = i;
+                }
+            }
+        }
+
+        if (bestArtifact >= 0) {
+            EGameResource resource;
+            long price = getArtifactPurchasePrice(
+                artifactList[bestArtifact], marketCount, &resource);
+            g_currentPlayer->m_resources[resource] -= price;
+
+            type_artifact artifact(artifactList[bestArtifact]);
+            currentHero->giveArtifact(&artifact, 1, 1);
+            artifactList[bestArtifact] = ARTIFACT_NONE;
+        }
+    } while (bestArtifact >= 0);
+    aiEquipArtifacts(currentHero);
+}
+
 // E:\\gamedcs\\philai.cpp:370. Dreamcast gives this six-statement helper
 // and Complete expands it into AI_value_of_event's BLACK_MARKET arm: reject
 // a full backpack, select the cell's seven-artifact market record, and sum
 // the five-marketplace purchase value of every slot.
+MAC_ADDRESS(0x13ddec, 0xac)
 inline long valueOfBlackMarket(const hero* currentHero,
                                   const NewmapCell* cell)
 {
@@ -313,82 +379,73 @@ inline long valueOfBlackMarket(const hero* currentHero,
 // Original: buy_special_building; philai.cpp:445, dc 0x10dcc4.
 // Complete expands this ordinary helper into aiEnterTown. Dreamcast records
 // the helper call immediately before buy_artifacts at lines 778/779.
+// Mac retains the player-id aiResourceCost overload in all five cost arms.
+MAC_ADDRESS(0x13ed50, 0x324)
 static void buySpecialBuilding(const hero* currentHero, town* currentTown)
 {
-    if (currentHero->m_owner == currentTown->m_owner
-        && !g_game->townAlreadyBuiltOn(currentTown->m_id)) {
-        switch (currentTown->m_type) {
-        case TOWN_TOWER: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfKnowledge();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+    if (currentHero->m_owner != currentTown->m_owner
+        || g_game->townAlreadyBuiltOn(currentTown->m_id))
+        return;
+    switch (currentTown->m_type) {
+    case TOWN_TOWER: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_INFERNO: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int value = currentHero->getValueOfPower();
-            int owner = currentHero->m_owner;
-            if (value > aiResourceCost(&g_game->m_players[owner], cost))
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfKnowledge()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_INFERNO: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_DUNGEON: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            int owner = currentHero->m_owner;
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[owner], cost);
-            if (currentHero->m_turnExperienceToRvRatio * 1000.0f
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->getValueOfPower()
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_DUNGEON: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_STRONGHOLD: {
-            if (!currentTown->canBuild(EXTRA_2_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
-            long experience = hero::getExperienceIncrement(
-                currentHero->m_level);
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(EXTRA_2_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        if (currentHero->m_turnExperienceToRvRatio * 1000.0f
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_STRONGHOLD: {
+        if (!currentTown->canBuild(EXTRA_2_ID))
             break;
-        }
-        case TOWN_FORTRESS: {
-            if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
-                break;
-            int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
-            long experience = hero::getExperienceIncrement(
-                currentHero->m_level);
-            int resourceCost = aiResourceCost(
-                &g_game->m_players[currentHero->m_owner], cost);
-            if (static_cast<float>(experience)
-                * currentHero->m_turnExperienceToRvRatio
-                > resourceCost)
-                currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        int* cost = currentTown->getBuildCostArray(EXTRA_2_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(EXTRA_2_ID);
+        break;
+    }
+    case TOWN_FORTRESS: {
+        if (!currentTown->canBuild(SPECIAL_BUILDING_ID))
             break;
-        }
-        case TOWN_CONFLUX: {
-            if (!currentTown->canBuild(EXTRA_0_ID))
-                break;
-            type_university university;
-            university.initializeMagicSkills();
-            long value = valueOfUniversity(currentHero, &university, 0);
-            if (value > 0)
-                currentTown->buyBuilding(EXTRA_0_ID);
+        int* cost = currentTown->getBuildCostArray(SPECIAL_BUILDING_ID);
+        long experience = currentHero->getExperienceIncrement();
+        if (static_cast<float>(experience)
+            * currentHero->m_turnExperienceToRvRatio
+            > aiResourceCost(currentHero->m_owner, cost))
+            currentTown->buyBuilding(SPECIAL_BUILDING_ID);
+        break;
+    }
+    case TOWN_CONFLUX: {
+        if (!currentTown->canBuild(EXTRA_0_ID))
             break;
-        }
-        }
+        type_university university;
+        university.initializeMagicSkills();
+        long value = valueOfUniversity(currentHero, &university, 0);
+        if (value > 0)
+            currentTown->buyBuilding(EXTRA_0_ID);
+        break;
+    }
     }
 }
 
@@ -396,6 +453,7 @@ static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost);
 
 // E:\gamedcs\philai.cpp:561, dc 0x10e064.
+MAC_ADDRESS(0x13f254, 0x118)
 static void visitWarFactory(hero* currentHero, TArtifact engine)
 {
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
@@ -410,6 +468,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
 }
 
 // E:\gamedcs\philai.cpp:636
+MAC_ADDRESS(0x13f628, 0xb0)
 static const hero* getBestHero(long playerId)
 {
     const hero* bestHero = 0;
@@ -427,6 +486,7 @@ static const hero* getBestHero(long playerId)
 }
 
 // E:\gamedcs\philai.cpp:662
+MAC_ADDRESS(0x13f6d8, 0xac)
 static unsigned char shouldGarrisonTown(const hero* currentHero,
                                           const town* currentTown)
 {
@@ -457,6 +517,11 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
 // 89.6719%; the old forced shipyard enclosure reaches 93.3304%. Neither is
 // source evidence for a forced declaration. Direct/reference point arguments
 // in the fully ordinary family score 86.2031%; keep the real copied value.
+// DC 887/888 separate the boat-cell call and flag write. Naming that cell
+// makes the expanded Windows mark loop match retail directly: MoveHero has
+// 78/79 exact CFG blocks and all calls aligned, though byte score is 95.88%.
+// Naming the analogous clear-loop cell too instead creates an extra tail exit.
+MAC_ADDRESS(0x13fd54, 0x2ec)
 static void markShipyards(playerData* player)
 {
     int cost[7];
@@ -500,9 +565,10 @@ static void markShipyards(playerData* player)
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
             continue;
 
-        g_game->m_worldMap.cell(
+        NewmapCell* boatCell = g_game->m_worldMap.cell(
             info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 1;
+            player->m_shipyards[shipyardIndex].m_z);
+        boatCell->m_canBuildShip = 1;
     }
 }
 
@@ -511,6 +577,10 @@ static void markShipyards(playerData* player)
 // set_danger_zones statement.
 // DC 0x10e894: the 920/921 absent-boat continue closes before the 925/926
 // cell update. Its size/getCell/cell calls need no inline-depth overrides.
+// Keeping the returned boat cell in a local separates DC's call and store.
+// Passing the indexed shipyard point directly to getCell preserves DC's
+// operator[] source call and makes MoveHero's retail expansion byte-exact.
+MAC_ADDRESS(0x140040, 0x198)
 static void clearShipyards(playerData* player)
 {
     for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
@@ -526,16 +596,17 @@ static void clearShipyards(playerData* player)
 
     for (unsigned int shipyardIndex = 0;
          shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
+        NewmapCell* shipyard = g_game->getCell(
+            player->m_shipyards[shipyardIndex]);
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&shipyard->m_extraInfo));
         if (info->m_boatX == ShipyardInfo::NO_BOAT)
             continue;
 
-        g_game->m_worldMap.cell(
+        NewmapCell* boatCell = g_game->m_worldMap.cell(
             info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z)->m_canBuildShip = 0;
+            player->m_shipyards[shipyardIndex].m_z);
+        boatCell->m_canBuildShip = 0;
     }
 }
 
@@ -611,8 +682,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 
     originalDestination = destination.m_point;
     unsigned char destinationWasUnvisited =
-        !(getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                      originalDestination.m_z)
+        !(getMapExtra(originalDestination)
           & g_curPlayerBit);
     int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
                                     currentHero->m_z);
@@ -629,8 +699,7 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     aiAttemptMove(currentHero, destination, rawValue, exploreMode);
 
     if (destinationWasUnvisited && exploreMode
-        && (getMapExtra(originalDestination.m_x, originalDestination.m_y,
-                        originalDestination.m_z)
+        && (getMapExtra(originalDestination)
             & g_curPlayerBit)) {
         g_aiPlayers[g_netLocalGamePos].resetMagusHutValue();
         exploreMode = 0;
@@ -639,91 +708,14 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
     }
 }
 
-// Original: MoveHero; philai.cpp:1056, dc 0x10ec58.
-// DC records this helper as file-static with explore_mode by reference.
-// Keep the canonical definitions in DC source order; the VA declarations
-// below preserve the independently proven retail order.
-static void moveHero(hero* currentHero, long* dangerZones,
-                     unsigned char isLastHero, unsigned char& exploreMode)
-{
-    unsigned char mouseWasVisible = g_mouseManager->isVis();
-    playerData* player = &g_game->m_players[currentHero->m_owner];
-
-    checkForTown(currentHero);
-    if (currentHero->m_patrolX != hero::kPatrolNone
-        && currentHero->m_patrolRadius == 0) {
-        currentHero->m_movePoints = 0;
-        return;
-    }
-    if (g_gameOver)
-        return;
-
-    g_aiHeroMoveActive = 0;
-    g_advManager->m_advWindow->animateBottomView(0);
-    if (currentHero->m_movePoints > 0) {
-        if (!g_config.m_blackoutComputer && !g_remoteOn
-            && mapExtraPosAndAdjacentsSet(
-                currentHero->m_x, currentHero->m_y, currentHero->m_z,
-                g_mapVisibilityBit))
-            g_completeDrawEnabled = 1;
-        else
-            g_completeDrawEnabled = 0;
-
-        if (g_game->getCurrHero() == currentHero) {
-            isLastHero = 0;
-        } else {
-            g_advManager->demobilizeCurrHero(0, 1);
-            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
-            memset(dangerZones, 0,
-                   g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
-                       * sizeof(long));
-            if (g_game->m_setup.m_difficulty > 0
-                || g_game->isHumanAlly(g_netLocalGamePos))
-                aiMarkDangerZones(currentHero, dangerZones);
-        }
-
-        markShipyards(player);
-        g_searchArray->setDangerZones(dangerZones);
-        moveHero(currentHero, isLastHero, exploreMode);
-        g_searchArray->setDangerZones(0);
-        clearShipyards(player);
-    }
-
-    if (currentHero->m_owner >= 0
-        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
-        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
-                                        currentHero->m_z);
-        if (townId >= 0) {
-            town* currentTown = g_game->getTown(townId);
-            g_advManager->demobilizeCurrHero(0, 1);
-            if (currentTown->m_owner == currentHero->m_owner) {
-                if (currentTown->m_garrisonHeroId < 0) {
-                    player->addGarrisonHero(currentTown);
-                } else {
-                    hero* garrisonHero = g_game->getHero(
-                        currentTown->m_garrisonHeroId);
-                    if ((garrisonHero->m_movePoints > 0
-                         && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
-                                   < currentHero->m_army.getAIValue()))
-                        currentTown->swapHeroes();
-                }
-            }
-        }
-    }
-
-    restoreMouse(mouseWasVisible);
-}
-
 // Original: DetermineHeroToMove; philai.cpp:1156, dc 0x10eeb0.
 // The file-static selector precedes move_all_heroes in the DC TU. Keep its one canonical
 // body visible there: Complete's second DoAI phase expands it, while the first
 // retains the call. Its retail enrollment remains at the link-order position.
 // DC records current_hero and skill_sum at procedure scope; town ID row 1210
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
+// Mac0x1409c4 adds the accessor's int result directly; an extra short
+// temporary inserts a narrowing instruction absent from that native loop.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -735,15 +727,13 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         short heroId = player->m_heroes[heroIndex];
-        currentHero = &g_game->m_heroes[heroId];
+        currentHero = g_game->getHero(heroId);
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;
             skillSum = 0;
-            for (short skill = 0; skill < 4; ++skill) {
-                short skillValue = currentHero->getPrimarySkill(skill);
-                skillSum += skillValue;
-            }
+            for (short skill = 0; skill < 4; ++skill)
+                skillSum += currentHero->getPrimarySkill(skill);
             if (selectedHero) {
                 if (currentHero->m_patrolX != hero::kPatrolNone
                     && selectedHero->m_patrolX == hero::kPatrolNone)
@@ -792,13 +782,15 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 // Each phase owns its own exploration/last-hero flags. Complete expands the
 // helper twice in doAI, with separate call/expansion decisions for its nested
 // determineHeroToMove calls; keep the selector's canonical definition.
+MAC_ADDRESS(0x140b60, 0xcc)
 static void moveAllHeroes(long playerId, long* dangerZones)
 {
     unsigned char isLastHero = 0;
     unsigned char exploreMode = 1;
     if (!g_game->m_setup.m_difficulty || !g_currentPlayer->m_numTowns)
         exploreMode = 0;
-    while (hero* currentHero = determineHeroToMove(playerId, &isLastHero)) {
+    hero* currentHero;
+    while ((currentHero = determineHeroToMove(playerId, &isLastHero)) != 0) {
         moveHero(currentHero, dangerZones, isLastHero, exploreMode);
         if (g_gameOver)
             break;
@@ -806,6 +798,10 @@ static void moveAllHeroes(long playerId, long* dangerZones)
     g_advManager->demobilizeCurrHero(0, 1);
 }
 
+// Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
+// A != bound is byte-flat; pointer traversal and a short counter do not
+// recover that native loop. Keep the indexed helper and its exact VC6 callers.
+VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
 int aiResourceCost(const playerData* player, const int* resources)
 {
     int value = 0;
@@ -814,6 +810,7 @@ int aiResourceCost(const playerData* player, const int* resources)
     return value;
 }
 
+VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // paired native overload; claim owns the definition
 int aiResourceCost(long playerId, const int* resources)
 {
     return aiResourceCost(&g_game->m_players[playerId], resources);
@@ -855,6 +852,7 @@ static const struct {
 // Original: type_spellvalue::get_summoning_value; philai.cpp:1529, dc 0x10f94c.
 // Both builds cap the damage ratio, then the cast-count curve contribution.
 // Complete expands this ordinary helper in getRawSpellValue's summoning arm.
+MAC_ADDRESS(0x1413ac, 0xb0)
 long type_spellvalue::getSummoningValue(long damage, long timesCastable) const
 {
     double damageRatio = static_cast<double>(damage * 10);
@@ -874,6 +872,7 @@ long type_spellvalue::getSummoningValue(long damage, long timesCastable) const
 // descending sort. Complete's /Ob2 folds the single call into the constructor
 // at 0x526d40; retaining it here in its original lexical position reproduces
 // that expansion without flattening the source.
+MAC_ADDRESS(0x141658, 0xd0)
 void type_spellvalue::fillCreatureValueList()
 {
     type_creature_value creature;
@@ -896,6 +895,7 @@ void type_spellvalue::fillCreatureValueList()
 // Defined here as the DC build does; retail keeps no out-of-line row -
 // every site is expanded - and objdiff prices an unclaimed base-only
 // symbol at nothing.
+MAC_ADDRESS(0x141900, 0x90)
 long type_spellvalue::getValueOfIncrease(long baseValue,
     long powerChange, long durationChange, long manaChange)
 {
@@ -912,6 +912,7 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 // Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
 // Complete expands this ordinary static helper into valueOfStables with the
 // Cavalier/Champion pair. The existing destination stack halves the award.
+MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
 {
     int number = currentHero->creatureTypeCount(sourceType);
@@ -924,17 +925,22 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     return value;
 }
 
+// DC records the Arena, MapArtifact, BlackBox and Bank appraisals as static
+// philai.cpp procedures. Mac retains their bodies in that order at code0+
+// 0x141f14, 0x142010, 0x1422c4 and 0x14259c, called by its event dispatcher.
 // E:\\gamedcs\\philai.cpp:1854. Dreamcast preserves this source-real helper
 // boundary and its two calls; Complete keeps the same four-block body but
 // expands it into AI_value_of_event's ARENA arm. The retail arm calls
 // VisitedArena, returns zero on the visited edge, then doubles the level
-// increment before applying turnExperienceToRVRatio.
-inline int valueOfArena(const hero* currentHero, NewmapCell* cell)
+// increment before applying turnExperienceToRVRatio. VC6 expands this ordinary
+// helper with the same event bytes and call sequence as the inline probe.
+MAC_ADDRESS(0x141f14, 0x7c)
+static int valueOfArena(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->visitedArena(cell))
         return 0;
     int experienceValue =
-        2 * hero::getExperienceIncrement(currentHero->m_level);
+        2 * currentHero->getExperienceIncrement();
     return static_cast<int>(
         experienceValue * currentHero->m_turnExperienceToRvRatio);
 }
@@ -944,8 +950,10 @@ inline int valueOfArena(const hero* currentHero, NewmapCell* cell)
 // and defended early returns, then the six MapArtifactInfo price cases.
 // Complete expands this helper into AI_value_of_event's ARTIFACT arm and
 // retains the same statement/branch shape, using its later artifact-player
-// valuation entry point.
-inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
+// valuation entry point. With this TU, removing inline makes VC6 retain a
+// call here, contrary to retail; CodeWarrior retains the call either way.
+MAC_ADDRESS(0x142010, 0x1d8)
+static inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 {
     if (const_cast<hero*>(currentHero)->getNumberInBackpack(1)
             >= HERO_BACKPACK_CAPACITY)
@@ -972,11 +980,11 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
     case const_free_artifact:
         return value;
     case const_artifact_requires_wisdom:
-        if (currentHero->m_skillLevel[eSecSkillWisdom] > 0)
+        if (currentHero->getSecondarySkill(eSecSkillWisdom) > 0)
             return value;
         return 0;
     case const_artifact_requires_leadership:
-        if (currentHero->m_skillLevel[eSecSkillLeadership] > 0)
+        if (currentHero->getSecondarySkill(eSecSkillLeadership) > 0)
             return value;
         return 0;
     case const_artifact_costs_2000:
@@ -1015,7 +1023,10 @@ inline int valueOfMapArtifact(const hero* currentHero, NewmapCell* cell)
 // and the polarity flip comes back). The merge is therefore a FIXED POINT
 // this compiler reaches from any source shape; the cost is the register
 // transposition, not the spelling, so do not re-try the merge family.
-inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
+// With this TU, removing inline retains a VC6 call that retail expands;
+// CodeWarrior retains the call with either declaration.
+MAC_ADDRESS(0x1422c4, 0x2d8)
+static inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
 {
     BlackBoxData* blackBox = cell->getBlackBox();
     int value = 0;
@@ -1031,11 +1042,11 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
                 * currentHero->m_turnExperienceToRvRatio);
     }
 
-    value += aiResourceCost(
-        &g_game->m_players[currentHero->m_owner], blackBox->m_resQty);
+    // Mac 0:0x142378 retains the player-id wrapper.
+    value += aiResourceCost(currentHero->m_owner, blackBox->m_resQty);
 
     int primarySkillValue = static_cast<int>(
-        static_cast<float>(hero::getExperienceIncrement(currentHero->m_level))
+        static_cast<float>(currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
     for (int skill = 0; skill < 4; ++skill) {
         if (blackBox->m_primarySkillBonus[skill] > 0)
@@ -1046,8 +1057,8 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     for (unsigned int secondaryIndex = 0;
          secondaryIndex < blackBox->m_secondarySkills.size();
          ++secondaryIndex) {
-        signed char currentLevel = currentHero->m_skillLevel[
-            blackBox->m_secondarySkills[secondaryIndex].m_type];
+        signed char currentLevel = currentHero->getSecondarySkill(
+            blackBox->m_secondarySkills[secondaryIndex].m_type);
         int level = blackBox->m_secondarySkills[secondaryIndex].m_level;
         if (currentLevel == 0 && currentHero->m_skillCount < 8)
             value += level * primarySkillValue;
@@ -1084,7 +1095,9 @@ inline int valueOfBlackBox(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
-inline long valueOfBank(const hero* currentHero, NewmapCell* cell)
+// The ordinary static body is still VC6 byte-exact at 0x529920; Mac retains
+// three calls to its body from the event dispatcher.
+static long valueOfBank(const hero* currentHero, NewmapCell* cell)
 {
     long value;
 
@@ -1114,6 +1127,7 @@ inline long valueOfBank(const hero* currentHero, NewmapCell* cell)
 // terms. Complete expands the two cell accessors and this helper into
 // AI_value_of_event's CAMPFIRE arm; retail proves the 100-gold unit and the
 // same left-to-right double expression.
+MAC_ADDRESS(0x1426c8, 0x6c)
 inline int valueOfCampfire(playerData* player, NewmapCell* cell)
 {
     int size = cell->getCampfireSize();
@@ -1126,6 +1140,7 @@ inline int valueOfCampfire(playerData* player, NewmapCell* cell)
 // Tower already visited by this hero, then prices one experience increment
 // through the hero's turn ratio. Complete expands the helper and the no-arg
 // experience accessor into the DEFENSE_TOWER arm.
+MAC_ADDRESS(0x142b14, 0x84)
 inline int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_defenseTowerFlags & (1UL << cell->m_extraInfo))
@@ -1139,6 +1154,7 @@ inline int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 // the local creature swapper, the same-owner and same-team arms, and the
 // combat fallback. Complete adds the removable-troops and early-campaign
 // gates plus the Angelic Alliance input used by its widened swapper method.
+MAC_ADDRESS(0x142c74, 0x164)
 inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
 {
     garrison* currentGarrison = g_game->getGarrison(cell->m_extraInfo);
@@ -1163,11 +1179,10 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
         currentHero, 0, currentGarrison->m_garrisonArmy, 0, cell);
 }
 
-// E:\\gamedcs\\philai.cpp:2250. The shared Idol helper rejects the two
-// visited flags and an unaffordable trip, values both morale and luck on
-// Sunday, and otherwise selects one from the low flag bit. Complete expands
-// that shared shape into AI_value_of_event. Dreamcast's final fallback after
-// the same movement rejection is dc-only; retail has no corresponding edge.
+// Windows 0x528b3c/0x528b93 and Mac 0x142e38/0x142e94 select the
+// non-Sunday benefit from the day low bit. Mac also retains an unreachable
+// third morale/luck path at 0x142ef4; do not invent dead source calls for it.
+MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
     if (currentHero->m_flags & 0x10)
@@ -1184,7 +1199,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
             + aiValueOfLuck(
                 currentHero->getLuck(0, 0, 1), 1));
     }
-    if (currentHero->m_flags & 1) {
+    if (g_game->m_day & 1) {
         return static_cast<long>(aiValueOfLuck(
             currentHero->getLuck(0, 0, 1), 1));
     }
@@ -1196,6 +1211,7 @@ inline long valueOfIdol(const hero* currentHero, long moveCost)
 // with two resource-value products and one sum. Complete expands it into the
 // FLOTSAM arm; retail's literal pool fixes the expected haul at 175 gold and
 // five wood.
+MAC_ADDRESS(0x142f5c, 0x28)
 inline int valueOfFlotsam(playerData* player)
 {
     return static_cast<int>(
@@ -1206,6 +1222,7 @@ inline int valueOfFlotsam(playerData* player)
 // E:\\gamedcs\\philai.cpp:2283. A visited Garden of Revelation is worth
 // nothing; otherwise its one knowledge point is worth the hero's cached
 // knowledge value. Complete expands both the helper and accessor.
+MAC_ADDRESS(0x142f84, 0x28)
 inline int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_gardenOfRevelationFlags & (1UL << cell->m_extraInfo))
@@ -1217,6 +1234,7 @@ inline int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 // visit bit in the player's Lean-To flags and prices an unvisited cache as
 // three average resource units. Complete expands the helper and GetItemId
 // into the event arm without changing that shape.
+MAC_ADDRESS(0x142fac, 0x34)
 inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
@@ -1232,6 +1250,7 @@ inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 // Alliance input to both creature-swap appraisals. Retail also confirms the
 // enemy hero's bounty term, the stranded-player combat floor, and the same
 // movement-cost guard around the friendly-army increase check.
+MAC_ADDRESS(0x1432e8, 0x2e8)
 inline long valueOfHeroEvent(const hero* currentHero,
                                        NewmapCell* cell, short x, short y,
                                        short z, short moveCost)
@@ -1300,6 +1319,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
 // Complete expands the helper into AI_value_of_event and routes the upgrade
 // lookup through game::UpgradedCreatureType, whose real inline body carries
 // Complete's elemental-upgrade restriction.
+MAC_ADDRESS(0x1435d0, 0x298)
 inline long valueOfHillFort(const hero* currentHero,
                                       long moveCost)
 {
@@ -1348,12 +1368,13 @@ inline long valueOfHillFort(const hero* currentHero,
 // the exact value ingredients. Complete expands the helper and its two hero
 // value accessors into the event arm: a qualifying unvisited hero receives
 // two power values, two knowledge values, and one tenth of the army value.
+MAC_ADDRESS(0x143aa4, 0xb0)
 inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
         return 0;
     if (currentHero->m_level
-            + 2 * currentHero->m_skillLevel[eSecSkillDiplomacy]
+            + 2 * currentHero->getSecondarySkill(eSecSkillDiplomacy)
         < 10)
         return 0;
     return 2 * currentHero->getValueOfPower()
@@ -1365,10 +1386,11 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 // mine record, tests its owner through OnSameTeam, and returns 1,000 only
 // for an enemy lighthouse. Complete expands the vector access but retains
 // the same OnSameTeam boundary.
+MAC_ADDRESS(0x143b54, 0x80)
 inline int valueOfLighthouse(NewmapCell* cell)
 {
     if (g_game->onSameTeam(
-            g_game->m_mines[cell->m_extraInfo].m_playerOwner,
+            g_game->getMine(cell->m_extraInfo)->m_playerOwner,
             g_netLocalGamePos))
         return 0;
     return 1000;
@@ -1378,13 +1400,14 @@ inline int valueOfLighthouse(NewmapCell* cell)
 // worthless; otherwise it grants one level increment, converted through the
 // hero's current experience-to-resource ratio. Complete expands the helper
 // and retains the static experience accessor call.
+MAC_ADDRESS(0x143cb8, 0x84)
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell)
 {
     if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
         return 0;
     return static_cast<int>(
-        hero::getExperienceIncrement(currentHero->m_level)
+        currentHero->getExperienceIncrement()
         * currentHero->m_turnExperienceToRvRatio);
 }
 
@@ -1404,6 +1427,7 @@ inline int valueOfMoveSource(const hero* currentHero, long flag,
 // E:\\gamedcs\\philai.cpp:2775. Dreamcast preserves this one-statement
 // helper and the tiny type_AI_player accessor beneath it. Complete expands
 // both boundaries into AI_value_of_event's HUT_OF_MAGI arm.
+MAC_ADDRESS(0x1442e4, 0x14)
 inline long valueOfMagusHut(long playerId)
 {
     return g_aiPlayers[playerId].getMagusHutValue();
@@ -1414,6 +1438,7 @@ inline long valueOfMagusHut(long playerId)
 // Complete expands the helper into AI_value_of_event's DEAD_GUY arm; retail
 // fixes the later constants as one fifth of an average artifact, or 200 gold
 // when the backpack is full.
+MAC_ADDRESS(0x1449a0, 0xb4)
 inline int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
@@ -1432,58 +1457,12 @@ inline int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
 // E:\\gamedcs\\philai.cpp:2997. The helper reads the shrine spell through
 // its named packed-cell accessor and prices learning it. Complete expands
 // the helper/accessor but retains value_of_learning as a real call.
+MAC_ADDRESS(0x144b3c, 0x2c)
 inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    SpellID spell = info->getShrineSpell();
-    return valueOfLearning(currentHero, spell);
-}
-
-// CHECKPOINT (93.7290 -> 98.1308): Dreamcast line 355 prices the tray entry,
-// then line 358 constructs the artifact from the tray again.  Removing the
-// source-false artifact-id cache restores retail's reload and, with it, every
-// register allocation and all 15 CFG blocks.  The sole residual is the
-// scheduler's placement of the constructor's independent `extra = -1` store:
-// retail hoists it across the resource debit while this build emits it after
-// the artifact-id store. why-reg classifies the two-slot distance as a pure
-// B16/C3/C4 schedule transpose; all nine catalog probes are flat or worse,
-// and copy-initializing an equivalent constructor temporary falls to 92.48%.
-VA(0x00524400, 0x149)  // anchor-global, dc 0x10da30
-void buyArtifacts(hero* currentHero, TArtifact* artifactList,
-                   long marketCount)
-{
-    while (currentHero->getNumberInBackpack(1)
-           != HERO_BACKPACK_CAPACITY) {
-        long bestArtifact = -1;
-        long bestValue = 0;
-
-        for (long i = 0; i < 7; i++) {
-            if (artifactList[i] != ARTIFACT_NONE) {
-                long value = getArtifactPurchaseValue(
-                    artifactList[i], marketCount,
-                    g_currentPlayer->m_resources);
-                if (value > bestValue) {
-                    bestValue = value;
-                    bestArtifact = i;
-                }
-            }
-        }
-
-        if (bestArtifact >= 0) {
-            EGameResource resource;
-            long price = getArtifactPurchasePrice(
-                artifactList[bestArtifact], marketCount, &resource);
-            g_currentPlayer->m_resources[resource] -= price;
-
-            type_artifact artifact(artifactList[bestArtifact]);
-            currentHero->giveArtifact(&artifact, 1, 1);
-            artifactList[bestArtifact] = ARTIFACT_NONE;
-        } else {
-            aiEquipArtifacts(currentHero);
-            return;
-        }
-    }
+    return valueOfLearning(currentHero, info->getShrineSpell());
 }
 
 // The gold price has to be ONE reused local: the traits cost is read
@@ -1492,7 +1471,7 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
 // double conversion.  Reading the cost straight out of the traits row
 // fild's from the table with no staging store at all, and giving the
 // cost its own named local splits the slot in two.
-VA(0x00524550, 0xD2)  // dc 0x10d7b8
+VA(0x00524550, 0xD2) MAC_ADDRESS(0x13daa8, 0x140)  // dc 0x10d7b8
 long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
     EGameResource* bestResource)
 {
@@ -1524,7 +1503,7 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
     return bestPrice;
 }
 
-VA(0x00524630, 0x60)
+VA(0x00524630, 0x60) MAC_ADDRESS(0x13ea7c, 0x9c)
 int hero::soDGetSeerSkillValue(int skill, int level)
 {
     int typedSkill;
@@ -1552,7 +1531,7 @@ static double g_aiPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
 DATA(0x00681878)
 static double g_aiWaterMapFraction = 1.0;
 
-// Residual (78.1958%, ANATOMISED 2026-09-05 - the whole gap is TWO
+// Prior residual (78.1958%, ANATOMISED 2026-09-05 - the whole gap was TWO
 // cross-jumps we make and retail does not, plus their register fallout).
 // The two sides agree on everything structural: 48 conditional branches
 // each, the call census AGREES, and the 28-entry jump table pairs
@@ -1617,18 +1596,33 @@ static double g_aiWaterMapFraction = 1.0;
 // every source expression that computes `army_value * 7 / 100` lowers to the
 // same bytes - which is precisely why C2's cross-jumper merges them. The
 // knob is the pseudo-creation count UPSTREAM of the two arms, and it is not
-// reachable from either arm's own spelling. 78.1958 stays the max.
+// reachable from either arm's own spelling. 78.1958 was the prior max.
 // 2026-09-07 upstream controls: Dreamcast philai.cpp:3491 computes the
 // creature-traits address before line 3492's troop-value multiplication.
 // Naming that pointer (or const reference) is byte-identical at 78.19582.
 // Promoting GetPrimarySkill's local to int gives 76.2231; promoting this
 // function's mastery local gives 74.4189; both give 69.9535. Keep the byte
 // locals. These controls do not explain the later arithmetic cross-jumps.
-VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
+// 2026-09-23: Mac getSkillValue has the same 28-entry jump table (112/112
+// bytes), all six calls, and the same 1964-byte linked size at -O3. Four
+// commutative GetPrimarySkill*getValueOfPower/Knowledge expressions emitted
+// reversed mullw operands; reversing their source order raised Mac 97.5915
+// -> 97.9769 and Windows 78.1958 -> 86.50. The Estates multiplication and
+// troop aiValue*count operand swaps were Mac byte-flat, so they were restored.
+// Naming the DC 3491 creature-traits reference corrects Mac loop register
+// ownership (98.0732); naming Estates' double getResourceValue result fixes
+// shared conversion scratch offsets (98.8439); placing the water factor first
+// fixes Navigation FPR ownership (99.1329). These last three edits leave
+// Windows at 86.50 after focused VC6 builds. The remaining Mac mismatch is
+// solely Estates GPR/FPR allocation; its simple operand swap and named owner,
+// estate amount, and product probes do not improve it. A signed-byte owner
+// local and a named AI-player reference both shift the shared conversion
+// scratch slots by -8 and spread Mac mismatches beyond the Estates block.
+VA(0x00524690, 0x684) MAC_ADDRESS(0x13e158, 0x7ac)  // anchor-callee, dc 0x1135ac
 long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice)
 {
-    signed char level = ourHero->m_skillLevel[skill];
+    signed char level = ourHero->getSecondarySkill(skill);
     if (level == eMasteryExpert)
         return 0;
     if (level == eMasteryNone
@@ -1642,10 +1636,11 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
              group++) {
             TCreatureType creature = ourHero->m_army.m_armyTypes[group];
             if (creature != CREATURE_NONE) {
-                long value = g_creatureTypeTraits[creature].m_aiValue
+                const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
+                long value = traits.m_aiValue
                     * ourHero->m_army.m_numTroops[group];
                 armyValue += value;
-                if (g_creatureTypeTraits[creature].m_attributes & creatureShootingArmy)
+                if (traits.m_attributes & creatureShootingArmy)
                     rangedValue += value;
             }
         }
@@ -1668,13 +1663,13 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         return armyValue / 100;
     case eSecSkillNavigation:
         return static_cast<long>(
-            armyValue * g_aiWaterMapFraction / 2.0);
+            g_aiWaterMapFraction * armyValue / 2.0);
     case eSecSkillLeadership:
         return armyValue / 50;
     case eSecSkillWisdom:
         if (complexChoice)
-            return ourHero->getPrimarySkill(2)
-                * ourHero->getValueOfPower() / 2;
+            return ourHero->getValueOfPower()
+                * ourHero->getPrimarySkill(2) / 2;
         return ourHero->getPrimarySkill(2) * 25;
     case eSecSkillMysticism:
         if (complexChoice)
@@ -1685,7 +1680,7 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillSiegeBallistics:
         return armyValue / 8;
     case eSecSkillEagleEye:
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         if (complexChoice)
             return ourHero->getValueOfPower() / 5;
@@ -1695,42 +1690,43 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     case eSecSkillEstates: {
         DATA(0x0064038c)
         static const int constEstateValue[3] = {725, 725, 1550};
-        if (complexChoice)
-            return static_cast<long>(
-                constEstateValue[level]
-                * g_aiPlayers[ourHero->m_owner].getResourceValue(GOLD));
+        if (complexChoice) {
+            double goldValue =
+                g_aiPlayers[ourHero->m_owner].getResourceValue(GOLD);
+            return static_cast<long>(constEstateValue[level] * goldValue);
+        }
         return constEstateValue[level];
     }
     case eSecSkillSchoolOfFireMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfAirMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 25;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfWaterMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 3;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillSchoolOfEarthMagic:
         if (complexChoice)
             return getSchoolValue(ourHero, skill);
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 30;
         return ourHero->getPrimarySkill(2) * 10;
     case eSecSkillMagicScholar:
-        if (!ourHero->m_skillLevel[eSecSkillWisdom])
+        if (!ourHero->getSecondarySkill(eSecSkillWisdom))
             return 0;
         if (complexChoice)
-            return ourHero->getPrimarySkill(2)
-                * ourHero->getValueOfPower() / 10;
+            return ourHero->getValueOfPower()
+                * ourHero->getPrimarySkill(2) / 10;
         return ourHero->getPrimarySkill(2) * 5;
     case eSecSkillBattleTactics:
         return armyValue / 50;
@@ -1748,13 +1744,13 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
         return armyValue * 7 / 100;
     case eSecSkillIntelligence:
         if (complexChoice)
-            return ourHero->getPrimarySkill(3)
-                * ourHero->getValueOfKnowledge() / 4;
+            return ourHero->getValueOfKnowledge()
+                * ourHero->getPrimarySkill(3) / 4;
         return ourHero->getPrimarySkill(3) * 10;
     case eSecSkillSorcery:
         if (complexChoice)
-            return ourHero->getPrimarySkill(2)
-                * ourHero->getValueOfPower() / 20;
+            return ourHero->getValueOfPower()
+                * ourHero->getPrimarySkill(2) / 20;
         return ourHero->getPrimarySkill(2) * 2;
     case eSecSkillMagicResistance:
         return armyValue / 40;
@@ -1770,13 +1766,13 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
 }
 
 
-VA(0x00524d20, 0xa3)  // dc 0x11350c
+VA(0x00524d20, 0xa3) MAC_ADDRESS(0x13e09c, 0xbc)  // dc 0x11350c
 long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
 {
     type_spellvalue value(ourHero);
     long baseValue = value.getBestSpellValue(SPELL_VALUE_CLASS_MASK);
 
-    signed char level = ourHero->m_skillLevel[skill];
+    signed char level = ourHero->getSecondarySkill(skill);
     int oldLevel = level;
     if (oldLevel == 0)
         const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
@@ -1789,7 +1785,7 @@ long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
     return schoolValue;
 }
 
-VA(0x00524dd0, 0xF3)  // dc 0x113ae4
+VA(0x00524dd0, 0xF3) MAC_ADDRESS(0x13e904, 0x178)  // dc 0x113ae4
 unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
@@ -1799,7 +1795,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     int openSlots;
     int i;
     for (i = 0; i < 28; i++) {
-        if (ourHero->m_skillLevel[i] <= 0
+        if (ourHero->getSecondarySkill(TSecondarySkill(i)) <= 0
             && (g_heroClasses[ourHero->m_heroClass]
                     .m_gainSecondarySkillChance[i]
                 || first == i))
@@ -1819,7 +1815,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     openSlots = 8 - ourHero->m_skillCount;
     for (i = 28; i-- > 0;) {
         int skill = skillIndex[i];
-        if (ourHero->m_skillLevel[skill] == 0) {
+        if (ourHero->getSecondarySkill(TSecondarySkill(skill)) == 0) {
             if (skill == first)
                 return 1;
             if (--openSlots <= 0)
@@ -1829,7 +1825,7 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     return 1;
 }
 
-VA(0x00524ed0, 0xED)  // dc 0x113cbc
+VA(0x00524ed0, 0xED) MAC_ADDRESS(0x13ec3c, 0x114)  // dc 0x113cbc
 void aiVisitUniversity(hero* currentHero, type_university* university)
 {
     if (currentHero->m_skillCount >= 8)
@@ -1845,7 +1841,7 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
         for (int i = 0; i < 4; i++) {
             int skill = university->m_skills[i];
             if (traits.m_gainSecondarySkillChance[skill]
-                && currentHero->m_skillLevel[skill] <= 0
+                && currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0
                 && wantsSkill(currentHero, TSecondarySkill(skill), 1)) {
                 long value = getSkillValue(currentHero, TSecondarySkill(skill), 1);
                 if (value >= bestValue) {
@@ -1862,7 +1858,7 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
     } while (g_currentPlayer->m_resources[GOLD] >= 2000);
 }
 
-VA(0x00524fc0, 0x156)
+VA(0x00524fc0, 0x156) MAC_ADDRESS(0x13f36c, 0x48)
 void aiVisitWarFactory(hero* currentHero)
 {
     visitWarFactory(currentHero, ARTIFACT_BALLISTA);
@@ -1876,11 +1872,13 @@ void aiVisitWarFactory(hero* currentHero)
 // cost row before the value accumulator at 530, and 541/542 refuses excess
 // cost. Preserve those boundaries and the canonical type_artifact constructor.
 // Indexed costs score 96.5185%; walking the cost row raises this to 99.4198%.
+// Mac indexed loads do not prove indexed C++: the shared pointer walk
+// supplies the same costs and resource values on both targets.
 // An explicit sum or index declaration move is neutral; 78 traversal states
 // (14 objects) leave the funds/value increment ordering unresolved. A further
 // six distinct source states restore the early refusal and cost-row order;
 // three reproduced objects retain 99.4198% with no sibling changes.
-VA(0x00525120, 0xE0)
+VA(0x00525120, 0xE0) MAC_ADDRESS(0x13f074, 0x160)  // dc 0x10dea8
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
 {
@@ -1906,7 +1904,7 @@ static long valueOfWarFactory(const hero* currentHero,
     return artifactValue - resourceCost;
 }
 
-VA(0x00525200, 0x1d0)  // dc 0x10e334
+VA(0x00525200, 0x1d0) MAC_ADDRESS(0x13f784, 0x158)  // dc 0x10e334
 void considerGarrisoning(hero* currentHero, town* currentTown)
 {
     if (g_currentPlayer->m_numHeroes < 2
@@ -1922,26 +1920,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
                >= currentHero->getPrimarySkillTotal())
         return;
 
-    VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
-    if (victory.m_type != VICTORY_CONDITION_CAPTURE_TOWN)
-        return;
-    int townId = g_game->getTownId(victory.m_townX, victory.m_townY,
-                                    victory.m_townZ);
-    if (townId < 0 || townId != currentTown->m_id)
-        return;
-
-    playerData* player = &g_game->m_players[g_netLocalGamePos];
-    hero* bestHero = 0;
-    int bestSkill = 0;
-    for (int i = 0; i < player->m_numHeroes; ++i) {
-        hero* candidate = g_game->getHero(player->m_heroes[i]);
-        int skill = candidate->getPrimarySkillTotal();
-        if (skill >= bestSkill) {
-            bestSkill = skill;
-            bestHero = candidate;
-        }
-    }
-    if (currentHero == bestHero)
+    if (!shouldGarrisonTown(currentHero, currentTown))
         return;
 
     currentHero->m_movePoints = 0;
@@ -1949,22 +1928,46 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
         g_game->m_players[currentHero->m_owner].hasGivenArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
-    swapper.doSwap(
-        currentHero,
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy()),
-        secondHero, hasAngelicAlliance);
+    swapper.doSwap(currentHero, &currentTown->getArmy(),
+                   secondHero, hasAngelicAlliance);
 
     if (!secondHero) {
-        currentHero->m_army.mergeArmies(
-            *const_cast<armyGroup*>(
-                &static_cast<const town*>(currentTown)->getArmy()));
-        const_cast<armyGroup*>(
-            &static_cast<const town*>(currentTown)->getArmy())->initialize();
+        currentHero->m_army.mergeArmies(currentTown->getArmy());
+        currentTown->getArmy().initialize();
     }
 }
 
-VA(0x005253d0, 0x60c)  // dc 0x10e3f8
+// DC philai.cpp:803 records game::GetHero followed by
+// town::ApplySpecialBuildingEffect inside a nested scope. Keeping that
+// result in a local before the call makes VC6 expand the canonical getHero
+// body here, as retail does: the prior artifact-conversion source rose from
+// 96.44 to 99.15%, with 73/73 CFG blocks and all 44 calls agreeing.
+// DC line 767 puts the spellbook resource check at function scope; removing
+// the standalone block around its player pointer is VC6 byte-flat at 99.15%.
+// Mac section 0+0x13f8dc..0x13fc44 is the counterpart: hasArtifact(2) leads
+// its town-entry calls, two applySpecialBuildingEffect calls end it, and its
+// caller at +0x13d7e8 passes a hero and a 0x15c-stride town record.
+// Direct typed artifact construction and blacksmith-table access reproduce
+// both local Windows retail instruction spans and remove two extra Mac memcpy
+// calls: Mac now has the exact 872-byte size and all 24 calls at 94.0367%.
+// Under VC6 those direct expressions alter later inline decisions. Nesting
+// the Conflux building check restores getHero expansion, giving 73/73 CFG
+// blocks and 97.77%; its remaining extra hasBuilding call should be inlined.
+// Moving the POD university local before that inner check is byte-flat on
+// both compilers, so its smaller natural lifetime remains here. Gated VC6 C2
+// trace: caller C1 cost 623, last hasBuilding cost 68, available budget 51;
+// final getHero cost 41 expands under that same budget. Both expansions need
+// at least 109, a 58-unit increase at that point. Removing three owner aliases
+// from buySpecialBuilding lowers its C1 cost 610->595 (budget 66); removing
+// Dungeon's resourceCost alias lowers it to 590 (budget 71), which expands
+// hasBuilding but then leaves only 3 for getHero. Those partial variants are
+// Mac byte-flat and regress Windows. The combined buySpecialBuilding rejection
+// guard and direct value/cost expressions recover both expansions: 99.930435%,
+// 73 exact CFG blocks and all 44 calls agree. Mac retains cost acquisition,
+// value/experience acquisition, resource valuation and optional purchase in
+// that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
+// local in the DC line 768 gap is byte-flat in both compilers.
+VA(0x005253d0, 0x60c) MAC_ADDRESS(0x13f8dc, 0x368)  // dc 0x10e3f8
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
@@ -1990,20 +1993,13 @@ void aiEnterTown(hero* currentHero, town* currentTown)
         }
     }
 
-    {
-        playerData* player = &g_game->m_players[currentHero->m_owner];
-        if (player->m_resources[GOLD] >= 500
-            && currentTown->hasBuilding(MAGE_GUILD_ID, true)
-            && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            TArtifact artifactId;
-            {
-                int ordinal = ARTIFACT_SPELLBOOK;
-                memcpy(&artifactId, &ordinal, sizeof artifactId);
-            }
-            type_artifact artifact(artifactId);
-            currentHero->giveArtifact(&artifact, 1, 1);
-            player->m_resources[GOLD] -= 500;
-        }
+    playerData* player = &g_game->m_players[currentHero->m_owner];
+    if (player->m_resources[GOLD] >= 500
+        && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
+        && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        type_artifact artifact(ARTIFACT_SPELLBOOK);
+        currentHero->giveArtifact(&artifact, 1, 1);
+        player->m_resources[GOLD] -= 500;
     }
     currentTown->giveSpells(currentHero);
 
@@ -2020,36 +2016,32 @@ void aiEnterTown(hero* currentHero, town* currentTown)
                 aiSwapArtifacts(garrisonHero, currentHero);
             }
 
-            {
-                TArtifact artifactId;
-                int ordinal =
-                    g_blacksmithArtifacts[currentTown->m_type].m_artifactId;
-                memcpy(&artifactId, &ordinal, sizeof artifactId);
-                buySiegeEngine(currentHero, currentTown, BLACKSMITH_ID,
-                               artifactId);
-            }
+            buySiegeEngine(currentHero, currentTown, BLACKSMITH_ID,
+                           g_blacksmithArtifacts[currentTown->m_type].m_artifactId);
             if (currentTown->m_type == TOWN_STRONGHOLD)
                 buySiegeEngine(currentHero, currentTown, EXTRA_1_ID,
                                  ARTIFACT_BALLISTA);
         }
     }
 
-    if (currentTown->m_type == TOWN_CONFLUX
-        && currentTown->hasBuilding(EXTRA_0_ID, true)) {
-        type_university university;
-        university.initializeMagicSkills();
-        aiVisitUniversity(currentHero, &university);
+    if (currentTown->m_type == TOWN_CONFLUX) {
+        if (currentTown->hasBuilding(EXTRA_0_ID, 1)) {
+            type_university university;
+            university.initializeMagicSkills();
+            aiVisitUniversity(currentHero, &university);
+        }
     }
 
     g_advManager->demobilizeCurrHero(0, 0);
     if (garrisonHero)
         currentTown->applySpecialBuildingEffect(garrisonHero);
-    if (currentTown->m_visitingHeroId != -1)
-        currentTown->applySpecialBuildingEffect(
-            g_game->getHero(currentTown->m_visitingHeroId));
+    if (currentTown->m_visitingHeroId != -1) {
+        hero* visitingHero = g_game->getHero(currentTown->m_visitingHeroId);
+        currentTown->applySpecialBuildingEffect(visitingHero);
+    }
 }
 
-VA(0x005259e0, 0x205)  // dc 0x10db74
+VA(0x005259e0, 0x205) MAC_ADDRESS(0x13debc, 0x1e0)  // dc 0x10db74
 void buyArtifacts(hero* currentHero, town* currentTown)
 {
     if (currentTown->m_type != TOWN_TOWER
@@ -2097,7 +2089,7 @@ void buyArtifacts(hero* currentHero, town* currentTown)
     buyArtifacts(currentHero, g_game->m_marketArtifacts, marketCount);
 }
 
-VA(0x00525bf0, 0xac)  // dc 0x113c1c
+VA(0x00525bf0, 0xac) MAC_ADDRESS(0x13eb18, 0xe4)  // dc 0x113c1c
 static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay)
@@ -2112,15 +2104,28 @@ static long valueOfUniversity(const hero* currentHero,
     long total = 0;
     for (int i = 0; i < 4; i++) {
         int skill = university->m_skills[i];
-        if (traits->m_gainSecondarySkillChance[skill]
-            && currentHero->m_skillLevel[skill] <= 0
-            && wantsSkill(currentHero, TSecondarySkill(skill), 1))
-            total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+        if (traits->m_gainSecondarySkillChance[skill]) {
+            if (currentHero->getSecondarySkill(TSecondarySkill(skill)) <= 0) {
+                if (wantsSkill(currentHero, TSecondarySkill(skill), 1))
+                    total += getSkillValue(currentHero, TSecondarySkill(skill), 1);
+            }
+        }
     }
     return total;
 }
 
-VA(0x00525ca0, 0x11e)  // dc 0x10e118
+// Mac retains this event adapter immediately after valueOfUniversity at
+// code0+0x13ebfc. It calls ExtraInfoUnion::getUniversity and then the
+// three-argument appraisal with mustPay=1; VC6 expands it in the event arm.
+MAC_ADDRESS(0x13ebfc, 0x40)
+static long valueOfUniversity(const hero* currentHero, NewmapCell* cell)
+{
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(cell));
+    return valueOfUniversity(currentHero, info->getUniversity(), 1);
+}
+
+VA(0x00525ca0, 0x11e) MAC_ADDRESS(0x13f3b4, 0x274)  // dc 0x10e118
 void buySiegeEngine(hero* currentHero, town* currentTown,
                       type_building_id building, TArtifact engine)
 {
@@ -2155,7 +2160,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     currentHero->giveArtifact(&type_artifact(engine), 1, 1);
 }
 
-VA(0x00525dc0, 0xB1)  // dc 0x10e678
+VA(0x00525dc0, 0xB1) MAC_ADDRESS(0x13fc44, 0x110)  // dc 0x10e678
 void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 {
     type_AI_creature_swapper swapper;
@@ -2187,7 +2192,7 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 // separate priority rejections and staged values, this restores retail's
 // first selector call and second selector expansion, including retained
 // getTown/getHero calls, without inline controls.
-VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
+VA(0x00525e80, 0x362) MAC_ADDRESS(0x140c2c, 0x114)  // anchor-callee, dc 0x10f16c
 void philAI::doAI(int whichPlayer)
 {
     pollSound();
@@ -2210,22 +2215,90 @@ void philAI::doAI(int whichPlayer)
     g_mouseManager->showPointer(1);
 }
 
-// E:\gamedcs\philai.cpp:1056
-VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
+// Original: MoveHero; philai.cpp:1056, dc 0x10ec58.
+// DC records this helper as file-static with explore_mode by reference.
+// Keep the canonical definitions in DC source order; the VA tag here lets
+// both compilers extract this same body.
+VA(0x005261f0, 0x5ba) MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee, dc 0x10ec58
 static void moveHero(hero* currentHero, long* dangerZones,
-                     unsigned char isLastHero, unsigned char& exploreMode);
+                     unsigned char isLastHero, unsigned char& exploreMode)
+{
+    unsigned char mouseWasVisible = g_mouseManager->isVis();
+    playerData* player = &g_game->m_players[currentHero->m_owner];
 
+    checkForTown(currentHero);
+    if (currentHero->m_patrolX != hero::kPatrolNone
+        && currentHero->m_patrolRadius == 0) {
+        currentHero->m_movePoints = 0;
+        return;
+    }
+    if (g_gameOver)
+        return;
+
+    g_aiHeroMoveActive = 0;
+    g_advManager->m_advWindow->animateBottomView(0);
+    if (currentHero->m_movePoints > 0) {
+        if (!g_config.m_blackoutComputer && !g_remoteOn
+            && mapExtraPosAndAdjacentsSet(
+                currentHero->m_x, currentHero->m_y, currentHero->m_z,
+                g_mapVisibilityBit))
+            g_completeDrawEnabled = 1;
+        else
+            g_completeDrawEnabled = 0;
+
+        if (g_game->getCurrHero() == currentHero) {
+            isLastHero = 0;
+        } else {
+            g_advManager->demobilizeCurrHero(0, 1);
+            g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
+            memset(dangerZones, 0,
+                   g_mapHeight * g_mapWidth * g_game->getNumMapLevels()
+                       * sizeof(long));
+            if (g_game->m_setup.m_difficulty > 0
+                || g_game->isHumanAlly(g_netLocalGamePos))
+                aiMarkDangerZones(currentHero, dangerZones);
+        }
+
+        markShipyards(player);
+        g_searchArray->setDangerZones(dangerZones);
+        moveHero(currentHero, isLastHero, exploreMode);
+        g_searchArray->setDangerZones(0);
+        clearShipyards(player);
+    }
+
+    if (currentHero->m_owner >= 0
+        && (currentHero->m_movePoints <= 0 || currentHero->m_isSleeping)) {
+        int townId = g_game->getTownId(currentHero->m_x, currentHero->m_y,
+                                        currentHero->m_z);
+        if (townId >= 0) {
+            town* currentTown = g_game->getTown(townId);
+            g_advManager->demobilizeCurrHero(0, 1);
+            if (currentTown->m_owner == currentHero->m_owner) {
+                if (currentTown->m_garrisonHeroId < 0) {
+                    player->addGarrisonHero(currentTown);
+                } else {
+                    hero* garrisonHero = g_game->getHero(
+                        currentTown->m_garrisonHeroId);
+                    if ((garrisonHero->m_movePoints > 0
+                         && !garrisonHero->m_isSleeping)
+                        || (currentTown->getArmy().getCreatureTotal() > 0
+                            && currentTown->getArmy().getAIValue()
+                                   < currentHero->m_army.getAIValue()))
+                        currentTown->swapHeroes();
+                }
+            }
+        }
+    }
+
+    restoreMouse(mouseWasVisible);
+}
+
+VA(0x005267b0, 0x2da) MAC_ADDRESS(0x1401d8, 0x3a4)  // dc 0x10e9a8
 static void moveHero(hero* currentHero, unsigned char isLastHero,
                      unsigned char& exploreMode);
 
-VA(0x00526a90, 0x1d4)  // dc 0x10eeb0
+VA(0x00526a90, 0x1d4) MAC_ADDRESS(0x1408f0, 0x270)  // dc 0x10eeb0
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
-
-VA(0x00526c70, 0x48)  // dc 0x10f22c
-int aiResourceCost(const playerData* player, const int* resources);
-
-VA(0x00526cc0, 0x55)  // dc 0x10f2f8
-int aiResourceCost(long playerId, const int* resources);
 
 // Complete's computer-owner purchase wrapper; its declaration belongs to
 // philai.h with this definition. Retail buy_building calls it at 0x5bf476,
@@ -2234,14 +2307,14 @@ int aiResourceCost(long playerId, const int* resources);
 // (source 1451..1459), without the new computer-owner trading path.
 // Retail 0x526d2e selects g_aiPlayers[playerId] with a 152-byte stride,
 // calls trade_resources at 0x526d35, and returns with ret 4.
-VA(0x00526d20, 0x1e)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
+VA(0x00526d20, 0x1e) MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
 void unnamed526d20(int playerId, int* costs, int flag)
 {
     g_aiPlayers[playerId].tradeResources(costs, flag);
 }
 
 // E:\gamedcs\philai.cpp:1339, dc 0x10f37c
-VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
+VA(0x00526d40, 0x393) MAC_ADDRESS(0x140e1c, 0x174)  // anchor-global, dc 0x10f37c
 type_spellvalue::type_spellvalue(const hero* newHero)
 {
     m_ourHero = newHero;
@@ -2263,7 +2336,7 @@ type_spellvalue::type_spellvalue(const hero* newHero)
     }
 }
 
-VA(0x005270e0, 0xDF)  // dc 0x10f404
+VA(0x005270e0, 0xDF) MAC_ADDRESS(0x140f90, 0x180)  // dc 0x10f404
 long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable, long combatValue) const
 {
@@ -2290,7 +2363,7 @@ long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     return static_cast<long>(static_cast<double>(combatValue) * byRatio);
 }
 
-VA(0x005271c0, 0xC1)  // dc 0x10f648
+VA(0x005271c0, 0xC1) MAC_ADDRESS(0x141110, 0x144)  // dc 0x10f648
 long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
@@ -2320,7 +2393,7 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery maste
     return value < 0 ? 0 : value;
 }
 
-VA(0x00527290, 0x134)  // dc 0x10f810
+VA(0x00527290, 0x134) MAC_ADDRESS(0x141254, 0x158)  // dc 0x10f810
 long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
@@ -2351,12 +2424,12 @@ long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     return total / 700;
 }
 
-VA(0x005273d0, 0x1DD)  // dc 0x10fa84
+VA(0x005273d0, 0x1DD) MAC_ADDRESS(0x14145c, 0x1fc)  // dc 0x10fa84
 long type_spellvalue::getRawSpellValue(SpellID spell) const
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
     hero* caster = const_cast<hero*>(m_ourHero);
-    int mastery = caster->getSpellLevel(spell, caster->getSpecialTerrain());
+    int mastery = caster->getSpellLevel(spell);
     int cost = const_cast<hero*>(m_ourHero)->getManaCost(spell, 0, -1);
     if (cost > m_mana)
         return 0;
@@ -2388,7 +2461,7 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
     return 1;
 }
 
-VA(0x005275b0, 0x8A)  // dc 0x10fcf0
+VA(0x005275b0, 0x8A) MAC_ADDRESS(0x141728, 0xd8)  // dc 0x10fcf0
 long type_spellvalue::getBestSpellValue(long bits) const
 {
     long best = 0;
@@ -2413,7 +2486,7 @@ long type_spellvalue::getBestSpellValue(long bits) const
     return best;
 }
 
-VA(0x00527640, 0xCB)  // dc 0x10fd78
+VA(0x00527640, 0xCB) MAC_ADDRESS(0x141800, 0x100)  // dc 0x10fd78
 long aiGetSpellValue(const hero* ourHero, SpellID spell)
 {
     type_spellvalue value(ourHero);
@@ -2431,7 +2504,7 @@ long aiGetSpellValue(const hero* ourHero, SpellID spell)
     return raw - best;
 }
 
-VA(0x00527710, 0x4C)  // dc 0x10feb8
+VA(0x00527710, 0x4C) MAC_ADDRESS(0x141990, 0xa0)  // dc 0x10feb8
 float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy)
 {
     int increment = currentHero->getExperienceIncrement();
@@ -2439,7 +2512,7 @@ float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy)
     return (float(g_heroGoldCost) + armyValue) / float(increment * 40);
 }
 
-VA(0x00527760, 0x1f2)  // dc 0x10fef4
+VA(0x00527760, 0x1f2) MAC_ADDRESS(0x141a30, 0x1c8)  // dc 0x10fef4
 void aiSetHeroBonuses(hero* ourHero)
 {
     type_spellvalue caster(ourHero);
@@ -2487,8 +2560,10 @@ void aiSetHeroBonuses(hero* ourHero)
 // only a two-slot B16/C3/C4 transpose: its 16 guided mutations are flat or
 // worse. Naming the numerator is byte-flat, while carrying it through a
 // second average local falls to 95.57%, so the direct DC-shaped expression
-// remains the strongest defensible spelling.
-VA(0x00527960, 0x140)  // anchor-callee, dc 0x110018
+// remains the strongest defensible spelling. Naming the numerator while
+// implicitly promoting artifactCount is also Windows byte-flat; Mac falls
+// from 88.70% to 85.82%, so that probe was restored.
+VA(0x00527960, 0x140) MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee, dc 0x110018
 void philAI::getTurnAIVars(int whichPlayer)
 {
     g_curHourGlassPhase = 0;
@@ -2506,12 +2581,9 @@ void philAI::getTurnAIVars(int whichPlayer)
          artifactId < ARTIFACT_COUNT; ++artifactId) {
         if (!g_artifactTraits[artifactId].m_disabled) {
             ++artifactCount;
-            TArtifact artifactType;
-            {
-                int ordinal = artifactId;
-                memcpy(&artifactType, &ordinal, sizeof artifactType);
-            }
-            type_artifact artifact(artifactType);
+            // The loop walks ordinal storage; type_artifact consumes the
+            // artifact enum at this revision boundary.
+            type_artifact artifact(H3_ENUM_DECODE(TArtifact, artifactId));
             totalArtifactValue +=
                 aiGetValueOfArtifact(artifact, whichPlayer);
         }
@@ -2520,31 +2592,35 @@ void philAI::getTurnAIVars(int whichPlayer)
         static_cast<float>(static_cast<double>(totalArtifactValue)
                            / static_cast<double>(artifactCount));
 
-    if (!g_game->m_setup.m_difficulty) {
+    signed char difficulty = g_game->m_setup.m_difficulty;
+    if (!difficulty) {
         type_AI_player::setAttackBonuses(1.0f, -0.4f);
         return;
     }
 
-    float difficulty = static_cast<float>(g_game->m_setup.m_difficulty);
-    float humanBonus = (difficulty + 1.0f) * 0.25f;
-    float computerBonus = 0.75f - difficulty * 0.25f;
+    float difficultyValue = static_cast<float>(difficulty);
+    // Windows 0x527a67..0x527a7f computes (difficulty + 1) * 0.25
+    // for humans, then difficulty * 0.25 for computers. Mac 0x141d70
+    // shares one quarter product with the DC build. Naming that shared
+    // product changes the Windows instruction sequence (97.87 -> 91.28),
+    // while Mac reaches 88.70; neither proves a unique shared spelling.
+    // Signed-byte difficulty makes these formulas exactly equivalent, so
+    // keep the Windows expression without introducing a platform branch.
+    float humanBonus = (difficultyValue + 1.0f) * 0.25f;
+    float computerBonus = 0.75f - difficultyValue * 0.25f;
+
     type_AI_player::setAttackBonuses(computerBonus, humanBonus);
 }
 
-// DC ValueOfSpell(const hero*, SpellID), philai.cpp:1945 (dc 0x110574),
-// becomes this const hero member in Complete. Retail 0x527aa0 takes the hero
-// in ECX, SpellID at [ebp+8], and returns with ret 4 on both exits.
-VA(0x00527aa0, 0x56)  // dc 0x110574
+// Mac retains this member wrapper's call to valueOfLearning at 0:0x1422b0.
+// Retail 0x527aa0 takes the hero in ECX and SpellID at [ebp+8].
+VA(0x00527aa0, 0x56) MAC_ADDRESS(0x1422a4, 0x20)  // dc 0x110574
 int hero::valueOfSpell(SpellID spell) const
 {
-    if (g_spellTraits[spell].m_level <= m_skillLevel[eSecSkillWisdom] + 2
-        && !m_inSpellbook[spell]
-        && this->isWieldingArtifact(ARTIFACT_SPELLBOOK))
-        return aiGetSpellValue(this, spell);
-    return 0;
+    return valueOfLearning(this, spell);
 }
 
-VA(0x00527b00, 0xa4)  // dc 0x110c04
+VA(0x00527b00, 0xa4) MAC_ADDRESS(0x142a4c, 0xc8)  // dc 0x110c04
 void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner,
@@ -2559,7 +2635,7 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
 }
 
 
-VA(0x00527bb0, 0x11D)  // dc 0x111630
+VA(0x00527bb0, 0x11D) MAC_ADDRESS(0x143868, 0x23c)  // dc 0x111630
 void aiVisitHillFort(hero* currentHero)
 {
     long cost[NUM_RESOURCES];
@@ -2568,11 +2644,7 @@ void aiVisitHillFort(hero* currentHero)
         TCreatureType creature = currentHero->m_army.m_armyTypes[i];
         if (creature == CREATURE_NONE)
             continue;
-        if (g_game->m_gameVersion == 0
-            && isBaseElemental(creature))
-            continue;
-
-        TCreatureType upgrade = upgradedCreatureType(creature);
+        TCreatureType upgrade = g_game->upgradedCreatureType(creature);
         if (upgrade == CREATURE_NONE)
             continue;
 
@@ -2595,7 +2667,7 @@ void aiVisitHillFort(hero* currentHero)
     }
 }
 
-VA(0x00527cd0, 0x1b)  // dc 0x111808
+VA(0x00527cd0, 0x1b) MAC_ADDRESS(0x143bd4, 0x20)  // dc 0x111808
 TPrimarySkill aiChooseMagicSkill(hero* currentHero)
 {
     return currentHero->getValueOfPower() < currentHero->getValueOfKnowledge()
@@ -2605,7 +2677,7 @@ TPrimarySkill aiChooseMagicSkill(hero* currentHero)
 // DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692 (dc 0x111b7c),
 // becomes this hero member. Complete 0x527cf0 takes the hero in ECX and the
 // award at [ebp+8]; both exits use ret 4. Keep the changed owner/ABI explicit.
-VA(0x00527cf0, 0x89)  // dc 0x111b7c
+VA(0x00527cf0, 0x89) MAC_ADDRESS(0x143fc8, 0xd8)  // dc 0x111b7c
 int hero::moraleIncreaseValue(int value)
 {
     if (m_army.hasAllUndead())
@@ -2620,7 +2692,7 @@ int hero::moraleIncreaseValue(int value)
 // DC LuckIncreaseValue(const hero*, int), philai.cpp:2728 (dc 0x111c78),
 // becomes this hero member. Complete 0x527d80 passes ECX to getLuck, reads
 // the award from [ebp+8], and returns with ret 4 on both exits.
-VA(0x00527d80, 0x90)  // dc 0x111c78
+VA(0x00527d80, 0x90) MAC_ADDRESS(0x144104, 0xdc)  // dc 0x111c78
 int hero::luckIncreaseValue(int value)
 {
     int luck = getLuck(0, 0, 1);
@@ -2636,7 +2708,7 @@ int hero::luckIncreaseValue(int value)
     return static_cast<int>(valueAdded);
 }
 
-VA(0x00527e10, 0xab)  // dc 0x112208
+VA(0x00527e10, 0xab) MAC_ADDRESS(0x144744, 0xd4)  // dc 0x112208
 void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner, type, number,
@@ -2650,7 +2722,7 @@ void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
                           hasAngelicAlliance);
 }
 
-VA(0x00527ec0, 0x93)  // dc 0x11260c
+VA(0x00527ec0, 0x93) MAC_ADDRESS(0x144b68, 0xf0)  // dc 0x11260c
 int aiVisitSirens(const hero* currentHero, armyGroup& army)
 {
     long total = 0;
@@ -2671,7 +2743,7 @@ int aiVisitSirens(const hero* currentHero, armyGroup& army)
         * const_cast<hero*>(currentHero)->getExperienceBonusFactor());
 }
 
-VA(0x00527f60, 0x73)  // dc 0x112dd4
+VA(0x00527f60, 0x73) MAC_ADDRESS(0x145890, 0xe0)  // dc 0x112dd4
 unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     TCreatureType type, short amount, long goldCost)
 {
@@ -2683,7 +2755,7 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     return bribeWorth > fightWorth;
 }
 
-VA(0x00527fe0, 0x51)  // dc 0x112ee0
+VA(0x00527fe0, 0x51) MAC_ADDRESS(0x145970, 0xac)  // dc 0x112ee0
 unsigned char aiChooseResourceOrExperience(const hero* currentHero,
     EGameResource resource, int amount, int experience)
 {
@@ -2697,15 +2769,15 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 }
 
 // Keep the address claim in retail order; the definition follows DC source order.
-VA(0x00528040, 0x1648)  // anchor-callee + DC statement shape, dc 0x113e24
+VA(0x00528040, 0x1648) MAC_ADDRESS(0x146134, 0xa58)  // anchor-callee + DC statement shape, dc 0x113e24
 long aiValueOfEvent(const hero* currentHero, type_point point,
                    long& moveCost);
 
-VA(0x00529750, 0x78)  // dc 0x10d91c
+VA(0x00529750, 0x78) MAC_ADDRESS(0x13dbe8, 0xfc)  // dc 0x10d91c
 static long getArtifactPurchaseValue(
     TArtifact artifactId, long marketCount, long* funds);
 
-VA(0x005297d0, 0x36)  // dc 0x10e028
+VA(0x005297d0, 0x36) MAC_ADDRESS(0x13f1d4, 0x80)  // dc 0x10e028
 long valueOfWarFactory(const hero* currentHero, long moveCost)
 {
     return valueOfWarFactory(currentHero, ARTIFACT_FIRST_AID_TENT,
@@ -2714,7 +2786,7 @@ long valueOfWarFactory(const hero* currentHero, long moveCost)
         + valueOfWarFactory(currentHero, ARTIFACT_BALLISTA, moveCost);
 }
 
-VA(0x00529810, 0x7c)  // dc 0x110174
+VA(0x00529810, 0x7c) MAC_ADDRESS(0x141d98, 0xb8)  // dc 0x110174
 int netValueOfArtifact(const hero* currentHero, int artifactValue,
     int goldCost, int resourceCost, EGameResource resourceType)
 {
@@ -2729,7 +2801,7 @@ int netValueOfArtifact(const hero* currentHero, int artifactValue,
             * player->m_ai.m_resourceValue[resourceType]);
 }
 
-VA(0x00529890, 0x40)  // dc 0x1103c4
+VA(0x00529890, 0x40) MAC_ADDRESS(0x141f90, 0x80)  // dc 0x1103c4
 long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue)
 {
     TreasureData* treasure = g_advManager->getTreasureData(cell);
@@ -2739,21 +2811,32 @@ long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue
     return itemValue;
 }
 
-VA(0x005298d0, 0x4b)  // dc 0x1105ac
-long valueOfLearning(const hero* currentHero, SpellID spell)
+// DC ValueOfSpell is file-static at philai.cpp:1945 and Mac retains the
+// separate body at 0:0x1421e8 before valueOfLearning. Complete expands its
+// only PHILAI call into the learning gate; the hero member above is a distinct
+// Complete entry point with the wisdom check included.
+MAC_ADDRESS(0x1421e8, 0x6c)
+static int valueOfSpell(const hero* currentHero, SpellID spell)
 {
-    if (g_spellTraits[spell].m_level > currentHero->m_skillLevel[eSecSkillWisdom] + 2
-        || currentHero->isInSpellbook(SpellID(spell))
-        || !currentHero->isWieldingArtifact(
-               ARTIFACT_SPELLBOOK))
-        return 0;
-    return aiGetSpellValue(currentHero, spell);
+    if (!currentHero->isInSpellbook(spell)
+        && currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK))
+        return aiGetSpellValue(currentHero, spell);
+    return 0;
 }
 
-VA(0x00529920, 0x10d)  // dc 0x110808
-long valueOfBank(const hero* currentHero, NewmapCell* cell);
+VA(0x005298d0, 0x4b) MAC_ADDRESS(0x142254, 0x50)  // dc 0x1105ac
+long valueOfLearning(const hero* currentHero, SpellID spell)
+{
+    if (g_spellTraits[spell].m_level
+        > currentHero->getSecondarySkill(eSecSkillWisdom) + 2)
+        return 0;
+    return valueOfSpell(currentHero, spell);
+}
 
-VA(0x00529a30, 0x27f)  // dc 0x1109b8
+VA(0x00529920, 0x10d) MAC_ADDRESS(0x14259c, 0x12c)  // dc 0x110808
+static long valueOfBank(const hero* currentHero, NewmapCell* cell);
+
+VA(0x00529a30, 0x27f) MAC_ADDRESS(0x142734, 0x318)  // dc 0x1109b8
 int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* cell, int moveCost)
 {
     generator currentGenerator;
@@ -2791,6 +2874,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         purchaseValue = 0;
     value += purchaseValue;
 
+    // Mac 0x1429c0 expands getAlignment for the generator's creature.
     if (static_cast<unsigned char>(
             g_game->m_mapHeader.m_victoryCondition.appliesToPlayer(
                 g_netLocalGamePos))
@@ -2798,18 +2882,13 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && (g_game->m_gameVersion != 0
-            || (currentGenerator.m_type[0] != CREATURE_AIR_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_EARTH_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_FIRE_ELEMENTAL
-                && currentGenerator.m_type[0] != CREATURE_WATER_ELEMENTAL))
-        && g_creatureTypeTraits[currentGenerator.m_type[0]].m_townType != -1) {
+        && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
         value += 5000000 / g_game->m_generators.size();
     }
     return value;
 }
 
-VA(0x00529cb0, 0x2d9)  // dc 0x11105c
+VA(0x00529cb0, 0x2d9) MAC_ADDRESS(0x142fe0, 0x308)  // dc 0x11105c
 long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short moveCost, NewmapCell* cell)
 {
     int creatureCost[NUM_RESOURCES];
@@ -2879,7 +2958,7 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
     return combatValue + townValue;
 }
 
-VA(0x00529f90, 0x72)  // dc 0x111834
+VA(0x00529f90, 0x72) MAC_ADDRESS(0x143bf4, 0xc4)  // dc 0x111834
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
@@ -2894,10 +2973,10 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
-VA(0x0052a010, 0x12a)  // dc 0x111970
+VA(0x0052a010, 0x12a) MAC_ADDRESS(0x143d3c, 0x184)  // dc 0x111970
 int valueOfMine(const hero* currentHero, NewmapCell* cell)
 {
-    mine* currentMine = &g_game->m_mines[cell->m_extraInfo];
+    mine* currentMine = g_game->getMine(cell->m_extraInfo);
     long value = 0;
     int mineType = currentMine->m_type;
     int sameTeam = onMySide(currentMine->m_playerOwner);
@@ -2925,7 +3004,7 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
-VA(0x0052a140, 0x96)  // dc 0x111a9c
+VA(0x0052a140, 0x96) MAC_ADDRESS(0x143ec0, 0x108)  // dc 0x111a9c
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point)
 {
     int typedCreature;
@@ -2946,11 +3025,11 @@ long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point
     return value;
 }
 
-VA(0x0052a1e0, 0xc3)  // dc 0x111c44
+VA(0x0052a1e0, 0xc3) MAC_ADDRESS(0x1440a0, 0x64)  // dc 0x111c44
 int valueOfMoveSource(const hero* currentHero, long flag,
                          short increase, long& moveCost);
 
-VA(0x0052a2b0, 0xc5)  // dc 0x111d68
+VA(0x0052a2b0, 0xc5) MAC_ADDRESS(0x1441e0, 0x104)  // dc 0x111d68
 int valueOfObelisk(NewmapCell* cell, long playerId)
 {
     if (g_game->m_obeliskFlags[cell->m_extraInfo] & (1 << playerId))
@@ -2970,7 +3049,7 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
         / g_game->m_numObelisks;
 }
 
-VA(0x0052a380, 0x1c)  // dc 0x111e34
+VA(0x0052a380, 0x1c) MAC_ADDRESS(0x1442f8, 0x28)  // dc 0x111e34
 int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
@@ -2978,7 +3057,7 @@ int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
     return currentHero->getValueOfPower();
 }
 
-VA(0x0052a3a0, 0x61)  // dc 0x111ea4
+VA(0x0052a3a0, 0x61) MAC_ADDRESS(0x144320, 0xa0)  // dc 0x111ea4
 int valueOfPrison(NewmapCell* cell, playerData* player)
 {
     if (g_currentPlayer->m_numHeroes >= 8)
@@ -2990,7 +3069,7 @@ int valueOfPrison(NewmapCell* cell, playerData* player)
 }
 
 const int g_pyramidSpellLevel = 5;
-VA(0x0052a410, 0xF5)
+VA(0x0052a410, 0xF5) MAC_ADDRESS(0x1443c0, 0x144)
 long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
 {
     short owner = currentHero->m_owner;
@@ -3003,19 +3082,11 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     guardians.add(0x74, 0x28, -1);
     guardians.add(0x75, 0x14, -1);
 
-    if (currentHero->m_skillLevel[eSecSkillWisdom] >= 3) {
+    if (currentHero->getSecondarySkill(eSecSkillWisdom) >= 3) {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (g_spellTraits[spell].m_level == g_pyramidSpellLevel) {
                 if (!currentHero->spellIsAvailable(spell)) {
-                    long spellValue;
-                    if (currentHero->isInSpellbook(SpellID(spell)))
-                        spellValue = 0;
-                    else if (currentHero->isWieldingArtifact(
-                                 ARTIFACT_SPELLBOOK))
-                        spellValue = aiGetSpellValue(currentHero, spell);
-                    else
-                        spellValue = 0;
-                    value += spellValue;
+                    value += valueOfSpell(currentHero, SpellID(spell));
                 }
                 count++;
             }
@@ -3026,26 +3097,23 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     return aiValueOfCombat(currentHero, 0, guardians, 0, cell) + value;
 }
 
-VA(0x0052a510, 0xdf)  // dc 0x11206c
+VA(0x0052a510, 0xdf) MAC_ADDRESS(0x144504, 0x140)  // dc 0x11206c
 long getValueOfWell(const hero* currentHero, unsigned short moveCost)
 {
     if (currentHero->m_flags & 1)
         return 0;
 
-    type_point path;
-    path.m_x = currentHero->m_pathTargetX;
-    path.m_y = currentHero->m_pathTargetY;
-    path.m_z = currentHero->m_pathTargetZ;
+    type_point path = currentHero->getTarget();
     type_point target = path;
     if (target.isValid() && moveCost > 300) {
-        NewmapCell* cell = g_game->m_worldMap.cell(target);
+        NewmapCell* cell = g_game->getCell(target);
         if (cell->m_type != MAGIC_WELL && cell->m_type != MAGIC_SPRING)
             return 0;
     }
     return currentHero->getValueOfWell();
 }
 
-VA(0x0052a5f0, 0x108)  // dc 0x1120e8
+VA(0x0052a5f0, 0x108) MAC_ADDRESS(0x144644, 0xd4)  // dc 0x1120e8
 int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 {
     if (currentHero->m_flags & 0x10000)
@@ -3062,7 +3130,7 @@ int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                          short amount);
 
-VA(0x0052a700, 0x10)  // dc 0x1121b8
+VA(0x0052a700, 0x10) MAC_ADDRESS(0x144718, 0x2c)  // dc 0x1121b8
 int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 {
     TCreatureType creature;
@@ -3075,7 +3143,7 @@ int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 }
 
 
-VA(0x0052a710, 0xad)  // dc 0x110c90
+VA(0x0052a710, 0xad) MAC_ADDRESS(0x142b98, 0xdc)  // dc 0x110c90
 long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                          short amount)
 {
@@ -3090,7 +3158,7 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 }
 
-VA(0x0052a7c0, 0xa8)  // dc 0x112260
+VA(0x0052a7c0, 0xa8) MAC_ADDRESS(0x144818, 0xfc)  // dc 0x112260
 long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* player)
 {
     long combatValue = 0;
@@ -3112,7 +3180,7 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* play
         + static_cast<double>(combatValue));
 }
 
-VA(0x0052a870, 0x4F)  // dc 0x1123ac
+VA(0x0052a870, 0x4F) MAC_ADDRESS(0x144914, 0x8c)  // dc 0x1123ac
 int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
     playerData* player = currentHero->getPlayer();
@@ -3123,7 +3191,7 @@ int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
     return static_cast<int>(player->m_ai.m_resourceValue[GOLD] * 1200.0);
 }
 
-VA(0x0052a8c0, 0x9a)  // dc 0x112510
+VA(0x0052a8c0, 0x9a) MAC_ADDRESS(0x144a54, 0xe8)  // dc 0x112510
 int valueOfScroll(const hero* currentHero, NewmapCell* cell)
 {
     SpellID spell;
@@ -3148,7 +3216,7 @@ int valueOfScroll(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
-VA(0x0052a960, 0x158)  // dc 0x1126d0
+VA(0x0052a960, 0x158) MAC_ADDRESS(0x144c58, 0x170)  // dc 0x1126d0
 int valueOfSirens(const hero* currentHero)
 {
     armyGroup army = currentHero->m_army;
@@ -3164,7 +3232,7 @@ int valueOfSirens(const hero* currentHero)
         * experience - value);
 }
 
-VA(0x0052aac0, 0xB9)  // dc 0x11276c
+VA(0x0052aac0, 0xB9) MAC_ADDRESS(0x144dc8, 0x98)  // dc 0x11276c
 int valueOfStables(const hero* currentHero, long& moveCost)
 {
     int value = 0;
@@ -3193,7 +3261,7 @@ DATA(0x00640558) static const TArtifact g_legionArtifacts[5] = {
     ARTIFACT_HEAD_OF_LEGION
 };
 
-VA(0x0052ab80, 0x505)  // dc 0x112914
+VA(0x0052ab80, 0x505) MAC_ADDRESS(0x145390, 0x500)  // dc 0x112914
 long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 {
     short townId = static_cast<short>(g_game->getTownId(x, y, z));
@@ -3299,7 +3367,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     return min(value, 5000000L);
 }
 
-VA(0x0052b090, 0x14e)  // dc 0x112830
+VA(0x0052b090, 0x14e) MAC_ADDRESS(0x144e60, 0x1a0)  // dc 0x112830
 long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
     long playerId = currentHero->m_owner;
@@ -3315,11 +3383,11 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
-        &static_cast<const town*>(currentTown)->getArmy(), garrisonHero,
+        &currentTown->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army, currentHero->getMorale(0, 0, 1),
-        &static_cast<const town*>(currentTown)->getArmy(), player->m_resources,
+        &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
     if (moveCost >= 400
@@ -3337,7 +3405,7 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 // The new helper also prices the Conflux university and unlearned guild
 // spells, then checks the per-hero town bonus mask before the stat arms.
 // Its role name is provisional; keep the retained body in this module.
-VA(0x0052b1e0, 0x2f4)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
+VA(0x0052b1e0, 0x2f4) MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
 long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 {
     long value = 0;
@@ -3355,7 +3423,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
                 value += 1000;
         } else {
             for (int level = 0;
-                 level < currentHero->m_skillLevel[eSecSkillWisdom] + 2; level++) {
+                 level < currentHero->getSecondarySkill(eSecSkillWisdom) + 2; level++) {
                 if (level > currentTown->m_mageLevel)
                     break;
                 for (int slot = 0;
@@ -3391,16 +3459,14 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     case TOWN_STRONGHOLD:
         if (currentTown->hasBuilding(EXTRA_2_ID, true))
             value = static_cast<long>(
-                static_cast<float>(hero::getExperienceIncrement(
-                    currentHero->m_level))
+                static_cast<float>(currentHero->getExperienceIncrement())
                 * currentHero->m_turnExperienceToRvRatio
                 + static_cast<float>(value));
         break;
     case TOWN_FORTRESS:
         if (currentTown->hasBuilding(SPECIAL_BUILDING_ID, true))
             value = static_cast<long>(
-                static_cast<float>(hero::getExperienceIncrement(
-                    currentHero->m_level))
+                static_cast<float>(currentHero->getExperienceIncrement())
                 * currentHero->m_turnExperienceToRvRatio
                 + static_cast<float>(value));
         break;
@@ -3408,7 +3474,7 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     return value;
 }
 
-VA(0x0052b4e0, 0xbf)  // dc 0x112f6c
+VA(0x0052b4e0, 0xbf) MAC_ADDRESS(0x145a1c, 0x124)  // dc 0x112f6c
 int valueOfTreasure(const hero* currentHero)
 {
     playerData* player = currentHero->getPlayer();
@@ -3452,7 +3518,7 @@ int valueOfTreasure(const hero* currentHero)
 // philai.h is itself in game.h's closure.
 const int g_treePriceGold = 1;
 const int g_treePriceGems = 2;
-VA(0x0052b5a0, 0x161)  // dc 0x1130cc
+VA(0x0052b5a0, 0x161) MAC_ADDRESS(0x145b40, 0x20c)  // dc 0x1130cc
 int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
@@ -3461,13 +3527,13 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
             & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
         return 0;
 
-    int increment = hero::getExperienceIncrement(currentHero->m_level);
+    int increment = currentHero->getExperienceIncrement();
     playerData* player = currentHero->getPlayer();
     int levelValue = static_cast<int>(static_cast<float>(increment)
         * currentHero->m_turnExperienceToRvRatio);
 
     if (cell->playerKnowsCell(currentHero->m_owner)) {
-        switch (info->m_treeInfo.m_price) {
+        switch (info->getTreePrice()) {
         case g_treePriceGold:
             if (g_currentPlayer->m_resources[GOLD] < 2000)
                 return 0;
@@ -3492,7 +3558,7 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
     return levelValue - expectedPrice;
 }
 
-VA(0x0052b710, 0x7e)  // dc 0x113324
+VA(0x0052b710, 0x7e) MAC_ADDRESS(0x145d4c, 0xc0)  // dc 0x113324
 int valueOfWagon(NewmapCell* cell, long playerId)
 {
     if (cell->playerKnowsCell(static_cast<short>(playerId)))
@@ -3504,7 +3570,7 @@ int valueOfWagon(NewmapCell* cell, long playerId)
         + static_cast<float>(resourcePart));
 }
 
-VA(0x0052b790, 0x71)  // dc 0x113380
+VA(0x0052b790, 0x71) MAC_ADDRESS(0x145e0c, 0xb8)  // dc 0x113380
 int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
@@ -3514,12 +3580,12 @@ int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
         return 0;
     return static_cast<int>(
         static_cast<float>(
-            hero::getExperienceIncrement(currentHero->m_level))
+            currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
-VA(0x0052b810, 0xe1)  // dc 0x11348c
+VA(0x0052b810, 0xe1) MAC_ADDRESS(0x145ec4, 0x140)  // dc 0x11348c
 long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost)
 {
@@ -3528,13 +3594,11 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    type_point path;
-    path.m_x = currentHero->m_pathTargetX;
-    path.m_y = currentHero->m_pathTargetY;
-    path.m_z = currentHero->m_pathTargetZ;
-    type_point target = path;
+    // DC dc0x11348c records one target local, and Mac0x145ec4 expands
+    // getTarget directly. The extra path-to-target copy was reconstruction.
+    type_point target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
-        NewmapCell* destination = g_game->m_worldMap.cell(target);
+        NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL
             && destination->m_type != MAGIC_SPRING)
             return 0;
@@ -3542,7 +3606,7 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     return currentHero->getValueOfSpring();
 }
 
-VA(0x0052b900, 0xb6)  // dc 0x113da0
+VA(0x0052b900, 0xb6) MAC_ADDRESS(0x146004, 0x130)  // dc 0x113da0
 int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
@@ -3550,10 +3614,10 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     if (cell->playerKnowsCell(currentHero->m_owner)) {
         if (currentHero->m_skillCount >= 8)
             return 0;
-        int skill = info->m_witchHutInfo.m_skill;
+        int skill = info->getWitchSkill();
         if (skill == -1)
             return 0;
-        if (currentHero->m_skillLevel[skill])
+        if (currentHero->getSecondarySkill(TSecondarySkill(skill)))
             return 0;
         if (!wantsSkill(currentHero, TSecondarySkill(skill), 1))
             return 0;
@@ -3561,7 +3625,7 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
     }
     return static_cast<int>(
         static_cast<float>(
-            hero::getExperienceIncrement(currentHero->m_level))
+            currentHero->getExperienceIncrement())
         * currentHero->m_turnExperienceToRvRatio);
 }
 
@@ -3689,26 +3753,14 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case LIGHTHOUSE:
         return valueOfLighthouse(cell);
     case MAGIC_SCHOOL:
-        // Both Dreamcast and Complete retain this named helper call. Keep
-        // the source-real boundary even when VC6's current budget wants to
-        // expand it.
-#pragma inline_depth(0)
         return valueOfMagicSchool(currentHero, cell);
-#pragma inline_depth()
     case MAGIC_SPRING:
-        // Both targets retain this source-real helper boundary.
-#pragma inline_depth(0)
         return getValueOfSpring(
             currentHero, cell,
             static_cast<unsigned short>(moveCost));
-#pragma inline_depth()
     case MAGIC_WELL:
-        // Complete retains this helper call as well; keep the decision
-        // independent of the surrounding event arm's changing inline budget.
-#pragma inline_depth(0)
         return getValueOfWell(
             currentHero, static_cast<unsigned short>(moveCost));
-#pragma inline_depth()
     case MERC_CAMP:
         return valueOfMercenaryCamp(currentHero, cell);
     case MERMAID:
@@ -3716,16 +3768,12 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return
             const_cast<hero*>(currentHero)->luckIncreaseValue(1);
-#pragma inline_depth()
     case MINE:
         return valueOfMine(currentHero, cell);
     case MONSTER:
-#pragma inline_depth(0)
         return valueOfMonsters(currentHero, cell, point);
-#pragma inline_depth()
 
     case MYSTICAL_GARDEN: {
         const ExtraInfoUnion* info =
@@ -3740,68 +3788,45 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     }
 
     case OASIS:
-#pragma inline_depth(0)
         return valueOfMoveSource(
             currentHero, 0x80, 400, moveCost);
-#pragma inline_depth()
     case OBELISK:
-#pragma inline_depth(0)
         return valueOfObelisk(cell, currentHero->m_owner);
-#pragma inline_depth()
     case OBSERVATORY:
         return
             aiValueOfObservatory(point, currentHero->m_owner, 20);
     case POWER_SCHOOL:
-#pragma inline_depth(0)
         return valueOfPowerSchool(currentHero, cell);
-#pragma inline_depth()
     case PRISON:
-#pragma inline_depth(0)
         return valueOfPrison(cell, player);
-#pragma inline_depth()
     case PYRAMID:
         return valueOfPyramid(currentHero, cell);
     case RALLY_FLAG:
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return valueOfRallyFlag(currentHero, moveCost);
-#pragma inline_depth()
     case REFUGEE_CAMP:
-#pragma inline_depth(0)
         return valueOfRefugeeCamp(currentHero, cell);
-#pragma inline_depth()
     case RESOURCE:
-#pragma inline_depth(0)
         return valueOfResource(currentHero, cell, player);
-#pragma inline_depth()
     case SCHOLAR:
         return static_cast<int>(
-            hero::getExperienceIncrement(currentHero->m_level)
+            currentHero->getExperienceIncrement()
             * currentHero->m_turnExperienceToRvRatio);
     case SEA_CHEST:
-#pragma inline_depth(0)
         return valueOfSeaChest(currentHero, cell);
-#pragma inline_depth()
     case SEER:
         return g_game->m_worldMap.m_seerHutList[cell->m_extraInfo].getValue(
             const_cast<hero*>(currentHero));
     case SEPULCHER:
     case SHIPWRECK:
-#pragma inline_depth(0)
         return valueOfBank(currentHero, cell);
-#pragma inline_depth()
     case SHIPYARD: {
         const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
             static_cast<const void*>(&cell->m_extraInfo));
-        // The Dreamcast statement is a named OnSameTeam call and Complete
-        // retains that boundary.  Pin only the call; the surrounding event
-        // arm remains ordinary source.
-#pragma inline_depth(0)
         if (g_game->onSameTeam(
                 info->m_owner, g_netLocalGamePos))
             return 0;
-#pragma inline_depth()
         return 1000;
     }
     case SHRINE1:
@@ -3809,9 +3834,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case SHRINE3:
         return valueOfShrine(currentHero, cell);
     case SIREN:
-#pragma inline_depth(0)
         return valueOfSirens(currentHero);
-#pragma inline_depth()
     case SPELL_SCROLL:
         return valueOfScroll(currentHero, cell);
     case STABLES:
@@ -3823,10 +3846,8 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
-#pragma inline_depth(0)
         return
             const_cast<hero*>(currentHero)->moraleIncreaseValue(2);
-#pragma inline_depth()
     case TOWN:
         return valueOfTown(
             currentHero, point.m_x, point.m_y, point.m_z,
@@ -3844,37 +3865,28 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfTreasure(currentHero);
     case TREE_OF_KNOWLEDGE:
         return valueOfTree(currentHero, cell);
-    case UNIVERSITY: {
-        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-            static_cast<void*>(cell));
-        return valueOfUniversity(
-            currentHero, info->getUniversity(), 1);
-    }
+    case UNIVERSITY:
+        return valueOfUniversity(currentHero, cell);
     case WAGON:
-#pragma inline_depth(0)
         return valueOfWagon(cell, currentHero->m_owner);
-#pragma inline_depth()
     case WAR_MACHINE_FACTORY:
-#pragma inline_depth(0)
         return valueOfWarFactory(currentHero, moveCost);
-#pragma inline_depth()
     case WAR_SCHOOL:
-#pragma inline_depth(0)
         return valueOfWarSchool(currentHero, cell);
-#pragma inline_depth()
     case WARRIOR_TOMB: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos))
             return 0;
-#pragma inline_depth()
+        // Mac 0x1469f8 retains this tomb-specific backpack check.
+        if (const_cast<hero*>(currentHero)
+                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
+            return 0;
+        return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
     }
     case SHIPWRECK_SURVIVOR:
-        // Complete's retail jump table maps object type 86 directly to the
-        // backpack-test / average-artifact tail which WARRIOR_TOMB reaches
-        // by fallthrough. Dreamcast independently proves this named helper.
+        // Mac 0x1467b4 retains a separate survivor backpack check.
         if (const_cast<hero*>(currentHero)
                 ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
@@ -3883,9 +3895,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos)) {
-#pragma inline_depth()
             return static_cast<long>(
                 info->getWheelGold() * player->m_ai.m_resourceValue[GOLD]);
         }
@@ -3893,17 +3903,13 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
             player->m_ai.m_resourceValue[GOLD] * 1000.0);
     }
     case WATERING_HOLE:
-#pragma inline_depth(0)
         return valueOfMoveSource(
             currentHero, 0x40, 200, moveCost);
-#pragma inline_depth()
     case WINDMILL: {
         const ExtraInfoUnion* info =
             static_cast<const ExtraInfoUnion*>(
                 static_cast<const void*>(cell));
-#pragma inline_depth(0)
         if (info->playerKnowsCell(g_netLocalGamePos)) {
-#pragma inline_depth()
             if (info->getWindmillAmount() == 0)
                 return 0;
         }
@@ -3915,7 +3921,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     return 0;
 }
 
-VA(0x0052b9c0, 0x20c)  // dc 0x1147ac
+VA(0x0052b9c0, 0x20c) MAC_ADDRESS(0x146b8c, 0x2f4)  // dc 0x1147ac
 void __cdecl aiExamineMap()
 {
     type_point point;
@@ -3924,10 +3930,10 @@ void __cdecl aiExamineMap()
     long waterCells = 0;
     long extraMovement[3] = {0, 0, 0};
 
-    for (; point.m_z < g_game->m_worldMap.getNumLevels(); point.m_z++) {
+    for (; point.m_z < g_game->getNumMapLevels(); point.m_z++) {
         for (point.m_x = 0; point.m_x < g_mapWidth; point.m_x++) {
             for (point.m_y = 0; point.m_y < g_mapHeight; point.m_y++) {
-                NewmapCell* cell = g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z);
+                NewmapCell* cell = g_game->getCell(point);
                 if ((cell->m_flags0011 & 0x40)
                         && cell->m_groundSet != eTerrainRock) {
                     passableCells++;
@@ -3953,20 +3959,20 @@ void __cdecl aiExamineMap()
             = static_cast<double>(extraMovement[skill]) / passableCells;
 }
 
-VA(0x0052bbd0, 0x87)  // dc 0x114a5c
+VA(0x0052bbd0, 0x87) MAC_ADDRESS(0x146e80, 0xf4)  // dc 0x114a5c
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     TSecondarySkill first, TSecondarySkill second,
     unsigned char complexChoice)
 {
-    if ((ourHero->m_skillLevel[first] > 0)
-            == (ourHero->m_skillLevel[second] > 0)) {
+    if ((ourHero->getSecondarySkill(first) > 0)
+            == (ourHero->getSecondarySkill(second) > 0)) {
         if (getSkillValue(ourHero, first, complexChoice)
                 >= getSkillValue(ourHero, second, complexChoice))
             return first;
         return second;
     }
 
-    if (ourHero->m_skillLevel[second] == 0) {
+    if (ourHero->getSecondarySkill(second) == 0) {
         TSecondarySkill known = first;
         first = second;
         second = known;
@@ -3976,7 +3982,7 @@ TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     return second;
 }
 
-VA(0x0052bc60, 0xAB)  // dc 0x114adc
+VA(0x0052bc60, 0xAB) MAC_ADDRESS(0x146f74, 0xd4)  // dc 0x114adc
 void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount)
 {
@@ -3991,7 +3997,7 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
                           hasAngelicAlliance);
 }
 
-VA(0x0052bd10, 0x1D)  // dc 0x114b44
+VA(0x0052bd10, 0x1D) MAC_ADDRESS(0x147048, 0x34)  // dc 0x114b44
 long aiValueOfEvent(const hero* currentHero, type_point point)
 {
     long moveCost = 0;

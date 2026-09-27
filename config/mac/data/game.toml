@@ -1,0 +1,220 @@
+# CodeWarrior's signed-int-to-double conversion bias used by the admitted
+# gate-pairing body. The anonymous candidate pool name is context-dependent.
+
+[[data]]
+retail_va = 0x006779b0
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x426c4
+mac_size = 24
+sha256 = "69debb2e596ccf7ba59ff4eaee264cefedb7be9659e443eee54c376c5e69c535"
+evidence = "Mac giveTroopsToNeutralTown loads TOC 1+0x24f4 at code0+0xd4df4 and walks successive four-byte weights at 0xd4e00..0xd4e20 until the level reaches six. The loader resolves that pointer to initialized data1+0x426c4; all six big-endian integers {2,3,4,5,4,3} match the complete source-owned DATA(0x006779b0) table."
+
+[[data]]
+retail_va = 0x00677998
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x42628
+mac_size = 24
+sha256 = "3ac9c8619d58266d41c50896956051384cc620442b8f4b4533ae0d0bda132bfb"
+evidence = "Mac calculateProduction loads TOC 1+0x2538 at code0+0xca984 into r25, then indexes that pointer with the signed handicap byte times eight at 0xcb0d8..0xcb0e4. The loader resolves it to initialized data1+0x42628. All three big-endian doubles are {0.0, 0.15, 0.3}, exactly the source-owned DATA(0x00677998) table; the complete 24-byte payload is verified."
+
+[[data]]
+retail_va = 0x0063e668
+source = "src/game.cpp"
+mac_section = 0
+mac_offset = 0x2a4d4c
+mac_size = 16
+sha256 = "e9decb8d201a0dbc794d887dd560ce7c058915213ab5e5fa574ee2e6ddd6a011"
+evidence = "game::perDay at Mac code0+0xdeb5c indexes the source-owned static const g_resources[4] through loader TOC 1+0x24c8 -> code0+0x2a4d4c. The complete 16-byte big-endian payload is {1,3,4,5}, exactly MERCURY, SULFUR, CRYSTAL, GEMS from DATA(0x0063e668); following bytes start a distinct code-pool item."
+
+[[data]]
+retail_va = 0x006972b8
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x526bfc
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "game::perDay loads g_gameOver through loader TOC 1+0x70c -> zero-filled storage 1+0x526bfc at Mac code0+0xde824. The source-owned DATA(0x006972b8) declaration in include/advmgr.h binds the external address only, without supplying an initializer. Full ordinary KB object confirms source-owned g_gameOver RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
+
+[[data]]
+retail_va = 0x00677958
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x425e0
+mac_size = 28
+sha256 = "3babf870af4558404976ce9f7fed2e2e6620dec6adb5f4793b3f880771339ebe"
+evidence = "Mac convertObject at code0+0xe0cc4 loads TOC 1+0xbdc -> 1+0x425e0 and indexes seven loader-relocated pointers. Their complete strings are avtwood0.def, avtmerc0.def, avtore0.def, avtsulf0.def, avtcrys0.def, avtgems0.def and avtgold0.def, matching DATA g_resourceObjectDefs[7]. External address binding only."
+
+[[data]]
+retail_va = 0x00677974
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42608
+mac_size = 4
+sha256 = "4c5350f9fa8a07d90d71ddecd0929424911d6fb71bcc157e00a2d20a957f3da5"
+evidence = "Mac convertObject at code0+0xe0cd8 loads TOC 1+0xbd8 -> pointer storage 1+0x42608. Its loader-relocated pointer selects the complete format string ava%04d.def at 1+0x425fc before sprintf; DATA g_artifactObjectDefFormat owns the external pointer cell."
+
+[[data]]
+retail_va = 0x00677a54
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42c20
+mac_size = 36
+sha256 = "460b1201ba3e70f8a733516438e928f5de0459c64ff4d7348859000f1b1f604d"
+evidence = "Mac convertObject at code0+0xe0d88 indexes TOC 1+0xbd4 -> 1+0x42c20 in the isCapitol branch. All nine loader-relocated strings are faction AVC...z0.def Capitol graphics, matching DATA g_townCapitolObjectDefs[9]. External address binding only."
+
+[[data]]
+retail_va = 0x00677a30
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42b84
+mac_size = 36
+sha256 = "8396baa8dd329a9a19370f35952379968f629954565b5e40ec08bc3bd3583167"
+evidence = "Mac convertObject at code0+0xe0e2c indexes TOC 1+0xbd0 -> 1+0x42b84 in the isCastle branch. All nine loader-relocated strings are faction AVC...x0.def Fort graphics, matching DATA g_townFortObjectDefs[9]. External address binding only."
+
+[[data]]
+retail_va = 0x00677a0c
+source = "src/game.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x42ae8
+mac_size = 36
+sha256 = "b0c2b26af566dbdae2d407d1a4546749d6a50731139af3cae8e73aa3ba66d69c"
+evidence = "Mac convertObject at code0+0xe0e48 indexes TOC 1+0xbcc -> 1+0x42ae8 in the remaining town branch. All nine loader-relocated strings are faction AVC...0.def Village graphics, matching DATA g_townVillageObjectDefs[9]. External address binding only."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4be0
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "Mac matchUndergroundGates at code 0:0xd7220 loads the signed-integer conversion bias through loader-relocated TOC 1+0x2534 -> data 1+0x4be0. The eight big-endian bytes are 0x4330000080000000, and the CodeWarrior candidate emits that exact anonymous double payload while converting dx*dx+dy*dy before MathLib sqrt."
+
+[[data]]
+retail_va = 0x006779c8
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x426dc
+mac_size = 28
+sha256 = "5e13954fb8aef90443816943ff5b0d1a9c211c9cd573314cbf2e9896b40ea9d0"
+evidence = "newMap copies seven tutorial resources from Windows 0x6779c8. Mac data1+0x426dc uniquely contains the same six 50s followed by 50000; loader TOC1+0x24f0 resolves this table. Mac newMap code0+0xd5ab4 loads that pointer into r26; after the tutorial flag at 0xd5fb0, 0xd5fbc passes it as the source for the 28-byte copy at 0xd5fc8. The adjacent six neutral-town weights are a distinct array."
+
+[[data]]
+retail_va = 0x00698400
+source = "src/hero.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x527e3c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "newMap's setup guard is owned by DATA g_inSetup in hero.cpp and extern in game.h. Mac code0+0xd5aa4 loads r14 from loader TOC1+0xbf4 -> zero-filled storage1+0x527e3c; entry0xd5adc stores int1 and exit0xd6338 stores int0, matching Windows newMap's setup lifetime. External address binding only."
+
+[[data]]
+retail_va = 0x00678170
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x430e4
+mac_size = 140
+sha256 = "c5b4864a27c3ed3749b38dd3d607d7b12ea2de9c73a42e64c108ca154d361e7b"
+evidence = "The five seven-resource human difficulty rows exactly match the source-owned Windows initializer. Mac newMap loads loader TOC1+0xbf0 -> data1+0x430e4 into r17; its human branch scales difficulty by28 and copies that row at code0+0xd5fa8. All35 big-endian signed-int values are verified, including the distinct gold amounts."
+
+[[data]]
+retail_va = 0x006781fc
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x43170
+mac_size = 140
+sha256 = "0eb9e90c75be19e035eb96784d3b2646661e40d3679b236db1f7d348ee5f479c"
+evidence = "The five seven-resource computer difficulty rows exactly match the source-owned Windows initializer. Mac newMap loads loader TOC1+0xbec -> data1+0x43170 into r25; its computer branch scales difficulty by28 and copies that row at code0+0xd6000. All35 big-endian signed-int values are verified, including the distinct gold amounts."
+
+[[data]]
+retail_va = 0x0069fbf8
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_array = true
+mac_section = 1
+mac_offset = 0x54d30c
+mac_size = 32
+sha256 = "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+evidence = "Source game.cpp owns eight uninitialized signed-int starting bonuses. Mac newMap code0+0xd5f3c loads loader TOC1+0x92c -> 32-byte zero storage1+0x54d30c into r23; 0xd6014 reads the current player's bonus and 0xd604c compares it with random-bonus3 before the same hero-dependent random choices. The loop advances this pointer four bytes for each of eight players. The source definition stays in its owning TU, with external consumers address-bound."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bd0
+mac_size = 8
+sha256 = "0a03e37f385d6df93ff35a87c7ffed7e6d1f9c425041ca587cf552867878364b"
+evidence = "Mac newMap handicap resource multiplication loads the big-endian double 0.85 directly from TOC data1+0x4bd0 at code0+0xd62c4; the candidate emits the same eight-byte anonymous scalar payload."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bc8
+mac_size = 8
+sha256 = "98cf842bb9d3a4708bd0f6e9f2e13b85a4591177462716ae809f77862b7aaf42"
+evidence = "Mac newMap handicap resource multiplication loads the big-endian double 0.7 directly from TOC data1+0x4bc8 at code0+0xd62cc; the candidate emits the same eight-byte anonymous scalar payload."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4b24
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Mac newMap clears its eight disabled flags through eight byte load/store pairs at code0+0xd5d74..0xd5dbc. Every load uses direct TOC1+0x4b24, whose byte is zero; this pins the constant-reference value used by the expanded fill operation."
+
+[[data]]
+retail_va = 0x00677978
+source = "src/game.cpp"
+mac_section = 1
+mac_offset = 0x4260c
+mac_size = 28
+sha256 = "f4ba13bd6c3c88e4de754d7e3402cd38deb5bf03d6f836d41548cb84d716beb1"
+evidence = "Mac calculateProduction loads TOC1+0x253c -> section1+0x4260c at0xca99c and indexes four-byte mine production values at0xcaaf0 after checking mine type below GOLD. All seven big-endian integers are2,1,2,1,1,1,1000, identical to the ordinary game.cpp definition. Loader destination and full28-byte payload are verified."
+
+[[data]]
+retail_va = 0x00697750
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x527e20
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Ordinary game.cpp owns the uninitialized int g_weekType. Native perWeek loads TOC1+0x654 -> zero storage1+0x527e20, then stores the corresponding week value at0xdf514. Four-byte zero payload and loader destination are verified; owner UDATA and external consumer references remain checked separately."
+
+[[data]]
+retail_va = 0x006983fc
+source = "src/game.cpp"
+same_tu_definition = true
+same_tu_external = true
+mac_section = 1
+mac_offset = 0x527e1c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "Ordinary game.cpp owns the uninitialized int g_weekTypeExtra. Native perWeek loads TOC1+0x650 -> zero storage1+0x527e1c, then stores the corresponding week value at0xdf51c. Four-byte zero payload and loader destination are verified; owner UDATA and external consumer references remain checked separately."
+
+[[constants]]
+units = ["game"]
+mac_section = 1
+mac_offset = 0x4bd8
+mac_size = 4
+sha256 = "1b9e0fe7b740b4e583727aa1c9d27ff8c01491f911d2de0747f8c997ef6b3498"
+evidence = "Native setupPuzzlePieces loads the direct TOC float at1+0x4bd8 with lfs at0xcde14 and uses it for the quadratic percentage factor. The complete four-byte big-endian payload is3f000000, exactly0.5f, the reciprocal of the authored division by2.0f. Bind the reviewed literal payload and address without any anonymous compiler-ordinal identity."
+
+[[constants]]
+units = ["game"]
+owner_va = 0x004c92c0
+candidate_offset = 0xa8
+target_offset = 0xa0
+mac_section = 1
+mac_offset = 0x4b2d
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Native getRandomMonster at0xdff74 loads its fill value through direct TOC data1+0x4b2d. The emitted fill loop at raw candidate+0xa8 loads the same anonymous one-byte false payload. Pin this owner's actual use instead of reusing newMap's separately reviewed false literal at1+0x4b24; all anonymous-symbol use sites are checked by the resolver."

@@ -4,6 +4,18 @@ from homm3.model import choose_carrier, CarrierPolicy
 
 
 class HeaderCarrierTest(unittest.TestCase):
+    def test_reviewed_comparison_replaces_an_emitted_banked_copy(self):
+        policy = CarrierPolicy({20: 'inlined'}, reviewed={20: 'retained'})
+        self.assertEqual(policy.choose(20, {'inlined', 'retained'},
+                                       policy.banked, []), 'retained')
+        self.assertEqual(policy.for_units({'inlined', 'retained'}),
+                         {20: 'retained'})
+
+    def test_reviewed_missing_copy_is_measured_as_missing(self):
+        policy = CarrierPolicy({20: 'retained'}, reviewed={20: 'retained'})
+        self.assertEqual(policy.choose(20, {'different'}, policy.banked, []),
+                         'retained')
+
     def test_emitter_preferred_over_missing_banked_carrier(self):
         self.assertEqual(choose_carrier(20, {'a', 'b'}, {20: 'b'}, []), 'b')
         self.assertEqual(choose_carrier(20, {'a'}, {20: 'b'}, []), 'a')

@@ -104,6 +104,28 @@ class OwnershipCacheTest(unittest.TestCase):
         (self.root / "src/new.h").write_text("// newly resolvable include")
         self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
 
+    def test_mac_metadata_edits_reuse_windows_ast_cache(self):
+        path = self.root / "config/mac/units.toml"
+        path.parent.mkdir(parents=True)
+        path.write_text('flags=["-O3"]\n')
+        self.collect()
+        self.assertEqual(self.collect()[1], [])
+        path.write_text('flags=["-O3", "-nomapcr"]\n')
+        self.assertEqual(self.collect()[1], [])
+        # New names still matter to include resolution, even under config/mac.
+        (path.parent / "new.toml").write_text('flags=[]\n')
+        self.assertEqual(self.collect()[1], ["src/a.cpp", "src/b.cpp"])
+
+    def test_included_mac_metadata_still_invalidates_its_consumer(self):
+        path = self.root / "config/mac/units.toml"
+        path.parent.mkdir(parents=True)
+        path.write_text('flags=["-O3"]\n')
+        self.includes["src/a.cpp"] = ["config/mac/units.toml"]
+        self.collect()
+        self.assertEqual(self.collect()[1], [])
+        path.write_text('flags=["-O3", "-nomapcr"]\n')
+        self.assertEqual(self.collect()[1], ["src/a.cpp"])
+
     def test_parse_errors_and_corrupt_entries_are_retried(self):
         self.failures = ["PARSE missing include"]
         self.collect()

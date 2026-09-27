@@ -28,6 +28,7 @@ class ReadmeScoreTest(unittest.TestCase):
             readme.write_text(f"before\n{status.RM_START}\nold\n{status.RM_END}\nafter\n")
             with patch.object(status, "README_PATH", readme), \
                     patch.object(status, "load_baseline", return_value=baseline), \
+                    patch.object(status, "source_hash_pair", return_value=({}, {})), \
                     patch.object(status, "function_rvas", return_value={
                         ("unit", fn["name"]): i for i, fn in enumerate(functions)
                     }), \
@@ -43,15 +44,14 @@ class ReadmeScoreTest(unittest.TestCase):
                 self.assertEqual(readme.read_text(), first)
 
         self.assertIn("**Executable MAX: 65.00%**", first)
-        self.assertIn("**CUR diagnostics** — 1 / 6 functions exact (16.7%)", first)
+        self.assertIn("_CUR / MAX / HIST: 1 / 2 / 3 exact", first)
         self.assertIn("**Function exact MAX** — 2 / 6 current implementations "
                       "(33.3%)", first)
         table = [[c.strip() for c in line.strip("|").split("|")]
                  for line in first.splitlines() if line.startswith("|")]
-        self.assertIn("Function exact MAX", table[0])
-        self.assertEqual(table[2][2:4], ["2 / 4 (50.0%)", "1 / 4 (25.0%)"])
-        self.assertEqual(table[2][4:], ["97.50%", "56.25%"])
-        self.assertEqual(table[3][2:4], ["0 / 2 (0.0%)", "0 / 2 (0.0%)"])
+        self.assertIn("Functions exact MAX", table[0])
+        self.assertEqual(table[2][2:], ["2 / 4 (50.0%)", "97.50%"])
+        self.assertEqual(table[3][2:], ["0 / 2 (0.0%)", "0.0%"])
         self.assertTrue(first.startswith("before\n"))
         self.assertTrue(first.endswith("\nafter\n"))
 
@@ -70,6 +70,7 @@ class ReadmeScoreTest(unittest.TestCase):
             with patch.object(status, "README_PATH", readme), \
                     patch.object(status, "load_baseline",
                                  return_value=baseline), \
+                    patch.object(status, "source_hash_pair", return_value=({}, {})), \
                     patch.object(status, "function_rvas", return_value={
                         ("unit", "?CompilerSpelling@@YAXXZ"): 0x1234,
                     }), \
@@ -82,10 +83,10 @@ class ReadmeScoreTest(unittest.TestCase):
                 text = readme.read_text()
 
         self.assertIn("**Executable MAX: 100.00%**", text)
-        self.assertIn("**CUR diagnostics** — 0 / 1 functions exact", text)
+        self.assertIn("_CUR / MAX / HIST: 0 / 1 / 1 exact", text)
         self.assertIn("**Function exact MAX** — 1 / 1 current implementations",
                       text)
-        self.assertRegex(text, r"\|\s*100\.00% \|\s*25\.00% \|")
+        self.assertRegex(text, r"\|\s*1 / 1 \(100\.0%\) \|\s*100\.00% \|")
 
 
     def test_excluded_linked_bodies_do_not_inflate_progress(self):
@@ -103,6 +104,7 @@ class ReadmeScoreTest(unittest.TestCase):
             readme.write_text("")
             with patch.object(status, "README_PATH", readme), \
                     patch.object(status, "load_baseline", return_value=baseline), \
+                    patch.object(status, "source_hash_pair", return_value=({}, {})), \
                     patch.object(status, "function_rvas",
                                  return_value={("unit", "1"): 1}), \
                     patch("homm3.build.configure.load_manifest", return_value=(
@@ -116,10 +118,9 @@ class ReadmeScoreTest(unittest.TestCase):
 
         self.assertIn("**Executable MAX: 75.00%**", text)
         self.assertIn("**Function exact MAX** — 1 / 2", text)
-        self.assertIn("**CUR diagnostics** — 1 / 2", text)
-        self.assertIn("(2 in linked units)", text)
+        self.assertIn("_CUR / MAX / HIST: 1 / 1 / 1 exact", text)
         self.assertNotIn("`(unmatched)`", text)
-        self.assertRegex(text, r"\|\s*75\.00% \|\s*75\.00% \|")
+        self.assertRegex(text, r"\|\s*1 / 2 \(50\.0%\) \|\s*75\.00% \|")
 
 if __name__ == "__main__":
     unittest.main()

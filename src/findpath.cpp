@@ -37,7 +37,7 @@ bool type_point::isValid() const
     return m_x >= 0 && m_x < g_mapWidth && m_y >= 0 && m_y < g_mapHeight;
 }
 
-VA(0x004b1370, 0x62)  // dc 0x9ed88
+VA(0x004b1370, 0x62) MAC_ADDRESS(0x0c4594, 0xc8)  // dc 0x9ed88
 searchArray::searchArray()
 {
     m_cellData = 0;
@@ -55,47 +55,43 @@ searchArray::searchArray()
     m_limitReached = 0;
 }
 
-VA(0x004b13e0, 0x78)  // dc 0x9ee08
+// Dreamcast findpath.cpp:66 calls Close; Mac retains its callable body.
+// Retail VC6 expands the ordinary helper in this destructor.
+VA(0x004b13e0, 0x78) MAC_ADDRESS(0x0c465c, 0xa8)  // dc 0x9ee08
 searchArray::~searchArray()
 {
-    if (m_cellData)
-        delete m_cellData;
-    if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
+    close();
 }
 
-VA(0x004b1460, 0x9F)  // dc 0x9ee34
+// Dreamcast findpath.cpp:72/77 calls Close then game::GetNumMapLevels;
+// Mac retains Close, while retail VC6 expands both source calls.
+VA(0x004b1460, 0x9F) MAC_ADDRESS(0x0c4704, 0x128)  // dc 0x9ee34
 void searchArray::init()
 {
-    if (m_cellData)
-        delete m_cellData;
-    if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
-    m_cellData = 0;
-    m_isMoatSlowed = 0;
+    close();
     m_validRectangle.left = 0;
     m_validRectangle.right = g_mapWidth;
     m_validRectangle.top = 0;
     m_validRectangle.bottom = g_mapHeight;
-    m_cellData = new pathCell[(g_game->m_worldMap.getNumLevels()) * g_mapHeight
+    m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
     m_isMoatSlowed = new unsigned char[187];
 }
 
-VA(0x004b1500, 0x2F)  // dc 0x9eee8
+VA(0x004b1500, 0x2F) MAC_ADDRESS(0x0c4830, 0xb0)  // dc 0x9eee8
 void searchArray::close()
 {
     if (m_cellData)
-        delete m_cellData;
+        delete[] m_cellData;
     if (m_isMoatSlowed)
-        delete m_isMoatSlowed;
+        delete[] m_isMoatSlowed;
     m_cellData = 0;
     m_isMoatSlowed = 0;
 }
 
-VA(0x004b1530, 0x20F)  // dc 0x9ef20
+// Dreamcast findpath.cpp:116 calls FindPath.h get_cell. Retail expands
+// its null guard and plane/row offset before clearing the path cells.
+VA(0x004b1530, 0x20F) MAC_ADDRESS(0x0c48e0, 0x198)  // dc 0x9ef20
 void searchArray::clear(long flyLevel, long startZ, long stopZ)
 {
     m_queue.clear();
@@ -112,12 +108,7 @@ void searchArray::clear(long flyLevel, long startZ, long stopZ)
         for (long fly = 0; fly <= flyLevel; fly++) {
             for (point.m_y = static_cast<short>(m_validRectangle.top); point.m_y < m_validRectangle.bottom;
                     point.m_y++) {
-                pathCell* row = m_cellData;
-                if (row != 0) {
-                    unsigned char plane = fly != 0;
-                    row += ((point.m_z * 2 + plane) * g_mapHeight
-                            + point.m_y) * g_mapWidth + point.m_x;
-                }
+                pathCell* row = getCell(point, fly != 0);
                 memset(row, 0, width * sizeof(pathCell));
             }
         }
@@ -170,7 +161,7 @@ DATA(0x006778ac) long g_masteryTerrainCost[4] = { 140, 140, 120, 100 };
 // its positive-result byte to CalcTerrainCost: hasNomad names that proven
 // creature predicate, which removes the Sand penalty.
 
-VA(0x004b1740, 0x13E)  // dc 0x9f034
+VA(0x004b1740, 0x13E) MAC_ADDRESS(0x0c4a78, 0x204)  // dc 0x9f034
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
                     long pathfinding, long endRoad, long flying,
                     long waterWalking, long nativeTerrain,
@@ -216,7 +207,7 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     return cost;
 }
 
-VA(0x004b1880, 0x33)  // dc 0x9f154
+VA(0x004b1880, 0x33) MAC_ADDRESS(0x0c4c7c, 0x4c)  // dc 0x9f154
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                        long pathfinding, long flying, long waterWalking,
                        unsigned char hasNomad)
@@ -226,14 +217,17 @@ int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                            cell->m_groundSet, hasNomad);
 }
 
-VA(0x004b18c0, 0x1A2)  // dc 0x9f184
+// Dreamcast findpath.cpp:237/239 calls game::get_cell twice, then
+// Hero.h get_secondary_skill at 259. Retail and Mac expand those
+// header accessors while retaining the terrain-cost callees.
+VA(0x004b18c0, 0x1A2) MAC_ADDRESS(0x0c4cc8, 0x204)  // dc 0x9f184
 int getTerrainCost(hero* currentHero, type_point start, int direction, int moveLeft)
 {
     const int destX = start.m_x + g_normalDirTable[direction].m_x;
     const int destY = start.m_y + g_normalDirTable[direction].m_y;
-    NewmapCell* from = g_game->m_worldMap.cell(start.m_x, start.m_y, start.m_z);
+    NewmapCell* from = g_game->getCell(start);
     type_point to(destX, destY, start.m_z);
-    NewmapCell* dest = g_game->m_worldMap.cell(to.m_x, to.m_y, to.m_z);
+    NewmapCell* dest = g_game->getCell(to);
     long flying = currentHero->m_flightLevel;
     long waterWalking = currentHero->m_waterWalkLevel;
     if (currentHero->isWieldingArtifact(0x48))
@@ -242,7 +236,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
         waterWalking = 3;
     if (currentHero->m_flags & 0x40000)
         waterWalking = flying = -1;
-    long mastery = currentHero->m_skillLevel[0];
+    long mastery = currentHero->getSecondarySkill(eSecSkillPathfinding);
     return calcTerrainCost(from, direction, moveLeft, mastery,
                            dest->m_roadSet, flying, waterWalking,
                            currentHero->m_army.getNativeTerrain(),
@@ -269,7 +263,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
 // queue search. One local for that shared role, together with pop_back,
 // reproduces the retained body. Separate cell/entry locals leave six stack
 // homes permuted (99.9640%); the original local name is not recorded.
-VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
+VA(0x004b1a70, 0x88D) MAC_ADDRESS(0x0c4ecc, 0x65c)  // anchor-bracket, dc 0x9f2a4
 void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
                             int direction, int moveCost, int limit,
                             long barrierValue, type_point monster,
@@ -490,12 +484,15 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // (all byte-flat); and 1/2/4/6 complete local type definitions (byte-flat
 // across all findpath rows, with all thirteen exact functions preserved).
 // DC-local follow-up: moving candidate and the three path flags to function
-// scope/order is byte-flat; spelling source_terrain/terrain as TTerrainType is
-// byte-flat but rejected because the required bitfield-to-enum casts violate
-// the zero-cast cleanliness floor; reversing the two diagonal corner
+// scope/order is byte-flat. DC source_terrain is TTerrainType and terrain
+// is const int; the shared enum decoder retains the typed source local.
+// Reversing the two diagonal corner
 // declarations regresses to 99.19779%; and DC's const srcCell cannot be
 // expressed without changing the still-non-const NewmapCell accessors.
-VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
+// Dreamcast findpath.cpp:482/635/697 calls point inequality, game::get_cell
+// twice, and type_obscuring_object::get_obscured_type. Retail expands these
+// header helpers inside the path direction loop.
+VA(0x004b2300, 0xA94) MAC_ADDRESS(0x0c552c, 0xf80)  // anchor-callee, dc 0x9f718
 void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                          long turnMobility, long maxMobility,
                                          unsigned char adjacentMonster,
@@ -505,7 +502,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                          long nativeTerrain)
 {
     NewmapCell* srcCell = g_advManager->getCell(source->m_point);
-    long srcGround = srcCell->m_groundSet;
+    TTerrainType sourceTerrain = H3_ENUM_DECODE(TTerrainType, srcCell->m_groundSet);
     unsigned char hasNomad =
         currentHero->m_army.getCreatureTotal(CREATURE_NOMAD) > 0;
 
@@ -516,16 +513,12 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
-            if (candidate.m_point.m_x != monsterLocation.m_x)
-                continue;
-            if (candidate.m_point.m_y != monsterLocation.m_y)
-                continue;
-            if (candidate.m_point.m_z != monsterLocation.m_z)
+            if (candidate.m_point != monsterLocation)
                 continue;
         }
 
         NewmapCell* destCell = g_advManager->getCell(candidate.m_point);
-        long destGround = destCell->m_groundSet;
+        const int terrain = destCell->m_groundSet;
         unsigned char blocked = 0;
         unsigned char impassable = 0;
         unsigned char needsBoat = 0;
@@ -534,7 +527,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_dimensionDoor = 0;
 
         long cost;
-        if (destGround == eTerrainRock) {
+        if (terrain == eTerrainRock) {
             cost = 0;
             impassable = 1;
             candidate.m_canStop = 0;
@@ -574,8 +567,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_canStop = 0;
         }
 
-        if (!(getMapExtra(candidate.m_point.m_x, candidate.m_point.m_y,
-                          candidate.m_point.m_z) & g_mapVisibilityBit)
+        if (!(getMapExtra(candidate.m_point) & g_mapVisibilityBit)
                 && searchType != const_AI_enemy_search
                 && (g_currentPlayer->isHuman()
                     || (!(getMapExtra(source->m_point) & g_mapVisibilityBit)
@@ -597,13 +589,13 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                 && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
             continue;
 
-        if (destGround == eTerrainWater) {
+        if (terrain == eTerrainWater) {
             if (source->m_inBoat) {
                 if (destCell->m_type == BOAT && destCell->m_isTrigger) {
                     impassable = 1;
                     candidate.m_canStop = 0;
                 }
-                if (srcGround == eTerrainWater
+                if (sourceTerrain == eTerrainWater
                         && g_normalDirTable[direction].m_x != 0
                         && g_normalDirTable[direction].m_y != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts
@@ -616,11 +608,9 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     type_point acrossY = source->m_point;
                     acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
                     acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
-                    if (g_game->m_worldMap.cell(acrossX.m_x, acrossX.m_y,
-                                              acrossX.m_z)->m_groundSet
+                    if (g_game->getCell(acrossX)->m_groundSet
                                 != eTerrainWater
-                            || g_game->m_worldMap.cell(acrossY.m_x, acrossY.m_y,
-                                                     acrossY.m_z)->m_groundSet
+                            || g_game->getCell(acrossY)->m_groundSet
                                 != eTerrainWater)
                         impassable = 1;
                 }
@@ -664,7 +654,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
         if (destCell->m_type == HERO && destCell->m_isTrigger) {
             hero* other = g_game->getHero(destCell->m_extraInfo);
-            if (other->obscuredIsTrigger() && other->m_obscuredType == SANCTUARY
+            if (other->obscuredIsTrigger() && other->getObscuredType() == SANCTUARY
                     && other->m_owner != currentHero->m_owner) {
                 blocked = 1;
                 candidate.m_canStop = 0;
@@ -698,9 +688,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             // for the same reason GetTerrainCost spells artifacts 0x48 and
             // 0x5a as literals: naming it means a new enumerator in
             // armygrp.h, whose include closure is measured and live.
-            cost = currentHero->getSpellLevel(
-                       8, currentHero->getSpecialTerrain())
-                       == eMasteryExpert ? 200 : 300;
+            cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                ? 200 : 300;
         }
 
         if (blocked && !candidate.m_flying && !candidate.m_dimensionDoor) {
@@ -713,9 +702,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_adjustedCost += 500;
             if (m_canCastTeleport) {
                 candidate.m_dimensionDoor = 1;
-                cost = currentHero->getSpellLevel(
-                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
-                                                                       : 300;
+                cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                    ? 200 : 300;
             } else {
                 if (source->m_inBoat)
                     continue;
@@ -769,9 +757,8 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             if (m_canCastTeleport) {
                 candidate.m_adjustedCost += 500;
                 candidate.m_dimensionDoor = 1;
-                cost = currentHero->getSpellLevel(
-                           8, currentHero->getSpecialTerrain()) == eMasteryExpert ? 200
-                                                                       : 300;
+                cost = currentHero->getSpellLevel(8) == eMasteryExpert
+                    ? 200 : 300;
             } else if (m_flightLevel <= m_waterWalkLevel) {
                 if (!currentHero->isWieldingArtifact(0x5a))
                     candidate.m_adjustedCost += 500;
@@ -821,13 +808,13 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy, int hex)
         int adjacent = g_combatManager->m_adjacentCells[hex][i];
         if (combatManager::validHex(adjacent)
             && g_combatManager->m_cells[adjacent].m_validMove
-            && !m_isMoatSlowed[adjacent])
+            && !isMoat(adjacent))
             return 1;
         if (currentArmy->is(creatureDoubleWide)) {
             adjacent -= currentArmy->offsetToFront(-1);
             if (combatManager::validHex(adjacent)
                 && g_combatManager->m_cells[adjacent].m_validMove
-                && !m_isMoatSlowed[adjacent])
+                && !isMoat(adjacent))
                 return 1;
         }
     }
@@ -851,7 +838,10 @@ unsigned char searchArray::validMoveAdjacent(const army* currentArmy,
 // base_speed falls back to the stack's own speed when the caller
 // passed a negative and the limit collapses to zero for a bound stack.
 
-VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
+// Dreamcast findpath.cpp:943/952/960/963 calls army::get_spell_time,
+// FindPath.h get_hex, army::OffsetToFront and
+// combatManager::InInvisibleColumn. Retail expands these accessors.
+VA(0x004b2da0, 0x24B) MAC_ADDRESS(0x0c64ac, 0x2c0)  // anchor-global, dc 0xa03fc
 void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, long limit, unsigned char inPlacementPhase, long baseSpeed)
 {
     if (m_cellData == 0)
@@ -862,14 +852,14 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     } else {
         if (baseSpeed < 0)
             baseSpeed = thisArmy->getSpeed();
-        if (thisArmy->m_spellInfluence[72])
+        if (thisArmy->getSpellTime(72))
             limit = 0;
     }
     findCombatPath(thisArmy, currentGroup, -1, inPlacementPhase, limit,
                    baseSpeed);
 
     for (long i = 0; i < COMBAT_GRID_CELLS; i++) {
-        const pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[i];
+        const pathCell* cell = getHex(i);
         if (cell->m_visited && static_cast<long>(cell->m_cost) <= baseSpeed
                 && cell->m_flightCost == 0
                 && (!inPlacementPhase
@@ -877,11 +867,8 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
                             currentGroup, i))) {
             g_combatManager->m_cells[i].m_validMove = 1;
             if (thisArmy->is(creatureDoubleWide) && !thisArmy->is(creatureSiegeWeapon)) {
-                long second = i + (thisArmy->m_facing != 0 ? 1 : -1);
-                if (second < 0 || second >= COMBAT_GRID_CELLS
-                        || (second % COMBAT_GRID_ROW_STRIDE != 0
-                            && second % COMBAT_GRID_ROW_STRIDE
-                                != COMBAT_GRID_LAST_COLUMN)) {
+                long second = i + thisArmy->offsetToFront(-1);
+                if (!g_combatManager->inInvisibleColumn(second)) {
                     if (inPlacementPhase
                             && g_combatManager->isOutsidePlacementBoundry(
                                     currentGroup, second))
@@ -909,14 +896,16 @@ void searchArray::seedCombatPosition(const army* thisArmy, long currentGroup, lo
     }
 }
 
-VA(0x004b2ff0, 0x298)  // dc 0xa0630
+// Dreamcast findpath.cpp:1013/1060 calls get_hex in both passes;
+// retail expands both header helper calls.
+VA(0x004b2ff0, 0x298) MAC_ADDRESS(0x0c676c, 0x29c)  // dc 0xa0630
 void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 {
     if (m_cellData == 0)
         init();
 
     for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
-        pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+        pathCell* cell = getHex(hex);
         cell->m_point.m_x = static_cast<short>(hex);
         if (!g_combatManager->inInvisibleColumn(hex)
                 && currentArmy->canFit(hex, 0, 0)
@@ -946,11 +935,9 @@ void searchArray::markTeleport(const army* currentArmy, long currentGroup)
 
             long direction = enemy->is(creatureDoubleWide) ? 8 : 6;
             while (direction-- > 0) {
-                long adjacent = enemy->getAdjacentHex(enemy->m_gridIndex,
-                                                        direction);
+                long adjacent = enemy->getAdjacentHex(direction);
                 if (g_combatManager->validHex(adjacent)) {
-                    pathCell* adjacentCell =
-                        m_cellData == 0 ? 0 : &m_cellData[adjacent];
+                    pathCell* adjacentCell = getHex(adjacent);
                     if (adjacentCell->m_visited)
                         break;
                 }
@@ -980,7 +967,10 @@ DATA(0x0063bcf4) const unsigned char g_innerMoatHexes[11] = {
     10, 27, 43, 60, 76, 94, 110, 128, 145, 163, 180
 };
 
-VA(0x004b3290, 0x16F)  // dc 0xa0804
+// Dreamcast findpath.cpp:1098/1117 calls get_controlling_side,
+// get_owning_side and TObstacle::IsVisible. Retail expands their
+// shared header bodies in the drawbridge and quicksand checks.
+VA(0x004b3290, 0x16F) MAC_ADDRESS(0x0c6a08, 0x1d0)  // dc 0xa0804
 void searchArray::setMoat(const army* currentArmy)
 {
     memset(m_isMoatSlowed, 0, 187);
@@ -997,8 +987,7 @@ void searchArray::setMoat(const army* currentArmy)
                 m_isMoatSlowed[g_innerMoatHexes[hex]] = 1;
         } }
         if (g_combatManager->m_drawbridgeState != DRAWBRIDGE_UP
-                || (currentArmy->m_spellInfluence[60] ? 1 - currentArmy->m_combatSide
-                                                : currentArmy->m_combatSide) == 1) {
+                || currentArmy->getControllingSide() == 1) {
             m_isMoatSlowed[g_moatHexes[5]] = 0;
             if (g_combatManager->m_moatIsWide)
                 m_isMoatSlowed[g_innerMoatHexes[5]] = 0;
@@ -1007,8 +996,8 @@ void searchArray::setMoat(const army* currentArmy)
     { for (int cell = 0; cell < 187; ++cell) {
         if (g_combatManager->m_cells[cell].m_attributes & hexcell::quicksand) {
             const combatManager::TObstacle* obstacle =
-                &g_combatManager->m_obstacles[g_combatManager->m_cells[cell].m_obstacleIndex];
-            if (currentArmy->m_combatSide == obstacle->m_owner || obstacle->m_isVisible)
+                &g_combatManager->getObstacle(g_combatManager->m_cells[cell].m_obstacleIndex);
+            if (obstacle->isVisible(currentArmy->getOwningSide()))
                 m_isMoatSlowed[cell] = 1;
         }
     } }
@@ -1018,6 +1007,7 @@ void searchArray::setMoat(const army* currentArmy)
 }
 
 // E:\gamedcs\findpath.cpp:1136, dc 0xa0970
+MAC_ADDRESS(0x0c6bd8, 0x170)
 bool searchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
 {
@@ -1026,7 +1016,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
     if (currentArmy->m_side == -1) {
         if (endHex != destination)
             return 0;
-    } else if (m_result.size() == 0) {
+    } else if (getPathSteps() == 0) {
         return 0;
     }
 
@@ -1036,10 +1026,11 @@ bool searchArray::buildCombatPath(const army* currentArmy,
         endHex = currentArmy->getAdjacentCellIndex(
             endHex, oppositeDirection(stepCell->m_direction));
     }
-    return m_result.size() > 0;
+    return getPathSteps() > 0;
 }
 
 // E:\gamedcs\findpath.cpp:1172
+MAC_ADDRESS(0x0c6d48, 0x58)
 void searchArray::markEnemy(long hex, long cost)
 {
     hexcell* combatCell = &g_combatManager->m_cells[hex];
@@ -1059,6 +1050,7 @@ void searchArray::markEnemy(long hex, long cost)
 // hex this enemy stands on IS the destination", which is why retail's
 // caller consumes the result with `sete`/`test`/`jne` rather than with a
 // plain compare.
+MAC_ADDRESS(0x0c6da0, 0xd8)
 bool searchArray::checkEnemyArmies(long hex, long cost,
                                   long currentGroup, long destination)
 {
@@ -1124,7 +1116,7 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // Candidate /Z7 labels are candidate-only, and aggregate call counts or
 // unclaimed synthetic labels do not prove a missing source statement.
 
-VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
+VA(0x004b3400, 0x787) MAC_ADDRESS(0x0c6e78, 0x720)  // anchor-global, dc 0xa0b18
 unsigned char searchArray::findCombatPath(const army* currentArmy,
                                           long currentGroup, long destination,
                                           unsigned char inPlacementPhase,
@@ -1273,8 +1265,8 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             m_result.push_back(reached);
         }
 
-        if (m_result.size() > 0) {
-            bestHex = m_result[0]->m_lastPoint.m_x;
+        if (getPathSteps() > 0) {
+            bestHex = getStepCell(0)->m_lastPoint.m_x;
             break;
         }
     }
@@ -1283,7 +1275,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                              destination);
 }
 
-VA(0x004b3bb0, 0x35C)  // dc 0xa0f54
+VA(0x004b3bb0, 0x35C) MAC_ADDRESS(0x0c7598, 0x194)  // dc 0xa0f54
 void searchArray::pushCombatPoint(int index, int direction, int cost, int flightCost, int limit)
 {
     if (!combatManager::validHex(index))
@@ -1326,17 +1318,18 @@ void searchArray::pushCombatPoint(int index, int direction, int cost, int flight
     *cell = currentPathCell;
 }
 
-VA(0x004b3f10, 0xF)  // dc 0xa10b0
+VA(0x004b3f10, 0xF) MAC_ADDRESS(0x0c772c, 0x18)  // dc 0xa10b0
 void searchArray::lowerDoor()
 {
     m_isMoatSlowed[0x5f] = 0;
     m_isMoatSlowed[0x5e] = 0;
 }
 
-VA(0x004b3f20, 0x41)  // dc 0xa10c4
+// Dreamcast findpath.cpp:1436 calls get_hex before computing the time.
+VA(0x004b3f20, 0x41) MAC_ADDRESS(0x0c7744, 0x64)  // dc 0xa10c4
 long searchArray::getTravelTime(const army* currentArmy, long hex) const
 {
-    pathCell* cell = m_cellData == 0 ? 0 : &m_cellData[hex];
+    pathCell* cell = getHex(hex);
     long speed = currentArmy->getSpeed();
     long turns = (cell->m_cost + speed - 1) / speed;
 

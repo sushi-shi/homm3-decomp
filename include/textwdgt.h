@@ -35,7 +35,7 @@ public:
     virtual void draw() const;
     // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
     virtual void dim() const;
-    VA(0x0057C6D0, 0xAC)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
+    VA(0x0057C6D0, 0xAC) MAC_ADDRESS(0x005bcc, 0x4c)  // textWidget vtable slot 13 + DC header COMDAT, dc 0x1473f8
     virtual void setText(const char* newText) { m_text = newText; }
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.

@@ -26,6 +26,82 @@ def origin(name='Widget::draw', file='widget.h', line=100):
 
 
 class OwnershipTest(unittest.TestCase):
+    def test_conditional_parameter_signature_keeps_one_body(self):
+        from homm3.match.source_ownership import scan_unit, skip_conditional_signature_tail
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            parsing_project(root)
+            (root / 'src').mkdir()
+            source = root / 'src/widget.cpp'
+            source.write_text(
+                'struct Widget { int read(unsigned char value); };\n'
+                '#ifdef _MSC_VER\n'
+                'int Widget::read(unsigned char value)\n'
+                '#else\n'
+                'int Widget::read(int value)\n'
+                '#endif\n'
+                '{ return value; }\n')
+            definitions, errors, _ = scan_unit({'source': 'src/widget.cpp'}, root)
+            self.assertEqual(errors, [])
+            self.assertEqual([(d.name, d.argument_types) for d in definitions],
+                             [('Widget::read', ('unsigned char',))])
+            self.assertEqual(source.read_text()[definitions[0].end - 1], '}')
+        self.assertEqual(skip_conditional_signature_tail('#else\nint x\n', 0), 0)
+
+    def test_fragment_can_retain_original_cpp_owner(self):
+        from homm3.match.source_ownership import fragment_owners
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'config/source').mkdir(parents=True)
+            (root / 'include').mkdir()
+            (root / 'src').mkdir()
+            (root / 'include/constant.inl').write_text('const int value = 7;\n')
+            owner = root / 'src/game.cpp'
+            owner.write_text('#include "constant.inl"\n')
+            inventory = root / 'config/source/header-fragments.toml'
+            inventory.write_text('[[fragments]]\nfragment="include/constant.inl"\n'
+                                 'owner="src/game.cpp"\nevidence="original constant"\n')
+            with self.assertRaises(ValueError):
+                fragment_owners(root)
+            owner.write_text('#include "../include/constant.inl"\n')
+            self.assertEqual(fragment_owners(root)['include/constant.inl'][0], 'src/game.cpp')
+            owner.write_text('#include "../include/constant.inl"\n'
+                             '#include "../include/constant.inl"\n')
+            with self.assertRaises(ValueError):
+                fragment_owners(root)
+
+    def test_fragment_owner_requires_real_include_and_preserves_order_and_duplicates(self):
+        from dataclasses import replace
+        from homm3.match.source_ownership import fragment_owners, definition_order, scan_unit
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            parsing_project(root)
+            (root / 'config/source').mkdir()
+            (root / 'include').mkdir()
+            owner = root / 'include/widget.h'
+            owner.write_text('struct Widget {\nvoid before() {}\n#include "draw.inl"\nvoid after() {}\n};\n')
+            (root / 'include/draw.inl').write_text('void draw() {}\n')
+            path = root / 'config/source/header-fragments.toml'
+            path.write_text('[[fragments]]\nfragment="include/draw.inl"\nowner="include/widget.h"\nevidence="canonical body at original include position"\n')
+            defs, errors, _ = scan_unit({'source': 'include/widget.h'}, root)
+            self.assertEqual(errors, [])
+            defs.sort(key=definition_order)
+            self.assertEqual([d.name for d in defs], ['Widget::before', 'Widget::draw', 'Widget::after'])
+            draw = defs[1]
+            self.assertEqual(draw.file, 'include/draw.inl')
+            self.assertEqual(draw.source_owner, 'include/widget.h')
+            origins = [origin(name=d.name, line=10 * (i + 1)) for i, d in enumerate(defs)]
+            self.assertEqual(compare(defs, origins, {}, {})[0], [])
+            self.assertTrue(any(e.startswith('ORDER ') for e in compare(list(reversed(defs)), origins, {}, {})[0]))
+            duplicate = replace(draw, file='include/copy.inl')
+            self.assertTrue(any(e.startswith('DUPLICATE ') for e in compare([draw, duplicate], origins, {}, {})[0]))
+            for bad in (owner.read_text().replace('#include "draw.inl"', ''),
+                        owner.read_text().replace('#include "draw.inl"', '/*\n#include "draw.inl"\n*/'),
+                        owner.read_text().replace('#include "draw.inl"', '#include "draw.inl"\n#include "draw.inl"')):
+                owner.write_text(bad)
+                with self.assertRaises(ValueError):
+                    fragment_owners(root)
+
     def test_reviewed_declaration_gap_cannot_hide_other_source_facts(self):
         from dataclasses import replace
         d = replace(definition(), declaration_only_type=0x1234,
@@ -264,6 +340,39 @@ class OwnershipTest(unittest.TestCase):
         self.assertTrue(any(e.startswith('DUPLICATE ') for e in compare([d, duplicate], [o], {}, {})[0]))
         distinct_type = replace(d, name='widget::getValue')
         self.assertTrue(compare([distinct_type], [o], {}, {})[0][0].startswith('WIN_ONLY '))
+
+    def test_reviewed_owner_placement_requires_exact_live_dc_file(self):
+        from dataclasses import replace
+        d = replace(definition(), file='include/shared.h')
+        o = origin(file='widget.cpp')
+        key = (d.file, d.name, d.signature, o.file)
+        matched = []
+        errors, counts = compare([d], [o], {}, {}, owner_placements={key: 'Mac and retail evidence'},
+                                 matched_out=matched)
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['reviewed_owner_placement'], 1)
+        self.assertEqual(len(matched), 1)
+        wrong = (*key[:3], 'other.cpp')
+        errors, _ = compare([d], [o], {}, {}, owner_placements={wrong: 'wrong origin'})
+        self.assertTrue(any(e.startswith('OWNER ') for e in errors))
+        self.assertTrue(any(e.startswith('FILTER stale owner_placements.tsv') for e in errors))
+
+    def test_reviewed_order_placement_is_exact_and_stale_checked(self):
+        from dataclasses import replace
+        first = definition(name='first', line=10)
+        second = definition(name='second', line=20)
+        first_dc = origin(name='first', line=200)
+        second_dc = replace(origin(name='second', line=100), offset='0x2000')
+        key = (second.file, second.name, second.signature, first.name, second_dc.file)
+        errors, counts = compare([first, second], [first_dc, second_dc], {}, {},
+                                 order_placements={key: 'Reviewed Mac source order'})
+        self.assertEqual(errors, [])
+        self.assertEqual(counts['reviewed_order_placement'], 1)
+        wrong = (*key[:3], 'other', key[4])
+        errors, _ = compare([first, second], [first_dc, second_dc], {}, {},
+                            order_placements={wrong: 'Wrong preceding helper'})
+        self.assertTrue(any(e.startswith('ORDER ') for e in errors))
+        self.assertTrue(any(e.startswith('FILTER stale order_placements.tsv') for e in errors))
 
     def test_normalized_name_collision_requires_source_identity(self):
         d = definition(name='Widget::getValue')
@@ -969,6 +1078,17 @@ class CoverageTest(unittest.TestCase):
         key = (d.file, d.name, d.signature)
         self.assertEqual(compare([d], [o], {}, {key: 'New Windows overload'})[0], [])
 
+    def test_reviewed_same_arity_overload_requires_distinct_known_formals(self):
+        from dataclasses import replace
+        d = replace(definition(name='Widget::choose', signature='int (int)'),
+                    parameters=1, argument_types=('int',))
+        o = replace(origin(name=d.name), argument_types=('std::bitset<5>',))
+        key = (d.file, d.name, d.signature)
+        self.assertEqual(compare([d], [o], {}, {key: 'Reviewed overload'})[0], [])
+        unknown = replace(o, argument_types=None)
+        self.assertTrue(any('hides a CodeView counterpart' in error for error in
+                            compare([d], [unknown], {}, {key: 'Unproven overload'})[0]))
+
     def test_origin_hints_cannot_waive_formal_arity_or_constness(self):
         from dataclasses import replace
         o = replace(origin(), argument_types=())
@@ -1044,6 +1164,17 @@ class InlineCppOrderTest(unittest.TestCase):
         rows['src/lobby.cpp'][-1] = (3, 'VA', 0x400800, 8)
         functions[0x800] = 8
         self.assertTrue(check(rows, functions, {}, {('src/lobby.cpp', 0x409000)}))
+
+    def test_reviewed_source_before_caller_va_inversion_is_exact(self):
+        from homm3.match.verify_va_claims import check
+        rows = {'src/media.cpp': [(1, 'VA', 0x402000, 8),
+                                  (2, 'VA', 0x401000, 8)]}
+        functions = {0x1000: 8, 0x2000: 8}
+        placement = ('src/media.cpp', 0x401000, 0x402000)
+        self.assertEqual(check(rows, functions, {}, order_placements={placement}), [])
+        wrong = ('src/media.cpp', 0x401000, 0x403000)
+        failures = check(rows, functions, {}, order_placements={wrong})
+        self.assertEqual({kind for kind, _, _ in failures}, {'ORDER', 'ORDER_FILTER'})
 
 
 class CompilerIdentityTest(unittest.TestCase):

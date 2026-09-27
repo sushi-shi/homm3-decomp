@@ -53,7 +53,7 @@ VA_COMPGEN(0x0056bf30, 0xF4, IMPLICIT_DTOR, TSeerHutQuestText)
 // Shared input-pointer lifetime falls to 99.8712%; binding both endpoint
 // destinations reaches 98.7121% (98.6212% combined). All five siblings stay
 // exact. These meaningful local bindings do not explain the SIB choice.
-VA(0x0056c120, 0x2A3)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
+VA(0x0056c120, 0x2A3) MAC_ADDRESS(0x2543f0, 0x1fc)  // anchor-string(seerhut.txt caller 0x56c3e0) + anchor-callee(basic_string::assign) + retail-only
 void loadSeerHutTextColumn(TSpreadsheetResource* sheet,
                            TSeerHutTextColumn* column, int col)
 {
@@ -85,7 +85,7 @@ DATA(0x0069faa8) std::vector<std::string> g_seerHutNames;
 // an if/else produce; the return is the ordinary copy construction of the
 // accumulator, `_Tidy()` plus `assign(result, 0, npos)`.
 
-VA(0x0056c960, 0x216)
+VA(0x0056c960, 0x216) MAC_ADDRESS(0x163f0c, 0xe8)
 std::string joinTextList(const std::vector<std::string>& items)
 {
     std::string result;

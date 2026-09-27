@@ -1,5 +1,3 @@
-# Translation units currently admitted to the matching build.
-
 [build]
 compiler = "msvc6.0"
 platform = "win32"
@@ -11,9 +9,13 @@ includes = [
   "vendor/smacker-3.2h/include",
   "vendor/zlib-1.1.3",
 ]
-analysis_profile = "game_o2_ml_gr_windows"
+analysis_profile = "game_o2_mt_gr_windows"
+
+[header_comparisons]
+"0x0042b9e0" = "town"
 
 [flags]
+
 zlib_o2_ml_gr_c_windows = [
   "/nologo",
   "/c",
@@ -23,13 +25,7 @@ zlib_o2_ml_gr_c_windows = [
   "/TC",
   "/D_WINDOWS",
 ]
-# Minimal profile for reconstructed Victor library functions. The public
-# stdcall entry points and internal cdecl calls are explicit in the source.
-# /O2's omitted frames reproduce both admitted wrappers; /Oy- does not.
-# These functions do not distinguish CRT mode or compiler generation.
-# victorInitializePalette expands the ordinary victorUploadPalette body.
-# /Ob2 reproduces its GDI call sequence; /O2 alone retains a mismatching call.
-# The existing allocation/validation wrappers remain byte-exact with /Ob2.
+
 victor_o2_ml_gd_windows = [
   "/nologo",
   "/c",
@@ -39,10 +35,7 @@ victor_o2_ml_gd_windows = [
   "/Gd",
   "/D_WINDOWS",
 ]
-# External Victor assembly kernels: global optimization would remove the
-# unused EBX save/restore in the RLE decoder. /Og- preserves the retail frame;
-# all three kernels match byte-for-byte. /Od is an equivalent byte control,
-# so the other original optimization switches remain undetermined.
+
 victor_kernels_o2_ogoff_ml_gd_windows = [
   "/nologo",
   "/c",
@@ -52,97 +45,7 @@ victor_kernels_o2_ogoff_ml_gd_windows = [
   "/Gd",
   "/D_WINDOWS",
 ]
-# Game C++ profile (2026-08-04, proven on the first three matches):
-# /Gr from retail's fastcall free functions (Random takes ecx/edx);
-# /Oy- from IsMember - retail keeps EBP frames wherever stack access
-# exists (frameless GetNumArmies proves the frame is conditional, so
-# this is /O2 /Oy-, not /O1 or /Od). /Ob2 proven 2026-08-06 by the
-# heroWindow::BroadcastMessage pair: both out-of-line bodies exist in
-# retail AND their loops are inlined into WidgetSet/ClearStatus in the
-# same TU - auto-inlining with unconditional emission, which /Ob1
-# cannot produce. /Op (improve float consistency) proven ENGINE-WIDE
-# 2026-08-07: ai_combat and ai_tactical independently byte-require it
-# (fdiv kept against the pool constant vs reciprocal fmul; int->double
-# rounded through memory; CRT sqrt instead of fsqrt - /Op disables FP
-# intrinsics), and the all-TU sweep left every exact function exact.
-# Refined as game TUs accumulate.
-game_o2_ml_gr_windows = [
-  "/nologo",
-  "/c",
-  "/O2",
-  "/Ob2",
-  "/Oy-",
-  "/Op",
-  "/ML",
-  "/Gr",
-  "/GX",
-  "/D_WINDOWS",
-]
-# campaignbrief.obj's NewSMapHeader destructor and bottomviewsubwindow.obj's
-# strstreambuf constructor contain std::_Lockit scopes around Dinkumware
-# runtime state. /ML removes those calls; /MT reproduces both retail bodies
-# while leaving the campaign-window destructor unchanged.
-# ForceFeedback.obj joined them 2026-09-05 on the same test, four rows at
-# once: yvals.h gives _Lockit an out-of-line constructor only under _MT, and
-# retail's map<CImmEnclosure*, RECT> members carry those calls - the
-# constructor 0x4b6f60, `insert` 0x4b70e0, `_Insert` 0x4b7a50 and
-# `const_iterator::_Dec` 0x4b7db0 go 86.75/80.34/81.14/51.19 -> EXACT on
-# the flag change alone, with the unit's other nine rows unmoved.
-#
-# SYSTEMATIC SWEEP 2026-09-05. Retail .text was scanned for every E8 rel32
-# landing on ??0_Lockit (0x20b598) or ??1_Lockit (0x20b634); each call site
-# was mapped through config/retail/functions.tsv to its owning carve row and
-# through config/match_baseline.tsv to its unit. 341 of the 662 sites sit in
-# the game band, and they resolve to exactly eleven compilands:
-#   objecttype 106, game 75, resourcemanager 43, bottomviewsubwindow 42,
-#   campaignbrief 40, forcefeedback 17, singleselectionwindow 6,
-#   gzinflatebuf 4, rmg 4, cmbtmgr 2, spells 2.
-# Six of those already expose the external-lock view with a local
-# `#define _MT` around <yvals.h> (objecttype, game, resourcemanager,
-# gzinflatebuf, rmg, rmg_terrain). /MT plus that local define is a C2373
-# `_errno` redefinition, which is what the 2026-09-05 sweep measured - but
-# REMOVING the define and flipping the flag is legal and is retail's truth,
-# because /MT defines _MT for the whole compiland (2026-09-05, polish 19,
-# each unit measured on its own build with every tree row diffed):
-#   objecttype       define removed + /MT: +9 exact, 0 fell. The nine
-#     num_get<char>::do_get COMDATs (93.24/93.28/93.28/93.72/93.72/94.20/
-#     94.20/97.90/99.30) all reach 100.0000 - the local define only reached
-#     <yvals.h>, while retail's <istream> COMDATs need the _MT view too.
-#   resourcemanager  define removed + /MT: +2 exact, 0 fell -
-#     basic_stringbuf<char>::seekpos 87.97 -> 100 and ::seekoff 91.74 -> 100.
-#   gzinflatebuf     define removed + /MT: byte-flat tree-wide (0 moved).
-#   game             define removed + /MT: byte-flat tree-wide (0 moved).
-# The last two are kept because the flag is the retail fact and the local
-# define is a scaffold. rmg / rmg_terrain also use /MT with the local
-# define removed (2026-09-06); CreateRiver and PaintTransitions are byte-flat.
-# The three that had neither joined here, each measured on its own build
-# with the whole tree's per-row scores diffed before and after:
-#   singleselectionwindow (6 sites) - CMapHeaderData(const&) 0x590810
-#     97.52 -> 100, ~CNewMapHeaderInfoMsg 0x58a300 90.57 -> 97.06,
-#     map<int,type_map_hero_info> _Tree::_Init 0x58ffc0 72.55 -> 100.
-#   cmbtmgr (2 sites) - ~TCombatEagleEyeSide 0x4628b0 81.67 -> 100.
-#   spells (2 sites) - set<int> _Tree::insert 0x5a9450 80.34 -> 100.
-# +4 exact rows, +74.4 summed fuzzy, and NO row anywhere in the tree fell.
-# singleselectionwindow.obj joined them 2026-09-05, found by a systematic
-# scan of retail .text for E8 rel32 calls landing on ??0_Lockit (0x20b598)
-# and ??1_Lockit (0x20b634): its `CMapHeaderData(const&)` 0x590810,
-# `CNewMapHeaderInfoMsg::~CNewMapHeaderInfoMsg` 0x58a300 and the
-# map<int,type_map_hero_info> `_Tree::_Init` 0x58ffc0 carry six of them.
-# Measured 97.52/90.57/72.55 -> 100.0000/97.06/100.0000, +2 exact rows,
-# no other row in the tree moved in either direction.
-# The same scan attributes every other retail _Lockit call site in the game
-# band to objecttype, game, resourcemanager, gzinflatebuf, rmg, rmg_terrain
-# (all six already expose the external-lock view with a local `#define _MT`
-# around <yvals.h>), to the three /MT units above, or to cmbtmgr / spells -
-# whose single sites were measured and REJECTED (see below).
-# customcampaign joined them 2026-09-06. That scan had missed it because its
-# two sites sit in COMDATs nothing had claimed yet: `basic_streambuf<char>::
-# getloc` (0x48d820) and `_Tidyfac<codecvt<char,char,int> >::_Save`
-# (0x48ec60) each carry a `call 0x60b598` / `call 0x60b634` pair around the
-# facet refcount, and `_Save`'s is inside an fs:[0] frame that only the
-# locking form needs. Flipping the flag: +2 exact rows -
-# basic_filebuf<char>::seekoff 79.8214 -> 100.0000 and ::seekpos
-# 92.4667 -> 100.0000 - and NO row anywhere in the tree fell.
+
 game_o2_mt_gr_windows = [
   "/nologo",
   "/c",
@@ -155,17 +58,7 @@ game_o2_mt_gr_windows = [
   "/GX",
   "/D_WINDOWS",
 ]
-# RETIRED 2026-08-07 (game_o2_ml_gr_windows_noeh): the "first no-EH TU"
-# inference was wrong. sample.obj's frameless ~sample does NOT exclude
-# /GX - it only proves `operator delete` was visible as nothrow, exactly
-# the ai_combat lever. Its ctor 0x566da0 carries a full fs:[0] frame
-# (the `new` can throw with the resource base still to unwind), which no
-# non-/GX compile can emit. With /GX + the nothrow redeclaration all
-# three sample functions are byte-exact, so the engine has ONE C++
-# profile and this variant has no users.
 
-# Verbatim zlib 1.1.3 release sources. This is the only component in the build
-# until another translation unit and its compiler profile are reviewed.
 [[unit]]
 unit = "adler32"
 source = "vendor/zlib-1.1.3/adler32.c"
@@ -236,155 +129,150 @@ unit = "zutil"
 source = "vendor/zlib-1.1.3/zutil.c"
 flags = "zlib_o2_ml_gr_c_windows"
 
-# First game TUs (2026-08-04): bootstrap-partial - implemented bodies
-# compile, remaining carcass stubs sit behind `#if 0 // @carcass`
-# (lexically present for labels + the va-claims gate).
 [[unit]]
 unit = "misc"
 source = "src/misc.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "armygrp"
 source = "src/armygrp.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "basemgr"
 source = "src/basemgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "button"
 source = "src/button.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "widget"
 source = "src/widget.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "window"
 source = "src/window.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "resource"
 source = "src/resource.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "border"
 source = "src/border.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "iconwdgt"
 source = "src/iconwdgt.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "textscroller"
 source = "src/textscroller.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "textwdgt"
 source = "src/textwdgt.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "textntry"
 source = "src/textntry.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "textresource"
 source = "src/textresource.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "hiscore"
 source = "src/hiscore.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "sample"
 source = "src/sample.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "font"
 source = "src/font.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "exec"
 source = "src/exec.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "inputmgr"
 source = "src/inputmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
-# Retail-only context data and its retained bitset setter, 0x4eccf0..0x4ece60.
-# The original source filename is unavailable; gamecontext is provisional.
 [[unit]]
 unit = "gamecontext"
 source = "src/gamecontext.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "findpath"
 source = "src/findpath.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "smackmgr"
 source = "src/smackmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "path"
 source = "src/path.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "monframeinfo"
 source = "src/monframeinfo.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "initialize"
 source = "src/initialize.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "winfile"
 source = "src/winfile.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "strip"
 source = "src/strip.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "winmgr"
 source = "src/winmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "subwindow"
 source = "src/subwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "resourcedisplay"
 source = "src/resourcedisplay.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "resourcemanager"
@@ -399,97 +287,97 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "creaturetype"
 source = "src/creaturetype.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "creature_bank"
 source = "src/creature_bank.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "u2dvers"
 source = "src/u2dvers.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "levelupwindow"
 source = "src/levelupwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "gametypewindow"
 source = "src/gametypewindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "quickinfowindow"
 source = "src/quickinfowindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "campaignmap"
 source = "src/campaignmap.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "campaignwindow"
 source = "src/campaignwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "adventureoptionswindow"
 source = "src/adventureoptionswindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "kbwin"
 source = "src/kbwin.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "soundmgr"
 source = "src/soundmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "mousemgr"
 source = "src/mousemgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "castle"
 source = "src/castle.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "combatcontrolsubwindow"
 source = "src/combatcontrolsubwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "binkmanager"
 source = "src/binkmanager.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "townmgr"
 source = "src/townmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bitmap16"
 source = "src/bitmap16.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bitmap24"
 source = "src/bitmap24.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "mainmenu"
 source = "src/mainmenu.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "campaignbrief"
@@ -504,85 +392,80 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "customcampaignwindow"
 source = "src/customcampaignwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "questlogwindow"
 source = "src/questlogwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "lodfile"
 module = "codec"
 source = "src/lodfile.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "towngatewindow"
 source = "src/towngatewindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "drawing"
 source = "src/drawing.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "dimensiondoorwindow"
 source = "src/dimensiondoorwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "wingraph"
 source = "src/wingraph.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "csprite"
 source = "src/csprite.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "text"
 source = "src/text.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "palette"
 source = "src/palette.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "army"
 source = "src/army.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "adventuremapwindow"
 source = "src/adventuremapwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "philai"
 source = "src/philai.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "cspriteframe"
 module = "codec"
 source = "src/cspriteframe.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "events"
 source = "src/events.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
-# The /ML profiles of kb, newgame, quickherowindow and quicktownwindow
-# retained an empty std::_Lockit destructor in EH cleanup,
-# colliding with retail LIBCPMT's real lock release at 0x60b634. /MT removes
-# that conflicting definition. Isolated profile probes preserve all 61 kb
-# and 17 newgame/quick-window game-function scores; see docs/vc6/runtime-link.md.
 [[unit]]
 unit = "kb"
 source = "src/kb.cpp"
@@ -597,24 +480,24 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "recruit"
 source = "src/recruit.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "hexcell"
 source = "src/hexcell.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 
 [[unit]]
 unit = "town"
 source = "src/town.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 
 [[unit]]
 unit = "hero"
 source = "src/hero.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "game"
@@ -624,7 +507,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "mapcell"
 source = "src/mapcell.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "cmbtmgr"
@@ -634,37 +517,37 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "command"
 source = "src/command.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "advmgr"
 source = "src/advmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "ai"
 source = "src/ai.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "ai_combat"
 source = "src/ai_combat.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "ai_tactical"
 source = "src/ai_tactical.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "ai_player"
 source = "src/ai_player.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "fly"
 source = "src/fly.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "quickherowindow"
@@ -674,17 +557,17 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "systemoptionswindow"
 source = "src/systemoptionswindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "viewarmywindow"
 source = "src/viewarmywindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "viewwrld"
 source = "src/viewwrld.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "newgame"
@@ -694,13 +577,13 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "advspells"
 source = "src/advspells.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "multiplayerwindow"
 module = "network"
 source = "src/multiplayerwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "singleselectionwindow"
@@ -710,12 +593,12 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "diff"
 source = "src/diff.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "artifact"
 source = "src/artifact.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "quicktownwindow"
@@ -725,141 +608,139 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "slider"
 source = "src/slider.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "combatresultswindow"
 source = "src/combatresultswindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "combatoptionswindow"
 source = "src/combatoptionswindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "combatwindow"
 source = "src/combatwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "spelldefs"
 source = "src/spelldefs.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
-# Provisional source owner for Complete text-table helpers whose original
-# filename is unresolved. Nearby RVAs alone do not prove a compiland boundary.
 [[unit]]
 unit = "seerhuttext"
 source = "src/seerhuttext.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "scenarioinfo"
 source = "src/scenarioinfo.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "dialogbox"
 source = "src/dialogbox.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "puzzlewindow"
 source = "src/puzzlewindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "remote"
 module = "network"
 source = "src/remote.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "university_window"
 source = "src/university_window.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "csequence"
 source = "src/csequence.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "cursor"
 source = "src/cursor.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "event_record"
 source = "src/event_record.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "singleselectionpopups"
 source = "src/singleselectionpopups.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "victorylossconditions"
 source = "src/victorylossconditions.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "bitmap816"
 source = "src/bitmap816.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "search"
 source = "src/search.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "herodefs"
 source = "src/herodefs.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "overview"
 source = "src/overview.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "spellbookwindow"
 source = "src/spellbookwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "hillfortwindow"
 source = "src/hillfortwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "dxplay"
 module = "network"
 source = "src/dxplay.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "swapmgr"
 source = "src/swapmgr.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "tradpost"
 source = "src/tradpost.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "seerhut"
 source = "src/seerhut.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "sacrifice_window"
 source = "src/sacrifice_window.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "rmg"
@@ -871,7 +752,7 @@ flags = "game_o2_mt_gr_windows"
 unit = "rmg_support"
 module = "rmg"
 source = "src/rmg_support.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "rmg_terrain"
@@ -882,7 +763,7 @@ flags = "game_o2_mt_gr_windows"
 [[unit]]
 unit = "objnames"
 source = "src/objnames.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "forcefeedback"
@@ -903,7 +784,7 @@ flags = "game_o2_mt_gr_windows"
 unit = "gzfile"
 module = "codec"
 source = "src/gzfile.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "gzinflatebuf"
@@ -915,46 +796,41 @@ flags = "game_o2_mt_gr_windows"
 unit = "netmsg"
 module = "network"
 source = "src/netmsg.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "campaign"
 source = "src/campaign.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "campaignmusic"
 source = "src/campaignmusic.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 [[unit]]
 unit = "tiles"
 source = "src/tiles.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
-# Reconstructed external Victor library; grouping filename is provisional.
 [[unit]]
 unit = "victor"
 module = "victor"
 source = "src/victor.cpp"
 flags = "victor_o2_ml_gd_windows"
 
-# Retail flip retains helpers expanded by the palette compilation context.
-# Original library object name unknown; keep ordinary declarations/calls.
 [[unit]]
 unit = "victor_flip"
 module = "victor"
 source = "src/victor_flip.cpp"
 flags = "victor_o2_ml_gd_windows"
 
-# PCX loader retains its ordinary library helper calls in retail.
 [[unit]]
 unit = "victor_loadpcx"
 module = "victor"
 source = "src/victor_loadpcx.cpp"
 flags = "victor_o2_ml_gd_windows"
 
-# Semantic grouping of external assembly kernels; original filename unknown.
 [[unit]]
 unit = "victor_pcx_kernels"
 module = "victor"

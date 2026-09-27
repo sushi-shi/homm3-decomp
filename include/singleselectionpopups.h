@@ -16,9 +16,6 @@ class CSprite;
 class Bitmap816;
 enum TTownType;
 
-const char* getStartingResourceName(int town);
-const char* getStartingResourceDescription(int town);
-
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
 // independently fixes the four overrides below.
@@ -73,7 +70,7 @@ public:
         addWidget(w, -1);
     }
 
-    VA(0x00575430, 0x8f)  // dc 0x12ef28
+    VA(0x00575430, 0x8f) MAC_ADDRESS(0x160ca4, 0x68)  // dc 0x12ef28
     virtual int handleMessage(message& msg)
     {
         if (msg.m_id != MESSAGE_RIGHT_BUTTON_UP) {
@@ -189,7 +186,7 @@ public:
     // The retained vtable body and GenerateRandomMap's expanded final step
     // share this operation. Header visibility is inferred from retail; this
     // Complete-only class has no Dreamcast source-location evidence.
-    VA(0x00577320, 0x31)
+    VA(0x00577320, 0x31) MAC_ADDRESS(0x16dba8, 0x58)
     virtual void advance(int amount)
     {
         m_done = min(m_done + amount, m_steps);

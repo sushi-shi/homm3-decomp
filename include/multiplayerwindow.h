@@ -4,7 +4,7 @@
 #include "va.h"
 
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "dxplay.h"
 #include "hotseat.h"
@@ -158,7 +158,7 @@ public:
     virtual int windowHandler(message& msg);
     virtual int onWidgetDeselect(int id, bool& exitFlag);
     // E:\gamedcs\MultiPlayerWindow.h:91, dc 0x101da0
-    VA(0x0050ed50, 0x7)  // dc 0x101da0
+    VA(0x0050ed50, 0x7) MAC_ADDRESS(0x21cfdc, 0x8)  // dc 0x101da0
     virtual textWidget* getRolloverWidget()
     {
         return m_rolloverWidget;

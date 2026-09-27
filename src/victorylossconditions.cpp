@@ -6,7 +6,7 @@
 
 #include "game.h"
 
-VA(0x005f15a0, 0x63)  // dc 0x18fdc4
+VA(0x005f15a0, 0x63) MAC_ADDRESS(0x1fd30c, 0xc0)  // dc 0x18fdc4
 int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
@@ -36,28 +36,36 @@ static const int g_angelicAllianceCampaign = 18;
 static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
-VA(0x005f1610, 0x4FE)  // dc 0x18fdf8
+// Native retains the campaign base across the special artifact-vector path.
+// The shared reference restores those +2/+4 member accesses; Windows remains
+// 86.10% versus the prior86.11%, with exact siblings unchanged.
+// Retail's isHuman call belongs to an expanded isHumanTeam loop inside
+// isHumanAlly; replacing the wrapper with a direct call removes that loop.
+// The retained Mac isHumanTeam body matches all148bytes. Live VC6 budget
+// capture instead leaves39 after GetTeam46, below the scan's93 cost.
+VA(0x005f1610, 0x4FE) MAC_ADDRESS(0x1fd3cc, 0x44c)  // dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
-    int& currCampaign = g_game->m_campaign.m_currentCampaign;
-    if ((currCampaign == g_armorOfTheDamnedCampaign
-            && g_game->m_campaign.m_currentMap == 1)
-        || (currCampaign == g_angelicAllianceCampaign
-            && (g_game->m_campaign.m_currentMap
+    SCampaign& campaign = g_game->m_campaign;
+    if ((campaign.m_currentCampaign == g_armorOfTheDamnedCampaign
+            && campaign.m_currentMap == 1)
+        || (campaign.m_currentCampaign == g_angelicAllianceCampaign
+            && (campaign.m_currentMap
                     == g_angelicAllianceFirstMap
-                || g_game->m_campaign.m_currentMap
+                || campaign.m_currentMap
                     == g_angelicAllianceSecondMap))) {
-        signed char& currMap = g_game->m_campaign.m_currentMap;
         if (!g_currentPlayer->isHuman())
             return 0;
 
-        std::vector<int> pieces;
+        // Native keeps the non-POD vector placement/copy path and takes these
+        // artifact constants by reference; the original type spelling is unknown.
+        std::vector<TArtifact> pieces;
         pieces.reserve(3);
-        if (currCampaign == g_armorOfTheDamnedCampaign) {
+        if (campaign.m_currentCampaign == g_armorOfTheDamnedCampaign) {
             pieces.push_back(ARTIFACT_SWORD_OF_HELLFIRE);
             pieces.push_back(ARTIFACT_SHIELD_OF_THE_DAMNED);
             pieces.push_back(ARTIFACT_BREASTPLATE_OF_BRIMSTONE);
-        } else if (currMap == g_angelicAllianceFirstMap) {
+        } else if (campaign.m_currentMap == g_angelicAllianceFirstMap) {
             pieces.push_back(ARTIFACT_CELESTIAL_NECKLACE_OF_BLISS);
             pieces.push_back(ARTIFACT_SANDALS_OF_THE_SAINT);
             pieces.push_back(ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT);
@@ -69,7 +77,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
 
         for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
             hero* h = g_game->getHero(g_currentPlayer->m_heroes[i]);
-            for (std::vector<int>::iterator it = pieces.begin();
+            for (std::vector<TArtifact>::iterator it = pieces.begin();
                  it != pieces.end();) {
                 if (h->hasArtifact(*it))
                     it = pieces.erase(it);
@@ -90,8 +98,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
         int j;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             if (g_game->getHero(g_currentPlayer->m_heroes[j])
@@ -129,15 +136,14 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
     return 0;
 }
 
-VA(0x005f1b10, 0x169)  // dc 0x18fe98
+VA(0x005f1b10, 0x169) MAC_ADDRESS(0x1fd818, 0x1e4)  // dc 0x18fe98
 unsigned char VictoryConditionStruct::checkForTotalCreatures()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_CREATURES) {
         long total = 0;
         if (g_currentPlayer
             && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-            int team = g_game->getTeam(g_netLocalGamePos);
-            if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+            if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
                 int i;
                 for (i = 0; i < g_currentPlayer->m_numHeroes; ++i)
                     total += g_game->getHero(g_currentPlayer->m_heroes[i])
@@ -156,14 +162,13 @@ unsigned char VictoryConditionStruct::checkForTotalCreatures()
     return 0;
 }
 
-VA(0x005f1c80, 0xB9)  // dc 0x18ff84
+VA(0x005f1c80, 0xB9) MAC_ADDRESS(0x1fd9fc, 0x130)  // dc 0x18ff84
 unsigned char VictoryConditionStruct::checkForTotalResources()
 {
     if (m_type == VICTORY_CONDITION_TOTAL_RESOURCES
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
-        int team = g_game->getTeam(g_netLocalGamePos);
-        if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+        if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
             if (g_currentPlayer->m_resources[m_resourceType] >= m_resourceAmount) {
                 m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
                 m_gameWon = 1;
@@ -174,7 +179,7 @@ unsigned char VictoryConditionStruct::checkForTotalResources()
     return 0;
 }
 
-VA(0x005f1d40, 0x1A4)  // dc 0x190038
+VA(0x005f1d40, 0x1A4) MAC_ADDRESS(0x1fdb2c, 0x298)  // dc 0x190038
 unsigned char VictoryConditionStruct::checkForUpgradedTown()
 {
     if (m_type != VICTORY_CONDITION_UPGRADE_TOWN
@@ -192,26 +197,24 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
 
     switch (m_hallLevel) {
     case VICTORY_HALL_TOWN:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_TOWN_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_TOWN_ID, true);
         break;
     case VICTORY_HALL_CITY:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_CITY_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_CITY_ID, true);
         break;
     case VICTORY_HALL_CAPITOL:
-        hallOk = (checkedTown->m_active & g_bitNumber[HALL_CAPITOL_ID]) != 0;
+        hallOk = checkedTown->hasBuilding(HALL_CAPITOL_ID, true);
         break;
     }
     switch (m_castleLevel) {
     case VICTORY_CASTLE_FORT:
-        castleOk = (checkedTown->m_active & g_bitNumber[CASTLE_FORT_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_FORT_ID, true);
         break;
     case VICTORY_CASTLE_CITADEL:
-        castleOk =
-            (checkedTown->m_active & g_bitNumber[CASTLE_CITADEL_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_CITADEL_ID, true);
         break;
     case VICTORY_CASTLE_CASTLE:
-        castleOk =
-            (checkedTown->m_active & g_bitNumber[CASTLE_CASTLE_ID]) != 0;
+        castleOk = checkedTown->hasBuilding(CASTLE_CASTLE_ID, true);
         break;
     }
     if (hallOk && castleOk) {
@@ -222,7 +225,7 @@ unsigned char VictoryConditionStruct::checkForUpgradedTown()
     return 0;
 }
 
-VA(0x005f1ef0, 0x203)  // dc 0x190124
+VA(0x005f1ef0, 0x203) MAC_ADDRESS(0x1fddc4, 0x2d0)  // dc 0x190124
 unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
 {
     if (m_type != VICTORY_CONDITION_BUILD_GRAIL
@@ -230,20 +233,21 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
+    // Mac 0x1fde18 constructs the target before the loop; DC records
+    // the target and wildcard locals at the same outer lifetime.
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
-
     int player = 0;
     for (;;) {
         if (g_game->onSameTeam(player, g_netLocalGamePos)) {
             for (int j = 0; j < g_game->m_players[player].m_numTowns; ++j) {
                 town* thisTown = g_game->getTown(
                     g_game->m_players[player].m_townIds[j]);
-                type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
-                                         thisTown->m_mapZ);
+                type_point thisTownLoc = thisTown->getLocation();
                 bool hasGrail = false;
-                if (thisTownLoc == grailTownLoc
-                    || grailTownLoc == anyTownLoc)
+                // Mac 0x1fdf0c..0x1fe024 expands the same coordinate and
+                // wildcard comparison as isGrailTarget at 0x1fe124.
+                if (isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc))
                     hasGrail = thisTown->hasBuilding(HOLY_GRAIL_ID, true);
                 if (hasGrail) {
                     m_playerWinner = thisTown->m_owner;
@@ -258,7 +262,7 @@ unsigned char VictoryConditionStruct::checkForGrailBuildingWin()
     }
 }
 
-VA(0x005f2100, 0x53)  // dc 0x190244
+VA(0x005f2100, 0x53) MAC_ADDRESS(0x1fe094, 0x90)  // dc 0x190244
 bool VictoryConditionStruct::checkForHeroDefeatWin(
     const int winningPlayer, const hero* loser)
 {
@@ -274,21 +278,17 @@ bool VictoryConditionStruct::checkForHeroDefeatWin(
     return false;
 }
 
-VA(0x005f2160, 0xFD)  // dc 0x1902c4
+VA(0x005f2160, 0xFD) MAC_ADDRESS(0x1fe124, 0x184)  // dc 0x1902c4
 unsigned char VictoryConditionStruct::isGrailTarget(town* thisTown)
 {
     type_point anyTownLoc(-1, -1, -1);
     type_point grailTownLoc(m_townX, m_townY, m_townZ);
-    type_point thisTownLoc(thisTown->m_mapX, thisTown->m_mapY,
-                             thisTown->m_mapZ);
-
-    if (thisTownLoc == grailTownLoc
-        || grailTownLoc == anyTownLoc)
-        return 1;
-    return 0;
+    type_point thisTownLoc = thisTown->getLocation();
+    return isGrailTarget(thisTownLoc, grailTownLoc, anyTownLoc);
 }
 
-VA(0x005f2260, 0x34)  // dc 0x190340
+
+VA(0x005f2260, 0x34) MAC_ADDRESS(0x1fe2a8, 0x6c)  // dc 0x190340
 bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN)
@@ -299,7 +299,7 @@ bool VictoryConditionStruct::isTownCaptureTarget(town* thisTown)
     return true;
 }
 
-VA(0x005f22a0, 0xE6)  // dc 0x19037c
+VA(0x005f22a0, 0xE6) MAC_ADDRESS(0x1fe314, 0x154)  // dc 0x19037c
 unsigned char VictoryConditionStruct::checkForTownCaptureWin()
 {
     if (m_type != VICTORY_CONDITION_CAPTURE_TOWN
@@ -307,8 +307,7 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     int townId = g_game->getTownId(m_townX, m_townY, m_townZ);
@@ -321,19 +320,18 @@ unsigned char VictoryConditionStruct::checkForTownCaptureWin()
     return 1;
 }
 
-VA(0x005f2390, 0x267)  // dc 0x19040c
+VA(0x005f2390, 0x267) MAC_ADDRESS(0x1fe468, 0x3a8)  // dc 0x19040c
 bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     const hero* thisHero, const type_point monsterLoc)
 {
     if (m_type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
         type_point pos;
-        for (pos.m_z = 0; pos.m_z < g_game->m_worldMap.getNumLevels(); ++pos.m_z) {
+        for (pos.m_z = 0; pos.m_z < g_game->getNumMapLevels(); ++pos.m_z) {
             for (pos.m_y = 0; pos.m_y < g_mapHeight; ++pos.m_y) {
                 for (pos.m_x = 0; pos.m_x < g_mapWidth; ++pos.m_x) {
-                    NewmapCell* cell =
-                        g_game->m_worldMap.cell(pos.m_x, pos.m_y, pos.m_z);
+                    NewmapCell* cell = g_game->getCell(pos);
                     if (cell->m_isTrigger && cell->m_type == MONSTER) {
-                        if (!pos.operator==(monsterLoc))
+                        if (!(pos == monsterLoc))
                             return 0;
                     }
                 }
@@ -346,7 +344,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
         && g_currentPlayer
         && !g_game->m_playerDisabled[g_netLocalGamePos]) {
         type_point pos(m_monsterX, m_monsterY, m_monsterZ);
-        if (monsterLoc.operator==(pos)) {
+        if (monsterLoc == pos) {
             m_playerWinner = thisHero->m_owner;
             m_gameWon = 1;
             return 1;
@@ -355,7 +353,7 @@ bool VictoryConditionStruct::checkForDefeatedMonsterWin(
     return 0;
 }
 
-VA(0x005f2600, 0x117)  // dc 0x190488
+VA(0x005f2600, 0x117) MAC_ADDRESS(0x1fe810, 0x194)  // dc 0x190488
 unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_GENERATORS
@@ -363,8 +361,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_generators.size(); ++i) {
@@ -377,7 +374,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedGeneratorWin()
     return 1;
 }
 
-VA(0x005f2720, 0xEB)  // dc 0x190538
+VA(0x005f2720, 0xEB) MAC_ADDRESS(0x1fe9a4, 0x190)  // dc 0x190538
 unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
 {
     if (m_type != VICTORY_CONDITION_FLAG_ALL_MINES
@@ -385,8 +382,7 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if (!((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer))
+    if (!(g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer))
         return 0;
 
     for (unsigned int i = 0; i < g_game->m_mines.size(); ++i) {
@@ -399,12 +395,11 @@ unsigned char VictoryConditionStruct::checkForFlaggedMineWin()
     return 1;
 }
 
-VA(0x005f2810, 0x45)  // hd-crossbuild
+VA(0x005f2810, 0x45) MAC_ADDRESS(0x1feb34, 0x6c)  // hd-crossbuild
 unsigned char VictoryConditionStruct::checkForTimeSurvival()
 {
     if (m_type == VICTORY_CONDITION_SURVIVE_TIME) {
-        short days = (g_game->m_month * 4
-            + g_game->m_week - 5) * 7 + g_game->m_day;
+        short days = g_game->getCurrentTurn();
         if (days > m_numDays) {
             m_gameWon = 1;
             return 1;
@@ -413,7 +408,9 @@ unsigned char VictoryConditionStruct::checkForTimeSurvival()
     return 0;
 }
 
-VA(0x005f2860, 0x1DE)  // dc 0x190620
+// DC lines448..458 retain the positive point-match scope. Complete retail
+// needs the same scope to place the common failure epilogue after success.
+VA(0x005f2860, 0x1DE) MAC_ADDRESS(0x1feba0, 0x2bc)  // dc 0x190620
 unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
     const hero* thisHero, const type_point townLoc)
 {
@@ -422,32 +419,30 @@ unsigned char VictoryConditionStruct::checkForArtifactTransportWin(
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    int team = g_game->getTeam(g_netLocalGamePos);
-    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
+    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
         type_point target(m_townX, m_townY, m_townZ);
-        if (!target.operator==(townLoc))
-            return 0;
+        if (target == townLoc) {
+            if (thisHero->hasArtifact(m_artifactNum)) {
+                m_playerWinner = thisHero->m_owner;
+                m_gameWon = 1;
+                return 1;
+            }
+            int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
+            if (comboIdx == -1)
+                return 0;
 
-        if (thisHero->hasArtifact(m_artifactNum)) {
-            m_playerWinner = thisHero->m_owner;
-            m_gameWon = 1;
-            return 1;
-        }
-        int comboIdx = g_artifactTraits[m_artifactNum].m_comboType;
-        if (comboIdx == -1)
-            return 0;
-
-        const std::bitset<144>& components =
-            g_combinationArtifacts[comboIdx].m_components;
-        int remaining = components.count();
-        for (int i = 0;; ++i) {
-            if (components.test(i)) {
-                if (!thisHero->hasArtifact(i))
-                    return 0;
-                if (--remaining == 0) {
-                    m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
-                    m_gameWon = 1;
-                    return 1;
+            const std::bitset<144>& components =
+                g_combinationArtifacts[comboIdx].m_components;
+            int remaining = components.count();
+            for (int i = 0;; ++i) {
+                if (components.test(i)) {
+                    if (!thisHero->hasArtifact(i))
+                        return 0;
+                    if (--remaining == 0) {
+                        m_playerWinner = static_cast<signed char>(g_netLocalGamePos);
+                        m_gameWon = 1;
+                        return 1;
+                    }
                 }
             }
         }
@@ -536,23 +531,29 @@ static const int g_lossPortrait146 = 0x92;
 // executable bytes and reference targets across this TU, including nineteen
 // exact siblings. Their three object identities differ only in local label
 // and temporary numbering; none repairs the return layout at 82.0170%.
+// Mac keeps one campaign base pointer and retains map across the artifact
+// checks before independently admitting maps 2..4. Keep that lifetime rather
+// than borrowing the known-map fact from an else arm. Its component loop
+// assigns the index to r28 and the component reference to r29; a loop-local
+// index reproduces those homes. The full source model raises Mac to 55.6973%
+// (previous recorded peak 51.2799%); Windows 81.15% vs 82.02% is recovery debt.
 // E:\gamedcs\victorylossconditions.cpp:463
-VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
+VA(0x005f2a40, 0x3C8) MAC_ADDRESS(0x1fee5c, 0x448)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
 {
     if (g_inCampaign) {
         int map;
-        int i;
-        switch (g_game->m_campaign.m_currentCampaign) {
+        const SCampaign& campaign = g_game->m_campaign;
+        switch (campaign.m_currentCampaign) {
         case g_lossCampaign3:
-            if (g_game->m_campaign.m_currentMap == g_map2
+            if (campaign.m_currentMap == g_map2
                 && (loser->m_id == g_lossHero4
                     || loser->m_portrait == g_lossPortrait146))
                 return 1;
             break;
         case g_lossCampaign7:
-            if ((g_game->m_campaign.m_currentMap == g_map6
-                 || g_game->m_campaign.m_currentMap == g_map7)
+            if ((campaign.m_currentMap == g_map6
+                 || campaign.m_currentMap == g_map7)
                 && (loser->m_id == g_lossHero148 || loser->m_id == g_lossHero152
                     || loser->m_id == g_lossHero146))
                 return 1;
@@ -560,8 +561,8 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
         case g_lossCampaign10:
             if (loser->m_id == g_lossHero149)
                 return 1;
-            if ((g_game->m_campaign.m_currentMap == 1
-                 || g_game->m_campaign.m_currentMap == g_map2)
+            if ((campaign.m_currentMap == 1
+                 || campaign.m_currentMap == g_map2)
                 && (loser->m_id == g_lossHero104 || loser->m_id == g_lossHero97
                     || loser->m_id == g_lossHero110))
                 return 1;
@@ -577,7 +578,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
         case g_lossCampaign14: {
             if (loser->m_id == g_lossHero45)
                 return 1;
-            map = g_game->m_campaign.m_currentMap;
+            map = campaign.m_currentMap;
             if (map == g_map2) {
                 if (loser->hasArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)
@@ -586,43 +587,43 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
                     || loser->hasArtifact(ARTIFACT_ORB_OF_INHIBITION)
                     || loser->hasArtifact(ARTIFACT_SWORD_OF_HELLFIRE))
                     return 1;
-            } else if (map != g_map3 && map != g_map4) {
-                break;
             }
-            if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
-                return 1;
-            const std::bitset<144>& components =
-                g_combinationArtifacts[0].m_components;
-            for (i = 0; i < 0x90; ++i) {
-                if (components.test(i)
-                    && loser->hasArtifact(i))
+            if (map >= g_map2 && map <= g_map4) {
+                if (loser->hasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
                     return 1;
+                const std::bitset<144>& components =
+                    g_combinationArtifacts[0].m_components;
+                for (int i = 0; i < 0x90; ++i) {
+                    if (components.test(i)
+                        && loser->hasArtifact(i))
+                        return 1;
+                }
             }
             break;
         }
+        // Mac 0x1ff0bc..0x1ff13c continues through three independent map
+        // predicates; VC6 propagates the known map into direct failure exits.
         case g_lossCampaign15:
-            map = g_game->m_campaign.m_currentMap;
-            if (map == 1) {
-                if (loser->m_id == g_lossHero22)
-                    return 1;
-            } else if (map == g_map2) {
-                if (loser->m_id == g_lossHero22
-                    || loser->hasArtifact(ARTIFACT_VAMPIRES_COWL))
-                    return 1;
-            } else if (map == g_map3) {
-                if (loser->m_id == g_lossHero22
-                    || loser->hasArtifact(ARTIFACT_DEAD_MANS_BOOTS))
-                    return 1;
-            }
+            map = campaign.m_currentMap;
+            if (map == 1 && loser->m_id == g_lossHero22)
+                return 1;
+            if (map == g_map2
+                && (loser->m_id == g_lossHero22
+                    || loser->hasArtifact(ARTIFACT_VAMPIRES_COWL)))
+                return 1;
+            if (map == g_map3
+                && (loser->m_id == g_lossHero22
+                    || loser->hasArtifact(ARTIFACT_DEAD_MANS_BOOTS)))
+                return 1;
             break;
         case g_lossCampaign17:
-            if ((g_game->m_campaign.m_currentMap == g_map2
-                 || g_game->m_campaign.m_currentMap == g_map3)
+            if ((campaign.m_currentMap == g_map2
+                 || campaign.m_currentMap == g_map3)
                 && (loser->m_id == g_lossHero74 || loser->m_id == g_lossHero76))
                 return 1;
             break;
         case g_lossCampaign18:
-            map = g_game->m_campaign.m_currentMap;
+            map = campaign.m_currentMap;
             if (map == g_map4) {
                 if (loser->m_id == g_lossHero96)
                     return 1;
@@ -643,8 +644,8 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
             }
             break;
         case g_lossCampaign19:
-            if ((g_game->m_campaign.m_currentMap == 0
-                 || g_game->m_campaign.m_currentMap == g_map2)
+            if ((campaign.m_currentMap == 0
+                 || campaign.m_currentMap == g_map2)
                 && loser->m_id == g_lossHero74)
                 return 1;
             break;
@@ -656,7 +657,7 @@ unsigned char LossConditionStruct::checkForDefeatedHeroLoss(const hero* loser)
     return defeated;
 }
 
-VA(0x005f2e10, 0x2F)
+VA(0x005f2e10, 0x2F) MAC_ADDRESS(0x1ff2a4, 0x60)
 unsigned char LossConditionStruct::heroKilled(const hero* loser)
 {
     if (checkForDefeatedHeroLoss(loser)) {
@@ -668,28 +669,33 @@ unsigned char LossConditionStruct::heroKilled(const hero* loser)
     return 0;
 }
 
-VA(0x005f2e40, 0xD9)  // dc 0x19074c
+// Mac is byte-exact with the early type guard, returned-location temporary
+// as the equality operand, and stored loss member as the result. A named
+// location local delays field extraction; an explicit result assignment
+// adds another copy. Windows stays 99.8429% with only the two stack homes
+// exchanged; keep the canonical constructor, getLocation and operator==.
+VA(0x005f2e40, 0xD9) MAC_ADDRESS(0x1ff304, 0x140)  // dc 0x19074c
 unsigned char LossConditionStruct::checkForDefeatedTownLoss(
     const int oldOwner, const town* lostTown)
 {
-    if (m_type == LOSS_CONDITION_LOSE_TOWN) {
-        type_point target(m_townX, m_townY, m_townZ);
-        type_point lost(lostTown->m_mapX, lostTown->m_mapY,
-                        lostTown->m_mapZ);
+    if (m_type != LOSS_CONDITION_LOSE_TOWN)
+        return 0;
 
-        if (lost.operator==(target)) {
-            m_playerLoser = static_cast<signed char>(oldOwner);
-            m_gameLost = 1;
-            return 1;
-        }
+    type_point target(m_townX, m_townY, m_townZ);
+    if (target == lostTown->getLocation()) {
+        m_playerLoser = static_cast<signed char>(oldOwner);
+        m_gameLost = 1;
+        return m_gameLost;
     }
     return 0;
 }
 
-VA(0x005f2f20, 0x50)  // dc 0x1907bc
+VA(0x005f2f20, 0x50) MAC_ADDRESS(0x1ff444, 0x78)  // dc 0x1907bc
 unsigned char LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
+        // The time-limit check keeps the full unsigned calendar expression;
+        // getCurrentTurn() returns a short and would narrow it first.
         int days = (static_cast<unsigned short>(g_game->m_month) * 4
             + static_cast<unsigned short>(g_game->m_week) - 5) * 7
           + g_game->m_day;

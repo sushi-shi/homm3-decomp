@@ -27,7 +27,7 @@ iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 
-VA(0x004ea720, 0x8C)  // dc 0xd9350
+VA(0x004ea720, 0x8C) MAC_ADDRESS(0x10c3f0, 0xa8)  // dc 0xd9350
 iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
                        int frame, int sequence, bool flipped,
                        unsigned backColor, int style)
@@ -57,7 +57,7 @@ void iconWidget::initialize(int x, int y, int w, int h, int id,
     m_postPostWalkSequence = cs_wait;
 }
 
-VA(0x004ea7b0, 0x55)  // dc 0xd9464
+VA(0x004ea7b0, 0x55) MAC_ADDRESS(0x10c498, 0x7c)  // dc 0xd9464
 iconWidget::~iconWidget()
 {
     if (m_sprite)
@@ -71,15 +71,10 @@ iconWidget::~iconWidget()
 // than its copied load/dispose body. Both helpers expand naturally here.
 
 // DC 190..217 and 229..245 retain nested mouse-hit and selected scopes.
-// The positive selected scope lets VC6 merge the zero epilogues. Together
-// with positive hit testing, all five old goto returns become direct exits
-// and Main improves 95.7040% to 99.9639%. The whole 756-byte body and all
-// relocation references agree except two scratch-register operands:
-// +0x113 movsx and +0x117 mov use EDX where retail uses ECX for widget id.
-// All-direct returns with the old negative selected guard lose score;
-// moving default/base delegation into separate switch arms gives at most
-// 91.8050%. Neither failed form establishes an unavoidable source goto.
-VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
+// Mac retains three widget::main calls: inactive, unhandled disabled widget
+// message, and the shared active tail. Restoring the middle source call also
+// makes the Windows retail comparison exact.
+VA(0x004ea810, 0x2F4) MAC_ADDRESS(0x10c514, 0x33c)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
@@ -121,6 +116,9 @@ int iconWidget::main(message& msg)
                 return 1;
             }
         }
+        // Mac retains this disabled-message base call at 0:0x10c688.
+        if (isDisabled)
+            return widget::main(msg);
         break;
 
     case MESSAGE_LEFT_BUTTON_DOWN:
@@ -158,7 +156,9 @@ int iconWidget::main(message& msg)
             msg.m_id = MESSAGE_WIDGET;
             msg.m_codeX = WIDGET_DESELECT;
             msg.m_codeY = m_id;
-            if (handleClick(false, false))
+            // Mac 0x10c7c8..0x10c7e0 retains this argument expression
+            // after the MESSAGE_WIDGET assignment above.
+            if (handleClick(false, msg.m_id == MESSAGE_RIGHT_BUTTON_UP))
                 return 1;
             if (msg.m_id == MESSAGE_RIGHT_BUTTON_UP)
                 msg.m_qualifier = MESSAGE_MODIFIER_RIGHT;
@@ -191,19 +191,19 @@ void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // matches the DC's three parameters (this + two). Both arguments are
 // dead - retail returns a bare zero.
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x004eab10, 0x5)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
+VA(0x004eab10, 0x5) MAC_ADDRESS(0x10c850, 0x8)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
 bool iconWidget::handleClick(bool downClick, bool rightClick)
 {
     return 0;
 }
 
-VA(0x004eab20, 0x7)  // dc 0xd96bc
+VA(0x004eab20, 0x7) MAC_ADDRESS(0x10c858, 0xc)  // dc 0xd96bc
 int iconWidget::getRealWidth() const
 {
     return m_sprite->getWidth();
 }
 
-VA(0x004eab30, 0x7)  // dc 0xd96d0
+VA(0x004eab30, 0x7) MAC_ADDRESS(0x10c864, 0xc)  // dc 0xd96d0
 int iconWidget::getRealHeight() const
 {
     return m_sprite->getHeight();
@@ -215,7 +215,7 @@ int iconWidget::getRealHeight() const
 // and then clips the source rectangle on all four sides - each negative
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
-VA(0x004eab40, 0x4B0)  // dc 0xd96e8
+VA(0x004eab40, 0x4B0) MAC_ADDRESS(0x10c874, 0x6ec)  // dc 0xd96e8
 void iconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
@@ -344,7 +344,7 @@ void iconWidget::draw() const
     }
 }
 
-VA(0x004eaff0, 0x3E)  // dc 0xd9c7c
+VA(0x004eaff0, 0x3E) MAC_ADDRESS(0x10cf60, 0x50)  // dc 0xd9c7c
 void iconWidget::setIconFrame(int newFrame)
 {
     m_frame = newFrame % m_sprite->getNumFrames(m_seqId);
@@ -355,6 +355,7 @@ void iconWidget::setIconFrame(int newFrame)
 // Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
 // its six-instruction block is exact only with this source shape.
 
+MAC_ADDRESS(0x10cfb0, 0x10)
 void iconWidget::setIconSequence(int newSequence)
 {
     m_seqId = newSequence;
@@ -362,6 +363,7 @@ void iconWidget::setIconSequence(int newSequence)
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
+MAC_ADDRESS(0x10cfc0, 0x60)
 void iconWidget::setPalette(const char* paletteName)
 {
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
@@ -372,6 +374,7 @@ void iconWidget::setPalette(const char* paletteName)
 }
 
 // E:\gamedcs\iconwdgt.cpp:462
+MAC_ADDRESS(0x10d020, 0x54)
 void iconWidget::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_sprite->getPalette(), whichPlayer);
@@ -379,7 +382,7 @@ void iconWidget::setPlayerPaletteColors(int whichPlayer)
     ::setPlayerPaletteColors(m_sprite->getPalette24(), whichPlayer);
 }
 
-VA(0x004eb030, 0x22)  // dc 0xd9d64
+VA(0x004eb030, 0x22) MAC_ADDRESS(0x10d074, 0x5c)  // dc 0xd9d64
 void iconWidget::setSprite(const char* newSprite)
 {
     if (m_sprite)
@@ -387,7 +390,7 @@ void iconWidget::setSprite(const char* newSprite)
     m_sprite = ResourceManager::getSprite(newSprite);
 }
 
-VA(0x004eb060, 0x1EB)  // dc 0xd9d90
+VA(0x004eb060, 0x1EB) MAC_ADDRESS(0x10d0d0, 0x210)  // dc 0xd9d90
 void iconWidget::nextRandomFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {
@@ -439,7 +442,7 @@ void iconWidget::nextRandomFrame()
     setIconSequence(chosen);
 }
 
-VA(0x004eb250, 0xED)  // dc 0xd9ee8
+VA(0x004eb250, 0xED) MAC_ADDRESS(0x10d2e0, 0x190)  // dc 0xd9ee8
 void iconWidget::nextRandomSiegeEngineFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {

@@ -65,7 +65,7 @@ static const int g_resourceDisplayOrder[NUM_RESOURCES] = {
 // 52+0 on both), ruling out the compiler-generation family. The residual is
 // therefore a measured C1 front-end handle-order wall with no source-nameable
 // lever found; preserve this source shape.
-VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
+VA(0x00558ba0, 0x2A1) MAC_ADDRESS(0x151684, 0x328)  // anchor-global, dc 0x120c54
 TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
     : m_isSmall(isSmall)
 {
@@ -129,7 +129,7 @@ TResourceDisplay::TResourceDisplay(heroWindow* parent, bool isSmall)
 
 VA_COMPGEN(0x00558e50, 0x21, SCALAR_DELETING_DTOR, TResourceDisplay)
 
-VA(0x00558e80, 0x95)  // dc 0x120ee8
+VA(0x00558e80, 0x95) MAC_ADDRESS(0x1519ac, 0x120)  // dc 0x120ee8
 TResourceDisplay::~TResourceDisplay()
 {
     if (m_backgroundWidget)
@@ -163,7 +163,7 @@ TResourceDisplay::~TResourceDisplay()
 // in retail; recruitUnit::close supplies push 0 / push 1 at 0x55033a.
 // DC156 proves playerData&; DC168/201 prove operator[] for the three
 // date labels in Update/Clear. Retail expands those canonical accessors.
-VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
+VA(0x00558f20, 0xF3) MAC_ADDRESS(0x151acc, 0x158)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::update(bool drawRequested, bool update)
 {
     int playerPos = g_curWatchPlayer;
@@ -187,7 +187,7 @@ void TResourceDisplay::update(bool drawRequested, bool update)
         draw(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x00559020, 0xA4)  // dc 0x1210b4
+VA(0x00559020, 0xA4) MAC_ADDRESS(0x151c24, 0x110)  // dc 0x1210b4
 void TResourceDisplay::clear()
 {
     m_backgroundWidget->setPlayerPaletteColors(g_curWatchPlayer);

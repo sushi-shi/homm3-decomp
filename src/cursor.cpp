@@ -27,6 +27,7 @@ DATA(0x0063d6dc) static const int g_scrollDelayValues[5] = { 100, 50, 50, 50, 10
 DATA(0x006968e8) unsigned char g_unnamed6968e8;
 
 // E:\gamedcs\cursor.cpp:52
+MAC_ADDRESS(0x08e514, 0x60)
 void advManager::startCursor(int direction)
 {
     m_cursorDirection = direction;
@@ -52,7 +53,7 @@ void advManager::startCursor(int direction)
     }
 }
 
-VA(0x0047f7d0, 0x82)  // dc 0x79a84
+VA(0x0047f7d0, 0x82) MAC_ADDRESS(0x08e574, 0xc4)  // dc 0x79a84
 void advManager::stopCursor(unsigned char standEnd)
 {
     if (standEnd) {
@@ -71,7 +72,7 @@ void advManager::stopCursor(unsigned char standEnd)
     m_cursorTurning = 0;
 }
 
-VA(0x0047f860, 0x2D9)  // dc 0x79b0c
+VA(0x0047f860, 0x2D9) MAC_ADDRESS(0x08e638, 0x37c)  // dc 0x79b0c
 void advManager::drawCursor(int cellX, int cellY)
 {
     if (!g_completeDrawEnabled)
@@ -121,7 +122,7 @@ void advManager::drawCursor(int cellX, int cellY)
     }
 }
 
-VA(0x0047fb40, 0x140)  // dc 0x79ea8
+VA(0x0047fb40, 0x140) MAC_ADDRESS(0x08e9b4, 0x198)  // dc 0x79ea8
 void advManager::drawCursorShadow(int cellX, int cellY)
 {
     if (!g_completeDrawEnabled)
@@ -151,7 +152,7 @@ void advManager::drawCursorShadow(int cellX, int cellY)
     }
 }
 
-VA(0x0047fc80, 0x35A)  // dc 0x7a024
+VA(0x0047fc80, 0x35A) MAC_ADDRESS(0x08eb4c, 0x404)  // dc 0x7a024
 void advManager::drawCursorAlpha()
 {
     if (g_completeDrawEnabled) {
@@ -177,7 +178,7 @@ void advManager::drawCursorAlpha()
             if (m_radarOrigin.m_y + 9 >= g_mapHeight)
                 bottomClip = abs((g_mapHeight - m_radarOrigin.m_y - 9) * 32);
 
-            hero* curr = g_game->getHero(g_currentPlayer->m_currHeroId);
+            hero* curr = g_game->getCurrHero();
 
             if (curr->m_flags & 0x40000) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
@@ -221,14 +222,14 @@ void advManager::drawCursorAlpha()
     }
 }
 
-VA(0x0047ffe0, 0x1A)  // dc 0x7a428
+VA(0x0047ffe0, 0x1A) MAC_ADDRESS(0x08ef50, 0x28)  // dc 0x7a428
 void advManager::turnTo(int newDirection)
 {
-    m_cursorTurning = 0;
     m_cursorDirection = newDirection;
+    stopCursor(0);
 }
 
-VA(0x00480000, 0x84)  // dc 0x7a45c
+VA(0x00480000, 0x84) MAC_ADDRESS(0x08ef78, 0xd0)  // dc 0x7a45c
 int advManager::getMoveShowIt(hero* currHero, int direction)
 {
     int xInc = g_normalDirTable[direction].m_x;
@@ -247,7 +248,7 @@ int advManager::getMoveShowIt(hero* currHero, int direction)
         return 0;
 }
 
-VA(0x00480090, 0x1A4)  // dc 0x7a4d0
+VA(0x00480090, 0x1A4) MAC_ADDRESS(0x08f048, 0x268)  // dc 0x7a4d0
 NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned char isRemoteMove, long origX, long origY, unsigned char standEnd, int* foughtBattle)
 {
     updateRadar(1, 1, 0, 0, 0);
@@ -272,7 +273,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned
     return returnCell;
 }
 
-VA(0x00480240, 0x131)  // dc 0x7a6c4
+VA(0x00480240, 0x131) MAC_ADDRESS(0x08f2b0, 0x108)  // dc 0x7a6c4
 NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, unsigned char isRemoteMove, unsigned char standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
 {
     stopCursor(1);
@@ -310,7 +311,7 @@ NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, un
 // is byte-flat. Retain next_frame_time in the loop and all canonical calls.
 // All 17 CFG blocks and 604 bytes agree after resolving the two equivalent
 // startVals+4 / retail const_23d6f4 operands. No table bytes were changed.
-VA(0x00480380, 0x25C)  // exhaustive order + timeGetTime call, dc 0x7a7f4
+VA(0x00480380, 0x25C) MAC_ADDRESS(0x08f3b8, 0x1e8)  // exhaustive order + timeGetTime call, dc 0x7a7f4
 void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 {
     m_scrollX = m_scrollY = 0;
@@ -388,7 +389,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 // Access recovery: DC cursor.cpp:731/750/905 switches to hero.h:641/645
 // for IsFlying, including its can_land call. Complete expands that same
 // checkTerrain=1 wrapper; canLand is private, not a direct cursor API.
-VA(0x004805e0, 0x131C)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
+VA(0x004805e0, 0x131C) MAC_ADDRESS(0x08f5a0, 0x1578)  // ret 0x1c + caller arg order/call set, dc 0x7aa54
 NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
 {
     unsigned char becameBoat = 0;
@@ -492,7 +493,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     enteredBoat = 0;
     if ((!curr->isFlying(0) || curr->getTarget() == triggerPoint)
         && destCell->m_isTrigger
-        && validMoveWithEvent(curr, direction)) {
+        && g_advManager->validMoveWithEvent(curr, direction)) {
         switch (destCell->m_type) {
         case BOAT:
             if (curr->m_flags & 0x40000)
@@ -500,7 +501,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                                      origX, origY, standEnd,
                                      foughtBattle);
             else {
-                boat* newBoat = &g_game->m_boats[destCell->m_extraInfo];
+                boat* newBoat = g_game->getBoat(destCell->m_extraInfo);
                 g_game->recordHideHero(curr, curr->m_owner, 0);
                 g_game->recordHideBoat(newBoat, 1, curr->m_id);
                 g_game->recordShowHero(curr, curr->m_owner,
@@ -566,8 +567,12 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
                              foughtBattle);
     }
 
-    CMCMoveHero msg(curr->m_id, direction, standEnd, curr->getLocation());
-    sendMapChange(&msg);
+    if (!isRemoteMove) {
+        CMCMoveHero msg(curr->m_id, direction, standEnd, curr->getLocation());
+        sendMapChange(&msg);
+    }
+    if (isRemoteMove && !g_followPlayerMode)
+        curr->restoreCell();
 
     if (!becameBoat)
         g_game->recordMove(curr, direction, triggerPoint);
@@ -592,17 +597,6 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         return 0;
     }
 
-    // Retail sequences this AFTER the network early-return block, not
-    // before record_move as Dreamcast does (dc 0x7b5a2 precedes
-    // record_move at 0x7b5c2): retail's `mov al,[gbFollowPlayerMode] /
-    // test al,al / jne / call restore_cell` sits between
-    // DemobilizeCurrHero's `ret 0x1c` and the animate_move argument
-    // build. Moving it here pairs the last stray call (base-only
-    // restore_cell at +0xa06 against retail's +0xb81) and raises
-    // 89.5139 -> 89.8315.
-    if (isRemoteMove && !g_followPlayerMode)
-        curr->restoreCell();
-
     animateMove(curr, direction, xInc, yInc);
 
     curr->m_movePoints -= curMoveCost;
@@ -614,8 +608,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     unsigned char hasEvent = !isRemoteMove && destCell->hasTriggerableEvent();
     if (!computerMove && hasEvent)
         standEnd = 1;
-    if (standEnd)
-        stopCursor(1);
+    stopCursor(standEnd);
     if (computerMove && standEnd && g_completeDrawEnabled) {
         completeDraw(0);
         updateScreen(0, 0);
@@ -626,19 +619,19 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
         g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
-    }
 
-    sample* walkSample = m_heroSamples[
-        getCell(curr->getLocation())->m_groundSet];
-    if (curr->isFlying(0))
-        walkSample = m_heroSamples[10];
-    walkSample->m_memSample.m_memLooping = 0;
-    if (m_cursorFrameCount) {
-        g_newWalkSample = walkSample;
-    } else {
-        g_newWalkSample = 0;
-        g_soundManager->stopSample(g_walkSample);
-        g_walkSample = g_soundManager->memorySample(walkSample);
+        sample* walkSample = m_heroSamples[
+            getCell(curr->getLocation())->m_groundSet];
+        if (curr->isFlying(0))
+            walkSample = m_heroSamples[10];
+        walkSample->m_memSample.m_memLooping = 0;
+        if (m_cursorFrameCount) {
+            g_newWalkSample = walkSample;
+        } else {
+            g_newWalkSample = 0;
+            g_soundManager->stopSample(g_walkSample);
+            g_walkSample = g_soundManager->memorySample(walkSample);
+        }
     }
 
     point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
@@ -662,7 +655,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
             if (curr->getTarget() != triggerPoint
                 && g_currentPlayer->isHuman()
                 && g_game->onSameTeam(
-                    g_game->m_garrisons[eventCell->m_extraInfo].m_playerOwner,
+                    g_game->getGarrison(eventCell->m_extraInfo)->m_playerOwner,
                     g_netLocalGamePos))
                 returnCell = 0;
             break;
@@ -730,7 +723,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
 // bytes below reaches 100.0000 with retail's own `jne` layout, so this is a
 // C2 block-ordering choice and not a source difference; every other block,
 // all nine calls and the whole call order already agree.
-VA(0x00481900, 0x1C1)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
+VA(0x00481900, 0x1C1) MAC_ADDRESS(0x090b18, 0x1a4)  // exhaustive cursor-tail order/call set, dc 0x7bbbc
 void advManager::checkAdjacentMon(int* foughtBattle)
 {
     hero* curr = g_game->getCurrHero();
@@ -753,7 +746,7 @@ void advManager::checkAdjacentMon(int* foughtBattle)
     }
 }
 
-VA(0x00481ad0, 0x10D)  // dc 0x7bdcc
+VA(0x00481ad0, 0x10D) MAC_ADDRESS(0x090cbc, 0x130)  // dc 0x7bdcc
 int advManager::validMoveWithEvent(hero* who, int direction)
 {
     int destX = who->m_x + g_normalDirTable[direction].m_x;
@@ -774,7 +767,7 @@ int advManager::validMoveWithEvent(hero* who, int direction)
     return 1;
 }
 
-VA(0x00481be0, 0x2ED)  // dc 0x7bee4
+VA(0x00481be0, 0x2ED) MAC_ADDRESS(0x090dec, 0x3f8)  // dc 0x7bee4
 int advManager::validMove(hero* who, int direction, int computerMove,
                           unsigned char landOnly)
 {
@@ -845,7 +838,7 @@ int advManager::validMove(hero* who, int direction, int computerMove,
     return 1;
 }
 
-VA(0x00481ed0, 0xF9)  // dc 0x7c1d8
+VA(0x00481ed0, 0xF9) MAC_ADDRESS(0x0911e4, 0x1bc)  // dc 0x7c1d8
 void advManager::onMoveHero(CMapChange* mapChange)
 {
     CMCMoveHero* change = static_cast<CMCMoveHero*>(mapChange);
@@ -866,6 +859,7 @@ void advManager::onMoveHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1158
+MAC_ADDRESS(0x0913a0, 0x64)
 void advManager::onTeleportHero(CMapChange* mapChange)
 {
     CMCTeleportHero* change = static_cast<CMCTeleportHero*>(mapChange);
@@ -874,6 +868,7 @@ void advManager::onTeleportHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1167
+MAC_ADDRESS(0x091404, 0x64)
 void advManager::onClaimMine(CMapChange* mapChange)
 {
     CMCClaimMine* change = static_cast<CMCClaimMine*>(mapChange);
@@ -884,6 +879,7 @@ void advManager::onClaimMine(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1177
+MAC_ADDRESS(0x091468, 0x68)
 void advManager::onClaimTown(CMapChange* mapChange)
 {
     CMCClaimTown* change = static_cast<CMCClaimTown*>(mapChange);
@@ -893,6 +889,7 @@ void advManager::onClaimTown(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1186
+MAC_ADDRESS(0x0914d0, 0x84)
 void advManager::onBuildBoat(CMapChange* mapChange)
 {
     CMCBuildBoat* change = static_cast<CMCBuildBoat*>(mapChange);
@@ -903,6 +900,7 @@ void advManager::onBuildBoat(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1196
+MAC_ADDRESS(0x091554, 0x6c)
 void advManager::onEraseObject(CMapChange* mapChange)
 {
     CMCEraseObject* change = static_cast<CMCEraseObject*>(mapChange);
@@ -913,6 +911,7 @@ void advManager::onEraseObject(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1208
+MAC_ADDRESS(0x0915c0, 0x148)
 void advManager::onDeadHero(CMapChange* mapChange)
 {
     CMCDeadHero* change = static_cast<CMCDeadHero*>(mapChange);
@@ -925,6 +924,7 @@ void advManager::onDeadHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1224
+MAC_ADDRESS(0x091708, 0xa0)
 void advManager::onRecruitHero(CMapChange* mapChange)
 {
     CMCRecruitHero* change = static_cast<CMCRecruitHero*>(mapChange);
@@ -940,16 +940,18 @@ void advManager::onRecruitHero(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1245
+MAC_ADDRESS(0x0917a8, 0xb4)
 void advManager::onDeadPlayer(CMapChange* mapChange)
 {
     CMCDeadPlayer* change = static_cast<CMCDeadPlayer*>(mapChange);
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_PLAYER_DEFEATED_FORMAT),
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_PLAYER_DEFEATED_FORMAT],
             g_game->getPlayerName(change->m_playerPos));
     normalDialog(g_text, 1, -1, -1, 10, change->m_playerPos,
                  -1, -1, -1, 5000, -1, 0);
 }
 
 // E:\gamedcs\cursor.cpp:1253
+MAC_ADDRESS(0x09185c, 0x34)
 void advManager::onClaimGenerator(CMapChange* mapChange)
 {
     CMCClaimGenerator* change =
@@ -958,6 +960,7 @@ void advManager::onClaimGenerator(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1260
+MAC_ADDRESS(0x091890, 0x34)
 void advManager::onClaimGarrison(CMapChange* mapChange)
 {
     CMCClaimGarrison* change =
@@ -966,6 +969,7 @@ void advManager::onClaimGarrison(CMapChange* mapChange)
 }
 
 // E:\gamedcs\cursor.cpp:1267
+MAC_ADDRESS(0x0918c4, 0x34)
 void advManager::onClaimShipYard(CMapChange* mapChange)
 {
     CMCClaimShipYard* change =
@@ -973,7 +977,7 @@ void advManager::onClaimShipYard(CMapChange* mapChange)
     g_game->claimShipyard(change->m_point, change->m_playerPos);
 }
 
-VA(0x00481fd0, 0x32)  // dc 0x7c688
+VA(0x00481fd0, 0x32) MAC_ADDRESS(0x0918f8, 0x54)  // dc 0x7c688
 void advManager::onHideHero(CMapChange* mapChange)
 {
     CMCHideHero* change = static_cast<CMCHideHero*>(mapChange);
@@ -982,7 +986,7 @@ void advManager::onHideHero(CMapChange* mapChange)
         currentHero->restoreCell();
 }
 
-VA(0x00482010, 0x328)  // dc 0x7c6bc
+VA(0x00482010, 0x328) MAC_ADDRESS(0x09194c, 0xa4)  // dc 0x7c6bc
 void advManager::processMapChangeNew(CMapChange* mapChange)
 {
     switch (mapChange->m_subType) {
@@ -1028,7 +1032,7 @@ void advManager::processMapChangeNew(CMapChange* mapChange)
     }
 }
 
-VA(0x00482390, 0x21)  // dc 0x7c9f8
+VA(0x00482390, 0x21) MAC_ADDRESS(0x0919f0, 0x4c)  // dc 0x7c9f8
 void sendMapChange(CMapChange* mapChange)
 {
     if (g_thisNetGotAdventureControl && g_remoteOn)

@@ -49,7 +49,7 @@ static void customCampaignSliderHandler(int state, heroWindow* window);
 // one), while the eighteen list rows use the fixed 100.. / 118.. ranges
 // OnWidgetDeselect decodes.
 
-VA(0x004827b0, 0x727)
+VA(0x004827b0, 0x727) MAC_ADDRESS(0x21ed2c, 0x82c)
 TCustomCampaignWindow::TCustomCampaignWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
@@ -120,7 +120,7 @@ TCustomCampaignWindow::TCustomCampaignWindow()
 
 VA_COMPGEN(0x00482ee0, 0x21, SCALAR_DELETING_DTOR, TCustomCampaignWindow)
 
-VA(0x00482f10, 0xB1)
+VA(0x00482f10, 0xB1) MAC_ADDRESS(0x21f5dc, 0xd4)
 TCustomCampaignWindow::~TCustomCampaignWindow()
 {
     for (unsigned i = 0; i < m_campaignHeaders.size(); i++) {
@@ -130,7 +130,7 @@ TCustomCampaignWindow::~TCustomCampaignWindow()
     deleteWidgets();
 }
 
-VA(0x00482fd0, 0x264)
+VA(0x00482fd0, 0x264) MAC_ADDRESS(0x21f6b0, 0x1d4)
 void TCustomCampaignWindow::loadCampaignList()
 {
     char currentDirectory[100];
@@ -196,7 +196,7 @@ bool CampaignHeaderPointerLess::operator()(
 // (the `>=` else-first form IS retail's layout, +11), raw send_message
 // against show()/hide(), and hoisting the name widget above the colour
 // branch (loses 1.2). Include-set class.
-VA(0x00483330, 0x281)  // LoadCampaignList's tail callee, retail-only
+VA(0x00483330, 0x281) MAC_ADDRESS(0x21f884, 0x21c)  // LoadCampaignList's tail callee, retail-only
 void TCustomCampaignWindow::updateList()
 {
     int i;
@@ -235,7 +235,7 @@ void TCustomCampaignWindow::updateList()
     }
 }
 
-VA(0x004835c0, 0xA4)
+VA(0x004835c0, 0xA4) MAC_ADDRESS(0x21faa0, 0xe8)
 int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id < 100 || id > 135)
@@ -263,7 +263,7 @@ int TCustomCampaignWindow::onWidgetDeselect(int id, bool& exitFlag)
 
 // Complete-only. The campaign ordinal 20 is the custom-campaign slot
 // select_campaign reserves for a file chosen here.
-VA(0x00483670, 0xCE)
+VA(0x00483670, 0xCE) MAC_ADDRESS(0x21fb88, 0x80)
 bool TCustomCampaignWindow::acceptSelection()
 {
     int index = m_selected + m_firstVisible;
@@ -274,7 +274,7 @@ bool TCustomCampaignWindow::acceptSelection()
     return 1;
 }
 
-VA(0x00483740, 0x134)
+VA(0x00483740, 0x134) MAC_ADDRESS(0x21fc08, 0x24)
 std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
 {
     return m_fileName;
@@ -282,7 +282,7 @@ std::string TCampaignBrief::CampaignHeaderStruct::getFileName() const
 
 // Complete-only. The Begin button accepts the selection and closes the
 // modal loop with codeY 1; the Back button closes it with codeY 0.
-VA(0x00483880, 0x3C)
+VA(0x00483880, 0x3C) MAC_ADDRESS(0x21fc2c, 0x7c)
 static int customCampaignBeginHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
@@ -297,7 +297,7 @@ static int customCampaignBeginHandler(message& msg)
     return 0;
 }
 
-VA(0x004838c0, 0x2E)
+VA(0x004838c0, 0x2E) MAC_ADDRESS(0x21fca8, 0x40)
 static int customCampaignBackHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
@@ -309,7 +309,7 @@ static int customCampaignBackHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x004838f0, 0x25)
+VA(0x004838f0, 0x25) MAC_ADDRESS(0x21fce8, 0x5c)
 static void customCampaignSliderHandler(int state, heroWindow* window)
 {
     TCustomCampaignWindow* campaignWindow =

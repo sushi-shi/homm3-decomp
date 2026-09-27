@@ -81,7 +81,7 @@ DATA(0x0063bc00) static const short g_campaignSetExitRect[4] = { 576, 464, 126, 
 // at least ten wrong temporary-slot operands. A named ROE entry alone is
 // enough to reach that plateau; it does not explain retail's alternating
 // allocation/reserve, widget-entry and hotkey homes. No such local is retained.
-VA(0x00456ec0, 0x337)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
+VA(0x00456ec0, 0x337) MAC_ADDRESS(0x21e104, 0x4cc)  // anchor-string CSSsod.def + anchor-vtable 0x63bc08 + DoCampaignWindow's stack object, retail-only
 TCampaignSetWindow::TCampaignSetWindow()
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -134,7 +134,7 @@ TCampaignSetWindow::TCampaignSetWindow()
 
 VA_COMPGEN(0x00457200, 0x21, SCALAR_DELETING_DTOR, TCampaignSetWindow)
 
-VA(0x00457230, 0x4E)
+VA(0x00457230, 0x4E) MAC_ADDRESS(0x21e5d0, 0x68)
 TCampaignSetWindow::~TCampaignSetWindow()
 {
     deleteWidgets();
@@ -143,7 +143,7 @@ TCampaignSetWindow::~TCampaignSetWindow()
 // The five plate callbacks. Each answers a right-click with its own help
 // row and a left-release with the modal result DoCampaignWindow switches
 // on; the Exit plate answers the shared 0x7801 dialog-cancel id.
-VA(0x00457280, 0x64)
+VA(0x00457280, 0x64) MAC_ADDRESS(0x21e638, 0xb8)
 static int campaignSetSodHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -160,7 +160,7 @@ static int campaignSetSodHandler(message& msg)
     return 0;
 }
 
-VA(0x004572f0, 0x64)
+VA(0x004572f0, 0x64) MAC_ADDRESS(0x21e6f0, 0xb8)
 static int campaignSetArmHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -177,7 +177,7 @@ static int campaignSetArmHandler(message& msg)
     return 0;
 }
 
-VA(0x00457360, 0x64)
+VA(0x00457360, 0x64) MAC_ADDRESS(0x21e7a8, 0xb8)
 static int campaignSetCusHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -194,7 +194,7 @@ static int campaignSetCusHandler(message& msg)
     return 0;
 }
 
-VA(0x004573d0, 0x64)
+VA(0x004573d0, 0x64) MAC_ADDRESS(0x21e860, 0xb8)
 static int campaignSetExitHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -211,7 +211,7 @@ static int campaignSetExitHandler(message& msg)
     return 0;
 }
 
-VA(0x00457440, 0x60)
+VA(0x00457440, 0x60) MAC_ADDRESS(0x21e918, 0xb8)
 static int campaignSetRoeHandler(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -228,7 +228,7 @@ static int campaignSetRoeHandler(message& msg)
     return 0;
 }
 
-VA(0x004574a0, 0x2C)
+VA(0x004574a0, 0x2C) MAC_ADDRESS(0x21e9d0, 0x58)
 void TCampaignSetWindow::doModal()
 {
     g_soundManager->startMP3(
@@ -236,7 +236,7 @@ void TCampaignSetWindow::doModal()
     g_windowManager->doDialog(this, heroWindowHandler, 0);
 }
 
-VA(0x004574d0, 0xC4)
+VA(0x004574d0, 0xC4) MAC_ADDRESS(0x21ea28, 0x144)
 int TCampaignSetWindow::handleMessage(message& msg)
 {
     unsigned char hoverChanged = 0;

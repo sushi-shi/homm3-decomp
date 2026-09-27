@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <math.h>
+#include <new>
 #include <string.h>
 
 #include "bitmap24.h"
@@ -10,10 +11,6 @@
 #include "bitmap16.h"
 #include "hsv.h"
 #include "pcx.h"
-
-// The retail destructor is frameless under /GX, so this compiland saw the
-// same nothrow deallocator contract as bitmap16.obj and sample.obj.
-__declspec(nothrow) void __cdecl operator delete(void* value);
 
 // Dreamcast exposes these three source helpers as standalone bitmap24.cpp
 // functions. Complete retains each call boundary in source but VC6 expands all
@@ -46,7 +43,7 @@ Bitmap24Bit::Bitmap24Bit()
 {
 }
 
-VA(0x0044ed50, 0xAA)
+VA(0x0044ed50, 0xAA) MAC_ADDRESS(0x05ce9c, 0xc4)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
     : resource(name, RESOURCE_TYPE_BITMAP24),
@@ -69,7 +66,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     importPCXFile(filename);
 }
 
-VA(0x0044eec0, 0x22)
+VA(0x0044eec0, 0x22) MAC_ADDRESS(0x05cf60, 0x70)
 Bitmap24Bit::~Bitmap24Bit()
 {
     if (m_data)
@@ -125,16 +122,16 @@ int Bitmap24Bit::importPCXFile(const char* filename)
     flipimage(&pcxfile, &pcxfile);
 
     for (int y = 0; y < m_height; ++y) {
-        memcpy(m_data + y * m_width * 3,
+        memcpy(m_data + y * getPitch(),
                pcxfile.m_ibuff + y * pcxfile.m_buffwidth,
-               m_width * 3);
+               getPitch());
     }
 
     freeimage(&pcxfile);
     return 0;
 }
 
-VA(0x0044efd0, 0x37)
+VA(0x0044efd0, 0x37) MAC_ADDRESS(0x05cfd0, 0x3c)
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const
 {
@@ -149,7 +146,7 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // Bitmap16Bit wrapper above.
 // Dreamcast line 342 advances both row pointers after the inner pixel loop;
 // Complete retains the same post-row induction.
-VA(0x0044f010, 0x161)  // source-order bracket + RGB mask/data flow, dc 0x52968
+VA(0x0044f010, 0x161) MAC_ADDRESS(0x05d00c, 0x210)  // source-order bracket + RGB mask/data flow, dc 0x52968
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
 {
@@ -203,14 +200,14 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
     }
 }
 
-VA(0x0044f180, 0x7)
+VA(0x0044f180, 0x7) MAC_ADDRESS(0x05d21c, 0xc)
 unsigned int Bitmap24Bit::getSize() const
 {
     return m_dataSize + sizeof(Bitmap24Bit);
 }
 
 // E:\gamedcs\bitmap24.cpp:349
-VA(0x0044f190, 0x5F8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
+VA(0x0044f190, 0x5F8) MAC_ADDRESS(0x05d228, 0x2f8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
 void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
                             float hueAdjust, float saturationAdjust,
                             float valueAdjust)
@@ -280,6 +277,7 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
 }
 
 // Original: RGBToHSV; bitmap24.cpp:446, dc 0x52ecc.
+MAC_ADDRESS(0x05d520, 0x1c8)
 static void rgbToHSV(unsigned int r, unsigned int g,
                             unsigned int b, float* h, float* s, float* v)
 {
@@ -318,6 +316,7 @@ static void rgbToHSV(unsigned int r, unsigned int g,
 }
 
 // Original: HSVToRGB; bitmap24.cpp:481, dc 0x53084.
+MAC_ADDRESS(0x05d6e8, 0x248)
 static void hsvToRGB(float h, float s, float v,
                             unsigned int* r, unsigned int* g, unsigned int* b)
 {

@@ -74,7 +74,7 @@ All use the pinned binaries under Wine.
      {ESI, EDI, EBP} are precisely the three x86 GPRs with no 8-bit
      subregister.
 5. **Behavioral oracle.** Standalone probes against the pinned SP3 CL
-   (game profile `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR- /D_WINDOWS`)
+   (historical `/ML` probe: `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR- /D_WINDOWS`)
    measured the assignment order, its overflow, the byte-width exclusion
    and the creation-order flip (section 4).
 6. **Real-case validation.** The model was run against retail via the

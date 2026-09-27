@@ -221,10 +221,11 @@ machinery (which is what makes `-Gs` vs `-Gs4096` and `-Fdvc60.pdb` vs
 `-Fdvc60.idb` come out right). `-D_MSC_VER`/`-D_WIN32` go through the `/D`
 handler path (front ends only — C2 never sees defines).
 
-## 7. Worked example — the game profile
+## 7. Worked example — historical `/ML` probe
 
-`/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR- /D_WINDOWS` (units.toml
-`game_o2_ml_gr_windows`, minus the driver-only `/nologo /c`). Model output =
+`/O2 /Ob2 /Oy- /Op /ML /Gr /GX /GR- /D_WINDOWS` was the provisional game
+profile when this driver trace was captured. The current manifest uses `/MT`.
+Model output for this historical `/ML` trace =
 the /Bd-observed pass lines **token-for-token** (2026-08-09 run; `-Bd` itself
 elided):
 

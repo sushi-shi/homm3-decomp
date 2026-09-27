@@ -74,7 +74,7 @@ static const long g_constCreatureOfferings[2][2] = {
     {334, 109}, {417, 305}
 };
 
-VA(0x0055fc30, 0xab)  // dc 0x123e8c
+VA(0x0055fc30, 0xab) MAC_ADDRESS(0x1552ec, 0xe0)  // dc 0x123e8c
 void type_artifact_offering::set(const type_artifact* artifact, long slot,
                                  const hero* owner)
 {
@@ -105,6 +105,7 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
 
 // E:\gamedcs\sacrifice_window.cpp:170
 // All Complete calls are expanded into the artifact widget builder.
+MAC_ADDRESS(0x1553cc, 0x80)
 inline type_doll_slot_widget::type_doll_slot_widget(
     const type_doll_slot_definition& def, long id)
     : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
@@ -115,6 +116,7 @@ inline type_doll_slot_widget::type_doll_slot_widget(
 
 // E:\gamedcs\sacrifice_window.cpp:204
 // All Complete calls are expanded into the artifact widget builder.
+MAC_ADDRESS(0x15548c, 0x80)
 inline type_backpack_slot_widget::type_backpack_slot_widget(
     const type_icon_definition& def, long newSlot, long id)
     : iconWidget(def.m_x, def.m_y, def.m_width, def.m_height, id, def.m_image,
@@ -125,6 +127,7 @@ inline type_backpack_slot_widget::type_backpack_slot_widget(
 
 // E:\gamedcs\sacrifice_window.cpp:235
 // All Complete calls are expanded into the artifact widget builder.
+MAC_ADDRESS(0x15554c, 0x6c)
 inline type_artifact_offering_widget::type_artifact_offering_widget(
     long x, long y, long width, long height, long newItemNumber,
     long id, const char* image)
@@ -138,7 +141,7 @@ inline type_artifact_offering_widget::type_artifact_offering_widget(
 // Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
 // body shape, and forwarding to artifact_click - the equipped-slot handler.
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
+VA(0x0055fce0, 0x26) MAC_ADDRESS(0x15544c, 0x40)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
 bool type_doll_slot_widget::handleClick(
     bool downClick, bool rightClick)
 {
@@ -151,7 +154,7 @@ bool type_doll_slot_widget::handleClick(
 }
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x0055fd10, 0x26)
+VA(0x0055fd10, 0x26) MAC_ADDRESS(0x15550c, 0x40)
 bool type_backpack_slot_widget::handleClick(
     bool downClick, bool rightClick)
 {
@@ -164,7 +167,7 @@ bool type_backpack_slot_widget::handleClick(
 }
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x0055fd40, 0x26)
+VA(0x0055fd40, 0x26) MAC_ADDRESS(0x1555b8, 0x40)
 bool type_artifact_offering_widget::handleClick(
     bool downClick, bool rightClick)
 {
@@ -190,7 +193,7 @@ VA_COMPGEN(0x0055fd70, 0x21, SCALAR_DELETING_DTOR,
 // That is creature_click's (slot, right_click, left_pane) exactly, and the
 // pair matches the Dreamcast constructor's (new_slot, _left_pane).
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
+VA(0x0055fda0, 0x2a) MAC_ADDRESS(0x155674, 0x44)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
 bool type_army_slot_widget::handleClick(
     bool downClick, bool rightClick)
 {
@@ -206,6 +209,7 @@ bool type_army_slot_widget::handleClick(
 // Complete expands both calls in create_creature_icons and retains no
 // separately claimable copy. The base constructor arguments and the three
 // trailing stores are byte-proven by those two expansions.
+MAC_ADDRESS(0x1555f8, 0x7c)
 type_army_slot_widget::type_army_slot_widget(
     long newX, long newY, long newW, long newH, long newSlot,
     long newId, const char* image, unsigned char newLeftPane)
@@ -216,7 +220,7 @@ type_army_slot_widget::type_army_slot_widget(
     m_leftPane = newLeftPane;
 }
 
-VA(0x0055fdd0, 0x574)  // dc 0x12419c
+VA(0x0055fdd0, 0x574) MAC_ADDRESS(0x1556b8, 0x820)  // dc 0x12419c
 type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -235,7 +239,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 414, 104, 50,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_NEXT_LEVEL],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
@@ -245,7 +249,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 
     m_widgets.push_back(new textWidget(
         24, 492, 104, 42,
-        g_generalText->getText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE],
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
@@ -286,7 +290,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:360
-VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
+VA(0x00560380, 0xD67) MAC_ADDRESS(0x155fc0, 0x1468)  // ctor caller + dc name/order/locals, dc 0x1246b8
 void type_sacrifice_window::createArtifactWidgets(
     long& widgetId, int curPlayer)
 {
@@ -392,9 +396,11 @@ void type_sacrifice_window::createArtifactWidgets(
     m_widgets.push_back(m_currentArtifactWidget);
     m_artifactWidgets.push_back(m_currentArtifactWidget);
 
+    // CodeWarrior resolves the overloaded handler name only in an initializer.
+    type_func_button::handler_type emptyBackpackHandler = emptyBackpack;
     m_emptyBackpackButton = new type_func_button(
         146, 520, 64, 32, widgetId++, "AltEmBk.def",
-        emptyBackpack, 0, 1);
+        emptyBackpackHandler, 0, 1);
     m_emptyBackpackButton->setHelpText(
         g_sacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].m_text, 0, 1);
     m_widgets.push_back(m_emptyBackpackButton);
@@ -432,7 +438,7 @@ void type_sacrifice_window::createArtifactWidgets(
     m_artifactWidgets.push_back(currentTextWidget);
 }
 
-VA(0x005610f0, 0xE73)  // dc 0x124e60
+VA(0x005610f0, 0xE73) MAC_ADDRESS(0x157428, 0x14c8)  // dc 0x124e60
 void type_sacrifice_window::createCreatureWidgets(
     long& widgetId, int curPlayer)
 {
@@ -481,7 +487,8 @@ void type_sacrifice_window::createCreatureWidgets(
     textWidget* newTextWidgets[7];
     long itemNumber = 0;
 
-    for (long defIndex = 0; defIndex < 2; ++defIndex) {
+    long defIndex;
+    for (defIndex = 0; defIndex < 2; ++defIndex) {
         count = createCreatureIcons(
             g_constCreatureSources[defIndex][0],
             g_constCreatureSources[defIndex][1],
@@ -588,7 +595,7 @@ void type_sacrifice_window::createCreatureWidgets(
     m_creatureWidgets.push_back(m_artifactsButton);
 }
 
-VA(0x00561f70, 0x427)  // dc 0x1255cc
+VA(0x00561f70, 0x427) MAC_ADDRESS(0x1588f0, 0x46c)  // dc 0x1255cc
 long type_sacrifice_window::createCreatureIcons(
     long iconX, long iconY, long columns, long rows, long itemNumber,
     long& widgetId, iconWidget** iconWidgets,
@@ -640,7 +647,7 @@ long type_sacrifice_window::createCreatureIcons(
 VA_COMPGEN(0x00560350, 0x21, SCALAR_DELETING_DTOR,
            type_sacrifice_window)
 
-VA(0x005623a0, 0x15b)  // dc 0x125824
+VA(0x005623a0, 0x15b) MAC_ADDRESS(0x158d5c, 0x148)  // dc 0x125824
 type_sacrifice_window::~type_sacrifice_window()
 {
     deleteWidgets();
@@ -663,7 +670,7 @@ std::string convertWithCommas(long value)
     return result;
 }
 
-VA(0x00562500, 0x15a)  // dc 0x125998
+VA(0x00562500, 0x15a) MAC_ADDRESS(0x158f98, 0x118)  // dc 0x125998
 void type_sacrifice_window::updateExperience()
 {
     std::string text;
@@ -677,7 +684,7 @@ void type_sacrifice_window::updateExperience()
     m_sacrificeButton->enable(m_totalExperience > 0);
 }
 
-VA(0x00562660, 0x1d5)  // dc 0x1258ac
+VA(0x00562660, 0x1d5) MAC_ADDRESS(0x158ea4, 0xf4)  // dc 0x1258ac
 std::string convertWithCommas(long value);
 
 void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
@@ -693,7 +700,7 @@ void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact)
     }
 }
 
-VA(0x00562840, 0x166)  // dc 0x125b3c
+VA(0x00562840, 0x166) MAC_ADDRESS(0x159248, 0x144)  // dc 0x125b3c
 void type_sacrifice_window::updateSlot(long slot)
 {
     TArtifactSlot artifactSlot;
@@ -720,7 +727,7 @@ void type_sacrifice_window::updateSlot(long slot)
     }
 }
 
-VA(0x005629e0, 0x33)  // dc 0x125c34
+VA(0x005629e0, 0x33) MAC_ADDRESS(0x15938c, 0x7c)  // dc 0x125c34
 void type_sacrifice_window::updateAllSlots()
 {
     long slotCount = g_game->m_gameVersion >= 2 ? 19 : 18;
@@ -728,7 +735,7 @@ void type_sacrifice_window::updateAllSlots()
         updateSlot(slot);
 }
 
-VA(0x00562a20, 0x24e)  // dc 0x125c60
+VA(0x00562a20, 0x24e) MAC_ADDRESS(0x159408, 0x1d8)  // dc 0x125c60
 void type_sacrifice_window::setArtifactMode()
 {
     unsigned long i;
@@ -743,13 +750,7 @@ void type_sacrifice_window::setArtifactMode()
     for (i = 0; i < m_artifactOfferingWidgets.size(); ++i)
         updateArtifactOffering(i);
 
-    for (i = 0; i < m_backpackWidgets.size(); ++i)
-        updateArtifactWidget(m_backpackWidgets[i], m_currentHero->getBackpack(i));
-
-    unsigned char scrollBackpack =
-        m_currentHero->getLastBackpackIndex() + 1 > m_backpackWidgets.size();
-    m_leftBackpackButton->enable(scrollBackpack);
-    m_rightBackpackButton->enable(scrollBackpack);
+    updateBackpack();
 
     updateOffering(m_currentArtifactWidget, m_currentArtifactValue,
                     &m_holdingArtifact);
@@ -767,22 +768,12 @@ void type_sacrifice_window::setArtifactMode()
     updateExperience();
 }
 
-VA(0x00562c70, 0x124)  // dc 0x125aac
+VA(0x00562c70, 0x124) MAC_ADDRESS(0x159150, 0xf8)  // dc 0x125aac
 void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
                      const type_artifact_offering* offering)
 {
     type_artifact artifact = *offering;
-    if (artifact.m_artifactId == -1) {
-        artifactWidget->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(0, 0, 1);
-    } else {
-        artifactWidget->setIconFrame(artifact.m_artifactId);
-        artifactWidget->sendMessage(widget::WIDGET_SET_STATUS,
-                                      widget::WIDGET_DRAWN);
-        artifactWidget->setHelpText(
-            g_artifactTraits[artifact.m_artifactId].m_name, 0, 1);
-    }
+    updateArtifactWidget(artifactWidget, artifact);
 
     if (offering->m_artifactId == -1) {
         artifactWidget->setHelpText(
@@ -802,6 +793,7 @@ void updateOffering(iconWidget* artifactWidget, textWidget* valueWidget,
 // E:\gamedcs\sacrifice_window.cpp:914
 // Inlined at both retail callers. The AI-value load at +0x40 and the signed
 // divide-by-forty reciprocal fix this integer value exactly.
+MAC_ADDRESS(0x1595e0, 0x34)
 long sacrificeValue(TCreatureType creature)
 {
     return g_creatureTypeTraits[creature].m_aiValue / 40 * 5;
@@ -833,7 +825,7 @@ long sacrificeValue(TCreatureType creature)
 // `long total_hits` in the same block, 93.8202 - it costs the `xor ebx,ebx`
 // at fn+0x20 and cascades.  The two block-scoped strings do not overlay on
 // either side, so the cycle is an allocation order, not a lifetime fact.
-VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph, dc 0x125e08
+VA(0x00562da0, 0x3a2) MAC_ADDRESS(0x159614, 0x3a8)  // dc order/name/signature + retail field graph, dc 0x125e08
 void type_sacrifice_window::updateCreatureOffering(
     type_creature_offering* creature)
 {
@@ -872,7 +864,7 @@ void type_sacrifice_window::updateCreatureOffering(
         creature->m_selectionWidget->setVisible(creature->m_amount > 0);
         result = convertWithCommas(totalHits);
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_EXPERIENCE],
             result.c_str());
         creature->m_experienceText->setText(result.c_str());
         creature->m_experienceText->setVisible(creature->m_amount > 0);
@@ -885,7 +877,7 @@ void type_sacrifice_window::updateCreatureOffering(
         } else {
             std::string helpText;
             helpText = formatString(
-                g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE],
                 getArmyName(creatureType, 0));
             creature->m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
             creature->m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
@@ -893,7 +885,7 @@ void type_sacrifice_window::updateCreatureOffering(
     }
 }
 
-VA(0x00563150, 0x141)  // dc 0x126064
+VA(0x00563150, 0x141) MAC_ADDRESS(0x1599bc, 0x1f4)  // dc 0x126064
 void type_sacrifice_window::setCreatureMode()
 {
     unsigned long i;
@@ -930,6 +922,7 @@ void type_sacrifice_window::setCreatureMode()
 // Retail expands this helper at the click sites. The DC line map fixes the
 // source order and argument ABI; the Complete mouse-pointer and refresh call
 // graph independently proves the body.
+MAC_ADDRESS(0x159bb0, 0xc4)
 void type_sacrifice_window::pickUpArtifact(
     type_artifact artifact, long slot, unsigned char newArtifact)
 {
@@ -950,6 +943,7 @@ void type_sacrifice_window::pickUpArtifact(
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
 // sacrifice, but retains the helper's redraw as a distinct inline tail.
+MAC_ADDRESS(0x159c74, 0xa4)
 void type_sacrifice_window::putDownArtifact(
     unsigned char changeExperience)
 {
@@ -965,7 +959,7 @@ void type_sacrifice_window::putDownArtifact(
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x005632a0, 0x417)  // dc 0x1262e4
+VA(0x005632a0, 0x417) MAC_ADDRESS(0x159d18, 0x1d4)  // dc 0x1262e4
 void type_sacrifice_window::artifactClick(
     long slot, unsigned char rightClick)
 {
@@ -990,8 +984,7 @@ void type_sacrifice_window::artifactClick(
 
         if (oldArtifact.m_artifactId == ARTIFACT_CATAPULT) {
             normalDialog(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT],
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
@@ -1018,8 +1011,10 @@ void type_sacrifice_window::artifactClick(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1127
-// Complete expands this helper into both halves of backpack_click. Its widget
-// vector walk and shared scrolling-state byte are directly visible there.
+// Complete expands this helper in setArtifactMode and both halves of
+// backpackClick. Mac retains the call in setArtifactMode at 0:0x1594dc;
+// Dreamcast names update_backpack on source line 895.
+MAC_ADDRESS(0x159eec, 0xb8)
 void type_sacrifice_window::updateBackpack()
 {
     for (unsigned long i = 0; i < m_backpackWidgets.size(); ++i)
@@ -1036,7 +1031,7 @@ void type_sacrifice_window::updateBackpack()
 // Picking up an artifact removes its backpack record. Putting one down inserts
 // it or displays the backpack error.
 // E:\gamedcs\sacrifice_window.cpp:1150
-VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
+VA(0x005636c0, 0x31a) MAC_ADDRESS(0x159fa4, 0x13c)  // widget call edge + dc name/order, dc 0x1264dc
 void type_sacrifice_window::backpackClick(
     long slot, unsigned char rightClick)
 {
@@ -1068,10 +1063,10 @@ void type_sacrifice_window::backpackClick(
     }
 }
 
-VA(0x005639e0, 0x5b)  // dc 0x125a4c
+VA(0x005639e0, 0x5b) MAC_ADDRESS(0x1590b0, 0xa0)  // dc 0x125a4c
 void updateArtifactWidget(iconWidget* slotWidget, type_artifact artifact);
 
-VA(0x00563a40, 0x31)  // dc 0x1265b8
+VA(0x00563a40, 0x31) MAC_ADDRESS(0x15a0e0, 0x40)  // dc 0x1265b8
 void type_sacrifice_window::updateArtifactOffering(long slot)
 {
     updateOffering(m_artifactOfferingWidgets[slot],
@@ -1079,7 +1074,7 @@ void type_sacrifice_window::updateArtifactOffering(long slot)
                     &m_artifactOfferings[slot]);
 }
 
-VA(0x00563a80, 0x31b)  // dc 0x126640
+VA(0x00563a80, 0x31b) MAC_ADDRESS(0x15a120, 0x118)  // dc 0x126640
 void type_sacrifice_window::offeringClick(
     long slot, unsigned char rightClick)
 {
@@ -1106,7 +1101,7 @@ void type_sacrifice_window::offeringClick(
     }
 }
 
-VA(0x00563da0, 0x152)
+VA(0x00563da0, 0x152) MAC_ADDRESS(0x15a238, 0xd4)
 int type_sacrifice_window::scrollBackpackLeft(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1130,7 +1125,7 @@ int type_sacrifice_window::scrollBackpackLeft(message& msg)
     return 0;
 }
 
-VA(0x00563f00, 0x152)
+VA(0x00563f00, 0x152) MAC_ADDRESS(0x15a30c, 0xd4)
 int type_sacrifice_window::scrollBackpackRight(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1158,6 +1153,7 @@ int type_sacrifice_window::scrollBackpackRight(message& msg)
 // Complete expands this helper into both artifact-batch callbacks. It fills
 // the first empty offering, adds that record's scaled value, and refreshes
 // the corresponding pair of offering widgets.
+MAC_ADDRESS(0x15a3e0, 0xd4)
 unsigned char type_sacrifice_window::addArtifact(
     type_artifact artifact, long source)
 {
@@ -1175,9 +1171,11 @@ unsigned char type_sacrifice_window::addArtifact(
     return 1;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1310
-// The helper is expanded at each callback. Retail scans the fixed 64-record
+// E:\gamedcs\sacrifice_window.cpp:1310. Mac retains this ordinary helper at
+// 0:0x15a4b4 and calls it from allArtifacts; VC6 expands it at each callback.
+// Retail scans the fixed 64-record
 // backpack for its next occupied slot and stops if the offering pane fills.
+MAC_ADDRESS(0x15a4b4, 0x158)
 void type_sacrifice_window::emptyBackpack()
 {
     type_artifact artifact;
@@ -1195,7 +1193,7 @@ void type_sacrifice_window::emptyBackpack()
     updateBackpack();
 }
 
-VA(0x00564060, 0x2d3)
+VA(0x00564060, 0x2d3) MAC_ADDRESS(0x15a60c, 0xd4)
 int type_sacrifice_window::emptyBackpack(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1234,7 +1232,7 @@ int type_sacrifice_window::emptyBackpack(message& msg)
 // helper improves this site to about 91.4% but regresses the exact standalone
 // empty-backpack callback (and force-inlining update_backpack also regresses
 // backpack_click), so the source-authentic call graph is retained.
-VA(0x00564340, 0x35f)  // callback address-take + dc name/signature/order
+VA(0x00564340, 0x35f) MAC_ADDRESS(0x15a6e0, 0x154)  // callback address-take + dc name/signature/order
 int type_sacrifice_window::allArtifacts(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1267,7 +1265,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
     return 0;
 }
 
-VA(0x005646a0, 0x269)
+VA(0x005646a0, 0x269) MAC_ADDRESS(0x15a834, 0x2a8)
 int type_sacrifice_window::sacrifice(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1329,7 +1327,7 @@ int type_sacrifice_window::sacrifice(message& msg)
     return 0;
 }
 
-VA(0x00564910, 0x164)
+VA(0x00564910, 0x164) MAC_ADDRESS(0x15aadc, 0xd4)
 int type_sacrifice_window::sacrificeCreatures(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1357,6 +1355,7 @@ int type_sacrifice_window::sacrificeCreatures(message& msg)
 // Complete expands it into clear. The same order is independently repeated
 // by ExitDialog: original equipped slot, any legal equipped slot, backpack,
 // then a final arbitrary equipped-slot fallback.
+MAC_ADDRESS(0x15abb0, 0x94)
 void type_sacrifice_window::returnArtifact(
     const type_artifact_offering& artifact)
 {
@@ -1374,6 +1373,7 @@ void type_sacrifice_window::returnArtifact(
 // The Dreamcast line map places clear at source line 1521. Complete expands
 // it into sacrifice_artifacts; retail's vector walk, held-record cleanup and
 // terminal total reset expose the entire body.
+MAC_ADDRESS(0x15ac44, 0xb0)
 void type_sacrifice_window::clear()
 {
     for (unsigned long i = 0; i < m_artifactOfferings.size(); ++i) {
@@ -1390,7 +1390,7 @@ void type_sacrifice_window::clear()
     m_totalExperience = 0;
 }
 
-VA(0x00564a80, 0x171)
+VA(0x00564a80, 0x171) MAC_ADDRESS(0x15acf4, 0xc8)
 int type_sacrifice_window::exitClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1414,7 +1414,7 @@ int type_sacrifice_window::exitClick(message& msg)
     return 0;
 }
 
-VA(0x00564c00, 0xe6)
+VA(0x00564c00, 0xe6) MAC_ADDRESS(0x15adbc, 0x110)
 void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 {
     if (m_creatureOfferings[slot].m_amount == newAmount)
@@ -1438,8 +1438,11 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1599
-// Retail expands this helper at both callers. The scan preserves one troop
-// only when every other army slot has already been offered to its limit.
+// Retail expands this helper at both callers. Mac retains the body at
+// 0:0x15aecc; allCreatures and creatureClick call it at 0:0x15b06c and
+// 0:0x15b558. The scan preserves one troop only when every other army slot
+// has already been offered to its limit.
+MAC_ADDRESS(0x15aecc, 0x114)
 long type_sacrifice_window::getMaxAmount(long slot) const
 {
     long amount = m_currentHero->m_army.m_numTroops[slot];
@@ -1458,7 +1461,7 @@ long type_sacrifice_window::getMaxAmount(long slot) const
     return amount;
 }
 
-VA(0x00564cf0, 0xe9)
+VA(0x00564cf0, 0xe9) MAC_ADDRESS(0x15afe0, 0x120)
 int type_sacrifice_window::allCreatures(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1487,7 +1490,7 @@ int type_sacrifice_window::allCreatures(message& msg)
     return 0;
 }
 
-VA(0x00564de0, 0x88)
+VA(0x00564de0, 0x88) MAC_ADDRESS(0x15b100, 0xd0)
 int type_sacrifice_window::maxCreatures(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1509,7 +1512,7 @@ int type_sacrifice_window::maxCreatures(message& msg)
     return 0;
 }
 
-VA(0x00564e70, 0x164)
+VA(0x00564e70, 0x164) MAC_ADDRESS(0x15b1d0, 0xd4)
 int type_sacrifice_window::sacrificeArtifacts(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -1533,7 +1536,7 @@ int type_sacrifice_window::sacrificeArtifacts(message& msg)
     return 0;
 }
 
-VA(0x00564fe0, 0x394)  // dc 0x1270f0
+VA(0x00564fe0, 0x394) MAC_ADDRESS(0x15b2a4, 0x374)  // dc 0x1270f0
 void type_sacrifice_window::creatureClick(
     long slot, unsigned char rightClick, unsigned char leftPane)
 {
@@ -1543,8 +1546,7 @@ void type_sacrifice_window::creatureClick(
         if (slot < 0) {
             if (rightClick) {
                 normalDialog(
-                    g_generalText->getText(
-                        SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE),
+                    (*g_generalText)[SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE],
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
             return;
@@ -1580,8 +1582,7 @@ void type_sacrifice_window::creatureClick(
         } else {
             std::string buffer;
             buffer = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE_NAME],
                 getArmyName(m_currentHero->m_army.m_armyTypes[slot], 0));
             m_creatureNameWidget->setText(buffer.c_str());
             m_creatureNameWidget->setVisible(1);
@@ -1598,7 +1599,7 @@ void type_sacrifice_window::creatureClick(
     }
 }
 
-VA(0x00565380, 0x2e)
+VA(0x00565380, 0x2e) MAC_ADDRESS(0x15b618, 0x68)
 void type_sacrifice_window::creatureSliderChange(
     int state, heroWindow* parentWindow)
 {
@@ -1610,7 +1611,7 @@ void type_sacrifice_window::creatureSliderChange(
         1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x005653b0, 0x37)  // dc 0x127404
+VA(0x005653b0, 0x37) MAC_ADDRESS(0x15b680, 0x60)  // dc 0x127404
 void type_sacrifice_window::doModal(bool fadeIn)
 {
     if (m_canSacrificeArtifacts)
@@ -1620,7 +1621,7 @@ void type_sacrifice_window::doModal(bool fadeIn)
     heroWindow::doModal(fadeIn);
 }
 
-VA(0x005653f0, 0x3b)  // dc 0x12743c
+VA(0x005653f0, 0x3b) MAC_ADDRESS(0x15b6e0, 0x8c)  // dc 0x12743c
 void type_sacrifice_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
@@ -1650,7 +1651,7 @@ int type_sacrifice_window::windowHandler(message& msg)
 // path once more before closing the modal dialog.
 // DC line 1866 calls return_artifact. The existing ordinary returnArtifact
 // expands naturally here and preserves 100% while removing three failure joins.
-VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
+VA(0x00565430, 0x80) MAC_ADDRESS(0x15b7c8, 0x70)  // anchor-vtable slot 14, dc 0x1274bc
 int type_sacrifice_window::exitDialog(message& msg)
 {
     type_artifact_offering* artifact = &m_holdingArtifact;
@@ -1669,7 +1670,7 @@ int type_sacrifice_window::exitDialog(message& msg)
 VA_COMPGEN(0x005654b0, 0x5, IMPLICIT_DTOR, type_transformer_slot)  // dc 0x128764
 
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
+VA(0x005654c0, 0x2a) MAC_ADDRESS(0x15b8b8, 0x48)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
 bool type_transformer_slot::handleClick(
     bool downClick, bool rightClick)
 {
@@ -1684,6 +1685,7 @@ bool type_transformer_slot::handleClick(
 // E:\gamedcs\sacrifice_window.cpp:1891
 // Complete expands both calls in the transformer icon grid and retains no
 // separately claimable constructor body.
+MAC_ADDRESS(0x15b838, 0x80)
 type_transformer_slot::type_transformer_slot(
     long newX, long newY, long newW, long newH, long newGroup,
     long newSlot, long newId, const char* image)
@@ -1706,7 +1708,7 @@ VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 // the final rollover append's growth path retains an extra vector::size.
 // Removing the vector alias or binding its pointer argument locally does
 // not recover that nested expansion; keep the canonical container call.
-VA(0x005654f0, 0xA3C)  // dc 0x1275c0
+VA(0x005654f0, 0xA3C) MAC_ADDRESS(0x15b900, 0x99c)  // dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     : CAdvPopup(100, 67, 600, 485, 18)
 {
@@ -1725,23 +1727,19 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
 
     m_widgets.push_back(new textWidget(
         25, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 21, 257, 18,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE],
         "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         25, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
     m_widgets.push_back(new textWidget(
         320, 55, 257, 42,
-        g_generalText->getText(
-            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
+        (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION],
         "medfont.fnt", font::HEADING, -1, 1, 0, 8));
 
     createCreatureIcons(
@@ -1791,7 +1789,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     addWidgetsToMessageStream();
 }
 
-VA(0x00565f60, 0xC2)  // dc 0x127a08
+VA(0x00565f60, 0xC2) MAC_ADDRESS(0x15c320, 0xd8)  // dc 0x127a08
 type_skeleton_window::~type_skeleton_window()
 {
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
@@ -1814,10 +1812,13 @@ void type_skeleton_window::unselect()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
-// All Complete callers inline this source helper. The DC call edges and the
+// All Complete callers expand this ordinary source helper. The DC call edges and the
 // repeated retail expansion prove the transformed-army scan and the two
-// terminal button states.
-inline void type_skeleton_window::updateButtons()
+// terminal button states. Mac retains the body at code0+0x15c3f8 before
+// update(), with calls from creatureClick(), allCreatures(), and sacrifice().
+// Retained Dreamcast and Mac call boundaries support an ordinary helper.
+MAC_ADDRESS(0x15c3f8, 0x178)
+void type_skeleton_window::updateButtons()
 {
     long i;
     for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -1831,7 +1832,7 @@ inline void type_skeleton_window::updateButtons()
     m_allCreaturesButton->enable(m_armies[0]->hasCreatures());
 }
 
-VA(0x00566030, 0x45D)  // dc 0x127b68
+VA(0x00566030, 0x45D) MAC_ADDRESS(0x15c570, 0x3e4)  // dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
     TCreatureType type = m_armies[group]->m_armyTypes[index];
@@ -1858,24 +1859,21 @@ void type_skeleton_window::update(long group, long index)
 
     if (group == 0) {
         result = formatString(
-            g_generalText->getText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+            (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE], name);
     } else {
         int transformed = g_deathCreature[type];
         if (transformed != type) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE],
                 name, getArmyName(
                     transformed, m_armies[group]->m_numTroops[index]));
         } else if (m_armies[group]->m_numTroops[index] == 1) {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE],
                 name);
         } else {
             result = formatString(
-                g_generalText->getText(
-                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
+                (*g_generalText)[SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY],
                 name);
         }
     }
@@ -1888,7 +1886,7 @@ void type_skeleton_window::update(long group, long index)
     m_armyLabel[group][index]->setHelpText(result.c_str(), 0, 1);
 }
 
-VA(0x00566490, 0x258)
+VA(0x00566490, 0x258) MAC_ADDRESS(0x15c954, 0x294)
 void type_skeleton_window::creatureClick(
     long side, long slot, unsigned char rightClick)
 {
@@ -1909,8 +1907,7 @@ void type_skeleton_window::creatureClick(
     } else if (m_selectedGroup < 0) {
         m_selectedIndex = slot;
         m_selectedGroup = side;
-        m_selectBorder[side][slot]->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[side][slot]->setVisible(1);
         m_selectBorder[side][slot]->draw();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     } else {
@@ -1929,8 +1926,7 @@ void type_skeleton_window::creatureClick(
             m_armies[m_selectedGroup]->m_armyTypes[m_selectedIndex] = creatureType;
             m_armies[m_selectedGroup]->m_numTroops[m_selectedIndex] = troops;
         }
-        m_selectBorder[m_selectedGroup][m_selectedIndex]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
         update(side, slot);
         update(m_selectedGroup, m_selectedIndex);
 
@@ -1946,7 +1942,7 @@ void type_skeleton_window::creatureClick(
 // E:\gamedcs\sacrifice_window.cpp:2281
 // Slot 9, sitting two rows past creature_click 0x566490 - the call target the
 // transformer slot above pins - in the Dreamcast roster's order.
-VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
+VA(0x005666f0, 0x2e) MAC_ADDRESS(0x15cbe8, 0x5c)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
 int type_skeleton_window::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -1968,7 +1964,7 @@ int type_skeleton_window::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x00566720, 0x38)  // dc 0x128098
+VA(0x00566720, 0x38) MAC_ADDRESS(0x15cc70, 0x8c)  // dc 0x128098
 void type_skeleton_window::handleWidgetHover(widget* currentWidget)
 {
     if (!currentWidget->getHelpText())
@@ -1978,7 +1974,7 @@ void type_skeleton_window::handleWidgetHover(widget* currentWidget)
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x00566760, 0x28f)  // dc 0x1280e0
+VA(0x00566760, 0x28f) MAC_ADDRESS(0x15ccfc, 0x32c)  // dc 0x1280e0
 void type_skeleton_window::createCreatureIcons(
     long iconX, long iconY, long columns, long rows,
     long groupNumber, long itemNumber, long& widgetId,
@@ -2022,10 +2018,12 @@ void type_skeleton_window::createCreatureIcons(
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
-// DC names this helper and records both transformer callbacks as callers.
-// Complete expands both calls: occupied source slots move into the same
+// DC records move_all_armies as file-static and both transformer callbacks
+// as callers. Mac retains its body immediately before those callbacks.
+// Complete expands both ordinary source calls: occupied source slots move into the same
 // destination slot when free, otherwise armyGroup::Add chooses a slot.
-inline void moveAllArmies(armyGroup* source, armyGroup* dest)
+MAC_ADDRESS(0x15d028, 0x84)
+static void moveAllArmies(armyGroup* source, armyGroup* dest)
 {
     for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (source->m_armyTypes[i] == CREATURE_NONE)
@@ -2038,7 +2036,7 @@ inline void moveAllArmies(armyGroup* source, armyGroup* dest)
     }
 }
 
-VA(0x005669f0, 0x137)  // dc 0x128310
+VA(0x005669f0, 0x137) MAC_ADDRESS(0x15d0ac, 0x11c)  // dc 0x128310
 int type_skeleton_window::allCreatures(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
@@ -2066,7 +2064,7 @@ int type_skeleton_window::allCreatures(message& msg)
     return 0;
 }
 
-VA(0x00566b30, 0xE4)  // dc 0x1283ac
+VA(0x00566b30, 0xE4) MAC_ADDRESS(0x15d1c8, 0xdc)  // dc 0x1283ac
 int type_skeleton_window::exitClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT
@@ -2091,7 +2089,7 @@ int type_skeleton_window::exitClick(message& msg)
     return 0;
 }
 
-VA(0x00566c20, 0x15F)  // dc 0x128468
+VA(0x00566c20, 0x15F) MAC_ADDRESS(0x15d2a4, 0x1e0)  // dc 0x128468
 int type_skeleton_window::sacrifice(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT

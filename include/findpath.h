@@ -4,8 +4,8 @@
 #include "va.h"
 
 #include <vector>
-#include <windows.h>
-#include <windows.h>
+#include "platform.h"
+#include "platform.h"
 
 #include "struct.h"
 
@@ -218,6 +218,9 @@ private:
                           long destination);
     void checkTownPortal(const hero* currentHero,
                            const pathCell* startCell, long maxMobility);
+    void enterStartTrigger(const hero* currentHero,
+                           const pathCell* startCell, long maxMobility,
+                           type_search_type searchType);
     // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
     // inside the valid rectangle for every (z, fly-plane) combination.
     void clear(long flyLevel, long startZ, long stopZ);
@@ -317,9 +320,9 @@ inline long searchArray::getDangerValue(type_point point) const
 // part of the array. Name is an address ordinal.
 extern const int g_moatDamage[];
 
-// Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
-// globals when that TU's data is modeled.
-extern searchArray* g_searchArray;
+// Retail .bss 0x699284. The Mac AI view binds its zero-filled pointer
+// storage through the loader pointer at TOC 1+0x720.
+DATA(0x00699284) extern searchArray* g_searchArray;
 
 // The eight-direction step table at 0x678150, four bytes a row:
 // (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.

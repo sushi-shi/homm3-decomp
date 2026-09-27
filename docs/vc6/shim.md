@@ -63,7 +63,7 @@ scope table 0x409a90, handler thunk 0x406620). Its evidence chain:
   parameter is a NULL-terminated `char*` vector by contract.
 - **argv[0]** is the full Windows path of the pass binary (observed
   `Z:\...\msvc\bin\c2.dll`); the C2 option tokens follow, e.g. for the game
-  profile `/c /O2 /Ob2 /Oy- /Op /ML /Gr /GX`:
+  profile `/c /O2 /Ob2 /Oy- /Op /MT /Gr /GX`:
   `-il <tmp> -f <src> -W 1 -G5 -Gs4096 -dos -Fdvc60.idb -Gy -ML -EHs -Fo<obj>`.
 - **SEH**: the runner's filter (0x4061cd) special-cases 0x80000003; the
   current descriptor is published to 0x40b82c and an in-pass flag to

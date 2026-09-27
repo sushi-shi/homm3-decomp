@@ -8,6 +8,9 @@
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
 #include "va.h"
 
+// DC S_LPROC32: TU-local. Declared before the header so the friend binds to it.
+class message;
+static int mainMenuHandler(message& msg);
 #include "mainmenu.h"
 
 #include "button.h"
@@ -25,9 +28,6 @@
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x0069957c) int g_cdDriveNumber;
-
-// DC S_LPROC32 identifies this ordinary callback as TU-local.
-static int mainMenuHandler(message& msg);
 
 // Set after the one-time missing-CD notice has been shown. The constructor
 // uses it only as the persistent suppression latch; the disk-space check has
@@ -56,7 +56,7 @@ static const TMainMenuButtonRect g_mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
-VA(0x004fb2a0, 0x385)  // dc 0xea2ec
+VA(0x004fb2a0, 0x385) MAC_ADDRESS(0x11c674, 0x550)  // dc 0xea2ec
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -104,7 +104,7 @@ TMainMenu::TMainMenu()
 
 VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
 
-VA(0x004fb660, 0x75)
+VA(0x004fb660, 0x75) MAC_ADDRESS(0x11cbc4, 0xb4)
 TMainMenu::~TMainMenu()
 {
     g_mainMenu = 0;
@@ -114,7 +114,7 @@ TMainMenu::~TMainMenu()
     }
 }
 
-VA(0x004fb6e0, 0x2C)  // dc 0xea5ec
+VA(0x004fb6e0, 0x2C) MAC_ADDRESS(0x11cc78, 0x58)  // dc 0xea5ec
 void TMainMenu::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
@@ -128,7 +128,7 @@ void TMainMenu::doModal()
 // The hover call also really passes Y then X here - retail loads +0x10 first,
 // pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
 
-VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
+VA(0x004fb710, 0x484) MAC_ADDRESS(0x11ccd0, 0x574)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 static int mainMenuHandler(message& msg)
 {
     unsigned char updatePlease = 0;
@@ -136,7 +136,7 @@ static int mainMenuHandler(message& msg)
 
     if (g_checkDiskSpace) {
         if (getAvailableDiskSpace() < 5 * 1024 * 1024) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_MAIN_MENU_LOW_DISK),
+            normalDialog((*g_generalText)[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             updatePlease = 1;
             g_windowManager->m_dialogReturn = TMainMenu::QUIT_ID;
@@ -145,22 +145,22 @@ static int mainMenuHandler(message& msg)
     }
 
     if (g_mainMenu->m_showCdMessage && !updatePlease) {
-        const char* fill = g_generalText->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+        const char* fill = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
 
         g_mainMenu->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                WINDOW_ALL_WIDGETS_HIGH);
         if (g_cdDriveNumber != CD_DRIVE_NUMBER_5 &&
             g_cdDriveNumber != CD_DRIVE_NUMBER_6) {
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_CD_REQUIRED_GENERIC_FORMAT],
                 fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             const char* drive = g_cdDriveNumber == CD_DRIVE_NUMBER_5
-                ? g_generalText->getText(GENERAL_TEXT_RESTORATION_OF_ERATHIA)
-                : g_generalText->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                ? (*g_generalText)[GENERAL_TEXT_RESTORATION_OF_ERATHIA]
+                : (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             normalDialog(formatString(
-                g_generalText->getText(GENERAL_TEXT_WRONG_CD_EDITION_FORMAT),
+                (*g_generalText)[GENERAL_TEXT_WRONG_CD_EDITION_FORMAT],
                 drive, fill, fill, fill, fill).c_str(),
                 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -198,7 +198,7 @@ static int mainMenuHandler(message& msg)
             if (msg.m_codeY == TMainMenu::QUIT_ID) {
                 videoPause();
                 if (!g_lobbyLaunched) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_QUIT],
                                  2, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
                     videoResume();
@@ -214,7 +214,7 @@ static int mainMenuHandler(message& msg)
             }
         }
     } else if (msg.m_id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = g_mainMenu->findWidget(msg.m_mouseY, msg.m_mouseX);
+        int hoverID = g_mainMenu->findWidget(msg.m_mouseX, msg.m_mouseY);
         if (hoverID != g_lastImHoverId) {
             hoverChanged = 1;
             g_lastImHoverId = hoverID;
@@ -242,7 +242,7 @@ static int mainMenuHandler(message& msg)
     if (!updatePlease) {
         if (g_lobbyLaunched) {
             unsigned long lastCheck = g_lastDiskSpaceCheck;
-            if (static_cast<long>(GameTime::get() - lastCheck) > 10000)
+            if (GameTime::elapsedSince(lastCheck) > 10000)
                 g_windowManager->m_dialogReturn = TMainMenu::NEW_GAME_ID;
             else
                 return MESSAGE_DISPATCH_CONSUME;

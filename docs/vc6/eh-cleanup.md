@@ -65,6 +65,17 @@ Two independent inputs, each a fact about retail's TU:
    region that its own call would otherwise need, collapsing the map to one
    entry.
 
+A nothrow-visible `operator delete` is therefore a fact about the TU's
+include set, not a declaration to write by hand. Any standard C++ header
+reaches `<new>`; a TU that includes none needs `#include <new>`. The
+hand-written `__declspec(nothrow) void __cdecl operator delete(void*)`
+redeclarations were removed on 2026-09-26: in sample, font, seerhut,
+bottomviewsubwindow, dxplay and `ai_combat.h` another header already supplied
+`<new>`; bitmap16, bitmap24 and cspriteframe now include `<new>`. Every VC6
+object stayed equivalent (code, data, relocations and symbols, modulo VC6's
+`$L`/`$T` counters); cspriteframe alone gains the `-defaultlib:libcpmt`
+directive that every standard header carries.
+
 ## Provisional C linkage can erase the whole cleanup frame
 
 The retail-only resource reporters at `0x559510` and `0x5599e0` originally

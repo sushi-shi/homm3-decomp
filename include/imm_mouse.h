@@ -11,7 +11,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <windows.h>
+#include "platform.h"
 
 #include "forcefeedback.h"
 

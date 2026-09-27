@@ -4,7 +4,7 @@
 #include "va.h"
 
 #include <string>
-#include <windows.h>
+#include "platform.h"
 
 // PROVEN retail layout: both ctor and dtor access only the allocation
 // pointer at +0; callers allocate four bytes for the object.

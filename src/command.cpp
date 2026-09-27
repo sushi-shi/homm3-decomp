@@ -3,6 +3,8 @@
 // expansion.  Omitting that header-inline body loses 16 retail CFG blocks.
 #include "va.h"
 
+#include <stdio.h>
+
 #include "command.h"
 
 #include "cmbtmgr.h"
@@ -61,12 +63,26 @@ static const int g_combatActionFirstAid = 11;
 // count/skill declaration order are byte-flat; moving the wall lifetime
 // earlier costs 36 rows, while naming `skill == 0` costs 37. Keep the direct
 // DC-shaped access rather than forcing a register with synthetic state.
+// Mac code0+0x81d04 retains validWallTarget(WALL_TARGET_3) at the keep check.
+// Keep that source call even though VC6 emits a longer boolean test here.
 // A chosen-target result guards the fallback wall/tower selection and
 // removes the shared-order goto at 99.8804%. Bool, unsigned-char and int
 // forms are neutral, as are two single-pass selection scopes. Copying the
 // final order stores and return into the keep arm scores 95.9569%. Preserve
-// the four named calls and their conditional random draw.
-VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
+// the named calls and their conditional random draw.
+// Mac 0x81dc4..0x81df8 rejects manual positive-skill control first, then
+// tests the keep independently. Restoring that early guard raises Windows
+// 92.18% to 98.68% while preserving validWallTarget and every other helper.
+// A common-order jump is Windows byte-flat and matches Mac's direct keep
+// edge with target in r27 and saves starting at r26. The chosen-result flag
+// adds three CW instructions and an r25 save absent from native; remove that
+// provisional state while retaining the shared order stores.
+// Full native comparison now matches all 1016 Mac bytes: name the controller,
+// keep the typed mastery and signed four-wall count, and reuse one index
+// across the wall-array scans. Windows remains 98.6842%; every helper stays.
+// A temporary bool return on validWallTarget is byte-flat in this caller
+// and Mac; keep its CodeView-proven unsigned-char boundary unchanged.
+VA(0x00473c00, 0x29F) MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
     DATA(0x0063d54c) static const TWallTargetId walls[4] = {
@@ -94,72 +110,70 @@ unsigned char combatManager::automateCatapult()
     }
 
     long count;
-    long skill = currentArmy->getController()->getSecondarySkill(
+    hero* controller = currentArmy->getController();
+    TSkillMastery skill = controller->getSecondarySkill(
         eSecSkillSiegeBallistics);
-    bool targetChosen = 0;
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
-            || isComputerAction(getCurrentArmy())) {
-        if (skill > 0
-                && m_wallStrength[s_wallTargets[WALL_TARGET_3].m_wall] > 0) {
-            target = WALL_TARGET_3;
-            targetChosen = 1;
-        }
-    } else if (skill > 0) {
+    if (!isComputerAction() && skill > 0)
         return 0;
+    if (skill > 0 && validWallTarget(WALL_TARGET_3)) {
+        target = WALL_TARGET_3;
+        goto issueCatapultOrder;
     }
 
-    if (!targetChosen) {
+    long index;
+    count = 0;
+    { for (index = 0; index < 4; index++) {
+            if (getWallStrength(walls[index]) > 0)
+                count++;
+        }
+    }
+
+    if (count > 0 && (skill == 0 || count == static_cast<long>(sizeof(walls) / sizeof(walls[0])))) {
+        long weakest = 100;
         count = 0;
-        { for (long i = 0; i < 4; i++) {
-                if (getWallStrength(walls[i]) > 0)
-                    count++;
+        { for (index = 0; index < 4; index++) {
+                long strength = getWallStrength(walls[index]);
+                if (strength <= 0 || strength > weakest)
+                    continue;
+                if (strength < weakest)
+                    count = 0;
+                count++;
+                weakest = strength;
             }
         }
 
-        if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
-            long weakest = 100;
-            count = 0;
-            { for (long i = 0; i < 4; i++) {
-                    long strength = getWallStrength(walls[i]);
-                    if (strength <= 0 || strength > weakest)
-                        continue;
-                    if (strength < weakest)
-                        count = 0;
-                    count++;
-                    weakest = strength;
-                }
-            }
+        // Dreamcast and Mac retain sRandom here. Complete binds its
+        // identical body to the shared random implementation.
+        long choice = sRandom(1, count);
+        index = 0;
+        for (; index < 4; index++) {
+            long strength = getWallStrength(walls[index]);
+            if (strength == weakest && --choice == 0)
+                break;
+        }
+        target = walls[index];
+    } else {
+        DATA(0x00670198) static TWallTargetId towers[4] = {
+            WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
+        };
 
-            long choice = sRandom(1, count);
-            long index = 0;
-            for (; index < 4; index++) {
-                long strength = getWallStrength(walls[index]);
-                if (strength == weakest && --choice == 0)
-                    break;
-            }
-            target = walls[index];
+        for (index = 0; index < 4; index++) {
+            if (validWallTarget(towers[index]))
+                break;
+        }
+        if (index < 4) {
+            target = towers[index];
         } else {
-            DATA(0x00670198) static TWallTargetId towers[4] = {
-                WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
-            };
-
-            long index;
-            for (index = 0; index < 4; index++) {
-                if (validWallTarget(towers[index]))
+            for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
+                    target = TWallTargetId(target + 1)) {
+                if (validWallTarget(target))
                     break;
-            }
-            if (index < 4) {
-                target = towers[index];
-            } else {
-                for (target = WALL_TARGET_0; target < WALL_TARGET_COUNT;
-                        target = TWallTargetId(target + 1)) {
-                    if (validWallTarget(target))
-                        break;
-                }
             }
         }
     }
 
+
+issueCatapultOrder:
     m_nextAction = 9;
     m_nextActionGridIndex = s_wallTargets[target].m_targetHex;
     m_nextActionExtra = -1;
@@ -171,7 +185,11 @@ unsigned char combatManager::automateCatapult()
 // The final two stores follow DC's separate statement groups: select and store
 // the target grid first, then clear field_40. Retail's Complete-only pointer
 // overload of is_computer_action is kept because its call relocation proves it.
-VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
+// Mac keeps a -1 creature-type register and regenerative-target checks at
+// 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
+// checks folds away in both current compilers (Windows remains exact, Mac
+// remains 396 vs 440 bytes); its initialization boundary is still unresolved.
+VA(0x00473ea0, 0x196) MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automateFirstAidTent()
 {
     const army* currentArmy = getCurrentArmy();
@@ -205,8 +223,7 @@ unsigned char combatManager::automateFirstAidTent()
         return 1;
     }
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
-            && !isComputerAction(getCurrentArmy())) {
+    if (!isComputerAction()) {
         if (currentArmy->getController()->getSecondarySkill(
                 eSecSkillFirstAid) > 0)
             return 0;
@@ -218,13 +235,13 @@ unsigned char combatManager::automateFirstAidTent()
     return 1;
 }
 
-VA(0x00474040, 0x8C)  // dc 0x6b268
+VA(0x00474040, 0x8C) MAC_ADDRESS(0x0822b4, 0xd0)  // dc 0x6b268
 void combatManager::doAnimations()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
-    if (GameTime::elapsedSince(g_timers[0]) >= 0) {
+    if (GameTime::isPast(g_timers[0])) {
         pollSound();
         long interval = static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
@@ -232,7 +249,7 @@ void combatManager::doAnimations()
             GameTime::nextFrameTime(g_timers[0], interval);
     }
 
-    if (GameTime::elapsedSince(g_timers[8]) >= 0
+    if (GameTime::isPast(g_timers[8])
             && !g_processingCombatAction) {
         g_processingCombatAction = 1;
         cycleCombatScreen();
@@ -240,18 +257,34 @@ void combatManager::doAnimations()
     }
 }
 
+// Mac 0:0x82384 retains this helper immediately before main and calls it
+// from main, processCombatMsg, and resetRound. Dreamcast's older source has
+// the equivalent statements at those call sites.
+MAC_ADDRESS(0x082384, 0x78)
+void combatManager::finishCreaturePlacement()
+{
+    if (!m_creaturePlacement)
+        return;
+    m_creaturePlacement = 0;
+    m_actingSide = 1;
+    m_actingSlot = 0;
+    m_turnNumber = 0;
+    if (!isQuickCombat())
+        m_combatWindow->endPlacementPhase();
+    resetRound();
+}
+
 // E:\gamedcs\command.cpp:291
-VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
+VA(0x004740d0, 0x5AB) MAC_ADDRESS(0x0823fc, 0x39c)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::main(message& msg)
 {
     int result = 1;
     doAnimations();
 
     unsigned char automaticTurn = 0;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!isQuickCombat()
             && m_thisNetHasControl && (m_autoCombatOn || g_goSolo)) {
-        if (static_cast<const combatManager*>(this)->isQuickCombat()
-                || isComputerAction(getCurrentArmy())) {
+        if (isComputerAction()) {
             while (msg.m_id != MESSAGE_KEY_DOWN
                     && msg.m_id != MESSAGE_LEFT_BUTTON_DOWN
                     && msg.m_id != MESSAGE_LEFT_BUTTON_UP
@@ -271,49 +304,16 @@ int combatManager::main(message& msg)
     if (!m_creaturePlacement && m_nextAction == 0 && m_thisNetHasControl) {
         automaticTurn = automateFirstAidTent();
 
-        unsigned char towerTurn;
-        if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL) {
-            towerTurn = 0;
-        } else {
-            army* currentArmy = getCurrentArmy();
-            if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER) {
-                towerTurn = 0;
-            } else {
-                int wall;
-                switch (currentArmy->m_gridIndex) {
-                case COMBAT_HEX_LOWER_TOWER:
-                    wall = 13;
-                    break;
-                case COMBAT_HEX_KEEP:
-                    wall = 14;
-                    break;
-                case COMBAT_HEX_UPPER_TOWER:
-                    wall = 5;
-                    break;
-                }
-
-                if (m_wallStrength[wall] == 0) {
-                    currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
-                    m_nextAction = 12;
-                    towerTurn = 1;
-                } else if (static_cast<const combatManager*>(this)->isQuickCombat()
-                        || isComputerAction(getCurrentArmy())) {
-                    unnamed465f20();
-                    resetMouse();
-                    towerTurn = 1;
-                } else {
-                    towerTurn = 0;
-                }
-            }
-        }
-
-        automaticTurn |= towerTurn | automateCatapult();
+        // Mac accumulates the tower result before calling the catapult.
+        // A combined OR expression instead calls catapult first under CW.
+        automaticTurn |= automateTower();
+        automaticTurn |= automateCatapult();
     }
 
     if (checkWin(&msg))
         return MESSAGE_DISPATCH_FORWARD;
 
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()
+    if (!isQuickCombat()
             && !automaticTurn) {
         // The retail command header retains the Dreamcast two-argument
         // prototype even though remote.cpp's Complete wrapper ignores the
@@ -347,15 +347,7 @@ int combatManager::main(message& msg)
                 break;
 
             case RS_COMBAT_END_PLACEMENT:
-                if (m_creaturePlacement) {
-                    m_actingSlot = 0;
-                    m_turnNumber = 0;
-                    m_creaturePlacement = 0;
-                    m_actingSide = 1;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                        m_combatWindow->endPlacementPhase();
-                    resetRound();
-                }
+                finishCreaturePlacement();
                 nextArmy(1);
                 break;
 
@@ -376,7 +368,7 @@ int combatManager::main(message& msg)
 
     if (m_thisNetHasControl) {
         army* currentArmy = getCurrentArmy();
-        if (currentArmy->m_spellInfluence[59]) {
+        if (currentArmy->getSpellTime(59)) {
             currentArmy->goBerserk();
             if (checkWin(&msg))
                 return MESSAGE_DISPATCH_FORWARD;
@@ -404,15 +396,29 @@ process_action:
 // retail fixes the Complete grid layout, validation order and tie-breaking.
 // Residual: 90.8771%, with all 39 branches and the return agreeing; VC6 keeps
 // `this` in EDI instead of EBX, adding one reload block (60 vs 59). 64 D1 and
-// 256 D2 ordinary-source trees were exhausted. Exposing OffsetToFront's real
-// header inline was byte-flat, so its folded expression avoids another view.
-VA(0x00474690, 0x36B)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
+// 256 D2 ordinary-source trees were exhausted. Dreamcast lines 519 and 532
+// retain OffsetToFront calls. Restoring those canonical header-inline calls
+// is byte-flat under VC6; the third facing adjustment has no such attribution.
+// Native 0x8285c/0x82864 saves the prior side/slot in r23/r22. Declaring
+// these before the loop locals reproduces the full native prefix; an int
+// clear-loop index reproduces its initial eight-store unroll without the
+// spurious entry guard. Both controls are VC6 byte-flat (90.8259%).
+// Rotating attack/index/group declarations is flat on Windows but worsens
+// native bindings; keep the proven local types and their supported roles.
+// Guard both validity results together: VC6 rises 90.8259 -> 91.3686%;
+// either guard alone falls to 87.28/87.23%. Mac moves 40.9468 -> 38.2601%,
+// so the combined declaration/flag-lifetime model remains open. All CanFit,
+// IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
+// Nesting firstHex assignment in ValidHex is Windows-flat and moves Mac
+// 38.2601 -> 38.0912%; keep the separate assignment and canonical check.
+VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::setCombatDirections(int hex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
-            || isComputerAction(getCurrentArmy()))
+    if (isComputerAction())
         return;
 
+    int oldSide;
+    int oldSlot;
     unsigned char secondIsValid;
     long attackAngle;
     long firstHex;
@@ -424,15 +430,15 @@ void combatManager::setCombatDirections(int hex)
     long secondHex;
 
     currentArmy = getCurrentArmy();
-    int oldSide = currentArmy->m_side;
-    int oldSlot = currentArmy->m_slot;
+    oldSide = currentArmy->m_side;
+    oldSlot = currentArmy->m_slot;
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
 
     g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                      currentArmy->getSpeed(), 0, -1);
 
-    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
+    { for (int i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
             m_combatDirections[0][i] = 0;
             m_combatDirections[1][i] = -1;
         }
@@ -444,13 +450,14 @@ void combatManager::setCombatDirections(int hex)
         firstHex = m_adjacentCells[hex][targetIndex];
         if (!validHex(firstHex))
             continue;
-        firstIsValid =
-            m_cells[firstHex].m_validMove
-            && currentArmy->canFit(firstHex, 0, 0)
-            && !g_searchArray->isMoat(firstHex);
+        firstIsValid = 0;
+        if (m_cells[firstHex].m_validMove
+                && currentArmy->canFit(firstHex, 0, 0)
+                && !g_searchArray->isMoat(firstHex))
+            firstIsValid = 1;
         if (firstIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
-                    firstHex + (currentArmy->m_facing ? 1 : -1)))
+                    firstHex + currentArmy->offsetToFront(-1)))
             firstIsValid = 0;
 
         targetGroup = (targetIndex + 3) % 6;
@@ -462,14 +469,15 @@ void combatManager::setCombatDirections(int hex)
         if (!currentArmy->is(creatureDoubleWide))
             continue;
 
-        secondHex = firstHex - (currentArmy->m_facing ? 1 : -1);
-        secondIsValid =
-            m_cells[secondHex].m_validMove
-            && currentArmy->canFit(secondHex, 0, 0)
-            && !g_searchArray->isMoat(secondHex);
+        secondHex = firstHex - currentArmy->offsetToFront(-1);
+        secondIsValid = 0;
+        if (m_cells[secondHex].m_validMove
+                && currentArmy->canFit(secondHex, 0, 0)
+                && !g_searchArray->isMoat(secondHex))
+            secondIsValid = 1;
         if (secondIsValid && currentArmy->is(creatureDoubleWide)
                 && g_searchArray->isMoat(
-                    secondHex + (currentArmy->m_facing ? 1 : -1)))
+                    secondHex + currentArmy->offsetToFront(-1)))
             secondIsValid = 0;
 
         if (!firstIsValid && !secondIsValid)
@@ -483,7 +491,7 @@ void combatManager::setCombatDirections(int hex)
             continue;
         }
 
-        if ((currentArmy->m_facing == 0) == (targetIndex <= 2)) {
+        if (currentArmy->needToTurn(targetIndex)) {
             std::swap(firstHex, secondHex);
             std::swap(firstIsValid, secondIsValid);
         }
@@ -553,11 +561,11 @@ int combatManager::validAttackHex(int hex)
 }
 
 // E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
-// and its two-comparison body. Complete expands the helper into
-// ProcessCombatMsg and carries no out-of-line copy, so keep the source fact
-// as an inline definition rather than replacing it with caller longhand.
+// and its two-comparison body. Mac retains the ordinary helper; Complete
+// expands its call into ProcessCombatMsg.
 
-inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
+MAC_ADDRESS(0x082e98, 0x24)
+int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 {
     if (inCombatCommand == COMBAT_COMMAND_VIEW_OTHER_HERO
             || inCombatCommand == COMBAT_COMMAND_VIEW_TOWERS)
@@ -574,81 +582,101 @@ inline int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // convert the mouse/hex tuple into one of the twelve SetCombatDirections
 // slots, cache that slot's destination hex, and select its combat cursor frame
 // only when the frame changes.
-// Preserve the separate quick-combat and computer-action checks in one
-// failure scope. Both do/while(0) and for(;;) remove the early join at
-// unchanged 97.6434%; the full cursor body remains after those checks.
-// Positive/negative nested-body guards instead score 85.8951%, and the
-// earlier direct zero return loses 3.9161 points. The canonical nullary
-// isComputerAction wrapper does not recover the required separate checks.
-// Remaining differences are the ESI/EDI register binding, with the same
-// retail CFG and calls; this is not a claim of complete byte equality.
-VA(0x00474a00, 0x198)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+// Mac retains the policy wrapper and abs(x), abs(y), in that order.
+// CodeWarrior -O3 preserves three calls in the old abs(y)-guard followed
+// by abs(x)/abs(y) spelling; it does not merge the repeated library call.
+// Windows is 98.5874%; its residual is x87 ratio temporary scheduling.
+// Initializing the vertical default before the guard scores 96.07%.
+// Separate numerator assignment followed by /= is also byte-flat in
+// Windows; the paired Mac compilation still has unresolved references.
+// Mac preserves (gridX - 1)*44 + 58 and the split 86/26 vertical
+// border terms: these equal the Windows 14/112 offsets. This shared
+// decomposition is Windows-flat. yDifference preceding direction, named
+// float ratio components, and separate x-border subtraction recover every
+// Mac byte (488 bytes); Windows remains 98.5874% at its x87 scheduling wall.
+// Six const/order/implicit/one-component ratio controls are Windows-flat.
+// Computing both components before the zero guard drops Windows to 86.91%
+// and Mac to 87.70%; the native conversion lifetime stays inside that arm.
+// Double or mixed-precision ratio components lower VC6 to 95.31..95.65%;
+// keep the float components that already reproduce the exact Mac body.
+// A block-local float initialized with the equivalent conditional ratio
+// is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
+VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
+    int yDifference;
     int direction;
     float slope;
 
-    do {
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (isComputerAction(getCurrentArmy()))
-            break;
-        int xDifference = x - (hex % 17) * 44 - 14;
-        int row = hex / 17;
-        if (!(row & 1))
-            xDifference -= 22;
+    if (isComputerAction())
+        return 0;
+    int xDifference = x - (gridX(hex) - 1) * 44;
+    xDifference -= 58;
+    int row = gridY(hex);
+    if (!rowIsOdd(row))
         xDifference -= 22;
-        int yDifference = y - row * 42 - 112;
+    xDifference -= 22;
+    yDifference = y - 86 - row * 42;
+    yDifference -= 26;
 
-        direction = 0;
-        if (xDifference < 0) {
-            if (yDifference < 0)
-                direction = 9;
-            else
-                direction = 6;
-        } else if (yDifference >= 0) {
-            direction = 3;
-        }
+    direction = 0;
+    if (xDifference < 0) {
+        if (yDifference < 0)
+            direction = 9;
+        else
+            direction = 6;
+    } else if (yDifference >= 0) {
+        direction = 3;
+    }
 
-        if (abs(yDifference) == 0)
-            slope = 100.0f;
-        else {
-            slope = static_cast<float>(abs(xDifference));
-            slope = slope / abs(yDifference);
-        }
+    // Mac retains abs(x) then abs(y), once each, before the zero guard.
+    // Its coordinate subtraction is retained as separate grid/border terms.
+    xDifference = abs(xDifference);
+    yDifference = abs(yDifference);
+    if (yDifference == 0)
+        slope = 100.0f;
+    else {
+        float horizontal = static_cast<float>(xDifference);
+        float vertical = static_cast<float>(yDifference);
+        slope = horizontal / vertical;
+    }
 
-        if (direction != COMBAT_ATTACK_ANGLE_0
-                && direction != COMBAT_ATTACK_ANGLE_6) {
-            if (slope < 0.58)
-                direction += 2;
-            else if (slope < 1.73)
-                direction++;
-        } else {
-            if (slope > 1.73)
-                direction += 2;
-            else if (slope > 0.58)
-                direction++;
-        }
+    if (direction == COMBAT_ATTACK_ANGLE_0
+            || direction == COMBAT_ATTACK_ANGLE_6) {
+        if (slope > 1.73)
+            direction += 2;
+        else if (slope > 0.58)
+            direction++;
+    } else {
+        if (slope < 0.58)
+            direction += 2;
+        else if (slope < 1.73)
+            direction++;
+    }
 
-        m_lastMoveToIndex = m_combatDirections[1][direction];
-        if (m_combatDirections[0][direction] == m_lastAttackCursor)
-            return 0;
+    m_lastMoveToIndex = m_combatDirections[1][direction];
+    if (m_combatDirections[0][direction] == m_lastAttackCursor)
+        return 0;
 
-        m_lastAttackCursor = m_combatDirections[0][direction];
-        g_mouseManager->setPointer(m_combatDirections[0][direction],
-                                   mouseManager::COMBAT_SET);
-        return 1;
-    } while (0);
-    return 0;
+    m_lastAttackCursor = m_combatDirections[0][direction];
+    g_mouseManager->setPointer(m_combatDirections[0][direction],
+                               mouseManager::COMBAT_SET);
+    return 1;
 }
 
 // E:\gamedcs\command.cpp:928, dc 0x6bebc.
-VA(0x00474ba0, 0x4A)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
+// Mac 0x82ebc retains this wrapper at all thirteen command/drawing call sites.
+// Naming the current-army argument preserves the exact retained wrapper in
+// both builds and restores the retail register setup in its expanded callers:
+// getControl, resetRound and automateFirstAidTent become exact together.
+// The nested expression is the measured control; it loses those three matches.
+VA(0x00474ba0, 0x4A) MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding, dc 0x6bebc
 unsigned char combatManager::isComputerAction()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return 1;
-    return isComputerAction(getCurrentArmy());
+    army* currentArmy = getCurrentArmy();
+    return isComputerAction(currentArmy);
 }
 
 // Complete adds this one-argument policy overload. CodeView's full class
@@ -689,10 +717,10 @@ unsigned char combatManager::isComputerAction()
 // dereference get_owner's result unguarded.
 
 // Use the controlling player, which can change when a stack is hypnotized.
-VA(0x00474bf0, 0x188)  // anchor-global + retained nullary caller, retail-only overload
+VA(0x00474bf0, 0x188) MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return 1;
 
     hero* owner = currentArmy->getController();
@@ -705,7 +733,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 1;
         if (owner == 0)
             return 1;
-        if (owner->m_skillLevel[20] == 0)
+        if (owner->getSecondarySkill(eSecSkillBattlefieldBallistics) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;
@@ -715,7 +743,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 0;
         if (m_autoCombatOn && g_config.m_combatCatapult)
             return 1;
-        if (owner->m_skillLevel[eSecSkillSiegeBallistics] == 0)
+        if (owner->getSecondarySkill(eSecSkillSiegeBallistics) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;
@@ -725,7 +753,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
             return 0;
         if (m_autoCombatOn && g_config.m_combatFirstAidTent)
             return 1;
-        if (owner->m_skillLevel[27] == 0)
+        if (owner->getSecondarySkill(eSecSkillFirstAid) == 0)
             return 1;
         if (g_goSolo && m_thisNetHasControl)
             return 1;
@@ -765,25 +793,22 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // arms therefore have tails that are byte-identical to each other but carry an
 // extra live-register dependency, and C2 declines the merge.  Census: our
 // `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
-// AND THE CONSTANT CACHE IS DOWNSTREAM OF THE FRAME, WHOSE 0x14 IS NOW
-// FULLY ACCOUNTED FOR - it is ONE overlay decision, not missing locals.
-// Retail reserves 0x60 and lays out three non-overlapping regions:
-// [-0x60,-0x40) the hidden return temporary PeekEvent fills, [-0x40,-0x20)
-// `msgTemp` (32 B), [-0x20,-0xc) the network arm's `CEndPlacementPhaseMsg
-// placementMsg` (0x14 B), with mouseX/mouseY at -0xc/-0x8.  We reserve 0x4c
-// because C2 OVERLAID msgTemp onto placementMsg: our msgTemp sits at -0x2c
-// and spans -0x2c..-0xc, straight across placementMsg's -0x20..-0xc, and the
-// two never live at once (one is the WIDGET arm, the other MOUSE_MOVE).  So
-// retail's msgTemp must be LIVE across the network arm and ours is not, which
-// is a use of msgTemp our reconstruction does not have - not a missing
-// declaration.  Every ebp slot below -0x20 and the three `lea`s match
-// one-for-one otherwise, and the class sizes are confirmed by retail's own
-// `mov [ebp-0x14],0x14` (sizeof CEndPlacementPhaseMsg) and by the 8-dword
-// `rep movsd` into msgTemp.
-// MEASURED AND REJECTED here: declaring msgTemp above mouseX/mouseY is
-// byte-flat (93.0970 to the digit, frame still 0x4c), so declaration order is
-// not the lever - only a real second use of msgTemp can be.
-VA(0x00474d80, 0x114D)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
+// The network packet is an unnamed full-expression temporary. DC records
+// only msgTemp as a named local and attributes packet construction and
+// transmission to command.cpp:1176. Both historical compilers accept this
+// address-of-temporary spelling. VC6 then reproduces retail's 0x60 frame:
+// PeekEvent's hidden result at [-0x60,-0x40), msgTemp at [-0x40,-0x20),
+// and the 20-byte placement packet at [-0x20,-0xc). The named packet local
+// control overlays msgTemp with the packet and instead reserves 0x4c.
+// Constant caching and branch threading remain separate residuals; the
+// corrected frame does not establish a missing second use of msgTemp.
+// Moving the identical g_surrenderCost definition from cmbtmgr.cpp into
+// this TU leaves CodeWarrior's external-IL load unchanged; source ownership
+// alone does not recover the native direct-TOC scalar access.
+// Native Mac 0x83920 dispatches the complete 0/1/2 information-mode switch.
+// Keeping the explicit no-info arm gives CodeWarrior the native 1/3 pivot;
+// VC6 improves 94.0588 -> 94.6868% without removing any window helpers.
+VA(0x00474d80, 0x114D) MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::processCombatMsg(message& msg)
 {
     int mouseX = msg.m_mouseX;
@@ -830,8 +855,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_autoCombatOn)
                     getControl();
                 if (m_autoCombatOn
-                        && (static_cast<const combatManager*>(this)->isQuickCombat()
-                            || isComputerAction(getCurrentArmy()))) {
+                        && isComputerAction()) {
                     m_combatWindow->m_controlSubWindow->disableAllButtons();
                 }
                 break;
@@ -846,7 +870,7 @@ int combatManager::processCombatMsg(message& msg)
 
             case TCombatWindow::COMBAT_RIGHT_COMMAND_0_ID:
                 if (!m_heroes[m_currentSide]) {
-                    normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL),
+                    normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_NO_HERO_FOR_SPELL],
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
@@ -856,7 +880,7 @@ int combatManager::processCombatMsg(message& msg)
                 break;
 
             case TCombatWindow::COMBAT_LEFT_COMMAND_1_ID:
-                normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_PROMPT),
+                normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_RETREAT_PROMPT],
                              2, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -868,7 +892,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (doSurrender()) {
                     if (g_game->m_players[m_playerIds[m_currentSide]].m_resources[6]
                             < g_surrenderCost) {
-                        normalDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD),
+                        normalDialog((*g_generalText)[GENERAL_TEXT_COMBAT_NOT_ENOUGH_GOLD],
                                      1, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
@@ -887,25 +911,12 @@ int combatManager::processCombatMsg(message& msg)
             case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
                 m_lastMovedArmy = 0;
                 if (g_remoteOn) {
-                    // The Dreamcast NB11 stream gives placementMsg its own
-                    // nested lexical scope inside the network arm.
-                    {
-                        CEndPlacementPhaseMsg placementMsg;
-                        transmitRemoteData(
-                            &placementMsg,
-                            g_combatControlNetPos[1 - m_currentSide],
-                            false, true);
-                    }
+                    transmitRemoteData(
+                        &CEndPlacementPhaseMsg(),
+                        g_combatControlNetPos[1 - m_currentSide],
+                        false, true);
                 }
-                if (m_creaturePlacement) {
-                    m_creaturePlacement = 0;
-                    m_actingSide = 1;
-                    m_actingSlot = 0;
-                    m_turnNumber = 0;
-                    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                        m_combatWindow->endPlacementPhase();
-                    resetRound();
-                }
+                finishCreaturePlacement();
                 nextArmy(1);
                 m_backgroundDrawn = 0;
                 drawFrame(1, 0, 0, 0, 1, 0);
@@ -918,8 +929,7 @@ int combatManager::processCombatMsg(message& msg)
     case MESSAGE_MOUSE_MOVE: {
         unsigned char pointerChanged = 0;
         if ((m_autoCombatOn || g_goSolo)
-                && (static_cast<const combatManager*>(this)->isQuickCombat()
-                    || isComputerAction(getCurrentArmy())))
+                && isComputerAction())
             break;
 
         msgTemp = g_inputManager->peekEvent();
@@ -977,36 +987,37 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_cells[gridIndex].hasArmy()) {
                     army* stack = m_cells[gridIndex].getArmy();
                     hero* owner = stack->getOwner();
-                    if (g_config.m_combatArmyInfoLevel
-                            == TCombatOptionsWindow::
-                                CREATURE_INFO_LEVEL_VERBOSE) {
-                        if (stack->m_combatSide == 0) {
+                    switch (g_config.m_combatArmyInfoLevel) {
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_NONE:
+                        break;
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
+                        if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[0]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[0]->show();
-                        } else if (stack->m_combatSide == 1) {
+                        } else if (stack->getOwningSide() == 1) {
                             m_combatWindow->m_creatureSubWindows[1]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[1]->show();
                         }
-                    } else if (g_config.m_combatArmyInfoLevel
-                               == TCombatOptionsWindow::
-                                   CREATURE_INFO_LEVEL_COMPACT) {
-                        if (stack->m_combatSide == 0) {
+                        break;
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT:
+                        if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[2]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[2]->show();
-                        } else if (stack->m_combatSide == 1) {
+                        } else if (stack->getOwningSide() == 1) {
                             m_combatWindow->m_creatureSubWindows[3]->update(*stack,
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[3]->show();
                         }
+                        break;
                     }
                 } else if (m_debugShowBlockedHexes
                            && (m_cells[gridIndex].m_attributes & hexcell::blocked)
                            && m_cells[gridIndex].m_obstacleIndex != -1) {
                     TObstacle& obstacle =
-                        m_obstacles[m_cells[gridIndex].m_obstacleIndex];
+                        getObstacle(m_cells[gridIndex].m_obstacleIndex);
                     sprintf(g_text,
                             "Obstacle name: %s, owner: %d, visible:%s",
                             obstacle.m_shape->m_spriteName, obstacle.m_owner,
@@ -1082,8 +1093,7 @@ int combatManager::processCombatMsg(message& msg)
             if (m_creaturePlacement)
                 break;
             if ((m_autoCombatOn || g_goSolo)
-                    && (static_cast<const combatManager*>(this)->isQuickCombat()
-                        || isComputerAction(getCurrentArmy())))
+                    && isComputerAction())
                 break;
             {
                 army* currentArmy = getCurrentArmy();
@@ -1121,7 +1131,7 @@ int combatManager::processCombatMsg(message& msg)
 // placement-phase handoff in front and widens the stack rows to the retail
 // 0x548-byte army layout. The identity and extent are independently fixed by
 // the unique whole-body retail map and the exhaustive command order-map.
-// RESIDUAL (97.48035%): all 21 branches and both returns are exact. The 26
+// RESIDUAL (97.48472%): all 21 branches and both returns are exact. The 24
 // register-visible differences are confined to the placement message and the
 // inlined TurnOffHighlighter path; why-reg v2 classifies them as C1 front-end
 // scratch-pseudo ordering with the same callee-saved bindings. Named/value/
@@ -1135,23 +1145,13 @@ void combatManager::getHexXY(int hex, int& x, int& y)
     y = (m_cells[hex].m_hexUly + m_cells[hex].m_hexBry) / 2;
 }
 
-VA(0x00475ed0, 0x32F)  // unique retail body + order-map, dc 0x6d060
+VA(0x00475ed0, 0x32F) MAC_ADDRESS(0x083e10, 0x274)  // unique retail body + order-map, dc 0x6d060
 void combatManager::resetRound()
 {
     m_turnNumber++;
-    if (m_creaturePlacement
-            && (static_cast<const combatManager*>(this)->isQuickCombat()
-                || isComputerAction(getCurrentArmy()))
+    if (m_creaturePlacement && isComputerAction()
             && (!m_anyActionTaken || m_turnNumber >= 3)) {
-        if (m_creaturePlacement) {
-            m_creaturePlacement = 0;
-            m_actingSide = 1;
-            m_actingSlot = 0;
-            m_turnNumber = 0;
-            if (!static_cast<const combatManager*>(this)->isQuickCombat())
-                m_combatWindow->endPlacementPhase();
-            resetRound();
-        }
+        finishCreaturePlacement();
 
         if (g_remoteOn) {
             CEndPlacementPhaseMsg msg;
@@ -1179,7 +1179,9 @@ void combatManager::resetRound()
         m_turnSinceLastEnchanter[side]++;
         for (int slot = 0; slot < 20; slot++) {
             army* stack = &m_armies[side][slot];
-            if (stack->m_gridIndex != -1)
+            // DC 1788 and retail +0x237 test creatureType at +0x34;
+            // gridIndex is the distinct field at +0x38.
+            if (stack->m_creatureType != CREATURE_NONE)
                 stack->resetRound();
         }
     }
@@ -1200,14 +1202,14 @@ void combatManager::resetRound()
     }
 
     if (!m_creaturePlacement
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !isQuickCombat()) {
         m_combatWindow->combatMessage(
-            g_generalText->getText(GENERAL_TEXT_COMBAT_ROUND), 1, 0);
+            (*g_generalText)[GENERAL_TEXT_COMBAT_ROUND], 1, 0);
     }
     m_lastMovedArmy = 0;
 }
 
-VA(0x00476200, 0xE1)  // dc 0x6d2c8
+VA(0x00476200, 0xE1) MAC_ADDRESS(0x084084, 0x238)  // dc 0x6d2c8
 void combatManager::autoResolveCombat()
 {
     // ai_combat.cpp's free function is __fastcall under the shared /Gr
@@ -1240,10 +1242,10 @@ void combatManager::autoResolveCombat()
     }
 }
 
-VA(0x004762f0, 0xF6)  // dc 0x6d430
+VA(0x004762f0, 0xF6) MAC_ADDRESS(0x0842bc, 0x15c)  // dc 0x6d430
 int combatManager::checkWin(message* msg)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat()
+    if (isQuickCombat()
             && m_turnNumber > 30)
         autoResolveCombat();
 
@@ -1272,17 +1274,20 @@ int combatManager::checkWin(message* msg)
     return 1;
 }
 
-VA(0x004763f0, 0x4D)  // dc 0x6d508
+VA(0x004763f0, 0x4D) MAC_ADDRESS(0x084418, 0x98)  // dc 0x6d508
 unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 {
     if (group == 0)
-        return index % COMBAT_GRID_ROW_STRIDE
+        return gridX(index)
             > m_placementBoundaryDepth * 2 + 1;
-    return index % COMBAT_GRID_ROW_STRIDE
+    return gridX(index)
         < m_placementBoundaryDepth * 2 + 15;
 }
 
-VA(0x00476440, 0x50)  // dc 0x6d548
+// A positive/zero return ladder changes the retained Windows helper
+// from 100% to 88.97% and its catapult expansion to 91.17%; DC line1947
+// and Mac's branchless final result support the single comparison return.
+VA(0x00476440, 0x50) MAC_ADDRESS(0x0844b0, 0x84)  // dc 0x6d548
 unsigned char combatManager::validWallTarget(TWallTargetId wall)
 {
     if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
@@ -1291,7 +1296,7 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
     if (wall == WALL_TARGET_7
         && m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
         return 0;
-    return m_wallStrength[s_wallTargets[wall].m_wall] > 0;
+    return getWallStrength(wall) > 0;
 }
 
 // E:\gamedcs\command.cpp:1964
@@ -1332,29 +1337,49 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // of the embedded traits record; its `in_placement_phase` is pushed as
 // a whole register whose low byte only is loaded, the ordinary
 // unsigned char argument form.
+// Dreamcast line rows 1972/2077 retain hexcell::HasArmy, 2033 retains
+// ValidHex/InInvisibleColumn, and 2080/2181 retain army::get_owning_side.
+// Using those existing helpers moves current VC6 similarity 92.57143%
+// to 92.53571%; Mac's reviewed span still has all 13 direct calls aligned.
+// Mac 0x84798..0x847c0 keeps one cell receiver in r28 and index in r27;
+// the same receiver feeds HasArmy, GetArmy, side/slot and move flags.
+// Keep that receiver local to the army branch; native 0x84a64..0x84a74
+// recomputes the later move flags from the index. Combined with the
+// positive shot-penalty guard and side-first declaration, this improves
+// Windows 92.5357 -> 100% and Mac 31.6621 -> 98.4765%. Declaring the cell
+// after clearing the target fields closes Windows' final scheduling gap.
+// Mac retains a 0x70 frame versus 0x80, indexed early HasArmy access and
+// a pointer-strength-reduced wall walk; explicit pointer walks do not
+// improve Windows. The wall arm writes
+// slot before side, as native 0x849cc/0x849d8 does.
+// Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
+// non-null hero returns. These four guard controls are VC6 byte-flat;
+// retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
+// Native 0x84684/0x846ec writes newIndex into both tower slots. Those
+// source assignments are VC6 byte-flat and improve Mac to 61.67%.
 
-VA(0x00476490, 0x52A)  // anchor-global, dc 0x6d58c
+VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
 {
     if (newIndex == -1)
         return COMBAT_COMMAND_NONE;
 
     if (g_remoteOn && m_thisNetHasControl == 0)
-        return m_cells[newIndex].m_armySide < 0 ? COMBAT_COMMAND_HOVER
-                                            : COMBAT_COMMAND_VIEW_ARMY;
+        return m_cells[newIndex].hasArmy() ? COMBAT_COMMAND_VIEW_ARMY
+                                           : COMBAT_COMMAND_HOVER;
 
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
-        if (m_heroes[1] == 0)
-            return COMBAT_COMMAND_NONE;
-        return m_currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
-                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        if (m_heroes[1])
+            return m_currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
+                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        return COMBAT_COMMAND_NONE;
     }
 
     if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
-        if (m_heroes[0] == 0)
-            return COMBAT_COMMAND_NONE;
-        return m_currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
-                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        if (m_heroes[0])
+            return m_currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
+                                     : COMBAT_COMMAND_VIEW_OTHER_HERO;
+        return COMBAT_COMMAND_NONE;
     }
 
     army* currentArmy = getCurrentArmy();
@@ -1364,7 +1389,7 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_0)) {
-            currentArmy->m_slot = COMBAT_HEX_UPPER_TOWER;
+            currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
@@ -1376,29 +1401,25 @@ int combatManager::getCommand(int newIndex)
         if (currentArmy->is(creatureCatapult) && m_currentSide == 0
                 && !m_creaturePlacement
                 && validWallTarget(WALL_TARGET_7)) {
-            currentArmy->m_slot = COMBAT_HEX_KEEP;
+            currentArmy->m_slot = newIndex;
             currentArmy->m_side = -1;
             return COMBAT_COMMAND_BOMBARD_WALL;
         }
         return COMBAT_COMMAND_VIEW_TOWERS;
     }
 
-    if (newIndex < 0 || newIndex >= COMBAT_GRID_CELLS)
-        return COMBAT_COMMAND_NONE;
-
-    long column = newIndex % COMBAT_GRID_ROW_STRIDE;
-    if (column == 0)
-        return COMBAT_COMMAND_NONE;
-    if (column == COMBAT_GRID_LAST_COLUMN)
+    if (!validHex(newIndex) || inInvisibleColumn(newIndex))
         return COMBAT_COMMAND_NONE;
 
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
+    hexcell* cell = &m_cells[newIndex];
 
-    if (m_cells[newIndex].m_armySide >= 0
+    if (cell->hasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
-        army* target = m_cells[newIndex].getArmy();
-        long targetSide = target->m_combatSide;
+        long targetSide;
+        army* target = cell->getArmy();
+        targetSide = target->getOwningSide();
 
         if (m_creaturePlacement)
             return COMBAT_COMMAND_VIEW_ARMY;
@@ -1417,17 +1438,17 @@ int combatManager::getCommand(int newIndex)
         if (targetSide == m_currentSide)
             return COMBAT_COMMAND_VIEW_ARMY;
 
-        currentArmy->m_side = m_cells[newIndex].m_armySide;
-        currentArmy->m_slot = m_cells[newIndex].m_armySlot;
+        currentArmy->m_side = cell->m_armySide;
+        currentArmy->m_slot = cell->m_armySlot;
 
         if (currentArmy->canShoot(0)) {
             if (currentArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 return COMBAT_COMMAND_SHOOT;
-            if (!shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
-                                   newIndex)
-                    && !shotIsNotOptimal(currentArmy, target))
-                return COMBAT_COMMAND_SHOOT;
-            return COMBAT_COMMAND_SHOOT_PENALTY;
+            if (shotIsThroughWall(currentArmy, currentArmy->m_gridIndex,
+                                  newIndex)
+                    || shotIsNotOptimal(currentArmy, target))
+                return COMBAT_COMMAND_SHOOT_PENALTY;
+            return COMBAT_COMMAND_SHOOT;
         }
         if (currentArmy->validPath(newIndex, 0))
             return currentArmy->m_creatureType == CREATURE_BALLISTA
@@ -1451,8 +1472,8 @@ int combatManager::getCommand(int newIndex)
                 wall = TWallTargetId(wall + 1)) {
             if (newIndex == s_wallTargets[wall].m_targetHex) {
                 if (validWallTarget(wall)) {
-                    currentArmy->m_side = -1;
                     currentArmy->m_slot = newIndex;
+                    currentArmy->m_side = -1;
                     return COMBAT_COMMAND_BOMBARD_WALL;
                 }
                 break;
@@ -1464,7 +1485,7 @@ int combatManager::getCommand(int newIndex)
         return COMBAT_COMMAND_CREATURE_SPELL;
 
     if (!m_creaturePlacement
-            || !isOutsidePlacementBoundry(currentArmy->m_combatSide,
+            || !isOutsidePlacementBoundry(currentArmy->getOwningSide(),
                                              newIndex)) {
         g_searchArray->seedCombatPosition(currentArmy, m_currentSide,
                                           currentArmy->m_monInfo.m_speed,
@@ -1480,11 +1501,9 @@ int combatManager::getCommand(int newIndex)
     return COMBAT_COMMAND_NONE;
 }
 
-// The wall arm is one `goto`: wallTargets[7] short-circuits the whole
-// hex test, while wallTargets[0] and [6] are only reachable once the
-// hex test has failed AND the town is a full castle. All three land on
-// ViewCastleBallista(1).
-VA(0x004769c0, 0x207)  // dc 0x6d988
+// Mac retains separate ViewCastleBallista calls for wall target 7 and the
+// full-castle targets 0/6 at 0:0x84bf8 and 0:0x84ca8.
+VA(0x004769c0, 0x207) MAC_ADDRESS(0x084ad8, 0x200)  // dc 0x6d988
 int combatManager::rightClick(int newIndex)
 {
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
@@ -1513,31 +1532,22 @@ int combatManager::rightClick(int newIndex)
         return 0;
     }
 
-    if (newIndex != s_wallTargets[7].m_targetHex) {
-        if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
-                && m_cells[newIndex].m_armySide >= 0) {
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            viewArmy(m_cells[newIndex].getArmy(), 1);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                return 0;
-            if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                    && g_game->isHuman(m_playerIds[m_currentSide])) {
-                m_lastCellIndex = -1;
-                if (m_combatWindow)
-                    m_combatWindow->clearCombatMessages();
-                g_inputManager->forceMouseMove();
-                return 0;
-            }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            return 0;
-        }
-        if (m_fortificationLevel != COMBAT_FORTIFICATION_CASTLE)
-            return 0;
-        if (newIndex != s_wallTargets[0].m_targetHex
-                && newIndex != s_wallTargets[6].m_targetHex)
-            return 0;
+    if (newIndex == s_wallTargets[7].m_targetHex) {
+        viewCastleBallista(1);
+        return 0;
     }
-    viewCastleBallista(1);
+
+    if (validHex(newIndex)
+            && m_cells[newIndex].hasArmy()) {
+        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        viewArmy(m_cells[newIndex].getArmy(), 1);
+        resetMouse();
+        return 0;
+    }
+    if (m_fortificationLevel == COMBAT_FORTIFICATION_CASTLE
+        && (newIndex == s_wallTargets[0].m_targetHex
+            || newIndex == s_wallTargets[6].m_targetHex))
+        viewCastleBallista(1);
     return 0;
 }
 
@@ -1548,7 +1558,7 @@ int combatManager::rightClick(int newIndex)
 // wide-stack shift: when the destination cell's field_4b marks it as a
 // tail hex, the anchor moves one column against the stack's facing.
 
-VA(0x00476bd0, 0x402)  // dc 0x6db78
+VA(0x00476bd0, 0x402) MAC_ADDRESS(0x084cd8, 0x308)  // dc 0x6db78
 void combatManager::doCommand(int command)
 {
     army* currentArmy = getCurrentArmy();
@@ -1559,7 +1569,7 @@ void combatManager::doCommand(int command)
         m_nextAction = 2;
         m_nextActionGridIndex = m_lastCellIndex;
         if (currentArmy->is(creatureDoubleWide) && m_cells[m_lastCellIndex].m_frontMove)
-            m_nextActionGridIndex = m_lastCellIndex - (currentArmy->m_facing ? 1 : -1);
+            m_nextActionGridIndex = m_lastCellIndex - currentArmy->offsetToFront(-1);
         m_nextActionExtra = -1;
         break;
 
@@ -1603,52 +1613,22 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             initiateSpell(spell, 0);
-            if (static_cast<const combatManager*>(this)->isQuickCombat())
-                break;
-            if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                    && g_game->isHuman(m_playerIds[m_currentSide])) {
-                m_lastCellIndex = -1;
-                if (m_combatWindow)
-                    m_combatWindow->clearCombatMessages();
-                g_inputManager->forceMouseMove();
-                break;
-            }
-            g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+            resetMouse();
         }
         break;
 
     case COMBAT_COMMAND_VIEW_TOWERS:
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         viewCastleBallista(0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                && g_game->isHuman(m_playerIds[m_currentSide])) {
-            m_lastCellIndex = -1;
-            if (m_combatWindow)
-                m_combatWindow->clearCombatMessages();
-            g_inputManager->forceMouseMove();
-            break;
-        }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        resetMouse();
         break;
 
     case COMBAT_COMMAND_VIEW_ARMY:
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-        if (m_lastCellIndex < 0 || m_lastCellIndex >= COMBAT_GRID_CELLS)
+        if (!validHex(m_lastCellIndex))
             break;
         viewArmy(m_cells[m_lastCellIndex].getArmy(), 0);
-        if (static_cast<const combatManager*>(this)->isQuickCombat())
-            break;
-        if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
-                && g_game->isHuman(m_playerIds[m_currentSide])) {
-            m_lastCellIndex = -1;
-            if (m_combatWindow)
-                m_combatWindow->clearCombatMessages();
-            g_inputManager->forceMouseMove();
-            break;
-        }
-        g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
+        resetMouse();
         break;
 
     case COMBAT_COMMAND_BOMBARD_WALL:
@@ -1665,7 +1645,7 @@ void combatManager::doCommand(int command)
     }
 }
 
-VA(0x00476fe0, 0x2C4)  // dc 0x6de24
+VA(0x00476fe0, 0x2C4) MAC_ADDRESS(0x084fe0, 0x2a0)  // dc 0x6de24
 void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
 {
     hero* winner = m_heroes[winningGroup];
@@ -1703,7 +1683,7 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
             launchSample(
                 formatString(DATA_COMPGEN(0x00670268, pickupSampleFormat,
                                            "pickup%02d.82M"),
-                              random(1, 7))
+                              sRandom(1, 7))
                     .c_str(),
                 -1, 3);
             extendedDialog(msg.c_str(), rewards, -1, -1, dialogTimeout);
@@ -1712,7 +1692,7 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
     }
 }
 
-VA(0x004772b0, 0x1BF)  // dc 0x6e0d8
+VA(0x004772b0, 0x1BF) MAC_ADDRESS(0x085280, 0x14c)  // dc 0x6e0d8
 void combatManager::showLootedArtifacts(
     std::vector<type_artifact>& lootedArtifacts, int dialogTimeout)
 {
@@ -1733,7 +1713,7 @@ void combatManager::showLootedArtifacts(
             launchSample(
                 formatString(DATA_COMPGEN(0x00670268, pickupSampleFormat,
                                            "pickup%02d.82M"),
-                              random(1, 7))
+                              sRandom(1, 7))
                     .c_str(),
                 -1, 3);
             extendedDialog(g_generalText->getText(GENERAL_TEXT_COMBAT_CAPTURED_ARTIFACT), rewards, -1, -1,
@@ -1748,7 +1728,7 @@ void combatManager::showLootedArtifacts(
 // snapshots leave 99.8293% despite an otherwise identical call sequence.
 // Complete darkens the screen after freeArmies; the older port's earlier
 // text drawing and extra results-dialog fade/surface setup are absent.
-VA(0x00477470, 0x58C)  // dc 0x6e1c8
+VA(0x00477470, 0x58C) MAC_ADDRESS(0x0853cc, 0x6e4)  // dc 0x6e1c8
 void combatManager::doVictory(int winningGroup)
 {
     int lastAliveSideIndex = 1 - winningGroup;
@@ -1856,12 +1836,12 @@ void combatManager::doVictory(int winningGroup)
     }
 
     freeArmies();
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
+    if (!isQuickCombat())
         m_combatWindow->combatMessage("", 0, 0);
     g_mouseManager->m_noChangePointer = 0;
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
         g_windowManager->updateScreen(0, 0, 800, 600);
     }
@@ -1904,16 +1884,23 @@ void combatManager::doVictory(int winningGroup)
     g_dialogDeadline = 0;
 }
 
-VA(0x00477a00, 0xB2)  // dc 0x6e898
+// A named army-row base shared with checkGetAIMove is not the missing CSE:
+// it lowers this retained body from 100% to 86.44% and the caller from
+// 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
+// Native 0x85b44 reloads m_currentSide inside each scan iteration. Restoring
+// that field access keeps the retained Windows body exact and raises its
+// CheckGetAIMove expansion 94.4335 -> 99.3038%. Dividing and multiplying
+// the accumulator before returning preserves the native r31 lifetime and
+// matches all 388 Mac bytes; a single return expression is only 83.2474%.
+// Both retained bodies are exact, with the factor helper still called.
+VA(0x00477a00, 0xB2) MAC_ADDRESS(0x085b14, 0x184)  // dc 0x6e898
 long combatManager::getSurrenderCost()
 {
     long cost = 0;
-    int side = m_currentSide;
 
     for (int slot = 0; slot < 20; ++slot) {
-        army* currentArmy = &m_armies[side][slot];
-        if (currentArmy->m_creatureType >= 0
-            && currentArmy->m_numTroops > 0
+        army* currentArmy = &m_armies[m_currentSide][slot];
+        if (currentArmy->isActive()
             && !currentArmy->is(creatureSummoned)
             && currentArmy->m_numTroops
                 > currentArmy->m_numTroopsBattleResurrected) {
@@ -1923,8 +1910,9 @@ long combatManager::getSurrenderCost()
         }
     }
 
-    return static_cast<long>(m_heroes[side]->getSurrenderCostFactor()
-                             * static_cast<float>(cost / 2));
+    cost /= 2;
+    cost *= m_heroes[m_currentSide]->getSurrenderCostFactor();
+    return cost;
 }
 
 // E:\gamedcs\command.cpp:2800. Keep the Dreamcast-proven helper boundary:
@@ -1932,6 +1920,7 @@ long combatManager::getSurrenderCost()
 // no standalone retail body. Complete also omits the older port's FullUpdate
 // after the modal dialog, as it does in the neighbouring retreat path.
 
+MAC_ADDRESS(0x085c98, 0xd4)
 inline int combatManager::doSurrender()
 {
     g_surrenderCost = getSurrenderCost();
@@ -1941,10 +1930,10 @@ inline int combatManager::doSurrender()
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
 }
 
-VA(0x00477ac0, 0x95)  // dc 0x6ea10
+VA(0x00477ac0, 0x95) MAC_ADDRESS(0x085d6c, 0xcc)  // dc 0x6ea10
 void combatManager::checkChangeSelector()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     army* currentArmy = getCurrentArmy();
@@ -1961,7 +1950,7 @@ void combatManager::checkChangeSelector()
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x00477b60, 0xB6)  // dc 0x6eb18
+VA(0x00477b60, 0xB6) MAC_ADDRESS(0x085e38, 0xf0)  // dc 0x6eb18
 void combatManager::turnOffSelector(unsigned char drawIt)
 {
     if (!m_lastMovedArmy)
@@ -1970,7 +1959,7 @@ void combatManager::turnOffSelector(unsigned char drawIt)
     if (drawIt) {
         resetLimitCreature();
         if (!m_lastMovedArmy->is(creatureImmobilized))
-            markCreatureEffect(m_lastMovedArmy->m_combatSide,
+            markCreatureEffect(m_lastMovedArmy->getOwningSide(),
                                m_lastMovedArmy->m_bitIndex);
     }
 
@@ -1979,10 +1968,10 @@ void combatManager::turnOffSelector(unsigned char drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
 
-VA(0x00477c20, 0x1E4)  // dc 0x6ebbc
+VA(0x00477c20, 0x1E4) MAC_ADDRESS(0x085f28, 0x258)  // dc 0x6ebbc
 void combatManager::checkChangeHighlighter(int currentIndex)
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
     if (m_battleOver)
         return;
@@ -2016,13 +2005,16 @@ void combatManager::checkChangeHighlighter(int currentIndex)
             currentArmy->m_currFrameType = cs_wait;
             currentArmy->m_currFrameIndex = 0;
         }
-        markCreatureEffect(currentArmy->m_combatSide, currentArmy->m_bitIndex);
+        // Loading the slot before the accessor preserves Complete's argument
+        // registers without replacing the owning-side helper with field access.
+        int slot = currentArmy->m_bitIndex;
+        markCreatureEffect(currentArmy->getOwningSide(), slot);
     }
 
     drawFrame(1, 1, 0, 0, 1, 0);
 }
 
-VA(0x00477e10, 0xC2)  // dc 0x6ed18
+VA(0x00477e10, 0xC2) MAC_ADDRESS(0x086180, 0xfc)  // dc 0x6ed18
 void combatManager::turnOffHighlighter(unsigned char drawIt)
 {
     if (!m_highlighterOn)
@@ -2040,34 +2032,65 @@ void combatManager::turnOffHighlighter(unsigned char drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
 
+// Complete Mac retains this tower-turn helper at code 0:8627c. Its sole
+// caller is main, where Windows expands the decision between first aid and
+// catapult automation. An ordinary definition leaves an extra VC6 call;
+// this inline definition restores its retail expansion boundary.
+// Mac exits on a false computer-action policy before the AI/resetMouse tail.
+// That early guard restores main from 97.17% to an exact Windows body; the
+// positive-action if followed by return0 merges three retail false exits.
+// Mac places this body between turnOffHighlighter and checkGetAIMove;
+// restoring that source order is byte-flat in both compiler controls.
+MAC_ADDRESS(0x08627c, 0x10c)
+inline unsigned char combatManager::automateTower()
+{
+    if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
+        return 0;
+
+    army* currentArmy = getCurrentArmy();
+    if (currentArmy->m_creatureType != CREATURE_ARROW_TOWER)
+        return 0;
+
+    int wall;
+    switch (currentArmy->m_gridIndex) {
+    case COMBAT_HEX_LOWER_TOWER:
+        wall = 13;
+        break;
+    case COMBAT_HEX_KEEP:
+        wall = 14;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        wall = 5;
+        break;
+    }
+
+    if (m_wallStrength[wall] == 0) {
+        currentArmy->m_monInfo.m_attributes |= creatureImmobilized;
+        m_nextAction = 12;
+        return 1;
+    }
+    if (!isComputerAction())
+        return 0;
+    unnamed465f20();
+    resetMouse();
+    return 1;
+}
+
 // E:\gamedcs\command.cpp:3038. Retail's command-order bracket leaves one
 // 997-byte body between TurnOffHighlighter and GetControl, exactly where the
 // Dreamcast roster places CheckGetAIMove. The direct call at 0x477f3d lands
 // in the Dreamcast AICheckRetreat statement slot. Complete inlines the
 // already exact get_surrender_cost body here, while retaining its standalone
 // copy at 0x477a00.
-// RESIDUAL (94.43355%): the 53-block CFG is exact (49 blocks also have the
-// exact instruction count; four are size-only), including all 35 branches
-// and five returns. The remaining 110 register-visible slots are confined to
-// the two twenty-stack value loops; retail homes one extra four-byte scratch
-// and binds the row walk to EDI/ECX where this build uses EDX/EDI. A named
-// side is codegen-inert; explicit current-hero locals score 87.19%/80.53%;
-// and an earlier IsActive-call probe scored 84.86%. The current source keeps
-// IsActive (DC line 3085); the text lookups at 3058/3105 use the underlying
-// getText accessor here. FullUpdate after each dialog is DC-only here:
-// retail continues directly to the response checks without that redraw.
-// Keeping a named army-row base is the best measured natural spelling.
-// Countdown sweep 2026-09-06: retail computes ONE `&armies[currentSide][0]
-// .numTroops` (edi at fn+0x4b2, disp 0x5518 folded into the lea) and shares
-// it between this loop and the inlined get_surrender_cost walk, and homes
-// `heroes[currentSide]` at [ebp-0x20] from the enclosing guard; ours
-// recomputes both.  Two spellings measured against 94.4335: dropping the
-// named row base so both loops spell `&armies[currentSide][slot]` scores
-// 94.3892, and the countdown pointer walk
-// `army* p = armies[currentSide]; for (int slot = 20; slot--; p++)` is
-// BYTE-FLAT.  The wall is the cross-inline CSE of the row base, not the
-// loop form.
-VA(0x00477ee0, 0x3E5)  // exhaustive command order-map + call graph, dc 0x6ee60
+// Mac reloads currentSide within getSurrenderCost's retained body. Restoring
+// those loads and the accumulator's divide/multiply assignments closes that
+// helper on both compilers; direct army-row indexing here then closes Windows
+// too. Earlier row-index probes against the incomplete helper model lowered
+// the score, so their results did not refute this complete source model.
+// IsActive and the canonical surrender helper remain source calls. Mac keeps
+// the surrender call; Windows expands it. FullUpdate after each dialog is
+// DC-only: Windows retail continues directly to the response checks.
+VA(0x00477ee0, 0x3E5) MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph, dc 0x6ee60
 void combatManager::checkGetAIMove()
 {
     unsigned char isHuman = 0;
@@ -2080,7 +2103,7 @@ void combatManager::checkGetAIMove()
         if (isHuman) {
             if (m_autoRetreatOn) {
                 std::string result = formatString(
-                    g_generalText->getText(GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT), m_heroes[m_currentSide]->m_name);
+                    (*g_generalText)[GENERAL_TEXT_COMBAT_RETREAT_OVERWHELMED_FORMAT], m_heroes[m_currentSide]->m_name);
                 normalDialog(result.c_str(), 2, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
                 if (g_windowManager->m_dialogReturn
@@ -2096,9 +2119,8 @@ void combatManager::checkGetAIMove()
         if (proceed) {
             long combatValue = 0;
             if (m_heroes[1 - m_currentSide] && m_heroes[m_currentSide]) {
-                army* currentArmies = m_armies[m_currentSide];
                 for (int slot = 0; slot < 20; ++slot) {
-                    army* currentArmy = &currentArmies[slot];
+                    army* currentArmy = &m_armies[m_currentSide][slot];
                     if (currentArmy->isActive()) {
                         combatValue +=
                             g_creatureTypeTraits[currentArmy->m_creatureType].m_cost[6]
@@ -2113,7 +2135,7 @@ void combatManager::checkGetAIMove()
                         && combatValue > g_surrenderCost + 2500) {
                     std::string msg;
                     if (isHuman) {
-                        msg = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT),
+                        msg = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_SAVE_ARMY_PROMPT_FORMAT],
                                             m_heroes[m_currentSide]->m_name,
                                             g_surrenderCost);
                         normalDialog(msg.c_str(), 2, -1, -1, 6,
@@ -2138,7 +2160,7 @@ void combatManager::checkGetAIMove()
 }
 
 // E:\gamedcs\command.cpp:3131
-VA(0x004782d0, 0x5B5)  // exhaustive command order-map + body, dc 0x6f198
+VA(0x004782d0, 0x5B5) MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body, dc 0x6f198
 void combatManager::getControl()
 {
     m_lastCellIndex = -1;
@@ -2148,7 +2170,7 @@ void combatManager::getControl()
         g_inputManager->flush();
 
     if (m_status == STATUS_ACTIVE
-            && !static_cast<const combatManager*>(this)->isQuickCombat())
+            && !isQuickCombat())
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 
     checkChangeSelector();
@@ -2238,7 +2260,7 @@ void combatManager::getControl()
                     m_combatWindow->widgetSetStatus(
                         0x7d8, 0x1000);
 
-                if (m_inSecondPhase || m_creaturePlacement)
+                if (isInSecondPhase() || m_creaturePlacement)
                     m_combatWindow->widgetSetStatus(
                         0x7d9, 0x1000);
                 else
@@ -2267,10 +2289,10 @@ void combatManager::getControl()
     doSpellAI();
 }
 
-VA(0x00478890, 0x6E)  // dc 0x6f5f4
+VA(0x00478890, 0x6E) MAC_ADDRESS(0x086cf8, 0xb4)  // dc 0x6f5f4
 void combatManager::resetMouse()
 {
-    if (static_cast<const combatManager*>(this)->isQuickCombat())
+    if (isQuickCombat())
         return;
 
     if (m_thisNetHasControl && m_playerIds[m_currentSide] >= 0
@@ -2285,7 +2307,7 @@ void combatManager::resetMouse()
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
-VA(0x00478900, 0x290)  // dc 0x6f664
+VA(0x00478900, 0x290) MAC_ADDRESS(0x086dac, 0x1f8)  // dc 0x6f664
 unsigned char combatManager::processMoveThenAttack(message* msg)
 {
     army* currentArmy = getCurrentArmy();
@@ -2308,14 +2330,13 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
 
     currentArmy->m_monInfo.m_attributes |= creatureDone;
     currentArmy->m_joustBonus = 0;
+    // Mac 0x86ec0..0x86f00 expands isIncapacitated in this return step.
     if (m_nextActionExtra != -1 && oldGridIndex != m_nextActionExtra
             && (currentArmy->m_creatureType == army::ARMY_CREATURE_HARPY
                 || currentArmy->m_creatureType
                        == army::ARMY_CREATURE_HARPY_HAG)
             && !currentArmy->is(creatureImmobilized)
-            && currentArmy->m_spellInfluence[62] == 0
-            && currentArmy->m_spellInfluence[70] == 0
-            && currentArmy->m_spellInfluence[74] == 0) {
+            && !currentArmy->isIncapacitated()) {
         currentArmy->moveTo(oldGridIndex, 0);
     }
 
@@ -2336,12 +2357,12 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     return 0;
 }
 
-VA(0x00478b90, 0x1E5)  // dc 0x6f824
+VA(0x00478b90, 0x1E5) MAC_ADDRESS(0x086fa4, 0x22c)  // dc 0x6f824
 void combatManager::processFirstAid(army* currentArmy)
 {
     if (validHex(m_nextActionGridIndex)) {
         army* targetArmy = m_cells[m_nextActionGridIndex].getArmy();
-        int maximum = random(
+        int maximum = sRandom(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
                    * 100.0f));
@@ -2350,7 +2371,7 @@ void combatManager::processFirstAid(army* currentArmy)
         targetArmy->m_topCreatureDamage -= result;
         currentArmy->m_monInfo.m_attributes |= creatureDone;
 
-        if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+        if (!isQuickCombat()) {
             SAMPLE2 sample = loadPlaySample(
                 DATA_COMPGEN(0x00660a94, regenerSampleName,
                              "Regener.wav"));
@@ -2372,12 +2393,15 @@ void combatManager::processFirstAid(army* currentArmy)
 // text-resource getters. Residual 99.7272%: the wait-arm string constructor
 // retains _Tidy where retail expands it. Naming the defend-bonus result is
 // flat; naming its percentage input is worse. Neither justifies flattening
-// max or changing the DC string lifetimes.
+// max or changing the DC string lifetimes. Mac default construction at
+// 0x87888 (defend) and 0x87a90 (wait) fixes both lifetimes independently;
+// pristine VC6 XSTRING calls _Tidy from that same default constructor.
+// The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
-VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
+VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
         m_combatWindow->m_heroSubWindows[0]->unShow();
         m_combatWindow->m_heroSubWindows[1]->unShow();
@@ -2388,7 +2412,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     }
 
     g_processingCombatAction = 1;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         if (m_nextAction)
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
         updateMouseGrid(-1, 1);
@@ -2492,7 +2516,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionRetreat:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_RETREAT_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2506,7 +2530,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     case g_combatActionSurrender:
         if ((m_heroes[0] && m_heroes[0]->isWieldingArtifact(125))
                 || (m_heroes[1] && m_heroes[1]->isWieldingArtifact(125))) {
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT),
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_SHACKLES_PREVENT_SURRENDER_FORMAT],
                     m_heroes[m_currentSide]->m_name);
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
@@ -2529,11 +2553,11 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
                     currentArmy->m_monInfo.m_defenseSkill * 20 / 100, 1);
 
                 if (currentArmy->m_numTroops == 1)
-                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT),
+                    message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_DEFEND_ONE_FORMAT],
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 else
-                    message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT),
+                    message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_DEFEND_MANY_FORMAT],
                                             currentArmy->getName(),
                                             currentArmy->m_defendBonus);
                 m_combatWindow->combatMessage(message.c_str(), 1, 0);
@@ -2552,10 +2576,10 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
         if (!m_creaturePlacement) {
             std::string message;
             if (currentArmy->m_numTroops == 1)
-                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT),
+                message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_WAIT_ONE_FORMAT],
                                         currentArmy->getName());
             else
-                message = formatString(g_generalText->getText(GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT),
+                message = formatString((*g_generalText)[GENERAL_TEXT_COMBAT_WAIT_MANY_FORMAT],
                                         currentArmy->getName());
             m_combatWindow->combatMessage(message.c_str(), 1, 0);
         }
@@ -2605,7 +2629,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     return 1;
 }
 
-VA(0x00479de0, 0x14F)  // dc 0x701b0
+VA(0x00479de0, 0x14F) MAC_ADDRESS(0x087d0c, 0x164)  // dc 0x701b0
 void combatManager::resetCyclingCreatures()
 {
     int cyclingCreatures = 0;
@@ -2638,7 +2662,7 @@ void combatManager::resetCyclingCreatures()
     }
 }
 
-VA(0x00479f30, 0x8B)  // dc 0x702bc
+VA(0x00479f30, 0x8B) MAC_ADDRESS(0x087e70, 0xa4)  // dc 0x702bc
 void combatManager::resetCycleTimers()
 {
     unsigned long now = GameTime::get();
@@ -2660,6 +2684,7 @@ void combatManager::resetCycleTimers()
 // Original: combatManager::SetCombatViewArmy; command.cpp:3819, dc 0x70398.
 // Complete ProcessCombatMsg's F5 arm (0x474d80) expands this preference
 // write, frame refresh and WritePrefs sequence.
+MAC_ADDRESS(0x087f14, 0x44)
 void combatManager::setCombatViewArmy(int newCombatViewArmy)
 {
     g_config.m_combatArmyInfoLevel = newCombatViewArmy;
@@ -2667,7 +2692,7 @@ void combatManager::setCombatViewArmy(int newCombatViewArmy)
     writePrefs();
 }
 
-VA(0x00479fc0, 0x131)  // dc 0x703c0
+VA(0x00479fc0, 0x131) MAC_ADDRESS(0x087f58, 0xec)  // dc 0x703c0
 void combatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatShowMouseHex,
                                   int combatGridLevel,
@@ -2698,7 +2723,12 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // right-left+1, bottom-top+1) - which is what fixes their roles as a
 // left/top/right/bottom rectangle. The save/redraw/fizzle triple around
 // DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
-VA(0x0047a100, 0x1CD)  // dc 0x70474
+// DC command.cpp:3906/3910 calls WinMgr.h's const-SLimitData-reference
+// overloads (dc 0x70b40/0x70af0), which contain Width/Height. Restoring
+// those existing higher-level calls makes Windows 94.1419% -> 100%.
+// CodeWarrior still expands both wrappers into the native scalar fizzle
+// call sequence; its scored body remains 21.4474%. No helper is flattened.
+VA(0x0047a100, 0x1CD) MAC_ADDRESS(0x088044, 0x2f0)  // dc 0x70474
 army* combatManager::addArmy(int side, int monType, int monQty,
                              int gridIndex, int setAttributes,
                              int fizzleItIn)
@@ -2718,7 +2748,7 @@ army* combatManager::addArmy(int side, int monType, int monQty,
             break;
         }
     } }
-    if (slot == -1 || m_cells[gridIndex].m_armySide >= 0)
+    if (slot == -1 || m_cells[gridIndex].hasArmy())
         return 0;
 
     army* newArmy = &m_armies[side][slot];
@@ -2730,27 +2760,18 @@ army* combatManager::addArmy(int side, int monType, int monQty,
         m_numArmies[side]++;
 
     if (fizzleItIn
-            && !static_cast<const combatManager*>(this)->isQuickCombat()) {
+            && !isQuickCombat()) {
         resetLimitCreature();
-        if (m_armies[side][slot].m_creatureType == CREATURE_ARROW_TOWER)
-            markTowerArmy(newArmy);
-        else
-            m_creatureEffect[side][slot] = 1;
+        markCreatureEffect(side, slot);
         computeMaxExtent();
-        g_windowManager->saveFizzleSourceX(
-            m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-            m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+        g_windowManager->saveFizzleSourceX(m_drawbridgeBounds);
         drawFrame(0, 0, 0, 0, 1, 0);
-        g_windowManager->fizzleForwardX(
-            m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-            m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-            m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1, 75);
+        g_windowManager->fizzleForwardX(m_drawbridgeBounds, 75);
     }
     return newArmy;
 }
 
-VA(0x0047a2d0, 0xA7)  // dc 0x70650
+VA(0x0047a2d0, 0xA7) MAC_ADDRESS(0x088334, 0xe0)  // dc 0x70650
 std::string combatManager::getTowerString(TWallSection wall, long archers,
                                              long skill) const
 {
@@ -2766,7 +2787,7 @@ std::string combatManager::getTowerString(TWallSection wall, long archers,
         skill, archers * 2, archers * 3);
 }
 
-VA(0x0047a380, 0x180)  // dc 0x70714
+VA(0x0047a380, 0x180) MAC_ADDRESS(0x088414, 0x190)  // dc 0x70714
 void combatManager::viewCastleBallista(int isQuickInfo)
 {
     if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
@@ -2789,7 +2810,7 @@ void combatManager::viewCastleBallista(int isQuickInfo)
                  -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0047a500, 0x164)  // dc 0x70820
+VA(0x0047a500, 0x164) MAC_ADDRESS(0x0885a4, 0x16c)  // dc 0x70820
 unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
                                                       message* msg)
 {

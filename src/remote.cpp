@@ -91,7 +91,7 @@ void dpsd(int dpErr, char* file, int line)
     g_inside = 0;
 }
 
-VA(0x005522d0, 0x1E)  // dc order-map (DPSD, calc_crc_long, CDPlayHeroes::CDPlayHeroes) + anchor-callee @crc32@12 twice, dc 0x11b940
+VA(0x005522d0, 0x1E) MAC_ADDRESS(0x210260, 0x50)  // Mac and retail both call crc32 twice; dc 0x11b940
 unsigned long calcCrcLong(const unsigned char* buf, unsigned len)
 {
     unsigned long seed = crc32(0, 0, 0);
@@ -120,16 +120,20 @@ CDPlayHeroes::CDPlayHeroes()
 // destructor is the decisive inline-budget input: with that complete base
 // contract, the original named helper call expands to the exact 0x205-byte
 // retail body (both deque walks included).
+// Mac 0x210868 retains destroyMsg for each packet drained from the queue.
+MAC_ADDRESS(0x210814, 0x80)
 void CDPlayHeroes::destroyMsgQueue()
 {
     while (!m_msgQueue.empty()) {
         CNetMsg* netMsg = m_msgQueue.front();
-        delete netMsg;
+        destroyMsg(netMsg);
         m_msgQueue.pop_front();
     }
 }
 
-VA(0x00552320, 0x205)  // dc 0x11ba38
+// CodeWarrior combines the deleting wrapper and destructor body: r4 selects
+// whether operator delete runs after the shared destroyMsgQueue call.
+VA(0x00552320, 0x205) MAC_ADDRESS(0x210770, 0xa4)  // dc 0x11ba38
 CDPlayHeroes::~CDPlayHeroes()
 {
     destroyMsgQueue();
@@ -183,7 +187,9 @@ unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
     return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
 }
 
-VA(0x00552b60, 0x24B)  // dc 0x11bb9c
+// Mac polls its native receive buffer here and calls the same low-level
+// dispatcher and queue helper; Windows uses DirectPlay receive/error state.
+VA(0x00552b60, 0x24B) MAC_ADDRESS(0x210944, 0xa0)  // dc 0x11bb9c
 bool CDPlayHeroes::pollRemote()
 {
     unsigned long fromId;
@@ -257,12 +263,17 @@ static const long g_playerActiveUpdateInterval = 600000;
 // Unimplemented carcass rows remain available to the claim/label scanners but
 // stay outside compilation as this large TU is admitted incrementally.
 
-VA(0x00552db0, 0x28F)  // dc 0x11bc88
+// Mac 0x2109e4 handles the same ping, ping reply and player-drop subtypes;
+// its native transport supplies the incoming message.
+VA(0x00552db0, 0x28F) MAC_ADDRESS(0x2109e4, 0x1a0)  // dc 0x11bc88
 unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
     case RS_PING:
         {
+            // Mac 0x210a40 retains CLogFile::log before sending the reply;
+            // its format string is at PEF data section 1:0x591f0.
+            g_logFile.log("Recieved RS_PING from %d", netMsg->m_dpidFrom);
             transmitRemoteDataDPID(
                 &CPingResponseMsg(
                     static_cast<CPingMsg*>(netMsg)->m_pingTime, RS_PING_REPLY),
@@ -286,6 +297,10 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
         {
             unsigned long dpid =
                 static_cast<CDestroyPlayerMsg*>(netMsg)->m_dpid;
+            // Mac 0x210adc records the sender and dropped player IDs; its
+            // format string is at PEF data section 1:0x59209.
+            g_logFile.log("Recieved RS_DESTROY_PLAYER from %d [kill %d]",
+                          netMsg->m_dpidFrom, dpid);
             if (dpid == g_thisNetPlayerInfo.m_dpid) {
                 remoteCleanup();
                 normalDialog(
@@ -314,7 +329,7 @@ unsigned char CDPlayHeroes::handleLowLevelMsg(CNetMsg* netMsg)
 // Assigning the result before setting wasCompressed recovers the remaining
 // four instruction differences and reaches 100%; the reversed ordering is
 // the 98.62% negative control. Both helper and caller boundaries stay natural.
-VA(0x00553040, 0x1D1)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
+VA(0x00553040, 0x1D1) MAC_ADDRESS(0x210b84, 0x14c)  // anchor-caller(the free GetRemoteData wrapper, CheckHandleNet) + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
                                      unsigned char* wasCompressed)
 {
@@ -346,7 +361,7 @@ CNetMsg* CDPlayHeroes::getRemoteData(unsigned char removeFromQueue,
     return netMsg;
 }
 
-VA(0x00553220, 0x89)
+VA(0x00553220, 0x89) MAC_ADDRESS(0x210cd0, 0x58)
 bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
                                       bool compressMsg, bool guaranteed)
 {
@@ -361,13 +376,15 @@ bool CDPlayHeroes::transmitRemoteData(CNetMsg* msg, int toWho,
         msg, dpidTo, compressMsg, guaranteed);
 }
 
-VA(0x005532b0, 0xB9)
+// Mac 0x210dcc and 0x210e00 retain destroyMsg for both failed-compression
+// exits; keep the same cleanup boundary when VC6 expands it.
+VA(0x005532b0, 0xB9) MAC_ADDRESS(0x210d28, 0x100)
 CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 {
     HOMM3_RELEASE_VERIFY(netMsg != 0 && netMsg->m_size >= sizeof(CNetMsg));
     unsigned long compressedSize =
         static_cast<unsigned long>(netMsg->m_size * 1.2) + 12;
-    void* storage = ::operator new(compressedSize);
+    void* storage = new char[compressedSize];
     CNetMsg* compressedMsg = static_cast<CNetMsg*>(storage);
     memcpy(compressedMsg, netMsg, sizeof(CNetMsg));
 
@@ -378,7 +395,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
             static_cast<const unsigned char*>(
                 static_cast<const void*>(netMsg)) + sizeof(CNetMsg),
             netMsg->m_size - sizeof(CNetMsg), 6)) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
 
@@ -386,7 +403,7 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
     unsigned long originalSize = netMsg->m_size;
     compressedMsg->m_uncompressedSize = originalSize;
     if (compressedMsg->m_size >= originalSize) {
-        ::operator delete(storage);
+        destroyMsg(compressedMsg);
         return 0;
     }
     return compressedMsg;
@@ -394,10 +411,11 @@ CNetMsg* CDPlayHeroes::compressMsg(CNetMsg* netMsg)
 
 // Original: CDPlayHeroes::UncompressMsg; remote.cpp:463, dc 0x11bf40
 // GetRemoteData (0x553040) expands this header copy, zlib call and cleanup.
+MAC_ADDRESS(0x210e28, 0xbc)
 CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
 {
     unsigned long destSize = netMsg->m_uncompressedSize + sizeof(CNetMsg);
-    CNetMsg* result = static_cast<CNetMsg*>(::operator new(destSize));
+    CNetMsg* result = reinterpret_cast<CNetMsg*>(new char[destSize]);
     *result = *netMsg;
     destSize -= sizeof(CNetMsg);
     if (uncompress(static_cast<unsigned char*>(static_cast<void*>(result)) + sizeof(CNetMsg),
@@ -411,7 +429,11 @@ CNetMsg* CDPlayHeroes::uncompressMsg(CNetMsg* netMsg)
     return result;
 }
 
-VA(0x00553370, 0x5C)
+// Windows retains one sendIt join after choosing the packet, then releases
+// the compressed temporary through destroyMsg. Mac 0x210f50/0x210f78
+// instead retains separate compressed/original sends (cleanup at0x210f60);
+// the common helper paths are preserved, but that Mac flow is not yet exact.
+VA(0x00553370, 0x5C) MAC_ADDRESS(0x210ee4, 0xb4)
 bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
                                           unsigned long dpidTo,
                                           bool compressMsg, bool guaranteed)
@@ -419,15 +441,14 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
     msg->m_from = g_localGamePos;
     CNetMsg* compressedMsg = 0;
     msg->m_dpidFrom = g_thisNetPlayerInfo.m_dpid;
-    if (compressMsg) {
+    if (compressMsg)
         compressedMsg = this->compressMsg(msg);
-        if (compressedMsg)
-            msg = compressedMsg;
-    }
 
+    if (compressedMsg)
+        msg = compressedMsg;
     bool result = sendIt(msg, dpidTo, guaranteed);
     if (compressedMsg)
-        delete compressedMsg;
+        destroyMsg(compressedMsg);
     return result;
 }
 
@@ -466,7 +487,9 @@ bool CDPlayHeroes::transmitRemoteDataDPID(CNetMsg* msg,
 // CONSEQUENCE of the rotation, not an independent merge to spell.
 // Polish 49 adds the third loop form to that list: `int retries = 0;
 // while (retries <= 5) { ...; ++retries; }` is byte-identical at 88.8550.
-VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
+// Mac 0x210f98 sends through its native transport once; Windows retains the
+// DirectPlay retry and error-dialog flow around the corresponding send.
+VA(0x005533d0, 0x1AB) MAC_ADDRESS(0x210f98, 0x74)  // anchor-strings + virtual-slots + dc-order-map
 bool CDPlayHeroes::sendIt(CNetMsg* msg, unsigned long dpidTo,
                           bool guaranteed)
 {
@@ -529,7 +552,9 @@ void CDPlayHeroes::handleNewPlayer(unsigned long, char*, void*, unsigned long)
 {
 }
 
-VA(0x00553580, 0x1F0)
+// Both builds construct a player-drop message and queue it; Mac uses the
+// native network identity passed from its transport layer.
+VA(0x00553580, 0x1F0) MAC_ADDRESS(0x21100c, 0x7c)
 void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 {
     g_logFile.log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
@@ -543,9 +568,10 @@ void CDPlayHeroes::handlePlayerDrop(unsigned long dpid)
 // allocation/copy into both member drop paths; the standalone handler also
 // expands Dinkumware's push_back internals, while SendIt's nested occurrence
 // stops at that template boundary.
+MAC_ADDRESS(0x211088, 0x64)
 void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 {
-    void* storage = ::operator new(netMsg->m_size);
+    void* storage = new char[netMsg->m_size];
     memcpy(storage, netMsg, netMsg->m_size);
     m_msgQueue.push_back(static_cast<CNetMsg*>(storage));
 }
@@ -554,7 +580,7 @@ void CDPlayHeroes::queueMsg(CNetMsg* netMsg)
 // combined condition keeps this body exact but costs 62 VC6 inline units;
 // nested ifs cost 71. WaitForReadyToPlayMsg's ready-path cleanup has budget 64:
 // this source form expands SetNetMsgHandler and retains Copy exactly as retail.
-VA(0x00553770, 0x30)  // dc 0x11c268
+VA(0x00553770, 0x30) MAC_ADDRESS(0x2110ec, 0x60)  // dc 0x11c268
 void CDPlayHeroes::setNetMsgHandler(CNetMsgHandler* netMsgHandler)
 {
     CNetMsgHandler* old = m_netMsgHandler;
@@ -563,7 +589,7 @@ void CDPlayHeroes::setNetMsgHandler(CNetMsgHandler* netMsgHandler)
         m_netMsgHandler->copy(old);
 }
 
-VA(0x005537a0, 0x7)  // dc 0x11c290
+VA(0x005537a0, 0x7) MAC_ADDRESS(0x21114c, 0x8)  // dc 0x11c290
 CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 {
     return m_netMsgHandler;
@@ -572,6 +598,7 @@ CNetMsgHandler* CDPlayHeroes::getNetMsgHandler()
 // Original: CChatManager::CChatManager; remote.cpp:804, dc 0x11c298
 // Retail initializer 0x5521c0 constructs g_chatMan with 20 lines. It adds
 // the Miles handle at +0x28 between isSysMsg and the five sample stores.
+MAC_ADDRESS(0x2113a0, 0x7c)
 CChatManager::CChatManager(int maxChatLines)
 {
     m_currMsg = 0;
@@ -601,7 +628,7 @@ CChatManager::~CChatManager()
     delete[] m_msgArray;
 }
 
-VA(0x005537b0, 0x46)  // dc 0x11c330
+VA(0x005537b0, 0x46) MAC_ADDRESS(0x211484, 0x64)  // dc 0x11c330
 void CChatManager::init()
 {
     m_chatSample = ResourceManager::getSample(
@@ -616,7 +643,7 @@ void CChatManager::init()
         DATA_COMPGEN(0x00682af4, playerEnterSampleName, "playcome.wav"));
 }
 
-VA(0x00553800, 0x31)  // dc 0x11c374
+VA(0x00553800, 0x31) MAC_ADDRESS(0x2114e8, 0x9c)  // dc 0x11c374
 void CChatManager::shutDown()
 {
     if (m_chatSample) {
@@ -628,7 +655,7 @@ void CChatManager::shutDown()
     }
 }
 
-VA(0x00553840, 0x11B)  // dc 0x11c3a8
+VA(0x00553840, 0x11B) MAC_ADDRESS(0x211584, 0x148)  // dc 0x11c3a8
 void CChatManager::addChat(const char* format, ...)
 {
     char chatText[1024];
@@ -656,18 +683,8 @@ void CChatManager::addChat(const char* format, ...)
     m_changed = 1;
 
     if (!m_isSysMsg) {
-        if (m_chatMemSample
-            && g_soundManager->getSampleInfo(
-                m_chatMemSample, AIL_SAMPLE_PLAYING))
-            return;
-        sample* chatSample = m_chatSample;
-        if (chatSample) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(chatSample);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
+        // Mac 0:0x2116a8 passes null to the retained sound helper.
+        playChatSample(0);
     }
 }
 
@@ -678,7 +695,7 @@ void CChatManager::addChat(const char* format, ...)
 // and falls back to chat.wav. A positive display scope removes the
 // skip-chat goto with identical VC6 scores throughout this TU, retaining
 // the common sound tail and the order of the short-circuit time checks.
-VA(0x00553960, 0x136)  // anchor-callees + arity/order-map, dc 0x11c4ac
+VA(0x00553960, 0x136) MAC_ADDRESS(0x2116cc, 0x120)  // anchor-callees + arity/order-map, dc 0x11c4ac
 void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
 {
     char chatText[1024];
@@ -705,29 +722,17 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
         sprintf(
             finalText,
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
-            g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
+            (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
             chatText);
         m_isSysMsg = 1;
         addChat(finalText);
         m_isSysMsg = 0;
     }
 
-    sample* sampleToPlay = m_turnDurSample;
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_turnDurSample);
 }
 
-VA(0x00553aa0, 0xC0)  // dc 0x11c558
+VA(0x00553aa0, 0xC0) MAC_ADDRESS(0x2117ec, 0xa4)  // dc 0x11c558
 void __cdecl CChatManager::systemMsg(const char* format, ...)
 {
     char chatText[1024];
@@ -743,24 +748,11 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_sysMsgSample;
     m_isSysMsg = 0;
-
-    if (m_chatMemSample
-        && g_soundManager->getSampleInfo(
-            m_chatMemSample, AIL_SAMPLE_PLAYING))
-        return;
-    if (!sampleToPlay)
-        sampleToPlay = m_chatSample;
-    if (sampleToPlay) {
-        int soundWasEnabled = g_soundManager->m_playSounds;
-        g_soundManager->m_playSounds = 1;
-        m_chatMemSample = g_soundManager->memorySample(sampleToPlay);
-        g_soundManager->m_playSounds = soundWasEnabled;
-    }
+    playChatSample(m_sysMsgSample);
 }
 
-VA(0x00553b60, 0xCA)  // dc 0x11c5bc
+VA(0x00553b60, 0xCA) MAC_ADDRESS(0x211890, 0xa4)  // dc 0x11c5bc
 void CChatManager::playerDropMsg(const char* format, ...)
 {
     char chatText[1024];
@@ -776,25 +768,11 @@ void CChatManager::playerDropMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerDropSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerDropSample);
     m_isSysMsg = 0;
 }
 
-VA(0x00553c30, 0xCA)  // dc 0x11c658
+VA(0x00553c30, 0xCA) MAC_ADDRESS(0x211934, 0xa4)  // dc 0x11c658
 void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 {
     char chatText[1024];
@@ -810,27 +788,32 @@ void __cdecl CChatManager::playerEnterMsg(const char* format, ...)
 
     m_isSysMsg = 1;
     addChat(finalText);
-    sample* sampleToPlay = m_playerEnterSample;
-
-    if (!(m_chatMemSample
-          && g_soundManager->getSampleInfo(
-              m_chatMemSample, AIL_SAMPLE_PLAYING))) {
-        if (!sampleToPlay)
-            sampleToPlay = m_chatSample;
-        if (sampleToPlay) {
-            int soundWasEnabled = g_soundManager->m_playSounds;
-            g_soundManager->m_playSounds = 1;
-            m_chatMemSample =
-                g_soundManager->memorySample(sampleToPlay);
-            g_soundManager->m_playSounds = soundWasEnabled;
-        }
-    }
+    playChatSample(m_playerEnterSample);
     m_isSysMsg = 0;
+}
+
+// Mac +0x2119d8 retains one method called by all five chat formatters.
+// VC6 expands its sound-state and fallback sequence at those call sites.
+MAC_ADDRESS(0x2119d8, 0xa0)
+void CChatManager::playChatSample(sample* preferred)
+{
+    if (m_chatMemSample
+        && g_soundManager->getSampleInfo(
+            m_chatMemSample, AIL_SAMPLE_PLAYING))
+        return;
+    if (!preferred)
+        preferred = m_chatSample;
+    if (preferred) {
+        int soundWasEnabled = g_soundManager->m_playSounds;
+        g_soundManager->m_playSounds = 1;
+        m_chatMemSample = g_soundManager->memorySample(preferred);
+        g_soundManager->m_playSounds = soundWasEnabled;
+    }
 }
 
 // DC's UpdateWidget public encodes native bool for killOld; the retained
 // PC body tests that byte, and all authored callers supply 0 or 1.
-VA(0x00553d00, 0xA1)  // dc 0x11c6bc
+VA(0x00553d00, 0xA1) MAC_ADDRESS(0x211a78, 0xbc)  // dc 0x11c6bc
 void CChatManager::updateWidget(textWidget* widget, bool killOld, int numLines)
 {
     if (m_pauseTime == 0) {
@@ -850,6 +833,7 @@ void CChatManager::updateWidget(textWidget* widget, bool killOld, int numLines)
 // E:\gamedcs\remote.cpp:1060/1065. DC records these named source helpers.
 // AddChat uses the first canonical helper; retail /Ob2 also expands the
 // second at both surviving KillOldChat call sites.
+MAC_ADDRESS(0x211b34, 0x20)
 int CChatManager::getNextFreeMsgNbr()
 {
     return (m_currMsg + m_msgCount) % m_maxLines;
@@ -857,21 +841,22 @@ int CChatManager::getNextFreeMsgNbr()
 
 // E:\gamedcs\remote.cpp:1065.
 // Retail KillOldChat expands this helper at both surviving call sites.
+MAC_ADDRESS(0x211b54, 0x18)
 int CChatManager::getNextMsgNbr(int msgNbr)
 {
     return (msgNbr + 1) % m_maxLines;
 }
 
-VA(0x00553db0, 0x33)  // dc 0x11c754
+VA(0x00553db0, 0x33) MAC_ADDRESS(0x211b6c, 0x6c)  // dc 0x11c754
 unsigned char CChatManager::hasOldChat()
 {
     if (m_msgCount == 0)
         return 0;
     unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
-    return static_cast<long>(GameTime::get() - killTime) > 20000;
+    return GameTime::elapsedSince(killTime) > 20000;
 }
 
-VA(0x00553df0, 0xE4)  // dc 0x11c7b0
+VA(0x00553df0, 0xE4) MAC_ADDRESS(0x211bd8, 0x11c)  // dc 0x11c7b0
 void CChatManager::killOldChat()
 {
     m_chatKilled = 0;
@@ -904,6 +889,7 @@ void CChatManager::killOldChat()
 }
 
 // Original: CChatManager::UpdateNewChat; remote.cpp:1115, dc 0x11c87c
+MAC_ADDRESS(0x211cf4, 0x90)
 void CChatManager::updateNewChat()
 {
     int msgNbr = m_currMsg;
@@ -914,7 +900,7 @@ void CChatManager::updateNewChat()
     }
 }
 
-VA(0x00553ee0, 0x163)  // dc 0x11c8d0
+VA(0x00553ee0, 0x163) MAC_ADDRESS(0x211d84, 0x16c)  // dc 0x11c8d0
 void CChatManager::updateWidgetText(int numLines, textWidget* widget)
 {
     int lineCounts[20];
@@ -937,7 +923,7 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
     for (i = firstMsg; i <= lastMsg; i++) {
         lineCounts[lineNbr] =
             widget->m_font->lineLength(m_msgArray[msgNbr].m_text, widget->m_width);
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         totalLines += lineCounts[lineNbr];
         lineNbr++;
     }
@@ -955,19 +941,19 @@ void CChatManager::updateWidgetText(int numLines, textWidget* widget)
         if (i < lastMsg)
             strcat(m_widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
         i++;
-        msgNbr = (msgNbr + 1) % m_maxLines;
+        msgNbr = getNextMsgNbr(msgNbr);
         if (msgNbr == m_currMsg)
             break;
     }
 }
 
-VA(0x00554050, 0xD)  // dc 0x11c9fc
+VA(0x00554050, 0xD) MAC_ADDRESS(0x211ef0, 0x30)  // dc 0x11c9fc
 void CChatManager::pauseTimeOuts()
 {
     m_pauseTime = GameTime::get();
 }
 
-VA(0x00554060, 0x4B)  // dc 0x11ca14
+VA(0x00554060, 0x4B) MAC_ADDRESS(0x211f20, 0x78)  // dc 0x11ca14
 void CChatManager::resumeTimeOuts()
 {
     for (int i = 0; i < 20; i++) {
@@ -986,7 +972,7 @@ unsigned char CChatManager::hasChat()
     return m_msgCount > 0;
 }
 
-VA(0x005540b0, 0x20)  // dc 0x11ca70
+VA(0x005540b0, 0x20) MAC_ADDRESS(0x211f98, 0xc0)  // dc 0x11ca70
 void CChatManager::clearChat()
 {
     m_msgCount = 0;
@@ -995,7 +981,7 @@ void CChatManager::clearChat()
         m_msgArray[i].m_killTime = 0;
 }
 
-VA(0x005540d0, 0x9C)  // dc 0x11cabc
+VA(0x005540d0, 0x9C) MAC_ADDRESS(0x212058, 0xc0)  // dc 0x11cabc
 void CChatManager::setMaxLines(int maxChatLines)
 {
     if (m_widgetText)
@@ -1007,7 +993,7 @@ void CChatManager::setMaxLines(int maxChatLines)
     clearChat();
 }
 
-VA(0x00554170, 0x23)  // dc 0x11cb24
+VA(0x00554170, 0x23) MAC_ADDRESS(0x21212c, 0x30)  // dc 0x11cb24
 void CChatManager::setPosition(int newPos)
 {
     if (newPos < 0)
@@ -1018,7 +1004,7 @@ void CChatManager::setPosition(int newPos)
     m_changed = 1;
 }
 
-VA(0x005541a0, 0x5A)  // dc 0x11cb48
+VA(0x005541a0, 0x5A) MAC_ADDRESS(0x21215c, 0x84)  // dc 0x11cb48
 CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
     char* fontName, font::TColor color, font::EJustify justification,
     char* backgroundIcon, int backgroundFrame, int id, int style,
@@ -1029,7 +1015,7 @@ CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
 {
 }
 
-VA(0x00554200, 0x36)  // dc 0x11cbf4
+VA(0x00554200, 0x36) MAC_ADDRESS(0x2121e0, 0x68)  // dc 0x11cbf4
 void CChatEdit::updateScreen()
 {
     draw();
@@ -1037,7 +1023,9 @@ void CChatEdit::updateScreen()
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
-VA(0x00554240, 0xEA)  // dc 0x11cc2c
+// Mac 0x212430..0x212794 retains each function-key virtual call with
+// its literal recipient, rather than one call after key arithmetic.
+VA(0x00554240, 0xEA) MAC_ADDRESS(0x212248, 0x59c)  // dc 0x11cc2c
 int CChatEdit::onKeyPress(message* msg)
 {
     int key = getCharPressed(msg);
@@ -1046,6 +1034,26 @@ int CChatEdit::onKeyPress(message* msg)
             return onEnter(*msg);
         case KEYCODE_ESCAPE:
             return onEscape(*msg);
+#if defined(HOMM3_TARGET_MAC)
+        case KEYCODE_F1:
+            return onFunctionKey(*msg, 0);
+        case KEYCODE_F2:
+            return onFunctionKey(*msg, 1);
+        case KEYCODE_F3:
+            return onFunctionKey(*msg, 2);
+        case KEYCODE_F4:
+            return onFunctionKey(*msg, 3);
+        case KEYCODE_F5:
+            return onFunctionKey(*msg, 4);
+        case KEYCODE_F6:
+            return onFunctionKey(*msg, 5);
+        case KEYCODE_F7:
+            return onFunctionKey(*msg, 6);
+        case KEYCODE_F8:
+            return onFunctionKey(*msg, 7);
+#else
+        // Windows and Dreamcast's contiguous F-key scan codes permit one
+        // recipient computation; Classic Mac's native codes above are sparse.
         case KEYCODE_F1:
         case KEYCODE_F2:
         case KEYCODE_F3:
@@ -1055,6 +1063,7 @@ int CChatEdit::onKeyPress(message* msg)
         case KEYCODE_F7:
         case KEYCODE_F8:
             return onFunctionKey(*msg, key - KEYCODE_F1);
+#endif
     }
 
     int result = textEntryWidget::onKeyPress(msg);
@@ -1062,7 +1071,7 @@ int CChatEdit::onKeyPress(message* msg)
     return result;
 }
 
-VA(0x00554330, 0x44)  // dc 0x11cd14
+VA(0x00554330, 0x44) MAC_ADDRESS(0x2127e4, 0x7c)  // dc 0x11cd14
 int CChatEdit::onFunctionKey(message msg, int toWho)
 {
     if (m_text.size() > 0)
@@ -1073,7 +1082,7 @@ int CChatEdit::onFunctionKey(message msg, int toWho)
     return 1;
 }
 
-VA(0x00554380, 0x3E)  // dc 0x11cd64
+VA(0x00554380, 0x3E) MAC_ADDRESS(0x212860, 0x7c)  // dc 0x11cd64
 int CChatEdit::onEnter(message msg)
 {
     if (m_text.size() > 0)
@@ -1084,7 +1093,7 @@ int CChatEdit::onEnter(message msg)
     return 1;
 }
 
-VA(0x005543c0, 0x1F)  // dc 0x11cdb0
+VA(0x005543c0, 0x1F) MAC_ADDRESS(0x2128dc, 0x4c)  // dc 0x11cdb0
 int CChatEdit::onEscape(message msg)
 {
     setupDisplayString(
@@ -1093,7 +1102,7 @@ int CChatEdit::onEscape(message msg)
     return 1;
 }
 
-VA(0x005543e0, 0x9)  // dc 0x11cddc
+VA(0x005543e0, 0x9) MAC_ADDRESS(0x212928, 0x1c)  // dc 0x11cddc
 bool CChatEdit::isOpen()
 {
     if (m_text.size() > 0)
@@ -1101,20 +1110,20 @@ bool CChatEdit::isOpen()
     return false;
 }
 
-VA(0x005543f0, 0x5)  // dc 0x11cdf8
+VA(0x005543f0, 0x5) MAC_ADDRESS(0x212944, 0x8)  // dc 0x11cdf8
 unsigned char CChatEdit::ignoreKey(message* msg)
 {
     return 0;
 }
 
-VA(0x00554400, 0xF)  // dc 0x11cdfc
+VA(0x00554400, 0xF) MAC_ADDRESS(0x21294c, 0x30)  // dc 0x11cdfc
 CNetMsg* getRemoteData(unsigned char removeFromQueue,
                        unsigned char* wasCompressed)
 {
     return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
 
-VA(0x00554410, 0x93)
+VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)
 unsigned char initRemote(eNetGameType mpType, const char* userName)
 {
     CNetPlayerInfo playerInfo;
@@ -1123,9 +1132,6 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    playerInfo.m_dpid = 0;
-    playerInfo.m_name[0] = 0;
-    playerInfo.m_version = g_gameContext;
     g_thisNetPlayerInfo = playerInfo;
 
     strcpy(g_config.m_networkDefaultName, userName);
@@ -1136,7 +1142,7 @@ unsigned char initRemote(eNetGameType mpType, const char* userName)
     return 1;
 }
 
-VA(0x005544b0, 0xAA)
+VA(0x005544b0, 0xAA) MAC_ADDRESS(0x212a50, 0x138)
 void remoteCleanup()
 {
     g_gameMode = 0;
@@ -1154,16 +1160,14 @@ void remoteCleanup()
 
         g_remoteOn = 0;
         {
+            // Mac 0x212b14 constructs this record once, then copies it.
             CNetPlayerInfo playerInfo;
-            playerInfo.m_dpid = 0;
-            playerInfo.m_name[0] = 0;
-            playerInfo.m_version = g_gameContext;
             g_thisNetPlayerInfo = playerInfo;
         }
     }
 }
 
-VA(0x00554560, 0x82)
+VA(0x00554560, 0x82) MAC_ADDRESS(0x212b88, 0x68)
 int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed)
 {
@@ -1173,7 +1177,7 @@ int transmitRemoteDataDPID(CNetMsg* msg, unsigned long dpidTo,
     return 0;
 }
 
-VA(0x005545f0, 0xBA)
+VA(0x005545f0, 0xBA) MAC_ADDRESS(0x212bf0, 0x68)
 int transmitRemoteData(CNetMsg* msg, int toWho,
                        bool compressMsg, bool guaranteed)
 {
@@ -1183,7 +1187,7 @@ int transmitRemoteData(CNetMsg* msg, int toWho,
     return 0;
 }
 
-VA(0x005546b0, 0x103)
+VA(0x005546b0, 0x103) MAC_ADDRESS(0x212c58, 0x118)
 void pollRemote()
 {
     if (g_gameOver || !g_remoteOn || !g_dPlay)
@@ -1196,7 +1200,8 @@ void pollRemote()
                    > g_playerActiveUpdateInterval) {
             g_lastActiveUpdate = GameTime::get();
             CPlayerActiveMsg msg;
-            transmitRemoteDataDPID(&msg, 0, false, false);
+            // Mac 0x212d40 retains the player-recipient broadcast wrapper.
+            transmitRemoteData(&msg, NET_MESSAGE_RECIPIENT_ALL, false, false);
         }
     } else {
         g_lastActiveUpdate = 0;
@@ -1205,7 +1210,7 @@ void pollRemote()
     g_dPlay->pollRemote();
 }
 
-VA(0x005547c0, 0x25A)  // dc 0x11d020
+VA(0x005547c0, 0x25A) MAC_ADDRESS(0x212d70, 0x220)  // dc 0x11d020
 void sendChat(const char* chatString, int toWho)
 {
     if (_strcmpi(chatString,
@@ -1256,14 +1261,14 @@ void sendChat(const char* chatString, int toWho)
     transmitRemoteData(&msg, toWho, false, false);
 }
 
-VA(0x00554a20, 0x21)  // dc 0x11d1c8
+VA(0x00554a20, 0x21) MAC_ADDRESS(0x212f90, 0x48)  // dc 0x11d1c8
 void receiveChat(char* chatString, int fromPlayer)
 {
     g_chatMan.addChat(DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
         g_game->getPlayerName(fromPlayer), chatString);
 }
 
-VA(0x00554a50, 0x22)  // dc 0x11d1ec
+VA(0x00554a50, 0x22) MAC_ADDRESS(0x212fd8, 0x50)  // dc 0x11d1ec
 CAnimatedDlg::CAnimatedDlg()
     : CTextDialog(0x12)
 {
@@ -1273,7 +1278,7 @@ CAnimatedDlg::CAnimatedDlg()
     m_palUpdated = 0;
 }
 
-VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
+VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg) MAC_COMPGEN_ADDRESS(0x213028, 0x8c, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
 // E:\gamedcs\remote.cpp:1547, dc 0x11d250
 // WaitForReadyToPlayMsg calls this destructor out of line.
@@ -1284,7 +1289,7 @@ CAnimatedDlg::~CAnimatedDlg()
         m_sprite->dispose();
 }
 
-VA(0x00554b10, 0x20)  // dc 0x11d290
+VA(0x00554b10, 0x20) MAC_ADDRESS(0x2130b4, 0x28)  // dc 0x11d290
 unsigned char CAnimatedDlg::setup(
     const char* text, font* textFont, const char* spriteName, int sequence)
 {
@@ -1293,7 +1298,7 @@ unsigned char CAnimatedDlg::setup(
     return CTextDialog::setup(text, textFont);
 }
 
-VA(0x00554b30, 0xF5)  // dc 0x11d2b0
+VA(0x00554b30, 0xF5) MAC_ADDRESS(0x2130dc, 0x10c)  // dc 0x11d2b0
 void CAnimatedDlg::calcSpriteDimensions(
     CSprite* sprite, int& maxWidth, int& maxHeight, int& minY)
 {
@@ -1327,7 +1332,7 @@ void CAnimatedDlg::calcSpriteDimensions(
     maxHeight = height - minY;
 }
 
-VA(0x00554c30, 0xB8)  // dc 0x11d394
+VA(0x00554c30, 0xB8) MAC_ADDRESS(0x2131e8, 0xfc)  // dc 0x11d394
 void CAnimatedDlg::calcDimensions(
     const char* text, font* textFont, int& winX, int& winY,
     int& winWidth, int& winHeight)
@@ -1353,7 +1358,7 @@ void CAnimatedDlg::calcDimensions(
     winY = (600 - winHeight) / 2;
 }
 
-VA(0x00554cf0, 0x94)  // dc 0x11d490
+VA(0x00554cf0, 0x94) MAC_ADDRESS(0x2132e4, 0xd8)  // dc 0x11d490
 void CAnimatedDlg::drawSprite()
 {
     int s0x = m_sprite->getCroppedX(m_seq, m_spriteFrame);
@@ -1367,19 +1372,19 @@ void CAnimatedDlg::drawSprite()
         g_windowManager->m_screenBitmap, dx, dy, 0, 0);
 }
 
-VA(0x00554d90, 0x80)  // dc 0x11d558
+VA(0x00554d90, 0x80) MAC_ADDRESS(0x2133bc, 0x24)  // dc 0x11d558
 int CAnimatedDlg::handleMessage(message& msg)
 {
     tickAnimation();
     return 0;
 }
 
-VA(0x00554e10, 0x7C)  // dc 0x11d56c
+VA(0x00554e10, 0x7C) MAC_ADDRESS(0x2133e0, 0xf0)  // dc 0x11d56c
 void CAnimatedDlg::tickAnimation()
 {
     unsigned long currentTime = GameTime::get();
     unsigned long lastTick = m_lastTick;
-    if (static_cast<long>(GameTime::get() - lastTick) >= 200) {
+    if (GameTime::elapsedSince(lastTick) >= 200) {
         m_spriteFrame = (m_spriteFrame + 1)
                       % m_sprite->getNumFrames(m_seq);
         m_lastTick = currentTime;
@@ -1388,7 +1393,7 @@ void CAnimatedDlg::tickAnimation()
     }
 }
 
-VA(0x00554e90, 0x7D)  // dc 0x11d5dc
+VA(0x00554e90, 0x7D) MAC_ADDRESS(0x2134d0, 0xc4)  // dc 0x11d5dc
 void CAnimatedDlg::drawWindow(unsigned char update, int lowID, int highID)
 {
     if (!m_palUpdated) {
@@ -1425,12 +1430,9 @@ void CWaitForReadyPlayersDlg::wait()
     m_startTime = GameTime::get();
     sRand(m_startTime);
 
-    int creature;
-    do {
-        // Complete calls Random (retail 0x554f10+0x13b); DC1723 calls SRandom.
-        creature = random(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
+        creature = sRandom(0, 111);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_READY_PLAYERS), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
@@ -1444,6 +1446,7 @@ void CWaitForReadyPlayersDlg::wait()
 
 // E:\gamedcs\remote.cpp:1798. Dreamcast's `_N` return mangling proves bool;
 // retail independently proves the eight-entry human/ready scan when inlined.
+MAC_ADDRESS(0x216110, 0x7c)
 bool CWaitForReadyPlayersDlg::allPlayersReady()
 {
     for (int i = 0; i < 8; ++i) {
@@ -1479,7 +1482,7 @@ int CWaitForReadyPlayersDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 // flag is T_UCHAR, so changing its type to bool would discard source evidence.
 // Earlier controls: inverted Wait/return contradicts DC's condition/return
 // scope; a depth-zero return calls the entire derived destructor (70.4658%).
-VA(0x00554f10, 0x23A)  // anchor-vtable + dc-order-map, dc 0x11d6c8
+VA(0x00554f10, 0x23A) MAC_ADDRESS(0x213594, 0x1ec)  // anchor-vtable + dc-order-map, dc 0x11d6c8
 void waitForReadyToPlayMsg()
 {
     CWaitForReadyPlayersDlg dlg;
@@ -1489,7 +1492,7 @@ void waitForReadyToPlayMsg()
     dlg.wait();
 }
 
-VA(0x00555190, 0x319)  // dc 0x11f9f0
+VA(0x00555190, 0x319) MAC_ADDRESS(0x215e2c, 0x2e4)  // dc 0x11f9f0
 int CWaitForReadyPlayersDlg::handleMessage(message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
@@ -1638,7 +1641,7 @@ unsigned char initConnection(char* ipAddressOrPhoneNbr,
     return 1;
 }
 
-VA(0x00555910, 0x08)  // dc 0x11d8ec
+VA(0x00555910, 0x08) MAC_ADDRESS(0x21393c, 0x20)  // dc 0x11d8ec
 void destroyMsg(CNetMsg* netMsg)
 {
     delete netMsg;
@@ -1855,6 +1858,7 @@ unsigned char lobbyLaunchConnect()
 // E:\gamedcs\remote.cpp:2150. Retail has no surviving out-of-line copy:
 // HandlePlayerDrop expands the eight-player DPID search and consumes -1 as
 // its not-found sentinel.
+MAC_ADDRESS(0x213ba4, 0xec)
 int getPlayerPos(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i) {
@@ -1867,6 +1871,7 @@ int getPlayerPos(unsigned long dpid)
 // E:\gamedcs\remote.cpp:2161. Retail has no surviving out-of-line copy:
 // both HandleNewHost expansions keep the candidate in a register, wrap at
 // zero and ask game::IsHuman until they find the prior human seat.
+MAC_ADDRESS(0x213c90, 0x58)
 int getPriorPlayer(int gamePos)
 {
     do {
@@ -1880,6 +1885,7 @@ int getPriorPlayer(int gamePos)
 // E:\gamedcs\remote.cpp:2174. DC supplies this source boundary and the
 // CDPlayPlayer member names. Retail expands it into UpdateCurrentPlayers:
 // virtual GetCount/Get calls remain, while GetId becomes the +0x100 load.
+MAC_ADDRESS(0x213ce8, 0x94)
 static inline unsigned char isValidHuman(
     CAutoArray<CDPlayPlayer>& playerArray, unsigned long dpid)
 {
@@ -1890,7 +1896,7 @@ static inline unsigned char isValidHuman(
     return 0;
 }
 
-VA(0x005562e0, 0x14E)  // dc 0x11df10
+VA(0x005562e0, 0x14E) MAC_ADDRESS(0x213d7c, 0x168)  // dc 0x11df10
 void updateCurrentPlayers()
 {
     CAutoArray<CDPlayPlayer> playerArray;
@@ -1912,7 +1918,7 @@ void updateCurrentPlayers()
     playerArray.destroy(1);
 }
 
-VA(0x00556430, 0x1A1)  // dc 0x11e01c
+VA(0x00556430, 0x1A1) MAC_ADDRESS(0x213ee4, 0x178)  // dc 0x11e01c
 void handlePlayerDrop(unsigned long dpid)
 {
     int playerPos = getPlayerPos(dpid);
@@ -1957,6 +1963,7 @@ void handlePlayerDrop(unsigned long dpid)
 // both call edges; retail /Ob2 expands it into CLevelPickWaitDlg's dispatcher
 // and CNetMsgHandler::HandleNetMsg, leaving no standalone body. The two PC
 // copies agree on every global, message field, and call.
+MAC_ADDRESS(0x21405c, 0xe0)
 void handleNewHost()
 {
     g_logFile.log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
@@ -1986,7 +1993,7 @@ void handleNewHost()
 // rejected. The refreshed structure pass has all 8 edges aligned (only B4 is
 // one instruction smaller); predict-inline independently isolates that same
 // TDialogBox cleanup as the sole real over-inline call boundary.
-VA(0x005565e0, 0x19E)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
+VA(0x005565e0, 0x19E) MAC_ADDRESS(0x21413c, 0x1d4)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
 void onPlayerDropUpdateMsg(unsigned long dpid)
 {
     g_logFile.log(DATA_COMPGEN(0x00682e24, playerDropUpdateLog,
@@ -1995,7 +2002,7 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
 
     g_mouseManager->setPointer(1, mouseManager::ADVENTURE_SET);
     CTextDialog dlg(0x12);
-    dlg.setup(g_generalText->getText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
+    dlg.setup((*g_generalText)[GENERAL_TEXT_PLAYER_DROP_RELOAD],
               g_mediumFont);
     dlg.open(0, 1);
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
@@ -2032,7 +2039,7 @@ void onPlayerDropUpdateMsg(unsigned long dpid)
     }
 }
 
-VA(0x00556780, 0x1C0)  // dc 0x11e39c
+VA(0x00556780, 0x1C0) MAC_ADDRESS(0x214310, 0x1ac)  // dc 0x11e39c
 void handlePlayerDead(int deadGuy, unsigned char showMsg)
 {
     g_game->m_playerDisabled[deadGuy] = 1;
@@ -2065,7 +2072,7 @@ void handlePlayerDead(int deadGuy, unsigned char showMsg)
     }
 }
 
-VA(0x00556940, 0x5E)  // dc 0x11e494
+VA(0x00556940, 0x5E) MAC_ADDRESS(0x2144bc, 0xb8)  // dc 0x11e494
 void handlePlayerWon(CNetMsg* netMsg)
 {
     CPlayerWonMsg* message = static_cast<CPlayerWonMsg*>(netMsg);
@@ -2084,7 +2091,7 @@ void handlePlayerWon(CNetMsg* netMsg)
         g_defeatedAllPlayers = 1;
 }
 
-VA(0x005569a0, 0x4B)  // dc 0x11e500
+VA(0x005569a0, 0x4B) MAC_ADDRESS(0x214574, 0x74)  // dc 0x11e500
 void handlePlayerLost(CNetMsg* netMsg)
 {
     CPlayerLostMsg* message = static_cast<CPlayerLostMsg*>(netMsg);
@@ -2100,7 +2107,7 @@ void handlePlayerLost(CNetMsg* netMsg)
         g_defeatedAllPlayers = 1;
 }
 
-VA(0x005569f0, 0xB4)  // dc 0x11e598
+VA(0x005569f0, 0xB4) MAC_ADDRESS(0x2145e8, 0x160)  // dc 0x11e598
 void handleNormalWinMsg(CNetMsg* netMsg)
 {
     CNormalWinMsg* message = static_cast<CNormalWinMsg*>(netMsg);
@@ -2119,24 +2126,22 @@ void handleNormalWinMsg(CNetMsg* netMsg)
     }
 }
 
-VA(0x00556ab0, 0xB6)  // dc 0x11e630
+VA(0x00556ab0, 0xB6) MAC_ADDRESS(0x214748, 0x58)  // dc 0x11e630
 CLevelPickWaitDlg::CLevelPickWaitDlg()
 {
     m_fromWho = -1;
     m_playerDropped = 0;
 }
 
-VA(0x00556ba0, 0x72)  // dc 0x11e6a4
+VA(0x00556ba0, 0x72) MAC_ADDRESS(0x2147a0, 0xd4)  // dc 0x11e6a4
 void CLevelPickWaitDlg::waitForLevels(int fromWho)
 {
     m_fromWho = fromWho;
     sRand(GameTime::get());
 
-    int creature;
-    do {
-        creature = random(0, 111);
-    } while (creature == CREATURE_ARCH_DEVIL
-             || creature == CREATURE_DEVIL);
+    int creature = sRandom(0, 111);
+    while (creature == CREATURE_ARCH_DEVIL || creature == CREATURE_DEVIL)
+        creature = sRandom(0, 111);
 
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_LEVEL_SELECTION), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 0);
@@ -2145,7 +2150,7 @@ void CLevelPickWaitDlg::waitForLevels(int fromWho)
 
 VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
 
-VA(0x00556c20, 0x2F5)  // dc 0x11e718
+VA(0x00556c20, 0x2F5) MAC_ADDRESS(0x214874, 0x178)  // dc 0x11e718
 int CLevelPickWaitDlg::handleMessage(message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
@@ -2185,6 +2190,7 @@ int CLevelPickWaitDlg::handleMessage(message& msg)
 // E:\gamedcs\remote.cpp:2546. Retail expands this source boundary into the
 // dispatcher. A drop from the player whose level choice is pending marks the
 // modal and closes it; every other drop is still handed to the global handler.
+MAC_ADDRESS(0x2149ec, 0x88)
 int CLevelPickWaitDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
@@ -2208,6 +2214,7 @@ void hero::setPrimarySkills(const signed char* stats)
 // E:\gamedcs\remote.cpp:2567. DC names the message fields; retail proves
 // their offsets by copying the 28 secondary-skill levels and four primary
 // stats into the selected hero before replacing the secondary-skill count.
+MAC_ADDRESS(0x214a74, 0x8c)
 void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
 {
     CHeroLevelUpdateMsg* levelMsg =
@@ -2221,7 +2228,7 @@ void CLevelPickWaitDlg::onHeroLevelUpdate(CNetMsg* netMsg)
     }
 }
 
-VA(0x00556f20, 0x13C)  // dc 0x11e8e0
+VA(0x00556f20, 0x13C) MAC_ADDRESS(0x214b00, 0x104)  // dc 0x11e8e0
 CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
 {
     m_playerPos = 0;
@@ -2234,17 +2241,17 @@ CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
 VA_COMPGEN(0x00557060, 0x21, SCALAR_DELETING_DTOR,
            CWaitForRemoteBattleDlg)
 
-VA(0x00557090, 0x5C)  // dc 0x11e948
+VA(0x00557090, 0x5C) MAC_ADDRESS(0x214c04, 0xac)  // dc 0x11e948
 void CWaitForRemoteBattleDlg::wait(int playerPos)
 {
     m_playerPos = playerPos;
-    int creature = random(0, 111);
+    int creature = sRandom(0, 111);
     setup(g_generalText->getText(GENERAL_TEXT_WAIT_FOR_REMOTE_BATTLE), g_mediumFont,
           g_creatureTypeTraits[creature].m_spriteName, 12);
     doModal(0);
 }
 
-VA(0x005570f0, 0x1E9)  // dc 0x11e9a0
+VA(0x005570f0, 0x1E9) MAC_ADDRESS(0x214cb0, 0x1b8)  // dc 0x11e9a0
 int CWaitForRemoteBattleDlg::handleMessage(message& msg)
 {
     CAnimatedDlg::handleMessage(msg);
@@ -2288,6 +2295,7 @@ int CWaitForRemoteBattleDlg::handleMessage(message& msg)
 // E:\gamedcs\remote.cpp:2660. Retail expands the helper into the dispatcher:
 // it resolves and processes every dropped DPID, but closes this modal only
 // when the dropped player is the combat peer it is waiting for.
+MAC_ADDRESS(0x214e68, 0x84)
 int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
 {
     int gamePos = g_game->getGamePosFromDPID(netMsg->m_dpidFrom);
@@ -2297,7 +2305,7 @@ int CWaitForRemoteBattleDlg::onPlayerDrop(CNetMsg* netMsg, message& msg)
     return 0;
 }
 
-VA(0x005572e0, 0x2D)  // dc 0x11eb40
+VA(0x005572e0, 0x2D) MAC_ADDRESS(0x214eec, 0x48)  // dc 0x11eb40
 CSaveScreen::CSaveScreen(int w, int h)
     : Bitmap16Bit(w, h)
 {
@@ -2309,7 +2317,7 @@ CSaveScreen::CSaveScreen(int w, int h)
 VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 VA_COMPGEN(0x00557340, 0x05, IMPLICIT_DTOR, CSaveScreen)
 
-VA(0x00557350, 0x3A)  // dc 0x11eb9c
+VA(0x00557350, 0x3A) MAC_ADDRESS(0x214f34, 0x54)  // dc 0x11eb9c
 void CSaveScreen::save(int x, int y)
 {
     m_x = x;
@@ -2318,7 +2326,7 @@ void CSaveScreen::save(int x, int y)
     grab(g_windowManager->m_screenBitmap, x, y);
 }
 
-VA(0x00557390, 0x69)  // dc 0x11ebc8
+VA(0x00557390, 0x69) MAC_ADDRESS(0x214f88, 0xb8)  // dc 0x11ebc8
 void CSaveScreen::restore(unsigned char update)
 {
     if (m_screenSaved) {
@@ -2329,7 +2337,7 @@ void CSaveScreen::restore(unsigned char update)
     }
 }
 
-VA(0x00557400, 0x4)  // dc 0x11ec5c
+VA(0x00557400, 0x4) MAC_ADDRESS(0x215040, 0x8)  // dc 0x11ec5c
 unsigned char CSaveScreen::isSaved()
 {
     return m_screenSaved;
@@ -2337,7 +2345,7 @@ unsigned char CSaveScreen::isSaved()
 
 void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 
-VA(0x00557410, 0x1E)  // dc 0x11ec64
+VA(0x00557410, 0x1E) MAC_ADDRESS(0x215048, 0x2c)  // dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
 {
     m_x = 0;
@@ -2349,14 +2357,15 @@ CGameTransferSmack::CGameTransferSmack()
     m_drawText = 1;
 }
 
-VA(0x00557430, 0x22)  // dc 0x11ec88
+VA(0x00557430, 0x22) MAC_ADDRESS(0x215074, 0x84)  // dc 0x11ec88
 CGameTransferSmack::~CGameTransferSmack()
 {
-    stop();
+    if (m_started)
+        stop();
     delete m_saveScreen;
 }
 
-VA(0x00557460, 0x1E)  // dc 0x11ecbc
+VA(0x00557460, 0x1E) MAC_ADDRESS(0x2150f8, 0x14)  // dc 0x11ecbc
 void CGameTransferSmack::setup(int x, int y, unsigned char sending,
                                unsigned char drawText)
 {
@@ -2366,7 +2375,7 @@ void CGameTransferSmack::setup(int x, int y, unsigned char sending,
     m_drawText = drawText;
 }
 
-VA(0x00557480, 0x25)  // dc 0x11ecd8
+VA(0x00557480, 0x25) MAC_ADDRESS(0x21510c, 0x4c)  // dc 0x11ecd8
 void CGameTransferSmack::start()
 {
     m_started = 1;
@@ -2375,7 +2384,9 @@ void CGameTransferSmack::start()
 
 // DrawCurrentFrame is defined in remote.cpp:2784 in DC; the Windows
 // helper below calls the current-handle video wrapper at 0x598e80.
-VA(0x005574b0, 0x12D)  // dc 0x11ece4
+// Mac additionally clamps NaN progress to zero through MathLib::__fpclassifyf
+// at 0x215184; Windows proceeds directly to the frame calculation.
+VA(0x005574b0, 0x12D) MAC_ADDRESS(0x215158, 0x160)  // dc 0x11ece4
 void CGameTransferSmack::setPercentage(float pct)
 {
     m_lastFrame = static_cast<int>(pct * 20.0f);
@@ -2404,13 +2415,14 @@ void CGameTransferSmack::setPercentage(float pct)
 // DC retains an empty body on the console; retail SetPercentage calls the
 // Windows video draw wrapper through this source helper.
 // E:\gamedcs\remote.cpp:2784, dc 0x11ede8
+MAC_ADDRESS(0x2152b8, 0x24)
 inline void CGameTransferSmack::drawCurrentFrame()
 {
     SmackManager::drawSmackerFrame();
 }
 
 // E:\gamedcs\remote.cpp:2789
-VA(0x005575e0, 0x15)  // dc 0x11edec
+VA(0x005575e0, 0x15) MAC_ADDRESS(0x2152dc, 0x40)  // dc 0x11edec
 void CGameTransferSmack::stop()
 {
     if (m_started) {
@@ -2419,7 +2431,7 @@ void CGameTransferSmack::stop()
     }
 }
 
-VA(0x00557600, 0xAB)  // dc 0x11ee04
+VA(0x00557600, 0xAB) MAC_ADDRESS(0x21531c, 0x70)  // dc 0x11ee04
 void CGameTransferSmack::saveScreen()
 {
     if (!m_saveScreen)
@@ -2427,14 +2439,14 @@ void CGameTransferSmack::saveScreen()
     m_saveScreen->save(m_x, m_y);
 }
 
-VA(0x005576b0, 0x61)  // dc 0x11ee3c
+VA(0x005576b0, 0x61) MAC_ADDRESS(0x21538c, 0x30)  // dc 0x11ee3c
 void CGameTransferSmack::restoreScreen()
 {
     if (m_saveScreen)
         m_saveScreen->restore(1);
 }
 
-VA(0x00557720, 0x3C)  // dc 0x11ee54
+VA(0x00557720, 0x3C) MAC_ADDRESS(0x2153bc, 0x54)  // dc 0x11ee54
 CGameTransferDlg::CGameTransferDlg(unsigned char sending)
     : CTextDialog(0x12)
 {
@@ -2443,7 +2455,7 @@ CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 
 VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 
-VA(0x00557790, 0x51)  // dc 0x11eed8
+VA(0x00557790, 0x51) MAC_ADDRESS(0x215410, 0x74)  // dc 0x11eed8
 void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
                                       int& winX, int& winY,
                                       int& winWidth, int& winHeight)
@@ -2456,7 +2468,7 @@ void CGameTransferDlg::calcDimensions(const char* text, font* currentFont,
 }
 
 // E:\gamedcs\remote.cpp:1293
-VA(0x005577f0, 0x11)  // dc 0x11ef34
+VA(0x005577f0, 0x11) MAC_ADDRESS(0x215484, 0x18)  // dc 0x11ef34
 CNetMsgHandler::CNetMsgHandler()
 {
     m_inPopup = 0;
@@ -2467,9 +2479,9 @@ CNetMsgHandler::CNetMsgHandler()
 // vtable 0x640f14. It is 0x45 rather than the usual 0x21 because
 // the destructor below is small and NOT EH-bearing, so /Ob2 inlines it here
 // while still emitting it out of line.
-VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler)
+VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler) MAC_COMPGEN_ADDRESS(0x215568, 0x84, SCALAR_DELETING_DTOR, CNetMsgHandler)
 
-VA(0x00557860, 0x70)  // dc 0x11ef60
+VA(0x00557860, 0x70) MAC_ADDRESS(0x21549c, 0xcc)  // dc 0x11ef60
 CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
                                         unsigned char* msgReceived)
 {
@@ -2485,7 +2497,7 @@ CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
         m_abortPopupMsg = 0;
         return handleNetMsg(abortMsg);
     }
-    CNetMsg* netMsg = g_dPlay->getRemoteData(1, 0);
+    CNetMsg* netMsg = getRemoteData(1, 0);
     if (netMsg == 0)
         return 0;
     if (msgReceived)
@@ -2501,13 +2513,13 @@ CNetMsgHandler::~CNetMsgHandler()
 }
 
 // E:\gamedcs\remote.cpp:2875
-VA(0x00557910, 0xD)  // dc 0x11efcc
+VA(0x00557910, 0xD) MAC_ADDRESS(0x2155f4, 0x8)  // dc 0x11efcc
 void CNetMsgHandler::setAbortPopupMsg(CNetMsg* netMsg)
 {
     m_abortPopupMsg = netMsg;
 }
 
-VA(0x00557920, 0x157)  // dc 0x11efd0
+VA(0x00557920, 0x157) MAC_ADDRESS(0x2155fc, 0xd0)  // dc 0x11efd0
 CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType) {
@@ -2541,7 +2553,7 @@ CTurnDuration::CTurnDuration()
     m_pauseTime = 0;
 }
 
-VA(0x00557a80, 0x15)  // dc 0x11f070
+VA(0x00557a80, 0x15) MAC_ADDRESS(0x2156e4, 0x28)  // dc 0x11f070
 unsigned char CTurnDuration::isOn()
 {
     // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
@@ -2554,12 +2566,11 @@ unsigned char CTurnDuration::isOn()
     return 1;
 }
 
-VA(0x00557aa0, 0x4D)  // dc 0x11f090
+VA(0x00557aa0, 0x4D) MAC_ADDRESS(0x21570c, 0xac)  // dc 0x11f090
 unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
-            && m_currDuration != 0
-            && !g_inCampaign
+            && isOn()
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
@@ -2570,14 +2581,9 @@ unsigned char CTurnDuration::isExpired()
 }
 
 // E:\gamedcs\remote.cpp:2950
-// Residual (97.09%): flow-distance 0, register-distance 38 - one
-// caller-saved permutation at the head of the re-arm block. Retail parks
-// m_currDuration in ECX and the half in EAX; this compile parks them the
-// other way round, and that single swap is what makes our two `timeLeft`
-// arms reassociate to `m_currDuration - currTime + m_turnStartTime` where
-// retail keeps `m_turnStartTime - currTime + m_currDuration`. `why-reg
-// --model` reports the creation-order lever copy-propagated (C1 handle
-// state, capped); naming the half as a local does not move it.
+// DC lines 2951 and 2964 call IsOn and GameTime::ElapsedSince. Restoring
+// both canonical calls closes the former 97.09% register-order residual:
+// VC6 inlines them and all 30 retail CFG blocks and seven calls agree.
 
 // Three spellings ARE byte-load-bearing and were found the hard way:
 //   * `((m_currDuration >> 1) << 1) > 120000` and NOT the semantically
@@ -2598,12 +2604,10 @@ unsigned char CTurnDuration::isExpired()
 // The two Get() calls really are two calls - retail saves the first in EBX
 // for the m_lastWarned store and prices the gap with the second.
 // E:\gamedcs\remote.cpp:2950
-VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
+VA(0x00557af0, 0x208) MAC_ADDRESS(0x2157b8, 0x284)  // anchor-global, dc 0x11f108
 void CTurnDuration::checkForWarning()
 {
-    if (m_currDuration == 0)
-        return;
-    if (g_inCampaign)
+    if (!isOn())
         return;
     if (m_nextWarning == 0)
         return;
@@ -2620,7 +2624,7 @@ void CTurnDuration::checkForWarning()
 
     unsigned long currTime = GameTime::get();
     unsigned long lastWarned = m_lastWarned;
-    if (GameTime::get() - lastWarned < m_nextWarning)
+    if (GameTime::elapsedSince(lastWarned) < m_nextWarning)
         return;
 
     long timeLeft = m_turnStartTime - currTime + m_currDuration;
@@ -2632,9 +2636,9 @@ void CTurnDuration::checkForWarning()
     if (timeLeft > 60000) {
         float minutes = timeLeft / 60000.0f;
         if (minutes >= 0.8 && minutes <= 1.2)
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING));
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_ONE_MINUTE_REMAINING]);
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT), minutes);
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_MINUTES_REMAINING_FORMAT], minutes);
     } else {
         // A 29-second remainder is announced as the 30-second mark. The
         // bound is spelled as a named local rather than an enumerator on
@@ -2646,9 +2650,9 @@ void CTurnDuration::checkForWarning()
         if (seconds == roundUpSeconds)
             seconds = 30;
         if (seconds == 1)
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_ONE_SECOND_REMAINING));
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_ONE_SECOND_REMAINING]);
         else
-            g_chatMan.turnDurationMsg(g_generalText->getText(GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT), seconds);
+            g_chatMan.turnDurationMsg((*g_generalText)[GENERAL_TEXT_TURN_SECONDS_REMAINING_FORMAT], seconds);
     }
 
     m_lastWarned = currTime;
@@ -2664,7 +2668,7 @@ void CTurnDuration::checkForWarning()
         m_nextWarning = 0;
 }
 
-VA(0x00557d00, 0x55)  // dc 0x11f2fc
+VA(0x00557d00, 0x55) MAC_ADDRESS(0x215a3c, 0x9c)  // dc 0x11f2fc
 unsigned char CTurnDuration::isClose(unsigned long howClose)
 {
     if (!isOn())
@@ -2673,28 +2677,30 @@ unsigned char CTurnDuration::isClose(unsigned long howClose)
         return 0;
     if (m_pauseTime != 0)
         return 0;
-    unsigned char close = GameTime::get() + howClose
-                          > m_turnStartTime + m_currDuration;
-    return close;
+    // Guard returns keep the retained Windows body exact and let its chat
+    // caller branch directly; a byte comparison local leaves seta/test there.
+    if (GameTime::get() + howClose <= m_turnStartTime + m_currDuration)
+        return 0;
+    return 1;
 }
 
-VA(0x00557d60, 0xB)  // dc 0x11f39c
+VA(0x00557d60, 0xB) MAC_ADDRESS(0x215ad8, 0x14)  // dc 0x11f39c
 void CTurnDuration::clear()
 {
     m_nextWarning = m_lastWarned = m_turnStartTime = 0;
 }
 
-VA(0x00557d70, 0x14)  // dc 0x11f3a8
+VA(0x00557d70, 0x14) MAC_ADDRESS(0x215aec, 0x10)  // dc 0x11f3a8
 void CTurnDuration::setDuration(unsigned long ms)
 {
     m_turnStartTime = 0;
     m_currDuration = ms;
 }
 
-VA(0x00557d90, 0x3D)  // dc 0x11f3b0
+VA(0x00557d90, 0x3D) MAC_ADDRESS(0x215afc, 0x6c)  // dc 0x11f3b0
 void CTurnDuration::start()
 {
-    if (m_currDuration != 0 && !g_inCampaign) {
+    if (isOn()) {
         m_lastWarned = m_turnStartTime = GameTime::get();
         m_nextWarning = 0;
         if (m_currDuration > 60000)
@@ -2705,20 +2711,21 @@ void CTurnDuration::start()
 }
 
 // Original: CTurnDuration::AddTime; remote.cpp:3070, dc 0x11f3ec
+MAC_ADDRESS(0x215b68, 0x1c)
 void CTurnDuration::addTime(unsigned long howMuch)
 {
     m_turnStartTime += howMuch;
     m_lastWarned += howMuch;
 }
 
-VA(0x00557dd0, 0x14)  // dc 0x11f3fc
+VA(0x00557dd0, 0x14) MAC_ADDRESS(0x215b84, 0x3c)  // dc 0x11f3fc
 void CTurnDuration::pause()
 {
     if (m_turnStartTime != 0)
         m_pauseTime = GameTime::get();
 }
 
-VA(0x00557df0, 0x31)  // dc 0x11f41c
+VA(0x00557df0, 0x31) MAC_ADDRESS(0x215bc0, 0x68)  // dc 0x11f41c
 void CTurnDuration::resume()
 {
     unsigned long pausedAt = m_pauseTime;
@@ -2729,7 +2736,7 @@ void CTurnDuration::resume()
     }
 }
 
-VA(0x00557e30, 0x7A)  // dc 0x11f448
+VA(0x00557e30, 0x7A) MAC_ADDRESS(0x215c28, 0x6c)  // dc 0x11f448
 CNetMsgHandlerPause::CNetMsgHandlerPause()
 {
     if (g_dPlay) {
@@ -2738,7 +2745,7 @@ CNetMsgHandlerPause::CNetMsgHandlerPause()
     }
 }
 
-VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
+VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause) MAC_COMPGEN_ADDRESS(0x215c94, 0x78, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 
 // CAutoArray<CDPlayPlayer>'s two out-of-line destructors. remote.obj emits
 // BOTH the CDPlaySession and the CDPlayPlayer instantiation of each, and the
@@ -2775,14 +2782,14 @@ CNetMsgHandlerPause::~CNetMsgHandlerPause()
         g_dPlay->setNetMsgHandler(m_netMsgHandlerSave);
 }
 
-VA(0x00557f80, 0x31)  // dc 0x11f4d0
+VA(0x00557f80, 0x31) MAC_ADDRESS(0x215d0c, 0x34)  // dc 0x11f4d0
 CHourGlass::CHourGlass(unsigned char thread)
     : m_thread(thread)
 {
     start();
 }
 
-VA(0x00557fc0, 0x1A)  // dc 0x11f4e8
+VA(0x00557fc0, 0x1A) MAC_ADDRESS(0x215d40, 0x54)  // dc 0x11f4e8
 CHourGlass::~CHourGlass()
 {
     stop();
@@ -2796,6 +2803,7 @@ CHourGlass::~CHourGlass()
 // not. Stop deliberately leaves m_thread armed, so an explicit Stop and the
 // later destructor both stop the thread, exactly as retail does.
 
+MAC_ADDRESS(0x215d94, 0x44)
 void CHourGlass::stop()
 {
     if (m_thread)
@@ -2804,6 +2812,7 @@ void CHourGlass::stop()
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
+MAC_ADDRESS(0x215dd8, 0x44)
 void CHourGlass::start()
 {
     if (m_thread)

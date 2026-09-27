@@ -17,10 +17,13 @@ inside the build shell. The shell can inherit paths to the main checkout;
 changing cwd alone does not select the worktree. Keep build outputs separate
 between workers and do not edit inputs another worker is compiling.
 
-Establish a full `homm3 build` checkpoint before searching and after integration.
-It refreshes targets, scores and gates. After source, header, profile, claim or
-merge changes, establish a fresh search context; do not reuse stale snapshots or
-scores. Inspect a failing command's actual exit status and cause before continuing.
+Start from the existing retail targets and checkpoint; establish one full
+`homm3 build` if they are missing or stale. Use `homm3 build --fast <TU>` for
+routine iterations: it compiles and compares the selected Windows TU and
+admitted Mac counterparts, then reports per-function projected MAX movement
+without banking the ledger. After source, header, profile, claim or merge
+changes, refresh the affected TU before reusing its score. Run the full build
+for final integration and gates. Inspect a failing command's actual cause.
 
 ## Evidence and reconstruction
 
@@ -44,6 +47,9 @@ scores. Inspect a failing command's actual exit status and cause before continui
    Compare unmasked `sema disasm <selector>` and `--base` when immediates or
    relocation masking obscure the difference. For large functions, narrow the
    comparison with `--base-range` and `--target-range`.
+   For a switch dispatcher whose cases may reach the wrong arms, run
+   `homm3 sema switchmap <selector>`; use `--all` for a broad screen. A hit
+   is a lead: inspect the named retail table and both arms before changing C++.
 4. **Recover the source model.** Preserve proven types, layout, ABI, declaration
    ownership and one canonical definition of each helper. Match retained helper
    bodies and caller expansions separately. Returned objects and temporary
@@ -81,8 +87,8 @@ PYTHONPATH=scripts python -m homm3.vc6.source_families \
   under ignored `build/`. Reuse existing helpers when useful; do not commit a
   generator, fixture or experiment diary for every function or follow-up.
 
-Manual `homm3 build --fast <TU>` and `homm3 sema diff` are useful for bootstrapping
-and focused diagnostics. Adopt supported source deliberately: the search does
+`homm3 sema diff` is useful for focused diagnostics. Adopt supported source
+deliberately: the search does
 not adopt candidates or update the score ledger.
 
 ## Validation and completion
@@ -102,6 +108,12 @@ dip with held MAX is not a lost match, a regression, or a reason to reject a
 candidate. Rank searches by projected MAX from the ledger's source-hash rules;
 use CUR only to diagnose emitted code and verify reproduction. Check actual
 MAX changes before claiming collateral losses, including for shared helpers.
+Before integrating a lane, compare its compiled report with main's committed
+ledger using `homm3 status check --baseline-ref REF`. RESET means the edited
+source left banked CUR unchanged while resetting MAX; CHANGED-CUR means emitted
+bytes moved and need review. Both remain observational. If a rebase conflicts
+in `config/match_baseline.tsv`, run `homm3 status merge-baseline`, inspect its
+per-row result and stage it; never take one entire side of the generated ledger.
 Do not edit or inflate scores manually. Preserve recoverable candidate evidence
 under ignored build output or Git history. A source-supported combined model
 may temporarily lower scores: investigate its concrete predictions rather than

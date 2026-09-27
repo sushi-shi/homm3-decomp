@@ -1,5 +1,6 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
+#include "creaturetype_fwd.h"
 
 #include "va.h"
 
@@ -84,12 +85,6 @@ public:
                               TCreatureType creature, long slot);
 };
 SIZE(TRecruitWindow, 0x6c);
-
-// The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
-// gp<Type> house convention); recruitUnit::Open builds it,
-// recruitUnit::Close RemoveWindow()s and deletes it, and Update
-// broadcasts every widget refresh through it.
-extern TRecruitWindow* g_recruitWindow;
 
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
@@ -193,10 +188,9 @@ public:
     recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen);
 
     // The definition follows GetMonsterCost in recruit.cpp, as Dreamcast's
-    // recruit.cpp line table attests.  It remains inline: retail emits no
-    // standalone body and expands the nested GetMonsterCost loop at all four
-    // recruitUnit call sites.
-    inline void updateCost();
+    // recruit.cpp line table attests. VC6 auto-inlines this ordinary helper
+    // at the recruitUnit call sites; Mac retains calls to its own body.
+    void updateCost();
     // The three baseManager slots of vtable 0x640c70. Only Close is
     // reconstructed; the other two are declared so the class is
     // concrete, which is what `new recruitUnit(...)` at the fort page's

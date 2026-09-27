@@ -1,6 +1,7 @@
 #include "prefs.h"
 #include "va.h"
 
+#include "platform.h"
 #include <ddraw.h>
 #include <string.h>
 
@@ -65,7 +66,7 @@ DATA(0x0068c850) DDPIXELFORMAT g_pixelFormat = {
 // first colour in each layout. DC proves unsigned short* and TPalette24&
 // parameters; the retail offsets and fastcall argument locations agree.
 // E:\gamedcs\wingraph.cpp:72
-VA(0x005ffe20, 0x1E)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
+VA(0x005ffe20, 0x1E) MAC_ADDRESS(0x20c684, 0x44)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 {
     memcpy(pal + 224, &g_playerPalette->m_data[whichPlayer * 32],
@@ -73,7 +74,7 @@ void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 }
 
 // E:\gamedcs\wingraph.cpp:83
-VA(0x005ffe40, 0x22)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
+VA(0x005ffe40, 0x22) MAC_ADDRESS(0x20c6c8, 0x44)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
     memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
@@ -130,6 +131,18 @@ static void ddSetupClipper()
 
 }
 
+// Mac retains this opaque-only blit at 20ca9c; its only xrefs are the
+// cursor save/restore copies at 20c93c and 20ca84. Its display, readback
+// and offscreen paths expand ddBlit with transparency disabled (including
+// the copy-context lifetime). Windows uses DDBLT_WAIT for this operation.
+// The original helper name is unknown.
+MAC_ADDRESS(0x20ca9c, 0xf0)
+static void ddBlitOpaque(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
+                        IDirectDrawSurface* srcSurface, const tagRECT& srcRect)
+{
+    ddBlit(dstSurface, dstRect, srcSurface, srcRect, DDBLT_WAIT);
+}
+
 // The screen blit: unlock the back buffer, put the damaged rectangle up on
 // the primary, and lock the back buffer again with both Bitmap16Bit views
 // re-referenced to wherever it landed. When the damaged rectangle overlaps
@@ -138,7 +151,9 @@ static void ddSetupClipper()
 // the body; the empty spin on the mouse manager's busy word is retail's, and
 // VC6 hoists its load out so the wait is one self-jump.
 // E:\gamedcs\wingraph.cpp:260
-VA(0x005ffe70, 0x35C)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
+// Mac retains this rectangle/pointer composite at code 0+0x20c80c, using
+// Mac screen surfaces where this Windows body calls DirectDraw.
+VA(0x005ffe70, 0x35C) MAC_ADDRESS(0x20c80c, 0x290)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
 void robAppBlit(tagRECT* combRect)
 {
     if (IsIconic(g_hwndApp))
@@ -176,10 +191,10 @@ void robAppBlit(tagRECT* combRect)
             sourceRect = pointerRect;
             OffsetRect(&sourceRect, -g_mouseManager->m_savedRect.left,
                        -g_mouseManager->m_savedRect.top);
-            ddBlit(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
-                   pointerRect, DDBLT_WAIT);
-            if (g_mouseManager->m_hideCount == 0 && g_mouseManager->m_sprite
-                && g_mouseManager->m_frame >= 0) {
+            ddBlitOpaque(g_ddsMouseSaveSurface, sourceRect, g_ddsBack,
+                         pointerRect);
+            if (g_mouseManager->isVis() && g_mouseManager->m_sprite
+                && g_mouseManager->getFrame() >= 0) {
                 DDSURFACEDESC surfaceDesc;
                 memset(&surfaceDesc, 0, sizeof(surfaceDesc));
                 surfaceDesc.dwSize = sizeof(surfaceDesc);
@@ -187,7 +202,7 @@ void robAppBlit(tagRECT* combRect)
                 if (result != DD_OK)
                     ddsd(result, DATA_COMPGEN(0x0068c87c, wingraphSourceFile,
                      "C:\\Dev\\Heroes 3 Exp 2\\Game\\WINGRAPH.CPP"), 0x119);
-                g_mouseManager->m_sprite->draw(0, g_mouseManager->m_frame,
+                g_mouseManager->m_sprite->draw(0, g_mouseManager->getFrame(),
                     pointerRect.left - g_mouseManager->m_imageX,
                     pointerRect.top - g_mouseManager->m_imageY,
                     pointerRect.right - pointerRect.left,
@@ -205,10 +220,10 @@ void robAppBlit(tagRECT* combRect)
 
         ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
 
-        if (g_mouseManager && g_mouseManager->m_hideCount == 0
-            && g_mouseManager->m_sprite && g_mouseManager->m_frame >= 0) {
-            ddBlit(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
-                   sourceRect, DDBLT_WAIT);
+        if (g_mouseManager && g_mouseManager->isVis()
+            && g_mouseManager->m_sprite && g_mouseManager->getFrame() >= 0) {
+            ddBlitOpaque(g_ddsBack, pointerRect, g_ddsMouseSaveSurface,
+                         sourceRect);
         }
     } else {
         ddBlit(g_ddsPrimary, screenRect, g_ddsBack, *combRect, DDBLT_WAIT);
@@ -259,7 +274,9 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // (udst_rect/usrc_rect), not nullable pointers. All callers pass real RECTs.
 //
 // E:\gamedcs\wingraph.cpp:931
-VA(0x006001d0, 0x1E1)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
+// Mac retains the five-argument blit interface at code 0+0x217e10 and
+// uses Mac surfaces for the six pointer-update calls from mousemgr.
+VA(0x006001d0, 0x1E1) MAC_ADDRESS(0x217e10, 0x1d0)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags)

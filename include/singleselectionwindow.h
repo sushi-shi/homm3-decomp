@@ -2,6 +2,7 @@
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
 #include "va.h"
+#include "platform_file_time.h"
 
 #include <vector>
 
@@ -11,6 +12,9 @@
 #include "remote.h"
 #include "rmg_request.h"
 #include "town.h"
+
+const char* getResourceBonusCaption(int townType);
+const char* getResourceBonusDescription(int townType);
 
 // Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
 // (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
@@ -262,9 +266,10 @@ public:
     // operator= copies description's 0x12d bytes then stores fileTime's
     // two dwords directly (OnMapFileNameMsg's two expansions) - a named
     // pad array here adds a fourth byte-copy loop retail lacks.
-    // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
-    // its address to FileTimeToLocalFileTime.
-    _FILETIME m_fileTime;  // +0x6f8
+    // Windows uses FILETIME (+0x6f8, eight bytes). Mac serializers
+    // 0:0x16e4d4/0x16e5d0 use DateTimeRec (+0x6ba, fourteen bytes);
+    // the following SavedGameHeader starts at Mac +0x6c8.
+    FileTime m_fileTime;  // +0x6f8
     SavedGameHeader m_saved;  // +0x700
 
     VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
@@ -274,6 +279,9 @@ public:
         memset(m_description, 0, sizeof(m_description));
         m_setup.m_difficulty = 1;
     }
+
+    unsigned char read(TAbstractFile* infile);
+    unsigned char write(TAbstractFile* outfile);
 
     // Both the copy ctor and operator= are IMPLICIT: the synthesized
     // memberwise bodies are retail's 0x5904f0 and 0x578440 COMDATs, and
@@ -312,7 +320,7 @@ public:
     // The 0x7c-byte player-record stride leaves three bytes of tail alignment.
     char m_tailPadding[3];
     // E:\gamedcs\SingleSelectionWindow.h:108
-    VA(0x0057C790, 0x40)
+    VA(0x0057C790, 0x40) MAC_ADDRESS(0x16ed9c, 0x78)
     CNetPlayerHandlerPlayer()
     {
         m_heroIndex = -1;
@@ -676,6 +684,8 @@ public:
     void drawBasicMapInfo();
     unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
     void updateFilterWidgets();
+    void refreshFilterWidgets();
+    void openRandomMapOptions();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
@@ -711,6 +721,7 @@ public:
                                 int position);
     void onDeleteFile();
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
+    bool assignPlayerToOpenHumanSlot(unsigned long dpid);
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);
@@ -757,6 +768,7 @@ public:
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
     void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
+    void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
     void setupNewGameMode();
     int getCommonGameVersion();
@@ -765,6 +777,7 @@ public:
     // UpdateGameVars role (dc 0x139090, void()). Called after the
     // header transfer completes.
     void updateGameVars();
+    void applyHeaderToGame(GameSelectionHeadersStruct* header);
     unsigned char beginSavedGame();
     bool beginNewGame();
     void updateMainWindow();
@@ -775,6 +788,8 @@ public:
     // retail widened DC's (cFilename, pHeader) with the dir argument
     // its chdir dance needs.
     int getFileSpecNbr();
+    char* getHeaderDirectory();
+    std::vector<GameSelectionHeadersStruct>* getSourceHeaders();
     void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
     void windowFn00582e90(
         std::vector<GameSelectionHeadersStruct>* headers);

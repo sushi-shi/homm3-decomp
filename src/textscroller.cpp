@@ -35,30 +35,39 @@ class type_text_slider : public slider {
 public:
     type_text_scroller* m_owner;  // +0x68
 
-    type_text_slider(int x, int y, int w, int h, int id, int num,
-                     TSliderFunction func, EGraphics graphics, int page,
-                     unsigned char hotKey, type_text_scroller* scroller)
-        : slider(x, y, w, h, id, num, func, graphics, page, hotKey)
-    {
-        m_owner = scroller;
-    }
+    type_text_slider(type_text_scroller* scroller, int x, int y, int w, int h,
+                     int id, int num, EGraphics graphics, int page,
+                     unsigned char hotKey);
 
     virtual void close();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
 
+MAC_ADDRESS(0x25b0c4, 0x80)
+// Mac saves the first argument (r4) as m_owner, forwards geometry from
+// r5..r10, and supplies a null callback to slider. Its caller at 0x25b40c
+// passes the owning scroller first; no callback parameter is present.
+type_text_slider::type_text_slider(type_text_scroller* scroller,
+                                   int x, int y, int w, int h, int id, int num,
+                                   EGraphics graphics, int page,
+                                   unsigned char hotKey)
+    : slider(x, y, w, h, id, num, 0, graphics, page, hotKey)
+{
+    m_owner = scroller;
+}
+
 // Slot 16 of the scroller's private slider vtable 0x642cc8 - the only
 // slot it overrides. Thirteen bytes, no frame: it reads the slider's own
 // currentState and the owner at +0x68 and calls the scroller's
 // repaint.
-VA(0x005B9FA0, 0xD)
+VA(0x005B9FA0, 0xD) MAC_ADDRESS(0x25b144, 0x2c)
 void type_text_slider::close()
 {
     m_owner->refresh(m_currentState);
 }
 
 // x/y/w/h arguments go to the widget base with a literal -1 id
-VA(0x005B9FB0, 0x2FF)
+VA(0x005B9FB0, 0x2FF) MAC_ADDRESS(0x25b170, 0x2d4)
 type_text_scroller::type_text_scroller(const char* text, int x, int y,
                                        int w, int h, const char* fontName,
                                        font::TColor color,
@@ -87,9 +96,9 @@ type_text_scroller::type_text_scroller(const char* text, int x, int y,
     }
 
     m_textSlider = new type_text_slider(
-        this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
+        this, this->m_x + m_width - 16, this->m_y, 16, m_height, -1,
         max(1, m_textLines.size() - m_lineImages.size() + 1),
-        0, graphics, m_lineImages.size(), 1, this);
+        graphics, m_lineImages.size(), 1);
     textFont->dispose();
 }
 
@@ -99,7 +108,7 @@ VA_COMPGEN(0x005BA2B0, 0x21, SCALAR_DELETING_DTOR, type_text_scroller)
 // Slot 1. Hands every line widget and the slider to the opening window at
 // consecutive priorities above the scroller's own, then folds the slider
 // away when the text fits without scrolling.
-VA(0x005BA2E0, 0xC6)
+VA(0x005BA2E0, 0xC6) MAC_ADDRESS(0x25b444, 0xfc)
 int type_text_scroller::open(int newPriority, heroWindow* parent)
 {
     int result = widget::open(newPriority, parent);
@@ -118,7 +127,7 @@ int type_text_scroller::open(int newPriority, heroWindow* parent)
     return 0;
 }
 
-VA(0x005BA3B0, 0x101)
+VA(0x005BA3B0, 0x101) MAC_ADDRESS(0x25b540, 0x12c)
 type_text_scroller::~type_text_scroller()
 {
     for (unsigned int i = 0; i < m_lineImages.size(); i++)
@@ -130,7 +139,7 @@ type_text_scroller::~type_text_scroller()
 // Slot 2. Only MESSAGE_WIDGET reaches the body: WIDGET_DRAW grabs the
 // backdrop once, WIDGET_SET_STATUS / WIDGET_CLEAR_STATUS are relayed to
 // every line and, when the text overflows, to the slider.
-VA(0x005BA4C0, 0x13D)
+VA(0x005BA4C0, 0x13D) MAC_ADDRESS(0x25b670, 0x144)
 int type_text_scroller::main(message& msg)
 {
     if (msg.m_id == MESSAGE_WIDGET) {
@@ -161,7 +170,7 @@ int type_text_scroller::main(message& msg)
 
 // The repaint the slider's state-change hook drives: restore the grabbed
 // backdrop, then re-text and redraw every visible line from `firstLine`.
-VA(0x005BA600, 0xD7)
+VA(0x005BA600, 0xD7) MAC_ADDRESS(0x25b7b8, 0x120)
 void type_text_scroller::refresh(int firstLine)
 {
     m_background->draw(0, 0, m_width - 16, m_height,
@@ -187,7 +196,7 @@ void type_text_scroller::refresh(int firstLine)
 // Residual (99.4444%): 29/30 blocks are exact; the empty-line push retains
 // one extra count argument. Calling insert(end(), value) directly perturbs
 // the /Ob2 frontier and falls to 97.03%, so keep the canonical push_back.
-VA(0x005BA6E0, 0x1EF)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
+VA(0x005BA6E0, 0x1EF) MAC_ADDRESS(0x25b8d8, 0x1dc)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {
     font* textFont = ResourceManager::getFont(m_fontFilename);

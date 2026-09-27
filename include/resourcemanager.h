@@ -1,6 +1,9 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
+#include "resource.h"
+#include "csprite.h"
+
 class CSprite;
 class font;
 class resource;
@@ -24,6 +27,10 @@ extern int& g_gameContext;
 extern unsigned char g_graphicsSaturated;  // retail 0x69e5b0
 
 namespace ResourceManager {
+// Retail exception type name is ResourceManager::t_open_errors on Windows
+// and Mac; the archive opener catches this shared domain in open().
+enum t_open_errors { openErrorGeneric = 0, openErrorRequiredArchive = 1 };
+
 void remapGraphics();
 void saturateGraphics();
 // Complete adds an error-code output to Dreamcast's two-boolean form. The
@@ -51,10 +58,16 @@ void addToCache(resource* value);
 // Dreamcast resourcemanager.cpp:2377; expanded by Complete's cache getters.
 resource* getFromCache(const char* name);
 
-void dispose(resource* value);
+// Existing disposal wrappers expand across TUs in the selection destructor:
+// Windows 0x583bb8..0x583c35 and Mac 0x17b5b0..0x17b6bc retain only the
+// member virtual calls. Their bodies must be visible at those source calls.
+inline void dispose(resource* value) { value->dispose(); }
 void dispose(sample* value);
-void dispose(CSprite* value);
-void delSprFromCache();
+inline void dispose(CSprite* value) { value->dispose(); }
+// Older DC resourcemanager.cpp:2280, dc 0x1226d4 had the cache sweep.
+// Complete has no cache-sweep work in the Windows and Mac selection teardown.
+// Keep the original call and expose the empty helper across translation units.
+inline void delSprFromCache() {}
 
 LODFile* pointToSpriteResource(const char* name);
 LODFile* pointToBitmapResource(const char* name);

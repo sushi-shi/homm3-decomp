@@ -16,7 +16,7 @@
 #include "window.h"
 #include "winmgr.h"
 
-VA(0x005132b0, 0x1B)  // dc 0x103494
+VA(0x005132b0, 0x1B) MAC_ADDRESS(0x132158, 0xc4)  // dc 0x103494
 long getAlignmentCount(int legalAlignments)
 {
     long count = 0;
@@ -27,7 +27,7 @@ long getAlignmentCount(int legalAlignments)
     return count;
 }
 
-VA(0x005132d0, 0x50)  // dc 0x1034b4
+VA(0x005132d0, 0x50) MAC_ADDRESS(0x13221c, 0x184)  // dc 0x1034b4
 TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
 {
     long count = getAlignmentCount(legalAlignments);
@@ -58,7 +58,7 @@ const int g_mapFormatAb = 21;
 // sentinel for a slot the computer takes.
 const int g_setupPlayerPosComputer = 10;
 
-VA(0x00513320, 0x41A)  // dc 0x1034fc
+VA(0x00513320, 0x41A) MAC_ADDRESS(0x1323a0, 0x3bc)  // dc 0x1034fc
 void game::initNewGame(int difficulty, int version,
                        NewSMapHeader* mapHeader, TAbstractFile* infile)
 {
@@ -137,6 +137,7 @@ void game::initNewGame(int difficulty, int version,
 
 // Complete uses the nine-town alignment mask for both helpers.
 // E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
+MAC_ADDRESS(0x17e364, 0x30)
 TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 {
     do {
@@ -150,6 +151,7 @@ TTownType pickPrevAlignment(int legalAlignments, TTownType type)
 }
 
 // E:\gamedcs\newgame.cpp:368, dc 0x10380c.
+MAC_ADDRESS(0x17e394, 0x30)
 TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
@@ -160,7 +162,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
     return type;
 }
 
-VA(0x00513740, 0xBC)  // dc 0x103824
+VA(0x00513740, 0xBC) MAC_ADDRESS(0x13275c, 0x94)  // dc 0x103824
 void game::showScenInfo()
 {
     if (g_inCampaign) {
@@ -174,9 +176,11 @@ void game::showScenInfo()
     }
 }
 
-VA(0x00513800, 0x1D5)  // dc 0x103888
+VA(0x00513800, 0x1D5) MAC_ADDRESS(0x1327f0, 0x278)  // dc 0x103888
 void game::getLossConditionText(char* text)
 {
+    // Dreamcast lines 646, 655 and 662 retain TTextResource::operator[]
+    // for the hero, time-limit and standard-loss text lookups.
     LossConditionStruct& loss = m_mapHeader.m_lossCondition;
     if (loss.m_type != -1) {
         switch (loss.m_type) {
@@ -194,23 +198,34 @@ void game::getLossConditionText(char* text)
         }
         case LOSS_CONDITION_LOSE_HERO: {
             hero* targetHero = getHero(loss.m_heroId);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT), targetHero->m_name);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_LOSE_HERO_FORMAT], targetHero->m_name);
             break;
         }
         case LOSS_CONDITION_TIME_LIMIT: {
             int month = (loss.m_numDays - 1) / 28 + 1;
             int week = (loss.m_numDays - (month - 1) * 28 - 1) / 7 + 1;
             int dayOfWeek = (loss.m_numDays - 1) % 7 + 1;
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT), month, week, dayOfWeek);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_TIME_LIMIT_FORMAT], month, week, dayOfWeek);
             break;
         }
         }
     } else {
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_LOSS_CONDITION_STANDARD));
+        strcpy(text, (*g_generalText)[GENERAL_TEXT_LOSS_CONDITION_STANDARD]);
     }
 }
 
-VA(0x005139e0, 0x64C)  // dc 0x103a08
+// Residual: Windows MAX 98.58% has the same 83 CFG blocks and 12 calls.
+// DC records named anytown_loc and town_loc; Mac 0x132d28 constructs the
+// point and compares its coordinates to -1. Declaring townLoc before
+// anyTownLoc improves the Windows stack slots without changing the helper
+// calls. CodeWarrior's aligned shape and call sequence remain unchanged,
+// although the candidate stack offsets move; Mac is not exact.
+// DC newgame.cpp:721-725 records the separate anytown_loc/town_loc points;
+// lines 764/766 call GetArmyName with count 2, and its text lookups name
+// TTextResource::operator[]. The shared source calls are retained despite
+// VC6 falling from an earlier peak when the larger helper source entered
+// the inline budget. Mac O3 retains 38 direct calls on each side.
+VA(0x005139e0, 0x64C) MAC_ADDRESS(0x132a68, 0x820)  // dc 0x103a08
 void game::getVictoryConditionText(char* text)
 {
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;
@@ -221,45 +236,46 @@ void game::getVictoryConditionText(char* text)
                 victory.m_townX, victory.m_townY, victory.m_townZ));
             const char* targetType;
             if (targetTown->isCastle())
-                targetType = g_generalText->getText(GENERAL_TEXT_CASTLE_LOWERCASE);
+                targetType = (*g_generalText)[GENERAL_TEXT_CASTLE_LOWERCASE];
             else
-                targetType = g_generalText->getText(GENERAL_TEXT_ATTACK_TARGET_TOWN);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_CAPTURE_TOWN_FORMAT), targetType,
+                targetType = (*g_generalText)[GENERAL_TEXT_ATTACK_TARGET_TOWN];
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_CAPTURE_TOWN_FORMAT], targetType,
                     targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_DEFEAT_HERO: {
             hero* targetHero = getHero(victory.m_heroId);
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_HERO_FORMAT), targetHero->m_name);
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_HERO_FORMAT], targetHero->m_name);
             break;
         }
         case VICTORY_CONDITION_ARTIFACT:
             if (victory.m_artifactNum == ARTIFACT_HOLY_GRAIL) {
-                strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_FIND_GRAIL));
+                strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FIND_GRAIL]);
             } else {
-                sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_FIND_ARTIFACT_FORMAT),
+                sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FIND_ARTIFACT_FORMAT],
                         g_artifactTraits[victory.m_artifactNum].m_name);
             }
             break;
         case VICTORY_CONDITION_TOTAL_RESOURCES:
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_RESOURCE_FORMAT), victory.m_resourceAmount,
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_RESOURCE_FORMAT], victory.m_resourceAmount,
                     g_resourceNames[victory.m_resourceType]);
             break;
         case VICTORY_CONDITION_UPGRADE_TOWN: {
             town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_UPGRADE_FORMAT), targetTown->m_name.c_str());
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_UPGRADE_FORMAT], targetTown->m_name.c_str());
             break;
         }
         case VICTORY_CONDITION_BUILD_GRAIL: {
-            type_point townPos(victory.m_townX, victory.m_townY, victory.m_townZ);
-            if (townPos != type_point(-1, -1, -1)) {
+            type_point townLoc(victory.m_townX, victory.m_townY, victory.m_townZ);
+            type_point anyTownLoc(-1, -1, -1);
+            if (townLoc != anyTownLoc) {
                 town* targetTown = getTown(getTownId(
                     victory.m_townX, victory.m_townY, victory.m_townZ));
-                sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_BUILD_GRAIL_IN_TOWN_FORMAT),
+                sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_BUILD_GRAIL_IN_TOWN_FORMAT],
                         targetTown->m_name.c_str());
             } else {
-                strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_BUILD_GRAIL_ANYWHERE));
+                strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_BUILD_GRAIL_ANYWHERE]);
             }
             break;
         }
@@ -293,42 +309,38 @@ void game::getVictoryConditionText(char* text)
                 direction = 8;
 
             if (!monsterZ) {
-                sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_FORMAT),
-                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
-                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : "",
+                sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_FORMAT],
+                        getArmyName(victory.m_creatureType, 2),
                         g_directions[direction]);
             } else {
-                sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_UNDERGROUND_FORMAT),
-                        victory.m_creatureType >= 0 && victory.m_creatureType <= 0x96
-                            ? g_creatureTypeTraits[victory.m_creatureType].m_pluralName
-                            : "",
+                sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_DEFEAT_MONSTER_UNDERGROUND_FORMAT],
+                        getArmyName(victory.m_creatureType, 2),
                         g_directions[direction]);
             }
             break;
         }
         case VICTORY_CONDITION_TOTAL_CREATURES:
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_CREATURES_FORMAT), victory.m_numCreatures,
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_ACCUMULATE_CREATURES_FORMAT], victory.m_numCreatures,
                     g_creatureTypeTraits[victory.m_creatureType].m_pluralName);
             break;
         case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
-            strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_FLAG_DWELLINGS));
+            strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FLAG_DWELLINGS]);
             break;
         case VICTORY_CONDITION_FLAG_ALL_MINES:
-            strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_FLAG_MINES));
+            strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_FLAG_MINES]);
             break;
         case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
             town* targetTown = getTown(getTownId(
                 victory.m_townX, victory.m_townY, victory.m_townZ));
-            sprintf(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_TRANSPORT_ARTIFACT_FORMAT),
+            sprintf(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_TRANSPORT_ARTIFACT_FORMAT],
                     g_artifactTraits[victory.m_artifactNum].m_name,
                     targetTown->m_name.c_str());
             break;
         }
         }
         if (victory.m_allowNormalVictory)
-            strcat(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_STANDARD_ALLOWED));
+            strcat(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_STANDARD_ALLOWED]);
     } else {
-        strcpy(text, g_generalText->getText(GENERAL_TEXT_VICTORY_CONDITION_STANDARD));
+        strcpy(text, (*g_generalText)[GENERAL_TEXT_VICTORY_CONDITION_STANDARD]);
     }
 }

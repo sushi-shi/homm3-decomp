@@ -39,7 +39,7 @@ import csv
 import re
 import sys
 from pathlib import Path
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from homm3.build.canonicalize_data_symbols import normalize_anon_ns_name
 from homm3.core import common
@@ -69,7 +69,10 @@ POOLED_CHANNELS = ("src-DATA_COMPGEN", "src-DATA_COMPGEN_GUARD")
 
 
 def choose_carrier(rva: int, emitters: set[str], banked: dict[int, str],
-                   anchors: list[tuple[int, str]]) -> str | None:
+                   anchors: list[tuple[int, str]],
+                   reviewed: dict[int, str] | None = None) -> str | None:
+    if reviewed and rva in reviewed:
+        return reviewed[rva]
     if banked.get(rva) in emitters:
         return banked[rva]
     if len(emitters) == 1:
@@ -92,21 +95,25 @@ class CarrierPolicy:
     """Reviewed comparison bindings; missing bodies retain their banked carrier."""
     banked: dict[int, str]
     bindings: tuple[tuple[str, int], ...] = ()
+    reviewed: dict[int, str] = field(default_factory=dict)
 
-    choose = staticmethod(choose_carrier)
+    def choose(self, rva, emitters, banked, anchors):
+        return choose_carrier(rva, emitters, banked, anchors, self.reviewed)
 
     def for_units(self, units) -> dict[int, str]:
         # Filter before resolving duplicate RVAs, matching the ledger's order.
-        if self.bindings:
-            return {rva: unit for unit, rva in self.bindings if unit in units}
-        return {rva: unit for rva, unit in self.banked.items() if unit in units}
+        result = ({rva: unit for unit, rva in self.bindings if unit in units}
+                  if self.bindings else
+                  {rva: unit for rva, unit in self.banked.items() if unit in units})
+        result.update({rva: unit for rva, unit in self.reviewed.items() if unit in units})
+        return result
 
 
-def carrier_policy(baseline) -> CarrierPolicy:
+def carrier_policy(baseline, *, reviewed=None) -> CarrierPolicy:
     return CarrierPolicy({row.rva: unit for (unit, _name), row in baseline.items()
                           if row.rva is not None},
                          tuple((unit, row.rva) for (unit, _name), row in baseline.items()
-                                   if row.rva is not None))
+                                   if row.rva is not None), reviewed or {})
 
 
 def header_data_problems(sites: dict, rows: dict) -> list[str]:

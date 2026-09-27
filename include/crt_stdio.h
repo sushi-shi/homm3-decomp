@@ -1,4 +1,4 @@
-// crt_stdio.h - the CRT stream/memory surface, declared WITHOUT pulling
+// crt_stdio.h - the Windows CRT stream/memory surface, declared WITHOUT pulling
 // <stdio.h> or <string.h>.
 
 // Why this header exists rather than the real CRT headers: the
@@ -13,7 +13,7 @@
 // A bare `struct _iobuf;` FORWARD declaration is in the proven-inert
 // set (blank lines, comments, typedefs, `extern int` and bare
 // `struct X;` do NOT move the class), so this header buys the CRT calls
-// with no type DEFINITION at all. _CRTIMP is empty under /ML, so these
+// with no type DEFINITION at all. _CRTIMP is empty for the static CRT, so these
 // match the real declarations and the CRT's own linkage.
 
 // Same doctrine as winmm_thunks.h: a declaration whose SPELLING is
@@ -22,6 +22,12 @@
 #ifndef HOMM3_CRT_STDIO_H
 #define HOMM3_CRT_STDIO_H
 
+#if defined(HOMM3_TARGET_MAC)
+// Use MSL declarations; redeclaring its string functions makes lookup ambiguous.
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#else
 extern "C" {
 struct _iobuf;
 typedef struct _iobuf FILE;
@@ -43,5 +49,7 @@ unsigned int __cdecl strlen(const char* text);
 
 #define SEEK_SET 0
 #define SEEK_END 2
+
+#endif  // native Mac CRT / Windows declarations
 
 #endif  /* HOMM3_CRT_STDIO_H */

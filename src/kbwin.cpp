@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
+#include "platform.h"
 
 #include "kbwin.h"
 
@@ -108,16 +108,15 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
     return 1;
 }
 
-// AppWndProc retains its AppCommand call at +0x359. The inline policy on
-// AppCommand preserves that boundary; removing it expands five extra branches
-// in AppWndProc and drops its match to 74.8%. The original source reason for
-// this call boundary remains unresolved.
+// AppWndProc retains its AppCommand call at +0x359 without an inline fence.
 VA(0x004f7c00, 0x394)  // dc 0xe7e38
 LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     switch (message) {
         case WM_CREATE:
-            srand(timeGetTime());
+            // Mac core/make callback 0:0x20f7ac retains GameTime::get
+            // before srand; Windows 0x4f7c39 expands its timeGetTime read.
+            srand(GameTime::get());
             GdiSetBatchLimit(1);
             return 0;
         case WM_ACTIVATE:
@@ -164,7 +163,7 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_CLOSE:
             if (window == g_hwndApp && gameUnsaved()) {
                 videoPause();
-                normalDialog(g_generalText->getText(GENERAL_TEXT_QUIT), 2,
+                normalDialog((*g_generalText)[GENERAL_TEXT_QUIT], 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 videoResume();
                 if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT)
@@ -222,7 +221,9 @@ void appExit()
     cleanUpMenus();
 }
 
-VA(0x004f7fb0, 0xAA)  // dc 0xe7fd0
+// Mac retains the shared event pump at code 0+0x20f90c. Its event polling
+// uses Mac OS services; this Windows body pumps native window messages.
+VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)  // dc 0xe7fd0
 void process1WindowsMessage()
 {
     MSG message;
@@ -251,12 +252,6 @@ void process1WindowsMessage()
 // E:\gamedcs\kbwin.cpp:648
 // homm2 lineage kept the three non-size menu commands; the About
 // template is the ordinal 0x67 (homm2 passed the string "HEROES").
-// auto_inline(off) is load-bearing, not cosmetic: retail emits a real
-// `call` at AppWndProc+0x359 while our /Ob2 expands this body inline
-// (it is the TU's only call site). See AppWndProc's note - without the
-// pragma that function is 74.8%, with it 100%. The pragma is scoped to
-// this definition and changes no other kbwin function.
-#pragma auto_inline(off)
 VA(0x004f8060, 0xD4)  // dc 0xe8014
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -289,7 +284,6 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     }
     return 0;
 }
-#pragma auto_inline(on)
 
 // Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
 // The released menu-update hook has an empty body. The adjacent 0x4f8140
@@ -335,7 +329,7 @@ void kbChangeMenu(HMENU newMenu)
     }
 }
 
-VA(0x004f81e0, 0x31)  // dc 0xe8020
+VA(0x004f81e0, 0x31) MAC_ADDRESS(0x20ff48, 0x38)  // dc 0xe8020
 void setNoDialogMenus(int noMenus)
 {
     if (g_menusSuppressed && !noMenus)
@@ -388,13 +382,13 @@ void setMenus(HMENU menu, int enabled)
     }
 }
 
-VA(0x004f82e0, 0x6)  // dc 0xe8058
+VA(0x004f82e0, 0x6) MAC_ADDRESS(0x20fc5c, 0xc)  // dc 0xe8058
 unsigned long GameTime::get()
 {
     return timeGetTime();
 }
 
-VA(0x004f82f0, 0xCD)  // dc 0xe806c
+VA(0x004f82f0, 0xCD) MAC_ADDRESS(0x20fc68, 0x40)  // dc 0xe806c
 void GameTime::delayTil(unsigned long time)
 {
     while (!GameTime::isPast(time)) {
@@ -403,7 +397,7 @@ void GameTime::delayTil(unsigned long time)
     }
 }
 
-VA(0x004f83c0, 0xD0)  // dc 0xe8098
+VA(0x004f83c0, 0xD0) MAC_ADDRESS(0x20fca8, 0x34)  // dc 0xe8098
 void GameTime::delay(int interval)
 {
     GameTime::delayTil(GameTime::get() + interval);
@@ -412,6 +406,7 @@ void GameTime::delay(int interval)
 // Original: InitVideo; kbwin.cpp:851, dc 0xe80b4
 // Empty hook; heroWindowManager::open retains the call to retail's
 // shared ICF ret at 0x5bc690.
+MAC_ADDRESS(0x20fcdc, 0x4)
 void initVideo()
 {
 }

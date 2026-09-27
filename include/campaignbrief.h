@@ -153,6 +153,8 @@ public:
         // Complete-only retained wrapper at 0x4884c0.  The campaign-header
         // wrapper below is its sole direct caller.
         void startScenario(std::streambuf* stream, int option);
+        void playText(bool epilogue);
+        bool prerequisitesMet() const;
         std::string getRegionDescription() const;
         std::string getBonusText(CampaignHeaderStruct* campaign, int option);
         ~ScenarioStruct();
@@ -200,9 +202,11 @@ public:
         void startMusic();
         void getAvailableScenarios(unsigned char* available) const;
         void startScenario(int which, int option);
+        void playScenarioText(int which, bool epilogue);
         void freeData();
         int getNumMaps() const;
         // Complete expands this shared cleanup in both load and the destructor.
+        MAC_ADDRESS(0x096afc, 0x78)
         void clearScenarios()
         {
             for (unsigned int scenarioIndex = 0;

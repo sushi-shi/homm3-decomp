@@ -108,6 +108,7 @@ DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 }
 DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 
 // E:\gamedcs\puzzlewindow.cpp:103
+MAC_ADDRESS(0x14723c, 0x40)
 static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
 {
     char pieceName[40];
@@ -115,7 +116,7 @@ static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
     return ResourceManager::getBitmap816(pieceName);
 }
 
-VA(0x0052c1e0, 0x388)  // dc 0x114f40
+VA(0x0052c1e0, 0x388) MAC_ADDRESS(0x14727c, 0x548)  // dc 0x114f40
 TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -138,7 +139,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
     m_widgets.push_back(new textWidget(
         607, 73, 190, 40,
-        g_generalText->getText(GENERAL_TEXT_PUZZLE_WINDOW),
+        (*g_generalText)[GENERAL_TEXT_PUZZLE_WINDOW],
         "Bigfont.fnt", font::HEADING, -1,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
 
@@ -169,7 +170,7 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
 VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
 
-VA(0x0052c5a0, 0x96)  // dc 0x115268
+VA(0x0052c5a0, 0x96) MAC_ADDRESS(0x1477c4, 0x10c)  // dc 0x115268
 TPuzzleWindow::~TPuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
@@ -200,7 +201,7 @@ int TPuzzleWindow::convertID2HelpID(int id) const
 }
 
 // E:\gamedcs\puzzlewindow.cpp:203
-VA(0x0052c640, 0x78)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
+VA(0x0052c640, 0x78) MAC_ADDRESS(0x1478d0, 0xfc)  // vtable slot 9 + CAdvPopup delegation, dc 0x115328
 int TPuzzleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -230,13 +231,13 @@ int TPuzzleWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x0052c6c0, 0xAD)  // dc 0x1153a8
+VA(0x0052c6c0, 0xAD) MAC_ADDRESS(0x1479cc, 0xec)  // dc 0x1153a8
 int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
 
     for (int i = 0; i < 48; ++i) {
-        if (full || !g_puzzlePiecesRemoved.test(i)) {
+        if (full || !g_puzzlePiecesRemoved[i]) {
             int piece = g_puzzlePieceOrder[m_puzWhich * 48 + i];
             Bitmap816* bitmap = m_puzzlePieces[piece];
             const short* xCoordinate = g_puzzleCoordinates[m_puzWhich].m_x;
@@ -254,44 +255,47 @@ int TPuzzleWindow::updatePuzzle(int full)
 
 // Retail preserves the Dreamcast record's four packed allocation units:
 // a 10-bit object type, two signed four-bit object offsets, three terrain
-// descriptors, and the diggable/grail/visible flag trio.
+// descriptors, and the diggable/grail/visible flag trio. DC type0x3fbd
+// records the offset and flag fields as plain char bitfields. Alignment
+// padding is implicit; naming padding arrays emits extra copy helpers.
 struct type_AI_puzzle_tile {
     int m_objectType : 10;
-    int m_paddingAfterObjectType : 22;
-    signed char m_objectX : 4;
-    signed char m_objectY : 4;
-    char m_paddingBeforeTerrain[3];
+    char m_objectX : 4;
+    char m_objectY : 4;
     int m_terrain : 5;
     int m_river : 4;
     int m_road : 4;
-    int m_paddingAfterRoad : 19;
-    unsigned char m_diggable : 1;
-    unsigned char m_hasGrail : 1;
-    unsigned char m_visible : 1;
-    unsigned char m_paddingAfterVisible : 5;
-    char m_tailPadding[3];
+    char m_diggable : 1;
+    char m_hasGrail : 1;
+    char m_visible : 1;
 
-    // Retail expands these stores in AI_attempt_puzzle_guess's array loop.
-    // E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4
-    type_AI_puzzle_tile()
-    {
-        m_objectType = 0;
-        m_objectX = -1;
-        m_objectY = -1;
-        m_terrain = -1;
-        m_river = 0;
-        m_road = 0;
-        m_diggable = 1;
-        m_visible = 0;
-    }
+    type_AI_puzzle_tile();
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
-    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
+    unsigned char operator==(const type_AI_puzzle_tile& arg) const;
 };
 SIZE(type_AI_puzzle_tile, 0x10);
 
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
+// Retail expands these stores in AI_attempt_puzzle_guess's array loop.
+// E:\gamedcs\puzzlewindow.cpp:279, dc 0x1154c4. Both DC line281
+// and Mac0x147ad0 clear visibility immediately after object type.
+// Mac retains this ordinary TU constructor in matchPuzzle's first-tile
+// local; keep its body before the adjacent cell-taking constructor.
+MAC_ADDRESS(0x147ab8, 0x70)
+type_AI_puzzle_tile::type_AI_puzzle_tile()
+{
+    m_objectType = 0;
+    m_visible = 0;
+    m_objectX = -1;
+    m_objectY = -1;
+    m_terrain = -1;
+    m_river = 0;
+    m_road = 0;
+    m_diggable = 1;
+}
 
-VA(0x0052c770, 0x140)  // dc 0x115538
+static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17]);
+
+VA(0x0052c770, 0x140) MAC_ADDRESS(0x147b28, 0x1e0)  // dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
     m_objectType = 0;
@@ -325,16 +329,17 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
 
+MAC_ADDRESS(0x147d08, 0x178)
 unsigned char type_AI_puzzle_tile::operator==(
-    const type_AI_puzzle_tile* arg) const
+    const type_AI_puzzle_tile& arg) const
 {
-    return m_objectType == arg->m_objectType
-        && m_objectX == arg->m_objectX
-        && m_objectY == arg->m_objectY
-        && m_terrain == arg->m_terrain
-        && m_river == arg->m_river
-        && m_road == arg->m_road
-        && m_diggable == arg->m_diggable;
+    return m_objectType == arg.m_objectType
+        && m_objectX == arg.m_objectX
+        && m_objectY == arg.m_objectY
+        && m_terrain == arg.m_terrain
+        && m_river == arg.m_river
+        && m_road == arg.m_road
+        && m_diggable == arg.m_diggable;
 }
 
 // E:\gamedcs\puzzlewindow.cpp:334
@@ -346,7 +351,7 @@ unsigned char type_AI_puzzle_tile::operator==(
 // final cursors are not dereferenced, but their formation is not valid portable
 // C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
 // remain non-exact. No extra allocation or padding guarantee is claimed.
-VA(0x0052c8b0, 0xFC)  // bracketed between tile ctor and AI attempt, dc 0x11577c
+VA(0x0052c8b0, 0xFC) MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt, dc 0x11577c
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
     int offsetX = (-16 - destX) & 31;
@@ -391,6 +396,7 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
 
+MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
     long puzzle;
@@ -419,6 +425,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
 
+MAC_ADDRESS(0x1480b8, 0x190)
 static void createAIPuzzleMap(long player, unsigned char* visible,
                             long puzzleX, long puzzleY,
                             type_AI_puzzle_tile (&puzzleMap)[19][17])
@@ -440,11 +447,13 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 }
 
 // E:\gamedcs\puzzlewindow.cpp:614, dc 0x115838
-VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
+// Mac 0x148b4c..0x148b8c initializes the result at this first-use boundary;
+// direct construction keeps its canonical point constructor and avoids a copy.
+// Retail loads current before storing best; DC 668/669 spans support the
+// point assignment before that scalar update (Windows 99.22 -> 100).
+VA(0x0052c9b0, 0x55B) MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller, dc 0x115f64
 type_point aiAttemptPuzzleGuess(long player)
 {
-    type_point result;
-
     int found = g_game->setupPuzzlePieces(player, 1);
     double uncovered =
         found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
@@ -460,9 +469,7 @@ type_point aiAttemptPuzzleGuess(long player)
             if (guess.m_x < 0)
                 return guess;
 
-            result.m_x = -1;
-            result.m_y = -1;
-            result.m_z = -1;
+            type_point result(-1, -1, -1);
 
             int best = 0x7fff;
             type_point current;
@@ -473,7 +480,7 @@ type_point aiAttemptPuzzleGuess(long player)
                      ++current.m_y) {
                     if (!current.isValid())
                         continue;
-                    if (!g_game->m_worldMap.cell(current)->isDiggable())
+                    if (!g_game->getCell(current)->isDiggable())
                         continue;
 
                     type_point index;
@@ -487,8 +494,8 @@ type_point aiAttemptPuzzleGuess(long player)
                         int distance = abs(guess.m_y - current.m_y)
                                        + abs(guess.m_x - current.m_x);
                         if (result.m_x < 0 || distance < best) {
-                            best = distance;
                             result = current;
+                            best = distance;
                         }
                     }
                 }
@@ -498,10 +505,7 @@ type_point aiAttemptPuzzleGuess(long player)
         }
     }
 
-    result.m_x = -1;
-    result.m_y = -1;
-    result.m_z = -1;
-    return result;
+    return type_point(-1, -1, -1);
 }
 
 // E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
@@ -514,9 +518,10 @@ type_point aiAttemptPuzzleGuess(long player)
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
 
+MAC_ADDRESS(0x148248, 0x240)
 static long checkMatch(long player, long firstX, long firstY,
                         type_point origin,
-                        type_AI_puzzle_tile (*puzzleMap)[17])
+                        type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
     long playerMask = 1 << player;
     origin.m_x = origin.m_x - firstX;
@@ -533,11 +538,10 @@ static long checkMatch(long player, long firstX, long firstY,
                 continue;
             if (!puzzleMap[firstX][firstY].m_visible)
                 continue;
-            if (!(getMapExtra(point.m_x, point.m_y, point.m_z) & playerMask))
+            if (!(getMapExtra(point) & playerMask))
                 continue;
-            type_AI_puzzle_tile tile(
-                g_game->m_worldMap.cell(point.m_x, point.m_y, point.m_z), point);
-            if (puzzleMap[firstX][firstY] == &tile)
+            type_AI_puzzle_tile tile(g_game->getCell(point), point);
+            if (puzzleMap[firstX][firstY] == tile)
                 ++matches;
             else
                 return 0;
@@ -546,24 +550,25 @@ static long checkMatch(long player, long firstX, long firstY,
     return matches;
 }
 
-// E:\gamedcs\puzzlewindow.cpp:520. The one AI/puzzle helper retail keeps out
-// of line, called from AI_attempt_puzzle_guess above; the declaration lives
-// in puzzlewindow.h so both sides of that call agree.
+// E:\gamedcs\puzzlewindow.cpp:520. DC proves a file-static helper and a
+// reference to the whole puzzle board, also used by check_match. Complete
+// increases that board to 19x17. The declaration and caller share this TU.
 
 // DC puzzlewindow.cpp:523-579 names first, result, point, and the two RECT
 // locals extents/rect. Lines 547-550 update left/right/top/bottom in that
-// order; lines 560-577 clamp each rect member through the shared min/max
-// wrappers. Their by-value operands explain retail's temporary copies.
+// order; lines 560-577 clamp each rect member through min/max. Native Mac
+// selectors take references to the census counters and RECT members; long
+// counters expose that overload while VC6 retains its integer wrappers.
 // Complete scans 19x17 cells instead of DC's 13x12. Retail and DC both use
 // map width in the Y window's first upper bound; preserve that asymmetry.
 // Restoring the rectangles, point constructors and map-level accessor gives
 // 95.3093%, from 92.4089% with scalar carriers and explicit long selectors.
 // Omitting DC's unused first-tile snapshot gives the same score. The remaining
 // differences are four size-only blocks with matching branch/call structure.
-// VC6 resolves the RECT LONG/LONG min calls to the integer wrapper; Clang
-// considers the integer/double overloads ambiguous, leaving an audit gap.
-VA(0x0052cf10, 0x5B4)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
-type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
+// Whole-board references, long census counters and uncast RECT bounds retain
+// Windows 95.1081%; Mac reference selectors remain a non-exact source lead.
+VA(0x0052cf10, 0x5B4) MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d, dc 0x115be8
+static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
     type_AI_puzzle_tile first;
     unsigned char found = 0;
@@ -576,8 +581,8 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     extents.top = 17;
     extents.bottom = 0;
 
-    for (int x = 0; x < 19; ++x) {
-        for (int y = 0; y < 17; ++y) {
+    for (long x = 0; x < 19; ++x) {
+        for (long y = 0; y < 17; ++y) {
             if (puzzleMap[x][y].m_visible) {
                 if (!found) {
                     first = puzzleMap[x][y];
@@ -605,13 +610,15 @@ type_point matchPuzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17])
     rect.left = max(rect.left, firstX - extents.left);
     rect.left = max(rect.left, 0);
     rect.right = g_mapWidth + firstX - 9;
-    rect.right = min(rect.right, g_mapWidth - extents.right + firstX);
+    rect.right = min(rect.right,
+                     g_mapWidth - extents.right + firstX);
     rect.right = min(rect.right, g_mapWidth);
     rect.top = firstY - 8;
     rect.top = max(rect.top, firstY - extents.top);
     rect.top = max(rect.top, 0);
     rect.bottom = g_mapHeight + firstY - 8;
-    rect.bottom = min(rect.bottom, g_mapWidth - extents.bottom + firstY);
+    rect.bottom = min(rect.bottom,
+                      g_mapWidth - extents.bottom + firstY);
     rect.bottom = min(rect.bottom, g_mapHeight);
 
     for (point.m_z = 0; point.m_z < g_game->getNumMapLevels(); ++point.m_z) {

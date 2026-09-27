@@ -1,0 +1,131 @@
+# Reviewed ResourceManager storage and archive-loader literals. The mutable
+# path object is source-owned storage in this TU; the fallback strings below
+# are immutable code-section payloads reached through relocated TOC pointers.
+
+[[data]]
+retail_va = 0x0069e4f0
+source = "src/resourcemanager.cpp"
+same_tu_definition = true
+mac_section = 1
+mac_offset = 0x5494
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "The archive pathname helper at code 0:0x15221c computes the address of the four-byte Mac std::string object directly from TOC 1+0x5494. The same direct TOC address is used at 0:0x152c1c and 0:0x154f40. Windows src/resourcemanager.cpp owns the uninitialized file-static DATA(0x0069e4f0) g_resourcePath definition in this TU. A file-static source probe changes the candidate relocation from indirect HUNK_XREF_16BIT_IL to the retained direct HUNK_XREF_16BIT while preserving five Windows exact functions. The stored bytes are checked but the runtime constructor and string contents are not scored."
+
+[[data]]
+retail_va = 0x0069e5b0
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c108
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "The palette-data helper reads the graphics-saturation byte through TOC 1+0x61c at 0:0x15349c; the loader relocates that cell to zero-initialized storage 1+0x52c108. Bitmap and palette loaders also consult the same cell. This binds source-owned storage without comparing an external initializer."
+
+[[data]]
+retail_va = 0x0069d860
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c12c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads firstMaskBits through TOC 1+0xe7c at 0:0x1544c8 into palette constructor argument r5; the cell points to this zero-filled source-owned storage."
+
+[[data]]
+retail_va = 0x0069d868
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c120
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads firstMaskShift through TOC 1+0xe80 at 0:0x1544d0 into palette constructor argument r6; the cell points to this zero-filled source-owned storage."
+
+[[data]]
+retail_va = 0x0069d854
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c128
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads greenMaskBits through TOC 1+0xe74 at 0:0x1544d8 into palette constructor argument r7; the cell points to this zero-filled source-owned storage."
+
+[[data]]
+retail_va = 0x0069d864
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c11c
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads greenMaskShift through TOC 1+0xe78 at 0:0x1544dc into palette constructor argument r8; the cell points to this zero-filled source-owned storage."
+
+[[data]]
+retail_va = 0x0069e5a0
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c124
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads lastMaskBits through TOC 1+0xe6c at 0:0x1544e0 into palette constructor argument r9; the cell points to this zero-filled source-owned storage."
+
+[[data]]
+retail_va = 0x0069d85c
+source = "src/resourcemanager.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x52c118
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "getSprite loads lastMaskShift through TOC 1+0xe70 at 0:0x1544e4 into palette constructor argument r10; the cell points to this zero-filled source-owned storage."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 0
+mac_offset = 0x2a6689
+mac_size = 12
+sha256 = "2c65475e0cac6977edfa6d0c03116aede600c3fdea6df6700de8343ef69d3506"
+evidence = "The getPalette24 fallback loads TOC 1+0x2be4 at 0:0x15350c; the loader points that cell to the exact NUL-terminated default.pal literal at code 0:0x2a6689."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 0
+mac_offset = 0x2a6695
+mac_size = 12
+sha256 = "8ad7b3f28fbb9569c78d6718c10553ed1236a693abaf3ad4fc4ddd5fd2a72785"
+evidence = "The loadFont fallback loads TOC 1+0x2be0 at 0:0x1538dc; the loader points that cell to the exact NUL-terminated default.fnt literal at code 0:0x2a6695."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 1
+mac_offset = 0x4cbc9
+mac_size = 35
+sha256 = "81b011f83e6b3832c71a6f674b606a2905ff7d4eac102ff3ef45c25d75e69cdb"
+evidence = "The retained ResourceManager::open loads TOC 1+0x2bf8 at 0:0x152930; the loader points directly to the 35-byte NUL-terminated CodeWarrior exception type name Q215ResourceManager13t_open_errors at data 1+0x4cbc9. The candidate emits the identical anonymous @54 payload after restoring the source-owned enum."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 1
+mac_offset = 0x54cc
+mac_size = 4
+sha256 = "b705efea49cb3296c6f0417c21fe14f10adb140333fd79d7cfc3318904f887ea"
+evidence = "ResourceManager::getSprite loads this direct TOC float at 0:0x1544b0 as HSV argument f1, also copied to f2. Bytes BF800000 encode the source -1.0f; six other ResourceManager palette paths use the same cell."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 1
+mac_offset = 0x54c8
+mac_size = 4
+sha256 = "314ed632b7fb5d384c2dde92e5f3acc0ab1bd767266747bc2f8a89aba31099ad"
+evidence = "ResourceManager::getSprite loads this direct TOC float at 0:0x1544b8 as HSV argument f3. Bytes 3FC00000 encode the source 1.5f; six other ResourceManager palette paths use the same cell."
+
+[[constants]]
+units = ["resourcemanager"]
+mac_section = 1
+mac_offset = 0x54c4
+mac_size = 4
+sha256 = "8bc645c4f017251f7ed69e83c40660e203f7282323b51bbcdd853a399978dd0b"
+evidence = "ResourceManager::getSprite loads this direct TOC float at 0:0x1544c0 as HSV argument f4. Bytes 3F99999A encode the source 1.2f; six other ResourceManager palette paths use the same cell."

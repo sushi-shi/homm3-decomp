@@ -33,7 +33,7 @@ TPoint g_tileDirections[TILE_DIR_COUNT] = {
     TPoint(0, 1),   TPoint(-1, 1),  TPoint(-1, 0),  TPoint(-1, -1)
 };
 
-VA(0x005BC910, 0x7D)
+VA(0x005BC910, 0x7D) MAC_ADDRESS(0x25bcd4, 0xf8)
 void __fastcall buildTileNeighbourMask(int width, int height, int x, int y,
                                        unsigned char* neighbourExists)
 {

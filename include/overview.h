@@ -110,8 +110,10 @@ public:
     void updateFlaggableIcons();
 
 private:
+    void addFlaggableItem(int itemType);
     void updateFlaggableIcon(int i);
     void doFlaggableButtons(int which);
+    void setHeroArtifactPage(int row, int rowWidgetId, int pageId);
     void clearButtons(int slot);
     void updateRollover(char* text);
     void doRollover(int codeY);

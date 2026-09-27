@@ -22,16 +22,6 @@
 #include "dxplay_com.h"
 #include "exceptions.h"
 
-// VC6's <new> declares `operator delete` WITHOUT an exception specification,
-// so under /GX every explicit `::operator delete` becomes a throw point and
-// the EH state variable has to be normalised across it
-// (`mov dword ptr [ebp-4], -1`).  Retail emits no such store before the
-// trailing `::operator delete(pAddress)` of the four Create*Connection
-// bodies - its operator delete was visible as nothrow, exactly as
-// ai_combat.h already records for AI_quick_combat/AI_auto_combat.  The
-// retail target is the 11-byte free thunk at 0x60ab30, which cannot throw.
-__declspec(nothrow) void __cdecl operator delete(void* p);
-
 // File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
 // forward-declared so the Enum* wrappers above them can take their addresses.
 int __stdcall enumAddressCallback(const GUID*, unsigned long, const void*, void*);
@@ -1431,12 +1421,16 @@ VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 // Objnames' 0x41b500 expands the derived allocation-error initialization
 // around a call here; gzinflatebuf retains and calls 0x4d6b80.
 
-TDebugBreak::TDebugBreak()
+// The body is the base list. RTTI proves the empty TDebugBreak base;
+// its default constructor is declared in exceptions.h. The
+VA(0x0049a0c0, 0xF9) MAC_ADDRESS(0x2207bc, 0x94)TRuntimeError::TRuntimeError(const char* text)
+    : std::runtime_error(text)
 {
 }
 
-VA(0x0049a0c0, 0xF9)
-TRuntimeError::TRuntimeError(const char* text)
-    : std::runtime_error(std::string(text))
+// The retained empty-base calls at 0x41b62a and 0x514dbd reach a body
+// folded with philAI::philAI at 0x524360. Its original TU is unknown.
+MAC_ADDRESS(0x2207b8, 0x4)
+TDebugBreak::TDebugBreak()
 {
 }

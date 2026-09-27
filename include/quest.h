@@ -20,6 +20,7 @@
 #define HOMM3_QUEST_H
 
 #include "va.h"
+#include "abstractfile.h"
 #include "seerhuttext.h"
 
 #include <string>
@@ -64,6 +65,12 @@ enum EQuestType {
 // 0x40; nothing between the vptr and there is attested.
 class type_quest {
 public:
+    // Native Mac ctor 0x163ff4 places the vptr before selector +4 and texts
+    // +8/+c/+10. CodeWarrior follows the first virtual declaration's position;
+    // declaring this existing slot before fields restores that layout. Windows
+    // keeps its original vptr-first layout and all current byte matches.
+    virtual ~type_quest();
+
     // SLICED 2026-08-21 out of the family's slot-13 serializer, which
     // writes every one of these in this order and is the only body in
     // the image that touches all of them: a byte at +0x04, a byte
@@ -108,11 +115,6 @@ public:
     // nothing in this tree reaches them yet, so they are placeholders whose
     // only job is to hold the offsets - do NOT invent semantics for them.
 
-    // Slot 0: the destructor. Retail's slot-0 bodies are scalar deleting
-    // dtors - 0x571530 is `call <base dtor> / test [ebp+8],1 / call
-    // operator delete / mov eax,esi`, the standard `??_G` shape - so the
-    // source declared `virtual ~type_quest()`.
-    virtual ~type_quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
     virtual int getAIValue(int player) { return 0; }
@@ -182,6 +184,14 @@ public:
     // not. `Load` / `LoadFromMap` are provisional names for that split.
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    // Each quest text writes its length, then its current payload.
+    // This repeated operation is expanded three times in Mac base save.
+    static int writeText(TAbstractFile* file, const std::string& text)
+    {
+        int length = text.length();
+        writeLittleEndianValue(file, length);
+        return file->write(text.c_str(), text.length());
+    }
     virtual void save(TAbstractFile* file);
     // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
     // strings above from columns 0/1/2 of its own text group, and only
@@ -248,6 +258,7 @@ public:
     std::string getProgressDialogText();
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
+    MAC_ADDRESS(0x169418, 0x24)
     std::string getCompletionText() { return m_completionText; }
     // The exact HD structural twin maps this deadline suffix builder to
     // retail 0x56d040. The two dated dialog getters and the complex skill /
@@ -288,6 +299,7 @@ public:
 
     std::string skillRequirementText(
         const signed char (&skills)[4]);
+    void showSkillRequirementsDialog(const char* text, const signed char* skills);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void doProposalDialog(hero* currentHero);
@@ -355,7 +367,7 @@ public:
     std::vector<TArtifact> m_artifacts;  // +0x40
 
     type_artifact_quest(unsigned char flags);
-    type_artifact_quest(unsigned char flags, TArtifact artifact, int textRow);
+    type_artifact_quest(TArtifact artifact, int textRow);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -374,6 +386,8 @@ public:
     virtual void setDefaultText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    void showArtifactProgress(const char* text,
+                              const std::vector<TArtifact>& artifacts);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
@@ -443,6 +457,7 @@ public:
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
+    virtual void save(TAbstractFile* file);
     virtual void doProposalDialog(hero* currentHero);
     virtual void doProgressDialog();
     virtual std::string getQuestDescription();

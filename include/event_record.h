@@ -200,9 +200,9 @@ public:
     type_record_erase() {}
 
     type_point m_location;         // +0x08
-    int m_objectId;               // +0x0c
-    unsigned int m_extraInfo;     // +0x10
-    int m_objectIndex;            // +0x14
+    long m_objectId;              // +0x0c
+    unsigned long m_extraInfo;    // +0x10
+    long m_objectIndex;           // +0x14
 };
 
 // Dreamcast names the complete tail; retail independently proves each

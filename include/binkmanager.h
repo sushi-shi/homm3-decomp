@@ -3,7 +3,13 @@
 
 #include "va.h"
 
+#if defined(HOMM3_TARGET_MAC)
+struct BINK;
+typedef BINK* HBINK;
+struct BINKSUMMARY;
+#else
 #include <bink.h>
+#endif
 
 // The active vendor header is patched from its preserved 1.0a source to the
 // complete 0.5a layouts proved by Dreamcast CodeView. Retail independently

@@ -1,9 +1,7 @@
 // crt_process.h - the CRT thread entry points used by the game.
 
-// VC6's <process.h> hides these declarations under _MT, while the retail
-// singleselectionwindow.obj is a /ML compiland that still calls both symbols.
-// Keep the ABI spelling in one reviewed owner instead of repeating it in a
-// consumer or changing the TU's _MT preprocessor state.
+// Keep these thread-entry ABI declarations in one reviewed owner without
+// pulling <process.h> and its additional declarations into every consumer.
 #ifndef HOMM3_CRT_PROCESS_H
 #define HOMM3_CRT_PROCESS_H
 

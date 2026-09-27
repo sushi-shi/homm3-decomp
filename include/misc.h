@@ -14,7 +14,6 @@ void sRand(int seed);              // 0x50c5f0
 int sRandom(int lower, int upper);
 void checkConfigFile();             // 0x50b260
 void setGameDefaults();             // 0x50b4d0
-void setDefaultSystemOptions();
 void setDefaultCombatOptions();     // 0x50b700
 void readPrefsFromRegistry();
 void writePrefsToRegistry();        // 0x50be10

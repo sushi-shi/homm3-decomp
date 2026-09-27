@@ -403,7 +403,7 @@ DATA(0x00695030) long g_surrenderCost;
 DATA(0x006985a3) unsigned char g_combatRetreated;
 DATA(0x00697744) unsigned char g_combatSurrendered;
 
-VA(0x00462760, 0x127)  // dc 0x5d3e0
+VA(0x00462760, 0x127) MAC_ADDRESS(0x06de48, 0x150)  // dc 0x5d3e0
 combatManager::combatManager()
     : m_combatWindow(0)
 {
@@ -430,10 +430,10 @@ VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 // 0x462920 clears +4/+8; 0x462930 releases +8 then +4, including cleanup
 // of the second member if the first release throws. CodeView's older
 // TArcher uses raw Sprite/Missile pointers and has no written constructor.
-VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher)
-VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher)
+VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher) MAC_COMPGEN_ADDRESS(0x06e02c, 0x10, CLASS_CTOR, TArcher)
+VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher) MAC_COMPGEN_ADDRESS(0x06df98, 0x94, IMPLICIT_DTOR, TArcher)
 
-VA(0x00462990, 0x8F)  // dc 0x5d538
+VA(0x00462990, 0x8F) MAC_ADDRESS(0x06e140, 0xe0)  // dc 0x5d538
 unsigned char combatManager::loadWallTraitsTable()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -470,7 +470,7 @@ unsigned char combatManager::loadWallTraitsTable()
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
 
-VA(0x00462a20, 0x83F)  // dc 0x5d60c
+VA(0x00462a20, 0x83F) MAC_ADDRESS(0x06e220, 0x5c4)  // dc 0x5d60c
 int combatManager::open(int newPriority)
 {
     SAMPLE2 sample;
@@ -508,8 +508,10 @@ int combatManager::open(int newPriority)
     m_powSprite = 0;
     m_powSpellEffect = -1;
 
-    int leftTactics = m_heroes[0] ? m_heroes[0]->m_skillLevel[19] : 0;
-    int rightTactics = m_heroes[1] ? m_heroes[1]->m_skillLevel[19] : 0;
+    int leftTactics = m_heroes[0]
+        ? m_heroes[0]->getSecondarySkill(eSecSkillBattleTactics) : 0;
+    int rightTactics = m_heroes[1]
+        ? m_heroes[1]->getSecondarySkill(eSecSkillBattleTactics) : 0;
     int tacticsSide = rightTactics > leftTactics;
     m_placementBoundaryDepth = leftTactics - rightTactics;
     m_creaturePlacement = m_placementBoundaryDepth != 0 && !m_isSurrounded;
@@ -564,7 +566,7 @@ int combatManager::open(int newPriority)
         char music[100];
         sprintf(music,
                 DATA_COMPGEN(0x0066fedc, combatMusicFormat, "combat%02d"),
-                random(1, 4));
+                sRandom(1, 4));
         g_soundManager->startMP3(music, 0, 1);
     }
 
@@ -597,7 +599,7 @@ int combatManager::open(int newPriority)
     return 0;
 }
 
-VA(0x00463260, 0x105)  // dc 0x5dc70
+VA(0x00463260, 0x105) MAC_ADDRESS(0x06e7e4, 0x154)  // dc 0x5dc70
 void combatManager::close()
 {
     if (!isQuickCombat())
@@ -624,7 +626,7 @@ void combatManager::close()
 // extern declaration is include-set inert where a whole header is not.
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 
-VA(0x00463370, 0x18D)  // dc 0x5ddc0
+VA(0x00463370, 0x18D) MAC_ADDRESS(0x06e938, 0x1d0)  // dc 0x5ddc0
 void combatManager::loadIcons()
 {
     m_combatCellGridBitmap = ResourceManager::getBitmap816(
@@ -672,7 +674,7 @@ void combatManager::loadIcons()
     }
 }
 
-VA(0x00463500, 0xFD)  // dc 0x5dfb4
+VA(0x00463500, 0xFD) MAC_ADDRESS(0x06eb08, 0x164)  // dc 0x5dfb4
 void combatManager::freeIcons()
 {
     for (int group = 0; group < 18; ++group) {
@@ -743,7 +745,7 @@ void combatManager::freeIcons()
 // array receiver were a score-neutral flattening. Fatal rules now preserve
 // these five names, types, declaration scopes/order and receiver boundary.
 
-VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
+VA(0x00463600, 0x3D8) MAC_ADDRESS(0x06ec6c, 0x420)  // anchor-callee, dc 0x5e09c
 void combatManager::loadArmies(unsigned char isSurrounded)
 {
     int side;
@@ -754,12 +756,14 @@ void combatManager::loadArmies(unsigned char isSurrounded)
             m_armies[side][slot].initClean();
         }
         m_numArmies[side] = 0;
-        int placed = 0;
         hero* combatHero = m_heroes[side];
         armyGroup* group = m_armyGroups[side];
         const unsigned char grouped =
             combatHero && (combatHero->m_formation & 1) && m_sideIsAi[side];
         const int layout = group->getNumArmies() - 1;
+        // Mac0x6ed50 initializes the placement counter after the layout call.
+        // This order also restores Windows' known-zero comparison.
+        int placed = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
             if (m_armyGroups[side]->m_armies[i] == CREATURE_NONE)
                 continue;
@@ -844,7 +848,7 @@ void combatManager::loadArmies(unsigned char isSurrounded)
 // its army members are reference-counted handles whose destructor cleanup
 // is byte-proven at 0x43d400. DoVictory retains this call and Close expands
 // it. The earlier provisional name stopCombatSounds split this identity.
-VA(0x004639e0, 0x0E)  // dc 0x5e3d8
+VA(0x004639e0, 0x0E) MAC_ADDRESS(0x06f08c, 0x2c)  // dc 0x5e3d8
 void combatManager::freeArmies()
 {
     g_soundManager->stopAllSamples(1);
@@ -853,6 +857,7 @@ void combatManager::freeArmies()
 // Original: combatManager::CheckNativeTerrain; cmbtmgr.cpp:1498, dc 0x5e948.
 // SetupCombat expands this ordinary member after LoadArmies. Each side's
 // summary flag is set by the first native-terrain army in that group.
+MAC_ADDRESS(0x06f86c, 0x6c)
 void combatManager::checkNativeTerrain()
 {
     for (int side = 0; side < 2; side++) {
@@ -866,7 +871,7 @@ void combatManager::checkNativeTerrain()
     }
 }
 
-VA(0x004639f0, 0x270)  // dc 0x5e464
+VA(0x004639f0, 0x270) MAC_ADDRESS(0x06f0b8, 0x330)  // dc 0x5e464
 void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
     g_combatSeed = seed;
@@ -965,7 +970,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
 // CheckNativeTerrain loop: [eax+edi] here versus [edi+eax] in retail. Keep
 // the Dreamcast-shaped m_numArmies[side] loop instead of reverse indexing.
 
-VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
+VA(0x00463c60, 0x43C) MAC_ADDRESS(0x06f3e8, 0x484)  // anchor-callee, dc 0x5e690
 void combatManager::initNonVisualVars()
 {
     m_debugNoSpellLimit = 0;
@@ -1058,19 +1063,19 @@ void combatManager::initNonVisualVars()
     checkNativeTerrain();
 }
 
-VA(0x004640a0, 0x144)  // dc 0x5e9ac
+VA(0x004640a0, 0x144) MAC_ADDRESS(0x06f8d8, 0x1fc)  // dc 0x5e9ac
 void combatManager::setupAdjacencyArray()
 {
     int adjacent;
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        int row = hex / COMBAT_GRID_ROW_STRIDE;
-        int column = hex % COMBAT_GRID_ROW_STRIDE;
+        int row = gridY(hex);
+        int column = gridX(hex);
 
         for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
                 direction++) {
-            if (validHex(hex)
-                    && (column == 0
-                        || column == COMBAT_GRID_LAST_COLUMN)) {
+            // DC cmbtmgr.cpp:1541 names InInvisibleColumn here; Mac expands
+            // its bounds and edge-column tests in the call-free loop.
+            if (inInvisibleColumn(hex)) {
                 m_adjacentCells[hex][direction] = -1;
                 if (column == 0) {
                     if (direction >= COMBAT_DIRECTION_3)
@@ -1082,27 +1087,27 @@ void combatManager::setupAdjacencyArray()
 
             switch (direction) {
             case COMBAT_DIRECTION_0:
-                adjacent = (row & 1) ? hex - 17 : hex - 16;
+                adjacent = rowIsOdd(row) ? hex - 17 : hex - 16;
                 break;
             case COMBAT_DIRECTION_1:
                 adjacent = hex + 1;
                 break;
             case COMBAT_DIRECTION_2:
-                adjacent = (row & 1) ? hex + 17 : hex + 18;
+                adjacent = rowIsOdd(row) ? hex + 17 : hex + 18;
                 break;
             case COMBAT_DIRECTION_3:
-                adjacent = (row & 1) ? hex + 16 : hex + 17;
+                adjacent = rowIsOdd(row) ? hex + 16 : hex + 17;
                 break;
             case COMBAT_DIRECTION_4:
                 adjacent = hex - 1;
                 break;
             case COMBAT_DIRECTION_5:
-                adjacent = (row & 1) ? hex - 18 : hex - 17;
+                adjacent = rowIsOdd(row) ? hex - 18 : hex - 17;
                 break;
             }
 
             if (validHex(adjacent)) {
-                int adjacentColumn = adjacent % COMBAT_GRID_ROW_STRIDE;
+                int adjacentColumn = gridX(adjacent);
                 if (adjacentColumn != 0
                         && adjacentColumn != COMBAT_GRID_LAST_COLUMN) {
                     m_adjacentCells[hex][direction] =
@@ -1114,7 +1119,7 @@ void combatManager::setupAdjacencyArray()
         }
     }
 }
-VA(0x004641f0, 0xDA)  // dc 0x5eb40
+VA(0x004641f0, 0xDA) MAC_ADDRESS(0x06fad4, 0x128)  // dc 0x5eb40
 void combatManager::updateArmyGroup(int whichSide)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
@@ -1148,7 +1153,7 @@ void combatManager::updateArmyGroup(int whichSide)
     }
 }
 
-VA(0x004642d0, 0xDC)  // dc 0x5eca8
+VA(0x004642d0, 0xDC) MAC_ADDRESS(0x06fbfc, 0x108)  // dc 0x5eca8
 void combatManager::generateMap()
 {
     int y;
@@ -1176,7 +1181,7 @@ void combatManager::generateMap()
     }
 }
 
-VA(0x004643b0, 0x317)  // dc 0x5ed68
+VA(0x004643b0, 0x317) MAC_ADDRESS(0x06fd04, 0x2c4)  // dc 0x5ed68
 void combatManager::determineCombatTerrain()
 {
     m_magicTerrain = -1;
@@ -1198,11 +1203,11 @@ void combatManager::determineCombatTerrain()
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->getMapObject() == MINE
             && m_combatCell->m_isTrigger
-            && (g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+            && (g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_6
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_type
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_type
                     == COMBAT_MINE_TYPE_4
-                || g_game->m_mines[m_combatCell->getMapExtraInfo()].m_isAbandoned)) {
+                || g_game->getMine(m_combatCell->getMapExtraInfo())->m_isAbandoned)) {
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (m_combatCell->m_flags0011 & 0x200) {
         m_magicTerrain = 0;
@@ -1246,7 +1251,7 @@ void combatManager::determineCombatTerrain()
     }
 }
 
-VA(0x004646d0, 0xC5)  // dc 0x5ef54
+VA(0x004646d0, 0xC5) MAC_ADDRESS(0x06ffc8, 0x110)  // dc 0x5ef54
 const char* combatManager::getBackgroundName()
 {
     const char* background;
@@ -1281,30 +1286,24 @@ const char* combatManager::getBackgroundName()
     m_combatFringe = -1;
     return background;
 }
-VA(0x004647a0, 0x17A)  // dc 0x5f058
+// Bound-first SLimitData comparisons reproduce retail's four expanded
+// rectangle checks; all 39 CFG blocks and the six return sites now agree.
+VA(0x004647a0, 0x17A) MAC_ADDRESS(0x0700d8, 0x2fc)  // dc 0x5f058
 int combatManager::getGridIndex(int x, int y) const
 {
-    if (combatManager::s_leftHeroLimits.m_minX <= x && x <= combatManager::s_leftHeroLimits.m_maxX
-            && combatManager::s_leftHeroLimits.m_minY <= y
-            && y <= combatManager::s_leftHeroLimits.m_maxY)
+    if (combatManager::s_leftHeroLimits.contains(x, y))
         return 252;
-    if (combatManager::s_rightHeroLimits.m_minX <= x && x <= combatManager::s_rightHeroLimits.m_maxX
-            && combatManager::s_rightHeroLimits.m_minY <= y
-            && y <= combatManager::s_rightHeroLimits.m_maxY)
+    if (combatManager::s_rightHeroLimits.contains(x, y))
         return 253;
-    if (combatManager::s_mainBuildingLimits.m_minX <= x && x <= combatManager::s_mainBuildingLimits.m_maxX
-            && combatManager::s_mainBuildingLimits.m_minY <= y
-            && y <= combatManager::s_mainBuildingLimits.m_maxY)
+    if (combatManager::s_mainBuildingLimits.contains(x, y))
         return 254;
-    if (combatManager::s_upperTowerLimits.m_minX <= x && x <= combatManager::s_upperTowerLimits.m_maxX
-            && combatManager::s_upperTowerLimits.m_minY <= y
-            && y <= combatManager::s_upperTowerLimits.m_maxY)
+    if (combatManager::s_upperTowerLimits.contains(x, y))
         return 255;
 
     int px = x - 14;
     int py = y - 86;
     int row = py / 42;
-    if ((row & 1) == 0)
+    if (!rowIsOdd(row))
         px -= 22;
     int col = px / 44;
     if (px < 0 || px >= 748 || py < 0 || py >= 472)
@@ -1315,16 +1314,16 @@ int combatManager::getGridIndex(int x, int y) const
         if (depth < abs(across - 22) / 2) {
             row--;
             if (across < 22) {
-                if ((row & 1) == 0)
+                if (!rowIsOdd(row))
                     col--;
-            } else if ((row & 1) != 0) {
+            } else if (rowIsOdd(row)) {
                 col++;
             }
         }
     }
     if (row < 0 || row >= 11 || col < 0 || col >= 17)
         return -1;
-    return row * 17 + col;
+    return getHexIndex(col, row);
 }
 
 // Original: combatManager::CombineGroups; cmbtmgr.cpp:1971, dc 0x5f1d0.
@@ -1356,7 +1355,7 @@ void combatManager::combineGroups(armyGroup* src, armyGroup* dest)
 }
 
 // and the creature-name lookup uses CreatureType.h's canonical helper.
-VA(0x00464920, 0x211)  // dc 0x5f2b0
+VA(0x00464920, 0x211) MAC_ADDRESS(0x0703d4, 0x204)  // dc 0x5f2b0
 void combatManager::checkApplyGoodMorale(int group, int index)
 {
     if (group < 0)
@@ -1372,7 +1371,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
         return;
     if (!stack->m_numTroops)
         return;
-    if (random(1, 24) > stack->getMorale(1))
+    if (sRandom(1, 24) > stack->getMorale(1))
         return;
     stack->m_monInfo.m_attributes = (stack->m_monInfo.m_attributes & ~creatureDone) | creatureMorale;
     if (!isQuickCombat()) {
@@ -1380,7 +1379,7 @@ void combatManager::checkApplyGoodMorale(int group, int index)
             DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
         spellEffect(20, stack, 100, 0);
         sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_MORALE_FORMAT),
-            getArmyName(stack->m_creatureType, stack->m_numTroops));
+            stack->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         waitEndSample(sample, -1);
     }
@@ -1388,20 +1387,20 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x00464b40, 0x1FB)  // dc 0x5f3c4
+VA(0x00464b40, 0x1FB) MAC_ADDRESS(0x0705d8, 0x1d8)  // dc 0x5f3c4
 int combatManager::checkApplyBadMorale(int group, int index)
 {
     if (group >= 0 && index >= 0) {
         army* stack = &m_armies[group][index];
-        if (random(1, 12) <= -stack->getMorale(1)) {
-            if (m_sideIsAi[group] || random(1, 4) != 1) {
+        if (sRandom(1, 12) <= -stack->getMorale(1)) {
+            if (m_sideIsAi[group] || sRandom(1, 4) != 1) {
                 stack->m_monInfo.m_attributes |= creatureDone;
                 if (!isQuickCombat()) {
                     SAMPLE2 sample = loadPlaySample(DATA_COMPGEN(
                         0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
                     sprintf(g_text,
                         g_generalText->getText(GENERAL_TEXT_BAD_MORALE_FORMAT),
-                        getArmyName(stack->m_creatureType, stack->m_numTroops));
+                        stack->getName());
                     m_combatWindow->combatMessage(g_text, 1, 0);
                     spellEffect(30, stack, 100, 1);
                     waitEndSample(sample, -1);
@@ -1413,7 +1412,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
     return 0;
 }
 
-VA(0x00464d40, 0x20D)
+VA(0x00464d40, 0x20D) MAC_ADDRESS(0x0707b0, 0x208)
 unsigned char combatManager::unnamed464d40(army* selected)
 {
     if (selected->is(creatureNoMorale))
@@ -1421,11 +1420,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
     if (selected->m_creatureType == CREATURE_AZURE_DRAGON)
         return 0;
 
-    int actualSide;
-    if (selected->m_spellInfluence[60])
-        actualSide = 1 - selected->m_combatSide;
-    else
-        actualSide = selected->m_combatSide;
+    int actualSide = selected->getControllingSide();
     int opposingSide = 1 - actualSide;
 
     int azureDragons = 0;
@@ -1446,7 +1441,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_COMBAT_FEAR_FORMAT),
                 getArmyName(CREATURE_AZURE_DRAGON, azureDragons),
-                getArmyName(selected->m_creatureType, selected->m_numTroops));
+                selected->getName());
         m_combatWindow->combatMessage(g_text, 1, 0);
         spellEffect(15, selected, 100, 1);
         waitEndSample(sample, -1);
@@ -1454,7 +1449,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
     return 1;
 }
 
-VA(0x00464f50, 0x123)
+VA(0x00464f50, 0x123) MAC_ADDRESS(0x0709b8, 0x1bc)
 unsigned char combatManager::unnamed464f50(
     const army* incumbent, const army* candidate)
 {
@@ -1476,12 +1471,12 @@ unsigned char combatManager::unnamed464f50(
             return incumbent->getSpeed() < candidate->getSpeed();
         return incumbent->getSpeed() > candidate->getSpeed();
     }
-    if (incumbent->m_combatSide != candidate->m_combatSide)
-        return incumbent->m_combatSide != m_actingSide;
+    if (incumbent->getOwningSide() != candidate->getOwningSide())
+        return incumbent->getOwningSide() != m_actingSide;
     return incumbent->m_bitIndex < candidate->m_bitIndex;
 }
 
-VA(0x00465080, 0x2A2)  // dc 0x5f518
+VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)  // dc 0x5f518
 unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
@@ -1525,20 +1520,17 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
             if (best) {
                 if (!m_inSecondPhase)
                     best->newTurn();
-                if (best->m_spellInfluence[62])
-                    continue;
-                if (best->m_spellInfluence[70])
-                    continue;
-                if (best->m_spellInfluence[74])
+                // Mac 0x70d50..0x70d90 expands this inline predicate.
+                if (best->isIncapacitated())
                     continue;
                 if (checkingForBadMorale && !m_creaturePlacement
                     && !m_inSecondPhase) {
-                    if (checkApplyBadMorale(best->m_combatSide, best->m_bitIndex))
+                    if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
                         continue;
                     if (unnamed464d40(best))
                         continue;
                 }
-                setNextArmy(best->m_combatSide, best->m_bitIndex);
+                setNextArmy(best->getOwningSide(), best->m_bitIndex);
                 return 1;
             }
             break;
@@ -1601,7 +1593,7 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
 // byte-exact and removes the diagnostic inline-depth fence. Recovering the
 // two player references in isQuickCombat then restores retail's expansion
 // here as well: all 0x4f6 bytes, 74 blocks, 44 branches and 27 calls match.
-VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
+VA(0x00465330, 0x4F6) MAC_ADDRESS(0x070e9c, 0x508)  // anchor-global, dc 0x5f934
 void combatManager::setNextArmy(int group, int index)
 {
     army* stack = &m_armies[group][index];
@@ -1681,7 +1673,7 @@ void combatManager::setNextArmy(int group, int index)
     getControl();
 }
 
-VA(0x00465830, 0x76)  // dc 0x5fb14
+VA(0x00465830, 0x76) MAC_ADDRESS(0x0713a4, 0x170)  // dc 0x5fb14
 unsigned char combatManager::combatIsOver() const
 {
     for (int side = 0; side < 2; side++) {
@@ -1707,7 +1699,7 @@ unsigned char combatManager::combatIsOver() const
     return 0;
 }
 
-VA(0x004658b0, 0xBC)  // dc 0x5fc00
+VA(0x004658b0, 0xBC) MAC_ADDRESS(0x071514, 0x264)  // dc 0x5fc00
 unsigned char combatManager::isWinner(int thisSide) const
 {
     const int otherSide = 1 - thisSide;
@@ -1742,7 +1734,7 @@ unsigned char combatManager::isWinner(int thisSide) const
     return 1;
 }
 
-VA(0x00465970, 0x20)  // dc 0x5fcec
+VA(0x00465970, 0x20) MAC_ADDRESS(0x071778, 0xac)  // dc 0x5fcec
 TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
     for (int i = 0; i < 8; i++) {
@@ -1752,14 +1744,14 @@ TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
     return TWallTargetId(-1);
 }
 
-VA(0x00465990, 0x140)  // dc 0x5fd10
+VA(0x00465990, 0x140) MAC_ADDRESS(0x071824, 0x164)  // dc 0x5fd10
 void combatManager::damageWall(TWallTargetId targetWall, int damage)
 {
     if (damage <= 0)
         return;
 
     int strength;
-    strength = m_wallStrength[s_wallTargets[targetWall].m_wall] - damage;
+    strength = getWallStrength(targetWall) - damage;
     if (strength < 0)
         strength = 0;
 
@@ -1824,13 +1816,18 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // archer index uninitialised for any other hex - and its 0xfe -> 0 /
 // 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
 
-// Residual (95.0344%): FLOW-DISTANCE 0 and the call multisets agree
-// exactly, 17 against 17, so nothing structural is left. What remains
-// is register binding with the schedule already aligned - eax->ebx x11,
-// ecx->eax x8 - which is the register-homing family damage_message's
-// note also lands in. why-reg's B6/B14 naming knobs are the only route
-// the catalog offers and neither is source-addressable here.
+// DC records const numFrames; a conditional initializer preserves that lifetime.
+// The missile-frame output lives in its animation branch, reproducing
+// retail's -0x28 home. Naming the staged double before the retained reduction
+// call, then directly converting the product, is Windows exact. Assigning
+// that product back to the double introduces a redundant /Op rounding spill.
 
+// Mac 0x719e8..0x719f8 orders the lower/keep/upper arms; its facing
+// decision merges an integer before the field store at0x71a70. VC6
+// canonicalizes the source choices. Mac divides tower damage by the
+// retained reduction at0x71c20; Windows multiplies, so that port-specific
+// arithmetic is recorded separately from shared helper recovery.
+//
 // Two shapes the bytes forced and that are worth not re-litigating:
 // the damage accumulator is a DOWN-counted loop over a copy of
 // numTroops (retail spills the count and steps it with dec/jne, which
@@ -1838,17 +1835,17 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // `damage * ComputeDefenderDamageReduction(1)` is in THAT operand
 // order - retail materialises and spills the int-to-double conversion
 // BEFORE the call, which is the left-operand-first shape.
-VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
+VA(0x00465ad0, 0x443) MAC_ADDRESS(0x071988, 0x408)  // anchor-callee, dc 0x5feac
 void combatManager::keepAttack(int towerPos)
 {
-    army* tower = &m_armies[m_actingSide][m_actingSlot];
+    army* tower = getCurrentArmy();
     int archerIndex;
     switch (tower->m_gridIndex) {
-    case COMBAT_HEX_KEEP:
-        archerIndex = 0;
-        break;
     case COMBAT_HEX_LOWER_TOWER:
         archerIndex = 1;
+        break;
+    case COMBAT_HEX_KEEP:
+        archerIndex = 0;
         break;
     case COMBAT_HEX_UPPER_TOWER:
         archerIndex = 2;
@@ -1863,12 +1860,17 @@ void combatManager::keepAttack(int towerPos)
     int delay;
     int startX;
     int startY;
-    int missileFrame;
 
     if (!isQuickCombat()) {
         int destX = target->midX();
         const int destY = target->midY();
-        archer->m_facing = destX >= archer->m_x;
+        int facing;
+        if (destX < archer->m_x)
+            facing = 0;
+        else
+            facing = 1;
+        archer->m_facing = facing;
+        int missileFrame;
         getMissileStartingPosition(archer->m_creatureType, archer->m_x,
                                    archer->m_y, archer->m_facing, destX,
                                    destY, archer->m_shadowSprite,
@@ -1880,9 +1882,9 @@ void combatManager::keepAttack(int towerPos)
                 g_creatureTypeTraits[archer->m_creatureType].m_samplePrefix);
         sample = loadPlaySample(g_text);
 
-        int frames = info->m_attackFrames;
-        if (frames <= 0)
-            frames = archer->m_sprite->getNumFrames(armyDir);
+        const int frames = info->m_attackFrames > 0
+            ? info->m_attackFrames
+            : archer->m_sprite->getNumFrames(armyDir);
         archer->m_sequence = armyDir;
         delay = info->m_attackStartCycleTime / frames;
 
@@ -1903,9 +1905,17 @@ void combatManager::keepAttack(int towerPos)
     // up-counted `for (i = 0; i < n; i++)` does not produce.
     int damage = 0;
     for (int shot = tower->m_numTroops; shot > 0; shot--)
-        damage += random(2, 4);
+        damage += sRandom(2, 4);
+    // The shared reduction helper is dual exact. This caller differs:
+    // Mac 0x71c20 divides by that multiplier, Windows multiplies it.
+    double scaledDamage = damage;
+#ifdef HOMM3_TARGET_MAC
     damage = static_cast<int>(
-        damage * target->computeDefenderDamageReduction(1));
+        scaledDamage / target->computeDefenderDamageReduction(1));
+#else
+    damage = static_cast<int>(
+        scaledDamage * target->computeDefenderDamageReduction(1));
+#endif
     if (damage <= 0)
         damage = 1;
 
@@ -1932,13 +1942,13 @@ void combatManager::keepAttack(int towerPos)
         waitEndSample(sample, -1);
 }
 
-VA(0x00465f20, 0xB2)
+VA(0x00465f20, 0xB2) MAC_ADDRESS(0x071d90, 0xc0)
 void combatManager::unnamed465f20()
 {
     int numArchers;
     int archerLevel;
     m_defendingTown->calcNumLevelArchers(&numArchers, &archerLevel);
-    if (m_armies[m_actingSide][m_actingSlot].m_gridIndex != COMBAT_HEX_KEEP)
+    if (getCurrentArmy()->m_gridIndex != COMBAT_HEX_KEEP)
         numArchers = (numArchers + 1) / 2;
 
     int target = chooseBallistaTarget(0, archerLevel, numArchers * 6 / 2);
@@ -1962,6 +1972,7 @@ float combatManager::computeDamageModifier(int attack, int defense)
 // into CalculateGainedExperience. The helper owns the stack loop, both
 // army::Is calls (line 2745), and the defeated-hero bonus (2749/2750).
 
+MAC_ADDRESS(0x071e50, 0xd8)
 int combatManager::experienceValueOfStack(int whichGroup)
 {
     int total = 0;
@@ -1976,7 +1987,7 @@ int combatManager::experienceValueOfStack(int whichGroup)
     return total;
 }
 
-VA(0x00465fe0, 0x29)  // dc 0x60318
+VA(0x00465fe0, 0x29) MAC_ADDRESS(0x071f28, 0x88)  // dc 0x60318
 void combatManager::resetHitByCreature()
 {
     for (int side = 0; side < 2; side++) {
@@ -1985,7 +1996,7 @@ void combatManager::resetHitByCreature()
     }
 }
 
-VA(0x00466010, 0x243)  // dc 0x60354
+VA(0x00466010, 0x243) MAC_ADDRESS(0x071fb0, 0x294)  // dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
     const TObstacleInfo* const shape = &s_obstacleInfo[obstacleId];
@@ -2062,20 +2073,19 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //   * both obstacle-budget arms tail-merge into ONE Random call site,
 //     which is what says a single local is assigned in an if/else
 //     rather than two calls written out;
+//   * the landmine placement passes size()-1 directly. Dreamcast records
+//     no slot local, and retail pushes the final argument before the decrement;
 //   * the large-obstacle guard is the De Morgan form
 //     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
 //     retail falls THROUGH to Random on `jl` and skips on `je`, and the
 //     positive `!(a && b)` spelling emits those two swapped;
 //   * the placement loop is `while (placed < budget)` with `placed`
 //     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
-//     The inner re-draw is the ROTATED two-Pick shape PlaceLargeObstacle
-//     already carries - a leading `Pick()` and a second one at the foot
-//     of the reject loop, not a do/while with one site: retail emits two
-//     out-of-line Pick calls and a do/while can only ever emit one
-//     (89.8722 -> 91.5113 on that rewrite alone). The redundant
-//     `id < 0` re-test in front of place_obstacle survives it.
+//     Mac 0x72a34 keeps a single Pick call in the inner retry loop.
+//     The guarded retry preserves that call in CodeWarrior while VC6 rotates
+//     it into the retail initial/retry sites; a do/while misses the rotation.
 
-VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
+VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
 void combatManager::setupAndLoadObstacles()
 {
     m_obstacleAnimationFrame = 0;
@@ -2148,9 +2158,8 @@ void combatManager::setupAndLoadObstacles()
                 newLandmine.m_duration = 0;
                 newLandmine.m_dispelEffect = 0x3b;
                 m_obstacles.push_back(newLandmine);
-                int landmineSlot = m_obstacles.size();
-                landmineSlot--;
-                placeObstacle(newLandmine, landmineSlot, hex, hexcell::landMine);
+                placeObstacle(newLandmine, m_obstacles.size() - 1, hex,
+                              hexcell::landMine);
             }
         }
 
@@ -2176,9 +2185,9 @@ void combatManager::setupAndLoadObstacles()
     int budget;
     if (m_fortificationLevel >= COMBAT_FORTIFICATION_CITADEL
             && m_defendingTown->m_type == TOWN_STRONGHOLD)
-        budget = random(10, 16);
+        budget = sRandom(10, 16);
     else
-        budget = random(5, 12);
+        budget = sRandom(5, 12);
 
     unsigned int terrainMask = 0;
     unsigned int specialTerrainMask = 0;
@@ -2189,18 +2198,22 @@ void combatManager::setupAndLoadObstacles()
 
     if ((m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL
                 || m_defendingTown->m_type != TOWN_STRONGHOLD)
-            && random(1, 100) <= 40)
+            && sRandom(1, 100) <= 40)
         budget -= placeLargeObstacle(terrainMask, specialTerrainMask) / 2;
 
     int placed = 0;
     TPickANumber obstaclePicker(0, 90);
     while (placed < budget) {
-        int obstacleId = obstaclePicker.pick();
-        while (obstacleId >= 0
-               && !(s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
-               && !(s_obstacleInfo[obstacleId].m_specialTerrainMask
-                    & specialTerrainMask))
+        int obstacleId;
+        for (;;) {
             obstacleId = obstaclePicker.pick();
+            if (obstacleId < 0)
+                break;
+            if ((s_obstacleInfo[obstacleId].m_terrainMask & terrainMask)
+                || (s_obstacleInfo[obstacleId].m_specialTerrainMask
+                    & specialTerrainMask))
+                break;
+        }
         if (obstacleId < 0)
             break;
         if (placeObstacle(obstacleId))
@@ -2208,13 +2221,16 @@ void combatManager::setupAndLoadObstacles()
     }
 }
 
-VA(0x004668a0, 0x108)  // dc 0x6091c
+VA(0x004668a0, 0x108) MAC_ADDRESS(0x072ad0, 0x1d0)  // dc 0x6091c
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
     TPickANumber picker(0, 0x21);
-    int obstacleId = picker.pick();
-    while (obstacleId >= 0) {
+    // Mac 0x72b0c keeps the pick at the loop head.
+    for (;;) {
+        int obstacleId = picker.pick();
+        if (obstacleId < 0)
+            return 0;
         if ((terrainMask & s_elevationOverlay[obstacleId].m_terrainMask)
                 || (magicTerrainMask
                     & s_elevationOverlay[obstacleId].m_specialTerrainMask)) {
@@ -2228,12 +2244,10 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
             m_largeObstacleId = obstacleId;
             return count;
         }
-        obstacleId = picker.pick();
     }
-    return 0;
 }
 
-VA(0x004669b0, 0xBF)  // dc 0x609d0
+VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)  // dc 0x609d0
 void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
     const TObstacleInfo* const info = obstacle.m_shape;
@@ -2277,7 +2291,7 @@ void combatManager::placeAllObstacles()
     }
 }
 
-VA(0x00466b30, 0x11F)  // dc 0x60b20
+VA(0x00466b30, 0x11F) MAC_ADDRESS(0x072d58, 0x130)  // dc 0x60b20
 void combatManager::removeObstacle(int index)
 {
     if (index < 0
@@ -2286,11 +2300,11 @@ void combatManager::removeObstacle(int index)
         return;
     TObstacle* obstacle = &getObstacle(index);
     const TObstacleInfo* shape = obstacle->m_shape;
-    unsigned char rowIsOdd =
-        static_cast<unsigned char>((obstacle->m_hex / 0x11) & 1);
+    // Mac 0x72d9c/0x72de8 expands gridY and rowIsOdd at both checks.
+    unsigned char oddRow = rowIsOdd(gridY(obstacle->m_hex));
     for (int i = 0; i < shape->m_extraHexCount; i++) {
         int cellIndex = shape->m_extraHexOffsets[i] + obstacle->m_hex;
-        if (rowIsOdd && ((cellIndex / 0x11) & 1) == 0)
+        if (oddRow && !rowIsOdd(gridY(cellIndex)))
             cellIndex--;
         hexcell& cell = m_cells[cellIndex];
         cell.m_attributes &= ~hexcell::obstacleMask;
@@ -2303,7 +2317,7 @@ void combatManager::removeObstacle(int index)
     obstacle->m_sprite = 0;
 }
 
-VA(0x00466c50, 0x1A1)  // dc 0x60c0c
+VA(0x00466c50, 0x1A1) MAC_ADDRESS(0x072e88, 0x234)  // dc 0x60c0c
 void combatManager::initializeArchers()
 {
     TArcher* archer = m_archers;
@@ -2318,12 +2332,8 @@ void combatManager::initializeArchers()
 
     archer->m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (archer->m_sprite)
-        archer->m_sprite->dispose();
     archer->m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (archer->m_shadowSprite)
-        archer->m_shadowSprite->dispose();
     archer->m_shadowSprite = locals.m_sprite;
     archer->m_x = info.m_positions[0].m_x;
     archer->m_y = info.m_positions[0].m_y;
@@ -2336,12 +2346,8 @@ void combatManager::initializeArchers()
 
     m_archers[1].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[1].m_sprite)
-        m_archers[1].m_sprite->dispose();
     m_archers[1].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[1].m_shadowSprite)
-        m_archers[1].m_shadowSprite->dispose();
     m_archers[1].m_shadowSprite = locals.m_sprite;
     m_archers[1].m_x = info.m_positions[1].m_x;
     m_archers[1].m_y = info.m_positions[1].m_y;
@@ -2351,12 +2357,8 @@ void combatManager::initializeArchers()
 
     m_archers[2].m_creatureType = info.m_creatureType;
     locals.m_sprite = ResourceManager::getSprite(locals.m_spriteName);
-    if (m_archers[2].m_sprite)
-        m_archers[2].m_sprite->dispose();
     m_archers[2].m_sprite = locals.m_sprite;
     locals.m_sprite = ResourceManager::getSprite(info.m_shadowSpriteName);
-    if (m_archers[2].m_shadowSprite)
-        m_archers[2].m_shadowSprite->dispose();
     m_archers[2].m_shadowSprite = locals.m_sprite;
     m_archers[2].m_x = info.m_positions[2].m_x;
     m_archers[2].m_y = info.m_positions[2].m_y;
@@ -2383,18 +2385,10 @@ void combatManager::initializeArchers()
 // asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
 // the army index by 21, and ResetLimitCreature memsets exactly 2x20.
 
-// Generated scheduling search (2026-08-27): moving the width capture before
-// `y` raises 96.8312 -> 97.3713 while preserving all 27 branches. The 21
-// depth-1 variants found that winner; all 218 depth-2 interactions around
-// the retained body were flat or worse. Post-helper structure is 38/39
-// blocks exact; the extent-capture block alone is 14 versus 16 instructions.
-// Retail still captures y and x before computing either extent, reloads y
-// for the height subtraction, and consequently assigns the four SaveFizzle
-// arguments to a different caller-saved ordering. Enabling drawing.h's
-// SLimitData view to spell Width/Height is not a local lever: it changes the
-// whole consumer view and makes existing `.values` consumers ill-formed.
-// A partial view conversion is therefore rejected rather than retained.
-VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0
+// Mac 0x73178..0x7319c captures both origins before computing the extents.
+// The same order with the canonical width/height calls restores Windows
+// exact bytes; the earlier raw-member scheduling controls are superseded.
+VA(0x00466e00, 0x323) MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global, dc 0x60ce0
 void combatManager::makeCreaturesVanish()
 {
     int x;
@@ -2414,9 +2408,9 @@ void combatManager::makeCreaturesVanish()
         }
         computeMaxExtent();
         x = m_drawbridgeBounds.m_minX;
-        width = m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1;
         y = m_drawbridgeBounds.m_minY;
-        height = m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1;
+        width = m_drawbridgeBounds.width();
+        height = m_drawbridgeBounds.height();
     }
 
     for (side = 0; side < 2; side++) {
@@ -2427,8 +2421,8 @@ void combatManager::makeCreaturesVanish()
             m_cells[stack.m_gridIndex].m_armySide = -1;
             m_cells[stack.m_gridIndex].m_armySlot = -1;
             if (stack.is(creatureDoubleWide)) {
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySide = -1;
-                m_cells[stack.m_gridIndex + (stack.m_facing ? 1 : -1)].m_armySlot = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
             }
         }
     }
@@ -2443,11 +2437,10 @@ void combatManager::makeCreaturesVanish()
     }
 }
 
-VA(0x00467130, 0x82)  // dc 0x60ee0
+VA(0x00467130, 0x82) MAC_ADDRESS(0x073328, 0xa8)  // dc 0x60ee0
 unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
-    int side = thisArmy->m_spellInfluence[60] ? 1 - thisArmy->m_combatSide
-                                        : thisArmy->m_combatSide;
+    int side = thisArmy->getControllingSide();
     if (side != 1 || m_fortificationLevel == 0 || m_drawbridgeState != DRAWBRIDGE_UP)
         return 0;
     if (hex == COMBAT_HEX_GATE || hex == COMBAT_HEX_GATE_MOAT
@@ -2455,14 +2448,14 @@ unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
         return 1;
     if (!thisArmy->is(creatureDoubleWide))
         return 0;
-    long second = hex + (thisArmy->m_facing != 0 ? 1 : -1);
+    long second = hex + thisArmy->offsetToFront(-1);
     if (second == COMBAT_HEX_GATE || second == COMBAT_HEX_GATE_MOAT
             || second == COMBAT_HEX_OUTER_MOAT)
         return 1;
     return 0;
 }
 
-VA(0x004671c0, 0x113)  // dc 0x60fa8
+VA(0x004671c0, 0x113) MAC_ADDRESS(0x0733d0, 0xdc)  // dc 0x60fa8
 void combatManager::lowerDoor()
 {
     if (isQuickCombat()) {
@@ -2481,19 +2474,19 @@ void combatManager::lowerDoor()
     waitEndSample(sample, -1);
 }
 
-VA(0x004672e0, 0x177)  // dc 0x61034
+VA(0x004672e0, 0x177) MAC_ADDRESS(0x0734ac, 0xd0)  // dc 0x61034
 void combatManager::raiseDoor()
 {
     if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
         return;
-    if (m_cells[COMBAT_HEX_GATE].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
             || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
         return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].m_armySide >= 0
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
             || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
         return;
     if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].m_armySide >= 0
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
                 || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
         return;
 
@@ -2514,27 +2507,28 @@ void combatManager::raiseDoor()
 // E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
 // Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
 // TeleportTo and ProcessNextAction retain this forwarding source boundary.
+MAC_ADDRESS(0x07357c, 0x94)
 void combatManager::testRaiseDoor()
 {
     raiseDoor();
 }
 
-VA(0x00467460, 0x22)  // dc 0x61160
+VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)  // dc 0x61160
 unsigned char combatManager::inCastle(int index)
 {
-    return index >= g_castleWallColumns[index / 0x11];
+    return index >= g_castleWallColumns[gridY(index)];
 }
 
-VA(0x00467490, 0x22)  // dc 0x61180
+VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)  // dc 0x61180
 unsigned char combatManager::leftOfMoat(int index)
 {
-    return index < g_moatHexes[index / 0x11];
+    return index < g_moatHexes[gridY(index)];
 }
 
-VA(0x004674c0, 0x4C)  // dc 0x611a0
+VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
 unsigned char combatManager::isAdjacent(int first, int second) const
 {
-    if (first >= 0 && first < 187 && second >= 0 && second < 187) {
+    if (validHex(first) && validHex(second)) {
         for (int i = 0; i < 6; i++) {
             if (m_adjacentCells[first][i] == second)
                 return 1;
@@ -2543,12 +2537,11 @@ unsigned char combatManager::isAdjacent(int first, int second) const
     return 0;
 }
 
-VA(0x00467510, 0xEA)  // dc 0x61224
+VA(0x00467510, 0xEA) MAC_ADDRESS(0x073778, 0x114)  // dc 0x61224
 unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIndex,
                                                int destIndex) const
 {
-    int side = shooter->m_spellInfluence[60] ? 1 - shooter->m_combatSide
-                                      : shooter->m_combatSide;
+    int side = shooter->getControllingSide();
     if (shooter->m_creatureType == CREATURE_MAGE
             || shooter->m_creatureType == CREATURE_ARCH_MAGE
             || shooter->m_creatureType == CREATURE_ENCHANTER
@@ -2564,11 +2557,10 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
     return inLineOfSight(sourceIndex, destIndex) == 0;
 }
 
-VA(0x00467600, 0x23A)  // dc 0x61284
+VA(0x00467600, 0x23A) MAC_ADDRESS(0x07388c, 0x134)  // dc 0x61284
 unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
-    int side = attacker->m_spellInfluence[60] ? 1 - attacker->m_combatSide
-                                       : attacker->m_combatSide;
+    int side = attacker->getControllingSide();
     if (m_heroes[side]
             && (m_heroes[side]->isWieldingArtifact(ARTIFACT_GOLDEN_BOW)
                 || m_heroes[side]->isWieldingArtifact(
@@ -2590,16 +2582,16 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
-VA(0x00467840, 0x1B6)  // dc 0x61318
+VA(0x00467840, 0x1B6) MAC_ADDRESS(0x0739c0, 0x284)  // dc 0x61318
 unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
         return 1;
 
-    int sourceX = sourceIndex % COMBAT_GRID_ROW_STRIDE;
-    int sourceY = sourceIndex / COMBAT_GRID_ROW_STRIDE;
-    int deltaX = destIndex % COMBAT_GRID_ROW_STRIDE - sourceX;
-    int deltaY = destIndex / COMBAT_GRID_ROW_STRIDE - sourceY;
+    int sourceX = gridX(sourceIndex);
+    int sourceY = gridY(sourceIndex);
+    int deltaX = gridX(destIndex) - sourceX;
+    int deltaY = gridY(destIndex) - sourceY;
     if (deltaY == 0 && deltaX == 0)
         return 1;
     int sample;
@@ -2626,8 +2618,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
     for (sample = 0; sample < samples; sample++) {
         x += stepX;
         y += stepY;
-        int hex = static_cast<int>(y) * COMBAT_GRID_ROW_STRIDE
-            + static_cast<int>(x);
+        int hex = getHexIndex(static_cast<int>(x), static_cast<int>(y));
         if (hex == COMBAT_HEX_GATE) {
             if (m_drawbridgeState == DRAWBRIDGE_UP)
                 return 0;
@@ -2712,7 +2703,7 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // halfway - the arc is half the horizontal span, which is what makes
 // `flatness` the right name for the coefficient rather than a height.
 
-VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
+VA(0x00467a00, 0x3AF) MAC_ADDRESS(0x073c44, 0x488)  // anchor-global, dc 0x614f0
 void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
 {
@@ -2747,13 +2738,14 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     if (nframes > 0) {
         int travelX = 0;
         int remaining = nframes;
-        for (; step < nframes; step++) {
+        // Retail advances step before the remaining-frame decrement.
+        // Keep both real induction variables in the loop increment.
+        for (; step < nframes; step++, --remaining) {
             unsigned long nextFrameTime = GameTime::get() + missileperiod;
             if (step != 0) {
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = x + width - 1;
-                updateArea.m_maxY = y + height - 1;
+                // Mac 0x73e24 copies a four-word rectangle temporary here.
+                updateArea = TDrawbridgeBounds(
+                    x, y, x + width - 1, y + height - 1);
                 x = startX + travelX / nframes;
                 y = static_cast<int>(
                     (deltaY - remaining * flatness) * step
@@ -2769,28 +2761,12 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getWidth(),
                 g_windowManager->m_screenBitmap->getHeight(),
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
-            int right = x + width - 1;
-            int bottom = y + height - 1;
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -2801,12 +2777,11 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 frame = 0;
             GameTime::delayTil(nextFrameTime);
             travelX += deltaX;
-            --remaining;
         }
     }
 }
 
-VA(0x00467db0, 0x46A)  // dc 0x619a8
+VA(0x00467db0, 0x46A) MAC_ADDRESS(0x0740cc, 0x588)  // dc 0x619a8
 void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
                                          const float* angles,
@@ -2881,10 +2856,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             if (step != 0) {
                 saved.draw(0, 0, width, height,
                            g_windowManager->m_screenBitmap, x, y, false);
-                updateArea.m_minX = x;
-                updateArea.m_minY = y;
-                updateArea.m_maxX = right;
-                updateArea.m_maxY = bottom;
+                // Mac 0x743e0 constructs and copies the four-word bounds.
+                updateArea = TDrawbridgeBounds(x, y, right, bottom);
                 x += addX;
                 right += addX;
                 y += addY;
@@ -2893,26 +2866,12 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.grab(g_windowManager->m_screenBitmap, x, y);
             missile->draw(0, frame, 0, 0, width, height,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
-            if (updateArea.m_minX > x)
-                updateArea.m_minX = x;
-            if (updateArea.m_minY > y)
-                updateArea.m_minY = y;
-            if (updateArea.m_maxX < right)
-                updateArea.m_maxX = right;
-            if (updateArea.m_maxY < bottom)
-                updateArea.m_maxY = bottom;
-            if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-                updateArea.m_minX = g_combatDrawLimits.m_minX;
-            if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-                updateArea.m_minY = g_combatDrawLimits.m_minY;
-            if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-                updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-            if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-                updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
-                updateArea.m_maxX - updateArea.m_minX + 1,
-                updateArea.m_maxY - updateArea.m_minY + 1);
+                updateArea.width(),
+                updateArea.height());
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;
@@ -2946,7 +2905,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 // GetMissileStartingPosition multiplies by further down this same TU.
 // Two constants, two spellings, both retail's.
 
-VA(0x00468220, 0x48F)  // anchor-global, dc 0x61e60
+VA(0x00468220, 0x48F) MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global, dc 0x61e60
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                                  const float* angles, const CSprite* missile)
 {
@@ -2958,8 +2917,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     // DC records flipped as a lowered byte; retail forwards it directly to
     // CSprite's public _N parameter. An unsigned char adds test/setne.
     bool flipped = deltaX < 0;
-    const int nframes = (static_cast<int>(sqrt(static_cast<double>(
-                       deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
+    int distance = static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX)));
+    const int nframes = (distance + 20) / 40;
     int addX;
     int addY;
     if (nframes > 0) {
@@ -3011,8 +2971,6 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
-    int bottom = y + height - 1;
-    int right = x + width - 1;
     for (int step = 0; step < nframes; step++) {
         unsigned long nextFrameTime = GameTime::get() + arrowdelay;
         if (step != 0) {
@@ -3021,14 +2979,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                        g_windowManager->m_screenBitmap->getWidth(),
                        g_windowManager->m_screenBitmap->getHeight(),
                        g_windowManager->m_screenBitmap->getPitch(), false);
-            updateArea.m_minX = x;
-            updateArea.m_minY = y;
-            updateArea.m_maxX = right;
-            updateArea.m_maxY = bottom;
+            // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
+            // Retaining those expressions also matches the Windows loop schedule.
+            updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
             x += addX;
-            right += addX;
             y += addY;
-            bottom += addY;
         }
         saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                    g_windowManager->m_screenBitmap->getWidth(),
@@ -3043,25 +2998,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getWidth(),
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
-        if (updateArea.m_minX > x)
-            updateArea.m_minX = x;
-        if (updateArea.m_minY > y)
-            updateArea.m_minY = y;
-        if (updateArea.m_maxX < right)
-            updateArea.m_maxX = right;
-        if (updateArea.m_maxY < bottom)
-            updateArea.m_maxY = bottom;
-        if (updateArea.m_minX < g_combatDrawLimits.m_minX)
-            updateArea.m_minX = g_combatDrawLimits.m_minX;
-        if (updateArea.m_minY < g_combatDrawLimits.m_minY)
-            updateArea.m_minY = g_combatDrawLimits.m_minY;
-        if (updateArea.m_maxX > g_combatDrawLimits.m_maxX)
-            updateArea.m_maxX = g_combatDrawLimits.m_maxX;
-        if (updateArea.m_maxY > g_combatDrawLimits.m_maxY)
-            updateArea.m_maxY = g_combatDrawLimits.m_maxY;
+        updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+        updateArea.clip(g_combatDrawLimits);
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
-                                      updateArea.m_maxX - updateArea.m_minX + 1,
-                                      updateArea.m_maxY - updateArea.m_minY + 1);
+                                      updateArea.width(),
+                                      updateArea.height());
         GameTime::delayTil(nextFrameTime);
     }
 
@@ -3072,7 +3013,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     g_windowManager->updateScreen(x, y, width, height);
 }
 
-VA(0x004686b0, 0x7B)  // dc 0x622bc
+VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)  // dc 0x622bc
 void combatManager::combatSystemOptions()
 {
     TCombatOptionsWindow options;
@@ -3082,36 +3023,39 @@ void combatManager::combatSystemOptions()
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x00468730, 0x8E)  // dc 0x62358
+VA(0x00468730, 0x8E) MAC_ADDRESS(0x074c94, 0x7c)  // dc 0x62358
 void combatManager::removeArmyFromGrid(const army& a)
 {
     m_cells[a.m_gridIndex].m_armySlot = -1;
     m_cells[a.m_gridIndex].m_armySide = -1;
     m_cells[a.m_gridIndex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        int hex = a.m_gridIndex + (a.m_facing != 0 ? 1 : -1);
+        int hex = a.m_gridIndex + a.offsetToFront(-1);
         m_cells[hex].m_armySlot = -1;
         m_cells[hex].m_armySide = -1;
         m_cells[hex].m_partOfDouble = -1;
     }
 }
 
-VA(0x004687c0, 0x99)  // dc 0x623cc
+// Native Mac 0x74d4c/0x74dac selects integer 1/0 before narrowing;
+// Boolean assignments use branchless neg/cntlzw instead. VC6 is byte-flat.
+// getOwningSide and offsetToFront remain the canonical shared helpers.
+VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)  // dc 0x623cc
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.m_combatSide);
+    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
     m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
     m_cells[hex].m_partOfDouble = -1;
     if (a.is(creatureDoubleWide)) {
-        m_cells[hex].m_partOfDouble = a.m_facing == 0;
-        int second = hex + (a.m_facing != 0 ? 1 : -1);
-        m_cells[second].m_armySide = static_cast<signed char>(a.m_combatSide);
+        m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
+        int second = hex + a.offsetToFront(-1);
+        m_cells[second].m_armySide = static_cast<signed char>(a.getOwningSide());
         m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-        m_cells[second].m_partOfDouble = a.m_facing != 0;
+        m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
     }
 }
 
-VA(0x00468860, 0x124)  // dc 0x62478
+VA(0x00468860, 0x124) MAC_ADDRESS(0x074dcc, 0x120)  // dc 0x62478
 void combatManager::viewArmy(army* thisArmy, int isQuickView)
 {
     if (thisArmy) {
@@ -3196,7 +3140,11 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // Its true arm permits the common frame body; only the false arm skips it.
 // The inverted continue guard still scores 96.2378%, so guard polarity and
 // scope matter here even though the source operations are otherwise equal.
-VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
+// Explicit range-flag arms and cs_defend/cs_wince stores preserve Is and
+// GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
+// same separate stores; its range comparison compression remains different.
+// A switch and named frame snapshot do not reproduce that compression.
+VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global, dc 0x62560
 void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 {
     int side;
@@ -3206,19 +3154,22 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
         for (side = 0; side < 2; side++) {
             for (slot = 0; slot < m_numArmies[side]; slot++) {
                 army& stack = m_armies[side][slot];
-                stack.m_showRangeFrames = static_cast<unsigned char>(
-                    stack.m_currFrameType == cs_range_ur
+                if (stack.m_currFrameType == cs_range_ur
                     || stack.m_currFrameType == cs_range_r
-                    || stack.m_currFrameType == cs_range_dr);
+                    || stack.m_currFrameType == cs_range_dr)
+                    stack.m_showRangeFrames = 1;
+                else
+                    stack.m_showRangeFrames = 0;
                 stack.m_nextFrameType = -1;
                 if (stack.m_someUnitsDamaged || stack.m_showAttackFrames) {
                     if (stack.m_showAttackFrames)
                         stack.m_nextFrameType = stack.m_showAttackFrameType;
                     else if (stack.m_allUnitsKilled)
                         stack.m_nextFrameType = cs_death;
+                    else if (stack.is(creatureDefending))
+                        stack.m_nextFrameType = cs_defend;
                     else
-                        stack.m_nextFrameType = static_cast<signed char>(
-                            cs_wince + (stack.is(creatureDefending)));
+                        stack.m_nextFrameType = cs_wince;
                     stack.m_remainingFramesToPlay = static_cast<signed char>(
                         stack.m_stdIcon->getNumFrames(stack.m_nextFrameType));
                     if (stack.m_nextFrameType == stack.m_currFrameType)
@@ -3360,8 +3311,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
             drawFrame(0, 1, 0, 100, 1, 1);
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.m_maxX - m_drawbridgeBounds.m_minX + 1,
-                m_drawbridgeBounds.m_maxY - m_drawbridgeBounds.m_minY + 1);
+                m_drawbridgeBounds.width(),
+                m_drawbridgeBounds.height());
         }
     }
 
@@ -3435,7 +3386,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x004693a0, 0x9F)
+VA(0x004693a0, 0x9F) MAC_ADDRESS(0x075a1c, 0xc0)
 void combatManager::unnamed4693a0(int side)
 {
     g_game->m_isCheater = 1;
@@ -3453,7 +3404,7 @@ void combatManager::unnamed4693a0(int side)
     }
 }
 
-VA(0x00469440, 0x1B2)
+VA(0x00469440, 0x1B2) MAC_ADDRESS(0x075adc, 0x160)
 void combatManager::checkRebirth()
 {
     for (int side = 0; side < 2; side++) {
@@ -3486,7 +3437,7 @@ void combatManager::checkRebirth()
     }
 }
 
-VA(0x00469600, 0x6E)  // dc 0x62db8
+VA(0x00469600, 0x6E) MAC_ADDRESS(0x075c3c, 0x9c)  // dc 0x62db8
 unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                                const army* excluded) const
 {
@@ -3501,13 +3452,14 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
     return 0;
 }
 
-VA(0x00469670, 0xD2)  // dc 0x62e4c
+// Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
+VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)  // dc 0x62e4c
 long combatManager::getDistance(long start, long stop)
 {
-    int sx = start % 0x11;
-    int sy = start / 0x11;
-    int tx = stop % 0x11;
-    int ty = stop / 0x11;
+    int sx = gridX(start);
+    int sy = gridY(start);
+    int tx = gridX(stop);
+    int ty = gridY(stop);
     int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
     int b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
@@ -3515,14 +3467,13 @@ long combatManager::getDistance(long start, long stop)
     return abs(a) + abs(b);
 }
 
-VA(0x00469750, 0x12B)  // dc 0x62f00
+VA(0x00469750, 0x12B) MAC_ADDRESS(0x075e10, 0x108)  // dc 0x62f00
 void combatManager::updateArmyLuckAndMorale()
 {
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
-            int ownerSide = stack.m_spellInfluence[60]
-                ? 1 - stack.m_combatSide : stack.m_combatSide;
+            int ownerSide = stack.getControllingSide();
             town* ownerTown;
             if (!ownerSide)
                 ownerTown = 0;
@@ -3541,7 +3492,7 @@ void combatManager::updateArmyLuckAndMorale()
 
 // DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail
 // loads the same 0x67ff24 reference cell owned by monframeinfo.cpp.
-VA(0x00469880, 0x190)  // dc 0x62fe4
+VA(0x00469880, 0x190) MAC_ADDRESS(0x075f18, 0x214)  // dc 0x62fe4
 void combatManager::getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 int destX, int destY,
                                 const CSprite* missile, int* startX,
@@ -3602,6 +3553,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 // both canonical HasArmy calls. Complete expands this ordinary helper in
 // HexIsBlocked; its two cell/body tests are the same retail operands.
 
+MAC_ADDRESS(0x07612c, 0x60)
 unsigned char combatManager::doorCanBeLowered() const
 {
     if (m_currentSide != 1)
@@ -3615,7 +3567,7 @@ unsigned char combatManager::doorCanBeLowered() const
     return 1;
 }
 
-VA(0x00469a10, 0x80)  // dc 0x632c4
+VA(0x00469a10, 0x80) MAC_ADDRESS(0x07618c, 0x78)  // dc 0x632c4
 unsigned char combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
@@ -3627,7 +3579,7 @@ unsigned char combatManager::hexIsBlocked(int index) const
     return 0;
 }
 
-VA(0x00469a90, 0x324)  // dc 0x6335c
+VA(0x00469a90, 0x324) MAC_ADDRESS(0x076204, 0x2c0)  // dc 0x6335c
 void combatManager::damageMessage(const char* attacker, long attackerQty, long damage, const army* defender, long deaths)
 {
     if (isQuickCombat())
@@ -3676,7 +3628,7 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
-VA(0x00469dc0, 0x8D)  // dc 0x6351c
+VA(0x00469dc0, 0x8D) MAC_ADDRESS(0x0764c4, 0xd4)  // dc 0x6351c
 unsigned char combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
@@ -3706,7 +3658,7 @@ unsigned char combatManager::isInMoat(int hex, int* index)
     return 0;
 }
 
-VA(0x00469e50, 0xC1)
+VA(0x00469e50, 0xC1) MAC_ADDRESS(0x076598, 0x144)
 unsigned char combatManager::unnamed469e50(
     int hex, army* stack, unsigned char playSound)
 {
@@ -3729,7 +3681,7 @@ unsigned char combatManager::unnamed469e50(
     return 0;
 }
 
-VA(0x00469f20, 0xBA)  // dc 0x6359c
+VA(0x00469f20, 0xBA) MAC_ADDRESS(0x0766dc, 0x114)  // dc 0x6359c
 void combatManager::raiseSkeletons(int side)
 {
     if (m_raisedCreatureCount > 0) {
@@ -3737,13 +3689,8 @@ void combatManager::raiseSkeletons(int side)
         added = m_armyGroups[side]->add(
             m_raisedCreatureType, m_raisedCreatureCount, -1);
         if (!added) {
-            TCreatureType upgradedType = m_raisedCreatureType;
-            if (!g_game->m_gameVersion
-                && isBaseElemental(upgradedType)) {
-                upgradedType = CREATURE_NONE;
-            } else {
-                upgradedType = upgradedCreatureType(upgradedType);
-            }
+            TCreatureType upgradedType =
+                g_game->upgradedCreatureType(m_raisedCreatureType);
 
             m_raisedCreatureType = upgradedType;
             m_raisedCreatureCount = (m_raisedCreatureCount * 2 + 2) / 3;
@@ -3757,7 +3704,7 @@ void combatManager::raiseSkeletons(int side)
     m_raisedCreatureCount = 0;
 }
 
-VA(0x00469fe0, 0x88)  // dc 0x63648
+VA(0x00469fe0, 0x88) MAC_ADDRESS(0x0767f0, 0xf0)  // dc 0x63648
 void combatManager::learnSpellFromEagleEye(int side)
 {
     for (std::set<SpellID>::iterator it = m_eagleEyeData[side].begin();
@@ -3765,7 +3712,7 @@ void combatManager::learnSpellFromEagleEye(int side)
         SpellID spell = *it;
         if (m_heroes[side]->isWieldingArtifact(ARTIFACT_SPELLBOOK)
             && g_spellTraits[spell].m_level
-                <= m_heroes[side]->m_skillLevel[eSecSkillWisdom] + 2)
+                <= m_heroes[side]->getSecondarySkill(eSecSkillWisdom) + 2)
             m_heroes[side]->addSpell(spell);
     }
 }
@@ -3780,7 +3727,7 @@ void combatManager::learnSpellFromEagleEye(int side)
 // The looted_artifacts parameter is a reference: DC's public mangling has
 // AAV (not PAV), despite an older roster rendering it as a pointer.
 
-VA(0x0046a070, 0x2D3)  // dc 0x63704
+VA(0x0046a070, 0x2D3) MAC_ADDRESS(0x0768f0, 0x1a4)  // dc 0x63704
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
 {
@@ -3825,7 +3772,7 @@ void combatManager::lootDeadHero(int side,
     }
 }
 
-VA(0x0046a350, 0x10C)  // dc 0x6388c
+VA(0x0046a350, 0x10C) MAC_ADDRESS(0x076a94, 0xdc)  // dc 0x6388c
 void combatManager::calculateGainedExperience(int side, int* experienceGained)
 {
     int total = experienceValueOfStack(1 - side);
@@ -3840,7 +3787,7 @@ void combatManager::calculateGainedExperience(int side, int* experienceGained)
     *experienceGained = total;
 }
 
-VA(0x0046a460, 0x39)
+VA(0x0046a460, 0x39) MAC_ADDRESS(0x076b70, 0x58)
 void combatManager::markTowerArmy(const army* tower)
 {
     switch (tower->m_gridIndex) {
@@ -3856,7 +3803,7 @@ void combatManager::markTowerArmy(const army* tower)
     }
 }
 
-VA(0x0046a4a0, 0x71)  // dc 0x63900
+VA(0x0046a4a0, 0x71) MAC_ADDRESS(0x076bc8, 0xac)  // dc 0x63900
 bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)
@@ -3875,7 +3822,7 @@ bool combatManager::isQuickCombat() const
     return g_config.m_quickCombat != 0;
 }
 
-VA(0x0046a520, 0x44)
+VA(0x0046a520, 0x44) MAC_ADDRESS(0x076c74, 0x7c)
 void combatManager::markMovingArmy(army* stack)
 {
     memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
@@ -3884,7 +3831,7 @@ void combatManager::markMovingArmy(army* stack)
         m_obstacleAttackVisited[stack->getSecondGridIndex()] = 1;
 }
 
-VA(0x0046a570, 0xE0)
+VA(0x0046a570, 0xE0) MAC_ADDRESS(0x076cf0, 0x15c)
 unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
                                                     unsigned char isWalking)
 {

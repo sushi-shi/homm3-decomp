@@ -51,7 +51,7 @@ OVERLAY_MSVC = OVERLAY / "msvc"
 GATE_DIR = _common.REPO / "build/vc6/shim/gate"
 ARGV_LOG = _common.REPO / "build/vc6/shim/argv.log"   # == homm3.vc6.argv.SHIM_LOG
 SAMPLE = SHIM_DIR / "sample_tu.cpp"
-GATE_FLAGS = ["/c", "/O2", "/Ob2", "/Oy-", "/Op", "/ML", "/Gr", "/GX"]
+GATE_FLAGS = ["/c", "/O2", "/Ob2", "/Oy-", "/Op", "/MT", "/Gr", "/GX"]
 EXPECTED_EXPORTS = {"_InvokeCompilerPass@12", "_AbortCompilerPass@4"}
 TS_BYTES = range(4, 8)  # COFF FileHeader.TimeDateStamp - the masked window
 

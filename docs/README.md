@@ -7,6 +7,7 @@ iterate on a function.
 
 - [Source ownership](matching/source-ownership.md) and [source facts](matching/source-facts.md)
 - [Dreamcast line tables](matching/dc-line-tables.md)
+- [Classic Mac second target and labeling](matching/mac-second-target-plan.md)
 - [Naming conventions](matching/naming.md)
 - [Source hypothesis runner](matching/source-hypotheses.md)
 - [VC6 compiler reference](vc6/README.md)
@@ -26,6 +27,9 @@ iterate on a function.
 ## Tooling and reference
 
 - [Data flow](tooling/data-flow.md), [telemetry](tooling/telemetry.md), [performance measurement](tooling/performance.md), [compiler warnings](tooling/compiler-warnings.md)
+- [Retail data coverage and linking](tooling/data-coverage.md)
+- [Mac tooling implementation report and current phase](tooling/mac-matching-report.md)
+- [Mac matching tooling rollout and worker readiness](tooling/mac-matching-roadmap.md)
 - [Executable libraries](reference/executable-libraries.md)
 - [RMG undefined behavior](reference/rmg-undefined-behavior.md) and [Voronoi provenance](reference/rmg-voronoi-provenance.md)
 

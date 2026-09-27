@@ -5,6 +5,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from homm3.core.cc_wrap import _compile_staged
+
 
 class WinePrefixAnchorTests(unittest.TestCase):
     """cc_wrap must pin WINEPREFIX to this tree's prefix.
@@ -52,6 +54,55 @@ class WinePrefixAnchorTests(unittest.TestCase):
         self.assertIn('if not (_prefix and Path(_prefix).is_dir()):', source)
         self.assertNotIn('if not Path(os.environ.get("WINEPREFIX", "")).is_dir()',
                          source)
+
+
+class StagedObjectTests(unittest.TestCase):
+    def test_failed_compile_preserves_the_previous_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "hero.obj"
+            out.write_bytes(b"previous")
+
+            def fail(command, staged):
+                self.assertEqual(command, [str(staged)])
+                return "Wine failed", 1
+
+            self.assertEqual(_compile_staged(out, lambda path: [str(path)],
+                                             run=fail),
+                             ("Wine failed", 1, False))
+            self.assertEqual(out.read_bytes(), b"previous")
+            self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
+
+    def test_success_replaces_the_previous_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "hero.obj"
+            out.write_bytes(b"previous")
+
+            def compile_object(command, staged):
+                self.assertEqual(command, [str(staged)])
+                staged.write_bytes(b"new object")
+                return "", 0
+
+            self.assertEqual(_compile_staged(out, lambda path: [str(path)],
+                                             run=compile_object),
+                             ("", 0, True))
+            self.assertEqual(out.read_bytes(), b"new object")
+            self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
+
+    def test_failed_compile_with_partial_object_preserves_previous_object(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "hero.obj"
+            out.write_bytes(b"previous")
+
+            def fail_after_writing(command, staged):
+                self.assertEqual(command, [str(staged)])
+                staged.write_bytes(b"partial object")
+                return "compiler error", 1
+
+            self.assertEqual(_compile_staged(
+                out, lambda path: [str(path)], run=fail_after_writing),
+                ("compiler error", 1, False))
+            self.assertEqual(out.read_bytes(), b"previous")
+            self.assertEqual(list(Path(tmp).glob(".*.tmp.obj")), [])
 
 
 if __name__ == "__main__":
