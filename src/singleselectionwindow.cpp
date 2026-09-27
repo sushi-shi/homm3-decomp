@@ -1376,11 +1376,12 @@ inline void CNewPlayerUpdateProc::requestConfirmation()
 // back to +0x5e (past the initial guard), and the exhausted-list arm at
 // +0x1c6 skips BOTH HandleRequests and RequestConfirmation when empty.
 
-// Residual (89.8712%): all 21 blocks, 10 branches and three returns agree.
+// Residual (90.5767%): all 21 blocks, 10 branches and three returns agree.
 // The message constructor still schedules its row/FILETIME arguments
 // differently: frame 0xa0 vs retail 0xa4, saved alignment pointer vs saved
-// FILETIME high word. Both request-count tests use TEST -8 where retail
-// uses SAR 3. The flattened elapsed expression and wrong per-iteration
+// FILETIME high word. Native Mac tests the unsigned request count; using
+// size() > 0 also restores retail's SAR 3 count lowering. The flattened
+// elapsed expression and wrong per-iteration
 // count guard banked 71.8957%; restoring only ElapsedSince gives 73.25%.
 // The coherent base-like if/for/else shape, including conditional final
 // confirmation, reaches this peak. Extending the message scope through the
@@ -1402,14 +1403,14 @@ void t_map_list_update::tick()
                 g_singleSelectionWindow->m_transferHeaders[m_nextHeader].m_fileTime);
             transmitRemoteDataDPID(&msg, m_dpid, true, false);
             ++m_nextHeader;
-            if (static_cast<int>(m_requests.size()) != 0)
+            if (m_requests.size() > 0)
                 handleRequests();
             if (m_nextHeader >= g_singleSelectionWindow->m_transferHeaders.size()) {
                 requestConfirmation();
                 break;
             }
         }
-    } else if (static_cast<int>(m_requests.size()) != 0) {
+    } else if (m_requests.size() > 0) {
         handleRequests();
         requestConfirmation();
     }
@@ -1480,10 +1481,11 @@ void CNewPlayerUpdateProc::go()
 // CGameHeaderInfoMsg/CMapFileNameMsg constructors, request-drain helper and
 // confirmation helper. Complete retail adds the list-select flag to both
 // message layouts but preserves that source control flow.
-// Residual (86.6723): all 32 aligned blocks, 16 branch sequences and their
+// Residual (87.1555): all 32 aligned blocks, 16 branch sequences and their
 // topology agree. The remaining bands are VC6 scheduling: ESI/EDI exchange
 // roles for zero/m_nextHeader, the CMapFileNameMsg arguments are pushed in a
-// different schedule, and vector count lowering differs. Several callees
+// different schedule. The unsigned positive request count restores retail's
+// count lowering, as in the transfer-list override. Several callees
 // also still have anonymous relocation names. An explicit pHeader local was
 // tested and rejected: DC lists only i/msg/msg and it lowered the score.
 // E:\gamedcs\singleselectionwindow.cpp:1282
@@ -1510,14 +1512,14 @@ void CNewPlayerUpdateProc::tick()
             }
 
             ++m_nextHeader;
-            if (static_cast<int>(m_requests.size()) != 0)
+            if (m_requests.size() > 0)
                 handleRequests();
             if (m_nextHeader >= g_singleSelectionWindow->m_headersA.size()) {
                 requestConfirmation();
                 break;
             }
         }
-    } else if (static_cast<int>(m_requests.size()) != 0) {
+    } else if (m_requests.size() > 0) {
         handleRequests();
         requestConfirmation();
     }
