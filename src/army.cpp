@@ -1266,8 +1266,9 @@ void army::animateMissile(army* armyToAttack)
 // assigned under `if (a)`, so an armyless hex adds the PREVIOUS
 // iteration's values into the totals.
 
-// What is genuinely left is the first shape, and the frame still says so
-// (0x24 against retail's 0x20).
+// DC1434/1435 clears the selected target before the Magog message. Reusing
+// first, as in the Lich arm, restores Windows100%; a separate reported alias
+// prevents the native branch/load arrangement. All canonical helpers remain.
 
 VA(0x0043f900, 0x7F9) MAC_ADDRESS(0x04b62c, 0x6e4)  // dc-bracket forced, dc 0x458a0
 void army::rangeAttack(army* armyToAttack)
@@ -1335,11 +1336,10 @@ void army::rangeAttack(army* armyToAttack)
             killed += killedNow;
         }
         if (damage > 0) {
-            army* reported = first;
             if (multiple)
-                reported = 0;
+                first = 0;
             g_combatManager->damageMessage(getName(),
-                                            m_numTroops, damage, reported,
+                                            m_numTroops, damage, first,
                                             killed);
             g_combatManager->powEffect(effect, 1);
         }
