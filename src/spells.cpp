@@ -4610,9 +4610,7 @@ void combatManager::earthquake(int level)
                 *bounds = TDrawbridgeBounds(left, top, right, bottom);
                 bounds->clip(g_combatDrawLimits);
                 if (frame == g_earthquakeImpactFrame) {
-                    TWallTargetId wall;
-                    memcpy(&wall, &i, sizeof wall);
-                    damageWall(wall, counts[i]);
+                    damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
                 blast->draw(0, frame, 0, 0,
                             bounds->width(), bounds->height(),
@@ -4631,9 +4629,7 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            TWallTargetId wall;
-            memcpy(&wall, &i, sizeof wall);
-            damageWall(wall, counts[i]);
+            damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
         }
     }
     g_mouseManager->showPointer(0);
