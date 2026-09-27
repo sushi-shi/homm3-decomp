@@ -176,6 +176,8 @@ public:
         }
     }
 
+    // DC dxplay.h:90 retains the third early success arm. It preserves the
+    // exact standalone body and avoids a byte temporary in Update's expansion.
     VA(0x005112c0, 0x1C)  // exact selected COMDAT, dc 0x101d58
     unsigned char isJoinDisabled()
     {
@@ -183,8 +185,9 @@ public:
             return 1;
         if (m_flags & 1)
             return 1;
-        unsigned char disabled = m_playerCount == m_maxPlayers;
-        return disabled;
+        if (m_playerCount == m_maxPlayers)
+            return 1;
+        return 0;
     }
     unsigned char isPasswordProtected()
     {
