@@ -882,11 +882,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
                            m_combatShadowBitmap, 0, 0);
     }
 
-    SLimitData& extent =
-        *static_cast<SLimitData*>(static_cast<void*>(&m_drawbridgeBounds));
-    const SLimitData& combatDrawLimits =
-        *static_cast<const SLimitData*>(static_cast<const void*>(
-            &g_combatDrawLimits));
+    SLimitData& extent = m_drawbridgeBounds;
+    const SLimitData& combatDrawLimits = g_combatDrawLimits;
     SLimitData saveExtent = extent;
     int saveLimitToExtent = m_limitToExtent;
     m_drawbridgeBounds = g_combatAreaLimits;
