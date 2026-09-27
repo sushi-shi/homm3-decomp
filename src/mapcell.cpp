@@ -3977,11 +3977,15 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int numObjects;
     int count;
     int x;
-    count = readValue(infile, intBuffer);
+    count = readLittleEndianValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
 
+    // Both Mac count fields are read through the same caller-owned integer
+    // slot, then byte-reversed before resize. The decoding wrapper preserves
+    // readValue and its returned count. Its currently retained Mac expansion
+    // remains an inlining difference; there is no retail wrapper to bind.
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4018,7 +4022,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    count = readValue(infile, intBuffer);
+    count = readLittleEndianValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
