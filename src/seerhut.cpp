@@ -407,6 +407,9 @@ unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 // Mac Complete retains this common skill-picture dialog at code0:0x164e44
 // (three callers), taking text and four signed skill values after `this`.
 // Windows Complete expands it in slot 5; preserve one ordinary source body.
+// The ordinary-header CodeWarrior body matches all 192 native bytes after
+// its three direct-call reload NOPs collapse. The reviewed constructor,
+// append, extendedDialog and vector cleanup destinations all agree.
 MAC_ADDRESS(0x164e44, 0xc0)
 void type_skill_quest::showSkillRequirementsDialog(
     const char* text, const signed char* skills)
