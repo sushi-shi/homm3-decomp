@@ -160,8 +160,8 @@ def load_data(root: Path) -> list[DataPair]:
             owner_end = _function_end(raw, owner_brace)
             if not owner_brace < start < end < owner_end:
                 raise SourceError(f"{source}: DATA({va:#x}) is outside its claimed function owner")
-            if declaration_only or not re.match(r'\s*static\s+const\b', declaration):
-                raise SourceError(f"{source}: local DATA requires a canonical static const initializer")
+            if declaration_only or not re.match(r'\s*static\s+', declaration):
+                raise SourceError(f"{source}: local DATA requires a canonical static initializer")
             if "mac_symbol" in row:
                 raise SourceError(f"{source}: local DATA symbol counters must not be pinned")
             scope = ()

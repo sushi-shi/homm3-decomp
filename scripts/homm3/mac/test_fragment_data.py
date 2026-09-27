@@ -56,6 +56,46 @@ evidence = "Pinned source-owned table and TOC destination."
             with self.assertRaisesRegex(SourceError, "expected one DATA"):
                 load_data(root)
 
+    def test_function_owned_mutable_initializer_and_owner_guards(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (root / "src").mkdir()
+            owner = root / "src/owner.cpp"
+            body = "VA(0x00400200, 32)\nvoid f() {\n%s\n}\n"
+            declaration = "DATA(0x00400100) static int towers[4] = {3,7,0,6};"
+            owner.write_text(body % declaration)
+            manifest = root / "config/mac/data.toml"
+            manifest.write_text(f'''[[data]]
+retail_va = 0x00400100
+owner_va = 0x00400200
+source = "src/owner.cpp"
+mac_section = 1
+mac_offset = 0x40
+mac_size = 16
+sha256 = "{sha256(bytes(16)).hexdigest()}"
+evidence = "Reviewed mutable local static array, complete payload and owner."
+''')
+            pair, = load_data(root)
+            self.assertEqual(pair.local_owner_va, 0x00400200)
+            self.assertEqual(pair.mac_symbol, "towers")
+            self.assertFalse(pair.read_only)
+            self.assertEqual(pair.definition, "")
+            owner.write_text(body % declaration.replace("static ", ""))
+            with self.assertRaisesRegex(SourceError, "canonical static initializer"):
+                load_data(root)
+            owner.write_text(body % declaration.replace(" = {3,7,0,6}", ""))
+            with self.assertRaisesRegex(SourceError, "unsupported Mac data definition"):
+                load_data(root)
+            owner.write_text(declaration + "\n" + body % "")
+            with self.assertRaisesRegex(SourceError, "outside its claimed function owner"):
+                load_data(root)
+            owner.write_text(body % declaration)
+            manifest.write_text(manifest.read_text() + 'mac_symbol = "towers$7"\n')
+            with self.assertRaisesRegex(SourceError, "counters must not be pinned"):
+                load_data(root)
+
 
 if __name__ == "__main__":
     unittest.main()

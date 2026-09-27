@@ -29,3 +29,34 @@ mac_offset = 0x4690
 mac_size = 4
 sha256 = "9dc1b62d60acff118f222dc22cb76a1c7e9f2fcc1ae7d16c56861eb0301bd59a"
 evidence = "checkSetMouseDirection lfs at code0+0x82d90 directly reads binary32 100.0 from TOC1+0x4690 for the zero vertical-distance case."
+
+[[data]]
+retail_va = 0x0063d54c
+owner_va = 0x00473c00
+source = "src/command.cpp"
+mac_section = 0
+mac_offset = 0x2a4380
+mac_size = 16
+sha256 = "37833a40a0fb8a8de4f1cb70a9f26fbf9cad5fb29a7a918429fcf75d376fe95f"
+evidence = "automateCatapult loads loader-relocated TOC 1+0x2248 at code 0+0x81d1c; its wall-strength and weakest-wall scans index the source-owned static walls array there. The full four big-endian target IDs are {1,2,4,5}, matching DATA(0x63d54c) in the owning function."
+
+[[data]]
+retail_va = 0x00670198
+owner_va = 0x00473c00
+source = "src/command.cpp"
+mac_section = 1
+mac_offset = 0x39fbc
+mac_size = 16
+sha256 = "79a8acac6d3518fbe541a365c6ecdef684273b859bd7f74a2b48072012c7131d"
+evidence = "automateCatapult loads loader-relocated TOC 1+0x2244 at code 0+0x81d10; its surviving-tower fallback indexes this initialized mutable array. The full four big-endian target IDs are {3,7,0,6}, matching DATA(0x670198) in the owning function; the emitted local static suffix is paired by its owner rather than its counter."
+
+[[data]]
+retail_va = 0x0063be60
+source = "src/cmbtmgr.cpp"
+declaration_only = true
+mac_symbol = "s_wallTargets__13combatManager"
+mac_section = 0
+mac_offset = 0x2a4040
+mac_size = 96
+sha256 = "e590a254ab8e05c2500a4817a213c4aae0ab535ad7fb9e94268f0f06919d0c49"
+evidence = "automateCatapult loads TOC 1+0x7bc -> code 0+0x2a4040 at 0x81d18 and indexes eight 12-byte TWallTarget records to read m_wall at +8. All eight big-endian short/short/short/short/enum records match the source-owned DATA(0x63be60) initializer in cmbtmgr.cpp. This is external address binding; command does not emit or score the owning initializer."
