@@ -18,31 +18,23 @@
 // negating operator== instead scored 64.78% in the earlier buildPath probe.
 
 // E:\gamedcs\search.cpp:32
-// Residual (86.3333%): two enregistration choices, both measured unreachable
-// on 2026-08-14. (1) retail materialises `this + 0x48` (the `result` vector)
-// once into ESI and addresses every field through it (`[esi+4]`, `[esi+8]`),
-// where our CL keeps `this` in EDI, reads the fields as `[edi+0x4c]`/`[edi+0x50]`
-// and separately computes `lea esi,[edi+0x48]` for the calls. Binding `result`
-// to a reference, to a pointer, before or after the loop locals, or for the
-// insert only, all give the same 86.4571 - a +0.12 tie among four spellings,
-// i.e. different-but-not-retail, so none is landed. (2) retail keeps
-// previous_cost (0x30d400) in EBX; our CL spills it into the incoming
-// parameter slot [ebp+8]. An EXHAUSTIVE sweep of all 24 orderings of
-// {path_cell decl, flying, previous_cost, clear_path()} is byte-flat at
-// 86.3333, so statement order does not reach the allocator here.
+// Native 0x1616a4 and 0x1616bc clear the point-mismatch and unvisited paths
+// independently, agreeing with DC's separate 71/79 source groups. Preserve
+// both guards and their clearPath calls. Flying is Boolean state passed to
+// the Boolean getCell parameter; a byte local adds a non-retail normalization.
+// These source repairs recover 76.50 -> 79.57%. The remaining mismatch is
+// vector::erase expansion inside clearPath, not a reason to flatten it.
+// Earlier result-reference and 24 local-order probes did not recover retail's
+// retained vector base; four current initialization phases give three objects.
 VA(0x0056a0d0, 0x282) MAC_ADDRESS(0x161498, 0x41c)  // anchor-global, dc 0x12b2e0
 int searchArray::buildPath(const hero* currentHero, long limit)
 {
     type_point source = currentHero->getLocation();
     type_point dest = currentHero->getTarget();
     pathCell* currentPathCell;
-
-    unsigned char flying = 0;
     int previousCost = 0x30d400;
-
-    // Source order matters to VC6's register allocator: initializing these
-    // loop locals before clearing result raises the retail score materially.
     clearPath();
+    bool flying = false;
 
     while (dest != source) {
         if (!dest.isValid()) {
@@ -57,7 +49,11 @@ int searchArray::buildPath(const hero* currentHero, long limit)
         }
         previousCost = currentPathCell->m_adjustedCost;
 
-        if (currentPathCell->m_point != dest || !currentPathCell->m_visited) {
+        if (currentPathCell->m_point != dest) {
+            clearPath();
+            break;
+        }
+        if (!currentPathCell->m_visited) {
             clearPath();
             break;
         }
@@ -233,9 +229,11 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // into the barrier; the normal search only routes through built gates.
 // A town with a visiting hero cannot receive. Retail's min temporaries put
 // gates first, and its destination loop loads each town ID once.
+// DC records const pathCell&; restoring the reference keeps Windows bytes
+// unchanged. The remaining extra slot belongs to the location return value.
 VA(0x0056a850, 0x27E) MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map, dc 0x12b988
 void searchArray::enterTown(const hero* currentHero, long startTown,
-                             const pathCell* currentPathCell, long limit,
+                             const pathCell& currentPathCell, long limit,
                              type_search_type searchType)
 {
     const town* ourTown = g_game->getTown(startTown);
@@ -275,7 +273,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
             continue;
         if (otherTown->m_visitingHeroId >= 0)
             continue;
-        newCell = *currentPathCell;
+        newCell = currentPathCell;
         if (!otherTown->hasBuilding(EXTRA_1_ID, true)) {
             if (!otherTown->canBuild(EXTRA_1_ID))
                 continue;
@@ -285,7 +283,7 @@ void searchArray::enterTown(const hero* currentHero, long startTown,
         }
         newCell.m_point = otherTown->getLocation();
         newCell.m_castleGate = 1;
-        pushPoint(*currentPathCell, newCell, 0, 0, limit,
+        pushPoint(currentPathCell, newCell, 0, 0, limit,
                   newCell.m_barrierValue + barrierValue, newCell.m_monster,
                   0);
     }
@@ -416,7 +414,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         if (checkAdjacentMonster(currentHero, cell, searchType))
             return 0;
-        enterTown(currentHero, mapCell->m_extraInfo, cell, limit,
+        enterTown(currentHero, mapCell->m_extraInfo, *cell, limit,
                    searchType);
         return 1;
     }
@@ -674,7 +672,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
             int startTown = g_game->getTownId(
                 cell.m_point.m_x, cell.m_point.m_y, cell.m_point.m_z);
             if (startTown >= 0) {
-                enterTown(currentHero, startTown, &cell, maxMobility,
+                enterTown(currentHero, startTown, cell, maxMobility,
                            searchType);
             } else {
                 enterStartTrigger(currentHero, &cell, maxMobility, searchType);

@@ -236,7 +236,7 @@ private:
                     long excluded, pathCell* entryPoint, long limit,
                     type_search_type searchType);
     void enterTown(const hero* currentHero, long startTown,
-                    const pathCell* currentPathCell, long limit,
+                    const pathCell& currentPathCell, long limit,
                     type_search_type searchType);
     unsigned char enterTrigger(const hero* currentHero, pathCell* cell,
                                 long limit, type_search_type searchType);
