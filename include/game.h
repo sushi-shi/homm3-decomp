@@ -479,12 +479,34 @@ SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
 
 
+// Shared method order is recorded by both DC class lists (0x2459/0x6d46).
 class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
     std::string m_mapDescription;
     std::bitset<156> m_availableHeroes;
+    int get(const char* path, const char* filename, int saveVersion);
+    // Complete's scenario reader consumes the abstract stream and the
+    // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
+    int read(TAbstractFile* infile, int campaignMap);
     int save(TAbstractFile* outfile);
+    // Retail carries the save-version argument absent from the Dreamcast
+    // declarator; the 0x4c5630 body returns with `ret 8`.
+    int load(TAbstractFile* infile, int saveVersion);
+    // DC game.cpp:7232 and the class method record name this static
+    // string-reference reader. Retail 0x4c6010 uses the same two-register
+    // ABI as game's short-length reader, with a dword map length instead.
+    static int __fastcall readString(TAbstractFile* infile, std::string& value);
+    int readVictoryCondition(char type, TAbstractFile* infile);
+    int readLossCondition(char type, TAbstractFile* infile);
+    int saveVictoryCondition(char type, TAbstractFile* outfile);
+    // Complete's saved-header reader carries the save version as a third
+    // argument so pre-25 campaign hero ids can be remapped.
+    int loadVictoryCondition(char type, TAbstractFile* infile,
+                             int saveVersion);
+    int saveLossCondition(char type, TAbstractFile* outfile);
+    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
+
     VA(0x0045a7a0, 0x1A3) MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
     NewSMapHeader()
     {
@@ -514,26 +536,6 @@ public:
         m_mapName = name;
         m_mapDescription = description;
     }
-    // Complete's scenario reader consumes the abstract stream and the
-    // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
-    int read(TAbstractFile* infile, int campaignMap);
-    // DC game.cpp:7232 and the class method record name this static
-    // string-reference reader. Retail 0x4c6010 uses the same two-register
-    // ABI as game's short-length reader, with a dword map length instead.
-    static int __fastcall readString(TAbstractFile* infile, std::string& value);
-    int readVictoryCondition(char type, TAbstractFile* infile);
-    int readLossCondition(char type, TAbstractFile* infile);
-    int saveVictoryCondition(char type, TAbstractFile* outfile);
-    int saveLossCondition(char type, TAbstractFile* outfile);
-    // Complete's saved-header reader carries the save version as a third
-    // argument so pre-25 campaign hero ids can be remapped.
-    int loadVictoryCondition(char type, TAbstractFile* infile,
-                             int saveVersion);
-    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
-    // Retail carries the save-version argument absent from the Dreamcast
-    // declarator; the 0x4c5630 body returns with `ret 8`.
-    int load(TAbstractFile* infile, int saveVersion);
-    int get(const char* path, const char* filename, int saveVersion);
 };
 SIZE(NewSMapHeader, 0x304);
 
