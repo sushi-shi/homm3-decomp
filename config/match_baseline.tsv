@@ -988,10 +988,10 @@ cmbtmgr	?removeObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b3
 cmbtmgr	?resetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0	tokens1:67f4e025aa86
 cmbtmgr	?setNextArmy@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x65330	tokens1:864d9ec7d1d1
 cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:c5ebe3df5946
-cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	98.6392	98.6392	100.0000	0x66290	tokens1:561be05acab1
+cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:88ee7c1ee002
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
 cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	100.0000	100.0000	100.0000	0x67db0	tokens1:77d8f171765d
-cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	97.3719	97.3719	97.3719	0x67a00	tokens1:eb0ba95c8b66
+cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	97.4281	97.4281	97.4281	0x67a00	tokens1:4b54b0f3b6a3
 cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	100.0000	100.0000	100.0000	0x68220	tokens1:0ec65654d344
 cmbtmgr	?shotIsNotOptimal@combatManager@@QBEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	tokens1:84bb1e66fa9a
 cmbtmgr	?shotIsThroughWall@combatManager@@QBEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	tokens1:2b74d27c31da
@@ -1323,7 +1323,7 @@ customcampaign	?isBuildingBonus@TCampaignBuildingBonus@@UBE_NXZ	100.0000	100.000
 customcampaign	?isBuildingBonus@TCampaignResourceBonus@@UBE_NXZ	100.0000	100.0000	100.0000	0x84d50	tokens1:ee91be690d5b
 customcampaign	?isBuildingBonus@TCampaignStartBonusOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85430	tokens1:8b6a1ee6fc7e
 customcampaign	?isBuildingBonus@TCampaignStartCrossoverOption@@UBE_NH@Z	100.0000	100.0000	100.0000	0x85a30	tokens1:28de21c0102a
-customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	85.4693	85.4693	85.4693	0x88880	tokens1:4aa4982262ae
+customcampaign	?load@CampaignHeaderStruct@TCampaignBrief@@QAE_NXZ	82.4518	82.4518	85.4693	0x88880	tokens1:963ea6921dfe
 customcampaign	?load@SCampaign@@QAEXPAVTAbstractFile@@H@Z	99.0228	99.0228	99.0228	0x8a310	tokens1:d510169ee945
 customcampaign	?loadMapHeader@ScenarioStruct@TCampaignBrief@@QAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@PAVNewSMapHeader@@H@Z	100.0000	100.0000	100.0000	0x87d30	tokens1:308273d46565
 customcampaign	?loadScenario@CampaignHeaderStruct@TCampaignBrief@@QAE_NHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0x88810	tokens1:31457f8c8102
@@ -1780,7 +1780,7 @@ findpath	?pushCombatPoint@searchArray@@AAEXHHHHH@Z	100.0000	100.0000	100.0000	0x
 findpath	?pushPoint@searchArray@@AAEXABUpathCell@@AAU2@HHHJUtype_point@@H@Z	100.0000	100.0000	100.0000	0xb1a70	tokens1:b627cf6ec84d
 findpath	?seedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	100.0000	100.0000	100.0000	0xb2da0	tokens1:7bc18c425316
 findpath	?setMoat@searchArray@@AAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290	tokens1:78d9d29aad2c
-findpath	?testPossibleDirections@searchArray@@AAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	tokens1:6c915e9e08ff
+findpath	?testPossibleDirections@searchArray@@AAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	99.2000	99.2000	99.2000	0xb2300	tokens1:b7370651231a
 fly	?fly@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4a40	tokens1:f7eea3edf684
 fly	?flyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0	tokens1:d2f0a09622ae
 fly	?teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10	tokens1:88d5d62860bb
@@ -4204,7 +4204,7 @@ spells	?demonicResurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	97.2740	97.2740	
 spells	?displayFailureReason@combatManager@@QAEXHPBDJ@Z	100.0000	100.0000	100.0000	0x1a2c60	tokens1:ac0c52503e7f
 spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20	tokens1:10276108e1ac
 spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	100.0000	100.0000	100.0000	0x1a5440	tokens1:77fe36e615c5
-spells	?earthquake@combatManager@@QAEXH@Z	86.9157	86.9157	86.9157	0x1a7c80	tokens1:e6e9dfe67c15
+spells	?earthquake@combatManager@@QAEXH@Z	86.9157	86.9157	86.9157	0x1a7c80	tokens1:d4cc3e36abd1
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:c538d970d8f0
 spells	?findDemonicResurrectionTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3e40	tokens1:ea8043ced0e6
 spells	?findResurrectionTarget@combatManager@@QAEPAVarmy@@HHJ@Z	100.0000	100.0000	100.0000	0x1a3cc0	tokens1:4a8899993fac
@@ -4276,7 +4276,7 @@ swapmgr	?handleNetMsg@CSwapMgrNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100
 swapmgr	?isLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380	tokens1:c93f03c39366
 swapmgr	?main@swapManager@@UAEHAAVmessage@@@Z	84.0502	84.0502	84.8412	0x1afdf0	tokens1:c871d27c965c
 swapmgr	?onWidgetDeselect@swapManager@@QAEXAAVmessage@@AAH@Z	88.4550	88.4550	99.9650	0x1b10d0	tokens1:827cf45e8bf9
-swapmgr	?open@swapManager@@UAEHH@Z	95.7482	95.7482	96.3237	0x1ae750	tokens1:f4c5c2f6a6ef
+swapmgr	?open@swapManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x1ae750	tokens1:b03e69bede5b
 swapmgr	?reset@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ae5b0	tokens1:63d96cc3cb15
 swapmgr	?sendChat@CSwapManagerChatEdit@@UAEXPBDH@Z	100.0000	100.0000	100.0000	0x1ae370	tokens1:b78ac9655d44
 swapmgr	?sendHeroUpdate@swapManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1afbf0	tokens1:90eca4d1c39e
@@ -4573,7 +4573,7 @@ tradpost	?update@TTradeResourceWindow@@QAEXE@Z	90.2166	90.2166	90.3876	0x1ea6e0	
 tradpost	?updateSellArtifactWidget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0	tokens1:4098b94ea55d
 tradpost	?windowHandler@TBuyArtifactWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0	tokens1:e9e8888ce2fc
 tradpost	?windowHandler@TGiveResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550	tokens1:38e667e0b51f
-tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	81.1491	81.1491	90.6792	0x1edf60	tokens1:39df9ae61e82
+tradpost	?windowHandler@TSellArtifactWindow@@UAEHAAVmessage@@@Z	83.1581	83.1581	90.6792	0x1edf60	tokens1:564a93196f9e
 tradpost	?windowHandler@TSellCreatureWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890	tokens1:5e154036ab4f
 tradpost	?windowHandler@TTradeResourceWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0	tokens1:49128342879b
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70	-
