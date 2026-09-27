@@ -355,11 +355,12 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
     }
 }
 
+// The ordinary ABC sum order matches both retained retail bodies exactly.
 VA(0x004b57a0, 0x25) MAC_ADDRESS(0x0c9600, 0x28)  // dc 0xa2420
 int font::getCharacterWidth(unsigned char currChar) const
 {
     const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
-    return record->m_abcB + record->m_abcC + record->m_abcA;
+    return record->m_abcA + record->m_abcB + record->m_abcC;
 }
 
 VA(0x004b57d0, 0x44) MAC_ADDRESS(0x0c9628, 0x68)  // dc 0xa2438
