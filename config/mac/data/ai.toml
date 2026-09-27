@@ -2,13 +2,12 @@
 
 [[data]]
 retail_va = 0x0063bd00
-source = "include/cmbtmgr.h"
-declaration_only = true
+source = "src/cmbtmgr.cpp"
 mac_section = 0
 mac_offset = 0x2a400e
 mac_size = 11
 sha256 = "7867ae4f8f8192b325ee181199bf92d8cbed0e56854695f9e5d1400a642cd101"
-evidence = "Retail chooseMeleeTarget indexes the source-declared castle-wall column byte table at 0x63bd00. Mac body 0:0x24048 reads TOC 1+0x7b4 -> 0+0x2a400e and indexes 11 row bytes 0c 1d 2d 3e 4e 60 70 82 93 a5 b6; neighboring byte tables flank its exact 11-byte span. Address binding only because the Mac table lives in the code section."
+evidence = "Retail chooseMeleeTarget indexes the source-declared castle-wall column byte table at 0x63bd00. Mac body 0:0x24048 reads TOC 1+0x7b4 -> 0+0x2a400e and indexes 11 row bytes 0c 1d 2d 3e 4e 60 70 82 93 a5 b6; neighboring byte tables flank its exact 11-byte span. The source-owned const initializer is compared byte-for-byte against its reviewed native code-section pool."
 
 [[data]]
 retail_va = 0x00699284
