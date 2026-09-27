@@ -455,9 +455,10 @@ void type_skill_quest::showSkillRequirementsDialog(
 // Mac 0x164f28..0x164ff4 stores either the required byte or zero in
 // separate arms. Direct member reads reproduce that loop exactly; the
 // earlier reference/conditional expression introduced extra byte conversions.
-// Natural c_str arguments avoid extended pointer lifetimes. Mac now 96.11%
-// (592 bytes on both sides), with string stack homes and format registers left.
-// Windows 68.33% versus the previous 70.53% remains a recovery obligation.
+// Keep the table lookup in the format argument: native +0x1b4..+0x1c4
+// format-register order is now exact, with every named helper retained.
+// Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
+// bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
@@ -476,9 +477,8 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
         showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
-        const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts.m_text1.c_str(), requirement.c_str());
+            questTexts().m_text1.c_str(), requirement.c_str());
         text += getTimeLimitText();
         showSkillRequirementsDialog(text.c_str(), missing);
     }
