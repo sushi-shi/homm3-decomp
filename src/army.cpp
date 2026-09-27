@@ -2434,10 +2434,8 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
                                    const army* excluded) const
 {
-    long attackModifier = getAttackModifier(0, ranged);
-    long attackDiff = attackModifier - lowestAttack;
-    long defenseModifier = getDefenseModifier();
-    long defenseDiff = defenseModifier - lowestDefense;
+    long attackDiff = getAttackModifier(0, ranged) - lowestAttack;
+    long defenseDiff = getDefenseModifier() - lowestDefense;
     // Mac 0x4ea40 calls the full reduction before the defense product.
     // Keep the recovered base helper inside that upper operation. This restores
     // Windows 84.28 -> 96.59; the inverse wrapper exhausts VC6's nested inline
