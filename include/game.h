@@ -1047,9 +1047,10 @@ public:
     // current dwelling population is augmented by one growth cycle.
     // Its wider calendar role is not yet attested, so the name remains
     // ordinal rather than importing a semantic guess.
+    // DC game type variants record all three calendar words as unsigned short.
     unsigned short m_day;
-    short m_week;
-    short m_month;
+    unsigned short m_week;
+    unsigned short m_month;
     char m_uniqueSystemId[0x20];
     TArtifact m_marketArtifacts[7];
     // NH3API global.hpp confirms the PC vector at +0x1f680. Map loading
@@ -1976,9 +1977,11 @@ inline NewmapCell* game::getCell(type_point point)
 
 // Game.h:1390 in the DC roster. Retail expands this short calendar
 // accessor at every game.obj call site and retains no standalone row.
+// DC and Mac completeCurrentMap preserve day + (week - 1) * 7 +
+// (month - 1) * 28 before the signed-short return.
 inline short game::getCurrentTurn() const
 {
-    return (m_month * 4 + m_week - 5) * 7 + m_day;
+    return m_day + (m_week - 1) * 7 + (m_month - 1) * 28;
 }
 
 // Original: game::get_liths; Game.h:1395, dc 0x12ca94.
