@@ -6387,6 +6387,9 @@ int NewSMapHeader::get(const char* path, const char* filename,
 
 // DC NewSMapHeader::readString (0xb1110), static with a string reference.
 // Mac 0xdc8b0 checks the read count before decoding length at 0xdc8c4.
+// DC names size/count/instr. Declaration-order and entry-vs-arm pointer
+// lifetime controls keep this body exact and read() at 59.53%; those scopes
+// do not explain VC6 expanding the two readString calls in that caller.
 VA(0x004c6010, 0x1CE) MAC_ADDRESS(0x0dc878, 0x114)  // dc 0xb1110
 int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
