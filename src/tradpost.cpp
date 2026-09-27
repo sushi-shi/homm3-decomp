@@ -2148,10 +2148,11 @@ void TGiveResourceWindow::update(bool update)
 // Mac 0x1f6bf8..0x1f6c44 first chooses qty, then performs one of two
 // singular/plural lookups; nested wording emits a third native lookup path.
 // Ordinary text indexing retains getText through operator[] and reproduces
-// Mac's vector-index accessor frontier. Windows currently 95.46 (prior 96.39):
-// 54 calls and 24 branches agree, 53/57 blocks exact; remaining register roles
-// differ. why-reg's qty removal reduces distance 94 -> 63 but re-evaluates the
-// condition across calls, unlike Mac's quantity retained in r24. Keep qty.
+// Mac's vector-index accessor frontier. Mac 0x1f6ca0..0x1f6cf0 retains
+// separate sprintf calls for the two idle titles; Windows merges their tails.
+// Mac 0x1f7014..0x1f708c also puts the resource message fields before
+// formatting its count. Preserve both phases (99.68% Windows). Removing qty
+// re-evaluates its condition across calls, unlike Mac's retained r24 value.
 VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2172,8 +2173,10 @@ void TBuyArtifactWindow::update(unsigned char update)
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
-        sprintf(g_text, g_leftDenominated ? (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]
-                                        : (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
+        if (g_leftDenominated)
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ACCEPTED_MESSAGE]);
+        else
+            sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_INSTRUCTIONS]);
     }
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeX = widget::WIDGET_SET_TEXT;
@@ -2266,18 +2269,18 @@ void TBuyArtifactWindow::update(unsigned char update)
         for (int i = 0; i < 7; ++i) {
             if (col == 0) {
                 msg.m_codeX = widget::WIDGET_SET_STATUS;
-                msg.m_extra = 6;
                 msg.m_codeY = 0x15 + i;
+                msg.m_extra = 6;
                 broadcastMessage(msg);
                 msg.m_codeY = MARKET_SELL_WOOD_ID + i;
                 broadcastMessage(msg);
                 msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
-                msg.m_codeX = widget::WIDGET_SET_TEXT;
                 msg.m_extraText = g_text;
+                msg.m_codeX = widget::WIDGET_SET_TEXT;
+                msg.m_codeY = 0x23 + i;
                 sprintf(g_text, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                         g_currentPlayer->m_resources[i]);
-                msg.m_codeY = 0x23 + i;
                 broadcastMessage(msg);
                 msg.m_codeX = widget::WIDGET_SET_Y;
                 msg.m_extra = g_resourceValueWidgetY[i];
