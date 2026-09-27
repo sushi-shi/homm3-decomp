@@ -786,6 +786,10 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
     }
 }
 
+// All 92 Windows CFG blocks and 23 calls agree; the residual is register
+// homing. Named mutable/const locals for defender.getArmy() leave 99.7461%
+// unchanged in a reproduced three-state family. Header getter-body order is
+// also flat across all 60 emitted function code sections.
 // E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593) MAC_ADDRESS(0x027b88, 0x3c0)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::castSpell(
