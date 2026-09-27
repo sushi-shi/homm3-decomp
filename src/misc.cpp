@@ -68,6 +68,9 @@ void generateUniqueSystemID()
 // Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
 // A shared settings reference is also Windows-flat; its Mac comparison
 // remains unavailable, so the ordinary direct global access is retained.
+// Mac config storage also differs: First Time is inside it at +0x58,
+// army-info/name/combat-speed are +0x74/+0x94/+0x98 (Win +0x70/+0x90/+0x94).
+// The shared class is kept pending a reviewed platform-layout model.
 VA(0x0050b260, 0x26C) MAC_ADDRESS(0x130e60, 0x21c)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
