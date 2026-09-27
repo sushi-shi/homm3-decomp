@@ -794,6 +794,9 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // control overlays msgTemp with the packet and instead reserves 0x4c.
 // Constant caching and branch threading remain separate residuals; the
 // corrected frame does not establish a missing second use of msgTemp.
+// Moving the identical g_surrenderCost definition from cmbtmgr.cpp into
+// this TU leaves CodeWarrior's external-IL load unchanged; source ownership
+// alone does not recover the native direct-TOC scalar access.
 // Native Mac 0x83920 dispatches the complete 0/1/2 information-mode switch.
 // Keeping the explicit no-info arm gives CodeWarrior the native 1/3 pivot;
 // VC6 improves 94.0588 -> 94.6868% without removing any window helpers.
