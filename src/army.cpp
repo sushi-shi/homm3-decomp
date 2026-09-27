@@ -4074,8 +4074,9 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     long x = targetX - halfWidth;
     long halfHeight = explosion->getHeight() / 2;
     long y = targetY - halfHeight;
-    long bottom = explosion->getHeight() - halfHeight + targetY - 1;
-    long right = explosion->getWidth() - halfWidth + targetX - 1;
+    // Mac 0x52378/0x5237c adds full dimensions to the computed origin.
+    long bottom = y + explosion->getHeight() - 1;
+    long right = x + explosion->getWidth() - 1;
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
         // Mac 0x52374 builds the four-word rectangle on the stack and
