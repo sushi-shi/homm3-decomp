@@ -65,6 +65,9 @@ void generateUniqueSystemID()
 // that shared source order lowers the Windows score from 99.1018% to
 // 93.7126%, while all 24 CFG blocks and six calls still agree. The old
 // score remains a compiler-scheduling lead, not a source-order verdict.
+// Expanding every compound mask into x = x & 1 is byte-flat in both compilers.
+// A shared settings reference is also Windows-flat; its Mac comparison
+// remains unavailable, so the ordinary direct global access is retained.
 VA(0x0050b260, 0x26C) MAC_ADDRESS(0x130e60, 0x21c)  // body + sole retail caller, dc 0xfd958
 void checkConfigFile()
 {
