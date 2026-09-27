@@ -1250,6 +1250,10 @@ void ResourceManager::expunge()
 }
 
 // A cache hit adds a reference before returning the resource.
+// Mac 0x152194 calls a different cache backend at 0x1520e8: it searches
+// 16384 eight-byte hash/resource rows, using the name hash at 0x15216c.
+// Windows retains the typed std::map lookup below; its Mac backend cannot
+// be admitted as the same map storage solely through an address binding.
 MAC_ADDRESS(0x152194, 0x3c)
 resource* ResourceManager::getFromCache(const char* name)
 {
