@@ -794,6 +794,9 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // control overlays msgTemp with the packet and instead reserves 0x4c.
 // Constant caching and branch threading remain separate residuals; the
 // corrected frame does not establish a missing second use of msgTemp.
+// Native Mac 0x83920 dispatches the complete 0/1/2 information-mode switch.
+// Keeping the explicit no-info arm gives CodeWarrior the native 1/3 pivot;
+// VC6 improves 94.0588 -> 94.6868% without removing any window helpers.
 VA(0x00474d80, 0x114D) MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::processCombatMsg(message& msg)
 {
@@ -973,9 +976,10 @@ int combatManager::processCombatMsg(message& msg)
                 if (m_cells[gridIndex].hasArmy()) {
                     army* stack = m_cells[gridIndex].getArmy();
                     hero* owner = stack->getOwner();
-                    if (g_config.m_combatArmyInfoLevel
-                            == TCombatOptionsWindow::
-                                CREATURE_INFO_LEVEL_VERBOSE) {
+                    switch (g_config.m_combatArmyInfoLevel) {
+                    case 0:
+                        break;
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
                         if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[0]->update(*stack,
                                                                         owner);
@@ -985,9 +989,8 @@ int combatManager::processCombatMsg(message& msg)
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[1]->show();
                         }
-                    } else if (g_config.m_combatArmyInfoLevel
-                               == TCombatOptionsWindow::
-                                   CREATURE_INFO_LEVEL_COMPACT) {
+                        break;
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT:
                         if (stack->getOwningSide() == 0) {
                             m_combatWindow->m_creatureSubWindows[2]->update(*stack,
                                                                         owner);
@@ -997,6 +1000,7 @@ int combatManager::processCombatMsg(message& msg)
                                                                         owner);
                             m_combatWindow->m_creatureSubWindows[3]->show();
                         }
+                        break;
                     }
                 } else if (m_debugShowBlockedHexes
                            && (m_cells[gridIndex].m_attributes & hexcell::blocked)
