@@ -2351,6 +2351,10 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // slots) and the 6-instruction surplus follow from that one promotion.
 // A parameter's caching is C2's promotion choice, not a spelling; no
 // catalog mutation moves the branch shape (guided search exhausted).
+// Current helper-preserving form: 72.70%. Mac 0x194288..0x1942b8
+// normalizes the target/callee result to zero or one. Keeping that operation
+// in a nested `return callee(...) != 0` gives 69.32%; its conditional-expression
+// equivalent gives 67.11%. All three source-family controls reproduced.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
