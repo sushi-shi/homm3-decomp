@@ -2831,7 +2831,9 @@ static void checkHolyGrail(
                     if (point.m_moveCost <= friendlyCost) {
                         if (g_game->m_mapHeader.m_victoryCondition.m_type
                             == VICTORY_CONDITION_BUILD_GRAIL) {
-                            point.m_value = 1968;
+                            // Windows0x42f4f4 and Mac0x31edc/0x31ee0
+                            // store the five-million victory objective value.
+                            point.m_value = 5000000;
                         } else {
                             point.m_value = aiGetValueOfArtifact(
                                 type_artifact(ARTIFACT_HOLY_GRAIL),
@@ -3170,7 +3172,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // exploration or by AI_value_of_event, cost-adjusted, with the escort
 // classes gated on the friendly-distance map. Inside a town only enemy
 // heroes within this turn's movement qualify (is_critical). The tail adds
-// the player's puzzle-guess grail spot, valued 1968 under the build-grail
+// the player's puzzle-guess grail spot, valued 5000000 under the build-grail
 // victory or as the Holy Grail artifact otherwise. Returns the danger under
 // the hero (mark_destinations' result).
 // Residual (96.365%, 80/81 blocks, 54/54 branches): Complete retains the
@@ -3425,6 +3427,12 @@ long markDestinations(hero* currentHero, long maxDistance,
 // seven canonical calls intact. Reusing currentPathCell after the refund
 // restores the retail barrier/danger source and raises Windows 86.50% to
 // 96.97%; a separate lastCell pointer had preserved the wrong cell.
+// DC3510 groups the three refund guards; its monster local is declared at
+// 3531, after danger accumulation. Reusing point as both search arguments
+// restores the native common argument copy (Mac0x32c84..0x32c98).
+// Windows0x42fac7 is cmp esi,5000000 (81fe404b4c00), not1968:
+// that scalar had been mislabeled as the function at0x4c4b40 by delinking.
+// These corrections reach Windows100%, with all seven helper calls intact.
 // E:\gamedcs\ai_player.cpp:3498
 // Prices one candidate destination: a pickupable trigger already visited by
 // this player refunds the final step (move_cost re-based to last_point's
@@ -3437,35 +3445,33 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
-    type_point monsterPos;
     type_point point = destination.m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
-    if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
-        if (getMapExtra(point) & g_curPlayerBit) {
-            // Mac0x32b48/0x32b4c snapshots the last point before the
-            // movement refund at0x32b50..0x32b5c. Keep the same source order.
-            point = currentPathCell->m_lastPoint;
-            destination.m_moveCost -= currentPathCell->m_cost;
-            // Windows keeps the returned cell in EBX for the following
-            // barrier/danger reads; Mac 0x32bcc likewise replaces r25.
-            // The refund changes the active path cell, not just its cost.
-            currentPathCell = currentSearchArray->getCell(point, 0);
-            destination.m_moveCost += currentPathCell->m_cost;
-        }
+    if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding
+        && (getMapExtra(point) & g_curPlayerBit)) {
+        // Mac0x32b48/0x32b4c snapshots the last point before the
+        // movement refund at0x32b50..0x32b5c. Keep the same source order.
+        point = currentPathCell->m_lastPoint;
+        destination.m_moveCost -= currentPathCell->m_cost;
+        // Windows keeps the returned cell in EBX for the following
+        // barrier/danger reads; Mac 0x32bcc likewise replaces r25.
+        // The refund changes the active path cell, not just its cost.
+        currentPathCell = currentSearchArray->getCell(point, 0);
+        destination.m_moveCost += currentPathCell->m_cost;
     }
 
     long value = getDangerCell(strategicMap, point)
         + currentPathCell->m_barrierValue;
-    if (currentPathCell->m_dangerValue <= -500000000 && value >= 1968)
+    if (currentPathCell->m_dangerValue <= -500000000 && value >= 5000000)
         currentPathCell->m_dangerValue = -2500000;
     if (value >= -500000000)
         value += currentPathCell->m_dangerValue;
 
+    type_point monsterPos;
     if (!g_adventureObjectTraits[type].m_blocksLanding) {
-        if (g_advManager->findAdjacentMonster(destination.m_point,
-                                              &monsterPos,
-                                              destination.m_point)) {
+        point = destination.m_point;
+        if (g_advManager->findAdjacentMonster(point, &monsterPos, point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
                 value += aiValueOfEvent(currentHero, monsterPos,
@@ -4904,7 +4910,9 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
          || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT)
         && g_game->m_mapHeader.m_victoryCondition.m_artifactNum
                == artifact.m_artifactId) {
-        value = 1968;
+        // Windows0x4338f4 stores5000000. Mac0x38a9c/0x38aa0
+        // uses the same victory bonus, added to its existing value.
+        value = 5000000;
     }
 
     for (unsigned int i = 0;
