@@ -2278,17 +2278,14 @@ long army::getDefenseModifier() const
         - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
 }
 
-// E:\gamedcs\army.cpp:2680
-// Dreamcast's eight-byte body returns 1.0, but the shared helper boundary is
-// still visible in get_unit_combat_value. Mac expands this inline wrapper and
-// calls computeDefenderDamageReduction at 0:0x4ea40; keep the canonical
-// reduction body instead of spelling it a second time here. In a focused VC6
-// build, the caller falls from 96.5871% to 84.0903% because this compile
-// retains the reduction call where retail expands it through getDefenseFactor.
+// E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
+// Complete's full damage-reduction operation starts from the same baseline.
+// Its composition with this base helper is a reconstruction hypothesis: both
+// compilers erase the constant-returning call, so bytes alone cannot prove it.
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
 {
-    return computeDefenderDamageReduction(rangedAttack);
+    return 1.0;
 }
 
 // The controller/owner pair, and the resolution of a naming inversion
@@ -2441,10 +2438,11 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     long attackDiff = attackModifier - lowestAttack;
     long defenseModifier = getDefenseModifier();
     long defenseDiff = defenseModifier - lowestDefense;
-    // Mac 0x4ea40 evaluates the reduction before forming adjusted defense,
-    // then multiplies the adjusted value by that factor. Naming its lifetime
-    // preserves every helper and improves Windows 84.0903% -> 84.2839%.
-    double defense = getDefenseDamageModifier(ranged);
+    // Mac 0x4ea40 calls the full reduction before the defense product.
+    // Keep the recovered base helper inside that upper operation. This restores
+    // Windows 84.28 -> 96.59; the inverse wrapper exhausts VC6's nested inline
+    // budget (67 bytes available versus a 131-byte reduction body).
+    double defense = computeDefenderDamageReduction(ranged);
     defense = (defenseDiff * 0.05 + 1.0) * defense;
     if (ranged && !canShoot(0))
         ranged = 0;
@@ -2837,7 +2835,7 @@ double army::computeAttackerDamageReduction(const army* defender,
 VA(0x00443d90, 0x9C) MAC_ADDRESS(0x04fd04, 0x88)  // dc 0x48fc4
 double army::computeDefenderDamageReduction(unsigned char isShooting) const
 {
-    double reduction = 1.0;
+    double reduction = getDefenseDamageModifier(isShooting);
     if (isShooting) {
         if (m_spellInfluence[28])
             reduction = m_airShieldFactor;
