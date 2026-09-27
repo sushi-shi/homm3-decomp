@@ -2122,15 +2122,13 @@ void TGiveResourceWindow::update(bool update)
 // resources and the artifact-for-sale slots (icon, per-artifact price via the
 // inlined ratio math, selection highlight). The final repaint is bUpdate-gated.
 // The inlined SetWidgetOn/Off/Disabled helpers expand to the status broadcasts.
-// Current retail structure: all 52 calls and all 24 conditional branches agree;
-// 33/57 blocks are byte-identical. The remaining CFG delta is one cross-jumped
-// sprintf argument path (our shared block is forward, retail's is backward).
-// Six natural amount spellings compile byte-identically, and an 800-pair AST
-// sweep found only a +0.0087 equality-order allocator perturbation whose operand
-// order contradicts retail. Repeating msg.id at the retail store site is also a
-// measured loss (-0.39 raw), so both are intentionally left unbanked.
-// Keeping the singular/plural assignment inside its quantity arm removes
-// have_word and improves 88.6580% to 89.2899%; DC 1479-1495 scopes support it.
+// Mac 0x1f6bf8..0x1f6c44 first chooses qty, then performs one of two
+// singular/plural lookups; nested wording emits a third native lookup path.
+// Ordinary text indexing retains getText through operator[] and reproduces
+// Mac's vector-index accessor frontier. Windows currently 95.46 (prior 96.39):
+// 54 calls and 24 branches agree, 53/57 blocks exact; remaining register roles
+// differ. why-reg's qty removal reduces distance 94 -> 63 but re-evaluates the
+// condition across calls, unlike Mac's quantity retained in r24. Keep qty.
 VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::update(unsigned char update)
 {
@@ -2141,20 +2139,13 @@ void TBuyArtifactWindow::update(unsigned char update)
     msg.m_id = MESSAGE_WIDGET;
 
     if (g_selectedArtifact != -1 && g_leftResource != -1) {
-        int qty;
+        int qty = g_ratioInverted ? 1 : g_giveQuantity;
         const char* word;
-        if (g_ratioInverted) {
-            qty = 1;
-            word = g_generalText->getText(GENERAL_TEXT_UNIT);
-        } else {
-            qty = g_giveQuantity;
-            if (qty > 1) {
-                word = g_generalText->getText(GENERAL_TEXT_UNITS);
-            } else {
-                word = g_generalText->getText(GENERAL_TEXT_UNIT);
-            }
-        }
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_ARTIFACT_FOR_RESOURCE_FORMAT),
+        if (qty > 1)
+            word = (*g_generalText)[GENERAL_TEXT_UNITS];
+        else
+            word = (*g_generalText)[GENERAL_TEXT_UNIT];
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_ARTIFACT_FOR_RESOURCE_FORMAT],
                 g_artifactTraits[g_marketArtifacts[g_leftResource]].m_name,
                 qty, word, g_resourceNames[g_selectedArtifact]);
     } else {
@@ -2172,7 +2163,7 @@ void TBuyArtifactWindow::update(unsigned char update)
         strcpy(g_text, g_marketSubtitle);
         break;
     case MARKET_SOURCE_BLACK_MARKET:
-        sprintf(g_text, g_generalText->getText(GENERAL_TEXT_BLACK_MARKET));
+        sprintf(g_text, (*g_generalText)[GENERAL_TEXT_BLACK_MARKET]);
         break;
     }
 
@@ -2180,10 +2171,10 @@ void TBuyArtifactWindow::update(unsigned char update)
     broadcastMessage(msg);
 
     msg.m_codeY = 0xe;
-    sprintf(g_text, g_generalText->getText(GENERAL_TEXT_KINGDOM_RESOURCES));
+    sprintf(g_text, (*g_generalText)[GENERAL_TEXT_KINGDOM_RESOURCES]);
     broadcastMessage(msg);
 
-    strcpy(g_text, g_generalText->getText(GENERAL_TEXT_TRADE_AVAILABLE));
+    strcpy(g_text, (*g_generalText)[GENERAL_TEXT_TRADE_AVAILABLE]);
     msg.m_codeX = widget::WIDGET_SET_TEXT;
     msg.m_codeY = 0xf;
     msg.m_extraText = g_text;
