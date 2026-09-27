@@ -933,74 +933,23 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // Mac checks its display mode to choose gamma or bitmap fade paths
 // (0x20e650 and 0x20ea8c). Their extra bitmap, blit and delay
 // calls are platform paths, not missing helpers in the Windows fade.
+// DC names const unsigned pixel masks, a read-only pixel source and the
+// fade period; the ordinary Windows body retains those types and helpers.
+// Mac uses separate gamma/bitmap paths; these native comparisons remain
+// unavailable rather than pretending that the Windows body is a Mac port.
 VA(0x006030e0, 0x1F9) MAC_ADDRESS(0x20e634, 0x444)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
-    unsigned long maskRed = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
-    unsigned long maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
-    unsigned long maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
+    const unsigned int maskRed = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
+    const unsigned int maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
+    const unsigned int maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
+    const int fadePeriod = 50;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
     fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
         m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
 
     for (int shift = 0; shift < 3; shift++) {
-        unsigned long deadline = GameTime::get() + 50;
-        unsigned long started = GameTime::get();
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.getMap(0, 0)));
-        unsigned char* destinationBytes = static_cast<unsigned char*>(
-            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
-            unsigned long* src = static_cast<unsigned long*>(
-                static_cast<void*>(sourceBytes));
-            unsigned int* dst = static_cast<unsigned int*>(
-                static_cast<void*>(destinationBytes));
-            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
-                unsigned long pair = *src++;
-                unsigned long blue = (pair & maskRed) >> shift;
-                unsigned long green = (pair & maskGreen) >> shift;
-                unsigned long red = (pair & maskBlue) >> shift;
-                dst[x] = (red & maskBlue) | (green & maskGreen)
-                    | (blue & maskRed);
-            }
-            sourceBytes += fadeFrom.getPitch();
-            destinationBytes += m_screenBitmap->getPitch();
-        }
-        blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
-                                WINDOW_SCREEN_HEIGHT);
-        if (GameTime::get() - started > 50)
-            break;
-        GameTime::delayTil(deadline);
-    }
-
-    m_screenBitmap->fillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
-    blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
-                            WINDOW_SCREEN_HEIGHT);
-    if (expectFadein) {
-        fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-            m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-            m_screenBitmap->getHeight(), m_screenBitmap->getPitch(), 0);
-    }
-}
-
-// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call at
-// 0x602c91. The mirror of FadeToBlack: the same three-pass shift walked
-// DOWNWARDS from 2 and stopping before 0, so the last pass is the
-// half-brightness frame and the full-brightness image is restored by
-// the Draw below rather than by a pass of its own.
-
-VA(0x006032e0, 0x1E5) MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller, dc 0x19c3b8
-void heroWindowManager::fadeFromBlack(int speed)
-{
-    unsigned long maskRed = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
-    unsigned long maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
-    unsigned long maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
-    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
-
-    for (int shift = 2; shift > 0; shift--) {
-        unsigned long deadline = GameTime::get() + 50;
+        unsigned long deadline = GameTime::get() + fadePeriod;
         unsigned long started = GameTime::get();
         unsigned char* sourceBytes = static_cast<unsigned char*>(
             static_cast<void*>(fadeFrom.getMap(0, 0)));
@@ -1024,7 +973,64 @@ void heroWindowManager::fadeFromBlack(int speed)
         }
         blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                                 WINDOW_SCREEN_HEIGHT);
-        if (GameTime::get() - started > 50)
+        if (GameTime::get() - started > fadePeriod)
+            break;
+        GameTime::delayTil(deadline);
+    }
+
+    m_screenBitmap->fillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
+    blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                            WINDOW_SCREEN_HEIGHT);
+    if (expectFadein) {
+        fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+            m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+            m_screenBitmap->getHeight(), m_screenBitmap->getPitch(), 0);
+    }
+}
+
+// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call at
+// 0x602c91. The mirror of FadeToBlack: the same three-pass shift walked
+// DOWNWARDS from 2 and stopping before 0, so the last pass is the
+// half-brightness frame and the full-brightness image is restored by
+// the Draw below rather than by a pass of its own.
+
+VA(0x006032e0, 0x1E5) MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller, dc 0x19c3b8
+void heroWindowManager::fadeFromBlack(int speed)
+{
+    const unsigned int maskRed = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
+    const unsigned int maskGreen = (Bitmap16Bit::s_greenMask << 16) | Bitmap16Bit::s_greenMask;
+    const unsigned int maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
+    const int fadePeriod = 50;
+    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
+        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
+
+    for (int shift = 2; shift > 0; shift--) {
+        unsigned long deadline = GameTime::get() + fadePeriod;
+        unsigned long started = GameTime::get();
+        unsigned char* sourceBytes = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.getMap(0, 0)));
+        unsigned char* destinationBytes = static_cast<unsigned char*>(
+            static_cast<void*>(m_screenBitmap->getMap(0, 0)));
+        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
+            const unsigned int* src = static_cast<const unsigned int*>(
+                static_cast<void*>(sourceBytes));
+            unsigned int* dst = static_cast<unsigned int*>(
+                static_cast<void*>(destinationBytes));
+            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                unsigned long pair = *src++;
+                unsigned long blue = (pair & maskRed) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskBlue) >> shift;
+                dst[x] = (red & maskBlue) | (green & maskGreen)
+                    | (blue & maskRed);
+            }
+            sourceBytes += fadeFrom.getPitch();
+            destinationBytes += m_screenBitmap->getPitch();
+        }
+        blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
+                                WINDOW_SCREEN_HEIGHT);
+        if (GameTime::get() - started > fadePeriod)
             break;
         GameTime::delayTil(deadline);
     }
