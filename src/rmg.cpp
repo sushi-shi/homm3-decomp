@@ -52,15 +52,6 @@ int getRmgDistance(TPoint first, TPoint second)
         + (first.m_y - second.m_y) * (first.m_y - second.m_y))));
 }
 
-// Complete-only shared land predicate; original name is unknown. Nine
-// placement/decoration sites use this same road-passable, non-rock test.
-// Keeping its ordinary helper boundary restores decorateMap's retail branch
-// layout (409 bytes exact); spelling the two field tests in the caller does not.
-unsigned char TRmgMapItem::isPassableLand() const
-{
-    return m_tileData.m_roadPassable && m_tile.m_landType != eTerrainRock;
-}
-
 typedef std::set<TPoint> TRmgPointSet;
 
 // Complete-only creature reward values: seven signed dwords at 0x6824e0.
@@ -2664,6 +2655,8 @@ placementFailure:
 // sums at 0x233b70..0x233c18 recover the ordinary -=/+ calls and reach
 // 87.9333%, beyond the compound-only 83.4524%. Coordinate homes and vector
 // cleanup remain; the object-vector insert folds to the retail widget alias.
+// Native 0x233aa0..0x233ab4 copies the trigger before its coordinate
+// conversion; the explicit value snapshot improves Windows to 88.0476%.
 VA(0x00535970, 0x240) MAC_ADDRESS(0x233a44, 0x2d4) // anchor-callee 0x546680; thiscall, ret 4
 unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
 {
@@ -2674,7 +2667,8 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
     bounds.m_minimumY = prototype->getHeight() + 2;
     bounds.m_maximumX = m_map.m_mapWidth - 3;
     bounds.m_maximumY = m_map.m_mapHeight - 3;
-    TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
+    TObjectType::TPoint triggerCell = prototype->m_triggerCell;
+    TPoint trigger(triggerCell.m_x, triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
     TRmgMapPosition position;
     unsigned index;
@@ -2746,6 +2740,8 @@ void TRmgTreasureGroup::updateBounds()
 // The retained vector<TPoint>::insert matches all 582 bytes of the folded
 // vector<type_artifact> body at 0x54d330, with identical new/delete calls.
 // Direction-table references resolve to g_rmgDirections (0x69cdc0) and +4.
+// The native perimeter uses the surface lookup overload. Restoring that
+// call also recovers this context from 78.5616% to the existing 100% peak.
 VA(0x00535EE0, 0x18F) MAC_ADDRESS(0x233fb8, 0x274) // anchor-callee 0x5468ea/0x53511b; thiscall, ret 0
 void TRmgTreasureGroup::traceOutline()
 {
@@ -2755,7 +2751,7 @@ void TRmgTreasureGroup::traceOutline()
     position.m_x = 0;
     for (position.m_y = 0; position.m_y < m_map.m_mapHeight; ++position.m_y) {
         for (position.m_x = 0; position.m_x < m_map.m_mapWidth; ++position.m_x) {
-            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y, 0);
+            TRmgMapItem* item = m_map.getMapItem(position.m_x, position.m_y);
             if (item->isRoadEntrance() || !item->isPassableLand() || !item->hasSubterraneanGate())
                 break;
         }
@@ -2777,7 +2773,7 @@ void TRmgTreasureGroup::traceOutline()
             if (nearby.m_x < 0 || nearby.m_x >= m_map.m_mapWidth
                 || nearby.m_y < 0 || nearby.m_y >= m_map.m_mapHeight)
                 break;
-            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+            TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
             if (!item->isRoadEntrance() && item->isPassableLand() && item->hasSubterraneanGate())
                 break;
         } while (++attempts < 4);
@@ -8350,6 +8346,10 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // All seven header-consuming TUs were scored; only other rmg.cpp callers
 // moved. No accessor change was adopted: this family supplies no positive
 // evidence for a different helper body at the mismatching expansion.
+// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates.
+// Direct field-test controls omit those Boolean results; the class-defined
+// shared predicate reproduces them. Windows currently falls 93.3047% to
+// 75.6133%; keep both helper calls while recovering the surrounding lowering.
 VA(0x005469B0, 0x2B4) MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
 void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position)
@@ -8375,12 +8375,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
                 TRmgMapPosition(point.m_x + position.m_x, point.m_y + position.m_y, position.m_z));
             unsigned char border = destination->hasBorderObject();
             unsigned char gate = destination->hasSubterraneanGate();
-            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
-                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
-                && destination->m_tileData.m_roadPassable
-                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
+                && !source->hasSubterraneanGate() && source->isPassableLand() && !source->isRoadEntrance()
+                && destination->isPassableLand() && !destination->isRoadEntrance()) {
                 if (!destination->m_connection.m_present)
                     destination->m_tileData.m_subterraneanGate = 0;
                 if (source->hasBorderObject() && !destination->m_connection.m_present) {
@@ -8444,6 +8442,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // expands the constructor retained at retail +0xbd (live C2 cost 47 versus
 // direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
 // still expands it; restoring the call must precede the old stack-home work.
+// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results.
+// Restore the same shared calls and surface-map queries here; Windows
+// currently falls 96.8953% to 81.0773%. Byte/bool result types and seven
+// ordinary predicate return forms do not recover the caller lowering.
 VA(0x00546C70, 0x452) MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
 unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup* group,
     TRmgMapPosition position, TRmgZone* zone)
@@ -8494,9 +8496,8 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     int direction;
     for (direction = firstDirection; direction < lastDirection; ++direction) {
         TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
-        TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
-        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
-            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
+        TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
+        if (!source->hasSubterraneanGate() || !source->isPassableLand() || source->isRoadEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
@@ -8506,8 +8507,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
-            && destination->m_tileData.m_roadPassable
-            && destination->m_tile.m_landType != eTerrainRock
+            && destination->isPassableLand()
             && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
             break;
     }
@@ -8519,7 +8519,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     TPoint point;
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
-            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
+            TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (!source->hasSubterraneanGate()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;

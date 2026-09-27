@@ -1051,7 +1051,14 @@ struct TRmgMapItem {
         return m_tileData.m_subterraneanGate;
     }
 
-    unsigned char isPassableLand() const;
+    // Native Mac group callers expand this byte-valued predicate. The
+    // ordinary source-defined control retains calls; direct field tests
+    // omit its Boolean result. This class body reproduces that predicate
+    // shape; its seven-unit Windows control loses no exact functions.
+    unsigned char isPassableLand() const
+    {
+        return m_tileData.m_roadPassable && getLandType() != eTerrainRock;
+    }
 
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
