@@ -1,0 +1,9 @@
+[[data]]
+retail_va = 0x006993d0
+source = "src/kb.cpp"
+declaration_only = true
+mac_section = 1
+mac_offset = 0x528938
+mac_size = 4
+sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+evidence = "src/kb.cpp owns DATA(0x6993d0) combatManager* g_combatManager. Mac army::animateMissile loads its pointer-cell address through TOC 1+0x7b8 at code0+0x4afa8, dereferences it at 0x4afd0, then calls the paired combatManager::isQuickCombat at 0x4afd4. The same cell supplies the named combat-manager accesses at 0x4affc, 0x4b014 and the animation drawFrame call at 0x4b124. PEF loader relocations bind TOC 1+0x7b8 to zero-filled four-byte pointer storage 1+0x528938; this external-consumer declaration mapping does not require an emitted owner payload."
