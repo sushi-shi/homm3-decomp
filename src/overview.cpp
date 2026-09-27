@@ -1925,27 +1925,26 @@ void TOverviewWindow::updateRollover(char* text)
 // town control bands, the constructor-built flaggable vector, and the two
 // Complete help bands. Retail expands GetHero/GetTown/GetArmyName and the
 // final UpdateRollover helper; those source boundaries remain explicit here.
-// Negative control: naming top+iSlot as a hero-index local raises the byte
-// checkpoint (97.85 -> 98.25; function-wide lifetime 98.51) but creates a
-// 134th x86 block and destroys the otherwise exact 133-block flow pairing.
-// Dreamcast retains only iSlot, so the repeated source expression is kept.
-// Swapping the guard's addition operands is byte-flat. Reversing its compare
-// raises 97.85 to 97.93 but emits jl instead of retail's jg; a short-lived
-// selectedIndex for the guard and first hero lookup emits 135 x86 blocks.
+// Mac keeps top in r24 beside slot in r23 through the row guard and hero
+// lookup. Naming top after slot lifts Windows 97.85 -> 98.51 (131/133 exact
+// blocks, unchanged CFG) and Mac masked agreement 553 -> 637 instructions.
+// Declaring top first reaches Windows 98.85 but adds a block and gives poorer
+// Mac agreement. A combined selectedIndex local likewise changes the CFG.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
         int slot = (codeY - 200) / 200;
-        if (g_overviewTop[g_overviewType] + slot
+        int top = g_overviewTop[g_overviewType];
+        if (top + slot
                 > g_overviewItemCounts[g_overviewType])
             return;
         codeY = (codeY - 200) % 200;
 
         if (g_overviewType == 0) {
             hero* currHero = g_game->getHero(
-                g_overviewHeroIds[g_overviewTop[g_overviewType] + slot]);
+                g_overviewHeroIds[top + slot]);
 
             switch (codeY) {
             case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
@@ -2075,7 +2074,7 @@ void TOverviewWindow::doRollover(int codeY)
                 currHero->getArtifact(TArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
-                         g_overviewTop[g_overviewType] + slot]) % 18))
+                         top + slot]) % 18))
                     .getRolloverText(g_text);
                 break;
 
@@ -2089,14 +2088,14 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_BACKPACK_FIRST_ID + 7: {
                 int lastBackpackIndex =
                     getLastBackpackIndex(
-                        g_overviewTop[g_overviewType] + slot) + 1;
+                        top + slot) + 1;
                 if (!lastBackpackIndex) {
                     strcpy(g_text, "");
                     break;
                 }
                 currHero->getBackpack(
                     (g_overviewBackpackStart[
-                         g_overviewTop[g_overviewType] + slot] + codeY
+                         top + slot] + codeY
                      - OVERVIEW_HERO_BACKPACK_FIRST_ID)
                     % lastBackpackIndex).getRolloverText(g_text);
                 break;
@@ -2109,7 +2108,7 @@ void TOverviewWindow::doRollover(int codeY)
         } else {
             town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
-                    g_overviewTop[g_overviewType] + slot]);
+                    top + slot]);
             strcpy(g_text, "");
 
             switch (codeY) {
