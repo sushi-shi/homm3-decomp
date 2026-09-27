@@ -743,24 +743,15 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // arms therefore have tails that are byte-identical to each other but carry an
 // extra live-register dependency, and C2 declines the merge.  Census: our
 // `push esi` 20 / `cmp ..,esi` 39 against retail 12 / 27.
-// AND THE CONSTANT CACHE IS DOWNSTREAM OF THE FRAME, WHOSE 0x14 IS NOW
-// FULLY ACCOUNTED FOR - it is ONE overlay decision, not missing locals.
-// Retail reserves 0x60 and lays out three non-overlapping regions:
-// [-0x60,-0x40) the hidden return temporary PeekEvent fills, [-0x40,-0x20)
-// `msgTemp` (32 B), [-0x20,-0xc) the network arm's `CEndPlacementPhaseMsg
-// placementMsg` (0x14 B), with mouseX/mouseY at -0xc/-0x8.  We reserve 0x4c
-// because C2 OVERLAID msgTemp onto placementMsg: our msgTemp sits at -0x2c
-// and spans -0x2c..-0xc, straight across placementMsg's -0x20..-0xc, and the
-// two never live at once (one is the WIDGET arm, the other MOUSE_MOVE).  So
-// retail's msgTemp must be LIVE across the network arm and ours is not, which
-// is a use of msgTemp our reconstruction does not have - not a missing
-// declaration.  Every ebp slot below -0x20 and the three `lea`s match
-// one-for-one otherwise, and the class sizes are confirmed by retail's own
-// `mov [ebp-0x14],0x14` (sizeof CEndPlacementPhaseMsg) and by the 8-dword
-// `rep movsd` into msgTemp.
-// MEASURED AND REJECTED here: declaring msgTemp above mouseX/mouseY is
-// byte-flat (93.0970 to the digit, frame still 0x4c), so declaration order is
-// not the lever - only a real second use of msgTemp can be.
+// The network packet is an unnamed full-expression temporary. DC records
+// only msgTemp as a named local and attributes packet construction and
+// transmission to command.cpp:1176. Both historical compilers accept this
+// address-of-temporary spelling. VC6 then reproduces retail's 0x60 frame:
+// PeekEvent's hidden result at [-0x60,-0x40), msgTemp at [-0x40,-0x20),
+// and the 20-byte placement packet at [-0x20,-0xc). The named packet local
+// control overlays msgTemp with the packet and instead reserves 0x4c.
+// Constant caching and branch threading remain separate residuals; the
+// corrected frame does not establish a missing second use of msgTemp.
 VA(0x00474d80, 0x114D) MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::processCombatMsg(message& msg)
 {
@@ -864,15 +855,10 @@ int combatManager::processCombatMsg(message& msg)
             case TCombatWindow::COMBAT_PLACEMENT_COMMAND_1_ID:
                 m_lastMovedArmy = 0;
                 if (g_remoteOn) {
-                    // The Dreamcast NB11 stream gives placementMsg its own
-                    // nested lexical scope inside the network arm.
-                    {
-                        CEndPlacementPhaseMsg placementMsg;
-                        transmitRemoteData(
-                            &placementMsg,
-                            g_combatControlNetPos[1 - m_currentSide],
-                            false, true);
-                    }
+                    transmitRemoteData(
+                        &CEndPlacementPhaseMsg(),
+                        g_combatControlNetPos[1 - m_currentSide],
+                        false, true);
                 }
                 finishCreaturePlacement();
                 nextArmy(1);
