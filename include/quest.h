@@ -188,7 +188,7 @@ public:
     static int writeText(TAbstractFile* file, const std::string& text)
     {
         int length = text.length();
-        writeValue<int&>(file, length);
+        writeLittleEndianValue(file, length);
         return file->write(text.c_str(), text.length());
     }
     virtual void save(TAbstractFile* file);

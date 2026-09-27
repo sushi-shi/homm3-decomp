@@ -257,9 +257,10 @@ void type_quest::loadFromMap(TAbstractFile* file)
 
 // Mac retains this base writer at 0:0x16438c. All nine derived quest
 // writers call it after their own payload, including the folded be-hero save.
-// Mac swaps m_limit and each text length with stwbrx before writing. The
-// native prefix writer still needs that byte-order boundary; CodeWarrior
-// also retains writeValue<int&> where the retail base expands its staging.
+// Mac swaps m_limit and each text length with stwbrx before writing;
+// writeLittleEndianValue supplies that file-format boundary while retaining
+// writeScalar/writeValue underneath. Windows remains exact. CodeWarrior
+// still retains this scalar wrapper where native expands the operation.
 VA(0x0056cf70, 0xCD) MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
@@ -273,7 +274,7 @@ void type_quest::save(TAbstractFile* file)
     }
     {
         int extra = m_limit;
-        file->write(&extra, sizeof(extra));
+        writeLittleEndianValue(file, extra);
     }
     writeText(file, m_proposalText);
     writeText(file, m_progressText);
