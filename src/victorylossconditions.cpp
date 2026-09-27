@@ -36,28 +36,32 @@ static const int g_angelicAllianceCampaign = 18;
 static const int g_angelicAllianceFirstMap = 8;
 static const int g_angelicAllianceSecondMap = 9;
 
+// Native retains the campaign base across the special artifact-vector path.
+// The shared reference restores those +2/+4 member accesses; Windows remains
+// 86.10% versus the prior86.11%, with exact siblings unchanged.
 VA(0x005f1610, 0x4FE) MAC_ADDRESS(0x1fd3cc, 0x44c)  // dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
-    int& currCampaign = g_game->m_campaign.m_currentCampaign;
-    if ((currCampaign == g_armorOfTheDamnedCampaign
-            && g_game->m_campaign.m_currentMap == 1)
-        || (currCampaign == g_angelicAllianceCampaign
-            && (g_game->m_campaign.m_currentMap
+    SCampaign& campaign = g_game->m_campaign;
+    if ((campaign.m_currentCampaign == g_armorOfTheDamnedCampaign
+            && campaign.m_currentMap == 1)
+        || (campaign.m_currentCampaign == g_angelicAllianceCampaign
+            && (campaign.m_currentMap
                     == g_angelicAllianceFirstMap
-                || g_game->m_campaign.m_currentMap
+                || campaign.m_currentMap
                     == g_angelicAllianceSecondMap))) {
-        signed char& currMap = g_game->m_campaign.m_currentMap;
         if (!g_currentPlayer->isHuman())
             return 0;
 
-        std::vector<int> pieces;
+        // Native keeps the non-POD vector placement/copy path and takes these
+        // artifact constants by reference; the original type spelling is unknown.
+        std::vector<TArtifact> pieces;
         pieces.reserve(3);
-        if (currCampaign == g_armorOfTheDamnedCampaign) {
+        if (campaign.m_currentCampaign == g_armorOfTheDamnedCampaign) {
             pieces.push_back(ARTIFACT_SWORD_OF_HELLFIRE);
             pieces.push_back(ARTIFACT_SHIELD_OF_THE_DAMNED);
             pieces.push_back(ARTIFACT_BREASTPLATE_OF_BRIMSTONE);
-        } else if (currMap == g_angelicAllianceFirstMap) {
+        } else if (campaign.m_currentMap == g_angelicAllianceFirstMap) {
             pieces.push_back(ARTIFACT_CELESTIAL_NECKLACE_OF_BLISS);
             pieces.push_back(ARTIFACT_SANDALS_OF_THE_SAINT);
             pieces.push_back(ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT);
@@ -69,7 +73,7 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
 
         for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
             hero* h = g_game->getHero(g_currentPlayer->m_heroes[i]);
-            for (std::vector<int>::iterator it = pieces.begin();
+            for (std::vector<TArtifact>::iterator it = pieces.begin();
                  it != pieces.end();) {
                 if (h->hasArtifact(*it))
                     it = pieces.erase(it);
