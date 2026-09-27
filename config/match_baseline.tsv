@@ -2074,7 +2074,7 @@ game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.000
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0	tokens1:ccc683ca5891
 game	?save@game@@AAEHPAVTAbstractFile@@@Z	74.1778	74.1949	98.6650	0xbe3f0	tokens1:ddad66f38e9a
 game	?save@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	tokens1:3de7c2f6368f
-game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	98.7604	98.7604	99.9557	0xba670	tokens1:0e42fc795c0e
+game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	tokens1:3e527ced92ec
 game	?saveBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40	tokens1:c43bccd59268
 game	?saveGame@game@@QAEEPBDEEEE@Z	100.0000	100.0000	100.0000	0xbeea0	tokens1:9390e1605830
 game	?saveGarrisonPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0	tokens1:fa73bce530bb

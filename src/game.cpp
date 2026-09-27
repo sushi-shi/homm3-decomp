@@ -1359,9 +1359,10 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // retains an absent CRT call. Native 0xcd220..0xcd234 compounds the integer
 // shift directly; an explicit byte cast adds a mask before the OR. These
 // paired operations preserve all scalar writers and the bitset test helper.
-// Windows currently scores98.7604; the earlier99.9557 peak remains a lead.
-// Four declaration-order controls are object-identical, so they do not fix
-// the remaining scalar-buffer/loop-counter stack-home permutation.
+// Declare the bit counter in its loop after the fill: VC6 then retains the
+// native bitset bounds check and reproduces the scalar-buffer homes. The
+// remaining 99.9557% residual is the x/uintBuffer stack-home permutation;
+// all 49 blocks and 22 calls agree. Outer local-order controls are object-identical.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
@@ -1472,9 +1473,8 @@ int playerData::save(TAbstractFile* outfile)
     // Mac passes the bitset and index directly to test; no mutable proxy.
     unsigned char bits[2];
     const std::bitset<12>* combinations = &m_assembledCombinations;
-    unsigned int bit = 0;
     std::fill_n(bits, sizeof(bits), 0);
-    for (; bit < 12; bit++) {
+    for (unsigned int bit = 0; bit < 12; bit++) {
         if (combinations->test(bit))
             bits[bit >> 3] |= 1 << (bit & 7);
     }
