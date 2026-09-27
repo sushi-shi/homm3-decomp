@@ -155,11 +155,11 @@ void strip::drawOwner(int frame)
         msg.m_extra = widget::WIDGET_DRAWN;
         m_win->broadcastMessage(msg);
     } else {
-        // Mac retains the image and status broadcasts in this branch at
-        // 0:0x19b434 and 0:0x19b450; the clear-status arm calls at 0:0x19b408.
-        const char* name = g_heroTraits[frame].m_largePortraitName;
+        // Mac writes SET_IMAGE before loading the portrait at 0x19b410..0x19b42c.
+        // Keep the direct assignment and both broadcasts (0x19b434/0x19b450);
+        // an early portrait-name local changes Windows scheduling and cleanup.
         msg.m_codeX = widget::WIDGET_SET_IMAGE;
-        msg.m_extraText = name;
+        msg.m_extraText = g_heroTraits[frame].m_largePortraitName;
         m_win->broadcastMessage(msg);
         msg.m_codeX = widget::WIDGET_SET_STATUS;
         msg.m_extra = widget::WIDGET_DRAWN;
