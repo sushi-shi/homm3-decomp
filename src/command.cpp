@@ -1889,7 +1889,10 @@ void combatManager::doVictory(int winningGroup)
 // 94.4335% to 93.50%. Mac reloads the side at 0x85b44 inside the walk.
 // Native 0x85b44 reloads m_currentSide inside each scan iteration. Restoring
 // that field access keeps the retained Windows body exact and raises its
-// CheckGetAIMove expansion 94.4335 -> 99.3038%; Mac rises 17.5258 -> 83.2474%.
+// CheckGetAIMove expansion 94.4335 -> 99.3038%. Dividing and multiplying
+// the accumulator before returning preserves the native r31 lifetime and
+// matches all 388 Mac bytes; a single return expression is only 83.2474%.
+// Both retained bodies are exact, with the factor helper still called.
 VA(0x00477a00, 0xB2) MAC_ADDRESS(0x085b14, 0x184)  // dc 0x6e898
 long combatManager::getSurrenderCost()
 {
@@ -1907,8 +1910,9 @@ long combatManager::getSurrenderCost()
         }
     }
 
-    return static_cast<long>(m_heroes[m_currentSide]->getSurrenderCostFactor()
-                             * static_cast<float>(cost / 2));
+    cost /= 2;
+    cost *= m_heroes[m_currentSide]->getSurrenderCostFactor();
+    return cost;
 }
 
 // E:\gamedcs\command.cpp:2800. Keep the Dreamcast-proven helper boundary:
