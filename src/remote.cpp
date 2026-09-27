@@ -1695,15 +1695,9 @@ bool testIfLobbyLaunched()
 // CAutoArray destructor is consequently redundant on the success path but
 // remains visible on the two failure exits.
 
-// Residual wall (98.3167%, 2026-08-22): all 24 branches and seven returns
-// agree.  Our VC6 retains the success-edge destructor's dead vptr store plus
-// three already-zero member stores (16 bytes); retail drops all four and
-// keeps only the EH-state close.  Constructor order, bool-vs-byte, chained
-// zeroing, inner-vs-outer deleteData guards, and the seven guided why-reg
-// mutations all plateau here.  The other two destructor exits, including
-// the redundant Destroy(1) call after failed JoinSession, match retail and
-// forbid changing the class lifetime merely to erase this one compiler
-// artifact.
+// VC6 also eliminates the redundant success-edge destructor stores with the
+// canonical value-temporary initialization in initRemote; all retail bytes
+// match without changing the session-array lifetime or its cleanup calls.
 VA(0x00555aa0, 0x443)  // anchor-IAT/vtable/data + dc-xref/order-map, dc 0x11d9ac
 unsigned char handleMPlayerLaunch()
 {

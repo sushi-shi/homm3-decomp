@@ -487,9 +487,9 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_gameSlider = gs;
     m_widgets.push_back(gs);
 
-    int sessionRowY = 112;
-    for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
-        m_widgets.push_back(new textWidget(18, sessionRowY, 317, 22, 0,
+    // Mac bounds the row index at twelve; DC line 956 retains 112 + i * 25.
+    for (int i = 0; i < 12; i++)
+        m_widgets.push_back(new textWidget(18, 112 + i * 25, 317, 22, 0,
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
