@@ -239,6 +239,11 @@ TGzInflateBuf::~TGzInflateBuf()
 
 // 0x4d6920: drain the source into the output half, either
 // through inflate or, for a non-gzip member, by straight copy.
+// Mac 0x221574..0x221588 dispatches inflate status with a range tree:
+// compare -3, skip larger values, compare -4, then select the exceptions.
+// A switch reproduces that tree at candidate +0xc0..+0xd4; sequential
+// equality guards do not. Windows 81.4346% -> 81.90%, with every trailer
+// readByte call preserved. Exception homes and expansion decisions remain.
 
 // The FIRST guard reads `avail_in <= 0`, not `== 0`: retail inverts it to
 // `ja` (unsigned above) where `== 0` can only ever emit `jne`, and the two
@@ -285,10 +290,14 @@ int TGzInflateBuf::underflow()
             if (m_ok) {
                 if (m_inflating) {
                     int status = inflate(&m_stream, Z_SYNC_FLUSH);
-                    if (status == Z_MEM_ERROR)
+                    switch (status) {
+                    case Z_MEM_ERROR:
                         throw TAllocationFailure();
-                    if (status == Z_DATA_ERROR)
+                    case Z_DATA_ERROR:
                         throw TDataError();
+                    default:
+                        break;
+                    }
                     // This is the live z_stream output window's beginning.
                     // Retail +0x9b..+0xb3 loads next_out/avail_out and forms
                     // their sum minus 512, rather than loading m_outBuffer.
