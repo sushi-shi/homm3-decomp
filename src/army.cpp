@@ -1106,6 +1106,8 @@ void army::walk(int direction, unsigned char endWalk,
 // DC line 1322 calls the Bitmap16Bit overload of CSprite::Draw; its ordinary
 // wrapper reproduces Windows' argument expansion. These three corrections
 // reach Windows 100% while retaining all bitmap and rectangle helpers.
+// The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
+// also retain Windows 100%; keep their accessors nested in those helpers.
 VA(0x0043f2c0, 0x63B) MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket, dc 0x453c8
 void army::animateMissile(army* armyToAttack)
 {
@@ -1204,19 +1206,13 @@ void army::animateMissile(army* armyToAttack)
                 GameTime::get() + missileperiod;
             if (frame != 0) {
                 saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch(), false);
+                           g_windowManager->m_screenBitmap, x, y, false);
                 // Mac 0x4b3f4 constructs and copies the rectangle value.
                 updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
                 x += stepX;
                 y += stepY;
             }
-            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch());
+            saved.grab(g_windowManager->m_screenBitmap, x, y);
             m_missileIcon->draw(0, missileFrame, 0, 0, width, height,
                               g_windowManager->m_screenBitmap, x, y,
                               targetX < startX, 1);
@@ -1231,10 +1227,7 @@ void army::animateMissile(army* armyToAttack)
             GameTime::delayTil(nextFrameTime);
         }
     }
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->getMap(0, 0),
-               x, y, g_windowManager->m_screenBitmap->getWidth(),
-               g_windowManager->m_screenBitmap->getHeight(),
-               g_windowManager->m_screenBitmap->getPitch(), false);
+    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, width, height);
 }
 

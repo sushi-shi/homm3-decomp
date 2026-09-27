@@ -4539,6 +4539,9 @@ long combatManager::modifySpellDamageForSpells(long damage, SpellID spell,
 // rectangle operations in its lightly optimized body, while Windows
 // expands the calls. The remaining mismatch is register homing; 45 of 46
 // CFG blocks now have exact shape, with all 25 branches and calls aligned.
+// DC lines 5189, 5202 and 5288 retain the bitmap Grab/Draw and sprite
+// bitmap-forwarding overloads. Restoring all three canonical calls is
+// Windows byte-flat at 86.9157%; their bitmap accessors remain nested.
 VA(0x005a7c80, 0x408) MAC_ADDRESS(0x1991d0, 0x688)  // order-map+arity, dc 0x156ec4
 void combatManager::earthquake(int level)
 {
@@ -4546,10 +4549,7 @@ void combatManager::earthquake(int level)
     int counts[WALL_TARGET_COUNT];
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         g_mouseManager->hidePointer();
-        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap->getMap(0, 0), 0, 0,
-                         g_windowManager->m_screenBitmap->getWidth(),
-                         g_windowManager->m_screenBitmap->getHeight(),
-                         g_windowManager->m_screenBitmap->getPitch());
+        m_saveScreenPostGrid->grab(g_windowManager->m_screenBitmap, 0, 0);
         long shakeDelay = static_cast<long>(
             g_combatSpeedFactors[g_config.m_combatSpeed] * 15.0f);
         int pass = 3;
@@ -4558,12 +4558,9 @@ void combatManager::earthquake(int level)
                 unsigned long shakeTil = GameTime::get() + shakeDelay;
                 pollSound();
                 m_saveScreenPostGrid->draw(0, 0, m_saveScreenPostGrid->getWidth(), m_saveScreenPostGrid->getHeight(),
-                                 g_windowManager->m_screenBitmap->getMap(0, 0),
+                                 g_windowManager->m_screenBitmap,
                                  g_earthquakeShakeOffsets[step][0],
-                                 g_earthquakeShakeOffsets[step][1],
-                                 g_windowManager->m_screenBitmap->getWidth(),
-                                 g_windowManager->m_screenBitmap->getHeight(),
-                                 g_windowManager->m_screenBitmap->getPitch(), 0);
+                                 g_earthquakeShakeOffsets[step][1], 0);
                 updateCombatArea();
                 GameTime::delayTil(shakeTil);
             }
@@ -4625,11 +4622,9 @@ void combatManager::earthquake(int level)
                 }
                 blast->draw(0, frame, 0, 0,
                             bounds->width(), bounds->height(),
-                            g_windowManager->m_screenBitmap->getMap(0, 0),
+                            g_windowManager->m_screenBitmap,
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
-                            g_windowManager->m_screenBitmap->getWidth(),
-                            g_windowManager->m_screenBitmap->getHeight(),
-                            g_windowManager->m_screenBitmap->getPitch(), 0, 1);
+                            0, 1);
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
                     bounds->width(), bounds->height());
