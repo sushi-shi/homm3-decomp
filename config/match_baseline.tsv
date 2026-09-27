@@ -80,7 +80,7 @@ advmgr	?bvMessage@advManager@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x16210	token
 advmgr	?bvResMsg@advManager@@QAEXPBDHH@Z	100.0000	100.0000	100.0000	0x16060	tokens1:e9dc2f7072d8
 advmgr	?checkDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450	tokens1:1f6966eef1a6
 advmgr	?checkScreenScroll@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19820	tokens1:c42c13fa77a8
-advmgr	?close@advManager@@UAEXXZ	86.3656	86.3656	86.3656	0x77e0	tokens1:a0b624698104
+advmgr	?close@advManager@@UAEXXZ	86.3656	86.3656	86.3656	0x77e0	tokens1:f371ea07ce76
 advmgr	?completeDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870	tokens1:56e3fecb7649
 advmgr	?completeDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0	tokens1:28bde9458485
 advmgr	?computeAdvNetControl@@YIXXZ	100.0000	100.0000	100.0000	0x1a660	tokens1:94c300f01a31

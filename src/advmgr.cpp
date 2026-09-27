@@ -830,9 +830,14 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
 // knob is caller body mass, not a vector spelling.
 
+// DC records two signed int indices, i and j. Reusing them across the
+// cleanup loops preserves the native operations and Windows 86.3656%.
+// Three index-scope/type controls produced two objects without a MAX gain.
 VA(0x004077e0, 0x2D1) MAC_ADDRESS(0x007d0c, 0x3f4)  // anchor-vtable, dc 0x74ec
 void advManager::close()
 {
+    int i;
+    int j;
     clearBottomView();
     if (g_townViewActive == 0) {
         g_soundManager->switchAmbientMusic(-1);
@@ -846,50 +851,46 @@ void advManager::close()
         m_radarIcons = 0;
         m_cloudIcons->dispose();
         m_cloudIcons = 0;
-        for (int cursor = 0; cursor < 18; cursor++) {
-            m_cursorIcons[cursor]->dispose();
-            m_cursorIcons[cursor] = 0;
+        for (i = 0; i < 18; i++) {
+            m_cursorIcons[i]->dispose();
+            m_cursorIcons[i] = 0;
         }
-        for (unsigned int cached = 0; cached < m_cachedGraphics.size(); cached++)
-            m_cachedGraphics[cached]->dispose();
-        // MEASURED BYTE-FLAT, do not retry: `#pragma inline_depth(2)`
-        // here, to keep clear()+erase() inline while forcing the
-        // destroy-range helper out of line the way retail has it, changes
-        // nothing (86.3656 either way). inline_depth only bites at 0 in
-        // VC6 - the same result hero.cpp records for depths 1/2/3/4 - so
-        // there is no way to spell "inline the parent, call the child".
+        for (i = 0; i < m_cachedGraphics.size(); i++)
+            m_cachedGraphics[i]->dispose();
+        // Retail retains a nested destroy-range call here; the current
+        // clear expansion inlines it. Inline-depth(2) was byte-flat.
         m_cachedGraphics.clear();
         m_movingObjectSprite->dispose();
         m_movingObjectSprite = 0;
-        for (int boat = 0; boat < 3; boat++) {
-            m_boatIcons[boat]->dispose();
-            m_boatIcons[boat] = 0;
-            m_boatFrothIcons[boat]->dispose();
-            m_boatFrothIcons[boat] = 0;
-            for (int boatOwner = 0; boatOwner < 8; boatOwner++) {
-                m_boatFlagIcons[boat][boatOwner]->dispose();
-                m_boatFlagIcons[boat][boatOwner] = 0;
+        for (i = 0; i < 3; i++) {
+            m_boatIcons[i]->dispose();
+            m_boatIcons[i] = 0;
+            m_boatFrothIcons[i]->dispose();
+            m_boatFrothIcons[i] = 0;
+            for (j = 0; j < 8; j++) {
+                m_boatFlagIcons[i][j]->dispose();
+                m_boatFlagIcons[i][j] = 0;
             }
         }
-        for (int owner = 0; owner < 8; owner++) {
-            m_flagIcons[owner]->dispose();
-            m_flagIcons[owner] = 0;
+        for (i = 0; i < 8; i++) {
+            m_flagIcons[i]->dispose();
+            m_flagIcons[i] = 0;
         }
     }
 
-    for (int looping = 0; looping < LOOPING_SOUND_COUNT; looping++) {
-        if (m_loopedSample[looping]) {
-            m_loopedSample[looping]->dispose();
-            m_loopedSample[looping] = 0;
+    for (i = 0; i < LOOPING_SOUND_COUNT; i++) {
+        if (m_loopedSample[i]) {
+            m_loopedSample[i]->dispose();
+            m_loopedSample[i] = 0;
         }
     }
-    for (int river = 1; river < 5; river++) {
-        m_riverTileset[river]->dispose();
-        m_riverTileset[river] = 0;
+    for (i = 1; i < 5; i++) {
+        m_riverTileset[i]->dispose();
+        m_riverTileset[i] = 0;
     }
-    for (int road = 1; road < 4; road++) {
-        m_roadTileset[road]->dispose();
-        m_roadTileset[road] = 0;
+    for (i = 1; i < 4; i++) {
+        m_roadTileset[i]->dispose();
+        m_roadTileset[i] = 0;
     }
     m_borderTileset->dispose();
     m_borderTileset = 0;
@@ -903,11 +904,11 @@ void advManager::close()
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
-    for (int ground = 0; ground < 10; ground++) {
-        m_groundTileset[ground]->dispose();
-        m_groundTileset[ground] = 0;
-        m_heroSamples[ground]->dispose();
-        m_heroSamples[ground] = 0;
+    for (i = 0; i < 10; i++) {
+        m_groundTileset[i]->dispose();
+        m_groundTileset[i] = 0;
+        m_heroSamples[i]->dispose();
+        m_heroSamples[i] = 0;
     }
 
     g_windowManager->removeWindow(m_advWindow);
