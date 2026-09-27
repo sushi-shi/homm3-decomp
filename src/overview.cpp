@@ -1926,17 +1926,18 @@ void TOverviewWindow::updateRollover(char* text)
 // Complete help bands. Retail expands GetHero/GetTown/GetArmyName and the
 // final UpdateRollover helper; those source boundaries remain explicit here.
 // Mac keeps top in r24 beside slot in r23 through the row guard and hero
-// lookup. Naming top after slot lifts Windows 97.85 -> 98.51 (131/133 exact
-// blocks, unchanged CFG) and Mac masked agreement 553 -> 637 instructions.
-// Declaring top first reaches Windows 98.85 but adds a block and gives poorer
-// Mac agreement. A combined selectedIndex local likewise changes the CFG.
+// lookup. Naming top before slot lifts Windows 97.85 -> 98.85 and Mac masked
+// agreement 553 -> 635 instructions. The extra Windows block zeroes getHero's
+// null result: ESI holds top here, while retail reuses overviewType == 0.
+// Declaring top after slot reaches 98.51; equal aggregate block counts alone
+// do not settle this register-lifetime difference. Keep every helper call.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
-        int slot = (codeY - 200) / 200;
         int top = g_overviewTop[g_overviewType];
+        int slot = (codeY - 200) / 200;
         if (top + slot
                 > g_overviewItemCounts[g_overviewType])
             return;
