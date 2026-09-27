@@ -486,8 +486,8 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.getHero(), damage);
         if (value > choice.m_value) {
+            choice.m_target = i;  // Mac0x270e0 stores target before value.
             choice.m_value = value;
-            choice.m_target = i;
         }
     }
     if (choice.m_value <= 0)
