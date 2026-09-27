@@ -2451,6 +2451,11 @@ void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
 // Explicit insert(end, guard) gives 88.88%; one-element range erase gives
 // 87.74%. An outline-size local across rand is byte-neutral. Coordinate
 // homes and nested container expansion remain; keep the helper boundaries.
+// Native 0x233234/0x23333c/0x2334a0/0x2335e0 uses the surface
+// lookup overload. Its three materialized land predicates and copied point
+// sums at 0x233458/0x23356c use the shared isPassableLand and operator+.
+// Restoring these calls keeps the group insertion helper and reaches
+// 88.2086%; the remaining vector expansion and coordinate homes differ.
 VA(0x00535110, 0x4AB) MAC_ADDRESS(0x233028, 0x6a8) // anchor-callee 0x546843; thiscall, ret 4
 unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
 {
@@ -2469,8 +2474,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         while (direction--) {
             TRmgMapPosition position = entrance + g_rmgDirections[direction];
             TRmgMapItem* item = m_map.getMapItem(position);
-            if (item->isRoadEntrance() || !item->m_tileData.m_roadPassable
-                || item->m_tile.m_landType == eTerrainRock)
+            if (item->isRoadEntrance() || !item->isPassableLand())
                 continue;
             if (!item->m_connection.m_present) {
                 item->m_tileData.m_subterraneanGate = 0;
@@ -2478,9 +2482,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
             }
             for (int x = position.m_x - 1; x <= position.m_x + 1; ++x) {
                 for (int y = position.m_y - 1; y <= position.m_y + 1; ++y) {
-                    TRmgMapItem* nearby = m_map.getMapItem(x, y, 0);
-                    if (nearby->m_tileData.m_roadPassable
-                        && nearby->m_tile.m_landType != eTerrainRock
+                    TRmgMapItem* nearby = m_map.getMapItem(x, y);
+                    if (nearby->isPassableLand()
                         && !nearby->isRoadEntrance() && !nearby->m_connection.m_present)
                         nearby->m_tileData.m_subterraneanGate = 0;
                 }
@@ -2494,7 +2497,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         position.m_x = point.m_x;
         position.m_y = point.m_y;
         position.m_z = 0;
-        if (!m_map.getMapItem(point.m_x, point.m_y, 0)->hasBorderObject()
+        if (!m_map.getMapItem(point.m_x, point.m_y)->hasBorderObject()
             || !canFitObject(guardProperties, position))
             m_outline.erase(m_outline.begin() + index);
     }
@@ -2507,10 +2510,9 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
     guardPosition.m_y -= prototype->m_triggerCell.m_y;
     int guardType = guardProperties->m_prototype->m_objectType;
     for (int direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
-        TPoint point;
-        point.m_x = guardPosition.m_x + g_rmgDirections[direction].m_x;
-        point.m_y = guardPosition.m_y + g_rmgDirections[direction].m_y;
-        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, 0);
+        TPoint point = g_rmgDirections[direction]
+            + TRmgVector(guardPosition.m_x, guardPosition.m_y);
+        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y);
         if (!item->isPassableLand())
             continue;
         if (guardType == BORDER_GUARD && item->hasBorderObject())
@@ -2529,15 +2531,13 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
             count = 1;
         }
         while (count--) {
-            TPoint nearby;
-            nearby.m_x = point.m_x + g_rmgDirections[fanDirection].m_x;
-            nearby.m_y = point.m_y + g_rmgDirections[fanDirection].m_y;
+            TPoint nearby = g_rmgDirections[fanDirection]
+                + TRmgVector(point.m_x, point.m_y);
             if (nearby.m_x >= 0 && nearby.m_x < m_map.m_mapWidth
                 && nearby.m_y >= 0 && nearby.m_y < m_map.m_mapHeight) {
-                TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y, 0);
+                TRmgMapItem* next = m_map.getMapItem(nearby.m_x, nearby.m_y);
                 if (!next->hasBorderObject() && !next->hasSubterraneanGate()
-                    && next->m_tileData.m_roadPassable
-                    && next->m_tile.m_landType != eTerrainRock && !next->m_connection.m_present) {
+                    && next->isPassableLand() && !next->m_connection.m_present) {
                     next->m_tileData.m_borderObject = 0;
                     next->m_tileData.m_subterraneanGate = 1;
                 }
@@ -2644,8 +2644,8 @@ placementFailure:
         for (direction = 0; direction < RMG_DIRECTION_COUNT; ++direction) {
             TPoint nearby = g_rmgDirections[direction] + origin;
             TRmgMapItem* item = m_map.getMapItem(nearby.m_x, nearby.m_y);
-            if (!item->isRoadEntrance() && item->m_tileData.m_roadPassable
-                && item->m_tile.m_landType != eTerrainRock && !item->hasBorderObject())
+            if (!item->isRoadEntrance() && item->isPassableLand()
+                && !item->hasBorderObject())
                 break;
         }
         if (direction == RMG_DIRECTION_COUNT)
