@@ -561,6 +561,8 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // by abs(x)/abs(y) spelling; it does not merge the repeated library call.
 // Windows is 98.5874%; its residual is x87 ratio temporary scheduling.
 // Initializing the vertical default before the guard scores 96.07%.
+// Separate numerator assignment followed by /= is also byte-flat in
+// Windows; the paired Mac compilation still has unresolved references.
 // A block-local float initialized with the equivalent conditional ratio
 // is Windows byte-flat at 98.5874%; the compiled Mac body remains 125 words.
 VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
