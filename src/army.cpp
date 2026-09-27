@@ -3974,6 +3974,9 @@ void army::attackWall(TWallTargetId wall,
 // both for the wall-id domain at entry and `explosion != 0` immediately
 // before the bounds expressions. Neither source class creates retail's four
 // extra frame slots; the residual remains allocator state.
+// DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload.
+// Its canonical call is Windows byte-flat at 89.908%; keep the nested
+// bitmap accessors inside that wrapper, as in animateMissile.
 VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -4084,12 +4087,9 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
         explosion->draw(0, frame, 0, 0,
                         g_combatManager->m_drawbridgeBounds.width(),
                         g_combatManager->m_drawbridgeBounds.height(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         targetX - explosion->getWidth() / 2,
-                        targetY - explosion->getHeight() / 2,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 1);
+                        targetY - explosion->getHeight() / 2, 0, 1);
         g_windowManager->updateScreen(
             g_combatManager->m_drawbridgeBounds.m_minX,
             g_combatManager->m_drawbridgeBounds.m_minY,
