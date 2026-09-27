@@ -6615,9 +6615,12 @@ bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 // DC keeps these helpers out of line; retail VC6 expands them at the advanced-
 // options call sites. Keep the original cpp boundaries visible while allowing
 // the retail TU to reproduce that lowering.
+// Ordinary definition retains every Windows caller byte under /Ob2 and
+// restores Mac onPlayerPosClick's complete 336-byte match. The prior explicit
+// inline expanded this CPP-owned helper into that native-retained call site.
 // E:\gamedcs\singleselectionwindow.cpp:6980
 MAC_ADDRESS(0x181bac, 0xc4)
-inline unsigned char TSingleSelectionWindow::sendPlayerPositions(
+unsigned char TSingleSelectionWindow::sendPlayerPositions(
     unsigned long dpidTo)
 {
     CUpdatePlayerPosMsg msg(m_players.m_humanPlayers,
