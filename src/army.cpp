@@ -1687,6 +1687,9 @@ void army::doFireShield(long damageAmount)
 // is now a four-byte frame difference plus nested GetName/GetArmyName inline
 // selection. Dreamcast's later Rust-message rows are not carried into
 // Complete: retail's relocation/call multiset directly rejects them.
+// Native Windows forms the missing troop count before the first min, then
+// multiplies by HP for the second min (DC1907/1909/1912). Keeping that
+// count rather than an early missing-life product improves 97.08 -> 98.49%.
 VA(0x00440bc0, 0xA41) MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global, dc 0x46658
 void army::doPostAttack(army* target, int attackDamage, int killedCount,
                           int totalLife)
@@ -1695,10 +1698,10 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
     case CREATURE_VAMPIRE_LORD:
         if (target->is(creatureAlive)) {
             long deadVampires = 0;
-            long missingLife =
-                m_monInfo.m_hitPoints * (m_origNumTroops - m_numTroops) + m_topCreatureDamage;
+            long missingTroops = m_origNumTroops - m_numTroops;
             long damageRecovered = min(attackDamage, totalLife);
-            damageRecovered = min(damageRecovered, missingLife);
+            damageRecovered = min(damageRecovered,
+                m_monInfo.m_hitPoints * missingTroops + m_topCreatureDamage);
             m_topCreatureDamage -= damageRecovered;
             if (m_topCreatureDamage < 0) {
                 deadVampires =
