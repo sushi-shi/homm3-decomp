@@ -2204,9 +2204,9 @@ hero	?getDescription@type_artifact@@QBE?AV?$basic_string@DU?$char_traits@D@std@@
 hero	?getEagleEyeChance@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4420	tokens1:ec821d947053
 hero	?getEquippedArtifacts@hero@@QBEJE@Z	100.0000	100.0000	100.0000	0xd9070	tokens1:5e9f9bf8f54f
 hero	?getEstatesBonus@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4390	tokens1:151dbbc4f883
-hero	?getExperience@hero@@SIHH@Z	100.0000	100.0000	100.0000	0xda3a0	tokens1:92eee233a887
+hero	?getExperience@hero@@SIHH@Z	100.0000	100.0000	100.0000	0xda3a0	tokens1:247e1a600b09
 hero	?getExperienceBonusFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4840	tokens1:df69271c20a3
-hero	?getExperienceIncrement@hero@@SIHH@Z	100.0000	100.0000	100.0000	0xda420	tokens1:6c897bdb12cf
+hero	?getExperienceIncrement@hero@@SIHH@Z	98.1013	100.0000	100.0000	0xda420	tokens1:6c897bdb12cf
 hero	?getFirstAidFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4920	tokens1:7263893faee8
 hero	?getHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0	tokens1:81c31a49d79f
 hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	100.0000	100.0000	100.0000	0xe51c0	tokens1:7eafc28e21d9
@@ -2244,7 +2244,7 @@ hero	?getStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?getSurrenderCostFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4580	tokens1:a7b572659fd1
 hero	?getVisibility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4070	tokens1:498f41cfaf60
 hero	?giveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	94.7166	95.4534	95.4534	0xe3070	tokens1:780b67f8c67f
-hero	?giveExperience@hero@@QAEHHHE@Z	97.6632	97.6632	100.0000	0xe33b0	tokens1:bf106b3792bf
+hero	?giveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0	tokens1:bf106b3792bf
 hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cfba9aeace3
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
 hero	?hasArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91b0	tokens1:29e20864179b
@@ -2264,7 +2264,7 @@ hero	?heroFn004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100
 hero	?heroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800	tokens1:9e0149e3d34c
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1:06b0579ceb00
 hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:dcc64c74458e
-hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	74.6888	74.6888	100.0000	0xd8b30	tokens1:2901198cbcd5
+hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	76.4260	76.4260	100.0000	0xd8b30	tokens1:2901198cbcd5
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:aa1b6db957c1
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:0af5a57e3a5d
@@ -2309,7 +2309,7 @@ hero	?viewArtifact@hero@@QAEXPBUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0x
 hero	?viewStat@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990	tokens1:f1dd86876dfc
 hero	?visitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0	tokens1:c94a15209e04
 hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	tokens1:be6640e77d13
-hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	88.3989	88.3989	90.2246	0xdd2d0	tokens1:7e22bd509bbf
+hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	88.1532	88.3989	90.2246	0xdd2d0	tokens1:7e22bd509bbf
 hero	std_vector_begin	0.0000	100.0000	100.0000	0xe64e0	tokens1:a9834228d38f
 hero	std_vector_end	0.0000	100.0000	100.0000	0xe64f0	tokens1:3d89f67f1437
 hero	std_vector_push_back	0.0000	100.0000	100.0000	0xe6500	tokens1:2e4b4e3a244d

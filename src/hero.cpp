@@ -1612,9 +1612,10 @@ int hero::getExperience(int level)
 {
     if (level <= 12)
         return g_experienceForLevel[level - 1];
+    int total = g_experienceForLevel[11];
     int increment = static_cast<int>(
-        (g_experienceForLevel[11] - g_experienceForLevel[10]) * 1.2);
-    int total = g_experienceForLevel[11] + increment;
+        (total - g_experienceForLevel[10]) * 1.2);
+    total += increment;
     for (int i = 13; i < level; i++) {
         increment *= 1.2;
         total += increment;
@@ -1640,13 +1641,9 @@ int hero::getExperienceIncrement(int level)
 MAC_ADDRESS(0x0f6390, 0xd0)
 int hero::getLevel(int experience)
 {
-    int heroLevel = 1;
-    // INDEX loop, not a pointer walk: retail closes this with `jle`, and a
-    // C++ pointer relational compare is UNSIGNED (`jbe`). VC6 strength-
-    // reduces the signed `i <= 11` into the pointer form retail emits while
-    // keeping the original compare's signedness.
-    for (int i = 0; i <= 11; i++, heroLevel++) {
-        if (experience < g_experienceForLevel[i])
+    int heroLevel;
+    for (heroLevel = 1; heroLevel <= 12; heroLevel++) {
+        if (experience < g_experienceForLevel[heroLevel - 1])
             return heroLevel - 1;
     }
     int total = g_experienceForLevel[11];
@@ -5100,10 +5097,9 @@ int hero::giveRandomArtifact()
 // Complete VC6 and Dreamcast both declare showCapWindow as unsigned char.
 // The stripped Mac executable contains no giveExperience symbol; a candidate
 // mangled name does not establish a different source parameter type.
-// Current residual: VC6 97.66%, with the first ESI/EBX swap at the expanded
-// getExperience result. The one-run why-reg model classifies it as C1 handle
-// order and proposes no source-local edit. Mac 95.7071%, same 396-byte size
-// and all 11 calls; remaining bytes schedule normalDialog's literal arguments.
+// Both experience helpers expand here. Initializing getExperience's total
+// before its increment fixes the cap-result lifetime; getLevel's single
+// level counter (Mac 0xf6394..0xf63c0) closes the Windows caller to 100%.
 VA(0x004e33b0, 0x24A) MAC_ADDRESS(0x104098, 0x18c)  // dc 0xd3e88
 int hero::giveExperience(int howMuch, int checkForLevelUp,
                          unsigned char showCapWindow)
