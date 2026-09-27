@@ -5953,8 +5953,9 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        // Complete retail tests this dword for zero, not signed positivity.
-        unsigned int count = readValue<unsigned int>(infile);
+        // Mac 0xdb36c decodes this saved dword with lwbrx. Windows tests
+        // it for zero and decrements after the append, not signed positivity.
+        unsigned int count = readLittleEndianValue<unsigned int>(infile);
         if (count > 0) {
             do {
                 x = readValue<unsigned char>(infile);
