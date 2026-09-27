@@ -469,11 +469,8 @@ def main(argv=None) -> int:
         if args.command == "disasm":
             from capstone import Cs, CS_ARCH_PPC, CS_MODE_32, CS_MODE_BIG_ENDIAN
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
-            if args.size is not None:
-                names = _raw_code_names(common.HOMM3_DIR)
-            else:
-                names = {(address.section, address.offset): name
-                         for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
+            # Retail inspection does not depend on candidate object identities.
+            names = _raw_code_names(common.HOMM3_DIR)
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name
