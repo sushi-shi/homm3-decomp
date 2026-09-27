@@ -671,10 +671,10 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                                        int height, int fadeTime)
 {
     // DC locals: DEFAULT_FADE_TIME and factor are const int; src/odst
-    // are read-only row pointers. Initializing the writable map first,
-    // although suggested by both optimized assemblies, changes Windows
-    // allocation (94.84 -> 93.82) without resolving the native comparison.
-    // Retain the pointer phase until a complete lifetime model supports it.
+    // are read-only row pointers. Initialize target, screen, then source:
+    // the complete lifetime model raises Windows94.84 ->99.91 (2026-09-27).
+    // CFG27 blocks,14 branches and10 named calls agree; one pointer reload
+    // order remains. Six cursor increment orders emit identical bytes.
     const int defaultFadeTime = 33;
     if (g_completeDrawEnabled) {
         if (startX < 0) {
@@ -705,12 +705,12 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                 unsigned long deadline = GameTime::get() + fadeTime;
                 const int alpha = (frame << 16) / 8;
 
-                Bitmap16ConstMapPointer source;
-                source.m_pixels = m_bmpFizzleSource->getMap(0, 0);
                 Bitmap16ConstMapPointer target;
                 target.m_pixels = destination.getMap(0, 0);
                 Bitmap16MapPointer screen;
                 screen.m_pixels = m_screenBitmap->getMap(startX, startY);
+                Bitmap16ConstMapPointer source;
+                source.m_pixels = m_bmpFizzleSource->getMap(0, 0);
 
                 for (int row = 0; row < height; row++) {
                     unsigned short* d = screen.m_pixels;
