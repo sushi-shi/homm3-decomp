@@ -1509,6 +1509,10 @@ unsigned char TMultiPlayerWindow::isNT()
 // for player-name edits. Complete vtable 0x6401d8 slot 9 uses the inherited
 // CHeroWindowEx::windowHandler (0x5ff820); CHotSeatEdit handles native keys.
 
+// Mac expands this constructor inside onHotSeat (0x21c710), retaining the
+// same reserve/push_back and widget calls. Windows' remaining difference is
+// the first vector::size expansion in the last push_back; sharing one loop
+// index across the edit/link/autodraw loops is byte-flat at 97.43%.
 VA(0x00511e20, 0x5A1)  // dc 0x1028c4
 CHotSeatDlg::CHotSeatDlg()
     : CHeroWindowEx(218, 96, 363, 407, 18)
