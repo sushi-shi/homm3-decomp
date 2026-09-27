@@ -603,7 +603,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // short loop was 89.7479%; masking an int and using for/while loops reached
 // 88.3698/89.8403%; a second promoted count was 88.6135%; and explicitly
 // hoisting the quest pointer was 82.2605%. The guarded do/while below is the
-// best source-faithful spelling measured.
+// best spelling in that earlier compiler context.
 
 // [polish-45] The first `!!` names the remaining shape precisely: retail
 // SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
@@ -635,22 +635,21 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 //     more than the slot it buys.
 // So the residual is the handle NUMBERING with the same local set, not a
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
+// Native Mac 0x11f86c decodes the little-endian count; 0x11f924..0x11f930
+// increments an index and compares against the unchanged count. The same
+// canonical reader and for-loop raise current Windows MAX 88.65 -> 91.30;
+// CodeWarrior retains the scalar wrapper instead of expanding it as native does.
 VA(0x004fd950, 0x268) MAC_ADDRESS(0x11f834, 0x114)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::loadQuestGuardList(
     TAbstractFile* infile, int saveVersion)
 {
-    int count = readValue<unsigned short>(infile);
+    int count = readLittleEndianValue<unsigned short>(infile);
     m_questGuardList.resize(count);
-
-    if (count > 0) {
-        int i = 0;
-        do {
-            m_questGuardList[i].load(infile, saveVersion);
-            if (m_questGuardList[i].m_quest)
-                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                    static_cast<void*>(m_questGuardList[i].m_quest)));
-            ++i;
-        } while (--count);
+    for (int i = 0; i < count; ++i) {
+        m_questGuardList[i].load(infile, saveVersion);
+        if (m_questGuardList[i].m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(m_questGuardList[i].m_quest)));
     }
 }
 
@@ -1683,14 +1682,15 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
+            // Mac 0x121b14..0x121b68 directly stores each decoded enum word.
             int skillType = value;
-            memcpy(&thisBox->m_secondarySkills[i].m_type,
-                   &skillType, sizeof(skillType));
+            thisBox->m_secondarySkills[i].m_type =
+                H3_ENUM_DECODE(TSecondarySkill, skillType);
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
             int skillLevel = value;
-            memcpy(&thisBox->m_secondarySkills[i].m_level,
-                   &skillLevel, sizeof(skillLevel));
+            thisBox->m_secondarySkills[i].m_level =
+                H3_ENUM_DECODE(TSkillMastery, skillLevel);
         }
     }
 
@@ -1746,7 +1746,9 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     }
 
     char padding[8];
-    return infile->read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
 // The cap here is 400, not the 4000 the treasure readers use, and the index
@@ -1916,6 +1918,9 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // local that is then masked - the same asymmetric artifact crossing
 // loadMonsterList has.
 
+// Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
+// reads; DC records one int_buffer and char_buffer. Sharing those readers
+// and the existing index raises Windows MAX 91.44 -> 96.15.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
@@ -1928,19 +1933,17 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     thisBox->m_hasCustomTreasure = value != 0;
     if (thisBox->m_hasCustomTreasure) {
-        if (loadTreasureData(infile, *thisBox) < 0)
+        if (loadTreasureData(infile, *thisBox) != 0)
             return -1;
     }
 
-    {
-        int intValue;
-        if (infile->read(&intValue, sizeof(intValue)) < sizeof(intValue))
-            return -1;
-        thisBox->m_experienceBonus = intValue;
-        if (infile->read(&intValue, sizeof(intValue)) < sizeof(intValue))
-            return -1;
-        thisBox->m_manaBonus = intValue;
-    }
+    int intBuffer;
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+        return -1;
+    thisBox->m_experienceBonus = intBuffer;
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+        return -1;
+    thisBox->m_manaBonus = intBuffer;
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
@@ -1949,22 +1952,15 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     thisBox->m_luckBonus = value;
 
-    {
-        int resourceValue;
-        for (int resourceIndex = 0; resourceIndex < 7; ++resourceIndex) {
-            if (infile->read(&resourceValue, sizeof(resourceValue))
-                < sizeof(resourceValue))
-                return -1;
-            thisBox->m_resQty[resourceIndex] = resourceValue;
-        }
+    for (i = 0; i < 7; ++i) {
+        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+            return -1;
+        thisBox->m_resQty[i] = intBuffer;
     }
-    {
-        signed char skillValue;
-        for (int skill = 0; skill < 4; ++skill) {
-            if (infile->read(&skillValue, sizeof(skillValue)) < sizeof(skillValue))
-                return -1;
-            thisBox->m_primarySkillBonus[skill] = skillValue;
-        }
+    for (i = 0; i < 4; ++i) {
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->m_primarySkillBonus[i] = value;
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -1974,14 +1970,15 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
+        // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
         int skillType = value;
-        memcpy(&thisBox->m_secondarySkills[i].m_type,
-               &skillType, sizeof(skillType));
+        thisBox->m_secondarySkills[i].m_type =
+            H3_ENUM_DECODE(TSecondarySkill, skillType);
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
         int skillLevel = value;
-        memcpy(&thisBox->m_secondarySkills[i].m_level,
-               &skillLevel, sizeof(skillLevel));
+        thisBox->m_secondarySkills[i].m_level =
+            H3_ENUM_DECODE(TSkillMastery, skillLevel);
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2375,6 +2372,10 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // Hoisting one shared int for the resource and artifact reads regressed to
 // 96.84 by extending its lifetime without shrinking the frame; the
 // `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
+// Current real C2 trace admits string::_Tidy (cb152, budget212) under the
+// MonsterData/string constructor chain. Body assignment, artifact initializer
+// and explicit message initializer emit one identical mapcell object; retain
+// the canonical constructor while investigating the retained _Tidy boundary.
 // Both Complete builds write MonsterInfo fields and clear bits 27..30
 // after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
 // the Windows mask 0x87fbffff combines it with the dontGrow assignment.
@@ -2690,22 +2691,25 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (int spell = 0; spell < 70; ++spell)
-            tempTown.m_fixedSpells[spell] =
-                (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
+        for (x = 0; x < 70; ++x)
+            tempTown.m_fixedSpells[x] =
+                (spellBuf[x / 8] & (1 << (x % 8))) != 0;
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (int spell = 0; spell < 70; ++spell)
-        tempTown.m_spells[spell] =
-            (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
+    for (x = 0; x < 70; ++x)
+        tempTown.m_spells[x] =
+            (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
     if (readValue(infile, numTownEvents)
         < sizeof(numTownEvents))
         return -1;
 
-    for (count = numTownEvents; count > 0; --count) {
+    // Native Mac 0x1247a4..0x124804 caches the read count across event calls
+    // and increments a separate index; CodeWarrior reproduces that lifetime.
+    count = numTownEvents;
+    for (x = 0; x < count; ++x) {
         TTownEvent thisEvent;
         thisEvent.read(infile, mapVersion);
         thisEvent.m_townNum = g_game->m_scenarioTowns.size();
@@ -2780,10 +2784,9 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // -1 = clear the set) and jumps straight to the padding, while every later
 // format carries a 70-bit mask in nine bytes and then the four primaries.
 
-// The alignment reaching GetStartingHeroId is moved into its enum with
-// memcpy rather than a cast, which is this tree's own idiom for the
-// conversion - pick_alignment does exactly the same thing to its loop index,
-// and the cast-into-an-enum floor is why.
+// Mac 0x124d04 directly loads the alignment argument; its artifact loops
+// likewise store decoded enum words without memcpy. Use the shared enum
+// decoding macro at those serialized and integer-valued boundaries.
 
 // The next structure pass reads the raw symbol nesting, not only the compact
 // roster: all thirteen DC locals appear under S_GPROC32 before the first
@@ -2894,9 +2897,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = g_startingHeroOverrides[owner];
             g_startingHeroOverrides[owner] = -1;
         } else {
-            TTownType alignment;
-            memcpy(&alignment, &g_game->m_setup.m_alignment[owner],
-                   sizeof(alignment));
+            TTownType alignment = H3_ENUM_DECODE(
+                TTownType, g_game->m_setup.m_alignment[owner]);
             heroID = g_game->getStartingHeroId(alignment, owner,
                                                experience);
         }
@@ -2981,8 +2983,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 shortBuffer = readValue<short>(infile);
                 intBuffer = shortBuffer;
             }
-            memcpy(&heroData->m_artifacts[x].m_artifactId, &intBuffer,
-                   sizeof heroData->m_artifacts[x].m_artifactId);
+            heroData->m_artifacts[x].m_artifactId =
+                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         shortBuffer = readValue<short>(infile);
@@ -2996,8 +2998,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 shortBuffer = readValue<short>(infile);
                 intBuffer = shortBuffer;
             }
-            memcpy(&heroData->m_backpack[x].m_artifactId, &intBuffer,
-                   sizeof heroData->m_backpack[x].m_artifactId);
+            heroData->m_backpack[x].m_artifactId =
+                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         // The fourth war-machine position is never serialized: every hero
@@ -3383,7 +3385,8 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     tempObject->m_z = value;
 
     int typeIndex;
-    count = readValue(infile, typeIndex);
+    // Native Mac 0x125fb0..0x125fcc decodes the map type index with lwbrx.
+    count = readLittleEndianValue(infile, typeIndex);
     if (count < sizeof(typeIndex))
         return -1;
     tempObject->m_typeIndex = static_cast<unsigned short>(typeIndex);

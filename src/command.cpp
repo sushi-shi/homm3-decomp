@@ -984,7 +984,7 @@ int combatManager::processCombatMsg(message& msg)
                     army* stack = m_cells[gridIndex].getArmy();
                     hero* owner = stack->getOwner();
                     switch (g_config.m_combatArmyInfoLevel) {
-                    case 0:
+                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_NONE:
                         break;
                     case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
                         if (stack->getOwningSide() == 0) {

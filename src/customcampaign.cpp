@@ -1528,7 +1528,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    HeroId heroId = static_cast<HeroId>(currentHero->m_id);
+    HeroId heroId = H3_ENUM_DECODE(HeroId, currentHero->m_id);
     g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
@@ -2946,7 +2946,7 @@ static void readAssignedCampaignHeroes(TAbstractFile* infile,
     campaign.m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
         campaign.m_assignedCarryover[assignedIndex] =
-            static_cast<HeroId>(readValue<short>(infile));
+            H3_ENUM_DECODE(HeroId, readValue<short>(infile));
     }
 }
 
