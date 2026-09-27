@@ -1122,16 +1122,16 @@ CNetMsg* getRemoteData(unsigned char removeFromQueue,
     return g_dPlay->getRemoteData(removeFromQueue, 0);
 }
 
-VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)
+// Mac 0x2129a8..0x2129d0 clears the mode flags before constructing the
+// assigned player record. Keep the constructor at its expression lifetime.
+VA(0x00554410, 0x93) MAC_ADDRESS(0x21297c, 0xd4)  // dc 0x11ce14
 unsigned char initRemote(eNetGameType mpType, const char* userName)
 {
-    CNetPlayerInfo playerInfo;
-
     g_gameMode = static_cast<unsigned char>(mpType);
     g_followPlayerMode = 0;
     g_weMoved = 0;
 
-    g_thisNetPlayerInfo = playerInfo;
+    g_thisNetPlayerInfo = CNetPlayerInfo();
 
     strcpy(g_config.m_networkDefaultName, userName);
     strcpy(g_thisNetPlayerInfo.m_name,
