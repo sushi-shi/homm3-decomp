@@ -3170,8 +3170,8 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 
     memset(m_localHeader.m_heroAvailability, -1,
            sizeof(m_localHeader.m_heroAvailability));
-    strcpy(m_localHeader.m_title, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME));
-    strcpy(m_localHeader.m_description, g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION));
+    strcpy(m_localHeader.m_title, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_NAME]);
+    strcpy(m_localHeader.m_description, (*g_generalText)[GENERAL_TEXT_RANDOM_MAP_SCENARIO_DESCRIPTION]);
     GameSelectionHeadersStruct& localHeader = m_localHeader;
     localHeader.m_header = header;
 
@@ -5500,7 +5500,7 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         // down BEFORE the `test bl,bl`, so only the expansion differs. Both
         // want a caller-shrink or a site pin and neither is available.
         if (generateRandomMap(getRandomMapName().c_str()))
-            normalDialog(g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_CREATED),
+            normalDialog((*g_generalText)[GENERAL_TEXT_RANDOM_MAP_CREATED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         break;
     }
@@ -7368,6 +7368,9 @@ void TSingleSelectionWindow::sendPlayerFaces()
 // Earlier controls: removing the const bitset cast was byte-flat; .test()
 // scored 76.71% against the then-current 78.76% candidate.
 // E:\gamedcs\singleselectionwindow.cpp:7698
+// Mac retains ordinary text indexing at 0x183850..0x183b08. Direct
+// branch-local lookups preserve those calls and recover Windows 92.87%
+// without caching the table across the two compatibility-message arms.
 VA(0x0058BCE0, 0x5AF) MAC_ADDRESS(0x183698, 0x51c)  // begin-button caller and DC source shape, dc 0x142674
 unsigned char TSingleSelectionWindow::onBeginGame()
 {
@@ -7401,16 +7404,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
 
         if (!static_cast<const std::bitset<4>&>(
                 g_gameContextFeatures[m_commonGameVersion])[gameVersionClass]) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_SAVED_GAME_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7423,16 +7423,13 @@ unsigned char TSingleSelectionWindow::onBeginGame()
                 > MAP_FORMAT_RESTORATION_OF_ERATHIA;
 
         if (m_commonGameVersion < mapVersionClass) {
-            const TTextResource* text;
             const char* gameType;
             if (*g_videoGameState == SINGLE_SELECTION_CONTEXT_1) {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_ARMAGEDDONS_BLADE);
+                gameType = (*g_generalText)[GENERAL_TEXT_ARMAGEDDONS_BLADE];
             } else {
-                text = g_generalText;
-                gameType = text->getText(GENERAL_TEXT_SHADOW_OF_DEATH);
+                gameType = (*g_generalText)[GENERAL_TEXT_SHADOW_OF_DEATH];
             }
-            normalDialog(formatString(text->getText(GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT), gameType).c_str(), 1, -1, -1,
+            normalDialog(formatString((*g_generalText)[GENERAL_TEXT_MAP_VERSION_REQUIREMENT_FORMAT], gameType).c_str(), 1, -1, -1,
                          -1, 0, -1, 0, -1, 0, -1, 0);
             return 0;
         }
@@ -7443,14 +7440,14 @@ unsigned char TSingleSelectionWindow::onBeginGame()
         return 0;
 
     if (m_selectionHeaders.size() == 0 && !m_randomMapSelected) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_NO_MAPS_TO_PLAY), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_NO_MAPS_TO_PLAY], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
 
     CNetPlayerHandlerPlayer* player = getThisPlayer();
     if (!m_loadMode && player->m_playerPos == -1) {
-        normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED), 1, -1, -1, -1, 0, -1, 0, -1,
+        normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_POSITION_REQUIRED], 1, -1, -1, -1, 0, -1, 0, -1,
                      0, -1, 0);
         return 0;
     }
@@ -7458,7 +7455,7 @@ unsigned char TSingleSelectionWindow::onBeginGame()
     // Mac retains the shared IsMultiPlayer call at 0x183adc.
     if (isMultiPlayer()) {
         if (m_players.getPlayerCount(1) < 2) {
-            normalDialog(g_generalText->getText(GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS), 1, -1, -1, -1, 0, -1, 0,
+            normalDialog((*g_generalText)[GENERAL_TEXT_MULTIPLAYER_REQUIRES_TWO_PLAYERS], 1, -1, -1, -1, 0, -1, 0,
                          -1, 0, -1, 0);
             return 0;
         }
