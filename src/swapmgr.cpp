@@ -1472,10 +1472,14 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // Dreamcast supplies the one exitFlag local, helper boundaries and complete
 // statement order. Retail independently fixes the Complete widget ranges,
 // modifier bits, network-exit expansion and 215-byte selector table.
-// Negative control: spelling GetOtherHero before the first requestDone
-// construction raises the isolated score from 84.05% to 84.84%, but reverses
-// DC's positive ctor/helper order at line 1243. Keep the recovered order; the
-// residual retail store scheduling is optimizer state, not source evidence.
+// DC attributes request-done construction, GetOtherHero and transmission
+// to one line at each of 1243, 1259 and 1291, with only exitFlag named.
+// Mac initializes three separate 0x14-byte packets before GetOtherHero;
+// Windows retail evaluates GetOtherHero before packet initialization.
+// Full-expression packet temporaries permit both argument evaluation orders
+// and raise Windows 84.0502% to 86.82% without changing other scored rows.
+// The current CodeWarrior compile still retains the packet constructor;
+// its expansion and message/flag register choices remain to be recovered.
 // Combining the sixteen left/right skill case labels and selecting hero
 // plus skill index in one scope removes the shared-skill jump, but scores
 // 83.1641% (left-first) or 83.4984% (right-first), against 84.0502%. Both
@@ -1497,8 +1501,7 @@ int swapManager::main(message& msg)
     {
         if (g_remoteOn)
         {
-            CTradeRequestDoneMsg requestDone;
-            transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
+            transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
         }
         return exitSwapManager(msg);
     }
@@ -1510,8 +1513,7 @@ int swapManager::main(message& msg)
         {
             if (isLeftHero())
             {
-                CTradeRequestDoneMsg requestDone;
-                transmitRemoteData(&requestDone, getOtherHero()->m_owner, 0, 1);
+                transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner, 0, 1);
             }
             exitFlag = 1;
         }
@@ -1541,8 +1543,7 @@ int swapManager::main(message& msg)
             case widget::WIDGET_END_DIALOG:
                 if (g_remoteOn && m_humanPlayerTrade)
                 {
-                    CTradeRequestDoneMsg requestDone;
-                    transmitRemoteData(&requestDone, getOtherHero()->m_owner,
+                    transmitRemoteData(&CTradeRequestDoneMsg(), getOtherHero()->m_owner,
                                        0, 1);
                 }
                 exitFlag = 1;
