@@ -5214,6 +5214,36 @@ void TSingleSelectionWindow::refreshFilterWidgets()
     this->update();
 }
 
+// Mac 0x17e364/0x17e394 places these ordinary helpers between the
+// selection handlers, although Dreamcast kept them in newgame.cpp.
+// Windows expands both in onWidgetDeselect; retain their TU visibility.
+// Complete uses the nine-town alignment mask for both helpers.
+// E:\gamedcs\newgame.cpp:355, dc 0x1037f8.
+MAC_ADDRESS(0x17e364, 0x30)
+TTownType pickPrevAlignment(int legalAlignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type - 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type < -1)
+            type = TOWN_CONFLUX;
+        else if (type == -1)
+            break;
+    } while (!(legalAlignments & (1 << type)));
+    return type;
+}
+
+// E:\gamedcs\newgame.cpp:368, dc 0x10380c.
+MAC_ADDRESS(0x17e394, 0x30)
+TTownType pickNextAlignment(int legalAlignments, TTownType type)
+{
+    do {
+        type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+        if (type > TOWN_CONFLUX)
+            type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    } while (type != -1 && !(legalAlignments & (1 << type)));
+    return type;
+}
+
 // Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
 // Its random-maps arm calls it; VC6 expands the three calls in that arm.
 MAC_ADDRESS(0x17e3c4, 0x60)
