@@ -1930,9 +1930,10 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     }
     if (bestHex == currentArmy->m_gridIndex)
         return 0;
-    unsigned char shouldMoveToward = 0;
-    if (!estimate->m_simulated && bestTime > 1)
-        shouldMoveToward = 1;
+    // Retail merges an integer 0/1 argument before this retained call.
+    // Byte and bool carriers change the expansion decision elsewhere in
+    // this body; the ordinary int closes Windows without removing helpers.
+    int shouldMoveToward = !estimate->m_simulated && bestTime > 1;
     moveToward(currentArmy, bestHex, enemyAttacks,
                shouldMoveToward);
     return 1;
