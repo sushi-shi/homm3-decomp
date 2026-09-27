@@ -1317,7 +1317,11 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // Keep that receiver local to the army branch; native 0x84a64..0x84a74
 // recomputes the later move flags from the index. Combined with the
 // positive shot-penalty guard and side-first declaration, this improves
-// Windows 92.5357 -> 98.1429% and Mac 31.6621 -> 98.4765%. The wall arm writes
+// Windows 92.5357 -> 100% and Mac 31.6621 -> 98.4765%. Declaring the cell
+// after clearing the target fields closes Windows' final scheduling gap.
+// Mac retains a 0x70 frame versus 0x80, indexed early HasArmy access and
+// a pointer-strength-reduced wall walk; explicit pointer walks do not
+// improve Windows. The wall arm writes
 // slot before side, as native 0x849cc/0x849d8 does.
 // Mac 0x84584..0x84618 fixes the positive HasArmy ternary and guarded
 // non-null hero returns. These four guard controls are VC6 byte-flat;
@@ -1378,9 +1382,9 @@ int combatManager::getCommand(int newIndex)
     if (!validHex(newIndex) || inInvisibleColumn(newIndex))
         return COMBAT_COMMAND_NONE;
 
-    hexcell* cell = &m_cells[newIndex];
     currentArmy->m_side = -1;
     currentArmy->m_slot = -1;
+    hexcell* cell = &m_cells[newIndex];
 
     if (cell->hasArmy()
             && currentArmy->m_creatureType != CREATURE_CATAPULT) {
