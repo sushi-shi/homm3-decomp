@@ -2394,6 +2394,16 @@ void TRmgTreasureGroup::reset()
     }
 }
 
+// Mac keeps this shared group insertion at 0x233d78. Its four callers
+// pass one object and a two-dimensional point; map storage uses level zero.
+MAC_ADDRESS(0x233d78, 0xd4)
+void TRmgTreasureGroup::addObject(type_object* object, TPoint point)
+{
+    m_objects.push_back(object);
+    TRmgMapPosition position(point.m_x, point.m_y, 0);
+    m_map.addObject(*object, position);
+}
+
 // Complete-only group helpers: assembly passes the guard pointer in one
 // stack dword to 0x535110 (AL result); its first and last calls trace the
 // group's closed outline. 0x535ee0 appends points at +0x38 until closure.
@@ -2456,12 +2466,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
         return 0;
     unsigned int outlineCount = m_outline.size();
     TPoint guardPosition = m_outline[rand() % outlineCount];
-    m_objects.push_back(guard);
-    TRmgMapPosition position;
-    position.m_x = guardPosition.m_x;
-    position.m_y = guardPosition.m_y;
-    position.m_z = 0;
-    m_map.addObject(*guard, position);
+    addObject(guard, guardPosition);
     guardPosition.m_x -= prototype->m_triggerCell.m_x;
     guardPosition.m_y -= prototype->m_triggerCell.m_y;
     int guardType = guardProperties->m_prototype->m_objectType;
@@ -2614,12 +2619,9 @@ placementFailure:
 // directions 3..1. Candidate bounds leave a margin around the group map.
 // A successful random choice transfers the object to the group and stamps
 // its footprint on surface level zero. Names describe Complete-only roles.
-// Residual (79.3429%): all 21 CFG blocks and branch destinations align;
-// remaining differences are local/register homes, coordinate copies and
-// vector cleanup scheduling. Reusing the candidate variable for the final
-// choice loses to separate scopes (75.5095% versus 79.3143%). The RMG trigger
-// point is flat; two canonical += translations reach 79.3429%, and naming
-// the candidate count is flat. Preserve both map and group helper calls.
+// Mac retains addObject at 0x233cf0 and reuses the candidate position for
+// the final choice. Restoring that call, position lifetime and selection
+// index reaches 83.4524%; coordinate copies and vector cleanup remain.
 VA(0x00535970, 0x240) MAC_ADDRESS(0x233a44, 0x2d4) // anchor-callee 0x546680; thiscall, ret 4
 unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
 {
@@ -2632,7 +2634,9 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
     bounds.m_maximumY = m_map.m_mapHeight - 3;
     TPoint trigger(prototype->m_triggerCell.m_x, prototype->m_triggerCell.m_y);
     std::vector<TRmgMapPosition> candidates;
-    for (unsigned index = 0; index < m_objects.size(); ++index) {
+    TRmgMapPosition position;
+    unsigned index;
+    for (index = 0; index < m_objects.size(); ++index) {
         type_object* existing = m_objects[index];
         TObjectType* existingPrototype = existing->m_properties->m_prototype;
         TRmgMapPosition entrance = existing->getPosition();
@@ -2648,7 +2652,7 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
             first = 1;
         }
         for (int direction = end; direction-- > first; ) {
-            TRmgMapPosition position = entrance;
+            position = entrance;
             position += g_rmgDirections[direction];
             position += trigger;
             if (position.m_x >= bounds.m_minimumX && position.m_x < bounds.m_maximumX
@@ -2660,13 +2664,9 @@ unsigned char TRmgTreasureGroup::tryAddObject(type_object* object)
     unsigned count = candidates.size();
     if (!count)
         return 0;
-    TRmgMapPosition selected = candidates[rand() % count];
-    m_objects.push_back(object);
-    TRmgMapPosition position;
-    position.m_x = selected.m_x;
-    position.m_y = selected.m_y;
-    position.m_z = 0;
-    m_map.addObject(*object, position);
+    index = rand() % count;
+    position = candidates[index];
+    addObject(object, position);
     return 1;
 }
 
@@ -8117,35 +8117,10 @@ type_object* type_random_map_generator::createTreasureObject(TRmgZone* zone,
 // map; later objects use the fit helper. Generation and fit have independent
 // three-attempt limits. Failed fits release the object before retrying;
 // accepted values accumulate until the target or a small remainder stops us.
-// Residual (97.8371%): centering-load scheduling remains. Assigned
-// coordinates and distinct first/later object lifetimes restore retail
-// calls (91.2079%); constructor temporaries over-expand vector insertion.
-// Unsigned centers and a separate accepted object reach 92.7247%; immediate
-// third-fit failure exit reaches 95.1461%; prototype lookup before accepting
-// the first object reaches 97.7697%. Reversing center sum operands is flat.
-// Explicit count insert expands its body (4.3427%); keep push_back.
-// Three 60-state families retain the public helpers and vary centering,
-// receiver bindings and real local lifetimes. Scoping the initial object
-// phase removes the four-byte frame surplus and reaches 97.8371%, with
-// the other 339 RMG scores unchanged. Reusing its position in later factory
-// calls expands vector insertion (438 -> 821 bytes in the split-properties
-// control). Unsigned accumulator/read-back families do not improve this
-// peak. Retail still loads map width before prototype width and prefetches
-// the insertion end between dimension reads; the native lifecycle oracle
-// separately verifies retries, unsigned centers, value reads and cleanup.
-// Structured retry exit: clear nextObject after deleting the third failed
-// fit, then use the existing null-selection break. This removes the jump
-// at 97.8371%, with every RMG sibling unchanged in a 48-state family.
-// A post-loop attempt-count check and duplicated updateBounds/return change
-// the emitted control flow and lose score; the selection result is sufficient.
-// The named vector-insert mismatch is a folded pointer-template alias:
-// vector<type_object*>::insert matches retail 0x54d120's 521 bytes after
-// masking its two call operands, and both operator new/delete targets agree.
-// The retail label names vector<widget*>; keep the real source element type.
-// Public single insertion and an earlier named insertion iterator do not
-// recover the centering loads, including a separately bound object vector.
-// Signed/unsigned coordinate arrays and a TPoint center also leave 97.8371%;
-// separating the sums from division instead over-expands vector insertion.
+// Exact with the native group->addObject boundary (Mac call 0x24a670).
+// Flattening that helper left centering loads and insertion scheduling at
+// 97.8371%. Keep distinct first/later object lifetimes and the third failed
+// fit's deletion/null-selection exit; duplicate bounds updates change CFG.
 VA(0x00546520, 0x1B6) MAC_ADDRESS(0x24a584, 0x22c) // anchor-callee 0x54678a; thiscall, ret 0x10
 int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
     TRmgTreasureGroup* group, unsigned char alternate, int value)
@@ -8172,8 +8147,7 @@ int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
         position.m_x = (group->m_map.m_mapWidth + static_cast<unsigned>(prototype->getWidth())) / 2;
         position.m_y = (group->m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
         position.m_z = 0;
-        group->m_objects.push_back(object);
-        group->m_map.addObject(*object, position);
+        group->addObject(object, position);
         total = objectValue;
     }
     while (total < value) {
@@ -10141,8 +10115,7 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
     type_object* questObject = seerHut;
-    group.m_objects.push_back(questObject);
-    group.m_map.addObject(*questObject, position);
+    group.addObject(questObject, position);
     group.updateBounds();
     group.traceOutline();
     group.m_ready = 1;
