@@ -1806,6 +1806,9 @@ long type_AI_spellcaster::getBacklashValue(const army* ourArmy, type_enchant_dat
 // bit 2 (shoots) clear: a melee double-attacker gets one more swing out
 // of the deal than a shooter does.
 // Dreamcast and Mac retain getAttackBoostValue; retail VC6 expands it.
+// Mac 0x439f4/0x43a34/0x43a54 has three early refusals. Its first damage
+// result is stored before scaling and then replaced by min with our hitpoints.
+// DC names the melee count enemies; keep the same canonical damage helpers.
 
 VA(0x00439e80, 0x290) MAC_ADDRESS(0x0437bc, 0x20c)  // dc 0x40628
 long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchant_data caster) const
@@ -1848,26 +1851,27 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
 VA(0x0043a110, 0x222) MAC_ADDRESS(0x0439c8, 0x1ac)  // dc 0x407e8
 long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_data caster) const
 {
-    if (!m_winLikely) {
-        long count = m_meleeEnemies[ourArmy->m_bitIndex].m_count;
-        long amount = caster.getMasteryValue();
-        if (ourArmy->m_creatureType == CREATURE_EFREET_SULTAN)
-            amount -= 20;
-        if (amount > 0) {
-            const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
-            if (target && !target->is(creatureImmuneToFireSpells)) {
-                long reflected = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 1, 0)
-                    * amount / 100;
-                long ourHits = ourArmy->getTotalHitPoints(0);
-                long capped = min(reflected, ourHits);
-                long oldDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
-                long combined = capped * count + oldDamage;
-                double increase = static_cast<double>(combined) / static_cast<double>(oldDamage);
-                return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
-            }
-        }
-    }
-    return 0;
+    if (m_winLikely)
+        return 0;
+    long count = m_meleeEnemies[ourArmy->m_bitIndex].m_count;
+    long amount = caster.getMasteryValue();
+    if (ourArmy->m_creatureType == CREATURE_EFREET_SULTAN)
+        amount -= 20;
+    if (amount <= 0)
+        return 0;
+    const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
+    if (!target || target->is(creatureImmuneToFireSpells))
+        return 0;
+    long reflected = target->getAverageDamage(ourArmy, 0,
+        target->m_numTroops, 1, 0);
+    reflected = reflected * amount / 100;
+    reflected = min(reflected, ourArmy->getTotalHitPoints(0));
+    long oldDamage = ourArmy->getAverageDamage(target, 0,
+        ourArmy->m_numTroops, 1, 0);
+    long combined = count * reflected + oldDamage;
+    double increase = static_cast<double>(combined)
+                      / static_cast<double>(oldDamage);
+    return getAttackBoostValue(ourArmy, target, caster.m_duration, increase);
 }
 
 VA(0x0043a340, 0xBE) MAC_ADDRESS(0x043b74, 0xf0)  // dc 0x40928
