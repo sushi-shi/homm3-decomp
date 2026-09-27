@@ -174,11 +174,6 @@ public:
     // unchanged position costs nothing.  Retail compares the fresh
     // `done * 256 / total` against it and returns when they agree.
     int m_drawnPosition;              // +0x24
-    // retail's live monsterStrength/min temporary: constructor receiver
-    // ebp-0x5c at 0x5862ef, independent word ebp-0x30 at 0x586306/0x586437.
-    // Retain only the unresolved word at +0x28. The known fields fill
-    // 0x28 bytes; 0x2c is an extent bound, not a proven retail sizeof.
-    char m_pad28[4];
 
     TRandomMapProgress(int totalSteps);
     virtual ~TRandomMapProgress();
@@ -195,7 +190,10 @@ public:
     // Descriptive name inferred from the retained progress-bar repaint body.
     void updateProgressBar();  // retail 0x577180
 };
-// Check this provisional view; exact retail extent remains unresolved.
-SIZE(TRandomMapProgress, 0x2c);
+// The known fields fill 0x28 bytes. This extent reproduces the caller's
+// 0xa0 frame and progress receiver at ebp-0x5c (retail 0x5862ef); the
+// former speculative tail word enlarged both by four bytes. All retained
+// methods remain byte-identical without it.
+SIZE(TRandomMapProgress, 0x28);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */
