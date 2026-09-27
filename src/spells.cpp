@@ -1050,6 +1050,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // also what let VC6 cross-jump this arm's damage_message/CheckRebirth
     // tail into IMPLOSION's identical one - retail emits both copies.
     // 90.7105 -> 91.2759 on the one token.
+    // Retail's spell-10 selector maps17 and57 to the same arm;
+    // Mac's table at data1+0x5311c maps both to code0+0x191420.
+    case SPELL_TITANS_LIGHTNING_BOLT:
     case SPELL_LIGHTNING_BOLT: {
         spellEffect(1, target, 10, 0);
         int damage = computeSpellDamage(spellId, monsterPower,
