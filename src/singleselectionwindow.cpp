@@ -5238,7 +5238,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 {
     do {
         type = static_cast<TTownType>(type + 1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
-        if (type > TOWN_CONFLUX)
+        if (type >= TOWN_CONFLUX + 1)
             type = static_cast<TTownType>(-1) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     } while (type != -1 && !(legalAlignments & (1 << type)));
     return type;
@@ -5751,7 +5751,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         unsigned int map = msg->m_codeY - SSW_FILE_ROW_FIRST + m_currentIndex;
         if (m_saveMode) {
             m_textIndex = msg->m_codeY - SSW_FILE_ROW_FIRST;
-            setCurrentMap(map, 1);
+            // Mac 0x17f074 reloads both members; Windows adds after the store.
+            setCurrentMap(m_textIndex + m_currentIndex, 1);
         } else if (map < m_selectionHeaders.size()) {
             unsigned long lastClick = m_clickTime;
             if (GameTime::elapsedSince(lastClick) < 400) {
