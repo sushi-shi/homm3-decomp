@@ -2562,6 +2562,12 @@ void type_AI_spellcaster::considerSpell(type_spell_choice* choice) const
 }
 
 // E:\gamedcs\ai_tactical.cpp:3191
+// Both retail builds ask ourArmy for target time: Windows 0x43bfda/0x43bfe2
+// keeps the first army in ESI while the selected target is EDI; Mac
+// 0x45d88/0x45d94 passes the first army in r29 to speed and target-time calls.
+// This census intentionally reuses that same first army across iterations;
+// neither retail body increments its pointer. Preserve the helper calls.
+// Mac's zeroing entry is bzero; the Windows/DC spelling remains memset.
 VA(0x0043bf20, 0x119) MAC_ADDRESS(0x045c80, 0x190)  // anchor-global, dc 0x420ac
 void type_AI_spellcaster::setMeleeEnemies()
 {
@@ -2571,7 +2577,7 @@ void type_AI_spellcaster::setMeleeEnemies()
         if (ourArmy->cannotAttack() || ourArmy->getSpellTime(SPELL_HYPNOTIZE))
             continue;
         const army* target = ourArmy->getAITarget();
-        if (!target || ourArmy->canShoot(0) || target->getAITargetTime() > 1)
+        if (!target || ourArmy->canShoot(0) || ourArmy->getAITargetTime() > 1)
             continue;
         m_meleeEnemies[i].m_enemy = target;
         long damage = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 0, 0);
