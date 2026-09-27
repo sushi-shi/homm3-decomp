@@ -2041,7 +2041,7 @@ game	?mineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70	tokens1:0
 game	?newMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520	tokens1:c9ed53d1c02f
 game	?newMap@game@@QAEXPAVTAbstractFile@@PAHPAUScenarioStruct@TCampaignBrief@@H@Z	100.0000	100.0000	100.0000	0xbfe70	tokens1:334a11c65f0d
 game	?nextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40	tokens1:1467134bdb30
-game	?nextPlayer@game@@QAEXXZ	82.4458	82.4458	84.8614	0xc6fe0	tokens1:0017eef9b436
+game	?nextPlayer@game@@QAEXXZ	89.4563	89.4563	89.4563	0xc6fe0	tokens1:b66426d0425d
 game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12560d43ae3
 game	?numOfGivenArtifact@playerData@@QBEHH@Z	100.0000	100.0000	100.0000	0xbabd0	tokens1:6f2acc104950
 game	?perDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	tokens1:250677db0bd7
@@ -2117,7 +2117,7 @@ game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0	-
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0	-
 game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50	-
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0	-
-game	?transmitSaveGame@game@@QAEHHHEE@Z	83.8044	83.8044	85.0958	0xcafd0	tokens1:3a60b83a5d20
+game	?transmitSaveGame@game@@QAEHHHEE@Z	85.0897	85.0897	85.0958	0xcafd0	tokens1:ef97bbd79468
 game	?turnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0	tokens1:09ac63bef778
 game	?turnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80	tokens1:b9f191ddf209
 game	?updateBonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0	tokens1:9bea0f215987

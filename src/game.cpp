@@ -6655,27 +6655,17 @@ void game::turnOffAIMusic()
 // (immediately after TurnOffAIMusic), five retail callers and the complete DC
 // callee set independently identify the row.
 
-// RECONSTRUCTED 2026-08-26 (83.3584%). The frame is retail's exact 0x150 and
-// the 256-byte sText home, 40-byte inlined AI-theme scratch, turn message,
-// saved-player slot and retained autosave-census write all land in the retail
-// stack bands. The remaining structural residual is 69 candidate branches
-// against 73 retail. Most of its visible churn is one allocation family around
-// the failed-transfer tail retry: our VC6 homes the receiver and carries it in
-// ESI while keeping zero in EBX; retail keeps the receiver in EBX and zero in
-// ESI. Explicit backward goto, a structured retry loop and recursive-inlining
-// pragma all reproduced the same allocation family. Forcing the week-transition
-// value to a volatile byte worsened the score to 80.1988% and grew the frame.
-// DC game.cpp:7638 calls game::IsHuman(i), conditionally increments iHumans,
-// and Mac 0xdd92c retains the same helper call. The counted scan restores
-// retail's fourteen-instruction expansion of the clamp in game::isHuman.
-// This raises Windows 82.56% -> 84.86%, restores the 0x150 frame and reduces
-// the branch deficit from eight to four; Mac direct calls become 63/63.
-// The remaining register allocation and four branches need separate proof.
+// Mac 0xdd9fc..0xddab8 retains an inner player scan and an outer -1
+// sentinel loop. It flips lastWasHuman before perDay, as DC game.cpp:7674
+// also does. Restoring those loops and the byte assignment raises Windows
+// 82.4458% -> 89.4563%; the receiver allocation now agrees with retail.
+// DC game.cpp:7638 and Mac 0xdd92c retain game::isHuman in the human census.
+// Remaining differences include byte-flag stack homes and later expansions.
+// Grouping the byte declarations and moving makeOrig initialization are flat.
 VA(0x004c6fe0, 0x947) MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
 void game::nextPlayer()
 {
     int toWho;
-    int weekSave;
     int humans;
     int i;
     unsigned char lastWasHuman;
@@ -6711,8 +6701,8 @@ void game::nextPlayer()
                 ++humans;
         }
         g_advManager->drawRolloverText(
-            const_cast<char*>(g_generalText->getText(GENERAL_TEXT_AUTOSAVING)));
-        saveGame(g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 1, 0, 1, 0);
+            const_cast<char*>((*g_generalText)[GENERAL_TEXT_AUTOSAVING]));
+        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerEmptyRollover, ""));
     }
@@ -6722,20 +6712,19 @@ void game::nextPlayer()
     g_advManager->deactivateCurrTown(0);
     g_advManager->deactivateCurrHero(0);
 
-    makeOrig = 0;
     lastWasHuman = m_players[g_netLocalGamePos].isHuman();
-    for (;;) {
-        ++g_netLocalGamePos;
-        if (g_netLocalGamePos < 8) {
+    makeOrig = 0;
+    do {
+        while (++g_netLocalGamePos < g_mapHeaderPlayerCount) {
             if (!m_playerDisabled[g_netLocalGamePos]
                 && static_cast<unsigned char>(
                        m_players[g_netLocalGamePos].isHuman())
-                       == lastWasHuman) {
+                       == lastWasHuman)
                 break;
-            }
-        } else {
-            weekSave = !lastWasHuman;
-            if (weekSave) {
+        }
+        if (g_netLocalGamePos == g_mapHeaderPlayerCount) {
+            lastWasHuman = !lastWasHuman;
+            if (lastWasHuman) {
                 makeOrig = 1;
                 perDay();
                 if (g_remoteOn) {
@@ -6745,23 +6734,22 @@ void game::nextPlayer()
                         return;
                 }
             }
-            lastWasHuman = static_cast<unsigned char>(weekSave);
             g_netLocalGamePos = -1;
         }
-    }
+    } while (g_netLocalGamePos == -1);
 
     if (g_goSolo && makeOrig
         && (!g_remoteOn || g_numHumanPlayers == 1)) {
         g_advManager->drawRolloverText(
-            const_cast<char*>(g_generalText->getText(GENERAL_TEXT_AUTOSAVING)));
-        saveGame(g_generalText->getText(GENERAL_TEXT_AUTOSAVE_NAME), 1, 0, 1, 0);
+            const_cast<char*>((*g_generalText)[GENERAL_TEXT_AUTOSAVING]));
+        saveGame((*g_generalText)[GENERAL_TEXT_AUTOSAVE_NAME], 1, 0, 1, 0);
         g_advManager->drawRolloverText(
             DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
 
         save = g_remoteOn;
         g_remoteOn = 1;
         g_goSolo = 0;
-        normalDialogTimeOut(g_generalText->getText(GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE), 2, 2000,
+        normalDialogTimeOut((*g_generalText)[GENERAL_TEXT_PRESS_ESC_TO_CANCEL_SOLO_MODE], 2, 2000,
                             -1, -1, -1, 0, -1, 0, -1, -1, 0);
         g_remoteOn = save;
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE) {
@@ -6854,8 +6842,8 @@ void game::nextPlayer()
 
         if (g_blackoutPlayer && g_numHumanPlayers > 1) {
             char textBuffer[256];
-            sprintf(textBuffer, g_generalText->getText(
-                        GENERAL_TEXT_PLAYER_TURN_FORMAT),
+            sprintf(textBuffer, (*g_generalText)[
+                        GENERAL_TEXT_PLAYER_TURN_FORMAT],
                     g_currentPlayer->getName());
             waitForPlayer(textBuffer, g_netLocalGamePos);
         }
@@ -8532,6 +8520,10 @@ void game::processOnMapHeroes()
 // The first destroy-player path reloads its dpid across opaque calls; the
 // broadcast loop has a named killDPID, as DC also records. Preserve both.
 
+// Mac 0xe2904..0xe2a48 retains the initial-send completion loop, with
+// bytesLeft/current/curBlock reset inside it; 0xe2a08 sets done before the
+// end-message send. Restoring that loop raises Windows 83.8044% -> 85.0897%.
+// Placing done around the final log/end-message statements is Windows-flat.
 // Residual: the DC-order candidate's frame is 0x3b0 versus retail's 0x3a4.
 // Retail keeps isDiff/newSize in BL/EBX through disjoint phases and bytesLeft
 // in EBX through transmission; the candidate keeps the packet pointer there
@@ -8663,36 +8655,43 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     }
 
     transferSmack->start();
-    while (bytesLeft > 0) {
-        pollSound();
-        checkDoMain(0, 1);
+    while (!done) {
+        bytesLeft = fileSize;
+        current = data;
+        curBlock = 0;
+        while (bytesLeft > 0) {
+            pollSound();
+            checkDoMain(0, 1);
 
-        if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
-            gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
-        else
-            gameTransmitMainMsg->m_blockSize = bytesLeft;
-        transferSmack->setPercentage(static_cast<float>(curBlock)
-                              / static_cast<float>(totalBlocks));
+            if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
+                gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
+            else
+                gameTransmitMainMsg->m_blockSize = bytesLeft;
+            transferSmack->setPercentage(static_cast<float>(curBlock)
+                                  / static_cast<float>(totalBlocks));
 
-        gameTransmitMainMsg->m_blockNbr = curBlock;
-        gameTransmitMainMsg->update(current,
-                                     gameTransmitMainMsg->m_blockSize);
-        transmitRemoteData(gameTransmitMainMsg, toWho,
-                           false, useGuaranteed);
+            gameTransmitMainMsg->m_blockNbr = curBlock;
+            gameTransmitMainMsg->update(current,
+                                         gameTransmitMainMsg->m_blockSize);
+            transmitRemoteData(gameTransmitMainMsg, toWho,
+                               false, useGuaranteed);
 
-        current += gameTransmitMainMsg->m_blockSize;
-        bytesLeft -= gameTransmitMainMsg->m_blockSize;
-        ++curBlock;
+            current += gameTransmitMainMsg->m_blockSize;
+            bytesLeft -= gameTransmitMainMsg->m_blockSize;
+            ++curBlock;
+        }
+
+        g_logFile.log(DATA_COMPGEN(
+            0x00677f54, xferFinishedLog,
+            "Finished sending data... Now handling requests.."));
+        done = 1;
+        {
+            CGameTransmitEndMsg end(g_monthType, g_monthTypeExtra,
+                                     g_weekType, g_weekTypeExtra, diffSize);
+            transmitRemoteData(&end, toWho, false, true);
+        }
     }
-
-    g_logFile.log(DATA_COMPGEN(
-        0x00677f54, xferFinishedLog,
-        "Finished sending data... Now handling requests.."));
-    {
-        CGameTransmitEndMsg end(g_monthType, g_monthTypeExtra,
-                                 g_weekType, g_weekTypeExtra, diffSize);
-        transmitRemoteData(&end, toWho, false, true);
-    }
+    done = 0;
 
     unsigned char playerDone[8];
     memset(playerDone, 0, sizeof(playerDone));
