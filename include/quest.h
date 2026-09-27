@@ -236,11 +236,11 @@ public:
     // The five-column text group for this quest type. Keep the selector
     // call and virtual discriminator in the same expression: retail's
     // retained and expanded instances evaluate their operands differently.
+    // Return the selected group directly; a redundant reference local changes
+    // VC6 nested expansion in the creature and artifact dialogs.
     const TSeerHutQuestText& questTexts()
     {
-        const TSeerHutQuestText& texts =
-            questTextRow()->m_quest[questType()];
-        return texts;
+        return questTextRow()->m_quest[questType()];
     }
     const std::string& questText(int column)
     {
