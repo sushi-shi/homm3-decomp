@@ -1,5 +1,4 @@
 #include "va.h"
-#include "homm3_minmax.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -4189,11 +4188,13 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // 5223 begins the count; 5284/5285 separates the line count and pixel height.
 // The 72-state family produced 21 objects and ten reproduced elites,
 // recovering 93.6558% from 87.1948% while preserving the seven local types.
-// DC 5240/5242/5245 calls std::max<long> by const reference. Retail instead
-// copies BOTH operands to fresh stack homes before selecting a reference:
-// the canonical by-value max wrapper in homm3_minmax.h supplies those homes.
-// Direct std::_cpp_max is the negative control and does not reproduce that
-// boundary. Keep the long locals; the audit intentionally reports std::max.
+// DC 5240/5242/5245 and Mac select std::max<long> by const reference.
+// VC6 has no public standard max: the ordinary unqualified calls reach
+// includes.h's by-value int wrapper, staging both 32-bit operands before
+// cppMax selects their address. Including the public-name compatibility
+// shim instead changes that boundary and drops this body to89.61%.
+// Native0x117330..0x117370 selects member/local addresses directly.
+// Keep the long locals and let each compiler's ordinary library resolve them.
 // DC 5317/5319 and 5321/5323 scopes support the else-if; retail jumps past
 // the second predicate after the popup store. The 48-state follow-up has
 // two objects/two reproduced elites; the adopted equivalent also reproduced
