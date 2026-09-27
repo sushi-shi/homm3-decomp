@@ -1667,14 +1667,11 @@ hero* SCampaign::findCrossoverHero(int heroId)
 // that wrapper to the three fields scores 87.2742; the canonical call
 // reaches 98.0287 with all 71 blocks and 40 branches aligned. No DC body
 // survives for this Complete-only caller; the cell wrapper is DC-proven.
-// Residual (98.03%): 0x48 vs retail's 0x4c frame, packed-coordinate/trigger
-// local sharing, and registers in the loss-condition tail. Both vector
-// destructors now expand on the two early returns and stay called on the
-// final exit, as retail requires. POD/STL folded names differ at six calls.
-// Moving triggerX/Y before the point construction keeps the wrong 0x48
-// frame (97.29); copy-initializing lossHero from a point value also keeps
-// that frame and adds coordinate-packing differences (96.68). Both probes
-// are rejected; neither recovers retail's separate trigger-output homes.
+// Mac 0x958a0..0x95904 keeps the packed loss point separate from the two
+// trigger outputs. Declaring those outputs with the function's container
+// locals preserves their lifetime across the pass and restores Windows's
+// separate slots and 0x4c frame. All instructions and CFG blocks now match;
+// the inner-loop declarations had reused point storage (99.8262%).
 VA(0x00487290, 0x664) MAC_ADDRESS(0x095554, 0x450)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 {
@@ -1687,6 +1684,8 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
     std::vector<hero> heroes;
     std::vector<HeroPlaceholderData> placeholders =
         g_game->m_worldMap.m_heroPlaceholders;
+    int triggerX;
+    int triggerY;
     if (placeholders.size() == 0)
         return;
 
@@ -1741,8 +1740,6 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
                  ++placeholderIndex) {
                 placeholder = &placeholders[placeholderIndex];
                 CObject* object = placeholder->m_object;
-                int triggerX;
-                int triggerY;
                 object->findTrigger(triggerX, triggerY);
                 if (triggerX == lossHero.m_x && triggerY == lossHero.m_y
                     && object->m_z == lossHero.m_z) {
