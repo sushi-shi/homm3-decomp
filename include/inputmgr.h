@@ -78,7 +78,8 @@ enum EKeyCodes {
     KEYCODE_BACKSLASH = 0x2b,
     KEYCODE_COMMA = 0x33,
     KEYCODE_PERIOD = 0x34,
-    KEYCODE_SLASH = 0x35,
+    // CSaveGameEdit::ignoreKey's Mac table entry 0x2c selects its ignore arm.
+    KEYCODE_SLASH = H3_NATIVE_KEY_CODE(0x35, 0x2c),
     // The numpad Del/decimal key, one past KP_0 - the caret editor's
     // forward-delete arm. Its value is forced by the same dense jump
     // table that fixes KP_1/KP_4/KP_6/KP_7: textEntryWidget::OnKeyPress
