@@ -2600,8 +2600,13 @@ void philAI::getTurnAIVars(int whichPlayer)
     }
 
     float difficultyValue = static_cast<float>(difficulty);
-    // Both expressions operate on an exact signed-byte difficulty value;
-    // compiler reassociation does not justify a platform-specific formula.
+    // Windows 0x527a67..0x527a7f computes (difficulty + 1) * 0.25
+    // for humans, then difficulty * 0.25 for computers. Mac 0x141d70
+    // shares one quarter product with the DC build. Naming that shared
+    // product changes the Windows instruction sequence (97.87 -> 91.28),
+    // while Mac reaches 88.70; neither proves a unique shared spelling.
+    // Signed-byte difficulty makes these formulas exactly equivalent, so
+    // keep the Windows expression without introducing a platform branch.
     float humanBonus = (difficultyValue + 1.0f) * 0.25f;
     float computerBonus = 0.75f - difficultyValue * 0.25f;
 
