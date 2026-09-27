@@ -1351,18 +1351,14 @@ std::string armyGroup::getMoraleDescription(
 // changed string expansion decisions, but do not establish alternate helper
 // declarations or justify adding candidate sites to this source.
 
-// [2026-08-21] +5.69 (84.5060 -> 90.1916) from the nine-town switch routing
-// below, and the two sides' instruction counts now agree exactly (332 = 332,
-// one `ret` each). What is left is a parameter-home family: retail spills
-// `currentLuck` into the dead `ourHero` parameter slot ([ebp+0x14]) the
-// moment GetLuck returns while this compile keeps it in EBX for the whole
-// body, and retail's empty-allocator scratch byte sits in the [ebp+0x10]
-// slot's high byte ([ebp+0x13]) where ours sits in the [ebp+0xc] slot's
-// ([ebp+0xf]). By the recorded scratch-slot rule that second fact reads as
-// retail's SECOND parameter being narrower than the `int luck` modelled
-// here - worth testing, but it is a non-additive change to a declarator
-// viewarmywindow.cpp also calls, so it needs an owner who can re-measure
-// that unit's rows in the same build.
+// Windows reads luck as a full DWORD, and Mac 0x5a18c subtracts from the
+// full-width saved argument. The allocator scratch byte in its high byte
+// does not establish a narrow parameter. Keep the recorded int interface.
+// The Halfling arm retains a string destruction call in Windows while the
+// final adjustment expands it. Naming only the creature name is byte-flat;
+// naming the formatted string extends its lifetime and drops 95.1677% to
+// 91.8743% (four reproduced states, three objects). Keep the temporary and
+// its existing formatString / append / destruction boundaries.
 // [2026-08-26] Scoping a signed-byte snapshot of `ourTown->type` under the
 // nonnull gate raises 90.1916 -> 92.3623. The cache preserves retail's 33
 // conditional branches and symbolic branch targets. A generated one-line
