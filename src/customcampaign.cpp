@@ -327,6 +327,9 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // prologue; numHeroes is re-read from the record on every pass. Mac calls
 // heroPower for candidate and then best at 0:0x91ecc/0:0x91ed8;
 // Complete expands both copies of this ordinary helper.
+// Reversing the equivalent comparison to heroPower(candidate) >
+// heroPower(best) preserves those source calls but moves VC6 from 98.3704%
+// to 96.19%; keep the natural best-first expression and both helper sites.
 VA(0x004840d0, 0x155) MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
@@ -2280,6 +2283,9 @@ void TCampaignBrief::ScenarioStruct::playText(bool epilogue)
 VA(0x00488fb0, 0x528) MAC_ADDRESS(0x097700, 0x6bc)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
+    // The direct speech->dispose() below is Windows byte-exact. Replacing it
+    // with ResourceManager::dispose(speech) keeps behavior but drops this
+    // body to 99.57%; this site retains the direct source call.
     // The subtitle completion flag can also end playback after input.
     // Retaining the event switch and testing finished removes three jumps
     // at unchanged 83.8848%; an if-chain for the same events gives 80.7396%.

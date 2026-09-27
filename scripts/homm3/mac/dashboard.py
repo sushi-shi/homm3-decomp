@@ -78,7 +78,9 @@ def collect(root: Path) -> dict:
     if baseline.is_file():
         for line in baseline.read_text().splitlines():
             if line and not line.startswith("#"):
-                scores.append(float(line.split("\t")[4]))
+                fields = line.split("\t")
+                if len(fields) < 9 or fields[8] == "1":
+                    scores.append(float(fields[4]))
     result["byte_match"] = {
         "scope": "admitted Mac pairs over verified spans only",
         "pairs": len(scores),

@@ -2041,6 +2041,9 @@ static long g_castWallIndexToCastOn = -1;
 // Naming the helper's string result (mutable or const) was reproduced and
 // rejected: its retained body falls from 100% to 94.53%, and this caller
 // moves from 99.9703% to 99.9294% without recovering the native slot pairing.
+// VC6 predict-inline's apparent self-call mismatch is a local jump pairing:
+// the 17 Mac calls retain the same game targets and order. Their two differing
+// vector destructor labels are MSL template ownership, not this helper body.
 VA(0x005a3250, 0x31C) MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {

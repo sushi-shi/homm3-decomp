@@ -193,9 +193,10 @@ void type_text_scroller::refresh(int firstLine)
 // Re-wraps the whole scroller around a new string. The wrap width is
 // re-tried at the narrow measure only when the wide one already fits, and
 // the slider is re-ranged or hidden from the resulting line count.
-// Residual (99.4444%): 29/30 blocks are exact; the empty-line push retains
-// one extra count argument. Calling insert(end(), value) directly perturbs
-// the /Ob2 frontier and falls to 97.03%, so keep the canonical push_back.
+// The final font release uses ResourceManager's canonical inline disposal
+// wrapper. That source call steers VC6's earlier empty-line push expansion
+// and closes the last block (99.4444% -> exact) while
+// retaining push_back and the same 17 ordered retail calls.
 VA(0x005BA6E0, 0x1EF) MAC_ADDRESS(0x25b8d8, 0x1dc)  // anchor-callee (font::FillLinesVector) + slider slots, retail-only
 void type_text_scroller::setText(const char* text)
 {
@@ -222,7 +223,7 @@ void type_text_scroller::setText(const char* text)
 
     for (unsigned int i = 0; i < m_lineImages.size(); i++)
         m_lineImages[i]->setText(m_textLines[i].c_str());
-    textFont->dispose();
+    ResourceManager::dispose(textFont);
 }
 
 // Retail vtable 0x642d0c slots 3/4 share the empty ret 8 / ret bodies

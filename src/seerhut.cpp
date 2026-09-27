@@ -95,13 +95,15 @@ std::string formatString(const char* format, ...);
 // three-column tables from it, then walk every row
 
 // Complete loads quest text from a spreadsheet; Dreamcast initializes a fixed table.
-// The name-row append is inferred from retail. Canonical push_back gives
+// The name-row append is inferred from retail. Canonical push_back gave
 // 79.8841%; direct insert formerly hid the remaining inline-context mismatch.
 // Mac's lightly optimized build confirms the source-shaped temporary string:
 // its constructor, vector push_back, and destructor are retained in order
 // (8/8 direct calls in the full function). Explicit/named string construction,
-// positive validation and the cell accessor do not recover VC6 retail's
-// retained string::assign during that conversion.
+// positive validation and the cell accessor did not recover VC6 retail's
+// retained string::assign during that conversion. Releasing the sheet through
+// ResourceManager's canonical inline helper restores that decision and makes
+// the Windows body exact without changing the seven retained calls.
 // E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
 VA(0x0056c3e0, 0x183) MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
@@ -126,7 +128,7 @@ unsigned char initializeSeerHutText()
         g_seerHutNames.push_back(name);
     }
 
-    sheet->dispose();
+    ResourceManager::dispose(sheet);
     return 1;
 }
 

@@ -574,8 +574,9 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType)
 // per-row stream's virtual base (guarded by the construction flag at
 // [ebp-0x14]), its strstreambuf and the stream itself.
 // resize(count), an explicit TObjectType() argument and a named default
-// object reproduce three objects without improving 73.3263%. Keep the
-// canonical constructor; the residual starts in its nested bitset expansion.
+// object reproduced three lower-scoring objects. The canonical inline
+// ResourceManager::dispose(resource*) calls at both exit paths restore the
+// nested expansion and make the whole Windows body exact (73.3263% -> 100%).
 
 VA(0x00514d80, 0x284) MAC_ADDRESS(0x224224, 0x244)  // anchor-callee ResourceManager::GetText + anchor-bracket NewfullMapFn_00505DA0; retail-only
 void TObjectTypeTable::load(char* filename)
@@ -592,10 +593,10 @@ void TObjectTypeTable::load(char* filename)
             row >> m_objectTypes[i];
         }
     } catch (...) {
-        text->dispose();
+        ResourceManager::dispose(text);
         throw;
     }
-    text->dispose();
+    ResourceManager::dispose(text);
 }
 
 VA_COMPGEN(0x00517780, 0xA3, TREE_CONST_ITERATOR_INC, string)

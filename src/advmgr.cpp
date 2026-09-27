@@ -814,25 +814,15 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // statements rather than a loop, which is why their null stores sink past
 // the following Dispose calls into one batch.
 
-// Residual (86.37%): ONE over-inline, and the whole rest of the delta is
-// its cascade. predict-inline reports exactly one divergence - retail
-// emits an out-of-line call to the Dinkumware destroy-range helper that
-// clear() -> erase(begin(), end()) reaches (`mov ecx,ebx; push [ebx+8];
-// push edi; call`, the ICF-folded empty pointer-destroy body the delinked
-// object labels sample_vslot03), where this compile elides it entirely.
-// That call is what pins retail's EBX to `lea ebx,[esi+0xd0]`, which in
-// turn evicts the element counter into [ebp-4], frees EDI to walk
-// boatFlagIcons (so retail spells the movingObjectSprite null store as an
-// immediate where ours reuses the EDI zero), and flips the EAX/EDX scratch
-// parity for every `mov <scratch>,[ecx]; call [<scratch>+4]` pair after
-// it. Our body is eight bytes shorter than retail's, which is that one
-// call plus its argument setup. Same family as mainmenu's TMainMenu ctor
-// and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
-// knob is caller body mass, not a vector spelling.
-
 // DC records two signed int indices, i and j. Reusing them across the
-// cleanup loops preserves the native operations and Windows 86.3656%.
-// Three index-scope/type controls produced two objects without a MAX gain.
+// cleanup loops preserves the native operations. Three index-scope/type
+// controls produced two objects without a MAX gain.
+// DC lines 1109..1192 use ResourceManager::Dispose for the sprite and
+// resource pointers. Keep the canonical inline wrapper at those source
+// calls; the two sample loops retain their retail virtual-call spelling.
+// The wrappers restore the retained destroy-range call and retail's loop
+// register allocation (86.37% -> 97.31%). Retail then proves an explicit
+// null guard on route-array deletion; together these recover exact VC6 bytes.
 VA(0x004077e0, 0x2D1) MAC_ADDRESS(0x007d0c, 0x3f4)  // anchor-vtable, dc 0x74ec
 void advManager::close()
 {
@@ -847,33 +837,32 @@ void advManager::close()
     }
 
     if (g_adventureGraphicsPreserveMode <= 0) {
-        m_radarIcons->dispose();
+        ResourceManager::dispose(m_radarIcons);
         m_radarIcons = 0;
-        m_cloudIcons->dispose();
+        ResourceManager::dispose(m_cloudIcons);
         m_cloudIcons = 0;
         for (i = 0; i < 18; i++) {
-            m_cursorIcons[i]->dispose();
+            ResourceManager::dispose(m_cursorIcons[i]);
             m_cursorIcons[i] = 0;
         }
         for (i = 0; i < m_cachedGraphics.size(); i++)
-            m_cachedGraphics[i]->dispose();
-        // Retail retains a nested destroy-range call here; the current
-        // clear expansion inlines it. Inline-depth(2) was byte-flat.
+            ResourceManager::dispose(m_cachedGraphics[i]);
+        // The canonical dispose calls restore retail's destroy-range call.
         m_cachedGraphics.clear();
-        m_movingObjectSprite->dispose();
+        ResourceManager::dispose(m_movingObjectSprite);
         m_movingObjectSprite = 0;
         for (i = 0; i < 3; i++) {
-            m_boatIcons[i]->dispose();
+            ResourceManager::dispose(m_boatIcons[i]);
             m_boatIcons[i] = 0;
-            m_boatFrothIcons[i]->dispose();
+            ResourceManager::dispose(m_boatFrothIcons[i]);
             m_boatFrothIcons[i] = 0;
             for (j = 0; j < 8; j++) {
-                m_boatFlagIcons[i][j]->dispose();
+                ResourceManager::dispose(m_boatFlagIcons[i][j]);
                 m_boatFlagIcons[i][j] = 0;
             }
         }
         for (i = 0; i < 8; i++) {
-            m_flagIcons[i]->dispose();
+            ResourceManager::dispose(m_flagIcons[i]);
             m_flagIcons[i] = 0;
         }
     }
@@ -885,27 +874,27 @@ void advManager::close()
         }
     }
     for (i = 1; i < 5; i++) {
-        m_riverTileset[i]->dispose();
+        ResourceManager::dispose(m_riverTileset[i]);
         m_riverTileset[i] = 0;
     }
     for (i = 1; i < 4; i++) {
-        m_roadTileset[i]->dispose();
+        ResourceManager::dispose(m_roadTileset[i]);
         m_roadTileset[i] = 0;
     }
-    m_borderTileset->dispose();
+    ResourceManager::dispose(m_borderTileset);
     m_borderTileset = 0;
-    m_arrowTileset->dispose();
+    ResourceManager::dispose(m_arrowTileset);
     m_arrowTileset = 0;
-    m_gemIcons[0]->dispose();
-    m_gemIcons[1]->dispose();
-    m_gemIcons[2]->dispose();
-    m_gemIcons[3]->dispose();
+    ResourceManager::dispose(m_gemIcons[0]);
+    ResourceManager::dispose(m_gemIcons[1]);
+    ResourceManager::dispose(m_gemIcons[2]);
+    ResourceManager::dispose(m_gemIcons[3]);
     m_gemIcons[0] = 0;
     m_gemIcons[1] = 0;
     m_gemIcons[2] = 0;
     m_gemIcons[3] = 0;
     for (i = 0; i < 10; i++) {
-        m_groundTileset[i]->dispose();
+        ResourceManager::dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
         m_heroSamples[i]->dispose();
         m_heroSamples[i] = 0;
@@ -914,7 +903,8 @@ void advManager::close()
     g_windowManager->removeWindow(m_advWindow);
     delete m_advWindow;
     m_advWindow = 0;
-    delete[] m_routeArray;
+    if (m_routeArray)
+        delete[] m_routeArray;
     m_routeArray = 0;
     m_status = 0;
     if (m_netMsgHandler) {

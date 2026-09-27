@@ -749,6 +749,9 @@ int game::saveSignPool(TAbstractFile* outfile)
     // DC game.cpp:874..888 records int count, int x, char char_buffer,
     // with each write/save result assigned before its separate guard.
     // Complete uses the abstract-file write in place of DC's gzwrite.
+    // Retail retains saveString in the loop, while this VC6 context expands
+    // it and its allocation chain. Initializing charBuffer at its declaration
+    // instead of assigning below is byte-flat (6.50%); keep the source call.
     int count;
     int x;
     char charBuffer;
@@ -961,6 +964,11 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
     return 0;
 }
 
+// DC game.cpp:1114..1174 records all five typed locals and the repeated
+// vector indexing/read order below. Retail retains every abstract-file read
+// and the boat loader, but expands one vector::size call that this TU keeps.
+// Mac comparison currently stops at the unresolved readValue<unsigned char>
+// glue reference; it supplies no byte verdict for this function yet.
 VA(0x004b9a00, 0x239) MAC_ADDRESS(0x0cbc7c, 0x28c)  // dc 0xa46e8
 int game::loadBoatPool(TAbstractFile* infile)
 {
@@ -6399,6 +6407,11 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
     return length;
 }
 
+// DC game.cpp:7317 names IsComputerTeam followed by IsHumanTeam. Complete
+// retains the latter call and expands the former wrapper. Replacing the
+// wrapper with !isHumanTeam raises Windows 76.07% to 80.72%, but loses its
+// negative-team guard; a named team local with the wrapper is byte-flat.
+// Keep both canonical source calls and the guard.
 VA(0x004c61e0, 0x4A8) MAC_ADDRESS(0x0dc98c, 0x3dc)  // dc 0xb1230
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
@@ -6519,6 +6532,9 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
+// DC game.cpp:7462 names NewfullMap::cell. The canonical game::getCell
+// wrapper expands to that call; spelling m_worldMap.cell directly is VC6
+// byte-flat here and does not resolve the remaining branch-shape difference.
 VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
@@ -8412,7 +8428,8 @@ void game::checkHeroConsistency()
 // E:\gamedcs\game.cpp:9833
 // Complete's town-name lookup has a 16-pointer faction stride, matching
 // initializeTownNameText and the Mac initializer at 0:0x1adff8. Correcting
-// that declaration makes this Windows body exact (57/57 CFG, 18/18 calls).
+// that declaration once made this Windows body exact. In the current TU,
+// the 18 calls still agree but the CFG is 60/57 blocks (95.81%).
 // The Mac body is independently bounded at 0:0xe2024..0xe21e0; its pair
 // proposal stays in build/mac/pairing until the game declaration view grows.
 VA(0x004caa70, 0x39C) MAC_ADDRESS(0x0e2024, 0x1bc)  // DC name/order + retail map/vector/string shape, dc 0xb69f4

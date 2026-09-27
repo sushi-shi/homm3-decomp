@@ -64,10 +64,49 @@ class TestMacTarget(unittest.TestCase):
                                    result("0x00400400", 5.0, "tokens1:b")])
             rows = {line.split("\t")[0]: line.split("\t")[4:] for line in baseline.read_text().splitlines()
                     if not line.startswith("#")}
-        self.assertEqual(rows["0x00400100"], ["50.0000", "60.0000", "70.0000", "tokens1:a"])
-        self.assertEqual(rows["0x00400200"], ["30.0000", "30.0000", "95.0000", "tokens1:new"])
-        self.assertEqual(rows["0x00400300"], ["15.0000", "20.0000", "20.0000", "tokens1:same"])
-        self.assertEqual(rows["0x00400400"], ["5.0000", "5.0000", "5.0000", "tokens1:b"])
+        self.assertEqual(rows["0x00400100"], ["50.0000", "60.0000", "70.0000", "tokens1:a", "0"])
+        self.assertEqual(rows["0x00400200"], ["30.0000", "30.0000", "95.0000", "tokens1:new", "1"])
+        self.assertEqual(rows["0x00400300"], ["15.0000", "20.0000", "20.0000", "tokens1:same", "1"])
+        self.assertEqual(rows["0x00400400"], ["5.0000", "5.0000", "5.0000", "tokens1:b", "1"])
+
+    def test_preservation_gate_requires_reviewed_one_checkpoint_exception(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "owner.cpp"
+            source.write_text("VA(0x00400100, 4) MAC_ADDRESS(0x100, 4)\n")
+            pair = pairs.Pair(0x400100, "unit", source, "owner::helper", 0,
+                              0x100, 4, ".helper", "va:0x00400100", line=1)
+            inventory = pairs.Inventory((pair,), (), {}, {}, ())
+            old = {"0x00400100": ["0x00400100", "unit", "0", "0x100", "60.0000",
+                                   "60.0000", "60.0000", "tokens1:abc", "1"]}
+            result = build.Result(retail_va="0x00400100", unit="unit", signature="owner::helper",
+                                  mac_section=0, mac_offset="0x100", size=4,
+                                  candidate_size=4, matching_bytes=2, score=50.0,
+                                  exact=False, source_hash="tokens1:def", target_sha256="t",
+                                  mac_symbol=".helper", resolved_calls=(), removed_reload_slots=(),
+                                  first_difference="+0x2")
+            problems, exceptions = build._preservation_problems([result], inventory, [], old)
+            self.assertEqual(len(problems), 1)
+            self.assertFalse(exceptions)
+
+            source.write_text("VA(0x00400100, 4) MAC_ADDRESS(0x100, 4) "
+                              "// MAC_ABSTRACTION_FROM(tokens1:abc,60.0000): "
+                              "restore the canonical owner helper\n")
+            problems, exceptions = build._preservation_problems([result], inventory, [], old)
+            self.assertFalse(problems)
+            self.assertEqual(len(exceptions), 1)
+
+            later = {"0x00400100": [*old["0x00400100"][:4], "50.0000", "60.0000",
+                                   "60.0000", "tokens1:def", "1"]}
+            lower = build.Result(**{**result.__dict__, "score": 40.0})
+            problems, exceptions = build._preservation_problems([lower], inventory, [], later)
+            self.assertEqual(len(problems), 1)  # old marker cannot waive a later drop
+            self.assertFalse(exceptions)
+
+            problems, _ = build._preservation_problems([], inventory, [], later)
+            self.assertIn("unavailable", problems[0])
+            legacy = {"0x00400100": later["0x00400100"][:8]}
+            problems, _ = build._preservation_problems([], inventory, [], legacy)
+            self.assertFalse(problems)  # pre-gate historical gap
 
     def test_selector_accepts_va_mac_offset_and_name(self):
         pair = pairs.Pair(0x4e51c0, "hero", Path("src/hero.cpp"), "hero::getHighestSchool",

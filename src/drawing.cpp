@@ -973,6 +973,9 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // DC1205/1207 and1303/1305/1307 prove both walks, but do not name their
 // counters, so sharing is a retail-tested lifetime hypothesis.
 // DrawFrame's DC public symbol ends _N00H00: five native Boolean flags.
+// DC drawing.cpp:1207/1307 names GetHexIndex in both grid walks. The two
+// canonical lowercase calls remain in the authored loops below; the audit
+// does not resolve their spelling to the older decorated name.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5) MAC_ADDRESS(0x0a5f6c, 0x758)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::drawFrame(bool update,

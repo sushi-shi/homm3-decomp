@@ -222,6 +222,10 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
+// A second-pass helper check finds the only unmatched retained call is the
+// nested tLimit at createLuckWidget; the canonical limit -> tLimit source
+// call already lives in that helper. Naming the getArmyLuck result in this
+// caller is byte-flat, so it does not recover the required inline decision.
 
 //  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
 //    rep movsd`) so hero::HeroFn_004E6120 can fold the hero's own

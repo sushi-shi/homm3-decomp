@@ -80,7 +80,7 @@ advmgr	?bvMessage@advManager@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x16210	token
 advmgr	?bvResMsg@advManager@@QAEXPBDHH@Z	100.0000	100.0000	100.0000	0x16060	tokens1:e9dc2f7072d8
 advmgr	?checkDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450	tokens1:1f6966eef1a6
 advmgr	?checkScreenScroll@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19820	tokens1:c42c13fa77a8
-advmgr	?close@advManager@@UAEXXZ	86.3656	86.3656	86.3656	0x77e0	tokens1:f371ea07ce76
+advmgr	?close@advManager@@UAEXXZ	100.0000	100.0000	100.0000	0x77e0	tokens1:c90f370916c2
 advmgr	?completeDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870	tokens1:56e3fecb7649
 advmgr	?completeDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0	tokens1:28bde9458485
 advmgr	?computeAdvNetControl@@YIXXZ	100.0000	100.0000	100.0000	0x1a660	tokens1:94c300f01a31
@@ -2820,7 +2820,7 @@ objecttype	?insert@?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TO
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x1167a0	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	100.0000	100.0000	100.0000	0x115ca0	-
 objecttype	?is@?$ctype@D@std@@QBE_NFD@Z	100.0000	100.0000	100.0000	0x119500	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	73.3263	73.3263	82.2717	0x114d80	tokens1:aecc2de3df9a
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	100.0000	100.0000	100.0000	0x114d80	tokens1:b913d6f6d6c8
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	100.0000	100.0000	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
@@ -3764,7 +3764,7 @@ seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0	
 seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173a70	tokens1:c471bf17ada4
 seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80	tokens1:93f6c194c72a
 seerhut	?hasExpired@type_quest@@QBEEXZ	100.0000	100.0000	100.0000	0x16ccb0	tokens1:cfc9b917b8ea
-seerhut	?initializeSeerHutText@@YIEXZ	79.8841	79.8841	100.0000	0x16c3e0	tokens1:ee98e6ae722e
+seerhut	?initializeSeerHutText@@YIEXZ	100.0000	100.0000	100.0000	0x16c3e0	tokens1:d685a3e6a10a
 seerhut	?insert@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAEPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@PAV32@ABV32@@Z	100.0000	100.0000	100.0000	0xaf350	-
 seerhut	?isSatisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800	tokens1:93b892a98aa9
 seerhut	?isSatisfied@type_be_hero_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f00	tokens1:90c725828dbf
@@ -4350,7 +4350,7 @@ textscroller	?close@type_text_slider@@UAEXXZ	100.0000	100.0000	100.0000	0x1b9fa0
 textscroller	?main@type_text_scroller@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ba4c0	tokens1:244fb5b25eff
 textscroller	?open@type_text_scroller@@UAEHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1ba2e0	tokens1:7b921104b1ed
 textscroller	?refresh@type_text_scroller@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ba600	tokens1:bf9a6ce6d0eb
-textscroller	?setText@type_text_scroller@@QAEXPBD@Z	99.4444	99.4444	99.4444	0x1ba6e0	tokens1:8d562b705089
+textscroller	?setText@type_text_scroller@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x1ba6e0	tokens1:a3a23ea54633
 textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	100.0000	100.0000	100.0000	0x1bc760	tokens1:2fcb90d9c98f
 textwdgt	??0textWidget@@QAE@HHHHPBD0W4TColor@font@@HIHH@Z	100.0000	100.0000	100.0000	0x1bc280	tokens1:ff64d558ac37
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0	cc83e8635640
@@ -4399,7 +4399,7 @@ town	?giveSpells@town@@QBEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1be030	token
 town	?hasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0	tokens1:b50503afce0b
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0	tokens1:d2853d2508f6
 town	?increasePopulation@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.0000	0x1bfdd0	tokens1:5cc4d188ea70
-town	?initialize@town@@QAEXPBVTownExtra@@@Z	89.7688	89.7688	100.0000	0x1c0670	tokens1:1225099ff020
+town	?initialize@town@@QAEXPBVTownExtra@@@Z	91.0983	91.0983	100.0000	0x1c0670	tokens1:1225099ff020
 town	?initializeBuildingCostsTables@town@@SIEXZ	100.0000	100.0000	100.0000	0x1c14c0	tokens1:6977d74db776
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c08c0	tokens1:e8c1524616de
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:12a6d91f4df1

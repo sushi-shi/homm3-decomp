@@ -770,6 +770,8 @@ hero::hero()
 // All current differences begin in the custom-name string assignment. Moving
 // initialSex to its use or reading the trait directly falls to 81.3926%;
 // commuting the aggression product is flat (six states, three objects).
+// Spelling the existing string operation as assign("") is byte-flat;
+// retain the ordinary assignment and its canonical library helpers.
 VA(0x004d8720, 0x410) MAC_ADDRESS(0x0f3fe4, 0x568)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -1232,6 +1234,8 @@ std::bitset<70> markSpells(TSpellSchool school)
 
 // Mac f5034/f50e8 initializes each result through the no-argument
 // three-word zeroing body e7378, with no unsigned-long value argument.
+// Mac retains all 11 expected helpers, but direct Tome returns lower VC6
+// from 97.56% to 77.57%; keep the shared result assignment and clear tail.
 VA(0x004d9350, 0x272) MAC_ADDRESS(0x0f50bc, 0x214)  // retail artifact-id dispatch + bitset return, retail-only
 std::bitset<70> markArtifactSpells(int artifactId)
 {
@@ -4618,8 +4622,10 @@ void hero::transferArtifacts(hero* src)
 // Mac loads the component count before counting classSlots. Naming that
 // reference and advancing slot before remaining raises Windows to 98.48%.
 // The initial mask test now uses the canonical artifactAllowedInSlot helper;
-// VC6 expands it byte-identically. A do/while spelling of the outer loop
-// drops to 95.24%, so retain the for shape while resolving its exit branch.
+// VC6 expands it byte-identically. Both a do/while spelling and a top-tested
+// for(;;) with an explicit break drop to 95.24%, so retain this for shape.
+// Mac retains six bitset test/count calls in the same order as this body;
+// its call census shows no missing callee at this boundary.
 // The residual is the empty-mask branch and outer-loop exit polarity.
 VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)

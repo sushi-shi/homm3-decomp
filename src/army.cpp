@@ -2881,6 +2881,9 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
 // A 17-state original-damage capture family (two emitted objects) also
 // does not improve 98.5227%: int/long captures, const qualifiers, block
 // lifetimes and return-then-add all leave the add-register choice unresolved.
+// The natural `amount += attackerBonus(...) + defenderBonus(...)` grouping
+// also compiles to the same 98.5227% Windows body. Mac still retains the
+// defender-bonus call; keep both canonical calls while resolving allocation.
 VA(0x00443e30, 0x101) MAC_ADDRESS(0x04fd8c, 0xf4)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
 long army::getEstimatedDamage(const army* target, long amount,

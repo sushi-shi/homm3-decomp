@@ -1603,6 +1603,9 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
 // after prompt construction, while this compile keeps it in EDI. The other
 // 114/115 blocks are an alignment cascade from this one allocator choice,
 // not evidence for a source control-flow rewrite.
+// Naming the HasCreatures result (94.82%) or the guards reference (90.78%)
+// worsens VC6; naming getOwner scores 99.07%, and a typed generator pointer
+// is byte-flat. Keep the canonical calls and current reference lifetime.
 VA(0x004a18b0, 0x79A) MAC_ADDRESS(0x0acbec, 0x7c8)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
 void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
                                           type_point point, bool humanPlayer)

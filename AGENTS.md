@@ -112,6 +112,14 @@ Mac linking inventories are not a required work queue.
 `homm3 mac calls <Windows-VA>` compares call sites and ordered targets.
 Indirect calls through the reviewed Mac glue remain explicitly unknown;
 equal aggregate counts do not prove a matching helper/inlining decision.
+The full build gates every currently scored Mac pair against its preceding
+Mac CUR and refuses loss of a previously available comparison. Preserve Mac
+score while matching Windows. A proven move to a higher-level canonical helper
+may lower Mac temporarily; document that one checkpoint on the function's
+`MAC_ADDRESS` line with
+`// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
+The old hash and score must match the preceding ledger, so this cannot waive
+later regressions. Fast builds report scores without checkpointing.
 A pair is a source `MAC_ADDRESS` claim whose body the unit's full-TU
 CodeWarrior object (`ninja mac:<unit>`) emits; `homm3 mac build` scores it.
 Follow the [Mac tooling guide](docs/tooling/mac-matching-roadmap.md) to add

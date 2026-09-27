@@ -1473,6 +1473,8 @@ void showBuildingRewards(const town* thisTown,
 // The creature twin emits "<count> <name>" per reward with the same separators,
 // selects singular/plural by count, and drives the outer format by the first
 // reward's count.
+// Feeding formatString a second direct reward-count expression scores 91.42%
+// instead of 99.0596%; the shared count local preserves its retail lifetime.
 VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward), dc 0x167a8c
 void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
@@ -1509,15 +1511,19 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 // Complete expands the ordinary initializer into town::initialize. Its custom
 // army path additionally resolves the map format's negative random-tier IDs;
 // DC's older body copied those creature IDs directly. Both use getArmy's
-// canonical garrison/hero selection at every read and write.
+// canonical garrison/hero selection at every read and write. Complete's
+// read uses the retained const getArmy twin (0x5c1460); selecting
+// that overload for the troop-count test raises initialize from 89.77% to
+// 91.10% while preserving the mutable calls for writes.
 MAC_ADDRESS(0x1b648c, 0x1ac)
 static void initializeArmy(town* currentTown, const TownExtra* townSetup)
 {
+    const town* townView = currentTown;
     if (townSetup->m_customArmies) {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             currentTown->getArmy().m_numTroops[slot] =
                 townSetup->m_townArmy.m_numTroops[slot];
-            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+            if (townView->getArmy().m_numTroops[slot] > 0) {
                 int troop = townSetup->m_townArmy.m_armies[slot];
                 if (troop <= -2) {
                     int tier = (-2 - troop) / 2;

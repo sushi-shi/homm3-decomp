@@ -1360,6 +1360,13 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // retaining the native forms improves the paired Mac body 31.66 -> 34.96%.
 // Native 0x84684/0x846ec writes newIndex into both tower slots. Those
 // source assignments are VC6 byte-flat and improve Mac to 61.67%.
+// At the current Windows 99.9464% plateau the first reported difference,
+// +0x124, loads the same wall-target datum under the source s_wallTargets
+// and retail wallTargets labels; four masked instruction rows still differ.
+// All nine Windows calls and thirteen Mac calls retain their named order.
+// DC command.cpp:2129 passes army::get_controlling_side into the older
+// ShotIsThroughWall signature. Complete's canonical helper takes the army
+// instead and reads its controlling side inside that retained body.
 
 VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global, dc 0x6d58c
 int combatManager::getCommand(int newIndex)
@@ -2401,6 +2408,9 @@ void combatManager::processFirstAid(army* currentArmy)
 // pristine VC6 XSTRING calls _Tidy from that same default constructor.
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
+// Mac retains testRaiseDoor in this caller. Windows binds the corresponding
+// call to raiseDoor after expanding the forwarding wrapper; keep the canonical
+// source call despite that retained-call difference.
 VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {

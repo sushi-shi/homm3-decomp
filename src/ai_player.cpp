@@ -1463,6 +1463,9 @@ static void markValues(long* fullValue, long totalValue,
 // Mac passes building IDs directly: the prior memcpy conversions and their
 // temporary-only scopes were reconstruction scaffolding. Ordinary enum casts
 // retain all game helper calls and recover Windows 84.7770% -> 93.6425%.
+// The retained Mac game-call sequence also agrees here (14 calls on each
+// side). Its two differing targets are zero-fill runtime calls (`bzero`
+// versus `memset`), so changing a game helper cannot resolve those sites.
 VA(0x0042ae00, 0x718) MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchaseBuilding(
     unsigned char* prohibitedCreatures)

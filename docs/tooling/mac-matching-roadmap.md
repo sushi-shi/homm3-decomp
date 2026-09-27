@@ -17,6 +17,14 @@ hunk at the claimed address and compares it with the pinned PEF; the Mac
 CUR/MAX/HIST ledger `config/mac/match_baseline.tsv` is keyed by the VA, and a
 VA not scored in a checkpoint keeps its previous row. MAX follows the
 definition's own token fingerprint, as in the Windows ledger.
+The full checkpoint also records whether each pair scored. The next full
+build fails if an available pair becomes unavailable or its Mac CUR falls
+below the preceding CUR. Historical unavailable rows are retained but are
+not mistaken for new losses. A reviewed move to a higher-level canonical
+helper can carry a one-checkpoint exception on its `MAC_ADDRESS` line:
+`// MAC_ABSTRACTION_FROM(tokens1:<old-hash>,<old-cur>): <specific reason>`.
+The hash and score must match the preceding ledger; a later drop needs new
+evidence. Fast builds remain diagnostic and do not update this checkpoint.
 
 Call targets resolve from the same join: every symbol a full-TU object emits
 or references names the claim of the one definition it mangles, plus the

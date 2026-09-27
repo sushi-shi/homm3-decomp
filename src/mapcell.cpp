@@ -4009,6 +4009,8 @@ void NewfullMap::rebuildObjectTypeIndex()
 // count (sp+0x30) owns read lengths and object-reader status; int v (sp+0x2c)
 // scans invalid placements. This ownership and the two braced read guards
 // reproduce retail, including its distinct empty/nonempty vector cleanups.
+// Naming the canonical GetSprite result inside the sprite loop drops Windows
+// from 99.5485% to 98.34%; its direct vector assignment keeps the peak.
 VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {

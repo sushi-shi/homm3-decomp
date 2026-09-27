@@ -275,6 +275,8 @@ void TCampaignBrief::updateAllyEnemyFlags()
 // on the first arrow (72.43%), second arrow (71.91%), or both (76.12%), and
 // three-argument `insert(end(), 1, value)` on the second arrow (77.52%); each
 // changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
+// Naming m_widgets as one reference across all eight appends likewise moves
+// the inline frontier and scores 98.26%, so the member accesses stay direct.
 VA(0x00458120, 0xC1C) MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor), dc 0x58dac
 void TCampaignBrief::addBonusIcons()
 {
