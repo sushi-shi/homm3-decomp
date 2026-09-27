@@ -3431,8 +3431,10 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
         if (getMapExtra(point) & g_curPlayerBit) {
-            destination.m_moveCost -= currentPathCell->m_cost;
+            // Mac0x32b48/0x32b4c snapshots the last point before the
+            // movement refund at0x32b50..0x32b5c. Keep the same source order.
             point = currentPathCell->m_lastPoint;
+            destination.m_moveCost -= currentPathCell->m_cost;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
             destination.m_moveCost += lastCell->m_cost;
         }
