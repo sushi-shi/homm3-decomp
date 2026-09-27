@@ -45,6 +45,22 @@ def _raw_code_names(root):
     return names
 
 
+def _disassembly_words(decoder, data: bytes, address: int):
+    """Inspect every PPC word, retaining unsupported words and partial tails."""
+    for offset in range(0, len(data), 4):
+        word = data[offset:offset + 4]
+        instruction = (next(iter(decoder.disasm(word, address + offset, count=1)), None)
+                       if len(word) == 4 else None)
+        if instruction is not None:
+            yield instruction
+        else:
+            yield SimpleNamespace(address=address + offset, bytes=word,
+                                  mnemonic=".long" if len(word) == 4 else ".byte",
+                                  op_str=(f"0x{word.hex()} ; undecoded instruction"
+                                          if len(word) == 4 else
+                                          ", ".join(f"0x{byte:02x}" for byte in word)))
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="homm3 mac", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -453,16 +469,13 @@ def main(argv=None) -> int:
         if args.command == "disasm":
             from capstone import Cs, CS_ARCH_PPC, CS_MODE_32, CS_MODE_BIG_ENDIAN
             decoder = Cs(CS_ARCH_PPC, CS_MODE_32 | CS_MODE_BIG_ENDIAN)
-            if args.size is not None:
-                names = _raw_code_names(common.HOMM3_DIR)
-            else:
-                names = {(address.section, address.offset): name
-                         for name, address in symbols.addresses(common.HOMM3_DIR, pef).items()}
+            # Retail inspection does not depend on candidate object identities.
+            names = _raw_code_names(common.HOMM3_DIR)
             loader = Loader(pef)
             toc = loader.toc()
             data_names = {(claim.mac_section, claim.mac_offset): claim.name
                           for claim in load_data(common.HOMM3_DIR)}
-            for instruction in decoder.disasm(target, pair.mac_offset):
+            for instruction in _disassembly_words(decoder, target, pair.mac_offset):
                 note = ""
                 word = int.from_bytes(instruction.bytes, "big")
                 if word >> 26 == 18:

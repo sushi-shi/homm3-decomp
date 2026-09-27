@@ -442,11 +442,7 @@ void type_AI_player::calculateDemand()
     std::vector<type_creature_value> creatures(145);
     int creatureIndex;
     for (creatureIndex = 0; creatureIndex < 145; creatureIndex++) {
-        {
-            int value = creatureIndex;
-            memcpy(&creatures[creatureIndex].m_type, &value,
-                   sizeof creatures[creatureIndex].m_type);
-        }
+        creatures[creatureIndex].m_type = H3_ENUM_DECODE(TCreatureType, creatureIndex);
         creatures[creatureIndex].m_amount = 0;
     }
 
@@ -1106,11 +1102,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
     int i;
     for (i = 0; i < 7; ++i) {
         if (supply[i] > 0) {
-            EGameResource resource;
-            {
-                int ordinal = i;
-                memcpy(&resource, &ordinal, sizeof resource);
-            }
+            EGameResource resource = H3_ENUM_DECODE(EGameResource, i);
             marketValue = static_cast<long>(
                 getMarketValue(resource) * supply[i]
                 * efficiency + marketValue);
@@ -1201,21 +1193,9 @@ void type_AI_player::doResourceTrade(int* supply)
         for (int dest = 0; dest < 7; ++dest) {
             if (supply[dest] >= 0)
                 continue;
-            double ratio;
-            {
-                EGameResource sourceResource;
-                EGameResource destResource;
-                {
-                    int ordinal = source;
-                    memcpy(&sourceResource, &ordinal, sizeof sourceResource);
-                }
-                {
-                    int ordinal = dest;
-                    memcpy(&destResource, &ordinal, sizeof destResource);
-                }
-                ratio = getTradeRatio(sourceResource, destResource,
-                                      efficiency);
-            }
+            double ratio = getTradeRatio(H3_ENUM_DECODE(EGameResource, source),
+                                         H3_ENUM_DECODE(EGameResource, dest),
+                                         efficiency);
             long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
             long limit = static_cast<long>(
                 static_cast<long>(supply[source] / ratio) * ratio);
@@ -1390,13 +1370,8 @@ static __int64 getRequirements(const town* currentTown,
     int k = building;
     while (k < MAX_BUILDING_TYPE) {
         if (requirements & g_bitNumber[k]) {
-            {
-                type_building_id buildingId;
-                int ordinal = k;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                if (!currentTown->isLegalBuilding(buildingId))
-                    return 0;
-            }
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, k)))
+                return 0;
             seen |= g_bitNumber[k];
             requirements |= g_hierarchyMask[currentTown->m_type][k];
             requirements &= ~currentTown->getBuildingMask();
@@ -1418,13 +1393,8 @@ static void getFullCost(const town* currentTown, int* result,
 {
     for (int k = 0; k < MAX_BUILDING_TYPE; ++k) {
         if (requirements & g_bitNumber[k]) {
-            int* costs;
-            {
-                type_building_id buildingId;
-                int ordinal = k;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                costs = currentTown->getBuildCostArray(buildingId);
-            }
+            int* costs = currentTown->getBuildCostArray(
+                H3_ENUM_DECODE(type_building_id, k));
             for (int i = 0; i < 7; ++i)
                 result[i] += costs[i];
         }
@@ -1467,6 +1437,12 @@ static void markValues(long* fullValue, long totalValue,
 // Restoring these canonical calls moves the current Windows comparison from
 // 84.31% to 84.78% and raises exact CFG blocks from 8 to 30; the changed
 // inliner state additionally retains game::getHero in valueOfBuilding.
+// The same direct conversions in getRequirements/getFullCost raise this
+// caller further to 94.1381%; canTradeResources remains byte-identical when
+// its ordinary named resource local is retained.
+// Mac passes building IDs directly: the prior memcpy conversions and their
+// temporary-only scopes were reconstruction scaffolding. Ordinary enum casts
+// retain all game helper calls and recover Windows 84.7770% -> 93.6425%.
 VA(0x0042ae00, 0x718) MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchaseBuilding(
     unsigned char* prohibitedCreatures)
@@ -1490,37 +1466,23 @@ unsigned char type_AI_player::purchaseBuilding(
         memset(extraCosts, 0, sizeof(extraCosts));
         int building;
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                if (!currentTown->isLegalBuilding(buildingId)
-                    || currentTown->hasBuilding(building, true)
-                    || building == HOLY_GRAIL_ID) {
-                    basicValue[building] = -1;
-                    continue;
-                }
+            if (!currentTown->isLegalBuilding(H3_ENUM_DECODE(type_building_id, building))
+                || currentTown->hasBuilding(building, true)
+                || building == HOLY_GRAIL_ID) {
+                basicValue[building] = -1;
+                continue;
             }
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                basicValue[building] = valueOfBuilding(
-                    currentTown, buildingId,
-                    prohibitedCreatures, extraCosts[building]);
-            }
+            basicValue[building] = valueOfBuilding(
+                currentTown, H3_ENUM_DECODE(type_building_id, building),
+                prohibitedCreatures, extraCosts[building]);
         }
 
         memset(fullValue, 0, sizeof(fullValue));
         for (building = 0; building < MAX_BUILDING_TYPE; ++building) {
             if (basicValue[building] <= 0)
                 continue;
-            {
-                type_building_id buildingId;
-                int ordinal = building;
-                memcpy(&buildingId, &ordinal, sizeof buildingId);
-                requirements = getRequirements(currentTown, buildingId);
-            }
+            requirements = getRequirements(
+                currentTown, H3_ENUM_DECODE(type_building_id, building));
             if (requirements == 0)
                 continue;
             getFullCost(currentTown, extraCosts[building],
@@ -1546,12 +1508,7 @@ unsigned char type_AI_player::purchaseBuilding(
         return 0;
 
     int cost[7];
-    {
-        type_building_id buildingId;
-        int ordinal = bestBuilding;
-        memcpy(&buildingId, &ordinal, sizeof buildingId);
-        bestTown->getBuildCost(buildingId, cost);
-    }
+    bestTown->getBuildCost(H3_ENUM_DECODE(type_building_id, bestBuilding), cost);
     tradeResources(cost, 1);
     if (g_game->townAlreadyBuiltOn(bestTown->m_id))
         return 0;
@@ -1567,13 +1524,8 @@ unsigned char type_AI_player::purchaseBuilding(
                 return 0;
         }
     }
-    {
-        type_building_id buildingId;
-        int ordinal = bestBuilding;
-        memcpy(&buildingId, &ordinal, sizeof buildingId);
-        if (!bestTown->buyBuilding(buildingId))
-            return 0;
-    }
+    if (!bestTown->buyBuilding(H3_ENUM_DECODE(type_building_id, bestBuilding)))
+        return 0;
     calculateDemand();
     return 1;
 }
@@ -2265,8 +2217,14 @@ long type_AI_creature_swapper::valueOfAddingArmy(
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         // Mac 0x30354 expands getAlignment again for this threshold.
-        int minimumMorale =
-            g_game->getAlignment(type) == TOWN_NECROPOLIS ? 2 : 1;
+        // Mac 0x30380..0x30390 assigns the two threshold values in separate
+        // branches. This spelling improves Windows 80.3322% -> 82.4178%
+        // while preserving the second getAlignment and morale helper calls.
+        int minimumMorale;
+        if (g_game->getAlignment(type) == TOWN_NECROPOLIS)
+            minimumMorale = 2;
+        else
+            minimumMorale = 1;
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)
@@ -2423,18 +2381,12 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // source - a fresh `short count` from MaxBuyableCreatures, and `short count =
 // best_number` after the assignment - are byte-flat at 97.2740, so the extra
 // slot is the allocator's, not a source local.
-// Mac O3 agrees on all nine named calls and unrolls the resource deduction.
-// The Mac declaration view now follows MSL vector's data()+index access;
-// this raised the score from 61.01% to 81.10%. Declaring function-scope slot
-// before resourceCost raises Mac to 81.25%, restores retail's 0xf0 frame and
-// moves the first mismatch from +0x2b to +0x77. Windows stays at 97.29%.
-// Mac still places resourceCost and slot four bytes earlier than retail.
-// Moving sourceIndex after the initialized best-state locals regresses Mac
-// to 78.72%, so that order was not retained.
-// Putting bestSlot before bestValue lowers Mac to 79.17%. A final-loop int counter
-// raises Mac to 81.25% and matches the 0xf0 frame, but lowers VC6 to 96.74%;
-// the retail dword counter is also emitted from this short spelling, so the
-// type is not independently proved.
+// Native Mac retains all nine named calls and unrolls resource deduction.
+// An int resource counter restores resourceCost at SP+0x98 and slot at
+// SP+0xb4: the first 0x164 bytes now agree. Windows moves 97.29 ->96.76;
+// keep the native local model while resolving the final register roles.
+// A separate final quantity is byte-flat; a shared function-scope creature
+// type changes the already-matching prefix, so neither probe is retained.
 VA(0x0042d420, 0x264) MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller; dc 0x32038
 long type_AI_creature_purchaser::doBestPurchase(
     unsigned char tradeAllowed)
@@ -2495,7 +2447,7 @@ long type_AI_creature_purchaser::doBestPurchase(
             getMonsterCost(type, resourceCost);
             bestNumber = maxBuyableCreatures(
                 m_funds, type, m_creatures[bestSource].m_number);
-            for (short resource = 0; resource < 7; ++resource)
+            for (int resource = 0; resource < 7; ++resource)
                 m_funds[resource] -= resourceCost[resource] * bestNumber;
             m_creatures[bestSource].m_number -= bestNumber;
         }
@@ -3127,7 +3079,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
             isNearby = 0;
 
         long candidateRaw = netValueOfLocation(
-            currentHero, &point, strategicMap, currentPathCell, g_searchArray);
+            currentHero, point, strategicMap, currentPathCell, g_searchArray);
         long value = candidateRaw;
         if (candidateRaw > 0) {
             if (point.m_moveCost > 100)
@@ -3385,6 +3337,8 @@ long markDestinations(hero* currentHero, long maxDistance,
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
+    // DC records one function-scope point; use it for the friend's target
+    // and fallback location. This lifetime spelling is byte-flat in VC6.
     type_point point;
     heroDanger = currentSearchArray->getDangerValue(
         currentHero->getLocation());
@@ -3404,10 +3358,10 @@ long markDestinations(hero* currentHero, long maxDistance,
         if (!friendCell->m_visited)
             continue;
 
-        type_point target = friendly->getTarget();
+        point = friendly->getTarget();
         unsigned short extraCost;
-        if (!target.isValid()) {
-            target = friendly->getLocation();
+        if (!point.isValid()) {
+            point = friendly->getLocation();
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;
@@ -3417,10 +3371,10 @@ long markDestinations(hero* currentHero, long maxDistance,
                 extraCost -= friendly->m_movePoints;
         }
 
-        NewmapCell* targetCell = g_advManager->getCell(target);
+        NewmapCell* targetCell = g_advManager->getCell(point);
         g_advManager->m_advWindow->animateBottomView(0);
         friendlySearch.seedPosition(
-            friendly, target, type_point(-1, -1, -1),
+            friendly, point, type_point(-1, -1, -1),
             friendly->m_maxMovePoints,
             targetCell->m_groundSet == eTerrainWater, const_AI_allied_search,
             friendly->m_maxMovePoints, 0);
@@ -3440,6 +3394,12 @@ long markDestinations(hero* currentHero, long maxDistance,
     return heroDanger;
 }
 
+// Dreamcast dc0x33854 proves HeroDestination&. Complete passes the same
+// address and has no nullable path; the previous pointer exception cited an
+// authored symbol label, not a symbol present in the stripped retail image.
+// Reference and pointer share the machine ABI. Retain the reference model
+// through its frame-allocation dip (0x10 versus retail0x18) and recover the
+// caller/callee lifetimes together; all seven named calls remain intact.
 // Residual (85.35%): flow-distance 0; why-reg v2 reports first defs agree
 // (ebx=destination, esi=point, edi=point) and the residual is a mid-body
 // edx<->ecx x15 / eax<->ebx x12 rename family plus retail's RMW
@@ -3456,19 +3416,21 @@ long markDestinations(hero* currentHero, long maxDistance,
 // value, and the hero's current path target scales the result by 1.5 (+20)
 // where anything else is scaled by Random(1,25)+75 percent.
 VA(0x0042f980, 0x2c9) MAC_ADDRESS(0x032a90, 0x454)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
-int netValueOfLocation(hero* currentHero, HeroDestination* destination,
+int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
-    type_point point = destination->m_point;
+    type_point point = destination.m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
         if (getMapExtra(point) & g_curPlayerBit) {
-            destination->m_moveCost -= currentPathCell->m_cost;
+            // Mac0x32b48/0x32b4c snapshots the last point before the
+            // movement refund at0x32b50..0x32b5c. Keep the same source order.
             point = currentPathCell->m_lastPoint;
+            destination.m_moveCost -= currentPathCell->m_cost;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
-            destination->m_moveCost += lastCell->m_cost;
+            destination.m_moveCost += lastCell->m_cost;
         }
     }
 
@@ -3481,19 +3443,19 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
 
     if (!g_adventureObjectTraits[type].m_blocksLanding) {
         type_point monsterPos;
-        if (g_advManager->findAdjacentMonster(destination->m_point,
+        if (g_advManager->findAdjacentMonster(destination.m_point,
                                               &monsterPos,
-                                              destination->m_point)) {
+                                              destination.m_point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
                 value += aiValueOfEvent(currentHero, monsterPos,
-                                           destination->m_moveCost);
+                                           destination.m_moveCost);
         }
     }
 
-    if (destination->m_point.m_x == currentHero->m_pathTargetX
-        && destination->m_point.m_y == currentHero->m_pathTargetY
-        && destination->m_point.m_z == currentHero->m_pathTargetZ) {
+    if (destination.m_point.m_x == currentHero->m_pathTargetX
+        && destination.m_point.m_y == currentHero->m_pathTargetY
+        && destination.m_point.m_z == currentHero->m_pathTargetZ) {
         float scaled = static_cast<float>(value);
         if (value < 0)
             scaled = scaled / 1.5f;
@@ -3501,7 +3463,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
             scaled = scaled * 1.5f;
         int result = static_cast<int>(scaled) + 20;
         if (currentHero->m_targetIsCritical) {
-            destination->m_isCritical = 1;
+            destination.m_isCritical = 1;
             return result;
         }
         return result;
@@ -4861,14 +4823,8 @@ long aiGetValueOfArtifact(type_artifact artifact, const hero* owner, unsigned ch
             return 0;
         if (!equipped && owner->spellIsAvailable(artifact.m_extra))
             return 0;
-        // The ordinal copy belongs to this scroll appraisal. Keep memcpy
-        // so the bridge preserves bits without an out-of-range enum cast.
-        SpellID spell;
-        {
-            int ordinal = artifact.m_extra;
-            memcpy(&spell, &ordinal, sizeof spell);
-        }
-        return aiGetSpellValue(owner, spell);
+        return aiGetSpellValue(
+            owner, H3_ENUM_DECODE(SpellID, artifact.m_extra));
     }
 
     case ARTIFACT_HOLY_GRAIL:
@@ -5440,7 +5396,10 @@ void aiInitialize()
 // retail expands that nested base while VC6 gives the current natural source
 // 56 budget units for a 63-unit callee. In-class and ordinary constructor
 // definitions are byte-flat; inline_depth(255) is also flat. No synthetic
-// force-inline or pragma is retained.
+// force-inline or pragma is retained. A combat-artifact member initializer
+// moves its bonus store before the derived vptr, contradicting retained
+// Windows order (constructor 100 -> 96.12). Explicit base initialization
+// with the original body assignment is byte-flat for constructor and caller.
 VA(0x00434100, 0x490) MAC_ADDRESS(0x036748, 0x4b4)  // tail target/fresh frame + DC helper, dc 0x35f08
 static void initializeArtifactEffects()
 {

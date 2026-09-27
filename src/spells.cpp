@@ -754,12 +754,12 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     if (validHex(targetIndex) && spellTargetsASingleArmy(spellId, mastery)) {
         // CastSpell -> find_spell_target: Dreamcast line 696
         // records the helper call and retail +0x276 retains its REL32.
-        // Negative control: with normal depth VC6 expands the helper into
-        // its three leaf callees (0 find_spell_target calls; 82.4456%).
-#pragma inline_depth(0)
+        // Without diagnostic depth pins, VC6 expands both calls while retail
+        // retains them (castSpell MAX 93.98 -> 92.47). CodeWarrior retains
+        // both calls, as does Mac retail; its empty depth reset was illegal.
+        // Recover the Windows inlining state without suppressing inlining.
         target = findSpellTarget(
             spellId, m_currentSide, targetIndex, 1, isMonsterSpell);
-#pragma inline_depth()
     } else {
         target = 0;
     }
@@ -812,11 +812,9 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                     0);
         // CastSpell -> find_spell_target: Dreamcast line 759
         // records this redirected-target call and retail +0x478 retains it.
-        // The same flattening negative control above removes both calls.
-#pragma inline_depth(0)
+        // Windows inlining state remains the same unfinished lead as above.
         target = findSpellTarget(
             spellId, otherSide, secondaryIndex, 0, isMonsterSpell);
-#pragma inline_depth()
         redirected = 1;
     } else {
         redirected = 0;
@@ -2618,11 +2616,13 @@ long combatManager::pointToHex(tagPOINT point)
 }
 
 // E:\gamedcs\spells.cpp:3138, dc 0x1536d4.
+// Mac 0x194c3c/0x194c48 subtracts start from stop; the same canonical
+// operand order restores both Windows hex collectors to exact bytes.
 MAC_ADDRESS(0x194c08, 0xd0)
 long combatManager::getDistance(tagPOINT start, tagPOINT stop)
 {
-    long dx = start.x - stop.x;
-    long dy = start.y - stop.y;
+    long dx = stop.x - start.x;
+    long dy = stop.y - start.y;
     if ((dx < 0) == (dy < 0))
         return cppMax(abs(dx), abs(dy));
     return abs(dx) + abs(dy);
@@ -4180,13 +4180,15 @@ void combatManager::removeCorpse(army* corpse)
 }
 
 // The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
-// stack takes its cell.
+// stack takes its cell. DC records the SAMPLE2 local as sound. Native quick
+// combat skips its initialization; a zero-initialized ternary adds absent
+// stores and changes the POD return-object path. Keep the conditional load.
 VA(0x005a7390, 0x1CB) MAC_ADDRESS(0x1984ec, 0x200)  // dc 0x1566f8
 void combatManager::demonicResurrection(const army* caster, army* target)
 {
-    SAMPLE2 sample;
-    if (!static_cast<const combatManager*>(this)->isQuickCombat())
-        sample = loadPlaySample(
+    SAMPLE2 sound;
+    if (!isQuickCombat())
+        sound = loadPlaySample(
             DATA_COMPGEN(0x00660af4, resurrectSampleName, "Resurect.wav"));
 
     removeCorpse(target);
@@ -4198,7 +4200,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
                            target->m_gridIndex, 0, 1);
     demons->m_originalIndex = origPosition;
     resetLimitCreature();
-    if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
+    if (!isQuickCombat()) {
         updateGrid(0, 1);
         drawFrame(1, 0, 0, 0, 1, 0);
         if (raised != 1)
@@ -4208,7 +4210,7 @@ void combatManager::demonicResurrection(const army* caster, army* target)
             sprintf(g_text, g_generalText->getText(GENERAL_TEXT_UNDEAD_RISE_ONE_FORMAT), raised,
                     demons->getName(raised));
         m_combatWindow->combatMessage(g_text, 1, 0);
-        waitEndSample(sample, -1);
+        waitEndSample(sound, -1);
     }
 }
 
@@ -4237,25 +4239,20 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 
 // Dreamcast attributes the name lookup to army::GetName; its inline body
 // expands to the global getArmyName call in retail and Mac.
-// Residual (90.6%): scheduling only, no shape difference. Retail forms
-// `raised` and tests it against 1 BEFORE loading creatureType for the
-// name lookup where our CL loads the type first, and the arithmetic
-// block's three scratch registers are rotated (ecx/edi/eax against
-// edi/ecx/eax). Every instruction, immediate and call pairs.
+// Mac 0x198a0c/0x198a10 calculates deathFrames - i - 1 in the loop.
+// VC6 strength-reduces that expression into the retained back-frame induction
+// variable; spelling the induction manually misplaced its initialization.
+// Recovering the expression and the conditional total raises Windows
+// 89.54 -> 94.26 with all helpers kept.
 VA(0x005a7560, 0x32F) MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity, dc 0x156840
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                               unsigned char temporary)
 {
     long hex = targetArmy->m_gridIndex;
     long oldCount = targetArmy->m_numTroops;
-    // SEEDED FROM THE COUNT, not from a literal zero: retail loads
-    // numTroops once, keeps it as `old_count`, and lets that same
-    // register be the sum's starting value on the dead-stack path -
-    // which is only correct because the path is the one where it IS
-    // zero, and is what a literal 0 does not produce.
-    long total = oldCount;
-    if (oldCount)
-        total = targetArmy->getTotalHitPoints(0);
+    // Mac 0x198728 explicitly selects zero for an empty stack; VC6 reuses
+    // oldCount on that path, where the value is already zero.
+    long total = oldCount ? targetArmy->getTotalHitPoints(0) : 0;
     total += hitPointsResurrected;
     targetArmy->m_numTroops =
         (targetArmy->m_monInfo.m_hitPoints + total - 1) / targetArmy->m_monInfo.m_hitPoints;
@@ -4300,19 +4297,17 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long frames = max(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
         playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
-        long back = deathFrames - 1;
         { for (long i = 0; i < frames; i++) {
             m_powFrameIndex = i;
             if (targetArmy->m_currFrameType == cs_death) {
                 if (i < deathFrames) {
-                    targetArmy->m_currFrameIndex = back;
+                    targetArmy->m_currFrameIndex = deathFrames - i - 1;
                 } else {
                     targetArmy->m_currFrameType = cs_wait;
                     targetArmy->m_currFrameIndex = 0;
                 }
             }
             drawFrame(1, 0, 0, 100, 1, 1);
-            back--;
         } }
     }
 
@@ -4610,9 +4605,7 @@ void combatManager::earthquake(int level)
                 *bounds = TDrawbridgeBounds(left, top, right, bottom);
                 bounds->clip(g_combatDrawLimits);
                 if (frame == g_earthquakeImpactFrame) {
-                    TWallTargetId wall;
-                    memcpy(&wall, &i, sizeof wall);
-                    damageWall(wall, counts[i]);
+                    damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
                 }
                 blast->draw(0, frame, 0, 0,
                             bounds->width(), bounds->height(),
@@ -4631,9 +4624,7 @@ void combatManager::earthquake(int level)
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
-            TWallTargetId wall;
-            memcpy(&wall, &i, sizeof wall);
-            damageWall(wall, counts[i]);
+            damageWall(H3_ENUM_DECODE(TWallTargetId, i), counts[i]);
         }
     }
     g_mouseManager->showPointer(0);

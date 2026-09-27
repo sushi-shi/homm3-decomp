@@ -474,6 +474,12 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
     }
 }
 
+// The remaining size() branch layout differs from its exact sibling expansions
+// in getAttack/getFinalMeleeValue, despite the same native vector template.
+// Loop-index declaration/initialization order leaves that frontier unchanged.
+// Native Mac matches all 300 bytes with target stored before value. A reverse-
+// index loop, split damage initialization, or a self getHero call each changes
+// native instructions; keep this model while resolving VC6's size expansion.
 VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)  // dc 0x2a868
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
@@ -483,8 +489,8 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
         long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
                                                            defender.getHero(), damage);
         if (value > choice.m_value) {
+            choice.m_target = i;  // Mac0x270e0 stores target before value.
             choice.m_value = value;
-            choice.m_target = i;
         }
     }
     if (choice.m_value <= 0)

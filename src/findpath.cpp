@@ -484,9 +484,9 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // (all byte-flat); and 1/2/4/6 complete local type definitions (byte-flat
 // across all findpath rows, with all thirteen exact functions preserved).
 // DC-local follow-up: moving candidate and the three path flags to function
-// scope/order is byte-flat; spelling source_terrain/terrain as TTerrainType is
-// byte-flat but rejected because the required bitfield-to-enum casts violate
-// the zero-cast cleanliness floor; reversing the two diagonal corner
+// scope/order is byte-flat. DC source_terrain is TTerrainType and terrain
+// is const int; the shared enum decoder retains the typed source local.
+// Reversing the two diagonal corner
 // declarations regresses to 99.19779%; and DC's const srcCell cannot be
 // expressed without changing the still-non-const NewmapCell accessors.
 // Dreamcast findpath.cpp:482/635/697 calls point inequality, game::get_cell
@@ -502,7 +502,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                          long nativeTerrain)
 {
     NewmapCell* srcCell = g_advManager->getCell(source->m_point);
-    long srcGround = srcCell->m_groundSet;
+    TTerrainType sourceTerrain = H3_ENUM_DECODE(TTerrainType, srcCell->m_groundSet);
     unsigned char hasNomad =
         currentHero->m_army.getCreatureTotal(CREATURE_NOMAD) > 0;
 
@@ -518,7 +518,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         NewmapCell* destCell = g_advManager->getCell(candidate.m_point);
-        long destGround = destCell->m_groundSet;
+        const int terrain = destCell->m_groundSet;
         unsigned char blocked = 0;
         unsigned char impassable = 0;
         unsigned char needsBoat = 0;
@@ -527,7 +527,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_dimensionDoor = 0;
 
         long cost;
-        if (destGround == eTerrainRock) {
+        if (terrain == eTerrainRock) {
             cost = 0;
             impassable = 1;
             candidate.m_canStop = 0;
@@ -589,13 +589,13 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                 && g_adventureObjectTraits[destCell->getMapObject()].m_trait1 == 0)
             continue;
 
-        if (destGround == eTerrainWater) {
+        if (terrain == eTerrainWater) {
             if (source->m_inBoat) {
                 if (destCell->m_type == BOAT && destCell->m_isTrigger) {
                     impassable = 1;
                     candidate.m_canStop = 0;
                 }
-                if (srcGround == eTerrainWater
+                if (sourceTerrain == eTerrainWater
                         && g_normalDirTable[direction].m_x != 0
                         && g_normalDirTable[direction].m_y != 0) {
                     // READ-BACK, not a re-read of `source`. Retail extracts

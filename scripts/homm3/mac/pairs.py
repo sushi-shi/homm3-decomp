@@ -57,6 +57,21 @@ def _universe(root: Path) -> set[str]:
     return names
 
 
+def generated_copy_assignment_owner(symbol: str) -> str | None:
+    """Recognize the exact implicit-copy ABI, not arbitrary operator= overloads."""
+    split = emitted._split(symbol)
+    if split is None or split[1] or not split[0].endswith("::operator="):
+        return None
+    owner = split[0].removesuffix("::operator=")
+    parameters = split[2]
+    if not parameters.startswith("RC"):
+        return None
+    parsed = emitted._qualifiers(parameters[2:])
+    if parsed is None or parsed[1] or "::".join(parsed[0]) != owner:
+        return None
+    return owner
+
+
 def load(root: Path, definitions=None, claims=None) -> Inventory:
     from homm3.mac import addresses
     if claims is None:
@@ -85,8 +100,20 @@ def load(root: Path, definitions=None, claims=None) -> Inventory:
         pairs.append(Pair(claim.windows_va, row["unit"] or row["object"], root / definition.file,
                           definition.name, 0, claim.offset, claim.size, row["symbol"],
                           claim.identity, claim.line, _fingerprint(root, definition)))
+    # Generated bodies have no authored Definition. Their reviewed source
+    # claims still own call destinations; bind only the proven copy ABI.
+    universe = _universe(root)
+    generated = defaultdict(list)
+    for claim in claims:
+        if claim.compgen and claim.compgen[0] == "IMPLICIT_COPY_ASSIGN":
+            generated[claim.compgen[1]].append(claim)
+    for symbol in universe:
+        owner = generated_copy_assignment_owner(symbol)
+        for claim in generated.get(owner, ()):
+            offsets[symbol].add(claim.offset)
+            labels[symbol] = owner + "::operator="
     # Referenced symbols whose own unit does not compile resolve by name.
-    for symbol in _universe(root) - set(offsets):
+    for symbol in universe - set(offsets):
         split = emitted._split(symbol)
         if split is None:
             continue

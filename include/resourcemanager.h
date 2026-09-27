@@ -64,7 +64,10 @@ resource* getFromCache(const char* name);
 inline void dispose(resource* value) { value->dispose(); }
 void dispose(sample* value);
 inline void dispose(CSprite* value) { value->dispose(); }
-void delSprFromCache();
+// Older DC resourcemanager.cpp:2280, dc 0x1226d4 had the cache sweep.
+// Complete has no cache-sweep work in the Windows and Mac selection teardown.
+// Keep the original call and expose the empty helper across translation units.
+inline void delSprFromCache() {}
 
 LODFile* pointToSpriteResource(const char* name);
 LODFile* pointToBitmapResource(const char* name);

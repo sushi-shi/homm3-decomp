@@ -152,20 +152,21 @@ void soundManager::initializeSamples()
 // because it uses ds_engine; Complete performs the PC waveOut preference
 // fallback, Smacker/Bink binding and twelve-handle allocation here.
 
-// Residual (84.53%): the best source has retail's 17 branches, one return,
-// complete middleware call/data flow and 703-byte target extent. Two retry
-// branches still target blocks in the opposite physical order, and C2 keeps
-// `this` in EBX while retail keeps it in ESI (homed while ESI carries the
-// channel count) and holds AIL_set_preference in EBX. Four grounded shapes
-// were exhausted: structured retry plus a post-loop driver test (83.56%, one
-// extra branch), explicit-goto retry (67.80%, wrong block order), the direct
-// result-carrier loop below (84.53%), and an explicit long-lived
-// set-preference pointer (same bytes). The remaining layout/RA choice is not
-// source-addressable without distorting the proven retry semantics.
-// The pointer probe is removed: five direct AIL_set_preference source calls
-// preserve 84.5280% and clear the audit's five unresolved indirect-call gaps.
-// Retail's cached import pointer is an optimizer result, not source proof of
-// a local function pointer. Further source hypotheses remain possible.
+// Retail retry at +0x1ba returns to the common sample-rate test instead of
+// exiting directly. Continuing through the existing rate guard restores
+// that edge and raises Open from 84.5280% to 94.32%. All middleware calls
+// and initializeSamples remain canonical; the Mac channel setup is a
+// platform rewrite. The remaining Windows difference is 30 vs 31 blocks,
+// chiefly the shared preference/exit tails; helper calls are preserved.
+// A conditional while-loop with a preinitialized null result scores 92.07%;
+// the guarded infinite loop retains the stronger 94.32% comparison.
+// Separate initial/bottom guards in a do/while score 91.79%; a failure-first
+// nested preference arm scores 77.34%. Neither restores the shared tail.
+// A direct-call condition plus while(1) scores 82.85%; the SDK S32 result
+// local is byte-flat. The guarded do loop with a shared driverReady join
+// restores all 31 blocks and reaches 95.21%. A common retry label is flat;
+// branch-local preference tails score 87.94%. The same driver join inside
+// an infinite loop returns to 94.32%; its common rate guard is shared.
 VA(0x005997d0, 0x2BF) MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string, dc 0x14b240
 int soundManager::open(int newPriority)
 {
@@ -182,59 +183,57 @@ int soundManager::open(int newPriority)
 
             HDIGDRIVER driver;
             HDIGDRIVER result;
-            for (;;) {
-                if (g_soundSampleRate < 11025) {
-                    result = 0;
-                    break;
-                }
+            if (g_soundSampleRate >= 11025) {
+                do {
+                    g_soundWaveFormat.wf.wFormatTag = 1;
+                    g_soundWaveFormat.wf.nChannels =
+                        static_cast<unsigned short>(g_soundOutputChannels);
+                    g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                    g_soundWaveFormat.wf.nAvgBytesPerSec =
+                        (g_soundBitsPerSample / 8) * g_soundOutputChannels
+                        * g_soundSampleRate;
+                    g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
+                        (g_soundBitsPerSample / 8) * g_soundOutputChannels);
+                    g_soundWaveFormat.wBitsPerSample =
+                        static_cast<unsigned short>(g_soundBitsPerSample);
 
-                g_soundWaveFormat.wf.wFormatTag = 1;
-                g_soundWaveFormat.wf.nChannels =
-                    static_cast<unsigned short>(g_soundOutputChannels);
-                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
-                g_soundWaveFormat.wf.nAvgBytesPerSec =
-                    (g_soundBitsPerSample / 8) * g_soundOutputChannels
-                    * g_soundSampleRate;
-                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
-                    (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                g_soundWaveFormat.wBitsPerSample =
-                    static_cast<unsigned short>(g_soundBitsPerSample);
-
-                AIL_HWND();
-                int openResult = AIL_waveOutOpen(
-                    &driver, 0, -1, &g_soundWaveFormat.wf);
-                if (!openResult) {
-                    char description[128];
-                    strcpy(description, DATA_COMPGEN(
-                        0x00684b28, soundDevicePrefix, "Device: "));
-                    AIL_digital_configuration(
-                        driver, 0, 0, description + strlen(description));
-                    if (AIL_get_preference(15)) {
-                        result = driver;
-                        break;
+                    AIL_HWND();
+                    int openResult = AIL_waveOutOpen(
+                        &driver, 0, -1, &g_soundWaveFormat.wf);
+                    if (!openResult) {
+                        char description[128];
+                        strcpy(description, DATA_COMPGEN(
+                            0x00684b28, soundDevicePrefix, "Device: "));
+                        AIL_digital_configuration(
+                            driver, 0, 0, description + strlen(description));
+                        if (AIL_get_preference(15)) {
+                            result = driver;
+                            goto driverReady;
+                        }
+                        if (!strstr(description, DATA_COMPGEN(
+                                0x00684b1c, emulatedDeviceMarker,
+                                "Emulated"))) {
+                            result = driver;
+                            goto driverReady;
+                        }
+                        AIL_waveOutClose(driver);
+                        AIL_set_preference(15, 1);
+                    } else if (AIL_get_preference(15)) {
+                        g_soundSampleRate /= 2;
+                        if (g_soundSampleRate >= 11025)
+                            continue;
+                        if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
+                            g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
+                            g_soundSampleRate = 22050;
+                            continue;
+                        }
+                        continue;
                     }
-                    if (!strstr(description, DATA_COMPGEN(
-                            0x00684b1c, emulatedDeviceMarker,
-                            "Emulated"))) {
-                        result = driver;
-                        break;
-                    }
-                    AIL_waveOutClose(driver);
                     AIL_set_preference(15, 1);
-                } else if (AIL_get_preference(15)) {
-                    g_soundSampleRate /= 2;
-                    if (g_soundSampleRate >= 11025)
-                        continue;
-                    if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
-                        g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
-                        g_soundSampleRate = 22050;
-                        continue;
-                    }
-                    result = 0;
-                    break;
-                }
-                AIL_set_preference(15, 1);
+                } while (g_soundSampleRate >= 11025);
             }
+            result = 0;
+        driverReady:
             m_ds = result;
         }
 
@@ -427,6 +426,10 @@ void soundManager::modifySample(ds_memsample* inSample, short functionId, long v
 // the Miles volume and operation 4 reduces the status to the playing bit;
 // every other operation retains the initialized zero result.
 VA(0x0059a030, 0x87) MAC_ADDRESS(0x218b48, 0xac)
+// Combining the three early guards is not a callback fix: the retained
+// helper drops from 100% to 70.33%, while waitEndSampleThread stays 92%.
+// Moving its zero-result initialization across the early guards also loses
+// the retained exact body without improving the callback.
 int soundManager::getSampleInfo(ds_memsample* inSample, short operation)
 {
     if (g_noSound)
@@ -615,6 +618,12 @@ void launchSample(const char* sampleName, int maxTime, int channel)
 }
 
 // E:\gamedcs\soundmgr.cpp:911
+// A counted for-loop with its timer initialized inside the eligibility
+// guard scores 87.32% versus 92%; retail initializes that timer before
+// the guard. Preserve the original helper query and body update order.
+// An explicit infinite loop with the same query/time exit is byte-flat;
+// the residual is the expanded query's receiver/zero-result path, not
+// the named AIL_end_sample import's extra underscore in delinked labels.
 VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
 void __cdecl waitEndSampleThread(void* arglist)
 {

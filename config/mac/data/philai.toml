@@ -13,13 +13,14 @@ evidence = "Windows MoveHero stores and restores the DATA-claimed g_completeDraw
 
 [[data]]
 retail_va = 0x006972b8
-source = "include/advmgr.h"
-declaration_only = true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x526bfc
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Canonical advmgr.h identifies the retail game-over latch at 0x6972b8; Windows MoveHero returns on it before movement setup. Mac MoveHero loads TOC 1+0x70c -> zero-filled storage 1+0x526bfc at 0x14060c, taking the same early-return arm."
+evidence = "Canonical advmgr.h identifies the retail game-over latch at 0x6972b8; Windows MoveHero returns on it before movement setup. Mac MoveHero loads TOC 1+0x70c -> zero-filled storage 1+0x526bfc at 0x14060c, taking the same early-return arm. Full ordinary KB object confirms source-owned g_gameOver RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va = 0x0069ccd4
@@ -65,7 +66,6 @@ evidence = "Windows MoveHero passes the DATA-claimed g_mapVisibilityBit to mapEx
 [[data]]
 retail_va = 0x006783c8
 source = "src/game.cpp"
-declaration_only = true
 mac_section = 1
 mac_offset = 0x432f4
 mac_size = 4
@@ -75,7 +75,6 @@ evidence = "Windows DATA 0x6783c8 is g_mapWidth. Mac convertObject loads TOC 1+0
 [[data]]
 retail_va = 0x006783cc
 source = "src/game.cpp"
-declaration_only = true
 mac_section = 1
 mac_offset = 0x432f8
 mac_size = 4
@@ -94,13 +93,14 @@ evidence = "Windows MoveHero passes DATA-claimed g_netLocalGamePos to isHumanAll
 
 [[data]]
 retail_va = 0x00699268
-source = "include/advmgr.h"
-declaration_only = true
+source = "src/kb.cpp"
+same_tu_definition = true
+same_tu_external = true
 mac_section = 1
 mac_offset = 0x52893c
 mac_size = 4
 sha256 = "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
-evidence = "Windows aiEnterTown references ?gpAdvManager@@3PAVadvManager@@A at 0x699268 (retail alias ledger). Mac aiEnterTown at 0x13fbd4 loads TOC 1+0x628 -> zero-filled pointer storage 1+0x52893c before demobilizeCurrHero; address-only binding."
+evidence = "Windows aiEnterTown references ?gpAdvManager@@3PAVadvManager@@A at 0x699268 (retail alias ledger). Mac aiEnterTown at 0x13fbd4 loads TOC 1+0x628 -> zero-filled pointer storage 1+0x52893c before demobilizeCurrHero; address-only binding. Full ordinary KB object confirms source-owned g_advManager RW4 zero UDATA and indirect IL uses; strict same-TU binding validates the authored storage against native bytes."
 
 [[data]]
 retail_va = 0x006aa9f8

@@ -63,13 +63,7 @@ DATA(0x0069cc4c) static button** g_buttonDynamic;
 DATA(0x0069cc50) static textButton** g_textButtonDynamic;
 DATA(0x0069cc54) static int g_overviewType;
 DATA(0x0069cc58) static int g_overviewTop[2];
-// One Dreamcast-attested array: indices 0..1 and 3..5 are the two title
-// groups, 6..7 describe the overview selector buttons, 8..10 their
-// right-click help, 11..12 their rollover text, and 13..15 describe the
-// three hero-artifact pages on rollover. Complete accesses all sixteen
-// cells.
 DATA(0x0069cbe8) static int g_lastDynamicType;
-DATA(0x006a7ec0) static const char* g_overviewText[16];
 
 // Complete keeps the first visible entry in the constructor-built
 // flaggable-item vector here. Dreamcast has the same top/count/array
@@ -84,7 +78,9 @@ DATA(0x0069873c) int g_overviewReturnActionExtra;
 // The compiler emits this eight-dword source table immediately before the
 // TOverviewWindow vtable. Both overview help bands use its first seven rows;
 // the first band alone reaches the eighth.
-static const int g_overviewHelpIds[8] = {
+// ProcessIconSelect reaches retail 0x640300 through the biased operands
+// 0x63f35c / 0x63f33c; Mac TOC 1+0x29a8 targets code 0+0x2a6364.
+DATA(0x00640300) static const int g_overviewHelpIds[8] = {
     19, 20, 21, 22, 23, 24, 18, 25
 };
 
@@ -1143,6 +1139,53 @@ static void updateArtifacts(int slot)
     g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
 }
 
+// Mac and older DC place these retained helpers before backpack scrolling.
+VA(0x00522470, 0x15E) MAC_ADDRESS(0x136cb0, 0x1cc)  // dc 0x107668
+void updateBackpack(int slot)
+{
+    int i = 0;
+    int slotOff = slot * 200 + 200;
+    int heroNumber = g_overviewTop[g_overviewType] + slot;
+    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
+    int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
+    type_artifact artifact;
+    // DC 0x1076c4 calls the default message constructor at 0x2d58.
+    // Retail 0x522470 initializes the same zero fields before id/codeX.
+    message msg;
+
+    msg.m_id = MESSAGE_WIDGET;
+    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
+
+    for (; i < 8 && i < lastBackpackIndex; ++i) {
+        msg.m_codeY = i + slotOff + 130;
+        artifact = currHero->getBackpack(
+            (g_overviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
+        msg.m_extra = artifact.m_artifactId;
+        g_overWin->broadcastMessage(msg);
+
+        if (artifact.m_artifactId == -1)
+            g_overWin->widgetClearStatus(i + slotOff + 130, 4);
+        else
+            g_overWin->widgetSetStatus(i + slotOff + 130, 4);
+    }
+
+    g_overWin->drawWindow(1, 0xffff0001, 0xffff);
+    g_overWin->drawWindow(0, slotOff + 130, slotOff + 137);
+    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
+}
+
+// Complete retains this body even though its same-TU callers expand it.
+// External linkage reproduces that emission; Dreamcast labels the older body static.
+VA(0x005225d0, 0x55) MAC_ADDRESS(0x136e7c, 0x90)  // dc 0x1078e8
+long getLastBackpackIndex(long heroNumber)
+{
+    if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
+        return 0;
+    hero* currHero = g_game->getHero(
+        g_game->getLocalPlayer()->m_heroes[heroNumber]);
+    return currHero->getLastBackpackIndex();
+}
+
 // Dreamcast proves these as two ordinary static source helpers, each with the
 // selected hero index, one backpack-bound query and one conditional refresh.
 // Complete emits no standalone copies: VC6 expands every call below, while
@@ -1878,27 +1921,31 @@ void TOverviewWindow::updateRollover(char* text)
 // town control bands, the constructor-built flaggable vector, and the two
 // Complete help bands. Retail expands GetHero/GetTown/GetArmyName and the
 // final UpdateRollover helper; those source boundaries remain explicit here.
-// Negative control: naming top+iSlot as a hero-index local raises the byte
-// checkpoint (97.85 -> 98.25; function-wide lifetime 98.51) but creates a
-// 134th x86 block and destroys the otherwise exact 133-block flow pairing.
-// Dreamcast retains only iSlot, so the repeated source expression is kept.
-// Swapping the guard's addition operands is byte-flat. Reversing its compare
-// raises 97.85 to 97.93 but emits jl instead of retail's jg; a short-lived
-// selectedIndex for the guard and first hero lookup emits 135 x86 blocks.
+// Mac keeps top in r24 beside slot in r23 through the row guard and hero
+// lookup. Naming top before slot lifts Windows 97.85 -> 98.85 and Mac masked
+// agreement 553 -> 635 instructions. The extra Windows block zeroes getHero's
+// null result: ESI holds top here, while retail reuses overviewType == 0.
+// Declaring top after slot reaches 98.51; equal aggregate block counts alone
+// do not settle this register-lifetime difference. Keep every helper call.
 // E:\gamedcs\overview.cpp:2115
 VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map + exhaustive body, dc 0x10906c
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
-        int slot = (codeY - 200) / 200;
-        if (g_overviewTop[g_overviewType] + slot
+        // Keep the quotient and page top separate, as retained in Mac.
+        // Initializing the page top first recovers the Windows slot lifetime.
+        int slot;
+        int top;
+        top = g_overviewTop[g_overviewType];
+        slot = (codeY - 200) / 200;
+        if (top + slot
                 > g_overviewItemCounts[g_overviewType])
             return;
         codeY = (codeY - 200) % 200;
 
         if (g_overviewType == 0) {
             hero* currHero = g_game->getHero(
-                g_overviewHeroIds[g_overviewTop[g_overviewType] + slot]);
+                g_overviewHeroIds[top + slot]);
 
             switch (codeY) {
             case OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
@@ -2028,7 +2075,7 @@ void TOverviewWindow::doRollover(int codeY)
                 currHero->getArtifact(TArtifactSlot(
                     (codeY - OVERVIEW_HERO_ARTIFACT_FIRST_ID
                      + 9 * g_overviewHeroArtifactPage[
-                         g_overviewTop[g_overviewType] + slot]) % 18))
+                         top + slot]) % 18))
                     .getRolloverText(g_text);
                 break;
 
@@ -2042,14 +2089,14 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_BACKPACK_FIRST_ID + 7: {
                 int lastBackpackIndex =
                     getLastBackpackIndex(
-                        g_overviewTop[g_overviewType] + slot) + 1;
+                        top + slot) + 1;
                 if (!lastBackpackIndex) {
                     strcpy(g_text, "");
                     break;
                 }
                 currHero->getBackpack(
                     (g_overviewBackpackStart[
-                         g_overviewTop[g_overviewType] + slot] + codeY
+                         top + slot] + codeY
                      - OVERVIEW_HERO_BACKPACK_FIRST_ID)
                     % lastBackpackIndex).getRolloverText(g_text);
                 break;
@@ -2062,7 +2109,7 @@ void TOverviewWindow::doRollover(int codeY)
         } else {
             town* currTown = g_game->getTown(
                 g_game->getLocalPlayer()->m_townIds[
-                    g_overviewTop[g_overviewType] + slot]);
+                    top + slot]);
             strcpy(g_text, "");
 
             switch (codeY) {
@@ -2442,8 +2489,41 @@ int TOverviewWindow::windowHandler(message& msg)
                 setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
                     OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
                 break;
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
+                break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
                 setHeroArtifactPage(0, OVERVIEW_ROW_FIRST_ID,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
+                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
+                break;
+
+            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
+                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
+                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
                     OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
                 break;
 
@@ -2458,17 +2538,6 @@ int TOverviewWindow::windowHandler(message& msg)
                 }
                 break;
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(1, OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
-            case OVERVIEW_ROW_FIRST_ID + OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2481,17 +2550,6 @@ int TOverviewWindow::windowHandler(message& msg)
                 }
                 break;
             case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(2, OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
-            case OVERVIEW_ROW_FIRST_ID + 2 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
                         && g_overviewHeroArtifactPage[
@@ -2503,17 +2561,6 @@ int TOverviewWindow::windowHandler(message& msg)
                     g_game->setupNewOverviewType(0, 1);
                 }
                 break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
-                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_1_ID);
-                break;
-            case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
-                    + OVERVIEW_HERO_ARTIFACT_PAGE_2_ID:
-                setHeroArtifactPage(3, OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE,
-                    OVERVIEW_HERO_ARTIFACT_PAGE_2_ID);
-                break;
-
             case OVERVIEW_ROW_FIRST_ID + 3 * OVERVIEW_ROW_STRIDE
                     + OVERVIEW_HERO_ARTIFACT_PAGE_3_ID:
                 if (g_overviewType == 0
@@ -2633,50 +2680,4 @@ int TOverviewWindow::windowHandler(message& msg)
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
-}
-
-VA(0x00522470, 0x15E) MAC_ADDRESS(0x136cb0, 0x1cc)  // dc 0x107668
-void updateBackpack(int slot)
-{
-    int i = 0;
-    int slotOff = slot * 200 + 200;
-    int heroNumber = g_overviewTop[g_overviewType] + slot;
-    hero* currHero = g_game->getHero(g_overviewHeroIds[heroNumber]);
-    int lastBackpackIndex = currHero->getLastBackpackIndex() + 1;
-    type_artifact artifact;
-    // DC 0x1076c4 calls the default message constructor at 0x2d58.
-    // Retail 0x522470 initializes the same zero fields before id/codeX.
-    message msg;
-
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeX = widget::WIDGET_SET_ICON_FRAME;
-
-    for (; i < 8 && i < lastBackpackIndex; ++i) {
-        msg.m_codeY = i + slotOff + 130;
-        artifact = currHero->getBackpack(
-            (g_overviewBackpackStart[heroNumber] + i) % lastBackpackIndex);
-        msg.m_extra = artifact.m_artifactId;
-        g_overWin->broadcastMessage(msg);
-
-        if (artifact.m_artifactId == -1)
-            g_overWin->widgetClearStatus(i + slotOff + 130, 4);
-        else
-            g_overWin->widgetSetStatus(i + slotOff + 130, 4);
-    }
-
-    g_overWin->drawWindow(1, 0xffff0001, 0xffff);
-    g_overWin->drawWindow(0, slotOff + 130, slotOff + 137);
-    g_windowManager->updateScreen(293, slot * 116 + 91, 428, 46);
-}
-
-// Complete retains this body even though its same-TU callers expand it.
-// External linkage reproduces that emission; Dreamcast labels the older body static.
-VA(0x005225d0, 0x55) MAC_ADDRESS(0x136e7c, 0x90)  // dc 0x1078e8
-long getLastBackpackIndex(long heroNumber)
-{
-    if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
-        return 0;
-    hero* currHero = g_game->getHero(
-        g_game->getLocalPlayer()->m_heroes[heroNumber]);
-    return currHero->getLastBackpackIndex();
 }

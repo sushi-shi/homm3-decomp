@@ -206,11 +206,7 @@ void type_quest::load(TAbstractFile* file, int version)
         file->read(&row, sizeof(row));
         m_textVariant = row;
     }
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);
@@ -245,11 +241,7 @@ void type_quest::load(TAbstractFile* file, int version)
 VA(0x0056ce50, 0x11E) MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
-    {
-        int extra;
-        file->read(&extra, sizeof(extra));
-        m_limit = extra;
-    }
+    m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
     m_progressText = readLengthPrefixedString(file);
     m_completionText = readLengthPrefixedString(file);
@@ -257,6 +249,10 @@ void type_quest::loadFromMap(TAbstractFile* file)
 
 // Mac retains this base writer at 0:0x16438c. All nine derived quest
 // writers call it after their own payload, including the folded be-hero save.
+// Mac swaps m_limit and each text length with stwbrx before writing;
+// writeLittleEndianValue supplies that file-format boundary while retaining
+// writeScalar/writeValue underneath. Windows remains exact. CodeWarrior
+// still retains this scalar wrapper where native expands the operation.
 VA(0x0056cf70, 0xCD) MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
@@ -270,23 +266,11 @@ void type_quest::save(TAbstractFile* file)
     }
     {
         int extra = m_limit;
-        file->write(&extra, sizeof(extra));
+        writeLittleEndianValue(file, extra);
     }
-    {
-        int length = m_proposalText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_proposalText.c_str(), m_proposalText.length());
-    }
-    {
-        int length = m_progressText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_progressText.c_str(), m_progressText.length());
-    }
-    {
-        int length = m_completionText.length();
-        file->write(&length, sizeof(length));
-        file->write(m_completionText.c_str(), m_completionText.length());
-    }
+    writeText(file, m_proposalText);
+    writeText(file, m_progressText);
+    writeText(file, m_completionText);
 }
 
 // The base dialog getters append this deadline suffix. Retail reads the
@@ -468,31 +452,35 @@ void type_skill_quest::showSkillRequirementsDialog(
 // indexed/cursor forms give 73.9279/68.3423%, and progress falls to 94.2360%.
 // Removing all six pins with direct push_back gives 53.0360%; the earlier
 // 90.6577% control removed constructor/cleanup pins, not both insertion pins.
+// Mac 0x164f28..0x164ff4 stores either the required byte or zero in
+// separate arms. Direct member reads reproduce that loop exactly; the
+// earlier reference/conditional expression introduced extra byte conversions.
+// Natural c_str arguments avoid extended pointer lifetimes. Mac now 96.11%
+// (592 bytes on both sides), with string stack homes and format registers left.
+// Windows 68.33% versus the previous 70.53% remains a recovery obligation.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
         int have = currentHero->getPrimarySkill(i);
-        // The actual requirement is a signed byte. The old const int& bound
-        // a converted temporary; it never referred back to the byte field.
-        const signed char& required = m_requiredSkills[i];
-        missing[i] = required > have ? required : 0;
+        if (m_requiredSkills[i] > have)
+            missing[i] = m_requiredSkills[i];
+        else
+            missing[i] = 0;
     }
 
     if (m_progressText.length() > 0) {
-        std::string text = getProposalDialogText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        // Windows consumes the returned string directly; Mac 0x165014..0x165028
+        // keeps that same temporary alive through the dialog, without a copy.
+        showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
-        const char* requirementPointer = requirement.c_str();
         const TSeerHutQuestText& texts = questTexts();
         std::string text = formatString(
-            texts.m_text1.c_str(), requirementPointer);
+            texts.m_text1.c_str(), requirement.c_str());
         text += getTimeLimitText();
-        const char* textPointer = text.c_str();
-        showSkillRequirementsDialog(textPointer, missing);
+        showSkillRequirementsDialog(text.c_str(), missing);
     }
 }
 
@@ -828,7 +816,9 @@ void type_monster_quest::save(TAbstractFile* file)
 // Residual 96.7191%: the middle-north assignment retains string::assign
 // where retail expands it. Moving the name declaration to its use is flat;
 // explicit inner returns in getArmyName worsen this caller to 73.8785% and
-// lower four other consumers, including two exact drawing functions.
+// lower four other consumers, including two exact drawing functions. Keeping
+// its invalid-range guard as an early return restores 96.7191%; the plural
+// selection remains the canonical shared helper's conditional expression.
 VA(0x0056ef20, 0x57C) MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
@@ -970,9 +960,9 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 // Slot 5 calls that same helper with the full artifact payload. The direct
 // expression below matches all 21 Mac instructions in order after relocation
 // masking, including all three calls; no Dreamcast counterpart exists. VC6
-// expands the helper and currently scores 81.0118% (12/12 CFG blocks align).
-// The earlier copied loop reached 89.8471%, but Mac's retained helper and the
-// two proposal call sites establish a stronger source boundary.
+// expands the same helper and is exact when the picture kind is assigned
+// inside its loop, matching Mac 0x166b74. The earlier copied loop reached
+// only 89.8471%; preserve the retained helper and both proposal call sites.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6) MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
@@ -986,8 +976,9 @@ void type_artifact_quest::showArtifactProgress(
 {
     std::vector<type_dialog_resource> dialogResources;
     type_dialog_resource resource;
-    resource.m_resource = 8;
+    // Both retail loops assign the descriptor kind on each iteration.
     for (unsigned i = 0; i < artifacts.size(); ++i) {
+        resource.m_resource = 8;
         resource.m_qualifier = artifacts[i];
         dialogResources.push_back(resource);
     }

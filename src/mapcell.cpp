@@ -89,9 +89,7 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     }
     count = infile->read(&m_playerFlags, sizeof(m_playerFlags));
     if (count < sizeof(m_playerFlags)) {
-#pragma inline_depth(0)
         return -1;
-#pragma inline_depth()
     }
 
     if (saveVersion >= 28) {
@@ -122,16 +120,25 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
+// DC records separate int_buffer/count/x/err locals. Mac 0x11d89c..0x11d8b0
+// reverses the four-byte event count before writing; keep the shared endian
+// helper and the retained TTimedEvent::save call.
 VA(0x004fc390, 0xA5) MAC_ADDRESS(0x11d874, 0xc4)  // dc 0xeb9a0
 int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 {
-    int count = m_timedEventList.size();
-    if (static_cast<unsigned>(writeValue(outfile, count))
-        < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+    int err;
+
+    intBuffer = m_timedEventList.size();
+    count = writeLittleEndianValue(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_timedEventList.size(); ++i) {
-        if (m_timedEventList[i].save(outfile) < 0)
+    for (x = 0; x < m_timedEventList.size(); ++x) {
+        err = m_timedEventList[x].save(outfile);
+        if (err < 0)
             return -1;
     }
     return 0;
@@ -219,16 +226,25 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
     return 0;
 }
 
+// DC records int_buffer/count/x/err separately. Mac 0x11df38..0x11df50
+// writes the native count without the timed-event writer's byte reversal.
+// Keep caller-owned scalar storage and the retained TTownEvent::save helper.
 VA(0x004fc770, 0xFA) MAC_ADDRESS(0x11df10, 0xbc)  // dc 0xebd24
 int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 {
-    int count = m_townEventList.size();
-    if (static_cast<unsigned>(writeValue(outfile, count))
-        < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+    int err;
+
+    intBuffer = m_townEventList.size();
+    count = writeScalar(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (unsigned int i = 0; i < m_townEventList.size(); ++i) {
-        if (m_townEventList[i].save(outfile) < 0)
+    for (x = 0; x < m_townEventList.size(); ++x) {
+        err = m_townEventList[x].save(outfile);
+        if (err < 0)
             return -1;
     }
     return 0;
@@ -288,11 +304,10 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 // Dreamcast retains an out-of-line copy. Mac places the retained body between
 // TTownEvent::load and getTriggerCell; both Mac callers are in mapcell.
 // Retail's corresponding source-order slot is twelve bytes of NOP padding,
-// while isDiggable and getSpecialTerrain expand this lookup. Removing inline
-// leaves both callers exact but emits an unused VC6 COMDAT; the original
-// keyword remains unproven.
+// while isDiggable and getSpecialTerrain expand this ordinary lookup.
+// The unused VC6 COMDAT does not justify an unproven inline keyword.
 MAC_ADDRESS(0x11e1fc, 0x20)
-inline CObject* NewmapCell::TObjectCell::getObject() const
+CObject* NewmapCell::TObjectCell::getObject() const
 {
     return &g_game->m_worldMap.m_objects[m_objectIndex];
 }
@@ -588,7 +603,7 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 // short loop was 89.7479%; masking an int and using for/while loops reached
 // 88.3698/89.8403%; a second promoted count was 88.6135%; and explicitly
 // hoisting the quest pointer was 82.2605%. The guarded do/while below is the
-// best source-faithful spelling measured.
+// best spelling in that earlier compiler context.
 
 // [polish-45] The first `!!` names the remaining shape precisely: retail
 // SINKS the masked count.  `mov esi,[ebp-0xc] / and esi,0xffff` keeps the
@@ -620,22 +635,21 @@ int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
 //     more than the slot it buys.
 // So the residual is the handle NUMBERING with the same local set, not a
 // missing or extra local: docs/vc6/handle-order.md's C1-capped class.
+// Native Mac 0x11f86c decodes the little-endian count; 0x11f924..0x11f930
+// increments an index and compares against the unchanged count. The same
+// canonical reader and for-loop raise current Windows MAX 88.65 -> 91.30;
+// CodeWarrior retains the scalar wrapper instead of expanding it as native does.
 VA(0x004fd950, 0x268) MAC_ADDRESS(0x11f834, 0x114)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
 void NewfullMap::loadQuestGuardList(
     TAbstractFile* infile, int saveVersion)
 {
-    int count = readValue<unsigned short>(infile);
+    int count = readLittleEndianValue<unsigned short>(infile);
     m_questGuardList.resize(count);
-
-    if (count > 0) {
-        int i = 0;
-        do {
-            m_questGuardList[i].load(infile, saveVersion);
-            if (m_questGuardList[i].m_quest)
-                m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                    static_cast<void*>(m_questGuardList[i].m_quest)));
-            ++i;
-        } while (--count);
+    for (int i = 0; i < count; ++i) {
+        m_questGuardList[i].load(infile, saveVersion);
+        if (m_questGuardList[i].m_quest)
+            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(m_questGuardList[i].m_quest)));
     }
 }
 
@@ -925,56 +939,79 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
     return size * size;
 }
 
+// DC records separate byte, unsigned/signed short, int and unsigned-long
+// staging, count and two scoped x counters. Mac reuses the same width slots:
+// char +0x58, ushort +0x52, short +0x50, ulong +0x4c, int +0x54.
 VA(0x004fe490, 0x22A) MAC_ADDRESS(0x1200b4, 0x334)  // dc 0xed384
 int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
     NewmapCell* thisCell = cell(0, 0, layer);
+    int y;
+    int x;
+    unsigned short ushortBuffer;
+    int intBuffer;
+    short shortBuffer;
+    int count;
+    unsigned long ulongBuffer;
+    char charBuffer;
 
-    for (int y = 0; y < size; ++y) {
-        for (int x = 0; x < size; ++x) {
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_groundSet)) < 1)
+    for (y = 0; y < size; ++y) {
+        for (x = 0; x < size; ++x) {
+            charBuffer = thisCell->m_groundSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_groundIndex)) < 1)
+            charBuffer = thisCell->m_groundIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_riverSet)) < 1)
+            charBuffer = thisCell->m_riverSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_riverIndex)) < 1)
+            charBuffer = thisCell->m_riverIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_roadSet)) < 1)
+            charBuffer = thisCell->m_roadSet;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
-            if (static_cast<unsigned>(
-                    writeValue<char>(outfile, thisCell->m_roadIndex)) < 1)
-                return -1;
-
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_cellFlags)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_type)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_objectIndex)) < 2)
-                return -1;
-            if (static_cast<unsigned>(
-                    writeValue<short>(outfile, thisCell->m_objectTypeIndex)) < 2)
-                return -1;
-
-            if (static_cast<unsigned>(
-                    writeValue<unsigned long>(outfile, thisCell->m_extraInfo)) < 4)
+            charBuffer = thisCell->m_roadIndex;
+            count = writeScalar(outfile, charBuffer);
+            if (count < sizeof(charBuffer))
                 return -1;
 
-            if (static_cast<unsigned>(
-                    writeValue<int>(outfile, thisCell->m_objects.size())) < 4)
+            ushortBuffer = thisCell->m_cellFlags;
+            count = writeScalar(outfile, ushortBuffer);
+            if (count < sizeof(ushortBuffer))
+                return -1;
+            ushortBuffer = thisCell->m_type;
+            count = writeScalar(outfile, ushortBuffer);
+            if (count < sizeof(ushortBuffer))
+                return -1;
+            shortBuffer = thisCell->m_objectIndex;
+            count = writeScalar(outfile, shortBuffer);
+            if (count < sizeof(shortBuffer))
+                return -1;
+            shortBuffer = thisCell->m_objectTypeIndex;
+            count = writeScalar(outfile, shortBuffer);
+            if (count < sizeof(shortBuffer))
                 return -1;
 
-            for (unsigned int i = 0; i < thisCell->m_objects.size(); ++i) {
-                if (static_cast<unsigned>(
-                        outfile->write(&thisCell->m_objects[i], 4)) < 4)
+            ulongBuffer = thisCell->m_extraInfo;
+            count = writeScalar(outfile, ulongBuffer);
+            if (count < sizeof(ulongBuffer))
+                return -1;
+
+            intBuffer = thisCell->m_objects.size();
+            count = writeScalar(outfile, intBuffer);
+            if (count < sizeof(intBuffer))
+                return -1;
+
+            for (int x = 0; x < thisCell->m_objects.size(); ++x) {
+                count = outfile->write(&thisCell->m_objects[x], sizeof(int));
+                if (count < sizeof(int))
                     return -1;
             }
             ++thisCell;
@@ -1199,11 +1236,11 @@ CObjectType* CObject::getObjectTypePtr() const
 
 // E:\gamedcs\mapcell.cpp:1119. Dreamcast retains this source helper as an
 // out-of-line SH4 body; Mac places it between getObjectTypePtr and findTrigger.
-// Its two Mac callers are in mapcell. Complete expands the admitted uses;
-// removing inline keeps getTriggerCell exact but emits an unused VC6 COMDAT,
-// so the original keyword remains unproven.
+// Its two Mac callers are in mapcell. Complete expands the admitted uses.
+// The ordinary body keeps getTriggerCell exact; an unused VC6 COMDAT does
+// not justify an unproven inline keyword.
 MAC_ADDRESS(0x120ab8, 0x80)
-inline type_point CObject::getTrigger() const
+type_point CObject::getTrigger() const
 {
     int resultX;
     int resultY;
@@ -1645,14 +1682,15 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
+            // Mac 0x121b14..0x121b68 directly stores each decoded enum word.
             int skillType = value;
-            memcpy(&thisBox->m_secondarySkills[i].m_type,
-                   &skillType, sizeof(skillType));
+            thisBox->m_secondarySkills[i].m_type =
+                H3_ENUM_DECODE(TSecondarySkill, skillType);
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
             int skillLevel = value;
-            memcpy(&thisBox->m_secondarySkills[i].m_level,
-                   &skillLevel, sizeof(skillLevel));
+            thisBox->m_secondarySkills[i].m_level =
+                H3_ENUM_DECODE(TSkillMastery, skillLevel);
         }
     }
 
@@ -1708,7 +1746,9 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     }
 
     char padding[8];
-    return infile->read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
 // The cap here is 400, not the 4000 the treasure readers use, and the index
@@ -1878,6 +1918,9 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // local that is then masked - the same asymmetric artifact crossing
 // loadMonsterList has.
 
+// Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
+// reads; DC records one int_buffer and char_buffer. Sharing those readers
+// and the existing index raises Windows MAX 91.44 -> 96.15.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
@@ -1890,19 +1933,17 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     thisBox->m_hasCustomTreasure = value != 0;
     if (thisBox->m_hasCustomTreasure) {
-        if (loadTreasureData(infile, *thisBox) < 0)
+        if (loadTreasureData(infile, *thisBox) != 0)
             return -1;
     }
 
-    {
-        int intValue;
-        if (infile->read(&intValue, sizeof(intValue)) < sizeof(intValue))
-            return -1;
-        thisBox->m_experienceBonus = intValue;
-        if (infile->read(&intValue, sizeof(intValue)) < sizeof(intValue))
-            return -1;
-        thisBox->m_manaBonus = intValue;
-    }
+    int intBuffer;
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+        return -1;
+    thisBox->m_experienceBonus = intBuffer;
+    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+        return -1;
+    thisBox->m_manaBonus = intBuffer;
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
@@ -1911,22 +1952,15 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     thisBox->m_luckBonus = value;
 
-    {
-        int resourceValue;
-        for (int resourceIndex = 0; resourceIndex < 7; ++resourceIndex) {
-            if (infile->read(&resourceValue, sizeof(resourceValue))
-                < sizeof(resourceValue))
-                return -1;
-            thisBox->m_resQty[resourceIndex] = resourceValue;
-        }
+    for (i = 0; i < 7; ++i) {
+        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+            return -1;
+        thisBox->m_resQty[i] = intBuffer;
     }
-    {
-        signed char skillValue;
-        for (int skill = 0; skill < 4; ++skill) {
-            if (infile->read(&skillValue, sizeof(skillValue)) < sizeof(skillValue))
-                return -1;
-            thisBox->m_primarySkillBonus[skill] = skillValue;
-        }
+    for (i = 0; i < 4; ++i) {
+        if (infile->read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->m_primarySkillBonus[i] = value;
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -1936,14 +1970,15 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     for (i = 0; i < count; ++i) {
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
+        // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
         int skillType = value;
-        memcpy(&thisBox->m_secondarySkills[i].m_type,
-               &skillType, sizeof(skillType));
+        thisBox->m_secondarySkills[i].m_type =
+            H3_ENUM_DECODE(TSecondarySkill, skillType);
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
         int skillLevel = value;
-        memcpy(&thisBox->m_secondarySkills[i].m_level,
-               &skillLevel, sizeof(skillLevel));
+        thisBox->m_secondarySkills[i].m_level =
+            H3_ENUM_DECODE(TSkillMastery, skillLevel);
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
@@ -2337,6 +2372,10 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // Hoisting one shared int for the resource and artifact reads regressed to
 // 96.84 by extending its lifetime without shrinking the frame; the
 // `rawIdentifier` split above is banked at +0.58 so a collapse must beat that.
+// Current real C2 trace admits string::_Tidy (cb152, budget212) under the
+// MonsterData/string constructor chain. Body assignment, artifact initializer
+// and explicit message initializer emit one identical mapcell object; retain
+// the canonical constructor while investigating the retained _Tidy boundary.
 // Both Complete builds write MonsterInfo fields and clear bits 27..30
 // after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
 // the Windows mask 0x87fbffff combines it with the dontGrow assignment.
@@ -2576,6 +2615,9 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // below are retained.
 // Mac 0x124674 and 0x12470c construct bitset reference proxies before the
 // retained assignments at 0x1246b4 and 0x12474c.
+// Map scalars are little endian: native 0x124330 decodes the identifier,
+// 0x124468 the troop count, and 0x124798 the event count. Shared decoding
+// reproduces these CodeWarrior operations and is byte-flat under VC6.
 VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2598,7 +2640,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         tempTown.m_objRef = 0;
     } else {
         readValue(infile, intBuffer);
-        tempTown.m_objRef = intBuffer;
+        tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
     }
 
     if (readValue(infile, charBuffer) < sizeof(charBuffer))
@@ -2622,6 +2664,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             if (readValue(infile, shortBuffer)
                 < sizeof(shortBuffer))
                 return -1;
+            shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
             tempTown.m_townArmy.m_numTroops[x] = shortBuffer;
         }
     }
@@ -2652,22 +2695,27 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->read(spellBuf, sizeof(spellBuf));
-        for (int spell = 0; spell < 70; ++spell)
-            tempTown.m_fixedSpells[spell] =
-                (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
+        for (x = 0; x < 70; ++x)
+            tempTown.m_fixedSpells[x] =
+                (spellBuf[x / 8] & (1 << (x % 8))) != 0;
     }
 
     if (infile->read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (int spell = 0; spell < 70; ++spell)
-        tempTown.m_spells[spell] =
-            (spellBuf[spell / 8] & (1 << (spell % 8))) != 0;
+    for (x = 0; x < 70; ++x)
+        tempTown.m_spells[x] =
+            (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
     if (readValue(infile, numTownEvents)
         < sizeof(numTownEvents))
         return -1;
 
-    for (count = numTownEvents; count > 0; --count) {
+    numTownEvents = LITTLE_ENDIAN_LONG(numTownEvents);
+
+    // Native Mac 0x1247a4..0x124804 caches the read count across event calls
+    // and increments a separate index; CodeWarrior reproduces that lifetime.
+    count = numTownEvents;
+    for (x = 0; x < count; ++x) {
         TTownEvent thisEvent;
         thisEvent.read(infile, mapVersion);
         thisEvent.m_townNum = g_game->m_scenarioTowns.size();
@@ -2742,10 +2790,9 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // -1 = clear the set) and jumps straight to the padding, while every later
 // format carries a 70-bit mask in nine bytes and then the four primaries.
 
-// The alignment reaching GetStartingHeroId is moved into its enum with
-// memcpy rather than a cast, which is this tree's own idiom for the
-// conversion - pick_alignment does exactly the same thing to its loop index,
-// and the cast-into-an-enum floor is why.
+// Mac 0x124d04 directly loads the alignment argument; its artifact loops
+// likewise store decoded enum words without memcpy. Use the shared enum
+// decoding macro at those serialized and integer-valued boundaries.
 
 // The next structure pass reads the raw symbol nesting, not only the compact
 // roster: all thirteen DC locals appear under S_GPROC32 before the first
@@ -2856,9 +2903,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = g_startingHeroOverrides[owner];
             g_startingHeroOverrides[owner] = -1;
         } else {
-            TTownType alignment;
-            memcpy(&alignment, &g_game->m_setup.m_alignment[owner],
-                   sizeof(alignment));
+            TTownType alignment = H3_ENUM_DECODE(
+                TTownType, g_game->m_setup.m_alignment[owner]);
             heroID = g_game->getStartingHeroId(alignment, owner,
                                                experience);
         }
@@ -2943,8 +2989,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 shortBuffer = readValue<short>(infile);
                 intBuffer = shortBuffer;
             }
-            memcpy(&heroData->m_artifacts[x].m_artifactId, &intBuffer,
-                   sizeof heroData->m_artifacts[x].m_artifactId);
+            heroData->m_artifacts[x].m_artifactId =
+                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         shortBuffer = readValue<short>(infile);
@@ -2958,8 +3004,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 shortBuffer = readValue<short>(infile);
                 intBuffer = shortBuffer;
             }
-            memcpy(&heroData->m_backpack[x].m_artifactId, &intBuffer,
-                   sizeof heroData->m_backpack[x].m_artifactId);
+            heroData->m_backpack[x].m_artifactId =
+                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         // The fourth war-machine position is never serialized: every hero
@@ -3345,7 +3391,8 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     tempObject->m_z = value;
 
     int typeIndex;
-    count = readValue(infile, typeIndex);
+    // Native Mac 0x125fb0..0x125fcc decodes the map type index with lwbrx.
+    count = readLittleEndianValue(infile, typeIndex);
     if (count < sizeof(typeIndex))
         return -1;
     tempObject->m_typeIndex = static_cast<unsigned short>(typeIndex);
@@ -3490,23 +3537,33 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     return 1;
 }
 
+// DC records char_buffer, ushort_buffer and count at function scope.
+// Mac stages the three coordinates through one byte slot and the type index
+// through a separate short slot; preserve those lifetimes around the helper.
 VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
+    unsigned short ushortBuffer;
     int count;
-    count = writeValue<char>(outfile, tempObject.m_x);
+    char charBuffer;
+
+    charBuffer = tempObject.m_x;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<char>(outfile, tempObject.m_y);
+    charBuffer = tempObject.m_y;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<char>(outfile, tempObject.m_z);
+    charBuffer = tempObject.m_z;
+    count = writeScalar(outfile, charBuffer);
     if (count < sizeof(char))
         return -1;
 
-    count = writeValue<unsigned short>(outfile, tempObject.m_typeIndex);
+    ushortBuffer = tempObject.m_typeIndex;
+    count = writeScalar(outfile, ushortBuffer);
     if (count < sizeof(unsigned short))
         return -1;
     return 0;
@@ -3593,6 +3650,12 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // reproduced objects; these locals and the reference call leave the retained
 // reader/caller bytes unchanged. A short or byte buffer does not explain the
 // remaining int_buffer/enum-owner stack displacements.
+// Windows and DC initialize the first image-name byte then zero the other
+// 99 bytes. Native Mac 0x126480/0x1264a8..0x1264cc copies the same static
+// 100-byte zero initializer in twelve eight-byte chunks and one final word.
+// There is no bzero call in this reader; preserve aggregate initialization.
+// Mac 0x1264f4, 0x126838 and 0x1268cc decode the three four-byte file
+// scalars after their complete-read guards; use the shared endian reader.
 VA(0x00503780, 0x4C0) MAC_ADDRESS(0x126478, 0x528)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(TAbstractFile* infile,
                                CObjectType& tempObjectType)
@@ -3604,7 +3667,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     unsigned char packed[6];
     int i;
 
-    count = readValue(infile, value);
+    count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
         return -1;
     infile->read(imageName, value);
@@ -3674,7 +3737,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
     // the typed member, exactly as the trait fixup below copies into it: a
     // separate TAdventureObjectType local takes its own frame slot and pushes
     // every later displacement by four (99.9633 against retail's 0x8c frame).
-    count = readValue(infile, value);
+    count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
         return -1;
     memcpy(&tempObjectType.m_objectType, &value,
@@ -3692,7 +3755,7 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
            &g_adventureObjectTraits[tempObjectType.m_objectType].m_nameRow,
            sizeof(tempObjectType.m_objectType));
 
-    count = readValue(infile, value);
+    count = readLittleEndianValue(infile, value);
     if (count < sizeof(value))
         return -1;
     tempObjectType.m_extra = value;
@@ -3721,10 +3784,10 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
     game::saveString(outfile, tempObjectType->m_imageName);
 
     char value = tempObjectType->m_width;
-    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
+    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
         return -1;
     value = tempObjectType->m_height;
-    if (static_cast<unsigned>(writeValue(outfile, value)) < 1)
+    if (static_cast<unsigned>(writeScalar(outfile, value)) < 1)
         return -1;
 
     unsigned char packed[6];
@@ -3763,15 +3826,15 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
         return -1;
 
     short typeValue = tempObjectType->m_objectType;
-    if (static_cast<unsigned>(writeValue(outfile, typeValue)) < 2)
+    if (static_cast<unsigned>(writeScalar(outfile, typeValue)) < 2)
         return -1;
 
     int extra = tempObjectType->m_extra;
-    if (static_cast<unsigned>(writeValue(outfile, extra)) < 4)
+    if (static_cast<unsigned>(writeScalar(outfile, extra)) < 4)
         return -1;
 
     value = tempObjectType->m_suppressDraw;
-    return static_cast<unsigned>(writeValue(outfile, value)) < 1 ? -1 : 1;
+    return static_cast<unsigned>(writeScalar(outfile, value)) < 1 ? -1 : 1;
 }
 
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
@@ -3947,11 +4010,15 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int numObjects;
     int count;
     int x;
-    count = readValue(infile, intBuffer);
+    count = readLittleEndianValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
 
+    // Both Mac count fields are read through the same caller-owned integer
+    // slot, then byte-reversed before resize. The decoding wrapper preserves
+    // readValue and its returned count. Its currently retained Mac expansion
+    // remains an inlining difference; there is no retail wrapper to bind.
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -3988,7 +4055,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    count = readValue(infile, intBuffer);
+    count = readLittleEndianValue(infile, intBuffer);
     if (count < sizeof(intBuffer)) {
         return -1;
     }
@@ -4024,25 +4091,34 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     return 1;
 }
 
+// DC separates int_buffer from write/helper status count and records int x.
+// The retained SaveObject boundary remains an inliner residual in Complete.
 VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
-    int count = m_objectTypes.size();
-    if (writeValue(outfile, count) < sizeof(count))
+    int intBuffer;
+    int count;
+    int x;
+
+    intBuffer = m_objectTypes.size();
+    count = writeScalar(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    unsigned int i;
-    for (i = 0; i < m_objectTypes.size(); ++i) {
-        if (saveObjectType(outfile, &m_objectTypes[i]) < 0)
+    for (x = 0; x < m_objectTypes.size(); ++x) {
+        count = saveObjectType(outfile, &m_objectTypes[x]);
+        if (count < 0)
             return -1;
     }
 
-    count = m_objects.size();
-    if (writeValue(outfile, count) < sizeof(count))
+    intBuffer = m_objects.size();
+    count = writeScalar(outfile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    for (i = 0; i < m_objects.size(); ++i) {
-        if (saveObject(outfile, m_objects[i]) < 0)
+    for (x = 0; x < m_objects.size(); ++x) {
+        count = saveObject(outfile, m_objects[x]);
+        if (count < 0)
             return -1;
     }
     return 1;

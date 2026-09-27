@@ -4144,6 +4144,11 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // leaves the retained helper at 100% and this dispatcher at 99.4678%. Removing
 // only the Garden pin gives 97.8007% under either structure; four distinct
 // reproduced objects rule out that branch spelling as the call-boundary fix.
+// Removing the four depth-zero pins restores natural compiler settings;
+// CodeWarrior rejects the empty reset, which otherwise disables later inlining.
+// Windows retains DefenseTower/Garden/MercenaryCamp/PowerSchool calls at
+// 0x4a8d4b/0x4a9049/0x4a9676/0x4a9c95. The unpinned caller currently expands
+// them (88.61% vs HIST99.99%); recover these boundaries through source structure.
 VA(0x004a84f0, 0x2542) MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
@@ -4261,9 +4266,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventSkeleton(currentHero, cell, humanPlayer);
         break;
     case DEFENSE_TOWER:
-#pragma inline_depth(0)
         doEventDefenseTower(currentHero, cell, humanPlayer);
-#pragma inline_depth()
         break;
     case DERELICT_SHIP:
         doEventUndeadLair(currentHero, cell,
@@ -4308,9 +4311,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventFountainOfYouth(currentHero, cell, humanPlayer);
         break;
     case GARDEN_OF_REVELATION:
-#pragma inline_depth(0)
         doEventGarden(currentHero, cell, humanPlayer);
-#pragma inline_depth()
         break;
     case GARRISON: {
         g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
@@ -4428,9 +4429,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         doEventMagicWell(currentHero, cell, humanPlayer);
         break;
     case MERC_CAMP:
-#pragma inline_depth(0)
         doEventMercenaryCamp(currentHero, cell, humanPlayer);
-#pragma inline_depth()
         break;
     case MERMAID:
         doEventMermaid(currentHero, cell, humanPlayer);
@@ -4514,9 +4513,7 @@ void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point p
         break;
     }
     case POWER_SCHOOL:
-#pragma inline_depth(0)
         doEventPowerSchool(currentHero, cell, humanPlayer);
-#pragma inline_depth()
         break;
     case PRISON:
         doEventPrison(currentHero, cell, point, humanPlayer);

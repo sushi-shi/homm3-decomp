@@ -365,9 +365,16 @@ public:
     static const SLimitData s_upperTowerLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
+    // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
+    // that cross-TU expansion supports header visibility of this delegation.
+    // Older DC owns the scrolling facade in drawing.cpp.
     unsigned char scrollTo(int x, int y, unsigned char draw,
                            unsigned char doscrollX,
-                           unsigned char doscrollY);
+                           unsigned char doscrollY)
+    {
+        return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
+                        doscrollX, doscrollY);
+    }
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
@@ -2103,7 +2110,7 @@ extern const long g_castleWallGateTargets[5];   // 0x63abe0
 // Header placement is a platform visibility inference, not recovered lexical
 // source. dc_only.tsv retains the CE origins separately. The by-value helper
 // chain reproduces all 1102 Fly bytes; an inlined copy does not prove a
-// const-reference parameter. The coordinate ScrollTo facade stays in drawing.cpp.
+// const-reference parameter.
 inline void combatManager::updateCombatArea(int x, int y, int width, int height)
 {
     g_windowManager->updateScreen(x, y, width, height);

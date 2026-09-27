@@ -130,7 +130,9 @@ DATA(0x006912ec) char g_completeDrawFpsText[100];
 DATA(0x006976d8) int g_gameCommand;
 // Original DC name: gbInViewWorld; ViewWorld owns its set/reset lifetime.
 DATA(0x006aac3c) int g_inViewWorld;
-DATA(0x00691674) unsigned long g_lastMapScrollTime;
+// Mac stores this file-local scalar in its TOC; every Windows reference is
+// in ScreenScroll or CheckScreenScroll.
+DATA(0x00691674) static unsigned long g_lastMapScrollTime;
 DATA(0x0065f690) int g_completeDrawFpsFrame = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
@@ -3378,17 +3380,9 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
     }
 }
 
-// RETAIL-RECONSTRUCTED (97.3418%): no distinct Dreamcast row survives, but the
-// two retail callers fix this five-parameter /Gr ABI and the MINE case role.
-// The body reads the byte-proven mine pool, chooses the ordinary/abandoned
-// description, adds owner and allied-resource text, then appends the guard-army
-// description. The direct string temporary raised 91.0717% to 96.3924%; the
-// symmetric player/owner OnSameTeam order raises it to the retained score and
-// makes every instruction from that comparison onward exact. Both sides have
-// the same 17 blocks, 10 branches and two returns. The residue is only the
-// earlier owner/player EAX<->EDI homing: the guided nine-mutation register
-// sweep found no improvement, while the allocator model reports identical
-// first definitions and therefore no source-addressable minimum slice.
+// Retail callers fix this five-parameter /Gr ABI and the mine-help role.
+// Mac expands onSameTeam(owner, playerId), including its two validity checks;
+// keeping that canonical call also reproduces the Windows comparison loads.
 VA(0x0040d670, 0x253) MAC_ADDRESS(0x00b444, 0x184)
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
@@ -3406,15 +3400,13 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
         strcat(buffer, g_ownedByColor[owner]);
     }
 
-    if (owner >= 0) {
-        if (playerId >= 0 && g_game->onSameTeam(playerId, owner)) {
-            strcat(buffer, separator);
-            strcat(buffer, DATA_COMPGEN(
-                0x00660354, mineResourceOpen, "("));
-            strcat(buffer, g_resourceNames[mineType]);
-            strcat(buffer, DATA_COMPGEN(
-                0x00660350, mineResourceClose, ")"));
-        }
+    if (g_game->onSameTeam(owner, playerId)) {
+        strcat(buffer, separator);
+        strcat(buffer, DATA_COMPGEN(
+            0x00660354, mineResourceOpen, "("));
+        strcat(buffer, g_resourceNames[mineType]);
+        strcat(buffer, DATA_COMPGEN(
+            0x00660350, mineResourceClose, ")"));
     }
 
     armyGroup* guards = &currentMine->m_guards;
@@ -8459,55 +8451,54 @@ void advManager::screenScroll(int dir, int changeMouse)
 VA(0x00419820, 0x169) MAC_ADDRESS(0x019e50, 0x1a0)  // dc 0x1cb08
 void advManager::checkScreenScroll()
 {
+    const int noScrollDirection = 100;
+    int dir = noScrollDirection;
     int x;
     int y;
     g_mouseManager->mouseCoords(x, y);
 
     // Mac initializes the no-scroll sentinel before testing the coordinates;
     // both outside-window and central-window paths reach the same clock call.
-    const int noScrollDirection = 100;
-    int dir = noScrollDirection;
     if (x >= 0 && x < WINDOW_SCREEN_WIDTH && y >= 0
         && y < WINDOW_SCREEN_HEIGHT) {
         if (x < 16) {
             if (y < 16)
                 dir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+            else if (y > WINDOW_SCREEN_HEIGHT - 16)
+                dir = ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
             else
-                dir = y <= WINDOW_SCREEN_HEIGHT - 16
-                           ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
-                           : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+                dir = ADV_SCROLL_WEST - ADV_SCROLL_POINTER;
         } else if (x > WINDOW_SCREEN_WIDTH - 16) {
             if (y < 16)
                 dir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+            else if (y > WINDOW_SCREEN_HEIGHT - 16)
+                dir = ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER;
             else
-                dir = y > WINDOW_SCREEN_HEIGHT - 16
-                           ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
-                           : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+                dir = ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
         } else if (y < 16) {
             dir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
         } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
             dir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
         }
     }
-    if (dir == noScrollDirection) {
+    if (dir != noScrollDirection) {
+        unsigned long now = GameTime::get();
+        if (now - g_lastMapScrollTime < 70)
+            return;
+        g_lastMapScrollTime += 70;
+        if (now - g_lastMapScrollTime >= 70)
+            g_lastMapScrollTime = now - 70;
+
+        int origX = m_radarOrigin.m_x;
+        int origY = m_radarOrigin.m_y;
+        screenScroll(dir, 1);
+        if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
+            && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
+            && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
+            g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
+    } else {
         g_lastMapScrollTime = GameTime::get();
-        return;
     }
-
-    unsigned long now = GameTime::get();
-    if (now - g_lastMapScrollTime < 70)
-        return;
-    g_lastMapScrollTime += 70;
-    if (now - g_lastMapScrollTime >= 70)
-        g_lastMapScrollTime = now - 70;
-
-    int origX = m_radarOrigin.m_x;
-    int origY = m_radarOrigin.m_y;
-    screenScroll(dir, 1);
-    if (g_mouseManager->getFrame() >= ADV_SCROLL_POINTER
-        && g_mouseManager->getFrame() <= ADV_SCROLL_NORTHWEST
-        && origX == m_radarOrigin.m_x && origY == m_radarOrigin.m_y)
-        g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 }
 
 // DC advmgr.cpp:10756 records MouseInScrollZone as an ordinary public member.

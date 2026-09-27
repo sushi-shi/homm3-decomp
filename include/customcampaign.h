@@ -1,5 +1,5 @@
 // customcampaign.h - canonical campaign state and Complete campaign types.
-// CodeView places SCampaign's constructor and completion query in this header.
+// The older DC class owns header bodies; Complete placement follows its retail callers.
 #ifndef HOMM3_CUSTOMCAMPAIGN_H
 #define HOMM3_CUSTOMCAMPAIGN_H
 
@@ -117,21 +117,11 @@ public:
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
-    // is a std::vector over a 4-byte element whose identity is unproven.
-    std::vector<int> m_assignedCarryover;
-    // E:\gamedcs\CustomCampaign.h:199, dc 0xbcd90
-    VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
-    SCampaign()
-    {
-        m_isCheater = 0;
-        m_secretActive = 0;
-        m_currentMap = -1;
-        m_numMapRegions = -1;
-        m_briefingChoice = -1;
-        m_crossoverArrayIndex = -1;
-        m_currentCampaign = CAMPAIGN_NONE;
-        memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
-    }
+    // is a four-byte hero-ID vector. Mac retains the non-POD append path;
+    // an enum reproduces that path and preserves the Windows bytes. The
+    // original element spelling remains unproven.
+    std::vector<HeroId> m_assignedCarryover;
+    SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
     // nameable before the campaign-brief declarations; the receiver,
     void playScenarioPrologue(void* campaignHeader);
@@ -152,15 +142,7 @@ public:
     // Original CampaignComplete@SCampaign@@QAA_NXZ (native bool, mutable).
     // DC's older fixed-array body also marks campaignCompleted. Retail's
     // 67-byte vector scan has no such store; preserve the Complete behavior.
-    VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)  // dc 0xe6ef8
-    bool campaignComplete()
-    {
-        for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
-            if (!m_mapScores[i].m_completed)
-                return 0;
-        }
-        return 1;
-    }
+    bool campaignComplete();
     int getScore() const;
     int getTotalTime() const;
     // Provisional name; PlaceCrossoverHeroes retains this lookup's nested

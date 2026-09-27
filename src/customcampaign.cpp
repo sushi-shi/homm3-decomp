@@ -129,7 +129,17 @@ DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusi
 
 // Scenario ordinals used when the fixed legacy matrices are promoted to the
 // current variable-length CampaignScenarioInfo vector.
-DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4];
+// Pinned Windows 0x63d8c8 and Mac code 0x2a4698 contain the same
+// seven four-entry rows; these are initialized ordinals, not BSS.
+DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4] = {
+    {0, 0, 0, 0},
+    {0, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 0, 0},
+    {0, 1, 0, 0},
+    {0, 0, 0, 0},
+    {0, 0, 0, 0}
+};
 
 // Retail .data 0x66c218 is a reference cell (the akHeroTraits pattern)
 // holding the campaign music table at 0x66c090; only StartMusic and
@@ -1199,6 +1209,11 @@ void TCampaignBonus::setTown(int)
 // code and call decisions otherwise align. The passive inline trace shows
 // default construction, resize/append, begin/Freeze, copy and destruction
 // expanding with the retained Grow/Eos/assign calls. No Dreamcast counterpart.
+// Mac 0x93f80 loads the file length with lwbrx; the shared platform macro
+// supplies that byte order while leaving Windows unchanged. Windows
+// 0x485dc5 zeros the read word explicitly; do not discard that initialization.
+// A function-scope, uninitialized-word/count-arm model failed that fact and
+// gave Mac 33.90%, versus 55.17% here. Buffer lifetime placement was flat.
 VA(0x00485d90, 0x1BB) MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
@@ -1206,7 +1221,7 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
     {
         unsigned int length = 0;
         infile->read(&length, sizeof(unsigned int));
-        remaining = length;
+        remaining = LITTLE_ENDIAN_LONG(length);
     }
     std::string text;
     text.resize(remaining);
@@ -1303,23 +1318,15 @@ void SCampaign::doPreLoadCustomization()
     }
 }
 
-// Complete-only helper hypothesis, name provisional. At 0x486590 the
-// retained-spellbook arm zeroes hero's two 70-byte tables before AddSpell
-// rebuilds them from the source hero. The DC method roster predates this
-// campaign path, so it supplies neither this name nor an inline keyword.
-// Keep the ordinary body visible before its caller for VC6 auto-inlining.
-void hero::clearSpells()
-{
-    memset(m_inSpellbook, 0, sizeof(m_inSpellbook));
-    memset(m_availableSpells, 0, sizeof(m_availableSpells));
-}
-
 // Complete-only campaign carry-over expansion. Dreamcast's campaign path has
 // no counterpart, but its debug types still corroborate hero, army and
 // artifact source boundaries. Retail independently proves the ScenarioStruct
 // receiver (+0x44..+0xa4), HeroPlaceholderData argument, and source hero. Its
 // code also proves the pointer-end artifact fill, custom-name flag order,
 // guarded west-adjacent TOWN test, and the final hero-id value lifetime.
+// Native binds the campaign base before the hero stores, and its final
+// append retains the four-byte non-POD hero-ID vector operation. Preserve
+// that typed local and ordinary source call; no trait override is needed.
 // The custom-name assignment still lacks retail's out-of-line _Eos;
 // spelling it as string::assign is byte-flat at 94.5908%.
 VA(0x00486590, 0xA84) MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
@@ -1328,9 +1335,9 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 {
     CObject* object = placeholder->m_object;
     hero* currentHero = g_game->getHero(sourceHero->m_id);
+    SCampaign* currentCampaign = &g_game->m_campaign;
     currentHero->m_order = 0;
     currentHero->m_id = sourceHero->m_id;
-    SCampaign* currentCampaign = &g_game->m_campaign;
     int slot;
 
     if (currentCampaign->m_currentCampaign == g_crossoverSplitCampaign
@@ -1521,7 +1528,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
     g_game->setVisibility(currentHero->m_x, currentHero->m_y, currentHero->m_z,
                           currentHero->m_owner, currentHero->getVisibility(), 1);
-    int heroId = currentHero->m_id;
+    HeroId heroId = H3_ENUM_DECODE(HeroId, currentHero->m_id);
     g_game->m_campaign.m_assignedCarryover.push_back(heroId);
 }
 
@@ -2198,13 +2205,15 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 
     int mapOffset = m_stream->pubseekoff(0, std::ios::cur, std::ios::in);
     NewSMapHeader mapHeader;
+    // Windows' -0x20 local and Mac 0x972e8 retain the selected record across
+    // loadMapHeader before applying its header; do not re-fetch the vector slot.
     for (int scenario2 = 0; scenario2 < numScenarios; ++scenario2) {
-        m_scenarios[scenario2]->m_offset = mapOffset;
-        if (m_scenarios[scenario2]->m_inflatedSize > 0) {
-            mapOffset += m_scenarios[scenario2]->m_inflatedSize;
-            m_scenarios[scenario2]->loadMapHeader(m_stream, &mapHeader,
-                                                 scenario2);
-            applyCampaignMapHeader(*m_scenarios[scenario2], mapHeader);
+        ScenarioStruct* scenario = m_scenarios[scenario2];
+        scenario->m_offset = mapOffset;
+        if (scenario->m_inflatedSize > 0) {
+            mapOffset += scenario->m_inflatedSize;
+            scenario->loadMapHeader(m_stream, &mapHeader, scenario2);
+            applyCampaignMapHeader(*scenario, mapHeader);
         }
     }
     return true;
@@ -2534,6 +2543,23 @@ void CampaignScenarioInfo::write(TAbstractFile* outfile) const
     }
 }
 
+// Complete retains this constructor in all three cross-TU callers:
+// TCampaignWindow, SavedGameHeader and game. Mac places it after
+// CampaignScenarioInfo::write and before the generated member teardown/
+// selectCampaign cluster. The older DC class used a header constructor.
+VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
+SCampaign::SCampaign()
+{
+    m_isCheater = 0;
+    m_secretActive = 0;
+    m_currentMap = -1;
+    m_numMapRegions = -1;
+    m_briefingChoice = -1;
+    m_crossoverArrayIndex = -1;
+    m_currentCampaign = CAMPAIGN_NONE;
+    memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
+}
+
 VA(0x00489590, 0x233) MAC_ADDRESS(0x098380, 0xc8)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
@@ -2560,6 +2586,18 @@ const int g_campaignOrdinal13 = 13;
 const int g_campaignOrdinal18 = 18;
 const int g_campaignMapOrdinal06 = 6;
 const int g_campaignMapOrdinal07 = 7;
+
+// Complete retains this vector scan and oldmain calls it across translation
+// units. The older Dreamcast inline header body scans fixed arrays instead.
+VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)  // dc 0xe6ef8
+bool SCampaign::campaignComplete()
+{
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
+        if (!m_mapScores[i].m_completed)
+            return 0;
+    }
+    return 1;
+}
 
 // PRICED 2026-09-06 - do not spend a lane on the /Ob2 side of this row. An
 // `if (0)` mass titration over N = 1,2,4,8,16,32,64 inert statements is flat
@@ -2597,8 +2635,8 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     scenario.m_days = g_game->getCurrentTurn();
     scenario.m_completed = true;
-    scenario.m_completeOrder = 0;
     scenario.m_score = g_game->getMapScore();
+    scenario.m_completeOrder = 0;
 
     if (scenario.m_index < 0) {
         scenario.m_index = m_carryOverHeroes.size();
@@ -2720,17 +2758,21 @@ static bool usesCrossoverPool(TCampaignBrief::ScenarioStruct& scenario, int pool
         && scenario.m_options->slot12(&scenario, pool);
 }
 
+// Native keeps the empty-scenario early return and initializes its best
+// result before that guard. Counter-before-result declaration matches all
+// register choices; only the two max argument homes remain four bytes off.
 MAC_ADDRESS(0x095ea8, 0x108)
 static int getMaxCrossoverHeroes(TCampaignBrief::ScenarioStruct& scenario)
 {
+    int option;
     int best = 0;
-    if (scenario.m_inflatedSize > 0) {
-        if (scenario.m_options->getCount() == 0)
-            best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
-        else
-            for (int option = scenario.m_options->getCount(); option--;)
-                best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
-    }
+    if (scenario.m_inflatedSize <= 0)
+        return best;
+    if (scenario.m_options->getCount() == 0)
+        best = scenario.m_heroesStatus[scenario.m_options->getPlayer(-1)];
+    else
+        for (option = scenario.m_options->getCount(); option--;)
+            best = max(best, scenario.m_heroesStatus[scenario.m_options->getPlayer(option)]);
     return best;
 }
 
@@ -2903,7 +2945,8 @@ static void readAssignedCampaignHeroes(TAbstractFile* infile,
     int count = readValue<unsigned char>(infile);
     campaign.m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
-        campaign.m_assignedCarryover[assignedIndex] = readValue<short>(infile);
+        campaign.m_assignedCarryover[assignedIndex] =
+            H3_ENUM_DECODE(HeroId, readValue<short>(infile));
     }
 }
 

@@ -13,6 +13,37 @@ from homm3.mac.relocations import Address, link_code
 
 
 class TestMacTarget(unittest.TestCase):
+    def test_generated_copy_assignment_requires_const_reference_to_same_owner(self):
+        symbol = ".__as__14CMapHeaderDataFRC14CMapHeaderData"
+        self.assertEqual(pairs.generated_copy_assignment_owner(symbol), "CMapHeaderData")
+        for invalid in (
+            ".__as__14CMapHeaderDataF14CMapHeaderData",
+            ".__as__14CMapHeaderDataCFRC14CMapHeaderData",
+            ".__as__14CMapHeaderDataFRC15SavedGameHeader",
+            ".__as__14CMapHeaderDataFRC14CMapHeaderDatai",
+            ".__ct__14CMapHeaderDataFRC14CMapHeaderData",
+        ):
+            with self.subTest(symbol=invalid):
+                self.assertIsNone(pairs.generated_copy_assignment_owner(invalid))
+
+    def test_generated_copy_assignment_uses_source_claim_and_preserves_conflicts(self):
+        from homm3.mac.addresses import Claim
+        symbol = ".__as__14CMapHeaderDataFRC14CMapHeaderData"
+        claim = Claim("src/campaignbrief.cpp", 178, 0x64044, 0x228,
+                      0x457cb0, ("IMPLICIT_COPY_ASSIGN", "CMapHeaderData"))
+        with patch.object(pairs.emitted, "object_hunks", return_value={}), \
+             patch.object(pairs.emitted, "claim_bodies", return_value=[]), \
+             patch.object(pairs.emitted, "bind", return_value=[]), \
+             patch.object(pairs, "_universe", return_value={symbol}):
+            result = pairs.load(Path("."), definitions=[], claims=[claim])
+            self.assertEqual(result.symbols[symbol], 0x64044)
+            self.assertFalse(result.pairs)  # a call binding is not an exact-body verdict
+            conflicting = Claim("src/other.cpp", 1, 0x1234, 0x228,
+                                0x123456, claim.compgen)
+            result = pairs.load(Path("."), definitions=[], claims=[claim, conflicting])
+            self.assertNotIn(symbol, result.symbols)
+            self.assertEqual(result.conflicts, (symbol,))
+
     def test_ledger_keeps_unscored_rows_and_resets_max_on_source_change(self):
         with tempfile.TemporaryDirectory() as directory:
             baseline = Path(directory) / "match_baseline.tsv"

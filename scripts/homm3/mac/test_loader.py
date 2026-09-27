@@ -138,6 +138,64 @@ Hunk: Kind=HUNK_LOCAL_IDATA Align=4 Class=TI Name="@13"(3) Size=4
         with self.assertRaises(ObjectError):
             parse_metadata_hunks(listing.replace("Size=18", "Size=16"))
 
+    def test_identical_generated_transition_vectors_and_cells_coalesce(self):
+        data = bytearray(128)
+        struct.pack_into(">III", data, 0, 0, 0x40, 0x50)
+        struct.pack_into(">II", data, 0x50, 0x20, 0x40)
+        native = bytes(0x20) + bytes.fromhex("4e800020") + bytes(220)
+        pef = container(bytes(data),
+                        (0x4600, 0x4200, 0x4200, 0xa000, 0x50, 0x4600, 0x4200),
+                        code=native)
+        symbol = "__defctor__7ExampleFv"
+        code_symbol = "." + symbol
+        code = CodeHunk(".owner", bytes.fromhex("808200004e800020"),
+                        ((0, "HUNK_XREF_16BIT_IL", symbol),))
+        descriptor = DataHunk(symbol, "DS", bytes(8),
+                              ((0, "HUNK_XREF_32BIT", code_symbol),
+                               (4, "HUNK_XREF_32BIT", "TOC")))
+        cell = DataHunk(symbol, "TC", bytes(4),
+                        ((0, "HUNK_XREF_32BIT", symbol),))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            folder = root / "config/mac/function_descriptors"
+            folder.mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            (folder / "example.toml").write_text(f'''[[descriptors]]
+unit="example"
+owner_vas=[0x00400100]
+symbol="{symbol}"
+code_symbol="{code_symbol}"
+mac_section=1
+mac_offset=0x50
+sha256="{sha256(data[0x50:0x58]).hexdigest()}"
+code_section=0
+code_offset=0x20
+code_size=4
+code_sha256="{sha256(native[0x20:0x24]).hexdigest()}"
+evidence="independently encoded native constructor transition vector"
+''')
+            for copies in (1, 2, 4):
+                with self.subTest(copies=copies):
+                    result = bindings(root, pef, code,
+                                      (descriptor,) * copies + (cell,) * copies,
+                                      unit="example", retail_va=0x00400100)
+                    self.assertEqual(result[symbol].target, Address(1, 0x50))
+                    self.assertEqual(result[symbol].displacement, 8 - 0x40)
+            conflicts = (
+                DataHunk(symbol, "DS", b"\1" + bytes(7), descriptor.xrefs),
+                DataHunk(symbol, "DS", bytes(8),
+                         ((0, "HUNK_XREF_32BIT", ".other"), descriptor.xrefs[1])),
+                DataHunk(symbol, "DS", bytes(8),
+                         (descriptor.xrefs[0], (4, "HUNK_XREF_32BIT", "OTHER_TOC"))),
+                DataHunk(symbol, "TC", bytes(4),
+                         ((0, "HUNK_XREF_32BIT", "other"),)),
+                DataHunk(symbol, "TC", b"\1" + bytes(3), cell.xrefs),
+            )
+            for conflict in conflicts:
+                with self.subTest(conflict=conflict), self.assertRaises(ObjectError):
+                    bindings(root, pef, code, (descriptor, cell, conflict),
+                             unit="example", retail_va=0x00400100)
+
     def test_external_global_is_bound_without_inventing_initializer(self):
         # Separate-TU MWLink control: an IL global in TOC range relaxes to addi,
         # including a pointer variable whose contents themselves are relocated.
@@ -170,6 +228,29 @@ declaration_only=true
             self.assertTrue(linked.data_references[0].declaration_only)
             with self.assertRaises(ObjectError):
                 bindings(root, pef, code, (*hunks, DataHunk("pointer", "RW", bytes(4), ())))
+
+    def test_external_bitset_binding_preserves_its_source_owner(self):
+        from homm3.mac.source import load_data, SourceError
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text("")
+            owner = root / "globals.h"
+            declaration = "DATA(0x00400100) std::bitset<48> removed;\n"
+            owner.write_text(declaration)
+            (root / "config/mac/data.toml").write_text(
+                '[[data]]\nretail_va=0x00400100\nsource="globals.h"\n'
+                'declaration_only=true\nmac_section=1\nmac_offset=16\nmac_size=8\n'
+                f'sha256="{sha256(bytes(8)).hexdigest()}"\n'
+                'evidence="reviewed external two-word bitset storage"\n')
+            row, = load_data(root)
+            self.assertEqual(row.mac_symbol, "removed")
+            self.assertTrue(row.declaration_only)
+            self.assertEqual(owner.read_text(), declaration)
+            for invalid in ("std::bitset<N>", "std::bitset<48, int>"):
+                owner.write_text(declaration.replace("std::bitset<48>", invalid))
+                with self.assertRaises(SourceError):
+                    load_data(root)
 
     def test_same_tu_udata_requires_zero_storage_and_direct_toc(self):
         listing = '''Hunk: Kind=HUNK_LOCAL_UDATA Align=1 Class=TD Name="viewFlag"(1) Size=1
@@ -231,6 +312,110 @@ evidence="same-TU direct zero byte"
                                                         sha256(bytes([1])).hexdigest()))
             with self.assertRaises(ObjectError):
                 bindings(root, container(bytes(changed), (0x4600, 0x4200)), code, (hunk,))
+
+    def test_external_udata_checks_owner_storage_and_consumer_reference(self):
+        data = bytearray(128)
+        struct.pack_into(">II", data, 0, 0, 0x40)
+        pef = container(bytes(data), (0x4600, 0x4200))
+        code = CodeHunk(".reader", bytes.fromhex("806200004e800020"),
+                        ((0, "HUNK_XREF_16BIT_IL", "flag"),))
+        cell = DataHunk("flag", "TC", bytes(4),
+                        ((0, "HUNK_XREF_32BIT", "flag"),))
+        storage, = parse_data_hunks(
+            'Hunk: Kind=HUNK_GLOBAL_UDATA Align=1 Class=RW Name="flag"(1) Size=1\n')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "config/mac").mkdir(parents=True)
+            (root / "config/units.toml").write_text(
+                '[[unit]]\nunit="owner"\nsource="source.cpp"\n')
+            (root / "source.cpp").write_text("DATA(0x00400100) unsigned char flag;\n")
+            (root / "config/mac/data.toml").write_text(f'''[[data]]
+retail_va=0x00400100
+source="source.cpp"
+same_tu_definition=true
+same_tu_external=true
+mac_section=1
+mac_offset=0x50
+mac_size=1
+sha256="{sha256(bytes(1)).hexdigest()}"
+evidence="externally linked zero storage with reviewed owner"
+''')
+            from homm3.mac.source import load_data, SourceError
+            manifest = root / "config/mac/data.toml"
+            ordinary_manifest = manifest.read_text()
+            vector_manifest = ordinary_manifest.replace("mac_size=1", "mac_size=12").replace(
+                sha256(bytes(1)).hexdigest(), sha256(bytes(12)).hexdigest())
+            manifest.write_text(vector_manifest)
+            (root / "source.cpp").write_text("DATA(0x00400100) std::vector<int> flag;\n")
+            vector_storage, = parse_data_hunks(
+                'Hunk: Kind=HUNK_GLOBAL_UDATA Align=4 Class=RW Name="flag"(1) Size=12\n')
+            pair, = load_data(root)
+            self.assertEqual(pair.owner_unit, "owner")
+            self.assertIn("std::vector<int>", pair.definition)
+            bindings(root, pef, code, (cell, vector_storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, storage), unit="owner")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, vector_storage), unit="consumer")
+            (root / "source.cpp").write_text("DATA(0x00400100) extern std::vector<int> flag;\n")
+            with self.assertRaises(SourceError):
+                load_data(root)
+            manifest.write_text(vector_manifest.replace(
+                "same_tu_external=true", "same_tu_external=false\nsame_tu_array=true"))
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) const char* flag[3];\n")
+            pair, = load_data(root)
+            self.assertTrue(pair.same_tu_array)
+            self.assertIn("const char*", pair.definition)
+            bindings(root, pef, code, (cell, vector_storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, storage), unit="owner")
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, code, (cell, vector_storage), unit="consumer")
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) extern const char* flag[3];\n")
+            with self.assertRaises(SourceError):
+                load_data(root)
+            constructed_manifest = ordinary_manifest.replace(
+                "same_tu_external=true", "same_tu_external=true\nsame_tu_constructed=true")
+            manifest.write_text(constructed_manifest)
+            (root / "source.cpp").write_text(
+                "DATA(0x00400100) Bounds flag(0, 0, 799, 555);\n")
+            pair, = load_data(root)
+            self.assertEqual(pair.name, "flag")
+            self.assertIn("(0, 0, 799, 555)", pair.definition)
+            bindings(root, pef, code, (cell, storage), unit="owner")
+            bindings(root, pef, code, (cell,), unit="consumer")
+            for bad_manifest in (
+                    ordinary_manifest,
+                    constructed_manifest.replace("same_tu_external=true", "same_tu_external=false"),
+                    constructed_manifest.replace("same_tu_constructed=true", 'same_tu_constructed="true"')):
+                manifest.write_text(bad_manifest)
+                with self.subTest(manifest=bad_manifest), self.assertRaises(SourceError):
+                    load_data(root)
+            manifest.write_text(constructed_manifest)
+            for declaration in ("Bounds flag(helper());", "Bounds flag(int arg);",
+                                "Bounds flag(1)[2];", "static Bounds flag(1);",
+                                "extern Bounds flag;"):
+                (root / "source.cpp").write_text("DATA(0x00400100) " + declaration)
+                with self.subTest(declaration=declaration), self.assertRaises(SourceError):
+                    load_data(root)
+            manifest.write_text(ordinary_manifest)
+            (root / "source.cpp").write_text("DATA(0x00400100) unsigned char flag;\n")
+            owner = bindings(root, pef, code, (cell, storage), unit="owner")
+            consumer = bindings(root, pef, code, (cell,), unit="consumer")
+            self.assertEqual(owner["flag"].target, consumer["flag"].target)
+            for unit, hunks in (("owner", (cell,)),
+                                ("consumer", (cell, storage)),
+                                ("owner", (cell, DataHunk("flag", "RW", b"\0", ())))):
+                with self.subTest(unit=unit, hunks=hunks), self.assertRaises(ObjectError):
+                    bindings(root, pef, code, hunks, unit=unit)
+            direct = CodeHunk(code.name, code.data,
+                              ((0, "HUNK_XREF_16BIT", "flag"),))
+            with self.assertRaises(ObjectError):
+                bindings(root, pef, direct, (cell,), unit="consumer")
 
     def test_address_only_source_owners_and_worker_manifest_conflicts(self):
         from homm3.mac.source import SourceError, load_data
@@ -392,7 +577,8 @@ evidence = "fixture"
         data[0x70] = 0x0a
         code_bytes = bytearray(256)
         struct.pack_into(">I", code_bytes, 0x20, 0x80620020)  # lwz r3,0x20(r2)
-        relocations = (0x4600, 0x4200, 0x8057, 0x4200)
+        # The first relocation leaves the cursor at 12; skip 84 bytes to 0x60.
+        relocations = (0x4600, 0x4200, 0x8053, 0x4200)
         pef = container(bytes(data), relocations, code=bytes(code_bytes))
         code = CodeHunk(".clear", bytes.fromhex("80620000"),
                         ((0, "HUNK_XREF_16BIT_IL", "@22"),))

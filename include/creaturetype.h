@@ -17,15 +17,17 @@ inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
         return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
-    } else {
-        return count == 1 ? g_creatureTypeTraits[type].m_name
-                          : g_creatureTypeTraits[type].m_pluralName;
     }
+    return count == 1 ? g_creatureTypeTraits[type].m_name
+                      : g_creatureTypeTraits[type].m_pluralName;
 }
 
+// Native Mac chooseWeakestArmy0x30200 and valueOfAddingArmy0x30310
+// subtract AIR and compare the unsigned offset with3. Keep this shared range
+// test; four equality checks retain extra native branches under CodeWarrior.
 #define isBaseElemental(type) \
-    ((type) == CREATURE_AIR_ELEMENTAL || (type) == CREATURE_EARTH_ELEMENTAL \
-        || (type) == CREATURE_FIRE_ELEMENTAL || (type) == CREATURE_WATER_ELEMENTAL)
+    (static_cast<unsigned int>((type) - CREATURE_AIR_ELEMENTAL) \
+        <= CREATURE_WATER_ELEMENTAL - CREATURE_AIR_ELEMENTAL)
 
 TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr);
 

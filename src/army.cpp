@@ -1202,8 +1202,6 @@ void army::animateMissile(army* armyToAttack)
 
     long frame = 0;
     if (nframes > 0) {
-        long right = x + width - 1;
-        long bottom = y + height - 1;
         for (; frame < nframes; frame++) {
             unsigned long nextFrameTime =
                 GameTime::get() + missileperiod;
@@ -1214,11 +1212,9 @@ void army::animateMissile(army* armyToAttack)
                            g_windowManager->m_screenBitmap->getHeight(),
                            g_windowManager->m_screenBitmap->getPitch(), false);
                 // Mac 0x4b3f4 constructs and copies the rectangle value.
-                updateArea = TDrawbridgeBounds(x, y, right, bottom);
+                updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
                 x += stepX;
                 y += stepY;
-                right += stepX;
-                bottom += stepY;
             }
             saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -1233,7 +1229,7 @@ void army::animateMissile(army* armyToAttack)
                               flipped, 1);
             // DC army.cpp:1326-1327 constructs this rectangle, then calls
             // SLimitData::Include and Clip; VC6 expands both methods.
-            updateArea.include(SLimitData(x, y, right, bottom));
+            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
@@ -2282,17 +2278,14 @@ long army::getDefenseModifier() const
         - g_creatureTypeTraits[m_creatureType].m_defenseSkill;
 }
 
-// E:\gamedcs\army.cpp:2680
-// Dreamcast's eight-byte body returns 1.0, but the shared helper boundary is
-// still visible in get_unit_combat_value. Mac expands this inline wrapper and
-// calls computeDefenderDamageReduction at 0:0x4ea40; keep the canonical
-// reduction body instead of spelling it a second time here. In a focused VC6
-// build, the caller falls from 96.5871% to 84.0903% because this compile
-// retains the reduction call where retail expands it through getDefenseFactor.
+// E:\gamedcs\army.cpp:2680: the recovered base modifier returns 1.0.
+// Complete's full damage-reduction operation starts from the same baseline.
+// Its composition with this base helper is a reconstruction hypothesis: both
+// compilers erase the constant-returning call, so bytes alone cannot prove it.
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
 {
-    return computeDefenderDamageReduction(rangedAttack);
+    return 1.0;
 }
 
 // The controller/owner pair, and the resolution of a naming inversion
@@ -2441,13 +2434,14 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
                                    const army* excluded) const
 {
-    long attackModifier = getAttackModifier(0, ranged);
-    long attackDiff = attackModifier - lowestAttack;
-    long defenseModifier = getDefenseModifier();
-    long defenseDiff = defenseModifier - lowestDefense;
-    double defense =
-        (defenseDiff * 0.05 + 1.0)
-        * getDefenseDamageModifier(ranged);
+    long attackDiff = getAttackModifier(0, ranged) - lowestAttack;
+    long defenseDiff = getDefenseModifier() - lowestDefense;
+    // Mac 0x4ea40 calls the full reduction before the defense product.
+    // Keep the recovered base helper inside that upper operation. This restores
+    // Windows 84.28 -> 96.59; the inverse wrapper exhausts VC6's nested inline
+    // budget (67 bytes available versus a 131-byte reduction body).
+    double defense = computeDefenderDamageReduction(ranged);
+    defense = (defenseDiff * 0.05 + 1.0) * defense;
     if (ranged && !canShoot(0))
         ranged = 0;
     double attack = attackDiff * 0.05 + 1.0;
@@ -2836,16 +2830,18 @@ double army::computeAttackerDamageReduction(const army* defender,
     return reduction;
 }
 
+// Mac 0x4fd30/0x4fd48 multiplies the baseline by each shield factor.
+// VC6 folds the initial 1.0 product; retaining both products is dual exact.
 VA(0x00443d90, 0x9C) MAC_ADDRESS(0x04fd04, 0x88)  // dc 0x48fc4
 double army::computeDefenderDamageReduction(unsigned char isShooting) const
 {
-    double reduction = 1.0;
+    double reduction = getDefenseDamageModifier(isShooting);
     if (isShooting) {
         if (m_spellInfluence[28])
-            reduction = m_airShieldFactor;
+            reduction *= m_airShieldFactor;
     } else {
         if (m_spellInfluence[27])
-            reduction = m_shieldFactor;
+            reduction *= m_shieldFactor;
     }
     if (m_spellInfluence[70])
         reduction *= 0.5;
@@ -4072,8 +4068,9 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     long x = targetX - halfWidth;
     long halfHeight = explosion->getHeight() / 2;
     long y = targetY - halfHeight;
-    long bottom = explosion->getHeight() - halfHeight + targetY - 1;
-    long right = explosion->getWidth() - halfWidth + targetX - 1;
+    // Mac 0x52378/0x5237c adds full dimensions to the computed origin.
+    long bottom = y + explosion->getHeight() - 1;
+    long right = x + explosion->getWidth() - 1;
     {
         TDrawbridgeBounds& bounds = g_combatManager->m_drawbridgeBounds;
         // Mac 0x52374 builds the four-word rectangle on the stack and
@@ -4783,7 +4780,9 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
     case SPELL_CURE:
         return target->m_topCreatureDamage > 0;
     case SPELL_PRAYER:
-        return static_cast<unsigned char>(~target->is(creatureDone)) & 1;
+        // Mac 0x543e4..0x543f0 negates the attribute test; the normal
+        // boolean expression is byte-identical to the former mask in VC6.
+        return !target->is(creatureDone);
     case SPELL_SLAYER:
         return groupHasDragons(1 - side);
     case SPELL_SHIELD:

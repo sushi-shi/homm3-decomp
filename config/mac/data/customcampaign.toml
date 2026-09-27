@@ -1,0 +1,227 @@
+[[constants]]
+units = ["customcampaign"]
+mac_section = 1
+mac_offset = 0x4878
+mac_size = 8
+sha256 = "07af8387624cf8f36152797d2f561246f21237d1d22b5c13006eacfa6f475e43"
+evidence = "initializeCrossoverHero native0x94ef0 loads the signed-int to double bias through TOC1+0x2300 -> section1+0x4878, then lfd at0x94ef8 subtracts it from the sign-bit-converted primary-skill value before multiplying by hero intelligence. All eight compiler-literal bytes are 0x4330000080000000 in native and candidate; bind the unit-owned payload without an anonymous ordinal."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x52c
+target_offset = 0x508
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x534
+target_offset = 0x510
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x53c
+target_offset = 0x518
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x544
+target_offset = 0x520
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x54c
+target_offset = 0x528
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x554
+target_offset = 0x530
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x55c
+target_offset = 0x538
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x564
+target_offset = 0x540
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x56c
+target_offset = 0x548
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x574
+target_offset = 0x550
+mac_section = 1
+mac_offset = 0x47a9
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47a9; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x590
+target_offset = 0x56c
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x598
+target_offset = 0x574
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5a0
+target_offset = 0x57c
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5a8
+target_offset = 0x584
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5b0
+target_offset = 0x58c
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5b8
+target_offset = 0x594
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5c0
+target_offset = 0x59c
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5c8
+target_offset = 0x5a4
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5d0
+target_offset = 0x5ac
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."
+
+[[constants]]
+units = ["customcampaign"]
+owner_va = 0x00486590
+candidate_offset = 0x5d8
+target_offset = 0x5b4
+mac_section = 1
+mac_offset = 0x47aa
+mac_size = 1
+sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+evidence = "Spell-table zero fill: this native byte load uses the direct TOC zero at1+0x47aa; its paired candidate load belongs to the same ten-store counted std::fill_n loop. Require the exact zero payload and all owner-bounded use sites; no compiler ordinal is pinned."

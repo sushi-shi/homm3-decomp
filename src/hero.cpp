@@ -889,8 +889,7 @@ void hero::initialize(short index)
     const int& initialSex = g_heroTraits[index].m_sex;
 
     type_obscuring_object::initialize();
-    std::fill_n(m_inSpellbook, sizeof(m_inSpellbook), static_cast<unsigned char>(0));
-    std::fill_n(m_availableSpells, sizeof(m_availableSpells), static_cast<unsigned char>(0));
+    clearSpells();
 
     short i;
     type_artifact* equipped = m_equipped;
