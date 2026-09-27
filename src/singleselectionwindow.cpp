@@ -6856,7 +6856,11 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
         sendPlayerPositions(0);
     }
+#if defined(HOMM3_TARGET_MAC)
+    // Mac 0x1818b4 refreshes the hero filter here; Windows 0x589fa0
+    // proceeds directly from the roster broadcast to the join message.
     makeHeroFilter();
+#endif
     g_chatMan.playerEnterMsg((*g_generalText)[GENERAL_TEXT_PLAYER_ENTERS_GAME_FORMAT],
                    msg->m_playerInfo.m_name);
     displayChat();
