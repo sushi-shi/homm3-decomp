@@ -9,10 +9,11 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
   [README.md](README.md#pinned-target).
 - Dreamcast's embedded debug symbols prove source facts for an older,
   cross-architecture build; x86 identities require retail proof.
-- The pinned Classic Mac PowerPC PEF is a second exact byte target for
-  shared functions. Source `MAC_ADDRESS` claims give PEF section-relative
-  offsets beside their Windows VA claims; unclaimed functions have no Mac
-  verdict. See [the Mac target plan](docs/matching/mac-second-target-plan.md).
+- The pinned Classic Mac PowerPC PEF is a source reference for Windows
+  reconstruction. Source `MAC_ADDRESS` claims pair its section-relative
+  function offsets with authored bodies. Use retained helpers, calls and
+  lightly optimized instructions to recover the Windows source structure.
+  Mac is not a game target or an independent exact-matching objective.
 
 Windows is the game being rebuilt. Use Mac solely as evidence for recovering
 the Windows source, particularly helper boundaries, source calls and function
@@ -94,15 +95,19 @@ homm3 sema diff 0x00524dd0 --structure
 homm3 sema diff 0x00524dd0 --source
 ```
 
-For byte matching a Mac pair, also run
-`homm3 mac show <Windows-VA>`, `homm3 mac disasm <Windows-VA>` and
-`homm3 mac diff <Windows-VA>` before speculative rewrites. A helper-sweep edit
-only needs enough Mac body/call evidence to identify the operation and its
-Windows callers; batch compilation and byte comparisons can follow the sweep.
-The Mac byte comparison is a separate exact verdict;
-its stripped PEF does not supply Dreamcast's names or line tables. Match the
-same authored C++ body against both targets, and document evidenced platform
-differences at the owning source.
+For a paired Mac reference, inspect `homm3 mac show <Windows-VA>` and
+`homm3 mac disasm <Windows-VA>`. Compile the same ordinary source with
+CodeWarrior when that tests a source hypothesis; use `homm3 mac shape` and
+call reports without requiring complete Mac linking. Masked shape agreement
+is not an exact-byte verdict and does not prove global or callee identities.
+Existing `homm3 mac diff` results may provide additional evidence when already
+available, but unavailable Mac data is not a blocker for Windows matching.
+
+Do not spend matching cycles adding data, literal, TOC or function-descriptor
+manifests under `config/mac/data` or `config/mac/function_descriptors`, or
+chasing independent Mac exact scores. Use `MAC_ADDRESS` for function pairing;
+retain canonical helpers and pursue Windows retail matches. Existing optional
+Mac linking inventories are not a required work queue.
 
 `homm3 mac calls <Windows-VA>` compares call sites and ordered targets.
 Indirect calls through the reviewed Mac glue remain explicitly unknown;
