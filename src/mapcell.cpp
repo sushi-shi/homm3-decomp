@@ -4594,6 +4594,8 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // terrainMask stay with the editor template.
 // Complete-only conversion constructor: retail 0x506080 constructs the
 // string and five masks, then copies the editor template's runtime fields.
+// Controls: equivalent reversed-grid getBitPos arithmetic and signed/long
+// position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no TObjectType* overload.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only

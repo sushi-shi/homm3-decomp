@@ -4,6 +4,7 @@
 #include "includes.h"
 #include "homm3_limit.h"
 #include "bitset_iterator.h"
+#include "packed_bits.h"
 
 #include <algorithm>
 #include <bitset>
@@ -508,37 +509,18 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
 // is unchecked. EH-bearing: the name assignment owns a string temporary
 // and the bitset's inlined set() carries its range throw.
 
-// Residual (87.9%): the /Ob2 budget inside the name assignment, nothing
-// source-local. `predict-inline` pairs 5 of the 13 out-of-line calls off
-// by COUNT (retail names its unclaimed basic_string callees, and the
-// 0x485d90 reader itself, with synth labels our side can never emit) and
-// leaves ONE real item, which it reports as `_Tidy` out of line 4 times
-// here against retail's 1.
-
-// READ THAT ROW THE OTHER WAY ROUND (2026-08-20, bytes). It is an
-// OVER-inline of basic_string::_Grow on OUR side, not an under-inline of
-// _Tidy. Both compiles inline std::bitset<48>::set AND its whole _Xran
-// throw at the granted-mask loop - our fn+0x652 and retail's fn+0x5e3
-// both carry the `invalid bitset<N> position` string construction inline.
-// Inside it, `assign(const char*, size_type)` calls `_Grow(_N, true)`,
-// and THAT is where the two diverge: retail leaves _Grow a CALL
-// (`push 1 / push ebx / lea ecx,[ebp-0x30] / call 0x4a90`), while our CL
-// expands _Grow and so exposes the `_Tidy` and `_Copy` calls that live
-// inside it. Same for the customName temporary at the head, where both
-// sides are already identical (`call assign(const basic_string&,
-// size_type, size_type)` then one `_Tidy`).
-// No statement in this body reaches _Grow - it is three levels down
-// inside an expansion both compiles agree to make - so the pin lever does
-// not apply and the depth lever (spelling the site one wrapper deeper)
-// has no shallower or deeper form to choose from here.
+// Mac 0xf3400 constructs a packed-bit result, decodes six bytes, then copies
+// through a second temporary at 0xf3478 before assigning the hero mask. The
+// ordinary readPackedBits return matches that lifetime and restores Windows
+// 79.07 -> 94.44%; using only decodePackedBits reached 81.32%. Both preserve
+// the bitset proxy operations and the stream read. Remaining nested string
+// expansions need separate inliner evidence; they are not register-only.
+// Typed scalar readers preserve every on-disk width while shortening the
+// staging lifetimes, bringing the same body to 94.93%.
 
 VA(0x004d7a20, 0x69F) MAC_ADDRESS(0x0f2ab4, 0xa04)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
-    unsigned int uintBuffer;
-    unsigned short ushortBuffer;
-    int intBuffer;
-    short shortBuffer;
 
     if (!type_obscuring_object::load(infile))
         return -1;
@@ -570,59 +552,33 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     m_levelSeed = readValue<unsigned char>(infile);
     m_lastWisdom = readValue<unsigned char>(infile);
 
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_pathTargetX = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_pathTargetY = intBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_pathTargetZ = shortBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_lastMagicSchoolLevel = shortBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_maxMovePoints = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_movePoints = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_experience = intBuffer;
-    infile->read(&intBuffer, sizeof(intBuffer));
-    m_skillCount = intBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_mana = shortBuffer;
-    infile->read(&shortBuffer, sizeof(shortBuffer));
-    m_level = shortBuffer;
-    infile->read(&ushortBuffer, sizeof(ushortBuffer));
-    m_targetDistance = ushortBuffer;
+    m_pathTargetX = readValue<int>(infile);
+    m_pathTargetY = readValue<int>(infile);
+    m_pathTargetZ = readValue<short>(infile);
+    m_lastMagicSchoolLevel = readValue<short>(infile);
+    m_maxMovePoints = readValue<int>(infile);
+    m_movePoints = readValue<int>(infile);
+    m_experience = readValue<int>(infile);
+    m_skillCount = readValue<int>(infile);
+    m_mana = readValue<short>(infile);
+    m_level = readValue<short>(infile);
+    m_targetDistance = readValue<unsigned short>(infile);
 
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_trainingGroundsFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_defenseTowerFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_gardenOfRevelationFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_mercCampFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_powerSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_treeOfKnowledgeFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_libraryFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_arenaFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_magicSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_warSchoolFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_universityFlags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine1Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine2Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_shrine3Flags = uintBuffer;
-    infile->read(&uintBuffer, sizeof(uintBuffer));
-    m_flags = uintBuffer;
+    m_trainingGroundsFlags = readValue<unsigned int>(infile);
+    m_defenseTowerFlags = readValue<unsigned int>(infile);
+    m_gardenOfRevelationFlags = readValue<unsigned int>(infile);
+    m_mercCampFlags = readValue<unsigned int>(infile);
+    m_powerSchoolFlags = readValue<unsigned int>(infile);
+    m_treeOfKnowledgeFlags = readValue<unsigned int>(infile);
+    m_libraryFlags = readValue<unsigned int>(infile);
+    m_arenaFlags = readValue<unsigned int>(infile);
+    m_magicSchoolFlags = readValue<unsigned int>(infile);
+    m_warSchoolFlags = readValue<unsigned int>(infile);
+    m_universityFlags = readValue<unsigned int>(infile);
+    m_shrine1Flags = readValue<unsigned int>(infile);
+    m_shrine2Flags = readValue<unsigned int>(infile);
+    m_shrine3Flags = readValue<unsigned int>(infile);
+    m_flags = readValue<unsigned int>(infile);
 
     m_army.load(infile);
 
@@ -647,12 +603,7 @@ int hero::load(TAbstractFile* infile, int saveVersion)
 
     m_isSleeping = readValue<unsigned char>(infile) != 0;
 
-    std::bitset<48> granted;
-    unsigned char inBuf[6];
-    infile->read(inBuf, sizeof(inBuf));
-    for (unsigned int i = 0; i < 48; i++)
-        granted[i] = (inBuf[i >> 3] & (1 << (i & 7))) != 0;
-    m_townSpecialGrantedMask = granted;
+    m_townSpecialGrantedMask = readPackedBits<48>(infile);
     return 0;
 }
 

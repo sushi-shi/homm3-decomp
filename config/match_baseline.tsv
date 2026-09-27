@@ -2272,7 +2272,7 @@ hero	?isInIdentifyRange@hero@@QBEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	tokens1:54ef7c96cd78
 hero	?isMobile@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:aac7d46590e4
 hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	tokens1:e365675044f1
-hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	79.0747	79.0747	87.9412	0xd7a20	tokens1:9e79329bc7ad
+hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	94.9316	94.9316	94.9316	0xd7a20	tokens1:e56381388c80
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	tokens1:099207a76ebe
 hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	97.5612	97.5612	97.5612	0xd9350	tokens1:748340d1cb90
 hero	?modifySpellDamage@hero@@QBEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760	tokens1:7fa269e7c30b
