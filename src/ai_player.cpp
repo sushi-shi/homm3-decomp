@@ -3085,7 +3085,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
             isNearby = 0;
 
         long candidateRaw = netValueOfLocation(
-            currentHero, &point, strategicMap, currentPathCell, g_searchArray);
+            currentHero, point, strategicMap, currentPathCell, g_searchArray);
         long value = candidateRaw;
         if (candidateRaw > 0) {
             if (point.m_moveCost > 100)
@@ -3400,6 +3400,12 @@ long markDestinations(hero* currentHero, long maxDistance,
     return heroDanger;
 }
 
+// Dreamcast dc0x33854 proves HeroDestination&. Complete passes the same
+// address and has no nullable path; the previous pointer exception cited an
+// authored symbol label, not a symbol present in the stripped retail image.
+// Reference and pointer share the machine ABI. Retain the reference model
+// through its frame-allocation dip (0x10 versus retail0x18) and recover the
+// caller/callee lifetimes together; all seven named calls remain intact.
 // Residual (85.35%): flow-distance 0; why-reg v2 reports first defs agree
 // (ebx=destination, esi=point, edi=point) and the residual is a mid-body
 // edx<->ecx x15 / eax<->ebx x12 rename family plus retail's RMW
@@ -3416,19 +3422,19 @@ long markDestinations(hero* currentHero, long maxDistance,
 // value, and the hero's current path target scales the result by 1.5 (+20)
 // where anything else is scaled by Random(1,25)+75 percent.
 VA(0x0042f980, 0x2c9) MAC_ADDRESS(0x032a90, 0x454)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
-int netValueOfLocation(hero* currentHero, HeroDestination* destination,
+int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, pathCell* currentPathCell,
                           searchArray* currentSearchArray)
 {
-    type_point point = destination->m_point;
+    type_point point = destination.m_point;
     NewmapCell* cell = g_advManager->getCell(point);
     int type = cell->m_type;
     if (cell->m_isTrigger && g_adventureObjectTraits[type].m_blocksLanding) {
         if (getMapExtra(point) & g_curPlayerBit) {
-            destination->m_moveCost -= currentPathCell->m_cost;
+            destination.m_moveCost -= currentPathCell->m_cost;
             point = currentPathCell->m_lastPoint;
             pathCell* lastCell = currentSearchArray->getCell(point, 0);
-            destination->m_moveCost += lastCell->m_cost;
+            destination.m_moveCost += lastCell->m_cost;
         }
     }
 
@@ -3441,19 +3447,19 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
 
     if (!g_adventureObjectTraits[type].m_blocksLanding) {
         type_point monsterPos;
-        if (g_advManager->findAdjacentMonster(destination->m_point,
+        if (g_advManager->findAdjacentMonster(destination.m_point,
                                               &monsterPos,
-                                              destination->m_point)) {
+                                              destination.m_point)) {
             if (currentPathCell->m_monster != monsterPos
                 && value >= -500000000)
                 value += aiValueOfEvent(currentHero, monsterPos,
-                                           destination->m_moveCost);
+                                           destination.m_moveCost);
         }
     }
 
-    if (destination->m_point.m_x == currentHero->m_pathTargetX
-        && destination->m_point.m_y == currentHero->m_pathTargetY
-        && destination->m_point.m_z == currentHero->m_pathTargetZ) {
+    if (destination.m_point.m_x == currentHero->m_pathTargetX
+        && destination.m_point.m_y == currentHero->m_pathTargetY
+        && destination.m_point.m_z == currentHero->m_pathTargetZ) {
         float scaled = static_cast<float>(value);
         if (value < 0)
             scaled = scaled / 1.5f;
@@ -3461,7 +3467,7 @@ int netValueOfLocation(hero* currentHero, HeroDestination* destination,
             scaled = scaled * 1.5f;
         int result = static_cast<int>(scaled) + 20;
         if (currentHero->m_targetIsCritical) {
-            destination->m_isCritical = 1;
+            destination.m_isCritical = 1;
             return result;
         }
         return result;
