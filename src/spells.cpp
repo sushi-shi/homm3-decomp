@@ -2616,11 +2616,13 @@ long combatManager::pointToHex(tagPOINT point)
 }
 
 // E:\gamedcs\spells.cpp:3138, dc 0x1536d4.
+// Mac 0x194c3c/0x194c48 subtracts start from stop; the same canonical
+// operand order restores both Windows hex collectors to exact bytes.
 MAC_ADDRESS(0x194c08, 0xd0)
 long combatManager::getDistance(tagPOINT start, tagPOINT stop)
 {
-    long dx = start.x - stop.x;
-    long dy = start.y - stop.y;
+    long dx = stop.x - start.x;
+    long dy = stop.y - start.y;
     if ((dx < 0) == (dy < 0))
         return cppMax(abs(dx), abs(dy));
     return abs(dx) + abs(dy);
