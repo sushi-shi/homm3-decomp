@@ -2573,6 +2573,9 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // has neither the eight random-map options nor these button arrays; its
 // mapFilter/filterSize members describe the existing scenario-file filter.
 // These desktop random-map helpers retain provisional semantic names.
+// Windows's six button loops and Mac 0x175f88/0x175f94/0x175fe8 reload
+// the array entry for each operation. Keep the pointer conversion temporary,
+// but do not cache the button across the two frame writes.
 
 VA(0x0057D170, 0x1DF7) MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createFilterWidgets()
@@ -2646,10 +2649,9 @@ void TSingleSelectionWindow::createFilterWidgets()
         326, 153, 55, 32, 0x127, "RanRand.def", 0, 1, 0, 0, 2);
     int i;
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountAButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountAButtons[i]->m_highlightedFrame = 2;
+        m_filterCountAButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountAButtons[i];
         widgets.push_back(added);
     }
 
@@ -2678,10 +2680,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountBButtons[8] = new button(
         326, 219, 55, 32, 0x131, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountBButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountBButtons[i]->m_highlightedFrame = 2;
+        m_filterCountBButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountBButtons[i];
         widgets.push_back(added);
     }
 
@@ -2710,10 +2711,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountCButtons[8] = new button(
         326, 285, 55, 32, 0x13b, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 9; ++i) {
-        button* current = m_filterCountCButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountCButtons[i]->m_highlightedFrame = 2;
+        m_filterCountCButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountCButtons[i];
         widgets.push_back(added);
     }
 
@@ -2740,10 +2740,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterCountDButtons[7] = new button(
         326, 351, 55, 32, 0x144, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 8; ++i) {
-        button* current = m_filterCountDButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterCountDButtons[i]->m_highlightedFrame = 2;
+        m_filterCountDButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterCountDButtons[i];
         widgets.push_back(added);
     }
 
@@ -2762,10 +2761,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterWaterButtons[3] = new button(
         326, 419, 55, 32, 0x149, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterWaterButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterWaterButtons[i]->m_highlightedFrame = 2;
+        m_filterWaterButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterWaterButtons[i];
         widgets.push_back(added);
     }
 
@@ -2784,10 +2782,9 @@ void TSingleSelectionWindow::createFilterWidgets()
     m_filterStrengthButtons[3] = new button(
         326, 485, 55, 32, 0x14e, "RanRand.def", 0, 1, 0, 0, 2);
     for (i = 0; i < 4; ++i) {
-        button* current = m_filterStrengthButtons[i];
-        current->m_highlightedFrame = 2;
-        current->setDisabledFrame(1);
-        widget* added = current;
+        m_filterStrengthButtons[i]->m_highlightedFrame = 2;
+        m_filterStrengthButtons[i]->setDisabledFrame(1);
+        widget* added = m_filterStrengthButtons[i];
         widgets.push_back(added);
     }
 
