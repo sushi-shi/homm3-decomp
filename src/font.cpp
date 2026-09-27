@@ -429,12 +429,14 @@ int font::lineWidth(const char* text) const
     return width;
 }
 
+// Ordinary len/pos/best declaration order matches both Windows and Mac;
+// the native difference was seven uses of the swapped best/pos registers.
 VA(0x004b5990, 0x76) MAC_ADDRESS(0x0c9888, 0xc4)  // dc 0xa25c8
 int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
-    int best = 0;
     int pos = 0;
+    int best = 0;
     while (pos < len && str[pos] != 0) {
         int lineWidth = 0;
         while (str[pos] != 0 && str[pos] != '\n') {
