@@ -77,6 +77,9 @@ static const int g_combatActionFirstAid = 11;
 // edge with target in r27 and saves starting at r26. The chosen-result flag
 // adds three CW instructions and an r25 save absent from native; remove that
 // provisional state while retaining the shared order stores.
+// Full native comparison now matches all 1016 Mac bytes: name the controller,
+// keep the typed mastery and signed four-wall count, and reuse one index
+// across the wall-array scans. Windows remains 98.6842%; every helper stays.
 VA(0x00473c00, 0x29F) MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automateCatapult()
 {
@@ -105,7 +108,8 @@ unsigned char combatManager::automateCatapult()
     }
 
     long count;
-    long skill = currentArmy->getController()->getSecondarySkill(
+    hero* controller = currentArmy->getController();
+    TSkillMastery skill = controller->getSecondarySkill(
         eSecSkillSiegeBallistics);
     if (!isComputerAction() && skill > 0)
         return 0;
@@ -114,18 +118,19 @@ unsigned char combatManager::automateCatapult()
         goto issueCatapultOrder;
     }
 
+    long index;
     count = 0;
-    { for (long i = 0; i < 4; i++) {
-            if (getWallStrength(walls[i]) > 0)
+    { for (index = 0; index < 4; index++) {
+            if (getWallStrength(walls[index]) > 0)
                 count++;
         }
     }
 
-    if (count > 0 && (skill == 0 || count == sizeof(walls) / sizeof(walls[0]))) {
+    if (count > 0 && (skill == 0 || count == 4)) {
         long weakest = 100;
         count = 0;
-        { for (long i = 0; i < 4; i++) {
-                long strength = getWallStrength(walls[i]);
+        { for (index = 0; index < 4; index++) {
+                long strength = getWallStrength(walls[index]);
                 if (strength <= 0 || strength > weakest)
                     continue;
                 if (strength < weakest)
@@ -138,7 +143,7 @@ unsigned char combatManager::automateCatapult()
         // Dreamcast and Mac retain sRandom here. Complete binds its
         // identical body to the shared random implementation.
         long choice = sRandom(1, count);
-        long index = 0;
+        index = 0;
         for (; index < 4; index++) {
             long strength = getWallStrength(walls[index]);
             if (strength == weakest && --choice == 0)
@@ -150,7 +155,6 @@ unsigned char combatManager::automateCatapult()
             WALL_TARGET_3, WALL_TARGET_7, WALL_TARGET_0, WALL_TARGET_6
         };
 
-        long index;
         for (index = 0; index < 4; index++) {
             if (validWallTarget(towers[index]))
                 break;
