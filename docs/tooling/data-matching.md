@@ -40,6 +40,12 @@ Pristine zlib definitions use the existing `config/retail/zlib-map.tsv` with
 the matching ABI. Initializers and pointer destinations are checked against
 retail; data rows do not enter the function denominator.
 
+VC6 local-static guard claims own one byte, as confirmed by the compiler's
+unsigned-char guard symbols and retail byte accesses. They do not claim the
+adjacent flags or other guards. Mutable source-owned character arrays are
+excluded from pooled-literal pairing: identical initial text does not make a
+writable buffer and a string literal the same object.
+
 `homm3 model` writes `build/gen/bindings.tsv` and `violations.tsv`. The existing
 `symbol_names.csv` is a compatibility export used by the synthetic PDB and
 Windows navigation tools. It is not another hand-maintained symbol ledger.

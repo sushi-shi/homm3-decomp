@@ -9,7 +9,7 @@
 #include "pcx.h"
 
 // Static mask storage, set by SetPixelFormat before sprite drawing.
-DATA(0x006968a4) TBlendMask CSpriteFrame::s_div2mask;
+DATA(0x006968a4) unsigned short CSpriteFrame::s_div2mask;
 DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 
 
@@ -130,7 +130,7 @@ void CSpriteFrame::setPixelFormat(unsigned rmask, unsigned gmask,
         if (bmask & (1 << i))
             bits++;
 
-    s_div2mask.m_word = ((((1 << rBits) - 1) / 2) << (gBits + bits))
+    s_div2mask = ((((1 << rBits) - 1) / 2) << (gBits + bits))
         | ((((1 << gBits) - 1) / 2) << bits)
         | (((1 << bits) - 1) / 2);
     s_div4mask = ((((1 << rBits) - 1) / 4) << (gBits + bits))
@@ -1073,9 +1073,9 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             } while (--count);
                         } else {
                             do {
-                                *out = (s_div2mask.m_dword
+                                *out = (s_div2mask
                                         & (pal.m_data[*src++] >> 1))
-                                     + (s_div2mask.m_word & (*out >> 1));
+                                     + (s_div2mask & (*out >> 1));
                                 ++out;
                             } while (--count);
                         }
@@ -1086,7 +1086,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask.m_word);
+                                     + ((*out >> 1) & s_div2mask);
                                 ++out;
                             } while (--count);
                             break;
@@ -1096,7 +1096,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 unsigned int color = *out;
-                                *out = (color >> 1) & s_div2mask.m_word;
+                                *out = (color >> 1) & s_div2mask;
                                 ++out;
                             } while (--count);
                             break;
@@ -1111,7 +1111,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask.m_word);
+                                     + ((*out >> 1) & s_div2mask);
                                 ++out;
                             } while (--count);
                             break;
@@ -1120,7 +1120,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 unsigned int color = *out;
-                                *out = (color >> 1) & s_div2mask.m_word;
+                                *out = (color >> 1) & s_div2mask;
                                 ++out;
                             } while (--count);
                             break;
@@ -1186,9 +1186,9 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                         } else {
                             do {
                                 --out;
-                                *out = (s_div2mask.m_dword
+                                *out = (s_div2mask
                                         & (pal.m_data[*src++] >> 1))
-                                     + (s_div2mask.m_dword & (*out >> 1));
+                                     + (s_div2mask & (*out >> 1));
                             } while (--count);
                         }
                     } else if (!outcolor) {
@@ -1199,7 +1199,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 --out;
                                 *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask.m_dword);
+                                     + ((*out >> 1) & s_div2mask);
                             } while (--count);
                             break;
                         }
@@ -1209,7 +1209,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & s_div2mask.m_dword;
+                                *out = (color >> 1) & s_div2mask;
                             } while (--count);
                             break;
                         }
@@ -1224,7 +1224,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 --out;
                                 *out = ((*out >> 2) & s_div4mask)
-                                     + ((*out >> 1) & s_div2mask.m_dword);
+                                     + ((*out >> 1) & s_div2mask);
                             } while (--count);
                             break;
                         }
@@ -1233,7 +1233,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                             do {
                                 unsigned int color = out[-1];
                                 --out;
-                                *out = (color >> 1) & s_div2mask.m_dword;
+                                *out = (color >> 1) & s_div2mask;
                             } while (--count);
                             break;
                         }
@@ -1520,16 +1520,16 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                         if (code == eRleControlOutline7) {
                             unsigned int count = run;
                             do {
-                                *out = (s_div2mask.m_dword
+                                *out = (s_div2mask
                                         & (palette[*src++] >> 1))
-                                     + (s_div2mask.m_dword & (*out >> 1));
+                                     + (s_div2mask & (*out >> 1));
                                 ++out;
                             } while (--count);
                         } else if (code == eRleControlOutline5 && flagcolor) {
                             unsigned int count = run;
                             do {
-                                *out = (s_div2mask.m_dword & (*out >> 1))
-                                     + (s_div2mask.m_dword & (flagcolor >> 1));
+                                *out = (s_div2mask & (*out >> 1))
+                                     + (s_div2mask & (flagcolor >> 1));
                                 ++out;
                             } while (--count);
                         } else {
@@ -1586,16 +1586,16 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = (s_div2mask.m_dword
+                                *out = (s_div2mask
                                         & (palette[*src++] >> 1))
-                                     + (s_div2mask.m_dword & (*out >> 1));
+                                     + (s_div2mask & (*out >> 1));
                             } while (--count);
                         } else if (code == eRleControlOutline5 && flagcolor) {
                             unsigned int count = run;
                             do {
                                 --out;
-                                *out = (s_div2mask.m_dword & (*out >> 1))
-                                     + (s_div2mask.m_dword & (flagcolor >> 1));
+                                *out = (s_div2mask & (*out >> 1))
+                                     + (s_div2mask & (flagcolor >> 1));
                             } while (--count);
                         } else {
                             out -= run;
@@ -1704,7 +1704,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                 unsigned int count = run;
                                 do {
                                     *out = ((*out >> 2) & s_div4mask)
-                                         + ((*out >> 1) & s_div2mask.m_dword);
+                                         + ((*out >> 1) & s_div2mask);
                                     ++out;
                                 } while (--count);
                                 break;
@@ -1713,7 +1713,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                 unsigned int count = run;
                                 do {
                                     unsigned int color = *out;
-                                    *out = (color >> 1) & s_div2mask.m_dword;
+                                    *out = (color >> 1) & s_div2mask;
                                     ++out;
                                 } while (--count);
                                 break;
@@ -1780,7 +1780,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                 do {
                                     --out;
                                     *out = ((*out >> 2) & s_div4mask)
-                                         + ((*out >> 1) & s_div2mask.m_dword);
+                                         + ((*out >> 1) & s_div2mask);
                                 } while (--count);
                                 break;
                             }
@@ -1788,7 +1788,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                 unsigned int count = run;
                                 do {
                                     --out;
-                                    *out = (*out >> 1) & s_div2mask.m_dword;
+                                    *out = (*out >> 1) & s_div2mask;
                                 } while (--count);
                                 break;
                             }
@@ -2332,7 +2332,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask.m_dword);
+                                             + ((*out >> 1) & s_div2mask);
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2342,7 +2342,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         unsigned int color = *out;
-                                        *out = (color >> 1) & s_div2mask.m_dword;
+                                        *out = (color >> 1) & s_div2mask;
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2408,7 +2408,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     do {
                                         --out;
                                         *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask.m_dword);
+                                             + ((*out >> 1) & s_div2mask);
                                     } while (--count);
                                     break;
                                 }
@@ -2417,7 +2417,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         --out;
-                                        *out = (*out >> 1) & s_div2mask.m_dword;
+                                        *out = (*out >> 1) & s_div2mask;
                                     } while (--count);
                                     break;
                                 }
@@ -2483,7 +2483,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask.m_dword);
+                                             + ((*out >> 1) & s_div2mask);
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2493,7 +2493,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         unsigned int color = *out;
-                                        *out = (color >> 1) & s_div2mask.m_dword;
+                                        *out = (color >> 1) & s_div2mask;
                                         ++out;
                                     } while (--count);
                                     break;
@@ -2559,7 +2559,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     do {
                                         --out;
                                         *out = ((*out >> 2) & s_div4mask)
-                                             + ((*out >> 1) & s_div2mask.m_dword);
+                                             + ((*out >> 1) & s_div2mask);
                                     } while (--count);
                                     break;
                                 }
@@ -2568,7 +2568,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                     unsigned int count = run;
                                     do {
                                         --out;
-                                        *out = (*out >> 1) & s_div2mask.m_dword;
+                                        *out = (*out >> 1) & s_div2mask;
                                     } while (--count);
                                     break;
                                 }
@@ -2674,9 +2674,9 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                     if (code == opaqueRunCode) {
                         unsigned int count = run;
                         do {
-                            *out = (s_div2mask.m_dword
+                            *out = (s_div2mask
                                     & (palette[*src++] >> 1))
-                                 + (s_div2mask.m_dword & (*out >> 1));
+                                 + (s_div2mask & (*out >> 1));
                             ++out;
                         } while (--count);
                     } else {
@@ -2725,9 +2725,9 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                         unsigned int count = run;
                         do {
                             --out;
-                            *out = (s_div2mask.m_dword
+                            *out = (s_div2mask
                                     & (palette[*src++] >> 1))
-                                 + (s_div2mask.m_dword & (*out >> 1));
+                                 + (s_div2mask & (*out >> 1));
                         } while (--count);
                     } else {
                         out -= run;
@@ -2948,13 +2948,13 @@ void CSpriteFrame::drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
                     if (skip)
                         --count;
                     while (count > 1) {
-                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        *out = ((*out >> 1) & s_div2mask) + ((*out >> 2) & s_div4mask);
                         ++out;
                         count -= 2;
                     }
                     skip = count != 0;
                     if (skip) {
-                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        *out = ((*out >> 1) & s_div2mask) + ((*out >> 2) & s_div4mask);
                         ++out;
                     }
                     break;
@@ -2964,13 +2964,13 @@ void CSpriteFrame::drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
                     if (skip)
                         --count;
                     while (count > 1) {
-                        *out = (*out >> 1) & s_div2mask.m_word;
+                        *out = (*out >> 1) & s_div2mask;
                         ++out;
                         count -= 2;
                     }
                     skip = count != 0;
                     if (skip) {
-                        *out = (*out >> 1) & s_div2mask.m_word;
+                        *out = (*out >> 1) & s_div2mask;
                         ++out;
                     }
                     break;
@@ -3528,12 +3528,12 @@ void CSpriteFrame::drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
                 case eRleControlShadow75: {
                     unsigned int count = run - skip;
                     while (count > 3) {
-                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        *out = ((*out >> 1) & s_div2mask) + ((*out >> 2) & s_div4mask);
                         ++out;
                         count -= 4;
                     }
                     if (count) {
-                        *out = ((*out >> 1) & s_div2mask.m_word) + ((*out >> 2) & s_div4mask);
+                        *out = ((*out >> 1) & s_div2mask) + ((*out >> 2) & s_div4mask);
                         // DC's partial quarter-size shadow run does not advance out.
                         skip = 4 - count;
                     } else {
@@ -3544,12 +3544,12 @@ void CSpriteFrame::drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
                 case eRleControlShadow50: {
                     unsigned int count = run - skip;
                     while (count > 3) {
-                        *out = (*out >> 1) & s_div2mask.m_word;
+                        *out = (*out >> 1) & s_div2mask;
                         ++out;
                         count -= 4;
                     }
                     if (count) {
-                        *out = (*out >> 1) & s_div2mask.m_word;
+                        *out = (*out >> 1) & s_div2mask;
                         // DC's partial quarter-size shadow run does not advance out.
                         skip = 4 - count;
                     } else {

@@ -64,5 +64,20 @@ void clean() { DATA(0x00401000) static unsigned char values[5] = { 1 }; }
         self.assertTrue(facts[0x1000]['source'].startswith('probe.cpp:'))
 
 
+class StaticGuardExtentTest(unittest.TestCase):
+    def test_adjacent_local_static_guards_own_one_byte_each(self):
+        from homm3.retail_labels.source import scan_file
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'probe.cpp'
+            path.write_text("""
+DATA_COMPGEN_GUARD(0x00698b98, firstGuard, first)
+DATA_COMPGEN_GUARD(0x00698b99, secondGuard, second)
+DATA_COMPGEN_GUARD(0x00698b9a, thirdGuard, third)
+""")
+            rows = scan_file(path, set())
+        self.assertEqual([(r['rva'], r['size']) for r in rows],
+                         [(0x298b98, 1), (0x298b99, 1), (0x298b9a, 1)])
+
+
 if __name__ == '__main__':
     unittest.main()

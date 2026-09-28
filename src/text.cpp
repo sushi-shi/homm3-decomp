@@ -59,7 +59,7 @@ const char* g_townCommand[35];
 DATA(0x006a5e20)
 const char* g_mineEventText[8];
 
-// 0x006a5e40 - datum claimed at src/townmgr.cpp:385
+DATA(0x006a5e40)
 const char* g_tavernInfo[8];
 
 DATA(0x006a5e60)
@@ -220,7 +220,7 @@ THelpText g_campaignBriefHelp[62];
 DATA(0x006a5f80)
 THelpText g_campaignWindowHelp[24];
 
-// 0x006a6530 - datum claimed at src/adventureoptionswindow.cpp:20
+DATA(0x006a6530)
 THelpText g_adventureOptionsHelp[7];
 
 DATA(0x006a6570)
@@ -244,7 +244,7 @@ THelpText g_sellArtifactWindowHelp[5];
 DATA(0x006a6c80)
 THelpText g_singleSelectionHelp[245];
 
-// 0x006a7458 - datum claimed at src/viewarmywindow.cpp:156
+DATA(0x006a7458)
 THelpText g_viewArmyHelp[15];
 
 DATA(0x006a7518)
@@ -327,10 +327,10 @@ const char* g_constWiseTreePriceText[3];
 DATA(0x006a74f0)
 const char* g_townTypeNames[10];
 
-// 0x006a7540 - datum claimed at src/hero.cpp:121 (gStatDesc)
+DATA(0x006a7540)
 const char* g_statDesc[4];
 
-// 0x006a7710 - datum claimed at src/game.cpp:446
+DATA(0x006a7710)
 const char* g_weekNames[15];
 
 DATA(0x006a7794)
@@ -345,7 +345,7 @@ const char* g_difficulty[5];
 DATA(0x006a7800)
 const char* g_handiText[3];
 
-// 0x006a79c4 - datum claimed at src/game.cpp:445
+DATA(0x006a79c4)
 const char* g_monthNames[10];
 
 DATA(0x006a7d94)

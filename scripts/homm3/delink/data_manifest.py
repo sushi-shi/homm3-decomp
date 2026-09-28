@@ -383,7 +383,7 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
     return rows, withheld, skipped
 
 
-def string_rows(base_dir=BASE_DIR):
+def string_rows(base_dir=BASE_DIR, *, mutable_arrays=()):
     """Enrollable `??_C@` string-literal definitions + the withheld ones.
 
     Both facts are PROVEN: the retail RVA comes from content-matching each
@@ -406,6 +406,11 @@ def string_rows(base_dir=BASE_DIR):
     img = retail()
     rows, withheld, by_name = [], [], defaultdict(list)
     for rva in _reloc_data_rvas():
+        # An authored mutable array is distinct storage even when its initial
+        # bytes equal a pooled literal. Do not let it create a false duplicate
+        # literal collision (g_title and WinMain's caption are one example).
+        if any(start <= rva < end for start, end in mutable_arrays):
+            continue
         cs = img.cstring(rva)
         if cs is None or cs not in owners:
             continue
@@ -842,7 +847,12 @@ def candidates(model: Model):
     tail_oracle = _candidate_member_storage()
     rows, withheld, skipped = claim_rows(model, tail_oracle)
 
-    strings, w = string_rows()
+    types = declared_types()
+    mutable_arrays = [(b.rva, b.rva + b.size) for b in model.data
+                      if b.channel == "src" and b.size
+                      and re.fullmatch(r"(?:signed |unsigned )?char(?:\[\d+\])+",
+                                       types.get(b.rva, ""))]
+    strings, w = string_rows(mutable_arrays=mutable_arrays)
     rows += strings
     withheld += w
     vtables, w = vtable_rows(model)

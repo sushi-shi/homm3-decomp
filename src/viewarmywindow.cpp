@@ -49,13 +49,9 @@ const unsigned int g_ctaShooter = 0x4;
 const int g_moraleHelpIndex = 9;
 const int g_luckHelpIndex = 10;
 
-// The popup's own help roster, filled from HELP.TXT by text.obj's
-// spreadsheet loader (0x5b98b0), which walks 0x6a7458 in stride-8 pairs
-// up to 0x6a74d4 - i.e. fifteen THelpText rows. convertID2HelpID's
-// 0..15 range is what indexes it: [].text is the bottom strip's line
-// and [].rclick the right-click dialog body. The extent is spelled 16
-// because the id map can produce 15; the loader stops one row short.
-DATA(0x006a7458) extern THelpText g_viewArmyHelp[16];
+// initializeHelpText fills fifteen rows at 0x6a7458. g_mineDescriptions
+// begins immediately afterward at 0x6a74d0. Retail's OK_ID -> 15 mapping
+// below does not prove an additional help row; preserve that dispatch.
 
 // Two ARRAYTXT.TXT runs text.obj's second loader (0x5b9cc0) fills with
 // stride-4 char pointers: 42 rows from 0x6a57bc and 25 from 0x6a532c.

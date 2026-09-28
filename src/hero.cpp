@@ -68,7 +68,6 @@ DATA(0x00698a44) int g_heroScreenArmyStripLive;
 // storage addresses and access widths are byte-proven; no public symbol
 // roster survives for the two name-table pointer spellings, so they are
 // provisional. gpCurrentHero and the hero-screen globals live in hero.h.
-DATA(0x006a7540) extern const char* g_statDesc[4];
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
 // cells and their roles; no surviving public names them, so the spellings
 // remain provisional.

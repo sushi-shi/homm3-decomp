@@ -874,7 +874,10 @@ def scan_file(path, functions: set[int],
                          "ckind": kind, "owner": owner})
         elif macro == "DATA_COMPGEN_GUARD":
             name = _arg(args[1], IDENT_ARG_RE, "name", where)
-            rows.append({"rva": rva, "unit": unit, "size": 4,
+            # VC6 local-static guards are unsigned char (the emitted $S
+            # symbols end in @4EA). Retail byte accesses and the adjacent
+            # herodefs guards at 0x698b98/99/9a independently confirm this.
+            rows.append({"rva": rva, "unit": unit, "size": 1,
                          "kind": "data",
                          "name": f"__h3cg${unit}$static_init_guard${name}",
                          "channel": "src-DATA_COMPGEN_GUARD"})

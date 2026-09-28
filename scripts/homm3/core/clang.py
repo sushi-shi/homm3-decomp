@@ -49,7 +49,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 7
+PATCH_VERSION = 8
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -112,6 +112,17 @@ def _sstream(text: str) -> str:
     return text
 
 
+def _functional(text: str) -> str:
+    """Disambiguate dependent binder typedefs, including their value casts.
+
+    VC6 accepts _Bfn::second_argument_type(value) without typename; Clang
+    rejects it when bind2nd is instantiated. This only repairs the analysis
+    mirror's syntax; the original SDK and matching compiler are untouched.
+    """
+    return re.sub(r"(?<!typename )\b_Bfn::(?:first_argument_type|second_argument_type|result_type)\b",
+                  lambda match: "typename " + match.group(0), text)
+
+
 def _limits(text: str) -> str:
     """VC6 accepts implicit explicit-specialization syntax for numeric_limits.
 
@@ -163,6 +174,7 @@ PATCHES = {
     "sstream": _sstream,
     "fstream": _fstream,
     "limits": _limits,
+    "functional": _functional,
 }
 
 

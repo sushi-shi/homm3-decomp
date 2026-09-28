@@ -47,5 +47,25 @@ class InputAdapterTests(unittest.TestCase):
                 self.assertEqual(parse.call_count, 2)
 
 
+class StringStorageTests(unittest.TestCase):
+    def test_mutable_array_does_not_collide_with_a_separate_literal(self):
+        from homm3.delink import data_manifest
+        candidate = SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
+                                    sym_name=lambda _: '??_C@caption',
+                                    cstring=lambda *_: b'Caption')
+        retail = SimpleNamespace(cstring=lambda _: b'Caption')
+        with patch.object(data_manifest.coffx, 'objects', return_value=[('window', candidate)]), \
+             patch.object(data_manifest, 'retail', return_value=retail), \
+             patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1000, 0x2000]), \
+             patch.object(data_manifest, '_classify', return_value='data-initialized'):
+            rows, withheld = data_manifest.string_rows(mutable_arrays=[(0x1000, 0x1008)])
+            self.assertEqual([(r['rva'], r['size']) for r in rows], [(0x2000, 8)])
+            self.assertEqual(withheld, [])
+            # Without a proven mutable owner, duplicate addresses remain ambiguous.
+            rows, withheld = data_manifest.string_rows()
+            self.assertEqual(rows, [])
+            self.assertEqual(len(withheld), 2)
+
+
 if __name__ == '__main__':
     unittest.main()

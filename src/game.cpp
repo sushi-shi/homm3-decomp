@@ -238,8 +238,6 @@ const int g_neutralTownFortifiedReinforcementChance = 80;
 // The ArrayTxt loader fills these calendar-name rows and the eight adjacent
 // new-turn message formats. Dreamcast supplies gWeekNames/gMonthNames; the
 // remaining spellings describe only the retail use proven in DoNewTurn.
-DATA(0x006a79c4) extern const char* g_monthNames[10];
-DATA(0x006a7710) extern const char* g_weekNames[15];
 
 // The 256 canned-rumour text pointers are filled by the game-data loader.
 // Its first store is 0x696d9c and SetCannedRumour is the table's only
@@ -4630,16 +4628,22 @@ void game::randomizeEvents()
 
                 case g_retailCreatureGenerator2:
                     sprintf(g_text,
-                            "CREATURE_GENERATOR_2 found at X=%d Y=%d Z=%d",
+                            DATA_COMPGEN(0x00677e38, invalidCreatureGenerator2Format,
+                                "CREATURE_GENERATOR_2 found at X:%03d - Y: %03d - Z: %03d\nPlease replace it with the appropriate single generator."),
                             x, y, z);
-                    MessageBoxA(g_hwndApp, g_text, "Invalid Generator", 0);
+                    MessageBoxA(g_hwndApp, g_text,
+                        DATA_COMPGEN(0x00677e24, invalidCreatureGeneratorTitle,
+                            "Invalid Generator"), 0);
                     break;
 
                 case g_retailCreatureGenerator3:
                     sprintf(g_text,
-                            "CREATURE_GENERATOR_3 found at X=%d Y=%d Z=%d",
+                            DATA_COMPGEN(0x00677db0, invalidCreatureGenerator3Format,
+                                "CREATURE_GENERATOR_3 found at X:%03d - Y: %03d - Z: %03d\nPlease replace it with the appropriate single generator."),
                             x, y, z);
-                    MessageBoxA(g_hwndApp, g_text, "Invalid Generator", 0);
+                    MessageBoxA(g_hwndApp, g_text,
+                        DATA_COMPGEN(0x00677e24, invalidCreatureGeneratorTitle,
+                            "Invalid Generator"), 0);
                     break;
 
                 case CREATURE_GENERATOR_4:

@@ -781,7 +781,6 @@ DATA(0x006aa62c) static TThievesGuildWindow* g_thievesGuildWindow;
 // eight-hero cap (takes the cap as a vararg), 2 the town square is
 // occupied, 3 the selected recruit's name and class, 4 a portrait's
 // name, 5 the thieves' guild button, 6 the rumour panel, 7 cancel.
-DATA(0x006a5e40) extern const char* g_tavernInfo[8];
 
 // The line DoPortalOfSummoning prints when the map has nothing left for
 // the portal to summon. ONE image-wide reference and no writer in the

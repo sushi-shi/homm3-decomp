@@ -106,7 +106,13 @@ admission a blanket waiver for every integer-to-enum conversion. The next step
 is canonical ownership and real input-domain recovery, preserving the attested
 public ABI rather than changing parameter types solely to satisfy callers.
 
-The other 33 remaining definitions are exhaustively grouped here:
+The other 32 remaining definitions are exhaustively grouped here. The later
+byte-ownership check removed `TBlendMask`: retail's `s_div2mask` is a two-byte
+unsigned short at 0x6968a4, followed by the distinct RLE code byte at 0x6968a6.
+The previous four-byte union overlapped that byte. The natural declaration
+preserves the mask's low-half semantics but leaves instruction-width residuals
+in drawCreatureImpl, drawAdvObjWithFlagAlpha and drawSpellEffect; the wider
+retail reads do not establish a four-byte allocation.
 
 | Owner / member | Count | Why retained / removal condition |
 |---|---:|---|
@@ -115,7 +121,6 @@ The other 33 remaining definitions are exhaustively grouped here:
 | `message` payload and `TIPv4SocketAddress` | 2 | Intentional integer/text message ABI and same-record sockaddr_in/sockaddr API views. Keep shared storage, not two sequential fields. |
 | Local pointer payloads: `advmgr::drawRolloverText`, two hero-screen portrait sends, `swapmgr::textPointerPayload` | 4 | Current retained broadcast overload takes an integer payload. Recover its real call/expansion decision before switching to the message-pointer overload; do not invent a text overload solely to hide the conversion. |
 | `TFloatLongBits` / `TDoubleLongBits` in bitmap16 and palette; the two `viewwrld::ftol` locals | 6 | Actual float/double bit reinterpretation and low-word extraction for the magic-constant conversion. Numeric casts are not equivalent. Keep the representation unless an equally evidenced implementation replaces it. |
-| `TBlendMask` | 1 | Actual word/dword views used by blend-mask loads, not two independent values. |
 | DirectPlay `DPNAME`, `DPSESSIONDESC2`, `DPCHAT` narrow/wide string slots | 5 | External ABI alternatives occupy the same fields. |
 | `ExtraInfoUnion`, CObject extra-info, NewmapCell extra-info, `LegacyUpgradeExtraInfo`, `CurrentUpgradeExtraInfo` | 5 | Tagged map-object payloads and legacy/current serialized bit layouts. |
 | NewmapCell flags and TObjectCell packed X/Y offset byte | 2 | Real bitfield/raw views of the same allocation units. |
