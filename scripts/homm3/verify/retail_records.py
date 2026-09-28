@@ -477,7 +477,11 @@ def referenced_literals(pe, sites, taken=()) -> Records:
     for site in sorted(sites):
         in_code = text_lo + 1 <= site < text_hi
         if in_code and pe.read(site - 1, 1) != b'\x68':
-            continue
+            # `mov edi, imm32` feeding an inline strlen (`repne scasb`)
+            # names a string just as a pushed argument does.
+            opcode, tail = pe.read(site - 1, 1), pe.read(site + 4, 12) or b''
+            if opcode != b'\xbf' or b'\xf2\xae' not in tail:
+                continue
         if not in_code and not (view.rdata[0] <= site < view.rdata[1]
                                 or view.data[0] <= site < view.data[1]):
             continue
