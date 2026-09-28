@@ -396,7 +396,116 @@ def nonliteral_storage(model, types):
                                  types[b.rva])]
 
 
-def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=()):
+def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} read off retail at relocation sites paired with ours.
+
+    A claimed function's DIR32 sites pair positionally with retail's admitted
+    sites only when both counts agree, and every referent the Model already
+    knows must then equal the address retail wrote (plus our addend). Only
+    such a corroborated pairing may state where a ``wanted`` symbol lives.
+    """
+    import struct
+
+    img = retail()
+    sites = img.reloc_sites
+    from homm3.delink.pdb_synth import UNIT_CHANNELS
+    known, fn_extent = {}, {}
+    for b in model.functions:
+        if b.channel in UNIT_CHANNELS and b.name:
+            known[msvc_names.mask(b.name)] = b.rva
+            fn_extent[msvc_names.mask(b.name)] = (b.rva, b.size)
+    for b in model.data:
+        if b.channel and b.name:
+            known.setdefault(msvc_names.mask(b.name), b.rva)
+    votes: dict[str, set[int]] = defaultdict(set)
+    for _stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & MEM_EXECUTE:
+                continue
+            rel = {site: nm for site, (nm, typ)
+                   in c.typed_relocations(sec["index"]).items()
+                   if typ == COFF_DIR32}
+            if not rel or not any(wanted(n) for n in rel.values()):
+                continue
+            text = c.section_payload(sec["index"])
+            for off, name in c.defined_symbols(sec["index"]):
+                hit = fn_extent.get(msvc_names.mask(name))
+                if hit is None:
+                    continue
+                rva, size = hit
+                mine = sorted((s, n) for s, n in rel.items()
+                              if off <= s < off + size)
+                lo = bisect.bisect_left(sites, rva)
+                hi = bisect.bisect_left(sites, rva + size)
+                theirs = sites[lo:hi]
+                if not mine or len(mine) != len(theirs):
+                    continue
+                found, corroborated = [], True
+                for (site, sym), target in zip(mine, theirs):
+                    at = img.off(target)
+                    if at is None or target - rva != site - off:
+                        corroborated = False
+                        break
+                    addend = struct.unpack("<i", text[site:site + 4])[0]
+                    value = struct.unpack("<I", img.data[at:at + 4])[0] \
+                        - img.image_base - addend
+                    if wanted(sym):
+                        found.append((sym, value))
+                        continue
+                    anchor = known.get(msvc_names.mask(sym))
+                    if anchor is not None and value != anchor:
+                        corroborated = False
+                        break
+                if corroborated:
+                    for sym, value in found:
+                        votes[sym].add(value)
+    return votes
+
+
+def paired_data_votes(rows, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} from pointer words inside enrolled source data.
+
+    A source definition's own COFF relocation at offset k names a ``wanted``
+    symbol; retail's word at the definition's address plus k, less our
+    addend, states where that symbol lives.
+    """
+    import struct
+
+    img = retail()
+    by_object = defaultdict(list)
+    for r in rows:
+        if r.get("provenance") == "src-DATA-sizeof":
+            by_object[r["object"].removesuffix(".c")].append(r)
+    votes: dict[str, set[int]] = defaultdict(set)
+    for stem, c in coffx.objects(base_dir):
+        wanted_rows = by_object.get(stem)
+        if not wanted_rows:
+            continue
+        where = {}
+        for idx, value, secnum in c.iter_symbols():
+            if secnum > 0:
+                where.setdefault(msvc_names.mask(c.sym_name(idx)), []).append((secnum, value))
+        for r in wanted_rows:
+            hits = where.get(msvc_names.mask(r["name"]), [])
+            if len(hits) != 1:
+                continue
+            secnum, value = hits[0]
+            payload = c.section_payload(secnum)
+            rva, size = int(r["rva"]), int(r["size"])
+            for site, (sym, typ) in c.typed_relocations(secnum).items():
+                if typ != COFF_DIR32 or not wanted(sym) \
+                        or not value <= site < value + size - 3 or not payload:
+                    continue
+                at = img.off(rva + site - value)
+                if at is None:
+                    continue
+                addend = struct.unpack("<i", payload[site:site + 4])[0]
+                votes[sym].add(struct.unpack("<I", img.data[at:at + 4])[0]
+                               - img.image_base - addend)
+    return votes
+
+
+def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
     """Enrollable `??_C@` string-literal definitions + the withheld ones.
 
     Both facts are PROVEN: the retail RVA comes from content-matching each
@@ -441,8 +550,14 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=()):
                  "provenance": "candidate-COFF-string"})
     for name, group in by_name.items():
         addrs = {r["rva"] for r in group}
+        paired = (votes or {}).get(name, set())
         if len(addrs) == 1:
             rows += group
+        elif len(paired) == 1 and paired <= addrs:
+            # Content is ambiguous, but corroborated code relocations that
+            # name this literal all read the same retail address.
+            rows += [dict(r, provenance="candidate-COFF-string-paired")
+                     for r in group if r["rva"] in paired]
         else:
             for r in group:
                 withheld.append((r["rva"], name,
@@ -860,7 +975,15 @@ def candidates(model: Model):
     rows, withheld, skipped = claim_rows(model, tail_oracle)
 
     types = declared_types()
-    strings, w = string_rows(nonliteral_ranges=nonliteral_storage(model, types))
+    literal = lambda name: name.startswith("??_C@")  # noqa: E731
+    votes = paired_code_votes(model, literal)
+    # Source data pointers are exact offsets; where they state one address,
+    # they take precedence over code pairings for the same literal.
+    for name, rvas in paired_data_votes(rows, literal).items():
+        if len(rvas) == 1:
+            votes[name] = rvas
+    strings, w = string_rows(nonliteral_ranges=nonliteral_storage(model, types),
+                             votes=votes)
     rows += strings
     withheld += w
     vtables, w = vtable_rows(model)
