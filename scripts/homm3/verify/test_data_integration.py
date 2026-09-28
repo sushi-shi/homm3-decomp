@@ -48,6 +48,30 @@ class InputAdapterTests(unittest.TestCase):
 
 
 class StringStorageTests(unittest.TestCase):
+    def test_typed_storage_excludes_numeric_and_aggregate_interiors(self):
+        from homm3.delink import data_manifest
+        types = {0x1000: 'const int[2]', 0x2000: 'const ButtonRect[5]',
+                 0x3000: 'char[8]', 0x4000: 'const char[8]'}
+        bindings = [SimpleNamespace(rva=rva, size=8, channel='src')
+                    for rva in [*types, 0x5000]]
+        bindings.append(SimpleNamespace(rva=0x6000, size=8, channel='src_data_compgen'))
+        types[0x6000] = 'int[2]'
+        self.assertEqual(data_manifest.nonliteral_storage(
+            SimpleNamespace(data=bindings), types),
+            [(0x1000, 0x1008), (0x2000, 0x2008), (0x3000, 0x3008)])
+        candidate = SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
+                                    sym_name=lambda _: '??_C@comma',
+                                    cstring=lambda *_: b',')
+        retail = SimpleNamespace(cstring=lambda _: b',')
+        with patch.object(data_manifest.coffx, 'objects', return_value=[('window', candidate)]), \
+             patch.object(data_manifest, 'retail', return_value=retail), \
+             patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1004, 0x2002, 0x7000]), \
+             patch.object(data_manifest, '_classify', return_value='data-initialized'):
+            rows, withheld = data_manifest.string_rows(nonliteral_ranges=
+                data_manifest.nonliteral_storage(SimpleNamespace(data=bindings), types))
+            self.assertEqual([(r['rva'], r['size']) for r in rows], [(0x7000, 2)])
+            self.assertEqual(withheld, [])
+
     def test_mutable_array_does_not_collide_with_a_separate_literal(self):
         from homm3.delink import data_manifest
         candidate = SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
@@ -58,7 +82,7 @@ class StringStorageTests(unittest.TestCase):
              patch.object(data_manifest, 'retail', return_value=retail), \
              patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1000, 0x2000]), \
              patch.object(data_manifest, '_classify', return_value='data-initialized'):
-            rows, withheld = data_manifest.string_rows(mutable_arrays=[(0x1000, 0x1008)])
+            rows, withheld = data_manifest.string_rows(nonliteral_ranges=[(0x1000, 0x1008)])
             self.assertEqual([(r['rva'], r['size']) for r in rows], [(0x2000, 8)])
             self.assertEqual(withheld, [])
             # Without a proven mutable owner, duplicate addresses remain ambiguous.

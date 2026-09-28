@@ -383,7 +383,20 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
     return rows, withheld, skipped
 
 
-def string_rows(base_dir=BASE_DIR, *, mutable_arrays=()):
+def nonliteral_storage(model, types):
+    """Named typed objects cannot impersonate anonymous string allocations.
+
+    Keep const character arrays eligible for the existing pooled-alias check.
+    Other DATA objects, including their interior bytes, have distinct storage:
+    an integer 44 in a hotkey table is not a pooled comma string.
+    """
+    return [(b.rva, b.rva + b.size) for b in model.data
+            if b.channel == "src" and b.size and types.get(b.rva)
+            and not re.fullmatch(r"const (?:signed |unsigned )?char(?:\[\d+\])+",
+                                 types[b.rva])]
+
+
+def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=()):
     """Enrollable `??_C@` string-literal definitions + the withheld ones.
 
     Both facts are PROVEN: the retail RVA comes from content-matching each
@@ -406,10 +419,9 @@ def string_rows(base_dir=BASE_DIR, *, mutable_arrays=()):
     img = retail()
     rows, withheld, by_name = [], [], defaultdict(list)
     for rva in _reloc_data_rvas():
-        # An authored mutable array is distinct storage even when its initial
-        # bytes equal a pooled literal. Do not let it create a false duplicate
-        # literal collision (g_title and WinMain's caption are one example).
-        if any(start <= rva < end for start, end in mutable_arrays):
+        # Typed DATA storage is not a ??_C allocation merely because its
+        # bytes happen to form the same NUL-terminated sequence.
+        if any(start <= rva < end for start, end in nonliteral_ranges):
             continue
         cs = img.cstring(rva)
         if cs is None or cs not in owners:
@@ -848,11 +860,7 @@ def candidates(model: Model):
     rows, withheld, skipped = claim_rows(model, tail_oracle)
 
     types = declared_types()
-    mutable_arrays = [(b.rva, b.rva + b.size) for b in model.data
-                      if b.channel == "src" and b.size
-                      and re.fullmatch(r"(?:signed |unsigned )?char(?:\[\d+\])+",
-                                       types.get(b.rva, ""))]
-    strings, w = string_rows(mutable_arrays=mutable_arrays)
+    strings, w = string_rows(nonliteral_ranges=nonliteral_storage(model, types))
     rows += strings
     withheld += w
     vtables, w = vtable_rows(model)

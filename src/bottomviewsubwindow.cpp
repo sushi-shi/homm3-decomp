@@ -130,13 +130,6 @@ type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
     initialize(614, 400, 176, 166, parentWindow);
 }
 
-// The four new-week announcement icons, indexed by the game's week number
-// 1..4; slot 0 is never read, which is why retail's dword there is null.
-DATA(0x00660b9c)
-static const char* g_newWeekIcons[5] = {
-    0, "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
-};
-
 // The new-turn banner, and the first of the seven big derived
 // constructors. Every literal is read off the body:
 
@@ -184,11 +177,17 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     m_frame = 0;
 
     std::string text;
+    // DC names: local static char*[4] (type 0x581a, 16 bytes).
+    // Mac 0x5f3fc reads names[week - 1]; VC6 folds -4 into the
+    // indexed address. 0x660b9c terminates the preceding ".bik" literal.
+    DATA(0x00660ba0)
+    static char* names[4] = {
+        "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
+    };
     const char* iconName;
     if (g_game->m_day == 1
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
-        iconName = g_newWeekIcons[
-            static_cast<unsigned short>(g_game->m_week)];
+        iconName = names[static_cast<unsigned short>(g_game->m_week) - 1];
         text = formatString("%s %d", (*g_generalText)[GENERAL_TEXT_CALENDAR_WEEK],
             static_cast<unsigned short>(g_game->m_week));
     } else {
