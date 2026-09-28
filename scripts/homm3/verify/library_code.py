@@ -37,6 +37,7 @@ INVENTORY = RETAIL / 'runtime-contributions.tsv'
 ZLIB_MAP = RETAIL / 'zlib-map.tsv'
 RUNTIME_LIBRARIES = ('LIBCMT.LIB', 'LIBCPMT.LIB')
 
+KINDS = ('code', 'alias', 'data', 'bss', 'common', 'thunk')
 DIR32, DIR32NB, REL32 = 6, 7, 20
 MEM_EXECUTE = 0x20000000
 LNK_COMDAT = 0x1000
@@ -50,9 +51,10 @@ class Contribution:
     size: int
     library: str
     member: str
-    section: int          # COFF section number; 0 for an import thunk
+    section: int          # COFF section number; 0 for a thunk or COMMON
     symbol: str
     evidence: str = '-'
+    kind: str = 'code'    # code | data | bss | common | thunk
 
 
 @dataclass
@@ -62,13 +64,18 @@ class Verdict:
     reasons: list = field(default_factory=list)
     data: list = field(default_factory=list)   # (key, address) data references
     align: int = 16
+    symbols: list = field(default_factory=list)  # (rva, name) defined here
 
 
 def read_inventory(path: Path | None = None) -> list[Contribution]:
     _banner, _header, rows = read_tsv(path or INVENTORY)
-    return [Contribution(int(r['rva'], 16), int(r['size'], 0), r['library'],
-                         r['member'], int(r['section']), r['symbol'],
-                         r.get('evidence', '-')) for r in rows]
+    out = [Contribution(int(r['rva'], 16), int(r['size'], 0), r['library'],
+                        r['member'], int(r['section']), r['symbol'],
+                        r.get('evidence', '-'), r['kind']) for r in rows]
+    for row in out:
+        if row.kind not in KINDS:
+            raise ValueError(f'{row.rva:#x}: unknown contribution kind {row.kind!r}')
+    return out
 
 
 # ---------------------------------------------------------------- archives --
@@ -302,7 +309,7 @@ class Placement:
 def _placements(library: Library, rows, zlib_rows):
     out = []
     for row in rows:
-        if row.section == 0:
+        if row.kind in ('thunk', 'common'):
             out.append(Placement(row, None))
             continue
         out.append(Placement(row, library.section(row.library, row.member, row.section)))
@@ -313,7 +320,7 @@ def _placements(library: Library, rows, zlib_rows):
                 if s.name == name and s.section > 0 and s.value == 0]
         if len(hits) != 1:
             out.append(Placement(Contribution(rva, 0, 'zlib', member, 0, name,
-                                              'unplaced'), None))
+                                              'unplaced', 'thunk'), None))
             continue
         sec = library.section('zlib', member, hits[0].section)
         out.append(Placement(Contribution(rva, sec.size, 'zlib', member, sec.number, name),
@@ -322,12 +329,14 @@ def _placements(library: Library, rows, zlib_rows):
 
 
 def verify(pe, rows=None, *, names=None, library=None, zlib_rows=None,
-           game_comdats=None, image=None):
+           game_comdats=None, image=None, reloc_sites=None):
     """Verdicts for every contribution; see the module docstring.
 
     `names` maps a (masked) symbol name to the retail addresses the model
     assigns it outside the runtime-map. `game_comdats(name, rva)` returns
     True when a game object's COMDAT `name` is byte-identical at `rva`.
+    `reloc_sites`, the sorted reviewed DIR32 site inventory, must agree with
+    every counted section's own DIR32 relocations.
     """
     from homm3.core import msvc_names
     image = image or Image(pe)
@@ -344,7 +353,7 @@ def verify(pe, rows=None, *, names=None, library=None, zlib_rows=None,
     public_at = defaultdict(set)               # symbol -> {rva}
     for p in placements:
         if p.sec is None:
-            if p.row.section == 0 and p.row.library != 'zlib':
+            if p.row.library != 'zlib':
                 public_at[p.row.symbol].add(p.row.rva)
             continue
         key = (p.row.library, p.row.member, p.row.section)
@@ -367,22 +376,58 @@ def verify(pe, rows=None, *, names=None, library=None, zlib_rows=None,
     for p in placements:
         v = Verdict(p.row)
         verdicts.append(v)
+        if p.row.kind == 'common':
+            _verify_common(v, image, library, game_comdats)
+            continue
         if p.sec is None:
             _verify_thunk(v, image, library)
             continue
         sec = p.sec
         v.align = sec.align
+        v.symbols = [(p.row.rva + sym.value, sym.name) for sym in sec.obj.symbols.values()
+                     if sym.section == sec.number and sym.storage_class in (2, 3)
+                     and not sym.aux_count]
+        kind = 'code' if sec.code else 'bss' if sec.bss else 'data'
+        if p.row.kind != kind and not (p.row.kind == 'alias' and kind == 'code'):
+            v.verdict = 'mismatch'
+            v.reasons.append(f'{p.row.kind} row names a {kind} section')
+            continue
         if p.row.size != sec.size:
             v.verdict = 'mismatch'
             v.reasons.append(f'size {p.row.size} != section {sec.size}')
             continue
+        if p.row.rva % sec.align:
+            v.verdict = 'mismatch'
+            v.reasons.append(f'not {sec.align}-byte aligned')
+            continue
         retail = image.read(p.row.rva, sec.size)
+        if kind == 'bss':
+            if image.section_of(p.row.rva, max(sec.size, 1)) != '.data' or retail != bytes(sec.size):
+                v.verdict = 'mismatch'
+                v.reasons.append('uninitialized section is not zero-filled .data')
+            continue
+        if kind == 'data' and image.section_of(p.row.rva, max(sec.size, 1)) not in ('.rdata', '.data'):
+            v.verdict = 'mismatch'
+            v.reasons.append('data section outside .rdata/.data')
+            continue
         wrong = differences(sec, retail)
         if wrong:
             v.verdict = 'mismatch'
             v.reasons.append(f'{len(wrong)} byte(s) differ, first +{wrong[0]:#x}')
             continue
         obj = sec.obj
+        if reloc_sites is not None and p.row.kind != 'alias':
+            import bisect
+            own = {p.row.rva + offset for offset, typ, index in sec.relocations
+                   if typ == DIR32 and obj.symbols[index].section != -1
+                   and obj.symbols[index].name not in library.absolute}
+            lo = bisect.bisect_left(reloc_sites, p.row.rva)
+            hi = bisect.bisect_left(reloc_sites, p.row.rva + sec.size)
+            listed = set(reloc_sites[lo:hi])
+            for site in sorted(own - listed):
+                v.reasons.append(f'+{site - p.row.rva:#x}: DIR32 site missing from relocs.tsv')
+            for site in sorted(listed - own):
+                v.reasons.append(f'+{site - p.row.rva:#x}: relocs.tsv site has no COFF relocation')
         for offset, typ, index in sec.relocations:
             sym = obj.symbols[index]
             if typ not in (DIR32, DIR32NB, REL32) or offset + 4 > sec.size:
@@ -438,6 +483,9 @@ def _resolve(v, sym, obj, p, target, absolute, image, library, at, public_at,
                 return 'target section not placed'
             return None if placed + sym.value == target else f'expected {placed + sym.value:#x}'
         else:
+            placed = at.get((row.library, row.member, sym.section))
+            if placed is not None:
+                return None if placed + sym.value == target else f'expected {placed + sym.value:#x}'
             key = ('section', row.library, row.member, sym.section)
             v.data.append((key, target - sym.value))
             data_refs[key][target - sym.value].append(row)
@@ -461,6 +509,8 @@ def _resolve(v, sym, obj, p, target, absolute, image, library, at, public_at,
         return None
     if game_comdats and game_comdats(name, target):
         return None
+    if name in public_at:
+        return f'expected {", ".join(hex(a) for a in sorted(public_at[name]))}'
     defs = library.public.get(name, [])
     data_defs = [d for d in defs if not library.section(d[0], d[1], d[2]).code]
     if defs and len(data_defs) == len(defs):
@@ -502,6 +552,33 @@ def _data_fits(key, address, image, library):
     return False
 
 
+def common_alignment(size: int) -> int:
+    """The linker's COMMON alignment: the size's power of two, at most 16."""
+    align = 1
+    while align < size and align < 16:
+        align *= 2
+    return align
+
+
+def _verify_common(v, image, library, game_comdats):
+    """A linker-allocated COMMON: largest declared size, zero-filled .data."""
+    row = v.row
+    sizes = set(library.common.get(row.symbol, ()))
+    if game_comdats is not None and hasattr(game_comdats, 'common_sizes'):
+        sizes |= game_comdats.common_sizes(row.symbol)
+    v.align = common_alignment(row.size)
+    v.symbols = [(row.rva, row.symbol)]
+    if not sizes or row.size != max(sizes):
+        v.verdict = 'mismatch'
+        v.reasons.append(f'size {row.size} != largest declaration {max(sizes) if sizes else "-"}')
+    elif row.rva % v.align:
+        v.verdict = 'mismatch'
+        v.reasons.append(f'not {v.align}-byte aligned')
+    elif image.section_of(row.rva, row.size) != '.data' or image.read(row.rva, row.size) != bytes(row.size):
+        v.verdict = 'mismatch'
+        v.reasons.append('COMMON is not zero-filled .data')
+
+
 def _verify_thunk(v, image, library):
     """A linker import thunk: `jmp dword ptr [__imp_X]` from an import member."""
     row = v.row
@@ -527,10 +604,10 @@ def ranges(verdicts, pe):
     """[(start, end, category, identity)] for exact contributions and fill."""
     # An empty section still aligns the next position, so it keeps its fill.
     exact = sorted({(v.row.rva, v.row.rva + v.row.size): v for v in verdicts
-                    if v.verdict == 'exact'}.items())
+                    if v.verdict == 'exact' and v.row.kind != 'alias'}.items())
     out = []
     for (start, end), v in exact:
-        if end > start:
+        if end > start and v.row.kind != 'alias':
             category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
             out.append((start, end, category, identity(v.row)))
     # Linker fill: the 0xCC run right before a verified contribution, shorter
@@ -539,22 +616,33 @@ def ranges(verdicts, pe):
     for v in verdicts:
         if v.verdict == 'exact':
             align[v.row.rva] = max(align.get(v.row.rva, 1), v.align)
+    # Data fill is zero, which alone proves nothing: it is credited only when
+    # it runs exactly from a verified contribution's end to the next aligned
+    # start.
     previous_end = 0
     for (start, end), v in exact:
-        size = 0
-        while size + 1 < align[start] and start - size - 1 >= previous_end and \
-                pe.read(start - size - 1, 1) == bytes([FILL]):
-            size += 1
-        if size and start % align[start] == 0:
-            category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
-            out.append((start - size, start, category, f'link fill before {identity(v.row)}'))
+        category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
+        if v.row.kind in ('code', 'thunk'):
+            size = 0
+            while size + 1 < align[start] and start - size - 1 >= previous_end and \
+                    pe.read(start - size - 1, 1) == bytes([FILL]):
+                size += 1
+            if size and start % align[start] == 0:
+                out.append((start - size, start, category, f'link fill before {identity(v.row)}'))
+        else:
+            gap = start - previous_end
+            if 0 < gap < align[start] and gap == (-previous_end) % align[start] and \
+                    pe.read(previous_end, gap) == bytes(gap):
+                out.append((previous_end, start, category, f'link fill before {identity(v.row)}'))
         previous_end = max(previous_end, end)
     return out
 
 
 def identity(row: Contribution) -> str:
-    if row.section == 0:
+    if row.kind == 'thunk':
         return f'{row.library}:{row.symbol} import thunk'
+    if row.kind == 'common':
+        return f'{row.library}:COMMON {row.symbol}'
     return f'{row.library}:{row.member}#{row.section}:{row.symbol}'
 
 
@@ -563,9 +651,9 @@ def identity(row: Contribution) -> str:
 class GameComdats:
     """Game-emitted COMDAT copies of library templates (linked first).
 
-    Game objects precede the libraries on the link line, so a COMDAT that a
-    game object also emits is linked from the game object (or ICF-folded into
-    an identical game function). `(name, rva)` is accepted when a compiled
+    Game objects precede the libraries on the link line, so a COMDAT (code or
+    data) that a game object also emits is linked from the game object (or
+    ICF-folded into an identical game function). `(name, rva)` is accepted when a compiled
     game object emits COMDAT `name` whose unrelocated bytes equal retail at a
     census function start `rva`.
     """
@@ -579,7 +667,7 @@ class GameComdats:
 
     def _build(self):
         from homm3.compare.canonicalize import CoffObject
-        index = defaultdict(list)
+        index, commons = defaultdict(list), defaultdict(set)
         for path in sorted(self.base_dir.glob('*.obj')):
             if path.stem in self.exclude:
                 continue
@@ -588,9 +676,17 @@ class GameComdats:
             except (ValueError, struct.error):
                 continue
             for number, name in _comdat_names(obj).items():
-                if name and obj.sections[number - 1].characteristics & MEM_EXECUTE:
+                if name:
                     index[name].append((path.stem, obj, number))
-        self._index = index
+            for sym in obj.symbols.values():
+                if sym.storage_class == 2 and sym.section == 0 and sym.value:
+                    commons[sym.name].add(sym.value)
+        self._index, self._commons = index, commons
+
+    def common_sizes(self, name):
+        if self._index is None:
+            self._build()
+        return self._commons.get(name, set())
 
     def __call__(self, name, rva):
         key = (name, rva)
@@ -603,7 +699,10 @@ class GameComdats:
                 # A census start, or the COMDAT's own section alignment.
                 if rva not in self.starts and rva % sec.align:
                     continue
-                if not differences(sec, self.pe.read(rva, sec.size)):
+                retail = self.pe.read(rva, sec.size)
+                if sec.bss and retail != bytes(sec.size):
+                    continue
+                if not differences(sec, retail):
                     self._cache[key] = f'{unit}.obj'
                     break
         return self._cache[key] is not None
@@ -653,7 +752,7 @@ def main(argv=None) -> int:
     from homm3.core.pe import image
     from homm3.model import resolve
     from homm3.verify.byte_accounting import library_ranges
-    ranges, report = library_ranges(image(), resolve())
+    ranges, report, _names = library_ranges(image(), resolve())
     if args.data:
         print('kind\tname\trva\tfits\treferences')
         for row in report['data']:

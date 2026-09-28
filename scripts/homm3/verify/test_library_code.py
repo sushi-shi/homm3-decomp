@@ -152,10 +152,90 @@ class LibraryCodeTests(unittest.TestCase):
         verdicts, _ = self.run_verify()
         self.assertEqual(verdicts[0].verdict, 'unresolved')
 
+    def test_relocation_inventory_must_agree(self):
+        ok = library_code.verify(None, self.rows, library=self.library, zlib_rows=[],
+                                 image=self.image, reloc_sites=[0x1006, 0x100c])[0]
+        self.assertEqual([v.verdict for v in ok], ['exact', 'exact'])
+        for sites in ([0x1006], [0x1006, 0x100c, 0x1021]):
+            bad = library_code.verify(None, self.rows, library=self.library, zlib_rows=[],
+                                      image=self.image, reloc_sites=sites)[0]
+            self.assertIn('unresolved', [v.verdict for v in bad])
+
     def test_unplaced_static_target_is_unresolved(self):
         verdicts, _ = self.run_verify(self.rows[:1])
         self.assertEqual(verdicts[0].verdict, 'unresolved')
         self.assertIn('not placed', verdicts[0].reasons[0])
+
+
+class LibraryDataTests(unittest.TestCase):
+    """Data, BSS and COMMON contributions, and the strict zero-fill rule."""
+
+    def setUp(self):
+        table = bytes.fromhex('00000000') + b'ABC\0'      # pointer to the helper, text
+        helper = bytes.fromhex('33c0c3')
+        self.obj = _coff(
+            [('.text', CODE, helper, []),
+             ('.data', DATA, table, [(0, 0, DIR32)]),
+             ('.bss', 0xC0300080, bytes(0), [])],
+            [_symbol('_helper', 0, 1, 2),
+             _symbol('_table', 0, 2, 2),
+             _symbol('_zeros', 0, 3, 2),
+             _symbol('_common', 16, 0, 2)])
+        memory = bytearray(0x3000)
+        memory[0x1000:0x1003] = helper
+        struct.pack_into('<I', memory, 0x2000, BASE + 0x1000)
+        memory[0x2004:0x2008] = b'ABC\0'
+        self.memory = memory
+        self.image = FakeImage(memory)
+        self.library = Library({'LIBX.LIB': {'a.obj': self.obj}}, {}, {})
+
+    def rows(self, *extra):
+        return [Contribution(0x1000, 3, 'LIBX.LIB', 'a.obj', 1, '_helper'),
+                Contribution(0x2000, 8, 'LIBX.LIB', 'a.obj', 2, '_table', kind='data'),
+                *extra]
+
+    def run_verify(self, rows):
+        return library_code.verify(None, rows, library=self.library, zlib_rows=[],
+                                   image=self.image)
+
+    def test_data_bytes_and_relocations(self):
+        verdicts, _ = self.run_verify(self.rows())
+        self.assertEqual([v.verdict for v in verdicts], ['exact', 'exact'])
+        struct.pack_into('<I', self.memory, 0x2000, BASE + 0x1001)
+        verdicts, _ = self.run_verify(self.rows())
+        self.assertEqual(verdicts[1].verdict, 'unresolved')
+
+    def test_kind_must_match_the_section(self):
+        rows = self.rows()
+        rows[1] = Contribution(0x2000, 8, 'LIBX.LIB', 'a.obj', 2, '_table', kind='bss')
+        verdicts, _ = self.run_verify(rows)
+        self.assertEqual(verdicts[1].verdict, 'mismatch')
+
+    def test_common_size_alignment_and_zero_fill(self):
+        good = Contribution(0x2010, 16, 'LIBX.LIB', 'a.obj', 0, '_common', kind='common')
+        self.assertEqual(self.run_verify(self.rows(good))[0][2].verdict, 'exact')
+        for bad in (Contribution(0x2010, 8, 'LIBX.LIB', 'a.obj', 0, '_common', kind='common'),
+                    Contribution(0x2018, 16, 'LIBX.LIB', 'a.obj', 0, '_common', kind='common')):
+            self.assertEqual(self.run_verify(self.rows(bad))[0][2].verdict, 'mismatch')
+        self.memory[0x2012] = 1
+        self.assertEqual(self.run_verify(self.rows(good))[0][2].verdict, 'mismatch')
+
+    def test_data_fill_only_as_exact_padding_between_verified_rows(self):
+        common = Contribution(0x2010, 16, 'LIBX.LIB', 'a.obj', 0, '_common', kind='common')
+        verdicts, _ = self.run_verify(self.rows(common))
+        fill = [r for r in library_code.ranges(verdicts, self.image) if r[3].startswith('link fill')]
+        self.assertEqual(fill, [(0x2008, 0x2010, 'library-runtime',
+                                 'link fill before LIBX.LIB:COMMON _common')])
+        self.memory[0x200a] = 7
+        fill = [r for r in library_code.ranges(verdicts, self.image) if r[3].startswith('link fill')]
+        self.assertEqual(fill, [])
+
+    def test_alias_is_verified_but_not_counted(self):
+        self.memory[0x1800:0x1803] = self.memory[0x1000:0x1003]
+        alias = Contribution(0x1800, 3, 'LIBX.LIB', 'a.obj', 1, '_helper', kind='alias')
+        verdicts, _ = self.run_verify([alias])
+        self.assertEqual(verdicts[0].verdict, 'exact')
+        self.assertEqual(library_code.ranges(verdicts, self.image), [])
 
 
 class ArchiveTests(unittest.TestCase):
@@ -181,6 +261,24 @@ class CoverageTests(unittest.TestCase):
         self.assertTrue(_covered(0x12, 0x26, verified))
         self.assertFalse(_covered(0x12, 0x29, verified))
         self.assertFalse(_covered(0x08, 0x12, verified))
+
+    def test_data_claim_yields_only_to_the_same_library_name(self):
+        from homm3.model import Binding, Model
+        from homm3.verify.byte_accounting import Range, model_ranges
+        model = Model([], [Binding(0x10, 8, 'vtable', 'rdata', '??_7a@@6B@', '', 'data_vtables', ()),
+                           Binding(0x18, 8, '', 'rdata', '_other', '', 'src', ())], [])
+        rows = model_ranges(model, [], [], [(0x10, 0x20)], {0x10: {'??_7a@@6B@'}, 0x18: {'_x'}})
+        self.assertEqual(rows, [Range(0x18, 0x20, 'game', '_other', 2)])
+
+    def test_vendor_literal_is_game_when_a_game_object_emits_it(self):
+        from homm3.model import Model
+        from homm3.verify.byte_accounting import model_ranges
+        row = lambda obj, rva: dict(name='??_C@_05X@', object=obj, rva=hex(rva), size='6',
+                                    provenance='candidate-COFF-string')
+        rows = model_ranges(Model([], [], []), [row('game.c', 0x10), row('zutil.c', 0x10),
+                                                row('zutil.c', 0x20)], [], zlib_units={'zutil'})
+        self.assertEqual(sorted((r.start, r.category) for r in rows),
+                         [(0x10, 'game'), (0x20, 'library-vendor')])
 
 
 if __name__ == '__main__':

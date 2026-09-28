@@ -14,7 +14,7 @@ import struct
 from pathlib import Path
 
 from homm3.core import msvc_names
-from homm3.core.paths import BUILD
+from homm3.core.paths import BUILD, RETAIL
 from homm3.core.tsv import read, write
 
 
@@ -25,6 +25,9 @@ class Range:
     category: str
     identity: str
     priority: int = 0
+
+
+ZLIB_MAP = RETAIL / 'zlib-map.tsv'
 
 
 def partition(size: int, ranges: list[Range]):
@@ -86,9 +89,20 @@ def _covered(start, end, verified):
     return True
 
 
-def model_ranges(model, enrolled, sections, verified_library=()):
-    """Model claims; library labels inside byte-verified contributions yield."""
+def model_ranges(model, enrolled, sections, verified_library=(), library_names=None,
+                 zlib_units=()):
+    """Model claims; library labels inside byte-verified contributions yield.
+
+    A data claim inside a verified library contribution yields only when the
+    contribution itself defines that name at that address; any other claim
+    there remains and shows as an overlap.
+    """
     verified = sorted(verified_library)
+    library_names = library_names or {}
+
+    def library_owned(start, end, name):
+        return verified and msvc_names.mask(name) in library_names.get(start, ()) \
+            and _covered(start, end, verified)
     out = []
     for b in model.functions + model.data:
         if not b.size or not b.channel:
@@ -96,19 +110,30 @@ def model_ranges(model, enrolled, sections, verified_library=()):
         if b.channel in ('functions_static_libs', 'functions_zlib') and verified \
                 and _covered(b.rva, b.rva+b.size, verified):
             continue
+        if b.space != 'text' and library_owned(b.rva, b.rva+b.size, b.name):
+            continue
         category = ('library-vendor' if b.channel in (
             'functions_zlib', 'data_static_libs',
             'data_zlib') else 'game')
         if b.channel == 'functions_static_libs':
             category = 'library-unverified'
         out.append(Range(b.rva, b.rva+b.size, category, b.name, 2))
+    # A folded literal also emitted by a game object is the game object's
+    # copy: game objects precede the vendor objects on the link line.
+    game_copies = {(r['rva'], r['name']) for r in enrolled
+                   if r.get('object', '').removesuffix('.c') not in zlib_units}
     for r in enrolled:
         if 'gap' in r.get('provenance', ''):
             continue
         start, size = int(r['rva'], 0), int(r['size'], 0)
         if size:
-            category = ('library-vendor' if r.get('provenance') == 'zlib-source-sizeof'
-                        else 'game')
+            if library_owned(start, start+size, r['name']):
+                continue
+            # Zlib objects are vendor contributions, including their literals.
+            vendor = r.get('provenance') == 'zlib-source-sizeof' or (
+                r.get('object', '').removesuffix('.c') in zlib_units
+                and (r['rva'], r['name']) not in game_copies)
+            category = 'library-vendor' if vendor else 'game'
             out.append(Range(start, start+size, category, r['name'], 2))
     for s in sections:
         if s['rva'] != '-' and int(s['size'], 0):
@@ -207,18 +232,28 @@ def library_ranges(pe, model):
     zlib_units = {r['unit'] for r in read(library_code.ZLIB_MAP)[2]}
     game = library_code.GameComdats(pe, [r['rva'] for r in functions()],
                                     exclude=zlib_units)
-    verdicts, data = library_code.verify(pe, names=names, game_comdats=game)
+    from homm3.delink.image import Image
+    verdicts, data = library_code.verify(pe, names=names, game_comdats=game,
+                                         reloc_sites=Image(pe).reloc_sites)
     ranges = [Range(lo, hi, category, identity, 2)
               for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
-    return ranges, library_code.summary(verdicts, data, game)
+    defined = defaultdict(set)
+    for v in verdicts:
+        if v.verdict == 'exact' and v.row.kind != 'alias':
+            for rva, name in v.symbols:
+                defined[rva].add(msvc_names.mask(name))
+    return ranges, library_code.summary(verdicts, data, game), defined
 
 
-def account(pe, model, enrolled, sections, *, initializers=(), library=()):
+def account(pe, model, enrolled, sections, *, initializers=(), library=(),
+            library_names=None):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
     verified = [(r.start, r.end) for r in library]
-    claims = (model_ranges(model, enrolled, sections, verified) + compiler_ranges(pe, model)
+    zlib_units = {r['unit'] for r in read(ZLIB_MAP)[2]} if ZLIB_MAP.is_file() else set()
+    claims = (model_ranges(model, enrolled, sections, verified, library_names, zlib_units)
+              + compiler_ranges(pe, model)
               + list(initializers) + list(library))
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
@@ -374,10 +409,10 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
-    library, library_report = library_ranges(pe, model)
+    library, library_report, library_names = library_ranges(pe, model)
     domains = account(pe, model, enrolled, sections,
                       initializers=initializer_ranges(dynamic)+startup_ranges(startup),
-                      library=library)
+                      library=library, library_names=library_names)
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
