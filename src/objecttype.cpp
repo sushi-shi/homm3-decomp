@@ -17,6 +17,10 @@
 // num_get, numpunct body exactly. Retail keeps no ostream code in this
 // compiland, so that insertion was dead code the linker removed; its
 // content is unknown and is not invented here.
+// Open question (for the user): whether a hypothesised dead writer, such as
+// an unreferenced operator<< for TObjectType placed before operator>>, may
+// be admitted on this evidence alone. Until then 0x51b830 and its CRT slot
+// stay unverified.
 #include <iostream>
 #include <map>
 #include <stdlib.h>

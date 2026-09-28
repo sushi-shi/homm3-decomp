@@ -35,6 +35,30 @@ As supporting evidence, the bink, smack and IFC hints agree with the export
 tables of Steam's runtime DLLs, but mss32's do not. Those DLLs are not pinned,
 so this does not verify anything.
 
+## The same pattern at the end of `.text`
+
+The end of `.text`, which sits directly before the IAT at `0x23a000`, has
+two residues that LINK does not write either. Both stay `missing`.
+
+- **24 bytes of `strlen` at `0x2395fa..0x239612`.** The code is
+  `mov ecx,[esp+4]`, a byte-scanning loop, then `sub eax,ecx; dec eax; ret`.
+  It starts right after the last LIBCPMT `xlocale.obj` `.text$x` stub, which
+  ends at `0x2395fa`. That address is not 4-aligned, and LINK starts every
+  contribution at its section alignment, so LINK did not place this code
+  there. The body ends exactly at `.text` VirtualSize, `0x238612`
+  (`0x1000 + 0x238612 = 0x239612`). LINK sets VirtualSize to the end of the
+  last contribution, `0x2395fa` here, so the header was enlarged by exactly
+  these 24 bytes. The bytes occur nowhere else in the image and in no
+  pinned library member, game object or zlib object. No relocation, absolute
+  word or `call`/`jmp` refers to them.
+- **3 bytes `05 43 5f` at `0x239ffd..0x23a000`.** These are the last bytes of
+  `.text`'s FileAlignment tail (VirtualSize `0x239612` up to raw end
+  `0x23a000`). LINK zero-fills that tail, and every other byte of it is zero.
+  They end exactly where the IAT begins.
+
+Both residues sit next to the edited import data and fall outside anything
+LINK produced. They are recorded as the same post-link edit, not claimed.
+
 ## To decide
 
 1. Identify what edited the import tables. Check whether one known tool or
@@ -48,5 +72,8 @@ so this does not verify anything.
    `import-structure` into a verified category, and whether `GetSysteminfo`
    becomes edit residue or remains unaccounted. The zero-unaccounted-bytes goal
    for the data campaign treats this as an open policy question.
-3. If the missing import libraries (mss32, binkw32, smackw32, IFC20) can be
+3. Check whether the same tool explains the `.text` residues: an appended,
+   unreferenced `strlen` that enlarged VirtualSize, and three non-zero
+   bytes at the end of the FileAlignment tail.
+4. If the missing import libraries (mss32, binkw32, smackw32, IFC20) can be
    pinned, verify their hint and name records the same way as the other DLLs.
