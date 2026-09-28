@@ -17,6 +17,29 @@ attribution counts are not current matching coverage.
 | MSVCRT.DLL | **not imported** | — | no `MSVCRT`/`MSVCP` import descriptor or byte sequence anywhere: the CRT is fully static, and LIBCMT's own `R6002`/`R6008`/`runtime error` strings are in `.rdata`. |
 | Middleware | **all dynamic — zero `.text` bytes** | import table only | see the import inventory below. |
 
+## Relocation-verified contributions
+
+`config/retail/runtime-contributions.tsv` now places every linked runtime
+section individually, and `homm3 verify library-code` re-proves each one on
+every build (see [data matching](../tooling/data-matching.md)). The variant is
+fixed by the bytes of those same sections, compared member by member:
+
+| candidate archive | rows byte-equal (same member and symbol) |
+|---|---|
+| SP3 `lib/LIBCMT.LIB` | 407 / 407 |
+| RTM `lib-rtm/LIBCMT.LIB` | 405 (`strftime.obj` `__Strftime`, `tzset.obj` `_cvtdate` differ) |
+| single-threaded `LIBC.LIB` | 263 (90 differ in size, 54 absent) |
+| debug `LIBCMTD.LIB` | 20 |
+| `LIBCPMT.LIB` (SP3 = RTM for these rows) | 486 / 486 named rows |
+| single-threaded `LIBCP.LIB` | 366 (113 differ, 152 absent) |
+
+Retail therefore links the multithreaded release SP3 `LIBCMT.LIB` and
+`LIBCPMT.LIB` (member paths `build\intel\mt_obj\...`). Identical copies in
+several members are attributed by link-order continuity or by the static
+symbol retail code references; ICF-folded COMDATs keep one row per folded
+symbol that retail references. `basic_string<char>::_Tidy` (0x4040f0) is the
+game-emitted COMDAT, not LIBCPMT's, and is claimed in `advmgr.cpp`.
+
 ## Import inventory
 
 | dll | imports | note |

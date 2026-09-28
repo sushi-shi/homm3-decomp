@@ -16,6 +16,7 @@ homm3 verify data-relocs
 homm3 verify data-tu-order
 homm3 verify data-coverage --tsv
 homm3 verify library-data-refs
+homm3 verify library-code
 ```
 
 The normal build refreshes the complete byte report and its README summary.
@@ -170,6 +171,23 @@ still distinguish exact bytes from unresolved comparisons. Runtime labels withou
 byte proof are `library-unverified`; they are not exempted as verified library
 coverage. Unknown zero bytes remain unknown: zeros alone do not prove padding.
 PE headers and independently identified resource/relocation sections are structural.
+
+`library-runtime` bytes are statically linked MSVC runtime sections proven by
+`homm3 verify library-code`. The reviewed `config/retail/runtime-contributions.tsv`
+places one COFF section of a pinned VC6 SP3 `LIBCMT.LIB` or `LIBCPMT.LIB`
+member (or one import-library thunk) per row; the zlib map places compiled
+pristine vendor sections the same way. Every run re-checks each section:
+unrelocated bytes must equal retail and every relocation must resolve to its
+symbol - a placed library section, the import slot, an absolute or COMMON
+symbol, a game definition, a byte-identical game-emitted COMDAT, or a library
+datum whose implied base holds the member's initialized bytes and agrees for
+every reference. Runtime-map and zlib labels inside verified sections yield to
+them. The only credited fill is the 0xCC run directly before a verified
+section, shorter than its alignment and ending on its aligned start. Rows that
+fail stay `library-unverified`, and `data_coverage.json` lists them under
+`library_code`, together with every library datum placement the relocations
+imply (`homm3 verify library-code --data`). Those placements are evidence for
+data recovery; they do not claim data coverage.
 
 The access report complements byte accounting with instruction-width, stride and
 shortfall checks. Its register tracking is local to a basic block; pointer escapes

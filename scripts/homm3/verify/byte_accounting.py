@@ -73,10 +73,28 @@ def manifest_rows(path=None):
     return read(path)[2] if path.is_file() else []
 
 
-def model_ranges(model, enrolled, sections):
+def _covered(start, end, verified):
+    """True when [start, end) lies inside the union of sorted verified ranges."""
+    import bisect
+    starts = [lo for lo, _hi in verified]
+    k = bisect.bisect_right(starts, start) - 1
+    while start < end:
+        if k < 0 or k >= len(verified) or not verified[k][0] <= start < verified[k][1]:
+            return False
+        start = verified[k][1]
+        k += 1
+    return True
+
+
+def model_ranges(model, enrolled, sections, verified_library=()):
+    """Model claims; library labels inside byte-verified contributions yield."""
+    verified = sorted(verified_library)
     out = []
     for b in model.functions + model.data:
         if not b.size or not b.channel:
+            continue
+        if b.channel in ('functions_static_libs', 'functions_zlib') and verified \
+                and _covered(b.rva, b.rva+b.size, verified):
             continue
         category = ('library-vendor' if b.channel in (
             'functions_zlib', 'data_static_libs',
@@ -177,12 +195,31 @@ def startup_ranges(comparison):
     return ranges
 
 
-def account(pe, model, enrolled, sections, *, initializers=()):
+def library_ranges(pe, model):
+    """Byte-verified static-library contributions (`homm3.verify.library_code`)."""
+    from homm3.retail_labels.censuses import functions
+    from homm3.verify import library_code
+    names = defaultdict(set)
+    for b in model.functions + model.data:
+        for entry in (b, *b.aliases):
+            if entry.name and entry.channel and entry.channel != 'functions_static_libs':
+                names[msvc_names.mask(entry.name)].add(b.rva)
+    zlib_units = {r['unit'] for r in read(library_code.ZLIB_MAP)[2]}
+    game = library_code.GameComdats(pe, [r['rva'] for r in functions()],
+                                    exclude=zlib_units)
+    verdicts, data = library_code.verify(pe, names=names, game_comdats=game)
+    ranges = [Range(lo, hi, category, identity, 2)
+              for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
+    return ranges, library_code.summary(verdicts, data, game)
+
+
+def account(pe, model, enrolled, sections, *, initializers=(), library=()):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
-    claims = (model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
-              + list(initializers))
+    verified = [(r.start, r.end) for r in library]
+    claims = (model_ranges(model, enrolled, sections, verified) + compiler_ranges(pe, model)
+              + list(initializers) + list(library))
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     for claim in claims:
@@ -337,12 +374,15 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
+    library, library_report = library_ranges(pe, model)
     domains = account(pe, model, enrolled, sections,
-                      initializers=initializer_ranges(dynamic)+startup_ranges(startup))
+                      initializers=initializer_ranges(dynamic)+startup_ranges(startup),
+                      library=library)
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
+           'library_code': library_report,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()
