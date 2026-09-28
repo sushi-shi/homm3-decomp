@@ -75,9 +75,12 @@ def runtime_names():
     if path.is_file():
         for row in read(path)[2]:
             symbol = row.get('symbol', '-')
-            # Compiler-private ordinals (`$E24`) name nothing outside their
-            # own archive member and would collide with emitted local code.
-            if symbol != '-' and not re.fullmatch(r'_?\$[A-Z][0-9]+', symbol):
+            # A row places one section; only a code section's symbol is known
+            # to start it. Compiler-private ordinals (`$E24`) name nothing
+            # outside their own archive member and would collide with
+            # emitted local code.
+            if (row.get('kind', 'code') == 'code' and symbol != '-'
+                    and not re.fullmatch(r'_?\$[A-Z][0-9]+', symbol)):
                 names[msvc_names.mask(symbol)].add(int(row['rva'], 0))
     return names
 

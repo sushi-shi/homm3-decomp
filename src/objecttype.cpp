@@ -8,6 +8,9 @@
 // Retail CRT slots 607/608 (0x516590/0x5165c0) construct <iostream>'s two
 // header statics, _Ios_init at 0x69cb59 and _Wios_init at 0x69cb58, and
 // register their destructors; this compiland included the header.
+// Its facet-id initializer 0x51b830 also guards num_put (0x6aba98) before
+// num_get (0x6aba7c); no recovered code here instantiates num_put, so that
+// 121-byte body stays unmatched.
 #include <iostream>
 #include <map>
 #include <stdlib.h>
