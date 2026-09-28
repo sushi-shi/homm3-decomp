@@ -118,6 +118,19 @@ class LibraryCodeTests(unittest.TestCase):
         self.assertEqual(fill, [(0x1016, 0x1020, 'library-runtime',
                                  'link fill before LIBX.LIB:a.obj#2:_helper')])
 
+    def test_empty_section_alignment_keeps_its_fill(self):
+        empty = _coff([('.text', 0x60300020, b'', [])], [])
+        self.library = Library({'LIBX.LIB': {'a.obj': self.obj, 'e.obj': empty}}, {}, {})
+        rows = self.rows + [Contribution(0x1014, 0, 'LIBX.LIB', 'e.obj', 1, '-')]
+        verdicts, _ = self.run_verify(rows)
+        self.assertEqual([v.verdict for v in verdicts], ['exact'] * 3)
+        ranges = library_code.ranges(verdicts, self.image)
+        self.assertIn((0x1011, 0x1014, 'library-runtime',
+                       'link fill before LIBX.LIB:e.obj#1:-'), ranges)
+        self.assertIn((0x1014, 0x1020, 'library-runtime',
+                       'link fill before LIBX.LIB:a.obj#2:_helper'), ranges)
+        self.assertFalse([r for r in ranges if r[0] == r[1]])
+
     def test_byte_difference_is_a_mismatch(self):
         self.memory[0x1020] = 0x31
         verdicts, _ = self.run_verify()

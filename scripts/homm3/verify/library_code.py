@@ -525,17 +525,19 @@ def _verify_thunk(v, image, library):
 
 def ranges(verdicts, pe):
     """[(start, end, category, identity)] for exact contributions and fill."""
+    # An empty section still aligns the next position, so it keeps its fill.
     exact = sorted({(v.row.rva, v.row.rva + v.row.size): v for v in verdicts
-                    if v.verdict == 'exact' and v.row.size}.items())
+                    if v.verdict == 'exact'}.items())
     out = []
     for (start, end), v in exact:
-        category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
-        out.append((start, end, category, identity(v.row)))
+        if end > start:
+            category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
+            out.append((start, end, category, identity(v.row)))
     # Linker fill: the 0xCC run right before a verified contribution, shorter
     # than that contribution's alignment and ending on its aligned start.
     align = {}
     for v in verdicts:
-        if v.verdict == 'exact' and v.row.size:
+        if v.verdict == 'exact':
             align[v.row.rva] = max(align.get(v.row.rva, 1), v.align)
     previous_end = 0
     for (start, end), v in exact:
