@@ -349,3 +349,31 @@ def data_alignment_tails(pe):
         elif va + vsize < va + virtual_end:
             image_ranges.append((va + vsize, va + virtual_end, f'{s["name"]} SectionAlignment tail'))
     return file_ranges, image_ranges
+
+
+def common_zone_fill(pe, commons, data_claims):
+    """Zero fill before a source datum that LINK allocated as a COMMON.
+
+    The COMMON zone runs from the first verified COMMON to the end of `.data`;
+    LINK allocates nothing else there. A source datum inside it is therefore a
+    COMMON, aligned to min(32, its size rounded up to a power of two). The
+    fill between a verified COMMON's end and such a datum counts only when it
+    is exactly that padding and zero. `commons` and `data_claims` are
+    (start, end) extents.
+    """
+    from homm3.verify.library_code import common_alignment
+    if not commons:
+        return []
+    zone = min(start for start, _end in commons)
+    ends = {end for _start, end in commons}
+    out = []
+    for start, end in data_claims:
+        if start < zone:
+            continue
+        align = common_alignment(end - start)
+        if start % align:
+            continue
+        before = [e for e in ends if start - align < e < start]
+        if len(before) == 1 and pe.read(before[0], start - before[0]) == bytes(start - before[0]):
+            out.append((before[0], start, f'COMMON fill before the datum at {start:#x}'))
+    return out

@@ -249,7 +249,8 @@ def library_ranges(pe, model):
     return ranges, library_code.summary(verdicts, data, game), defined
 
 
-def linker_ranges(pe, dynamic, startup_sets, library, library_names, enrolled):
+def linker_ranges(pe, dynamic, startup_sets, library, library_names, enrolled,
+                  model_claims=()):
     """Linker-produced import tables, game `.CRT$XCU` slots, fill and tails.
 
     `startup_sets` are match lists shaped like `startup_initializers`
@@ -286,6 +287,10 @@ def linker_ranges(pe, dynamic, startup_sets, library, library_names, enrolled):
         return group_alignment
     claims += [Range(a, b, 'linker-padding', identity, 2)
                for a, b, identity in linker.crt_group_fill(pe, library_names, section_alignment)]
+    commons = [(r.start, r.end) for r in library if 'COMMON ' in r.identity]
+    data_claims = [(r.start, r.end) for r in model_claims]
+    claims += [Range(a, b, 'linker-padding', identity, 2)
+               for a, b, identity in linker.common_zone_fill(pe, commons, data_claims)]
     file_tails, image_tails = linker.data_alignment_tails(pe)
     tails = ([Range(a, b, 'structural', identity, -1) for a, b, identity in file_tails],
              [Range(a, b, 'structural', identity, -1) for a, b, identity in image_tails])
@@ -459,8 +464,11 @@ def report(model=None):
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
     library, library_report, library_names = library_ranges(pe, model)
+    data_claims = [Range(b.rva, b.rva+b.size, 'game', b.name) for b in model.data
+                   if b.size and b.channel]
     linker, tails, linker_report = linker_ranges(pe, dynamic, [startup['matches']],
-                                                 library, library_names, enrolled)
+                                                 library, library_names, enrolled,
+                                                 data_claims)
     domains = account(pe, model, enrolled, sections,
                       initializers=initializer_ranges(dynamic)+startup_ranges(startup),
                       library=library, library_names=library_names,

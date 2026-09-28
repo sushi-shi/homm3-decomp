@@ -106,6 +106,15 @@ class TailTests(unittest.TestCase):
 
 
 class CommonTests(unittest.TestCase):
+    def test_fill_before_a_source_datum_in_the_common_zone(self):
+        pe = FakePe()
+        commons = [(0x100, 0x101)]
+        self.assertEqual([r[:2] for r in linker.common_zone_fill(pe, commons, [(0x104, 0x108)])],
+                         [(0x101, 0x104)])
+        self.assertEqual(linker.common_zone_fill(pe, commons, [(0x0f0, 0x0f4)]), [])
+        pe.data[0x102] = 1
+        self.assertEqual(linker.common_zone_fill(pe, commons, [(0x104, 0x108)]), [])
+
     def test_common_alignment_caps_at_32(self):
         self.assertEqual([common_alignment(n) for n in (1, 3, 4, 12, 16, 64, 257, 4096)],
                          [1, 4, 4, 16, 16, 32, 32, 32])
