@@ -2707,7 +2707,8 @@ def _fragment_rows(rows: list[dict]) -> list[list[str]]:
                     f"0x{size:x}" if isinstance(size, int) else "",
                     r.get("joined", r["name"]), r["kind"], r["channel"],
                     r["name"], "1" if r.get("dtor") else "",
-                    r.get("ckind", ""), r.get("owner", "")])
+                    r.get("ckind", ""), r.get("owner", ""),
+                    r.get("type", ""), r.get("defined", ""), r.get("source", ""), r.get("internal", "")])
     return out
 
 
@@ -2828,6 +2829,27 @@ def run(only_units: list[str] | None = None,
     headers.project(header_paths, functions,
                     {p.stem: names for p, names in zip(todo, ir_maps)},
                     rows_by_unit, problems, policy=policy, ownership=(definitions, errors, _reached))
+    from homm3.retail_labels import data as data_labels
+    from homm3.core.compiler_profile import Profiles
+    from homm3.core.project import Project
+    data_profiles = Profiles(Project(common.HOMM3_DIR))
+    with ThreadPoolExecutor(max_workers=jobs or min(8, os.cpu_count() or 4)) as pool:
+        data_errors = list(pool.map(
+            lambda path: data_labels.enrich(path, rows_by_unit[path.stem], data_profiles), todo))
+    issues_path = common.HOMM3_DIR / 'build/gen/data_extraction_issues.tsv'
+    retained_issues = []
+    if only_units is not None and issues_path.is_file():
+        import csv
+        selected_units = {path.stem for path in todo}
+        with issues_path.open() as stream:
+            retained_issues = [[row['unit'], row['issue']] for row in csv.DictReader(
+                (line for line in stream if not line.startswith('#')), delimiter='\t')
+                if row['unit'] not in selected_units]
+    write_tsv(common.HOMM3_DIR / 'build/gen/data_extraction_issues.tsv',
+              ['# GENERATED: explicit data type coverage gaps, not matched bytes.'],
+              ['unit', 'issue'],
+              retained_issues + [[path.stem, error] for path, errors in zip(todo, data_errors)
+               for error in errors])
     for path in todo:
         rows = sorted(rows_by_unit[path.stem], key=lambda r: (r['rva'], r['kind']))
         banner = [f"# GENERATED claim fragment for unit {path.stem} - the "

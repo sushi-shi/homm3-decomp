@@ -1,0 +1,2033 @@
+"""Canonicalize MSVC compiler-private names in a disposable COFF copy.
+
+Gruntz data normalization with HoMM3's existing VC6 compiler-helper adapters: VC6 emits the same counter-based
+`$SG`/`$T`/`name$S<n>` compiler-private data names and `$E<n>` init
+helpers as MSVC 4.2, and those counters are compiler state, not stable
+identities - comparing them directly makes equivalent data and code
+relocations look different. Only disposable comparison copies are ever
+rewritten; the real base/delinked objects stay authoritative.
+
+The data transform is deliberately local to one object and content-derived.
+Reviewed ``DATA_COMPGEN`` bindings additionally replace the physical candidate
+symbol with its source-owned semantic identity after proving section, offset,
+extent, storage, and scope against the generated data manifest.
+Compiler-generated functions may additionally consume source ``VA_COMPGEN``
+claims, then prove their semantic role from the object's relocation graph before
+renaming volatile ``$E`` symbols. Symbol indices do not change. In embedded
+.text jump tables, same-function DIR32 references through volatile local labels
+or another external function owner are rewritten to the containing external
+function plus an equivalent owner-relative addend; all resolved section offsets
+are proved unchanged. Reviewed anonymous-namespace aliases are scoped to their
+owning compiland and recorded in the rename sidecar. Only symbol-table names
+change in those passes. COMMON allocations are also materialized into comparison
+BSS sections. Embedded RTTI strings and the original compiler objects remain intact.
+"""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import io
+import json
+import os
+import re
+import struct
+import tempfile
+import warnings
+from collections import defaultdict
+from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
+
+from homm3.build.normalized_freshness import write_stamp
+from homm3.core import msvc_names
+
+
+SYMBOL_SIZE = 18
+VOLATILE_SG = re.compile(r"^\$SG[0-9]+$")
+VOLATILE_T = re.compile(r"^\$T[0-9]+$")
+NAMED_STATIC = re.compile(r"^(?P<prefix>.+\$S)[0-9]*$")
+VOLATILE_E_FUNCTION = re.compile(r"^_?\$E[0-9]+$")
+COMPGEN_PREFIX = "__h3cg$"
+
+# VC6 anonymous namespace scope: ?%<path><crc32>@ in mangled names.
+ANON_NS_SCOPE_RE = re.compile(r"\?%([^@]+)@")
+
+
+def anon_ns_stamp_inputs() -> dict[str, Path]:
+    from homm3.core import common
+    path = common.HOMM3_DIR / "config/retail/anon-ns-paths.tsv"
+    return {"anon_ns_paths": path} if path.is_file() else {}
+
+
+def _load_anon_ns_canonical() -> dict[tuple[str, str], str]:
+    path = anon_ns_stamp_inputs().get("anon_ns_paths")
+    if path is None:
+        return {}
+    # Cache parsed contents, not mtime/size: same-size edits must be visible
+    # even when a caller preserves the file's timestamps.
+    return _read_anon_ns_canonical(path.read_text())
+
+
+@lru_cache(maxsize=8)
+def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
+    lines = [line for line in contents.splitlines()
+             if line.strip() and not line.startswith("#")]
+    rows = list(csv.reader(lines, delimiter="\t"))
+    header = ["unit", "source_basename", "canonical_scope"]
+    if not rows or rows[0] != header:
+        raise ValueError("anon-ns-paths.tsv: invalid header")
+    result = {}
+    for row in rows[1:]:
+        if len(row) != len(header) or any(not value or value != value.strip()
+                                          for value in row):
+            raise ValueError("anon-ns-paths.tsv: malformed row")
+        unit, basename, scope = row
+        if (re.fullmatch(r"[A-Za-z0-9_.-]+", unit) is None
+                or re.fullmatch(r"[A-Za-z0-9_.-]+", basename) is None
+                or re.fullmatch(r"[^@?\r\n]+\.[A-Za-z]+[0-9]+", scope) is None):
+            raise ValueError("anon-ns-paths.tsv: invalid unit or scope")
+        key = (unit.lower(), basename.lower())
+        if key in result:
+            raise ValueError("anon-ns-paths.tsv: duplicate unit/basename")
+        result[key] = scope
+    return result
+
+
+def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
+    """Normalize only reviewed namespace scopes in their owning compiland.
+
+    This changes comparison metadata only. Unknown units/scopes are retained,
+    and calls without an owning unit cannot apply a basename-only alias.
+    """
+    if unit is None or "?%" not in name:
+        return name
+    canonical = _load_anon_ns_canonical()
+
+    def replace(match):
+        scope = match.group(1)
+        basename = re.split(r"[\\/]", scope)[-1]
+        basename = re.sub(r"[0-9]+$", "", basename).lower()
+        replacement = canonical.get((unit.lower(), basename))
+        return match.group(0) if replacement is None else "?%" + replacement + "@"
+
+    return ANON_NS_SCOPE_RE.sub(replace, name)
+
+
+def _anon_ns_renames(
+    symbols: dict[int, "Symbol"],
+    existing_renames: dict[int, str],
+    unit: str | None,
+    definitions: dict[int, "Definition"],
+) -> tuple[dict[int, str], list["CanonicalRow"]]:
+    renames = {}
+    rows = []
+    owners = {}
+    for symbol in symbols.values():
+        new_name = existing_renames.get(symbol.index)
+        if new_name is None:
+            new_name = normalize_anon_ns_name(symbol.name, unit)
+            if new_name != symbol.name:
+                renames[symbol.index] = new_name
+                definition = definitions.get(symbol.index)
+                size = definition.end - definition.start if definition else 0
+                rows.append(CanonicalRow(
+                    symbol.name, new_name, "anonymous-namespace",
+                    definition.storage if definition else "undefined",
+                    symbol.section, symbol.value, size, size, 0,
+                    hashlib.sha256(new_name.encode("latin-1")).hexdigest(),
+                    "retail-rtti-path; unit=" + str(unit),
+                    "config/retail/anon-ns-paths.tsv",
+                ))
+        previous = owners.get(new_name)
+        if previous is not None and previous != symbol.name:
+            raise ValueError("anonymous namespace canonical name collision: " + new_name)
+        owners[new_name] = symbol.name
+    return renames, rows
+
+
+INITIALIZED_DATA = 0x00000040
+UNINITIALIZED_DATA = 0x00000080
+CNT_CODE = 0x00000020
+# VC6 /Gy pads a .text COMDAT to its section alignment with 0x90 fill
+# (a function carrying a jump table pads to 16); one alignment's worth
+# is the most that can ever be fill.
+TEXT_PAD_TRIM_LIMIT = 15
+MEM_EXECUTE = 0x20000000
+MEM_WRITE = 0x80000000
+LNK_NRELOC_OVFL = 0x01000000
+
+RELOCATION_WIDTHS = {
+    0x0001: 2,  # IMAGE_REL_I386_DIR16
+    0x0002: 2,  # IMAGE_REL_I386_REL16
+    0x0006: 4,  # IMAGE_REL_I386_DIR32
+    0x0007: 4,  # IMAGE_REL_I386_DIR32NB
+    0x000A: 2,  # IMAGE_REL_I386_SECTION
+    0x000B: 4,  # IMAGE_REL_I386_SECREL
+    0x0014: 4,  # IMAGE_REL_I386_REL32
+}
+DIR32 = 0x0006
+FUNCTION_TYPE = 0x0020
+EXTERNAL_STORAGE = 2
+STATIC_STORAGE = 3
+
+
+@dataclass(frozen=True)
+class Section:
+    index: int
+    header_offset: int
+    name: str
+    raw_size: int
+    raw_offset: int
+    reloc_offset: int
+    reloc_count: int
+    characteristics: int
+
+
+@dataclass(frozen=True)
+class Symbol:
+    index: int
+    offset: int
+    name: str
+    value: int
+    section: int
+    typ: int
+    storage_class: int
+    aux_count: int
+
+
+@dataclass(frozen=True)
+class Relocation:
+    section: int
+    site: int
+    symbol_index: int
+    typ: int
+    offset: int = 0
+
+
+@dataclass(frozen=True)
+class JumpTableRewrite:
+    relocation_offset: int
+    section: int
+    site: int
+    original_symbol_index: int
+    owner_symbol_index: int
+    original_addend: int
+    owner_addend: int
+    resolved_offset: int
+
+
+@dataclass(frozen=True)
+class Definition:
+    symbol: Symbol
+    section: Section
+    storage: str
+    start: int
+    end: int
+
+
+@dataclass(frozen=True)
+class CanonicalRow:
+    original_name: str
+    canonical_name: str
+    family: str
+    storage: str
+    section_ordinal: int
+    section_offset: int
+    physical_size: int
+    meaningful_size: int
+    occurrence: int
+    digest: str
+    proof: str
+    preview: str
+
+
+@dataclass(frozen=True)
+class CompgenClaim:
+    name: str
+    kind: str
+    owner: str
+    size: int
+
+
+# These VA_COMPGEN kinds name ordinary, already-defined COFF symbols.  They
+# participate in the retail label join, but must not enter the anonymous
+# compiler-function canonicalizer below: there is nothing to rename.
+#: The relocation targets that make a volatile `$E<n>` function a
+#: TEARDOWN rather than an initializer: a destructor or an operator delete,
+#: either linked directly or through the import table.
+TEARDOWN_EDGE_PREFIXES = ("??1", "??3@", "??_V@", "??_G",
+                          "__imp_??1", "__imp_??3@", "__imp_??_V@")
+
+
+DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
+    "SCALAR_DELETING_DTOR",
+    "VECTOR_DELETING_DTOR",
+    "DEFAULT_CTOR_CLOSURE",
+    "VECTOR_DTOR",
+    "VECTOR_SIZE",
+    "VECTOR_CAPACITY",
+    "VECTOR_CONSTRUCTOR_ITERATOR",
+    "VECTOR_RESIZE",
+    "VECTOR_INSERT",
+    "VECTOR_INSERT_SINGLE",
+    "VECTOR_INSERT_COUNT",
+    "VECTOR_ERASE",
+    "VECTOR_DESTROY",
+    "VECTOR_UCOPY",
+    "VECTOR_UFILL",
+    "VECTOR_COPY_ASSIGN",
+    "VECTOR_COPY_CTOR",
+    "LIST_DTOR",
+    "LIST_INSERT_SINGLE",
+    "LIST_ERASE_ITERATOR",
+    "LIST_ERASE_RANGE",
+    "LIST_BUYNODE",
+    "BITSET_TIDY",
+    "BITSET_CTOR",
+    "BITSET_SUBSCRIPT",
+    "BITSET_REFERENCE_ASSIGN",
+    "BITSET_AND_ASSIGN",
+    "BITSET_OR",
+    "BITSET_FLIP",
+    "BITSET_COUNT",
+    "BITSET_ANY",
+    "BITSET_SET",
+    "BITSET_TEST",
+    "BITSET_XRAN",
+    "TREE_MIN",
+    "TREE_INSERT",
+    "TREE_NODE_INSERT",
+    "TREE_CONST_ITERATOR_DEC",
+    "TREE_CONST_ITERATOR_INC",
+    "TREE_COPY",
+    "TREE_COPY_NODE",
+    "TREE_ERASE",
+    "TREE_INIT",
+    "TREE_COPY_ASSIGN",
+    "STRINGBUF_OVERFLOW",
+    "STRINGBUF_INIT",
+    "DEQUE_FREEFRONT",
+    "DEQUE_FREEBACK",
+    "DEQUE_BUYBACK",
+    "BASIC_STRING_ASSIGN_PTR_SIZE",
+    "OSTREAM_PUT",
+    "OSTREAM_INSERT_CSTR",
+    "INSERTION_SORT_1",
+    "STD_SORT",
+    "STD_SORT_0",
+    "STD_MEDIAN",
+    "STD_UNGUARDED_PARTITION",
+    "STD_UNGUARDED_INSERT",
+    "STD_COPY_BACKWARD",
+    "STD_FILL",
+    "TREE_ERASE_ITERATOR",
+    "TREE_ERASE_RANGE",
+    "TREE_ERASE_KEY",
+    "TREE_LBOUND",
+    "TREE_UBOUND",
+    "DEQUE_ERASE",
+    "VECTOR_RESERVE",
+    "NUM_PUT_IPUT",
+    "NUM_PUT_FPUT",
+    "NUM_PUT_REP",
+    "STRINGBUF_STR",
+    "STRINGBUF_SEEKOFF",
+    "STRINGBUF_SEEKPOS",
+    "STRINGBUF_PBACKFAIL",
+    "STRINGBUF_UNDERFLOW",
+    "BASIC_STRING_SUBSTR",
+    "BASIC_STRING_MAX_SIZE",
+    "BASIC_STRING_GROW",
+    "BASIC_STRING_COPY",
+    "BASIC_STRING_APPEND_STR",
+    "BASIC_STRING_APPEND_PTR",
+    "BASIC_STRING_FIND",
+    "BASIC_STRING_FREEZE",
+    "STREAMBUF_XSGETN",
+    "STREAMBUF_SPUTC",
+    "OSTREAM_OPFX",
+    "BASIC_STRING_CONCAT",
+    "LOCALE_FACET_DECREF",
+    "IOS_BASE_GETLOC",
+    "NUM_PUT_DO_PUT",
+    "NUMPUNCT_DO_DECIMAL_POINT",
+    "NUMPUNCT_DO_THOUSANDS_SEP",
+    "NUMPUNCT_DO_GROUPING",
+    "NUMPUNCT_DO_FALSENAME",
+    "NUMPUNCT_DO_TRUENAME",
+    "NUMPUNCT_GROUPING",
+    "NUMPUNCT_FALSENAME",
+    "NUMPUNCT_TRUENAME",
+    "TIDYFAC_NUMPUNCT_SAVE",
+    "TIDYFAC_NUMPUNCT_TIDY",
+    "TIDYFAC_NUM_PUT_SAVE",
+    "TIDYFAC_NUM_PUT_TIDY",
+    "TREE_BUYNODE",
+    "TREE_BEGIN",
+    "STREAMBUF_UFLOW",
+    "STREAMBUF_OVERFLOW",
+    "STREAMBUF_SHOWMANYC",
+    "STREAMBUF_UNDERFLOW",
+    "STREAMBUF_SETBUF",
+    "STREAMBUF_IMBUE",
+    "STREAMBUF_SETG",
+    "OSTREAMBUF_ITERATOR_ASSIGN",
+    "BASIC_STRING_ASSIGN_STR",
+    "BASIC_STRING_APPEND_COUNT",
+    "BASIC_STRING_SPLIT",
+    "BASIC_STRING_ASSIGN_COUNT",
+    "BASIC_STRING_RESIZE",
+    "BASIC_STRING_SUBSCRIPT",
+    "BASIC_STRING_ERASE",
+    "VECTOR_CLEAR",
+    "EXCEPTION_DORAISE",
+    "DEQUE_ITERATOR_ADD_ASSIGN",
+    "DEQUE_CONST_ITERATOR_ADD",
+    "STREAMBUF_XSPUTN",
+    "PAIR_CONST_INT_DTOR",
+    "PAIR_CTOR",
+    "STD_CONSTRUCT",
+    "STD_COPY",
+    "STD_DISTANCE",
+    "STD_DISTANCE_TAGGED",
+    "LOCAL_STATIC_DTOR",
+    "CLASS_CTOR",
+    "CLASS_NONCOPY_CTOR",
+    "IMPLICIT_COPY_CTOR",
+    "IMPLICIT_COPY_ASSIGN",
+    "IMPLICIT_DTOR",
+    # The istream/locale half of the char stream family. Every name here
+    # must also exist in retail_labels.source's CHAR_STREAM_MEMBERS (or, for
+    # TREE_FIND, its _Tree arm); a kind registered there and NOT here reaches
+    # this module as a pending semantic claim and an overload group trips the
+    # duplicate-name check, because a group's members share one key by
+    # design.
+    "NUM_GET_DO_GET",
+    "NUM_GET_GETIFLD",
+    "ISTREAM_IPFX",
+    "STREAMBUF_SGETC",
+    "STREAMBUF_SBUMPC",
+    "BASIC_IOS_SETSTATE",
+    "BASIC_IOS_INIT",
+    "BASIC_IOS_CLEAR",
+    "ISTREAMBUF_ITERATOR_PEEK",
+    "ISTREAMBUF_ITERATOR_INC",
+    "ISTREAMBUF_ITERATOR_EQUAL",
+    "ISTREAMBUF_ITERATOR_DEREF",
+    "CTYPE_IS",
+    "CTYPE_DO_TOLOWER_CHAR",
+    "CTYPE_DO_TOLOWER_RANGE",
+    "CTYPE_DO_TOUPPER_CHAR",
+    "CTYPE_DO_TOUPPER_RANGE",
+    "BASIC_STRING_COMPARE_STR",
+    "BASIC_STRING_COMPARE_SUBSTR",
+    "BASIC_STRING_REPLACE",
+    "BASIC_STRING_RFIND",
+    "MAKLOCSTR",
+    "USE_FACET_CTYPE",
+    "USE_FACET_NUMPUNCT",
+    "TIDYFAC_CTYPE_SAVE",
+    "TIDYFAC_CTYPE_TIDY",
+    "TIDYFAC_NUM_GET_SAVE",
+    "TIDYFAC_NUM_GET_TIDY",
+    "TREE_FIND",
+    "FILEBUF_OVERFLOW",
+    "FILEBUF_PBACKFAIL",
+    "FILEBUF_UNDERFLOW",
+    "FILEBUF_UFLOW",
+    "FILEBUF_SEEKOFF",
+    "FILEBUF_SEEKPOS",
+    "FILEBUF_SETBUF",
+    "FILEBUF_SYNC",
+    "FILEBUF_CLOSE",
+    "FILEBUF_INIT",
+    "STREAMBUF_INIT",
+    "CODECVT_DO_LENGTH",
+    "LOCALE_FACET_INCREF",
+    "BITSET_XINV",
+    "ISTREAM_EXTRACT_BITSET",
+    "LOCALE_ID_CAST",
+    "STREAMBUF_SEEKOFF",
+    "STREAMBUF_SEEKPOS",
+    "OSTRINGSTREAM_STR",
+    "OSTREAM_INSERT_INT",
+    "DEQUE_PUSH_BACK",
+    "DEQUE_GROWMAP",
+    "DEQUE_ITERATOR_INC",
+    "DEQUE_ITERATOR_DEC",
+    "ISTREAM_EXTRACT_INT",
+    "ISTREAM_EXTRACT_STRING",
+    "LOGIC_ERROR_WHAT",
+    "DEQUE_CONST_ITERATOR_CTOR",
+    "DEQUE_CONST_ITERATOR_CTOR_NODE",
+    "ALLOCATOR_DEALLOCATE",
+    "BASIC_STRING_NULLSTR",
+    "TREE_CONST_ITERATOR_CTOR",
+    "TREE_ITERATOR_EQUAL",
+    "TREE_LOWER_BOUND",
+    "TREE_CONST_END",
+    "TREE_UPPER_BOUND",
+    "TREE_EQUAL_RANGE",
+    "MAP_INSERT",
+    "MAP_FIND",
+    # the <xlocale> facet block basic_filebuf::_Initcvt reaches
+    "FILEBUF_INITCVT",
+    "STREAMBUF_GETLOC",
+    "TIDYFAC_CODECVT_SAVE",
+    "TIDYFAC_CODECVT_TIDY",
+    "LOCALE_ADDFAC_CODECVT",
+    "CODECVT_BASE_DO_ALWAYS_NOCONV",
+    "CODECVT_BASE_DO_ENCODING",
+    "CODECVT_DO_IN",
+})
+
+
+@dataclass(frozen=True)
+class CompgenDataClaim:
+    name: str
+    section: int
+    offset: int
+    size: int
+    storage: str
+    scope: str
+
+
+@dataclass(frozen=True)
+class TextPadTrim:
+    section: int
+    trimmed: int
+
+
+@dataclass(frozen=True)
+class CanonicalizedObject:
+    data: bytes
+    rows: tuple[CanonicalRow, ...]
+
+
+class CoffObject:
+    def __init__(self, payload: bytes):
+        self.data = bytes(payload)
+        if len(self.data) < 20:
+            raise ValueError("short COFF object")
+        machine, section_count = struct.unpack_from("<HH", self.data, 0)
+        if machine != 0x14C:
+            raise ValueError(f"unsupported COFF machine 0x{machine:x}")
+        self.section_count = section_count
+        self.symbol_offset = struct.unpack_from("<I", self.data, 8)[0]
+        self.symbol_count = struct.unpack_from("<I", self.data, 12)[0]
+        optional_size = struct.unpack_from("<H", self.data, 16)[0]
+        first_section = 20 + optional_size
+        section_end = first_section + section_count * 40
+        if section_end > len(self.data):
+            raise ValueError("truncated COFF section table")
+        self.string_offset = self.symbol_offset + self.symbol_count * SYMBOL_SIZE
+        if self.string_offset + 4 > len(self.data):
+            raise ValueError("missing COFF string table")
+        self.string_size = struct.unpack_from("<I", self.data, self.string_offset)[0]
+        if self.string_size < 4 or self.string_offset + self.string_size != len(self.data):
+            raise ValueError("COFF string table is not final")
+        self.sections = self._read_sections(first_section)
+        self.symbols = self._read_symbols()
+        self.relocations = self._read_relocations()
+
+    def _string_name(self, offset: int) -> str:
+        if not 4 <= offset < self.string_size:
+            raise ValueError(f"invalid COFF string offset {offset}")
+        start = self.string_offset + offset
+        try:
+            end = self.data.index(b"\0", start, self.string_offset + self.string_size)
+        except ValueError as error:
+            raise ValueError("unterminated COFF string") from error
+        return self.data[start:end].decode("latin-1")
+
+    def _symbol_name(self, offset: int) -> str:
+        raw = self.data[offset:offset + 8]
+        zero, string_offset = struct.unpack("<II", raw)
+        if zero == 0:
+            return self._string_name(string_offset)
+        return raw.split(b"\0", 1)[0].decode("latin-1")
+
+    def _section_name(self, offset: int) -> str:
+        raw = self.data[offset:offset + 8].split(b"\0", 1)[0]
+        if raw.startswith(b"/") and raw[1:].isdigit():
+            return self._string_name(int(raw[1:]))
+        return raw.decode("latin-1")
+
+    def _read_sections(self, first: int) -> tuple[Section, ...]:
+        rows = []
+        for zero_index in range(self.section_count):
+            offset = first + zero_index * 40
+            raw_size, raw_offset, reloc_offset = struct.unpack_from(
+                "<III", self.data, offset + 16)
+            reloc_count = struct.unpack_from("<H", self.data, offset + 32)[0]
+            characteristics = struct.unpack_from("<I", self.data, offset + 36)[0]
+            if raw_offset and raw_offset + raw_size > len(self.data):
+                raise ValueError("COFF section raw data is out of bounds")
+            relocation_bytes = (10 if characteristics & LNK_NRELOC_OVFL
+                                else reloc_count * 10)
+            if reloc_count and reloc_offset + relocation_bytes > len(self.data):
+                raise ValueError("COFF relocation table is out of bounds")
+            rows.append(Section(
+                zero_index + 1, offset, self._section_name(offset), raw_size,
+                raw_offset, reloc_offset, reloc_count, characteristics,
+            ))
+        return tuple(rows)
+
+    def _read_symbols(self) -> dict[int, Symbol]:
+        if self.symbol_offset + self.symbol_count * SYMBOL_SIZE > len(self.data):
+            raise ValueError("COFF symbol table is out of bounds")
+        rows = {}
+        index = 0
+        while index < self.symbol_count:
+            offset = self.symbol_offset + index * SYMBOL_SIZE
+            value, section, typ, storage_class, aux_count = struct.unpack_from(
+                "<IhHBB", self.data, offset + 8)
+            if index + aux_count >= self.symbol_count:
+                raise ValueError("COFF auxiliary symbols exceed the symbol table")
+            rows[index] = Symbol(
+                index, offset, self._symbol_name(offset), value, section, typ,
+                storage_class, aux_count,
+            )
+            index += 1 + aux_count
+        return rows
+
+    def _read_relocations(self) -> tuple[Relocation, ...]:
+        rows = []
+        for section in self.sections:
+            count = section.reloc_count
+            first = 0
+            if section.characteristics & LNK_NRELOC_OVFL:
+                if count != 0xFFFF:
+                    raise ValueError("COFF relocation overflow flag/count disagree")
+                if section.reloc_offset + 10 > len(self.data):
+                    raise ValueError("missing COFF relocation overflow record")
+                count, symbol_index, typ = struct.unpack_from(
+                    "<IIH", self.data, section.reloc_offset)
+                if count < 1 or symbol_index or typ:
+                    raise ValueError("invalid COFF relocation overflow record")
+                first = 1
+            for index in range(first, count):
+                offset = section.reloc_offset + index * 10
+                if offset + 10 > len(self.data):
+                    raise ValueError("COFF relocation table is out of bounds")
+                site, symbol_index, typ = struct.unpack_from("<IIH", self.data, offset)
+                if site >= section.raw_size:
+                    raise ValueError("COFF relocation site is outside its section")
+                if symbol_index not in self.symbols:
+                    raise ValueError("COFF relocation targets an auxiliary/missing symbol")
+                rows.append(Relocation(
+                    section.index, site, symbol_index, typ, offset))
+        return tuple(rows)
+
+    def section_bytes(self, section: Section) -> bytes:
+        if section.raw_offset == 0:
+            return bytes(section.raw_size)
+        return self.data[section.raw_offset:section.raw_offset + section.raw_size]
+
+
+def _storage(section: Section) -> str | None:
+    flags = section.characteristics
+    if flags & MEM_EXECUTE:
+        return None
+    if flags & UNINITIALIZED_DATA:
+        return "bss"
+    if not flags & INITIALIZED_DATA:
+        return None
+    return "data" if flags & MEM_WRITE else "rdata"
+
+
+def _definitions(coff: CoffObject) -> tuple[Definition, ...]:
+    by_section: dict[int, list[Symbol]] = defaultdict(list)
+    for symbol in coff.symbols.values():
+        if (symbol.section > 0 and symbol.typ == 0 and
+                symbol.storage_class in (2, 3) and symbol.aux_count == 0 and
+                _storage(coff.sections[symbol.section - 1]) is not None):
+            by_section[symbol.section].append(symbol)
+    rows = []
+    for section_index, symbols in by_section.items():
+        section = coff.sections[section_index - 1]
+        offsets = sorted({symbol.value for symbol in symbols})
+        next_offset = {
+            value: offsets[index + 1] if index + 1 < len(offsets) else section.raw_size
+            for index, value in enumerate(offsets)
+        }
+        symbols_at_offset = defaultdict(list)
+        for symbol in symbols:
+            symbols_at_offset[symbol.value].append(symbol.name)
+        aliases = {
+            offset: names for offset, names in symbols_at_offset.items()
+            if len(names) > 1 and any(_family(name) is not None for name in names)
+        }
+        if aliases:
+            raise ValueError(
+                f"same-offset compiler-private data aliases in section "
+                f"{section.index}: {aliases}")
+        for symbol in symbols:
+            end = next_offset[symbol.value]
+            if not 0 <= symbol.value < end <= section.raw_size:
+                raise ValueError(
+                    f"invalid data extent for {symbol.name} at section "
+                    f"{section.index}+0x{symbol.value:x}")
+            rows.append(Definition(
+                symbol, section, _storage(section) or "", symbol.value, end,
+            ))
+    return tuple(sorted(rows, key=lambda row: (
+        row.section.index, row.start, row.symbol.index,
+    )))
+
+
+def _family(name: str) -> tuple[str, str | None] | None:
+    if VOLATILE_SG.fullmatch(name):
+        return "sg", None
+    if VOLATILE_T.fullmatch(name):
+        return "t", None
+    match = NAMED_STATIC.fullmatch(name)
+    if match:
+        return "named", msvc_names.mask(name)
+    return None
+
+
+def _relocation_width(typ: int) -> int:
+    try:
+        return RELOCATION_WIDTHS[typ]
+    except KeyError as error:
+        raise ValueError(f"unsupported i386 relocation type 0x{typ:x}") from error
+
+
+def _float_width(payload: bytes, operand_widths: frozenset[int | None] = frozenset()):
+    """Infer only widths proved by this allocation's bytes, span, and readers.
+
+    A zero tail is ambiguous by content alone: the delinker spans a pooled
+    float up to its aligned successor, and a double's upper dword may itself
+    be zero. There the width of every x87 operand that references the
+    constant decides, and only when all of them agree.
+    """
+    if len(payload) == 4:
+        return 4, "extent-4"
+    if len(payload) == 8 and any(payload[4:]):
+        return 8, "extent-8-nonzero-upper-dword"
+    if len(operand_widths) == 1:
+        (width,) = operand_widths
+        if (width and len(payload) >= width
+                and len(payload) - width <= MAX_ALIGNMENT_PADDING
+                and not any(payload[width:])):
+            return width, f"zero-tail-m{width * 8}fp-operands"
+    return None, "ambiguous-content-width"
+
+
+def _is_string(payload: bytes, relocations: list[Relocation]) -> int | None:
+    if relocations:
+        return None
+    terminator = payload.find(b"\0")
+    if terminator < 0 or any(payload[terminator + 1:]):
+        return None
+    return terminator + 1
+
+
+def _escaped_preview(payload: bytes, limit: int = 48) -> str:
+    shown = payload[:limit]
+    text = "".join(
+        chr(byte) if 0x20 <= byte < 0x7F and chr(byte) not in "\\\""
+        else f"\\x{byte:02x}"
+        for byte in shown
+    )
+    return text + ("..." if len(payload) > limit else "")
+
+
+def _record_bytes(record: dict) -> bytes:
+    return json.dumps(record, sort_keys=True, separators=(",", ":")).encode("ascii")
+
+
+def _digest(record: bytes, seen: dict[str, bytes]) -> str:
+    """Short content digest: 6 hex chars for readability (user decision
+    2026-08-04), lengthened by 2 only on an in-object prefix collision
+    between distinct records - deterministic per object."""
+    full = hashlib.sha256(record).hexdigest()
+    length = 6
+    value = full[:length]
+    while value in seen and seen[value] != record:
+        length += 2
+        if length > len(full):
+            raise ValueError(
+                f"SHA-256 collision for canonical data record {full}")
+        value = full[:length]
+    seen[value] = record
+    return value
+
+
+def _function_ranges(coff: CoffObject) -> dict[int, tuple[tuple[int, int, Symbol], ...]]:
+    """Return unambiguous function ownership ranges per text section."""
+    by_section: dict[int, dict[int, list[Symbol]]] = defaultdict(
+        lambda: defaultdict(list))
+    for symbol in coff.symbols.values():
+        if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
+                symbol.storage_class in (EXTERNAL_STORAGE, STATIC_STORAGE) and
+                coff.sections[symbol.section - 1].characteristics & MEM_EXECUTE):
+            by_section[symbol.section][symbol.value].append(symbol)
+    result = {}
+    for section_index, by_start in by_section.items():
+        starts = sorted(by_start)
+        ranges = []
+        for index, start in enumerate(starts):
+            if len(by_start[start]) != 1:
+                continue
+            end = starts[index + 1] if index + 1 < len(starts) else (
+                coff.sections[section_index - 1].raw_size)
+            ranges.append((start, end, by_start[start][0]))
+        result[section_index] = tuple(ranges)
+    return result
+
+
+def _function_owner(ranges, section: int, offset: int) -> Symbol | None:
+    for start, end, symbol in ranges.get(section, ()):
+        if start <= offset < end:
+            return symbol
+    return None
+
+
+def unexpected_compgen_names(defined_names, accounted_names) -> list[str]:
+    """The `__h3cg$` function symbols in an object that NO claim accounts
+    for - the defect the caller raises on.
+
+    `accounted_names` is every compiler-function claim the unit has, not
+    just the anonymous ones this module renames. A DIRECT-symbol claim whose
+    base symbol the compile does not emit stays spelled `__h3cg$...` in the
+    delinked object, so checking only the rename set reports those as
+    unclaimed the moment a unit gains its first anonymous claim (measured
+    2026-09-06 on game.obj: SCampaign's implicit copy assign and the two
+    type_map_hero_identity rows).
+    """
+    return sorted(
+        name for name in defined_names
+        if name.startswith(COMPGEN_PREFIX) and name not in accounted_names)
+
+
+def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
+                     accounted: frozenset[str] = frozenset()):
+    if not claims:
+        return {}, ()
+    claim_names = [claim.name for claim in claims]
+    claim_name_set = set(claim_names)
+    if len(claim_name_set) != len(claim_names):
+        raise ValueError("duplicate semantic compiler-function claim")
+    defined_functions = {
+        symbol.index: symbol for symbol in coff.symbols.values()
+        if (symbol.section > 0 and symbol.typ == FUNCTION_TYPE and
+            coff.sections[symbol.section - 1].characteristics & MEM_EXECUTE)
+    }
+    by_name = defaultdict(list)
+    for symbol in defined_functions.values():
+        by_name[symbol.name].append(symbol)
+    unexpected = unexpected_compgen_names(by_name, claim_name_set | accounted)
+    if unexpected:
+        raise ValueError("unclaimed semantic compiler functions: %s" %
+                         ", ".join(unexpected))
+    by_section = defaultdict(list)
+    for symbol in defined_functions.values():
+        by_section[symbol.section].append(symbol)
+
+    def extent(symbol):
+        later = sorted(other.value for other in by_section[symbol.section]
+                       if other.value > symbol.value)
+        end = later[0] if later else coff.sections[symbol.section - 1].raw_size
+        return symbol.value, end
+
+    def validate_extent(symbol, claim):
+        start, end = extent(symbol)
+        section = coff.sections[symbol.section - 1]
+        body = coff.section_bytes(section)
+        padding = body[start + claim.size:end]
+        if end - start < claim.size or any(byte not in (0x90, 0xCC)
+                                           for byte in padding):
+            raise ValueError("%s physical span 0x%x does not contain the "
+                             "expected 0x%x-byte body plus code padding" %
+                             (symbol.name, end - start, claim.size))
+        return start, start + claim.size
+
+    satisfied = set()
+    for claim in claims:
+        semantic = by_name.get(claim.name, ())
+        if semantic:
+            if len(semantic) != 1:
+                raise ValueError("duplicate semantic compiler function: %s" % claim.name)
+            validate_extent(semantic[0], claim)
+            satisfied.add(claim.name)
+    pending = [claim for claim in claims if claim.name not in satisfied]
+    if not pending:
+        return {}, ()
+
+    volatile = {index: symbol for index, symbol in defined_functions.items()
+                if VOLATILE_E_FUNCTION.fullmatch(symbol.name)}
+    extents = {}
+    for index, symbol in defined_functions.items():
+        extents[index] = extent(symbol)
+    outgoing = defaultdict(set)
+    for relocation in coff.relocations:
+        for index, symbol in defined_functions.items():
+            start, end = extents[index]
+            if relocation.section == symbol.section and start <= relocation.site < end:
+                outgoing[index].add(relocation.symbol_index)
+
+    def target_names(index):
+        return {coff.symbols[target].name for target in outgoing[index]}
+
+    #: Symbol indices this object DEFINES in a non-executable section - its
+    #: own data. `is_ownerless_static_dtor` below uses them as the proof
+    #: that a teardown thunk has no owner of its own.
+    local_data = {
+        index for index, symbol in coff.symbols.items()
+        if 0 < symbol.section <= len(coff.sections)
+        and not (coff.sections[symbol.section - 1].characteristics
+                 & MEM_EXECUTE)}
+
+    def owner_present(names, owner):
+        return any(
+            name == "_" + owner or
+            name.startswith("?" + owner + "@@") or
+            # Function-local statics use `_?name@?1??function...` rather
+            # than the external-data `?name@@...` spelling.
+            name.startswith("_?" + owner + "@?")
+            for name in names)
+
+    def is_special_member(index, owner, prefix):
+        names = target_names(index)
+        return (owner_present(names, owner) and
+                any(name.startswith(prefix) for name in names))
+
+    def registered_by_owner(index, owner):
+        # A function-local static's destructor may use only other globals.
+        # Its initializer still takes the owner's address, and registers
+        # the exact callback: push OFFSET callback; call _atexit. A mere
+        # graph edge (or calling the callback) is not registration proof.
+        for parent, symbol in defined_functions.items():
+            names = target_names(parent)
+            if not owner_present(names, owner) or "_atexit" not in names:
+                continue
+            start, end = extents[parent]
+            section = coff.sections[symbol.section - 1]
+            body = coff.section_bytes(section)
+            relocs = {r.site: r for r in coff.relocations
+                      if r.section == symbol.section and start <= r.site < end}
+            callbacks = set()
+            for site, ref in relocs.items():
+                call = relocs.get(site + 5)
+                if (ref.typ == DIR32 and ref.symbol_index in volatile
+                        and site > start and site + 9 <= end
+                        and body[site - 1] == 0x68 and body[site + 4] == 0xe8
+                        and body[site:site + 4] == b"\0" * 4
+                        and call is not None and call.typ == 0x14
+                        and coff.symbols[call.symbol_index].name == "_atexit"):
+                    callbacks.add(ref.symbol_index)
+            owners = {coff.symbols[t].name for t in outgoing[parent]
+                      if coff.symbols[t].name.startswith("_?")
+                      and not coff.symbols[t].name.startswith("_?$S")}
+            if callbacks == {index} and len(owners) == 1:
+                return True
+        return False
+
+    def is_static_ctor(index, owner):
+        names = target_names(index)
+        if (owner_present(names, owner) and
+                any(name.startswith("??0") for name in names)):
+            return True
+        # VC6 /Ob2 can inline a small constructor completely into its
+        # volatile `$E<n>` init function. The remaining owner edge proves
+        # which datum is initialized; excluding exit-registration and
+        # destructor roles prevents the other `$E<n>` helpers for that same
+        # datum from becoming candidates. The outer assignment still
+        # requires exactly one candidate before any rename is admitted.
+        return (owner_present(names, owner) and
+                "_atexit" not in names and
+                not is_static_dtor(index, owner))
+
+    def is_static_dtor(index, owner):
+        names = target_names(index)
+        if (owner_present(names, owner) and
+                any(name.startswith("??1") for name in names)):
+            return True
+        # VC6 /Ob2 can inline a small destructor completely into its
+        # volatile `$E<n>` exit function. Such a function still has two
+        # independent semantic edges: the owned datum and operator delete
+        # (scalar or vector). Requiring both keeps this distinct from an
+        # arbitrary `$E<n>` that merely touches the same global.
+        teardown = any(name.startswith(("??1", "__imp_??1", "??3@", "??_V@"))
+                       for name in names)
+        return ((teardown and owner_present(names, owner))
+                or registered_by_owner(index, owner))
+
+    def is_atexit(index, owner):
+        return ("_atexit" in target_names(index) and
+                any(target in volatile and
+                    is_special_member(target, owner, "??1")
+                    for target in outgoing[index]))
+
+    def is_ownerless_static_dtor(index):
+        """An EMPTY holder's teardown names no member at all.
+
+        `TImmMouseRuntime` (game.obj, retail 0x4b6910) is the shape: the
+        holder is eight bytes of nothing and its destructor closes and
+        deletes two OTHER globals, so once VC6 expands it into the `$E<n>`
+        thunk the `mov ecx, <holder>` disappears with the unused `this` and
+        NO relocation reaches the owned datum. `owner_present` therefore
+        cannot see it, and the strict arms above report zero candidates.
+
+        This runs only as a SECOND PASS over claims the strict arms left
+        unbound (see below), so it can never take a candidate away from an
+        owner-present claim. It still demands a teardown edge - a
+        destructor or an operator delete, imported or not - and refuses
+        anything registering with `_atexit`, which is the ctor-side role.
+
+        The discriminator is the OBJECT'S OWN DATA. A static destructor's
+        owned datum is by construction defined in the same object, so a
+        thunk that relocates any locally-defined datum HAS an owner and
+        belongs to the strict arms however they spell it; game.obj's
+        `_$E80` is the counter-example, a vector teardown that pushes the
+        address of its own `TPickRandomTownName` array. An ownerless one
+        reaches only imports and other compilands' externs.
+        """
+        names = target_names(index)
+        if "_atexit" in names:
+            return False
+        if any(target in local_data for target in outgoing[index]):
+            return False
+        # Registration evidence must pass registered_by_owner, not be
+        # reinterpreted as missing ownership by this fallback. This includes
+        # a different owner, malformed callback push/addend, or ambiguous
+        # callbacks. Absence of an initializer still permits the retail
+        # immMouse shape; contradictory initializer evidence does not.
+        if any(index in outgoing[parent] and "_atexit" in target_names(parent)
+               for parent in defined_functions):
+            return False
+        return any(name.startswith(TEARDOWN_EDGE_PREFIXES) for name in names)
+
+    def has_role(index, claim):
+        if claim.kind == "STATIC_CTOR":
+            return is_static_ctor(index, claim.owner)
+        if claim.kind == "STATIC_DTOR":
+            return is_static_dtor(index, claim.owner)
+        if claim.kind == "STATIC_ATEXIT":
+            return is_atexit(index, claim.owner)
+        if claim.kind == "STATIC_INIT_DISPATCH":
+            targets = outgoing[index]
+            return (any(target in volatile and
+                        is_special_member(target, claim.owner, "??0")
+                        for target in targets) and
+                    any(target in volatile and is_atexit(target, claim.owner)
+                        for target in targets))
+        return False
+
+    assigned = {}
+    deferred = []
+    for claim in pending:
+        candidates = [index for index in volatile
+                      if index not in assigned and has_role(index, claim)]
+        if len(candidates) != 1:
+            deferred.append((claim, len(candidates)))
+            continue
+        assigned[candidates[0]] = claim
+    # Second pass: a STATIC_DTOR the owner-relocation arms could not see at
+    # all. Deferring it keeps the relaxed shape from competing with any
+    # claim the strict arms already bound.
+    for claim, strict_candidates in deferred:
+        if claim.kind == "STATIC_DTOR" and strict_candidates == 0:
+            candidates = [index for index in volatile
+                          if index not in assigned
+                          and is_ownerless_static_dtor(index)]
+            if len(candidates) == 1:
+                assigned[candidates[0]] = claim
+                continue
+            strict_candidates = len(candidates)
+        warnings.warn(
+            "%s has %d semantic compiler-function candidates; leaving "
+            "claim unbound" % (claim.name, strict_candidates),
+            RuntimeWarning, stacklevel=2)
+
+    rows = []
+    renames = {}
+    for index, claim in assigned.items():
+        symbol = volatile[index]
+        start, end = validate_extent(symbol, claim)
+        renames[index] = claim.name
+        rows.append(CanonicalRow(
+            symbol.name, claim.name, "compgen", "text", symbol.section,
+            start, end - start, end - start, 0, "-",
+            "semantic-relocation-role", "%s:%s" % (claim.kind, claim.owner),
+        ))
+    return renames, tuple(rows)
+
+
+def _compgen_data_renames(
+        coff: CoffObject,
+        definitions: tuple[Definition, ...],
+        claims: tuple[CompgenDataClaim, ...]):
+    if not claims:
+        return {}, ()
+    by_location = defaultdict(list)
+    for definition in definitions:
+        by_location[(
+            definition.section.index,
+            definition.start,
+            definition.storage,
+            "external" if definition.symbol.storage_class == EXTERNAL_STORAGE
+            else "local",
+        )].append(definition)
+    renames = {}
+    rows = []
+    claimed_names = set()
+    for claim in claims:
+        if claim.name in claimed_names:
+            raise ValueError(
+                f"duplicate semantic compiler-data claim: {claim.name}")
+        claimed_names.add(claim.name)
+        key = (
+            claim.section,
+            claim.offset,
+            claim.storage,
+            claim.scope,
+        )
+        matches = by_location.get(key, ())
+        if len(matches) != 1:
+            raise ValueError(
+                f"{claim.name} has {len(matches)} candidate definitions at "
+                f"section {claim.section}+0x{claim.offset:x}")
+        definition = matches[0]
+        physical_size = definition.end - definition.start
+        if not 0 < claim.size <= physical_size:
+            raise ValueError(
+                f"{claim.name} logical size 0x{claim.size:x} exceeds candidate "
+                f"extent 0x{physical_size:x}")
+        collision = next((
+            symbol for symbol in coff.symbols.values()
+            if symbol.name == claim.name
+            and symbol.index != definition.symbol.index
+        ), None)
+        if collision is not None:
+            raise ValueError(
+                "semantic compiler-data name collides with existing symbol: "
+                f"{claim.name}")
+        renames[definition.symbol.index] = claim.name
+        meaningful = coff.section_bytes(definition.section)[
+            definition.start:definition.start + claim.size]
+        rows.append(CanonicalRow(
+            definition.symbol.name,
+            claim.name,
+            "semantic-data",
+            definition.storage,
+            definition.section.index,
+            definition.start,
+            physical_size,
+            claim.size,
+            0,
+            hashlib.sha256(meaningful).hexdigest(),
+            "source-DATA_COMPGEN",
+            _escaped_preview(meaningful),
+        ))
+    return renames, tuple(rows)
+
+
+def _rewrite_jump_table_relocations(
+        original: CoffObject, payload: bytes) -> tuple[bytes, tuple[JumpTableRewrite, ...]]:
+    """Rewrite same-function .text DIR32 sites to owner+relative addend."""
+    data = bytearray(payload)
+    ranges = _function_ranges(original)
+    rewrites = []
+    for relocation in original.relocations:
+        if relocation.typ != DIR32:
+            continue
+        section = original.sections[relocation.section - 1]
+        if not section.characteristics & MEM_EXECUTE:
+            continue
+        target = original.symbols[relocation.symbol_index]
+        if target.section != relocation.section:
+            continue
+        is_local_label = target.typ == 0 and target.storage_class == 6
+        is_external_function = (
+            target.typ == FUNCTION_TYPE and target.storage_class == EXTERNAL_STORAGE)
+        if not is_local_label and not is_external_function:
+            continue
+        if relocation.site + 4 > section.raw_size:
+            raise ValueError("DIR32 jump-table relocation crosses .text payload")
+        operand_offset = section.raw_offset + relocation.site
+        original_addend = struct.unpack_from("<I", original.data, operand_offset)[0]
+        resolved_offset = (target.value + original_addend) & 0xFFFFFFFF
+        site_owner = _function_owner(ranges, relocation.section, relocation.site)
+        target_owner = _function_owner(ranges, target.section, resolved_offset)
+        if site_owner is None or target_owner is None or site_owner != target_owner:
+            continue
+        owner_addend = (resolved_offset - target_owner.value) & 0xFFFFFFFF
+        if ((target_owner.value + owner_addend) & 0xFFFFFFFF != resolved_offset):
+            raise RuntimeError("jump-table owner/addend resolution changed")
+        struct.pack_into("<I", data, operand_offset, owner_addend)
+        struct.pack_into("<I", data, relocation.offset + 4, target_owner.index)
+        rewrites.append(JumpTableRewrite(
+            relocation.offset, relocation.section, relocation.site,
+            target.index, target_owner.index, original_addend, owner_addend,
+            resolved_offset,
+        ))
+    return bytes(data), tuple(rewrites)
+
+
+def _rewrite_names(coff: CoffObject, renames: dict[int, str]) -> bytes:
+    data = bytearray(coff.data[:coff.string_offset])
+    strings = bytearray(struct.pack("<I", 4))
+    offsets: dict[bytes, int] = {}
+
+    def encoded(name: str, section=False) -> bytes:
+        raw = name.encode("latin-1")
+        if len(raw) <= 8:
+            return raw.ljust(8, b"\0")
+        offset = offsets.get(raw)
+        if offset is None:
+            offset = len(strings)
+            offsets[raw] = offset
+            strings.extend(raw + b"\0")
+        if section:
+            value = f"/{offset}".encode("ascii")
+            if len(value) > 8:
+                raise ValueError("COFF long section-name offset does not fit")
+            return value.ljust(8, b"\0")
+        return struct.pack("<II", 0, offset)
+
+    for section in coff.sections:
+        data[section.header_offset:section.header_offset + 8] = encoded(
+            section.name, section=True)
+    for symbol in coff.symbols.values():
+        data[symbol.offset:symbol.offset + 8] = encoded(
+            renames.get(symbol.index, symbol.name))
+    struct.pack_into("<I", strings, 0, len(strings))
+    data.extend(strings)
+    return bytes(data)
+
+
+def _trim_text_alignment_padding(
+        coff: CoffObject, payload: bytes,
+        ) -> tuple[bytes, tuple[TextPadTrim, ...]]:
+    """Shrink executable sections past their trailing 0x90 alignment fill.
+
+    The compiled base carries each function in a /Gy COMDAT padded to its
+    section alignment, while the delinked target packs functions at their
+    claimed retail sizes - the same matched function then compares at two
+    lengths and the fill bytes score as a difference (widget::Main lost
+    1.4% to eight trailing nops). The fill belongs to no function, so this
+    first pass drops it. normalize_objs later restores only the smaller NOP
+    suffix that the linked target necessarily retains before its next
+    aligned function, and only when both logical function lengths agree. A
+    relocation span is never trimmed (jump-table dwords carry DIR32 relocs)
+    and at most TEXT_PAD_TRIM_LIMIT bytes go - one alignment's worth, never
+    code."""
+    data = bytearray(payload)
+    trims = []
+    for section in coff.sections:
+        if not section.characteristics & CNT_CODE:
+            continue
+        if not section.raw_size or not section.raw_offset:
+            continue
+        raw = coff.section_bytes(section)
+        run = 0
+        while (run < len(raw) and run < TEXT_PAD_TRIM_LIMIT
+               and raw[len(raw) - 1 - run] == 0x90):
+            run += 1
+        floor = 0
+        for relocation in coff.relocations:
+            if relocation.section != section.index:
+                continue
+            end = relocation.site + _relocation_width(relocation.typ)
+            if end > floor:
+                floor = end
+        run = min(run, len(raw) - floor)
+        if run <= 0:
+            continue
+        struct.pack_into("<I", data, section.header_offset + 16,
+                         section.raw_size - run)
+        trims.append(TextPadTrim(section.index, run))
+    return bytes(data), tuple(trims)
+
+
+def _assert_only_canonical_changes(
+        original: CoffObject, payload: bytes, renames: dict[int, str],
+        jump_table_rewrites: tuple[JumpTableRewrite, ...],
+        text_pad_trims: tuple[TextPadTrim, ...] = ()) -> None:
+    normalized = CoffObject(payload)
+    trims_by_section = {trim.section: trim.trimmed for trim in text_pad_trims}
+    if len(trims_by_section) != len(text_pad_trims):
+        raise RuntimeError("duplicate text-pad trim record")
+    rewrites_by_offset = {
+        rewrite.relocation_offset: rewrite for rewrite in jump_table_rewrites
+    }
+    if len(rewrites_by_offset) != len(jump_table_rewrites):
+        raise RuntimeError("duplicate jump-table rewrite record")
+    if (original.section_count != normalized.section_count or
+            original.symbol_count != normalized.symbol_count or
+            original.symbol_offset != normalized.symbol_offset):
+        raise RuntimeError("canonical COFF topology postcondition failed")
+    if len(original.sections) != len(normalized.sections):
+        raise RuntimeError("canonical COFF section-count postcondition failed")
+    for before, after in zip(original.sections, normalized.sections):
+        if before.name != after.name:
+            raise RuntimeError("canonical COFF changed a decoded section name")
+        trimmed = trims_by_section.get(before.index, 0)
+        if (before.raw_size - trimmed, before.raw_offset, before.reloc_offset,
+                before.reloc_count, before.characteristics) != (
+                after.raw_size, after.raw_offset, after.reloc_offset,
+                after.reloc_count, after.characteristics):
+            raise RuntimeError("canonical COFF changed section metadata")
+        before_payload = bytearray(original.section_bytes(before))
+        after_payload = bytearray(normalized.section_bytes(after))
+        if trimmed:
+            if before_payload[-trimmed:] != b"\x90" * trimmed:
+                raise RuntimeError("text-pad trim removed non-fill bytes")
+            del before_payload[-trimmed:]
+        for rewrite in jump_table_rewrites:
+            if rewrite.section != before.index:
+                continue
+            expected_before = struct.pack("<I", rewrite.original_addend)
+            expected_after = struct.pack("<I", rewrite.owner_addend)
+            site = rewrite.site
+            if (before_payload[site:site + 4] != expected_before or
+                    after_payload[site:site + 4] != expected_after):
+                raise RuntimeError("canonical COFF emitted an unexpected jump-table addend")
+            before_payload[site:site + 4] = bytes(4)
+            after_payload[site:site + 4] = bytes(4)
+        if before_payload != after_payload:
+            raise RuntimeError("canonical COFF changed unexpected section payload bytes")
+    if len(original.relocations) != len(normalized.relocations):
+        raise RuntimeError("canonical COFF changed relocation count")
+    for before, after in zip(original.relocations, normalized.relocations):
+        rewrite = rewrites_by_offset.get(before.offset)
+        expected_symbol = (rewrite.owner_symbol_index if rewrite is not None
+                           else before.symbol_index)
+        if (before.offset, before.section, before.site, before.typ) != (
+                after.offset, after.section, after.site, after.typ):
+            raise RuntimeError("canonical COFF changed relocation site/type/order")
+        if after.symbol_index != expected_symbol:
+            raise RuntimeError("canonical COFF changed an unexpected relocation target")
+        if rewrite is not None and before.symbol_index != rewrite.original_symbol_index:
+            raise RuntimeError("jump-table rewrite source-symbol postcondition failed")
+    if set(original.symbols) != set(normalized.symbols):
+        raise RuntimeError("canonical COFF changed symbol indices")
+    for index, before in original.symbols.items():
+        after = normalized.symbols[index]
+        if after.name != renames.get(index, before.name):
+            raise RuntimeError("canonical COFF emitted an unexpected symbol name")
+        if (before.value, before.section, before.typ, before.storage_class,
+                before.aux_count) != (
+                after.value, after.section, after.typ, after.storage_class,
+                after.aux_count):
+            raise RuntimeError("canonical COFF changed symbol metadata")
+        aux_start = before.offset + SYMBOL_SIZE
+        aux_end = aux_start + before.aux_count * SYMBOL_SIZE
+        if original.data[aux_start:aux_end] != payload[aux_start:aux_end]:
+            raise RuntimeError("canonical COFF changed auxiliary symbol bytes")
+
+    # Everything before the string table must be identical after masking only
+    # the section-name and primary-symbol-name fields that are allowed to move
+    # between inline and string-table encodings.
+    before_prefix = bytearray(original.data[:original.string_offset])
+    after_prefix = bytearray(payload[:normalized.string_offset])
+    for section in original.sections:
+        before_prefix[section.header_offset:section.header_offset + 8] = bytes(8)
+        after_prefix[section.header_offset:section.header_offset + 8] = bytes(8)
+    for symbol in original.symbols.values():
+        before_prefix[symbol.offset:symbol.offset + 8] = bytes(8)
+        after_prefix[symbol.offset:symbol.offset + 8] = bytes(8)
+    for rewrite in jump_table_rewrites:
+        section = original.sections[rewrite.section - 1]
+        operand = section.raw_offset + rewrite.site
+        before_prefix[operand:operand + 4] = bytes(4)
+        after_prefix[operand:operand + 4] = bytes(4)
+        before_prefix[rewrite.relocation_offset + 4:
+                      rewrite.relocation_offset + 8] = bytes(4)
+        after_prefix[rewrite.relocation_offset + 4:
+                     rewrite.relocation_offset + 8] = bytes(4)
+    for trim in text_pad_trims:
+        section = original.sections[trim.section - 1]
+        size_field = section.header_offset + 16
+        before_prefix[size_field:size_field + 4] = bytes(4)
+        after_prefix[size_field:size_field + 4] = bytes(4)
+        # the trimmed fill itself still sits in the file; it is simply
+        # outside the shrunk section - mask it so the raw bytes compare
+        fill = section.raw_offset + section.raw_size - trim.trimmed
+        before_prefix[fill:fill + trim.trimmed] = bytes(trim.trimmed)
+        after_prefix[fill:fill + trim.trimmed] = bytes(trim.trimmed)
+    if before_prefix != after_prefix:
+        raise RuntimeError(
+            "canonical COFF changed bytes outside symbol names/jump-table relocations")
+
+    normalized_relocations = {row.offset: row for row in normalized.relocations}
+    for rewrite in jump_table_rewrites:
+        before_relocation = next(
+            row for row in original.relocations
+            if row.offset == rewrite.relocation_offset)
+        after_relocation = normalized_relocations[rewrite.relocation_offset]
+        before_target = original.symbols[before_relocation.symbol_index]
+        after_target = normalized.symbols[after_relocation.symbol_index]
+        before_section = original.sections[before_relocation.section - 1]
+        after_section = normalized.sections[after_relocation.section - 1]
+        before_addend = struct.unpack_from(
+            "<I", original.data,
+            before_section.raw_offset + before_relocation.site)[0]
+        after_addend = struct.unpack_from(
+            "<I", payload,
+            after_section.raw_offset + after_relocation.site)[0]
+        before_resolved = (
+            before_target.section,
+            (before_target.value + before_addend) & 0xFFFFFFFF,
+        )
+        after_resolved = (
+            after_target.section,
+            (after_target.value + after_addend) & 0xFFFFFFFF,
+        )
+        expected = (rewrite.section, rewrite.resolved_offset)
+        if before_resolved != expected or after_resolved != expected:
+            raise RuntimeError(
+                "jump-table relocation resolved-target postcondition failed")
+
+
+
+EXTERNAL_STORAGE = 2
+DIR32 = 6
+BSS_CHARACTERISTICS = 0xC0400080
+MAX_ALIGNMENT_PADDING = 7
+ALIGNMENT_PADDING_PROOF = "physical-span-less-alignment-padding"
+X87_REAL_OPERANDS = {0xD8: (4, range(8)), 0xD9: (4, (0, 2, 3)),
+                     0xDC: (8, range(8)), 0xDD: (8, (0, 2, 3))}
+
+
+def _common_symbols(coff: CoffObject) -> list[Symbol]:
+    """COFF COMMON symbols: tentative definitions whose Value IS their size."""
+    return [
+        symbol for symbol in coff.symbols.values()
+        if symbol.section == 0 and symbol.value > 0
+        and symbol.storage_class == EXTERNAL_STORAGE
+        and symbol.typ == 0 and symbol.aux_count == 0
+    ]
+
+
+def materialize_commons(payload: bytes) -> tuple[bytes, tuple]:
+    """Allocate each COMMON symbol into a .bss section, as the linker would.
+
+    cl 5.0 emits a function-local static of a HEADER inline (and its `??_B`
+    dynamic-init guard byte) as a COFF COMMON into every TU that instantiates
+    the inline; the linker merges the copies into one `.bss` slot. The delinked
+    target reads the LINKED image and so carries the datum as an ordinary
+    section symbol, which a COMMON - sectionless by definition - can never pair
+    with. Do here what the linker did (the same doctrine as the weak-external
+    resolution below): extend the object's `.bss` (or append an empty one) and
+    move each COMMON into it. Offsets are this allocator's, not retail's, but
+    BSS extents are inferred on both sides and therefore not compared
+    (nix/patches/objdiff-bss-inferred-extent.patch); only the symbol's
+    existence, name and storage - the facts the two objects genuinely state -
+    enter the comparison. The transform is verified fail-closed by
+    `_assert_only_materialization_changes`.
+    """
+    coff = CoffObject(payload)
+    commons = sorted(_common_symbols(coff), key=lambda s: s.index)
+    if not commons:
+        return payload, ()
+    bss_sections = [s for s in coff.sections if _storage(s) == "bss"]
+    data = bytearray(payload)
+    if bss_sections:
+        host = bss_sections[-1]
+        host_index = host.index
+        cursor = host.raw_size
+    else:
+        # Append a .bss header after the last section header. Section raw data,
+        # relocation tables, the symbol table and the string table all live
+        # after the header block, so they shift by exactly one 40-byte header;
+        # every stored file offset is fixed up by the same amount. The new
+        # section is LAST, so no existing symbol's section index moves.
+        optional_size = struct.unpack_from("<H", payload, 16)[0]
+        first_section = 20 + optional_size
+        insert_at = first_section + coff.section_count * 40
+        host_index = coff.section_count + 1
+        cursor = 0
+        header = struct.pack(
+            "<8sIIIIIIHHI", b".bss", 0, 0, 0, 0, 0, 0, 0, 0,
+            BSS_CHARACTERISTICS)
+        data = bytearray(payload[:insert_at] + header + payload[insert_at:])
+        struct.pack_into("<H", data, 2, coff.section_count + 1)
+        struct.pack_into("<I", data, 8, coff.symbol_offset + 40)
+        for section in coff.sections:
+            for field_offset, value in (
+                    (20, section.raw_offset), (24, section.reloc_offset)):
+                if value:
+                    struct.pack_into(
+                        "<I", data, section.header_offset + field_offset,
+                        value + 40)
+            lineno = struct.unpack_from(
+                "<I", payload, section.header_offset + 28)[0]
+            if lineno:
+                struct.pack_into(
+                    "<I", data, section.header_offset + 28, lineno + 40)
+    shift = len(data) - len(payload)
+    allocations = []
+    for symbol in commons:
+        size = symbol.value
+        cursor = (cursor + 3) & ~3
+        allocations.append((symbol, cursor))
+        struct.pack_into("<I", data, symbol.offset + shift + 8, cursor)
+        struct.pack_into("<h", data, symbol.offset + shift + 12, host_index)
+        cursor += size
+    if bss_sections:
+        struct.pack_into("<I", data, host.header_offset + 16, cursor)
+    else:
+        new_header_offset = 20 + optional_size + coff.section_count * 40
+        struct.pack_into("<I", data, new_header_offset + 16, cursor)
+    result = bytes(data)
+    _assert_only_materialization_changes(coff, payload, result, allocations)
+    return result, tuple(
+        (symbol.name, offset, symbol.value) for symbol, offset in allocations)
+
+
+def _assert_only_materialization_changes(
+        original: CoffObject, payload: bytes, result: bytes,
+        allocations) -> None:
+    new = CoffObject(result)
+    appended = new.section_count == original.section_count + 1
+    if not appended and new.section_count != original.section_count:
+        raise RuntimeError("materialization changed the section count unexpectedly")
+    moved = {symbol.index: offset for symbol, offset in allocations}
+    host_index = (new.section_count if appended
+                  else max(s.index for s in original.sections
+                           if _storage(s) == "bss"))
+    for index, before in original.symbols.items():
+        after = new.symbols[index]
+        if index in moved:
+            if (after.section != host_index or after.value != moved[index] or
+                    after.name != before.name or
+                    after.storage_class != before.storage_class):
+                raise RuntimeError(
+                    f"materialized COMMON {before.name} landed wrong")
+        elif (before.name, before.value, before.section, before.typ,
+              before.storage_class, before.aux_count) != (
+                  after.name, after.value, after.section, after.typ,
+                  after.storage_class, after.aux_count):
+            raise RuntimeError(
+                f"materialization touched unrelated symbol {before.name}")
+    if len(original.relocations) != len(new.relocations):
+        raise RuntimeError("materialization changed relocation count")
+    for before, after in zip(original.relocations, new.relocations):
+        if (before.section, before.site, before.symbol_index, before.typ) != (
+                after.section, after.site, after.symbol_index, after.typ):
+            raise RuntimeError("materialization changed a relocation")
+    host = new.sections[host_index - 1]
+    if _storage(host) != "bss" or host.raw_offset != 0 or host.reloc_count:
+        raise RuntimeError("materialization host section is not a bare .bss")
+    # Recompute the allocation to prove every recorded offset and the host size.
+    cursor = 0 if appended else next(
+        s.raw_size for s in original.sections if s.index == host_index)
+    for symbol, offset in allocations:
+        cursor = (cursor + 3) & ~3
+        if offset != cursor:
+            raise RuntimeError("materialization allocation drifted")
+        cursor += symbol.value
+    if host.raw_size != cursor:
+        raise RuntimeError("materialization host size mismatch")
+    for before in original.sections:
+        after = new.sections[before.index - 1]
+        if before.name != after.name or before.characteristics != after.characteristics:
+            raise RuntimeError("materialization changed a section identity")
+        if before.index != host_index and before.raw_size != after.raw_size:
+            raise RuntimeError("materialization changed a section size")
+        if before.raw_offset == 0:
+            # Uninitialized: no file bytes exist; only the host may grow.
+            if after.raw_offset != 0:
+                raise RuntimeError("materialization gave a BSS section raw data")
+        elif original.section_bytes(before) != new.section_bytes(after):
+            raise RuntimeError("materialization changed section payload bytes")
+    if (payload[original.string_offset:] !=
+            result[new.string_offset:]):
+        raise RuntimeError("materialization changed the string table")
+
+
+def _identity_span(kind: str, physical_size: int, meaningful_size: int,
+                   proof: str = "") -> int:
+    # TEXT COMDATs and packed target text align the same helper differently.
+    # Padding is not part of a function's identity. Data allocation spans remain
+    # significant beyond the alignment gap, which neither side proves.
+    if kind == "text" or proof == ALIGNMENT_PADDING_PROOF:
+        return meaningful_size
+    return physical_size
+
+
+def _without_alignment_padding(raw: bytes, relocation_ends: list[int]) -> bytes:
+    """Drop the zero tail an allocator's alignment gap may have appended.
+
+    Both allocators pad before an aligned successor: cl packs `$T` doubles
+    after a 4-byte static, the delinker packs 8-aligned EH records after one,
+    so the same `static const float` spans 4 bytes on one side and 8 on the
+    other. At most MAX_ALIGNMENT_PADDING zero bytes go, never a relocated one.
+    """
+    floor = max([len(raw) - MAX_ALIGNMENT_PADDING, 1, *relocation_ends])
+    end = len(raw)
+    while end > floor and raw[end - 1] == 0:
+        end -= 1
+    return raw[:end]
+
+
+def _x87_operand_width(text: bytes, site: int) -> int | None:
+    """Real width of the x87 memory operand whose disp32 starts at `site`.
+
+    Accepts `[disp32]`, `[reg+disp32]` and the SIB forms of both; any other
+    instruction (a dword `mov` copy, an integer x87 form) proves no width.
+    """
+    for opcode_at, modrm_at, sib in ((site - 2, site - 1, False),
+                                     (site - 3, site - 2, True)):
+        if opcode_at < 0:
+            continue
+        modrm = text[modrm_at]
+        mod, reg, rm = modrm >> 6, (modrm >> 3) & 7, modrm & 7
+        if sib != (rm == 4):
+            continue
+        if sib:
+            has_disp32 = mod == 2 or (mod == 0 and text[site - 1] & 7 == 5)
+        else:
+            has_disp32 = mod == 2 or (mod == 0 and rm == 5)
+        form = X87_REAL_OPERANDS.get(text[opcode_at])
+        if has_disp32 and form and reg in form[1]:
+            return form[0]
+    return None
+
+
+def _x87_operand_widths(coff: CoffObject) -> dict[int, frozenset[int | None]]:
+    """Per referenced symbol, the real widths of the code operands naming it."""
+    widths: dict[int, set[int | None]] = defaultdict(set)
+    for relocation in coff.relocations:
+        section = coff.sections[relocation.section - 1]
+        if _storage(section) != "text" or relocation.typ != DIR32:
+            continue
+        text = coff.section_bytes(section)
+        addend = int.from_bytes(text[relocation.site:relocation.site + 4], "little")
+        widths[relocation.symbol_index].add(
+            None if addend else _x87_operand_width(text, relocation.site))
+    return {index: frozenset(rows) for index, rows in widths.items()}
+
+
+def canonicalize_coff(payload: bytes,
+                      compgen: tuple[CompgenClaim, ...] = (),
+                      compgen_data: tuple[CompgenDataClaim, ...] = (),
+                      compgen_accounted: frozenset[str] = frozenset(),
+                      *, unit: str | None = None, data_names: dict[str, str] | None = None,
+                      ) -> CanonicalizedObject:
+    """Return a normalized comparison copy and its readable rename records."""
+    payload, materialized = materialize_commons(payload)
+    coff = CoffObject(payload)
+    definitions = _definitions(coff)
+    definition_by_symbol = {row.symbol.index: row for row in definitions}
+    section_relocations: dict[int, list[Relocation]] = defaultdict(list)
+    for relocation in coff.relocations:
+        section_relocations[relocation.section].append(relocation)
+
+    candidates = {
+        row.symbol.index: row for row in definitions
+        if row.symbol.storage_class in (2, 3) and _family(row.symbol.name) is not None
+    }
+    operand_widths = _x87_operand_widths(coff)
+    kinds: dict[int, tuple[str, bytes, str, str]] = {}
+    for definition in candidates.values():
+        family = _family(definition.symbol.name)
+        raw = coff.section_bytes(definition.section)[definition.start:definition.end]
+        own_relocs = [row for row in section_relocations[definition.section.index]
+                      if definition.start <= row.site < definition.end]
+        kind, meaningful, proof = "data", raw, "physical-span"
+        if definition.storage == "bss":
+            meaningful, proof = b"", "bss-no-content"
+        elif family and family[0] == "sg":
+            string_size = _is_string(raw, own_relocs)
+            if string_size is not None:
+                kind, meaningful, proof = "string", raw[:string_size], "nul-terminated"
+        elif family and family[0] == "t":
+            width, proof = _float_width(raw, operand_widths.get(definition.symbol.index, frozenset()))
+            if width == 4:
+                kind, meaningful = "f32", raw[:4]
+            elif width == 8:
+                kind, meaningful = "f64", raw[:8]
+        if kind == "data" and proof == "physical-span":
+            meaningful = _without_alignment_padding(raw, [
+                row.site - definition.start + _relocation_width(row.typ)
+                for row in own_relocs])
+            if len(meaningful) != len(raw):
+                proof = ALIGNMENT_PADDING_PROOF
+        kinds[definition.symbol.index] = (kind, meaningful, proof, _escaped_preview(meaningful))
+
+    digest_records: dict[str, bytes] = {}
+    dependencies = {}
+    for symbol_index, definition in candidates.items():
+        dependencies[symbol_index] = {
+            relocation.symbol_index
+            for relocation in section_relocations[definition.section.index]
+            if (definition.start <= relocation.site < definition.end and
+                relocation.symbol_index in candidates)
+        }
+
+    levels = {}
+    finding_level = set()
+
+    def level(symbol_index):
+        if symbol_index in levels:
+            return levels[symbol_index]
+        if symbol_index in finding_level:
+            raise ValueError(
+                f"cyclic compiler-private data initializer at "
+                f"{coff.symbols[symbol_index].name}")
+        finding_level.add(symbol_index)
+        value = 0
+        if dependencies[symbol_index]:
+            value = 1 + max(level(target) for target in dependencies[symbol_index])
+        finding_level.remove(symbol_index)
+        levels[symbol_index] = value
+        return value
+
+    for symbol_index in candidates:
+        level(symbol_index)
+
+    occurrences = defaultdict(int)
+    renames = {}
+    existing_names = {
+        symbol.name: symbol.index for symbol in coff.symbols.values()
+        if _family(symbol.name) is None
+    }
+    canonical_owners = {}
+    resolved = {}
+
+    for current_level in range(max(levels.values(), default=-1) + 1):
+        prepared = []
+        for symbol_index, definition in candidates.items():
+            if levels[symbol_index] != current_level:
+                continue
+            family = _family(definition.symbol.name)
+            assert family is not None
+            kind, meaningful, proof, preview = kinds[definition.symbol.index]
+            masked = bytearray(meaningful)
+            reloc_rows = []
+            for relocation in section_relocations[definition.section.index]:
+                if not definition.start <= relocation.site < definition.end:
+                    continue
+                relative = relocation.site - definition.start
+                width = _relocation_width(relocation.typ)
+                if relative + width > len(meaningful):
+                    raise ValueError(
+                        f"relocation crosses meaningful payload for "
+                        f"{definition.symbol.name}")
+                addend = int.from_bytes(
+                    masked[relative:relative + width], "little", signed=True)
+                masked[relative:relative + width] = bytes(width)
+                target = coff.symbols[relocation.symbol_index]
+                if relocation.symbol_index in candidates:
+                    target_identity = (
+                        "canonical", renames[relocation.symbol_index])
+                else:
+                    target_identity = ("symbol", target.name)
+                reloc_rows.append((
+                    relative, relocation.typ, width, addend, target_identity,
+                ))
+            reloc_rows.sort(key=lambda row: _record_bytes({"relocation": row}))
+            record = _record_bytes({
+                "schema": "gruntz-anon-symbol-v2",
+                "kind": kind,
+                "storage": definition.storage,
+                "span": 0 if definition.storage == "bss" else _identity_span(
+                    kind, definition.end - definition.start, len(meaningful), proof),
+                "meaningful_size": len(meaningful),
+                "payload": bytes(masked).hex(),
+                "relocations": reloc_rows,
+            })
+            record_digest = _digest(record, digest_records)
+            if kind == "f32":
+                identity = f"{int.from_bytes(meaningful, 'little'):08x}"
+                base_name = f"$anon_f32_{identity}"
+            elif kind == "f64":
+                identity = f"{int.from_bytes(meaningful, 'little'):016x}"
+                base_name = f"$anon_f64_{identity}"
+            elif kind == "string":
+                identity = _digest(meaningful, digest_records)
+                base_name = f"$anon_str_{identity}"
+            else:
+                identity = record_digest
+                base_name = f"$anon_data_{identity}"
+            prefix = family[1]
+            if family[0] == "named":
+                base_name = f"{prefix}{kind}_{definition.storage}_{identity}"
+            display_digest = identity if kind in ("string", "data") else record_digest
+            prepared.append((
+                definition, family[0], kind, meaningful, proof, preview,
+                display_digest, base_name, record,
+            ))
+
+        for (definition, family, kind, meaningful, proof, preview,
+             digest, base_name, record) in sorted(
+                 prepared, key=lambda row: (
+                     row[0].section.index, row[0].start)):
+            occurrence = occurrences[base_name]
+            occurrences[base_name] += 1
+            canonical = f"{base_name}_{occurrence}"
+            collision = existing_names.get(canonical)
+            if collision is not None and collision != definition.symbol.index:
+                raise ValueError(
+                    f"canonical symbol name collides with existing symbol: {canonical}")
+            collision = canonical_owners.get(canonical)
+            if collision is not None and collision != definition.symbol.index:
+                raise ValueError(f"duplicate canonical symbol name: {canonical}")
+            canonical_owners[canonical] = definition.symbol.index
+            renames[definition.symbol.index] = canonical
+            resolved[definition.symbol.index] = (
+                definition, family, kind, meaningful, proof, preview,
+                digest, canonical, occurrence, record,
+            )
+
+    rows = []
+    for definition in sorted(candidates.values(), key=lambda row: (
+            row.section.index, row.start)):
+        (_definition, family, _kind, meaningful, proof, preview,
+         digest, canonical, occurrence, _record) = resolved[definition.symbol.index]
+        rows.append(CanonicalRow(
+            definition.symbol.name, canonical, family, definition.storage,
+            definition.section.index, definition.start, definition.end - definition.start,
+            len(meaningful), occurrence, digest, proof, preview,
+        ))
+
+    for symbol in sorted(coff.symbols.values(), key=lambda row: row.index):
+        family = _family(symbol.name)
+        if family is None or symbol.index in candidates:
+            continue
+        definition = definition_by_symbol.get(symbol.index)
+        if definition is not None:
+            storage = definition.storage
+            section_ordinal = definition.section.index
+            section_offset = definition.start
+            physical_size = definition.end - definition.start
+            status = "defined-nonprivate"
+        else:
+            storage = "common" if symbol.section == 0 and symbol.value else "undefined"
+            section_ordinal = max(symbol.section, 0)
+            section_offset = symbol.value
+            physical_size = 0
+            status = storage
+        rows.append(CanonicalRow(
+            symbol.name, symbol.name, family[0], storage, section_ordinal,
+            section_offset, physical_size, 0, 0, "-", f"skipped-{status}", "",
+        ))
+
+    for name, offset, size in materialized:
+        rows.append(CanonicalRow(name, name, "common", "bss", 0, offset, size,
+                                 0, 0, "-", "materialized-common-into-bss", ""))
+
+    # A source-local name shared by several TUs has a model RVA discriminator.
+    # The generated data manifest carries that identity; raw objects retain
+    # VC6's spelling. This changes names only, never initializer bytes.
+    for symbol in coff.symbols.values():
+        name = (data_names or {}).get(msvc_names.mask(symbol.name))
+        if name and '$RVA' in name:
+            renames[symbol.index] = name
+            rows.append(CanonicalRow(symbol.name, name, 'source', 'data',
+                max(symbol.section, 0), symbol.value, 0, 0, 0, '-',
+                'model-local-data-identity', ''))
+
+    compgen_data_rename, compgen_data_rows = _compgen_data_renames(
+        coff, definitions, compgen_data)
+    if compgen_data_rename:
+        claimed_locations = {
+            (definition.section.index, definition.start)
+            for definition in definitions
+            if definition.symbol.index in compgen_data_rename
+        }
+        rows = [
+            row for row in rows
+            if (row.section_ordinal, row.section_offset) not in claimed_locations
+        ]
+        renames.update(compgen_data_rename)
+        rows.extend(compgen_data_rows)
+
+    compgen_rename, compgen_rows = _compgen_renames(
+        coff, compgen, compgen_accounted)
+    overlap = set(renames) & set(compgen_rename)
+    if overlap:
+        raise RuntimeError("data and compiler-function canonicalization overlap")
+    renames.update(compgen_rename)
+    rows.extend(compgen_rows)
+    anon_renames, anon_rows = _anon_ns_renames(
+        coff.symbols, renames, unit, definition_by_symbol)
+    renames.update(anon_renames)
+    rows.extend(anon_rows)
+    normalized = _rewrite_names(coff, renames)
+    normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
+        coff, normalized)
+    normalized, text_pad_trims = _trim_text_alignment_padding(coff, normalized)
+    _assert_only_canonical_changes(
+        coff, normalized, renames, jump_table_rewrites, text_pad_trims)
+    return CanonicalizedObject(normalized, tuple(rows))
+
+
+SIDECAR_HEADER = (
+    "original_name", "canonical_name", "family", "storage", "section_ordinal",
+    "section_offset", "physical_size", "meaningful_size", "occurrence", "sha256",
+    "proof", "preview",
+)
+
+
+def sidecar_bytes(rows: tuple[CanonicalRow, ...]) -> bytes:
+    stream = io.StringIO(newline="")
+    writer = csv.writer(stream, delimiter="\t", lineterminator="\n")
+    writer.writerow(SIDECAR_HEADER)
+    for row in rows:
+        writer.writerow((
+            row.original_name, row.canonical_name, row.family, row.storage,
+            row.section_ordinal, f"0x{row.section_offset:x}", f"0x{row.physical_size:x}",
+            f"0x{row.meaningful_size:x}", row.occurrence, row.digest, row.proof, row.preview,
+        ))
+    return stream.getvalue().encode("utf-8")
+
+
+def _atomic_write(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+            dir=path.parent, prefix=f".{path.name}.", delete=False) as stream:
+        temporary = Path(stream.name)
+        stream.write(payload)
+    os.replace(temporary, path)
+
+
+def corpus_summary(roots: list[Path]) -> dict:
+    summary = {"schema": 1, "roots": {}}
+    for root in roots:
+        counts = defaultdict(int)
+        for path in sorted(root.rglob("*.obj")):
+            unit = path.name[:-6] if path.name.endswith(".c.obj") else path.stem
+            result = canonicalize_coff(path.read_bytes(), unit=unit)
+            counts["objects"] += 1
+            for row in result.rows:
+                counts["rows"] += 1
+                counts[f"family:{row.family}"] += 1
+                counts[f"proof:{row.proof}"] += 1
+                if row.canonical_name.startswith("$anon_f32_"):
+                    counts["kind:f32"] += 1
+                elif row.canonical_name.startswith("$anon_f64_"):
+                    counts["kind:f64"] += 1
+                elif row.canonical_name.startswith("$anon_str_"):
+                    counts["kind:string"] += 1
+                elif row.canonical_name.startswith("$anon_data_"):
+                    counts["kind:data"] += 1
+                elif row.family == "anonymous-namespace":
+                    counts["kind:anonymous-namespace"] += 1
+                elif row.canonical_name == row.original_name:
+                    counts["kind:skipped"] += 1
+                else:
+                    counts["kind:named-static"] += 1
+        summary["roots"][str(root)] = dict(sorted(counts.items()))
+    return summary
+
+
+def load_compgen_claims(path: Path | None, unit: str | None):
+    if path is None or unit is None:
+        return ()
+    if not path.exists():
+        raise FileNotFoundError("compiler-function manifest does not exist: %s" % path)
+    with path.open(newline="") as stream:
+        rows = csv.DictReader(
+            (line for line in stream if not line.startswith("#")),
+            delimiter="\t")
+        return tuple(CompgenClaim(
+            row["name"], row["kind"], row["owner"], int(row["size"], 0))
+            for row in rows
+            if (row["unit"] == unit
+                and row["kind"] not in DIRECT_SYMBOL_COMPGEN_KINDS))
+
+
+def load_compgen_claim_names(path: Path | None, unit: str | None):
+    """Every compiler-function claim name a unit has, DIRECT kinds
+    included. `load_compgen_claims` deliberately returns only the anonymous
+    kinds - those are the ones this module renames - but the unclaimed-name
+    gate has to know about the others too: a direct-kind claim whose base
+    symbol the compile does not emit keeps the `__h3cg$` spelling in the
+    delinked object and would otherwise be reported as unclaimed.
+    """
+    if path is None or unit is None:
+        return frozenset()
+    if not path.exists():
+        raise FileNotFoundError(
+            "compiler-function manifest does not exist: %s" % path)
+    with path.open(newline="") as stream:
+        rows = csv.DictReader(
+            (line for line in stream if not line.startswith("#")),
+            delimiter="\t")
+        return frozenset(row["name"] for row in rows if row["unit"] == unit)
+
+
+def load_compgen_data_claims(path: Path | None, unit: str | None):
+    if path is None or unit is None:
+        return ()
+    if not path.exists():
+        raise FileNotFoundError(
+            f"compiler-data manifest does not exist: {path}")
+    with path.open(newline="") as stream:
+        rows = csv.DictReader(
+            (line for line in stream if not line.lstrip().startswith("#")),
+            delimiter="\t")
+        claims = []
+        for row in rows:
+            if not row["provenance"].startswith("source-DATA_COMPGEN:"):
+                continue
+            object_unit = row["object"].replace("\\", "/")
+            if object_unit.lower().endswith(".c"):
+                object_unit = object_unit[:-2]
+            if object_unit != unit:
+                continue
+            claims.append(CompgenDataClaim(
+                row["name"],
+                int(row["section_ordinal"], 0),
+                int(row["section_offset"], 0),
+                int(row["size"], 0),
+                row["storage"],
+                row["scope"],
+            ))
+        return tuple(claims)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--input", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument("--sidecar", type=Path)
+    parser.add_argument("--unit")
+    parser.add_argument("--compgen-manifest", type=Path)
+    parser.add_argument("--data-manifest", type=Path)
+    parser.add_argument("--summary-root", type=Path, action="append")
+    parser.add_argument("--summary-output", type=Path)
+    args = parser.parse_args(argv)
+    if args.summary_root:
+        if args.input or args.output or args.sidecar:
+            parser.error("summary mode cannot be combined with object mode")
+        payload = (json.dumps(corpus_summary(args.summary_root), indent=2,
+                              sort_keys=True) + "\n").encode("utf-8")
+        if args.summary_output:
+            _atomic_write(args.summary_output, payload)
+        else:
+            print(payload.decode("utf-8"), end="")
+        return 0
+    if not args.input or not args.output or not args.sidecar:
+        parser.error("object mode requires --input, --output, and --sidecar")
+    resolved_paths = [path.resolve() for path in (
+        args.input, args.output, args.sidecar,
+    )]
+    if len(set(resolved_paths)) != len(resolved_paths):
+        parser.error("input, output, and sidecar paths must be distinct")
+    claims = load_compgen_claims(args.compgen_manifest, args.unit)
+    data_claims = load_compgen_data_claims(args.data_manifest, args.unit)
+    result = canonicalize_coff(args.input.read_bytes(), claims, data_claims,
+                               unit=args.unit)
+    _atomic_write(args.output, result.data)
+    _atomic_write(args.sidecar, sidecar_bytes(result.rows))
+    stamp_inputs = {"input": args.input}
+    stamp_inputs.update(anon_ns_stamp_inputs())
+    if args.compgen_manifest:
+        stamp_inputs["compgen_manifest"] = args.compgen_manifest
+    if args.data_manifest:
+        stamp_inputs["data_manifest"] = args.data_manifest
+    write_stamp(args.output, stamp_inputs)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

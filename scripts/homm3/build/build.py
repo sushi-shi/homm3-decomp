@@ -148,8 +148,19 @@ def main(argv=None) -> int:
 
     # Scores describe the completed compile/delink, including when an
     # independent source gate fails. Keep README consistent with the ledger.
+    data_accounting = None
     try:
-        status.write_readme(report)
+        from homm3.verify.byte_accounting import report as account_bytes
+        data_accounting = account_bytes()
+        totals = data_accounting['totals']['file']
+        print(f"[data-coverage] {totals.get('missing', 0):,} unclaimed file bytes; "
+              f"{totals.get('overlap', 0):,} overlapping bytes; "
+              "worklist in build/gen/data_coverage.json")
+    except (ValueError, OSError) as exc:
+        print(f"[data-coverage] unavailable: {exc}")
+        failed = True
+    try:
+        status.write_readme(report, data_accounting=data_accounting)
     except Exception as exc:  # the score block must never fail a build
         print(f"[build] README block skipped: {exc}")
 

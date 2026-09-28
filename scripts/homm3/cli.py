@@ -236,10 +236,14 @@ def cmd_clean(args) -> int:
 
 
 def _dispatch(argv: list[str]) -> int:
+    if argv and argv[0] == 'verify':
+        return run_module('homm3.verify', *argv[1:])
     # argparse does not reliably pass option-looking tokens through a
     # REMAINDER positional (notably ``homm3 dreamcast --help``).  Dreamcast is
     # a complete nested CLI, so hand it its argv before the umbrella parser
     # gets a chance to consume or reject any of those options.
+    if argv and argv[0] == "compare":
+        return run_module("homm3.compare.run", *argv[1:])
     if argv and argv[0] == "source-ownership":
         return run_module("homm3.match.source_ownership", *argv[1:])
     if argv and argv[0] == "source-inventory":
@@ -285,6 +289,9 @@ def _dispatch(argv: list[str]) -> int:
 
     sub.add_parser("warnings", add_help=False,
                    help="fresh Clang/VC6 warning report (homm3 warnings --help)")
+    sub.add_parser('compare', add_help=False, help='compare existing objects without compiling or banking scores')
+    sub.add_parser('verify', add_help=False,
+                   help='data-relocs / data-access / data-coverage / data-tu-order / library-data-refs')
 
     p = sub.add_parser(
         "build", help="compile + delink + report + evidence/source gates")

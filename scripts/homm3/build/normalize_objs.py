@@ -46,6 +46,7 @@ from homm3.core import common
 
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
 COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
+DATA_MANIFEST = common.HOMM3_DIR / 'build/gen/delink_data_manifest.tsv'
 
 CNT_CODE = 0x00000020
 DIR32 = 0x0006
@@ -898,42 +899,6 @@ def _canonicalize_matching_eh_handler_owners(
     return bytes(data), tuple(admitted)
 
 
-def _drop_data_sections(payload: bytes) -> bytes:
-    """Truncate every non-code section in a comparison copy to zero.
-
-    The matching scope is FUNCTIONS ONLY for now (user decision
-    2026-08-06): data comparison returns later as its own phase. The
-    raw base/delinked objects keep their data sections untouched -
-    only the disposable objdiff copies are scoped, so flipping this
-    call back re-admits data wholesale. Section headers stay in place
-    (no renumbering); raw size and relocation count drop to zero."""
-    data = bytearray(payload)
-    nsec, = struct.unpack_from("<H", data, 2)
-    dropped = set()
-    for index in range(nsec):
-        offset = 20 + index * 40
-        characteristics, = struct.unpack_from("<I", data, offset + 36)
-        if characteristics & CNT_CODE:
-            continue
-        dropped.add(index + 1)
-        struct.pack_into("<I", data, offset + 16, 0)   # SizeOfRawData
-        struct.pack_into("<H", data, offset + 32, 0)   # NumberOfRelocations
-    # Symbols defined in a dropped section become undefined externs in
-    # the copy - .text relocations keep resolving them by name, and the
-    # differ no longer sees extents pointing past the emptied section.
-    symoff, nsyms = struct.unpack_from("<II", data, 8)
-    o, i = symoff, 0
-    while i < nsyms:
-        section, = struct.unpack_from("<h", data, o + 12)
-        if section in dropped:
-            struct.pack_into("<I", data, o + 8, 0)     # Value
-            struct.pack_into("<h", data, o + 12, 0)    # SectionNumber
-        aux = data[o + 17]
-        o += 18 * (1 + aux)
-        i += 1 + aux
-    return bytes(data)
-
-
 def _retain_matching_target_padding(base_payload: bytes,
                                     target_payload: bytes) -> tuple[bytes, int]:
     """Retain linked-target NOP fill when the logical function sizes agree.
@@ -1006,6 +971,20 @@ def _retain_matching_target_padding(base_payload: bytes,
     return bytes(data), retained
 
 
+def data_names_for_unit(unit: str) -> dict[str, str]:
+    data_names = {}
+    if DATA_MANIFEST.is_file():
+        from homm3.core.tsv import read
+        from homm3.core.msvc_names import mask
+        for row in read(DATA_MANIFEST)[2]:
+            if row['object'] == unit + '.c' and '$RVA' in row['name']:
+                key = mask(row['name'])
+                if key in data_names and data_names[key] != row['name']:
+                    raise ValueError(f"ambiguous local data identity in {unit}: {key}")
+                data_names[key] = row['name']
+    return data_names
+
+
 def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     """Write the normalized copy + sidecar + stamp of one raw object unless
     the existing copy is fresh; True when written."""
@@ -1017,6 +996,8 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     out.parent.mkdir(parents=True, exist_ok=True)
     stamp_inputs = {"raw": obj}
     stamp_inputs.update(canon.anon_ns_stamp_inputs())
+    if DATA_MANIFEST.is_file():
+        stamp_inputs['data_manifest'] = DATA_MANIFEST
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
     if (out.exists() and sidecar.is_file()
@@ -1027,9 +1008,12 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     if COMPGEN_MANIFEST.is_file():
         claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
         accounted = canon.load_compgen_claim_names(COMPGEN_MANIFEST, unit)
-    result = canon.canonicalize_coff(obj.read_bytes(), claims,
-                                     compgen_accounted=accounted, unit=unit)
-    out.write_bytes(_drop_data_sections(result.data))
+    data_claims = (canon.load_compgen_data_claims(DATA_MANIFEST, unit)
+                   if DATA_MANIFEST.is_file() else ())
+    data_names = data_names_for_unit(unit)
+    result = canon.canonicalize_coff(obj.read_bytes(), claims, data_claims,
+                                     compgen_accounted=accounted, unit=unit, data_names=data_names)
+    out.write_bytes(result.data)
     sidecar.write_bytes(canon.sidecar_bytes(result.rows))
     write_stamp(out, stamp_inputs, context=context)
     return True
@@ -1063,6 +1047,9 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
             target_stamp_inputs[label] = inventory
     stamp_inputs.update(canon.anon_ns_stamp_inputs())
     target_stamp_inputs.update(canon.anon_ns_stamp_inputs())
+    if DATA_MANIFEST.is_file():
+        stamp_inputs['data_manifest'] = DATA_MANIFEST
+        target_stamp_inputs['data_manifest'] = DATA_MANIFEST
     if COMPGEN_MANIFEST.is_file():
         stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
         target_stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST

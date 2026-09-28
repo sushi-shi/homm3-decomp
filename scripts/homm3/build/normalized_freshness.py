@@ -38,7 +38,8 @@ STAMP_SUFFIX = ".stamp.json"
 # callback-registration evidence.
 # 15 canonicalizes reviewed anonymous-namespace paths and tracks their table.
 # 16 verifies output bytes and transform implementations; no stat-based memo.
-STAMP_SCHEMA = 16
+# 17 retains data, materializes COMMONs and joins generated model identities.
+STAMP_SCHEMA = 17
 
 
 class ValidationContext:
@@ -87,6 +88,8 @@ def implementation_inputs() -> dict[str, Path]:
         "normalized_freshness.py", "normalize_objs.py", "canonicalize_data_symbols.py")}
     for name in ("project.py", "image.py", "inputs.py"):
         paths["tool:core/" + name] = directory.parent / "core" / name
+    for name in ("compare/canonicalize.py", "core/msvc_names.py"):
+        paths["tool:" + name] = directory.parent / name
     return paths
 
 

@@ -216,6 +216,7 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
         "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
         "build_base": False,
         "build_target": False,
+        "options": {"functionRelocDiffs": "all"},
         "watch_patterns": ["*.obj"],
         "units": entries,
     }, indent=2) + "\n")

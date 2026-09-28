@@ -150,6 +150,7 @@ class UpdateRowsTest(unittest.TestCase):
                ("unit", "edited"): MatchRow(100, 100, 100, 2, "old")}
         hashes = {("unit", "held"): "same", ("unit", "edited"): "new"}
         with mock.patch("homm3.match.status.load_baseline", return_value=old), \
+                mock.patch("homm3.match.status.policy_baseline", side_effect=lambda rows: rows), \
                 mock.patch("homm3.match.status.function_rvas", return_value={
                     ("unit", "held"): 1, ("unit", "edited"): 2}), \
                 mock.patch("homm3.match.status.write_baseline") as write:
