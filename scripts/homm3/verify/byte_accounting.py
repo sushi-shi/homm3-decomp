@@ -27,6 +27,15 @@ class Range:
     priority: int = 0
 
 
+#: When one identity arrives through several channels, report the most
+#: specific evidence first.
+CATEGORY_PRECEDENCE = (
+    'source-initializer-exact', 'source-initializer-padding-exact',
+    'source-cleanup-exact', 'game', 'library-vendor', 'compiler-generated',
+    'compiler-metadata', 'library-unverified', 'section', 'alignment-padding',
+    'structural')
+
+
 def partition(size: int, ranges: list[Range]):
     """Disjoint complete [0,size) partition; nested overlaps are retained.
 
@@ -54,8 +63,9 @@ def partition(size: int, ranges: list[Range]):
             owners = [r for r in owners if r.priority == top]
         identities = tuple(sorted({r.identity for r in owners}))
         categories = {r.category for r in owners}
-        category = ('missing' if not owners else 'overlap' if len(owners) > 1
-                    else next(iter(categories)))
+        # One identity claimed through several channels is one folded object.
+        category = ('missing' if not owners else 'overlap' if len(identities) > 1
+                    else min(categories, key=CATEGORY_PRECEDENCE.index))
         row = {'start': pos, 'end': end, 'size': end-pos,
                'category': category, 'owners': identities}
         if result and all(result[-1][k] == row[k] for k in ('category', 'owners')):
@@ -210,7 +220,7 @@ def account(pe, model, enrolled, sections, *, initializers=()):
             'image': partition(image_size, image_ranges)}
 
 
-def compare_initializers(model, enrolled, pe, base_dir=None):
+def compare_initializers(model, enrolled, pe, base_dir=None, library_code=None):
     """Raw COFF versus retail, without normalized payloads or guessed extents."""
     from homm3.delink.coffx import Obj
     from homm3.delink.image import Image
@@ -223,6 +233,12 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
                 names[('', msvc_names.mask(entry.name))].add(b.rva)
                 if entry.unit:
                     names[(entry.unit, msvc_names.mask(entry.name))].add(b.rva)
+    # Runtime code whose pinned archive body reproduces retail at the named
+    # address (verify/library_data.py) is a known pointer referent too.
+    for name, rva in (library_code or {}).items():
+        key = ('', msvc_names.mask(name))
+        if key not in names:
+            names[key].add(rva)
     for r in enrolled:
         if 'gap' not in r.get('provenance', ''):
             unit = r['object'].removesuffix('.c')
@@ -306,6 +322,12 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             addend = struct.unpack_from('<i', payload, relative)[0]
             key = msvc_names.mask(name)
             targets = names.get((unit, key)) or names.get(('', key), set())
+            default = obj.weak_default(name)
+            if not targets and default:
+                # A weak external binds to its aux default when nothing
+                # defines it: VC6's vector deleting destructor names ??_G.
+                key = msvc_names.mask(default)
+                targets = names.get((unit, key)) or names.get(('', key), set())
             if len(targets) != 1:
                 unknown |= word; continue
             expected = (next(iter(targets))+pe.image_base+addend) & 0xffffffff
@@ -337,12 +359,39 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
-    domains = account(pe, model, enrolled, sections,
-                      initializers=initializer_ranges(dynamic)+startup_ranges(startup))
-    comparisons = compare_initializers(model, enrolled, pe)
+    from homm3.delink.image import Image
+    from homm3.verify import retail_records
+    records = retail_records.pe_structures(pe)
+    found = retail_records.metadata(pe, model, set(Image(pe).reloc_sites))
+    constants = retail_records.fp_constants(pe, set(Image(pe).reloc_sites))
+    for extra in (found, constants):
+        records.ranges += extra.ranges
+        records.starts.update(extra.starts)
+        records.ends |= extra.ends
+    from homm3.verify import library_data
+    library, _witnesses = library_data.analyse(pe, model)
+    for placement in library:
+        if placement.verdict in ('exact', 'unresolved') and placement.size:
+            records.starts[placement.rva] = max(placement.alignment or 1,
+                                                records.starts.get(placement.rva, 1))
+            records.ends.add(placement.rva + placement.size)
+    claims = (initializer_ranges(dynamic) + startup_ranges(startup) + records.ranges
+              + library_data.ranges(library))
+    domains = account(pe, model, enrolled, sections, initializers=claims)
+    padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
+    if padding:
+        domains = account(pe, model, enrolled, sections, initializers=claims + padding)
+    comparisons = compare_initializers(model, enrolled, pe,
+                                       library_code=library_data.analyse.verified_code)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
+           'library_data': [dict(member=r.member, section=r.name, rva=r.rva, size=r.size,
+                                 storage=r.storage, symbols=list(r.symbols),
+                                 verdict=r.verdict, different=r.different,
+                                 unresolved=r.unresolved, reason=r.reason,
+                                 witnesses=sorted(r.witnesses)[:4])
+                            for r in library],
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()

@@ -366,67 +366,62 @@ rva	function_count	class
 0x243ce8	14	
 0x243d20	11	File
 0x243d4c	3	heroWindowManager
-0x24559c	3	
+0x24559c	3	length_error@std
 # COL at 0x646cf0 names .?AVlogic_error@std@@; destructor 0x404690 stores this vptr.
 0x2455bc	3	logic_error@std
 0x2455cc	3	
-0x2455fc	3	
+0x2455fc	3	failure@ios_base@std
 # COL at 0x646de0 names .?AVruntime_error@std@@; destructor 0x4b6be0 stores this vptr.
 0x245640	3	runtime_error@std
-0x245670	13	
-0x2456a8	13	
-0x245708	7	
-0x245728	6	
-0x245744	7	
-0x245764	10	
-0x245790	5	
+0x245670	13	strstreambuf@std
+0x2456a8	13	?$basic_streambuf@DU?$char_traits@D@std@@@std
+0x245708	7	?$codecvt@DDH@std
+0x245728	6	?$numpunct@D@std
+0x245744	7	?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245764	10	?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245790	5	?$ctype@D@std
 0x2457a8	3	
 0x245810	13	
 0x245870	13	
 0x2458a8	13	
 0x2458f4	3	
-0x245904	7	
-0x245924	2	
-0x245930	7	
-0x245950	10	
-0x24597c	10	
-0x2459a8	3	
-0x2459b8	3	
-0x2459c8	4	
-0x2459dc	4	
-0x2459f0	6	
-0x245a0c	7	
-0x245a2c	10	
-0x245a58	13	
+0x245904	7	?$codecvt@GDH@std
+0x245924	2	?$time_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x245930	7	?$time_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x245950	10	?$moneypunct@G$00@std
+0x24597c	10	?$moneypunct@G$0A@@std
+0x2459a8	3	?$money_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x2459b8	3	?$money_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x2459c8	4	?$messages@G@std
+0x2459dc	4	?$collate@G@std
+0x2459f0	6	?$numpunct@G@std
+0x245a0c	7	?$num_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x245a2c	10	?$num_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+0x245a58	13	?$ctype@G@std
 0x245abc	10	
-0x245c30	2	
-0x245c3c	7	
-0x245c5c	10	
-0x245c88	10	
-0x245cb4	3	
-0x245cc4	3	
-0x245cd4	4	
-0x245ce8	4	
+0x245c30	2	?$time_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245c3c	7	?$time_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245c5c	10	?$moneypunct@D$00@std
+0x245c88	10	?$moneypunct@D$0A@@std
+0x245cb4	3	?$money_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245cc4	3	?$money_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+0x245cd4	4	?$messages@D@std
+0x245ce8	4	?$collate@D@std
 0x245cfc	10	
 # type_info::~type_info (0x616e8d) stores 0x645d28 at [this]. Its one
 # scalar-deleting destructor calls that body; COL 0x647d58 names .?AVtype_info@@.
+# 2026-09-28 library data review: the unnamed std rows at 0x24559c..0x245ce8
+# and 0x245d30 are named from the pinned LIBCPMT/LIBCMT vtable COMDATs. Each
+# COMDAT is placed by a matching archive function body; its COL word, slot
+# count and bytes compare against retail (homm3/verify/library_data.py).
+# Fourteen former two-slot rows (0x245d94, 0x245e2c, 0x245e38, 0x245f74,
+# 0x245f80, 0x245f8c, 0x245fc4, 0x245fe0, 0x245ff8, 0x246b6c, 0x246bfc,
+# 0x246c08, 0x246c34, 0x246c44) were removed: those words lie inside LIBCMT
+# $T __except scope tables whose sections place and compare exactly; they
+# are filter/handler pairs, not virtual tables.
 0x245d28	1	type_info
-0x245d30	2	
-0x245d94	2	
+0x245d30	2	exception
 0x245da4	2	
 0x245db4	2	
-0x245e2c	2	
-0x245e38	2	
-0x245f74	2	
-0x245f80	2	
-0x245f8c	2	
 0x245fa8	2	
 0x245fb4	2	
-0x245fc4	2	
-0x245fe0	2	
-0x245ff8	2	
-0x246b6c	2	
-0x246bfc	2	
-0x246c08	2	
-0x246c34	2	
-0x246c44	2	

@@ -43758,13 +43758,13 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x249564	0x628490	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24956c	0x628498	data	.rdata	code-isolated	-	kept-isolated-entry
 0x249588	0x649590	data	.rdata	data	-	kept
-0x24959c	0x44c7e7	data	.rdata	code-isolated	-	review-isolated-interior
+0x24959c	0x44c7e7	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x2284a0	code-isolated	-	kept-eh-catch-handler
 0x2495a8	0x6495c0	data	.rdata	data	-	kept
 0x2495b0	0x6495e0	data	.rdata	data	-	kept
 0x2495cc	0x6284b0	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2495d4	0x6284b8	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2495f0	0x6495f8	data	.rdata	data	-	kept
-0x249604	0x44c907	data	.rdata	code-isolated	-	review-isolated-interior
+0x249604	0x44c907	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x2284c0	code-isolated	-	kept-eh-catch-handler
 0x249610	0x649628	data	.rdata	data	-	kept
 0x24962c	0x6284d0	data	.rdata	code-isolated	-	kept-isolated-entry
 0x249634	0x6284d8	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -43918,7 +43918,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x249dc4	0x628bb0	data	.rdata	code-isolated	-	kept-isolated-entry
 0x249dcc	0x628bb8	data	.rdata	code-isolated	-	kept-isolated-entry
 0x249df0	0x649df8	data	.rdata	data	-	kept
-0x249e04	0x453b7b	data	.rdata	code-isolated	-	review-isolated-interior
+0x249e04	0x453b7b	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x228bc3	code-isolated	-	kept-eh-catch-handler
 0x249e10	0x649e28	data	.rdata	data	-	kept
 0x249e18	0x649e40	data	.rdata	data	-	kept
 0x249e2c	0x628bd0	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -44899,7 +44899,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x24d174	0x62b8bb	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24d190	0x64d198	data	.rdata	data	-	kept
 0x24d19c	0x677d48	data	.rdata	data	-	kept
-0x24d1a4	0x4bc845	data	.rdata	code-isolated	-	review-isolated-interior
+0x24d1a4	0x4bc845	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22b8c6	code-isolated	-	kept-eh-catch-handler
 0x24d1b0	0x64d1c8	data	.rdata	data	-	kept
 0x24d1cc	0x62b8d0	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24d1d4	0x62b8db	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -45074,7 +45074,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x24d794	0x62c000	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24d7b0	0x64d7b8	data	.rdata	data	-	kept
 0x24d7bc	0x677d48	data	.rdata	data	-	kept
-0x24d7c4	0x4bf550	data	.rdata	code-isolated	-	review-isolated-interior
+0x24d7c4	0x4bf550	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22c008	code-isolated	-	kept-eh-catch-handler
 0x24d7d0	0x64d7e8	data	.rdata	data	-	kept
 0x24d7d8	0x64d800	data	.rdata	data	-	kept
 0x24d7f4	0x62c020	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -45123,7 +45123,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x24da54	0x62c1d8	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24da70	0x64da78	data	.rdata	data	-	kept
 0x24da7c	0x677d48	data	.rdata	data	-	kept
-0x24da84	0x4c5fe8	data	.rdata	code-isolated	-	review-isolated-interior
+0x24da84	0x4c5fe8	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22c1e0	code-isolated	-	kept-eh-catch-handler
 0x24da90	0x64daa8	data	.rdata	data	-	kept
 0x24daac	0x62c1f0	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24dab8	0x64dad0	data	.rdata	data	-	kept
@@ -45157,7 +45157,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x24dc14	0x62c307	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24dc28	0x64dc30	data	.rdata	data	-	kept
 0x24dc34	0x677d48	data	.rdata	data	-	kept
-0x24dc3c	0x4cc566	data	.rdata	code-isolated	-	review-isolated-interior
+0x24dc3c	0x4cc566	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22c312	code-isolated	-	kept-eh-catch-handler
 0x24dc48	0x64dc60	data	.rdata	data	-	kept
 0x24dc64	0x62c320	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24dc70	0x64dc88	data	.rdata	data	-	kept
@@ -45287,9 +45287,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x24e278	0x64e290	data	.rdata	data	-	kept
 0x24e28c	0x64e2a0	data	.rdata	data	-	kept
 0x24e294	0x6783e8	data	.rdata	data	-	kept
-0x24e29c	0x4d6288	data	.rdata	code-isolated	-	review-isolated-interior
+0x24e29c	0x4d6288	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22c94e	code-isolated	-	kept-eh-catch-handler
 0x24e2a4	0x6783e8	data	.rdata	data	-	kept
-0x24e2ac	0x4d62a2	data	.rdata	code-isolated	-	review-isolated-interior
+0x24e2ac	0x4d62a2	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22c94e	code-isolated	-	kept-eh-catch-handler
 0x24e2b8	0x64e2d0	data	.rdata	data	-	kept
 0x24e2d4	0x62c960	data	.rdata	code-isolated	-	kept-isolated-entry
 0x24e2dc	0x62c968	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -45974,7 +45974,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x25036c	0x62e828	data	.rdata	code-isolated	-	kept-isolated-entry
 0x250374	0x62e830	data	.rdata	code-isolated	-	kept-isolated-entry
 0x250398	0x6503a0	data	.rdata	data	-	kept
-0x2503ac	0x515e80	data	.rdata	code-isolated	-	review-isolated-interior
+0x2503ac	0x515e80	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x22e83b	code-isolated	-	kept-eh-catch-handler
 0x2503b8	0x6503d0	data	.rdata	data	-	kept
 0x2503d4	0x62e850	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2503dc	0x62e858	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46668,9 +46668,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x2527d4	0x630900	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2527f8	0x652810	data	.rdata	data	-	kept
 0x25280c	0x652820	data	.rdata	data	-	kept
-0x25281c	0x55a491	data	.rdata	code-isolated	-	review-isolated-interior
+0x25281c	0x55a491	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230908	code-isolated	-	kept-eh-catch-handler
 0x252824	0x683000	data	.rdata	data	-	kept
-0x25282c	0x55a4fc	data	.rdata	code-isolated	-	review-isolated-interior
+0x25282c	0x55a4fc	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230908	code-isolated	-	kept-eh-catch-handler
 0x252838	0x652850	data	.rdata	data	-	kept
 0x252854	0x630920	data	.rdata	code-isolated	-	kept-isolated-entry
 0x25285c	0x63092b	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46694,7 +46694,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x252924	0x6309d6	data	.rdata	code-isolated	-	kept-isolated-entry
 0x25292c	0x6309e1	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252940	0x652948	data	.rdata	data	-	kept
-0x252954	0x55b1b9	data	.rdata	code-isolated	-	review-isolated-interior
+0x252954	0x55b1b9	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x2309ec	code-isolated	-	kept-eh-catch-handler
 0x252960	0x652978	data	.rdata	data	-	kept
 0x252968	0x6529a8	data	.rdata	data	-	kept
 0x252984	0x630a00	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46702,7 +46702,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x25299c	0x630a13	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2529a4	0x630a1b	data	.rdata	code-isolated	-	kept-isolated-entry
 0x2529b8	0x6529c0	data	.rdata	data	-	kept
-0x2529cc	0x55b57c	data	.rdata	code-isolated	-	review-isolated-interior
+0x2529cc	0x55b57c	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230a26	code-isolated	-	kept-eh-catch-handler
 0x2529d8	0x6529f0	data	.rdata	data	-	kept
 0x2529e0	0x652a18	data	.rdata	data	-	kept
 0x2529f4	0x630a30	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46715,7 +46715,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x252a6c	0x630a60	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252a7c	0x630a68	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252a90	0x652a98	data	.rdata	data	-	kept
-0x252aa4	0x55b98f	data	.rdata	code-isolated	-	review-isolated-interior
+0x252aa4	0x55b98f	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230a70	code-isolated	-	kept-eh-catch-handler
 0x252ab0	0x652ac8	data	.rdata	data	-	kept
 0x252ab8	0x652b08	data	.rdata	data	-	kept
 0x252ad4	0x630a80	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46725,7 +46725,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x252afc	0x630aa3	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252b04	0x630aab	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252b18	0x652b20	data	.rdata	data	-	kept
-0x252b2c	0x55bca4	data	.rdata	code-isolated	-	review-isolated-interior
+0x252b2c	0x55bca4	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230ab6	code-isolated	-	kept-eh-catch-handler
 0x252b38	0x652b50	data	.rdata	data	-	kept
 0x252b40	0x652b90	data	.rdata	data	-	kept
 0x252b5c	0x630ac0	data	.rdata	code-isolated	-	kept-isolated-entry
@@ -46735,7 +46735,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x252b84	0x630ae3	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252b8c	0x630aeb	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252ba0	0x652ba8	data	.rdata	data	-	kept
-0x252bb4	0x55bf74	data	.rdata	code-isolated	-	review-isolated-interior
+0x252bb4	0x55bf74	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230af6	code-isolated	-	kept-eh-catch-handler
 0x252bc0	0x652bd8	data	.rdata	data	-	kept
 0x252bdc	0x630b00	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252be8	0x652c00	data	.rdata	data	-	kept
@@ -46747,7 +46747,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x252c34	0x630b46	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252c3c	0x630b51	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252c50	0x652c58	data	.rdata	data	-	kept
-0x252c64	0x55c4c8	data	.rdata	code-isolated	-	review-isolated-interior
+0x252c64	0x55c4c8	data	.rdata; EH HandlerType.addressOfHandler, try map of FuncInfo loaded by stub 0x230b5c	code-isolated	-	kept-eh-catch-handler
 0x252c70	0x652c88	data	.rdata	data	-	kept
 0x252c8c	0x630b70	data	.rdata	code-isolated	-	kept-isolated-entry
 0x252c94	0x630b86	data	.rdata	code-isolated	-	kept-isolated-entry
