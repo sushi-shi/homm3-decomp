@@ -460,6 +460,47 @@ def source_literals(root, pe) -> Records:
     return out
 
 
+def referenced_literals(pe, sites, taken=()) -> Records:
+    """C string literals that retail pushes or stores by address.
+
+    A `push imm32` operand, or an initialized pointer word, that is an
+    admitted relocation naming a 4-aligned run of printable bytes and its NUL
+    is a string argument: the literal's extent is its own text plus the
+    terminator. Game objects emit these as 4-aligned `??_C@` COMDATs; the
+    claim sizes the object, not its owner.
+    """
+    printable = set(range(0x20, 0x7f)) | {9, 10, 13}
+    view = _View(pe)
+    text_lo, text_hi = view.text
+    out = Records()
+    seen = set()
+    for site in sorted(sites):
+        in_code = text_lo + 1 <= site < text_hi
+        if in_code and pe.read(site - 1, 1) != b'\x68':
+            continue
+        if not in_code and not (view.rdata[0] <= site < view.rdata[1]
+                                or view.data[0] <= site < view.data[1]):
+            continue
+        value = view.u32(site)
+        if value is None:
+            continue
+        target = value - view.base
+        if target in seen or target % 4 or not view.data[0] <= target < view.data[1]:
+            continue
+        end = view.cstring_end(target, 512)
+        if end is None or end - target < 2 or (not in_code and end - target > 64):
+            continue
+        body = pe.read(target, end - target - 1)
+        if any(b not in printable for b in body):
+            continue
+        if any(lo < end and target < hi for lo, hi in taken):
+            continue            # another retail record already sizes it
+        seen.add(target)
+        out.add(target, end, 'game', f'pushed literal {body[:24].decode("latin-1")!r}',
+                1, alignment=4, whole=True)
+    return out
+
+
 def comdat_contributions(enrolled, base_dir=None) -> Records:
     """Whole COMDAT contributions among enrolled rows, with COFF alignment.
 

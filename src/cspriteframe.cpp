@@ -869,6 +869,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
     }
 
     const unsigned int* lineOffset;
+    // Retail construction guard 0x6968b7; the copied run code at 0x69689c.
+    DATA_COMPGEN_GUARD(0x006968b7, drawOpaqueRunCodeGuard, opaqueRunCode)
+    DATA(0x0069689c)
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
@@ -1041,6 +1044,9 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
     }
 
     const TOffset* lineOffset;
+    // Retail construction guard 0x6968b4; the copied run code at 0x6968b5.
+    DATA_COMPGEN_GUARD(0x006968b4, creatureOpaqueRunCodeGuard, opaqueRunCode)
+    DATA(0x006968b5)
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 
@@ -2645,6 +2651,9 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
     const unsigned int* lineOffset;
     // DC 0x77664 local palette, bound after the line table at line 3811.
     const unsigned short* palette;
+    // Retail construction guard 0x6968a7; the copied run code at 0x6968b6.
+    DATA_COMPGEN_GUARD(0x006968a7, spellEffectOpaqueRunCodeGuard, opaqueRunCode)
+    DATA(0x006968b6)
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
     clip(sx, sy, sw, sh, dx, dy, dw, dh, hflip, 0);
 

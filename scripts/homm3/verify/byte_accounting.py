@@ -314,8 +314,10 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             names[('', msvc_names.mask(r['name']))].add(int(r['rva'], 0))
     image = Image(pe)
     objects, members, results = {}, {}, []
+    from homm3.verify import eh_records
+    results += eh_records.compare(model, enrolled, pe, names, base_dir)
     for r in enrolled:
-        if 'gap' in r.get('provenance', ''):
+        if 'gap' in r.get('provenance', '') or r.get('provenance') == 'retail-EH-funcinfo':
             continue
         unit = r['object'].removesuffix('.c')
         start, size = int(r['rva'], 0), int(r['size'], 0)
@@ -437,7 +439,9 @@ def report(model=None):
     comdats = retail_records.comdat_contributions(enrolled)
     members, compiler_padding = retail_records.ordinary_members(pe, enrolled)
     literals = retail_records.source_literals(HOMM3_DIR, pe)
-    for extra in (found, constants, comdats, members, literals):
+    pushed = retail_records.referenced_literals(
+        pe, sites, [(r.start, r.end) for x in (found, constants) for r in x.ranges])
+    for extra in (found, constants, comdats, members, literals, pushed):
         records.ranges += extra.ranges
         records.starts.update(extra.starts)
         records.ends |= extra.ends

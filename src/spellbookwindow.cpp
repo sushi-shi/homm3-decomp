@@ -98,6 +98,11 @@ void TSpellbookWindow::reset()
 MAC_ADDRESS(0x18ada4, 0xec)
 static const char* getLevelString(SpellID spell)
 {
+    // Retail: construction guard 0x6a34dc and the five label pointers at
+    // 0x6a34f8 (stored by the inlined copies in getSpellDescription and
+    // gotoPage, indexed by getSpellDescription).
+    DATA_COMPGEN_GUARD(0x006a34dc, levelStringsGuard, levelStrings)
+    DATA(0x006a34f8)
     static const char* levelStrings[] = {
         (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_ONE_LABEL],
         (*g_generalText)[GENERAL_TEXT_SPELL_LEVEL_TWO_LABEL],
