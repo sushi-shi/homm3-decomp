@@ -150,6 +150,14 @@ Unknown data references remain unresolved. Current source/compiler
 receipts are checked before and after the pass; this adds no address ledger,
 duplicate game bodies or new game-function score entries.
 
+Private SDK tree statics (`_Nil` and `_Nilrefs`) are identified from ordinary
+source instantiations. A current object must emit the complete four-byte BSS
+COMDAT, and an independently claimed function must match every instruction,
+relocation site and other named reference. Its address operands then identify
+the static; all witnesses must agree, and claimed storage cannot be overwritten.
+The model regenerates these names and sizes from compiler receipts. This does
+not require SDK edits, replacement globals or a separate symbol ledger.
+
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.
 Pointer words require a known target plus the correct addend, and the relocation

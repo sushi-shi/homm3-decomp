@@ -10278,8 +10278,9 @@ VA_COMPGEN(0x004d32e0, 0x344, STD_COPY_BACKWARD, town)
 // COMDAT pairing: std::fill<town>, agreement 0.992.
 VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
 
-// COMDAT pairing: _tree::1?$_Tree, mnemonic agreement 0.959.
-VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
+// The former 0x4b61f0 mnemonic-only pairing was a different specialization:
+// ForceFeedback's registered map cleanup calls it, and its erase target is
+// the CImmEnclosure*/RECT tree at 0x4b7200, not this hero-info tree.
 
 VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
 

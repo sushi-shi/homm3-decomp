@@ -97,6 +97,11 @@ public:
 // `_Nilrefs` statics live at 0x696d8c/0x696d90.
 DATA(0x00696d60)
 std::map<CImmEnclosure*, RECT> g_immEffectEntries;
+
+// The global's registered cleanup at 0x4b61e0 tail-calls this actual map
+// destructor. Its range erase, node release and shared nil teardown match
+// the ordinary SDK instantiation; no separate hand-written body is needed.
+VA_COMPGEN(0x004b61f0, 0x6e, IMPLICIT_DTOR, map)
 DATA(0x00696d70) POINT g_immWindowOrigin;
 DATA(0x00696d7c) HWND g_immWindow;
 DATA(0x00696d80) CImmDevice* g_immDevice;

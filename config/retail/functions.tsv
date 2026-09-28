@@ -2459,6 +2459,8 @@ rva	size
 0xb6010	373
 0xb6190	32
 0xb61b0	39
+# Source map cleanup registered by 0xb61b0: mov ecx,696d60; jmp 4b61f0.
+0xb61e0	10
 0xb61f0	110
 0xb6260	1122
 0xb66d0	33

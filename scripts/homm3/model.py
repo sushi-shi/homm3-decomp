@@ -198,10 +198,17 @@ def resolve(rows=None) -> Model:
         result.append(b)
     model = Model(functions, result, violations)
     from homm3.core.project import Project
+    from homm3.verify.source_static_data import recover as recover_statics
+    project = Project(common.HOMM3_DIR)
+    static_data = recover_statics(model, project, BUILD / 'objdiff/base')
+    if static_data:
+        data_by_address = {b.rva: b for b in model.data}
+        data_by_address.update((b.rva, b) for b in static_data)
+        model = model._replace(data=[data_by_address[rva] for rva in sorted(data_by_address)])
     from homm3.verify.source_function_aliases import recover
     from collections import defaultdict
     aliases = defaultdict(list)
-    for alias in recover(model, Project(common.HOMM3_DIR), BUILD / 'objdiff/base'):
+    for alias in recover(model, project, BUILD / 'objdiff/base'):
         aliases[alias.rva].append(alias)
     return model._replace(functions=[
         b._replace(aliases=b.aliases + tuple(aliases[b.rva]))

@@ -59,7 +59,9 @@ rva	name
 0x20b580	cxx_20b556_sub00_20b580
 0x20b58c	cxx_20b556_sub01_20b58c
 0x20b598	??0_Lockit@std@@QAE@XZ
-0x20b634	exe_scoped_lock_exe_scoped_lock
+# Pinned LIBCPMT _Lockit destructor: all 21 bytes, shared constructor's
+# _InitFlag/CritSec operands and LeaveCriticalSection IAT agree.
+0x20b634	??1_Lockit@std@@QAE@XZ
 0x20b649	cinit1121_20b649
 0x20b653	cxx_20b649_sub00_20b653
 0x20b654	cxx_20b649_sub01_20b654
