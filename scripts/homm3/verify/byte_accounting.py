@@ -233,8 +233,12 @@ def library_ranges(pe, model):
     game = library_code.GameComdats(pe, [r['rva'] for r in functions()],
                                     exclude=zlib_units)
     from homm3.delink.image import Image
+    evidence = read(RETAIL / 'reloc-evidence.tsv')[2]
+    referenced = {int(r['value'], 16) - pe.image_base for r in evidence
+                  if r['disposition'].startswith('kept')}
     verdicts, data = library_code.verify(pe, names=names, game_comdats=game,
-                                         reloc_sites=Image(pe).reloc_sites)
+                                         reloc_sites=Image(pe).reloc_sites,
+                                         referenced=referenced)
     ranges = [Range(lo, hi, category, identity, 2)
               for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
     defined = defaultdict(set)
@@ -245,18 +249,63 @@ def library_ranges(pe, model):
     return ranges, library_code.summary(verdicts, data, game), defined
 
 
+def linker_ranges(pe, dynamic, startup_sets, library, library_names, enrolled):
+    """Linker-produced import tables, game `.CRT$XCU` slots, fill and tails.
+
+    `startup_sets` are match lists shaped like `startup_initializers`
+    (rva, unit, symbol, source): every exact CRT body a slot may point to.
+    """
+    from homm3.verify import linker_structures as linker
+    records = linker.import_records(pe, referenced=linker.referenced_slots())
+    claims = [Range(r.start, r.start+r.size, r.category, f'import {r.kind} {r.name}', 2)
+              for r in records]
+    bodies = {}
+    for row in dynamic['matches']:
+        owner = row['owner']
+        bodies[row['rva']] = (f"{owner['source']}:{owner['name']}", owner['name'], None, None)
+    for matches in startup_sets:
+        for row in matches:
+            bodies[row['rva']] = (f"{row['source']}:{row['symbol']}", None,
+                                  row.get('unit'), row.get('symbol'))
+    covered = [(r.start, r.end) for r in library]
+    slots, slot_findings = linker.crt_slots(pe, bodies, library_names, covered)
+    claims += [Range(a, b, 'source-initializer-exact', identity, 2) for a, b, identity in slots]
+    # LINK aligns the start of the .data group that follows the merged .CRT
+    # group to the group's largest section alignment (a VC6 link of one
+    # 4-aligned .data object with LIBCMT starts .data 16-aligned after
+    # ___xt_z). The largest verified library .data alignment supplies it.
+    from homm3.verify import library_code
+    runtime = library_code.load_libraries(zlib_units=())
+    group_alignment = max((runtime.section(r.library, r.member, r.section).align
+                           for r in library_code.read_inventory()
+                           if r.kind == 'data' and r.library in library_code.RUNTIME_LIBRARIES
+                           and runtime.objects[(r.library, r.member)]
+                           .sections[r.section - 1].name == '.data'), default=0)
+
+    def section_alignment(_address):
+        return group_alignment
+    claims += [Range(a, b, 'linker-padding', identity, 2)
+               for a, b, identity in linker.crt_group_fill(pe, library_names, section_alignment)]
+    file_tails, image_tails = linker.data_alignment_tails(pe)
+    tails = ([Range(a, b, 'structural', identity, -1) for a, b, identity in file_tails],
+             [Range(a, b, 'structural', identity, -1) for a, b, identity in image_tails])
+    report = dict(imports=linker.summary(records), crt_slots=len(slots),
+                  crt_findings=slot_findings)
+    return claims, tails, report
+
+
 def account(pe, model, enrolled, sections, *, initializers=(), library=(),
-            library_names=None):
+            library_names=None, linker=(), tails=((), ())):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
     verified = [(r.start, r.end) for r in library]
     zlib_units = {r['unit'] for r in read(ZLIB_MAP)[2]} if ZLIB_MAP.is_file() else set()
     claims = (model_ranges(model, enrolled, sections, verified, library_names, zlib_units)
-              + compiler_ranges(pe, model)
+              + compiler_ranges(pe, model) + list(linker)
               + list(initializers) + list(library))
-    file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
-    image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
+    file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[0])
+    image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[1])
     for claim in claims:
         if not any(s['va'] <= claim.start < claim.end <=
                    s['va']+max(s['vsize'], s['rsize']) for s in pe.sections):
@@ -410,14 +459,18 @@ def report(model=None):
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
     library, library_report, library_names = library_ranges(pe, model)
+    linker, tails, linker_report = linker_ranges(pe, dynamic, [startup['matches']],
+                                                 library, library_names, enrolled)
     domains = account(pe, model, enrolled, sections,
                       initializers=initializer_ranges(dynamic)+startup_ranges(startup),
-                      library=library, library_names=library_names)
+                      library=library, library_names=library_names,
+                      linker=linker, tails=tails)
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
            'library_code': library_report,
+           'linker_structures': linker_report,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()

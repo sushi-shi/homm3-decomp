@@ -199,6 +199,36 @@ the next contribution's aligned start. Rows that fail stay
 `library_code`. Library data that verified relocations reach but no row
 places is listed there too (`homm3 verify library-code --data`).
 
+Linker-produced structures are accounted by `homm3.verify.linker_structures`.
+The import tables are bounded by the PE import format: descriptors to the null
+descriptor, each lookup table and IAT to its terminator, each hint/name record
+and DLL name to its NUL plus LINK's even-address pad. A structure is
+`linker-import` when the pinned toolchain import libraries reproduce it (same
+DLL spelling, hint and name, or the library's own ordinal binding; IAT equal to
+the lookup table; every slot referenced by a reviewed relocation). Bytes the
+format bounds but no pinned library reproduces are `import-structure`, with each
+reason in `data_coverage.json` `linker_structures`. In the pinned image these
+are the vendor DLLs (no pinned import libraries), the hints of every KERNEL32
+and USER32 import (0 in retail), the DLL spelling `KeRNeL32.dll`, and the
+descriptors' TimeDateStamp 0xad2b0000, none of which LINK writes; the
+unreferenced string `GetSysteminfo` after the last record stays missing.
+
+Game `.CRT$XCU` entries are the words `__initterm` walks between the verified
+`___xc_a` marker and the library entries. A slot is `source-initializer-exact`
+when it points to an exact initializer body; a startup body's unit must emit a
+`.CRT$XCU` relocation to the matched symbol, and header copies must repeat one
+declaration order block by block. The zero fill between `___xt_z` and `.data` is
+`linker-padding`: LINK aligns the `.data` group that follows the merged `.CRT`
+group to its largest section alignment (a one-object VC6 link with LIBCMT shows
+it). Zero tails of initialized data sections up to the FileAlignment and
+SectionAlignment boundaries are `structural`.
+
+COMMON storage is allocated by LINK at min(32, size rounded up to a power of
+two); a one-object VC6 link of `char c1; char big64[64]; char mid12[12];`
+shows the 32-byte cap. COMMONs referenced only by game code are `game` rows in
+the runtime inventory, checked like library COMMONs; the zero fill before them
+is `linker-padding`.
+
 Sites inside verified library sections follow their COFF relocations in
 `config/retail/relocs.tsv`; `reloc-evidence.tsv` names the owning member for
 each site added or rejected on that evidence.

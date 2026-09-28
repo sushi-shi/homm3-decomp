@@ -329,7 +329,7 @@ def _placements(library: Library, rows, zlib_rows):
 
 
 def verify(pe, rows=None, *, names=None, library=None, zlib_rows=None,
-           game_comdats=None, image=None, reloc_sites=None):
+           game_comdats=None, image=None, reloc_sites=None, referenced=None):
     """Verdicts for every contribution; see the module docstring.
 
     `names` maps a (masked) symbol name to the retail addresses the model
@@ -377,7 +377,7 @@ def verify(pe, rows=None, *, names=None, library=None, zlib_rows=None,
         v = Verdict(p.row)
         verdicts.append(v)
         if p.row.kind == 'common':
-            _verify_common(v, image, library, game_comdats)
+            _verify_common(v, image, library, game_comdats, referenced)
             continue
         if p.sec is None:
             _verify_thunk(v, image, library)
@@ -553,15 +553,21 @@ def _data_fits(key, address, image, library):
 
 
 def common_alignment(size: int) -> int:
-    """The linker's COMMON alignment: the size's power of two, at most 16."""
+    """LINK's COMMON alignment: the size rounded up to a power of two, at most 32.
+
+    A VC6 link of C tentative definitions `char c1; char big64[64];
+    char mid12[12]` places the 64-byte COMMON on a 32-byte boundary after the
+    12-byte one (16-byte aligned).
+    """
     align = 1
-    while align < size and align < 16:
+    while align < size and align < 32:
         align *= 2
     return align
 
 
-def _verify_common(v, image, library, game_comdats):
-    """A linker-allocated COMMON: largest declared size, zero-filled .data."""
+def _verify_common(v, image, library, game_comdats, referenced=None):
+    """A linker-allocated COMMON: largest declared size, zero-filled .data,
+    and (given the reviewed relocation targets) referenced by retail code."""
     row = v.row
     sizes = set(library.common.get(row.symbol, ()))
     if game_comdats is not None and hasattr(game_comdats, 'common_sizes'):
@@ -577,6 +583,9 @@ def _verify_common(v, image, library, game_comdats):
     elif image.section_of(row.rva, row.size) != '.data' or image.read(row.rva, row.size) != bytes(row.size):
         v.verdict = 'mismatch'
         v.reasons.append('COMMON is not zero-filled .data')
+    elif referenced is not None and not any(row.rva <= t < row.rva + row.size for t in referenced):
+        v.verdict = 'unresolved'
+        v.reasons.append('no reviewed relocation references this COMMON')
 
 
 def _verify_thunk(v, image, library):
@@ -608,8 +617,7 @@ def ranges(verdicts, pe):
     out = []
     for (start, end), v in exact:
         if end > start and v.row.kind != 'alias':
-            category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
-            out.append((start, end, category, identity(v.row)))
+            out.append((start, end, _category(v.row), identity(v.row)))
     # Linker fill: the 0xCC run right before a verified contribution, shorter
     # than that contribution's alignment and ending on its aligned start.
     align = {}
@@ -621,7 +629,9 @@ def ranges(verdicts, pe):
     # start.
     previous_end = 0
     for (start, end), v in exact:
-        category = 'library-vendor' if v.row.library == 'zlib' else 'library-runtime'
+        category = _category(v.row)
+        if category == 'game':
+            category = 'linker-padding'     # LINK's fill before a game COMMON
         if v.row.kind in ('code', 'thunk'):
             size = 0
             while size + 1 < align[start] and start - size - 1 >= previous_end and \
@@ -636,6 +646,14 @@ def ranges(verdicts, pe):
                 out.append((previous_end, start, category, f'link fill before {identity(v.row)}'))
         previous_end = max(previous_end, end)
     return out
+
+
+def _category(row: Contribution) -> str:
+    if row.library == 'zlib':
+        return 'library-vendor'
+    if row.library == 'game':
+        return 'game'
+    return 'library-runtime'
 
 
 def identity(row: Contribution) -> str:

@@ -9,7 +9,10 @@
 # `common` is a linker-allocated COMMON symbol (section 0; the largest
 # declaration, library or game, is its size); `thunk` is an import-library
 # jump stub (section 0). Rows sharing one RVA are ICF-folded COMDATs whose
-# symbols retail references at that address.
+# symbols retail references at that address. Library `game` places a COMMON
+# that only game objects declare (member = a declaring object); COMMONs take
+# LINK's alignment min(32, size rounded up to a power of two) and must be
+# referenced by a reviewed relocation.
 # `homm3 verify library-code` re-proves every row on each build: unrelocated
 # bytes equal retail (zero for bss/common, which must lie in .data at their
 # alignment) and every relocation resolves to its symbol's placed
@@ -25,7 +28,9 @@
 # to another member's, chosen by link-order continuity or by the symbol that
 # retail code references; `icf` folded with the other rows at this RVA;
 # `referenced-by-data` a folded COMDAT that only library data references;
-# `placed-by-bytes` a section no relocation reaches, found by its bytes and
+# `witness=`/`guards-*`/`third-guard-*` the retail code that references a
+# game COMMON (an exact candidate body, or the retail initializer whose other
+# guards are bound elsewhere); `placed-by-bytes` a section no relocation reaches, found by its bytes and
 # relocations inside its member's link-order window; `placed-by-layout` the
 # same for an all-zero section, accepted only as the window's sole candidate;
 # `empty-section`/`empty-section-by-layout` a zero-length section whose
@@ -2114,6 +2119,14 @@ rva	size	kind	library	member	section	symbol	evidence
 0x2aba60	20	bss	LIBCMT.LIB	winsig.obj	1	_ConsoleCtrlHandler_Installed	-
 0x2aba74	4	bss	LIBCMT.LIB	w_loc.obj	1	_?f_use@?1??__crtGetLocaleInfoW@@9@9	-
 0x2aba78	4	bss	LIBCMT.LIB	a_loc.obj	1	_?f_use@?1??__crtGetLocaleInfoA@@9@9	-
+0x2aba7c	1	common	game	objecttype.obj	0	??_B?1???id@?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@$D@@9@51	third-guard-of-initializer-0x51b830
+0x2aba7d	1	common	game	objecttype.obj	0	??_B?1??getObjectImageCache@@YIAAV?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@XZ@51	guards-imageCache-at-0x514703
+0x2aba80	16	common	game	objecttype.obj	0	?imageCache@?1??getObjectImageCache@@YIAAV?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@XZ@4V23@A	witness=0x514930
+0x2aba90	1	common	game	customcampaign.obj	0	??_B?1???id@?$codecvt@DDH@std@@$D@@9@51	witness=0x48f5f0,0x4b8000
+0x2aba94	4	common	LIBCPMT.LIB	iostream.obj	0	?_Stinit@?1??_Init@?$basic_filebuf@DU?$char_traits@D@std@@@std@@IAEXPAU_iobuf@@W4_Initfl@23@@Z@4HA	declared-by=1,game-declares=2,witness=0x48bd50
+0x2aba98	1	common	game	bottomviewsubwindow.obj	0	??_B?1???id@?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@$D@@9@51	witness=0x52f490,0x530d40
+0x2aba99	1	common	game	bottomviewsubwindow.obj	0	??_B?1???id@?$numpunct@D@std@@$D@@9@51	witness=0x52f490,0x530d40
+0x2aba9c	4	common	LIBCPMT.LIB	iostream.obj	0	?_Stz@?$fpos@H@std@@0HA	declared-by=3,game-declares=8,witness=0x454390
 0x2abaa0	1	common	LIBCPMT.LIB	string.obj	0	??_B?1???id@?$ctype@G@std@@$D@@9@51	declared-by=9,game-declares=114
 0x2abab0	4	common	LIBCPMT.LIB	wiostrea.obj	0	?_Stinit@?1??_Init@?$basic_filebuf@GU?$char_traits@G@std@@@std@@IAEXPAU_iobuf@@W4_Initfl@23@@Z@4HA	declared-by=1
 0x2abab4	1	common	LIBCPMT.LIB	string.obj	0	??_B?1???id@?$collate@D@std@@$D@@9@51	declared-by=9
