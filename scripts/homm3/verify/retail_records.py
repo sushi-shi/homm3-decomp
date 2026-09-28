@@ -95,6 +95,12 @@ class _View:
 
 
 def pe_structures(pe) -> Records:
+    """The import address table, bounded by the import directory.
+
+    The directory itself, its lookup and hint/name records and the section
+    alignment tails are verified by the library code verifier; only the IAT
+    slots and terminators, which game code reads through, are claimed here.
+    """
     from homm3.sema.coverage import system_claims
     out = Records()
     data = pe.data
@@ -102,31 +108,9 @@ def pe_structures(pe) -> Records:
     sections = [dict(rva=s['va'], raw_size=s['rsize'], raw_offset=s['rptr'])
                 for s in pe.sections]
     for claim in system_claims(data, sections, opt):
-        start, end = claim['rva'], claim['rva'] + claim['size']
-        out.add(start, end, 'structural', claim['evidence'], 0)
-        if claim['evidence'].startswith('PE import hint/name') and end % 2:
-            if pe.read(end, 1) == b'\0':
-                out.add(end, end + 1, 'structural',
-                        'PE import hint/name even-alignment pad', 0)
-    section_alignment, file_alignment = struct.unpack_from('<II', data, opt + 32)
-    ordered = sorted(pe.sections, key=lambda s: s['va'])
-    for s, following in zip(ordered, ordered[1:] + [None]):
-        # The loader's image extent: a section ends at its aligned virtual
-        # size, exactly where the next section (or SizeOfImage) begins.
-        end = s['va'] + max(s['vsize'], s['rsize'])
-        aligned = -(-end // section_alignment) * section_alignment
-        limit = following['va'] if following else struct.unpack_from('<I', data, opt + 56)[0]
-        if end < aligned == limit:
-            out.add(end, aligned, 'structural',
-                    f"{s['name']} section-alignment tail", 0)
-    for s in pe.sections:
-        if s['name'] in ('.rsrc', '.reloc') or s['rsize'] <= s['vsize']:
-            continue
-        aligned = -(-s['vsize'] // file_alignment) * file_alignment
-        tail = data[s['rptr'] + s['vsize']:s['rptr'] + s['rsize']]
-        if s['rsize'] == aligned and not any(tail):
-            out.add(s['va'] + s['vsize'], s['va'] + s['rsize'], 'structural',
-                    f"{s['name']} raw file-alignment tail", 0)
+        if claim['evidence'] in ('PE IAT slot', 'PE IAT terminator'):
+            out.add(claim['rva'], claim['rva'] + claim['size'], 'structural',
+                    claim['evidence'], 0)
     return out
 
 

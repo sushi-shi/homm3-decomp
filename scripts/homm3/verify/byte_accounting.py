@@ -14,7 +14,7 @@ import struct
 from pathlib import Path
 
 from homm3.core import msvc_names
-from homm3.core.paths import BUILD
+from homm3.core.paths import BUILD, RETAIL
 from homm3.core.tsv import read, write
 
 
@@ -27,13 +27,15 @@ class Range:
     priority: int = 0
 
 
+ZLIB_MAP = RETAIL / 'zlib-map.tsv'
+
 #: When one identity arrives through several channels, report the most
 #: specific evidence first.
 CATEGORY_PRECEDENCE = (
     'source-initializer-exact', 'source-initializer-padding-exact',
-    'source-cleanup-exact', 'game', 'library-vendor', 'compiler-generated',
-    'compiler-metadata', 'library-unverified', 'section', 'alignment-padding',
-    'structural')
+    'source-cleanup-exact', 'game', 'library-vendor', 'library-runtime',
+    'compiler-generated', 'compiler-metadata', 'library-unverified', 'section',
+    'alignment-padding', 'structural')
 
 
 def partition(size: int, ranges: list[Range]):
@@ -83,10 +85,41 @@ def manifest_rows(path=None):
     return read(path)[2] if path.is_file() else []
 
 
-def model_ranges(model, enrolled, sections):
+def _covered(start, end, verified):
+    """True when [start, end) lies inside the union of sorted verified ranges."""
+    import bisect
+    starts = [lo for lo, _hi in verified]
+    k = bisect.bisect_right(starts, start) - 1
+    while start < end:
+        if k < 0 or k >= len(verified) or not verified[k][0] <= start < verified[k][1]:
+            return False
+        start = verified[k][1]
+        k += 1
+    return True
+
+
+def model_ranges(model, enrolled, sections, verified_library=(), library_names=None,
+                 zlib_units=()):
+    """Model claims; library labels inside byte-verified contributions yield.
+
+    A data claim inside a verified library contribution yields only when the
+    contribution itself defines that name at that address; any other claim
+    there remains and shows as an overlap.
+    """
+    verified = sorted(verified_library)
+    library_names = library_names or {}
+
+    def library_owned(start, end, name):
+        return verified and msvc_names.mask(name) in library_names.get(start, ()) \
+            and _covered(start, end, verified)
     out = []
     for b in model.functions + model.data:
         if not b.size or not b.channel:
+            continue
+        if b.channel in ('functions_static_libs', 'functions_zlib') and verified \
+                and _covered(b.rva, b.rva+b.size, verified):
+            continue
+        if b.space != 'text' and library_owned(b.rva, b.rva+b.size, b.name):
             continue
         category = ('library-vendor' if b.channel in (
             'functions_zlib', 'data_static_libs',
@@ -94,13 +127,22 @@ def model_ranges(model, enrolled, sections):
         if b.channel == 'functions_static_libs':
             category = 'library-unverified'
         out.append(Range(b.rva, b.rva+b.size, category, b.name, 2))
+    # A folded literal also emitted by a game object is the game object's
+    # copy: game objects precede the vendor objects on the link line.
+    game_copies = {(r['rva'], r['name']) for r in enrolled
+                   if r.get('object', '').removesuffix('.c') not in zlib_units}
     for r in enrolled:
         if 'gap' in r.get('provenance', ''):
             continue
         start, size = int(r['rva'], 0), int(r['size'], 0)
         if size:
-            category = ('library-vendor' if r.get('provenance') == 'zlib-source-sizeof'
-                        else 'game')
+            if library_owned(start, start+size, r['name']):
+                continue
+            # Zlib objects are vendor contributions, including their literals.
+            vendor = r.get('provenance') == 'zlib-source-sizeof' or (
+                r.get('object', '').removesuffix('.c') in zlib_units
+                and (r['rva'], r['name']) not in game_copies)
+            category = 'library-vendor' if vendor else 'game'
             out.append(Range(start, start+size, category, r['name'], 2))
     for s in sections:
         if s['rva'] != '-' and int(s['size'], 0):
@@ -187,43 +229,41 @@ def startup_ranges(comparison):
     return ranges
 
 
-def crt_table_ranges(pe, library=lambda rva: False):
-    """The `.CRT$XCU` slots, once their reviewed order verifies as one table.
-
-    `init-thunks.tsv` lists every initializer body in slot order; the whole
-    sequence of pointers must occur exactly once in initialized data. The
-    table is then the linker's concatenation of the translation units'
-    `.CRT$XCU` contributions. Library contributions keep their own claims.
-    """
-    from homm3.core.paths import RETAIL
-    from homm3.verify.source_initializers import verified_roots
-    roots = verified_roots(pe, read(RETAIL / 'init-thunks.tsv')[2])
-    if not roots:
-        return []
-    table = b''.join(struct.pack('<I', pe.image_base + r) for r in roots)
-    start = pe.data.find(table)
-    section = next(s for s in pe.sections
-                   if s['rptr'] <= start < s['rptr'] + s['rsize'])
-    rva = section['va'] + start - section['rptr']
-    # Game translation units' slots only; runtime-library slots are library data.
-    out, run = [], None
-    for index, root in enumerate(roots + [None]):
-        game = root is not None and not library(root)
-        if game and run is None:
-            run = index
-        elif not game and run is not None:
-            out.append(Range(rva + 4 * run, rva + 4 * index, 'compiler-metadata',
-                             f'.CRT$XCU initializer slots {run}..{index - 1}', 1))
-            run = None
-    return out
+def library_ranges(pe, model):
+    """Byte-verified static-library contributions (`homm3.verify.library_code`)."""
+    from homm3.retail_labels.censuses import functions
+    from homm3.verify import library_code
+    names = defaultdict(set)
+    for b in model.functions + model.data:
+        for entry in (b, *b.aliases):
+            if entry.name and entry.channel and entry.channel != 'functions_static_libs':
+                names[msvc_names.mask(entry.name)].add(b.rva)
+    zlib_units = {r['unit'] for r in read(library_code.ZLIB_MAP)[2]}
+    game = library_code.GameComdats(pe, [r['rva'] for r in functions()],
+                                    exclude=zlib_units)
+    from homm3.delink.image import Image
+    verdicts, data = library_code.verify(pe, names=names, game_comdats=game,
+                                         reloc_sites=Image(pe).reloc_sites)
+    ranges = [Range(lo, hi, category, identity, 2)
+              for lo, hi, category, identity in library_code.ranges(verdicts, pe)]
+    defined = defaultdict(set)
+    for v in verdicts:
+        if v.verdict == 'exact' and v.row.kind != 'alias':
+            for rva, name in v.symbols:
+                defined[rva].add(msvc_names.mask(name))
+    return ranges, library_code.summary(verdicts, data, game), defined
 
 
-def account(pe, model, enrolled, sections, *, initializers=()):
+def account(pe, model, enrolled, sections, *, initializers=(), library=(),
+            library_names=None):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
-    claims = (model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
-              + list(initializers))
+    verified = [(r.start, r.end) for r in library]
+    zlib_units = {r['unit'] for r in read(ZLIB_MAP)[2]} if ZLIB_MAP.is_file() else set()
+    claims = (model_ranges(model, enrolled, sections, verified, library_names, zlib_units)
+              + compiler_ranges(pe, model)
+              + list(initializers) + list(library))
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     for claim in claims:
@@ -387,12 +427,13 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
+    library, library_report, library_names = library_ranges(pe, model)
     from homm3.delink.image import Image
     from homm3.verify import retail_records
+    sites = set(Image(pe).reloc_sites)
     records = retail_records.pe_structures(pe)
-    found = retail_records.metadata(pe, model, set(Image(pe).reloc_sites))
-    constants = retail_records.fp_constants(pe, set(Image(pe).reloc_sites),
-                                            retail_records.library_code(model))
+    found = retail_records.metadata(pe, model, sites)
+    constants = retail_records.fp_constants(pe, sites, retail_records.library_code(model))
     comdats = retail_records.comdat_contributions(enrolled)
     members, compiler_padding = retail_records.ordinary_members(pe, enrolled)
     literals = retail_records.source_literals(HOMM3_DIR, pe)
@@ -401,16 +442,18 @@ def report(model=None):
         records.starts.update(extra.starts)
         records.ends |= extra.ends
     claims = (initializer_ranges(dynamic) + startup_ranges(startup) + records.ranges
-              + crt_table_ranges(pe, retail_records.library_code(model))
               + compiler_padding)
-    domains = account(pe, model, enrolled, sections, initializers=claims)
+    domains = account(pe, model, enrolled, sections, initializers=claims,
+                      library=library, library_names=library_names)
     padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
     if padding:
-        domains = account(pe, model, enrolled, sections, initializers=claims + padding)
+        domains = account(pe, model, enrolled, sections, initializers=claims + padding,
+                          library=library, library_names=library_names)
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
+           'library_code': library_report,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()

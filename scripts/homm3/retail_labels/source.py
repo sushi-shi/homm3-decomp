@@ -265,6 +265,7 @@ CHAR_STREAM_MEMBERS = (
     ("?max_size@?$basic_string@D", "QBEIXZ", "basic_string_max_size"),
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
     ("?_Copy@?$basic_string@D", "AAEXI@Z", "basic_string_copy"),
+    ("?_Tidy@?$basic_string@D", "AAEX_N@Z", "basic_string_tidy"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
     ("?assign@?$basic_string@D", "@ABV12@II@Z",

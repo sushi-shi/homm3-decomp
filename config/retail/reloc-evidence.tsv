@@ -36239,6 +36239,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x2175e0	0x6175f0	code	jmp	code	mem	kept
 0x2175e7	0x6176e8	code	jmp	code	mem	kept
 0x2175ef	0x61766c	code	jmp	code	mem	kept
+0x2175f4	0x617600	switch	table@0x2175f4; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadUp1	code	-	kept
+0x2175f8	0x61762c	switch	table@0x2175f8; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadUp2	code	-	kept
+0x2175fc	0x617650	switch	table@0x2175fc; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadUp3	code	-	kept
 0x217625	0x6176d8	code	jmp	code	mem	kept
 0x21764b	0x6176d8	code	jmp	code	mem	kept
 0x217665	0x6176d8	code	jmp	code	mem	kept
@@ -36259,9 +36262,19 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x217755	0x617820	code	jmp	code	mem	kept
 0x217770	0x617778	code	jmp	code	mem	kept
 0x217777	0x617870	code	jmp	code	mem	kept
+0x21777c	0x617788	switch	table@0x21777c; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadDown1	code	-	kept
+0x217780	0x6177a8	switch	table@0x217780; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadDown2	code	-	kept
+0x217784	0x6177d0	switch	table@0x217784; library LIBCMT.LIB:memmove.obj#1 DIR32 LeadDown3	code	-	kept
 0x2177a1	0x617870	code	jmp	code	mem	kept
 0x2177cb	0x617870	code	jmp	code	mem	kept
 0x2177fd	0x617870	code	jmp	code	mem	kept
+0x217804	0x617824	switch	table@0x217804; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown7	code	-	kept
+0x217808	0x61782c	switch	table@0x217808; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown6	code	-	kept
+0x21780c	0x617834	switch	table@0x21780c; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown5	code	-	kept
+0x217810	0x61783c	switch	table@0x217810; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown4	code	-	kept
+0x217814	0x617844	switch	table@0x217814; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown3	code	-	kept
+0x217818	0x61784c	switch	table@0x217818; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown2	code	-	kept
+0x21781c	0x617854	switch	table@0x21781c; library LIBCMT.LIB:memmove.obj#1 DIR32 UnwindDown1	code	-	kept
 0x217820	0x617867	switch	table@0x217820	code	-	kept
 0x21786a	0x617870	code	jmp	code	mem	kept
 0x217870	0x617880	switch	table@0x217870	code	-	kept
@@ -36499,6 +36512,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x21a7f0	0x61a800	code	jmp	code	mem	kept
 0x21a7f7	0x61a8f8	code	jmp	code	mem	kept
 0x21a7ff	0x61a87c	code	jmp	code	mem	kept
+0x21a804	0x61a810	switch	table@0x21a804; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadUp1	code	-	kept
+0x21a808	0x61a83c	switch	table@0x21a808; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadUp2	code	-	kept
+0x21a80c	0x61a860	switch	table@0x21a80c; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadUp3	code	-	kept
 0x21a835	0x61a8e8	code	jmp	code	mem	kept
 0x21a85b	0x61a8e8	code	jmp	code	mem	kept
 0x21a875	0x61a8e8	code	jmp	code	mem	kept
@@ -36519,9 +36535,19 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x21a965	0x61aa30	code	jmp	code	mem	kept
 0x21a980	0x61a988	code	jmp	code	mem	kept
 0x21a987	0x61aa80	code	jmp	code	mem	kept
+0x21a98c	0x61a998	switch	table@0x21a98c; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadDown1	code	-	kept
+0x21a990	0x61a9b8	switch	table@0x21a990; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadDown2	code	-	kept
+0x21a994	0x61a9e0	switch	table@0x21a994; library LIBCMT.LIB:memcpy.obj#1 DIR32 LeadDown3	code	-	kept
 0x21a9b1	0x61aa80	code	jmp	code	mem	kept
 0x21a9db	0x61aa80	code	jmp	code	mem	kept
 0x21aa0d	0x61aa80	code	jmp	code	mem	kept
+0x21aa14	0x61aa34	switch	table@0x21aa14; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown7	code	-	kept
+0x21aa18	0x61aa3c	switch	table@0x21aa18; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown6	code	-	kept
+0x21aa1c	0x61aa44	switch	table@0x21aa1c; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown5	code	-	kept
+0x21aa20	0x61aa4c	switch	table@0x21aa20; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown4	code	-	kept
+0x21aa24	0x61aa54	switch	table@0x21aa24; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown3	code	-	kept
+0x21aa28	0x61aa5c	switch	table@0x21aa28; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown2	code	-	kept
+0x21aa2c	0x61aa64	switch	table@0x21aa2c; library LIBCMT.LIB:memcpy.obj#1 DIR32 UnwindDown1	code	-	kept
 0x21aa30	0x61aa77	switch	table@0x21aa30	code	-	kept
 0x21aa7a	0x61aa80	code	jmp	code	mem	kept
 0x21aa80	0x61aa90	switch	table@0x21aa80	code	-	kept
@@ -42713,8 +42739,8 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x2457a8	0x453ca0	data	.rdata	code	-	kept
 0x2457ac	0x61753a	data	.rdata	code	-	kept
 0x2457b0	0x453c80	data	.rdata	code	-	kept
-0x2457f0	0x622b61	data	.rdata	code	-	kept
-0x2457f4	0x622b77	data	.rdata	code	-	kept
+0x2457f0	0x622b61	data	.rdata; library LIBCPMT.LIB:fiopen.obj#5 has no relocation	code	-	rejected-library-coff
+0x2457f4	0x622b77	data	.rdata; library LIBCPMT.LIB:fiopen.obj#6 has no relocation	code	-	rejected-library-coff
 0x24580c	0x647388	data	.rdata	data	-	kept
 0x245810	0x48bd20	data	.rdata	code	-	kept
 0x245814	0x48b4e0	data	.rdata	code	-	kept
@@ -42866,6 +42892,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x245a80	0x60e77a	data	.rdata	code	-	kept
 0x245a84	0x60e7c3	data	.rdata	code	-	kept
 0x245a88	0x60e7b6	data	.rdata	code	-	kept
+0x245ab8	0x647a30	data	.rdata; library LIBCPMT.LIB:wlocale.obj#304 DIR32 ??_R4?$_Mpunct@G@std@@6B@	data	-	kept
 0x245abc	0x60ffb4	data	.rdata	code	-	kept
 0x245ac0	0x60faa9	data	.rdata	code	-	kept
 0x245ac4	0x60f492	data	.rdata	code	-	kept
@@ -42958,11 +42985,11 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x245e38	0x61b4cb	data	.rdata	code	-	kept
 0x245e3c	0x61b4cf	data	.rdata	code	-	kept
 0x245ed4	0x636544	data	.rdata	code-isolated	-	review-isolated-interior
-0x245ee4	0x677541	data	.rdata	literal-interior	-	kept
+0x245ee4	0x677541	data	.rdata; library LIBCMT.LIB:strftime.obj#24 has no relocation	literal-interior	-	rejected-library-coff
 0x245efc	0x626546	data	.rdata	code-isolated	-	review-isolated-interior
-0x245f4c	0x697246	data	.rdata	data	-	kept
-0x245f54	0x646557	data	.rdata	data	-	kept
-0x245f58	0x657554	data	.rdata	data	-	kept
+0x245f4c	0x697246	data	.rdata; library LIBCMT.LIB:strftime.obj#40 has no relocation	data	-	rejected-library-coff
+0x245f54	0x646557	data	.rdata; library LIBCMT.LIB:strftime.obj#42 has no relocation	data	-	rejected-library-coff
+0x245f58	0x657554	data	.rdata; library LIBCMT.LIB:strftime.obj#43 has no relocation	data	-	rejected-library-coff
 0x245f74	0x61c8b9	data	.rdata	code	-	kept
 0x245f78	0x61c8bd	data	.rdata	code	-	kept
 0x245f80	0x61c928	data	.rdata	code	-	kept
@@ -42976,18 +43003,18 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x245fb8	0x61d1b9	data	.rdata	code	-	kept
 0x245fc4	0x61d217	data	.rdata	code	-	kept
 0x245fc8	0x61d220	data	.rdata	code	-	kept
-0x245fd8	0x61d466	data	.rdata	code-isolated	-	review-isolated-interior
+0x245fd8	0x61d466	data	.rdata; library LIBCMT.LIB:hooks.obj#3 DIR32 $L16747	code	-	kept
 0x245fe0	0x61d452	data	.rdata	code	-	kept
 0x245fe4	0x61d456	data	.rdata	code	-	kept
-0x245ff0	0x61d4bc	data	.rdata	code-isolated	-	review-isolated-interior
+0x245ff0	0x61d4bc	data	.rdata; library LIBCMT.LIB:hooks.obj#7 DIR32 $L16765	code	-	kept
 0x245ff8	0x61d4a8	data	.rdata	code	-	kept
 0x245ffc	0x61d4ac	data	.rdata	code	-	kept
-0x2461e4	0x676f6c	data	.rdata	literal-start	-	kept
+0x2461e4	0x676f6c	data	.rdata; library LIBCMT.LIB:fpexcept.obj#26 has no relocation	literal-start	-	rejected-library-coff
 0x246748	0x617375	data	.rdata	code-isolated	-	review-isolated-interior
-0x246b00	0x696863	data	.rdata	data	-	kept
-0x246b04	0x686863	data	.rdata	data	-	kept
-0x246b5c	0x50434f	data	.rdata	code	-	kept
-0x246b60	0x504341	data	.rdata	code	-	kept
+0x246b00	0x696863	data	.rdata; library LIBCMT.LIB:getqloc.obj#119 has no relocation	data	-	rejected-library-coff
+0x246b04	0x686863	data	.rdata; library LIBCMT.LIB:getqloc.obj#120 has no relocation	data	-	rejected-library-coff
+0x246b5c	0x50434f	data	.rdata; library LIBCMT.LIB:getqloc.obj#142 has no relocation	code	-	rejected-library-coff
+0x246b60	0x504341	data	.rdata; library LIBCMT.LIB:getqloc.obj#143 has no relocation	code	-	rejected-library-coff
 0x246b6c	0x623e8a	data	.rdata	code	-	kept
 0x246b70	0x623e8e	data	.rdata	code	-	kept
 0x246bfc	0x625f57	data	.rdata	code	-	kept
@@ -51044,8 +51071,8 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x25f1f4	0x61b5a0	data	.data	code	-	kept
 0x25f1f8	0x625beb	data	.data	code	-	kept
 0x25f1fc	0x61df26	data	.data	code	-	kept
-0x25f208	0x61b648	data	.data	code-isolated	-	dropped-isolated-unowned
-0x25f214	0x61df37	data	.data	code-isolated	-	dropped-isolated-unowned
+0x25f208	0x61b648	data	.data; library LIBCMT.LIB:_file.obj#2 DIR32 ___endstdio	code	-	kept
+0x25f214	0x61df37	data	.data; library LIBCMT.LIB:unhandld.obj#1 DIR32 ?__CxxRestoreUnhandledExceptionFilter@@YAXXZ	code	-	kept
 0x25f220	0x65f290	data	.data	literal-start	-	kept
 0x25f224	0x65f274	data	.data	literal-start	-	kept
 0x25f22c	0x65f268	data	.data	literal-start	-	kept
@@ -56564,6 +56591,70 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x2900dc	0x625170	data	.data	code	-	kept
 0x2900e0	0x625170	data	.data	code	-	kept
 0x2900e4	0x625170	data	.data	code	-	kept
+0x29017e	0x61ebc4	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label0	code	-	kept
+0x290182	0x61ebca	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label1	code	-	kept
+0x290186	0x61ebcf	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label2	code	-	kept
+0x29018a	0x61ebd5	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label3	code	-	kept
+0x29018e	0x61ebda	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label4	code	-	kept
+0x290192	0x61ebe0	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label5	code	-	kept
+0x290196	0x61ebe6	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label6	code	-	kept
+0x29019a	0x61ebec	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label7	code	-	kept
+0x29019e	0x61ebf2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label8	code	-	kept
+0x2901a2	0x61ec0e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label9	code	-	kept
+0x2901a6	0x61ec13	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label10	code	-	kept
+0x2901aa	0x61ec29	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label11	code	-	kept
+0x2901ae	0x61ec2e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label12	code	-	kept
+0x2901b2	0x61ec4a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label13	code	-	kept
+0x2901b6	0x61ec5a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label14	code	-	kept
+0x2901ba	0x61ec6e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label15	code	-	kept
+0x2901be	0x61ec7e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label16	code	-	kept
+0x2901c2	0x61ec9e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label17	code	-	kept
+0x2901c6	0x61eca3	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label18	code	-	kept
+0x2901ca	0x61ecbd	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label19	code	-	kept
+0x2901ce	0x61ecc2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label20	code	-	kept
+0x2901d2	0x61ece2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label21	code	-	kept
+0x2901d6	0x61ecf6	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label22	code	-	kept
+0x2901da	0x61ed0e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label23	code	-	kept
+0x2901de	0x61ed22	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label24	code	-	kept
+0x2901e2	0x61ed42	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label25	code	-	kept
+0x2901e6	0x61ed47	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label26	code	-	kept
+0x2901ea	0x61ed61	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label27	code	-	kept
+0x2901ee	0x61ed66	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label28	code	-	kept
+0x2901f2	0x61ed86	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label29	code	-	kept
+0x2901f6	0x61ed9a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label30	code	-	kept
+0x2901fa	0x61edb2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label31	code	-	kept
+0x2901fe	0x61edc6	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label32	code	-	kept
+0x290202	0x61ede6	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label33	code	-	kept
+0x290206	0x61edeb	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label34	code	-	kept
+0x29020a	0x61ee05	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label35	code	-	kept
+0x29020e	0x61ee0a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label36	code	-	kept
+0x290212	0x61ee2a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label37	code	-	kept
+0x290216	0x61ee3e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label38	code	-	kept
+0x29021a	0x61ee56	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label39	code	-	kept
+0x29021e	0x61ee6a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label40	code	-	kept
+0x290222	0x61ee8a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label41	code	-	kept
+0x290226	0x61ee8f	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label42	code	-	kept
+0x29022a	0x61eea9	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label43	code	-	kept
+0x29022e	0x61eeae	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label44	code	-	kept
+0x290232	0x61eece	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label45	code	-	kept
+0x290236	0x61eee2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label46	code	-	kept
+0x29023a	0x61eefa	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label47	code	-	kept
+0x29023e	0x61ef0e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label48	code	-	kept
+0x290242	0x61ef2e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label49	code	-	kept
+0x290246	0x61ef33	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label50	code	-	kept
+0x29024a	0x61ef4d	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label51	code	-	kept
+0x29024e	0x61ef52	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label52	code	-	kept
+0x290252	0x61ef72	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label53	code	-	kept
+0x290256	0x61ef86	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label54	code	-	kept
+0x29025a	0x61ef9e	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label55	code	-	kept
+0x29025e	0x61efb2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label56	code	-	kept
+0x290262	0x61efd2	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label57	code	-	kept
+0x290266	0x61efd7	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label58	code	-	kept
+0x29026a	0x61eff1	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label59	code	-	kept
+0x29026e	0x61eff6	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label60	code	-	kept
+0x290272	0x61f016	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label61	code	-	kept
+0x290276	0x61f02a	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label62	code	-	kept
+0x29027a	0x61f042	data	.data; library LIBCMT.LIB:adj_fdiv.obj#2 DIR32 label63	code	-	kept
 0x290284	0x6461ec	data	.data	data	-	kept
 0x29028c	0x6461e8	data	.data	data	-	kept
 0x290294	0x6461e4	data	.data	data	-	kept
@@ -56626,289 +56717,289 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x290534	0x646200	data	.data	data	-	kept
 0x29053c	0x6461f0	data	.data	literal-start	-	kept
 0x29054c	0x646638	data	.data	literal-start	-	kept
-0x290550	0x505345	data	.data	code	-	kept
+0x290550	0x505345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290554	0x646630	data	.data	literal-interior	-	kept
-0x290558	0x505345	data	.data	code	-	kept
+0x290558	0x505345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290578	0x646628	data	.data	literal-interior	-	kept
-0x29057c	0x4e4946	data	.data	code	-	kept
+0x29057c	0x4e4946	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290580	0x646620	data	.data	literal-start	-	kept
-0x290584	0x4e4946	data	.data	code	-	kept
+0x290584	0x4e4946	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2905a4	0x646618	data	.data	literal-start	-	kept
-0x2905a8	0x415246	data	.data	code	-	kept
+0x2905a8	0x415246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2905ac	0x646610	data	.data	literal-start	-	kept
-0x2905b0	0x415246	data	.data	code	-	kept
+0x2905b0	0x415246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2905d0	0x646604	data	.data	literal-interior	-	kept
-0x2905d4	0x4c5349	data	.data	code	-	kept
+0x2905d4	0x4c5349	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2905d8	0x6465fc	data	.data	literal-interior	-	kept
-0x2905dc	0x4c5349	data	.data	code	-	kept
+0x2905dc	0x4c5349	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2905fc	0x6465f4	data	.data	literal-start	-	kept
-0x290600	0x455653	data	.data	code	-	kept
+0x290600	0x455653	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290604	0x6465ec	data	.data	literal-start	-	kept
-0x290608	0x455753	data	.data	code	-	kept
+0x290608	0x455753	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290628	0x6465e4	data	.data	literal-interior	-	kept
-0x29062c	0x515545	data	.data	code	-	kept
+0x29062c	0x515545	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290630	0x646630	data	.data	literal-interior	-	kept
-0x290634	0x505345	data	.data	code	-	kept
+0x290634	0x505345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290654	0x6465dc	data	.data	literal-start	-	kept
-0x290658	0x4d5345	data	.data	code	-	kept
+0x290658	0x4d5345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29065c	0x6465d4	data	.data	literal-interior	-	kept
-0x290660	0x58454d	data	.data	code	-	kept
+0x290660	0x58454d	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290680	0x646618	data	.data	literal-start	-	kept
-0x290684	0x425246	data	.data	code	-	kept
+0x290684	0x425246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290688	0x6465cc	data	.data	literal-start	-	kept
-0x29068c	0x4c4542	data	.data	code	-	kept
+0x29068c	0x4c4542	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2906ac	0x6465c4	data	.data	literal-interior	-	kept
-0x2906b0	0x414544	data	.data	code	-	kept
+0x2906b0	0x414544	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2906b4	0x6465bc	data	.data	literal-interior	-	kept
-0x2906b8	0x545541	data	.data	code	-	kept
+0x2906b8	0x545541	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2906d8	0x6465b4	data	.data	literal-start	-	kept
-0x2906dc	0x414e45	data	.data	code	-	kept
+0x2906dc	0x414e45	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2906e0	0x6465a8	data	.data	literal-start	-	kept
-0x2906e4	0x535541	data	.data	code	-	kept
+0x2906e4	0x535541	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290704	0x646590	data	.data	literal-start	-	kept
-0x290708	0x4e5345	data	.data	code	-	kept
+0x290708	0x4e5345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29070c	0x646630	data	.data	literal-interior	-	kept
-0x290710	0x505345	data	.data	code	-	kept
+0x290710	0x505345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290730	0x646618	data	.data	literal-start	-	kept
-0x290734	0x435246	data	.data	code	-	kept
+0x290734	0x435246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290738	0x646588	data	.data	literal-start	-	kept
-0x29073c	0x4e4143	data	.data	code	-	kept
+0x29073c	0x4e4143	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29075c	0x6465dc	data	.data	literal-start	-	kept
-0x290760	0x475345	data	.data	code	-	kept
+0x290760	0x475345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290764	0x64657c	data	.data	literal-interior	-	kept
-0x290768	0x4d5447	data	.data	code	-	kept
+0x290768	0x4d5447	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290788	0x646618	data	.data	literal-start	-	kept
-0x29078c	0x535246	data	.data	code	-	kept
+0x29078c	0x535246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290790	0x646570	data	.data	literal-start	-	kept
-0x290794	0x454843	data	.data	code	-	kept
+0x290794	0x454843	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2907b4	0x6465dc	data	.data	literal-start	-	kept
-0x2907b8	0x435345	data	.data	code	-	kept
+0x2907b8	0x435345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2907bc	0x646564	data	.data	literal-start	-	kept
-0x2907c0	0x495243	data	.data	code	-	kept
+0x2907c0	0x495243	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2907e0	0x646618	data	.data	literal-start	-	kept
-0x2907e4	0x4c5246	data	.data	code	-	kept
+0x2907e4	0x4c5246	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2907e8	0x646558	data	.data	literal-start	-	kept
-0x2907ec	0x58554c	data	.data	code	-	kept
+0x2907ec	0x58554c	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29080c	0x6465dc	data	.data	literal-start	-	kept
-0x290810	0x415345	data	.data	code	-	kept
+0x290810	0x415345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290814	0x646550	data	.data	literal-start	-	kept
-0x290818	0x4e4150	data	.data	code	-	kept
+0x290818	0x4e4150	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290838	0x6465b4	data	.data	literal-start	-	kept
-0x29083c	0x534e45	data	.data	code	-	kept
+0x29083c	0x534e45	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290840	0x646540	data	.data	literal-start	-	kept
-0x290844	0x46415a	data	.data	code	-	kept
+0x290844	0x46415a	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290864	0x6465dc	data	.data	literal-start	-	kept
-0x290868	0x445345	data	.data	code	-	kept
+0x290868	0x445345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29086c	0x64652c	data	.data	literal-start	-	kept
-0x290870	0x4d4f44	data	.data	code	-	kept
+0x290870	0x4d4f44	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290890	0x6465dc	data	.data	literal-start	-	kept
-0x290894	0x565345	data	.data	code	-	kept
+0x290894	0x565345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290898	0x646520	data	.data	literal-start	-	kept
-0x29089c	0x4e4556	data	.data	code	-	kept
+0x29089c	0x4e4556	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2908bc	0x6465dc	data	.data	literal-start	-	kept
-0x2908c0	0x4f5345	data	.data	code	-	kept
+0x2908c0	0x4f5345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2908c4	0x646514	data	.data	literal-start	-	kept
-0x2908c8	0x4c4f43	data	.data	code	-	kept
+0x2908c8	0x4c4f43	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2908e8	0x6465dc	data	.data	literal-start	-	kept
-0x2908ec	0x525345	data	.data	code	-	kept
+0x2908ec	0x525345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2908f0	0x64650c	data	.data	literal-start	-	kept
-0x2908f4	0x524550	data	.data	code	-	kept
+0x2908f4	0x524550	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290914	0x6465dc	data	.data	literal-start	-	kept
-0x290918	0x535345	data	.data	code	-	kept
+0x290918	0x535345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29091c	0x646500	data	.data	literal-interior	-	kept
-0x290920	0x475241	data	.data	code	-	kept
+0x290920	0x475241	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290940	0x6465dc	data	.data	literal-start	-	kept
-0x290944	0x465345	data	.data	code	-	kept
+0x290944	0x465345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290948	0x6464f8	data	.data	literal-start	-	kept
-0x29094c	0x554345	data	.data	code	-	kept
+0x29094c	0x554345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x29096c	0x6465dc	data	.data	literal-start	-	kept
-0x290970	0x4c5345	data	.data	code	-	kept
+0x290970	0x4c5345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290974	0x6464f0	data	.data	literal-interior	-	kept
-0x290978	0x4c4843	data	.data	code	-	kept
+0x290978	0x4c4843	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x290998	0x6465dc	data	.data	literal-start	-	kept
-0x29099c	0x595345	data	.data	code	-	kept
+0x29099c	0x595345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2909a0	0x6464e8	data	.data	literal-start	-	kept
-0x2909a4	0x595255	data	.data	code	-	kept
+0x2909a4	0x595255	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2909c4	0x6465dc	data	.data	literal-start	-	kept
-0x2909c8	0x5a5345	data	.data	code	-	kept
+0x2909c8	0x5a5345	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2909cc	0x6464dc	data	.data	literal-start	-	kept
-0x2909d0	0x595250	data	.data	code	-	kept
+0x2909d0	0x595250	data	.data; library LIBCMT.LIB:getqloc.obj#2 has no relocation	code	-	rejected-library-coff
 0x2909f8	0x646740	data	.data	literal-interior	-	kept
-0x2909fc	0x415355	data	.data	code	-	kept
+0x2909fc	0x415355	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a00	0x646738	data	.data	literal-start	-	kept
-0x290a04	0x524247	data	.data	code	-	kept
+0x290a04	0x524247	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a08	0x646730	data	.data	literal-start	-	kept
-0x290a0c	0x4e4843	data	.data	code	-	kept
+0x290a0c	0x4e4843	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a10	0x646728	data	.data	literal-interior	-	kept
-0x290a14	0x455a43	data	.data	code	-	kept
+0x290a14	0x455a43	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a18	0x646720	data	.data	literal-start	-	kept
-0x290a1c	0x524247	data	.data	code	-	kept
+0x290a1c	0x524247	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a20	0x646710	data	.data	literal-interior	-	kept
-0x290a24	0x524247	data	.data	code	-	kept
+0x290a24	0x524247	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a28	0x646708	data	.data	literal-start	-	kept
-0x290a2c	0x444c4e	data	.data	code	-	kept
+0x290a2c	0x444c4e	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a30	0x6466fc	data	.data	literal-interior	-	kept
-0x290a34	0x474b48	data	.data	code	-	kept
+0x290a34	0x474b48	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a38	0x6466f0	data	.data	literal-start	-	kept
-0x290a3c	0x4c5a4e	data	.data	code	-	kept
+0x290a3c	0x4c5a4e	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a40	0x6466ec	data	.data	data	-	kept
-0x290a44	0x4c5a4e	data	.data	code	-	kept
+0x290a44	0x4c5a4e	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a48	0x6466e0	data	.data	literal-start	-	kept
-0x290a4c	0x4e4843	data	.data	code	-	kept
+0x290a4c	0x4e4843	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a50	0x6466d4	data	.data	literal-interior	-	kept
-0x290a54	0x4e4843	data	.data	code	-	kept
+0x290a54	0x4e4843	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a58	0x6466c8	data	.data	literal-start	-	kept
-0x290a5c	0x495250	data	.data	code	-	kept
+0x290a5c	0x495250	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a60	0x6466c0	data	.data	literal-start	-	kept
-0x290a64	0x4b5653	data	.data	code	-	kept
+0x290a64	0x4b5653	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a68	0x6466b0	data	.data	literal-interior	-	kept
-0x290a6c	0x46415a	data	.data	code	-	kept
+0x290a6c	0x46415a	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a70	0x6466a4	data	.data	literal-start	-	kept
-0x290a74	0x524f4b	data	.data	code	-	kept
+0x290a74	0x524f4b	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a78	0x646694	data	.data	literal-interior	-	kept
-0x290a7c	0x46415a	data	.data	code	-	kept
+0x290a7c	0x46415a	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a80	0x646688	data	.data	literal-start	-	kept
-0x290a84	0x524f4b	data	.data	code	-	kept
+0x290a84	0x524f4b	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a88	0x646674	data	.data	literal-start	-	kept
-0x290a8c	0x4f5454	data	.data	code	-	kept
+0x290a8c	0x4f5454	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a90	0x646750	data	.data	data	-	kept
-0x290a94	0x524247	data	.data	code	-	kept
+0x290a94	0x524247	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290a98	0x646664	data	.data	literal-start	-	kept
-0x290a9c	0x524247	data	.data	code	-	kept
+0x290a9c	0x524247	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290aa0	0x646654	data	.data	literal-start	-	kept
-0x290aa4	0x415355	data	.data	code	-	kept
+0x290aa4	0x415355	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290aa8	0x64674c	data	.data	data	-	kept
-0x290aac	0x415355	data	.data	code	-	kept
+0x290aac	0x415355	data	.data; library LIBCMT.LIB:getqloc.obj#39 has no relocation	code	-	rejected-library-coff
 0x290ab0	0x646b50	data	.data	literal-start	-	kept
-0x290ab4	0x554e45	data	.data	code	-	kept
+0x290ab4	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ab8	0x646b3c	data	.data	literal-start	-	kept
-0x290abc	0x554e45	data	.data	code	-	kept
+0x290abc	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ac0	0x646b28	data	.data	literal-start	-	kept
-0x290ac4	0x554e45	data	.data	code	-	kept
+0x290ac4	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ac8	0x646b1c	data	.data	literal-interior	-	kept
-0x290acc	0x414e45	data	.data	code	-	kept
+0x290acc	0x414e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ad0	0x646b14	data	.data	literal-start	-	kept
-0x290ad4	0x424c4e	data	.data	code	-	kept
+0x290ad4	0x424c4e	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ad8	0x646b08	data	.data	literal-start	-	kept
-0x290adc	0x434e45	data	.data	code	-	kept
+0x290adc	0x434e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ae0	0x646b04	data	.data	data	-	kept
-0x290ae4	0x48485a	data	.data	code	-	kept
+0x290ae4	0x48485a	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ae8	0x646b00	data	.data	data	-	kept
-0x290aec	0x49485a	data	.data	code	-	kept
+0x290aec	0x49485a	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290af0	0x646af8	data	.data	literal-start	-	kept
-0x290af4	0x534843	data	.data	code	-	kept
+0x290af4	0x534843	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290af8	0x646ae4	data	.data	literal-start	-	kept
-0x290afc	0x48485a	data	.data	code	-	kept
+0x290afc	0x48485a	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b00	0x646ad0	data	.data	literal-start	-	kept
-0x290b04	0x534843	data	.data	code	-	kept
+0x290b04	0x534843	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b08	0x646abc	data	.data	literal-interior	-	kept
-0x290b0c	0x49485a	data	.data	code	-	kept
+0x290b0c	0x49485a	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b10	0x646aa8	data	.data	literal-start	-	kept
-0x290b14	0x544843	data	.data	code	-	kept
+0x290b14	0x544843	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b18	0x646a98	data	.data	literal-start	-	kept
-0x290b1c	0x424c4e	data	.data	code	-	kept
+0x290b1c	0x424c4e	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b20	0x646a84	data	.data	literal-interior	-	kept
-0x290b24	0x554e45	data	.data	code	-	kept
+0x290b24	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b28	0x646a78	data	.data	literal-start	-	kept
-0x290b2c	0x414e45	data	.data	code	-	kept
+0x290b2c	0x414e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b30	0x646a68	data	.data	literal-interior	-	kept
-0x290b34	0x4c4e45	data	.data	code	-	kept
+0x290b34	0x4c4e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b38	0x646a5c	data	.data	literal-start	-	kept
-0x290b3c	0x434e45	data	.data	code	-	kept
+0x290b3c	0x434e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b40	0x646a48	data	.data	literal-interior	-	kept
-0x290b44	0x424e45	data	.data	code	-	kept
+0x290b44	0x424e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b48	0x646a3c	data	.data	literal-interior	-	kept
-0x290b4c	0x494e45	data	.data	code	-	kept
+0x290b4c	0x494e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b50	0x646a2c	data	.data	literal-start	-	kept
-0x290b54	0x4a4e45	data	.data	code	-	kept
+0x290b54	0x4a4e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b58	0x646a20	data	.data	literal-start	-	kept
-0x290b5c	0x5a4e45	data	.data	code	-	kept
+0x290b5c	0x5a4e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b60	0x646a08	data	.data	literal-start	-	kept
-0x290b64	0x534e45	data	.data	code	-	kept
+0x290b64	0x534e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b68	0x6469ec	data	.data	literal-start	-	kept
-0x290b6c	0x544e45	data	.data	code	-	kept
+0x290b6c	0x544e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b70	0x6469e0	data	.data	literal-start	-	kept
-0x290b74	0x474e45	data	.data	code	-	kept
+0x290b74	0x474e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b78	0x6469d4	data	.data	literal-interior	-	kept
-0x290b7c	0x554e45	data	.data	code	-	kept
+0x290b7c	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b80	0x6469c8	data	.data	literal-start	-	kept
-0x290b84	0x554e45	data	.data	code	-	kept
+0x290b84	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b88	0x6469b8	data	.data	literal-interior	-	kept
-0x290b8c	0x425246	data	.data	code	-	kept
+0x290b8c	0x425246	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b90	0x6469a8	data	.data	literal-start	-	kept
-0x290b94	0x435246	data	.data	code	-	kept
+0x290b94	0x435246	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290b98	0x646994	data	.data	literal-start	-	kept
-0x290b9c	0x4c5246	data	.data	code	-	kept
+0x290b9c	0x4c5246	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ba0	0x646984	data	.data	literal-interior	-	kept
-0x290ba4	0x535246	data	.data	code	-	kept
+0x290ba4	0x535246	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ba8	0x646974	data	.data	literal-interior	-	kept
-0x290bac	0x414544	data	.data	code	-	kept
+0x290bac	0x414544	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bb0	0x646960	data	.data	literal-start	-	kept
-0x290bb4	0x434544	data	.data	code	-	kept
+0x290bb4	0x434544	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bb8	0x64694c	data	.data	literal-start	-	kept
-0x290bbc	0x4c4544	data	.data	code	-	kept
+0x290bbc	0x4c4544	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bc0	0x64693c	data	.data	literal-start	-	kept
-0x290bc4	0x534544	data	.data	code	-	kept
+0x290bc4	0x534544	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bc8	0x64692c	data	.data	literal-start	-	kept
-0x290bcc	0x494e45	data	.data	code	-	kept
+0x290bcc	0x494e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bd0	0x64691c	data	.data	literal-start	-	kept
-0x290bd4	0x535449	data	.data	code	-	kept
+0x290bd4	0x535449	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bd8	0x646910	data	.data	literal-start	-	kept
-0x290bdc	0x524f4e	data	.data	code	-	kept
+0x290bdc	0x524f4e	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290be0	0x6468fc	data	.data	literal-start	-	kept
-0x290be4	0x524f4e	data	.data	code	-	kept
+0x290be4	0x524f4e	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290be8	0x6468e8	data	.data	literal-start	-	kept
-0x290bec	0x4e4f4e	data	.data	code	-	kept
+0x290bec	0x4e4f4e	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bf0	0x6468d0	data	.data	literal-start	-	kept
-0x290bf4	0x425450	data	.data	code	-	kept
+0x290bf4	0x425450	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290bf8	0x6468bc	data	.data	literal-interior	-	kept
-0x290bfc	0x535345	data	.data	code	-	kept
+0x290bfc	0x535345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c00	0x6468ac	data	.data	literal-start	-	kept
-0x290c04	0x425345	data	.data	code	-	kept
+0x290c04	0x425345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c08	0x64689c	data	.data	literal-start	-	kept
-0x290c0c	0x4c5345	data	.data	code	-	kept
+0x290c0c	0x4c5345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c10	0x646888	data	.data	literal-start	-	kept
-0x290c14	0x4f5345	data	.data	code	-	kept
+0x290c14	0x4f5345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c18	0x646874	data	.data	literal-start	-	kept
-0x290c1c	0x435345	data	.data	code	-	kept
+0x290c1c	0x435345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c20	0x646858	data	.data	literal-interior	-	kept
-0x290c24	0x445345	data	.data	code	-	kept
+0x290c24	0x445345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c28	0x646848	data	.data	literal-interior	-	kept
-0x290c2c	0x465345	data	.data	code	-	kept
+0x290c2c	0x465345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c30	0x646834	data	.data	literal-start	-	kept
-0x290c34	0x455345	data	.data	code	-	kept
+0x290c34	0x455345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c38	0x646820	data	.data	literal-start	-	kept
-0x290c3c	0x475345	data	.data	code	-	kept
+0x290c3c	0x475345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c40	0x64680c	data	.data	literal-interior	-	kept
-0x290c44	0x485345	data	.data	code	-	kept
+0x290c44	0x485345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c48	0x6467fc	data	.data	literal-start	-	kept
-0x290c4c	0x4d5345	data	.data	code	-	kept
+0x290c4c	0x4d5345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c50	0x6467ec	data	.data	literal-start	-	kept
-0x290c54	0x4e5345	data	.data	code	-	kept
+0x290c54	0x4e5345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c58	0x6467d8	data	.data	literal-start	-	kept
-0x290c5c	0x495345	data	.data	code	-	kept
+0x290c5c	0x495345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c60	0x6467c8	data	.data	literal-start	-	kept
-0x290c64	0x415345	data	.data	code	-	kept
+0x290c64	0x415345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c68	0x6467b4	data	.data	literal-start	-	kept
-0x290c6c	0x5a5345	data	.data	code	-	kept
+0x290c6c	0x5a5345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c70	0x6467a4	data	.data	literal-interior	-	kept
-0x290c74	0x525345	data	.data	code	-	kept
+0x290c74	0x525345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c78	0x646790	data	.data	literal-interior	-	kept
-0x290c7c	0x555345	data	.data	code	-	kept
+0x290c7c	0x555345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c80	0x646780	data	.data	literal-start	-	kept
-0x290c84	0x595345	data	.data	code	-	kept
+0x290c84	0x595345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c88	0x64676c	data	.data	literal-interior	-	kept
-0x290c8c	0x565345	data	.data	code	-	kept
+0x290c8c	0x565345	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c90	0x64675c	data	.data	literal-start	-	kept
-0x290c94	0x465653	data	.data	code	-	kept
+0x290c94	0x465653	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290c98	0x646754	data	.data	literal-start	-	kept
-0x290c9c	0x534544	data	.data	code	-	kept
+0x290c9c	0x534544	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ca0	0x646750	data	.data	data	-	kept
-0x290ca4	0x474e45	data	.data	code	-	kept
+0x290ca4	0x474e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ca8	0x64674c	data	.data	data	-	kept
-0x290cac	0x554e45	data	.data	code	-	kept
+0x290cac	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290cb0	0x646748	data	.data	data	-	kept
-0x290cb4	0x554e45	data	.data	code	-	kept
+0x290cb4	0x554e45	data	.data; library LIBCMT.LIB:getqloc.obj#61 has no relocation	code	-	rejected-library-coff
 0x290ccc	0x545350	data	.data	code-isolated	-	review-isolated-interior
 0x290d0c	0x544450	data	.data	code-isolated	-	review-isolated-interior
 0x290d4c	0x690ccc	data	.data	data	-	kept

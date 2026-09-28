@@ -16,6 +16,7 @@ homm3 verify data-relocs
 homm3 verify data-tu-order
 homm3 verify data-coverage --tsv
 homm3 verify library-data-refs
+homm3 verify library-code
 ```
 
 The normal build refreshes the complete byte report and its README summary.
@@ -170,6 +171,37 @@ still distinguish exact bytes from unresolved comparisons. Runtime labels withou
 byte proof are `library-unverified`; they are not exempted as verified library
 coverage. Unknown zero bytes remain unknown: zeros alone do not prove padding.
 PE headers and independently identified resource/relocation sections are structural.
+
+`library-runtime` bytes are statically linked MSVC runtime code and data
+proven by `homm3 verify library-code`. The reviewed
+`config/retail/runtime-contributions.tsv` places one COFF section of a pinned
+VC6 SP3 `LIBCMT.LIB` or `LIBCPMT.LIB` member (or one import-library thunk, or
+one linker-allocated COMMON) per row; compiled pristine zlib data sections use
+the same rows, and the zlib map places zlib code. Every run re-checks each
+row: unrelocated bytes must equal retail, uninitialized sections and COMMONs
+must be zero-filled `.data` at their alignment (a COMMON takes its largest
+library or game declaration), and every relocation must resolve to its symbol:
+a placed library section, the import slot, an absolute symbol, a game
+definition, or a byte-identical game-emitted COMDAT. A COMDAT emitted by both
+a game object and a library is attributed by position: a game object's copy
+lies in the game part of its output section, a library copy among its
+member's neighbours. Library code COMDATs that the linker folded into a game
+function (`alias` rows) are verified but do not claim the game's bytes.
+
+Runtime-map and zlib labels, and model data claims of the same name, yield to
+verified sections that define them; a differently named claim inside a
+verified section remains and shows as an overlap. Credited code fill is the
+0xCC run directly before a verified section, shorter than its alignment and
+ending on its aligned start. Data fill is zero, which alone proves nothing: it
+is credited only when it runs exactly from one verified contribution's end to
+the next contribution's aligned start. Rows that fail stay
+`library-unverified`, and `data_coverage.json` lists them under
+`library_code`. Library data that verified relocations reach but no row
+places is listed there too (`homm3 verify library-code --data`).
+
+Sites inside verified library sections follow their COFF relocations in
+`config/retail/relocs.tsv`; `reloc-evidence.tsv` names the owning member for
+each site added or rejected on that evidence.
 
 The access report complements byte accounting with instruction-width, stride and
 shortfall checks. Its register tracking is local to a basic block; pointer escapes

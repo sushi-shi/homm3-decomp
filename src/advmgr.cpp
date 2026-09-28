@@ -9195,6 +9195,13 @@ VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 // Retail's hero assignment (0x406480) and getArmyHelpText (0x40abe0) call
 // it too. It expands in adventuremapwindow but remains naturally emitted
 // here: all 161 bytes agree outside four matching named call relocations.
+// basic_string<char>::_Tidy is game-emitted, not LIBCPMT's: the 60-byte
+// LIBCPMT COMDAT matches nowhere in retail, while this compiland's 80-byte
+// COMDAT (72 game objects emit the same bytes) equals 0x4040f0. Game objects
+// precede the libraries on the link line, so their copy is the one every
+// LIBCPMT caller reaches.
+VA_COMPGEN(0x004040F0, 0x4B, BASIC_STRING_TIDY, char)
+
 VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
 
 VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)
