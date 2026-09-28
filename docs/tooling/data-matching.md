@@ -78,6 +78,13 @@ withheld; an identical-looking record with unresolved pointers is not a match.
 Current compiler content receipts are required, and the emitted `.xdata$x`
 COMDAT topology is retained in the comparison objects.
 
+Folded exception constructors/destructors can have several source names at one
+retail address. The model admits an alias only when its complete emitted body
+and named references match a known retail body, and a complete type-identified
+exception record points to it. Source/object receipts are checked again before
+publishing the alias. Ambiguous addresses remain unresolved. These aliases
+share the existing function entry and do not increase the function denominator.
+
 The CLI and GUI use the same patched objdiff core. `functionRelocDiffs = all`
 checks callee/data identity as well as values; absolute relocation addends also
 participate. Changing to this scoring policy resets implementation MAX from the

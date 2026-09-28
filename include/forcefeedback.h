@@ -36,11 +36,6 @@ SIZE(CImmEffect, 0xa4);
 SIZE(CImmEnclosure, 0xe0);
 SIZE(CImmProject, 0x10);
 
-// Retail RTTI names this game-owned class in ForceFeedback.cpp's unnamed
-// namespace. Keeping its first declaration here preserves VC6's original
-// anonymous-namespace identity for the out-of-line definitions below.
-namespace { class t_initializer; }
-
 // --- ForceFeedback.obj's own objects ---
 
 // The window origin the enclosure rectangles are kept relative to, and

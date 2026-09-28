@@ -715,9 +715,10 @@ void writePrefs()
 }
 
 // DC IsCDDrive (misc.cpp:603, 0xfe060) accepts every drive; its
-// caller SetupCDDrive returns a fixed 7 as well. Complete 0x50c1c0
-// retains that fixed result, so no drive-enumeration/classification
-// expression survives in this pinned executable. See config/source/dc_only.tsv.
+// caller SetupCDDrive returns a fixed 7 as well. The pinned Complete entry
+// at 0x50c1c0 is patched to that result. The overwritten prologue's tail and
+// unreachable drive-enumeration/MCI code remain through 0x50c599; they are
+// not part of this six-byte source match. See config/source/dc_only.tsv.
 VA(0x0050c1c0, 0x6) MAC_ADDRESS(0x13137c, 0x114)  // dc 0xfe064
 int setupCDDrive()
 {

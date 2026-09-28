@@ -218,10 +218,11 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
     base_dir = base_dir or BUILD / 'objdiff/base'
     names = defaultdict(set)
     for b in model.functions + model.data:
-        if b.name and b.channel:
-            names[('', msvc_names.mask(b.name))].add(b.rva)
-            if b.unit:
-                names[(b.unit, msvc_names.mask(b.name))].add(b.rva)
+        for entry in (b, *b.aliases):
+            if entry.name and entry.channel:
+                names[('', msvc_names.mask(entry.name))].add(b.rva)
+                if entry.unit:
+                    names[(entry.unit, msvc_names.mask(entry.name))].add(b.rva)
     for r in enrolled:
         if 'gap' not in r.get('provenance', ''):
             unit = r['object'].removesuffix('.c')

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from homm3.core import compile_receipt as receipt
 from homm3.core.cc_wrap import scan_header_deps
@@ -36,6 +37,27 @@ class CompileReceiptTests(unittest.TestCase):
             (sdk / 'XSTDDEF').write_text('typedef unsigned int size_t;\n')
             self.assertEqual(set(scan_header_deps(src, sdk)),
                              {str(sdk / 'BITSET'), str(sdk / 'XSTDDEF')})
+
+    def test_shared_dependency_pass_reads_headers_once_and_next_pass_sees_edits(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            first, second = root/'first.cpp', root/'second.cpp'
+            common, added = root/'common.h', root/'added.h'
+            for src in (first, second):
+                src.write_text('#include "common.h"\n')
+            common.write_text('struct Value {};\n')
+            added.write_text('struct More {};\n')
+            reads, read_text = [], Path.read_text
+            def counted(path, *args, **kwargs):
+                reads.append(path)
+                return read_text(path, *args, **kwargs)
+            with patch.object(Path, 'read_text', counted):
+                cache = {}
+                for src in (first, second):
+                    self.assertEqual(scan_header_deps(src, root, cache=cache), [str(common)])
+            self.assertEqual(reads.count(common), 1)
+            common.write_text('#include "added.h"\n')
+            self.assertEqual(set(scan_header_deps(first, root)), {str(common), str(added)})
 
 
 if __name__ == '__main__':

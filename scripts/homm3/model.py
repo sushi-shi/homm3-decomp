@@ -196,7 +196,16 @@ def resolve(rows=None) -> Model:
             else:
                 violations.append(f'data identity {b.name} binds multiple retail addresses')
         result.append(b)
-    return Model(functions, result, violations)
+    model = Model(functions, result, violations)
+    from homm3.core.project import Project
+    from homm3.verify.source_function_aliases import recover
+    from collections import defaultdict
+    aliases = defaultdict(list)
+    for alias in recover(model, Project(common.HOMM3_DIR), BUILD / 'objdiff/base'):
+        aliases[alias.rva].append(alias)
+    return model._replace(functions=[
+        b._replace(aliases=b.aliases + tuple(aliases[b.rva]))
+        if b.rva in aliases else b for b in functions])
 
 
 def serialize(model: Model):

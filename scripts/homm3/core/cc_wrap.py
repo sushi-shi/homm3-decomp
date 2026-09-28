@@ -40,28 +40,36 @@ def _include_file(root, name):
             return None
     return path if path.is_file() else None
 
-def scan_header_deps(src, *inc_roots):
+def scan_header_deps(src, *inc_roots, cache=None):
     """Recover header dependencies independently of compiler diagnostic output: recursively resolve
     every `#include` against the search roots (+ each file's own dir for "quoted"
     includes) and return the in-tree headers reached. System headers (<string.h> etc.) don't
     resolve under any root and are skipped — they never change. Over-approximates (ignores
     #if), which is SAFE for a depfile: worst case an extra rebuild, never a stale obj.
     The roots are the same list cc_wrap puts on INCLUDE minus the toolchain, in the
-    same order, so <zlib.h> resolves here exactly as it does for CL."""
+    same order, so <zlib.h> resolves here exactly as it does for CL.
+    A caller may share a cache within one read pass; discard it before the next
+    pass. Source comparison callers independently validate content receipts."""
     src = Path(src).resolve(); inc_roots = [Path(r) for r in inc_roots]
+    cache = {} if cache is None else cache
     seen = set(); stack = [src]
     while stack:
         f = stack.pop()
         if f in seen:
             continue
         seen.add(f)
-        try:
-            text = f.read_text(errors="replace")
-        except OSError:
-            continue
-        for inc in _INC_RE.findall(text):
+        key = ('includes', f)
+        if key not in cache:
+            try:
+                cache[key] = _INC_RE.findall(f.read_text(errors="replace"))
+            except OSError:
+                continue
+        for inc in cache[key]:
             for root in [f.parent, *inc_roots]:
-                cand = _include_file(root, inc)
+                key = ('resolve', root, inc)
+                if key not in cache:
+                    cache[key] = _include_file(root, inc)
+                cand = cache[key]
                 if cand is not None:
                     stack.append(cand.resolve()); break
     return sorted(str(p) for p in seen if p != src)

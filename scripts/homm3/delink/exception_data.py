@@ -48,11 +48,11 @@ def supported(record):
     return False
 
 
-def candidates(project, base_dir):
+def candidates(project, base_dir, *, witnesses=None):
     """Only raw objects with current source/compiler content receipts qualify."""
     from homm3.core.cc_wrap import scan_header_deps
     by_unit = {u['unit']: u for u in project.manifest['unit']}
-    records, withheld, hashes = [], [], {}
+    records, withheld, hashes, headers = [], [], {}, {}
     compiler_files = [p for p in (project.toolchain / 'bin').iterdir()
                       if p.is_file() and p.suffix.lower() in ('.exe', '.dll')]
     for unit, obj in coffx.objects(base_dir):
@@ -78,13 +78,16 @@ def candidates(project, base_dir):
             source = project.root / row['source']
             required = [source, project.root / 'config/units.toml',
                         project.root / 'config/project.toml', *compiler_files,
-                        *scan_header_deps(source, project.toolchain / 'include', *project.includes)]
+                        *scan_header_deps(source, project.toolchain / 'include',
+                                          *project.includes, cache=headers)]
             inputs = compile_receipt.current(base_dir / f'{unit}.obj',
                 flags=project.manifest['flags'][row['flags']], required=required, hashes=hashes)
         if inputs is None or compile_receipt.digest(base_dir / f'{unit}.obj') != sha256(obj.buf).hexdigest():
             withheld.append((0, unit, 'exception metadata has no current source object'))
         else:
             records.extend(emitted)
+            if witnesses is not None:
+                witnesses[unit] = (obj, inputs)
     return records, withheld
 
 

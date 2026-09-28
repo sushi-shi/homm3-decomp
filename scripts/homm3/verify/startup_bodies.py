@@ -142,10 +142,11 @@ def bindings(model, enrolled, unit, emitted):
     from homm3.retail_labels.source import vc6_function_name
     names, local, owners = defaultdict(set), defaultdict(set), {}
     for b in model.functions + model.data:
-        if b.name and b.channel:
-            names[msvc_names.mask(b.name)].add(b.rva)
-            if b.unit == unit:
-                local[msvc_names.mask(b.name)].add(b.rva)
+        for entry in (b, *b.aliases):
+            if entry.name and entry.channel:
+                names[msvc_names.mask(entry.name)].add(b.rva)
+                if entry.unit == unit:
+                    local[msvc_names.mask(entry.name)].add(b.rva)
     for b in model.data:
         if b.channel == 'src' and b.size and b.unit == unit:
             owners[msvc_names.mask(b.name)] = b
