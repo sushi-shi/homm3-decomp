@@ -363,10 +363,12 @@ rva	function_count	class
 0x243d20	11	File
 0x243d4c	3	heroWindowManager
 0x24559c	3	
-0x2455bc	3	
+# COL at 0x646cf0 names .?AVlogic_error@std@@; destructor 0x404690 stores this vptr.
+0x2455bc	3	logic_error@std
 0x2455cc	3	
 0x2455fc	3	
-0x245640	3	
+# COL at 0x646de0 names .?AVruntime_error@std@@; destructor 0x4b6be0 stores this vptr.
+0x245640	3	runtime_error@std
 0x245670	13	
 0x2456a8	13	
 0x245708	7	
@@ -402,6 +404,9 @@ rva	function_count	class
 0x245cd4	4	
 0x245ce8	4	
 0x245cfc	10	
+# type_info::~type_info (0x616e8d) stores 0x645d28 at [this]. Its one
+# scalar-deleting destructor calls that body; COL 0x647d58 names .?AVtype_info@@.
+0x245d28	1	type_info
 0x245d30	2	
 0x245d94	2	
 0x245da4	2	

@@ -861,6 +861,10 @@ def candidates(model: Model):
     rtti, w = rtti_rows(model)
     rows += rtti
     withheld += w
+    from homm3.delink.exception_data import rows as exception_rows
+    exceptions, w = exception_rows(model, BASE_DIR, existing=rtti)
+    rows += exceptions
+    withheld += w
     ehfi, w = ehfuncinfo_rows(model)
     rows += ehfi
     withheld += w
@@ -1061,7 +1065,8 @@ def section_rows(rows, base_dir=BASE_DIR):
     for r in rows:
         if r.get("provenance") in ("candidate-COFF-string",
                                    "candidate-COFF-vtable",
-                                   "candidate-COFF-rtti"):
+                                   "candidate-COFF-rtti",
+                                   "candidate-COFF-exception-exact"):
             by_obj.setdefault(r["object"], []).append(r)
 
     for obj, rs in sorted(by_obj.items()):
@@ -1077,7 +1082,7 @@ def section_rows(rows, base_dir=BASE_DIR):
             if len(members) != 1:
                 continue
             offset, name = members[0]
-            if (name.startswith("??_C@") or name.startswith("??_R")) \
+            if name.startswith(("??_C@", "??_R", "__CT", "__TI")) \
                     and offset == 0:
                 owner[name] = (sec, 0)
             elif name.startswith("??_7"):
@@ -1090,7 +1095,8 @@ def section_rows(rows, base_dir=BASE_DIR):
                 continue
             sec, offset = hit
             group = sec['name'].split('$', 1)[0]
-            candidate_storage = {'.data': 'data', '.rdata': 'rdata', '.bss': 'bss'}.get(group)
+            candidate_storage = {'.data': 'data', '.rdata': 'rdata',
+                                 '.xdata': 'rdata', '.bss': 'bss'}.get(group)
             if candidate_storage != r['storage']:
                 withheld.append((r['rva'], r['name'],
                                  'candidate section storage differs from retail'))

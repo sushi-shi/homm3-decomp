@@ -879,6 +879,14 @@ VA_COMPGEN(0x00404660, 0x21, SCALAR_DELETING_DTOR, logic_error)
 VA_COMPGEN(0x00404690, 0x4B, IMPLICIT_DTOR, logic_error)
 VA_COMPGEN(0x004046e0, 0x1D, EXCEPTION_DORAISE, out_of_range)
 
+// Retail 0x4b6be3 stores runtime_error's vptr (0x645640); its COL names
+// .?AVruntime_error@std@@. The ordinary SDK destructor emitted here agrees
+// instruction-for-instruction, including delete and exception::~exception.
+// The former game.cpp out_of_range claim was a mnemonic-only pairing:
+// out_of_range's emitted destructor instead installs logic_error's vptr and
+// is identical to the 0x404690 body above. No authored helper is removed.
+VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, runtime_error)
+
 // The old count-insert claim at 0x46aeb0 named TImageInfo only because
 // its trivial 24-byte record produced the same generic vector code. Retail
 // callers are combatManager::placeObstacle and castSpell, both operating

@@ -10281,9 +10281,6 @@ VA_COMPGEN(0x004d2fe0, 0x2FC, STD_FILL, town)
 // COMDAT pairing: _tree::1?$_Tree, mnemonic agreement 0.959.
 VA_COMPGEN(0x004b61f0, 0x6E, IMPLICIT_DTOR, _tree)
 
-// COMDAT pairing: out_of_range::1out_of_range, mnemonic agreement 0.909.
-VA_COMPGEN(0x004b6be0, 0x4B, IMPLICIT_DTOR, out_of_range)
-
 VA_COMPGEN(0x0045c200, 0x53E, TREE_ERASE_ITERATOR, type_map_hero_info)
 
 // COMDAT pairing: bitset<129>::_Xran. This address arrived on lane 16 as

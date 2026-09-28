@@ -69,6 +69,15 @@ materializes COFF COMMON allocations for comparison. Raw compiler objects remain
 unchanged. Initializer verification reads those raw objects, so normalization of
 alignment or symbol names cannot hide a missing initializer byte.
 
+Exception type descriptors and catch/throw records are enrolled from the
+ordinary VC6 objects too. A descriptor's full encoded type name and reviewed
+`type_info` vtable identify it. Catchable-type records, arrays and ThrowInfo
+then join through known referents. Every byte, pointer addend and relocation
+site must agree. Unknown constructors/destructors and conflicting copies are
+withheld; an identical-looking record with unresolved pointers is not a match.
+Current compiler content receipts are required, and the emitted `.xdata$x`
+COMDAT topology is retained in the comparison objects.
+
 The CLI and GUI use the same patched objdiff core. `functionRelocDiffs = all`
 checks callee/data identity as well as values; absolute relocation addends also
 participate. Changing to this scoring policy resets implementation MAX from the

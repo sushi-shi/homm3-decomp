@@ -186,7 +186,7 @@
                  anyhow::anyhow!(
                      "{}:{}: expected exactly eleven tab-separated columns",
                      path.display(),
-@@ -263,22 +277,24 @@
+@@ -263,22 +277,26 @@
                      line_number
                  );
              }
@@ -203,10 +203,13 @@
                      ),
                      SectionStorage::Rdata => (
 -                        row.name == b".rdata",
-+                        group == b".rdata",
++                        group == b".rdata" || group == b".xdata",
                          object::pe::IMAGE_SCN_CNT_INITIALIZED_DATA,
                          object::pe::IMAGE_SCN_CNT_UNINITIALIZED_DATA
-                             | object::pe::IMAGE_SCN_MEM_WRITE,
+-                            | object::pe::IMAGE_SCN_MEM_WRITE,
++                            | object::pe::IMAGE_SCN_MEM_WRITE
++                            | object::pe::IMAGE_SCN_CNT_CODE
++                            | object::pe::IMAGE_SCN_MEM_EXECUTE,
                      ),
                      SectionStorage::Bss => (
 -                        row.name == b".bss",
@@ -214,6 +217,30 @@
                          object::pe::IMAGE_SCN_CNT_UNINITIALIZED_DATA
                              | object::pe::IMAGE_SCN_MEM_WRITE,
                          object::pe::IMAGE_SCN_CNT_INITIALIZED_DATA,
+@@ -533,6 +551,23 @@
+     }
+
+     #[test]
++    fn accepts_readonly_exception_comdats_and_rejects_writable_or_code_sections() {
++        let row = "a.c\t1\t.xdata$x\t0x100\t28\t8\t0x40401040\t0\t2\t-\trdata\n";
++        let manifest = parse(row).unwrap();
++        assert_eq!(manifest.sections()[0].name, b".xdata$x");
++        assert_eq!(manifest.sections()[0].storage, Some(SectionStorage::Rdata));
++        for characteristics in ["0xc0401040", "0x60401040", "0x40401060"] {
++            assert!(parse(&row.replace("0x40401040", characteristics)).is_err());
++        }
++        assert!(parse(&row.replace(".xdata$x", ".unknown$x")).is_err());
++        let gruntz = concat!(
++            "object\tordinal\tname\trva\tsize\talignment\tcharacteristics\tcomdat_selection\tassociative_ordinal\tstorage\tprovenance\n",
++            "a.c\t1\t.xdata$x\t0x100\t28\t8\t0x40401040\t2\t-\trdata\texception\n",
++        );
++        assert!(DataSectionManifest::parse(gruntz.as_bytes(), Path::new("test.tsv")).is_ok());
++    }
++
++    #[test]
+     fn accepts_crlf_and_missing_final_line_ending() {
+         let text = format!(
+             "{}a.c\t1\t.data\t0x100\t4\t4\t0xc0300040\t0\t0\t-\tdata",
 --- a/src/object_files.rs
 +++ b/src/object_files.rs
 @@ -19,7 +19,7 @@
