@@ -40,6 +40,21 @@ symbol retail code references; ICF-folded COMDATs keep one row per folded
 symbol that retail references. `basic_string<char>::_Tidy` (0x4040f0) is the
 game-emitted COMDAT, not LIBCPMT's, and is claimed in `advmgr.cpp`.
 
+Library data is placed the same way (`kind` data/bss/common rows): 1,044
+contributions of LIBCMT, LIBCPMT and compiled zlib data, reached from verified
+code relocations, data-to-data relocations, exact `.CRT$` pointer patterns and
+member link-order windows. Every non-COMDAT section of each linked member is
+placed. The spans are contiguous after the game (and zlib) contributions of
+each output group: `.rdata` 0x244450-0x246c4c, `.rdata$r` 0x246c50-0x247d9c,
+`.xdata$x` 0x25a110-0x25bd70, `.data` 0x28d77c-0x2911dc, `.bss`
+0x2ab160-0x2aba7c, with the COMMON zone (library and game COMMONs
+interleaved) up to 0x2ace60. Library COMDATs that a game object also emits
+resolve to the game copy when they lie outside those spans (literals, float
+constants, RTTI type descriptors, catchable types, `npos`, `_Psave` statics).
+The data-only members pulled in are `crt0init`, `ctype`, `nlsdata1-3`,
+`cmiscdat`, `days`, `timeset`, `constpow`, `_newmode`, `txtmode` and
+`ncommode`; `iomanip.obj` is not linked (no `.CRT$XCU` entry).
+
 ## Import inventory
 
 | dll | imports | note |
