@@ -491,11 +491,10 @@ void heroWindow::setFocus(int id)
 }
 
 // E:\gamedcs\window.cpp:934
-// NO VA CLAIM - a CARVE GAP, not a missing body. Retail's handler sits
-// at 0x5ff500, inside the unowned 0x5ff4fc..0x5ff510 run between
-// SetFocus and delete_widgets, and config/retail/functions.tsv has no
-// row there (it is MANUALLY MANAGED; correcting a boundary is not a
-// matcher's call). The twelve bytes are decoded by hand:
+// Retail's handler sits at 0x5ff500 between setFocus and deleteWidgets;
+// doModal passes its address to the window manager. The function census
+// row was admitted from that reference and the complete emitted body.
+// The twelve bytes decode as:
 //   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /
 //   call [edx+0xc] / ret
 // i.e. fastcall in ecx - the /Gr form of the STATIC member DC's
@@ -503,7 +502,7 @@ void heroWindow::setFocus(int id)
 // vtable slot 3, which independently corroborates handle_message's
 // slot in the roster in window.h. Defined here so that DoModal's
 // address-take resolves; that claim is what scores the pair.
-MAC_ADDRESS(0x20bc1c, 0x34)
+VA(0x005ff500, 0xC) MAC_ADDRESS(0x20bc1c, 0x34)
 int heroWindow::heroWindowHandler(message& msg)
 {
     return msg.m_window->handleMessage(msg);

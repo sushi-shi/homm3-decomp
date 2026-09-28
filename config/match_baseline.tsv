@@ -510,7 +510,8 @@ ai_tactical	?shouldAttackNow@type_AI_spellcaster@@IBEEABVarmy@@@Z	100.0000	100.0
 ai_tactical	?simulateAttack@type_AI_combat_parameters@@QBEXABVarmy@@AAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0	tokens1:defded86fe58
 ai_tactical	?unimplemented@type_AI_spellcaster@@IBEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b680	tokens1:f3ec3032cebc
 ai_tactical	?valueOfLuckAndMorale@@YINJJNN@Z	99.9000	99.9000	100.0000	0x35850	tokens1:176fbd809715
-army	??0army@@QAE@XZ	99.9057	99.9057	100.0000	0x3d250	tokens1:2a2e6bfe55ee
+army	??0?$TResourceHandle@Vsample@@@@QAE@XZ	100.0000	100.0000	100.0000	0x48d20	-
+army	??0army@@QAE@XZ	99.9528	99.9528	100.0000	0x3d250	tokens1:2a2e6bfe55ee
 army	??1army@@QAE@XZ	99.9438	99.9438	100.0000	0x3d400	tokens1:3f1d02811012
 army	??Eiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49230	-
 army	??Fiterator@?$deque@HV?$allocator@H@std@@@std@@QAEAAV012@XZ	100.0000	100.0000	100.0000	0x49270	-
@@ -847,7 +848,7 @@ campaign	?campaignSetCusHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x
 campaign	?campaignSetExitHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x573d0	tokens1:5cbc8e8e9e2d
 campaign	?campaignSetRoeHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57440	tokens1:548db4aba70c
 campaign	?campaignSetSodHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x57280	tokens1:3815659bc99d
-campaign	?doModal@TCampaignSetWindow@@QAEXXZ	99.6429	99.6429	100.0000	0x574a0	tokens1:5984e0a7228e
+campaign	?doModal@TCampaignSetWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x574a0	tokens1:5984e0a7228e
 campaign	?handleMessage@TCampaignSetWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x574d0	tokens1:ce06d92fd167
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABU?$less@H@1@ABV?$allocator@Utype_map_hero_info@@@1@@Z	99.9167	99.9167	100.0000	0x5bf70	-
 campaignbrief	??0?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5dcb0	-
@@ -1114,8 +1115,9 @@ crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	tokens1:cb25ee3dc25f
 creature_bank	?initializeCreatureBank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	99.9403	99.9403	100.0000	0x7ad90	tokens1:4c3046893927
 creature_bank	?initializeCreatureBankTraits@@YIEXZ	100.0000	100.0000	100.0000	0x7ab30	tokens1:3f6c1cc30dfc
+creaturetype	??1TAutoStrPtr@?%Z:\tmp\homm3-bytes-lib\src\creaturetype.cpp387610998@@QAE@XZ	100.0000	100.0000	100.0000	0x7b7b0	tokens1:3ee87be2a632
 creaturetype	?downgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	99.8684	99.8684	100.0000	0x7b220	tokens1:feeab7e7f694
-creaturetype	?initializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.5926	99.5926	100.0000	0x7b480	tokens1:4c84a5eb5dc0
+creaturetype	?initializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.6482	99.6482	100.0000	0x7b480	tokens1:4c84a5eb5dc0
 creaturetype	?initializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	tokens1:053799b9fa3f
 creaturetype	?isBaseCreature@@YIHW4TCreatureType@@@Z	99.8485	99.8485	100.0000	0x7b120	tokens1:2a00768bcfca
 creaturetype	?isSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180	tokens1:a65dc70c527e
@@ -1810,7 +1812,7 @@ forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.
 forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE@PAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb7da0	-
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	99.7287	99.7287	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	99.8837	99.8837	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
-forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@QAE@ABV012@@Z	99.6899	99.6899	100.0000	0xb6730	-
+forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@QAE@ABV012@@Z	99.7287	99.7287	100.0000	0xb6730	-
 forcefeedback	??0t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@QAE@PAX0@Z	99.7463	99.7463	100.0000	0xb6260	tokens1:6dcae3c83456
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
@@ -2815,7 +2817,7 @@ objecttype	?erase@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@
 objecttype	?erase@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEPAUTObjectType@@PAU3@0@Z	100.0000	100.0000	100.0000	0x116a90	-
 objecttype	?find@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAE?AViterator@12@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@2@@Z	99.9194	99.9194	100.0000	0x117ba0	-
 objecttype	?flip@?$bitset@$0DA@@std@@QAEAAV12@XZ	100.0000	100.0000	100.0000	0x116770	-
-objecttype	?getImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	98.7037	98.7037	100.0000	0x114960	tokens1:2217c1b9f222
+objecttype	?getImageName@TObjectType@@QAEABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.4444	99.4444	100.0000	0x114960	tokens1:3204494fc6d5
 objecttype	?imageCache@?1??getObjectImageCache@@YIAAV?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TObjectType@@@std@@@std@@XZ@$AV12@A	98.6667	98.6667	100.0000	0x114930	-
 objecttype	?insert@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@_N@2@ABU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@@Z	99.9606	99.9606	100.0000	0x11af50	-
 objecttype	?insert@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@U?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@U_Kfn@?$map@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HU?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@2@U?$less@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@V?$allocator@H@2@@std@@_N@2@ABU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@2@@Z	100.0000	100.0000	100.0000	0x117b70	-
@@ -2827,7 +2829,7 @@ objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	99.7632	99.7632	100.0000	0x114d80	t
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	99.8830	99.8830	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	99.9138	99.9138	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
-objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	98.5771	98.5771	99.2095	0x114610	tokens1:f060fd028a04
+objecttype	?setImageName@TObjectType@@QAEAAU1@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	98.7549	98.7549	99.2095	0x114610	tokens1:f060fd028a04
 objecttype	?setTriggerMask@TObjectType@@QAEAAU1@ABV?$bitset@$0DA@@std@@@Z	100.0000	100.0000	100.0000	0x114a60	tokens1:1e3a6e9d2d36
 objecttype	?setstate@?$basic_ios@DU?$char_traits@D@std@@@std@@QAEXH_N@Z	100.0000	100.0000	100.0000	0x115f20	-
 objecttype	?sgetc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x1157b0	-
@@ -2836,7 +2838,8 @@ objecttype	?size@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@Q
 objecttype	?use_facet@std@@YAABV?$ctype@D@1@ABVlocale@1@PBV21@_N@Z	99.5890	99.5890	100.0000	0x11a990	-
 objecttype	?use_facet@std@@YAABV?$numpunct@D@1@ABVlocale@1@PBV21@_N@Z	99.7222	99.7222	100.0000	0x11ab90	-
 objnames	??1?$TResourcePtr@VTTextResource@@@@QAE@XZ	100.0000	100.0000	100.0000	0x1bd90	tokens1:7135c54fe758
-objnames	?initializeAdventureObjectNames@@YIXXZ	99.6212	99.6212	100.0000	0x1b500	tokens1:6caf0243905c
+objnames	?initializeAdventureObjectNames@@YIXXZ	99.8232	99.8232	100.0000	0x1b500	tokens1:f80f89eb764d
+objnames	__h3cg$objnames$static_dtor$nameBuffer	100.0000	100.0000	100.0000	0x1b790	-
 overview	??0TOverviewWindow@@QAE@XZ	92.7311	92.7311	92.7779	0x11fa40	tokens1:3055e863f48c
 overview	??1TOverviewWindow@@UAE@XZ	99.9107	99.9107	100.0000	0x120d90	tokens1:2510f0c1a9f1
 overview	??_GTOverviewWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x120d60	-
@@ -3975,7 +3978,7 @@ singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@
 singleselectionwindow	?createFilterWidgets@TSingleSelectionWindow@@QAEXXZ	89.2251	89.2251	100.0000	0x17d170	tokens1:b917c4e819a5
 singleselectionwindow	?deletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90	tokens1:efedee50fc4b
 singleselectionwindow	?displayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80	tokens1:8d86b1fb7ac9
-singleselectionwindow	?doModal@TSingleSelectionWindow@@UAEX_N@Z	99.8148	99.8148	100.0000	0x184bf0	tokens1:179597e02ac4
+singleselectionwindow	?doModal@TSingleSelectionWindow@@UAEX_N@Z	100.0000	100.0000	100.0000	0x184bf0	tokens1:179597e02ac4
 singleselectionwindow	?draw@CChatWidget@@UBEXXZ	100.0000	100.0000	100.0000	0x17ca90	tokens1:be7ae9ac5f2a
 singleselectionwindow	?drawBasicMapInfo@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1840f0	tokens1:54585d1c5676
 singleselectionwindow	?drawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	100.0000	100.0000	100.0000	0x18d510	tokens1:163b7895be49
@@ -4727,12 +4730,13 @@ window	?broadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x1fe
 window	?centerWindow@heroWindow@@QAEXHH@Z	92.8767	92.8767	92.8767	0x1ff240	tokens1:a428000a59b5
 window	?close@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fec60	tokens1:75832717ae48
 window	?deleteWidgets@heroWindow@@IAEXXZ	100.0000	100.0000	100.0000	0x1ff510	tokens1:b98e90541752
-window	?doModal@heroWindow@@UAEX_N@Z	99.5455	99.5455	100.0000	0x1ff460	tokens1:503ad19bad9f
+window	?doModal@heroWindow@@UAEX_N@Z	100.0000	100.0000	100.0000	0x1ff460	tokens1:503ad19bad9f
 window	?drawWindow@heroWindow@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x1ff020	tokens1:4bf04fcf893d
 window	?findWidget@heroWindow@@QBEHHH@Z	100.0000	100.0000	100.0000	0x1ff3b0	tokens1:c5d3c7a36fa3
 window	?findWidgetPtr@heroWindow@@QBEPAVwidget@@HH@Z	100.0000	100.0000	100.0000	0x1ff3e0	tokens1:ba880ca73435
 window	?getRolloverWidget@CHeroWindowEx@@MAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x1ff8d0	tokens1:739006af715a
 window	?getWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000	100.0000	100.0000	0x1feff0	tokens1:86f119dfbfd7
+window	?heroWindowHandler@heroWindow@@KIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff500	tokens1:3eba2b26eb24
 window	?initializeWinSetupText@@YIEXZ	100.0000	100.0000	100.0000	0x1ff960	tokens1:f2ab008249ae
 window	?open@heroWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1feae0	tokens1:54e7cd9fcd1c
 window	?processHover@CHeroWindowEx@@UAEEHH@Z	99.8630	99.8630	100.0000	0x1ff6e0	tokens1:79fc9c462ad3

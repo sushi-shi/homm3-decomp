@@ -16,6 +16,20 @@
 # jump to the shared destructor at 0x4f9ca0. Six 0x90 bytes separate each
 # callback from the following independent function. Source definitions and
 # owner-specific compiler-generated claims are in src/rmg.cpp.
+# ADMITTED 2026-09-28 (byte accounting): code that claimed source functions
+# reference but the carve missed. Each row is a complete body ending in
+# ret/jmp, followed only by the compiler's NOP fill up to the next row:
+#   0x1b790 objnames local-static destructor, _atexit-registered at 0x41b526
+#   0x48d20 army TResourceHandle<sample> default constructor (ICF-folded),
+#           passed to the vector iterators at 0x43d289/0x47b4b7/0x4e6822
+#   0x7b7b0 creaturetype TAutoStrPtr destructor, pushed by the array cleanups
+#   0x1ff500 heroWindow::heroWindowHandler, address taken by doModal
+#   local-static _atexit callbacks registered by their claimed parents:
+#   0x4a4c0 0x7b7c0 0x7b7e0 0x7b800 0xe6ce0 0xe6d00 0xe6d20 0xe6d40
+#   0x114050 0x114a10 0x116060 0x149790 0x1b45e0 0x1b6df0 0x1b6fc0
+#   0x1165b0 0x1165e0 objecttype <iostream> static destructors, registered
+#           by CRT roots 0x516590/0x5165c0 (mov ecx,static / jmp ~Init/~_Winit)
+# local_cleanups compares every body with the parent's current object.
 # 11943 functions; size INCLUDES jump tables
 # BOUNDARY CORRECTION 2026-09-06 (b): the EH try-block census over the
 # image's FuncInfo records (every `_s_FuncInfo` with nTryBlocks > 0, its
@@ -461,6 +475,7 @@ rva	size
 0x1b410	203
 0x1b4e0	32
 0x1b500	651
+0x1b790	22
 0x1b7b0	361
 0x1b920	367
 0x1ba90	354
@@ -961,6 +976,7 @@ rva	size
 0x48ab0	276
 0x48bd0	246
 0x48cd0	75
+0x48d20	9
 0x48d30	54
 0x48d70	61
 0x48db0	766
@@ -988,6 +1004,7 @@ rva	size
 0x49e90	751
 0x4a180	735
 0x4a460	85
+0x4a4c0	1
 0x4a4d0	1326
 0x4aa00	58
 0x4aa40	58
@@ -1645,6 +1662,10 @@ rva	size
 0x7b220	109
 0x7b290	489
 0x7b480	802
+0x7b7b0	10
+0x7b7c0	23
+0x7b7e0	23
+0x7b800	23
 0x7b820	32
 0x7b840	68
 0x7b890	15
@@ -2992,6 +3013,10 @@ rva	size
 0xe67a0	374
 0xe6920	482
 0xe6b10	456
+0xe6ce0	23
+0xe6d00	20
+0xe6d20	20
+0xe6d40	20
 0xe6d60	32
 0xe6d80	89
 0xe6de0	96
@@ -3551,6 +3576,7 @@ rva	size
 0x113800	469
 0x1139e0	1612
 0x114030	32
+0x114050	10
 0x114060	202
 0x114130	126
 0x1141b0	110
@@ -3595,6 +3621,7 @@ rva	size
 0x114610	791
 0x114930	42
 0x114960	173
+0x114a10	69
 0x114a60	285
 0x114b80	503
 0x114d80	644
@@ -3615,6 +3642,7 @@ rva	size
 0x115ca0	634
 0x115f20	38
 0x115f50	262
+0x116060	13
 0x116070	28
 0x116090	56
 0x1160d0	28
@@ -3633,7 +3661,9 @@ rva	size
 0x116500	95
 0x116560	35
 0x116590	22
+0x1165b0	10
 0x1165c0	22
+0x1165e0	10
 0x1165f0	231
 0x1166e0	52
 0x116720	48
@@ -4175,6 +4205,7 @@ rva	size
 0x148a40	546
 0x148c70	381
 0x148df0	2463
+0x149790	1
 0x1497a0	206
 0x149870	177
 0x149930	891
@@ -5416,6 +5447,7 @@ rva	size
 0x1b3dd0	111
 0x1b3e40	56
 0x1b3e80	1887
+0x1b45e0	1
 0x1b45f0	621
 0x1b4860	110
 0x1b48d0	141
@@ -5430,7 +5462,9 @@ rva	size
 0x1b6810	132
 0x1b68a0	767
 0x1b6ba0	588
+0x1b6df0	1
 0x1b6e00	435
+0x1b6fc0	1
 0x1b6fd0	625
 0x1b7250	154
 0x1b72f0	549
@@ -6005,6 +6039,7 @@ rva	size
 0x1ff3e0	125
 0x1ff460	33
 0x1ff490	108
+0x1ff500	12
 0x1ff510	96
 0x1ff570	50
 0x1ff5b0	51

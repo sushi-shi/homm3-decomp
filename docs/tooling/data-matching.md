@@ -159,6 +159,81 @@ the static; all witnesses must agree, and claimed storage cannot be overwritten.
 The model regenerates these names and sizes from compiler receipts. This does
 not require SDK edits, replacement globals or a separate symbol ledger.
 
+Some header statics are initialized identically by many units without any
+authored storage owner: VC6's `std::ctype<unsigned short>::id` and the other
+facet ids use a compiler-private one-byte COMMON guard and register an empty
+destructor with `_atexit`. `shared_initializers` credits such a CRT root only
+when a current raw object emits the complete body: every unrelocated byte,
+relocation site, named callee and emitted local cleanup must agree. A private
+COMMON guard is bound only when every matching retail copy agrees on one
+zero-filled `.bss` address that no model claim owns and no other private
+symbol proposes. When byte-identical bodies name different private guards
+(`num_get` versus `num_put`), only the unit owning the preceding claimed
+source function may decide. Identical copies identify the header definition,
+not the retail unit. The bound guards are reported in `shared_initializers`
+but not claimed as storage here. A header's file-static object (such as
+`<iostream>`'s `_Ios_init`) binds only through the unit whose claimed code
+precedes the retail root, and only its address is checked. A call to a name
+the model or the reviewed runtime placements already know must reach that
+address; compiler-private `$E<n>` ordinals from runtime members are never
+used as names.
+
+VC6 pads each function COMDAT to its section alignment with NOP bytes inside
+the section's raw payload. `source-padding-exact` credits the bytes after a
+claimed function's reviewed extent when the function's own current COMDAT is
+exactly as long as the retail span to the next reviewed boundary and its
+bytes past the retail extent agree. `source-padding-aligned` covers
+non-exact implementations: the retail body starts on the emitted section's
+alignment, the next reviewed start is the very next aligned address, the
+object demonstrably pads its code COMDATs with 0x90, and every gap byte is
+that fill. Anonymous compiler functions are found through normalization's
+stamped sidecar. Startup bodies use `source-initializer-padding-exact` in the
+same way.
+
+`linker-padding` covers the gap after a source function's `.text$x` exception
+contribution. VC6 emits the cleanup funclets followed by the registration
+stub in one associative section, so the retail contribution ends with the
+decoded stub. LINK 6.00.8447 aligns the next contribution to 16 bytes and
+fills with INT3: linking the current `winmgr`, `winfile` and `window` objects
+with `/FORCE` places `0xcc` between every `.text$x` contribution, while the
+compiler's own NOP fill stays inside code COMDATs. The gap must end at the
+next 16-byte boundary, which must be a reviewed contribution start. Whether
+the emitted cleanup bytes also agree is reported per row as `contribution`.
+
+The same INT3 fill is credited directly before a source contribution: a
+claimed function's exclusive COMDAT or a source `.text$x` section (whose
+first cleanup outside the parent begins it), when the run starts at a
+reviewed extent's end and is shorter than the emitted section alignment.
+A function the unit does not emit (a compiler-function claim without a
+paired body) may use the unit's single `.text` COMDAT alignment for
+`source-padding-aligned`.
+
+`local_cleanups` credits `source-cleanup-exact` code that a claimed function
+references without a source name: local-static destructors registered with
+`_atexit` and element constructors/destructors handed to the vector
+iterators. Sites pair either at identical offsets, when the parent's
+emitted body has the retail length and exactly the retail relocation sites,
+or as ordered `_atexit` registrations of equal count. The whole emitted body,
+its relocation sites and every named or local callee must match. Reviewed
+atexit callbacks use slot `-` in `init-thunks.tsv`.
+
+`import-thunk` covers six-byte `jmp dword ptr [IAT slot]` census rows whose
+slot is named by the PE import directory and whose operand relocation is
+admitted. System DLL imports must come from the pinned VC6 import library;
+vendor DLL thunks rest on the import directory and say so in the report.
+Rows already owned by source or runtime placements are left to them.
+
+`config/retail/code-extents.tsv` holds reviewed `.text` extents that are
+neither a function nor its fill. `patch-residue` is the cut-off original body
+behind a binary-patched entry: it must start at a claimed function's reviewed
+end, end at the next reviewed start, and receive no admitted relocation.
+
+The zero-filled bytes between an executable section's VirtualSize and its
+FileAlignment/SectionAlignment boundary are `structural` when the section
+header, the next section's start and the raw size agree. Any non-zero byte in
+that tail remains missing. Initialized data-section tails are classified
+with the linker structures below; the two passes never share a section.
+
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.
 Pointer words require a known target plus the correct addend, and the relocation

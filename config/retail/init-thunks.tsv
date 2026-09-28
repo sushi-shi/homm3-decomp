@@ -1233,3 +1233,32 @@ rva	slot
 0xcaa20	-
 # resourcemanager: CRT registration 0x559150, eight TResourceLODSlot elements.
 0x159200	-
+# Local-static atexit callbacks: a claimed parent registers each address
+# with _atexit; local_cleanups pairs the site with the parent's current
+# object and compares the complete emitted body and its callees.
+# armygrp: armyGrpFn0044A460 registers the bitset's empty destructor.
+0x4a4c0	-
+# creaturetype: initializeCreatureTypeTraits, three TAutoStrPtr arrays.
+0x7b7c0	-
+0x7b7e0	-
+0x7b800	-
+# herodefs: hero, hero-class and secondary-skill TAutoStrPtr arrays.
+0xe6ce0	-
+0xe6d00	-
+0xe6d20	-
+0xe6d40	-
+# objecttype: setImageName and getImageName statics.
+0x114050	-
+0x114a10	-
+# objecttype: ctype<char>::_Term, registered by the retained constructor.
+0x116060	-
+# objecttype: <iostream>'s _Ios_init/_Wios_init destructors, registered by
+# CRT roots 0x516590/0x5165c0.
+0x1165b0	-
+0x1165e0	-
+# rmg: createRiver's static table.
+0x149790	-
+# rmg_terrain: selectTerrainTransition and the two diagonal offset tables.
+0x1b45e0	-
+0x1b6df0	-
+0x1b6fc0	-

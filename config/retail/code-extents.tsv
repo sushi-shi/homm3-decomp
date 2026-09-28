@@ -1,0 +1,8 @@
+# MANUALLY MANAGED: reviewed retail .text extents that are neither a function
+# body nor its alignment fill. Names remain source-owned; evidence must cite
+# the retail boundary justification. byte_accounting re-checks each row: it
+# must start where a claimed function's reviewed extent ends, end at the next
+# reviewed function start, and receive no admitted relocation.
+# Categories: patch-residue (bytes of an original body behind a patched entry).
+rva	size	category	evidence
+0x10c1c6	986	patch-residue	setupCDDrive: the Complete entry at 0x50c1c0 is patched to mov eax,7 / ret (6 bytes, src/misc.cpp). The cut prologue 55 8b ec 81 ec [00 02 00 00] leaves 02 00 00 at 0x50c1c6; decoding resumes at 0x50c1c9 (push ebx/esi/edi) and runs to the original ret at 0x50c598 without a gap, followed by seven NOPs of the original COMDAT fill up to fileSize at 0x50c5a0. Its operands (drive/MCI strings, GetDriveTypeA, mciSendCommandA) are admitted relocation sites; nothing in the image references an address inside it.
