@@ -749,7 +749,7 @@ static char g_formatStringBuffer[512];
 // attests an original name or linkage. The descriptive name follows the
 // stored seed; storage stays private to the only TU that touches it.
 DATA(0x0067fb94)
-static int g_randomSeed;
+static int g_randomSeed = 0x08156a03;
 
 VA(0x0050c5f0, 0xE) MAC_ADDRESS(0x131490, 0x24)  // dc 0xfe0b8
 void sRand(int seed)

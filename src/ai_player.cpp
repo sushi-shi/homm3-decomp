@@ -5377,6 +5377,7 @@ static void initializeArtifactEffects();
 type_AI_initializer::type_AI_initializer()
 {
     // Original: const_one_use_events.
+    DATA(0x00660540)
     static const int g_constOneUseEvents[] = {
         5, 6, 9, 10, 12, 13, 16, 22, 24, 29, 37, 39,
         42, 48, 53, 54, 55, 57, 58, 59, 60, 62, 63, 79,
@@ -5384,6 +5385,7 @@ type_AI_initializer::type_AI_initializer()
         112, 0
     };
     // Original: const_visibility_values; alternating event/value pairs.
+    DATA(0x006605d8)
     static const int g_constVisibilityValues[] = {
         2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
         11, 1, 12, 10, 13, 1000, 14, 1, 15, 1, 16, 10,

@@ -39174,169 +39174,169 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x23be30	0x66fe00	data	.rdata	literal-start	-	kept
 0x23be40	0x66fdf4	data	.rdata	literal-start	-	kept
 0x23be50	0x66fde8	data	.rdata	literal-start	-	kept
-0x23becc	0x5e0050	data	.rdata	code	-	kept
-0x23bed0	0x60005f	data	.rdata	code	-	kept
-0x23bed4	0x690061	data	.rdata	data	-	kept
-0x23bed8	0x6b006a	data	.rdata	data	-	kept
+0x23becc	0x5e0050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bed0	0x60005f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bed4	0x690061	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
+0x23bed8	0x6b006a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23bf00	0x66d834	data	.rdata	literal-interior	-	kept
 0x23bf10	0x5b0049	data	.rdata	code-isolated	-	review-isolated-interior
 0x23bf44	0x66d828	data	.rdata	literal-interior	-	kept
-0x23bf5c	0x480040	data	.rdata	code	-	kept
-0x23bf60	0x4a0049	data	.rdata	code	-	kept
-0x23bf64	0x4c004b	data	.rdata	code	-	kept
+0x23bf5c	0x480040	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bf60	0x4a0049	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bf64	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23bf88	0x66d81c	data	.rdata	literal-interior	-	kept
-0x23bf98	0x590058	data	.rdata	code	-	kept
-0x23bf9c	0x5b005a	data	.rdata	code	-	kept
-0x23bfa0	0x5d005c	data	.rdata	code	-	kept
-0x23bfa4	0x5f005e	data	.rdata	code	-	kept
-0x23bfa8	0x610060	data	.rdata	code	-	kept
+0x23bf98	0x590058	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bf9c	0x5b005a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfa0	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfa4	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfa8	0x610060	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23bfcc	0x66d810	data	.rdata	literal-interior	-	kept
-0x23bfdc	0x4d004c	data	.rdata	code	-	kept
-0x23bfe0	0x4f004e	data	.rdata	code	-	kept
-0x23bfe4	0x590050	data	.rdata	code	-	kept
-0x23bfe8	0x5b005a	data	.rdata	code	-	kept
-0x23bfec	0x5d005c	data	.rdata	code	-	kept
+0x23bfdc	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfe0	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfe4	0x590050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfe8	0x5b005a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23bfec	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c010	0x66d804	data	.rdata	literal-interior	-	kept
-0x23c028	0x4c004b	data	.rdata	code	-	kept
-0x23c02c	0x5f004d	data	.rdata	code	-	kept
+0x23c028	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c02c	0x5f004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c054	0x66d7f8	data	.rdata	literal-interior	-	kept
-0x23c064	0x5b0051	data	.rdata	code	-	kept
-0x23c068	0x5d005c	data	.rdata	code	-	kept
-0x23c06c	0x5f005e	data	.rdata	code	-	kept
-0x23c070	0x610060	data	.rdata	code	-	kept
-0x23c074	0x6a0062	data	.rdata	data	-	kept
+0x23c064	0x5b0051	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c068	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c06c	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c070	0x610060	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c074	0x6a0062	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c098	0x66d7ec	data	.rdata	literal-interior	-	kept
-0x23c0a8	0x4d004c	data	.rdata	code	-	kept
-0x23c0ac	0x4f004e	data	.rdata	code	-	kept
-0x23c0b0	0x5c005b	data	.rdata	code	-	kept
-0x23c0b4	0x61005d	data	.rdata	code	-	kept
-0x23c0b8	0x6a0062	data	.rdata	data	-	kept
+0x23c0a8	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c0ac	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c0b0	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c0b4	0x61005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c0b8	0x6a0062	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c0dc	0x66d7e0	data	.rdata	literal-interior	-	kept
 0x23c0f4	0x5c004b	data	.rdata	code-isolated	-	review-isolated-interior
 0x23c120	0x66d7d4	data	.rdata	literal-interior	-	kept
-0x23c138	0x4b004a	data	.rdata	code	-	kept
-0x23c13c	0x5d005c	data	.rdata	code	-	kept
+0x23c138	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c13c	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c164	0x66d7c8	data	.rdata	literal-interior	-	kept
-0x23c178	0x4d003d	data	.rdata	code	-	kept
-0x23c17c	0x5e005d	data	.rdata	code	-	kept
+0x23c178	0x4d003d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c17c	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c1a8	0x66d7bc	data	.rdata	literal-interior	-	kept
-0x23c1b8	0x4b004a	data	.rdata	code	-	kept
-0x23c1bc	0x4d004c	data	.rdata	code	-	kept
-0x23c1c0	0x5c005b	data	.rdata	code	-	kept
-0x23c1c4	0x5e005d	data	.rdata	code	-	kept
+0x23c1b8	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c1bc	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c1c0	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c1c4	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c1ec	0x66d7b0	data	.rdata	literal-interior	-	kept
-0x23c1fc	0x4e004d	data	.rdata	code	-	kept
-0x23c200	0x50004f	data	.rdata	code	-	kept
-0x23c204	0x5b0051	data	.rdata	code	-	kept
-0x23c208	0x5d005c	data	.rdata	code	-	kept
-0x23c20c	0x69005e	data	.rdata	data	-	kept
-0x23c210	0x6b006a	data	.rdata	data	-	kept
+0x23c1fc	0x4e004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c200	0x50004f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c204	0x5b0051	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c208	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c20c	0x69005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
+0x23c210	0x6b006a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c230	0x66d7a4	data	.rdata	literal-interior	-	kept
-0x23c244	0x4c003d	data	.rdata	code	-	kept
-0x23c248	0x5d004d	data	.rdata	code	-	kept
+0x23c244	0x4c003d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c248	0x5d004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c274	0x66d798	data	.rdata	literal-interior	-	kept
-0x23c284	0x480037	data	.rdata	code	-	kept
-0x23c288	0x6b005a	data	.rdata	data	-	kept
+0x23c284	0x480037	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c288	0x6b005a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c2b8	0x66d78c	data	.rdata	literal-interior	-	kept
 0x23c2cc	0x5e004c	data	.rdata	code-isolated	-	review-isolated-interior
 0x23c2fc	0x66d780	data	.rdata	literal-interior	-	kept
 0x23c314	0x4b003a	data	.rdata	code-isolated	-	review-isolated-interior
 0x23c340	0x66d774	data	.rdata	literal-interior	-	kept
-0x23c350	0x490048	data	.rdata	code	-	kept
-0x23c354	0x4b004a	data	.rdata	code	-	kept
-0x23c358	0x4d004c	data	.rdata	code	-	kept
-0x23c35c	0x4f004e	data	.rdata	code	-	kept
-0x23c360	0x510050	data	.rdata	code	-	kept
-0x23c364	0x690059	data	.rdata	data	-	kept
+0x23c350	0x490048	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c354	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c358	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c35c	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c360	0x510050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c364	0x690059	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c384	0x66d768	data	.rdata	literal-interior	-	kept
-0x23c394	0x490048	data	.rdata	code	-	kept
-0x23c398	0x4b004a	data	.rdata	code	-	kept
-0x23c39c	0x4d004c	data	.rdata	code	-	kept
-0x23c3a0	0x4f004e	data	.rdata	code	-	kept
-0x23c3a4	0x5a0050	data	.rdata	code	-	kept
-0x23c3a8	0x5c005b	data	.rdata	code	-	kept
-0x23c3ac	0x5e005d	data	.rdata	code	-	kept
-0x23c3b0	0x60005f	data	.rdata	code	-	kept
+0x23c394	0x490048	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c398	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c39c	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3a0	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3a4	0x5a0050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3a8	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3ac	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3b0	0x60005f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c3c8	0x66d75c	data	.rdata	literal-interior	-	kept
-0x23c3d8	0x4a0049	data	.rdata	code	-	kept
-0x23c3dc	0x4c004b	data	.rdata	code	-	kept
-0x23c3e0	0x4e004d	data	.rdata	code	-	kept
-0x23c3e4	0x5c005b	data	.rdata	code	-	kept
-0x23c3e8	0x5e005d	data	.rdata	code	-	kept
+0x23c3d8	0x4a0049	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3dc	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3e0	0x4e004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3e4	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c3e8	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c40c	0x66d750	data	.rdata	literal-interior	-	kept
 0x23c420	0x4b003a	data	.rdata	code-isolated	-	review-isolated-interior
 0x23c450	0x66d744	data	.rdata	literal-interior	-	kept
-0x23c460	0x490048	data	.rdata	code	-	kept
-0x23c464	0x4b004a	data	.rdata	code	-	kept
-0x23c468	0x4d004c	data	.rdata	code	-	kept
-0x23c46c	0x4f004e	data	.rdata	code	-	kept
-0x23c470	0x5a0050	data	.rdata	code	-	kept
-0x23c474	0x5c005b	data	.rdata	code	-	kept
-0x23c478	0x5e005d	data	.rdata	code	-	kept
-0x23c47c	0x60005f	data	.rdata	code	-	kept
+0x23c460	0x490048	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c464	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c468	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c46c	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c470	0x5a0050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c474	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c478	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c47c	0x60005f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c494	0x66d75c	data	.rdata	literal-interior	-	kept
-0x23c4a4	0x4a0049	data	.rdata	code	-	kept
-0x23c4a8	0x4c004b	data	.rdata	code	-	kept
-0x23c4ac	0x4e004d	data	.rdata	code	-	kept
-0x23c4b0	0x5a004f	data	.rdata	code	-	kept
-0x23c4b4	0x5c005b	data	.rdata	code	-	kept
-0x23c4b8	0x5e005d	data	.rdata	code	-	kept
-0x23c4bc	0x60005f	data	.rdata	code	-	kept
-0x23c4c0	0x6a0061	data	.rdata	data	-	kept
+0x23c4a4	0x4a0049	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4a8	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4ac	0x4e004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4b0	0x5a004f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4b4	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4b8	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4bc	0x60005f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4c0	0x6a0061	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c4d8	0x66d738	data	.rdata	literal-interior	-	kept
-0x23c4e8	0x490048	data	.rdata	code	-	kept
-0x23c4ec	0x4b004a	data	.rdata	code	-	kept
-0x23c4f0	0x590058	data	.rdata	code	-	kept
-0x23c4f4	0x5b005a	data	.rdata	code	-	kept
-0x23c4f8	0x5d005c	data	.rdata	code	-	kept
-0x23c4fc	0x5f005e	data	.rdata	code	-	kept
-0x23c500	0x610060	data	.rdata	code	-	kept
+0x23c4e8	0x490048	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4ec	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4f0	0x590058	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4f4	0x5b005a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4f8	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c4fc	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c500	0x610060	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c51c	0x66d72c	data	.rdata	literal-interior	-	kept
-0x23c52c	0x480047	data	.rdata	code	-	kept
-0x23c530	0x4a0049	data	.rdata	code	-	kept
-0x23c534	0x4c004b	data	.rdata	code	-	kept
-0x23c538	0x4e004d	data	.rdata	code	-	kept
-0x23c53c	0x5a0059	data	.rdata	code	-	kept
-0x23c540	0x5c005b	data	.rdata	code	-	kept
-0x23c544	0x5e005d	data	.rdata	code	-	kept
-0x23c548	0x60005f	data	.rdata	code	-	kept
-0x23c54c	0x620061	data	.rdata	code	-	kept
+0x23c52c	0x480047	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c530	0x4a0049	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c534	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c538	0x4e004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c53c	0x5a0059	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c540	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c544	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c548	0x60005f	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c54c	0x620061	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c560	0x66d720	data	.rdata	literal-interior	-	kept
-0x23c570	0x490048	data	.rdata	code	-	kept
-0x23c574	0x4b004a	data	.rdata	code	-	kept
-0x23c578	0x4d004c	data	.rdata	code	-	kept
-0x23c57c	0x4f004e	data	.rdata	code	-	kept
-0x23c580	0x510050	data	.rdata	code	-	kept
-0x23c584	0x5a0059	data	.rdata	code	-	kept
-0x23c588	0x6a0069	data	.rdata	data	-	kept
+0x23c570	0x490048	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c574	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c578	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c57c	0x4f004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c580	0x510050	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c584	0x5a0059	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c588	0x6a0069	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	data	-	rejected-scalar-fields
 0x23c5a4	0x66d714	data	.rdata	literal-interior	-	kept
 0x23c5b4	0x5b0049	data	.rdata	code-isolated	-	review-isolated-interior
 0x23c5e8	0x66d708	data	.rdata	literal-interior	-	kept
-0x23c604	0x4d004c	data	.rdata	code	-	kept
-0x23c608	0x5e005d	data	.rdata	code	-	kept
+0x23c604	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c608	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c62c	0x66d6fc	data	.rdata	literal-interior	-	kept
 0x23c670	0x66d6f0	data	.rdata	literal-interior	-	kept
-0x23c680	0x4d004c	data	.rdata	code	-	kept
-0x23c684	0x5d005c	data	.rdata	code	-	kept
-0x23c688	0x5f005e	data	.rdata	code	-	kept
+0x23c680	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c684	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c688	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c6b4	0x66d6e4	data	.rdata	literal-interior	-	kept
 0x23c6b8	0x400000	data	.rdata	unmapped	-	dropped-unmapped
-0x23c6c4	0x4d004c	data	.rdata	code	-	kept
-0x23c6c8	0x5c004e	data	.rdata	code	-	kept
-0x23c6cc	0x5e005d	data	.rdata	code	-	kept
+0x23c6c4	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c6c8	0x5c004e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c6cc	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c6f8	0x66d6d8	data	.rdata	literal-interior	-	kept
-0x23c708	0x4d004c	data	.rdata	code	-	kept
-0x23c70c	0x5c005b	data	.rdata	code	-	kept
-0x23c710	0x5e005d	data	.rdata	code	-	kept
+0x23c708	0x4d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c70c	0x5c005b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c710	0x5e005d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c73c	0x66d6cc	data	.rdata	literal-interior	-	kept
-0x23c750	0x4c004b	data	.rdata	code	-	kept
-0x23c754	0x5b004d	data	.rdata	code	-	kept
-0x23c758	0x5d005c	data	.rdata	code	-	kept
-0x23c75c	0x5f005e	data	.rdata	code	-	kept
+0x23c750	0x4c004b	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c754	0x5b004d	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c758	0x5d005c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c75c	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c780	0x66d6c0	data	.rdata	literal-interior	-	kept
-0x23c794	0x4b004a	data	.rdata	code	-	kept
-0x23c798	0x5d004c	data	.rdata	code	-	kept
-0x23c79c	0x5f005e	data	.rdata	code	-	kept
+0x23c794	0x4b004a	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c798	0x5d004c	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
+0x23c79c	0x5f005e	data	.rdata; source cmbtmgr:?s_elevationOverlay@combatManager@@0QBUSElevationOverlay@1@B	code	-	rejected-scalar-fields
 0x23c7c4	0x66d6b4	data	.rdata	literal-interior	-	kept
 0x23c7d8	0x66d6a8	data	.rdata	literal-interior	-	kept
 0x23c7ec	0x66d69c	data	.rdata	literal-interior	-	kept
@@ -40003,7 +40003,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x23e650	0x603574	data	.rdata	code	-	kept
 0x23e654	0x60356e	data	.rdata	code	-	kept
 0x23e658	0x603568	data	.rdata	code	-	kept
-0x23e6d4	0x6b007f	data	.rdata	data	-	kept
+0x23e6d4	0x6b007f	data	.rdata; source gametypewindow:_g_gameTypeButtonRects	data	-	rejected-scalar-fields
 0x23e6d8	0x4d5860	data	.rdata	code	-	kept
 0x23e6dc	0x5feae0	data	.rdata	code	-	kept
 0x23e6e0	0x5fec60	data	.rdata	code	-	kept
@@ -40160,8 +40160,8 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x23fe90	0x559140	data	.rdata	code	-	kept
 0x23fe94	0x5ff8d0	data	.rdata	code	-	kept
 0x23fe98	0x41b190	data	.rdata	code	-	kept
-0x23ff3c	0x6a00ef	data	.rdata	data	-	kept
-0x23ff4c	0x660072	data	.rdata	literal-interior	-	kept
+0x23ff3c	0x6a00ef	data	.rdata; source mainmenu:_g_mainMenuButtonRects	data	-	rejected-scalar-fields
+0x23ff4c	0x660072	data	.rdata; source mainmenu:_g_mainMenuButtonRects	literal-interior	-	rejected-scalar-fields
 0x23ff50	0x4fb630	data	.rdata	code	-	kept
 0x23ff54	0x5feae0	data	.rdata	code	-	kept
 0x23ff58	0x5fec60	data	.rdata	code	-	kept
@@ -51239,7 +51239,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x25f8a0	0x65f8cc	data	.data	literal-start	-	kept
 0x25f8a4	0x65f8bc	data	.data	literal-start	-	kept
 0x25f8a8	0x65f8ac	data	.data	literal-start	-	kept
-0x260328	0x646566	data	.data	literal-interior	-	kept
+0x260328	0x646566	data	.data; source advmgr:??_C@_03EFID@fed?$AA@	literal-interior	-	rejected-literal-bytes
 0x260428	0x691698	data	.data	data	-	kept
 0x260430	0x645d28	data	.data	data	-	kept
 0x260458	0x645d28	data	.data	data	-	kept
@@ -54928,28 +54928,28 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x275d70	0x675d8c	data	.data	literal-interior	-	kept
 0x275d74	0x675d84	data	.data	literal-interior	-	kept
 0x275d78	0x675d7c	data	.data	literal-start	-	kept
-0x275fe4	0x633173	data	.data	code	-	kept
-0x275fe8	0x623173	data	.data	code	-	kept
-0x275fec	0x613173	data	.data	code	-	kept
-0x275ff0	0x633367	data	.data	code	-	kept
-0x275ff4	0x623367	data	.data	code	-	kept
-0x275ff8	0x613367	data	.data	code	-	kept
-0x275ffc	0x643265	data	.data	data	-	kept
-0x276000	0x633265	data	.data	code	-	kept
-0x276004	0x623265	data	.data	code	-	kept
-0x276010	0x613265	data	.data	code	-	kept
-0x276014	0x643267	data	.data	data	-	kept
-0x276018	0x633267	data	.data	code	-	kept
-0x27601c	0x623267	data	.data	code	-	kept
-0x276020	0x613267	data	.data	code	-	kept
-0x27602c	0x62316e	data	.data	code	-	kept
-0x276030	0x61316e	data	.data	code	-	kept
-0x276034	0x633165	data	.data	code	-	kept
-0x276038	0x623165	data	.data	code	-	kept
-0x27603c	0x613165	data	.data	code	-	kept
-0x276040	0x633167	data	.data	code	-	kept
-0x276044	0x623167	data	.data	code	-	kept
-0x276048	0x613167	data	.data	code	-	kept
+0x275fe4	0x633173	data	.data; source customcampaign:??_C@_03LBOG@s1c?$AA@	code	-	rejected-literal-bytes
+0x275fe8	0x623173	data	.data; source customcampaign:??_C@_03BLHB@s1b?$AA@	code	-	rejected-literal-bytes
+0x275fec	0x613173	data	.data; source customcampaign:??_C@_03OEMI@s1a?$AA@	code	-	rejected-literal-bytes
+0x275ff0	0x633367	data	.data; source customcampaign:??_C@_03PFID@g3c?$AA@	code	-	rejected-literal-bytes
+0x275ff4	0x623367	data	.data; source customcampaign:??_C@_03FPBE@g3b?$AA@	code	-	rejected-literal-bytes
+0x275ff8	0x613367	data	.data; source customcampaign:??_C@_03KAKN@g3a?$AA@	code	-	rejected-literal-bytes
+0x275ffc	0x643265	data	.data; source customcampaign:??_C@_03BCOB@e2d?$AA@	data	-	rejected-literal-bytes
+0x276000	0x633265	data	.data; source customcampaign:??_C@_03EHAE@e2c?$AA@	code	-	rejected-literal-bytes
+0x276004	0x623265	data	.data; source customcampaign:??_C@_03ONJD@e2b?$AA@	code	-	rejected-literal-bytes
+0x276010	0x613265	data	.data; source customcampaign:??_C@_03BCCK@e2a?$AA@	code	-	rejected-literal-bytes
+0x276014	0x643267	data	.data; source customcampaign:??_C@_03LGMM@g2d?$AA@	data	-	rejected-literal-bytes
+0x276018	0x633267	data	.data; source customcampaign:??_C@_03ODCJ@g2c?$AA@	code	-	rejected-literal-bytes
+0x27601c	0x623267	data	.data; source customcampaign:??_C@_03EJLO@g2b?$AA@	code	-	rejected-literal-bytes
+0x276020	0x613267	data	.data; source customcampaign:??_C@_03LGAH@g2a?$AA@	code	-	rejected-literal-bytes
+0x27602c	0x62316e	data	.data; source customcampaign:??_C@_03LAOC@n1b?$AA@	code	-	rejected-literal-bytes
+0x276030	0x61316e	data	.data; source customcampaign:??_C@_03EPFL@n1a?$AA@	code	-	rejected-literal-bytes
+0x276034	0x633165	data	.data; source customcampaign:??_C@_03HMPL@e1c?$AA@	code	-	rejected-literal-bytes
+0x276038	0x623165	data	.data; source customcampaign:??_C@_03NGGM@e1b?$AA@	code	-	rejected-literal-bytes
+0x27603c	0x613165	data	.data; source customcampaign:??_C@_03CJNF@e1a?$AA@	code	-	rejected-literal-bytes
+0x276040	0x633167	data	.data; source customcampaign:??_C@_03NING@g1c?$AA@	code	-	rejected-literal-bytes
+0x276044	0x623167	data	.data; source customcampaign:??_C@_03HCEB@g1b?$AA@	code	-	rejected-literal-bytes
+0x276048	0x613167	data	.data; source customcampaign:??_C@_03INPI@g1a?$AA@	code	-	rejected-literal-bytes
 0x2776b4	0x49a650	data	.data	code	-	kept
 0x2776b8	0x49a980	data	.data	code	-	kept
 0x2776bc	0x49aa40	data	.data	code	-	kept
@@ -55008,9 +55008,9 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x277a70	0x677a88	data	.data	literal-start	-	kept
 0x277a74	0x677a78	data	.data	literal-start	-	kept
 0x277d48	0x645d28	data	.data	data	-	kept
-0x277da0	0x4d4754	data	.data	code	-	kept
-0x277da4	0x4d4743	data	.data	code	-	kept
-0x277da8	0x544d52	data	.data	code	-	kept
+0x277da0	0x4d4754	data	.data; source game:??_C@_03NGNJ@TGM?$AA@	code	-	rejected-literal-bytes
+0x277da4	0x4d4743	data	.data; source game:??_C@_03EJNC@CGM?$AA@	code	-	rejected-literal-bytes
+0x277da8	0x544d52	data	.data; source multiplayerwindow:??_C@_03PFPA@RMT?$AA@	code	-	rejected-literal-bytes
 0x2780e8	0x678104	data	.data	literal-start	-	kept
 0x2780ec	0x6780f4	data	.data	literal-start	-	kept
 0x2783e8	0x645d28	data	.data	data	-	kept
@@ -55348,48 +55348,48 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x27dcec	0x67d868	data	.data	data	-	kept
 0x27dcf0	0x698cf0	data	.data	data	-	kept
 0x27f1f0	0x67f4d0	data	.data	literal-start	-	kept
-0x27f204	0x62000c	data	.data	code	-	kept
-0x27f208	0x460010	data	.data	code	-	kept
+0x27f204	0x62000c	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f208	0x460010	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f214	0x54001c	data	.data	code-isolated	-	review-isolated-interior
 0x27f21c	0x550024	data	.data	code-isolated	-	review-isolated-interior
 0x27f224	0x47002c	data	.data	code-isolated	-	dropped-isolated-unowned
 0x27f22c	0x630034	data	.data	code-isolated	-	review-isolated-interior
-0x27f240	0x640048	data	.data	data	-	kept
+0x27f240	0x640048	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
 0x27f248	0x560050	data	.data	code-isolated	-	review-isolated-interior
-0x27f254	0x48005c	data	.data	code	-	kept
-0x27f258	0x650060	data	.data	data	-	kept
+0x27f254	0x48005c	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f258	0x650060	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
 0x27f268	0x580070	data	.data	code-isolated	-	review-isolated-interior
 0x27f270	0x570078	data	.data	code-isolated	-	review-isolated-interior
 0x27f27c	0x490084	data	.data	code-isolated	-	review-isolated-interior
 0x27f284	0x59008c	data	.data	code-isolated	-	review-isolated-interior
-0x27f290	0x680098	data	.data	data	-	kept
-0x27f294	0x69009c	data	.data	data	-	kept
+0x27f290	0x680098	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f294	0x69009c	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
 0x27f2a8	0x4a00b0	data	.data	code-isolated	-	review-isolated-interior
 0x27f2bc	0x4b00c1	data	.data	code-isolated	-	review-isolated-interior
 0x27f2c8	0x5a00ca	data	.data	code-isolated	-	review-isolated-interior
 0x27f2e4	0x4c00df	data	.data	code-isolated	-	review-isolated-interior
-0x27f2f0	0x6a00e8	data	.data	data	-	kept
+0x27f2f0	0x6a00e8	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
 0x27f2fc	0x4d00f1	data	.data	code-isolated	-	review-isolated-interior
 0x27f308	0x5b00fa	data	.data	code-isolated	-	review-isolated-interior
-0x27f310	0x6b0100	data	.data	data	-	kept
-0x27f328	0x4e0112	data	.data	code	-	kept
+0x27f310	0x6b0100	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f328	0x4e0112	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f32c	0x400115	data	.data	unmapped	-	dropped-unmapped
-0x27f334	0x66011b	data	.data	literal-interior	-	kept
-0x27f33c	0x5c0121	data	.data	code	-	kept
-0x27f340	0x670124	data	.data	literal-interior	-	kept
-0x27f344	0x4f0127	data	.data	code	-	kept
-0x27f348	0x41012a	data	.data	code	-	kept
-0x27f34c	0x5d012d	data	.data	code	-	kept
+0x27f334	0x66011b	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	literal-interior	-	rejected-scalar-fields
+0x27f33c	0x5c0121	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f340	0x670124	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	literal-interior	-	rejected-scalar-fields
+0x27f344	0x4f0127	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f348	0x41012a	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f34c	0x5d012d	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f354	0x5e0133	data	.data	code-isolated	-	review-isolated-interior
 0x27f35c	0x5f0139	data	.data	code-isolated	-	review-isolated-interior
-0x27f364	0x50013f	data	.data	code	-	kept
-0x27f368	0x510142	data	.data	code	-	kept
+0x27f364	0x50013f	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f368	0x510142	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f384	0x420157	data	.data	code-isolated	-	review-isolated-interior
 0x27f38c	0x43015d	data	.data	code-isolated	-	review-isolated-interior
-0x27f394	0x600163	data	.data	code	-	kept
-0x27f398	0x440166	data	.data	code	-	kept
-0x27f3a4	0x45016f	data	.data	code	-	kept
-0x27f3a8	0x520172	data	.data	code	-	kept
+0x27f394	0x600163	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f398	0x440166	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f3a4	0x45016f	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f3a8	0x520172	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f3bc	0x610181	data	.data	code-isolated	-	review-isolated-interior
 0x27f3cc	0x53018d	data	.data	code-isolated	-	review-isolated-interior
 0x27f3e8	0x471388	data	.data	code	-	kept
@@ -55425,7 +55425,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x27f598	0x67f59c	data	.data	literal-start	-	kept
 0x27fa58	0x444f4c	data	.data	code-isolated	-	review-isolated-interior
 0x27fb90	0x5c3a41	data	.data	code-isolated	-	review-isolated-interior
-0x27ff20	0x622b72	data	.data	code	-	kept
+0x27ff20	0x622b72	data	.data; source misc:??_C@_03LLMP@r?$CLb?$AA@	code	-	rejected-literal-bytes
 0x27ff24	0x6998e0	data	.data	data	-	kept
 0x27ff38	0x68160c	data	.data	literal-start	-	kept
 0x27ff3c	0x6815fc	data	.data	literal-start	-	kept
@@ -55433,7 +55433,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x27ff44	0x6815e0	data	.data	literal-start	-	kept
 0x27ff48	0x6815d0	data	.data	literal-start	-	kept
 0x281720	0x645d28	data	.data	data	-	kept
-0x2817c0	0x64252b	data	.data	data	-	kept
+0x2817c0	0x64252b	data	.data; source townmgr:??_C@_03OAHF@?$CL?$CFd?$AA@	data	-	rejected-literal-bytes
 0x281880	0x682310	data	.data	data	-	kept
 0x281884	0x68230c	data	.data	data	-	kept
 0x281888	0x682308	data	.data	data	-	kept
@@ -55443,40 +55443,40 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x281898	0x6822f8	data	.data	data	-	kept
 0x28189c	0x6822f4	data	.data	data	-	kept
 0x2818a0	0x6822f0	data	.data	data	-	kept
-0x2818b4	0x490047	data	.data	code	-	kept
-0x2818b8	0x6b0066	data	.data	data	-	kept
+0x2818b4	0x490047	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x2818b8	0x6b0066	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281934	0x4d0093	data	.data	code-isolated	-	review-isolated-interior
 0x28195c	0x440091	data	.data	code-isolated	-	review-isolated-interior
 0x281970	0x62003e	data	.data	code-isolated	-	review-isolated-interior
-0x2819c4	0x650008	data	.data	data	-	kept
+0x2819c4	0x650008	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281a38	0x4d003c	data	.data	code-isolated	-	review-isolated-interior
 0x281aa0	0x570143	data	.data	code-isolated	-	review-isolated-interior
 0x281af8	0x520051	data	.data	code-isolated	-	review-isolated-interior
-0x281b54	0x6501d7	data	.data	data	-	kept
-0x281b64	0x650037	data	.data	data	-	kept
+0x281b54	0x6501d7	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
+0x281b64	0x650037	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281b80	0x540011	data	.data	code-isolated	-	review-isolated-interior
-0x281b88	0x670195	data	.data	data	-	kept
+0x281b88	0x670195	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281bb8	0x5f003a	data	.data	code-isolated	-	review-isolated-interior
-0x281c2c	0x420123	data	.data	code	-	kept
-0x281c30	0x6201e2	data	.data	code	-	kept
-0x281c74	0x540040	data	.data	code	-	kept
-0x281c78	0x64005f	data	.data	data	-	kept
+0x281c2c	0x420123	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x281c30	0x6201e2	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x281c74	0x540040	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x281c78	0x64005f	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281cec	0x4b0008	data	.data	code-isolated	-	review-isolated-interior
 0x281d18	0x40010b	data	.data	unmapped	-	dropped-unmapped
 0x281d38	0x470032	data	.data	code-isolated	-	review-isolated-interior
 0x281dcc	0x550113	data	.data	code-isolated	-	review-isolated-interior
-0x281df8	0x580048	data	.data	code	-	kept
-0x281dfc	0x69005b	data	.data	data	-	kept
+0x281df8	0x580048	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x281dfc	0x69005b	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281e68	0x620146	data	.data	code-isolated	-	review-isolated-interior
 0x281e8c	0x41018f	data	.data	code-isolated	-	review-isolated-interior
-0x281eb0	0x570031	data	.data	code	-	kept
-0x281eb4	0x64005e	data	.data	data	-	kept
-0x281eb8	0x690066	data	.data	data	-	kept
+0x281eb0	0x570031	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	code	-	rejected-scalar-fields
+0x281eb4	0x64005e	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
+0x281eb8	0x690066	data	.data; source puzzlewindow:?g_puzzleCoordinates@@3PAUTPuzzleCoordinates@@A	data	-	rejected-scalar-fields
 0x281f38	0x5000ca	data	.data	code-isolated	-	review-isolated-interior
 0x281f54	0x5a00f6	data	.data	code-isolated	-	review-isolated-interior
-0x2822f0	0x656c45	data	.data	data	-	kept
-0x282300	0x63656e	data	.data	code	-	kept
-0x282304	0x666e69	data	.data	data	-	kept
+0x2822f0	0x656c45	data	.data; source puzzlewindow:??_C@_03PIAE@Ele?$AA@	data	-	rejected-literal-bytes
+0x282300	0x63656e	data	.data; source puzzlewindow:??_C@_03IAND@nec?$AA@	code	-	rejected-literal-bytes
+0x282304	0x666e69	data	.data; source puzzlewindow:??_C@_03LANC@inf?$AA@	data	-	rejected-literal-bytes
 0x282700	0x6827ec	data	.data	literal-start	-	kept
 0x282704	0x6827e4	data	.data	literal-interior	-	kept
 0x282708	0x6827dc	data	.data	literal-start	-	kept
@@ -55497,7 +55497,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x282744	0x682764	data	.data	literal-start	-	kept
 0x282748	0x682758	data	.data	literal-interior	-	kept
 0x28274c	0x682750	data	.data	literal-start	-	kept
-0x2827d8	0x646572	data	.data	literal-interior	-	kept
+0x2827d8	0x646572	data	.data; source rmg:??_C@_03CMLD@red?$AA@	literal-interior	-	rejected-literal-bytes
 0x28290c	0x6829c4	data	.data	literal-start	-	kept
 0x282910	0x6829b4	data	.data	literal-start	-	kept
 0x282914	0x6829a4	data	.data	literal-start	-	kept
@@ -55807,7 +55807,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x284b00	0x66c330	data	.data	literal-start	-	kept
 0x284b04	0x66c308	data	.data	literal-interior	-	kept
 0x284b08	0x66c2fc	data	.data	literal-start	-	kept
-0x284d18	0x656741	data	.data	data	-	kept
+0x284d18	0x656741	data	.data; source cmbtmgr:??_C@_03DOPF@Age?$AA@	data	-	rejected-literal-bytes
 0x285454	0x6882fc	data	.data	literal-start	-	kept
 0x2854dc	0x6882ec	data	.data	literal-interior	-	kept
 0x285564	0x6882e0	data	.data	literal-start	-	kept
@@ -56320,25 +56320,25 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x28a9b8	0x68b304	data	.data	literal-start	-	kept
 0x28a9d0	0x4c02c0	data	.data	code-isolated	-	review-isolated-interior
 0x28a9e8	0x420253	data	.data	code-isolated	-	review-isolated-interior
-0x28aa24	0x470215	data	.data	code	-	kept
-0x28aa28	0x4c0000	data	.data	code	-	kept
+0x28aa24	0x470215	data	.data; source townmgr:_g_townObjectPositions	code	-	rejected-scalar-fields
+0x28aa28	0x4c0000	data	.data; source townmgr:_g_townObjectPositions	code	-	rejected-scalar-fields
 0x28aa7c	0x4c0000	data	.data	code-isolated	-	review-isolated-interior
-0x28aa84	0x6500b0	data	.data	data	-	kept
+0x28aa84	0x6500b0	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
 0x28aa9c	0x410130	data	.data	code-isolated	-	review-isolated-interior
 0x28aaf4	0x4f0000	data	.data	code-isolated	-	review-isolated-interior
-0x28ab8c	0x49011f	data	.data	code	-	kept
-0x28ab90	0x440000	data	.data	code	-	kept
+0x28ab8c	0x49011f	data	.data; source townmgr:_g_townObjectPositions	code	-	rejected-scalar-fields
+0x28ab90	0x440000	data	.data; source townmgr:_g_townObjectPositions	code	-	rejected-scalar-fields
 0x28ab98	0x5a016a	data	.data	code-isolated	-	review-isolated-interior
-0x28abb0	0x650299	data	.data	data	-	kept
+0x28abb0	0x650299	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
 0x28abd4	0x410251	data	.data	code-isolated	-	review-isolated-interior
 0x28ac1c	0x520000	data	.data	code-isolated	-	review-isolated-interior
 0x28ac4c	0x520199	data	.data	code-isolated	-	review-isolated-interior
 0x28ac94	0x5f0265	data	.data	code-isolated	-	review-isolated-interior
-0x28aca4	0x4b0000	data	.data	code-isolated	-	kept-isolated-entry
+0x28aca4	0x4b0000	data	.data; source townmgr:_g_townObjectPositions	code-isolated	-	rejected-scalar-fields
 0x28acd0	0x5b004b	data	.data	code-isolated	-	review-isolated-interior
-0x28acdc	0x65029b	data	.data	data	-	kept
-0x28ad60	0x680251	data	.data	data	-	kept
-0x28add8	0x6901a4	data	.data	data	-	kept
+0x28acdc	0x65029b	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
+0x28ad60	0x680251	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
+0x28add8	0x6901a4	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
 0x28ade4	0x610155	data	.data	code-isolated	-	review-isolated-interior
 0x28ae08	0x42008a	data	.data	code-isolated	-	review-isolated-interior
 0x28ae48	0x500000	data	.data	code-isolated	-	review-isolated-interior
@@ -56348,16 +56348,16 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x28af1c	0x57016b	data	.data	code-isolated	-	review-isolated-interior
 0x28b138	0x6100a6	data	.data	code-isolated	-	review-isolated-interior
 0x28b168	0x440281	data	.data	code-isolated	-	review-isolated-interior
-0x28b1d4	0x6b0281	data	.data	data	-	kept
+0x28b1d4	0x6b0281	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
 0x28b1ec	0x45000f	data	.data	code-isolated	-	review-isolated-interior
-0x28b228	0x65015d	data	.data	data	-	kept
-0x28b234	0x65015d	data	.data	data	-	kept
-0x28c47c	0x64252d	data	.data	data	-	kept
-0x28c710	0x670006	data	.data	literal-interior	-	kept
-0x28c718	0x680006	data	.data	data	-	kept
-0x28c720	0x690006	data	.data	data	-	kept
-0x28c728	0x6a0006	data	.data	data	-	kept
-0x28c730	0x6b0006	data	.data	data	-	kept
+0x28b228	0x65015d	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
+0x28b234	0x65015d	data	.data; source townmgr:_g_townObjectPositions	data	-	rejected-scalar-fields
+0x28c47c	0x64252d	data	.data; source townmgr:??_C@_03MAC@?9?$CFd?$AA@	data	-	rejected-literal-bytes
+0x28c710	0x670006	data	.data; source window:_g_winSetup	literal-interior	-	rejected-scalar-fields
+0x28c718	0x680006	data	.data; source window:_g_winSetup	data	-	rejected-scalar-fields
+0x28c720	0x690006	data	.data; source window:_g_winSetup	data	-	rejected-scalar-fields
+0x28c728	0x6a0006	data	.data; source window:_g_winSetup	data	-	rejected-scalar-fields
+0x28c730	0x6b0006	data	.data; source window:_g_winSetup	data	-	rejected-scalar-fields
 0x28d278	0x603b10	data	.data	code	-	kept
 0x28d27c	0x604700	data	.data	code	-	kept
 0x28d280	0x6046e0	data	.data	code	-	kept

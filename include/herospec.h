@@ -95,14 +95,13 @@ enum THeroAbilityKind {
 
 struct THeroSpecificAbility {
     int m_type;                   // +0x00 - a THeroAbilityKind
-    // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE
-    // for kind 1 and hands it to UpgradedCreatureType, which takes a
-    // TCreatureType - so that arm needs a real lvalue of that type, not
-    // a cast into an enum (a cleanliness floor at zero here). The
-    // creature member is spelled with VC6's elaborated forward enum
-    // because herospec.h does not include armygrp.h and several TUs
-    // (advmgr.cpp, findpath.cpp) reach this header before it.
+    // +0x04 selects a skill, creature, resource or spell according to m_type.
+    // GetMobility uses the creature view; the specialty factor getters use
+    // the skill view. The raw subject also represents the other two domains.
     union {
+        // The initializer domain depends on m_type: skill, creature, resource
+        // or spell. Preserve the typed aliases used by each consumer.
+        int m_subject;
         TSecondarySkill m_skill;       // +0x04 - valid for kind 0
         enum TCreatureType m_creature; // +0x04 - valid for kind 1
     };

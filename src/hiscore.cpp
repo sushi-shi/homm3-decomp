@@ -156,7 +156,7 @@ DATA(0x0067f1fc) short g_highScoreCreatureTable[118][2] = {
 DATA(0x0067f1f0)
 static const char* g_highScoreFileName =
     DATA_COMPGEN(0x0067f4d0, highScoreFileName, "HiScore.dat");
-DATA(0x0067f1f4) static int g_highScoreRanks[2];
+DATA(0x0067f1f4) static int g_highScoreRanks[2] = { -1, -1 };
 
 DATA(0x006991c0) THighScoreWindow* g_highScoreWindow;
 DATA(0x006993cc) highScoreManager* g_highScoreManager;

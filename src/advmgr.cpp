@@ -102,7 +102,7 @@ DATA(0x00660388) char g_completeDrawFpsFormat[] = "FPS: %10.2f";
 DATA(0x00699544) unsigned long g_forceSwitchMusic;
 // Original DC name: giViewWorldScaleFloat; ViewWorld selects the floating tile scale.
 DATA(0x0068c6b8) float g_viewWorldScaleFloat = 11.84f;
-DATA(0x0067f574) unsigned char g_colorCyclingEnabled;
+DATA(0x0067f574) unsigned char g_colorCyclingEnabled = 1;
 
 
 // Retail table initializers, in the layouts used by their named consumers.

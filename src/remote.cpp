@@ -251,7 +251,7 @@ DATA(0x006989f0) eNetGameType g_mpNetProtocol;
 // Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
 // selected setup filename here before refreshing the scenario header; the
 // next retail cell at 0x6994e4 independently proves the 0x104-byte extent.
-DATA(0x00682a38) unsigned char g_followPlayerMode;
+DATA(0x00682a38) unsigned char g_followPlayerMode = 1;
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
 DATA(0x006993e0) char g_mapName[260];

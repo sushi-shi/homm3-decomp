@@ -64,6 +64,14 @@ std::vector<hero>* std::copy(std::vector<hero>* first,
 }
 #endif  // @carcass
 
+// Mutable path buffer; retail stores consecutive 260-byte arrays and
+// passes these addresses to strcpy, strcat and strtok.
+DATA(0x00683238) static char g_mapFileName[260] = "Arrogance.h3m";
+
+// Mutable path buffer; retail stores consecutive 260-byte arrays and
+// passes these addresses to strcpy, strcat and strtok.
+DATA(0x0068333c) static char g_newGameFileName[260] = "NEWGAME.gm1";
+
 // Initial contents recovered from the pinned Complete image.
 DATA(0x0069fc2c) char g_saveGameName[351];
 
@@ -449,11 +457,9 @@ unsigned char saveValid(const char* filename)
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
             valid = 1;
             strcpy(g_saveGameName, name);
-            strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                "NEWGAME.gm1"),
+            strcpy(g_newGameFileName,
                    name);
-            strcat(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                "NEWGAME.gm1"),
+            strcat(g_newGameFileName,
                    g_saveGameSuffix);
         }
     }
@@ -2058,13 +2064,11 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     if (m_saveMode) {
         m_widgets.push_back(new bitmapBorder(
             3, 520 - m_y, 399, 65, 388, "gsstrip.pcx", 0x800));
-        strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                            "NEWGAME.gm1"),
+        strtok(g_newGameFileName,
                DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
         m_saveGameEdit = new CSaveGameEdit(
             35, 542, 342, 21, 61,
-            DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                         "NEWGAME.gm1"),
+            g_newGameFileName,
             "smalfont.fnt", font::WHITE, font::VERT_CENTER_JUSTIFIED,
             0, 0, 160, 0x100, 0, 7, 5);
         m_widgets.push_back(m_saveGameEdit);
@@ -2565,8 +2569,7 @@ int CSaveGameEdit::onKeyPress(message* msg)
 {
     int ret = textEntryWidget::onKeyPress(msg);
     if (_strcmpi(m_text.c_str(),
-                 DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                              "NEWGAME.gm1")) != 0
+                 g_newGameFileName) != 0
             && g_singleSelectionWindow->m_currentMap != -1)
         g_singleSelectionWindow->setCurrentMap(-1, 1);
     return ret;
@@ -2945,8 +2948,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
     if (isHost()) {
         getHeaders(&m_headersA);
         m_scenarioOptionsStarted = 1;
-        highlightFile(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                   "NEWGAME.gm1"));
+        highlightFile(g_newGameFileName);
         setCurrentMap(m_currentMap, false);
     }
 
@@ -3007,8 +3009,7 @@ void TSingleSelectionWindow::setupNewGameMode()
     if (isHost()) {
         getHeaders(&m_headersA);
         m_scenarioOptionsStarted = 1;
-        highlightFile(DATA_COMPGEN(0x00683238, defaultMapFileName,
-                                   "Arrogance.h3m"));
+        highlightFile(g_mapFileName);
         setCurrentMap(m_currentMap, false);
     }
 }
@@ -3923,12 +3924,10 @@ void TSingleSelectionWindow::windowFn00582e90(
             m_selectionHeaders.size() - g_scenarioListVisibleRows + 1);
         if (m_saveMode || m_loadMode)
             b = highlightFile(
-                DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                             "NEWGAME.gm1"));
+                g_newGameFileName);
         else
             b = highlightFile(
-                DATA_COMPGEN(0x00683238, defaultMapFileName,
-                             "Arrogance.h3m"));
+                g_mapFileName);
         if (m_saveMode && !b) {
             m_currentMap = -1;
             backupGameHeaders(g_game, g_saveHeader);
@@ -4863,24 +4862,20 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         else
             m_currentHeader = &m_selectionHeaders[map];
         if (m_saveMode) {
-            strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                "NEWGAME.gm1"),
+            strcpy(g_newGameFileName,
                    m_currentHeader->m_setup.m_filename);
-            strtok(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                "NEWGAME.gm1"),
+            strtok(g_newGameFileName,
                    DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
             g_lastDiff = m_currentHeader->m_setup.m_difficulty;
         } else if (m_loadMode) {
-            strcpy(DATA_COMPGEN(0x0068333c, defaultNewGameFileName,
-                                "NEWGAME.gm1"),
+            strcpy(g_newGameFileName,
                    m_currentHeader->m_setup.m_filename);
             g_lastDiff = m_currentHeader->m_setup.m_difficulty;
             m_durationIndex = m_currentHeader->m_setup.m_turnDuration;
             if (m_durationSlider)
                 m_durationSlider->setState(m_durationIndex);
         } else {
-            strcpy(DATA_COMPGEN(0x00683238, defaultMapFileName,
-                                "Arrogance.h3m"),
+            strcpy(g_mapFileName,
                    m_currentHeader->m_setup.m_filename);
         }
         updateGameVars();
@@ -4893,9 +4888,7 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         setHumanSlot();
         makeHeroFilter();
         if (m_saveMode) {
-            m_saveGameEdit->setText(DATA_COMPGEN(0x0068333c,
-                                               defaultNewGameFileName,
-                                               "NEWGAME.gm1"));
+            m_saveGameEdit->setText(g_newGameFileName);
             m_saveGameEdit->draw();
         }
         msg.m_id = 0x200;

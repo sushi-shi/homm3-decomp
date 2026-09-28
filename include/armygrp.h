@@ -192,6 +192,8 @@ enum TCreatureType {
     // Dragon 0x84 / Crystal Dragon 0x85 ... Halfling 0x8a, leaving
     // 0x88/0x89 exactly where Enchanter/Sharpshooter sit in it.
     // NH3API spellings; values retail-proven.
+    // Gelu's retail specialty upgrades Wood Elves (0x12) to Sharpshooters.
+    CREATURE_WOOD_ELF = 0x12,
     CREATURE_MAGE = 0x22,
     CREATURE_ARCH_MAGE = 0x23,
     CREATURE_ENCHANTER = 0x88,

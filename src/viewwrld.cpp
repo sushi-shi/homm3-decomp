@@ -43,7 +43,7 @@
 // 0x6aab78/0x6aab79) and mines < artifacts < towns < heroes ascends the
 // same way in both. That correspondence is what fixes the two addresses
 // this file had no reader for until now.
-DATA(0x0068c6bc) int g_viewWorldScale;
+DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
 static unsigned char g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
