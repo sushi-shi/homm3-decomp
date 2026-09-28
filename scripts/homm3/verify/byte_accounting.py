@@ -187,6 +187,15 @@ def startup_ranges(comparison):
     return ranges
 
 
+def cleanup_ranges(comparison):
+    """Code a claimed parent references; each body is counted once."""
+    rows = {(r['rva'], r['size']): r for r in
+            comparison['matches'] + comparison['dependencies']}
+    return [Range(rva, rva+size, 'source-cleanup-exact',
+                  f"{row['unit']}:{row['symbol']}@{rva:x}", 3)
+            for (rva, size), row in sorted(rows.items())]
+
+
 def padding_ranges(comparison, category, aligned=None):
     """Compiler/linker alignment bytes proven through the next boundary.
 
@@ -418,6 +427,7 @@ def report(model=None):
     from homm3.verify.startup_bodies import compare as compare_startup
     from homm3.verify import source_padding
     from homm3.verify.shared_initializers import compare as compare_shared
+    from homm3.verify.local_cleanups import compare as compare_cleanups
     from homm3.verify.source_padding import compare as compare_padding
     model = model or resolve()
     enrolled = manifest_rows()
@@ -434,6 +444,7 @@ def report(model=None):
     shared_credit = dict(matches=shared['matches'], dependencies=[
         row for row in shared['dependencies'] if row['rva'] not in claimed_code])
     objects = source_padding.Objects(project)
+    cleanups = compare_cleanups(project, pe, model, enrolled, objects)
     functions = source_padding.function_entries(model)
     padding = compare_padding(project, pe, functions, objects)
     # A cleanup body that is also a claimed source function is checked once.
@@ -442,13 +453,14 @@ def report(model=None):
         source_padding.Entry(row['unit'], row['symbol'], row['rva'], row['size'],
                              f"{row['unit']}:{row['symbol']}")
         for row in (startup['matches'] + startup['dependencies']
-                    + shared['matches'] + shared_credit['dependencies'])
+                    + shared['matches'] + shared_credit['dependencies']
+                    + cleanups['matches'] + cleanups['dependencies'])
         if row['rva'] not in claimed], objects)
     groups = verified_eh_groups(pe, model)
     eh_padding = source_padding.compare_eh(project, pe, groups, objects)
     domains = account(pe, model, enrolled, sections, groups=groups,
                       initializers=initializer_ranges(dynamic)+startup_ranges(startup)
-                      + startup_ranges(shared_credit)
+                      + startup_ranges(shared_credit) + cleanup_ranges(cleanups)
                       + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
                       + padding_ranges(startup_padding, 'source-initializer-padding-exact',
                                        'source-padding-aligned')
@@ -458,6 +470,7 @@ def report(model=None):
            'source_initializers': dynamic,
            'startup_initializers': startup,
            'shared_initializers': shared,
+           'local_cleanups': cleanups,
            'source_padding': dict(functions=padding, startup=startup_padding,
                                   eh_contributions=eh_padding),
            'model_violations': model.violations, 'totals': {}}

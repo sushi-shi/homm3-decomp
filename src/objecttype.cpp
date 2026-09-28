@@ -137,6 +137,10 @@ std::istream& operator>>(std::istream& is, TObjectType& objectType);
 MAC_ADDRESS(0x223798, 0x78)
 static TObjectImageNameTable& getObjectImageNames()
 {
+    // Inlined into both callers: bit 0 of 0x69cb64 guards the table and
+    // its destructor callback 0x514050 is registered with _atexit.
+    DATA_COMPGEN_GUARD(0x0069cb64, imageNamesGuard, imageNames)
+    DATA(0x0069cb80)
     static TObjectImageNameTable imageNames;
     return imageNames;
 }
@@ -458,6 +462,9 @@ VA(0x00514960, 0xAD) MAC_ADDRESS(0x223dcc, 0x80)
 const std::basic_string<char, std::char_traits<char>, std::allocator<char> >&
 TObjectType::getImageName()
 {
+    // Bit 0 of 0x69cb70 guards the empty string; 0x514a10 releases it.
+    DATA_COMPGEN_GUARD(0x0069cb70, emptyImageNameGuard, emptyImageName)
+    DATA(0x0069cb48)
     static std::string emptyImageName;
     TObjectImageNameTable& imageNames = getObjectImageNames();
 

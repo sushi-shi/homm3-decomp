@@ -5145,6 +5145,11 @@ int army::getSpeed() const
     return speed;
 }
 
+// The nine-byte default constructor at 0x448d20 is army.obj's retained
+// TResourceHandle<sample> COMDAT (ICF-folded with identical four-byte
+// null constructors); vector iterators elsewhere pass its address.
+VA_COMPGEN(0x00448d20, 0x9, CLASS_CTOR, TResourceHandle)
+
 VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
 VA_COMPGEN(0x00449130, 0x8E, DEQUE_FREEBACK, int)
 
