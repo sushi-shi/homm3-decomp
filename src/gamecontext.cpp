@@ -35,6 +35,14 @@ int& g_videoGameState = g_defaultGameContext;
 // Unsuffixed integer literals are byte-flat. An implicit scalar initializer
 // list constructs directly into the array and loses retail's stack temporary,
 // so explicit bitset temporaries are retained.
+// `homm3 vc6 predict-inline --trace` on the initializer: the $E wrapper has
+// cb 16 (budget 1000), the initializer cb 68, each bitset<4>(unsigned long)
+// cb 95 at depth 2 (remaining 4), then _Tidy cb 72 and set cb 91 at depth 3.
+// set's budgets are 137, 121, 88 and 82, so the first two expand. Refusing
+// all four needs a first budget below 91: an initializer cb of at least 254,
+// or at least six depth-2 candidates. Flag-constant masks (FA | FB ...), a
+// returning file-static helper, nested temporaries and unsuffixed literals
+// all still expand the first two, so the retail spelling stays unknown.
 DATA(0x00699240)
 std::bitset<4> g_gameContextFeatures[4] = {
     std::bitset<4>(1ul), std::bitset<4>(3ul),

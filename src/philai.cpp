@@ -82,11 +82,18 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
 DATA(0x0069cca4) static unsigned char g_mainLoopInitFlags;
 DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 
-// Unrecovered: retail CRT root 0x52bda0 default-constructs a TU-local
-// std::string at 0x69ccd8 (allocator byte, then pointer/length/reserve at
-// +4/+8/+0xc) and registers cleanup 0x52bdd0, which frees the pointer. No
-// retail code reads the object and no source names it, so the declaration
-// is not invented here.
+// Unrecovered, and not this compiland's: retail CRT root 0x52bda0
+// default-constructs a 16-byte object at 0x69ccd8 (allocator byte, then
+// three zeroed words) and registers cleanup 0x52bdd0, which deletes the
+// first word and zeroes all three. That cleanup is a vector's, not a
+// string's (VC6's string _Tidy tests the reference count first), and VC6
+// emits it without a frame only for an internal-linkage `static
+// std::vector<T>` of a trivially destructible T; an external vector keeps a
+// frame. philAI's own facet guard 0x52bd30 and its template bodies precede
+// the root, and a second facet guard 0x52bdf0 follows its cleanup, so the
+// object belongs to a separate compiland linked between philai and
+// puzzlewindow (link order is alphabetical by source name). No retail code
+// reads it; its element type and compiland are unknown.
 
 // Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
 // Its retail cell immediately follows the nine-row town hierarchy table; this

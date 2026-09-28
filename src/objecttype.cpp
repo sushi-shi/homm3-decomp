@@ -10,7 +10,13 @@
 // register their destructors; this compiland included the header.
 // Its facet-id initializer 0x51b830 also guards num_put (0x6aba98) before
 // num_get (0x6aba7c); no recovered code here instantiates num_put, so that
-// 121-byte body stays unmatched.
+// 121-byte body stays unmatched. VC6 orders those guards by instantiation:
+// any arithmetic insertion into an ostream parsed before the first
+// arithmetic extraction - even inside an unreferenced inline function that
+// emits no code - reproduces retail's ctype<unsigned short>, num_put,
+// num_get, numpunct body exactly. Retail keeps no ostream code in this
+// compiland, so that insertion was dead code the linker removed; its
+// content is unknown and is not invented here.
 #include <iostream>
 #include <map>
 #include <stdlib.h>

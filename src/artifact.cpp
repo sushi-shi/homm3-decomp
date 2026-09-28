@@ -287,6 +287,12 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
 // the register differences do not establish a missing copy helper.
 // The neighboring combination cinit matches all 664 bytes / 24 relocations.
 // Both cinits remain outside the ordinary function-score inventory.
+// `homm3 vc6 predict-inline --trace`: the initializer has cb 258, the
+// default constructor (cb 34) is free and _Tidy (cb 72) meets a budget of
+// 742, so it expands; retail refused it, which needs a budget below 72.
+// makeArtifactSlotMask never divides that budget: its callee flags (0x708)
+// fail the candidate gate. Removing or moving the explicit bitset<19>
+// instantiation leaves the initializer unchanged.
 DATA(0x00693898)
 const std::bitset<19> g_artifactSlotMasks[15] = {
     std::bitset<19>(),
