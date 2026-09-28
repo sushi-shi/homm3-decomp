@@ -1000,9 +1000,14 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
         totals = data_accounting['totals']['file']
         initializers = data_accounting['initializers']
         exact = sum(row['verdict'] == 'exact' for row in initializers)
+        dynamic = data_accounting.get('source_initializers', {}).get('matches', [])
+        dynamic_summary = (f"{len(dynamic):,} source-emitted CRT bodies exact "
+                           f"({sum(r['size'] for r in dynamic):,} bytes). "
+                           if dynamic else "")
         block += ["", f"**Byte accountability:** {totals.get('missing', 0):,} file bytes "
                   f"unclaimed; {totals.get('overlap', 0):,} bytes with conflicting claims. "
                   f"{exact:,} / {len(initializers):,} enrolled initializer comparisons exact. "
+                  + dynamic_summary +
                   "[Data reports](docs/tooling/data-matching.md) separate ownership, "
                   "raw byte comparisons and verified library ranges."]
     block += ["", RM_END]

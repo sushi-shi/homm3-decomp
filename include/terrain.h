@@ -61,10 +61,10 @@
 // kMaxRunLength/kOpaqueRunCode in the sprite modules), so the absence
 // is evidence. They are plain file-scope statics.
 
-// NO DATA() CLAIMS: these are per-TU statics, so each including TU owns
-// a different ten-dword .bss run. There is no single address to claim,
-// and the initializer funclets are the cinit excluded class - never
-// claimed as functions either.
+// These per-TU statics have no single DATA address. The source-initializer
+// verifier pairs each emitted CRT body with retail, including its named
+// _Xran call and destination store. It accounts for the individual copies
+// without assigning an unproven retail TU or adding independent VA claims.
 
 // WHICH TUs GET THIS HEADER - decided by retail bytes, not by the DC
 // file column. Scanning config/retail/functions.tsv for the size run

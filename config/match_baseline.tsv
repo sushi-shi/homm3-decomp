@@ -4183,7 +4183,7 @@ spellbookwindow	?gotoPage@TSpellbookWindow@@QAEXH@Z	99.7157	99.7157	100.0000	0x1
 spellbookwindow	?open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970	tokens1:5b26676df7db
 spellbookwindow	?reset@TSpellbookWindow@@SIXXZ	100.0000	100.0000	100.0000	0x19ba80	tokens1:68c0b2c7fb61
 spellbookwindow	?windowHandler@TSpellbookWindow@@UAEHAAVmessage@@@Z	99.9506	99.9506	100.0000	0x19d040	tokens1:c899193341b8
-spelldefs	?initializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.7360	99.8350	100.0000	0x19e150	tokens1:6e5f0b9198d0
+spelldefs	?initializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.8350	99.8350	100.0000	0x19e150	tokens1:6e5f0b9198d0
 spelldefs	?initializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090	tokens1:4490b7081971
 spelldefs	?spellTargetsASingleArmy@@YIEHH@Z	99.7368	99.7368	100.0000	0x19e060	tokens1:694d99b0f093
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	98.3333	98.3333	100.0000	0x19e4d0	-

@@ -55,7 +55,11 @@
 #include "window.h"
 #include "winmgr.h"
 
-// Initial contents recovered from the pinned Complete image.
+// DC name: suffix. Retail saveGame passes 0x691268 to sprintf/strcat.
+// The current 20-byte extent is unresolved: verified terrain initializers
+// write independent masks at 0x691270, 0x691274 and 0x691278. The observed
+// suffixes need five bytes; neither unbounded string calls nor that next
+// object establish whether this buffer's declaration used five to eight.
 DATA(0x00691268) char g_saveGameSuffix[20];
 
 // Retail static constructor 0x405db0.

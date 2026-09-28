@@ -25,6 +25,21 @@ from homm3.core.common import HOMM3_DIR
 
 _INC_RE = re.compile(r'^[ \t]*#[ \t]*include[ \t]*[<"]([^>"]+)[>"]', re.M)
 
+def _include_file(root, name):
+    path = root / name
+    if path.is_file():
+        return path
+    # The original SDK uses uppercase filenames; Wine resolves them without
+    # regard to case. Dependency receipts must include those same headers.
+    path = root
+    for part in name.replace('\\', '/').split('/'):
+        if not path.is_dir():
+            return None
+        path = next((p for p in path.iterdir() if p.name.lower() == part.lower()), None)
+        if path is None:
+            return None
+    return path if path.is_file() else None
+
 def scan_header_deps(src, *inc_roots):
     """Recover header dependencies independently of compiler diagnostic output: recursively resolve
     every `#include` against the search roots (+ each file's own dir for "quoted"
@@ -45,8 +60,9 @@ def scan_header_deps(src, *inc_roots):
         except OSError:
             continue
         for inc in _INC_RE.findall(text):
-            for cand in [f.parent / inc] + [r / inc for r in inc_roots]:
-                if cand.is_file():
+            for root in [f.parent, *inc_roots]:
+                cand = _include_file(root, inc)
+                if cand is not None:
                     stack.append(cand.resolve()); break
     return sorted(str(p) for p in seen if p != src)
 
@@ -132,6 +148,14 @@ def main():
     project_includes = Project(HOMM3_DIR).includes
     incs = [msvc / "include", *(p for p in project_includes if p.is_dir())]
     os.environ["INCLUDE"] = ";".join(winepath_w(p) for p in incs)
+    from homm3.core import compile_receipt
+    inputs = compile_receipt.snapshot([
+        src, *scan_header_deps(src, *incs),
+        *[p for p in (msvc / 'bin').iterdir()
+          if p.is_file() and p.suffix.lower() in ('.exe', '.dll')],
+        HOMM3_DIR / 'config/units.toml', HOMM3_DIR / 'config/project.toml',
+        Path(__file__), Path(compile_receipt.__file__),
+    ])
     output, rc, produced = _compile_staged(
         out, lambda staged: ["wine", str(cl), *flags,
                              f"/Fo{winepath_w(staged)}", winepath_w(src)])
@@ -141,6 +165,10 @@ def main():
         sys.stderr.write(f"[cc_wrap] full diagnostics: {diagnostic_log}\n")
         sys.stderr.write(f"[cc_wrap] FAILED {src.name} -> {out}\n" + "\n".join(output.strip().splitlines()[-15:]) + "\n")
         sys.exit(rc or 1)
+    try:
+        compile_receipt.publish(out, inputs, flags)
+    except (OSError, ValueError) as error:
+        die(str(error))
     # Emit a conservative depfile so Ninja recompiles on local-header edits.
     deps = scan_header_deps(src, *project_includes)
     dep_list = " ".join(d.replace(" ", "\\ ") for d in deps)

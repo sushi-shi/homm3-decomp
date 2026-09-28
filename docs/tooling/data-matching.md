@@ -99,6 +99,24 @@ size. Bytes between separate cleanup bodies remain unclaimed. Explicit source
 body claims take priority, including catch handlers already inside their parent.
 This attribution does not assert that the candidate cleanup bytes match.
 
+`source-initializer-exact` ranges compare the ordinary terrain header's
+dynamic initializers with the retail CRT entries. Their instructions, named
+call targets, relocation sites and destination stores must all agree. Typed
+source declarations supply the destination extents. The checked CRT table
+supplies roots; reviewed function extents exclude alignment padding. A raw
+VC6 object is accepted only with a current content receipt for its source,
+headers, compiler and flags. Missing or stale evidence leaves bytes unclaimed.
+
+These results appear in `data_coverage.json` under `source_initializers`.
+Repeated header copies identify a declaration but do not establish the retail
+TU. The compiled witness is recorded separately; no per-copy handwritten
+address ledger is needed. Conflicting storage claims remain overlaps in the
+image partition and findings in that report. These generated bodies do not
+inflate the independent game-function matching denominator.
+`source-initializer-padding-exact` separately records the compiler's emitted
+alignment bytes when retail repeats them through the next reviewed function
+boundary. A zero-filled or NOP-looking gap alone is not sufficient.
+
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.
 Pointer words require a known target plus the correct addend, and the relocation

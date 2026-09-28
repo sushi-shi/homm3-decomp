@@ -145,11 +145,28 @@ def compiler_ranges(pe, model):
     return out
 
 
-def account(pe, model, enrolled, sections):
+def initializer_ranges(comparison):
+    ranges = []
+    for row in comparison['matches']:
+        owner = row['owner']
+        name = f"{owner['source']}:{owner['name']}@{row['destination']:x}"
+        ranges.append(Range(row['rva'], row['rva']+row['size'],
+                            'source-initializer-exact', name, 2))
+        if row.get('padding_size'):
+            end = row['rva'] + row['size']
+            ranges.append(Range(end, end+row['padding_size'],
+                                'source-initializer-padding-exact', name, 2))
+        ranges.append(Range(row['destination'], row['destination']+owner['size'],
+                            'game', name, 2))
+    return ranges
+
+
+def account(pe, model, enrolled, sections, *, initializers=()):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
-    claims = model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
+    claims = (model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
+              + list(initializers))
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     for claim in claims:
@@ -291,14 +308,19 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
 def report(model=None):
     from homm3.model import resolve
     from homm3.core.pe import image
+    from homm3.core.common import HOMM3_DIR
+    from homm3.core.project import Project
+    from homm3.verify.source_initializers import compare
     model = model or resolve()
     enrolled = manifest_rows()
     section_path = BUILD / 'gen/delink_data_section_manifest.tsv'
     sections = read(section_path)[2] if section_path.is_file() else []
     pe = image()
-    domains = account(pe, model, enrolled, sections)
+    dynamic = compare(Project(HOMM3_DIR), pe, model)
+    domains = account(pe, model, enrolled, sections, initializers=initializer_ranges(dynamic))
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
+           'source_initializers': dynamic,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()
