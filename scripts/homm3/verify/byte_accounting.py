@@ -587,7 +587,7 @@ def report(model=None):
     found = retail_records.metadata(pe, model, sites)
     constants = retail_records.fp_constants(pe, sites, retail_records.library_code(model))
     comdats = retail_records.comdat_contributions(enrolled)
-    members, compiler_padding = retail_records.ordinary_members(pe, enrolled)
+    members, compiler_padding = retail_records.ordinary_members(pe, enrolled, model=model)
     literals = retail_records.source_literals(HOMM3_DIR, pe)
     pushed = retail_records.referenced_literals(
         pe, sites, [(r.start, r.end) for x in (found, constants) for r in x.ranges])

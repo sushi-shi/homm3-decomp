@@ -731,7 +731,7 @@ border	?onSetFocus@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x4df0	tokens1:b063
 border	?setImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0	tokens1:e1d17acb579a
 border	?setPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520	tokens1:e3c6cbb4fc12
 border	?zBufferDraw@bitmapBorder@@UBEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0	tokens1:7b25b80f92b7
-bottomviewsubwindow	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	99.6667	99.6667	100.0000	0x53970	-
+bottomviewsubwindow	??0?$basic_ostream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N1@Z	99.7500	99.7500	100.0000	0x53970	-
 bottomviewsubwindow	??0?$basic_streambuf@DU?$char_traits@D@std@@@std@@IAE@XZ	99.9039	99.9039	100.0000	0x53f50	-
 bottomviewsubwindow	??0?$fpos@H@std@@QAE@J@Z	99.2500	99.2500	100.0000	0x54390	-
 bottomviewsubwindow	??0?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@QAE@I@Z	99.8148	99.8148	100.0000	0x546e0	-
@@ -741,8 +741,8 @@ bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	97.7060	97.7060	97
 bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.4898	98.4898	98.5213	0x52b80	tokens1:a98b42125081
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.9062	99.9062	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	99.9612	99.9612	100.0000	0x50dd0	tokens1:1245c50fac02
-bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.8480	99.8480	100.0000	0x51220	tokens1:adf5affa5312
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.7517	94.7517	98.7476	0x521f0	tokens1:eea1e18aec74
+bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.8649	99.8649	100.0000	0x51220	tokens1:adf5affa5312
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.7584	94.7584	98.7476	0x521f0	tokens1:eea1e18aec74
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
 bottomviewsubwindow	??0ios_base@std@@IAE@XZ	98.7500	98.7500	100.0000	0x515c0	-
@@ -2731,7 +2731,7 @@ newgame	?getVictoryConditionText@game@@QAEXPAD@Z	99.9277	99.9277	100.0000	0x1139
 newgame	?initNewGame@game@@QAEXHHPAVNewSMapHeader@@PAVTAbstractFile@@@Z	99.9853	99.9853	100.0000	0x113320	tokens1:54b876117b98
 newgame	?pickAlignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0	tokens1:11bc8aa15f7e
 newgame	?showScenInfo@game@@QAEXXZ	100.0000	100.0000	100.0000	0x113740	tokens1:031ac5d30e89
-objecttype	??0?$basic_istream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N@Z	99.6552	99.6552	100.0000	0x1151b0	-
+objecttype	??0?$basic_istream@DU?$char_traits@D@std@@@std@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@1@_N@Z	99.7414	99.7414	100.0000	0x1151b0	-
 objecttype	??0?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@IDABV?$allocator@D@1@@Z	100.0000	100.0000	100.0000	0x11a120	-
 objecttype	??0?$bitset@$0DA@@std@@QAE@K@Z	100.0000	100.0000	100.0000	0x1154a0	-
 objecttype	??0?$ctype@D@std@@QAE@PBF_NI@Z	99.6914	99.6914	100.0000	0x115f50	-
@@ -2823,7 +2823,7 @@ objecttype	?insert@?$vector@UTImageInfo@TObjectType@@V?$allocator@UTImageInfo@TO
 objecttype	?insert@?$vector@UTObjectType@@V?$allocator@UTObjectType@@@std@@@std@@QAEXPAUTObjectType@@IABU3@@Z	100.0000	100.0000	100.0000	0x1167a0	-
 objecttype	?ipfx@?$basic_istream@DU?$char_traits@D@std@@@std@@QAE_N_N@Z	99.9330	99.9330	100.0000	0x115ca0	-
 objecttype	?is@?$ctype@D@std@@QBE_NFD@Z	100.0000	100.0000	100.0000	0x119500	-
-objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	99.7632	99.7632	100.0000	0x114d80	tokens1:b913d6f6d6c8
+objecttype	?load@TObjectTypeTable@@QAEXPAD@Z	99.7895	99.7895	100.0000	0x114d80	tokens1:b913d6f6d6c8
 objecttype	?replace@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@IIPBDI@Z	99.9123	99.9123	100.0000	0x115a80	-
 objecttype	?rfind@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBEIPBDII@Z	100.0000	100.0000	100.0000	0x115c20	-
 objecttype	?sbumpc@?$basic_streambuf@DU?$char_traits@D@std@@@std@@QAEHXZ	100.0000	100.0000	100.0000	0x117b10	-
@@ -2992,7 +2992,7 @@ questlogwindow	?questSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100
 questlogwindow	?questTextRow@type_quest@@QAEPBUTSeerHutTextColumn@@XZ	100.0000	100.0000	100.0000	0x12e6b0	tokens1:2b11ec27953d
 questlogwindow	?updateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270	tokens1:7e40b6070e75
 questlogwindow	?windowHandler@TQuestLogWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410	tokens1:ae8c747ccc08
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	95.2807	95.2807	97.5654	0x12ead0	tokens1:cb1da96df78c
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	95.2875	95.2875	97.5654	0x12ead0	tokens1:cb1da96df78c
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	99.8684	99.8684	100.0000	0x12f3d0	tokens1:dbf31bd3831a
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0	-
 quickherowindow	?init@?$basic_ios@DU?$char_traits@D@std@@@std@@IAEXPAV?$basic_streambuf@DU?$char_traits@D@std@@@2@_N@Z	100.0000	100.0000	100.0000	0x12f440	-
@@ -3004,7 +3004,7 @@ quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	99.9737	99.9
 quicktownwindow	??1TQuickTownWindow@@UAE@XZ	99.8684	99.8684	100.0000	0x130920	tokens1:d6dd0e2f0448
 quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1307a0	-
 quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x130ca0	tokens1:bb3d922d203c
-quicktownwindow	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	99.8755	99.8755	100.0000	0x130990	tokens1:9ff74b845702
+quicktownwindow	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	99.8963	99.8963	100.0000	0x130990	tokens1:9ff74b845702
 quicktownwindow	?quickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30	tokens1:955bd9ea3854
 recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	98.8811	98.8811	99.0102	0x14e850	tokens1:f109715efb97
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	99.8750	99.8750	100.0000	0x151350	tokens1:a25baeb49e81
@@ -3169,7 +3169,7 @@ resourcedisplay	??1TResourceDisplay@@UAE@XZ	100.0000	100.0000	100.0000	0x158e80	
 resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158e50	-
 resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	99.9039	99.9039	100.0000	0x159020	tokens1:abd79301d80a
 resourcedisplay	?update@TResourceDisplay@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x158f20	tokens1:d0a93af9970f
-resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.6552	99.6552	100.0000	0x15d410	-
+resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.7126	99.7126	100.0000	0x15d410	-
 resourcemanager	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.8837	99.8837	100.0000	0x15e440	-
 resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	99.9167	99.9167	100.0000	0x15d2c0	-
 resourcemanager	??0?$pair@PBDPAVresource@@@std@@QAE@ABQBDABQAVresource@@@Z	100.0000	100.0000	100.0000	0x15ecf0	-
@@ -3231,8 +3231,8 @@ resourcemanager	?read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	10
 resourcemanager	?read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z	99.6154	99.6154	100.0000	0x1590f0	tokens1:12f49cab0faf
 resourcemanager	?readFromBitmapResource@ResourceManager@@YIHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0x15d0d0	tokens1:fd17c5cb4728
 resourcemanager	?remapGraphics@ResourceManager@@YIXXZ	99.9767	99.9767	100.0000	0x159e30	tokens1:19b0d5573bdf
-resourcemanager	?reportMissingSpriteResource@@YIXPBDH0@Z	99.9559	99.9559	100.0000	0x1599e0	tokens1:8d6e3e065292
-resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	99.9663	99.9663	100.0000	0x159510	tokens1:5364e85796f5
+resourcemanager	?reportMissingSpriteResource@@YIXPBDH0@Z	99.9706	99.9706	100.0000	0x1599e0	tokens1:8d6e3e065292
+resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	99.9775	99.9775	100.0000	0x159510	tokens1:5364e85796f5
 resourcemanager	?saturateGraphics@ResourceManager@@YIXXZ	99.9780	99.9780	100.0000	0x15a020	tokens1:0d48c354dd6f
 resourcemanager	?seekoff@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x15d8a0	-
 resourcemanager	?seekpos@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@V32@H@Z	100.0000	100.0000	100.0000	0x15da00	-

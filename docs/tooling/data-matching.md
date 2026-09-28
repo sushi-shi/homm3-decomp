@@ -208,6 +208,50 @@ shortfall checks. Its register tracking is local to a basic block; pointer escap
 and accesses through unknown runtime pointers remain blind spots. A report of no
 findings is not proof that every datum is fully understood.
 
+## Retail records, pairing and padding
+
+`homm3/verify/retail_records.py` adds claims whose extents the retail records
+state themselves. Every pointer word inside such a record must be an admitted
+relocation site; nothing is sized by the distance to a label.
+
+- `compiler-metadata`: exception frames rooted by a registration stub
+  (`mov eax, FuncInfo; jmp ___CxxFrameHandler`) in game code, sized by the
+  FuncInfo's own state/try/catch counts; throw records rooted by a game code
+  word; type descriptors reached from those records or referenced by game
+  code; x87 constants that at least one game function loads with one operand
+  width (named with VC6's `__real@` spelling of the value). Records owned by
+  runtime-library code belong to `homm3 verify library-code`.
+- `structural`: the IAT slots bounded by the import directory.
+- `game`: DATA_COMPGEN string literals whose bytes and NUL equal retail at
+  the annotated address, and C strings that retail pushes (`push imm32`) or
+  stores in an initialized pointer word.
+- `alignment-padding`: a zero gap is padding only when (a) the following
+  claim is a whole contribution whose COFF alignment places it exactly at the
+  aligned end of a preceding whole contribution, or (b) two members of one
+  candidate ordinary section sit at the candidate's own distance in retail and
+  the candidate emitted zeros between them.
+
+The data manifest places one-symbol game COMDAT data (x87 constants, template
+statics, virtual-base tables) and ambiguous literals from corroborated code
+pairings: a claimed function's DIR32 sites pair with retail's up to the first
+offset divergence, each wanted site must sit behind the same instruction bytes
+and at least one referent the model already knows must agree. Constructor
+immediate stores pair in order as well. Source data pointers place literals
+exactly; an ambiguous literal enrolls only when these votes name one address.
+
+`homm3/verify/eh_records.py` compares enrolled FuncInfo/unwind maps with the
+candidate `.xdata$x` record reached through the function's associative
+`.text$x` stub. Self references must name the same offset; unwind actions must
+name the census funclets of that parent in order. Records of functions whose
+bodies still differ are reported non-comparable, not mismatching.
+
+Raw initializer comparisons also resolve a pointer through identical code
+folding (the object's own definition of the named symbol reproduces retail at
+that address) and through identity-preserving spellings that differ only by
+the compiling path (a type's anonymous-namespace hash, VC6's `_name` form for
+statics in an anonymous namespace, a reference's cv letter, a guard's `$S`
+counter symbol in its owner's scope).
+
 ## Provenance
 
 The model and verification implementation was ported from local Gruntz revision

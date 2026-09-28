@@ -475,6 +475,59 @@ def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
 _OWNED_COMDAT_PREFIXES = ("??_C@", "??_7", "??_R", "__CT", "__TI", "$T")
 
 
+def paired_store_votes(model: Model, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} from immediate stores (`mov r/m32, imm32`) paired in order.
+
+    A claimed function whose compiled body stores exactly as many wanted
+    symbol addresses through `C7 /0` as retail's body stores data addresses
+    the same way pairs them in order: constructors publishing vtables and
+    virtual-base tables are the typical case.
+    """
+    import struct
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    from homm3.delink.pdb_synth import UNIT_CHANNELS
+    md = Cs(CS_ARCH_X86, CS_MODE_32)
+    img = retail()
+    fn_extent = {msvc_names.mask(b.name): (b.rva, b.size) for b in model.functions
+                 if b.channel in UNIT_CHANNELS and b.name}
+    data_lo = min(s["va"] for s in img.pe.sections if s["name"] in (".rdata", ".data"))
+    data_hi = max(s["va"] + s["vsize"] for s in img.pe.sections if s["name"] in (".rdata", ".data"))
+    votes: dict[str, set[int]] = defaultdict(set)
+    for _stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & MEM_EXECUTE:
+                continue
+            rel = {site: nm for site, (nm, typ)
+                   in c.typed_relocations(sec["index"]).items() if typ == COFF_DIR32}
+            if not any(wanted(n) for n in rel.values()):
+                continue
+            text = c.section_payload(sec["index"])
+            for off, name in c.defined_symbols(sec["index"]):
+                hit = fn_extent.get(msvc_names.mask(name))
+                if hit is None:
+                    continue
+                rva, size = hit
+                mine = []
+                for insn in md.disasm(text[off:off + size], 0):
+                    if insn.bytes[0] == 0xC7 and insn.size >= 6:
+                        site = off + insn.address + insn.size - 4
+                        mine.append(rel.get(site))
+                body = img.pe.read(rva, size) or b""
+                theirs = []
+                for insn in md.disasm(body, 0):
+                    if insn.bytes[0] == 0xC7 and insn.size >= 6:
+                        value = struct.unpack_from("<I", insn.bytes, insn.size - 4)[0] \
+                            - img.image_base
+                        if data_lo <= value < data_hi:
+                            theirs.append(value)
+                mine = [n for n in mine if n is not None]
+                if mine and len(mine) == len(theirs):
+                    for n, value in zip(mine, theirs):
+                        if wanted(n):
+                            votes[n].add(value)
+    return votes
+
+
 def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
     """Game-emitted COMDAT data placed by corroborated code pairings.
 
@@ -504,6 +557,9 @@ def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
     if not comdats:
         return [], []
     votes = paired_code_votes(model, lambda name: name in comdats, base_dir)
+    for name, rvas in paired_store_votes(model, lambda name: name in comdats
+                                         and name.startswith("??_8"), base_dir).items():
+        votes[name] |= rvas
     img = retail()
     rows, withheld = [], []
     for name, copies in sorted(comdats.items()):

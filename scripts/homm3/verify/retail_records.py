@@ -537,7 +537,7 @@ def comdat_contributions(enrolled, base_dir=None) -> Records:
     return out
 
 
-def ordinary_members(pe, enrolled, base_dir=None):
+def ordinary_members(pe, enrolled, base_dir=None, model=None):
     """Compiler padding inside, and contribution edges of, ordinary sections.
 
     Source data defined in one candidate `.data`/`.rdata`/`.bss` section keeps
@@ -554,6 +554,14 @@ def ordinary_members(pe, enrolled, base_dir=None):
     from homm3.delink.coffx import Obj
     from homm3.verify.byte_accounting import Range
     base_dir = Path(base_dir or BUILD / 'objdiff/base')
+    from homm3.core.common import HOMM3_DIR
+    from homm3.verify.byte_accounting import _guard_owners, bridge_data_name
+    guard_owners = _guard_owners(HOMM3_DIR)
+    owner_names = {}
+    for b in (model.data if model is not None else ()):
+        for entry in (b, *b.aliases):
+            if entry.name:
+                owner_names.setdefault(b.rva, set()).add(msvc_names.mask(entry.name))
     out, pads = Records(), []
     by_unit = {}
     claimed = [(int(r['rva'], 0), int(r['rva'], 0) + int(r['size'], 0),
@@ -574,6 +582,12 @@ def ordinary_members(pe, enrolled, base_dir=None):
         sections = {}
         for r in rows:
             hits = where.get(msvc_names.mask(r['name']), [])
+            if not hits:
+                # Guards and path-spelled statics reach their candidate
+                # symbol through the comparison's identity bridges.
+                bridged = bridge_data_name(msvc_names.mask(r['name']), where,
+                                           guard_owners, owner_names)
+                hits = where.get(bridged, []) if bridged else []
             if len(hits) != 1:
                 continue
             secnum, offset = hits[0]
