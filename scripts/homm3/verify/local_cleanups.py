@@ -66,8 +66,13 @@ def retail_registrations(actual, rva, atexit_rva, image_base):
     return [(site, value - image_base) for site, value in _pushed_to_atexit(actual, is_atexit)]
 
 
-def runtime_names():
-    """{masked symbol: {rva}} from reviewed runtime placements, if present."""
+def runtime_names(library_names=None):
+    """{masked symbol: {rva}} from reviewed runtime placements, if present.
+
+    `library_names` ({rva: {masked name}}, `byte_accounting.library_ranges`)
+    adds every symbol a byte-verified library section defines at its own
+    offset, such as a static data member inside a placed `.bss` section.
+    """
     from homm3.core.paths import RETAIL
     from homm3.core.tsv import read
     path = RETAIL / 'runtime-contributions.tsv'
@@ -82,10 +87,14 @@ def runtime_names():
             if (row.get('kind', 'code') == 'code' and symbol != '-'
                     and not re.fullmatch(r'_?\$[A-Z][0-9]+', symbol)):
                 names[msvc_names.mask(symbol)].add(int(row['rva'], 0))
+    for rva, defined in (library_names or {}).items():
+        for name in defined:
+            if not re.fullmatch(r'_?\$[A-Z][0-9]+', name):
+                names[name].add(rva)
     return names
 
 
-def compare(project, pe, model, enrolled=(), objects=None):
+def compare(project, pe, model, enrolled=(), objects=None, library_names=None):
     from homm3.delink.image import Image
     from homm3.retail_labels.censuses import functions
     image = Image(pe)
@@ -102,7 +111,7 @@ def compare(project, pe, model, enrolled=(), objects=None):
     result = dict(matches=[], dependencies=[], gaps=[])
     candidates = {}
     seen = {}
-    runtime = runtime_names()
+    runtime = runtime_names(library_names)
     for b in sorted(model.functions, key=lambda b: b.rva):
         if b.channel not in ('src', 'src_compgen', 'src_dyninit') or not b.unit:
             continue

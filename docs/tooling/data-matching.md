@@ -176,7 +176,11 @@ but not claimed as storage here. A header's file-static object (such as
 precedes the retail root, and only its address is checked. A call to a name
 the model or the reviewed runtime placements already know must reach that
 address; compiler-private `$E<n>` ordinals from runtime members are never
-used as names.
+used as names. Beyond a placed code section's own symbol, a name is known at
+an address only when a byte-verified library section defines it there: a
+static data member inside a placed `.bss` section (LIBCPMT `locale0.obj`'s
+`ctype<char>::_Cltab`, 0x10 into the section at 0x2ab1b4) is named at its own
+offset, never at the section start.
 
 VC6 pads each function COMDAT to its section alignment with NOP bytes inside
 the section's raw payload. `source-padding-exact` credits the bytes after a

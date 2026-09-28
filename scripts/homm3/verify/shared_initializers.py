@@ -91,7 +91,7 @@ def proposals(body, rva, actual, image, private, targets=None):
     return result
 
 
-def compare(project, pe, model, excluded=()):
+def compare(project, pe, model, excluded=(), library_names=None):
     """Return exact shared bodies, their dependencies and COMMON bindings."""
     from homm3.core.cc_wrap import scan_header_deps
     from homm3.delink.image import Image
@@ -111,7 +111,7 @@ def compare(project, pe, model, excluded=()):
             if entry.name and entry.channel:
                 targets[msvc_names.mask(entry.name)].add(b.rva)
     from homm3.verify.local_cleanups import runtime_names
-    for name, rvas in runtime_names().items():
+    for name, rvas in runtime_names(library_names).items():
         targets[name].update(rvas)
     owned = [(b.rva, b.rva + max(b.size, 1)) for b in model.data if b.channel]
     compiler = [p for p in (project.toolchain / 'bin').iterdir()

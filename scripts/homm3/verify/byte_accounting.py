@@ -613,14 +613,17 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
+    # Byte-verified library sections name their symbols at their own offsets.
+    library, library_report, library_names = library_ranges(pe, model)
     shared = compare_shared(project, pe, model, excluded={
-        row['rva'] for row in startup['matches'] + dynamic['matches']})
+        row['rva'] for row in startup['matches'] + dynamic['matches']},
+        library_names=library_names)
     # A local cleanup that is already a claimed source function keeps its owner.
     claimed_code = {b.rva for b in model.functions if b.channel}
     shared_credit = dict(matches=shared['matches'], dependencies=[
         row for row in shared['dependencies'] if row['rva'] not in claimed_code])
     objects = source_padding.Objects(project)
-    cleanups = compare_cleanups(project, pe, model, enrolled, objects)
+    cleanups = compare_cleanups(project, pe, model, enrolled, objects, library_names)
     functions = source_padding.function_entries(model)
     padding = compare_padding(project, pe, functions, objects)
     # A cleanup body that is also a claimed source function is checked once.
@@ -646,7 +649,6 @@ def report(model=None):
             | {group.stub + 10 for group, _, _ in groups})
     before = source_padding.compare_before(project, pe, model, groups, ends, objects)
     code_extents = reviewed_code_extents(pe, model)
-    library, library_report, library_names = library_ranges(pe, model)
     data_claims = [Range(b.rva, b.rva+b.size, 'game', b.name) for b in model.data
                    if b.size and b.channel]
     # Shared-header initializer bodies are CRT slot targets as well.
