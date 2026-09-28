@@ -170,7 +170,12 @@ symbol proposes. When byte-identical bodies name different private guards
 (`num_get` versus `num_put`), only the unit owning the preceding claimed
 source function may decide. Identical copies identify the header definition,
 not the retail unit. The bound guards are reported in `shared_initializers`
-but not claimed as storage here.
+but not claimed as storage here. A header's file-static object (such as
+`<iostream>`'s `_Ios_init`) binds only through the unit whose claimed code
+precedes the retail root, and only its address is checked. A call to a name
+the model or the reviewed runtime placements already know must reach that
+address; compiler-private `$E<n>` ordinals from runtime members are never
+used as names.
 
 VC6 pads each function COMDAT to its section alignment with NOP bytes inside
 the section's raw payload. `source-padding-exact` credits the bytes after a

@@ -27,23 +27,54 @@ from homm3.delink.coffx import Obj
 from homm3.verify.source_initializers import verified_roots
 from homm3.verify.startup_bodies import Candidate, match
 
-DIR32 = 6
+DIR32, REL32 = 6, 20
 
 
 def commons(obj):
-    """Compiler-private COMMON data: {name: size}."""
-    result = {}
+    """Compiler-private data: {name: size}.
+
+    COMMON symbols carry their size. A header's file-static object (such as
+    <iostream>'s `_Ios_init`) is a static symbol in uninitialized storage;
+    only its first byte is checked, since candidate placement proves no
+    retail extent.
+    """
+    result, statics = {}, defaultdict(list)
     for index, value, section in obj.iter_symbols():
         storage = obj.buf[obj.symptr + index*18 + 16]
+        name = obj.sym_name(index)
         if section == 0 and value and storage == 2:
-            result[obj.sym_name(index)] = value
+            result[name] = value
+        elif (section > 0 and storage == 3 and not name.startswith('.')
+              and obj.section_table[section - 1]['characteristics'] & 0x80):
+            statics[section].append((value, name))
+    for rows in statics.values():
+        for value, name in rows:
+            # Candidate placement does not give a retail extent: bind the
+            # address only and leave the object's size to its DATA owner.
+            result[name] = 1
+            FILE_STATIC.add(name)
     return result
 
 
-def proposals(body, rva, actual, image, private):
-    """COMMON bindings implied by one retail copy, or None on a byte conflict."""
+#: Names of file statics seen by `commons`; each belongs to one unit only.
+FILE_STATIC = set()
+
+
+def proposals(body, rva, actual, image, private, targets=None):
+    """Private-data bindings implied by one retail copy, or None on conflict.
+
+    Unrelocated bytes must agree, and a call to a name the model already
+    places must reach that address.
+    """
     if len(body.payload) != len(actual):
         return None
+    for off, name, kind in body.relocations:
+        known = (targets or {}).get(msvc_names.mask(name))
+        if kind == REL32 and known:
+            addend = struct.unpack_from('<i', body.payload, off)[0]
+            destination = rva + off + 4 + struct.unpack_from('<i', actual, off)[0] - addend
+            if destination not in known:
+                return None
     relocated = set()
     for off, _, _ in body.relocations:
         relocated.update(range(off, off+4))
@@ -79,6 +110,9 @@ def compare(project, pe, model, excluded=()):
         for entry in (b, *b.aliases):
             if entry.name and entry.channel:
                 targets[msvc_names.mask(entry.name)].add(b.rva)
+    from homm3.verify.local_cleanups import runtime_names
+    for name, rvas in runtime_names().items():
+        targets[name].update(rvas)
     owned = [(b.rva, b.rva + max(b.size, 1)) for b in model.data if b.channel]
     compiler = [p for p in (project.toolchain / 'bin').iterdir()
                 if p.is_file() and p.suffix.lower() in ('.exe', '.dll')]
@@ -129,13 +163,19 @@ def compare(project, pe, model, excluded=()):
     for rva in open_roots:
         actual = pe.read(rva, sizes[rva])
         found = []
+        unit = enclosing(rva)
         for emitters in patterns.values():
             stem, candidate, private, name = emitters[0]
-            binding = proposals(candidate.body(name), rva, actual, image, private)
-            if binding is not None:
-                found.append((emitters, binding))
+            binding = proposals(candidate.body(name), rva, actual, image, private, targets)
+            if binding is None:
+                continue
+            # A file static identifies storage of its own unit only.
+            if any(symbol in FILE_STATIC for symbol in binding):
+                emitters = tuple(e for e in emitters if e[0] == unit)
+                if not emitters:
+                    continue
+            found.append((emitters, binding))
         if len({tuple(sorted(b)) for _, b in found}) > 1:
-            unit = enclosing(rva)
             found = [(tuple(e for e in emitters if e[0] == unit), b)
                      for emitters, b in found]
             found = [(emitters, b) for emitters, b in found if emitters]

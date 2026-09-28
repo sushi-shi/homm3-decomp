@@ -1252,6 +1252,10 @@ rva	slot
 0x114a10	-
 # objecttype: ctype<char>::_Term, registered by the retained constructor.
 0x116060	-
+# objecttype: <iostream>'s _Ios_init/_Wios_init destructors, registered by
+# CRT roots 0x516590/0x5165c0.
+0x1165b0	-
+0x1165e0	-
 # rmg: createRiver's static table.
 0x149790	-
 # rmg_terrain: selectTerrainTransition and the two diagonal offset tables.

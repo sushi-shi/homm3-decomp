@@ -17,6 +17,7 @@ the same number. Anything else leaves the referenced bytes unclaimed.
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 import struct
 
 from homm3.core import msvc_names
@@ -65,6 +66,22 @@ def retail_registrations(actual, rva, atexit_rva, image_base):
     return [(site, value - image_base) for site, value in _pushed_to_atexit(actual, is_atexit)]
 
 
+def runtime_names():
+    """{masked symbol: {rva}} from reviewed runtime placements, if present."""
+    from homm3.core.paths import RETAIL
+    from homm3.core.tsv import read
+    path = RETAIL / 'runtime-contributions.tsv'
+    names = defaultdict(set)
+    if path.is_file():
+        for row in read(path)[2]:
+            symbol = row.get('symbol', '-')
+            # Compiler-private ordinals (`$E24`) name nothing outside their
+            # own archive member and would collide with emitted local code.
+            if symbol != '-' and not re.fullmatch(r'_?\$[A-Z][0-9]+', symbol):
+                names[msvc_names.mask(symbol)].add(int(row['rva'], 0))
+    return names
+
+
 def compare(project, pe, model, enrolled=(), objects=None):
     from homm3.delink.image import Image
     from homm3.retail_labels.censuses import functions
@@ -82,6 +99,7 @@ def compare(project, pe, model, enrolled=(), objects=None):
     result = dict(matches=[], dependencies=[], gaps=[])
     candidates = {}
     seen = {}
+    runtime = runtime_names()
     for b in sorted(model.functions, key=lambda b: b.rva):
         if b.channel not in ('src', 'src_compgen', 'src_dyninit') or not b.unit:
             continue
@@ -126,8 +144,10 @@ def compare(project, pe, model, enrolled=(), objects=None):
         if b.unit not in candidates:
             candidate = Candidate(obj)
             # Same-unit names, including VC6's spelling of anonymous scopes.
-            candidates[b.unit] = (candidate, bindings(model, enrolled, b.unit,
-                                                      list(candidate.symbols))[0])
+            unit_targets = bindings(model, enrolled, b.unit, list(candidate.symbols))[0]
+            for name, rvas in runtime.items():
+                unit_targets.setdefault(name, set()).update(rvas)
+            candidates[b.unit] = (candidate, unit_targets)
         candidate, unit_targets = candidates[b.unit]
         for symbol, callback in pairs:
             if callback in claimed or msvc_names.mask(symbol) in targets:

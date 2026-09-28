@@ -5,6 +5,10 @@
 // registry here; the registry's tree nodes hold a VC6 std::string at +0x0c.
 #include "va.h"
 
+// Retail CRT slots 607/608 (0x516590/0x5165c0) construct <iostream>'s two
+// header statics, _Ios_init at 0x69cb59 and _Wios_init at 0x69cb58, and
+// register their destructors; this compiland included the header.
+#include <iostream>
 #include <map>
 #include <stdlib.h>
 #include <string>

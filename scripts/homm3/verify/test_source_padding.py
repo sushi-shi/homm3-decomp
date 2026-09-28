@@ -166,3 +166,13 @@ class ImportThunkTests(unittest.TestCase):
             Path(tmp, 'WSOCK32.LIB').write_bytes(self.archive(
                 self.short_import('_send@16', 'WSOCK32.dll', 19, 0)))
             self.assertEqual(library_imports(Path(tmp), 'WSOCK32.dll'), ({19}, True))
+
+
+class SharedInitializerCallTests(unittest.TestCase):
+    def test_known_callee_must_be_reached(self):
+        body = Body('init', b'\xe8' + bytes(4) + b'\xc3',
+                    ((1, 'ctor', 20),), b'', 16)
+        image = SimpleNamespace(image_base=0x400000)
+        actual = b'\xe8' + struct.pack('<i', 0x200 - 0x105) + b'\xc3'
+        self.assertEqual(proposals(body, 0x100, actual, image, {}, {'ctor': {0x200}}), {})
+        self.assertIsNone(proposals(body, 0x100, actual, image, {}, {'ctor': {0x300}}))
