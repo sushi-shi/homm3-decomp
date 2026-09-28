@@ -30,7 +30,8 @@
 
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
-DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits;
+// CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).
+DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits(799, 599, 0, 0);
 
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set

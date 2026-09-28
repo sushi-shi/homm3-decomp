@@ -172,4 +172,16 @@ extern void* g_videoFile1;
 extern void* g_videoFile2;
 extern void* g_videoFile3;
 
+// Archive state populated by the sound loader; ResourceManager binds each
+// header/count/handle trio in its startup descriptor table.
+extern SoundHeaderStruct* g_soundHeader;
+extern SoundHeaderStruct* g_soundHeaderCd;
+extern SoundHeaderStruct* g_soundHeaderCampaign;
+extern int g_soundCount;
+extern int g_soundCountCd;
+extern int g_soundCountCampaign;
+extern void* g_soundFile;
+extern void* g_soundFileCd;
+extern void* g_soundFileCampaign;
+
 #endif  /* HOMM3_SMACKMGR_H */

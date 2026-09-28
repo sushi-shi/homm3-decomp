@@ -22,8 +22,9 @@
 #include "textresource.h"
 #include "winmgr.h"
 
-// Retail scalar state; startup initial values come from the pinned image.
-DATA(0x0069fab8) std::vector<std::string>* g_seerHutNamesPointer;
+// CRT 0x56c3d0 binds this reference to the text loader's vector.
+// The five other retail references only read the binding.
+DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;
 
 void aiEquipArtifacts(hero* currentHero);
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
@@ -1839,7 +1840,7 @@ int TQuestGuard::save(TAbstractFile* outfile)
 // construct availability, remove names used by this map, then select one.
 inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
-    std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
+    std::vector<unsigned char> nameAvailable(g_seerHutNameList.size());
     unsigned int name;
     for (name = 0; name < nameAvailable.size(); ++name)
         nameAvailable[name] = 1;
@@ -2266,7 +2267,7 @@ std::string TSeerHut::getSeerLogText()
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
@@ -2283,7 +2284,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
@@ -2302,7 +2303,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");

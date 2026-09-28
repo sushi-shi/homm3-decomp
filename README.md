@@ -24,7 +24,7 @@ _CUR / MAX / HIST: 2,729 / 2,730 / 4,458 exact; 97.09% / 97.09% / 98.52% weighte
 | `rmg`        |     3 |   195 / 368 (53.0%) |    93.35% |
 | `network`    |     4 |   197 / 281 (70.1%) |    98.38% |
 | `zlib-1.1.3` |    14 |     62 / 69 (89.9%) |    99.99% |
-| `codec`      |     4 |     23 / 43 (53.5%) |    95.88% |
+| `codec`      |     4 |     23 / 43 (53.5%) |    96.12% |
 | `victor`     |     4 |      5 / 17 (29.4%) |    85.39% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
@@ -36,7 +36,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `init/cleanup thunks` |     1,155 |   95,043 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
-**Byte accountability:** 133,314 file bytes unclaimed; 12 bytes with conflicting claims. 8,391 / 10,489 enrolled initializer comparisons exact. 962 source-emitted CRT bodies exact (88,355 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
+**Byte accountability:** 132,856 file bytes unclaimed; 12 bytes with conflicting claims. 8,403 / 10,501 enrolled initializer comparisons exact. 967 source-emitted CRT bodies exact (88,713 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
 
 <!-- match-score:end -->
 

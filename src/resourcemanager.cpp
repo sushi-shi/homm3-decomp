@@ -454,7 +454,7 @@ static LODFile* findSpriteResource(const char* name)
     TResourceArchiveList& archives =
         g_resourceArchiveContexts[g_videoGameState].m_sprites;
     int remaining = archives.m_count;
-    int* archive = archives.m_indices;
+    const int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {
@@ -473,7 +473,7 @@ static LODFile* findBitmapResource(const char* name)
     TResourceArchiveList& archives =
         g_resourceArchiveContexts[g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
-    int* archive = archives.m_indices;
+    const int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {
@@ -530,7 +530,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
             if (openSprites) {
                 int remaining = context->m_sprites.m_count;
-                int* archive = context->m_sprites.m_indices;
+                const int* archive = context->m_sprites.m_indices;
                 do {
                     int archiveIndex = *archive;
                     bool opened = openArchiveResource(archiveIndex);
@@ -546,7 +546,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
             if (openBitmaps) {
                 int remaining = context->m_bitmaps.m_count;
-                int* archive = context->m_bitmaps.m_indices;
+                const int* archive = context->m_bitmaps.m_indices;
                 do {
                     int archiveIndex = *archive;
                     bool opened = openArchiveResource(archiveIndex);
@@ -1280,8 +1280,20 @@ namespace ResourceManager {
 bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
+TSoundHeaderDescriptor::TSoundHeaderDescriptor(
+    SoundHeaderStruct** sounds, int* count, HANDLE* file)
+    : m_sounds(sounds), m_count(count), m_file(file)
+{
+}
+
+// Retail CRT 0x5592b0 binds campaign, installed, then CD sound archives.
 DATA(0x0069e500)
-TSoundHeaderDescriptor g_soundHeaderDescriptors[3];
+TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
+    TSoundHeaderDescriptor(&g_soundHeaderCampaign, &g_soundCountCampaign,
+                           &g_soundFileCampaign),
+    TSoundHeaderDescriptor(&g_soundHeader, &g_soundCount, &g_soundFile),
+    TSoundHeaderDescriptor(&g_soundHeaderCd, &g_soundCountCd, &g_soundFileCd)
+};
 
 // ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
 // Win32 file read replaces Dreamcast's separate data/header outputs.
@@ -1299,7 +1311,7 @@ bool ResourceManager::getSoundFile(const char* localName,
     TResourceArchiveContext* context =
         &g_resourceArchiveContexts[g_videoGameState];
     int remaining = context->m_sounds.m_count;
-    int* archive = context->m_sounds.m_indices;
+    const int* archive = context->m_sounds.m_indices;
     int x;
 
     do {
@@ -1626,8 +1638,45 @@ TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod")
 };
 
+// Retail CRT 0x559320 supplies these twelve read-only lists and their
+// counts. LOD indices address g_resourceLodSlots; sound indices address
+// g_soundHeaderDescriptors. Context numbers follow g_videoGameState.
+DATA(0x00641028) static const int g_context0Sprites[2] = { 5, 1 };
+DATA(0x00641030) static const int g_context0Bitmaps[2] = { 4, 0 };
+DATA(0x00641038) static const int g_context0Sounds[2] = { 1, 0 };
+DATA(0x00641040) static const int g_context1Sprites[3] = { 7, 3, 1 };
+DATA(0x0064104c) static const int g_context1Bitmaps[3] = { 6, 2, 0 };
+DATA(0x00641058) static const int g_context1Sounds[3] = { 2, 1, 0 };
+DATA(0x00641064) static const int g_context2Sprites[1] = { 1 };
+DATA(0x00641068) static const int g_context2Bitmaps[1] = { 0 };
+DATA(0x0064106c) static const int g_context2Sounds[2] = { 1, 0 };
+DATA(0x00641074) static const int g_context3Sprites[2] = { 1, 3 };
+DATA(0x0064107c) static const int g_context3Bitmaps[2] = { 0, 2 };
+DATA(0x00641084) static const int g_context3Sounds[2] = { 1, 0 };
+
+TResourceArchiveContext::TResourceArchiveContext(
+    int spriteCount, const int* sprites, int bitmapCount, const int* bitmaps,
+    int soundCount, const int* sounds)
+{
+    m_sprites.m_count = spriteCount;
+    m_sprites.m_indices = sprites;
+    m_bitmaps.m_count = bitmapCount;
+    m_bitmaps.m_indices = bitmaps;
+    m_sounds.m_count = soundCount;
+    m_sounds.m_indices = sounds;
+}
+
 DATA(0x0069e538)
-TResourceArchiveContext g_resourceArchiveContexts[4];
+TResourceArchiveContext g_resourceArchiveContexts[4] = {
+    TResourceArchiveContext(2, g_context0Sprites, 2, g_context0Bitmaps,
+                           2, g_context0Sounds),
+    TResourceArchiveContext(3, g_context1Sprites, 3, g_context1Bitmaps,
+                           3, g_context1Sounds),
+    TResourceArchiveContext(1, g_context2Sprites, 1, g_context2Bitmaps,
+                           2, g_context2Sounds),
+    TResourceArchiveContext(2, g_context3Sprites, 2, g_context3Bitmaps,
+                           2, g_context3Sounds)
+};
 
 VA(0x0055cf00, 0x4B) MAC_ADDRESS(0x1545e4, 0x7c)
 void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
@@ -1676,7 +1725,7 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 VA(0x0055d070, 0x5C) MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
-    int* archive =
+    const int* archive =
         g_resourceArchiveContexts[g_videoGameState].m_bitmaps.m_indices;
     for (;;) {
         LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
