@@ -29,6 +29,17 @@ A relocation target without a known extent remains a zero-sized address anchor;
 it does not own every byte up to the next address. Parse failures, extern-only
 claims, ambiguous identities and overlaps remain explicit coverage gaps.
 
+An error confined to one function body withholds that function's local data;
+clean functions can still contribute their typed declarations. Header and
+signature errors withhold the affected parse. Diagnostics remain in the
+extraction report. Anonymous namespace names join only when VC6's source
+module and complete symbol type uniquely agree with the declaration.
+
+Pristine zlib definitions use the existing `config/retail/zlib-map.tsv` with
+`kind = func` or `data`. Data sizes come from the vendor declarations under
+the matching ABI. Initializers and pointer destinations are checked against
+retail; data rows do not enter the function denominator.
+
 `homm3 model` writes `build/gen/bindings.tsv` and `violations.tsv`. The existing
 `symbol_names.csv` is a compatibility export used by the synthetic PDB and
 Windows navigation tools. It is not another hand-maintained symbol ledger.
@@ -75,6 +86,13 @@ between claims and after the last claim are included. Nested overlaps are report
 identical folded copies count once. Section containers have lower priority than
 individual definitions. Provisional gap allocations do not count as recovered data.
 
+`compiler-generated` ranges belong to an implemented source function's exception
+handling. A decoded registration push and retail FuncInfo identify the parent;
+each cleanup must also agree with the reviewed funclet census and its individual
+size. Bytes between separate cleanup bodies remain unclaimed. Explicit source
+body claims take priority, including catch handlers already inside their parent.
+This attribution does not assert that the candidate cleanup bytes match.
+
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.
 Pointer words require a known target plus the correct addend, and the relocation
@@ -82,7 +100,8 @@ site set must agree. A missing referent does not become an exact comparison by
 masking its word. Counts are per enrolled owner, including folded COMDAT copies;
 partition totals count physical bytes once.
 
-Verified library/vendor ranges are separate from game data. Runtime labels without
+Compiled vendor ranges are separate from game data; their initializer verdicts
+still distinguish exact bytes from unresolved comparisons. Runtime labels without
 byte proof are `library-unverified`; they are not exempted as verified library
 coverage. Unknown zero bytes remain unknown: zeros alone do not prove padding.
 PE headers and independently identified resource/relocation sections are structural.

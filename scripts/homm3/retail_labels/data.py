@@ -16,6 +16,42 @@ import tempfile
 from homm3.core import msvc_names
 
 
+def _error_bodies(tu, path, diagnostics):
+    """Locate errors wholly inside source function bodies, or reject the TU.
+
+    Header, signature and file-scope errors can invalidate types everywhere.
+    An error inside an unrelated body does not invalidate a clean function's
+    explicit local array type. Never recover declarations from that bad body.
+    """
+    import clang.cindex as cx
+
+    callable_kinds = {cx.CursorKind.FUNCTION_DECL, cx.CursorKind.CXX_METHOD,
+                      cx.CursorKind.CONSTRUCTOR, cx.CursorKind.DESTRUCTOR,
+                      cx.CursorKind.CONVERSION_FUNCTION, cx.CursorKind.FUNCTION_TEMPLATE}
+    bodies = []
+    pending = list(tu.cursor.get_children())
+    while pending:
+        cursor = pending.pop()
+        if not cursor.location.file or Path(cursor.location.file.name).resolve() != path:
+            continue
+        children = list(cursor.get_children())
+        pending.extend(children)
+        if cursor.kind in callable_kinds:
+            bodies.extend((c.extent.start.offset, c.extent.end.offset)
+                          for c in children if c.kind == cx.CursorKind.COMPOUND_STMT)
+    bad = set()
+    for diagnostic in diagnostics:
+        location = diagnostic.location
+        if not location.file or Path(location.file.name).resolve() != path:
+            return None
+        owners = [(start, end) for start, end in bodies
+                  if start <= location.offset < end]
+        if not owners:
+            return None
+        bad.update(owners)
+    return bad
+
+
 def _declarations(path: Path, profiles, *, bodies=False):
     import clang.cindex as cx
 
@@ -23,8 +59,10 @@ def _declarations(path: Path, profiles, *, bodies=False):
     tu = cx.Index.create().parse(
         str(path), args=[*profiles.for_source(path), '-ferror-limit=0'],
         options=0 if bodies else cx.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
-    errors = [str(d) for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
-    if errors:
+    diagnostics = [d for d in tu.diagnostics if d.severity >= cx.Diagnostic.Error]
+    errors = [str(d) for d in diagnostics]
+    bad_bodies = _error_bodies(tu, path, diagnostics) if bodies else None
+    if errors and (not bodies or bad_bodies is None):
         return {}, errors
     facts = {}
     pending = list(tu.cursor.get_children())
@@ -34,6 +72,8 @@ def _declarations(path: Path, profiles, *, bodies=False):
             continue
         pending.extend(cursor.get_children())
         if cursor.kind != cx.CursorKind.VAR_DECL or not cursor.location.file:
+            continue
+        if any(start <= cursor.location.offset < end for start, end in bad_bodies or ()):
             continue
         annotations = [child.spelling for child in cursor.get_children()
                        if child.kind == cx.CursorKind.ANNOTATE_ATTR]
@@ -76,10 +116,8 @@ def _uncached_declarations(path: Path, profiles):
                                       path.read_text())}
     if requested - facts.keys():
         local, local_errors = _declarations(path, profiles, bodies=True)
-        if not local_errors:
-            facts.update(local)
-        else:
-            errors.extend(local_errors)
+        facts.update(local)
+        errors.extend(local_errors)
     return facts, errors
 
 

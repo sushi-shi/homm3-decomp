@@ -378,7 +378,8 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
             continue
         rows.append({"name": b.name, "object": f"{unit}.c", "rva": b.rva,
                      "size": size, "storage": STORAGE[start],
-                     "provenance": "src-DATA-sizeof"})
+                     "provenance": "zlib-source-sizeof" if b.channel == 'data_zlib'
+                                   else "src-DATA-sizeof"})
     return rows, withheld, skipped
 
 

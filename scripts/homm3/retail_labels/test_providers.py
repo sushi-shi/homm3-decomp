@@ -7,6 +7,29 @@ import unittest
 from homm3.retail_labels import providers
 
 
+class ZlibMapTest(unittest.TestCase):
+    def claims(self, body):
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'zlib.tsv'
+            path.write_text(body)
+            return providers.zlib_map(path)
+
+    def test_legacy_function_schema(self):
+        claims = self.claims('rva\tsize\tname\tunit\n0x100\t16\t_crc32\tcrc32\n')
+        self.assertEqual((claims[0].kind, claims[0].channel), ('func', 'zlib-map'))
+
+    def test_typed_rows_keep_data_out_of_function_channel(self):
+        claims = self.claims('rva\tsize\tname\tunit\tkind\n'
+                             '0x100\t16\t_crc32\tcrc32\tfunc\n'
+                             '0x200\t1024\t_crc_table\tcrc32\tdata\n')
+        self.assertEqual([(c.kind, c.channel, c.size) for c in claims],
+                         [('func', 'zlib-map', 16), ('data', 'zlib-data-map', 1024)])
+
+    def test_unknown_kind_is_rejected(self):
+        with self.assertRaises(ValueError):
+            self.claims('rva\tsize\tname\tunit\tkind\n0x100\t16\t_crc32\tcrc32\ttypo\n')
+
+
 class RelocAliasTest(unittest.TestCase):
     def test_nonzero_addends_collapse_interior_targets_to_owner_base(self):
         with TemporaryDirectory() as tmp:

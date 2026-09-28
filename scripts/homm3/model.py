@@ -147,6 +147,7 @@ def resolve(rows=None) -> Model:
                      if c.meta.get('internal') == '1'}
     channels = {'src-VA': 'src', 'src-VA+ir': 'src', 'src-VA+base': 'src',
                 'src-VA_COMPGEN': 'src_compgen', 'zlib-map': 'functions_zlib',
+                'zlib-data-map': 'data_zlib',
                 'runtime-map': 'functions_static_libs', 'src-DATA': 'src',
                 'src-DATA_COMPGEN': 'src_data_compgen',
                 'src-DATA_COMPGEN_GUARD': 'data_compgen',
@@ -408,7 +409,7 @@ def _collect_inventory():
     # so the delinked objects pair 1:1 against our compiled base objs
     # (inflate.c.obj vs base/inflate.obj)
     for c in providers.zlib_map():
-        put(c.rva, c.name, c.unit, c.size, "func", c.channel)
+        put(c.rva, c.name, c.unit, c.size, c.kind, c.channel)
 
     # 3. runtime map (sizes from the universe)
     for c in providers.runtime_map():

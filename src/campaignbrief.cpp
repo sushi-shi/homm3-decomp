@@ -20,6 +20,7 @@ static int campaignBriefHandler(message& msg);
 #include "multiplayerwindow.h"
 #include "palette.h"
 #include "soundmgr.h"
+#include "text.h"
 #include "textresource.h"
 #include "textscroller.h"
 #include "textwdgt.h"
@@ -44,17 +45,10 @@ DATA(0x00694de0) static unsigned char g_campaignBriefReady;
 DATA(0x00694dec) static int g_campaignBriefFlashLeft;
 DATA(0x00694db0) static unsigned long g_campaignBriefFlashTime;
 
-// Dreamcast publishes the semantic table name. Complete's right-click path
-// independently fixes its THelpText stride and first-pointer use at this
-// address.
-DATA(0x006a59cc) extern THelpText g_campaignBriefHelp[];
-
 void backupGameHeaders(game* dest, game* src);
 
-// Complete's five campaign-difficulty buttons take paired rollover/right-
-// click strings from this contiguous table. Retail fixes the five-row extent
-// by advancing from 0x006a6cb8 to 0x006a6ce0 in AddBonusIcons.
-DATA(0x006a6cb8) static THelpText g_campaignDifficultyHelp[5];
+// AddBonusIcons uses rows 7..11 of g_singleSelectionHelp (0x6a6cb8).
+// initializeHelpText fills that shared table at 0x6a6c80.
 
 // Complete-only arrow callbacks. AddBonusIcons takes 0x457f70 for the
 // left arrow and 0x457fc0 for the right; each responds to left release.
@@ -348,8 +342,8 @@ void TCampaignBrief::addBonusIcons()
 
     for (i = 0; i < 5; ++i) {
         m_difficultyButtons[i]->setHelpText(
-            g_campaignDifficultyHelp[i].m_text,
-            g_campaignDifficultyHelp[i].m_rclick, 0);
+            g_singleSelectionHelp[i + 7].m_text,
+            g_singleSelectionHelp[i + 7].m_rclick, 0);
         m_difficultyButtons[i]->hide();
         m_widgets.push_back(m_difficultyButtons[i]);
     }
@@ -1009,7 +1003,7 @@ static int campaignBriefHandler(message& msg)
                         normalDialog(text.c_str(), 4, -1, -1, -1, 0,
                                      -1, 0, -1, 0, -1, 0);
                     } else {
-                        normalDialog(g_campaignBriefHelp[helpID].m_text,
+                        normalDialog(g_campaignBriefHelp[helpID].m_rclick,
                                      4, -1, -1, -1, 0, -1, 0,
                                      -1, 0, -1, 0);
                     }

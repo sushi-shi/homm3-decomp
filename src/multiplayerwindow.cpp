@@ -20,6 +20,7 @@
 #include "resourcemanager.h"
 #include "slider.h"
 #include "soundmgr.h"
+#include "text.h"
 #include "textresource.h"
 #include "winfile.h"
 #include "winmgr.h"
@@ -99,11 +100,9 @@ inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
 // that does NOT follow the Dreamcast emission order (the reference block above
 // keeps DC order), so they claim their retail RVAs in a dedicated ascending
 // block. Bodies left @stub - the classes are not yet modelled in the header.
-// File-scope storage the constructor reaches. gMultiPlayerHelp is the
-// rollover/right-click help table indexed by (widget id - 101); the two char
-// buffers hold the local player name shown in the entry field and the name of
-// the most recently loaded game (checked for the remote-temp prefix).
-DATA(0x006a6578) THelpText g_multiPlayerHelp[30];
+// The constructor uses g_multiSelectionHelp from row one (0x6a6578),
+// and rows 22/24 for the slider and cancel button. initializeHelpText
+// fills the canonical 25-row table at 0x6a6570.
 
 // Armed by all three retail host paths before they create a DirectPlay
 // session. DC DoNewGame/DoLoadGame identifies iMPExtendedType.
@@ -122,25 +121,9 @@ const long g_dplayErrorUserCancel = 0x88770118;
 // survives for the byte; its descriptive name follows that flag operation.
 DATA(0x00681628) static unsigned char g_sessionKeepAlive = 1;
 
-// The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
-// constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
-// 0x6a7768) is shared by both dialogs; the CHotSeatDlg edit ring uses its own
-// pair (0x6a7758/0x6a775c). No DC name; provisional house names.
-DATA(0x006a7758) char* g_hotSeatEditRollover;
-DATA(0x006a775c) char* g_hotSeatEditRightClick;
-DATA(0x006a7760) char* g_dialogOkHelp;
-DATA(0x006a7768) char* g_dialogBackHelp;
-
-// The generic network host dialog supplies separate help strings for its two
-// edit controls and a label for the session-name field. Retail proves their
-// cells and uses; descriptive names follow those controls.
-DATA(0x006a7770) char* g_sessionNameHelp;
-DATA(0x006a7778) char* g_sessionPasswordHelp;
-// The TCP search dialog's address field uses a distinct rollover string. The
-// second field reuses g_sessionPasswordHelp, while the generic OK/Back buttons keep
-// the shared pair above.
-DATA(0x006a7780) char* g_sessionNameLabel;
-DATA(0x006a7788) char* g_searchAddressHelp;
+// Dialog help comes from g_mpHelp, populated by initializeHelpText at
+// 0x6a7750: row 1 edit, 2 OK, 3 Back, 4 name, 5 password, 6 label,
+// and 7 search address. These are table entries, not separate globals.
 
 // CMPEdit owns the focus-ring links and navigation slots shared by the
 // multiplayer and hot-seat edits. Retail tables 0x640184/0x640130/0x640210
@@ -297,8 +280,8 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     setFocus(m_field1->m_id);
     m_field1->setAutoDraw(1);
     m_field2->setAutoDraw(1);
-    getWidget(OKAY_ID)->setHelpText(g_dialogOkHelp, 0, 0);
-    getWidget(BACK_ID)->setHelpText(g_dialogBackHelp, 0, 0);
+    getWidget(OKAY_ID)->setHelpText(g_mpHelp[2].m_text, 0, 0);
+    getWidget(BACK_ID)->setHelpText(g_mpHelp[3].m_text, 0, 0);
 }
 
 // Mac dialog reads at 0x219b04, 0x219cdc and 0x21ce48 expand
@@ -512,11 +495,11 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_currentIndex = 0;
     m_currentGame = 0;
 
-    setHelpText(g_multiPlayerHelp, 101, 110, 0);
-    m_gameSlider->setHelpText(g_multiPlayerHelp[21].m_text,
-                              g_multiPlayerHelp[21].m_rclick, 0);
-    m_cancel->setHelpText(g_multiPlayerHelp[23].m_text,
-                          g_multiPlayerHelp[23].m_rclick, 0);
+    setHelpText(g_multiSelectionHelp + 1, 101, 110, 0);
+    m_gameSlider->setHelpText(g_multiSelectionHelp[22].m_text,
+                              g_multiSelectionHelp[22].m_rclick, 0);
+    m_cancel->setHelpText(g_multiSelectionHelp[24].m_text,
+                          g_multiSelectionHelp[24].m_rclick, 0);
 
     deleteTempSaveGame(g_config.m_scFile);
 
@@ -1081,10 +1064,10 @@ unsigned char TMultiPlayerWindow::onHost()
 
     CMPInputDlg sessDlg(20, 20);
     sessDlg.m_field1->setText(g_generalText->getText(GENERAL_TEXT_MY_GAME));
-    sessDlg.m_header1->setText(g_sessionNameLabel);
+    sessDlg.m_header1->setText(g_mpHelp[6].m_text);
     sessDlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD));
-    sessDlg.m_field1->setHelpText(g_sessionNameHelp, 0, 0);
-    sessDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
+    sessDlg.m_field1->setHelpText(g_mpHelp[4].m_text, 0, 0);
+    sessDlg.m_field2->setHelpText(g_mpHelp[5].m_text, 0, 0);
     sessDlg.doModal(0);
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
@@ -1317,14 +1300,14 @@ unsigned char TMultiPlayerWindow::onJoin()
     const char* password = 0;
     CMPInputDlg dlg(20, 20);
     if (session->isPasswordProtected()) {
-        dlg.m_header1->setText(g_sessionNameLabel);
+        dlg.m_header1->setText(g_mpHelp[6].m_text);
         dlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD));
         dlg.m_field1->enable(0);
         dlg.m_field1->setText(sessName);
         dlg.drawWindow(1, 0xffff0001, 0xffff);
         dlg.setFocus(dlg.m_field2->m_id);
-        dlg.m_field1->setHelpText(g_sessionNameLabel, 0, 0);
-        dlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
+        dlg.m_field1->setHelpText(g_mpHelp[6].m_text, 0, 0);
+        dlg.m_field2->setHelpText(g_mpHelp[5].m_text, 0, 0);
         dlg.doModal(0);
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_CANCEL)
             return 0;
@@ -1443,8 +1426,8 @@ unsigned char TMultiPlayerWindow::onSearch()
     CMPInputDlg searchDlg(20, 20);
     searchDlg.m_header1->setText(g_generalText->getText(GENERAL_TEXT_NETWORK_HOST_ADDRESS_PROMPT));
     searchDlg.m_header2->setText(g_generalText->getText(GENERAL_TEXT_PASSWORD_OPTIONAL));
-    searchDlg.m_field1->setHelpText(g_searchAddressHelp, 0, 0);
-    searchDlg.m_field2->setHelpText(g_sessionPasswordHelp, 0, 0);
+    searchDlg.m_field1->setHelpText(g_mpHelp[7].m_text, 0, 0);
+    searchDlg.m_field2->setHelpText(g_mpHelp[5].m_text, 0, 0);
     searchDlg.disableOK();
     searchDlg.doModal(0);
 
@@ -1536,7 +1519,7 @@ CHotSeatDlg::CHotSeatDlg()
         m_edit[i] = new CHotSeatEdit(277 - m_x, sy - m_y, 281, 18, 21, "",
                                    "smalfont.fnt", font::WHITE, 0, 0, 0,
                                    FIRST_EDIT_ID + i, 0x100, 0, 7, 5);
-        m_edit[i]->setHelpText(g_hotSeatEditRollover, g_hotSeatEditRightClick, 0);
+        m_edit[i]->setHelpText(g_mpHelp[1].m_text, g_mpHelp[1].m_rclick, 0);
         m_widgets.push_back(m_edit[i]);
         sy += 30;
     }
@@ -1564,10 +1547,10 @@ CHotSeatDlg::CHotSeatDlg()
     for (j = 0; j < 8; j++)
         m_edit[j]->setAutoDraw(1);
     widget* w = getWidget(OKAY_ID);
-    w->setHelpText(g_dialogOkHelp, 0, 0);
+    w->setHelpText(g_mpHelp[2].m_text, 0, 0);
     w->enable(0);
     w = getWidget(BACK_ID);
-    w->setHelpText(g_dialogBackHelp, 0, 0);
+    w->setHelpText(g_mpHelp[3].m_text, 0, 0);
 }
 
 VA(0x005123d0, 0x4E) MAC_ADDRESS(0x21cc6c, 0x78)  // dc 0x102c28

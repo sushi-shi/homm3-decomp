@@ -47,11 +47,6 @@ DATA(0x00684b4c) static int g_lastImHoverId = -1;
 // resets the remembered view when the spellbook changes heroes.
 DATA(0x00684b48) static int g_lastSpellbookHeroId = -1;
 
-// Rollover/right-click pairs for the five school tabs, the two context tabs,
-// the mana label, the page arrows, and the close button.  The constructor
-// fills the zero-initialized rows from the spellbook text resource.
-DATA(0x006a52d0) static THelpText g_spellbookHelpText[11];
-
 // Dreamcast names this table `level_sprites`; the retail .rdata relocation
 // run at 0x641d94 fixes both its order and its four literals.
 DATA(0x00641d94) static const char* const g_levelSprites[] = {
@@ -602,7 +597,7 @@ int TSpellbookWindow::windowHandler(message& msg)
             } else {
                 int helpId = convertID2HelpID(id);
                 if (helpId >= 0)
-                    normalDialog(g_spellbookHelpText[helpId].m_rclick,
+                    normalDialog(g_spellbookHelp[helpId].m_rclick,
                                  4, -1, -1, -1, 0, -1, 0,
                                  -1, 0, -1, 0);
             }
@@ -771,7 +766,7 @@ int TSpellbookWindow::windowHandler(message& msg)
                 } else {
                     int helpId = convertID2HelpID(id);
                     if (helpId >= 0)
-                        rollover = g_spellbookHelpText[helpId].m_text;
+                        rollover = g_spellbookHelp[helpId].m_text;
                     else
                         rollover = "";
                 }

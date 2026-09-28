@@ -1,4 +1,5 @@
 #include "va.h"
+#include "text.h"
 
 #include "gametypewindow.h"
 
@@ -18,11 +19,6 @@ DATA(0x00698a2c) int g_noCdRom;
 // Source-private in the Dreamcast compiland. Retail's constructor stores the
 // active dialog here and its destructor clears it after deleting the widgets.
 DATA(0x006972d8) static TGameTypeWindow* g_gameTypeWindow;
-
-// Help.txt initialization fills this five-row pair table. The Dreamcast
-// public calls it gNewGameHelp, and the retail handler's 8*id indexing proves
-// the THelpText stride and the [0] field used by NormalDialog.
-DATA(0x006a6bfc) extern THelpText g_newGameHelp[5];
 
 // Dreamcast publishes gbNoCDRom, and retail oldmain writes the same address
 // from SetupCDRom before both front-end menus consume it.
@@ -150,7 +146,7 @@ int gameTypeWindowHandler(message& msg)
                 break;
             }
             if (helpIndex >= 0)
-                normalDialog(g_newGameHelp[helpIndex].m_text,
+                normalDialog(g_newGameHelp[helpIndex].m_rclick,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
     } else if (msg.m_id == MESSAGE_WIDGET) {

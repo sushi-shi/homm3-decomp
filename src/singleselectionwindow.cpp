@@ -2380,7 +2380,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
             getWidget(186)->enable(0);
     }
 
-    setHelpText(g_singleSelectionHelp, 104, 345, 0);
+    setHelpText(g_singleSelectionHelp + 4, 104, 345, 0);
     for (i = 0; i < 8; ++i) {
         g_newMapStartingBonus[i] = 3;
         g_startingHeroOverrides[i] = -1;

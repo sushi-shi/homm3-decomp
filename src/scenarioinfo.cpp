@@ -369,7 +369,7 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     // ordinary member boundary; retail expands its five-widget/message body
     // here. Keep the declaration non-inline and let VC6 choose this caller.
     setDifficultyHiLite();
-    setHelpText(g_singleSelectionHelp, 104, 345, 0);
+    setHelpText(g_singleSelectionHelp + 4, 104, 345, 0);
     // Retail +0xccd saves the duration slider in [ebp-0x10]; +0x205c
     // reloads that same object for Enable(false), after SetHelpText.
     durationSlider->enable(0);

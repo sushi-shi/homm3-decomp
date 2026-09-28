@@ -68,7 +68,8 @@ def classify(image=None):
     for r in _rows(RUNTIME_MAP):
         category.setdefault(int(r[0], 16), "runtime")
     for r in _rows(ZLIB_MAP):
-        category.setdefault(int(r[0], 16), "zlib")
+        if len(r) < 5 or r[4] == 'func':
+            category.setdefault(int(r[0], 16), "zlib")
     for r in _rows(INIT_THUNKS):
         rva = int(r[0], 16)
         if rva in functions:

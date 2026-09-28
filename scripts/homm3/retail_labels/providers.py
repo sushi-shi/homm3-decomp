@@ -23,10 +23,17 @@ RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail/reloc-evidence.tsv"
 
 
 def zlib_map(path: Path | None = None) -> list[Claim]:
-    """The reviewed vendored-zlib map: rva, size, name, owning TU."""
+    """The reviewed vendored-zlib function/data map; old rows default to func."""
     _b, _h, raw = read_tsv(path or ZLIB_MAP)
-    return [Claim(int(r["rva"], 16), r["name"], "func", "zlib-map",
-                  int(r["size"]), r["unit"], {}) for r in raw]
+    claims = []
+    for r in raw:
+        kind = r.get('kind', 'func')
+        if kind not in ('func', 'data'):
+            raise ValueError(f'unknown zlib map kind {kind!r} at {r["rva"]}')
+        claims.append(Claim(int(r['rva'], 16), r['name'], kind,
+                            'zlib-map' if kind == 'func' else 'zlib-data-map',
+                            int(r['size']), r['unit'], {}))
+    return claims
 
 
 def runtime_map(path: Path | None = None) -> list[Claim]:

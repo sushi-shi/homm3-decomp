@@ -194,12 +194,15 @@ const char* g_campaignRegionNames[23];
 
 DATA(0x006a8014)
 const char* g_heroScreen[33];
-// --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
+// Help.txt tables share storage with every window that consumes them.
+// initializeHelpText (0x5b98b0) proves each base and populated row count.
+// Original names include gSpellbookHelp, gGiveResourceWindowHelp,
+// gResourceWindowHelp, gSingleSelectionHelp and gUniversityWindowHelp.
 
-// 0x006a52d0 - datum claimed at src/spellbookwindow.cpp:52 (gSpellbookHelpText)
+DATA(0x006a52d0)
 THelpText g_spellbookHelp[11];
 
-// 0x006a53a8 - datum claimed at src/tradpost.cpp:1341 (gGiveHelpText)
+DATA(0x006a53a8)
 THelpText g_giveResourceWindowHelp[5];
 
 DATA(0x006a55a8)
@@ -208,7 +211,7 @@ THelpText g_combatOptionsHelp[39];
 DATA(0x006a56e0)
 THelpText g_adventureWindowHelp[27];
 
-// 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
+DATA(0x006a5868)
 THelpText g_resourceWindowHelp[6];
 
 DATA(0x006a59c8)
@@ -235,7 +238,7 @@ THelpText g_newGameHelp[5];
 DATA(0x006a6c20)
 THelpText g_mainMenuHelp[5];
 
-// 0x006a6c50 - datum claimed at src/tradpost.cpp:1343 (gSellArtHelpText)
+DATA(0x006a6c50)
 THelpText g_sellArtifactWindowHelp[5];
 
 DATA(0x006a6c80)
@@ -259,13 +262,13 @@ THelpText g_mpHelp[8];
 DATA(0x006a77d0)
 THelpText g_transformerWindowHelp[3];
 
-// 0x006a7da8 - datum claimed at src/tradpost.cpp:1344 (gBuyArtHelpText)
+DATA(0x006a7da8)
 THelpText g_buyArtifactWindowHelp[5];
 
-// 0x006a7dd8 - datum claimed at src/university_window.cpp:33 (gUniversityWindowHelp)
-THelpText g_universityWindowHelp2[4];
+DATA(0x006a7dd8)
+THelpText g_universityWindowHelp[4];
 
-// 0x006a7e98 - datum claimed at src/tradpost.cpp:1345 (gSellCreaHelpText)
+DATA(0x006a7e98)
 THelpText g_sellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
@@ -934,8 +937,8 @@ unsigned char initializeHelpText()
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
-        g_universityWindowHelp2[j].m_text = row[0];
-        g_universityWindowHelp2[j].m_rclick = row[1];
+        g_universityWindowHelp[j].m_text = row[0];
+        g_universityWindowHelp[j].m_rclick = row[1];
     }
     return 1;
 }

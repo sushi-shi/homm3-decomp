@@ -89,7 +89,9 @@ def model_ranges(model, enrolled, sections):
             continue
         start, size = int(r['rva'], 0), int(r['size'], 0)
         if size:
-            out.append(Range(start, start+size, 'game', r['name'], 2))
+            category = ('library-vendor' if r.get('provenance') == 'zlib-source-sizeof'
+                        else 'game')
+            out.append(Range(start, start+size, category, r['name'], 2))
     for s in sections:
         if s['rva'] != '-' and int(s['size'], 0):
             start, size = int(s['rva'], 0), int(s['size'], 0)
@@ -99,11 +101,55 @@ def model_ranges(model, enrolled, sections):
     return list(set(out))
 
 
+def compiler_ranges(pe, model):
+    """Attribute EH code to its authored parent, without claiming gap bytes.
+
+    The parent's decoded registration push and FuncInfo identify the owner;
+    the reviewed funclet census must independently agree and supply each
+    cleanup body's own extent. This establishes ownership, not byte matching.
+    """
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    from homm3.core.paths import RETAIL
+    from homm3.delink import eh_band
+    from homm3.retail_labels import censuses
+
+    parents = {b.rva: (b.name, b.unit, b.size) for b in model.functions
+               if b.channel in ('src', 'src_compgen', 'src_dyninit')
+               and b.name and b.unit and b.size}
+    sizes = {r['rva']: r['size'] for r in censuses.functions()}
+    reviewed = {(int(r['rva'], 0), int(r['parent_rva'], 0))
+                for r in read(RETAIL / 'funclets.tsv')[2]}
+    text = pe.section('.text')
+    lo, hi = text['va'], text['va'] + text['vsize']
+    disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
+    out = []
+    for group in eh_band.groups(pe.path, parents, contiguous=False):
+        if group.owner_rva not in parents:
+            continue
+        name, unit, size = parents[group.owner_rva]
+        body = pe.read(group.owner_rva, size)
+        expected = b'\x68' + struct.pack('<I', pe.image_base + group.stub)
+        if body is None or not any(
+                body[address-group.owner_rva:address-group.owner_rva+length] == expected
+                for address, length, _, _ in disassembler.disasm_lite(body, group.owner_rva)):
+            continue
+        if lo <= group.stub < group.stub + eh_band.STUB_SIZE <= hi:
+            out.append(Range(group.stub, group.stub + eh_band.STUB_SIZE,
+                             'compiler-generated', f'{unit}:{eh_band.registration_symbol(name)}', 1))
+        for address in group.funclets:
+            size = sizes.get(address, 0)
+            if ((address, group.owner_rva) in reviewed and size
+                    and lo <= address < address+size <= hi):
+                out.append(Range(address, address+size, 'compiler-generated',
+                                 f'{unit}:EH cleanup for {name}@{address:x}', 1))
+    return out
+
+
 def account(pe, model, enrolled, sections):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
-    claims = model_ranges(model, enrolled, sections)
+    claims = model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     for claim in claims:
@@ -135,6 +181,7 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
     """Raw COFF versus retail, without normalized payloads or guessed extents."""
     from homm3.delink.coffx import Obj
     from homm3.delink.image import Image
+    from homm3.retail_labels.source import vc6_function_name
     base_dir = base_dir or BUILD / 'objdiff/base'
     names = defaultdict(set)
     for b in model.functions + model.data:
@@ -163,9 +210,23 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
         if unit not in objects:
             objects[unit] = Obj(path)
             members[unit] = defaultdict(list)
+            emitted_names = []
             for idx, value, section in objects[unit].iter_symbols():
-                members[unit][msvc_names.mask(objects[unit].sym_name(idx))].append(
-                    (value, section))
+                name = objects[unit].sym_name(idx)
+                members[unit][msvc_names.mask(name)].append((value, section))
+                if section > 0 or section == 0 and value:
+                    emitted_names.append(name)
+            # Clang hashes anonymous namespaces; VC6 encodes their source
+            # filename. Reuse the strict module/signature bridge used for
+            # functions. These aliases apply only inside this object's TU.
+            for owner, spelling in list(names):
+                if owner != unit or '@?A0x' not in spelling:
+                    continue
+                emitted = vc6_function_name(spelling, emitted_names, unit)
+                if emitted is not None:
+                    key = msvc_names.mask(emitted)
+                    names[(unit, key)].update(names[(unit, spelling)])
+                    members[unit][spelling] = members[unit][key]
         obj = objects[unit]
         # Manifest ordinals address the reconstructed TARGET topology; they
         # are compressed and are not candidate COFF section numbers.
