@@ -72,6 +72,7 @@ advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60	tokens1:d
 advmgr	??4hero@@QAEAAV0@ABV0@@Z	99.9203	99.9203	100.0000	0x6480	-
 advmgr	??_GCAdvMgrNetMsgHandler@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x77b0	-
 advmgr	??_GCAdvPopup@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b0e0	-
+advmgr	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z	100.0000	100.0000	100.0000	0x40f0	-
 advmgr	?_Xran@?$bitset@$0DA@@std@@ABEXXZ	99.7887	99.7887	100.0000	0x1b410	-
 advmgr	?advmgrFn0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	99.9578	99.9578	100.0000	0xd670	tokens1:ba7e418e9671
 advmgr	?append@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEAAV12@ABV12@II@Z	99.8438	99.8438	100.0000	0x1b250	-
@@ -1809,8 +1810,8 @@ forcefeedback	??0TImmMouseEffect@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.
 forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAE@PAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb7da0	-
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	99.7287	99.7287	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	99.8837	99.8837	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
-forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\tmp\homm3-gruntz-data-model\src\forcefeedback.cpp2683822885@@QAE@ABV012@@Z	99.6899	99.6899	100.0000	0xb6730	-
-forcefeedback	??0t_initializer@?%Z:\tmp\homm3-gruntz-data-model\src\forcefeedback.cpp2683822885@@QAE@PAX0@Z	99.7164	99.7164	100.0000	0xb6260	tokens1:6dcae3c83456
+forcefeedback	??0t_initialize_failure@t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@QAE@ABV012@@Z	99.6899	99.6899	100.0000	0xb6730	-
+forcefeedback	??0t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@QAE@PAX0@Z	99.7164	99.7164	100.0000	0xb6260	tokens1:6dcae3c83456
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??1?$auto_ptr@VCImmProject@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7050	-
@@ -1820,7 +1821,7 @@ forcefeedback	??8iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@Ut
 forcefeedback	??_GCImmEnclosure@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6c30	-
 forcefeedback	??_GCImmMouse@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb6700	-
 forcefeedback	??_Gt_create_failure@t_enclosure@force_feedback@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x1bed0	-
-forcefeedback	??_Gt_initialize_failure@t_initializer@?%Z:\tmp\homm3-gruntz-data-model\src\forcefeedback.cpp2683822885@@UAEPAXI@Z	99.6429	99.6429	100.0000	0xb66d0	-
+forcefeedback	??_Gt_initialize_failure@t_initializer@?%Z:\tmp\homm3-bytes-lib\src\forcefeedback.cpp1137221408@@UAEPAXI@Z	99.6429	99.6429	100.0000	0xb66d0	-
 forcefeedback	?_Construct@std@@YIXPAU?$pair@QAVCImmEnclosure@@UtagRECT@@@1@ABU21@@Z	100.0000	100.0000	100.0000	0xb7fe0	-
 forcefeedback	?_Dec@const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xb7db0	-
 forcefeedback	?_Erase@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosure@@UtagRECT@@@std@@U_Kfn@?$map@PAVCImmEnclosure@@UtagRECT@@U?$less@PAVCImmEnclosure@@@std@@V?$allocator@UtagRECT@@@4@@3@U?$less@PAVCImmEnclosure@@@3@V?$allocator@UtagRECT@@@3@@std@@IAEXPAU_Node@12@@Z	100.0000	100.0000	100.0000	0xb79d0	-

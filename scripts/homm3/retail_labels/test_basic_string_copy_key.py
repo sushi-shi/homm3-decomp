@@ -28,5 +28,19 @@ class BasicStringCopyKeyTest(unittest.TestCase):
                                     "char@basic_string_copy")
 
 
+class BasicStringTidyKeyTest(unittest.TestCase):
+    def test_char_tidy_maps_to_direct_claim(self):
+        symbol = ("?_Tidy@?$basic_string@DU?$char_traits@D@std@@"
+                  "V?$allocator@D@2@@std@@AAEX_N@Z")
+        self.assertEqual(source._demangle_key(symbol), "char@basic_string_tidy")
+        self.assertIn("BASIC_STRING_TIDY", source.COMPGEN_KINDS)
+        self.assertIn("BASIC_STRING_TIDY", DIRECT_SYMBOL_COMPGEN_KINDS)
+
+    def test_wide_tidy_does_not_match(self):
+        symbol = ("?_Tidy@?$basic_string@GU?$char_traits@G@std@@"
+                  "V?$allocator@G@2@@std@@AAEX_N@Z")
+        self.assertNotEqual(source._demangle_key(symbol), "char@basic_string_tidy")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,7 +11,8 @@
 # label otherwise. Rows get properly mapped as matching
 # proceeds. MFC is absent from the image (docs/reference/executable-libraries.md).
 rva	name
-0x40f0	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z
+# 0x40f0 RETIRED 2026-09-28: basic_string<char>::_Tidy is the game-emitted
+# COMDAT (advmgr claims BASIC_STRING_TIDY); LIBCPMT's 60-byte copy is not linked.
 # 0x4bd0 RETIRED: adventuremapwindow's emitted basic_string<char>::_Copy
 # now owns the complete 264-byte body, including its catch and continuation.
 # See the functions.tsv boundary proof and BASIC_STRING_COPY claim.
