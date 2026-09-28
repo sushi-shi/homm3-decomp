@@ -14,11 +14,276 @@
 DATA(0x006abaa4) unsigned int g_victorUseDibSection;
 DATA(0x006abaa8) VictorCreateDibSection g_victorCreateDibSection;
 DATA(0x006abaac) VictorSetDibColorTable g_victorSetDibColorTable;
+// Victor .rdata that no linked code reads: the linked Victor objects keep
+// their data while retail drops their unreferenced functions. Every object
+// in this band starts 8-byte aligned; the zero bytes before an aligned start
+// (four after each 12-entry value list, six after each 162-entry list, two
+// after the type sizes) are that alignment and remain unclaimed. Extents come
+// from each table's content; all names are invented.
+// A complete permutation of the 64 coefficient positions, as byte offsets of
+// 32-bit coefficients.
+DATA(0x00643e38) extern const unsigned char g_victorJpegCoefficientOffsets[64] = {
+    112, 40, 72, 104, 144, 176, 208, 136, 88, 8, 16, 48, 192, 232, 240, 168,
+    56, 24, 0, 80, 160, 224, 248, 200, 96, 64, 32, 120, 128, 216, 184, 152,
+    148, 180, 212, 140, 116, 44, 76, 108, 196, 236, 244, 172, 92, 12, 20, 52,
+    164, 228, 252, 204, 60, 28, 4, 84, 132, 220, 188, 156, 100, 68, 36, 124
+};
+// JPEG zigzag scan position -> natural (row-major) coefficient index.
+DATA(0x00643e78) extern const unsigned char g_victorJpegZigzagOrder[64] = {
+    0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11, 4, 5,
+    12, 19, 26, 33, 40, 48, 41, 34, 27, 20, 13, 6, 7, 14, 21, 28,
+    35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23, 30, 37, 44, 51,
+    58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63
+};
+// ITU T.81 Annex K.1/K.2 quantization tables in zigzag order.
+DATA(0x00643eb8) extern const unsigned char g_victorJpegLuminanceQuantizer[64] = {
+    16, 11, 12, 14, 12, 10, 16, 14, 13, 14, 18, 17, 16, 19, 24, 40,
+    26, 24, 22, 22, 24, 49, 35, 37, 29, 40, 58, 51, 61, 60, 57, 51,
+    56, 55, 64, 72, 92, 78, 64, 68, 87, 69, 55, 56, 80, 109, 81, 87,
+    95, 98, 103, 104, 103, 62, 77, 113, 121, 112, 100, 120, 92, 101, 103, 99
+};
+DATA(0x00643ef8) extern const unsigned char g_victorJpegChrominanceQuantizer[64] = {
+    17, 18, 18, 24, 21, 24, 47, 26, 26, 47, 99, 66, 56, 66, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+    99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99
+};
+// ITU T.81 Annex K.3 Huffman tables: 16 code-length counts, then the values.
+DATA(0x00643f38) extern const unsigned char g_victorJpegDcLuminanceBits[16] = {
+    0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0
+};
+DATA(0x00643f48) extern const unsigned char g_victorJpegDcLuminanceValues[12] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+};
+DATA(0x00643f58) extern const unsigned char g_victorJpegDcChrominanceBits[16] = {
+    0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+};
+DATA(0x00643f68) extern const unsigned char g_victorJpegDcChrominanceValues[12] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+};
+DATA(0x00643f78) extern const unsigned char g_victorJpegAcLuminanceBits[16] = {
+    0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 125
+};
+DATA(0x00643f88) extern const unsigned char g_victorJpegAcLuminanceValues[162] = {
+    0x01, 0x02, 0x03, 0, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06,
+    0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xa1, 0x08,
+    0x23, 0x42, 0xb1, 0xc1, 0x15, 0x52, 0xd1, 0xf0, 0x24, 0x33, 0x62, 0x72,
+    0x82, 0x09, 0x0a, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x25, 0x26, 0x27, 0x28,
+    0x29, 0x2a, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44, 0x45,
+    0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
+    0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x73, 0x74, 0x75,
+    0x76, 0x77, 0x78, 0x79, 0x7a, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89,
+    0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a, 0xa2, 0xa3,
+    0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6,
+    0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7, 0xc8, 0xc9,
+    0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda, 0xe1, 0xe2,
+    0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf1, 0xf2, 0xf3, 0xf4,
+    0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
+};
+DATA(0x00644030) extern const unsigned char g_victorJpegAcChrominanceBits[16] = {
+    0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119
+};
+DATA(0x00644040) extern const unsigned char g_victorJpegAcChrominanceValues[162] = {
+    0, 0x01, 0x02, 0x03, 0x11, 0x04, 0x05, 0x21, 0x31, 0x06, 0x12, 0x41,
+    0x51, 0x07, 0x61, 0x71, 0x13, 0x22, 0x32, 0x81, 0x08, 0x14, 0x42, 0x91,
+    0xa1, 0xb1, 0xc1, 0x09, 0x23, 0x33, 0x52, 0xf0, 0x15, 0x62, 0x72, 0xd1,
+    0x0a, 0x16, 0x24, 0x34, 0xe1, 0x25, 0xf1, 0x17, 0x18, 0x19, 0x1a, 0x26,
+    0x27, 0x28, 0x29, 0x2a, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x43, 0x44,
+    0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58,
+    0x59, 0x5a, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x73, 0x74,
+    0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87,
+    0x88, 0x89, 0x8a, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0x98, 0x99, 0x9a,
+    0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xb2, 0xb3, 0xb4,
+    0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7,
+    0xc8, 0xc9, 0xca, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0xd9, 0xda,
+    0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf2, 0xf3, 0xf4,
+    0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
+};
+// TIFF 5.0 field-type byte sizes for types 0..5 (none, BYTE, ASCII, SHORT,
+// LONG, RATIONAL).
+DATA(0x006440e8) extern const unsigned char g_victorTiffTypeSizes[6] = {
+    0, 1, 1, 2, 4, 8
+};
+// PageNumber, Predictor and ColorMap tag rows; the IFD template below ends
+// with the same three tags.
+DATA(0x006440f0) extern const VictorTiffTagDefault g_victorTiffTagDefaults[3] = {
+    { 0x129, 3, 2, 0, 0 },
+    { 0x13d, 3, 1, 1, 0 },
+    { 0x140, 3, 0, 0, 0 }
+};
 // Retail masks preserve bits preceding/following an inclusive bit range.
 DATA(0x00644120) const unsigned char g_victorLeadingBits[8] =
     { 0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe };
 DATA(0x00644128) const unsigned char g_victorTrailingBits[8] =
     { 0x7f, 0x3f, 0x1f, 0x0f, 7, 3, 1, 0 };
+// Three RGB bits (red = 1, green = 2, blue = 4) -> standard VGA color index.
+DATA(0x00644130) extern const unsigned char g_victorRgbToVgaIndex[8] = {
+    0, 12, 10, 14, 9, 13, 11, 15
+};
+// 6x6x6 color-cube index -> palette entry, filled from 225 downward.
+DATA(0x00644138) extern const unsigned char g_victorColorCubeIndices[216] = {
+    225, 224, 223, 222, 221, 220, 219, 218, 217, 216, 215, 214, 213, 212, 211, 210,
+    209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198, 197, 196, 195, 194,
+    193, 192, 191, 190, 189, 188, 187, 186, 185, 184, 183, 182, 181, 180, 179, 178,
+    177, 176, 175, 174, 173, 172, 171, 170, 169, 168, 167, 166, 165, 164, 163, 162,
+    161, 160, 159, 158, 157, 156, 155, 154, 153, 152, 151, 150, 149, 148, 147, 146,
+    145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130,
+    129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114,
+    113, 112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98,
+    97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82,
+    81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66,
+    65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50,
+    49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34,
+    33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18,
+    17, 16, 15, 14, 13, 12, 11, 10
+};
+// 8x8 ordered-dither thresholds on the 51-step cube scale (0..50).
+DATA(0x00644210) extern const unsigned char g_victorOrderedDither[64] = {
+    0, 38, 9, 47, 2, 40, 11, 50,
+    25, 12, 35, 22, 27, 15, 37, 24,
+    6, 44, 3, 41, 8, 47, 5, 43,
+    31, 19, 28, 15, 34, 21, 31, 18,
+    1, 39, 11, 49, 0, 39, 10, 48,
+    27, 14, 36, 23, 26, 13, 35, 23,
+    7, 46, 4, 43, 7, 45, 3, 42,
+    33, 20, 30, 17, 32, 19, 29, 16
+};
+// Channel byte -> cube level and remainder (x / 51, x % 51).
+DATA(0x00644250) extern const unsigned char g_victorDivide51[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5
+};
+DATA(0x00644350) extern const unsigned char g_victorModulo51[256] = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+    48, 49, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
+    13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+    45, 46, 47, 48, 49, 50, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+    26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
+    42, 43, 44, 45, 46, 47, 48, 49, 50, 0, 1, 2, 3, 4, 5, 6,
+    7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+    23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+    39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 0, 1, 2, 3,
+    4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+    20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+    36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 0
+};
+
+// Victor .data. The cleanup table lists the bare-return cleanup of the
+// allocation object, then the eight lock cleanups from the last to the
+// first; nothing reads the table (its function pointers are its eight
+// admitted relocations plus one). The zero dword after it (0x68d29c) may
+// be a terminator or alignment before the next object and stays unclaimed.
+DATA(0x0068d278) void (__cdecl* g_victorModuleCleanups[9])() = {
+    victorReleaseNothing, victorReleaseLock7, victorReleaseLock6,
+    victorReleaseLock5, victorReleaseLock4, victorReleaseLock3,
+    victorReleaseLock2, victorReleaseLock1, victorReleaseLock0
+};
+// JPEG: the JFIF APP0 identifier pointer and the EOI marker bytes.
+DATA(0x0068d350) const char* g_victorJfifIdentifier =
+    DATA_COMPGEN(0x0068d358, victorJfifText, "JFIF");
+DATA(0x0068d354) unsigned char g_victorJpegEndOfImage[2] = { 0xff, 0xd9 };
+// ITU T.4 (CCITT Group 3) code words as { code, bit length }: 64 terminating
+// codes, 27 make-up codes (64..1728) and the 13 shared extended make-up codes
+// (1792..2560) for each color, then the nine T.4 two-dimensional mode codes
+// (VR3, VR2, VR1, V0, VL1, VL2, VL3, pass, horizontal).
+DATA(0x0068d360) unsigned char g_victorCcittWhiteCodes[104][2] = {
+    { 0x35, 8 }, { 0x07, 6 }, { 0x07, 4 }, { 0x08, 4 }, { 0x0b, 4 }, { 0x0c, 4 }, { 0x0e, 4 }, { 0x0f, 4 },
+    { 0x13, 5 }, { 0x14, 5 }, { 0x07, 5 }, { 0x08, 5 }, { 0x08, 6 }, { 0x03, 6 }, { 0x34, 6 }, { 0x35, 6 },
+    { 0x2a, 6 }, { 0x2b, 6 }, { 0x27, 7 }, { 0x0c, 7 }, { 0x08, 7 }, { 0x17, 7 }, { 0x03, 7 }, { 0x04, 7 },
+    { 0x28, 7 }, { 0x2b, 7 }, { 0x13, 7 }, { 0x24, 7 }, { 0x18, 7 }, { 0x02, 8 }, { 0x03, 8 }, { 0x1a, 8 },
+    { 0x1b, 8 }, { 0x12, 8 }, { 0x13, 8 }, { 0x14, 8 }, { 0x15, 8 }, { 0x16, 8 }, { 0x17, 8 }, { 0x28, 8 },
+    { 0x29, 8 }, { 0x2a, 8 }, { 0x2b, 8 }, { 0x2c, 8 }, { 0x2d, 8 }, { 0x04, 8 }, { 0x05, 8 }, { 0x0a, 8 },
+    { 0x0b, 8 }, { 0x52, 8 }, { 0x53, 8 }, { 0x54, 8 }, { 0x55, 8 }, { 0x24, 8 }, { 0x25, 8 }, { 0x58, 8 },
+    { 0x59, 8 }, { 0x5a, 8 }, { 0x5b, 8 }, { 0x4a, 8 }, { 0x4b, 8 }, { 0x32, 8 }, { 0x33, 8 }, { 0x34, 8 },
+    { 0x1b, 5 }, { 0x12, 5 }, { 0x17, 6 }, { 0x37, 7 }, { 0x36, 8 }, { 0x37, 8 }, { 0x64, 8 }, { 0x65, 8 },
+    { 0x68, 8 }, { 0x67, 8 }, { 0xcc, 9 }, { 0xcd, 9 }, { 0xd2, 9 }, { 0xd3, 9 }, { 0xd4, 9 }, { 0xd5, 9 },
+    { 0xd6, 9 }, { 0xd7, 9 }, { 0xd8, 9 }, { 0xd9, 9 }, { 0xda, 9 }, { 0xdb, 9 }, { 0x98, 9 }, { 0x99, 9 },
+    { 0x9a, 9 }, { 0x18, 6 }, { 0x9b, 9 }, { 0x08, 11 }, { 0x0c, 11 }, { 0x0d, 11 }, { 0x12, 12 }, { 0x13, 12 },
+    { 0x14, 12 }, { 0x15, 12 }, { 0x16, 12 }, { 0x17, 12 }, { 0x1c, 12 }, { 0x1d, 12 }, { 0x1e, 12 }, { 0x1f, 12 }
+};
+DATA(0x0068d430) unsigned char g_victorCcittBlackCodes[104][2] = {
+    { 0x37, 10 }, { 0x02, 3 }, { 0x03, 2 }, { 0x02, 2 }, { 0x03, 3 }, { 0x03, 4 }, { 0x02, 4 }, { 0x03, 5 },
+    { 0x05, 6 }, { 0x04, 6 }, { 0x04, 7 }, { 0x05, 7 }, { 0x07, 7 }, { 0x04, 8 }, { 0x07, 8 }, { 0x18, 9 },
+    { 0x17, 10 }, { 0x18, 10 }, { 0x08, 10 }, { 0x67, 11 }, { 0x68, 11 }, { 0x6c, 11 }, { 0x37, 11 }, { 0x28, 11 },
+    { 0x17, 11 }, { 0x18, 11 }, { 0xca, 12 }, { 0xcb, 12 }, { 0xcc, 12 }, { 0xcd, 12 }, { 0x68, 12 }, { 0x69, 12 },
+    { 0x6a, 12 }, { 0x6b, 12 }, { 0xd2, 12 }, { 0xd3, 12 }, { 0xd4, 12 }, { 0xd5, 12 }, { 0xd6, 12 }, { 0xd7, 12 },
+    { 0x6c, 12 }, { 0x6d, 12 }, { 0xda, 12 }, { 0xdb, 12 }, { 0x54, 12 }, { 0x55, 12 }, { 0x56, 12 }, { 0x57, 12 },
+    { 0x64, 12 }, { 0x65, 12 }, { 0x52, 12 }, { 0x53, 12 }, { 0x24, 12 }, { 0x37, 12 }, { 0x38, 12 }, { 0x27, 12 },
+    { 0x28, 12 }, { 0x58, 12 }, { 0x59, 12 }, { 0x2b, 12 }, { 0x2c, 12 }, { 0x5a, 12 }, { 0x66, 12 }, { 0x67, 12 },
+    { 0x0f, 10 }, { 0xc8, 12 }, { 0xc9, 12 }, { 0x5b, 12 }, { 0x33, 12 }, { 0x34, 12 }, { 0x35, 12 }, { 0x6c, 13 },
+    { 0x6d, 13 }, { 0x4a, 13 }, { 0x4b, 13 }, { 0x4c, 13 }, { 0x4d, 13 }, { 0x72, 13 }, { 0x73, 13 }, { 0x74, 13 },
+    { 0x75, 13 }, { 0x76, 13 }, { 0x77, 13 }, { 0x52, 13 }, { 0x53, 13 }, { 0x54, 13 }, { 0x55, 13 }, { 0x5a, 13 },
+    { 0x5b, 13 }, { 0x64, 13 }, { 0x65, 13 }, { 0x08, 11 }, { 0x0c, 11 }, { 0x0d, 11 }, { 0x12, 12 }, { 0x13, 12 },
+    { 0x14, 12 }, { 0x15, 12 }, { 0x16, 12 }, { 0x17, 12 }, { 0x1c, 12 }, { 0x1d, 12 }, { 0x1e, 12 }, { 0x1f, 12 }
+};
+DATA(0x0068d500) unsigned char g_victorCcittModeCodes[9][2] = {
+    { 0x03, 7 }, { 0x03, 6 }, { 0x03, 3 }, { 0x01, 1 }, { 0x02, 3 }, { 0x02, 6 }, { 0x02, 7 }, { 0x01, 4 },
+    { 0x01, 3 }
+};
+// The TIFF 6.0 IFD image a writer fills: 19 entries ending with next-IFD 0.
+DATA(0x0068d518) VictorTiffIfd g_victorTiffIfdTemplate = {
+    19,
+    {
+        { 0xfe, 4, 0x1, 0x0 },
+        { 0xff, 3, 0x1, 0x1 },
+        { 0x100, 3, 0x1, 0xff },
+        { 0x101, 3, 0x1, 0xff },
+        { 0x102, 3, 0xff, 0xff },
+        { 0x103, 3, 0x1, 0xff },
+        { 0x106, 3, 0x1, 0xff },
+        { 0x10d, 2, 0x10, 0xff },
+        { 0x111, 4, 0xff, 0xff },
+        { 0x115, 3, 0x1, 0xff },
+        { 0x116, 4, 0x1, 0xff },
+        { 0x117, 4, 0xff, 0xff },
+        { 0x11a, 5, 0x1, 0xff },
+        { 0x11b, 5, 0x1, 0xff },
+        { 0x11c, 3, 0x1, 0x1 },
+        { 0x128, 3, 0x1, 0xff },
+        { 0x129, 3, 0x2, 0xff },
+        { 0x13d, 3, 0x1, 0x1 },
+        { 0x140, 3, 0xff, 0xff }
+    },
+    0
+};
+// TIFF 6.0 little-endian file header: "II", 42, first IFD at offset 8.
+DATA(0x0068d650) unsigned char g_victorTiffHeader[8] = { 'I', 'I', 42, 0, 8, 0, 0, 0 };
+// TGA 2.0 footer signature and the software name.
+DATA(0x0068d740) char g_victorTgaSignature[18] = "TRUEVISION-XFILE.";
+DATA(0x0068d754) const char* g_victorSoftwareName =
+    DATA_COMPGEN(0x0068d758, victorImageText, "Victor Image");
+// Low-bit masks (1 << n) - 1 for n = 0..8.
+DATA(0x0068d770) unsigned char g_victorLowBitMasks[9] = {
+    0, 1, 3, 7, 15, 31, 63, 127, 255
+};
+
+// Victor .bss: the eight module locks, in cleanup order.
+DATA(0x006aad38) VictorLock g_victorLock0;
+DATA(0x006aad60) VictorLock g_victorLock1;
+DATA(0x006aad98) VictorLock g_victorLock2;
+DATA(0x006aade0) VictorLock g_victorLock3;
+DATA(0x006aafe8) VictorLock g_victorLock4;
+DATA(0x006ab0c0) VictorLock g_victorLock5;
+DATA(0x006ab100) VictorLock g_victorLock6;
+DATA(0x006ab140) VictorLock g_victorLock7;
 
 VA(0x00603590, 0x25)  // anchor-caller Bitmap24Bit/Bitmap816::importPCXFile; external Victor library
 int __stdcall allocimage(imgdes* image, int width, int height, int bitsPerPixel)

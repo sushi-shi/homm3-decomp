@@ -3169,13 +3169,13 @@ resourcedisplay	??1TResourceDisplay@@UAE@XZ	100.0000	100.0000	100.0000	0x158e80	
 resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158e50	-
 resourcedisplay	?clear@TResourceDisplay@@QAEXXZ	99.9039	99.9039	100.0000	0x159020	tokens1:abd79301d80a
 resourcedisplay	?update@TResourceDisplay@@QAEX_N0@Z	100.0000	100.0000	100.0000	0x158f20	tokens1:d0a93af9970f
-resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.7126	99.7126	100.0000	0x15d410	-
+resourcemanager	??0?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.7126	99.7701	100.0000	0x15d410	-
 resourcemanager	??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z	99.8837	99.8837	100.0000	0x15e440	-
 resourcemanager	??0?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@ABU?$less@VTCacheMapKey@ResourceManager@@@1@ABV?$allocator@PAVresource@@@1@@Z	99.9167	99.9167	100.0000	0x15d2c0	-
 resourcemanager	??0?$pair@PBDPAVresource@@@std@@QAE@ABQBDABQAVresource@@@Z	100.0000	100.0000	100.0000	0x15ecf0	-
 resourcemanager	??0TCacheMapKey@ResourceManager@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x15ac20	tokens1:24f58ffef6a7
 resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591e0	tokens1:77124f72008d
-resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.7794	99.7794	100.0000	0x15d530	-
+resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.7794	99.8529	100.0000	0x15d530	-
 resourcemanager	??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.9000	99.9000	100.0000	0x15db40	-
 resourcemanager	??1?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x159440	-
 resourcemanager	??1TResourceLODSlot@@QAE@XZ	100.0000	100.0000	100.0000	0x159220	-
@@ -3231,8 +3231,8 @@ resourcemanager	?read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	100.0000	10
 resourcemanager	?read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z	99.6154	99.6154	100.0000	0x1590f0	tokens1:12f49cab0faf
 resourcemanager	?readFromBitmapResource@ResourceManager@@YIHPAVLODFile@@PAXH@Z	100.0000	100.0000	100.0000	0x15d0d0	tokens1:fd17c5cb4728
 resourcemanager	?remapGraphics@ResourceManager@@YIXXZ	99.9767	99.9767	100.0000	0x159e30	tokens1:19b0d5573bdf
-resourcemanager	?reportMissingSpriteResource@@YIXPBDH0@Z	99.9706	99.9706	100.0000	0x1599e0	tokens1:8d6e3e065292
-resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	99.9775	99.9775	100.0000	0x159510	tokens1:5364e85796f5
+resourcemanager	?reportMissingSpriteResource@@YIXPBDH0@Z	99.9706	99.9853	100.0000	0x1599e0	tokens1:8d6e3e065292
+resourcemanager	?reportMissingTypedResource@@YIXPBDH0@Z	99.9775	99.9888	100.0000	0x159510	tokens1:5364e85796f5
 resourcemanager	?saturateGraphics@ResourceManager@@YIXXZ	99.9780	99.9780	100.0000	0x15a020	tokens1:0d48c354dd6f
 resourcemanager	?seekoff@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@JW4seekdir@ios_base@2@H@Z	100.0000	100.0000	100.0000	0x15d8a0	-
 resourcemanager	?seekpos@?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@MAE?AV?$fpos@H@2@V32@H@Z	100.0000	100.0000	100.0000	0x15da00	-
@@ -4483,7 +4483,7 @@ townmgr	?doMonsterJoinDialog@@YIXPAVhero@@W4TCreatureType@@H@Z	99.9231	99.9231	1
 townmgr	?doPortalOfSummoning@townManager@@QAEXXZ	99.9390	99.9390	100.0000	0x1d2950	tokens1:43bba85be8a6
 townmgr	?doShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720	tokens1:fe20c0a121c8
 townmgr	?doSkeletonTransformer@townManager@@AAEXXZ	99.8809	99.8809	100.0000	0x1d2f90	tokens1:8aef9fd1332e
-townmgr	?doTavern@@YIEXZ	99.9273	99.9273	100.0000	0x1d7ec0	tokens1:a53bb5d6db5b
+townmgr	?doTavern@@YIEXZ	99.9273	99.9636	100.0000	0x1d7ec0	tokens1:a53bb5d6db5b
 townmgr	?doTownGate@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d8480	tokens1:9f9e3ddf5246
 townmgr	?doTownTavern@townManager@@QAEXXZ	99.9635	99.9635	100.0000	0x1d82b0	tokens1:f508f3a48afe
 townmgr	?doUniversity@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2da0	tokens1:0b42de89e684

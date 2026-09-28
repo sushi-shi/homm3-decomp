@@ -80,4 +80,55 @@ void __stdcall victorExtractBits(unsigned char* destination,
 // select a DIB section versus a single global-memory allocation.
 extern unsigned int g_victorUseDibSection;
 
+// Victor's per-module lock: each of eight unrecovered cleanups at
+// 0x604620..0x604700 runs `if (m_initialized) { DeleteCriticalSection(
+// &m_section); m_initialized = 0; }` on one record, the flag at +0x18.
+// Type and member names are invented.
+struct VictorLock {
+    CRITICAL_SECTION m_section;
+    int m_initialized;
+};
+SIZE(VictorLock, 0x1c);
+
+// Unrecovered Victor code reached only through g_victorModuleCleanups:
+// 0x603b10 is a bare `ret`; victorReleaseLock<N> is the cleanup of the Nth
+// VictorLock by address. Names are invented; bodies belong to the .text
+// recovery.
+void __cdecl victorReleaseNothing();
+void __cdecl victorReleaseLock0();
+void __cdecl victorReleaseLock1();
+void __cdecl victorReleaseLock2();
+void __cdecl victorReleaseLock3();
+void __cdecl victorReleaseLock4();
+void __cdecl victorReleaseLock5();
+void __cdecl victorReleaseLock6();
+void __cdecl victorReleaseLock7();
+
+// TIFF 6.0 field layouts. The in-memory IFD image keeps the on-disk packing
+// (2-byte count, 12-byte entries at 2-byte offsets, next-IFD offset).
+#pragma pack(push, 2)
+struct VictorTiffEntry {
+    unsigned short m_tag;
+    unsigned short m_type;
+    unsigned long m_count;
+    unsigned long m_value;
+};
+struct VictorTiffIfd {
+    unsigned short m_count;
+    VictorTiffEntry m_entries[19];
+    unsigned long m_nextIfd;
+};
+#pragma pack(pop)
+SIZE(VictorTiffIfd, 0xea);
+// A 16-byte tag row; the last dword is zero in every retail row and its
+// role is unknown. Type and member names are invented.
+struct VictorTiffTagDefault {
+    unsigned short m_tag;
+    unsigned short m_type;
+    unsigned long m_count;
+    unsigned long m_value;
+    unsigned long m_reserved;
+};
+SIZE(VictorTiffTagDefault, 0x10);
+
 #endif
