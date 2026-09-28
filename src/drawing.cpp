@@ -28,6 +28,11 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// DC declares CombatAreaLimits_Visible as a const SLimitData class static.
+// Retail CRT 0x602110 constructs the full 800x600 viewport; no other reviewed
+// retail reference survives to this object.
+DATA(0x006aad00) const SLimitData combatManager::s_visibleCombatAreaLimits(0, 0, 799, 599);
+
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
 // CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).

@@ -22,6 +22,12 @@ DATA(0x006968aa) unsigned short CSpriteFrame::s_div4mask;
 DATA(0x006968a6) static const unsigned char g_generalRleOpaqueRunCode =
     std::numeric_limits<unsigned char>::max();
 
+// Original: kGeneralRLEMaxRunLength, file-static const unsigned int.
+// DC cspriteframe.cpp:47 calls the same max helper, then adds one;
+// retail CRT 0x47c270 installs 256 in this otherwise unreferenced storage.
+DATA(0x006968b0) static const unsigned int g_generalRleMaxRunLength =
+    std::numeric_limits<unsigned char>::max() + 1;
+
 // Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67, dc 0x74600.
 CSpriteFrame::CSpriteFrame()
     : resource(0, RESOURCE_TYPE_NONE),

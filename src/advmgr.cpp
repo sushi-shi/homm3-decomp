@@ -4092,6 +4092,11 @@ int advManager::processSearch(int x, int y, int z)
     return 1;
 }
 
+// Original: USMsg, advmgr.cpp:4978. DC's adjacent initializer at 0x104f8
+// calls message::message; retail CRT 0x40f240 clears this object's eight
+// fields through that same constructor. No other retail references survive.
+DATA(0x00691648) message g_updateScreenMessage;
+
 VA(0x0040f270, 0x7D) MAC_ADDRESS(0x00f6f0, 0xb8)  // dc 0x10520
 void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
 {

@@ -363,6 +363,8 @@ public:
     static const SLimitData s_rightHeroLimits;
     static const SLimitData s_mainBuildingLimits;
     static const SLimitData s_upperTowerLimits;
+    // Original: CombatAreaLimits_Visible.
+    static const SLimitData s_visibleCombatAreaLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
