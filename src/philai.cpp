@@ -82,6 +82,12 @@ int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
 DATA(0x0069cca4) static unsigned char g_mainLoopInitFlags;
 DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 
+// Unrecovered: retail CRT root 0x52bda0 default-constructs a TU-local
+// std::string at 0x69ccd8 (allocator byte, then pointer/length/reserve at
+// +4/+8/+0xc) and registers cleanup 0x52bdd0, which frees the pointer. No
+// retail code reads the object and no source names it, so the declaration
+// is not invented here.
+
 // Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
 // Its retail cell immediately follows the nine-row town hierarchy table; this
 // is its sole retail code reference, so this TU owns the public definition.

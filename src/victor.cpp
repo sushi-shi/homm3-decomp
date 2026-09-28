@@ -273,6 +273,11 @@ void __stdcall victorInitializePalette(imgdes* image)
 // 85.8333%; assigning a conditional minimum instead lowers it to 80.2778%.
 // These exit spellings do not recover retail's memory compare and epilogue.
 // Compiling this body alone with the same headers and flags is byte-identical.
+// Unrecovered Victor code: 0x603b10 (a bare ret) and eight lock cleanups at
+// 0x604620..0x60471e (if (flag) { DeleteCriticalSection(&lock); flag = 0; },
+// flags at lock+0x18) are referenced only by the null-terminated pointer
+// table at 0x68d278, which nothing references; the lock records at
+// 0x6aad38..0x6ab158 have no other reader. Their module is not identified.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)
