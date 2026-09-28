@@ -278,6 +278,8 @@ rva	function_count	class
 0x240fbc	13	
 0x240ffc	3	resource
 0x241024	1	TResourceDisplay
+# retail 0x55d50d / 0x55d559: ??0/??1basic_ostringstream<char> (src/resourcemanager.cpp) store this basic_ios-subobject vptr; the candidate COMDAT has one slot, retail's names ??_G at 0x55dae0
+0x2410e8	1	?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std
 0x2410ec	13	
 0x241128	3	
 0x241134	3	

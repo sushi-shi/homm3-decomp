@@ -1036,6 +1036,10 @@ DATA(0x0069fd90) static bool g_selectionCampaignMode;
 // Descriptive name: list population, scrolling and slider resolution use
 // this row count (18 normally, 16 in the alternate layout).
 DATA(0x0069fdc8) static int g_scenarioListVisibleRows;
+// Dreamcast's handler declares a second static lastIMHoverID; retail keeps
+// its -1 cell directly before the one below, and no code reads it. The
+// distinct file-scope name is invented.
+DATA(0x0068346c) static int g_otherImHoverId = -1;
 // Original DC lastIMHoverID; tracks the hovered hero-face row.
 DATA(0x00683470) static int g_lastImHoverId = -1;
 

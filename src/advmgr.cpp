@@ -137,6 +137,12 @@ DATA(0x006aac3c) int g_inViewWorld;
 // in ScreenScroll or CheckScreenScroll.
 DATA(0x00691674) static unsigned long g_lastMapScrollTime;
 DATA(0x0065f690) int g_completeDrawFpsFrame = -1;
+// Original DC names: giDeferObjDrawX, giDeferObjDrawY (int, -1 in both
+// builds). Dreamcast orders giDebugBuildingToBuild, giTerrainToMusicTrack,
+// these two, fTradingPostEfficency at the same offsets as retail's
+// 0x67832c..0x678344; no Windows code reads them.
+DATA(0x0067833c) int g_deferObjDrawX = -1;
+DATA(0x00678340) int g_deferObjDrawY = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
 DATA(0x00691208) unsigned char g_goSoloTest;
