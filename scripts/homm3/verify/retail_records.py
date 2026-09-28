@@ -108,7 +108,17 @@ def pe_structures(pe) -> Records:
             if pe.read(end, 1) == b'\0':
                 out.add(end, end + 1, 'structural',
                         'PE import hint/name even-alignment pad', 0)
-    file_alignment = struct.unpack_from('<I', data, opt + 36)[0]
+    section_alignment, file_alignment = struct.unpack_from('<II', data, opt + 32)
+    ordered = sorted(pe.sections, key=lambda s: s['va'])
+    for s, following in zip(ordered, ordered[1:] + [None]):
+        # The loader's image extent: a section ends at its aligned virtual
+        # size, exactly where the next section (or SizeOfImage) begins.
+        end = s['va'] + max(s['vsize'], s['rsize'])
+        aligned = -(-end // section_alignment) * section_alignment
+        limit = following['va'] if following else struct.unpack_from('<I', data, opt + 56)[0]
+        if end < aligned == limit:
+            out.add(end, aligned, 'structural',
+                    f"{s['name']} section-alignment tail", 0)
     for s in pe.sections:
         if s['name'] in ('.rsrc', '.reloc') or s['rsize'] <= s['vsize']:
             continue

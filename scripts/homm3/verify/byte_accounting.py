@@ -187,6 +187,28 @@ def startup_ranges(comparison):
     return ranges
 
 
+def crt_table_ranges(pe):
+    """The `.CRT$XCU` slots, once their reviewed order verifies as one table.
+
+    `init-thunks.tsv` lists every initializer body in slot order; the whole
+    sequence of pointers must occur exactly once in initialized data. The
+    table is then the linker's concatenation of the translation units'
+    `.CRT$XCU` contributions. Library contributions keep their own claims.
+    """
+    from homm3.core.paths import RETAIL
+    from homm3.verify.source_initializers import verified_roots
+    roots = verified_roots(pe, read(RETAIL / 'init-thunks.tsv')[2])
+    if not roots:
+        return []
+    table = b''.join(struct.pack('<I', pe.image_base + r) for r in roots)
+    start = pe.data.find(table)
+    section = next(s for s in pe.sections
+                   if s['rptr'] <= start < s['rptr'] + s['rsize'])
+    rva = section['va'] + start - section['rptr']
+    return [Range(rva, rva + len(table), 'compiler-metadata',
+                  f'.CRT$XCU initializer table ({len(roots)} reviewed slots)', 1)]
+
+
 def account(pe, model, enrolled, sections, *, initializers=()):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
@@ -196,8 +218,11 @@ def account(pe, model, enrolled, sections, *, initializers=()):
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     for claim in claims:
-        if not any(s['va'] <= claim.start < claim.end <=
-                   s['va']+max(s['vsize'], s['rsize']) for s in pe.sections):
+        # Only PE-structural claims (section-alignment tails) lie between
+        # sections; every other claim stays inside one retail section.
+        if claim.category != 'structural' and not any(
+                s['va'] <= claim.start < claim.end <=
+                s['va']+max(s['vsize'], s['rsize']) for s in pe.sections):
             raise ValueError(f'claim crosses retail section boundary: {claim}')
         image_ranges.append(claim)
     for s in pe.sections:
@@ -220,7 +245,7 @@ def account(pe, model, enrolled, sections, *, initializers=()):
             'image': partition(image_size, image_ranges)}
 
 
-def compare_initializers(model, enrolled, pe, base_dir=None, library_code=None):
+def compare_initializers(model, enrolled, pe, base_dir=None):
     """Raw COFF versus retail, without normalized payloads or guessed extents."""
     from homm3.delink.coffx import Obj
     from homm3.delink.image import Image
@@ -233,12 +258,6 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_code=None):
                 names[('', msvc_names.mask(entry.name))].add(b.rva)
                 if entry.unit:
                     names[(entry.unit, msvc_names.mask(entry.name))].add(b.rva)
-    # Runtime code whose pinned archive body reproduces retail at the named
-    # address (verify/library_data.py) is a known pointer referent too.
-    for name, rva in (library_code or {}).items():
-        key = ('', msvc_names.mask(name))
-        if key not in names:
-            names[key].add(rva)
     for r in enrolled:
         if 'gap' not in r.get('provenance', ''):
             unit = r['object'].removesuffix('.c')
@@ -368,30 +387,16 @@ def report(model=None):
         records.ranges += extra.ranges
         records.starts.update(extra.starts)
         records.ends |= extra.ends
-    from homm3.verify import library_data
-    library, _witnesses = library_data.analyse(pe, model)
-    for placement in library:
-        if placement.verdict in ('exact', 'unresolved') and placement.size:
-            records.starts[placement.rva] = max(placement.alignment or 1,
-                                                records.starts.get(placement.rva, 1))
-            records.ends.add(placement.rva + placement.size)
     claims = (initializer_ranges(dynamic) + startup_ranges(startup) + records.ranges
-              + library_data.ranges(library))
+              + crt_table_ranges(pe))
     domains = account(pe, model, enrolled, sections, initializers=claims)
     padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
     if padding:
         domains = account(pe, model, enrolled, sections, initializers=claims + padding)
-    comparisons = compare_initializers(model, enrolled, pe,
-                                       library_code=library_data.analyse.verified_code)
+    comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
-           'library_data': [dict(member=r.member, section=r.name, rva=r.rva, size=r.size,
-                                 storage=r.storage, symbols=list(r.symbols),
-                                 verdict=r.verdict, different=r.different,
-                                 unresolved=r.unresolved, reason=r.reason,
-                                 witnesses=sorted(r.witnesses)[:4])
-                            for r in library],
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()
