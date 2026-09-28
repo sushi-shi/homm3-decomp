@@ -379,7 +379,7 @@ VA(0x004d71a0, 0x71) MAC_ADDRESS(0x0f1cac, 0xec)  // dc 0xca728
 unsigned char initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
-        DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "herospec.txt"));
+        DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
     if (text == 0)
         return 0;
 

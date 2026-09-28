@@ -1841,6 +1841,7 @@ forcefeedback	__h3cg$forcefeedback$static_dtor$immMouse	100.0000	100.0000	100.00
 game	??0CMCClaimGarrison@@QAE@HH@Z	100.0000	100.0000	100.0000	0xc23e0	tokens1:8e750f5fad30
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0	443ed6fcdff2
 game	??0SavedGameHeader@@QAE@XZ	99.8595	99.8595	100.0000	0xbc0e0	tokens1:dc55999f0af0
+game	??0TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa10	tokens1:1261b8f842de
 game	??0game@@QAE@XZ	99.8673	99.8673	100.0000	0xcdf20	tokens1:8a33ebfa6d00
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550	tokens1:e7daf55622b0
 game	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	99.7308	99.7308	100.0000	0xc3090	-
@@ -2267,7 +2268,7 @@ hero	?initialize@hero@@QAEXF@Z	97.1275	97.1275	97.3624	0xd8720	tokens1:fd6795195
 hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	76.2900	76.2900	100.0000	0xd8b30	tokens1:0c85d76db41d
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
 hero	?initializeBallisticsTable@@YIEXZ	99.9485	99.9485	100.0000	0xd7240	tokens1:aa1b6db957c1
-hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	99.8809	99.8809	100.0000	0xd71a0	tokens1:0af5a57e3a5d
+hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:5b2e40d7bd6e
 hero	?isInIdentifyRange@hero@@QBEEPBUtype_point@@@Z	99.9450	99.9450	100.0000	0xe5e10	tokens1:db3fb36b9669
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	tokens1:54ef7c96cd78
 hero	?isMobile@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:aac7d46590e4
@@ -2747,7 +2748,7 @@ objecttype	??0strstreambuf@std@@QAE@PBDH@Z	99.7101	99.7101	100.0000	0x1165f0	-
 objecttype	??1?$basic_istream@DU?$char_traits@D@std@@@std@@UAE@XZ	98.7500	98.7500	100.0000	0x115260	-
 objecttype	??1?$ctype@D@std@@UAE@XZ	99.2308	99.2308	100.0000	0x116160	-
 objecttype	??1TObjectImageNameTable@@QAE@XZ	99.4681	99.4681	100.0000	0x114130	-
-objecttype	??1TObjectTypeFilter@@UAE@XZ	97.5000	97.5000	100.0000	0x114530	tokens1:3fce964598d4
+objecttype	??1TObjectTypeFilter@@UAE@XZ	100.0000	100.0000	100.0000	0x114530	tokens1:3fce964598d4
 objecttype	??1facet@locale@std@@UAE@XZ	97.5000	97.5000	100.0000	0x11a110	-
 objecttype	??1logic_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0x4690	-
 objecttype	??1runtime_error@std@@UAE@XZ	100.0000	100.0000	100.0000	0xb6be0	-
@@ -2764,7 +2765,7 @@ objecttype	??_G?$basic_istream@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	99.7222	99
 objecttype	??_G?$ctype@D@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116130	-
 objecttype	??_GTAnyTerrainObjectFilter@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x1144c0	-
 objecttype	??_GTNativeTerrainObjectFilter@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x1142c0	-
-objecttype	??_GTObjectTypeFilter@@UAEPAXI@Z	99.6667	99.6667	100.0000	0x116560	-
+objecttype	??_GTObjectTypeFilter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116560	-
 objecttype	??_Gistrstream@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x116720	-
 objecttype	??_Glogic_error@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4660	-
 objecttype	?_Construct@std@@YIXPAU?$pair@$$CBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@1@ABU21@@Z	99.7692	99.7692	100.0000	0x11b6d0	-
@@ -3176,6 +3177,7 @@ resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591
 resourcemanager	??1?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.6324	99.6324	100.0000	0x15d530	-
 resourcemanager	??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ	99.7000	99.7000	100.0000	0x15db40	-
 resourcemanager	??1?$map@VTCacheMapKey@ResourceManager@@PAVresource@@U?$less@VTCacheMapKey@ResourceManager@@@std@@V?$allocator@PAVresource@@@5@@std@@QAE@XZ	99.3056	99.3056	100.0000	0x159440	-
+resourcemanager	??1TResourceLODSlot@@QAE@XZ	100.0000	100.0000	100.0000	0x159220	-
 resourcemanager	??Hstd@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@0@ABV10@PBD@Z	99.9083	99.9083	100.0000	0xb7ec0	-
 resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1594f0	-
 resourcemanager	??_G?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15dae0	-
@@ -3545,7 +3547,7 @@ rmg_support	?splice@TRmgBoundaryVertex@@QAEXPAU1@@Z	100.0000	100.0000	100.0000	0
 rmg_terrain	??0?$TRmgCoordinatePoint@I@@QAE@ABI0@Z	100.0000	100.0000	100.0000	0x1b76b0	tokens1:10f8dfaa2cad
 rmg_terrain	??0?$TRmgCoordinatePoint@I@@QAE@ABUTPoint@@@Z	100.0000	100.0000	100.0000	0xfa520	tokens1:a9934a839507
 rmg_terrain	??0TRmgLineWalker@@QAE@PAVTRmgLinePainterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0xfa280	tokens1:a47b232e3c70
-rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	99.8461	99.8461	100.0000	0x1b3780	tokens1:2f033c99ea91
+rmg_terrain	??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z	99.9231	99.9231	100.0000	0x1b3780	tokens1:2f033c99ea91
 rmg_terrain	??0TRmgTableTerrainRule@@QAE@XZ	99.1667	99.1667	100.0000	0x1b3a20	tokens1:66876f605246
 rmg_terrain	??0TRmgTerrainBrush@@QAE@PAVTRmgMapInterface@@HH@Z	99.7000	99.7000	100.0000	0x1b7250	tokens1:e9a9e329da54
 rmg_terrain	??0TRmgTerrainPatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0x1b3940	tokens1:189440e2b9de
@@ -3553,7 +3555,7 @@ rmg_terrain	??0rmgTerrainPainter@@QAE@PAVTRmgMapInterface@@HH@Z	99.7699	99.7699	
 rmg_terrain	??1?$auto_ptr@VrmgTerrainPainter@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x1b76d0	-
 rmg_terrain	??1?$set@U?$TRmgCoordinatePoint@I@@U?$less@U?$TRmgCoordinatePoint@I@@@std@@V?$allocator@U?$TRmgCoordinatePoint@I@@@3@@std@@QAE@XZ	99.3056	99.3056	100.0000	0x1b4860	-
 rmg_terrain	??1TRmgTerrainBrush@@QAE@XZ	99.6774	99.6774	100.0000	0x1b72f0	tokens1:a329d58e8f80
-rmg_terrain	??1TRmgTerrainRule@@UAE@XZ	97.5000	97.5000	100.0000	0x1b3850	tokens1:b05b4ed6c93a
+rmg_terrain	??1TRmgTerrainRule@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3850	tokens1:b05b4ed6c93a
 rmg_terrain	??1rmgTerrainPainter@@QAE@XZ	99.6629	99.6629	100.0000	0x1b76f0	tokens1:fff62f3571c9
 rmg_terrain	??M@YI_NABU?$TRmgCoordinatePoint@I@@0@Z	100.0000	100.0000	100.0000	0x1b8ca0	tokens1:96befe7f66d6
 rmg_terrain	??YTPoint@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xfa540	tokens1:b43b440afd15

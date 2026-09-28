@@ -196,7 +196,9 @@ rva	function_count	class
 0x240264	3	
 0x240270	2	
 0x2402c4	2	
-0x2402cc	2	
+# TObjectTypeFilter::~TObjectTypeFilter stores this vptr (0x514530).
+# Slots: its deleting destructor 0x516560 and _purecall 0x617d9a.
+0x2402cc	2	TObjectTypeFilter
 0x2402d4	2	
 0x2402dc	2	
 0x2402f4	3	
@@ -322,7 +324,9 @@ rva	function_count	class
 0x24244c	3	
 0x242458	4	
 0x242468	15	
-0x242c80	6	
+# TRmgTerrainRule::~TRmgTerrainRule stores this vptr (0x5b3850).
+# All six slots are _purecall, including the pure virtual destructor.
+0x242c80	6	TRmgTerrainRule
 0x242c98	6	
 0x242cb0	6	
 0x242cc8	17	

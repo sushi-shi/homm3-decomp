@@ -1173,3 +1173,62 @@ rva	slot
 0x16c0b0	-
 # wingraph: registration in CRT root 0x5ffdf0; 10 exact bytes.
 0x1ffe10	-
+# Filter/rule callbacks: each emitted ten-byte body loads its named DATA
+# object and tail-calls the source base destructor; the registering root
+# also compares in full. These records introduce no independent game targets.
+# objecttype: CRT registration 0x514280.
+0x1142f0	-
+# objecttype: CRT registration 0x514300.
+0x114320	-
+# objecttype: CRT registration 0x514330.
+0x114350	-
+# objecttype: CRT registration 0x514360.
+0x114380	-
+# objecttype: CRT registration 0x514390.
+0x1143b0	-
+# objecttype: CRT registration 0x5143c0.
+0x1143e0	-
+# objecttype: CRT registration 0x5143f0.
+0x114410	-
+# objecttype: CRT registration 0x514420.
+0x114440	-
+# objecttype: CRT registration 0x514450.
+0x114470	-
+# objecttype: CRT registration 0x514480.
+0x1144a0	-
+# objecttype: CRT registration 0x5144f0.
+0x114540	-
+# objecttype: CRT registration 0x514550.
+0x114570	-
+# objecttype: CRT registration 0x514580.
+0x1145a0	-
+# objecttype: CRT registration 0x5145b0.
+0x1145d0	-
+# objecttype: CRT registration 0x5145e0.
+0x114600	-
+# rmg_terrain: CRT registration 0x5b3b60.
+0x1b3b90	-
+# rmg_terrain: CRT registration 0x5b3ba0.
+0x1b3bd0	-
+# rmg_terrain: CRT registration 0x5b3be0.
+0x1b3c10	-
+# rmg_terrain: CRT registration 0x5b3c20.
+0x1b3c50	-
+# rmg_terrain: CRT registration 0x5b3c60.
+0x1b3c90	-
+# rmg_terrain: CRT registration 0x5b3ca0.
+0x1b3cd0	-
+# rmg_terrain: CRT registration 0x5b3ce0.
+0x1b3d10	-
+# rmg_terrain: CRT registration 0x5b3d20.
+0x1b3d50	-
+# rmg_terrain: CRT registration 0x5b3d60.
+0x1b3d90	-
+# rmg_terrain: CRT registration 0x5b3da0.
+0x1b3dc0	-
+# Source-emitted array cleanup registrations: complete bodies and named
+# element constructors/destructors agree, including each element stride.
+# game: CRT registration 0x4ca9e0, nine TPickRandomTownName elements.
+0xcaa20	-
+# resourcemanager: CRT registration 0x559150, eight TResourceLODSlot elements.
+0x159200	-

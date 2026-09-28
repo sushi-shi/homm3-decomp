@@ -125,6 +125,10 @@ TResourceLODSlot::TResourceLODSlot(const char* name)
 {
 }
 
+// The archive-array cleanup takes this implicit destructor's address.
+// Retail adds four to this, then tail-calls LODFile::~LODFile.
+VA_COMPGEN(0x00559220, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
+
 VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 
 VA(0x005594b0, 0x40) MAC_ADDRESS(0x1521d0, 0x40)  // dc 0x122984

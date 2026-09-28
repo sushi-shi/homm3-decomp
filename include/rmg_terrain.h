@@ -121,7 +121,9 @@ public:
         unsigned char allowsSeparatedNeighbours = 0)
         : m_blendsWithOtherTerrain(blendsWithOtherTerrain),
           m_allowsSeparatedNeighbours(allowsSeparatedNeighbours) {}
-    virtual ~TRmgTerrainRule();
+    // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
+    // destructor still has its ordinary out-of-line body at 0x5b3850.
+    virtual ~TRmgTerrainRule() = 0;
     virtual unsigned char hasEntries() = 0;
     virtual unsigned char isSpecialFrame(int frame) = 0;
     virtual int getEntry(int index) = 0;

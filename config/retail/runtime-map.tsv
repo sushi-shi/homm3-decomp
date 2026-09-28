@@ -516,7 +516,8 @@ rva	name
 0x217d3c	?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z
 0x217d78	crt_217d78
 0x217d82	crt_217d82
-0x217d9a	exe_purecall
+# LIBCMT purevirt.obj: all nine bytes match, including __amsg_exit's REL32.
+0x217d9a	__purecall
 0x217db0	__CIatan
 0x217dc4	crt_45fd0_sub02_217dc4
 0x217dcd	crt_atan_217dcd
