@@ -176,7 +176,8 @@ PE headers and independently identified resource/relocation sections are structu
 proven by `homm3 verify library-code`. The reviewed
 `config/retail/runtime-contributions.tsv` places one COFF section of a pinned
 VC6 SP3 `LIBCMT.LIB` or `LIBCPMT.LIB` member (or one import-library thunk, or
-one linker-allocated COMMON) per row; compiled pristine zlib data sections use
+one linker-allocated COMMON, or one Platform SDK GUID section of `UUID.LIB` or
+`DXGUID.LIB`) per row; compiled pristine zlib data sections use
 the same rows, and the zlib map places zlib code. Every run re-checks each
 row: unrelocated bytes must equal retail, uninitialized sections and COMMONs
 must be zero-filled `.data` at their alignment (a COMMON takes its largest

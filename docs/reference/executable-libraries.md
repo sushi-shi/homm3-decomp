@@ -55,6 +55,14 @@ The data-only members pulled in are `crt0init`, `ctype`, `nlsdata1-3`,
 `cmiscdat`, `days`, `timeset`, `constpow`, `_newmode`, `txtmode` and
 `ncommode`; `iomanip.obj` is not linked (no `.CRT$XCU` entry).
 
+The DirectPlay identifiers at `.rdata` 0x243d58-0x243e38 are Platform SDK
+data, not game definitions: `GUID_NULL` is `UUID.LIB`'s `cguid_i_guid0.obj`
+section, and the thirteen `DPAID_*`, `DPSPGUID_*`, `CLSID_DirectPlay*` and
+`IID_IDirectPlay*` values are COMDATs of the pinned `lib/DXGUID.LIB`'s single
+`dxguid.obj`, placed in that member's section order. `IID_IDirectPlay4A` and
+`IID_IDirectPlayLobby3A` (DirectPlay 6) exist only in that library, not in
+`lib-rtm/DXGUID.LIB`.
+
 ## Import inventory
 
 | dll | imports | note |

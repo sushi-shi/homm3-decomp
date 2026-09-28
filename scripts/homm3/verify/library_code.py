@@ -2,7 +2,7 @@
 
 `config/retail/runtime-contributions.tsv` places individual COFF sections of
 the pinned VC6 SP3 `LIBCMT.LIB`/`LIBCPMT.LIB` members (plus import-library
-thunks) at retail RVAs. The reviewed zlib map places compiled pristine
+thunks, and the SDK GUID data of `UUID.LIB`/`DXGUID.LIB`) at retail RVAs. The reviewed zlib map places compiled pristine
 vendor sections the same way. Each placement is checked here:
 
 * every non-relocated byte of the section equals retail;
@@ -36,6 +36,10 @@ from homm3.core.tsv import read as read_tsv
 INVENTORY = RETAIL / 'runtime-contributions.tsv'
 ZLIB_MAP = RETAIL / 'zlib-map.tsv'
 RUNTIME_LIBRARIES = ('LIBCMT.LIB', 'LIBCPMT.LIB')
+#: Platform SDK libraries of pure data: GUID definitions pulled in by the
+#: game's DirectPlay references (`GUID_NULL` from UUID.LIB, the DirectPlay
+#: identifiers from DXGUID.LIB's COMDATs).
+GUID_LIBRARIES = ('UUID.LIB', 'DXGUID.LIB')
 
 KINDS = ('code', 'alias', 'data', 'bss', 'common', 'thunk')
 DIR32, DIR32NB, REL32 = 6, 7, 20
@@ -279,7 +283,7 @@ def load_libraries(toolchain: Path | None = None, vendor_dir: Path | None = None
     from homm3.compare.canonicalize import CoffObject
     from homm3.core.paths import msvc_dir
     root = Path(toolchain or msvc_dir()) / 'lib'
-    archives = {name: archive(root / name)[0] for name in RUNTIME_LIBRARIES}
+    archives = {name: archive(root / name)[0] for name in RUNTIME_LIBRARIES + GUID_LIBRARIES}
     for name, members in archives.items():
         if None in members:
             raise ValueError(f'{name}: duplicate member basenames')
@@ -288,7 +292,7 @@ def load_libraries(toolchain: Path | None = None, vendor_dir: Path | None = None
                        for u in sorted(set(zlib_units))}}
     imports = {}
     for path in sorted(root.glob('*.LIB')) + sorted(root.glob('*.lib')):
-        if path.name.upper() in RUNTIME_LIBRARIES:
+        if path.name.upper() in RUNTIME_LIBRARIES + GUID_LIBRARIES:
             continue
         try:
             for symbol, parsed in archive(path)[1].items():

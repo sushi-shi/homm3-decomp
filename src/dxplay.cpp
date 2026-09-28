@@ -44,7 +44,7 @@ CDPlay::CDPlay()
     m_inSession = 0;
     m_isHost = 0;
     m_res = 0;
-    m_guid = g_guidNull;
+    m_guid = GUID_NULL;
     m_sessionArray = 0;
     m_connectionArray = 0;
     m_groupArray = 0;
@@ -71,8 +71,8 @@ unsigned char CDPlay::init()
         static_cast<IDirectPlay4A*>(m_dp)->Release();
         m_dp = 0;
     }
-    m_res = CoCreateInstance(g_clsidDirectPlay, 0, CLSCTX_INPROC_SERVER,
-        g_iidDirectPlay4A, &m_dp);
+    m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
+        IID_IDirectPlay4A, &m_dp);
     unsigned char ok = m_res >= 0;
     return ok;
 }
@@ -121,7 +121,7 @@ unsigned char CDPlay::joinSession(GUID* sessionGuid, char* password)
     desc.m_passwordA = password;
     if (sessionGuid)
         desc.m_guidInstance = *sessionGuid;
-    if (memcmp(&m_guid, &g_guidNull, sizeof(GUID)) != 0)
+    if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) != 0)
         desc.m_guidApplication = m_guid;
     m_res = static_cast<IDirectPlay4A*>(m_dp)->Open(&desc, 1);
     if (m_res < 0)
@@ -930,16 +930,16 @@ unsigned char CDPlayLobby::init()
         static_cast<IDirectPlay4A*>(m_dp)->Release();
         m_dp = 0;
     }
-    m_res = CoCreateInstance(g_clsidDirectPlay, 0, CLSCTX_INPROC_SERVER,
-        g_iidDirectPlay4A, &m_dp);
+    m_res = CoCreateInstance(CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER,
+        IID_IDirectPlay4A, &m_dp);
     if (m_res < 0)
         return 0;
     if (m_lobby) {
         static_cast<IDirectPlayLobby3A*>(m_lobby)->Release();
         m_lobby = 0;
     }
-    m_res = CoCreateInstance(g_clsidDirectPlayLobby, 0, CLSCTX_INPROC_SERVER,
-        g_iidDirectPlayLobby3A, &m_lobby);
+    m_res = CoCreateInstance(CLSID_DirectPlayLobby, 0, CLSCTX_INPROC_SERVER,
+        IID_IDirectPlayLobby3A, &m_lobby);
     unsigned char ok = m_res >= 0;
     return ok;
 }
@@ -1049,7 +1049,7 @@ unsigned char CDPlayLobby::connect()
         static_cast<IDirectPlay4A*>(m_dp)->Release();
         m_dp = 0;
     }
-    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->ConnectEx(0, g_iidDirectPlay4A, &m_dp, 0);
+    m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->ConnectEx(0, IID_IDirectPlay4A, &m_dp, 0);
     unsigned char ok = m_res >= 0;
     return ok;
 }
@@ -1124,12 +1124,12 @@ CDPlayConnection* CDPlayLobby::createTCPIPConnection(
             ++count;
         }
     }
-    elements[count].m_guidDataType = g_dpaidServiceProvider;
+    elements[count].m_guidDataType = DPAID_ServiceProvider;
     elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &g_spTcpip;
+    elements[count].m_data = &DPSPGUID_TCPIP;
     ++count;
     if (ipAddress) {
-        elements[count].m_guidDataType = g_dpaidINet;
+        elements[count].m_guidDataType = DPAID_INet;
         elements[count].m_dataSize = strlen(ipAddress) + 1;
         elements[count].m_data = ipAddress;
         ++count;
@@ -1146,7 +1146,7 @@ CDPlayConnection* CDPlayLobby::createTCPIPConnection(
         return 0;
     }
     CDPlayConnection* connection = new CDPlayConnection(
-        &g_spTcpip, addressSize, address, name);
+        &DPSPGUID_TCPIP, addressSize, address, name);
     ::operator delete(address);
     return connection;
 }
@@ -1169,9 +1169,9 @@ CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection*
             ++count;
         }
     }
-    elements[count].m_guidDataType = g_dpaidServiceProvider;
+    elements[count].m_guidDataType = DPAID_ServiceProvider;
     elements[count].m_dataSize = sizeof(GUID);
-    elements[count].m_data = &g_spIpx;
+    elements[count].m_data = &DPSPGUID_IPX;
     ++count;
     m_res = static_cast<IDirectPlayLobby3A*>(m_lobby)->CreateCompoundAddress(elements, count, 0, &addressSize);
     if (m_res != DPERR_BUFFERTOOSMALL)
@@ -1182,7 +1182,7 @@ CDPlayConnection* CDPlayLobby::createIPXConnection(char* name, CDPlayConnection*
         ::operator delete(address);
         return 0;
     }
-    CDPlayConnection* conn = new CDPlayConnection(&g_spIpx, addressSize, address, name);
+    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_IPX, addressSize, address, name);
     ::operator delete(address);
     return conn;
 }
@@ -1192,18 +1192,18 @@ CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr,
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
     unsigned long addressSize = 0;
-    elements[0].m_guidDataType = g_dpaidServiceProvider;
+    elements[0].m_guidDataType = DPAID_ServiceProvider;
     elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &g_spModem;
+    elements[0].m_data = &DPSPGUID_MODEM;
     unsigned long count = 1;
     if (modemString) {
-        elements[1].m_guidDataType = g_dpaidModem;
+        elements[1].m_guidDataType = DPAID_Modem;
         elements[1].m_dataSize = strlen(modemString) + 1;
         elements[1].m_data = modemString;
         count = 2;
     }
     if (phoneNbr) {
-        elements[count].m_guidDataType = g_dpaidPhone;
+        elements[count].m_guidDataType = DPAID_Phone;
         elements[count].m_dataSize = strlen(phoneNbr) + 1;
         elements[count].m_data = phoneNbr;
         ++count;
@@ -1217,7 +1217,7 @@ CDPlayConnection* CDPlayLobby::createModemConnection(char* name, char* phoneNbr,
         ::operator delete(address);
         return 0;
     }
-    CDPlayConnection* conn = new CDPlayConnection(&g_spModem, addressSize, address, name);
+    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_MODEM, addressSize, address, name);
     ::operator delete(address);
     return conn;
 }
@@ -1227,12 +1227,12 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
     unsigned long addressSize = 0;
-    elements[0].m_guidDataType = g_dpaidServiceProvider;
+    elements[0].m_guidDataType = DPAID_ServiceProvider;
     elements[0].m_dataSize = sizeof(GUID);
-    elements[0].m_data = &g_spSerial;
+    elements[0].m_data = &DPSPGUID_SERIAL;
     unsigned long count = 1;
     if (comPortInfo) {
-        elements[1].m_guidDataType = g_dpaidComPort;
+        elements[1].m_guidDataType = DPAID_ComPort;
         elements[1].m_dataSize = 0x14;
         elements[1].m_data = comPortInfo;
         count = 2;
@@ -1246,7 +1246,7 @@ CDPlayConnection* CDPlayLobby::createSerialConnection(char* name, _DPCOMPORTADDR
         ::operator delete(address);
         return 0;
     }
-    CDPlayConnection* conn = new CDPlayConnection(&g_spSerial, addressSize, address, name);
+    CDPlayConnection* conn = new CDPlayConnection(&DPSPGUID_SERIAL, addressSize, address, name);
     ::operator delete(address);
     return conn;
 }
@@ -1331,7 +1331,7 @@ unsigned char CDPlayLobby::getIPAddress(unsigned long dpid, char* ipAddress)
     enumAddress(buf, size, &addresses);
     for (unsigned long i = 0; i < addresses.getCount(); ++i) {
         CDPlayAddressElement* elem = addresses.get(i);
-        if (memcmp(&elem->m_guid, &g_dpaidINet, sizeof(GUID)) == 0) {
+        if (memcmp(&elem->m_guid, &DPAID_INet, sizeof(GUID)) == 0) {
             strcpy(ipAddress, elem->m_data);
             break;
         }

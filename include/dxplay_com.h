@@ -130,43 +130,31 @@ public:
 };
 SIZE(DPAPPLICATIONDESC, 0x38);
 
-// The DirectPlay COM identifiers the object factory and lobby-connect paths
-// reference by address. Values read from the retail .rdata GUID pool; only the
-// address matters to the emitted code (the reloc immediate is masked). The
-// null GUID doubles as the unset-application-guid sentinel HostSession and the
-// base ctor compare against.
-DATA(0x00643d58) static const GUID g_guidNull =
-    { 0x00000000, 0x0000, 0x0000, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
-DATA(0x00643d78) static const GUID g_dpaidINet =
-    { 0xC4A54DA0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643db8) static const GUID g_clsidDirectPlayLobby =
-    { 0x2FE8F810, 0xB2A5, 0x11D0, { 0xA7, 0x87, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
-DATA(0x00643dc8) static const GUID g_iidDirectPlayLobby3A =
-    { 0x2DB72491, 0x652C, 0x11D1, { 0xA7, 0xA8, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
-DATA(0x00643e18) static const GUID g_clsidDirectPlay =
-    { 0xD1EB6D20, 0x8923, 0x11D0, { 0x9D, 0x97, 0x00, 0xA0, 0xC9, 0x0A, 0x43, 0xCB } };
-DATA(0x00643e28) static const GUID g_iidDirectPlay4A =
-    { 0x0AB1C531, 0x4745, 0x11D1, { 0xA7, 0xA1, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
-
-// The DPAID address-element data-type tags and the four service-provider GUIDs
-// the Create*Connection compound-address builders reference. Values read from the
-// same .rdata pool; DATA-claimed so the reloc names pair.
-DATA(0x00643d68) static const GUID g_dpaidComPort =
-    { 0xF2F0CE00, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643d88) static const GUID g_dpaidModem =
-    { 0xF6DCC200, 0xA2FE, 0x11D0, { 0x9C, 0x4F, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643d98) static const GUID g_dpaidPhone =
-    { 0x78EC89A0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643da8) static const GUID g_dpaidServiceProvider =
-    { 0x07D916C0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643dd8) static const GUID g_spModem =
-    { 0x44EAA760, 0xCB68, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643de8) static const GUID g_spSerial =
-    { 0x0F1D6860, 0x88D9, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
-DATA(0x00643df8) static const GUID g_spTcpip =
-    { 0x36E95EE0, 0x8577, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0x53, 0x4E, 0x82 } };
-DATA(0x00643e08) static const GUID g_spIpx =
-    { 0x685BC400, 0x9D2C, 0x11CF, { 0xA9, 0xCD, 0x00, 0xAA, 0x00, 0x68, 0x86, 0xE3 } };
+// The DirectPlay COM identifiers the object factory, lobby-connect and
+// compound-address paths reference by address. They are Platform SDK data,
+// not this TU's: retail links GUID_NULL from UUID.LIB (cguid_i_guid0.obj) and
+// the rest from DXGUID.LIB's dxguid.obj COMDATs, in that member's section
+// order (`homm3 verify library-code` compares every byte). The spellings are
+// the SDK's C ABI names; Dreamcast's dxplay.obj references DPAID_INet and
+// DPSPGUID_TCPIP under the same names. The null GUID doubles as the
+// unset-application-guid sentinel HostSession and the base ctor compare
+// against.
+extern "C" {
+DATA(0x00643d58) extern const GUID GUID_NULL;
+DATA(0x00643d68) extern const GUID DPAID_ComPort;
+DATA(0x00643d78) extern const GUID DPAID_INet;
+DATA(0x00643d88) extern const GUID DPAID_Modem;
+DATA(0x00643d98) extern const GUID DPAID_Phone;
+DATA(0x00643da8) extern const GUID DPAID_ServiceProvider;
+DATA(0x00643db8) extern const GUID CLSID_DirectPlayLobby;
+DATA(0x00643dc8) extern const GUID IID_IDirectPlayLobby3A;
+DATA(0x00643dd8) extern const GUID DPSPGUID_MODEM;
+DATA(0x00643de8) extern const GUID DPSPGUID_SERIAL;
+DATA(0x00643df8) extern const GUID DPSPGUID_TCPIP;
+DATA(0x00643e08) extern const GUID DPSPGUID_IPX;
+DATA(0x00643e18) extern const GUID CLSID_DirectPlay;
+DATA(0x00643e28) extern const GUID IID_IDirectPlay4A;
+}
 
 // The lobby compound-address builder consumes an array of these tag/size/value
 // triples; CreateCompoundAddress packs them into an SP address blob.
