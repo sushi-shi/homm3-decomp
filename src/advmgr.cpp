@@ -55,12 +55,11 @@
 #include "window.h"
 #include "winmgr.h"
 
-// DC name: suffix. Retail saveGame passes 0x691268 to sprintf/strcat.
-// The current 20-byte extent is unresolved: verified terrain initializers
-// write independent masks at 0x691270, 0x691274 and 0x691278. The observed
-// suffixes need five bytes; neither unbounded string calls nor that next
-// object establish whether this buffer's declaration used five to eight.
-DATA(0x00691268) char g_saveGameSuffix[20];
+// DC name: suffix (char[20] in the Dreamcast build). Retail saveGame passes
+// 0x691268 to sprintf/strcat, and this TU's verified terrain-mask initializers
+// write independent objects at 0x691270, 0x691274 and 0x691278, so the retail
+// buffer ends eight bytes in. The observed suffixes need five bytes.
+DATA(0x00691268) char g_saveGameSuffix[8];
 
 // Retail static constructor 0x405db0.
 DATA(0x00691250) SLimitData g_advMapViewLimits(8, 8, 615, 551);
@@ -583,8 +582,11 @@ advManager::advManager()
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
 DATA(0x0065f4c4) const char* const g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
 DATA(0x0065f55c) const char* const g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
-DATA(0x0065f588) const char* const g_riverTilesetNames[4] = { "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
-DATA(0x0065f59c) const char* const g_roadTilesetNames[3] = { "dirtrd.def", "gravrd.def", "cobbrd.def" };
+// River and road tilesets are indexed by type; type 0 (none) names "".
+// Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
+// loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
+DATA(0x0065f584) const char* const g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
+DATA(0x0065f598) const char* const g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
 DATA(0x0065f5a8) const char* const g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
 DATA(0x0065f5f0) const char* const g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
 DATA(0x0065f610) const char* const g_boatFlagIconNames[3][8] = {
@@ -678,11 +680,11 @@ int advManager::open(int newPriority)
     for (i = 0; i < 10; i++)
         m_groundTileset[i] = ResourceManager::getSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
-    for (i = 0; i < 4; i++)
-        m_riverTileset[i + 1] = ResourceManager::getSprite(g_riverTilesetNames[i]);
+    for (i = 1; i < 5; i++)
+        m_riverTileset[i] = ResourceManager::getSprite(g_riverTilesetNames[i]);
     incProgressBar(1);
-    for (i = 0; i < 3; i++)
-        m_roadTileset[i + 1] = ResourceManager::getSprite(g_roadTilesetNames[i]);
+    for (i = 1; i < 4; i++)
+        m_roadTileset[i] = ResourceManager::getSprite(g_roadTilesetNames[i]);
     incProgressBar(1);
     m_borderTileset =
         ResourceManager::getSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));

@@ -393,12 +393,16 @@ def report(model=None):
     found = retail_records.metadata(pe, model, set(Image(pe).reloc_sites))
     constants = retail_records.fp_constants(pe, set(Image(pe).reloc_sites),
                                             retail_records.library_code(model))
-    for extra in (found, constants):
+    comdats = retail_records.comdat_contributions(enrolled)
+    members, compiler_padding = retail_records.ordinary_members(pe, enrolled)
+    literals = retail_records.source_literals(HOMM3_DIR, pe)
+    for extra in (found, constants, comdats, members, literals):
         records.ranges += extra.ranges
         records.starts.update(extra.starts)
         records.ends |= extra.ends
     claims = (initializer_ranges(dynamic) + startup_ranges(startup) + records.ranges
-              + crt_table_ranges(pe, retail_records.library_code(model)))
+              + crt_table_ranges(pe, retail_records.library_code(model))
+              + compiler_padding)
     domains = account(pe, model, enrolled, sections, initializers=claims)
     padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
     if padding:

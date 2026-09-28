@@ -393,6 +393,216 @@ def fp_constants(pe, sites, library=lambda rva: False) -> Records:
     return out
 
 
+_COMPGEN_LITERAL = None
+
+
+def _c_string(body: str) -> bytes | None:
+    """Bytes of one C string-literal body (VC6 narrow, Latin-1 source)."""
+    out, i = bytearray(), 0
+    simple = {'n': 10, 't': 9, 'r': 13, '0': 0, '\\': 92, '"': 34, "'": 39,
+              'a': 7, 'b': 8, 'f': 12, 'v': 11, '?': 63}
+    while i < len(body):
+        c = body[i]
+        if c != '\\':
+            out += c.encode('latin-1')
+            i += 1
+            continue
+        i += 1
+        if i >= len(body):
+            return None
+        c = body[i]
+        if c == 'x':
+            j = i + 1
+            while j < len(body) and body[j] in '0123456789abcdefABCDEF':
+                j += 1
+            out.append(int(body[i + 1:j], 16) & 0xff)
+            i = j
+        elif c in '01234567':
+            j = i
+            while j < len(body) and j < i + 3 and body[j] in '01234567':
+                j += 1
+            out.append(int(body[i:j], 8) & 0xff)
+            i = j
+        elif c in simple:
+            out.append(simple[c])
+            i += 1
+        else:
+            return None
+    return bytes(out)
+
+
+def source_literals(root, pe) -> Records:
+    """String literals a source DATA_COMPGEN places at a retail address.
+
+    The annotation is the reviewed address claim; the literal's own bytes
+    plus its NUL must equal retail there. Nothing else is inferred: a value
+    that is not a plain (possibly concatenated) narrow string literal, or
+    whose bytes differ, claims nothing.
+    """
+    import re
+    from pathlib import Path
+    head = re.compile(r'\bDATA_COMPGEN\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*(\w+)\s*,\s*')
+    literal = re.compile(r'"((?:[^"\\\n]|\\.)*)"\s*')
+    out = Records()
+    seen = {}
+    for path in sorted([*Path(root, 'src').rglob('*.cpp'), *Path(root, 'include').rglob('*.h')]):
+        text = path.read_text(encoding='latin-1')
+        for m in head.finditer(text):
+            at, parts = m.end(), []
+            while True:
+                lm = literal.match(text, at)
+                if not lm:
+                    break
+                parts.append(lm.group(1))
+                at = lm.end()
+            if not parts or not text.startswith(')', at):
+                continue
+            data = b''.join(_c_string(p) or b'\xff\xff' for p in parts)
+            if any(_c_string(p) is None for p in parts):
+                continue
+            rva = int(m.group(1), 16) - pe.image_base
+            if pe.read(rva, len(data) + 1) != data + b'\0':
+                continue
+            seen.setdefault((rva, len(data) + 1), m.group(2))
+    data = pe.section('.data')
+    for (rva, size), name in sorted(seen.items()):
+        # Pooled literals in .data are 4-aligned `??_C@` COMDATs in every
+        # candidate object; elsewhere no contribution shape is assumed.
+        pooled = data['va'] <= rva < data['va'] + data['vsize']
+        out.add(rva, rva + size, 'game', f'source literal {name}', 1,
+                alignment=4 if pooled else None, whole=pooled)
+    return out
+
+
+def comdat_contributions(enrolled, base_dir=None) -> Records:
+    """Whole COMDAT contributions among enrolled rows, with COFF alignment.
+
+    A row is one whole contribution when its candidate definition is the only
+    external symbol of a COMDAT section, at offset 0, and the row's extent is
+    that section's size. The section's COFF alignment is then the linker's
+    placement requirement.
+    """
+    from pathlib import Path
+    from homm3.core import msvc_names
+    from homm3.core.paths import BUILD
+    from homm3.delink.coffx import Obj
+    base_dir = Path(base_dir or BUILD / 'objdiff/base')
+    out, objects = Records(), {}
+    for r in enrolled:
+        if 'gap' in r.get('provenance', ''):
+            continue
+        unit = r['object'].removesuffix('.c')
+        if unit not in objects:
+            path = base_dir / f'{unit}.obj'
+            obj = Obj(path) if path.is_file() else None
+            index = {}
+            for sec in (obj.section_table if obj else ()):
+                if sec['characteristics'] & 0x1000:
+                    members = obj.defined_symbols(sec['index'])
+                    if len(members) == 1 and members[0][0] == 0:
+                        index[msvc_names.mask(members[0][1])] = sec
+            objects[unit] = index
+        sec = objects[unit].get(msvc_names.mask(r['name']))
+        start, size = int(r['rva'], 0), int(r['size'], 0)
+        if sec is not None and sec['size'] == size and not start % sec['alignment']:
+            out.starts[start] = max(sec['alignment'], out.starts.get(start, 1))
+            out.ends.add(start + size)
+    return out
+
+
+def ordinary_members(pe, enrolled, base_dir=None):
+    """Compiler padding inside, and contribution edges of, ordinary sections.
+
+    Source data defined in one candidate `.data`/`.rdata`/`.bss` section keeps
+    the compiler's own member layout. Where two members that are adjacent in
+    the candidate section sit at the same distance in retail, the bytes
+    between them are the compiler's padding: claimed when the candidate
+    emitted zeros there (always, for uninitialized storage) and retail agrees.
+    A member at offset 0 starts the section contribution (with the section's
+    COFF alignment); a member ending at the section size ends it.
+    """
+    from pathlib import Path
+    from homm3.core import msvc_names
+    from homm3.core.paths import BUILD
+    from homm3.delink.coffx import Obj
+    from homm3.verify.byte_accounting import Range
+    base_dir = Path(base_dir or BUILD / 'objdiff/base')
+    out, pads = Records(), []
+    by_unit = {}
+    claimed = [(int(r['rva'], 0), int(r['rva'], 0) + int(r['size'], 0),
+                r['object'].removesuffix('.c'), r['name']) for r in enrolled
+               if 'gap' not in r.get('provenance', '') and int(r['size'], 0)]
+    for r in enrolled:
+        if r.get('provenance') == 'src-DATA-sizeof':
+            by_unit.setdefault(r['object'].removesuffix('.c'), []).append(r)
+    for unit, rows in sorted(by_unit.items()):
+        path = base_dir / f'{unit}.obj'
+        if not path.is_file():
+            continue
+        obj = Obj(path)
+        where = {}
+        for idx, value, secnum in obj.iter_symbols():
+            if secnum > 0:
+                where.setdefault(msvc_names.mask(obj.sym_name(idx)), []).append((secnum, value))
+        sections = {}
+        for r in rows:
+            hits = where.get(msvc_names.mask(r['name']), [])
+            if len(hits) != 1:
+                continue
+            secnum, offset = hits[0]
+            sec = obj.section_table[secnum - 1]
+            if sec['characteristics'] & 0x1000 or sec['name'] not in ('.data', '.rdata', '.bss'):
+                continue
+            sections.setdefault(secnum, []).append(
+                (offset, int(r['size'], 0), int(r['rva'], 0), r['name']))
+        for secnum, members in sections.items():
+            sec = obj.section_table[secnum - 1]
+            payload = obj.section_payload(secnum)
+            # A whole ordinary section is one contiguous link contribution.
+            # When every datum it defines is claimed, no foreign claim lies
+            # between them and the retail band is exactly the section size,
+            # the zero bytes left inside the band are that section's padding.
+            names = {n for _v, n, _scl in obj.section_members(secnum)}
+            placed = {n for _o, _z, _r, n in members}
+            lo = min(r for _o, _z, r, _n in members)
+            hi = max(r + z for _o, z, r, _n in members)
+            foreign = [x for x in claimed if x[0] < hi and lo < x[1]
+                       and (x[2], x[3]) not in {(unit, n) for n in placed}]
+            complete = {msvc_names.mask(n) for n in names} <= {
+                msvc_names.mask(n) for n in placed}
+            if complete and hi - lo == sec['size'] and not foreign:
+                out.starts[lo] = max(sec['alignment'], out.starts.get(lo, 1))
+                out.ends.add(hi)
+                cursor = lo
+                for _o, z, r, n in sorted(members, key=lambda m: m[2]):
+                    if r > cursor:
+                        retail = pe.read(cursor, r - cursor)
+                        if retail is not None and not any(retail):
+                            pads.append(Range(cursor, r, 'alignment-padding',
+                                              f'{unit} compiler padding at 0x{cursor:x}', 0))
+                    cursor = max(cursor, r + z)
+            others = sorted(value for value_name in obj.section_members(secnum)
+                            for value in [value_name[0]])
+            members.sort()
+            for offset, size, rva, _name in members:
+                if offset == 0 and not rva % sec['alignment']:
+                    out.starts[rva] = max(sec['alignment'], out.starts.get(rva, 1))
+                if offset + size == sec['size']:
+                    out.ends.add(rva + size)
+            for (o1, z1, r1, n1), (o2, _z2, r2, n2) in zip(members, members[1:]):
+                gap = o2 - (o1 + z1)
+                between = [v for v in others if o1 < v < o2]
+                if gap <= 0 or between or r2 - r1 != o2 - o1:
+                    continue
+                candidate = payload[o1 + z1:o2] if payload else bytes(gap)
+                retail = pe.read(r1 + z1, gap)
+                if retail is None or any(candidate) or retail != candidate:
+                    continue
+                pads.append(Range(r1 + z1, r2, 'alignment-padding',
+                                  f'{unit} compiler padding at 0x{r1 + z1:x}', 0))
+    return out, pads
+
+
 def alignment_padding(pe, rows, records: Records, sections=()):
     """Zero gaps that link alignment alone explains, as extra claims.
 

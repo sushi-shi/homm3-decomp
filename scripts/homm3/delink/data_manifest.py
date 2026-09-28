@@ -516,14 +516,26 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
     onto one rva). Identical payloads at two retail RVAs collide on one
     content-derived name; both are withheld.
     """
+    # Keyed by the literal's COMPLETE bytes: a literal with an embedded NUL
+    # (for example "\0\1\1\2...") must not collide with "" or any other
+    # literal sharing its leading C string.
     owners: dict[bytes, dict[str, str]] = defaultdict(dict)
+    by_prefix: dict[bytes, set[bytes]] = defaultdict(set)
     for stem, c in coffx.objects(base_dir):
         for idx, value, secnum in c.iter_symbols():
             name = c.sym_name(idx)
             if name.startswith("??_C@") and secnum >= 1:
-                cs = c.cstring(secnum, value)
-                if cs is not None:
-                    owners[cs][stem] = name
+                sec = c.section_table[secnum - 1]
+                raw = c.section_payload(secnum)
+                if not raw and value == 0 and sec["size"]:
+                    # cl omits the raw data of an all-zero COMDAT ("").
+                    raw = bytes(sec["size"])
+                if value != 0 or b"\0" not in raw:
+                    continue
+                whole = raw[:sec["size"]]
+                cs = whole[:whole.index(b"\0")]
+                owners[whole][stem] = name
+                by_prefix[cs].add(whole)
 
     img = retail()
     rows, withheld, by_name = [], [], defaultdict(list)
@@ -533,21 +545,30 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
         if any(start <= rva < end for start, end in nonliteral_ranges):
             continue
         cs = img.cstring(rva)
-        if cs is None or cs not in owners:
+        if cs is None:
             continue
-        units = owners[cs]
-        size = len(cs) + 1                      # the payload plus its NUL
-        start = _classify(rva)
-        end = _classify(rva + size - 1)
-        if start not in STORAGE or start != end:
-            withheld.append((rva, next(iter(units.values())),
-                             f"string storage {start} not enrollable"))
-            continue
-        for unit, name in sorted(units.items()):
-            by_name[name].append(
-                {"name": name, "object": f"{unit}.c", "rva": rva, "size": size,
-                 "storage": STORAGE[start],
-                 "provenance": "candidate-COFF-string"})
+        for whole in sorted(by_prefix.get(cs, ()), key=len):
+            size = len(whole)
+            at = img.off(rva)
+            if at is None or img.data[at:at + size] != whole:
+                continue
+            units = owners[whole]
+            start = _classify(rva)
+            end = _classify(rva + size - 1)
+            paired = any(rva in (votes or {}).get(n, ()) for n in units.values())
+            if start == end == "data-unprovable-tail" and paired:
+                # The zero tail cannot tell a literal from padding by its
+                # bytes; paired relocations naming this literal can.
+                start = end = "data-initialized"
+            if start not in STORAGE or start != end:
+                withheld.append((rva, next(iter(units.values())),
+                                 f"string storage {start} not enrollable"))
+                continue
+            for unit, name in sorted(units.items()):
+                by_name[name].append(
+                    {"name": name, "object": f"{unit}.c", "rva": rva, "size": size,
+                     "storage": STORAGE[start],
+                     "provenance": "candidate-COFF-string"})
     for name, group in by_name.items():
         addrs = {r["rva"] for r in group}
         paired = (votes or {}).get(name, set())
