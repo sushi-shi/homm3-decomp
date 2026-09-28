@@ -366,67 +366,142 @@ rva	function_count	class
 0x243ce8	14	
 0x243d20	11	File
 0x243d4c	3	heroWindowManager
-0x24559c	3	
+# LIBCPMT/LIBCMT string.obj#18: the verified library section defines ??_7length_error@std@@6B@ here
+0x24559c	3	length_error@std
 # COL at 0x646cf0 names .?AVlogic_error@std@@; destructor 0x404690 stores this vptr.
 0x2455bc	3	logic_error@std
-0x2455cc	3	
-0x2455fc	3	
+# LIBCPMT/LIBCMT string.obj#62: the verified library section defines ??_7out_of_range@std@@6B@ here
+0x2455cc	3	out_of_range@std
+# LIBCPMT/LIBCMT ios.obj#20: the verified library section defines ??_7failure@ios_base@std@@6B@ here
+0x2455fc	3	failure@ios_base@std
 # COL at 0x646de0 names .?AVruntime_error@std@@; destructor 0x4b6be0 stores this vptr.
 0x245640	3	runtime_error@std
-0x245670	13	
-0x2456a8	13	
-0x245708	7	
-0x245728	6	
-0x245744	7	
-0x245764	10	
-0x245790	5	
-0x2457a8	3	
-0x245810	13	
-0x245870	13	
-0x2458a8	13	
-0x2458f4	3	
-0x245904	7	
-0x245924	2	
-0x245930	7	
-0x245950	10	
-0x24597c	10	
-0x2459a8	3	
-0x2459b8	3	
-0x2459c8	4	
-0x2459dc	4	
-0x2459f0	6	
-0x245a0c	7	
-0x245a2c	10	
-0x245a58	13	
-0x245abc	10	
-0x245c30	2	
-0x245c3c	7	
-0x245c5c	10	
-0x245c88	10	
-0x245cb4	3	
-0x245cc4	3	
-0x245cd4	4	
-0x245ce8	4	
-0x245cfc	10	
+# LIBCPMT/LIBCMT strstrea.obj#49: the verified library section defines ??_7strstreambuf@std@@6B@ here
+0x245670	13	strstreambuf@std
+# LIBCPMT/LIBCMT strstrea.obj#50: the verified library section defines ??_7?$basic_streambuf@DU?$char_traits@D@std@@@std@@6B@ here
+0x2456a8	13	?$basic_streambuf@DU?$char_traits@D@std@@@std
+# LIBCPMT/LIBCMT locale.obj#89: the verified library section defines ??_7?$codecvt@DDH@std@@6B@ here
+0x245708	7	?$codecvt@DDH@std
+# LIBCPMT/LIBCMT locale.obj#90: the verified library section defines ??_7?$numpunct@D@std@@6B@ here
+0x245728	6	?$numpunct@D@std
+# LIBCPMT/LIBCMT locale.obj#91: the verified library section defines ??_7?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245744	7	?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT locale.obj#92: the verified library section defines ??_7?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245764	10	?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT locale.obj#93: the verified library section defines ??_7?$ctype@D@std@@6B@ here
+0x245790	5	?$ctype@D@std
+# LIBCPMT/LIBCMT locale.obj#292: the verified library section defines ??_7bad_cast@std@@6B@ here
+0x2457a8	3	bad_cast@std
+# LIBCPMT/LIBCMT iostream.obj#123: the verified library section defines ??_7?$basic_filebuf@DU?$char_traits@D@std@@@std@@6B@ here
+0x245810	13	?$basic_filebuf@DU?$char_traits@D@std@@@std
+# LIBCPMT/LIBCMT wiostrea.obj#139: the verified library section defines ??_7?$basic_filebuf@GU?$char_traits@G@std@@@std@@6B@ here
+0x245870	13	?$basic_filebuf@GU?$char_traits@G@std@@@std
+# LIBCPMT/LIBCMT wiostrea.obj#140: the verified library section defines ??_7?$basic_streambuf@GU?$char_traits@G@std@@@std@@6B@ here
+0x2458a8	13	?$basic_streambuf@GU?$char_traits@G@std@@@std
+# LIBCPMT/LIBCMT nomemory.obj#18: the verified library section defines ??_7bad_alloc@std@@6B@ here
+0x2458f4	3	bad_alloc@std
+# LIBCPMT/LIBCMT wlocale.obj#85: the verified library section defines ??_7?$codecvt@GDH@std@@6B@ here
+0x245904	7	?$codecvt@GDH@std
+# LIBCPMT/LIBCMT wlocale.obj#86: the verified library section defines ??_7?$time_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x245924	2	?$time_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#87: the verified library section defines ??_7?$time_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x245930	7	?$time_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#88: the verified library section defines ??_7?$moneypunct@G$00@std@@6B@ here
+0x245950	10	?$moneypunct@G$00@std
+# LIBCPMT/LIBCMT wlocale.obj#89: the verified library section defines ??_7?$moneypunct@G$0A@@std@@6B@ here
+0x24597c	10	?$moneypunct@G$0A@@std
+# LIBCPMT/LIBCMT wlocale.obj#90: the verified library section defines ??_7?$money_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x2459a8	3	?$money_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#91: the verified library section defines ??_7?$money_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x2459b8	3	?$money_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#92: the verified library section defines ??_7?$messages@G@std@@6B@ here
+0x2459c8	4	?$messages@G@std
+# LIBCPMT/LIBCMT wlocale.obj#93: the verified library section defines ??_7?$collate@G@std@@6B@ here
+0x2459dc	4	?$collate@G@std
+# LIBCPMT/LIBCMT wlocale.obj#94: the verified library section defines ??_7?$numpunct@G@std@@6B@ here
+0x2459f0	6	?$numpunct@G@std
+# LIBCPMT/LIBCMT wlocale.obj#95: the verified library section defines ??_7?$num_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x245a0c	7	?$num_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#96: the verified library section defines ??_7?$num_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std@@6B@ here
+0x245a2c	10	?$num_get@GV?$istreambuf_iterator@GU?$char_traits@G@std@@@std@@@std
+# LIBCPMT/LIBCMT wlocale.obj#97: the verified library section defines ??_7?$ctype@G@std@@6B@ here
+0x245a58	13	?$ctype@G@std
+# LIBCPMT/LIBCMT wlocale.obj#304: the verified library section defines ??_7?$_Mpunct@G@std@@6B@ here
+0x245abc	10	?$_Mpunct@G@std
+# LIBCPMT/LIBCMT xlocale.obj#56: the verified library section defines ??_7?$time_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245c30	2	?$time_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT xlocale.obj#57: the verified library section defines ??_7?$time_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245c3c	7	?$time_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT xlocale.obj#58: the verified library section defines ??_7?$moneypunct@D$00@std@@6B@ here
+0x245c5c	10	?$moneypunct@D$00@std
+# LIBCPMT/LIBCMT xlocale.obj#59: the verified library section defines ??_7?$moneypunct@D$0A@@std@@6B@ here
+0x245c88	10	?$moneypunct@D$0A@@std
+# LIBCPMT/LIBCMT xlocale.obj#60: the verified library section defines ??_7?$money_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245cb4	3	?$money_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT xlocale.obj#61: the verified library section defines ??_7?$money_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@6B@ here
+0x245cc4	3	?$money_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std
+# LIBCPMT/LIBCMT xlocale.obj#62: the verified library section defines ??_7?$messages@D@std@@6B@ here
+0x245cd4	4	?$messages@D@std
+# LIBCPMT/LIBCMT xlocale.obj#63: the verified library section defines ??_7?$collate@D@std@@6B@ here
+0x245ce8	4	?$collate@D@std
+# LIBCPMT/LIBCMT xlocale.obj#173: the verified library section defines ??_7?$_Mpunct@D@std@@6B@ here
+0x245cfc	10	?$_Mpunct@D@std
 # type_info::~type_info (0x616e8d) stores 0x645d28 at [this]. Its one
 # scalar-deleting destructor calls that body; COL 0x647d58 names .?AVtype_info@@.
 0x245d28	1	type_info
-0x245d30	2	
-0x245d94	2	
-0x245da4	2	
-0x245db4	2	
-0x245e2c	2	
-0x245e38	2	
-0x245f74	2	
-0x245f80	2	
-0x245f8c	2	
-0x245fa8	2	
-0x245fb4	2	
-0x245fc4	2	
-0x245fe0	2	
-0x245ff8	2	
-0x246b6c	2	
-0x246bfc	2	
-0x246c08	2	
-0x246c34	2	
-0x246c44	2	
+# LIBCPMT/LIBCMT stdexcpt.obj#8: the verified library section defines ??_7exception@@6B@ here
+0x245d30	2	exception
+# 0x245d94 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# ehvecdtr.obj#4 section here is $T16522, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245da4 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# threadex.obj#3 section here is $T17052, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245db4 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# thread.obj#4 section here is $T17055, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245e2c (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_map.obj#5 section here is $T17201, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245e38 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_map.obj#5 section here is $T17201, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245f74 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_cmp.obj#5 section here is $T17215, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245f80 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_cmp.obj#5 section here is $T17215, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245f8c (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# frame.obj#8 section here is $T17295, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245fa8 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# frame.obj#13 section here is $T17316, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245fb4 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# frame.obj#17 section here is $T17331, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245fc4 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# frame.obj#19 section here is $T17343, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245fe0 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# hooks.obj#3 section here is $T16755, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x245ff8 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# hooks.obj#7 section here is $T16773, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x246b6c (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_str.obj#5 section here is $T17182, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x246bfc (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# w_str.obj#5 section here is $T17198, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x246c08 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# w_str.obj#5 section here is $T17198, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x246c34 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# w_loc.obj#3 section here is $T17148, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
+# 0x246c44 (2 "slots") RETIRED 2026-09-28: not a vtable. The verified LIBCMT
+# a_loc.obj#3 section here is $T17152, an SEH scope-table entry whose words are
+# its filter/handler code labels (homm3 verify library-code).
