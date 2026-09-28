@@ -37,6 +37,7 @@ iterate on a function.
 
 - [Reconstruction debt](todos/reconstruction_debt.md)
 - [Unresolved fields](todos/unresolved-data-fields.md) and [data matching](todos/data-matching.md)
+- [Import table post-link edits](todos/import-table-post-link-edits.md)
 - [Save-game oracle](todos/save-game-oracle.md)
 - [Tooling](todos/tooling.md)
 - [VC6 out-of-line helpers](todos/vc6-budget-free-out-of-line-functions.md)
