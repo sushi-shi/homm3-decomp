@@ -622,15 +622,17 @@ enum ERmgGuardConstants {
     RMG_GUARD_DISPOSITION = 3
 };
 
-// The function-local river-delta table has a non-trivial empty destructor:
-// retail registers its cleanup thunk when CreateRiver first reaches the
-// table.  The type is shared here so the table has one canonical shape.
+// CreateRiver's function-local river-delta table. Retail registers the
+// bare-`ret` callback 0x549790 with _atexit when it first reaches the table.
+// VC6 registers exactly that empty callback for a function-local static
+// array of a class with a constructor and no destructor; a user-declared
+// empty destructor instead registers a callback that runs the eh vector
+// destructor iterator over the four elements.
 struct TRmgRiverDeltaOffset {
     int m_x;
     int m_y;
 
     TRmgRiverDeltaOffset(int newX, int newY) : m_x(newX), m_y(newY) {}
-    ~TRmgRiverDeltaOffset() {}
 };
 
 class type_object;

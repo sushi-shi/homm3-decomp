@@ -21,7 +21,7 @@ _CUR / MAX / HIST: 2,805 / 2,806 / 4,463 exact; 97.10% / 97.10% / 98.52% weighte
 | Module       | Units | Functions exact MAX | Fuzzy MAX |
 | :----------- | ----: | ------------------: | --------: |
 | `game`       |   123 | 2313 / 3998 (57.9%) |    97.35% |
-| `rmg`        |     3 |   205 / 368 (55.7%) |    93.36% |
+| `rmg`        |     3 |   205 / 368 (55.7%) |    93.40% |
 | `network`    |     4 |   197 / 281 (70.1%) |    98.38% |
 | `zlib-1.1.3` |    14 |     62 / 69 (89.9%) |    99.99% |
 | `codec`      |     4 |     24 / 43 (55.8%) |    96.13% |
@@ -36,7 +36,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `init/cleanup thunks` |     1,173 |   95,322 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
-**Byte accountability:** 26,889 file bytes unclaimed; 12 bytes with conflicting claims. 8,421 / 10,590 enrolled initializer comparisons exact. 971 source-emitted CRT bodies exact (88,839 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
+**Byte accountability:** 26,873 file bytes unclaimed; 12 bytes with conflicting claims. 8,421 / 10,590 enrolled initializer comparisons exact. 971 source-emitted CRT bodies exact (88,839 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
 
 <!-- match-score:end -->
 

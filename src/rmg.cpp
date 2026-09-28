@@ -9189,9 +9189,6 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 break;
         }
 
-        // Retail registers an empty destructor callback (0x549790 is a bare
-        // ret); this TU keeps ~TRmgRiverDeltaOffset out of line and emits a
-        // vector-destructor callback instead.
         static TRmgRiverDeltaOffset deltaOffsets[4] = {
             TRmgRiverDeltaOffset(4, 1),
             TRmgRiverDeltaOffset(1, 4),
