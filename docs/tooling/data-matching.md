@@ -158,6 +158,47 @@ the static; all witnesses must agree, and claimed storage cannot be overwritten.
 The model regenerates these names and sizes from compiler receipts. This does
 not require SDK edits, replacement globals or a separate symbol ledger.
 
+Some header statics are initialized identically by many units without any
+authored storage owner: VC6's `std::ctype<unsigned short>::id` and the other
+facet ids use a compiler-private one-byte COMMON guard and register an empty
+destructor with `_atexit`. `shared_initializers` credits such a CRT root only
+when a current raw object emits the complete body: every unrelocated byte,
+relocation site, named callee and emitted local cleanup must agree. A private
+COMMON guard is bound only when every matching retail copy agrees on one
+zero-filled `.bss` address that no model claim owns and no other private
+symbol proposes. When byte-identical bodies name different private guards
+(`num_get` versus `num_put`), only the unit owning the preceding claimed
+source function may decide. Identical copies identify the header definition,
+not the retail unit. The bound guards are reported in `shared_initializers`
+but not claimed as storage here.
+
+VC6 pads each function COMDAT to its section alignment with NOP bytes inside
+the section's raw payload. `source-padding-exact` credits the bytes after a
+claimed function's reviewed extent when the function's own current COMDAT is
+exactly as long as the retail span to the next reviewed boundary and its
+bytes past the retail extent agree. `source-padding-aligned` covers
+non-exact implementations: the retail body starts on the emitted section's
+alignment, the next reviewed start is the very next aligned address, the
+object demonstrably pads its code COMDATs with 0x90, and every gap byte is
+that fill. Anonymous compiler functions are found through normalization's
+stamped sidecar. Startup bodies use `source-initializer-padding-exact` in the
+same way.
+
+`linker-padding` covers the gap after a source function's `.text$x` exception
+contribution. VC6 emits the cleanup funclets followed by the registration
+stub in one associative section, so the retail contribution ends with the
+decoded stub. LINK 6.00.8447 aligns the next contribution to 16 bytes and
+fills with INT3: linking the current `winmgr`, `winfile` and `window` objects
+with `/FORCE` places `0xcc` between every `.text$x` contribution, while the
+compiler's own NOP fill stays inside code COMDATs. The gap must end at the
+next 16-byte boundary, which must be a reviewed contribution start. Whether
+the emitted cleanup bytes also agree is reported per row as `contribution`.
+
+The zero-filled bytes between an executable section's VirtualSize and its
+FileAlignment/SectionAlignment boundary are `structural` when the section
+header, the next section's start and the raw size agree. Any non-zero byte in
+that tail remains missing. Data-section tails are not classified this way.
+
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.
 Pointer words require a known target plus the correct addend, and the relocation

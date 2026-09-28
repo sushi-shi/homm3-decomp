@@ -13371,6 +13371,14 @@ site_rva	kind
 0xd5b54	dir32
 0xd5b58	dir32
 0xd5b5c	dir32
+# ADMITTED 2026-09-28: decoded absolute operands of three retail CRT bodies
+# (0xd5b60, 0xf9bc0, 0x1b3760) whose instructions are byte-identical to the
+# 133 sibling ctype<unsigned short>::id initializers already admitted here.
+# The carve missed them beside jump tables; shared_initializers verifies each
+# complete body against the emitted VC6 object.
+0xd5b62	dir32
+0xd5b70	dir32
+0xd5b75	dir32
 0xd5b82	dir32
 0xd5b90	dir32
 0xd5b95	dir32
@@ -17290,6 +17298,9 @@ site_rva	kind
 0xf9bb4	dir32
 0xf9bb8	dir32
 0xf9bbc	dir32
+0xf9bc2	dir32
+0xf9bd0	dir32
+0xf9bd5	dir32
 0xf9c14	dir32
 0xf9dd6	dir32
 0xf9df1	dir32
@@ -29095,6 +29106,7 @@ site_rva	kind
 0x1b3728	dir32
 0x1b372c	dir32
 0x1b3730	dir32
+0x1b3762	dir32
 0x1b3770	dir32
 0x1b3775	dir32
 0x1b37a8	dir32

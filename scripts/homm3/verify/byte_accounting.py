@@ -101,26 +101,14 @@ def model_ranges(model, enrolled, sections):
     return list(set(out))
 
 
-def compiler_ranges(pe, model):
-    """Attribute EH code to its authored parent, without claiming gap bytes.
-
-    The parent's decoded registration push and FuncInfo identify the owner;
-    the reviewed funclet census must independently agree and supply each
-    cleanup body's own extent. This establishes ownership, not byte matching.
-    """
+def verified_eh_groups(pe, model):
+    """EH groups whose authored parent pushes the decoded registration stub."""
     from capstone import Cs, CS_ARCH_X86, CS_MODE_32
-    from homm3.core.paths import RETAIL
     from homm3.delink import eh_band
-    from homm3.retail_labels import censuses
 
     parents = {b.rva: (b.name, b.unit, b.size) for b in model.functions
                if b.channel in ('src', 'src_compgen', 'src_dyninit')
                and b.name and b.unit and b.size}
-    sizes = {r['rva']: r['size'] for r in censuses.functions()}
-    reviewed = {(int(r['rva'], 0), int(r['parent_rva'], 0))
-                for r in read(RETAIL / 'funclets.tsv')[2]}
-    text = pe.section('.text')
-    lo, hi = text['va'], text['va'] + text['vsize']
     disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
     out = []
     for group in eh_band.groups(pe.path, parents, contiguous=False):
@@ -133,6 +121,28 @@ def compiler_ranges(pe, model):
                 body[address-group.owner_rva:address-group.owner_rva+length] == expected
                 for address, length, _, _ in disassembler.disasm_lite(body, group.owner_rva)):
             continue
+        out.append((group, name, unit))
+    return out
+
+
+def compiler_ranges(pe, model, groups=None):
+    """Attribute EH code to its authored parent, without claiming gap bytes.
+
+    The parent's decoded registration push and FuncInfo identify the owner;
+    the reviewed funclet census must independently agree and supply each
+    cleanup body's own extent. This establishes ownership, not byte matching.
+    """
+    from homm3.core.paths import RETAIL
+    from homm3.delink import eh_band
+    from homm3.retail_labels import censuses
+
+    sizes = {r['rva']: r['size'] for r in censuses.functions()}
+    reviewed = {(int(r['rva'], 0), int(r['parent_rva'], 0))
+                for r in read(RETAIL / 'funclets.tsv')[2]}
+    text = pe.section('.text')
+    lo, hi = text['va'], text['va'] + text['vsize']
+    out = []
+    for group, name, unit in (verified_eh_groups(pe, model) if groups is None else groups):
         if lo <= group.stub < group.stub + eh_band.STUB_SIZE <= hi:
             out.append(Range(group.stub, group.stub + eh_band.STUB_SIZE,
                              'compiler-generated', f'{unit}:{eh_band.registration_symbol(name)}', 1))
@@ -177,11 +187,84 @@ def startup_ranges(comparison):
     return ranges
 
 
-def account(pe, model, enrolled, sections, *, initializers=()):
+def padding_ranges(comparison, category, aligned=None):
+    """Compiler/linker alignment bytes proven through the next boundary.
+
+    Rows whose emitted section length differs from retail are `aligned`,
+    not byte-exact; they get their own category when one is given.
+    """
+    return [Range(row['start'], row['end'],
+                  aligned if aligned and row.get('kind') == 'aligned' else category,
+                  f"{row['owner']}@{row['rva']:x}", 2)
+            for row in comparison['matches']]
+
+
+def code_alignment_tails(pe):
+    """Header-proven alignment tails of executable sections.
+
+    The section header states VirtualSize; LINK rounds the raw data up to
+    FileAlignment and the next section starts at the SectionAlignment
+    boundary. Only a tail shorter than that alignment, reaching exactly the
+    next raw/virtual start and filled with the linker's zero fill, counts.
+    Data sections are reported separately and are not classified here.
+    """
+    data = pe.data
+    header = struct.unpack_from('<I', data, 0x3c)[0]
+    count = struct.unpack_from('<H', data, header + 6)[0]
+    optional = struct.unpack_from('<H', data, header + 20)[0]
+    section_alignment, file_alignment = struct.unpack_from('<II', data, header + 24 + 32)
+    image_size = struct.unpack_from('<I', data, header + 24 + 56)[0]
+    rows = []
+    for index in range(count):
+        base = header + 24 + optional + index * 40
+        vsize, va, rsize, rptr = struct.unpack_from('<IIII', data, base + 8)
+        characteristics = struct.unpack_from('<I', data, base + 36)[0]
+        rows.append((va, vsize, rsize, rptr, characteristics,
+                     data[base:base + 8].rstrip(b'\0').decode('latin-1')))
+    file_ranges, image_ranges = [], []
+
+    def zero_runs(lo, hi, rebase):
+        # Linker fill is zero; any other byte stays missing for review.
+        start = None
+        for offset in range(lo, hi + 1):
+            if offset < hi and data[offset] == 0:
+                start = offset if start is None else start
+            elif start is not None:
+                yield start + rebase, offset + rebase
+                start = None
+
+    for i, (va, vsize, rsize, rptr, characteristics, name) in enumerate(rows):
+        if not characteristics & 0x20:
+            continue
+        following = rows[i + 1] if i + 1 < len(rows) else None
+        virtual_end = -(-vsize // section_alignment) * section_alignment
+        raw_end = -(-vsize // file_alignment) * file_alignment
+        raw_tail = (rsize == raw_end and rsize > vsize
+                    and (following[3] if following else len(data)) == rptr + rsize)
+        if raw_tail:
+            for a, b in zero_runs(rptr + vsize, rptr + rsize, 0):
+                file_ranges.append(Range(a, b, 'structural',
+                                         f'{name} FileAlignment tail', -1))
+        if (virtual_end > vsize and rsize <= virtual_end
+                and (following[0] if following else image_size) == va + virtual_end):
+            # File-backed tail bytes load as-is; the rest is loader zero fill.
+            mapped = rptr + min(rsize, virtual_end) if rsize > vsize else rptr + vsize
+            if rsize > vsize and not raw_tail:
+                continue
+            for a, b in zero_runs(rptr + vsize, mapped, va - rptr):
+                image_ranges.append(Range(a, b, 'structural',
+                                          f'{name} SectionAlignment tail', -1))
+            if va + mapped - rptr < va + virtual_end:
+                image_ranges.append(Range(va + mapped - rptr, va + virtual_end,
+                                          'structural', f'{name} SectionAlignment tail', -1))
+    return file_ranges, image_ranges
+
+
+def account(pe, model, enrolled, sections, *, initializers=(), groups=None):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
-    claims = (model_ranges(model, enrolled, sections) + compiler_ranges(pe, model)
+    claims = (model_ranges(model, enrolled, sections) + compiler_ranges(pe, model, groups)
               + list(initializers))
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)]
@@ -204,8 +287,12 @@ def account(pe, model, enrolled, sections, *, initializers=()):
             if a < b:
                 file_ranges.append(Range(s['rptr']+a-lo, s['rptr']+b-lo,
                                          r.category, r.identity, r.priority))
-    # Alignment gaps, overlay and unclaimed zero fill remain explicit missing
-    # ranges. No inferred library frontier or zero-content padding exemptions.
+    # Code-section alignment tails are proven by the section headers.
+    # Other alignment gaps, overlay and unclaimed zero fill remain explicit
+    # missing ranges. No inferred library frontier or zero-content padding.
+    tails = code_alignment_tails(pe)
+    file_ranges += tails[0]
+    image_ranges += tails[1]
     return {'file': partition(len(data), file_ranges),
             'image': partition(image_size, image_ranges)}
 
@@ -329,6 +416,9 @@ def report(model=None):
     from homm3.core.project import Project
     from homm3.verify.source_initializers import compare
     from homm3.verify.startup_bodies import compare as compare_startup
+    from homm3.verify import source_padding
+    from homm3.verify.shared_initializers import compare as compare_shared
+    from homm3.verify.source_padding import compare as compare_padding
     model = model or resolve()
     enrolled = manifest_rows()
     section_path = BUILD / 'gen/delink_data_section_manifest.tsv'
@@ -337,12 +427,39 @@ def report(model=None):
     project = Project(HOMM3_DIR)
     dynamic = compare(project, pe, model)
     startup = compare_startup(project, pe, model, enrolled)
-    domains = account(pe, model, enrolled, sections,
-                      initializers=initializer_ranges(dynamic)+startup_ranges(startup))
+    shared = compare_shared(project, pe, model, excluded={
+        row['rva'] for row in startup['matches'] + dynamic['matches']})
+    # A local cleanup that is already a claimed source function keeps its owner.
+    claimed_code = {b.rva for b in model.functions if b.channel}
+    shared_credit = dict(matches=shared['matches'], dependencies=[
+        row for row in shared['dependencies'] if row['rva'] not in claimed_code])
+    objects = source_padding.Objects(project)
+    functions = source_padding.function_entries(model)
+    padding = compare_padding(project, pe, functions, objects)
+    # A cleanup body that is also a claimed source function is checked once.
+    claimed = {entry.rva for entry in functions}
+    startup_padding = compare_padding(project, pe, [
+        source_padding.Entry(row['unit'], row['symbol'], row['rva'], row['size'],
+                             f"{row['unit']}:{row['symbol']}")
+        for row in (startup['matches'] + startup['dependencies']
+                    + shared['matches'] + shared_credit['dependencies'])
+        if row['rva'] not in claimed], objects)
+    groups = verified_eh_groups(pe, model)
+    eh_padding = source_padding.compare_eh(project, pe, groups, objects)
+    domains = account(pe, model, enrolled, sections, groups=groups,
+                      initializers=initializer_ranges(dynamic)+startup_ranges(startup)
+                      + startup_ranges(shared_credit)
+                      + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
+                      + padding_ranges(startup_padding, 'source-initializer-padding-exact',
+                                       'source-padding-aligned')
+                      + padding_ranges(eh_padding, 'linker-padding'))
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,
+           'shared_initializers': shared,
+           'source_padding': dict(functions=padding, startup=startup_padding,
+                                  eh_contributions=eh_padding),
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()
