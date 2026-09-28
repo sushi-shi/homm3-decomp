@@ -92,7 +92,12 @@ def compare(model, enrolled, pe, names, base_dir):
         payload = obj.section_payload(xsec)[offset:offset + size]
         retail = pe.read(start, size)
         if retail is None or len(payload) != size:
-            emit('unavailable', 'candidate record shorter than the retail extent')
+            if exact(unit, owner):
+                emit('mismatch', 'candidate record shorter than the retail extent',
+                     different=size - len(payload))
+            else:
+                emit('unavailable', 'owning function is not yet byte-exact; its '
+                     'record is shorter than the retail extent')
             continue
         parent = functions.get((unit, msvc_names.mask(owner)))
         # Rank only the labels this record's actions name: other `.text$x`
@@ -174,6 +179,16 @@ def _exact_functions():
 def _candidate_record(obj, table, owner):
     """(.xdata$x section, record offset, .text$x section) for ``owner``."""
     homes = table['__masked__'].get(msvc_names.mask(owner), set())
+    if not homes and '$class_noncopy_ctor$' in owner:
+        # A compiler-kind claim: the one non-copy constructor of that class
+        # this object emits with an exception frame.
+        from homm3.retail_labels.source import COPY_CTOR_TAIL_RE
+        cls = owner.rsplit('$', 1)[1]
+        homes = {sec for name, rows in table.items()
+                 if name.startswith(f'??0{cls}@') and not COPY_CTOR_TAIL_RE.search(name)
+                 for sec, _v in rows if sec > 0
+                 and any(s['name'] == '.text$x' and s['assoc'] == sec
+                         for s in obj.section_table)}
     if len(homes) != 1:
         return None
     home = next(iter(homes))

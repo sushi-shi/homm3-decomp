@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 import json
+import re
 import struct
 from pathlib import Path
 
@@ -294,7 +295,102 @@ def account(pe, model, enrolled, sections, *, initializers=(), library=(),
             'image': partition(image_size, image_ranges)}
 
 
-def compare_initializers(model, enrolled, pe, base_dir=None):
+_ANON = re.compile(r'\?A0x[0-9A-Fa-f]+')
+
+
+def _guard_owners(root):
+    """{guard claim name: owner static} from source DATA_COMPGEN_GUARD rows."""
+    head = re.compile(r'\bDATA_COMPGEN_GUARD\s*\(\s*0x[0-9a-fA-F]+\s*,\s*(\w+)\s*,\s*(\w+)\s*\)')
+    data = re.compile(r'\bDATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)')
+    out = {}
+    for path in sorted(Path(root, 'src').rglob('*.cpp')):
+        unit = path.stem
+        text = path.read_text(encoding='latin-1')
+        for m in head.finditer(text):
+            # The owner's own DATA annotation follows its guard (a STATIC_DTOR
+            # row may sit between them) and names the owner's retail address.
+            follow = data.search(text, m.end(), m.end() + 300)
+            address = int(follow.group(1), 16) - 0x400000 if follow else None
+            out[f'__h3cg${unit}$static_init_guard${m.group(1)}'] = (m.group(2), address)
+    return out
+
+
+def bridge_data_name(name, emitted, guard_owners, owner_names=None):
+    """The candidate spelling of a claimed datum whose model name differs.
+
+    Only unique, identity-preserving spellings are accepted: the anonymous
+    namespace hash (which encodes the compiling path), VC6's `_name` form
+    for statics in an anonymous namespace, a reference's cv letter, and a
+    source guard's `$S` counter symbol in its owner static's scope.
+    """
+    owner_names = owner_names or {}
+
+    def unique(keys):
+        keys = [k for k in keys if emitted.get(k)]
+        return keys[0] if len(keys) == 1 else None
+
+    # Only a TYPE's anonymous namespace may be normalized: the variable's own
+    # scope must still come from the strict module bridge.
+    if not re.match(r'^_?\?\w+@\?A0x', name):
+        anon = _ANON.sub('?A0x#', name)
+        found = unique([k for k in emitted if _ANON.sub('?A0x#', k) == anon and k != name])
+        if found:
+            return found
+    m = re.match(r'^\?(\w+)@\?A0x[0-9A-Fa-f]+@@3', name)
+    if m and emitted.get('_' + m.group(1)):
+        return '_' + m.group(1)
+    if name.startswith('?') and '@@3AA' in name and name.endswith('B'):
+        found = unique([name[:-1] + 'A'])
+        if found:
+            return found
+    owner, address = guard_owners.get(name, (None, None))
+    if owner:
+        scopes = {k[len(f'_?{owner}@'):].split('@4', 1)[0] for k in emitted
+                  if k.startswith(f'_?{owner}@?')}
+        if len(scopes) > 1 and address is not None:
+            named = {k[len(f'_?{owner}@'):].split('@4', 1)[0]
+                     for k in owner_names.get(address, ()) if k.startswith(f'_?{owner}@?')}
+            scopes &= named
+        if len(scopes) == 1:
+            scope = scopes.pop()
+            return unique([k for k in emitted if k.startswith('_?$S')
+                           and k.split('@', 1)[1].split('@4', 1)[0] == scope])
+    return None
+
+
+def folded_body(obj, name, rva, pe):
+    """True when ``obj``'s code for ``name`` reproduces retail at ``rva``.
+
+    The body runs to the section's next defined symbol; relocation words are
+    masked, every other byte must agree, and at least eight bytes compare.
+    """
+    cache = obj.__dict__.setdefault('_folded_index', {})
+    if not cache:
+        for idx, value, section in obj.iter_symbols():
+            if section > 0 and obj.section_table[section - 1]['characteristics'] & 0x20000000:
+                cache.setdefault(obj.sym_name(idx), []).append((section, value))
+    hits = cache.get(name, [])
+    if len(hits) != 1:
+        return False
+    section, value = hits[0]
+    starts = obj.__dict__.setdefault('_folded_starts', {})
+    if section not in starts:
+        starts[section] = sorted({v for rows in cache.values() for s2, v in rows
+                                  if s2 == section})
+    later = [v for v in starts[section] if v > value]
+    end = later[0] if later else obj.section_table[section - 1]['size']
+    body = obj.section_payload(section)[value:end]
+    retail = pe.read(rva, len(body))
+    if len(body) < 8 or retail is None:
+        return False
+    masked = set()
+    for site in obj.typed_relocations(section):
+        if value <= site < end:
+            masked.update(range(site - value, site - value + 4))
+    return all(a == b for i, (a, b) in enumerate(zip(body, retail)) if i not in masked)
+
+
+def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None):
     """Raw COFF versus retail, without normalized payloads or guessed extents."""
     from homm3.delink.coffx import Obj
     from homm3.delink.image import Image
@@ -314,6 +410,43 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             names[('', msvc_names.mask(r['name']))].add(int(r['rva'], 0))
     image = Image(pe)
     objects, members, results = {}, {}, []
+    code_index = {}
+
+    def defining_objects(symbol):
+        """Other candidate objects defining ``symbol`` as code."""
+        if not code_index:
+            for path in sorted(base_dir.glob('*.obj')):
+                other = Obj(path)
+                for idx, value, section in other.iter_symbols():
+                    if section > 0 and other.section_table[section - 1]['characteristics'] & 0x20000000:
+                        code_index.setdefault(other.sym_name(idx), []).append(path)
+            code_index['__loaded__'] = {}
+        loaded = code_index['__loaded__']
+        out = []
+        for path in code_index.get(symbol, [])[:4]:
+            if path not in loaded:
+                loaded[path] = Obj(path)
+            out.append(loaded[path])
+        return out
+    from homm3.core.common import HOMM3_DIR
+    guard_owners = _guard_owners(HOMM3_DIR)
+    anon_names = defaultdict(set)
+    for (owner, key), rvas in list(names.items()):
+        if '?A0x' in key:
+            anon_names[_ANON.sub('?A0x#', key)].update(rvas)
+            # VC6 spells a static inside an anonymous namespace `_name`.
+            plain = re.match(r'^\?(\w+)@\?A0x[0-9A-Fa-f]+@@3', key)
+            if plain and owner:
+                names[(owner, '_' + plain.group(1))].update(rvas)
+    # Verified runtime-library contributions name their own public symbols.
+    for rva, symbols in (library_names or {}).items():
+        for symbol in symbols:
+            names.setdefault(('', symbol), set()).add(rva)
+    owner_names = defaultdict(set)
+    for b in model.data:
+        for entry in (b, *b.aliases):
+            if entry.name:
+                owner_names[b.rva].add(msvc_names.mask(entry.name))
     from homm3.verify import eh_records
     results += eh_records.compare(model, enrolled, pe, names, base_dir)
     for r in enrolled:
@@ -351,6 +484,10 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
         # Manifest ordinals address the reconstructed TARGET topology; they
         # are compressed and are not candidate COFF section numbers.
         definitions = members[unit].get(msvc_names.mask(r['name']), [])
+        if not definitions:
+            bridged = bridge_data_name(r['name'], members[unit], guard_owners, owner_names)
+            if bridged:
+                definitions = members[unit][bridged]
         hits = [(value, section) for value, section in definitions if section > 0]
         commons = [value for value, section in definitions if section == 0 and value]
         if not hits and len(commons) == 1 and r['storage'] == 'bss':
@@ -392,6 +529,9 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             addend = struct.unpack_from('<i', payload, relative)[0]
             key = msvc_names.mask(name)
             targets = names.get((unit, key)) or names.get(('', key), set())
+            if not targets and '?A0x' in key:
+                # The anonymous-namespace hash encodes the compiling path.
+                targets = anon_names.get(_ANON.sub('?A0x#', key), set())
             default = obj.weak_default(name)
             if not targets and default:
                 # A weak external binds to its aux default when nothing
@@ -399,6 +539,16 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
                 key = msvc_names.mask(default)
                 targets = names.get((unit, key)) or names.get(('', key), set())
             if len(targets) != 1:
+                # An identical-code-folded referent: the word names retail
+                # code that this object's own definition of the symbol (or of
+                # its weak default) reproduces byte for byte.
+                actual = struct.unpack_from('<I', retail, relative)[0]
+                claimed = (actual - pe.image_base - addend) & 0xffffffff
+                if relative in required and any(
+                        folded_body(other, candidate, claimed, pe)
+                        for candidate in (name, default) if candidate
+                        for other in [obj, *defining_objects(candidate)]):
+                    continue
                 unknown |= word; continue
             expected = (next(iter(targets))+pe.image_base+addend) & 0xffffffff
             actual = struct.unpack_from('<I', retail, relative)[0]
@@ -453,7 +603,7 @@ def report(model=None):
     if padding:
         domains = account(pe, model, enrolled, sections, initializers=claims + padding,
                           library=library, library_names=library_names)
-    comparisons = compare_initializers(model, enrolled, pe)
+    comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,

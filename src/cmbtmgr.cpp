@@ -59,8 +59,9 @@ DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.629999995231628
 DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
 // Retail follows the wall-column table with the eleven column-1 hexes (one
 // per grid row, stride 17) at 0x63bd0c. No retail instruction or datum
-// references it; the name is descriptive, not recovered.
-DATA(0x0063bd0c) const unsigned char g_firstColumnHexes[11] = { 1, 18, 35, 52, 69, 86, 103, 120, 137, 154, 171 };
+// references it (external linkage keeps it emitted, as in retail); the name
+// is descriptive, not recovered.
+DATA(0x0063bd0c) extern const unsigned char g_firstColumnHexes[11] = { 1, 18, 35, 52, 69, 86, 103, 120, 137, 154, 171 };
 DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
 DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
     { 1, 35, 69, 86, 103, 137, 171 },

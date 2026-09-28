@@ -56,3 +56,26 @@ class RetailRecordTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class BridgeNameTests(unittest.TestCase):
+    def test_bridges_are_unique_identity_preserving_spellings(self):
+        from homm3.verify.byte_accounting import bridge_data_name
+        emitted = {'?x@?A0x1234ABCD@@3HA': [(0, 3)], '_g_table': [(4, 3)],
+                   '_?m@?1??init@@YAXXZ@4Vt@?A0x1234ABCD@@A': [(20, 4)],
+                   '?g_ref@@3AAY01HA': [(8, 3)],
+                   '_?table@?1??f@@YAXXZ@4PAHA': [(16, 4)],
+                   '_?$S7@?1??f@@YAXXZ@4EA': [(12, 4)]}
+        # A variable's own anonymous namespace needs the strict module
+        # bridge; only a type's namespace hash is normalized here.
+        self.assertIsNone(bridge_data_name('?x@?A0xFFFF0000@@3HA', emitted, {}))
+        self.assertEqual(bridge_data_name('_?m@?1??init@@YAXXZ@4Vt@?A0xFFFF0000@@A',
+                                          emitted, {}),
+                         '_?m@?1??init@@YAXXZ@4Vt@?A0x1234ABCD@@A')
+        self.assertEqual(bridge_data_name('?g_table@?A0xFFFF0000@@3PAHA', emitted, {}),
+                         '_g_table')
+        self.assertEqual(bridge_data_name('?g_ref@@3AAY01HB', emitted, {}), '?g_ref@@3AAY01HA')
+        owners = {'__h3cg$u$static_init_guard$tableGuard': ('table', None)}
+        self.assertEqual(bridge_data_name('__h3cg$u$static_init_guard$tableGuard',
+                                          emitted, owners), '_?$S7@?1??f@@YAXXZ@4EA')
+        self.assertIsNone(bridge_data_name('?unknown@@3HA', emitted, {}))
