@@ -19,7 +19,23 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const TCreatureType g_deathCreature[145] = {
+// Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
+DATA(0x00641228) static const long g_slotDefinitions[19][2] = {
+    {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
+    {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
+    {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
+    {244, 64}, {244, 110}, {244, 299}, {15, 283}
+};
+
+DATA(0x006412c0) static const long g_rowStart[5][2] = {
+    {314, 50}, {314, 120}, {314, 190}, {314, 260}, {395, 330}
+};
+DATA(0x006412e8) static const long g_rowSize[5] = {5, 5, 5, 5, 2};
+
+// Skeleton transformer targets, indexed by creature type; retail .rdata
+// 0x6412fc directly after the row sizes (read by update, creatureClick,
+// allCreatures and sacrifice).
+DATA(0x006412fc) static const TCreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -50,19 +66,6 @@ static const TCreatureType g_deathCreature[145] = {
     CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
 };
-
-// Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
-DATA(0x00641228) static const long g_slotDefinitions[19][2] = {
-    {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
-    {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
-    {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
-    {244, 64}, {244, 110}, {244, 299}, {15, 283}
-};
-
-DATA(0x006412c0) static const long g_rowStart[5][2] = {
-    {314, 50}, {314, 120}, {314, 190}, {314, 260}, {395, 330}
-};
-DATA(0x006412e8) static const long g_rowSize[5] = {5, 5, 5, 5, 2};
 
 DATA(0x006830a8) static const long g_constCreatureSources[2][2] = {
     {45, 109}, {128, 305}

@@ -10,6 +10,13 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-04
 # 363 vtables, 3040 slots
+# 2026-09-28 data review: six game vtables are admitted from their
+# constructors and destructors: each claimed source function stores exactly
+# the retail .rdata words its compiled body stores through ??_7 relocations,
+# in the same order, the candidate COMDAT fixes the slot count, and every
+# slot is a census function start. font (0x23e5f4) and TPalette16 (0x240368)
+# have three slots; the former two-slot rows at 0x23e5f8 and 0x24036c were
+# their tails and are replaced.
 rva	function_count	class
 0x23a578	27	
 # retail 0x401557: ??0TAdventureMapWindow@@QAE@XZ stores this vptr
@@ -110,6 +117,8 @@ rva	function_count	class
 0x23d410	4	
 0x23d420	4	
 0x23d430	4	
+0x23d440	1	TCombatHeroSubWindow
+0x23d444	1	TCombatCreatureSubWindow
 0x23d448	9	
 0x23d46c	9	TCombatResultsWindow
 0x23d4bc	27	
@@ -158,7 +167,7 @@ rva	function_count	class
 0x23df64	6	
 0x23df7c	6	
 0x23e508	2	
-0x23e5f8	2	
+0x23e5f4	3	font
 0x23e60c	3	
 0x23e618	7	
 0x23e634	3	
@@ -203,7 +212,7 @@ rva	function_count	class
 0x2402dc	2	
 0x2402f4	3	
 0x240320	15	
-0x24036c	2	
+0x240368	3	TPalette16
 0x240374	3	
 0x240600	15	
 0x240648	15	
@@ -268,6 +277,7 @@ rva	function_count	class
 0x240fb0	3	
 0x240fbc	13	
 0x240ffc	3	resource
+0x241024	1	TResourceDisplay
 0x2410ec	13	
 0x241128	3	
 0x241134	3	
@@ -318,6 +328,7 @@ rva	function_count	class
 0x241d44	3	
 0x241d50	17	slider
 0x241dcc	15	
+0x24234c	1	TSubWindow
 0x242350	27	
 0x2423bc	27	
 0x242428	9	

@@ -149,6 +149,76 @@ DATA(0x0067f1fc) short g_highScoreCreatureTable[118][2] = {
     { 32767, 13 }
 };
 
+// Retail keeps a second threshold/creature table directly after the first:
+// 62 descending score thresholds and a {-1, -1} terminator (0x67f3d4 up to
+// the "HiScore.dat" literal at 0x67f4d0). No retail instruction or datum
+// references it; the name is descriptive, not recovered.
+DATA(0x0067f3d4) short g_highScoreCreatureTableDescending[63][2] = {
+    { 9999, 1 },
+    { 5800, 15 },
+    { 5600, 29 },
+    { 5400, 43 },
+    { 5200, 57 },
+    { 5000, 71 },
+    { 4800, 85 },
+    { 4600, 99 },
+    { 4400, 3 },
+    { 4200, 17 },
+    { 4000, 31 },
+    { 3800, 45 },
+    { 3600, 59 },
+    { 3400, 73 },
+    { 3200, 87 },
+    { 3000, 101 },
+    { 2800, 5 },
+    { 2600, 19 },
+    { 2400, 33 },
+    { 2200, 47 },
+    { 2000, 61 },
+    { 1900, 75 },
+    { 1800, 89 },
+    { 1700, 103 },
+    { 1600, 7 },
+    { 1500, 21 },
+    { 1400, 35 },
+    { 1300, 49 },
+    { 1200, 63 },
+    { 1100, 77 },
+    { 1000, 91 },
+    { 980, 105 },
+    { 960, 9 },
+    { 940, 23 },
+    { 920, 37 },
+    { 900, 51 },
+    { 880, 65 },
+    { 860, 79 },
+    { 840, 93 },
+    { 820, 107 },
+    { 800, 11 },
+    { 780, 25 },
+    { 760, 39 },
+    { 740, 53 },
+    { 720, 67 },
+    { 700, 81 },
+    { 680, 95 },
+    { 660, 109 },
+    { 640, 13 },
+    { 620, 27 },
+    { 600, 41 },
+    { 580, 55 },
+    { 560, 69 },
+    { 540, 83 },
+    { 520, 97 },
+    { 500, 111 },
+    { 480, 112 },
+    { 460, 113 },
+    { 440, 114 },
+    { 420, 115 },
+    { 400, 116 },
+    { 0, 117 },
+    { -1, -1 }
+};
+
 // The file-name pointer and the threshold/creature pairs are both
 // hiscore.obj-owned retail data.  The latter is deliberately only declared:
 // this TU needs the first two signed shorts of each four-byte record, while

@@ -349,7 +349,7 @@ def fp_constants(pe, sites, library=lambda rva: False) -> Records:
     """
     view = _View(pe)
     text_lo, text_hi = view.text
-    widths = {}
+    widths, game_users = {}, set()
     for site in sites:
         if not text_lo + 2 <= site < text_hi:
             continue
@@ -358,14 +358,16 @@ def fp_constants(pe, sites, library=lambda rva: False) -> Records:
             continue
         head = pe.read(site - 2, 2)
         width = None
-        if library(site):
-            width = 'library'
-        elif head[1] & 0xC7 == 0x05:
+        if head[1] & 0xC7 == 0x05:
             width = FPU_REAL.get((head[0], (head[1] >> 3) & 7))
         widths.setdefault(target, set()).add(width)
+        if not library(site):
+            # Game objects precede the libraries on the link line, so a
+            # constant any game function loads is the game's COMDAT.
+            game_users.add(target)
     out = Records()
     for target, seen in sorted(widths.items()):
-        if len(seen) != 1 or None in seen or 'library' in seen:
+        if len(seen) != 1 or None in seen or target not in game_users:
             continue
         width = seen.pop()
         raw = pe.read(target, width)

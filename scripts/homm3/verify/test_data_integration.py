@@ -47,7 +47,42 @@ class InputAdapterTests(unittest.TestCase):
                 self.assertEqual(parse.call_count, 2)
 
 
+def literal_object(name, payload, raw=True):
+    """A candidate COFF holding one `??_C@` COMDAT at offset 0."""
+    return SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
+                           sym_name=lambda _: name,
+                           section_table=[{'size': len(payload)}],
+                           section_payload=lambda _: payload if raw else b'')
+
+
+def retail_image(data):
+    data = bytes(data)
+
+    def cstring(rva):
+        end = data.find(b'\0', rva)
+        return data[rva:end] if end >= 0 else None
+    return SimpleNamespace(cstring=cstring, off=lambda rva: rva, data=data)
+
+
 class StringStorageTests(unittest.TestCase):
+    def test_literal_identity_is_its_complete_bytes(self):
+        # "\0\1\2" must not answer for "" at a retail NUL, and an all-zero
+        # COMDAT without raw data is still the one-byte literal "".
+        from homm3.delink import data_manifest
+        objects = [('a', literal_object('??_C@binary', b'\0\1\2\0')),
+                   ('b', literal_object('??_C@empty', b'\0', raw=False))]
+        image = bytearray(0x3000)
+        image[0x1000:0x1004] = b'\0\1\2\0'
+        with patch.object(data_manifest.coffx, 'objects', return_value=objects), \
+             patch.object(data_manifest, 'retail', return_value=retail_image(image)), \
+             patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1000, 0x2000]), \
+             patch.object(data_manifest, '_classify', return_value='data-initialized'):
+            rows, withheld = data_manifest.string_rows(
+                votes={'??_C@empty': {0x2000}})
+            self.assertEqual(sorted((r['name'], r['rva'], r['size']) for r in rows),
+                             [('??_C@binary', 0x1000, 4), ('??_C@empty', 0x2000, 1)])
+            self.assertEqual(withheld, [])
+
     def test_typed_storage_excludes_numeric_and_aggregate_interiors(self):
         from homm3.delink import data_manifest
         types = {0x1000: 'const int[2]', 0x2000: 'const ButtonRect[5]',
@@ -59,10 +94,11 @@ class StringStorageTests(unittest.TestCase):
         self.assertEqual(data_manifest.nonliteral_storage(
             SimpleNamespace(data=bindings), types),
             [(0x1000, 0x1008), (0x2000, 0x2008), (0x3000, 0x3008)])
-        candidate = SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
-                                    sym_name=lambda _: '??_C@comma',
-                                    cstring=lambda *_: b',')
-        retail = SimpleNamespace(cstring=lambda _: b',')
+        candidate = literal_object('??_C@comma', b',\0')
+        image = bytearray(0x8000)
+        for rva in (0x1004, 0x2002, 0x7000):
+            image[rva:rva + 2] = b',\0'
+        retail = retail_image(image)
         with patch.object(data_manifest.coffx, 'objects', return_value=[('window', candidate)]), \
              patch.object(data_manifest, 'retail', return_value=retail), \
              patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1004, 0x2002, 0x7000]), \
@@ -74,10 +110,11 @@ class StringStorageTests(unittest.TestCase):
 
     def test_mutable_array_does_not_collide_with_a_separate_literal(self):
         from homm3.delink import data_manifest
-        candidate = SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
-                                    sym_name=lambda _: '??_C@caption',
-                                    cstring=lambda *_: b'Caption')
-        retail = SimpleNamespace(cstring=lambda _: b'Caption')
+        candidate = literal_object('??_C@caption', b'Caption\0')
+        image = bytearray(0x3000)
+        for rva in (0x1000, 0x2000):
+            image[rva:rva + 8] = b'Caption\0'
+        retail = retail_image(image)
         with patch.object(data_manifest.coffx, 'objects', return_value=[('window', candidate)]), \
              patch.object(data_manifest, 'retail', return_value=retail), \
              patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x1000, 0x2000]), \

@@ -40007,6 +40007,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x23df90	0x49bf20	data	.rdata	code	-	kept
 0x23e508	0x4ad1f0	data	.rdata	code	-	kept
 0x23e50c	0x4ad340	data	.rdata	code	-	kept
+0x23e5f4	0x4b5040	data	.rdata; slot 0 of the reviewed font vtable (constructor/destructor vptr stores)	code	-	kept-vtable-slot
 0x23e5f8	0x55d0f0	data	.rdata	code	-	kept
 0x23e5fc	0x4b5250	data	.rdata	code	-	kept
 0x23e60c	0x4b66d0	data	.rdata	code	-	kept
@@ -40426,6 +40427,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x240350	0x559140	data	.rdata	code	-	kept
 0x240354	0x5ff8d0	data	.rdata	code	-	kept
 0x240358	0x41b190	data	.rdata	code	-	kept
+0x240368	0x522670	data	.rdata; slot 0 of the reviewed TPalette16 vtable (constructor/destructor vptr stores)	code	-	kept-vtable-slot
 0x24036c	0x55d0f0	data	.rdata	code	-	kept
 0x240370	0x522b40	data	.rdata	code	-	kept
 0x240374	0x522e50	data	.rdata	code	-	kept
@@ -55419,28 +55421,28 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x27f3a8	0x520172	data	.data; source hiscore:?g_highScoreCreatureTable@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f3bc	0x610181	data	.data	code-isolated	-	review-isolated-interior
 0x27f3cc	0x53018d	data	.data	code-isolated	-	review-isolated-interior
-0x27f3e8	0x471388	data	.data	code	-	kept
-0x27f3ec	0x5512c0	data	.data	code	-	kept
-0x27f3f0	0x6311f8	data	.data	code	-	kept
-0x27f408	0x490d48	data	.data	code	-	kept
-0x27f40c	0x570c80	data	.data	code	-	kept
-0x27f410	0x650bb8	data	.data	data	-	kept
-0x27f428	0x4b076c	data	.data	code	-	kept
-0x27f42c	0x590708	data	.data	code	-	kept
-0x27f430	0x6706a4	data	.data	data	-	kept
-0x27f448	0x4d044c	data	.data	code	-	kept
-0x27f44c	0x5b03e8	data	.data	code	-	kept
-0x27f450	0x6903d4	data	.data	data	-	kept
-0x27f464	0x410370	data	.data	code	-	kept
-0x27f468	0x4f035c	data	.data	code	-	kept
-0x27f46c	0x5d0348	data	.data	code	-	kept
-0x27f470	0x6b0334	data	.data	data	-	kept
-0x27f484	0x4302d0	data	.data	code	-	kept
-0x27f488	0x5102bc	data	.data	code	-	kept
-0x27f48c	0x5f02a8	data	.data	code	-	kept
-0x27f4a4	0x450230	data	.data	code	-	kept
-0x27f4a8	0x53021c	data	.data	code	-	kept
-0x27f4ac	0x610208	data	.data	code	-	kept
+0x27f3e8	0x471388	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f3ec	0x5512c0	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f3f0	0x6311f8	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f408	0x490d48	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f40c	0x570c80	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f410	0x650bb8	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f428	0x4b076c	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f42c	0x590708	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f430	0x6706a4	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f448	0x4d044c	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f44c	0x5b03e8	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f450	0x6903d4	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f464	0x410370	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f468	0x4f035c	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f46c	0x5d0348	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f470	0x6b0334	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	data	-	rejected-scalar-fields
+0x27f484	0x4302d0	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f488	0x5102bc	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f48c	0x5f02a8	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f4a4	0x450230	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f4a8	0x53021c	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
+0x27f4ac	0x610208	data	.data; source hiscore:?g_highScoreCreatureTableDescending@@3PAY01FA	code	-	rejected-scalar-fields
 0x27f578	0x6600d0	data	.data	literal-start	-	kept
 0x27f57c	0x6600c0	data	.data	literal-start	-	kept
 0x27f580	0x6600b0	data	.data	literal-start	-	kept

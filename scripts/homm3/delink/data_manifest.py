@@ -438,13 +438,18 @@ def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
                 lo = bisect.bisect_left(sites, rva)
                 hi = bisect.bisect_left(sites, rva + size)
                 theirs = sites[lo:hi]
-                if not mine or len(mine) != len(theirs):
+                if not mine:
                     continue
-                found, corroborated = [], True
+                # Pair the sites up to the first place the two bodies' site
+                # offsets diverge; past it the code no longer lines up. Each
+                # wanted site must also sit behind the same instruction bytes.
+                found, corroborated, anchored = [], True, 0
                 for (site, sym), target in zip(mine, theirs):
                     at = img.off(target)
                     if at is None or target - rva != site - off:
-                        corroborated = False
+                        break
+                    head = img.data[at - 2:at]
+                    if wanted(sym) and head != text[site - 2:site]:
                         break
                     addend = struct.unpack("<i", text[site:site + 4])[0]
                     value = struct.unpack("<I", img.data[at:at + 4])[0] \
@@ -453,13 +458,83 @@ def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
                         found.append((sym, value))
                         continue
                     anchor = known.get(msvc_names.mask(sym))
-                    if anchor is not None and value != anchor:
-                        corroborated = False
-                        break
-                if corroborated:
+                    if anchor is not None:
+                        if value != anchor:
+                            corroborated = False
+                            break
+                        anchored += 1
+                exact = len(mine) == len(theirs) and len(found) + anchored > 0
+                if corroborated and (anchored or exact):
                     for sym, value in found:
                         votes[sym].add(value)
     return votes
+
+
+#: COMDAT data other channels already own (literals, vtables, RTTI,
+#: exception records, FP pools).
+_OWNED_COMDAT_PREFIXES = ("??_C@", "??_7", "??_R", "__CT", "__TI", "$T")
+
+
+def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
+    """Game-emitted COMDAT data placed by corroborated code pairings.
+
+    Constants (`__real@`), virtual-base tables (`??_8`) and template static
+    members are one-symbol COMDAT sections. Where every paired game
+    reference to one names a single retail address and retail holds the
+    section's bytes there (relocation words aside), that COMDAT is linked
+    from the game object at that address.
+    """
+    comdats = defaultdict(list)
+    for stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & LNK_COMDAT \
+                    or sec["characteristics"] & MEM_EXECUTE \
+                    or sec["name"] not in ORDINARY_STORAGE:
+                continue
+            members = c.defined_symbols(sec["index"])
+            if len(members) != 1 or members[0][0] != 0 \
+                    or members[0][1].startswith(_OWNED_COMDAT_PREFIXES):
+                continue
+            payload = c.section_payload(sec["index"])[:sec["size"]]
+            masked = bytearray(payload.ljust(sec["size"], b"\0"))
+            for site in c.relocations(sec["index"]):
+                masked[site:site + 4] = b"\0\0\0\0"
+            comdats[members[0][1]].append((stem, sec, bytes(masked),
+                                           set(c.relocations(sec["index"]))))
+    if not comdats:
+        return [], []
+    votes = paired_code_votes(model, lambda name: name in comdats, base_dir)
+    img = retail()
+    rows, withheld = [], []
+    for name, copies in sorted(comdats.items()):
+        seen = votes.get(name, set())
+        if len(seen) != 1:
+            if len(seen) > 1:
+                withheld.append((min(seen), name, "paired references disagree"))
+            continue
+        rva = next(iter(seen))
+        sizes = {sec["size"] for _stem, sec, _m, _r in copies}
+        if len(sizes) != 1:
+            withheld.append((rva, name, "COMDAT copies disagree on the extent"))
+            continue
+        size = sizes.pop()
+        at = img.off(rva)
+        if at is None:
+            continue
+        retail_bytes = bytearray(img.data[at:at + size])
+        _stem, sec, masked, sites = copies[0]
+        for site in sites:
+            retail_bytes[site:site + 4] = b"\0\0\0\0"
+        storage = _classify(rva)
+        if bytes(retail_bytes) != masked or STORAGE.get(storage) != ORDINARY_STORAGE[sec["name"]]:
+            withheld.append((rva, name, "retail bytes or storage contradict the COMDAT"))
+            continue
+        for stem, csec, _m, _r in copies:
+            rows.append({"name": name, "object": f"{stem}.c", "rva": rva, "size": size,
+                         "storage": STORAGE[storage], "alignment": csec["alignment"],
+                         "section_placed": True,
+                         "provenance": "candidate-COFF-comdat-paired"})
+    return rows, withheld
 
 
 def paired_data_votes(rows, wanted, base_dir=BASE_DIR):
@@ -1019,6 +1094,9 @@ def candidates(model: Model):
     withheld += w
     ehfi, w = ehfuncinfo_rows(model)
     rows += ehfi
+    withheld += w
+    comdat, w = paired_comdat_rows(model)
+    rows += comdat
     withheld += w
 
     # cl's `$T` FP pool. A slot some OTHER channel already names is left to
