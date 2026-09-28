@@ -41,6 +41,8 @@ class SourceInitializerTests(unittest.TestCase):
             return verified_roots(SimpleNamespace(data=data, image_base=0x400000,
                 sections=[dict(name='.rdata', rptr=0, rsize=len(data))]), rows)
         self.assertEqual(roots(table), [0x100, 0x110, 0x120, 0x130])
+        rows.append(dict(slot='-', rva='0x200'))  # reviewed atexit cleanup
+        self.assertEqual(roots(table), [0x100, 0x110, 0x120, 0x130])
         self.assertFalse(roots(table+table))
         self.assertFalse(roots(table[:-1]+b'\x01'))
 

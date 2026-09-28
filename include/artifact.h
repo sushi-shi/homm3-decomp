@@ -136,7 +136,7 @@ inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slo
 // town-entry path. The record itself is completed by hero.h; an extern
 // array of unknown bound can retain that single owning declaration here.
 struct type_artifact;
-extern type_artifact g_blacksmithArtifacts[];
+extern const type_artifact g_blacksmithArtifacts[];
 
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real

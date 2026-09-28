@@ -33,10 +33,10 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
 | `CRT/C++ runtime`     |       913 |  110,536 | CRT/C++ runtime, named not matched (config/retail/runtime-map.tsv) |
-| `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
+| `init/cleanup thunks` |     1,128 |   94,750 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
-**Byte accountability:** 136,797 file bytes unclaimed; 12 bytes with conflicting claims. 8,326 / 10,424 enrolled initializer comparisons exact. 900 source-emitted CRT bodies exact (85,230 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
+**Byte accountability:** 134,329 file bytes unclaimed; 12 bytes with conflicting claims. 8,326 / 10,424 enrolled initializer comparisons exact. 934 source-emitted CRT bodies exact (87,481 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
 
 <!-- match-score:end -->
 

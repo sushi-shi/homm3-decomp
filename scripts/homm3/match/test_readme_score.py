@@ -40,7 +40,9 @@ class ReadmeScoreTest(unittest.TestCase):
                     contextlib.redirect_stdout(io.StringIO()):
                 accounting = dict(totals={'file': {'missing': 23}},
                     initializers=[{'verdict': 'exact'}, {'verdict': 'unresolved'}],
-                    source_initializers={'matches': [{'size': 89}, {'size': 96}]})
+                    source_initializers={'matches': [{'size': 89}, {'size': 96}]},
+                    startup_initializers={'matches': [{'size': 125}],
+                                          'dependencies': [{'size': 10}]})
                 status.write_readme(report, data_accounting=accounting)
                 first = readme.read_text()
                 status.write_readme(report, data_accounting=accounting)
@@ -58,7 +60,7 @@ class ReadmeScoreTest(unittest.TestCase):
         self.assertTrue(first.startswith("before\n"))
         self.assertTrue(first.endswith("\nafter\n"))
         self.assertIn('1 / 2 enrolled initializer comparisons exact.', first)
-        self.assertIn('2 source-emitted CRT bodies exact (185 bytes).', first)
+        self.assertIn('3 source-emitted CRT bodies exact (310 bytes).', first)
 
     def test_exact_max_follows_source_label_rename_by_retail_rva(self):
         report = {"units": [{"name": "unit", "functions": [{

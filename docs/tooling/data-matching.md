@@ -108,7 +108,7 @@ size. Bytes between separate cleanup bodies remain unclaimed. Explicit source
 body claims take priority, including catch handlers already inside their parent.
 This attribution does not assert that the candidate cleanup bytes match.
 
-`source-initializer-exact` ranges compare the ordinary terrain header's
+`source-initializer-exact` ranges compare ordinary source declarations'
 dynamic initializers with the retail CRT entries. Their instructions, named
 call targets, relocation sites and destination stores must all agree. Typed
 source declarations supply the destination extents. The checked CRT table
@@ -125,6 +125,23 @@ inflate the independent game-function matching denominator.
 `source-initializer-padding-exact` separately records the compiler's emitted
 alignment bytes when retail repeats them through the next reviewed function
 boundary. A zero-filled or NOP-looking gap alone is not sufficient.
+
+`startup_initializers` extends this comparison to source-owned `DATA` objects.
+References into their typed extents select possible CRT roots; the entire
+emitted body must then match, including named references and field addends.
+The report retains mismatching and unresolved candidates as a worklist. A
+raw zero-initialized object comparison does not check its later constructor:
+for example, a default-constructed artifact table can have correct BSS bytes
+while its startup values are wrong.
+
+Unpaired local cleanup functions reached by a candidate initializer must also
+compare completely against reviewed retail extents. Their verified bytes are
+`source-cleanup-exact`, counted once even when several initializers reference
+them. Reviewed atexit callbacks use slot `-` in the existing `init-thunks.tsv`
+inventory: they are excluded from game-function totals and from CRT table slots.
+Unknown data references remain unresolved. Current source/compiler
+receipts are checked before and after the pass; this adds no address ledger,
+duplicate game bodies or new game-function score entries.
 
 Ownership and matching are separate. An owned range may contain incorrect bytes.
 Initializer verdicts are `exact`, `mismatch`, `unresolved` or `unavailable`.

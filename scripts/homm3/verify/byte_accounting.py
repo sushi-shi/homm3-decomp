@@ -161,6 +161,22 @@ def initializer_ranges(comparison):
     return ranges
 
 
+def startup_ranges(comparison):
+    """Credit checked code only; its DATA owners already have typed extents."""
+    ranges = []
+    for row in comparison['matches']:
+        ranges.append(Range(row['rva'], row['rva']+row['size'],
+                            'source-initializer-exact',
+                            f"{row['source']}:CRT@{row['rva']:x}", 3))
+    roots = {r['rva'] for r in comparison['matches']}
+    # A cleanup referenced by several initializers is still one physical body.
+    for rva, size in sorted({(r['rva'], r['size']) for r in comparison['dependencies']}):
+        if rva not in roots:
+            ranges.append(Range(rva, rva+size, 'source-cleanup-exact',
+                                f'source-emitted cleanup@{rva:x}', 3))
+    return ranges
+
+
 def account(pe, model, enrolled, sections, *, initializers=()):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
@@ -311,16 +327,21 @@ def report(model=None):
     from homm3.core.common import HOMM3_DIR
     from homm3.core.project import Project
     from homm3.verify.source_initializers import compare
+    from homm3.verify.startup_bodies import compare as compare_startup
     model = model or resolve()
     enrolled = manifest_rows()
     section_path = BUILD / 'gen/delink_data_section_manifest.tsv'
     sections = read(section_path)[2] if section_path.is_file() else []
     pe = image()
-    dynamic = compare(Project(HOMM3_DIR), pe, model)
-    domains = account(pe, model, enrolled, sections, initializers=initializer_ranges(dynamic))
+    project = Project(HOMM3_DIR)
+    dynamic = compare(project, pe, model)
+    startup = compare_startup(project, pe, model, enrolled)
+    domains = account(pe, model, enrolled, sections,
+                      initializers=initializer_ranges(dynamic)+startup_ranges(startup))
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
+           'startup_initializers': startup,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()

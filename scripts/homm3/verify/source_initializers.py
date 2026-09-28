@@ -169,7 +169,8 @@ def matched_padding(pattern, rva, image, starts):
 
 def verified_roots(pe, rows):
     """Check the entire admitted slot sequence against one actual CRT table."""
-    ordered = sorted((int(r['slot'], 0), int(r['rva'], 0)) for r in rows)
+    ordered = sorted((int(r['slot'], 0), int(r['rva'], 0))
+                     for r in rows if r['slot'] != '-')
     if len(ordered) < 4 or [s for s, _ in ordered] != list(range(len(ordered))):
         return []
     table = b''.join(struct.pack('<I', pe.image_base+r) for _, r in ordered)

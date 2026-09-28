@@ -6,6 +6,7 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # `.CRT$XCU` initializer bodies in slot (link) order.
+# Slot "-" denotes a reviewed atexit cleanup, not an entry in the CRT table.
 rva	slot
 0x1000	0
 0x1060	1
@@ -1152,3 +1153,23 @@ rva	slot
 0x20dd7e	1142
 0x213ea9	1143
 0x216c61	1144
+# Reviewed atexit callbacks: entire source-emitted body, named references and
+# relocation sites agree; roots below register these addresses with _atexit.
+# ai_player: registration in CRT root 0x432460; 23 exact bytes.
+0x32490	-
+# creature_bank: registration in CRT root 0x47aa80; 23 exact bytes.
+0x7aab0	-
+# remote: registration in CRT root 0x5521c0; 27 exact bytes.
+0x152240	-
+# resourcemanager: registration in CRT root 0x559230; 69 exact bytes.
+0x159260	-
+# resourcemanager: registration in CRT root 0x559400; 10 exact bytes.
+0x159430	-
+# seerhuttext: registration in CRT root 0x56bd90; 23 exact bytes.
+0x16bdc0	-
+# seerhuttext: registration in CRT root 0x56c030; 23 exact bytes.
+0x16c060	-
+# seerhuttext: registration in CRT root 0x56c080; 109 exact bytes.
+0x16c0b0	-
+# wingraph: registration in CRT root 0x5ffdf0; 10 exact bytes.
+0x1ffe10	-

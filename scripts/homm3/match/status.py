@@ -1000,7 +1000,8 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
         totals = data_accounting['totals']['file']
         initializers = data_accounting['initializers']
         exact = sum(row['verdict'] == 'exact' for row in initializers)
-        dynamic = data_accounting.get('source_initializers', {}).get('matches', [])
+        dynamic = (data_accounting.get('source_initializers', {}).get('matches', [])
+                   + data_accounting.get('startup_initializers', {}).get('matches', []))
         dynamic_summary = (f"{len(dynamic):,} source-emitted CRT bodies exact "
                            f"({sum(r['size'] for r in dynamic):,} bytes). "
                            if dynamic else "")

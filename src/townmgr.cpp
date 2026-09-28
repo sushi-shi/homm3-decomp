@@ -702,7 +702,14 @@ DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
 DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
-DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
+// Original: blacksmithArtifactType (const type_artifact[] in Dreamcast).
+// Retail CRT initializer 0x5c2e20 constructs these nine records, in town
+// order, with the ordinary artifact constructor's -1 extra field.
+DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[9] = {
+    ARTIFACT_BALLISTA, ARTIFACT_FIRST_AID_TENT, ARTIFACT_AMMO_CART,
+    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA,
+    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA
+};
 
 void setWinText(heroWindow* win, int which);
 
