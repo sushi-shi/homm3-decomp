@@ -191,11 +191,10 @@ extern int g_skipDigitalDriverOpen;
 
 // Retail PC Miles initialization state used only by Open. The three .data
 // configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
-// 0x69fe80; and the successful sample-handle count occupies 0x684ae0.
+// 0x69fe80. The successful handle count updates the final channel range.
 extern int g_soundSampleRate;
 extern int g_soundBitsPerSample;
 extern int g_soundOutputChannels;
-extern int g_soundMaxSamples;
 extern PCMWAVEFORMAT g_soundWaveFormat;
 
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import

@@ -97,41 +97,41 @@ const type_ballistics_traits (&g_constBallisticsTraits)[4] =
 // four-int band as the two rows below).
 // Luck's own mastery row (retail 0x63e998) and Leadership's (0x63e9a8),
 // the two four-int rows below the float band.
-static const int g_luckBonuses[kNumMasteries] = { 0, 1, 2, 3 };
-static const int g_leadershipBonuses[kNumMasteries] = { 0, 1, 2, 3 };
-static const int g_mysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
-static const int g_scoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
+DATA(0x0063e998) static const int g_luckBonuses[kNumMasteries] = { 0, 1, 2, 3 };
+DATA(0x0063e9a8) static const int g_leadershipBonuses[kNumMasteries] = { 0, 1, 2, 3 };
+DATA(0x0063e9c8) static const int g_mysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
+DATA(0x0063e9d8) static const int g_scoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
 // Estates gold per day by mastery (retail 0x63ea18, the same band).
-static const int g_estatesGold[kNumMasteries] = { 0, 125, 250, 500 };
-static const float g_archeryFactors[kNumMasteries] =
+DATA(0x0063ea18) static const int g_estatesGold[kNumMasteries] = { 0, 125, 250, 500 };
+DATA(0x0063e9e8) static const float g_archeryFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.25f, 0.5f };
-static const float g_eagleEyeFactors[kNumMasteries] =
+DATA(0x0063ea28) static const float g_eagleEyeFactors[kNumMasteries] =
     { 0.0f, 0.4f, 0.5f, 0.6f };
-static const float g_diplomacyFactors[kNumMasteries] =
+DATA(0x0063ea38) static const float g_diplomacyFactors[kNumMasteries] =
     { 0.0f, 0.2f, 0.4f, 0.6f };
-static const float g_magicResistanceFactors[kNumMasteries] =
+DATA(0x0063ea48) static const float g_magicResistanceFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.2f };
-static const float g_offenseFactors[kNumMasteries] =
+DATA(0x0063e9f8) static const float g_offenseFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
-static const float g_defenseFactors[kNumMasteries] =
+DATA(0x0063ea08) static const float g_defenseFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
-static const float g_learningFactors[kNumMasteries] =
+DATA(0x0063ea58) static const float g_learningFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
-static const float g_intelligenceFactors[kNumMasteries] =
+DATA(0x0063ea88) static const float g_intelligenceFactors[kNumMasteries] =
     { 0.0f, 0.25f, 0.5f, 1.0f };
-static const float g_firstAidFactors[kNumMasteries] =
+DATA(0x0063ea98) static const float g_firstAidFactors[kNumMasteries] =
     { 0.0f, 1.0f, 2.0f, 3.0f };
 // Sorcery's spell-damage bonus by mastery (retail 0x63ea78).
 // Necromancy's raise-rate by mastery (retail 0x63e9b8, same band).
-static const float g_necromancyFactors[kNumMasteries] =
+DATA(0x0063e9b8) static const float g_necromancyFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
-static const float g_sorceryFactors[kNumMasteries] =
+DATA(0x0063ea78) static const float g_sorceryFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
 // The two SPELL-specialty ladders GetHeroSpellBonus (0x4e5ff0) indexes
 // by the target creature's level, seven entries each: retail 0x63eaa8
 // (shared by the six buff spells) and 0x63eac4 (Slayer's own).
-static const int g_buffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
-static const int g_slayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
+DATA(0x0063eaa8) static const int g_buffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
+DATA(0x0063eac4) static const int g_slayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
 // These three switch-only ids remain source-private because adding otherwise
 // unused enumerators to armygrp.h changes initialize.obj's VC6 include
 // personality. Retail and the DC SpellID roster prove the values.
@@ -5645,7 +5645,7 @@ float hero::getExperienceBonusFactor() const
 
 // Logistics' land-movement factor by mastery (retail .rdata 0x63ea68,
 // the same four-float band as the specialty rows above).
-static const float g_logisticsFactors[kNumMasteries] =
+DATA(0x0063ea68) static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // E:\gamedcs\hero.cpp:5709.

@@ -5340,8 +5340,8 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
                                    int numGroups2, TCreatureType monType3,
                                    int numMons3, int numGroups3)
 {
-    static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
-    static const int reorderMap[7][7][7] = {
+    DATA(0x006776e0) static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
+    DATA(0x0063df94) static const int reorderMap[7][7][7] = {
         {
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },

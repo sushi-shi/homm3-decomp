@@ -86,6 +86,14 @@ DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
     { 15, 7, 15, 7, 7, 7, 10000 }
 };
 
+// Legacy multiplier tables retained in Complete without code references.
+// DC names gfSSLogisticsMod/gfSSNavigationMod/gfSSArcheryMod/gfSSAIArcheryMod
+// identify the same four mastery rows; all 64 bytes agree between the builds.
+DATA(0x006782ec) float g_ssLogisticsMod[4] = { 1.0f, 1.1f, 1.2f, 1.3f };
+DATA(0x006782fc) float g_ssNavigationMod[4] = { 1.0f, 1.33f, 1.66f, 2.0f };
+DATA(0x0067830c) float g_ssArcheryMod[4] = { 1.0f, 1.1f, 1.25f, 1.5f };
+DATA(0x0067831c) float g_ssAIArcheryMod[4] = { 1.0f, 1.04f, 1.1f, 1.2f };
+
 DATA(0x0069ccb0) playerData* g_currentPlayer;
 DATA(0x0069cca8) int g_netLocalGamePos;
 DATA(0x00699554) int g_localGamePos;
@@ -95,6 +103,12 @@ DATA(0x00691680) int g_sandAnim;
 
 // Retail table initializers, in the layouts used by their named consumers.
 DATA(0x00677958) const char* g_resourceObjectDefs[NUM_RESOURCES] = { "avtwood0.def", "avtmerc0.def", "avtore0.def", "avtsulf0.def", "avtcrys0.def", "avtgems0.def", "avtgold0.def" };
+// Original DC name: HoleSpriteFilenames. Terrain order is dirt through rock;
+// water and rock have no digging sprite. The retained retail table is unused.
+DATA(0x006779e4) const char* g_holeSpriteFilenames[10] = {
+    "avlhold0.def", "avlhlds0.def", "avlholg0.def", "avlhlsn0.def",
+    "avlhols0.def", "avlholr0.def", "avlholx0.def", "avlholl0.def", "", ""
+};
 DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVCramp0.def", "AVCtowr0.def", "AVCinft0.def", "AVCnecr0.def", "AVCdung0.def", "AVCstro0.def", "AVCftrt0.def", "AVChfor0.def" };
 DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
 DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };

@@ -37,6 +37,7 @@ DATA(0x0069fe9c) int g_waitingLoop;
 // Mac 21873c..2187dc builds groups {0}, {1..4}, {5..12}; this Windows
 // table has an extra singleton group. The four/eight-channel groups are
 // therefore categories 1/2 on Mac and 2/3 here (e.g. spell launchSample).
+// Open updates the final group's m_last at 0x684ae0 after allocating handles.
 DATA(0x00684ab8) SoundChannelRange g_soundChannels[4] = {
     { 0, 1, 0 }, { 1, 2, 1 }, { 2, 6, 2 }, { 6, 14, 6 }
 };
@@ -51,7 +52,6 @@ DATA(0x006a3498) int g_mp3ResumePositionCount;
 DATA(0x00684aa8) int g_soundSampleRate = 44100;
 DATA(0x00684aac) int g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_16;
 DATA(0x00684ab0) int g_soundOutputChannels = 2;
-DATA(0x00684ae0) int g_soundMaxSamples = 14;
 DATA(0x0069fe80) PCMWAVEFORMAT g_soundWaveFormat;
 DATA(0x00698a28) int g_skipDigitalDriverOpen;
 
@@ -142,7 +142,7 @@ void soundManager::initializeSamples()
                 break;
         }
         m_sampleNum = count;
-        g_soundMaxSamples = count;
+        g_soundChannels[SOUND_CHANNEL_COUNT - 1].m_last = count;
     }
 }
 

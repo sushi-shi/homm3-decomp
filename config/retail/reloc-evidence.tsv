@@ -53741,7 +53741,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x26dbb8	0x66fb90	data	.data	literal-interior	-	kept
 0x26dbbc	0x66fb90	data	.data	literal-interior	-	kept
 0x26dbc0	0x66fb90	data	.data	literal-interior	-	kept
-0x26dbcc	0x6701ec	data	.data	literal-interior	-	kept
+0x26dbcc	0x6701ec	data	.data; source cmbtmgr:combatManager::s_wallTraits x/y short pair at row +0	literal-interior	-	rejected-scalar-fields
 0x26dbd4	0x66fb84	data	.data	literal-start	-	kept
 0x26dbfc	0x66fb74	data	.data	literal-start	-	kept
 0x26dc00	0x66fb64	data	.data	literal-start	-	kept
@@ -53996,7 +53996,7 @@ site_rva	value	channel	detail	target_class	ctx	disposition
 0x26e860	0x66f368	data	.data	literal-interior	-	kept
 0x26e864	0x66f368	data	.data	literal-interior	-	kept
 0x26e868	0x66f368	data	.data	literal-interior	-	kept
-0x26e874	0x6b01f3	data	.data	data	-	kept
+0x26e874	0x6b01f3	data	.data; source cmbtmgr:combatManager::s_wallTraits x/y short pair at row +0	data	-	rejected-scalar-fields
 0x26e87c	0x66f35c	data	.data	literal-start	-	kept
 0x26e8a4	0x66f34c	data	.data	literal-start	-	kept
 0x26e8a8	0x66f33c	data	.data	literal-start	-	kept
