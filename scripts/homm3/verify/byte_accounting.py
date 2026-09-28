@@ -10,6 +10,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 import json
+import re
 import struct
 from pathlib import Path
 
@@ -28,6 +29,16 @@ class Range:
 
 
 ZLIB_MAP = RETAIL / 'zlib-map.tsv'
+
+#: When one identity arrives through several channels, report the most
+#: specific evidence first.
+CATEGORY_PRECEDENCE = (
+    'source-initializer-exact', 'source-initializer-padding-exact',
+    'source-cleanup-exact', 'game', 'library-vendor', 'library-runtime',
+    'compiler-generated', 'compiler-metadata', 'import-thunk', 'linker-import',
+    'import-structure', 'library-unverified', 'section', 'source-padding-exact',
+    'source-padding-aligned', 'patch-residue', 'linker-padding',
+    'alignment-padding', 'structural')
 
 
 def partition(size: int, ranges: list[Range]):
@@ -57,8 +68,9 @@ def partition(size: int, ranges: list[Range]):
             owners = [r for r in owners if r.priority == top]
         identities = tuple(sorted({r.identity for r in owners}))
         categories = {r.category for r in owners}
-        category = ('missing' if not owners else 'overlap' if len(owners) > 1
-                    else next(iter(categories)))
+        # One identity claimed through several channels is one folded object.
+        category = ('missing' if not owners else 'overlap' if len(identities) > 1
+                    else min(categories, key=CATEGORY_PRECEDENCE.index))
         row = {'start': pos, 'end': end, 'size': end-pos,
                'category': category, 'owners': identities}
         if result and all(result[-1][k] == row[k] for k in ('category', 'owners')):
@@ -87,6 +99,17 @@ def _covered(start, end, verified):
         start = verified[k][1]
         k += 1
     return True
+
+
+def _merged(ranges):
+    """Sorted union of (start, end) extents."""
+    out = []
+    for start, end in sorted(ranges):
+        if out and start <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], end))
+        else:
+            out.append((start, end))
+    return out
 
 
 def model_ranges(model, enrolled, sections, verified_library=(), library_names=None,
@@ -452,8 +475,11 @@ def account(pe, model, enrolled, sections, *, initializers=(), groups=None, libr
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[0])
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[1])
     for claim in claims:
-        if not any(s['va'] <= claim.start < claim.end <=
-                   s['va']+max(s['vsize'], s['rsize']) for s in pe.sections):
+        # Only PE-structural claims (section-alignment tails) lie between
+        # sections; every other claim stays inside one retail section.
+        if claim.category != 'structural' and not any(
+                s['va'] <= claim.start < claim.end <=
+                s['va']+max(s['vsize'], s['rsize']) for s in pe.sections):
             raise ValueError(f'claim crosses retail section boundary: {claim}')
         image_ranges.append(claim)
     for s in pe.sections:
@@ -480,7 +506,102 @@ def account(pe, model, enrolled, sections, *, initializers=(), groups=None, libr
             'image': partition(image_size, image_ranges)}
 
 
-def compare_initializers(model, enrolled, pe, base_dir=None):
+_ANON = re.compile(r'\?A0x[0-9A-Fa-f]+')
+
+
+def _guard_owners(root):
+    """{guard claim name: owner static} from source DATA_COMPGEN_GUARD rows."""
+    head = re.compile(r'\bDATA_COMPGEN_GUARD\s*\(\s*0x[0-9a-fA-F]+\s*,\s*(\w+)\s*,\s*(\w+)\s*\)')
+    data = re.compile(r'\bDATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)')
+    out = {}
+    for path in sorted(Path(root, 'src').rglob('*.cpp')):
+        unit = path.stem
+        text = path.read_text(encoding='latin-1')
+        for m in head.finditer(text):
+            # The owner's own DATA annotation follows its guard (a STATIC_DTOR
+            # row may sit between them) and names the owner's retail address.
+            follow = data.search(text, m.end(), m.end() + 300)
+            address = int(follow.group(1), 16) - 0x400000 if follow else None
+            out[f'__h3cg${unit}$static_init_guard${m.group(1)}'] = (m.group(2), address)
+    return out
+
+
+def bridge_data_name(name, emitted, guard_owners, owner_names=None):
+    """The candidate spelling of a claimed datum whose model name differs.
+
+    Only unique, identity-preserving spellings are accepted: the anonymous
+    namespace hash (which encodes the compiling path), VC6's `_name` form
+    for statics in an anonymous namespace, a reference's cv letter, and a
+    source guard's `$S` counter symbol in its owner static's scope.
+    """
+    owner_names = owner_names or {}
+
+    def unique(keys):
+        keys = [k for k in keys if emitted.get(k)]
+        return keys[0] if len(keys) == 1 else None
+
+    # Only a TYPE's anonymous namespace may be normalized: the variable's own
+    # scope must still come from the strict module bridge.
+    if not re.match(r'^_?\?\w+@\?A0x', name):
+        anon = _ANON.sub('?A0x#', name)
+        found = unique([k for k in emitted if _ANON.sub('?A0x#', k) == anon and k != name])
+        if found:
+            return found
+    m = re.match(r'^\?(\w+)@\?A0x[0-9A-Fa-f]+@@3', name)
+    if m and emitted.get('_' + m.group(1)):
+        return '_' + m.group(1)
+    if name.startswith('?') and '@@3AA' in name and name.endswith('B'):
+        found = unique([name[:-1] + 'A'])
+        if found:
+            return found
+    owner, address = guard_owners.get(name, (None, None))
+    if owner:
+        scopes = {k[len(f'_?{owner}@'):].split('@4', 1)[0] for k in emitted
+                  if k.startswith(f'_?{owner}@?')}
+        if len(scopes) > 1 and address is not None:
+            named = {k[len(f'_?{owner}@'):].split('@4', 1)[0]
+                     for k in owner_names.get(address, ()) if k.startswith(f'_?{owner}@?')}
+            scopes &= named
+        if len(scopes) == 1:
+            scope = scopes.pop()
+            return unique([k for k in emitted if k.startswith('_?$S')
+                           and k.split('@', 1)[1].split('@4', 1)[0] == scope])
+    return None
+
+
+def folded_body(obj, name, rva, pe):
+    """True when ``obj``'s code for ``name`` reproduces retail at ``rva``.
+
+    The body runs to the section's next defined symbol; relocation words are
+    masked, every other byte must agree, and at least eight bytes compare.
+    """
+    cache = obj.__dict__.setdefault('_folded_index', {})
+    if not cache:
+        for idx, value, section in obj.iter_symbols():
+            if section > 0 and obj.section_table[section - 1]['characteristics'] & 0x20000000:
+                cache.setdefault(obj.sym_name(idx), []).append((section, value))
+    hits = cache.get(name, [])
+    if len(hits) != 1:
+        return False
+    section, value = hits[0]
+    starts = obj.__dict__.setdefault('_folded_starts', {})
+    if section not in starts:
+        starts[section] = sorted({v for rows in cache.values() for s2, v in rows
+                                  if s2 == section})
+    later = [v for v in starts[section] if v > value]
+    end = later[0] if later else obj.section_table[section - 1]['size']
+    body = obj.section_payload(section)[value:end]
+    retail = pe.read(rva, len(body))
+    if len(body) < 8 or retail is None:
+        return False
+    masked = set()
+    for site in obj.typed_relocations(section):
+        if value <= site < end:
+            masked.update(range(site - value, site - value + 4))
+    return all(a == b for i, (a, b) in enumerate(zip(body, retail)) if i not in masked)
+
+
+def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None):
     """Raw COFF versus retail, without normalized payloads or guessed extents."""
     from homm3.delink.coffx import Obj
     from homm3.delink.image import Image
@@ -500,8 +621,47 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             names[('', msvc_names.mask(r['name']))].add(int(r['rva'], 0))
     image = Image(pe)
     objects, members, results = {}, {}, []
+    code_index = {}
+
+    def defining_objects(symbol):
+        """Other candidate objects defining ``symbol`` as code."""
+        if not code_index:
+            for path in sorted(base_dir.glob('*.obj')):
+                other = Obj(path)
+                for idx, value, section in other.iter_symbols():
+                    if section > 0 and other.section_table[section - 1]['characteristics'] & 0x20000000:
+                        code_index.setdefault(other.sym_name(idx), []).append(path)
+            code_index['__loaded__'] = {}
+        loaded = code_index['__loaded__']
+        out = []
+        for path in code_index.get(symbol, [])[:4]:
+            if path not in loaded:
+                loaded[path] = Obj(path)
+            out.append(loaded[path])
+        return out
+    from homm3.core.common import HOMM3_DIR
+    guard_owners = _guard_owners(HOMM3_DIR)
+    anon_names = defaultdict(set)
+    for (owner, key), rvas in list(names.items()):
+        if '?A0x' in key:
+            anon_names[_ANON.sub('?A0x#', key)].update(rvas)
+            # VC6 spells a static inside an anonymous namespace `_name`.
+            plain = re.match(r'^\?(\w+)@\?A0x[0-9A-Fa-f]+@@3', key)
+            if plain and owner:
+                names[(owner, '_' + plain.group(1))].update(rvas)
+    # Verified runtime-library contributions name their own public symbols.
+    for rva, symbols in (library_names or {}).items():
+        for symbol in symbols:
+            names.setdefault(('', symbol), set()).add(rva)
+    owner_names = defaultdict(set)
+    for b in model.data:
+        for entry in (b, *b.aliases):
+            if entry.name:
+                owner_names[b.rva].add(msvc_names.mask(entry.name))
+    from homm3.verify import eh_records
+    results += eh_records.compare(model, enrolled, pe, names, base_dir)
     for r in enrolled:
-        if 'gap' in r.get('provenance', ''):
+        if 'gap' in r.get('provenance', '') or r.get('provenance') == 'retail-EH-funcinfo':
             continue
         unit = r['object'].removesuffix('.c')
         start, size = int(r['rva'], 0), int(r['size'], 0)
@@ -535,6 +695,10 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
         # Manifest ordinals address the reconstructed TARGET topology; they
         # are compressed and are not candidate COFF section numbers.
         definitions = members[unit].get(msvc_names.mask(r['name']), [])
+        if not definitions:
+            bridged = bridge_data_name(r['name'], members[unit], guard_owners, owner_names)
+            if bridged:
+                definitions = members[unit][bridged]
         hits = [(value, section) for value, section in definitions if section > 0]
         commons = [value for value, section in definitions if section == 0 and value]
         if not hits and len(commons) == 1 and r['storage'] == 'bss':
@@ -576,7 +740,26 @@ def compare_initializers(model, enrolled, pe, base_dir=None):
             addend = struct.unpack_from('<i', payload, relative)[0]
             key = msvc_names.mask(name)
             targets = names.get((unit, key)) or names.get(('', key), set())
+            if not targets and '?A0x' in key:
+                # The anonymous-namespace hash encodes the compiling path.
+                targets = anon_names.get(_ANON.sub('?A0x#', key), set())
+            default = obj.weak_default(name)
+            if not targets and default:
+                # A weak external binds to its aux default when nothing
+                # defines it: VC6's vector deleting destructor names ??_G.
+                key = msvc_names.mask(default)
+                targets = names.get((unit, key)) or names.get(('', key), set())
             if len(targets) != 1:
+                # An identical-code-folded referent: the word names retail
+                # code that this object's own definition of the symbol (or of
+                # its weak default) reproduces byte for byte.
+                actual = struct.unpack_from('<I', retail, relative)[0]
+                claimed = (actual - pe.image_base - addend) & 0xffffffff
+                if relative in required and any(
+                        folded_body(other, candidate, claimed, pe)
+                        for candidate in (name, default) if candidate
+                        for other in [obj, *defining_objects(candidate)]):
+                    continue
                 unknown |= word; continue
             expected = (next(iter(targets))+pe.image_base+addend) & 0xffffffff
             actual = struct.unpack_from('<I', retail, relative)[0]
@@ -656,21 +839,52 @@ def report(model=None):
                                                  [startup['matches'], shared['matches']],
                                                  library, library_names, enrolled,
                                                  data_claims)
-    domains = account(pe, model, enrolled, sections, groups=groups,
-                      initializers=initializer_ranges(dynamic)+startup_ranges(startup)
-                      + startup_ranges(shared_credit) + cleanup_ranges(cleanups)
-                      + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
-                      + padding_ranges(startup_padding, 'source-initializer-padding-exact',
-                                       'source-padding-aligned')
-                      + linker_fill_ranges(eh_padding, before)
-                      + [Range(r['rva'], r['rva'] + r['size'], 'import-thunk',
-                               f"{r['dll']}!{r['imported']}", 2) for r in thunks['matches']]
-                      + [Range(r['rva'], r['rva'] + r['size'], r['category'],
-                               f"reviewed {r['category']}@{r['rva']:x}", 2)
-                         for r in code_extents],
-                      library=library, library_names=library_names,
-                      linker=linker, tails=tails)
-    comparisons = compare_initializers(model, enrolled, pe)
+    # Retail-proven records: compiler metadata, FP constants, COMDAT data,
+    # member padding and literals (`homm3.verify.retail_records`).
+    from homm3.delink.image import Image
+    from homm3.verify import retail_records
+    sites = set(Image(pe).reloc_sites)
+    records = retail_records.pe_structures(pe)
+    found = retail_records.metadata(pe, model, sites)
+    constants = retail_records.fp_constants(pe, sites, retail_records.library_code(model))
+    comdats = retail_records.comdat_contributions(enrolled)
+    members, compiler_padding = retail_records.ordinary_members(pe, enrolled, model=model)
+    literals = retail_records.source_literals(HOMM3_DIR, pe)
+    pushed = retail_records.referenced_literals(
+        pe, sites, [(r.start, r.end) for x in (found, constants) for r in x.ranges])
+    for extra in (found, constants, comdats, members, literals, pushed):
+        records.ranges += extra.ranges
+        records.starts.update(extra.starts)
+        records.ends |= extra.ends
+    # Byte-verified library sections and the verified import tables already
+    # own their bytes; a retail-record reading inside one (an IAT slot, a
+    # library FP constant, printable bytes inside library RTTI) adds nothing.
+    verified = _merged([(r.start, r.end) for r in library]
+                       + [(r.start, r.end) for r in linker
+                          if r.category in ('linker-import', 'import-structure')])
+    records.ranges = [r for r in records.ranges
+                      if not _covered(r.start, r.end, verified)]
+    claims = (initializer_ranges(dynamic) + startup_ranges(startup)
+              + startup_ranges(shared_credit) + cleanup_ranges(cleanups)
+              + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
+              + padding_ranges(startup_padding, 'source-initializer-padding-exact',
+                               'source-padding-aligned')
+              + linker_fill_ranges(eh_padding, before)
+              + [Range(r['rva'], r['rva'] + r['size'], 'import-thunk',
+                       f"{r['dll']}!{r['imported']}", 2) for r in thunks['matches']]
+              + [Range(r['rva'], r['rva'] + r['size'], r['category'],
+                       f"reviewed {r['category']}@{r['rva']:x}", 2)
+                 for r in code_extents]
+              + records.ranges + compiler_padding)
+    arguments = dict(groups=groups, library=library, library_names=library_names,
+                     linker=linker, tails=tails)
+    domains = account(pe, model, enrolled, sections, initializers=claims, **arguments)
+    # Link-alignment zero fill is judged only where every other pass left a gap.
+    link_padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
+    if link_padding:
+        domains = account(pe, model, enrolled, sections,
+                          initializers=claims + link_padding, **arguments)
+    comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
            'startup_initializers': startup,

@@ -24,7 +24,7 @@
 // Retail .bss 0x695000. The constructor publishes itself here for the chat
 // edit callbacks and the destructor clears the slot. The Dreamcast image has
 // the corresponding compiland-local pointer at 0x1bf12c.
-static TCombatWindow* g_combatWindow;
+DATA(0x00695000) static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42, dc 0x69638
 // DC records only the TCheatCode local. Retail's extra four-byte frame slot

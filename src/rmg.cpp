@@ -9189,6 +9189,10 @@ void type_random_map_generator::createRiver(TRmgMapPosition source)
                 break;
         }
 
+        // Construction guard byte 0x69d59c; the four offsets at 0x69ce28 are
+        // indexed by eight here. The registered cleanup is the empty 0x549790.
+        DATA_COMPGEN_GUARD(0x0069d59c, riverDeltaOffsetsGuard, deltaOffsets)
+        DATA(0x0069ce28)
         static TRmgRiverDeltaOffset deltaOffsets[4] = {
             TRmgRiverDeltaOffset(4, 1),
             TRmgRiverDeltaOffset(1, 4),

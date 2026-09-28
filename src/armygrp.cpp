@@ -339,7 +339,13 @@ int TSplitWindow::windowHandler(message& msg)
 VA(0x0044a460, 0x55) MAC_ADDRESS(0x0578b4, 0x108)
 const std::bitset<9>& armyGrpFn0044A460()
 {
+    // Retail: construction guard 0x69385c, the bitset at 0x693884 and the
+    // built flag at 0x693890 (byte loads and stores in this body, getMorale
+    // and getMoraleDescription, where it is inlined).
+    DATA_COMPGEN_GUARD(0x0069385c, groupedAlignmentsGuard, groupedAlignments)
+    DATA(0x00693884)
     static std::bitset<9> groupedAlignments;
+    DATA(0x00693890)
     static unsigned char groupedAlignmentsBuilt = 0;
     if (!groupedAlignmentsBuilt) {
         groupedAlignments[TOWN_CASTLE] = true;

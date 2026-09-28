@@ -13,6 +13,9 @@
 #   127 isolated sites with function-INTERIOR targets HELD BACK for review (see reloc-evidence.tsv)
 #   4 isolated sites with unowned targets dropped
 #   20 unmapped-target sites dropped
+# REVIEWED 2026-09-28: 18 held-back interior sites are catch-handler words
+#   of FuncInfo try maps rooted by registration stubs (evidence disposition
+#   kept-eh-catch-handler); they are admitted.
 # NO VALIDATION ORACLE EXISTS FOR THIS IMAGE: every local pressing ships an
 # empty .reloc directory. The channels measured 0.9988 precision / 0.9942
 # recall against a DIFFERENT MSVC game exe that still had its .reloc; those
@@ -39884,6 +39887,7 @@ site_rva	kind
 0x23df90	dir32
 0x23e508	dir32
 0x23e50c	dir32
+0x23e5f4	dir32
 0x23e5f8	dir32
 0x23e5fc	dir32
 0x23e60c	dir32
@@ -40300,6 +40304,7 @@ site_rva	kind
 0x240350	dir32
 0x240354	dir32
 0x240358	dir32
+0x240368	dir32
 0x24036c	dir32
 0x240370	dir32
 0x240374	dir32
@@ -43645,11 +43650,13 @@ site_rva	kind
 0x249564	dir32
 0x24956c	dir32
 0x249588	dir32
+0x24959c	dir32
 0x2495a8	dir32
 0x2495b0	dir32
 0x2495cc	dir32
 0x2495d4	dir32
 0x2495f0	dir32
+0x249604	dir32
 0x249610	dir32
 0x24962c	dir32
 0x249634	dir32
@@ -43803,6 +43810,7 @@ site_rva	kind
 0x249dc4	dir32
 0x249dcc	dir32
 0x249df0	dir32
+0x249e04	dir32
 0x249e10	dir32
 0x249e18	dir32
 0x249e2c	dir32
@@ -44783,6 +44791,7 @@ site_rva	kind
 0x24d174	dir32
 0x24d190	dir32
 0x24d19c	dir32
+0x24d1a4	dir32
 0x24d1b0	dir32
 0x24d1cc	dir32
 0x24d1d4	dir32
@@ -44957,6 +44966,7 @@ site_rva	kind
 0x24d794	dir32
 0x24d7b0	dir32
 0x24d7bc	dir32
+0x24d7c4	dir32
 0x24d7d0	dir32
 0x24d7d8	dir32
 0x24d7f4	dir32
@@ -45005,6 +45015,7 @@ site_rva	kind
 0x24da54	dir32
 0x24da70	dir32
 0x24da7c	dir32
+0x24da84	dir32
 0x24da90	dir32
 0x24daac	dir32
 0x24dab8	dir32
@@ -45038,6 +45049,7 @@ site_rva	kind
 0x24dc14	dir32
 0x24dc28	dir32
 0x24dc34	dir32
+0x24dc3c	dir32
 0x24dc48	dir32
 0x24dc64	dir32
 0x24dc70	dir32
@@ -45167,7 +45179,9 @@ site_rva	kind
 0x24e278	dir32
 0x24e28c	dir32
 0x24e294	dir32
+0x24e29c	dir32
 0x24e2a4	dir32
+0x24e2ac	dir32
 0x24e2b8	dir32
 0x24e2d4	dir32
 0x24e2dc	dir32
@@ -45852,6 +45866,7 @@ site_rva	kind
 0x25036c	dir32
 0x250374	dir32
 0x250398	dir32
+0x2503ac	dir32
 0x2503b8	dir32
 0x2503d4	dir32
 0x2503dc	dir32
@@ -46545,7 +46560,9 @@ site_rva	kind
 0x2527d4	dir32
 0x2527f8	dir32
 0x25280c	dir32
+0x25281c	dir32
 0x252824	dir32
+0x25282c	dir32
 0x252838	dir32
 0x252854	dir32
 0x25285c	dir32
@@ -46569,6 +46586,7 @@ site_rva	kind
 0x252924	dir32
 0x25292c	dir32
 0x252940	dir32
+0x252954	dir32
 0x252960	dir32
 0x252968	dir32
 0x252984	dir32
@@ -46576,6 +46594,7 @@ site_rva	kind
 0x25299c	dir32
 0x2529a4	dir32
 0x2529b8	dir32
+0x2529cc	dir32
 0x2529d8	dir32
 0x2529e0	dir32
 0x2529f4	dir32
@@ -46588,6 +46607,7 @@ site_rva	kind
 0x252a6c	dir32
 0x252a7c	dir32
 0x252a90	dir32
+0x252aa4	dir32
 0x252ab0	dir32
 0x252ab8	dir32
 0x252ad4	dir32
@@ -46597,6 +46617,7 @@ site_rva	kind
 0x252afc	dir32
 0x252b04	dir32
 0x252b18	dir32
+0x252b2c	dir32
 0x252b38	dir32
 0x252b40	dir32
 0x252b5c	dir32
@@ -46606,6 +46627,7 @@ site_rva	kind
 0x252b84	dir32
 0x252b8c	dir32
 0x252ba0	dir32
+0x252bb4	dir32
 0x252bc0	dir32
 0x252bdc	dir32
 0x252be8	dir32
@@ -46617,6 +46639,7 @@ site_rva	kind
 0x252c34	dir32
 0x252c3c	dir32
 0x252c50	dir32
+0x252c64	dir32
 0x252c70	dir32
 0x252c8c	dir32
 0x252c94	dir32
@@ -55159,28 +55182,6 @@ site_rva	kind
 0x27dcec	dir32
 0x27dcf0	dir32
 0x27f1f0	dir32
-0x27f3e8	dir32
-0x27f3ec	dir32
-0x27f3f0	dir32
-0x27f408	dir32
-0x27f40c	dir32
-0x27f410	dir32
-0x27f428	dir32
-0x27f42c	dir32
-0x27f430	dir32
-0x27f448	dir32
-0x27f44c	dir32
-0x27f450	dir32
-0x27f464	dir32
-0x27f468	dir32
-0x27f46c	dir32
-0x27f470	dir32
-0x27f484	dir32
-0x27f488	dir32
-0x27f48c	dir32
-0x27f4a4	dir32
-0x27f4a8	dir32
-0x27f4ac	dir32
 0x27f578	dir32
 0x27f57c	dir32
 0x27f580	dir32

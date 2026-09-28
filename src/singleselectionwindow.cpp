@@ -982,6 +982,13 @@ DATA(0x0069fc18) static const char* g_lossConditionDesc[4];
 // while constructing CScenarioInfoDlg.
 DATA(0x0069fb14) static TTextResource* g_turnDurationTextResource;
 DATA(0x0069fb44) const char* g_turnDurationText[11];
+// Player colour letters for the per-slot "adopb2%c.def" buttons. Retail keeps
+// these eight bytes without a terminator in .rdata at 0x641ae0 and indexes
+// them from the constructor; the pooled "rbygopts" literal at 0x6831a8 is a
+// separate object used by the panel loaders.
+DATA(0x00641ae0) static const char g_playerColorLetters[8] = {
+    'r', 'b', 'y', 'g', 'o', 'p', 't', 's'
+};
 DATA(0x00641ae8) static const int g_turnDurationMinutes[10] = {
     1, 2, 4, 6, 8, 10, 15, 20, 25, 30
 };
@@ -2133,7 +2140,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
                 font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED,
                 0, 8));
 
-            sprintf(tempName, "adopb2%c.def", "rbygopts"[i]);
+            sprintf(tempName, "adopb2%c.def", g_playerColorLetters[i]);
             if (isMultiPlayer()) {
                 w = new textButton(
                     110, (133 + i * 50) + 18, 50, 24, 207 + i,
