@@ -300,8 +300,8 @@ TRecruitWindow::~TRecruitWindow()
 // E:\gamedcs\recruit.cpp:302
 // Retail's Complete-only elemental-card rule is the four-compare chain at
 // 0x54fbd5: when the campaign/version flag is zero, the four base elementals
-// use background index -1 (the deliberately biased akCreatureBackgrounds
-// base). `name_y` is genuinely unused here; the constructor uses it for the
+// have alignment -1 and select the neutral background at table index zero.
+// `name_y` is genuinely unused here; the constructor uses it for the
 // adjacent name widgets after calling this helper.
 // Residual (93.6325%): blocks B0..B24, including all three allocations and
 // constructor calls, are instruction-for-instruction exact. The only delta is
@@ -321,7 +321,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgrounds[g_game->getAlignment(creature)],
+        g_creatureBackgroundNames[g_game->getAlignment(creature) + 1],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -1213,7 +1213,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgrounds[g_game->getAlignment(monType)],
+        g_creatureBackgroundNames[g_game->getAlignment(monType) + 1],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,

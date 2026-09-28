@@ -2122,7 +2122,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     if (g_game->m_gameVersion >= 2
-        && *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
+        && g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
         && counts[classPlanesWalker] + counts[classElementalist]
             < totalCount) {
@@ -5709,7 +5709,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     m_hasRandomAlignment = readValue<signed char>(infile) != 0;
     if (m_hasRandomAlignment)
         m_legalAlignments |= 0x100;
-    if (!g_gameContextFeatures[*g_videoGameState].test(1))
+    if (!g_gameContextFeatures[g_videoGameState].test(1))
         m_legalAlignments &= 0xfeff;
 
     m_hasMainTown = readValue<signed char>(infile) != 0;

@@ -134,7 +134,7 @@ SIZE(SLimitData, 0x10);
 // CodeView struct.h:340/346 owns this network player record. Complete
 // extends DC's 28-byte dpid/name pair with the version dword at +0x1c;
 // retail's seat-record constructor proves the same base initialization.
-extern int* g_videoGameState;
+extern int& g_videoGameState;
 
 class CNetPlayerInfo {
 public:
@@ -146,14 +146,14 @@ public:
     {
         m_dpid = 0;
         m_name[0] = 0;
-        m_version = *g_videoGameState;
+        m_version = g_videoGameState;
     }
     // E:\gamedcs\struct.h:346
     CNetPlayerInfo(char* name, unsigned long dpid)
     {
         m_dpid = dpid;
         strcpy(m_name, name);
-        m_version = *g_videoGameState;
+        m_version = g_videoGameState;
     }
 };
 SIZE(CNetPlayerInfo, 32);

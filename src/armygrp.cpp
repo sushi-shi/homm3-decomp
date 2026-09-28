@@ -31,8 +31,15 @@
 #include "widget.h"
 #include "winmgr.h"
 
-// Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00682910) const char* g_creatureBackgrounds[9] = { "CrBkgCas.pcx", "CrBkgRam.pcx", "CrBkgTow.pcx", "CrBkgInf.pcx", "CrBkgNec.pcx", "CrBkgDun.pcx", "CrBkgStr.pcx", "CrBkgFor.pcx", "CrBkgEle.pcx" };
+// Dreamcast original: CreatureBackgroundNames. Complete adds Conflux.
+// Retail stores the neutral entry at 0x68290c; callers fold alignment + 1
+// into the indexed address 0x682910. Mac createPortraitWidget (0x201300)
+// likewise loads table[alignment + 1], retaining the four-byte displacement.
+DATA(0x0068290c) const char* g_creatureBackgroundNames[10] = {
+    "CrBkgNeu.pcx", "CrBkgCas.pcx", "CrBkgRam.pcx", "CrBkgTow.pcx",
+    "CrBkgInf.pcx", "CrBkgNec.pcx", "CrBkgDun.pcx", "CrBkgStr.pcx",
+    "CrBkgFor.pcx", "CrBkgEle.pcx"
+};
 
 DATA(0x00693878)
 static TSplitWindow* g_splitWindow;
@@ -101,8 +108,8 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         0, 20, m_width, 30, g_text, "bigfont.fnt", font::HEADING,
         1, 1, 0, 8));
 
-    strcpy(g_text, g_creatureBackgrounds[
-        g_game->getAlignment(m_creature)]);
+    strcpy(g_text, g_creatureBackgroundNames[
+        g_game->getAlignment(m_creature) + 1]);
 
     m_widgets.push_back(new bitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));

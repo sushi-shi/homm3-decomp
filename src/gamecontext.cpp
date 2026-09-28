@@ -8,6 +8,18 @@
 
 #include "gamecontext.h"
 
+// The context reference is bound once by the retail startup body at 0x4eccf0.
+// Its backing int at 0x67f554 starts at Complete's context ordinal, 3.
+// A named int reference emits exactly that eleven-byte store/return in VC6;
+// a pointer initializer is static data, and a literal-bound const reference
+// emits an additional backing-value store. All reviewed consumers load the
+// binding before reading its int; none rebind it.
+DATA(0x0067f554)
+static int g_defaultGameContext = 3;
+
+DATA(0x0069923c)
+int& g_videoGameState = g_defaultGameContext;
+
 // The 212-byte retail initializer constructs four unsigned-long bitsets in
 // one reused stack temporary, then copies them into 0x699240..0x69924f.
 // Its successive masks are 1, 3, 5 and 15. Game and single-selection readers
@@ -22,9 +34,7 @@
 // 32-byte locale-id guard. No extra stream include or emission caller is needed.
 // Unsuffixed integer literals are byte-flat. An implicit scalar initializer
 // list constructs directly into the array and loses retail's stack temporary,
-// so explicit bitset temporaries are retained. The adjacent selector still
-// needs its own source recovery: binding a const int reference directly to 3
-// adds a ten-byte runtime backing-value store absent from its retail thunk.
+// so explicit bitset temporaries are retained.
 DATA(0x00699240)
 std::bitset<4> g_gameContextFeatures[4] = {
     std::bitset<4>(1ul), std::bitset<4>(3ul),

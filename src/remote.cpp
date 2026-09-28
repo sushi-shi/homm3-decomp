@@ -1759,7 +1759,7 @@ unsigned char handleMPlayerLaunch()
 
     initRemote(MP_TCP, g_config.m_networkDefaultName);
 
-    int version = *g_videoGameState;
+    int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)
@@ -1845,7 +1845,7 @@ unsigned char lobbyLaunchConnect()
     g_numHumanPlayers = 1;
     g_mpBaseType = 1;
     initRemote(MP_TCP, g_config.m_networkDefaultName);
-    int version = *g_videoGameState;
+    int version = g_videoGameState;
     g_thisNetPlayerInfo.m_dpid = g_dPlay->createPlayer(
         g_config.m_networkDefaultName, &version, sizeof(version), 0);
     if (!g_thisNetPlayerInfo.m_dpid)

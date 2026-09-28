@@ -718,7 +718,7 @@ void TViewArmyWindow::createPortraitWidget(const char* spriteName,
 {
     m_widgets.push_back(new bitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
-        g_creatureBackgrounds[townType],
+        g_creatureBackgroundNames[townType + 1],
         0x800));
 
     m_spriteWidget = new iconWidget(

@@ -452,7 +452,7 @@ MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_sprites;
+        g_resourceArchiveContexts[g_videoGameState].m_sprites;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
@@ -471,7 +471,7 @@ MAC_ADDRESS(0x152374, 0x88)
 static LODFile* findBitmapResource(const char* name)
 {
     TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
+        g_resourceArchiveContexts[g_videoGameState].m_bitmaps;
     int remaining = archives.m_count;
     int* archive = archives.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
@@ -526,7 +526,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
         try {
             TResourceArchiveContext* context =
-                &g_resourceArchiveContexts[*g_videoGameState];
+                &g_resourceArchiveContexts[g_videoGameState];
 
             if (openSprites) {
                 int remaining = context->m_sprites.m_count;
@@ -1297,7 +1297,7 @@ bool ResourceManager::getSoundFile(const char* localName,
         soundName.erase(extension);
 
     TResourceArchiveContext* context =
-        &g_resourceArchiveContexts[*g_videoGameState];
+        &g_resourceArchiveContexts[g_videoGameState];
     int remaining = context->m_sounds.m_count;
     int* archive = context->m_sounds.m_indices;
     int x;
@@ -1614,11 +1614,6 @@ CSprite* ResourceManager::getSprite(const char* name)
     return sprite;
 }
 
-// The pointee's exact domain name is not yet proven; retail consumers agree
-// that this global points at the small active game/resource-context ordinal.
-DATA(0x0069923c)
-int* g_videoGameState;
-
 DATA(0x0069d870)
 TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
@@ -1682,7 +1677,7 @@ VA(0x0055d070, 0x5C) MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + 
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
     int* archive =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps.m_indices;
+        g_resourceArchiveContexts[g_videoGameState].m_bitmaps.m_indices;
     for (;;) {
         LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
         if (entry)
