@@ -142,6 +142,22 @@ def _owner_names(model):
     return owner
 
 
+def library_code(model):
+    """Predicate: an address inside a runtime-library function.
+
+    Library-owned data belongs to the library verifier; the records here are
+    rooted only in game code.
+    """
+    spans = sorted((b.rva, b.rva + b.size) for b in model.functions
+                   if b.channel in ('functions_static_libs',) and b.size)
+    starts = [lo for lo, _hi in spans]
+
+    def inside(rva):
+        i = bisect.bisect_right(starts, rva) - 1
+        return i >= 0 and rva < spans[i][1]
+    return inside
+
+
 def _named(model, name):
     hits = [b.rva for b in model.functions + model.data
             if b.name == name or any(a.name == name for a in b.aliases)]
@@ -153,10 +169,11 @@ def _pointer_sites_admitted(view, start, words, sites):
 
 
 def metadata(pe, model, sites) -> Records:
-    """EH, throw and RTTI records rooted in retail references."""
+    """EH, throw and type-descriptor records rooted in game code."""
     view = _View(pe)
     out = Records()
     owner = _owner_names(model)
+    library = library_code(model)
     handler = _named(model, '___CxxFrameHandler')
     type_info_vtable = _named(model, '??_7type_info@@6B@')
     if handler is None or type_info_vtable is None:
@@ -203,6 +220,8 @@ def metadata(pe, model, sites) -> Records:
             out.rejected.append((stub, 'stub does not load a FuncInfo'))
             continue
         _, states, unwind, tries, trymap, nip, ip = struct.unpack_from('<IiIiIiI', header)
+        if not pushes.get(stub) or any(library(site) for site in pushes[stub]):
+            continue
         parents = {owner(site) for site in pushes.get(stub, ())} - {None}
         name = parents.pop() if len(parents) == 1 else f'stub@{stub:x}'
         layout, pointers = [(funcinfo, FUNCINFO_SIZE)], []
@@ -290,7 +309,8 @@ def metadata(pe, model, sites) -> Records:
         words = [value + 12] + ([value + 4] if view.u32(value + 4) else [])
         words += [array + 4 + 4 * i for i in range(count)]
         words += [t + 4 for t in types] + [t + 24 for t in types if view.u32(t + 24)]
-        if not all(w in sites for w in words) or text_lo + offset not in sites:
+        if (not all(w in sites for w in words) or text_lo + offset not in sites
+                or library(text_lo + offset)):
             continue
         seen_throw.add(value)
         name = f'throw {value:x}'
@@ -303,58 +323,13 @@ def metadata(pe, model, sites) -> Records:
                     alignment=XDATA_ALIGNMENT, whole=True)
             type_descriptor(view.u32(t + 4) - view.base, name)
 
-    # --- RTTI -------------------------------------------------------------
-    # A COL is rooted by the admitted word preceding its vtable; unreviewed
-    # vtables still root their COL when the whole record graph validates.
-    roots = sorted(site + 4 for site in sites
-                   if view.rdata[0] <= site < view.rdata[1]
-                   and view.target(site, view.rdata) is not None)
-    for vtable in roots:
-        col = view.target(vtable - 4, view.rdata)
-        raw = pe.read(col, 20)
-        if raw is None or struct.unpack_from('<I', raw)[0]:
-            continue
-        signature, _offset, _cd, td, chd = struct.unpack('<IIIII', raw)
-        if signature or not type_descriptor_ok(td):
-            continue
-        chd -= view.base
-        head = pe.read(chd, 16) if view.rdata[0] <= chd < view.rdata[1] else None
-        if head is None:
-            continue
-        chd_signature, _attributes, bases, array = struct.unpack('<IIII', head)
-        array -= view.base
-        if (chd_signature or not 1 <= bases <= 64
-                or not view.rdata[0] <= array < view.rdata[1] - 4 * bases):
-            continue
-        descriptors = [view.u32(array + 4 * i) - view.base for i in range(bases)]
-        words = [col + 12, col + 16, chd + 12] + [array + 4 * i for i in range(bases)]
-        words += [d for d in descriptors]
-        if not all(w in sites for w in words):
-            out.rejected.append((col, 'RTTI pointer word is not an admitted relocation'))
-            continue
-        if not all(type_descriptor_ok(view.u32(d)) for d in descriptors):
-            continue
-        if (vtable not in sites or not view.text[0]
-                <= (view.u32(vtable) or 0) - view.base < view.text[1]):
-            continue
-        def decorated(descriptor):
-            end = view.cstring_end(descriptor + 8)
-            return pe.read(descriptor + 8, end - descriptor - 9).decode('latin-1')
-        cls = decorated(td - view.base)
-        out.add(vtable - 4, vtable, 'compiler-metadata',
-                f'COL word of vtable {vtable:x} ({cls})', 1)
-        out.add(col, col + 20, 'compiler-metadata', f'CompleteObjectLocator {cls}', 1)
-        out.add(chd, chd + 16, 'compiler-metadata', f'ClassHierarchyDescriptor {cls}', 1)
-        out.add(array, array + 4 * bases, 'compiler-metadata', f'BaseClassArray {cls}', 1)
-        type_descriptor(td - view.base, cls)
-        for d in descriptors:
-            base = view.u32(d) - view.base
-            type_descriptor(base, cls)
-            out.add(d, d + 24, 'compiler-metadata',
-                    f'BaseClassDescriptor {decorated(base)} at {d:x}', 1)
+    # RTTI graphs exist only for runtime-library classes (the game is built
+    # without /GR); they are library data and are not claimed here.
     # Any other admitted reference naming a complete type descriptor
     # (typeid, dynamic_cast and catch operands) roots it too.
     for site in sorted(sites):
+        if not text_lo <= site < text_hi or library(site):
+            continue
         target = view.u32(site)
         if target is not None and view.data[0] <= target - view.base < view.data[1]:
             type_descriptor(target - view.base, f'reference at {site:x}')
@@ -380,7 +355,7 @@ FPU_REAL = {**{(0xD8, r): 4 for r in range(8)}, **{(0xDC, r): 8 for r in range(8
             (0xD9, 0): 4, (0xDD, 0): 8}
 
 
-def fp_constants(pe, sites) -> Records:
+def fp_constants(pe, sites, library=lambda rva: False) -> Records:
     """Read-only x87 constants in `.rdata`, sized by every retail access.
 
     Each admitted code reference to the address must be a direct x87 load or
@@ -399,12 +374,14 @@ def fp_constants(pe, sites) -> Records:
             continue
         head = pe.read(site - 2, 2)
         width = None
-        if head[1] & 0xC7 == 0x05:
+        if library(site):
+            width = 'library'
+        elif head[1] & 0xC7 == 0x05:
             width = FPU_REAL.get((head[0], (head[1] >> 3) & 7))
         widths.setdefault(target, set()).add(width)
     out = Records()
     for target, seen in sorted(widths.items()):
-        if len(seen) != 1 or None in seen:
+        if len(seen) != 1 or None in seen or 'library' in seen:
             continue
         width = seen.pop()
         raw = pe.read(target, width)

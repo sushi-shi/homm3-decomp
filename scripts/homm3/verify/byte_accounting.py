@@ -187,7 +187,7 @@ def startup_ranges(comparison):
     return ranges
 
 
-def crt_table_ranges(pe):
+def crt_table_ranges(pe, library=lambda rva: False):
     """The `.CRT$XCU` slots, once their reviewed order verifies as one table.
 
     `init-thunks.tsv` lists every initializer body in slot order; the whole
@@ -205,8 +205,17 @@ def crt_table_ranges(pe):
     section = next(s for s in pe.sections
                    if s['rptr'] <= start < s['rptr'] + s['rsize'])
     rva = section['va'] + start - section['rptr']
-    return [Range(rva, rva + len(table), 'compiler-metadata',
-                  f'.CRT$XCU initializer table ({len(roots)} reviewed slots)', 1)]
+    # Game translation units' slots only; runtime-library slots are library data.
+    out, run = [], None
+    for index, root in enumerate(roots + [None]):
+        game = root is not None and not library(root)
+        if game and run is None:
+            run = index
+        elif not game and run is not None:
+            out.append(Range(rva + 4 * run, rva + 4 * index, 'compiler-metadata',
+                             f'.CRT$XCU initializer slots {run}..{index - 1}', 1))
+            run = None
+    return out
 
 
 def account(pe, model, enrolled, sections, *, initializers=()):
@@ -382,13 +391,14 @@ def report(model=None):
     from homm3.verify import retail_records
     records = retail_records.pe_structures(pe)
     found = retail_records.metadata(pe, model, set(Image(pe).reloc_sites))
-    constants = retail_records.fp_constants(pe, set(Image(pe).reloc_sites))
+    constants = retail_records.fp_constants(pe, set(Image(pe).reloc_sites),
+                                            retail_records.library_code(model))
     for extra in (found, constants):
         records.ranges += extra.ranges
         records.starts.update(extra.starts)
         records.ends |= extra.ends
     claims = (initializer_ranges(dynamic) + startup_ranges(startup) + records.ranges
-              + crt_table_ranges(pe))
+              + crt_table_ranges(pe, retail_records.library_code(model)))
     domains = account(pe, model, enrolled, sections, initializers=claims)
     padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
     if padding:
