@@ -194,6 +194,34 @@ compiler's own NOP fill stays inside code COMDATs. The gap must end at the
 next 16-byte boundary, which must be a reviewed contribution start. Whether
 the emitted cleanup bytes also agree is reported per row as `contribution`.
 
+The same INT3 fill is credited directly before a source contribution: a
+claimed function's exclusive COMDAT or a source `.text$x` section (whose
+first cleanup outside the parent begins it), when the run starts at a
+reviewed extent's end and is shorter than the emitted section alignment.
+A function the unit does not emit (a compiler-function claim without a
+paired body) may use the unit's single `.text` COMDAT alignment for
+`source-padding-aligned`.
+
+`local_cleanups` credits `source-cleanup-exact` code that a claimed function
+references without a source name: local-static destructors registered with
+`_atexit` and element constructors/destructors handed to the vector
+iterators. Sites pair either at identical offsets, when the parent's
+emitted body has the retail length and exactly the retail relocation sites,
+or as ordered `_atexit` registrations of equal count. The whole emitted body,
+its relocation sites and every named or local callee must match. Reviewed
+atexit callbacks use slot `-` in `init-thunks.tsv`.
+
+`import-thunk` covers six-byte `jmp dword ptr [IAT slot]` census rows whose
+slot is named by the PE import directory and whose operand relocation is
+admitted. System DLL imports must come from the pinned VC6 import library;
+vendor DLL thunks rest on the import directory and say so in the report.
+Rows already owned by source or runtime placements are left to them.
+
+`config/retail/code-extents.tsv` holds reviewed `.text` extents that are
+neither a function nor its fill. `patch-residue` is the cut-off original body
+behind a binary-patched entry: it must start at a claimed function's reviewed
+end, end at the next reviewed start, and receive no admitted relocation.
+
 The zero-filled bytes between an executable section's VirtualSize and its
 FileAlignment/SectionAlignment boundary are `structural` when the section
 header, the next section's start and the raw size agree. Any non-zero byte in

@@ -27,29 +27,42 @@ DIR32, REL32 = 6, 20
 PUSH, CALL = 0x68, 0xe8
 
 
-def registrations(body, relocations, atexit):
-    """[(site, symbol)] of `push OFFSET symbol; call _atexit` in emitted code."""
-    found = []
-    for site, (symbol, kind) in sorted(relocations.items()):
-        call = relocations.get(site + 5)
-        if (kind == DIR32 and site >= 1 and site + 9 <= len(body)
-                and body[site - 1] == PUSH and body[site + 4] == CALL
-                and call is not None and call[1] == REL32
-                and msvc_names.mask(call[0]) == atexit):
-            found.append((site, symbol))
+def _pushed_to_atexit(code, is_atexit):
+    """[(operand offset, pushed value)] reaching `call _atexit` as its argument.
+
+    The callback push may be separated from the call by instructions that do
+    not touch the stack (VC6 schedules the guard store between them).
+    """
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
+    found, pending = [], None
+    for address, size, mnemonic, operands in disassembler.disasm_lite(code, 0):
+        if mnemonic == 'push':
+            pending = ((address + 1, struct.unpack_from('<I', code, address + 1)[0])
+                       if code[address] == PUSH and size == 5 else None)
+        elif mnemonic == 'call':
+            if pending and code[address] == CALL and is_atexit(address):
+                found.append(pending)
+            pending = None
+        elif mnemonic in ('pop', 'pushal', 'popal', 'ret', 'leave') or 'esp' in operands:
+            pending = None
     return found
+
+
+def registrations(body, relocations, atexit):
+    """[(site, symbol)] of callbacks pushed for `call _atexit` in emitted code."""
+    def is_atexit(address):
+        call = relocations.get(address + 1)
+        return call is not None and call[1] == REL32 and msvc_names.mask(call[0]) == atexit
+    return [(site, relocations[site][0]) for site, _ in _pushed_to_atexit(body, is_atexit)
+            if relocations.get(site, ('', 0))[1] == DIR32]
 
 
 def retail_registrations(actual, rva, atexit_rva, image_base):
-    """[(site offset, callback rva)] of retail `push imm32; call _atexit`."""
-    found = []
-    for offset in range(1, len(actual) - 8):
-        if actual[offset - 1] != PUSH or actual[offset + 4] != CALL:
-            continue
-        target = rva + offset + 9 + struct.unpack_from('<i', actual, offset + 5)[0]
-        if target == atexit_rva:
-            found.append((offset, struct.unpack_from('<I', actual, offset)[0] - image_base))
-    return found
+    """[(site offset, callback rva)] of retail callbacks passed to _atexit."""
+    def is_atexit(address):
+        return rva + address + 5 + struct.unpack_from('<i', actual, address + 1)[0] == atexit_rva
+    return [(site, value - image_base) for site, value in _pushed_to_atexit(actual, is_atexit)]
 
 
 def compare(project, pe, model, enrolled=(), objects=None):

@@ -187,6 +187,54 @@ def startup_ranges(comparison):
     return ranges
 
 
+CODE_EXTENT_CATEGORIES = {'patch-residue'}
+
+
+def reviewed_code_extents(pe, model, path=None):
+    """Reviewed `.text` extents that are neither a function nor its padding.
+
+    `patch-residue`: bytes of an original body that a binary patch cut off
+    behind a claimed entry. The row must begin exactly where that claimed
+    function's reviewed extent ends, end at the next reviewed function start,
+    and no admitted relocation may point into it (the bytes are unreachable).
+    """
+    from homm3.core.paths import RETAIL
+    from homm3.retail_labels.censuses import functions
+    path = path or RETAIL / 'code-extents.tsv'
+    if not path.is_file():
+        return []
+    rows = read(path)[2]
+    starts = sorted(r['rva'] for r in functions())
+    claimed_ends = {b.rva + b.size for b in model.functions if b.channel and b.size}
+    targets = {int(r['value'], 16) - pe.image_base
+               for r in read(RETAIL / 'reloc-evidence.tsv')[2]
+               if r['value'].startswith('0x')}
+    text = pe.section('.text')
+    out = []
+    for r in rows:
+        rva, size = int(r['rva'], 0), int(r['size'], 0)
+        end = rva + size
+        following = next((s for s in starts if s > rva), None)
+        if (r['category'] not in CODE_EXTENT_CATEGORIES or not r['evidence']
+                or not text['va'] <= rva < end <= text['va'] + text['vsize']
+                or rva not in claimed_ends or following != end
+                or any(rva <= t < end for t in targets)):
+            raise ValueError(f'code extent does not verify: {r}')
+        out.append(dict(rva=rva, size=size, category=r['category'],
+                        evidence=r['evidence']))
+    return out
+
+
+def linker_ranges(*comparisons):
+    """LINK's INT3 fill; one physical gap is credited once."""
+    unique = {}
+    for comparison in comparisons:
+        for row in comparison['matches']:
+            unique.setdefault((row['start'], row['end']), row)
+    return [Range(start, end, 'linker-padding', f"{row['owner']}@{row['rva']:x}", 2)
+            for (start, end), row in sorted(unique.items())]
+
+
 def cleanup_ranges(comparison):
     """Code a claimed parent references; each body is counted once."""
     rows = {(r['rva'], r['size']): r for r in
@@ -428,6 +476,8 @@ def report(model=None):
     from homm3.verify import source_padding
     from homm3.verify.shared_initializers import compare as compare_shared
     from homm3.verify.local_cleanups import compare as compare_cleanups
+    from homm3.verify import import_thunks
+    from homm3.core.paths import RETAIL
     from homm3.verify.source_padding import compare as compare_padding
     model = model or resolve()
     enrolled = manifest_rows()
@@ -458,13 +508,30 @@ def report(model=None):
         if row['rva'] not in claimed], objects)
     groups = verified_eh_groups(pe, model)
     eh_padding = source_padding.compare_eh(project, pe, groups, objects)
+    from homm3.retail_labels.censuses import functions as census
+    reviewed = census()
+    claimed_code = {b.rva for b in model.functions if b.channel}
+    runtime_rows = RETAIL / 'runtime-contributions.tsv'
+    if runtime_rows.is_file():
+        claimed_code |= {int(r['rva'], 0) for r in read(runtime_rows)[2]}
+    thunks = import_thunks.compare(project, pe, {r['rva']: r['size'] for r in reviewed},
+                                   claimed_code)
+    ends = ({r['rva'] + r['size'] for r in reviewed}
+            | {group.stub + 10 for group, _, _ in groups})
+    before = source_padding.compare_before(project, pe, model, groups, ends, objects)
+    code_extents = reviewed_code_extents(pe, model)
     domains = account(pe, model, enrolled, sections, groups=groups,
                       initializers=initializer_ranges(dynamic)+startup_ranges(startup)
                       + startup_ranges(shared_credit) + cleanup_ranges(cleanups)
                       + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
                       + padding_ranges(startup_padding, 'source-initializer-padding-exact',
                                        'source-padding-aligned')
-                      + padding_ranges(eh_padding, 'linker-padding'))
+                      + linker_ranges(eh_padding, before)
+                      + [Range(r['rva'], r['rva'] + r['size'], 'import-thunk',
+                               f"{r['dll']}!{r['imported']}", 2) for r in thunks['matches']]
+                      + [Range(r['rva'], r['rva'] + r['size'], r['category'],
+                               f"reviewed {r['category']}@{r['rva']:x}", 2)
+                         for r in code_extents])
     comparisons = compare_initializers(model, enrolled, pe)
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'source_initializers': dynamic,
@@ -472,7 +539,9 @@ def report(model=None):
            'shared_initializers': shared,
            'local_cleanups': cleanups,
            'source_padding': dict(functions=padding, startup=startup_padding,
-                                  eh_contributions=eh_padding),
+                                  eh_contributions=eh_padding, linker_before=before),
+           'import_thunks': thunks,
+           'code_extents': code_extents,
            'model_violations': model.violations, 'totals': {}}
     for domain, rows in domains.items():
         totals = Counter()

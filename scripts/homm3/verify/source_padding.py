@@ -142,7 +142,17 @@ def fills_code(obj):
             last = (address + size, mnemonic)
         if last and last[0] == len(body) and last[1] in ('ret', 'jmp'):
             return True
+        # A body ending in a switch table ends in an absolute address word.
+        if obj.typed_relocations(section['index']).get(len(body) - 4, ('', 0))[1] == 6:
+            return True
     return False
+
+
+def unit_alignment(obj):
+    """The one alignment shared by every `.text` COMDAT of the object."""
+    alignments = {section['alignment'] for section in obj.section_table
+                  if section['characteristics'] & CODE and section['name'] == '.text'}
+    return next(iter(alignments)) if len(alignments) == 1 else 0
 
 
 def section_of(loaded, symbol):
@@ -174,12 +184,18 @@ def emitted_padding(entry, loaded, pe, relocs_in, starts):
     retail gap byte is that fill. Relocations never occur in either kind.
     """
     found = section_of(loaded, entry.symbol)
-    if not found:
-        return None, '', 'no exclusive emitted code section'
-    number, section = found
     obj = loaded[0]
-    raw = obj.section_payload(number) or b''
-    alignment = section['alignment']
+    if found:
+        number, section = found
+        raw = obj.section_payload(number) or b''
+        alignment = section['alignment']
+    else:
+        # The unit does not emit this body (a compiler-function claim with no
+        # paired body). Its own code COMDATs still prove one alignment.
+        alignment = unit_alignment(obj)
+        if not alignment:
+            return None, '', 'no emitted section and no uniform unit alignment'
+        raw = b''
     start = entry.rva + entry.size
     following = -(-start // alignment) * alignment
     index = bisect_right(starts, entry.rva)
@@ -199,7 +215,7 @@ def emitted_padding(entry, loaded, pe, relocs_in, starts):
         return None, '', 'object does not demonstrate its COMDAT code fill'
     if retail != bytes([COMDAT_CODE_FILL]) * (following - start):
         return None, '', 'retail bytes are not the compiler COMDAT fill'
-    return (start, following), 'aligned', ''
+    return (start, following), 'aligned' if found else 'aligned-unit', ''
 
 
 def compare(project, pe, entries, objects=None):
@@ -226,11 +242,8 @@ def compare(project, pe, entries, objects=None):
                 continue
             if entry.symbol.startswith('__h3cg$'):
                 emitted = objects.compgen_symbol(entry.unit, entry.symbol)
-                if emitted is None:
-                    reasons.append(f'{entry.unit}: compiler-function claim has no '
-                                   'stamped emitted symbol')
-                    continue
-                entry = Entry(entry.unit, emitted, entry.rva, entry.size, entry.owner)
+                if emitted is not None:
+                    entry = Entry(entry.unit, emitted, entry.rva, entry.size, entry.owner)
             extent, kind, reason = emitted_padding(entry, loaded, pe,
                                                    image.relocs_in, starts)
             if extent:
@@ -354,3 +367,62 @@ def compare_eh(project, pe, groups, objects=None):
         if row['unit'] not in fresh:
             withheld.append(dict(row, reason='source inputs changed during comparison'))
     return dict(matches=[m for m in matches if m['unit'] in fresh], withheld=withheld)
+
+
+def fill_before(pe, start, alignment, ends):
+    """[a, start) INT3 fill closing the gap after a reviewed extent end."""
+    if not alignment or start % alignment:
+        return None
+    for length in range(1, alignment):
+        a = start - length
+        if pe.read(a, 1) != bytes([LINK_CODE_FILL]):
+            return None
+        if a in ends:
+            return a, start
+    return None
+
+
+def compare_before(project, pe, model, groups, ends, objects=None):
+    """INT3 gaps that end at a source contribution's aligned start.
+
+    The contribution is either a claimed function's exclusive COMDAT or a
+    source `.text$x` group whose first funclet begins the associative
+    section; the current object supplies the section alignment. The gap must
+    begin at the end of a reviewed extent and be shorter than the alignment.
+    """
+    objects = objects or Objects(project)
+    matches = []
+    for b in model.functions:
+        if b.channel not in ('src', 'src_compgen', 'src_dyninit') or not b.unit:
+            continue
+        loaded = objects.get(b.unit)
+        name = b.name
+        if loaded is not None and name.startswith('__h3cg$'):
+            name = objects.compgen_symbol(b.unit, name) or name
+        found = section_of(loaded, name) if loaded is not None else None
+        if not found:
+            continue
+        extent = fill_before(pe, b.rva, found[1]['alignment'], ends)
+        if extent:
+            matches.append(dict(unit=b.unit, symbol=b.name, rva=b.rva,
+                                owner=f'{b.unit}:{b.name}', start=extent[0],
+                                end=extent[1], kind='before-function'))
+    from homm3.retail_labels.censuses import functions
+    sizes = {row['rva']: row['size'] for row in functions()}
+    for group, name, unit in groups:
+        loaded = objects.get(unit)
+        section = eh_section(loaded, name) if loaded is not None else None
+        if not section:
+            continue
+        # A catch handler can sit inside its parent; the associative section
+        # begins with the first cleanup outside the parent's own extent.
+        parent_end = group.owner_rva + sizes.get(group.owner_rva, 0)
+        start = min([f for f in group.funclets
+                     if not group.owner_rva <= f < parent_end] + [group.stub])
+        extent = fill_before(pe, start, section['alignment'], ends)
+        if extent:
+            matches.append(dict(unit=unit, symbol=name, rva=start,
+                                owner=f'{unit}:.text$x of {name}', start=extent[0],
+                                end=extent[1], kind='before-contribution'))
+    fresh = objects.fresh()
+    return dict(matches=[m for m in matches if m['unit'] in fresh], withheld=[])

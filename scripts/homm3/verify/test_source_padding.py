@@ -112,3 +112,57 @@ class SharedInitializerTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class FillBeforeTests(unittest.TestCase):
+    def test_int3_gap_from_reviewed_end_to_aligned_start(self):
+        pe, _ = retail(bytes_at(0x10c, b'\xcc' * 4))
+        self.assertEqual(source_padding.fill_before(pe, 0x110, 16, {0x10c}), (0x10c, 0x110))
+
+    def test_gap_must_start_at_a_reviewed_end_and_be_int3(self):
+        pe, _ = retail(bytes_at(0x10c, b'\xcc' * 4))
+        self.assertIsNone(source_padding.fill_before(pe, 0x110, 16, {0x108}))
+        pe, _ = retail(bytes_at(0x10c, b'\x90' * 4))
+        self.assertIsNone(source_padding.fill_before(pe, 0x110, 16, {0x10c}))
+        self.assertIsNone(source_padding.fill_before(pe, 0x118, 16, {0x10c}))
+
+
+class AtexitRegistrationTests(unittest.TestCase):
+    def test_guard_store_may_separate_push_and_call(self):
+        from homm3.verify.local_cleanups import _pushed_to_atexit
+        code = (b'\x68' + struct.pack('<I', 0x404df0)       # push callback
+                + b'\x88\x15' + bytes(4)                     # mov [guard], dl
+                + b'\xe8' + bytes(4))                        # call _atexit
+        self.assertEqual(_pushed_to_atexit(code, lambda address: address == 11),
+                         [(1, 0x404df0)])
+
+    def test_stack_adjustment_breaks_the_pairing(self):
+        from homm3.verify.local_cleanups import _pushed_to_atexit
+        code = (b'\x68' + struct.pack('<I', 0x404df0) + b'\x83\xc4\x04'
+                + b'\xe8' + bytes(4))
+        self.assertEqual(_pushed_to_atexit(code, lambda address: address == 8), [])
+
+
+class ImportThunkTests(unittest.TestCase):
+    def archive(self, member):
+        header = b'VERSION.dll/    ' + bytes(32).replace(b'\0', b' ')
+        header += str(len(member)).ljust(10).encode() + b'`\n'
+        return b'!<arch>\n' + header + member + (b'\n' if len(member) & 1 else b'')
+
+    def short_import(self, symbol, dll, value, name_type):
+        names = symbol.encode() + b'\0' + dll.encode() + b'\0'
+        return (struct.pack('<HHHHIIHH', 0, 0xffff, 0, 0x14c, 0, len(names),
+                            value, name_type << 2) + names)
+
+    def test_short_import_names_and_ordinals(self):
+        from homm3.verify.import_thunks import library_imports
+        with TemporaryDirectory() as tmp:
+            Path(tmp, 'VERSION.LIB').write_bytes(self.archive(
+                self.short_import('_VerQueryValueA@16', 'VERSION.dll', 0, 3)))
+            self.assertEqual(library_imports(Path(tmp), 'VERSION.dll'),
+                             ({'VerQueryValueA'}, True))
+            self.assertEqual(library_imports(Path(tmp), 'IFC20.dll'), (set(), False))
+        with TemporaryDirectory() as tmp:
+            Path(tmp, 'WSOCK32.LIB').write_bytes(self.archive(
+                self.short_import('_send@16', 'WSOCK32.dll', 19, 0)))
+            self.assertEqual(library_imports(Path(tmp), 'WSOCK32.dll'), ({19}, True))
