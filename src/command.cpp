@@ -2375,7 +2375,7 @@ void combatManager::processFirstAid(army* currentArmy)
         int maximum = sRandom(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
-                   * 100.0f));
+                   * 25.0f));
         int result = targetArmy->m_topCreatureDamage;
         result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;

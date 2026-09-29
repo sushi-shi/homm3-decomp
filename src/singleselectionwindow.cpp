@@ -6740,8 +6740,9 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     int weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
-    g_game->loadGame(
-        DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"), 0, 1);
+    // Retail loads the received RMT%sRC.BIN file named in the preferences
+    // (push 0x6987f0 = g_config.m_rcFile) and re-saves it as orig.dat.
+    g_game->loadGame(g_config.m_rcFile, 0, 1);
     g_game->saveGame(
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
         0, 0, 0, 1);
