@@ -913,6 +913,11 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // These two source controls are Windows-flat at 88.3551% (four states,
 // two objects). Both ordinary CodeWarrior and retail retain eleven calls;
 // the remaining shape comparison is not an exact Mac verdict.
+// Probes (2026-09-29): Dreamcast rows 1053..1094 put the draw arm first under
+// the inverted condition, with `if (allBlack) lookup = 0; else ...` (73.91%);
+// retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
+// baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
+// and lookup get real locals where this body reuses the parameter homes.
 VA(0x005f9940, 0x44A) MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
