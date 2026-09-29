@@ -11,6 +11,7 @@ unchanged from the pre-port homm3.build.labels.
 
 from __future__ import annotations
 
+import re
 import struct
 from pathlib import Path
 
@@ -46,6 +47,23 @@ def implib_decorations(libdir: Path) -> dict:
     for key in ambiguous:
         out.pop(key, None)
     return out
+
+
+#: An import-by-name that is already a complete C stdcall symbol
+#: (`_SmackToBuffer@28`): the DLL exports the decorated spelling, so the
+#: import library imported it by exact name and its `__imp_` symbol prefixes
+#: that name unchanged.
+DECORATED_STDCALL = re.compile(r"_[A-Za-z_][A-Za-z0-9_]*@[0-9]+")
+
+
+def import_symbol(name: str) -> tuple[str, str]:
+    """(__imp_ spelling, channel) of a by-name import no pinned library proves.
+
+    A C++ (`?`) or already-decorated stdcall name is its own symbol; any other
+    name keeps the cdecl placeholder spelling until a library proves it."""
+    if name.startswith("?") or DECORATED_STDCALL.fullmatch(name):
+        return "__imp_" + name, "iat-decorated"
+    return "__imp__" + name, "iat-undecorated"
 
 
 def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
@@ -96,8 +114,7 @@ def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
                 if proven:
                     slots[slot] = (proven, "iat-implib")
                 else:
-                    prefix = "__imp_" if name.startswith("?") else "__imp__"
-                    slots[slot] = (prefix + name, "iat-undecorated")
+                    slots[slot] = import_symbol(name)
             index += 1
         off += 20
     return slots
