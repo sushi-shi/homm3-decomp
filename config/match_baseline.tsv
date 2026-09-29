@@ -93,7 +93,7 @@ advmgr	?disableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0	tok
 advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.8372	94.8372	94.8372	0x7b80	tokens1:64315e15a09f
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:413a8bc047dc
-advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	87.6976	87.6976	87.9441	0x10c00	tokens1:0db5bcd7366d
+advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	87.7608	87.7608	87.9441	0x10c00	tokens1:c89803615da7
 advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2050	85.2050	85.2335	0x11590	tokens1:0938607e2189
 advmgr	?drawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	tokens1:35617ae5edc3
 advmgr	?drawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	tokens1:ef6dac784460
@@ -1770,7 +1770,7 @@ findpath	?calcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?clear@searchArray@@AAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530	tokens1:1031814f7169
 findpath	?close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500	tokens1:9bb939f46c96
 findpath	?copy@std@@YIPAUpathCell@@PAU2@00@Z	100.0000	100.0000	100.0000	0xb4270	-
-findpath	?findCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	91.7818	91.7818	92.2920	0xb3400	tokens1:e726f52a1254
+findpath	?findCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	92.2449	92.2449	92.2920	0xb3400	tokens1:ec5c3b114c59
 findpath	?getHex@searchArray@@QBEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90	tokens1:85322709815b
 findpath	?getTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0	tokens1:2dd9716aa61e
 findpath	?getTravelTime@searchArray@@QBEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20	tokens1:97aa7bc1ce7b

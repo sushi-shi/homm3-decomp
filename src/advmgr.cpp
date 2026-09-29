@@ -4670,7 +4670,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* cellObjects = thisCell;
     if (cellObjects->m_objects.size() > 0) {
-        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        // DC records int row, but retail tests the back edge unsigned (jbe).
+        for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (int numObj = 0; numObj < cellObjects->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];
