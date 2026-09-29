@@ -132,16 +132,6 @@ class ShortArrayAcceptanceTests(unittest.TestCase):
         rows = self.rows(7, 0x0D)
         self.assertEqual(_category_at(rows, BASE + 0x0C)['category'], gb.GAME_DATA_EXACT)
 
-    def test_alignment_fill_after_a_short_byte_array_is_provisional(self):
-        rows = self.rows(6, 0x10, padding=True)
-        types = {'_creat': 'Creature[6]', '_hero': 'char[6]', '_next': 'int'}
-        settled = gb.settle_padding(
-            rows, lambda row, text=False: True if text else (
-                row['owners'][0] if row.get('owners') else '', row['category'],
-                types.get(row['owners'][0] if row.get('owners') else '', '')))
-        for address in range(BASE + 0x0C, BASE + 0x10):
-            self.assertEqual(_category_at(settled, address)['category'], gb.PADDING_PROVISIONAL)
-
     def test_alignment_fill_after_a_fixed_size_datum_is_kept(self):
         proven, _why = gb.end_proven('_count', gb.GAME_DATA_EXACT, 'int')
         self.assertTrue(proven)

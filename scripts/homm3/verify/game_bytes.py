@@ -15,15 +15,16 @@ replaces that ownership with verdicts, in the image and file domains alike:
                            different value (pointers: a different referent or
                            addend), byte-precise
     game-data-unverified   every other game-claimed data byte, with a reason
-    padding-provisional    zero fill credited from alignment alone after a
-                           definition whose end is not proven
+
+Padding is accounted only through reviewed rows (`homm3.verify.padding`);
+this pass also turns the padding generators' ranges into review proposals.
 
 Invariant: a retail data byte is exact only if a compiled candidate
 definition emits that byte at that address. Retail-side extents, labels,
 slot sizes and zero-ness never cover a byte on their own.
 
 Every run in a finish-line category (missing, game-data-unverified,
-game-data-mismatch, padding-provisional) is written to
+game-data-mismatch) is written to
 build/gen/data_worklist.{json,tsv} with the neighbouring claims and a
 diagnosis; `homm3 verify data-worklist` lists it.
 """
@@ -46,9 +47,9 @@ PADDING_PROVISIONAL = 'padding-provisional'
 GAME_CATEGORIES = (GAME_CODE_EXACT, GAME_CODE_UNVERIFIED, GAME_DATA_EXACT,
                    GAME_BSS_EXACT, GAME_DATA_MISMATCH, GAME_DATA_UNVERIFIED)
 #: Categories that must reach zero (post-link residue excepted).
-FINISH_LINE = ('missing', GAME_DATA_UNVERIFIED, GAME_DATA_MISMATCH, PADDING_PROVISIONAL)
-#: Zero fill credited from alignment; kept only after a proven end.
-PADDING = ('alignment-padding', 'linker-padding')
+FINISH_LINE = ('missing', GAME_DATA_UNVERIFIED, GAME_DATA_MISMATCH)
+#: Accounted fill that a claim's own evidence may re-attribute.
+PADDING = ('padding', 'alignment-padding', 'linker-padding')
 #: Categories whose contributions have a size fixed by pinned bytes or a
 #: format: a library COFF section, a PE import record, compiler metadata.
 FIXED_SIZE = ('library-runtime', 'library-vendor', 'compiler-metadata',
@@ -550,30 +551,6 @@ def end_proven(identity, category, type_text):
     return True, f'declared {type_text}'
 
 
-def settle_padding(rows, describe, translate=None):
-    """Keep alignment/link zero fill only after a proven contribution end.
-
-    `describe(row)` returns (identity, category, type) of a claim row. The
-    nearest preceding non-padding row must have a proven end
-    (`end_proven`); otherwise the bytes are
-    `padding-provisional`. Executable fill is not judged here.
-    """
-    out = []
-    previous = None
-    for row in rows:
-        if row['category'] in PADDING and previous is not None and \
-                describe(row, text=True) is not None:
-            identity, category, type_text = describe(previous)
-            proven, why = end_proven(identity, category, type_text)
-            if not proven:
-                row = dict(row, category=PADDING_PROVISIONAL,
-                           reason=f'after {identity or category}: {why}')
-        out.append(row)
-        if row['category'] not in PADDING and row['category'] != PADDING_PROVISIONAL:
-            previous = row
-    return out
-
-
 def size_from_slot(claims_by_rva, annotation, pe, next_start):
     """Byte-array claims whose element count only fills the retail slot.
 
@@ -608,7 +585,7 @@ def size_from_slot(claims_by_rva, annotation, pe, next_start):
 # -------------------------------------------------------------- driver ---
 
 def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
-                layout=None, root=None):
+                layout=None, root=None, inferred=()):
     """Replace `game` with the GAME_* categories in both domains.
 
     Returns (domains, verification). Code verdicts come from the current
@@ -683,29 +660,32 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
                 return offset - sec['rptr'] + sec['va']
         raise ValueError(f'file offset {offset:#x} is in no section')
 
-    type_at = {rva: t for rva, (_n, _s, t) in data_claims.items()}
     claim_index = defaultdict(list)
     for rva, (name, size, _t) in data_claims.items():
         claim_index[name].append((rva, size))
-
-    def describe(row, text=False, translate=None):
-        start = translate(row['start']) if translate else row['start']
-        if text:
-            # Executable fill (INT3/NOP) is judged by its own passes.
-            return None if text_range[0] <= start < text_range[1] else True
-        identity = row['owners'][0] if row.get('owners') else ''
-        owner = next((rva for rva, size in claim_index.get(identity, ())
-                      if rva <= start < rva + size), start)
-        return identity, row['category'], type_at.get(owner, '')
 
     out = {}
     for domain, rows, translate in (('image', image, None), ('file', domains['file'], to_rva)):
         rows = apply_runs(rows, runs, translate=translate,
                           default=(GAME_DATA_UNVERIFIED, 'no-comparison'))
-        rows = reassign_padding(rows, spans, translate)
-        rows = settle_padding(
-            rows, lambda row, text=False, t=translate: describe(row, text, t), translate)
-        out[domain] = rows
+        out[domain] = reassign_padding(rows, spans, translate)
+
+    def describe(row):
+        # (name, category, declared type, file:line, size) of a claim row.
+        identity = row['owners'][0] if row.get('owners') else ''
+        owner = next(((rva, size) for rva, size in claim_index.get(identity, ())
+                      if rva <= row['start'] < rva + size), None)
+        rva, size = owner or (row['start'], row['end'] - row['start'])
+        where = annotation.get(rva, ('', '', ''))[0] or units.get(identity, '')
+        return identity, row['category'], data_claims.get(rva, ('', 0, ''))[2], where, size
+    from homm3.verify import padding as reviewed_padding
+    units = unit_sources(comparisons, model)
+    proposals = reviewed_padding.propose(inferred, out['image'], pe, describe)
+    reviewed = reviewed_padding.rows()
+    by_proof = defaultdict(lambda: [0, 0])
+    for r in reviewed:
+        by_proof[r['proof']][0] += 1
+        by_proof[r['proof']][1] += int(r['size'], 0)
     game_fns = {b.rva for b in model.functions if b.channel in GAME_CODE_CHANNELS and b.size}
     exact_fns = {rva for rva in game_fns if code.get(rva, (False, ''))[0]}
     worklist = build_worklist(out['image'], pe, comparisons, data_claims, annotation,
@@ -716,7 +696,9 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
         size_from_slot=[dict(rva=s, end=e, zero_tail=t, name=n, type=ty, source=w)
                         for s, e, t, n, ty, w in slots],
         functions=dict(exact=len(exact_fns), unverified=len(game_fns) - len(exact_fns)),
-        worklist=len(worklist))
+        worklist=len(worklist),
+        padding=dict(proposals=proposals,
+                     reviewed={proof: dict(rows=n, bytes=b) for proof, (n, b) in by_proof.items()}))
     return out, verification
 
 
@@ -841,10 +823,6 @@ def diagnose(item, by_name, layout, symbols, pe):
         return (f"{size} unclaimed byte(s) ({item['retail'][:32]}) between "
                 f"{_describe_claim(before)} and {_describe_claim(after)}; no candidate "
                 f"definition emits them.")
-    if category == PADDING_PROVISIONAL:
-        return (f"{size} zero byte(s) after {_describe_claim(before)} are credited as "
-                f"alignment fill only once that definition's end is proven "
-                f"({reason}). If retail's datum is longer, extend its declaration.")
     if category == GAME_DATA_MISMATCH:
         name = (owner or {}).get('name', '')
         lines = []

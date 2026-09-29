@@ -186,16 +186,17 @@ VC6 pads each function COMDAT to its section alignment with NOP bytes inside
 the section's raw payload. `source-padding-exact` credits the bytes after a
 claimed function's reviewed extent when the function's own current COMDAT is
 exactly as long as the retail span to the next reviewed boundary and its
-bytes past the retail extent agree. `source-padding-aligned` covers
-non-exact implementations: the retail body starts on the emitted section's
+bytes past the retail extent agree. The `source-padding-aligned` generator
+proposes a reviewed padding row (see "Reviewed padding") for non-exact
+implementations: the retail body starts on the emitted section's
 alignment, the next reviewed start is the very next aligned address, the
 object demonstrably pads its code COMDATs with 0x90, and every gap byte is
 that fill. Anonymous compiler functions are found through normalization's
 stamped sidecar. Startup bodies use `source-initializer-padding-exact` in the
 same way.
 
-`linker-padding` covers the gap after a source function's `.text$x` exception
-contribution. VC6 emits the cleanup funclets followed by the registration
+The `linker-padding` generator proposes the gap after a source function's
+`.text$x` exception contribution. VC6 emits the cleanup funclets followed by the registration
 stub in one associative section, so the retail contribution ends with the
 decoded stub. LINK 6.00.8447 aligns the next contribution to 16 bytes and
 fills with INT3: linking the current `winmgr`, `winfile` and `window` objects
@@ -204,7 +205,7 @@ compiler's own NOP fill stays inside code COMDATs. The gap must end at the
 next 16-byte boundary, which must be a reviewed contribution start. Whether
 the emitted cleanup bytes also agree is reported per row as `contribution`.
 
-The same INT3 fill is credited directly before a source contribution: a
+The same INT3 fill is proposed directly before a source contribution: a
 claimed function's exclusive COMDAT or a source `.text$x` section (whose
 first cleanup outside the parent begins it), when the run starts at a
 reviewed extent's end and is shorter than the emitted section alignment.
@@ -298,7 +299,7 @@ Game `.CRT$XCU` entries are the words `__initterm` walks between the verified
 when it points to an exact initializer body; a startup body's unit must emit a
 `.CRT$XCU` relocation to the matched symbol, and header copies must repeat one
 declaration order block by block. The zero fill between `___xt_z` and `.data` is
-`linker-padding`: LINK aligns the `.data` group that follows the merged `.CRT`
+proposed as linker padding: LINK aligns the `.data` group that follows the merged `.CRT`
 group to its largest section alignment (a one-object VC6 link with LIBCMT shows
 it). Zero tails of initialized data sections up to the FileAlignment and
 SectionAlignment boundaries are `structural`.
@@ -307,7 +308,7 @@ COMMON storage is allocated by LINK at min(32, size rounded up to a power of
 two); a one-object VC6 link of `char c1; char big64[64]; char mid12[12];`
 shows the 32-byte cap. COMMONs referenced only by game code are `game` rows in
 the runtime inventory, checked like library COMMONs; the zero fill before them
-is `linker-padding`.
+is proposed as linker padding.
 
 Sites inside verified library sections follow their COFF relocations in
 `config/retail/relocs.tsv`; `reloc-evidence.tsv` names the owning member for
@@ -335,7 +336,7 @@ relocation site; nothing is sized by the distance to a label.
 - `game`: DATA_COMPGEN string literals whose bytes and NUL equal retail at
   the annotated address, and C strings that retail pushes (`push imm32`) or
   stores in an initialized pointer word.
-- `alignment-padding`: a zero gap is padding only when (a) the following
+- `alignment-padding` (a generator): a zero gap is proposed as padding only when (a) the following
   claim is a whole contribution whose COFF alignment places it exactly at the
   aligned end of a preceding whole contribution, or (b) two members of one
   candidate ordinary section sit at the candidate's own distance in retail and
@@ -378,7 +379,7 @@ never cover a byte on their own.
 | `game-bss-exact` | Uninitialized storage whose candidate definition has the retail size and is zero in the image, at a compatible address. The address is compatible when it is a multiple of the power of two dividing the member's size, its section offset and its section alignment, or of the declared type's alignment from the layout oracle. Verified game COMMONs also count. |
 | `game-data-mismatch` | A byte the candidate emits with a different value, reported byte by byte. A pointer word naming another referent or addend counts. |
 | `game-data-unverified` | Every other game-claimed data byte, with a reason. |
-| `padding-provisional` | Zero fill credited from alignment alone after a definition whose end is not proven. |
+| `padding` | Fill named by a reviewed padding row; its content is not compared. |
 
 Every raw initializer comparison now checks its extent against the
 candidate definition. The definition runs to the next datum of its section,
@@ -406,20 +407,8 @@ Other `game-data-unverified` reasons:
   consumer proves the count; `game_verification.size_from_slot` lists these
   claims.
 
-`alignment-padding` and `linker-padding` in data sections survive only after
-a proven end. The contribution before the fill must have a size fixed by
-pinned bytes or a format: library and vendor sections, import records,
-compiler, EH and RTTI metadata, FP constants, guards, or COMMONs. A source
-declaration also proves its end unless it is a byte array.
-- String literals, byte arrays, claims without a known type and unverified
-  claims do not prove their end, so the fill after them is
-  `padding-provisional`.
-- Intra-object padding (`ordinary_members`) already requires the candidate
-  section to emit the same bytes between the same two definitions, and the
-  same end rule applies to it.
-
-The finish line is zero `missing`, `game-data-unverified`,
-`game-data-mismatch` and `padding-provisional` bytes, except post-link
+The finish line is zero `missing`, `game-data-unverified` and
+`game-data-mismatch` bytes, except post-link
 residue recorded in `docs/todos/import-table-post-link-edits.md`. Each such
 run is written to `build/gen/data_worklist.{json,tsv}`, sorted by address,
 with these fields:
@@ -436,6 +425,54 @@ List the worklist by TU:
 homm3 verify data-worklist --unit kbwin
 homm3 verify data-worklist --category game-data-mismatch
 ```
+
+## Reviewed padding
+
+Coverage no longer infers padding. A gap counts as `padding` only when a
+reviewed row names it: data sections in `config/retail/data-extents.tsv`,
+`.text` in `config/retail/code-extents.tsv`, both with category `padding`.
+Padding bytes are not compared with any candidate. A gap without a row stays
+`missing`. Byte-compared fill (`source-padding-exact`,
+`source-initializer-padding-exact`) remains a real comparison and needs no
+row. Section alignment tails stay `structural`: the section headers bound
+them.
+
+Every row records:
+- `section` and the observed `fill`: `00`, `CC`, `90` or `mixed`, and only
+  those values;
+- the `preceding` and `following` claims as name | file:line | type | sizeof;
+- the `alignment` that explains the gap: the generator's link alignment, or
+  the smallest power of two that places the following start and exceeds the
+  gap;
+- the generator `evidence`;
+- a `proof` class:
+  - `proven-end`: the preceding size is fixed by pinned bytes or a format.
+    That covers library and vendor sections, import records, code, EH and
+    RTTI metadata, FP constants, guards and COMMONs, and a declared type that
+    is not a byte array.
+  - `after-byte-array`, `after-literal`, `after-unknown-type` and
+    `after-unverified`: a longer retail datum would end in the same fill, so
+    the row is a reviewed risk.
+
+Coverage validates every row. A row must lie in its section and in the right
+file, carry a proof class and evidence, and its bytes must be the recorded
+fill. A row that overlaps any other claim (only section topology and PE
+structure may lie beneath it) is an error.
+
+The former inference passes (link alignment, compiler member padding, LINK
+fill before contributions and verified library sections, NOP fill of
+non-exact bodies) are generators only:
+
+```sh
+homm3 verify padding                     # rows per proof class
+homm3 verify padding --proof after-byte-array
+homm3 verify padding --propose           # build/gen/padding_proposals.tsv
+homm3 verify padding --propose --write   # append proposals for review
+```
+
+Every full build rewrites the proposal file with the gaps the generators
+would still credit; `data_coverage.json["padding"]` holds the proposals and
+the reviewed rows per proof class.
 
 ## Provenance
 

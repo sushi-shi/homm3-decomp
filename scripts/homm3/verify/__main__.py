@@ -11,6 +11,7 @@ COMMANDS = {
     'library-data-refs': 'library_data_refs',
     'library-code': 'library_code',
     'data-worklist': 'game_bytes',
+    'padding': 'padding',
 }
 
 

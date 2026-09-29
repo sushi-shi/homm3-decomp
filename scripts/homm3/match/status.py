@@ -1005,10 +1005,9 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
         dynamic_summary = (f"{len(dynamic):,} source-emitted CRT bodies exact "
                            f"({sum(r['size'] for r in dynamic):,} bytes). "
                            if dynamic else "")
-        unproven = (f"{totals.get('game-data-unverified', 0):,} unverified, "
-                    f"{totals.get('game-data-mismatch', 0):,} mismatching and "
-                    f"{totals.get('padding-provisional', 0):,} provisional-padding "
-                    "game data bytes. ")
+        unproven = (f"{totals.get('game-data-unverified', 0):,} unverified and "
+                    f"{totals.get('game-data-mismatch', 0):,} mismatching game data bytes; "
+                    f"{totals.get('padding', 0):,} bytes of reviewed padding. ")
         block += ["", f"**Byte accountability:** {totals.get('missing', 0):,} file bytes "
                   f"unclaimed; {totals.get('overlap', 0):,} bytes with conflicting claims; "
                   + unproven +

@@ -37,7 +37,7 @@ CATEGORY_PRECEDENCE = (
     'source-cleanup-exact', 'game', 'library-vendor', 'library-runtime',
     'compiler-generated', 'compiler-metadata', 'import-thunk', 'linker-import',
     'import-structure', 'library-unverified', 'section', 'source-padding-exact',
-    'source-padding-aligned', 'patch-residue', 'linker-padding',
+    'source-padding-aligned', 'patch-residue', 'padding', 'linker-padding',
     'alignment-padding', 'structural')
 
 
@@ -348,7 +348,7 @@ def reviewed_code_extents(pe, model, path=None):
     path = path or RETAIL / 'code-extents.tsv'
     if not path.is_file():
         return []
-    rows = read(path)[2]
+    rows = [r for r in read(path)[2] if r['category'] != 'padding']
     starts = sorted(r['rva'] for r in functions())
     claimed_ends = {b.rva + b.size for b in model.functions if b.channel and b.size}
     targets = {int(r['value'], 16) - pe.image_base
@@ -463,7 +463,7 @@ def code_alignment_tails(pe):
 
 
 def account(pe, model, enrolled, sections, *, initializers=(), groups=None, library=(),
-            library_names=None, linker=(), tails=((), ())):
+            library_names=None, linker=(), tails=((), ()), padding=()):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
@@ -472,6 +472,10 @@ def account(pe, model, enrolled, sections, *, initializers=(), groups=None, libr
     claims = (model_ranges(model, enrolled, sections, verified, library_names, zlib_units)
               + compiler_ranges(pe, model, groups) + list(linker)
               + list(initializers) + list(library))
+    # A reviewed padding row that overlaps an emitted definition is an error.
+    from homm3.verify.padding import check_overlaps
+    check_overlaps(padding, claims)
+    claims += list(padding)
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[0])
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[1])
     for claim in claims:
@@ -916,33 +920,43 @@ def report(model=None):
                           if r.category in ('linker-import', 'import-structure')])
     records.ranges = [r for r in records.ranges
                       if not _covered(r.start, r.end, verified)]
+    # Padding is credited only through reviewed rows (`homm3.verify.padding`).
+    # The inference passes below are generators: their ranges become review
+    # proposals and never claim bytes on their own.
+    function_padding = (padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
+                        + padding_ranges(startup_padding, 'source-initializer-padding-exact',
+                                         'source-padding-aligned'))
+    inferred = ([r for r in function_padding if r.category == 'source-padding-aligned']
+                + linker_fill_ranges(eh_padding, before) + compiler_padding
+                + [r for r in linker if r.category == 'linker-padding']
+                + [Range(r.start, r.end, 'linker-padding', r.identity, 2) for r in library
+                   if r.identity.startswith('link fill before')])
+    library = [r for r in library if not r.identity.startswith('link fill before')]
+    linker = [r for r in linker if r.category != 'linker-padding']
+    from homm3.verify import padding as reviewed_padding
     claims = (initializer_ranges(dynamic) + startup_ranges(startup)
               + startup_ranges(shared_credit) + cleanup_ranges(cleanups)
-              + padding_ranges(padding, 'source-padding-exact', 'source-padding-aligned')
-              + padding_ranges(startup_padding, 'source-initializer-padding-exact',
-                               'source-padding-aligned')
-              + linker_fill_ranges(eh_padding, before)
+              + [r for r in function_padding if r.category != 'source-padding-aligned']
               + [Range(r['rva'], r['rva'] + r['size'], 'import-thunk',
                        f"{r['dll']}!{r['imported']}", 2) for r in thunks['matches']]
               + [Range(r['rva'], r['rva'] + r['size'], r['category'],
                        f"reviewed {r['category']}@{r['rva']:x}", 2)
                  for r in code_extents]
-              + records.ranges + compiler_padding)
+              + records.ranges)
     arguments = dict(groups=groups, library=library, library_names=library_names,
-                     linker=linker, tails=tails)
+                     linker=linker, tails=tails, padding=reviewed_padding.claims(pe))
     domains = account(pe, model, enrolled, sections, initializers=claims, **arguments)
-    # Link-alignment zero fill is judged only where every other pass left a gap.
-    link_padding = retail_records.alignment_padding(pe, domains['image'], records, sections)
-    if link_padding:
-        domains = account(pe, model, enrolled, sections,
-                          initializers=claims + link_padding, **arguments)
+    # Link-alignment zero fill is proposed only where every other pass left a gap.
+    inferred += retail_records.alignment_padding(pe, domains['image'], records, sections)
     comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
     from homm3.verify.game_bytes import destination_comparisons, verify_game
     destinations = destination_comparisons(dynamic, pe)
-    domains, verification = verify_game(pe, model, domains, comparisons + destinations)
+    domains, verification = verify_game(pe, model, domains, comparisons + destinations,
+                                        inferred=inferred)
     verification['destinations'] = destinations
+    reviewed_padding.write_proposals(verification['padding']['proposals'])
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
-           'game_verification': verification,
+           'game_verification': verification, 'padding': verification.pop('padding'),
            'source_initializers': dynamic,
            'startup_initializers': startup,
            'library_code': library_report,
