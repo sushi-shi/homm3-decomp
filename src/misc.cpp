@@ -738,12 +738,6 @@ long fileSize(char* filename)
     return size;
 }
 
-// Retail's only three references to this scratch are format_string's
-// vsprintf destination, strlen source and copy source.  Its 512-byte extent
-// is bounded exactly by the next referenced bss cell at 0x6998cc.
-DATA(0x006996cc)
-static char g_formatStringBuffer[512];
-
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
 // image (one row in config/retail/reloc-evidence.tsv), so nothing
@@ -783,11 +777,16 @@ int sRandom(int lower, int upper)
 VA(0x0050c600, 0xDD) MAC_ADDRESS(0x131520, 0x70)  // dc 0xfe10c
 std::string formatString(const char* format, ...)
 {
+    // Dreamcast CodeView types format_string's function static `buffer` as
+    // char[512]. Retail's only three references to it are the vsprintf
+    // destination, the strlen source and the copy source.
+    DATA(0x006996cc)
+    static char buffer[512];
     va_list arguments;
     va_start(arguments, format);
-    vsprintf(g_formatStringBuffer, format, arguments);
+    vsprintf(buffer, format, arguments);
     va_end(arguments);
-    return std::string(g_formatStringBuffer);
+    return std::string(buffer);
 }
 
 // Both native constructors pass high-low+1 directly to vector<bool>;

@@ -412,7 +412,9 @@ Other `game-data-unverified` reasons:
 - `size-from-slot`: a byte array whose literal bound only fills its retail
   slot. The zero tail past its content stays unverified until a type or a
   consumer proves the count; `game_verification.size_from_slot` lists these
-  claims.
+  claims. A Dreamcast CodeView record of the same compiland that types the
+  declared name, or a name the comment block above the declaration cites,
+  as an array of exactly the claim's size proves the count as well.
 
 VC6 emits a function's `.xdata$x` records from its body, so while the body
 differs the records cannot be compared. Such records are

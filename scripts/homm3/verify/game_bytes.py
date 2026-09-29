@@ -593,13 +593,15 @@ def end_proven(identity, category, type_text):
     return True, f'declared {type_text}'
 
 
-def size_from_slot(claims_by_rva, annotation, pe, next_start):
+def size_from_slot(claims_by_rva, annotation, pe, next_start, dreamcast=None, root=None):
     """Byte-array claims whose element count only fills the retail slot.
 
     A declaration with a literal bound (not a named constant and not sized
     by its initializer) whose extent ends at the next claim or an aligned
     boundary, with retail zeros at its end, has a size the retail slot
-    allows but no type or consumer proves. Returns
+    allows but no type or consumer proves. A Dreamcast CodeView record of
+    the same compiland that types the declared or cited name as an array
+    of exactly this many bytes proves the count. Returns
     [(start, end, zero-tail start, identity, type, file:line)].
     """
     out = []
@@ -609,6 +611,8 @@ def size_from_slot(claims_by_rva, annotation, pe, next_start):
             continue
         bound = re.search(r'\[([^\]]*)\]', declaration)
         if not bound or not re.fullmatch(r'\s*(0x[0-9a-fA-F]+|\d+)\s*', bound.group(1)):
+            continue
+        if dreamcast and size in dreamcast_proven_sizes(where, declaration, dreamcast, root):
             continue
         end = rva + size
         following = next_start(end)
@@ -622,6 +626,63 @@ def size_from_slot(claims_by_rva, annotation, pe, next_start):
         if tail < end:
             out.append((rva, end, tail, identity, type_text, where))
     return out
+
+
+def dreamcast_array_sizes():
+    """{(compiland stem, name): {byte size}} of Dreamcast CodeView data
+    records typed as arrays (globals, file and function statics)."""
+    import struct
+    from homm3.core import inputs
+    symbols = inputs.dreamcast_symbols()
+    records = symbols.type_records
+
+    def array_bytes(index):
+        record = records.get(index)
+        if record is None or len(record) < 14:
+            return None
+        leaf = struct.unpack_from('<H', record, 2)[0]
+        if leaf == 0x1001 and len(record) >= 8:          # LF_MODIFIER
+            return array_bytes(struct.unpack_from('<I', record, 4)[0])
+        if leaf != 0x1003:                                # LF_ARRAY
+            return None
+        size = struct.unpack_from('<H', record, 12)[0]
+        if size == 0x8002 and len(record) >= 16:
+            size = struct.unpack_from('<H', record, 14)[0]
+        elif size in (0x8003, 0x8004) and len(record) >= 18:
+            size = struct.unpack_from('<I', record, 14)[0]
+        elif size >= 0x8000:
+            return None
+        return size
+    out = defaultdict(set)
+    for module, items in symbols.module_info.items():
+        stem = Path(module.replace('\\', '/')).stem.lower()
+        for item in items:
+            if item.get('kind') in ('global', 'static') and item.get('name'):
+                size = array_bytes(item.get('type_index', 0))
+                if size:
+                    out[(stem, item['name'])].add(size)
+    return out
+
+
+def dreamcast_proven_sizes(where, declaration, dreamcast, root=None):
+    """Byte sizes Dreamcast attests for a declaration: its own name, or a
+    name the comment block above it cites, typed in the same compiland."""
+    if not where:
+        return set()
+    path, _, line = where.rpartition(':')
+    stem = Path(path).stem.lower()
+    names = set(re.findall(r'\b(\w+)\s*\[', declaration)[:1])
+    try:
+        from homm3.core.common import HOMM3_DIR
+        lines = Path(root or HOMM3_DIR, path).read_text(encoding='latin-1').split('\n')
+        number = int(line) - 1
+    except (OSError, ValueError):
+        lines, number = [], 0
+    k = number - 1
+    while k >= 0 and lines[k].lstrip().startswith('//'):
+        names.update(re.findall(r'\b[A-Za-z_]\w*\b', lines[k]))
+        k -= 1
+    return set().union(*(dreamcast.get((stem, n), set()) for n in names)) if names else set()
 
 
 # -------------------------------------------------------------- driver ---
@@ -688,7 +749,12 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
     def next_start(address):
         k = bisect.bisect_left(claim_starts, address)
         return claim_starts[k] if k < len(claim_starts) else None
-    slots = size_from_slot(data_claims, annotation, pe, next_start)
+    try:
+        dreamcast = dreamcast_array_sizes()
+    except Exception as exc:  # the Dreamcast image is optional evidence
+        dreamcast = {}
+        notes.append(f'Dreamcast array records unavailable: {exc}')
+    slots = size_from_slot(data_claims, annotation, pe, next_start, dreamcast, root)
     disputes += [(tail, end, 'size-from-slot') for _s, end, tail, *_ in slots]
 
     text = pe.section('.text')
