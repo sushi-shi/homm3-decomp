@@ -66,9 +66,23 @@ def import_symbol(name: str) -> tuple[str, str]:
     return "__imp__" + name, "iat-undecorated"
 
 
+def ordinal_symbol(dll: str, ordinal: int, ordinals: dict) -> tuple[str, str]:
+    """(__imp_ spelling, channel) of an ordinal import: the import library's
+    own binding when it proves one, else the placeholder."""
+    proven = ordinals.get((dll.lower(), ordinal))
+    if proven:
+        return proven, "iat-implib-ordinal"
+    stem = dll.rsplit(".", 1)[0].lower()
+    return f"__imp__{stem}_ordinal_{ordinal}", "iat-ordinal"
+
+
 def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
     """slot rva -> (__imp_ spelling, channel), from the import directory."""
     decorations = implib_decorations(libdir)
+    from homm3.delink.implib import collect_ordinal_decorations
+    libraries = sorted(p for p in libdir.iterdir()
+                       if p.suffix.lower() == ".lib" and p.is_file()) if libdir.is_dir() else []
+    ordinals = collect_ordinal_decorations(libraries)
     data = exe_path.read_bytes()
     pe = struct.unpack_from("<I", data, 0x3C)[0]
     nsec = struct.unpack_from("<H", data, pe + 6)[0]
@@ -103,9 +117,9 @@ def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
                 break
             slot = iat + index * 4
             if thunk & 0x80000000:
-                stem = dll.rsplit(".", 1)[0].lower()
-                slots[slot] = (f"__imp__{stem}_ordinal_{thunk & 0xFFFF}",
-                               "iat-ordinal")
+                # The PE names no ordinal import; the pinned import library's
+                # own ordinal binding does (WSOCK32 ordinal 3 is closesocket).
+                slots[slot] = ordinal_symbol(dll, thunk & 0xFFFF, ordinals)
             else:
                 name = data[raw(thunk) + 2:raw(thunk) + 2 + 256] \
                     .split(b"\0")[0].decode("latin-1")

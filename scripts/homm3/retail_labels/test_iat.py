@@ -29,5 +29,15 @@ class ImportSymbolTest(unittest.TestCase):
                          ("__imp___private", "iat-undecorated"))
 
 
+class OrdinalSymbolTest(unittest.TestCase):
+    def test_import_library_binding_names_the_ordinal(self):
+        from homm3.retail_labels.iat import ordinal_symbol
+        ordinals = {("wsock32.dll", 3): "__imp__closesocket@4"}
+        self.assertEqual(ordinal_symbol("WSOCK32.dll", 3, ordinals),
+                         ("__imp__closesocket@4", "iat-implib-ordinal"))
+        self.assertEqual(ordinal_symbol("WSOCK32.dll", 4, ordinals),
+                         ("__imp__wsock32_ordinal_4", "iat-ordinal"))
+
+
 if __name__ == "__main__":
     unittest.main()
