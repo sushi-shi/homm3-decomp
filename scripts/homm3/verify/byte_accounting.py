@@ -464,7 +464,7 @@ def code_alignment_tails(pe):
 
 
 def account(pe, model, enrolled, sections, *, initializers=(), groups=None, library=(),
-            library_names=None, linker=(), tails=((), ()), padding=()):
+            library_names=None, linker=(), tails=((), ()), padding=(), stale=None):
     data = pe.data
     opt = struct.unpack_from('<I', data, 0x3c)[0] + 24
     image_size, header_size = struct.unpack_from('<II', data, opt+56)
@@ -473,10 +473,13 @@ def account(pe, model, enrolled, sections, *, initializers=(), groups=None, libr
     claims = (model_ranges(model, enrolled, sections, verified, library_names, zlib_units)
               + compiler_ranges(pe, model, groups) + list(linker)
               + list(initializers) + list(library))
-    # A reviewed padding row that overlaps an emitted definition is an error.
-    from homm3.verify.padding import check_overlaps
-    check_overlaps(padding, claims)
-    claims += list(padding)
+    # An exact comparison supersedes the reviewed padding row beneath it;
+    # any other overlap is an error (`homm3.verify.padding.supersede`).
+    from homm3.verify.padding import supersede
+    kept, superseded = supersede(padding, claims)
+    if stale is not None:
+        stale += superseded
+    claims += kept
     file_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[0])
     image_ranges = [Range(0, header_size, 'structural', 'PE headers', -1)] + list(tails[1])
     for claim in claims:
@@ -952,8 +955,10 @@ def report(model=None):
                        f"reviewed {r['category']}@{r['rva']:x}", 2)
                  for r in code_extents]
               + records.ranges)
+    stale = []
     arguments = dict(groups=groups, library=library, library_names=library_names,
-                     linker=linker, tails=tails, padding=reviewed_padding.claims(pe))
+                     linker=linker, tails=tails, padding=reviewed_padding.claims(pe),
+                     stale=stale)
     domains = account(pe, model, enrolled, sections, initializers=claims, **arguments)
     # Link-alignment zero fill is proposed only where every other pass left a gap.
     inferred += retail_records.alignment_padding(pe, domains['image'], records, sections)
@@ -975,6 +980,13 @@ def report(model=None):
     domains, verification = verify_game(pe, model, domains, comparisons + destinations,
                                         inferred=inferred, compilands=compilands)
     verification['destinations'] = destinations
+    # Rows an exact game verdict superseded must see that verdict now.
+    reviewed_padding.confirm(stale, domains['image'])
+    sources = {int(r['rva'], 0): Path(r['source']).name for r in reviewed_padding.rows()}
+    for row in stale:
+        row['source'] = sources.get(int(row['rva'], 16), '')
+    verification['padding']['stale'] = dict(
+        rows=stale, count=len(stale), bytes=sum(r['covered_bytes'] for r in stale))
     reviewed_padding.write_proposals(verification['padding']['proposals'])
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
            'game_verification': verification, 'padding': verification.pop('padding'),

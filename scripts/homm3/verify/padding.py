@@ -24,6 +24,10 @@ fill, INT3/NOP fill of non-exact bodies) are generators only:
 `--write` appends the proposals to the reviewed files. Byte-compared padding
 (`source-padding-exact`, `source-initializer-padding-exact`) stays a real
 comparison and needs no row.
+
+A row whose bytes an exact comparison also covers is superseded, not an
+error: the comparison wins those bytes and the row is reported stale
+(`--stale`, `--stale --retire`). Any other overlap remains an error.
 """
 from __future__ import annotations
 
@@ -99,28 +103,130 @@ def claims(pe, reviewed=None):
     return out
 
 
-def check_overlaps(padding, others):
-    """A reviewed padding row may not overlap an emitted definition.
+#: Byte-exact comparisons that win bytes a reviewed padding row also names:
+#: the compiler's compared fill after a body, and exact source code.
+EXACT = ('source-padding-exact', 'source-initializer-padding-exact',
+         'source-initializer-exact', 'source-cleanup-exact')
+#: Game claims whose verdict `game_bytes.verify_game` decides later; a padding
+#: row beneath one is superseded only where that verdict is exact.
+PENDING_VERDICT = ('game',)
+EXACT_GAME = ('game-code-exact', 'game-data-exact', 'game-bss-exact')
+#: Claims that may lie beneath a padding row without deciding its bytes.
+UNDERLAY = ('section', 'structural')
 
-    `others` are all other claims; only section topology and PE structure
-    may lie underneath a padding row.
+
+def supersede(padding, others):
+    """(kept padding claims, superseded rows) of the reviewed rows.
+
+    A reviewed row whose bytes an exact comparison also covers is stale: the
+    comparison wins those bytes and the row keeps only the rest. Game claims
+    are provisionally superseded here; `confirm` requires their final verdict
+    to be exact. Overlap with any other claim, or between two padding rows,
+    is an error.
     """
+    from homm3.verify.byte_accounting import Range
     spans = sorted((r.start, r.end, r.identity, r.category) for r in others
-                   if r.category not in ('padding', 'section', 'structural'))
+                   if r.category not in ('padding', *UNDERLAY))
     starts = [s[0] for s in spans]
     width = max((e - s for s, e, _i, _c in spans), default=0)
-    problems = []
-    for p in padding:
+    problems, kept, stale = [], [], []
+    ordered = sorted(padding, key=lambda r: (r.start, r.end))
+    for a, b in zip(ordered, ordered[1:]):
+        if b.start < a.end:
+            problems.append(f'{a.identity} {a.start:#x}..{a.end:#x} overlaps '
+                            f'padding {b.identity} {b.start:#x}..{b.end:#x}')
+    for p in ordered:
+        covered = []
         k = bisect.bisect_left(starts, p.start - width)
         while k < len(spans) and spans[k][0] < p.end:
             s, e, ident, category = spans[k]
-            if s < p.end and p.start < e:
+            k += 1
+            if not (s < p.end and p.start < e):
+                continue
+            if category in EXACT or category in PENDING_VERDICT:
+                covered.append(dict(start=max(s, p.start), end=min(e, p.end),
+                                    category=category, claim=ident))
+            else:
                 problems.append(f'{p.identity} {p.start:#x}..{p.end:#x} overlaps '
                                 f'{category} {ident} {s:#x}..{e:#x}')
-            k += 1
+        if not covered:
+            kept.append(p)
+            continue
+        remaining, pos = [], p.start
+        for c in sorted(covered, key=lambda c: c['start']):
+            if pos < c['start']:
+                remaining.append((pos, c['start']))
+            pos = max(pos, c['end'])
+        if pos < p.end:
+            remaining.append((pos, p.end))
+        kept += [Range(a, b, p.category, p.identity, p.priority) for a, b in remaining]
+        stale.append(dict(rva=hex(p.start), size=p.end - p.start, covered=covered,
+                          covered_bytes=p.end - p.start - sum(b - a for a, b in remaining),
+                          remaining=[[hex(a), b - a] for a, b in remaining]))
     if problems:
-        raise ValueError('reviewed padding overlaps emitted definitions: '
+        raise ValueError('reviewed padding overlaps claims that are not exact comparisons: '
                          + '; '.join(problems[:10]))
+    return kept, stale
+
+
+def confirm(stale, image_rows):
+    """Require every game claim that superseded a row to be exact.
+
+    `image_rows` is the final image partition. A superseding game claim
+    whose bytes are not all exact code or data makes the row an error, as
+    any other overlap is. Each covered part is relabelled with its verdict.
+    """
+    starts = [r['start'] for r in image_rows]
+    problems = []
+    for row in stale:
+        for c in row['covered']:
+            if c['category'] not in PENDING_VERDICT:
+                continue
+            k = max(0, bisect.bisect_right(starts, c['start']) - 1)
+            verdicts = set()
+            while k < len(image_rows) and image_rows[k]['start'] < c['end']:
+                if image_rows[k]['end'] > c['start']:
+                    verdicts.add(image_rows[k]['category'])
+                k += 1
+            if verdicts and verdicts <= set(EXACT_GAME):
+                c['category'] = min(verdicts)
+            else:
+                problems.append(f"{identity(int(row['rva'], 16))} {c['start']:#x}..{c['end']:#x} "
+                                f"overlaps {c['claim']} ({', '.join(sorted(verdicts)) or '-'})")
+    if problems:
+        raise ValueError('reviewed padding overlaps game bytes that are not exact: '
+                         + '; '.join(problems[:10]))
+    return stale
+
+
+def retire(stale, paths=(DATA_EXTENTS, CODE_EXTENTS)):
+    """Delete fully superseded rows; trim partially superseded ones.
+
+    A partially covered row keeps its uncovered remainder as reviewed
+    padding with the same evidence. Returns (deleted, trimmed, bytes retired).
+    """
+    by_rva = {int(r['rva'], 16): r for r in stale}
+    deleted = trimmed = retired = 0
+    for path in paths:
+        if not Path(path).is_file():
+            continue
+        banner, header, existing = read(path)
+        out, changed = [], False
+        for r in existing:
+            hit = by_rva.get(int(r['rva'], 0)) if r.get('category') == 'padding' else None
+            if hit is None or int(r['size'], 0) != hit['size']:
+                out.append(r)
+                continue
+            changed = True
+            retired += hit['covered_bytes']
+            if hit['remaining']:
+                trimmed += 1
+            else:
+                deleted += 1
+            out += [dict(r, rva=start, size=str(size)) for start, size in hit['remaining']]
+        if changed:
+            write(path, banner, header, out)
+    return deleted, trimmed, retired
 
 
 # ------------------------------------------------------------- proposals ---
@@ -230,6 +336,26 @@ def merge(proposals, pe):
         print(f'[padding] {path.name}: {len(added)} row(s) added')
 
 
+def stale_rows():
+    """Superseded rows from the latest accounting, recomputed when stale.
+
+    build/gen/data_coverage.json is reused only when it is newer than both
+    reviewed files; otherwise the byte accounting runs again.
+    """
+    import json
+    from homm3.core.paths import BUILD as build
+    coverage = build / 'gen/data_coverage.json'
+    inputs = [Path(x) for x in (DATA_EXTENTS, CODE_EXTENTS) if Path(x).is_file()]
+    if coverage.is_file() and all(coverage.stat().st_mtime > x.stat().st_mtime
+                                  for x in inputs):
+        doc = json.loads(coverage.read_text())
+        stale = doc.get('padding', {}).get('stale')
+        if stale is not None:
+            return stale['rows']
+    from homm3.verify.byte_accounting import report
+    return report()['padding']['stale']['rows']
+
+
 def main(argv=None) -> int:
     import argparse
     import collections
@@ -240,7 +366,26 @@ def main(argv=None) -> int:
     ap.add_argument('--write', action='store_true',
                     help='with --propose: append the proposals to the reviewed files')
     ap.add_argument('--proof', choices=PROOFS, help='list reviewed rows of one proof class')
+    ap.add_argument('--stale', action='store_true',
+                    help='list reviewed rows an exact comparison supersedes')
+    ap.add_argument('--retire', action='store_true',
+                    help='with --stale: delete superseded rows (trim partial ones)')
     a = ap.parse_args(argv)
+    if a.retire and not a.stale:
+        ap.error('--retire needs --stale')
+    if a.stale:
+        stale = stale_rows()
+        for r in stale:
+            by = ', '.join(sorted({c['category'] for c in r['covered']}))
+            left = ' '.join(f'{x}+{n}' for x, n in r['remaining'])
+            print(f"{r['rva']:>10} {r['size']:>4} {r.get('source', ''):17} "
+                  f"{r['covered_bytes']:>4} B by {by}" + (f'; keeps {left}' if left else ''))
+        print(f"[padding] {len(stale)} stale row(s), "
+              f"{sum(r['covered_bytes'] for r in stale):,} B superseded")
+        if a.retire:
+            deleted, trimmed, retired = retire(stale)
+            print(f'[padding] retired {deleted} row(s), trimmed {trimmed}, {retired:,} B')
+        return 0
     if a.propose:
         from homm3.verify.byte_accounting import report
         from homm3.core.pe import image

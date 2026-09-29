@@ -508,8 +508,21 @@ Every row records:
 
 Coverage validates every row. A row must lie in its section and in the right
 file, carry a proof class and evidence, and its bytes must be the recorded
-fill. A row that overlaps any other claim (only section topology and PE
-structure may lie beneath it) is an error.
+fill; a row whose bytes differ from its fill is an error.
+
+A row is **superseded** where a real exact byte comparison also covers its
+bytes: `source-padding-exact`, `source-initializer-padding-exact`, exact
+source code (`source-initializer-exact`, `source-cleanup-exact`), or game
+code and data whose final verdict is `game-code-exact`, `game-data-exact` or
+`game-bss-exact`. The comparison wins those bytes and the row keeps only the
+rest as `padding`. This is the normal end of a row seeded from
+`source-padding-aligned`: once the function is exact, its object emits and
+matches the same fill. Superseded rows are stale; they are listed in
+`data_coverage.json["padding"]["stale"]` with the covered bytes, the
+superseding categories and any remainder. Overlap with anything else stays
+an error: an unverified or mismatching claim, a game claim whose verdict is
+not exact, another padding row, or any provisional category. Only section
+topology and PE structure may lie beneath a row without deciding its bytes.
 
 The former inference passes (link alignment, compiler member padding, LINK
 fill before contributions and verified library sections, NOP fill of
@@ -520,7 +533,14 @@ homm3 verify padding                     # rows per proof class
 homm3 verify padding --proof after-byte-array
 homm3 verify padding --propose           # build/gen/padding_proposals.tsv
 homm3 verify padding --propose --write   # append proposals for review
+homm3 verify padding --stale             # rows an exact comparison supersedes
+homm3 verify padding --stale --retire    # delete them; trim partial ones
 ```
+
+`--stale` reuses the latest `data_coverage.json` when it is newer than both
+reviewed files and reruns the accounting otherwise. `--retire` deletes each
+fully superseded row and rewrites a partially superseded one as its
+uncovered remainder with the same evidence.
 
 Every full build rewrites the proposal file with the gaps the generators
 would still credit; `data_coverage.json["padding"]` holds the proposals and
