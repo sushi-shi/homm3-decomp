@@ -1277,18 +1277,22 @@ DATA(0x006aaaa0) static int g_marketWindowY;
 // coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
 // the char* caption it copies into the left-column label. Referenced only by
 // TSellCreatureWindow::Update; names provisional, addresses byte-proven.
-// Complete's seven initialized row positions agree on both architectures.
-DATA(0x0068c4c0) static int g_creatureRowY[7] = {
-    191, 191, 191, 289, 289, 289, 387
+// Complete's eight initialized positions agree on both architectures
+// (Windows 0x68c4c0, Mac 1+0x58400): seven army rows, then 518, the Y of
+// this window's bottom text widget (textWidget at y 518 in its constructor).
+DATA(0x0068c4c0) static int g_creatureRowY[8] = {
+    191, 191, 191, 289, 289, 289, 387, 518
 };
 // 0x6a54ec aliases g_specialBuildingNames[6][4], not independent storage.
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
 // each value widget (WIDGET_SET_Y). Provisional name.
-// Both retail tables contain 230,230,230,309,309,309,388; the Mac
-// resource-column loop loads them from section 1+0x583e0.
-DATA(0x0068c4a0) static int g_resourceValueWidgetY[7] = {
-    230, 230, 230, 309, 309, 309, 388
+// Both retail tables contain 230,230,230,309,309,309,388,497; the Mac
+// resource-column loop loads them from section 1+0x583e0. Both images
+// place g_creatureRowY exactly 32 bytes later, and the eighth word, 497, is
+// the Y of the constructors' bottom text widgets (textWidget at y 497).
+DATA(0x0068c4a0) static int g_resourceValueWidgetY[8] = {
+    230, 230, 230, 309, 309, 309, 388, 497
 };
 // The former subtitle cell at 0x6a542c is g_specialBuildingNames[2][0]:
 // 0x6a53d4 + 22*sizeof(char*). Both retail builds use that table entry;
