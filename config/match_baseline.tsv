@@ -4801,9 +4801,9 @@ winmgr	?convertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	1
 winmgr	?doDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	99.9737	99.9737	100.0000	0x202520	tokens1:749dcd930a7e
 winmgr	?doDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	99.9745	99.9745	100.0000	0x2027a0	tokens1:b1f11a38d949
 winmgr	?doQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	99.9621	99.9621	100.0000	0x202a40	tokens1:3a644994fac8
-winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	90.8518	90.8518	90.8518	0x2032e0	tokens1:e45ca570444b
+winmgr	?fadeFromBlack@heroWindowManager@@QAEXH@Z	93.2099	93.2099	93.2099	0x2032e0	tokens1:b2503be3b905
 winmgr	?fadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50	tokens1:7798457daf06
-winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	90.5814	90.5814	90.5872	0x2030e0	tokens1:39aba417ce49
+winmgr	?fadeToBlack@heroWindowManager@@QAEXHE@Z	91.1453	91.1453	91.1453	0x2030e0	tokens1:a24615a82ad2
 winmgr	?fizzleForwardX@heroWindowManager@@QAEXHHHHH@Z	99.8549	99.8549	99.9137	0x202dc0	tokens1:32d96140bd45
 winmgr	?main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320	tokens1:0baa2348f7dc
 winmgr	?open@heroWindowManager@@UAEHH@Z	99.9432	99.9432	100.0000	0x2021b0	tokens1:50317853feb2

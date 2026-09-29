@@ -4018,7 +4018,12 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // as retail does (74.82 -> 79.95). The random-map arm still inlines its
 // second assign where retail calls both: by the budget arithmetic retail has
 // one more depth-1 inline candidate after that arm. A guard written with
-// empty() is byte-flat.
+// empty() is byte-flat. Probe (2026-09-29): retail and Mac 0x17b2c8 both
+// index the load-mode row once for the two copies (retail computes the
+// second source before the first store); a block-local reference gives that
+// shape but drops to 74.82%. By the traced budgets retail needs four depth-1
+// candidates from the second applyHeaderToGame on, which that single index
+// makes two short; the missing ones are not yet identified.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
