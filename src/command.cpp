@@ -2367,6 +2367,7 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     return 0;
 }
 
+// Retail +0x61 scales the first-aid factor by the float 25.0 (0x63b76c).
 VA(0x00478b90, 0x1E5) MAC_ADDRESS(0x086fa4, 0x22c)  // dc 0x6f824
 void combatManager::processFirstAid(army* currentArmy)
 {
@@ -2375,7 +2376,7 @@ void combatManager::processFirstAid(army* currentArmy)
         int maximum = sRandom(
             1, static_cast<int>(
                    currentArmy->getController()->getFirstAidFactor()
-                   * 100.0f));
+                   * 25.0f));
         int result = targetArmy->m_topCreatureDamage;
         result = min(maximum, result);
         targetArmy->m_topCreatureDamage -= result;

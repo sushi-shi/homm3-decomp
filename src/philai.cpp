@@ -946,7 +946,8 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 
 // Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
 // Complete expands this ordinary static helper into valueOfStables with the
-// Cavalier/Champion pair. The existing destination stack halves the award.
+// Cavalier/Champion pair. An existing destination stack scales the award
+// by 1.2 (retail valueOfStables +0xba multiplies by the double at 0x63ac20).
 MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
 {
@@ -956,7 +957,7 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     int value = (g_creatureTypeTraits[destType].m_aiValue
                  - g_creatureTypeTraits[sourceType].m_aiValue) * number;
     if (currentHero->creatureTypeCount(destType) != 0)
-        value = static_cast<int>(value * 0.5);
+        value = static_cast<int>(value * 1.2);
     return value;
 }
 
