@@ -66,9 +66,17 @@ def func(name: str, *, decorated: bool = False) -> str:
     return mask(out if decorated else decorate(out))
 
 
+#: A global or static-member REFERENCE variable (`3A`/`2A` + the reference's
+#: own `A` modifier). Clang writes the referent's cv as the trailing storage
+#: class (`const T (&x)[N]` -> `...@@B`); cl 12.00 writes `A` for every
+#: reference, as the base objects' definitions and imports all spell it.
+REFERENCE_DATA = re.compile(r"^(\?[^@].*?@@[23]A[A-D].*)[B-D]$")
+
+
 def data(name: str, *, internal: bool, decorated: bool = False) -> str:
     """VC6 DATA spelling from a Clang declaration; linkage needs no wrapper."""
     out = name if decorated else decorate(name)
+    out = REFERENCE_DATA.sub(r"\1A", out)
     if internal and out.startswith("?") and LOCAL_STATIC_SCOPE.search(out):
         out = "_" + out
     return mask(out)
