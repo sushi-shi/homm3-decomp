@@ -4611,6 +4611,15 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no TObjectType* overload.
+// Lane A r4: retail CALLS bitset<48>::test for the draw and passable cells
+// and expands it (with _Xran) for shadow and trigger; set is always called.
+// Caller cb 454 floors the /Ob2 budget at 1000, so a direct depth-1 test
+// (cb 58, budget 956) cannot be refused: retail's test sits at depth >= 2,
+// where budget/remaining grows as the cell's later candidates are consumed.
+// Retail also keeps the tested position (esi = 0x2f - 8y - x, recomputed)
+// apart from the strength-reduced set position (edi), so the two positions
+// are not one shared `pos` expression. Source-mask subscripts assigned
+// reference-to-reference (test at depth 3) fall to 41.91%.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {

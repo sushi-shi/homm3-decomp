@@ -206,6 +206,12 @@ const int g_townNameFixedLength = 13;
 // does not close the residual. The value-reader variant retains an extra Mac
 // call. Earlier local-order/width searches peaked at 98.1694%; hoisting the
 // name assignment across the version arms fell to 88.68%.
+// 2026-09-29 (lane A r4): the residual is a scope fact. Ending the stored
+// buffer's scope before `m_name = g_text` lets VC6 pack it into saveVersion's
+// dead home and reaches 100% (braced block, diagnostic only - not adopted).
+// The value helper readLittleEndianValue<unsigned short> gives that scope but
+// drops caller cb 988 -> 978; /Ob2 budget 1956 then leaves _Grow's max_size
+// 39 < 41 and keeps it out of line (97.32%). Retail's caller is >= 986 cb.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
 VA(0x005bcd60, 0x586) MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
