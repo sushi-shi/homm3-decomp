@@ -1923,6 +1923,14 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // Byte versus promoted result locals for color, difficulty and retention flags,
 // coupled with the size result lifetime: 36 states / 24 objects reproduce no
 // improvement over 84.5181%. Preserve the actual serialized widths and helpers.
+// Budget lead (2026-09-29 trace): retail calls vector<unsigned char>::insert
+// (the h3cg vector_insert_single COMDAT, 0% until emitted) from push_back and
+// keeps the TCampaignStartHeroOption constructor and both option vector
+// constructors out of line. This body's cb 807 gives budget 1614: push_back's
+// child 1614/23 = 70 admits insert (62), and the hero-option site still has
+// 291. All three retail decisions fit a caller cb of at most about 615, so
+// this reader's IL is heavier than retail's by roughly 190 units; no
+// source-backed trim has been found yet.
 VA(0x00487e40, 0x586) MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
