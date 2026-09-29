@@ -90,10 +90,9 @@ struct VictorLock {
 };
 SIZE(VictorLock, 0x1c);
 
-// Unrecovered Victor code reached only through g_victorModuleCleanups:
+// Victor module cleanups reached only through g_victorModuleCleanups:
 // 0x603b10 is a bare `ret`; victorReleaseLock<N> is the cleanup of the Nth
-// VictorLock by address. Names are invented; bodies belong to the .text
-// recovery.
+// VictorLock by address. Names are invented; bodies in src/victor.cpp.
 void __cdecl victorReleaseNothing();
 void __cdecl victorReleaseLock0();
 void __cdecl victorReleaseLock1();

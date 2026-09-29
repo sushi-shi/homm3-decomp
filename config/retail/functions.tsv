@@ -30,7 +30,13 @@
 #   0x1165b0 0x1165e0 objecttype <iostream> static destructors, registered
 #           by CRT roots 0x516590/0x5165c0 (mov ecx,static / jmp ~Init/~_Winit)
 # local_cleanups compares every body with the parent's current object.
-# 11943 functions; size INCLUDES jump tables
+# ADMITTED 2026-09-29 (Victor module cleanups): the nine function pointers of
+# g_victorModuleCleanups at 0x68d278 (an initialized .data table relocated
+# to each start). 0x203b10 is a bare `ret` followed by fifteen NOPs;
+# 0x204620 + 0x20*n (n = 0..7) are 31-byte `mov eax,[lock+0x18]; test; je;
+# push lock; call [DeleteCriticalSection]; mov [lock+0x18],0; ret` bodies,
+# each followed by one NOP. src/victor.cpp claims all nine.
+# 12022 functions; size INCLUDES jump tables
 # BOUNDARY CORRECTION 2026-09-06 (b): the EH try-block census over the
 # image's FuncInfo records (every `_s_FuncInfo` with nTryBlocks > 0, its
 # TryBlockMap and the HandlerType addressOfHandler each names) leaves
@@ -6155,6 +6161,7 @@ rva	size
 0x2039a0	32
 0x2039c0	252
 0x203ac0	77
+0x203b10	1
 0x203b20	722
 0x203e00	1172
 0x2042a0	295
@@ -6162,6 +6169,14 @@ rva	size
 0x204510	83
 0x204570	99
 0x2045e0	52
+0x204620	31
+0x204640	31
+0x204660	31
+0x204680	31
+0x2046a0	31
+0x2046c0	31
+0x2046e0	31
+0x204700	31
 0x204720	132
 0x2047b0	115
 0x204830	26

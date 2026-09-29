@@ -538,11 +538,6 @@ void __stdcall victorInitializePalette(imgdes* image)
 // 85.8333%; assigning a conditional minimum instead lowers it to 80.2778%.
 // These exit spellings do not recover retail's memory compare and epilogue.
 // Compiling this body alone with the same headers and flags is byte-identical.
-// Unrecovered Victor code: 0x603b10 (a bare ret) and eight lock cleanups at
-// 0x604620..0x60471e (if (flag) { DeleteCriticalSection(&lock); flag = 0; },
-// flags at lock+0x18) are referenced only by the null-terminated pointer
-// table at 0x68d278, which nothing references; the lock records at
-// 0x6aad38..0x6ab158 have no other reader. Their module is not identified.
 VA(0x00603ac0, 0x4d)  // anchor-caller flipimage + unsigned extent semantics; external Victor library
 void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
                                       unsigned int* height, unsigned int* width)
@@ -555,6 +550,16 @@ void __cdecl victorMinimumDimensions(imgdes* first, imgdes* second,
         *width = secondWidth;
     if (*height > secondHeight)
         *height = secondHeight;
+}
+
+// Victor's module cleanups are reached only through g_victorModuleCleanups
+// (0x68d278), which nothing in the linked image reads; the lock records have
+// no other reader either. The owning Victor objects are unidentified, so the
+// bodies sit with the table. The first entry is a module with nothing to
+// release: 0x603b10 is a bare `ret`.
+VA(0x00603b10, 0x1)  // g_victorModuleCleanups[0]; external Victor library
+void __cdecl victorReleaseNothing()
+{
 }
 
 // Public Victor PCX metadata reader, corroborated by the Dreamcast API
@@ -670,6 +675,82 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
         free(buffer);
     }
     return colors;
+}
+
+// The eight lock cleanups, one per VictorLock in address order: 0x604620 +
+// 0x20*n releases g_victorLock<n> (g_victorModuleCleanups[8-n]). Each is 31
+// bytes: test the initialized flag at +0x18, DeleteCriticalSection through
+// the IAT, clear the flag.
+VA(0x00604620, 0x1f)  // g_victorModuleCleanups[8]; external Victor library
+void __cdecl victorReleaseLock0()
+{
+    if (g_victorLock0.m_initialized) {
+        DeleteCriticalSection(&g_victorLock0.m_section);
+        g_victorLock0.m_initialized = 0;
+    }
+}
+
+VA(0x00604640, 0x1f)  // g_victorModuleCleanups[7]; external Victor library
+void __cdecl victorReleaseLock1()
+{
+    if (g_victorLock1.m_initialized) {
+        DeleteCriticalSection(&g_victorLock1.m_section);
+        g_victorLock1.m_initialized = 0;
+    }
+}
+
+VA(0x00604660, 0x1f)  // g_victorModuleCleanups[6]; external Victor library
+void __cdecl victorReleaseLock2()
+{
+    if (g_victorLock2.m_initialized) {
+        DeleteCriticalSection(&g_victorLock2.m_section);
+        g_victorLock2.m_initialized = 0;
+    }
+}
+
+VA(0x00604680, 0x1f)  // g_victorModuleCleanups[5]; external Victor library
+void __cdecl victorReleaseLock3()
+{
+    if (g_victorLock3.m_initialized) {
+        DeleteCriticalSection(&g_victorLock3.m_section);
+        g_victorLock3.m_initialized = 0;
+    }
+}
+
+VA(0x006046a0, 0x1f)  // g_victorModuleCleanups[4]; external Victor library
+void __cdecl victorReleaseLock4()
+{
+    if (g_victorLock4.m_initialized) {
+        DeleteCriticalSection(&g_victorLock4.m_section);
+        g_victorLock4.m_initialized = 0;
+    }
+}
+
+VA(0x006046c0, 0x1f)  // g_victorModuleCleanups[3]; external Victor library
+void __cdecl victorReleaseLock5()
+{
+    if (g_victorLock5.m_initialized) {
+        DeleteCriticalSection(&g_victorLock5.m_section);
+        g_victorLock5.m_initialized = 0;
+    }
+}
+
+VA(0x006046e0, 0x1f)  // g_victorModuleCleanups[2]; external Victor library
+void __cdecl victorReleaseLock6()
+{
+    if (g_victorLock6.m_initialized) {
+        DeleteCriticalSection(&g_victorLock6.m_section);
+        g_victorLock6.m_initialized = 0;
+    }
+}
+
+VA(0x00604700, 0x1f)  // g_victorModuleCleanups[1]; external Victor library
+void __cdecl victorReleaseLock7()
+{
+    if (g_victorLock7.m_initialized) {
+        DeleteCriticalSection(&g_victorLock7.m_section);
+        g_victorLock7.m_initialized = 0;
+    }
 }
 
 // Retail-only bit-range insertion, called by flipimage. The first and last

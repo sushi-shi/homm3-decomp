@@ -249,9 +249,9 @@ reproduce for byte arrays; the zero bytes before those starts remain
 unclaimed. So do the unnamed statics between the locks and the
 unstructured `.data` words.
 
-The cleanup table points at nine unrecovered bodies: a bare `ret` at
-0x603b10 and eight 31-byte `if (m_initialized) { DeleteCriticalSection(
-&m_section); m_initialized = 0; }` cleanups at 0x604620-0x604700, one per
-`VictorLock` in address order. `victor.h` declares them as
-`victorReleaseNothing` and `victorReleaseLock0`..`7`; the table's raw
-initializer comparison stays unresolved until those bodies are claimed.
+The cleanup table points at nine bodies that `src/victor.cpp` claims:
+`victorReleaseNothing`, a bare `ret` at 0x603b10, and `victorReleaseLock0`..
+`7`, eight 31-byte `if (m_initialized) { DeleteCriticalSection(&m_section);
+m_initialized = 0; }` cleanups at 0x604620-0x604700, one per `VictorLock` in
+address order. With the bodies claimed the table's raw initializer
+comparison resolves every pointer.
