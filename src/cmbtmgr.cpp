@@ -2661,22 +2661,12 @@ void combatManager::lowerDoor()
     waitEndSample(sample, -1);
 }
 
-VA(0x004672e0, 0x177) MAC_ADDRESS(0x0734ac, 0xd0)  // dc 0x61034
+// E:\gamedcs\cmbtmgr.cpp:3400, dc 0x61034. The drawbridge animation alone,
+// as in Dreamcast and Mac (0x734ac, whose only caller is testRaiseDoor).
+// Retail has no standalone body: VC6 expands it into its sole caller below.
+MAC_ADDRESS(0x0734ac, 0xd0)
 void combatManager::raiseDoor()
 {
-    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
-        return;
-    if (m_cells[COMBAT_HEX_GATE].hasArmy()
-            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
-        return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
-            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
-        return;
-    if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
-        return;
-
     if (isQuickCombat()) {
         m_drawbridgeState = DRAWBRIDGE_UP;
         return;
@@ -2691,12 +2681,26 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
-// Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
-// TeleportTo and ProcessNextAction retain this forwarding source boundary.
-MAC_ADDRESS(0x07357c, 0x94)
+// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0. The occupancy guards, then the
+// animation: Mac 0x7357c has exactly retail's guard sequence before its one
+// call to raiseDoor, and walkTo, flyTo, teleportTo and processNextAction all
+// branch to it. Retail's 0x4672e0 is this function with raiseDoor expanded.
+VA(0x004672e0, 0x177) MAC_ADDRESS(0x07357c, 0x94)  // dc 0x610e0
 void combatManager::testRaiseDoor()
 {
+    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
+        return;
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
+            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
+        return;
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
+            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+        return;
+    if (m_defendingTown->m_type == TOWN_FORTRESS
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
+                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
+        return;
+
     raiseDoor();
 }
 
