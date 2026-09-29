@@ -2176,7 +2176,7 @@ gzio	@gzopen@8	100.0000	100.0000	100.0000	0x206220	-
 gzio	@gzread@12	99.9500	99.9500	100.0000	0x2066f0	-
 gzio	@gzwrite@12	99.9107	99.9107	100.0000	0x206930	-
 gzio	@putLong@8	100.0000	100.0000	100.0000	0x206b10	-
-hero	??0THeroScreenWindow@@QAE@XZ	99.9493	99.9493	100.0000	0xde710	tokens1:944c36c9da0d
+hero	??0THeroScreenWindow@@QAE@XZ	99.9953	99.9953	100.0000	0xde710	tokens1:944c36c9da0d
 hero	??0hero@@QAE@XZ	100.0000	100.0000	100.0000	0xd85f0	tokens1:934b68c425fb
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470	tokens1:b734f6aaa77f
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550	tokens1:a66706cb6c89
@@ -2282,6 +2282,7 @@ hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	97.4346	97.4346	97.5612	0
 hero	?modifySpellDamage@hero@@QBEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760	tokens1:7fa269e7c30b
 hero	?obscureCell@type_obscuring_object@@IAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0	tokens1:5dbb8ede82c2
 hero	?placeInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	tokens1:5b534aa49fff
+hero	?push_back@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXABQAVwidget@@@Z	99.9171	99.9171	100.0000	0xe6500	tokens1:2e4b4e3a244d
 hero	?removeArtifact@hero@@QAEEW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2dd0	tokens1:538b76100e82
 hero	?removeArtifact@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xe2bd0	tokens1:f7737dc30766
 hero	?removeBackpackArtifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50	tokens1:324509b0c948
@@ -2316,7 +2317,6 @@ hero	?walkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0	tokens1:be664
 hero	?windowHandler@THeroScreenWindow@@UAEHAAVmessage@@@Z	88.0931	88.0931	90.2246	0xdd2d0	tokens1:7e22bd509bbf
 hero	std_vector_begin	0.0000	0.0000	100.0000	0xe64e0	tokens1:a9834228d38f
 hero	std_vector_end	0.0000	0.0000	100.0000	0xe64f0	tokens1:3d89f67f1437
-hero	std_vector_push_back	0.0000	0.0000	100.0000	0xe6500	tokens1:2e4b4e3a244d
 herodefs	?initializeHeroClassTraitsTable@@YI_NXZ	99.7989	99.7989	100.0000	0xe6920	tokens1:2bb658a26c5a
 herodefs	?initializeHeroTraitsTable@@YIEXZ	99.6993	99.6993	100.0000	0xe67a0	tokens1:56946c3ebdd0
 herodefs	?initializeSSkillTraitsTable@@YI_NXZ	99.5705	99.6319	100.0000	0xe6b10	tokens1:5467fee07029
@@ -3891,7 +3891,7 @@ singleselectionwindow	??0GameSelectionHeadersStruct@@QAE@XZ	99.8626	99.8626	100.
 singleselectionwindow	??0NewSMapHeader@@QAE@ABV0@@Z	99.9265	99.9265	100.0000	0x18fa60	-
 singleselectionwindow	??0SCampaign@@QAE@ABV0@@Z	99.9756	99.9756	100.0000	0x18fc10	-
 singleselectionwindow	??0SavedGameHeader@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x193f50	-
-singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.3761	96.3761	96.4352	0x179960	tokens1:247a61e4adf4
+singleselectionwindow	??0TSingleSelectionWindow@@QAE@H@Z	96.3839	96.3839	96.4352	0x179960	tokens1:247a61e4adf4
 singleselectionwindow	??0message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190	tokens1:5b9404da14c9
 singleselectionwindow	??0t_map_list_update@@QAE@K@Z	100.0000	100.0000	100.0000	0x189240	tokens1:bb76c3485a66
 singleselectionwindow	??1?$vector@UGameSelectionHeadersStruct@@V?$allocator@UGameSelectionHeadersStruct@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x18ea70	-
@@ -4269,7 +4269,7 @@ subwindow	?draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0	tokens
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470	tokens1:3b99479ee9cd
 subwindow	?restoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610	tokens1:4c1cb3770b35
 subwindow	?saveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560	tokens1:ed13dd9e7fa5
-swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	99.9061	99.9061	100.0000	0x1aaa80	tokens1:442ab1db1a13
+swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	99.9935	99.9935	100.0000	0x1aaa80	tokens1:442ab1db1a13
 swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500	tokens1:b368ca6b74ad
 swapmgr	??1CHeroUpdateMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x1afd70	tokens1:e188f510dde5
 swapmgr	??1TSwapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1ae3c0	tokens1:18393a1f8ca4
@@ -4435,14 +4435,14 @@ towngatewindow	?updateTownLocator@TTownGateWindow@@AAEXH@Z	100.0000	100.0000	100
 towngatewindow	?windowHandler@TTownGateWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1c2840	tokens1:719caf7e66c6
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	99.9825	99.9825	100.0000	0x1d1360	tokens1:7cfe3574b4e2
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	99.9794	99.9794	100.0000	0x1d55c0	tokens1:3a5c18867246
-townmgr	??0TCastleWindow@@QAE@XZ	99.6665	99.6665	100.0000	0x1d86f0	tokens1:1f0691f74253
+townmgr	??0TCastleWindow@@QAE@XZ	99.7432	99.7432	100.0000	0x1d86f0	tokens1:1f0691f74253
 townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HAAVarmyGroup@@@Z	99.9167	99.9167	100.0000	0x1d0e00	tokens1:69ba259bfce1
-townmgr	??0THallWindow@@QAE@H@Z	99.8741	99.8741	100.0000	0x1c9be0	tokens1:02d2a49b639e
+townmgr	??0THallWindow@@QAE@H@Z	99.8868	99.8868	100.0000	0x1c9be0	tokens1:02d2a49b639e
 townmgr	??0TMageGuildWindow@@QAE@XZ	99.9005	99.9005	100.0000	0x1cc980	tokens1:1b2787340c7e
 townmgr	??0TShipWindow@@QAE@H@Z	99.9816	99.9816	100.0000	0x1d1ef0	tokens1:ba898d9964ca
 townmgr	??0TTavernWindow@@QAE@HH@Z	99.9369	99.9369	100.0000	0x1d70b0	tokens1:fcbf23231ce7
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	99.8989	99.8989	100.0000	0x1c8190	tokens1:b731a324214e
-townmgr	??0TTownScreenWindow@@QAE@XZ	99.8881	99.8881	100.0000	0x1c34d0	tokens1:41dcf1dd4156
+townmgr	??0TTownScreenWindow@@QAE@XZ	99.8927	99.8927	100.0000	0x1c34d0	tokens1:41dcf1dd4156
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310	tokens1:62210385965e
 townmgr	??0townObject@@QAE@HHPBD@Z	99.8649	99.8649	100.0000	0x1c2ea0	tokens1:eddd00493913
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HAAVarmyGroup@@@Z	99.8611	99.8611	100.0000	0x1ce830	tokens1:2e718fe4759e
@@ -4540,7 +4540,7 @@ townmgr	?windowHandler@TThievesGuildWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000
 townmgr	?windowHandler@type_garrison_base_window@@MAEHAAVmessage@@@Z	98.8000	98.8000	98.8000	0x1d0910	tokens1:00740dabafc6
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	99.8864	99.8864	100.0000	0x1e3730	tokens1:3ce6c5260965
 tradpost	??0TGiveResourceWindow@@QAE@HH@Z	99.8875	99.8875	100.0000	0x1e16c0	tokens1:04b90b8943bd
-tradpost	??0TSellArtifactWindow@@QAE@HH@Z	99.9207	99.9207	100.0000	0x1e5730	tokens1:b3632aa3441e
+tradpost	??0TSellArtifactWindow@@QAE@HH@Z	99.9312	99.9312	100.0000	0x1e5730	tokens1:b3632aa3441e
 tradpost	??0TSellCreatureWindow@@QAE@HH@Z	99.8875	99.8875	100.0000	0x1e7c80	tokens1:80a371223e83
 tradpost	??0TTradeResourceWindow@@QAE@HH@Z	99.8891	99.8891	100.0000	0x1df5f0	tokens1:c31eddb50c41
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0	tokens1:0f13d0bdb4c5
