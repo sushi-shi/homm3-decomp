@@ -49,6 +49,8 @@ COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 DATA_MANIFEST = common.HOMM3_DIR / 'build/gen/delink_data_manifest.tsv'
 
 CNT_CODE = 0x00000020
+INITIALIZED_DATA = 0x00000040
+UNINITIALIZED_DATA = 0x00000080
 DIR32 = 0x0006
 FUNCTION_TYPE = 0x0020
 EXTERNAL_STORAGE = 2
@@ -802,6 +804,69 @@ def _canonicalize_icf_aliases(
     return base_payload, target_payload, len(renames) + len(retargets)
 
 
+def _canonicalize_zero_literal_sections(
+        base_payload: bytes, target_payload: bytes) -> tuple[bytes, int]:
+    """Give a zero-filled string literal its retail section.
+
+    cl emits an all-zero literal such as `""` (`??_C@_00A@?$AA@`) as an
+    uninitialized COMDAT, while retail pools the same bytes in initialized
+    data. The comparison matches relocation targets by section name, so a
+    candidate `.bss` section holding nothing but literal symbols becomes
+    initialized data with the same zero bytes, under the name of the section
+    in which the target defines those literals. No symbol or relocation moves.
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    target_sections = {}
+    for symbol in target.symbols.values():
+        if symbol.section > 0 and symbol.name.startswith("??_C@"):
+            target_sections[symbol.name] = target.sections[symbol.section - 1].name
+    by_section: dict[int, list[canon.Symbol]] = {}
+    for symbol in base.symbols.values():
+        if symbol.section > 0:
+            by_section.setdefault(symbol.section, []).append(symbol)
+    renames: list[tuple[canon.Section, str]] = []
+    for number, symbols in sorted(by_section.items()):
+        section = base.sections[number - 1]
+        if (section.name != ".bss" or section.raw_offset
+                or not section.characteristics & UNINITIALIZED_DATA):
+            continue
+        literals = [symbol for symbol in symbols if symbol.name.startswith("??_C@")]
+        others = [symbol for symbol in symbols
+                  if not symbol.name.startswith("??_C@")
+                  and not (symbol.storage_class == STATIC_STORAGE
+                           and symbol.name == section.name)]
+        if not literals or others:
+            continue
+        names = {target_sections.get(symbol.name) for symbol in literals}
+        if len(names) != 1:
+            continue
+        name = names.pop()
+        if name is None or name == section.name or len(name) > 8:
+            continue
+        renames.append((section, name))
+    if not renames:
+        return base_payload, 0
+    # Zero raw data goes directly before the symbol table; the string table
+    # follows the symbols, so only the header's symbol pointer moves.
+    data = bytearray(base_payload)
+    cursor = base.symbol_offset
+    for section, name in renames:
+        data[section.header_offset:section.header_offset + 8] = \
+            name.encode("latin-1").ljust(8, b"\0")
+        struct.pack_into("<I", data, section.header_offset + 20, cursor)
+        struct.pack_into("<I", data, section.header_offset + 36,
+                         (section.characteristics & ~UNINITIALIZED_DATA)
+                         | INITIALIZED_DATA)
+        cursor += section.raw_size
+    zeros = cursor - base.symbol_offset
+    data[base.symbol_offset:base.symbol_offset] = bytes(zeros)
+    struct.pack_into("<I", data, 8, base.symbol_offset + zeros)
+    result = bytes(data)
+    canon.CoffObject(result)    # the rewritten object must still parse
+    return result, len(renames)
+
+
 def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
     """Read IMAGE_COMDAT_SELECT_ASSOCIATIVE parents from section aux rows."""
     result = {}
@@ -1239,6 +1304,10 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
     paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
         paired_base, paired_target, symbol_rvas, _icf_index())
     counts["icf"] += icf_count
+    paired_base, literal_sections = _canonicalize_zero_literal_sections(
+        paired_base, paired_target)
+    counts["zero_literal"] += literal_sections
+    icf_count += literal_sections
     normalized, rewrites = _canonicalize_matching_eh_handler_owners(
         paired_base, paired_target, symbol_rvas=symbol_rvas,
         funclet_owners=_retail_funclet_owners())
@@ -1304,6 +1373,7 @@ def normalize_all() -> Counter:
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"{counts['icf']} ICF twin reference(s) named "
+          f"{counts['zero_literal']} zero literal section(s) renamed "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts
