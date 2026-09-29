@@ -3786,16 +3786,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
+            // Both reads index the byte array directly: the typed
+            // getSecondarySkill facade widens through TSkillMastery and
+            // scores 88.09% against this form's 92.07%.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[
-                           g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
+                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill
-                             + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
+                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -5231,7 +5232,9 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.isHuman()) {
+                        } else if (!player.m_isHuman) {
+                            // Retail reads the byte; playerData::isHuman is
+                            // an out-of-line game.cpp body (called: 94.67%).
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
@@ -6320,10 +6323,11 @@ int* std::vector<int>::end()
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }
 
-// std::vector<T>::push_back(const T&) - 434 B, `ret 4`; see the note
-// above for why this is push_back and not either insert overload.
-VA(0x004e6500, 0x1B2)  // stl-comdat, retail-only
-void std::vector<int>::push_back(const int& _X)
+// std::vector<T*>::push_back(T* const&) - 434 B, `ret 4`: one ICF-folded
+// body for every pointer-element vector. hero.obj emits it for the hero
+// screen's widget list, so that instantiation owns the claim.
+VA_COMPGEN(0x004e6500, 0x1B2, VECTOR_PUSH_BACK, widget)
+void std::vector<widget*>::push_back(widget* const& _X)
 {
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }

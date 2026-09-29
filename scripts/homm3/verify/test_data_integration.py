@@ -18,6 +18,12 @@ class InputAdapterTests(unittest.TestCase):
         self.assertEqual(msvc_names.data('_g_table', internal=True,
                                          decorated=True), '_g_table')
         self.assertEqual(msvc_names.mask('_local$S123'), '_local$S')
+        # Clang's `B` storage class on a reference variable is cl 6's `A`.
+        self.assertEqual(msvc_names.data(
+            '?g_traits@@3AAY0JA@$$CBUTTraits@@B', internal=False,
+            decorated=True), '?g_traits@@3AAY0JA@$$CBUTTraits@@A')
+        self.assertEqual(msvc_names.data('?g_ptr@@3PBHB', internal=False,
+                                         decorated=True), '?g_ptr@@3PBHB')
         self.assertNotEqual(msvc_names.mask('$S123'), msvc_names.mask('$S124'))
 
     def test_score_policy_reset_preserves_history_and_source_hash(self):

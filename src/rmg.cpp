@@ -11,6 +11,7 @@
 #include "va.h"
 #include "includes.h"
 #include "bitset_iterator.h"
+#include "homm3_minmax.h"
 
 #include <algorithm>
 #include <bitset>
@@ -4571,8 +4572,10 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     int length = delta.length();
     if (length > 0) {
-        long displacement = max(4, length / 4);
-        displacement = min(displacement, length / 2);
+        // Both clamps bind long references (retail's two-temporary
+        // selector shape); the by-value int helpers score 75.89%.
+        long displacement = std::max<long>(4, length / 4);
+        displacement = std::min<long>(displacement, length / 2);
         delta = delta * displacement / length;
         point += delta;
     }
@@ -4582,8 +4585,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
         length = delta.length();
         if (length > 0) {
-            long displacement = max(4, length / 4);
-            displacement = min(displacement, length / 2);
+            long displacement = std::max<long>(4, length / 4);
+            displacement = std::min<long>(displacement, length / 2);
             delta = delta * displacement / length;
             point += delta;
         }
@@ -8341,10 +8344,13 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // All seven header-consuming TUs were scored; only other rmg.cpp callers
 // moved. No accessor change was adopted: this family supplies no positive
 // evidence for a different helper body at the mismatching expansion.
-// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates.
-// Direct field-test controls omit those Boolean results; the class-defined
-// shared predicate reproduces them. Windows currently falls 93.3047% to
-// 75.6328%; keep both helper calls while recovering the surrounding lowering.
+// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates, but
+// Windows retail materializes no Boolean here: its CFG tests the four
+// fields directly (93.30%), while every isPassableLand form tried (byte/bool
+// result, field or getLandType body, seven return shapes) scores 75.49%.
+// decorateMap, canPlaceObject and traceOutline do expand the predicate
+// (field tests cost them 9-34 points), so Windows is taken as the owner of
+// this caller's spelling; the Mac pair is unscored.
 // Native 0x24aa6c..0x24aacc copies the full position and local point before
 // translating them; retain the shared position-plus-point operation.
 VA(0x005469B0, 0x2B4) MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
@@ -8373,8 +8379,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             unsigned char gate = destination->hasSubterraneanGate();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->isPassableLand() && !source->isRoadEntrance()
-                && destination->isPassableLand() && !destination->isRoadEntrance()) {
+                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
+                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
+                && destination->m_tileData.m_roadPassable
+                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
                 if (!destination->m_connection.m_present)
                     destination->m_tileData.m_subterraneanGate = 0;
                 if (source->hasBorderObject() && !destination->m_connection.m_present) {
@@ -8438,10 +8446,9 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // expands the constructor retained at retail +0xbd (live C2 cost 47 versus
 // direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
 // still expands it; restoring the call must precede the old stack-home work.
-// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results.
-// Restore the same shared calls and surface-map queries here; Windows
-// currently falls 96.8953% to 81.0773%. Byte/bool result types and seven
-// ordinary predicate return forms do not recover the caller lowering.
+// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results;
+// Windows retail tests the fields directly, as in commitTreasureGroup
+// (96.86% versus 81.08% through isPassableLand in any result/body form).
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
 VA(0x00546C70, 0x452) MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
@@ -8494,7 +8501,8 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     for (direction = firstDirection; direction < lastDirection; ++direction) {
         TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
-        if (!source->hasSubterraneanGate() || !source->isPassableLand() || source->isRoadEntrance()
+        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
+            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
@@ -8504,7 +8512,8 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
-            && destination->isPassableLand()
+            && destination->m_tileData.m_roadPassable
+            && destination->m_tile.m_landType != eTerrainRock
             && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
             break;
     }
