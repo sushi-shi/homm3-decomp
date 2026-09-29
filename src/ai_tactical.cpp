@@ -430,6 +430,8 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
 {
     // DC records enemy_value, direction, checked and attack_time at
     // procedure scope. Restoring those lifetimes is byte-flat in VC6.
+    // Both bonus helpers take the enemy's stored combat side; the
+    // getOwningSide accessor call costs Windows 97.86% and Mac 85.00%.
     long threat;
     long direction;
     long checked;
@@ -464,13 +466,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
                                           m_data);
             if (m_enemyArmy->canRetaliate(*m_attackArmy)) {
                 if (m_enemyArmy->is(creatureMultiHeaded))
-                    value -= getMultiHeadBonus(m_enemyArmy->getOwningSide(),
+                    value -= getMultiHeadBonus(m_enemyArmy->m_combatSide,
                                                   m_enemyArmy,
                                                   m_enemyArmy->m_gridIndex,
                                                   m_enemyTroopsLeft,
                                                   m_attackArmy, hex, m_data);
                 if (m_enemyArmy->is(creatureHasExtendedAttack))
-                    value -= getBreathBonus(m_enemyArmy->getOwningSide(),
+                    value -= getBreathBonus(m_enemyArmy->m_combatSide,
                                               m_enemyArmy,
                                               m_enemyArmy->m_gridIndex,
                                               m_enemyTroopsLeft,

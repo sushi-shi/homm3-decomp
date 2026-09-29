@@ -6209,37 +6209,34 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
     return terrain != eTerrainWater;
 }
 
-// The three water scans share the copied origin plus a by-value offset.
-// Native 0x2445b0 copies both inputs before writing the returned coordinate.
-// Keep this inner operation beneath the retained floodShipyardWater helper.
+// canPlaceShipyard's water scans share the copied origin plus a by-value
+// offset through this forwarder.
 static TRmgMapPosition getRmgShipyardWaterPosition(TRmgMapPosition shipyardPosition,
     int waterOffset)
 {
     return shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
 }
 
-static bool findRmgShipyardWater(type_random_map* map,
-    TRmgMapPosition shipyardPosition, TRmgMapPosition& waterPosition)
-{
-    int waterOffset = 0;
-    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
-        waterPosition = getRmgShipyardWaterPosition(shipyardPosition, waterOffset);
-        if (waterPosition.m_x >= 0 && waterPosition.m_x < map->getWidth()
-            && map->getMapItem(waterPosition)->getLandType() == eTerrainWater)
-            break;
-    }
-    return waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT;
-}
-
 // Native 0x24457c owns the shipyard's water scan and successful flood.
-// Both retained callers pass the generator and the shipyard object. Their
-// remaining Windows differences are nested coordinate/lookup expansions;
-// keep this boundary while recovering those calls (connectZones 95.2240%).
+// Both retained callers pass the generator and the shipyard object. The scan
+// sits in this body and adds the offset directly: Windows expands the
+// position addition two levels below connectZones and createShipyardConnection
+// (retaining only the three-coordinate constructor). A separate find helper,
+// or the getRmgShipyardWaterPosition forwarder, pushes that addition a level
+// deeper and keeps it out of line (connectZones 95.22%, createShipyard 89.03%).
 MAC_ADDRESS(0x24457c, 0x130)
 void type_random_map_generator::floodShipyardWater(type_object* shipyard)
 {
+    TRmgMapPosition shipyardPosition = shipyard->getPosition();
     TRmgMapPosition waterPosition;
-    if (findRmgShipyardWater(&m_map, shipyard->getPosition(), waterPosition))
+    int waterOffset = 0;
+    for (; waterOffset < RMG_SHIPYARD_WATER_OFFSET_COUNT; ++waterOffset) {
+        waterPosition = shipyardPosition + g_rmgShipyardWaterOffsets[waterOffset];
+        if (waterPosition.m_x >= 0 && waterPosition.m_x < m_map.getWidth()
+            && m_map.getMapItem(waterPosition)->getLandType() == eTerrainWater)
+            break;
+    }
+    if (waterOffset != RMG_SHIPYARD_WATER_OFFSET_COUNT)
         floodConnectionRegion(waterPosition);
 }
 
@@ -10459,8 +10456,5 @@ TPoint operator+(TPoint point, TRmgVector offset)
 VA(0x005FDD40, 0x20)
 TRmgVector operator-(TPoint left, TPoint right)
 {
-    TRmgVector result;
-    result.m_x = left.m_x - right.m_x;
-    result.m_y = left.m_y - right.m_y;
-    return result;
+    return TRmgVector(left.m_x - right.m_x, left.m_y - right.m_y);
 }

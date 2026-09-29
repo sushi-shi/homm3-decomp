@@ -2241,15 +2241,20 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
-        // Mac 0x30354 expands getAlignment again for this threshold.
-        // Mac 0x30380..0x30390 assigns the two threshold values in separate
-        // branches. This spelling improves Windows 80.3322% -> 82.4178%
-        // while preserving the second getAlignment and morale helper calls.
+        // Complete gives the base elementals the lower threshold in a
+        // version-0 game before the Necropolis test (Windows 94.24%;
+        // the Mac-only getAlignment spelling scored 82.42%). The Mac body
+        // (0x30354..0x30390) has no game-version arm and re-expands
+        // getAlignment instead: a platform/edition difference, Mac 22.10%.
         int minimumMorale;
-        if (g_game->getAlignment(type) == TOWN_NECROPOLIS)
-            minimumMorale = 2;
-        else
+        if (g_game->m_gameVersion == 0
+            && isBaseElemental(type)) {
             minimumMorale = 1;
+        } else {
+            minimumMorale = 2;
+            if (traits->m_townType != TOWN_NECROPOLIS)
+                minimumMorale = 1;
+        }
 
         if (m_army->getMorale(0, 0, 0, 0, 0,
                            m_hasAngelicAlliance, 0)

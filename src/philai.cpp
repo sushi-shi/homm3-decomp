@@ -746,9 +746,11 @@ static void moveHero(hero* currentHero, unsigned char isLastHero,
 // precedes GetTown and agrees with retail's char-to-short-to-int conversion.
 // Mac0x1409c4 adds the accessor's int result directly; an extra short
 // temporary inserts a narrowing instruction absent from that native loop.
-// Current VC6 removes the first expanded getHero sentinel check, which
-// Windows retains. Five narrowed-ID lifetimes produce three objects with
-// no gain; equivalent shared-accessor returns do not restore that branch.
+// The movable-hero scan indexes m_heroes directly; only the garrison scan
+// goes through getHero. Routing the first lookup through the accessor made
+// VC6 fold its expanded sentinel check away (Windows 88.04%, doAI 82.80%,
+// Mac 23.30%); the direct subscript closes both Windows bodies and lifts
+// Mac to 53.96%. A short skillValue temporary is Windows-flat and costs Mac.
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 {
     hero* currentHero;
@@ -760,7 +762,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero)
 
     for (short heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         short heroId = player->m_heroes[heroIndex];
-        currentHero = g_game->getHero(heroId);
+        currentHero = &g_game->m_heroes[heroId];
         if (currentHero->m_movePoints > 0 && !currentHero->m_isSleeping) {
             if (selectedHero)
                 *isLastHero = 0;

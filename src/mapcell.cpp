@@ -3545,9 +3545,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     return 1;
 }
 
-// DC records char_buffer, ushort_buffer and count at function scope.
+// DC records char_buffer, ushort_buffer and count at function scope and
+// calls gzwrite directly at each of the four rows (dc 0xf1b3a..0xf1bca).
 // Mac stages the three coordinates through one byte slot and the type index
-// through a separate short slot; preserve those lifetimes around the helper.
+// through a separate short slot. Direct write calls matter to the caller:
+// through the free writeScalar wrapper this body's /Ob2 cost fell to 156 and
+// saveMapObjects expanded it (55.45%); retail and Mac both call it.
 VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
@@ -3556,23 +3559,23 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
     char charBuffer;
 
     charBuffer = tempObject.m_x;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_y;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_z;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     ushortBuffer = tempObject.m_typeIndex;
-    count = writeScalar(outfile, ushortBuffer);
-    if (count < sizeof(unsigned short))
+    count = outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    if (count < sizeof(ushortBuffer))
         return -1;
     return 0;
 }
@@ -4101,8 +4104,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     return 1;
 }
 
-// DC separates int_buffer from write/helper status count and records int x.
-// The retained SaveObject boundary remains an inliner residual in Complete.
+// DC separates int_buffer from write/helper status count, records int x and
+// calls gzwrite directly (dc 0xf3030, 0xf310a).
 VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
@@ -4111,7 +4114,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     int x;
 
     intBuffer = m_objectTypes.size();
-    count = writeScalar(outfile, intBuffer);
+    count = outfile->write(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
 
@@ -4122,7 +4125,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     }
 
     intBuffer = m_objects.size();
-    count = writeScalar(outfile, intBuffer);
+    count = outfile->write(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
 
