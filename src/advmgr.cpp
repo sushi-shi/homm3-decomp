@@ -3952,35 +3952,20 @@ void advManager::reseed(int targetX, int targetY)
 // movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
 // split, every player's puzzle refresh and the post-action route/button cleanup.
 
-// 91.44 -> 92.19 (2026-08-20): the frame sweep's 0x38-vs-0x30 pointed at
-// the two artifact records. Both are TWO-ARG CTOR declarations at their
-// use sites, not default-then-assign: a top-level `type_artifact grail;`
-// runs the header's defaulting ctor, and our compile spilled {-1,-1} into
-// two slots at ENTRY (`or edi,-1` + two stores) and CSE'd that -1 into
-// GetCurrHero's `cmp edx,edi` - retail compares the IMMEDIATE and writes
-// each record exactly twice at its use site ({2,-1} at [ebp-0x2c] for
-// grail, [ebp-0x24] for describedGrail). `type_artifact grail(
-// ARTIFACT_HOLY_GRAIL, -1)` inside the award arm is the faithful form.
-
-// Residual (92.19%): flow-distance 0; a whole-body EBX/EDI role swap
-// (currHero edi on retail, ebx ours; z the reverse) why-reg --model
-// proves is C2 handle state - creation order agrees on both sides, the
-// permutation is not source-reachable, capped after one compile. The
-// frame stays 0x38 vs 0x30: our two records do not share slots with the
-// description string temp the way retail packs them.
-
 // DC line 4878 constructs the point argument and calls GetCell on the same
-// row. Restoring that natural temporary and helper raises 93.7323% to 98.5243%.
+// row. Restoring that natural temporary and helper raised 93.7323% to 98.5243%.
 // The CheckDimNextHeroBut tail already uses its canonical source call. DC
-// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
-// the current 96.5199%.
+// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat.
 // DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
 // Keep the existing Complete getText calls; they are Windows byte-flat.
-// 2026-09-29: retail reads c_str() straight off getDescription's returned
-// object (`mov eax,[eax+4]`), so the description is an unnamed temporary,
-// not a named string local (98.51 -> 99.17). Describing `grail` itself
-// instead of a second record regresses to 94.99. The rest is the
-// type_artifact store order at the award arm and the temp reset schedule.
+// Retail reads c_str() straight off getDescription's returned object
+// (`mov eax,[eax+4]`), so the description is an unnamed temporary: DC 4936
+// constructs type_artifact(2) and describes it on one row (98.51 -> 99.17).
+// DC 4924/4926 default-construct the award record inside its arm and then
+// assign the Grail id, which is why retail stores the -1 payload before the
+// id. Retail's isHuman branch also jumps straight to giveArtifact, so the
+// ambient-music switch (DC 4937, same scope as the dialogs) belongs to the
+// human-only arm (99.17 -> 100).
 VA(0x0040ec90, 0x5AD) MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4059,7 +4044,8 @@ int advManager::processSearch(int x, int y, int z)
                     (*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL);
+            type_artifact grail;
+            grail.m_artifactId = ARTIFACT_HOLY_GRAIL;
 
             if (g_currentPlayer->isHuman()) {
                 g_grailOwner = g_netLocalGamePos;
@@ -4076,12 +4062,12 @@ int advManager::processSearch(int x, int y, int z)
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
-                normalDialog(describedGrail.getDescription().c_str(), 1, -1,
+                normalDialog(type_artifact(ARTIFACT_HOLY_GRAIL)
+                                 .getDescription().c_str(), 1, -1,
                              -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
             }
 
-            g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
             currHero->giveArtifact(&grail, 1, 1);
             g_game->m_ultimateArtifactPresent = 0;
         }
