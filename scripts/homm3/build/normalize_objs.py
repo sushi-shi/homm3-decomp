@@ -720,10 +720,49 @@ def _icf_index() -> tuple[dict[str, FunctionBody], dict[str, FunctionBody]]:
     return _ICF_INDEX
 
 
+_RETAIL_TWINS: dict[int, tuple[int, ...]] | None = None
+
+
+def _retail_twins() -> dict[int, tuple[int, ...]]:
+    """Census function RVA -> other census functions with the same bytes and
+    call targets.
+
+    Retail keeps some byte-identical bodies unfolded (four 521-byte
+    vector::insert copies, _Ufill<int> and _Ufill<widget*>, ten `ret`
+    bodies). A call that reaches one of them does not prove which
+    instantiation the source named, the rule reloc_pairing's RetailTwins
+    applies to fold proofs. Rel32 call/jump operands compare by target.
+    """
+    global _RETAIL_TWINS
+    if _RETAIL_TWINS is None:
+        from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+        from homm3.delink.image import retail
+        pe = retail().pe
+        disassembler = Cs(CS_ARCH_X86, CS_MODE_32)
+        groups: dict[bytes, list[int]] = {}
+        with FUNCTIONS.open(newline="") as stream:
+            rows = csv.DictReader((line for line in stream if not line.startswith("#")),
+                                  delimiter="\t")
+            census = [(int(row["rva"], 0), int(row["size"], 0)) for row in rows]
+        for rva, size in census:
+            body = bytearray(pe.read(rva, size) or b"") if size else bytearray()
+            if not body:
+                continue
+            for ins in disassembler.disasm(bytes(body), 0):
+                if ins.bytes[0] in (0xE8, 0xE9) and ins.size == 5:
+                    target = rva + ins.address + 5 + struct.unpack_from("<i", ins.bytes, 1)[0]
+                    body[ins.address + 1:ins.address + 5] = struct.pack("<I", target & 0xFFFFFFFF)
+            groups.setdefault(bytes(body), []).append(rva)
+        _RETAIL_TWINS = {rva: tuple(other for other in group if other != rva)
+                         for group in groups.values() if len(group) > 1 for rva in group}
+    return _RETAIL_TWINS
+
+
 def _canonicalize_icf_aliases(
         base_payload: bytes, target_payload: bytes,
         symbol_rvas: dict[str, tuple[int, str]],
         index: tuple[dict[str, FunctionBody], dict[str, FunctionBody]],
+        twins_of=lambda rva: (),
         ) -> tuple[bytes, bytes, int]:
     """Name a retail /OPT:ICF body by the candidate's folded twin.
 
@@ -733,7 +772,8 @@ def _canonicalize_icf_aliases(
     with the surviving twin's label. At a paired call/data site the two
     references are made to agree only when the retail name is a labelled
     function, the two bodies are ICF-identical, and the candidate name has
-    no retail address of its own. A single twin's
+    no retail address of its own, and retail keeps no identical copy of the
+    surviving body elsewhere (`twins_of`). A single twin's
     undefined target reference is renamed to the twin; otherwise the
     candidate relocations point at the surviving label, appended to the
     candidate object as an undefined external when absent. Every other
@@ -781,6 +821,10 @@ def _canonicalize_icf_aliases(
         authority = symbol_rvas.get(label)
         surviving = retail.get(label)
         if authority is None or authority[1] != "func" or surviving is None:
+            continue
+        if twins_of(authority[0]):
+            # Retail keeps an identical copy elsewhere: the candidate twin
+            # could equally be folded onto either, so the site stays visible.
             continue
         verified = set()
         for twin in twins:
@@ -1447,7 +1491,8 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
     counts["literal"] += literal_count
     counts["aggregate"] += aggregate_count
     paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
-        paired_base, paired_target, symbol_rvas, _icf_index())
+        paired_base, paired_target, symbol_rvas, _icf_index(),
+        lambda rva: _retail_twins().get(rva, ()))
     counts["icf"] += icf_count
     paired_target, address_count = _canonicalize_equivalent_data_addresses(
         paired_base, paired_target, symbol_rvas)

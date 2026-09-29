@@ -103,6 +103,23 @@ class IcfAliasRewriteTest(unittest.TestCase):
         self.assertEqual(parsed.symbols[parsed.relocations[0].symbol_index].name,
                          "??1TwinA")
 
+    def test_a_twin_with_its_own_retail_address_stays_visible(self):
+        base = coff(CALL, [("??_GA", 0)], [(1, "??1TwinA")], ["??1TwinA"])
+        target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])
+        index = ({"??1TwinA": JUMP_ONLY}, {"??1Folded": FOLDED, "??1TwinA": FOLDED})
+        rvas = dict(self.rvas, **{"??1TwinA": (0x40, "func")})
+        self.assertEqual(_canonicalize_icf_aliases(base, target, rvas, index),
+                         (base, target, 0))
+
+    def test_a_surviving_body_with_a_retail_twin_stays_visible(self):
+        base = coff(CALL, [("??_GA", 0)], [(1, "??1TwinA")], ["??1TwinA"])
+        target = coff(CALL, [("??_GA", 0)], [(1, "??1Folded")], ["??1Folded"])
+        index = ({"??1TwinA": JUMP_ONLY}, {"??1Folded": FOLDED})
+        twins = {0x30: (0x50,)}
+        self.assertEqual(_canonicalize_icf_aliases(
+            base, target, self.rvas, index, lambda rva: twins.get(rva, ())),
+            (base, target, 0))
+
 
 if __name__ == "__main__":
     unittest.main()
