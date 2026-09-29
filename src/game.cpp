@@ -3492,10 +3492,10 @@ void game::setupOrigData()
     g_normalVictory = 0;
     g_grailOwner = -1;
     m_difficultyRating = 1;
-    g_weekTypeExtra = 0;
-    g_weekType = 0;
-    g_monthType = 0;
     g_monthTypeExtra = 0;
+    g_monthType = 0;
+    g_weekType = 0;
+    g_weekTypeExtra = 0;
     m_isCheater = 0;
 
     strncpy(m_saveFileName, g_generalText->getText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));

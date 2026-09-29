@@ -400,12 +400,12 @@ const unsigned char NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
-            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
+            && ((m_extraInfo >> 10) & g_curPlayerBit))
             return 1;
 
         if (!g_currentPlayer->isLocalHuman()
             && (m_extraInfo & 0x40000)
-            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
+            && ((m_extraInfo >> 10) & g_curPlayerBit))
             return 1;
     }
     return 0;

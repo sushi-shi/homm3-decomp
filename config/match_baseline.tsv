@@ -2114,7 +2114,7 @@ game	?setWeeklyRecruits@game@@QAEXH@Z	100.0000	100.0000	100.0000	0xc8450	tokens1
 game	?setWitchSkill@ExtraInfoUnion@@QAEXW4TSecondarySkill@@@Z	100.0000	100.0000	100.0000	0xc23c0	tokens1:7987507f1271
 game	?setupAdjacentMons@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca410	tokens1:92dd2fe848ff
 game	?setupFirstPlayer@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0630	tokens1:6bcf0742be36
-game	?setupOrigData@game@@QAEXXZ	99.7980	99.7980	100.0000	0xbf1a0	tokens1:dd97ea38521d
+game	?setupOrigData@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbf1a0	tokens1:e920e6516c5c
 game	?setupPuzzlePieces@game@@QAEHHH@Z	98.9119	98.9119	98.9637	0xbaf00	tokens1:30cbf40d4ad4
 game	?setupShipyards@game@@AAEXXZ	99.9497	99.9497	100.0000	0xbcb30	tokens1:8cdef4405164
 game	?showComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0	tokens1:5b75015062fd
@@ -2556,7 +2556,7 @@ mapcell	?getMapObject@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0
 mapcell	?getObjectTypePtr@CObject@@QBEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10	tokens1:f88edff63446
 mapcell	?getSpecialTerrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xfce20	tokens1:8eabf957eb85
 mapcell	?getTriggerCell@NewmapCell@@QAEPAV1@XZ	100.0000	100.0000	100.0000	0xfcaa0	tokens1:726522405f1d
-mapcell	?hasTriggerableEvent@NewmapCell@@QBE?BEXZ	99.6970	99.6970	100.0000	0xfcdc0	tokens1:9789c56a1847
+mapcell	?hasTriggerableEvent@NewmapCell@@QBE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0	tokens1:57f71aa5c4cc
 mapcell	?init@NewfullMap@@AAEXHE@Z	99.9580	99.9580	100.0000	0xfd4f0	tokens1:745346b33bd0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0	-
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150	-
