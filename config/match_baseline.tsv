@@ -3861,8 +3861,8 @@ singleselectionpopups	??1CTeamAlignmentDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x
 singleselectionpopups	??1TRandomMapProgress@@UAE@XZ	100.0000	100.0000	100.0000	0x1770c0	tokens1:e0e79e6778f8
 singleselectionpopups	??_GCBonusDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1754c0	-
 singleselectionpopups	??_GCHeroDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175e30	-
-singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x175260	-
-singleselectionpopups	??_GCSpriteWidget@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x1757b0	-
+singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175260	-
+singleselectionpopups	??_GCSpriteWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1757b0	-
 singleselectionpopups	??_GTRandomMapProgress@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x177090	-
 singleselectionpopups	?_Ucopy@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEPAPAVwidget@@PBQAV3@0PAPAV3@@Z	100.0000	100.0000	100.0000	0x174ce0	-
 singleselectionpopups	?advance@TRandomMapProgress@@UAEXH@Z	100.0000	100.0000	100.0000	0x177320	tokens1:1948fea59118
