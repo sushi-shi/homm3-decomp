@@ -176,7 +176,7 @@ def resolve(rows=None) -> Model:
                 channel = ''
             else:
                 winner = next(c for c in sized if c.meta.get('defined') == '1')
-                name, size = winner.name, winner.size
+                name, size = data_spelling(winner.name, winner.unit), winner.size
         if not size:
             channel = ''
         space = next((key for key, (lo, hi) in regions.items() if lo <= rva < hi), '')
@@ -356,6 +356,39 @@ def _write_compgen(src_claims) -> None:
                              c.meta["owner"], f"0x{c.size:x}"])
 
 
+_EMITTED: dict[str, set[str]] = {}
+
+
+def data_spelling(name: str, unit: str) -> str:
+    """The owning object's emitted spelling of a clang-typed DATA name.
+
+    Clang and VC6 spell anonymous namespaces and local-static scopes
+    differently; `vc6_data_name` bridges only a unique, otherwise identical
+    emitted name of the declaring unit. Anything else keeps clang's name."""
+    if "?A0x" not in name and not msvc_names_scope(name):
+        return name
+    if unit not in _EMITTED:
+        from homm3.core.coff import Coff
+        path = BUILD / "objdiff/base" / f"{unit}.obj"
+        try:
+            _EMITTED[unit] = Coff(path).all_names()
+        except (OSError, ValueError):
+            _EMITTED[unit] = set()
+    bridged = labels_source.vc6_data_name(name, _EMITTED[unit], unit)
+    if bridged is None:
+        return name
+    # Keep the join spelling of a local-static scope (`mask`); only the
+    # anonymous-namespace identity comes from the emitted name.
+    from homm3.core import msvc_names
+    return normalize_anon_ns_name(
+        msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, bridged), unit)
+
+
+def msvc_names_scope(name: str) -> bool:
+    from homm3.core import msvc_names
+    return bool(msvc_names.LOCAL_STATIC_SCOPE.search(name))
+
+
 def _upgrade_dense_data_alias(row: dict, claim) -> dict:
     """Let a reviewed owner replace only a source DATA dense placeholder.
 
@@ -411,10 +444,11 @@ def _collect_inventory():
         if name in seen_names:
             name = f"{name}_{c.rva:x}"
         seen_names.add(name)
-        if c.channel in ("src-VA+ir", "src-VA+base") or (
-                c.channel == "src-DATA" and c.meta.get("type")
-                and c.meta.get('defined') == '1'):
+        if c.channel in ("src-VA+ir", "src-VA+base"):
             name = c.name
+        elif (c.channel == "src-DATA" and c.meta.get("type")
+                and c.meta.get('defined') == '1'):
+            name = data_spelling(c.name, c.unit)
         if c.channel in POOLED_CHANNELS:
             if c.rva in pooled:
                 continue        # one pooled datum, many claiming TUs

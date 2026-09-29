@@ -96,13 +96,20 @@ def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
 
 
 def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
-    """Normalize only reviewed namespace scopes in their owning compiland.
+    """Normalize anonymous-namespace scopes to machine-independent spellings.
 
-    This changes comparison metadata only. Unknown units/scopes are retained,
-    and calls without an owning unit cannot apply a basename-only alias.
+    A reviewed scope takes its retail RTTI-proven path in its owning
+    compiland; calls without an owning unit cannot apply a basename-only
+    alias. Any other scope declared in a repository source file (`src/*.cpp`)
+    takes the path-derived identity `msvc_names.anonymous_namespaces` gives
+    every join, so the checkout path and cl's nonce drop out on both sides.
+    Header and other unknown scopes are retained.
     """
-    if unit is None or "?%" not in name:
+    if "?%" not in name:
         return name
+    from homm3.core.msvc_names import anonymous_namespaces
+    if unit is None:
+        return anonymous_namespaces(name)
     canonical = _load_anon_ns_canonical()
 
     def replace(match):
@@ -112,7 +119,7 @@ def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
         replacement = canonical.get((unit.lower(), basename))
         return match.group(0) if replacement is None else "?%" + replacement + "@"
 
-    return ANON_NS_SCOPE_RE.sub(replace, name)
+    return anonymous_namespaces(ANON_NS_SCOPE_RE.sub(replace, name))
 
 
 def _anon_ns_renames(
@@ -144,6 +151,43 @@ def _anon_ns_renames(
         if previous is not None and previous != symbol.name:
             raise ValueError("anonymous namespace canonical name collision: " + new_name)
         owners[new_name] = symbol.name
+    return renames, rows
+
+
+def _local_scope_renames(
+    symbols: dict[int, "Symbol"],
+    existing_renames: dict[int, str],
+) -> tuple[dict[int, str], list["CanonicalRow"]]:
+    """Canonicalize function-local static scope numbers (`?8??` -> `?1??`).
+
+    cl numbers a local static's lexical scope per function; the model and
+    every join spell it with `msvc_names.CANONICAL_SCOPE` (see `mask`). A
+    name is rewritten only when its canonical spelling is unique in the
+    object: two statics of one function that differ only by scope stay
+    visible.
+    """
+    from homm3.core.msvc_names import CANONICAL_SCOPE, LOCAL_STATIC_SCOPE
+    current = {index: existing_renames.get(index, symbol.name)
+               for index, symbol in symbols.items()}
+    proposed = {}
+    for index, name in current.items():
+        if LOCAL_STATIC_SCOPE.search(name):
+            canonical = LOCAL_STATIC_SCOPE.sub(CANONICAL_SCOPE, name)
+            if canonical != name:
+                proposed[index] = canonical
+    taken: dict[str, set[str]] = defaultdict(set)
+    for index, name in current.items():
+        taken[proposed.get(index, name)].add(name)
+    renames, rows = {}, []
+    for index, canonical in proposed.items():
+        if len(taken[canonical]) != 1:
+            continue
+        renames[index] = canonical
+        rows.append(CanonicalRow(
+            current[index], canonical, "local-static-scope", "symbol",
+            symbols[index].section, symbols[index].value, 0, 0, 0,
+            hashlib.sha256(canonical.encode("latin-1")).hexdigest(),
+            "cl scope ordinal", "msvc_names.CANONICAL_SCOPE"))
     return renames, rows
 
 
@@ -1853,6 +1897,9 @@ def canonicalize_coff(payload: bytes,
         coff.symbols, renames, unit, definition_by_symbol)
     renames.update(anon_renames)
     rows.extend(anon_rows)
+    scope_renames, scope_rows = _local_scope_renames(coff.symbols, renames)
+    renames.update(scope_renames)
+    rows.extend(scope_rows)
     normalized = _rewrite_names(coff, renames)
     normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
         coff, normalized)
