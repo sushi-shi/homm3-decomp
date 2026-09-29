@@ -85,6 +85,27 @@ def coff_with_datum(body, site, datum, data_section):
     return bytes(out)
 
 
+def coff_with_eh_thunk(body, site, thunk=b"\xb8\0\0\0\0\xe9\0\0\0\0", pad=b"\xc3"):
+    """.text holding `_f` (DIR32 at `site` to `$L7`) plus a `.text$x`
+    section: `pad` bytes then the `$L7` label on `thunk`."""
+    text_raw = 20 + 80
+    x_raw = text_raw + len(body)
+    child = pad + thunk
+    reloc_at = x_raw + len(child)
+    symtab = reloc_at + 10
+    records = (b"_f\0\0\0\0\0\0" + struct.pack("<IhHBB", 0, 1, 0x20, 2, 0) +
+               b"$L7\0\0\0\0\0" + struct.pack("<IhHBB", len(pad), 2, 0, 6, 0))
+    out = bytearray(struct.pack("<HHIIIHH", 0x14C, 2, 0, symtab, 2, 0, 0))
+    out += b".text\0\0\0" + struct.pack("<IIIIIIHHI", 0, 0, len(body), text_raw,
+                                        reloc_at, 0, 1, 0, 0x60000020)
+    out += b".text$x\0" + struct.pack("<IIIIIIHHI", 0, 0, len(child), x_raw,
+                                       0, 0, 0, 0, 0x60001020)
+    out += body + child
+    out += struct.pack("<IIH", site, 1, DIR32)
+    out += records + struct.pack("<I", 4)
+    return bytes(out)
+
+
 def mov_eax(value):
     return b"\xa1" + struct.pack("<I", value)
 
@@ -279,6 +300,40 @@ class CompilandPrivateTests(unittest.TestCase):
         self.assertEqual(obj.private, {"_s"})
         self.assertTrue(rp.compiland_private("?g@?%C:\\src\\a.cpp12@@3HA", obj))
         self.assertFalse(rp.compiland_private("_g_x", obj))
+
+
+class EhThunkTests(unittest.TestCase):
+    PROLOGUE = b"\x55\x8b\xec\x6a\xff\x68"
+
+    def test_handler_thunk_label_votes_for_its_unit(self):
+        body = self.PROLOGUE + bytes(4) + b"\xc3"
+        candidate = rp.CandidateObject(coff_with_eh_thunk(body, 6))
+        self.assertEqual(candidate.eh_thunks, {"$L7"})
+        retail = self.PROLOGUE + struct.pack("<I", BASE + 0x22b4c0) + b"\xc3"
+        votes, reason = rp.function_votes(rp.Voter("exec", "_f", 0x1000, len(retail)),
+                                          candidate, retail, [0x1006], BASE)
+        self.assertEqual(reason, "")
+        self.assertEqual([(v.symbol, v.owner, v.private) for v in votes],
+                         [("$L7", 0x22b4c0, True)])
+        pairings, _ = decide(votes)
+        self.assertEqual((pairings[0].unit, pairings[0].owner), ("exec", 0x22b4c0))
+
+    def test_only_a_final_thunk_shaped_label_counts(self):
+        body = self.PROLOGUE + bytes(4) + b"\xc3"
+        not_thunk = rp.CandidateObject(coff_with_eh_thunk(
+            body, 6, thunk=b"\x8d\x4d\xcc\xe9\0\0\0\0\x90\x90"))
+        self.assertEqual(not_thunk.eh_thunks, set())
+        not_last = rp.CandidateObject(coff_with_eh_thunk(
+            body, 6, thunk=b"\xb8\0\0\0\0\xe9\0\0\0\0\xc3"))
+        self.assertEqual(not_last.eh_thunks, set())
+
+    def test_retail_operand_must_be_a_thunk(self):
+        image = {0x22b4c0: b"\xb8\x10\x20\x30\x00\xe9\x00\x00\x00\x00",
+                 0x22b4d0: b"\x8d\x4d\xcc\xe9\0\0\0\0\x90\x90"}
+        read = lambda rva, size: image.get(rva)
+        self.assertTrue(rp.eh_thunk_at(read, 0x22b4c0))
+        self.assertFalse(rp.eh_thunk_at(read, 0x22b4d0))
+        self.assertFalse(rp.eh_thunk_at(read, 0x22b4e0))
 
 
 class OutsideOperandTests(unittest.TestCase):

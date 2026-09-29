@@ -62,6 +62,7 @@ CNT_CODE = 0x00000020
 FUNCTION_TYPE = 0x0020
 EXTERNAL = 2
 STATIC = 3
+LABEL = 6
 FILL = frozenset(b"\x90\xcc")
 
 #: Placeholder spellings a pairing may replace: the model's dense anchors and
@@ -199,6 +200,20 @@ class CandidateObject:
         self.private = {s.name for s in coff.symbols.values()
                         if s.section > 0 and s.storage_class == STATIC
                         and not s.name.startswith((".", "$"))}
+        # VC6's frame-handler thunk (`mov eax, OFFSET FuncInfo; jmp
+        # ___CxxFrameHandler`): the local label ending a function's
+        # associative `.text$x` section, which its EH prologue pushes.
+        self.eh_thunks: set[str] = set()
+        for s in coff.symbols.values():
+            if s.section <= 0 or s.storage_class != LABEL:
+                continue
+            section = coff.sections[s.section - 1]
+            if section.name != ".text$x" or not section.characteristics & CNT_CODE:
+                continue
+            data = coff.section_bytes(section)
+            if (s.value + 10 == section.raw_size and data[s.value] == 0xB8
+                    and data[s.value + 5] == 0xE9):
+                self.eh_thunks.add(s.name)
         self.functions: dict[str, tuple[bytes, list]] = {}
         duplicate = set()
         for index, symbols in by_section.items():
@@ -321,7 +336,11 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
     for site, typ, name, addend, target in operand_targets(
             body, relocs, retail, voter.rva, image_base):
         raw, private = name, False
-        if unit_local(name):
+        if name in candidate.eh_thunks:
+            if typ != DIR32 or addend:
+                continue
+            private = True
+        elif unit_local(name):
             name, private = comparison_spelling(name, voter.unit), True
         elif compiland_private(name, candidate):
             name, private = comparison_spelling(name, voter.unit), True
@@ -511,6 +530,12 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
             if pairing.verdict == "admitted":
                 aliases.extend(v for v in mine if v.addend and v.typ == DIR32)
     return pairings, aliases
+
+
+def eh_thunk_at(read: Callable[[int, int], bytes | None], rva: int) -> bool:
+    """Retail holds a frame-handler thunk (`mov eax, imm32; jmp rel32`)."""
+    body = read(rva, 10) or b""
+    return len(body) == 10 and body[0] == 0xB8 and body[5] == 0xE9
 
 
 def _private_pairing(symbol: str, unit: str, mine: list[Vote], by_owner,
@@ -797,11 +822,24 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
         if row is None or is_placeholder(row["name"]):
             return None
         return row["name"]
+    thunks = {(unit, name) for unit in {v.unit for v in votes}
+              for name in (objects(unit).eh_thunks if objects(unit) else ())}
     extents = {c.rva: claim_extent(c.size, c.meta.get("type", "")) for c in claims
                if c.kind == "data" and c.channel == "src-DATA"}
     pairings, aliases = decide(votes, region_of=_region_of(img.pe),
                                claimed_name_at=claimed_name_at,
                                claimed_rva_of=by_name.get, extent_of=extents.get)
+    # A frame-handler thunk label is its unit's own: the parent's EH
+    # prologue pushes it, and retail's operand must be a thunk as well.
+    for pairing in pairings:
+        if (pairing.unit, pairing.symbol) not in thunks:
+            continue
+        if pairing.verdict == "held":
+            continue
+        if eh_thunk_at(img.pe.read, pairing.owner):
+            pairing.kind, pairing.verdict, pairing.reason = "code", "unit", "EH handler thunk"
+        else:
+            pairing.verdict, pairing.reason = "held", "retail operand is not a handler thunk"
     # An admitted anchor's interior operand must not already be another
     # claimed object. (A confirmed claim's operand outside its extent names
     # the neighbour's address by design.)
