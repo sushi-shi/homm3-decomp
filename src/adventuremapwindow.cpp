@@ -1195,7 +1195,7 @@ void TAdventureMapWindow::highlightLocators(unsigned char update)
     }
 }
 
-VA(0x004039b0, 0x1EA) MAC_ADDRESS(0x003614, 0x2b0)  // dc 0x1134
+VA(0x004039b0, 0x1EA) MAC_ADDRESS(0x003614, 0x2b0)  // dc 0x1134; MAC_ABSTRACTION_FROM(tokens1:283a696f3572,30.7692): unchanged body; CodeWarrior collateral of the DC EGameResource return restored on ExtraInfoUnion::getCampfireResource (mapcell.h)
 void TAdventureMapWindow::updateQuestLogButton(unsigned char update)
 {
     unsigned char enabled = 0;

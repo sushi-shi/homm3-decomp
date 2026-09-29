@@ -2409,9 +2409,7 @@ void combatManager::processFirstAid(army* currentArmy)
 // pristine VC6 XSTRING calls _Tidy from that same default constructor.
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
-// Mac retains testRaiseDoor in this caller. Windows binds the corresponding
-// call to raiseDoor after expanding the forwarding wrapper; keep the canonical
-// source call despite that retained-call difference.
+// Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
 VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {

@@ -2247,12 +2247,12 @@ static int handleGetTeleportDestination(message& msg)
 // DC 2614..2618 has Sacrifice's explicit two arms, then Resurrection
 // (2621), Animate Dead (2625), and the default GetArmy (2629). Preserve
 // both GetArmy source calls rather than merging them into a shared tail.
-// DC holds every arm's result in one register until the shared exit and
-// scopes the Sacrifice branches as blocks: a named result with a final
-// return and braced Sacrifice arms. That form costs about 177 (direct
-// returns 160, named result alone 173), above the /Ob2 save cliff, so
-// C1XX no longer saves the body and retail's retained calls reappear in
-// validSpellTarget (73.49 -> 96.60), initiateSpell and castSpell.
+// DC routes every arm's result through r4 to one shared move at 2633, while
+// army::can_cast_spell's `return call;` arms branch straight to the epilogue:
+// a named result with a final return. The Sacrifice then/else bodies have a
+// single scope each (a braced body has two), so they stay unbraced.
+// Retail's retained calls need cost >= 176; this form costs 173 and is still
+// saved. Neither DC nor Mac shows an accessor or local that supplies the rest.
 VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,
@@ -2263,11 +2263,10 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
     army* target;
     switch (spell) {
     case SPELL_SACRIFICE:
-        if (firstTarget) {
+        if (firstTarget)
             target = findResurrectionTarget(side, hex, creatureSpell);
-        } else {
+        else
             target = m_cells[hex].getArmy();
-        }
         break;
     case SPELL_RESURRECTION:
         target = findResurrectionTarget(side, hex, creatureSpell);
@@ -4648,13 +4647,15 @@ void combatManager::earthquake(int level)
                             g_windowManager->m_screenBitmap,
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
                             0, 1);
+                // DC spells.cpp:5292/5293 scroll, then UpdateCombatArea(*bounds)
+                // by value; that form lowers this row 86.85 -> 83.74.
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
                     bounds->width(), bounds->height());
             }
             GameTime::delayTil(frameTil);
         }
-        blast->dispose();
+        ResourceManager::dispose(blast);
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
@@ -5068,7 +5069,7 @@ CSprite* combatManager::loadSpellEffect(int effect)
 {
     if (m_powSpellEffect != effect) {
         if (m_powSprite)
-            m_powSprite->dispose();
+            ResourceManager::dispose(m_powSprite);
         if (effect != -1)
             m_powSprite = ResourceManager::getSprite(
                 g_spellEffectTraits[effect].m_name);

@@ -624,7 +624,7 @@ unsigned char combatManager::loadWallTraitsTable()
     if (!sheet)
         return 0;
     if (sheet->getNumberOfRows() < 179) {
-        sheet->dispose();
+        ResourceManager::dispose(sheet);
         return 0;
     }
 
@@ -663,6 +663,7 @@ int combatManager::open(int newPriority)
     g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
+    ResourceManager::delSprFromCache();  // DC cmbtmgr.cpp:599
 
     if (!isQuickCombat()) {
         char name[20];
@@ -863,28 +864,28 @@ void combatManager::freeIcons()
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_combatIcons[group][icon])
-                m_combatIcons[group][icon]->dispose();
+                ResourceManager::dispose(m_combatIcons[group][icon]);
         }
     }
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
-            obstacle->m_sprite->dispose();
+            ResourceManager::dispose(obstacle->m_sprite);
     }
     m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
-            m_creatureSprites[side]->dispose();
+            ResourceManager::dispose(m_creatureSprites[side]);
         if (m_heroFlagSprites[side])
-            m_heroFlagSprites[side]->dispose();
+            ResourceManager::dispose(m_heroFlagSprites[side]);
     }
 
     loadSpellEffect(-1);
-    m_combatGridBitmap->dispose();
-    m_combatCellGridBitmap->dispose();
-    m_combatShadowBitmap->dispose();
+    ResourceManager::dispose(m_combatGridBitmap);
+    ResourceManager::dispose(m_combatCellGridBitmap);
+    ResourceManager::dispose(m_combatShadowBitmap);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1004
@@ -2500,7 +2501,7 @@ void combatManager::removeObstacle(int index)
     hexcell& anchor = m_cells[obstacle->m_hex];
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
-    obstacle->m_sprite->dispose();
+    ResourceManager::dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
 }
 
@@ -2661,22 +2662,12 @@ void combatManager::lowerDoor()
     waitEndSample(sample, -1);
 }
 
-VA(0x004672e0, 0x177) MAC_ADDRESS(0x0734ac, 0xd0)  // dc 0x61034
+// E:\gamedcs\cmbtmgr.cpp:3400, dc 0x61034. The drawbridge animation alone,
+// as in Dreamcast and Mac (0x734ac, whose only caller is testRaiseDoor).
+// Retail has no standalone body: VC6 expands it into its sole caller below.
+MAC_ADDRESS(0x0734ac, 0xd0)
 void combatManager::raiseDoor()
 {
-    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
-        return;
-    if (m_cells[COMBAT_HEX_GATE].hasArmy()
-            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
-        return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
-            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
-        return;
-    if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
-        return;
-
     if (isQuickCombat()) {
         m_drawbridgeState = DRAWBRIDGE_UP;
         return;
@@ -2691,12 +2682,26 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
-// Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
-// TeleportTo and ProcessNextAction retain this forwarding source boundary.
-MAC_ADDRESS(0x07357c, 0x94)
+// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0. The occupancy guards, then the
+// animation: Mac 0x7357c has exactly retail's guard sequence before its one
+// call to raiseDoor, and walkTo, flyTo, teleportTo and processNextAction all
+// branch to it. Retail's 0x4672e0 is this function with raiseDoor expanded.
+VA(0x004672e0, 0x177) MAC_ADDRESS(0x07357c, 0x94)  // dc 0x610e0
 void combatManager::testRaiseDoor()
 {
+    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
+        return;
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
+            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
+        return;
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
+            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+        return;
+    if (m_defendingTown->m_type == TOWN_FORTRESS
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
+                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
+        return;
+
     raiseDoor();
 }
 
@@ -3055,6 +3060,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
             updateArea.include(SLimitData(x, y, right, bottom));
             updateArea.clip(g_combatDrawLimits);
+            // DC cmbtmgr.cpp:3874 passes this local to UpdateCombatArea by
+            // value; that form moves retail's register allocation.
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -3068,8 +3075,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     saved.draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
-    g_windowManager->updateScreen(x, y, width, height);
-    missile->dispose();
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:3890
+    ResourceManager::dispose(missile);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902
@@ -3187,6 +3194,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         updateArea.clip(g_combatDrawLimits);
+        // DC cmbtmgr.cpp:4022 passes this local by value (see above).
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
                                       updateArea.height());
@@ -3197,7 +3205,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                g_windowManager->m_screenBitmap->getWidth(),
                g_windowManager->m_screenBitmap->getHeight(),
                g_windowManager->m_screenBitmap->getPitch(), false);
-    g_windowManager->updateScreen(x, y, width, height);
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }
 
 VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)  // dc 0x622bc
@@ -3504,6 +3512,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
+            // DC cmbtmgr.cpp:4389 calls UpdateCombatArea(bounds); the by-value
+            // form lowers this row 96.16 -> 95.81, so it stays direct.
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
                 m_drawbridgeBounds.width(),

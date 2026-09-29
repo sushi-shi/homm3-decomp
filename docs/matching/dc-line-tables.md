@@ -118,6 +118,14 @@ parameter and local `S_REGREL32` records ahead of it — those name the
 **original parameter list**, which is independently useful (they proved
 `get_luck_description`'s DC signature had no `creature` parameter at all).
 
+**Braced bodies.** The SH compiler opens one `S_BLOCK32` for each `if`/
+`switch` statement and one for each branch body; a `{ }` compound adds a
+second, coincident scope. `DoEventGarden` (dc 0x93368) shows both forms in
+one function: its visited dialog body has one scope, its else dialog two.
+A by-value temporary adds none (`TeleportTo`'s guarded
+`SetEnvironmentOrigin(GetMapCenter(), 1)` at advspells.cpp:811 has one). So
+a body is braced only where `show` lists a coincident scope pair.
+
 ## What the artifact proves about optimization
 
 It does **not** prove a `/Od`-equivalent build. The embedded object paths name

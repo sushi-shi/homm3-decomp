@@ -1918,21 +1918,42 @@ callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
 A retail call to an ordinary (not `inline`) callee that no budget explains is
 usually a body C1XX never saved. `predict-inline --trace` lists every
 candidate's flags: `0x6a` is an auto-inline candidate with a saved body,
-`0x2a` has no `0x40` and is never tested. `advManager::dispatchEvent`
-(0x4a84f0, 88.58% -> 99.997%) expanded five ordinary visitors at budgets
-near 9000 while retail called them. Their costs were 169..172; the Dreamcast
-else-scope and braced guarded calls raise them to 176..177 with the same
-bytes, and the flags fall to `0x2a`. Measured on that TU: cost 174 is saved,
-176 is not. Read the flags before modelling budgets.
+`0x2a` has no `0x40` and is never tested. Measured in events.cpp: cost 174
+is saved, 176 is not. Read the flags before modelling budgets, then cross
+the cliff only with evidenced source: every brace must match a Dreamcast
+scope pair (see docs/matching/dc-line-tables.md, "Braced bodies").
 
-The same cliff closed two more families. `combatManager::findSpellTarget`
-(cost 160) expanded in all its callers; the Dreamcast named result and
-braced Sacrifice arms cost about 177, so `validSpellTarget` went from 73.49%
-to 96.60% and `initiateSpell` and `castSpell` rose too. The sell-artifact
-`computeTradeRatios` went from 157 to 166 with its market-value row. That
-stays below the cliff, but the first window-handler site (budget 165) now
-refuses it, as retail does (83.13% -> 93.60%). In game.cpp's save helpers,
-braced returns cost 2 each and were not adopted.
+- `advManager::dispatchEvent` (0x4a84f0) expanded five ordinary visitors
+  near budget 9000 while retail called them (88.58%). The four primary-skill
+  visitors' Dreamcast else-scopes and braced else-dialogs raise them to
+  176..177. Campfire's first dialog has one scope (unbraced); its missing
+  cost was the Dreamcast return type of `ExtraInfoUnion::getCampfireResource`
+  (`EGameResource`, not `int`). With that, all five retain calls (100%).
+- `combatManager::findSpellTarget` keeps the Dreamcast named result (173,
+  still saved). The braced Sacrifice arms that took it to 177 have no
+  Dreamcast scope pair and were reverted in the round-6 audit;
+  `validSpellTarget`, `initiateSpell` and `castSpell` returned to 73.65%,
+  90.79% and their pre-cliff values.
+- The sell-artifact `computeTradeRatios` keeps its Dreamcast market-value
+  row; its braces were unsupported and reverted, so the sell handler's first
+  `setupNewTrade` site (budget 165) again expands it (93.60% -> 83.13%).
+- In game.cpp's save helpers, braced returns cost 2 each and were not
+  adopted.
+
+Missing accessor and helper calls are the first hypothesis for a wrong
+cost, before any brace. Each inline helper call adds IL to its caller and a
+candidate site to C2's divisor even when it expands to nothing new:
+
+- `ExtraInfoUnion::getCampfireResource` returning the Dreamcast
+  `EGameResource` (not `int`) is what crossed the campfire cliff.
+- `combatManager::freeIcons` pasted `->dispose()` where Dreamcast calls
+  `ResourceManager::Dispose`; the existing inline helper restores retail's
+  retained `vector::_Destroy` call (94.33% -> 99.94%).
+- Passing a local `SLimitData` by value to `updateCombatArea` moved
+  retail's register allocation in the missile animators (99.98% -> 95.14%),
+  while the same call on `m_drawbridgeBounds` raised `army::attackWall`
+  (89.90% -> 90.91%). Measure each site; a by-value temporary is a real
+  codegen fact, not budget noise.
 
 ### The retained final `string::assign` has no shared cause
 

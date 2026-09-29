@@ -4063,8 +4063,12 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             incProgressBar(1);
     }
 
+    // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
+    // through ResourceManager::Dispose. With the helper the new budgets cost
+    // read 99.94 -> 96.24 and load 99.91 -> 97.99 (retail keeps one more
+    // string _Tidy and vector size call); kept per the helper rule.
     for (x = 0; x < oldSprites.size(); ++x)
-        oldSprites[x]->dispose();
+        ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
@@ -4177,7 +4181,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     }
 
     for (x = 0; x < oldSprites.size(); ++x)
-        oldSprites[x]->dispose();
+        ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
