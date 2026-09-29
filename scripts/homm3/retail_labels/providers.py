@@ -10,6 +10,7 @@ a duplicate census row); every cross-channel decision - precedence, the
 
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 
 from homm3.core import common
@@ -19,6 +20,8 @@ from homm3.retail_labels import Claim
 ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
 RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
 RELOC_ALIASES = common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+RUNTIME_CONTRIBUTIONS = (common.HOMM3_DIR
+                         / "config/retail/runtime-contributions.tsv")
 RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail/reloc-evidence.tsv"
 
 
@@ -43,6 +46,25 @@ def runtime_map(path: Path | None = None) -> list[Claim]:
     _b, _h, raw = read_tsv(path or RUNTIME_MAP)
     return [Claim(int(r["rva"], 16), r["name"], "func", "runtime-map",
                   None, "", {}) for r in raw]
+
+
+def runtime_data_symbols(path: Path | None = None) -> list[Claim]:
+    """Library data symbols proven by the reviewed runtime placements.
+
+    Each placed data/bss COFF section of a pinned archive member names the
+    symbol defined at its start (DXGUID's `_DPAID_ServiceProvider`,
+    LIBCPMT's `?_Fpz@std@@3_JB`). Label-only: the model applies these names
+    where it would otherwise invent a dense `const_`/`data_`/`bss_` label,
+    so a game reference to the library object compares by its real name.
+    """
+    _b, _h, raw = read_tsv(path or RUNTIME_CONTRIBUTIONS)
+    rows = [r for r in raw if r.get("kind") in ("data", "bss")
+            and r.get("library") != "zlib"
+            and (r.get("symbol") or "-")[:1] in ("_", "?")]
+    # Member-local statics ($T, $S) and repeated names identify no one object.
+    counts = Counter(r["symbol"] for r in rows)
+    return [Claim(int(r["rva"], 16), r["symbol"], "data", "runtime-data",
+                  None, "", {}) for r in rows if counts[r["symbol"]] == 1]
 
 
 def reloc_aliases(path: Path | None = None) -> list[Claim]:

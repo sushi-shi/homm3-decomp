@@ -35,11 +35,7 @@ RUNTIME = {
 }
 ALIASES = {
     '??1_Lockit@std@@QAE@XZ': 'exe_scoped_lock_exe_scoped_lock',
-    '_srand': 'exe_srand', '__purecall': 'exe_purecall',
-    '__chkstk': '__alloca_probe',
-    # Retail string-copy constructor 0x4044e0 calls these at +0x64/+0x8c.
-    '?_Xran@std@@YAXXZ': 'cxx_invalid_string_position_20ac23',
-    '_memmove': 'crt_44e0_sub04_217590',
+    '__purecall': 'exe_purecall',
 }
 
 
