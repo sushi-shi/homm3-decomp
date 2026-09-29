@@ -804,67 +804,196 @@ def _canonicalize_icf_aliases(
     return base_payload, target_payload, len(renames) + len(retargets)
 
 
-def _canonicalize_zero_literal_sections(
-        base_payload: bytes, target_payload: bytes) -> tuple[bytes, int]:
-    """Give a zero-filled string literal its retail section.
+def _append_undefined_symbols(payload: bytes, names: list[str]) -> tuple[bytes, dict[str, int]]:
+    """Append undefined external symbols; existing indices and offsets stay."""
+    coff = canon.CoffObject(payload)
+    strings = bytearray(payload[coff.string_offset:])
+    records = bytearray()
+    indices = {}
+    index = coff.symbol_count
+    for name in names:
+        raw = name.encode("latin-1")
+        if len(raw) <= 8:
+            field = raw.ljust(8, b"\0")
+        else:
+            field = struct.pack("<II", 0, len(strings))
+            strings.extend(raw + b"\0")
+        records.extend(field + struct.pack("<IhHBB", 0, 0, 0, EXTERNAL_STORAGE, 0))
+        indices[name] = index
+        index += 1
+    struct.pack_into("<I", strings, 0, len(strings))
+    data = bytearray(payload[:coff.string_offset]) + records + strings
+    struct.pack_into("<I", data, 12, index)
+    return bytes(data), indices
 
-    cl emits an all-zero literal such as `""` (`??_C@_00A@?$AA@`) as an
-    uninitialized COMDAT, while retail pools the same bytes in initialized
-    data. The comparison matches relocation targets by section name, so a
-    candidate `.bss` section holding nothing but literal symbols becomes
-    initialized data with the same zero bytes, under the name of the section
-    in which the target defines those literals. No symbol or relocation moves.
+
+def _canonicalize_equivalent_data_addresses(
+        base_payload: bytes, target_payload: bytes,
+        symbol_rvas: dict[str, tuple[int, str]]) -> tuple[bytes, int]:
+    """Compare two data references that resolve to one retail address.
+
+    VC6 spells an element address as its array symbol plus an addend, which
+    may lie before the array (`g_statNames[i - 23]`); the stripped image
+    names the same address after whichever labelled object contains it. When
+    a paired DIR32 site's candidate symbol has a labelled retail address and
+    both symbol+addend forms resolve to the same retail RVA, the target
+    relocation takes the candidate's symbol and addend (appending that
+    undefined external to the target object when it has none). Different
+    resolved addresses stay visible.
     """
     base = canon.CoffObject(base_payload)
     target = canon.CoffObject(target_payload)
-    target_sections = {}
+    base_ranges = canon._function_ranges(base)
+    target_ranges = canon._function_ranges(target)
+
+    def paired(coff, ranges):
+        rows = {}
+        for relocation in coff.relocations:
+            if relocation.typ != DIR32:
+                continue
+            owner = canon._function_owner(ranges, relocation.section, relocation.site)
+            if owner is not None:
+                rows[(owner.name, relocation.site - owner.value)] = relocation
+        return rows
+
+    def authority(name):
+        found = symbol_rvas.get(name)
+        if found is None:
+            placeholder = re.fullmatch(r"(?:data|bss|const)_([0-9a-fA-F]+)", name)
+            if placeholder is not None:
+                found = int(placeholder.group(1), 16), "data"
+        return found if found is not None and found[1] == "data" else None
+
+    base_rows = paired(base, base_ranges)
+    target_rows = paired(target, target_ranges)
+    rewrites = []
+    for key, target_relocation in target_rows.items():
+        base_relocation = base_rows.get(key)
+        if base_relocation is None:
+            continue
+        base_symbol = base.symbols[base_relocation.symbol_index]
+        target_symbol = target.symbols[target_relocation.symbol_index]
+        base_rva, target_rva = authority(base_symbol.name), authority(target_symbol.name)
+        if base_rva is None or target_rva is None:
+            continue
+        base_bytes = base.section_bytes(base.sections[base_relocation.section - 1])
+        target_section = target.sections[target_relocation.section - 1]
+        target_bytes = target.section_bytes(target_section)
+        base_addend, = struct.unpack_from("<i", base_bytes, base_relocation.site)
+        target_addend, = struct.unpack_from("<i", target_bytes, target_relocation.site)
+        if base_symbol.name == target_symbol.name and base_addend == target_addend:
+            continue
+        if base_rva[0] + base_addend != target_rva[0] + target_addend:
+            continue
+        if not _site_context_matches(base_bytes, base_relocation.site,
+                                     target_bytes, target_relocation.site):
+            continue
+        rewrites.append((target_relocation, target_section, base_symbol.name, base_addend))
+    if not rewrites:
+        return target_payload, 0
+    existing = {}
+    for symbol in sorted(target.symbols.values(), key=lambda row: row.index):
+        existing.setdefault(symbol.name, symbol.index)
+    missing = sorted({name for _r, _s, name, _a in rewrites if name not in existing})
+    payload, appended = _append_undefined_symbols(target_payload, missing)
+    existing.update(appended)
+    data = bytearray(payload)
+    for relocation, section, name, addend in rewrites:
+        struct.pack_into("<i", data, section.raw_offset + relocation.site, addend)
+        struct.pack_into("<I", data, relocation.offset + 4, existing[name])
+    result = bytes(data)
+    normalized = canon.CoffObject(result)
+    if len(normalized.relocations) != len(target.relocations):
+        raise RuntimeError("equivalent data-address normalization changed relocation count")
+    return result, len(rewrites)
+
+
+def _move_symbols_to_zero_sections(payload: bytes,
+                                   moves: list[tuple[canon.Symbol, str, int]]) -> bytes:
+    """Give each symbol its own initialized section of zero bytes.
+
+    New section headers follow the existing ones (every stored file offset
+    shifts by the inserted headers); their raw data goes directly before the
+    symbol table. Existing section numbers, symbol indices and relocations
+    are unchanged; only the moved symbols' section and value fields change.
+    """
+    coff = canon.CoffObject(payload)
+    optional_size = struct.unpack_from("<H", payload, 16)[0]
+    insert_at = 20 + optional_size + coff.section_count * 40
+    shift = 40 * len(moves)
+    data = bytearray(payload[:insert_at] + bytes(shift) + payload[insert_at:])
+    for section in coff.sections:
+        for field_offset, value in ((20, section.raw_offset), (24, section.reloc_offset)):
+            if value:
+                struct.pack_into("<I", data, section.header_offset + field_offset,
+                                 value + shift)
+        lineno = struct.unpack_from("<I", payload, section.header_offset + 28)[0]
+        if lineno:
+            struct.pack_into("<I", data, section.header_offset + 28, lineno + shift)
+    symbol_offset = coff.symbol_offset + shift
+    raw = bytearray()
+    for position, (symbol, name, size) in enumerate(moves):
+        number = coff.section_count + 1 + position
+        header = struct.pack("<8sIIIIIIHHI", name.encode("latin-1").ljust(8, b"\0"),
+                             0, 0, size, symbol_offset + len(raw), 0, 0, 0, 0,
+                             INITIALIZED_DATA | 0xC0000000 | 0x00300000)
+        data[insert_at + 40 * position:insert_at + 40 * (position + 1)] = header
+        raw.extend(bytes(size))
+        struct.pack_into("<I", data, symbol.offset + shift + 8, 0)
+        struct.pack_into("<h", data, symbol.offset + shift + 12, number)
+    data[symbol_offset:symbol_offset] = raw
+    struct.pack_into("<H", data, 2, coff.section_count + len(moves))
+    struct.pack_into("<I", data, 8, symbol_offset + len(raw))
+    result = bytes(data)
+    canon.CoffObject(result)
+    return result
+
+
+def _canonicalize_zero_literal_sections(
+        base_payload: bytes, target_payload: bytes) -> tuple[bytes, bytes, int]:
+    """Compare a zero-filled string literal in its retail section.
+
+    cl emits an all-zero literal such as `""` (`??_C@_00A@?$AA@`) as
+    uninitialized data (its own .bss COMDAT, or a COMMON that normalization
+    materializes into .bss), while retail pools the same bytes in initialized
+    data. The comparison matches relocation targets by section name, and a
+    .bss-named section cannot carry bytes. Each such candidate literal moves
+    to its own initialized section of the same zero bytes, named after the
+    section in which the target defines it. No byte value or relocation
+    moves. Returns (base, target, literals moved).
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    target_home = {}
     for symbol in target.symbols.values():
         if symbol.section > 0 and symbol.name.startswith("??_C@"):
-            target_sections[symbol.name] = target.sections[symbol.section - 1].name
-    by_section: dict[int, list[canon.Symbol]] = {}
+            target_home[symbol.name] = target.sections[symbol.section - 1]
+    starts: dict[int, list[int]] = {}
     for symbol in base.symbols.values():
         if symbol.section > 0:
-            by_section.setdefault(symbol.section, []).append(symbol)
-    renames: list[tuple[canon.Section, str]] = []
-    for number, symbols in sorted(by_section.items()):
-        section = base.sections[number - 1]
+            starts.setdefault(symbol.section, []).append(symbol.value)
+    moves = []
+    for symbol in sorted(base.symbols.values(), key=lambda row: row.index):
+        if symbol.section <= 0 or not symbol.name.startswith("??_C@"):
+            continue
+        section = base.sections[symbol.section - 1]
+        home = target_home.get(symbol.name)
         if (section.name != ".bss" or section.raw_offset
-                or not section.characteristics & UNINITIALIZED_DATA):
+                or not section.characteristics & UNINITIALIZED_DATA
+                or home is None or home.name == section.name
+                or len(home.name) > 8):
             continue
-        literals = [symbol for symbol in symbols if symbol.name.startswith("??_C@")]
-        others = [symbol for symbol in symbols
-                  if not symbol.name.startswith("??_C@")
-                  and not (symbol.storage_class == STATIC_STORAGE
-                           and symbol.name == section.name)]
-        if not literals or others:
+        following = [value for value in starts[symbol.section] if value > symbol.value]
+        end = min(following) if following else section.raw_size
+        size = end - symbol.value
+        if home.raw_size:
+            size = min(size, home.raw_size)
+        if size <= 0:
             continue
-        names = {target_sections.get(symbol.name) for symbol in literals}
-        if len(names) != 1:
-            continue
-        name = names.pop()
-        if name is None or name == section.name or len(name) > 8:
-            continue
-        renames.append((section, name))
-    if not renames:
-        return base_payload, 0
-    # Zero raw data goes directly before the symbol table; the string table
-    # follows the symbols, so only the header's symbol pointer moves.
-    data = bytearray(base_payload)
-    cursor = base.symbol_offset
-    for section, name in renames:
-        data[section.header_offset:section.header_offset + 8] = \
-            name.encode("latin-1").ljust(8, b"\0")
-        struct.pack_into("<I", data, section.header_offset + 20, cursor)
-        struct.pack_into("<I", data, section.header_offset + 36,
-                         (section.characteristics & ~UNINITIALIZED_DATA)
-                         | INITIALIZED_DATA)
-        cursor += section.raw_size
-    zeros = cursor - base.symbol_offset
-    data[base.symbol_offset:base.symbol_offset] = bytes(zeros)
-    struct.pack_into("<I", data, 8, base.symbol_offset + zeros)
-    result = bytes(data)
-    canon.CoffObject(result)    # the rewritten object must still parse
-    return result, len(renames)
+        moves.append((symbol, home.name, size))
+    if not moves:
+        return base_payload, target_payload, 0
+    return _move_symbols_to_zero_sections(base_payload, moves), target_payload, len(moves)
 
 
 def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
@@ -1304,8 +1433,12 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
     paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
         paired_base, paired_target, symbol_rvas, _icf_index())
     counts["icf"] += icf_count
-    paired_base, literal_sections = _canonicalize_zero_literal_sections(
-        paired_base, paired_target)
+    paired_target, address_count = _canonicalize_equivalent_data_addresses(
+        paired_base, paired_target, symbol_rvas)
+    counts["address"] += address_count
+    icf_count += address_count
+    paired_base, paired_target, literal_sections = \
+        _canonicalize_zero_literal_sections(paired_base, paired_target)
     counts["zero_literal"] += literal_sections
     icf_count += literal_sections
     normalized, rewrites = _canonicalize_matching_eh_handler_owners(
@@ -1373,7 +1506,8 @@ def normalize_all() -> Counter:
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
           f"{counts['icf']} ICF twin reference(s) named "
-          f"{counts['zero_literal']} zero literal section(s) renamed "
+          f"{counts['zero_literal']} zero literal(s) given retail sections "
+          f"{counts['address']} equivalent data address(es) named "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts
