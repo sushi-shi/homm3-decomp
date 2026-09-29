@@ -2888,7 +2888,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         currentHero->giveResource(GOLD, 1500);
         break;
     case const_sea_chest_artifact:
-        artifact.m_artifactId = TArtifact(cell->getSeaChestArtifact());
+        artifact.m_artifactId = cell->getSeaChestArtifact();
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
@@ -3299,7 +3299,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
 {
     if (cell->treasureIsArtifact()) {
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(TArtifact(cell->getTreasureArtifact()));
+            type_artifact artifact(cell->getTreasureArtifact());
             if (humanPlayer) {
                 sprintf(g_text,
                         (*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT],
@@ -3406,7 +3406,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
 
     if (cell->wagonHasArtifact()
         && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact(TArtifact(cell->getWagonArtifact()));
+        type_artifact artifact(cell->getWagonArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT],
@@ -3871,7 +3871,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact(TArtifact(cell->getTombArtifact()));
+        type_artifact artifact(cell->getTombArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT],

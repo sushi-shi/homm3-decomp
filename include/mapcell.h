@@ -730,7 +730,7 @@ public:
     int getPyramidSpell() const;
     bool pyramidIsGuarded() const;
     short getLeanToAmount() const;
-    int getLeanToResource() const;
+    EGameResource getLeanToResource() const;
     void setLeanTo(short id, short amount, int resource);
     unsigned char magicSpringIsFull() const;
     void fillMagicSpring(unsigned char full);
@@ -743,26 +743,26 @@ public:
     void setScholar(ScholarAwards award, TPrimarySkill primary,
                     TSecondarySkill secondary, SpellID spell);
     SpellID getShrineSpell() const;
-    int getTreasureArtifact() const;
+    TArtifact getTreasureArtifact() const;
     short getTreasureSize() const;
     bool treasureIsArtifact() const;
     bool skeletonHasTreasure() const;
     int getSkeletonArtifact() const;
     void setSkeleton(int id, bool hasTreasure, short artifact);
     int getSeaChestReward() const;
-    int getSeaChestArtifact() const;
+    TArtifact getSeaChestArtifact() const;
     int getTreePrice() const;
     type_university* getUniversity() const;
     void emptyWagon();
     short getWagonAmount() const;
-    int getWagonArtifact() const;
+    TArtifact getWagonArtifact() const;
     enum EGameResource getWagonResource() const;
     bool wagonHasArtifact() const;
     bool wagonIsFull() const;
     void setWagon(EGameResource resource, short amount);
     void setWagon(int artifact);
     void emptyTomb();
-    int getTombArtifact() const;
+    TArtifact getTombArtifact() const;
     unsigned char tombIsFull() const;
     void setTomb(TArtifact artifact);
     short getWheelGold() const;
@@ -770,7 +770,7 @@ public:
     short getWindmillAmount() const;
     enum EGameResource getWindmillResource() const;
     void setWindmill(enum EGameResource resource, short amount);
-    int getWitchSkill() const;
+    TSecondarySkill getWitchSkill() const;
     void setWitchSkill(TSecondarySkill skill);
 };
 SIZE(ExtraInfoUnion, 4);
@@ -1567,14 +1567,15 @@ inline void ExtraInfoUnion::setLeanTo(short id, short amount, int resource)
 // GetLeanToAmount is decorated `short` and that WIDTH is what makes
 // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
 // dialog argument a `movsx`. GetLeanToResource is decorated
-// EGameResource; it is spelled `int` here because the field is read
-// UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
-// what the bytes constrain and an enum return is int-wide anyway, so
-// no truncation barrier is lost. The id has no DC accessor and is
-// read off the arm directly.
+// EGameResource; the field stays an unsigned bitfield (an enum bitfield
+// sign-extends under VC6) and the accessor converts it to the DC return
+// type. The id has no DC accessor and is read off the arm directly.
 inline short ExtraInfoUnion::getLeanToAmount() const { return m_leanToInfo.m_amount; }
 
-inline int ExtraInfoUnion::getLeanToResource() const { return m_leanToInfo.m_resource; }
+inline EGameResource ExtraInfoUnion::getLeanToResource() const
+{
+    return EGameResource(m_leanToInfo.m_resource);
+}
 
 // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
 // new state rather than clearing unconditionally, which is what the
@@ -1670,8 +1671,8 @@ inline void ExtraInfoUnion::setScholar(ScholarAwards award, TPrimarySkill primar
 // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
 // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
 // MapCell.h:1104, which this file's carcass already carried.
-// GetSkeletonArtifact is spelled `int` for the reason get_tomb_artifact
-// is: retail stores the sign-extended ten-bit field straight into the
+// GetSkeletonArtifact is spelled `int` because
+// retail stores the sign-extended ten-bit field straight into the
 // artifact record with NO `movsx`, which a short return would have
 // forced.
 
@@ -1699,7 +1700,10 @@ inline void ExtraInfoUnion::setSkeleton(int id, bool hasTreasure, short artifact
 // are SeaChestRewardTypes / TArtifact; retain the existing int-wide reads.
 inline int ExtraInfoUnion::getSeaChestReward() const { return m_seaChestInfo.m_reward; }
 
-inline int ExtraInfoUnion::getSeaChestArtifact() const { return m_seaChestInfo.m_artifact; }
+inline TArtifact ExtraInfoUnion::getSeaChestArtifact() const
+{
+    return TArtifact(m_seaChestInfo.m_artifact);
+}
 
 inline SpellID ExtraInfoUnion::getShrineSpell() const
 {
@@ -1708,7 +1712,10 @@ inline SpellID ExtraInfoUnion::getShrineSpell() const
 
 // The artifact is signed; the gold amount is truncated to a short after
 // multiplying the stored count by 500.
-inline int ExtraInfoUnion::getTreasureArtifact() const { return m_treasureInfo.m_artifact; }
+inline TArtifact ExtraInfoUnion::getTreasureArtifact() const
+{
+    return TArtifact(m_treasureInfo.m_artifact);
+}
 
 inline short ExtraInfoUnion::getTreasureSize() const { return m_treasureInfo.m_gold * 500; }
 
@@ -1716,14 +1723,17 @@ inline bool ExtraInfoUnion::treasureIsArtifact() const { return m_treasureInfo.m
 
 // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
 // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
-// and spelled `int` for get_tomb_artifact's reason.
+// and spelled `int` until WiseTreePrices (advmgr.h) is visible here.
 inline int ExtraInfoUnion::getTreePrice() const { return m_treeInfo.m_price; }
 
 inline void ExtraInfoUnion::emptyWagon() { m_wagonInfo.m_full = 0; }
 
 inline short ExtraInfoUnion::getWagonAmount() const { return m_wagonInfo.m_resourceAmount; }
 
-inline int ExtraInfoUnion::getWagonArtifact() const { return m_wagonInfo.m_artifact; }
+inline TArtifact ExtraInfoUnion::getWagonArtifact() const
+{
+    return TArtifact(m_wagonInfo.m_artifact);
+}
 
 inline enum EGameResource ExtraInfoUnion::getWagonResource() const
 {
@@ -1738,9 +1748,7 @@ inline bool ExtraInfoUnion::wagonHasArtifact() const { return m_wagonInfo.m_hasA
 // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
 // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
 // which is what makes the payout argument a `movsx ecx,di`) and
-// EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
-// same reason get_tomb_artifact is: TArtifact has no modelled
-// definition here and an enum return is int-wide under VC6 anyway.
+// EmptyWagon `void ()`. GetWagonArtifact returns its DC TArtifact.
 inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 
 // DC 1177..1181 writes resource, amount, full, has_artifact, visited_bits.
@@ -1774,7 +1782,10 @@ inline void ExtraInfoUnion::setWagon(int artifact)
 
 inline void ExtraInfoUnion::emptyTomb() { m_tombInfo.m_hasArtifact = 0; }
 
-inline int ExtraInfoUnion::getTombArtifact() const { return m_tombInfo.m_artifact; }
+inline TArtifact ExtraInfoUnion::getTombArtifact() const
+{
+    return TArtifact(m_tombInfo.m_artifact);
+}
 
 inline unsigned char ExtraInfoUnion::tombIsFull() const { return m_tombInfo.m_hasArtifact; }
 
@@ -1816,7 +1827,10 @@ inline void ExtraInfoUnion::setWindmill(enum EGameResource resource, short amoun
     m_windmillInfo.m_amount = amount;
 }
 
-inline int ExtraInfoUnion::getWitchSkill() const { return m_witchHutInfo.m_skill; }
+inline TSecondarySkill ExtraInfoUnion::getWitchSkill() const
+{
+    return TSecondarySkill(m_witchHutInfo.m_skill);
+}
 
 // E:\gamedcs\MapCell.h:1251, dc 0xbcbdc
 // DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds

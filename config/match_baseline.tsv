@@ -1694,7 +1694,7 @@ events	?doEventRallyFlag@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	1
 events	?doEventRefugeeCamp@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa4600	tokens1:d5e2bb995c62
 events	?doEventResource@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4be0	tokens1:94a116ee66a0
 events	?doEventScholar@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0	tokens1:13eeaf7a3a4a
-events	?doEventSeaChest@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5030	tokens1:699422c30bd3
+events	?doEventSeaChest@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5030	tokens1:1996f677c6e4
 events	?doEventShipyard@advManager@@AAEXPAVNewmapCell@@Utype_point@@E@Z	85.4808	85.4808	91.9303	0x9e2e0	tokens1:f40ddf9caa7a
 events	?doEventShrine@advManager@@AAEXPAVhero@@PAVNewmapCell@@PBDW4GlobalInfoFlags@@_N@Z	89.6531	89.6531	89.6701	0xa5610	tokens1:4ecda292904c
 events	?doEventSiren@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa5980	tokens1:45039b2a385d
@@ -1704,13 +1704,13 @@ events	?doEventStables@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100
 events	?doEventSurvivor@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa52a0	tokens1:5da49eba631a
 events	?doEventTemple@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6200	tokens1:da793918e2b0
 events	?doEventTrainingGrounds@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6330	tokens1:96564a3f1e86
-events	?doEventTreasure@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6520	tokens1:f0e177f78954
+events	?doEventTreasure@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6520	tokens1:5f3a6d177ee2
 events	?doEventTreeOfKnowledge@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa6710	tokens1:2519c35c3e11
 events	?doEventUndeadLair@advManager@@AAEXPAVhero@@PAVNewmapCell@@PBD22KUtype_point@@@Z	100.0000	100.0000	100.0000	0xac490	tokens1:b090b3ef569f
-events	?doEventWagon@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa69b0	tokens1:ab616338ece1
+events	?doEventWagon@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa69b0	tokens1:1064ee567c8d
 events	?doEventWanderingMonster@advManager@@AAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa79c0	tokens1:b65754be9dbc
 events	?doEventWarSchool@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7a40	tokens1:4a268c6a1405
-events	?doEventWarriorTomb@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7c30	tokens1:0991565611f1
+events	?doEventWarriorTomb@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7c30	tokens1:392b51864401
 events	?doEventWaterWheel@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7de0	tokens1:24d710e99947
 events	?doEventWateringHole@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa7ea0	tokens1:71e2d3e023f8
 events	?doEventWindmill@advManager@@AAEXPAVhero@@PAUExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0	tokens1:731f15049868
