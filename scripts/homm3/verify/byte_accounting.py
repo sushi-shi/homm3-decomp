@@ -14,6 +14,7 @@ import re
 import struct
 from pathlib import Path
 
+from homm3.compare.canonicalize import normalize_anon_ns_name
 from homm3.core import msvc_names
 from homm3.core.paths import BUILD, RETAIL
 from homm3.core.tsv import read, write
@@ -682,6 +683,11 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None)
             for idx, value, section in objects[unit].iter_symbols():
                 name = objects[unit].sym_name(idx)
                 members[unit][msvc_names.mask(name)].append((value, section))
+                canonical = normalize_anon_ns_name(name, unit)
+                if canonical != name:
+                    # A reviewed anonymous namespace: the model spells the
+                    # retail scope, the object the compiling path.
+                    members[unit][msvc_names.mask(canonical)].append((value, section))
                 if section > 0 or section == 0 and value:
                     emitted_names.append(name)
             # Clang hashes anonymous namespaces; VC6 encodes their source
@@ -769,6 +775,9 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None)
             addend = struct.unpack_from('<i', payload, relative)[0]
             key = msvc_names.mask(name)
             targets = names.get((unit, key)) or names.get(('', key), set())
+            if not targets and '?%' in name:
+                canonical = msvc_names.mask(normalize_anon_ns_name(name, unit))
+                targets = names.get((unit, canonical)) or names.get(('', canonical), set())
             if not targets and '?A0x' in key:
                 # The anonymous-namespace hash encodes the compiling path.
                 targets = anon_names.get(_ANON.sub('?A0x#', key), set())
@@ -948,7 +957,14 @@ def report(model=None):
     domains = account(pe, model, enrolled, sections, initializers=claims, **arguments)
     # Link-alignment zero fill is proposed only where every other pass left a gap.
     inferred += retail_records.alignment_padding(pe, domains['image'], records, sections)
-    comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
+    # A verified import thunk is the address a call or table slot naming the
+    # imported symbol links to (a vendor DLL's C++ export keeps its decorated
+    # name in the import directory).
+    referent_names = defaultdict(set, {rva: set(names) for rva, names in library_names.items()})
+    for r in thunks['matches']:
+        if isinstance(r['imported'], str):
+            referent_names[r['rva']].add(r['imported'])
+    comparisons = compare_initializers(model, enrolled, pe, library_names=referent_names)
     from homm3.verify.game_bytes import (destination_comparisons, header_compilands,
                                          verify_game)
     destinations = destination_comparisons(dynamic, pe)

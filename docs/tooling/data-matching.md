@@ -361,7 +361,15 @@ folding (the object's own definition of the named symbol reproduces retail at
 that address) and through identity-preserving spellings that differ only by
 the compiling path (a type's anonymous-namespace hash, VC6's `_name` form for
 statics in an anonymous namespace, a reference's cv letter, a guard's `$S`
-counter symbol in its owner's scope).
+counter symbol in its owner's scope). A VC6 `?%<path><nonce>@` scope listed in
+`config/retail/anon-ns-paths.tsv` is compared under its retail spelling, for
+vtables and exception records as well. A word naming a vendor DLL's decorated
+export resolves to that import's verified thunk.
+
+Vtable identities come from the `class` column of `config/retail/vtables.tsv`.
+A row names `??_7<class>@@6B@`, or spells a complete `??_S` symbol: the local
+vftable VC6 emits and stores after calling a dllimport class's imported
+constructor (IFC's `CImmMouse` and `CImmEnclosure`).
 
 ## Verified game bytes
 
