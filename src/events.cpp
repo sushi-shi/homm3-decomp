@@ -5266,10 +5266,14 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             result += rewardStrings[i];
         }
 
-        // The initialiser form, not default-construct-then-assign: retail
-        // builds the reward line directly into its destination (inlined
-        // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
-        std::string rewardText = formatString(
+        // Retail FuncInfo 0x64c8e0 has eight states: rewardText (ebp-0x64,
+        // state 6) is alive before the formatted temporary (ebp-0x74, state
+        // 7, nested in 6) that is assigned into it, so the line is default
+        // constructed and then assigned (85.35 -> 89.48%). The initializer
+        // form yields seven states. Residual: retail expands one more string
+        // append chain (_Xlen/_Grow/_Eos calls) in the reward-list loop.
+        std::string rewardText;
+        rewardText = formatString(
             (*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT],
             getArmyName(leaderMonster, creatureCount), result.c_str());
         extendedDialog(rewardText.c_str(), resources, -1, -1, 0);

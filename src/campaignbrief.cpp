@@ -1003,6 +1003,18 @@ static int campaignBriefHandler(message& msg)
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
+                        // Retail FuncInfo 0x64a5e0 states 0/1 (strings at
+                        // ebp-0x38/-0x48, the second nested in the first)
+                        // and Mac's 264(SP)-inside-992(SP) string chain both
+                        // prove a default-constructed text assigned from the
+                        // returned temporary (retail 0x45b46a..0x45b4a6 calls
+                        // assign(str, 0, npos) at 0x404860). That form
+                        // reproduces all ten retail EH states but falls to
+                        // 82.12%: VC6 admits the three-argument assign (cb
+                        // 307) at depth-3 budget 308 (2468 / 8 remaining),
+                        // which retail refuses, so 13 more units of earlier
+                        // spending or 7 fewer caller IL units are still
+                        // missing. Copy-initialization stays until then.
                         std::string text =
                             brief->m_campaign->m_scenarios[helpID]
                                 ->getRegionDescription();

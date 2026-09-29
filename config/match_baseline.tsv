@@ -1651,7 +1651,7 @@ events	?_Unguarded_insert@std@@YIXPAHHUspell_level_order@@@Z	99.9296	99.9296	100
 events	?_Unguarded_partition@std@@YIPAHPAH0HUspell_level_order@@@Z	99.9576	99.9576	100.0000	0xb0400	-
 events	?clear@?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x14c120	-
 events	?combatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2814	99.2814	99.2966	0xac580	tokens1:47d7d75b4dad
-events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	85.3507	85.3507	91.5889	0xabdc0	tokens1:eb98533fad85
+events	?creatureBankEvent@advManager@@AAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	89.4782	89.4782	91.5889	0xabdc0	tokens1:32aab6afc29c
 events	?dispatchEvent@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	88.5762	88.5762	99.9911	0xa84f0	tokens1:1baf4185da03
 events	?doAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0	tokens1:cf82ee4e903c
 events	?doCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	93.7084	93.7084	99.1139	0xad470	tokens1:458e25de87d2

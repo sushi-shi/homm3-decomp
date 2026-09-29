@@ -2206,6 +2206,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         TAbstractFile* file = &streamFile;
         // Mac 0x96fa4 decodes the version with lwbrx, then reads an
         // unsigned region byte and separate signed difficulty/music bytes.
+        // Probe (2026-09-29): the older Windows spelling (one int buffer for
+        // version and masked region, one char buffer for difficulty/music)
+        // under a platform fork measured 82.28% against 83.40%; VC6 still
+        // expands CMapHeaderData's constructor inside mapHeader's, which
+        // retail calls (retail FuncInfo has 19 states; the two extra
+        // vector/player-array states here are that ctor's members).
         int version = readLittleEndianValue<int>(file);
         m_campaignVersion = version;
         if (m_campaignVersion < 4) {
