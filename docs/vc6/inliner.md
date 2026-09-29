@@ -2454,3 +2454,31 @@ reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
 bytes and 54 relocation operands agree with retail. Ordinary definitions of
 its two local search helpers and removal of the redundant outer loop block
 also preserve all five exact Fly targets (four states, two reproduced objects).
+
+## Array initializers: an entry type's constructor is a site per element
+
+A namespace-scope array initializer is its own `$E` body (a cb-16 wrapper
+expands it at depth 1), so its site list is the element constructions.
+Temporary copies into a plain class array are bitwise and add no sites, and a
+variadic builder is never collected (flags without 0x40). When retail refuses
+a nested expansion that no spelling of a plain array refuses, test an entry
+type with a one-argument constructor taking the built value: each
+`Entry(value)` adds a free (cb 30) site after the value's construction and
+emits only the copy.
+
+The slot-class table at 0x44cc00 needs `_Tidy` below 72 at the empty entry;
+the plain array gives it 742 (1000 minus the cb-258 initializer, one site).
+With fifteen entry constructors the empty mask's constructor is the first
+of sixteen sites and `_Tidy` gets 637/16 = 39, reproducing all 336 bytes.
+The game-context table at 0x4ecd00 needs all four `set` calls refused; with
+eight sites they get 29, 35, 46 and 82 against cb 91 while `_Tidy` still
+expands, reproducing all 224 bytes. An entry constructor taking the
+unsigned long instead of the bitset gives 272 bytes. CodeWarrior reserves a
+second stack temporary per element for such an entry type, which Mac's
+artifact initializer shows (entries 8 bytes apart) and its game-context
+equivalent does not.
+
+How readers name the bitset matters as much: a `std::bitset` member adds
+access cost to every reader, and in `updateMainWindow` that changes its
+expansion into `onSetAsHostMsg` (100% to 25.5976%). Deriving the entry type
+from the bitset leaves the readers' source and costs unchanged.

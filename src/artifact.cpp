@@ -278,38 +278,35 @@ const TCombinationArtifact g_combinationArtifactTable[12] = {
 // The fifteen allowable-slot classes searched by the traits initializer,
 // recovered from 0x44cc00. Class 0 is empty; classes 7 and 9 are the ring
 // pair (6, 7) and misc/backpack group (9, 10, 11, 12, 18).
-// Retail retains _Tidy(0) for the first entry. Neither default construction
-// nor explicit/implicit zero-value construction reproduces that boundary:
-// all expand it and produce a 326-byte cinit versus retail's 325 bytes, with
-// later copy-register changes.
-// VC6's bitset copy/destructor are implicit. Retail reuses one four-byte
-// temporary for all fifteen values, with no cleanup or additional owner;
-// the register differences do not establish a missing copy helper.
-// The neighboring combination cinit matches all 664 bytes / 24 relocations.
-// Both cinits remain outside the ordinary function-score inventory.
-// `homm3 vc6 predict-inline --trace`: the initializer has cb 258, the
-// default constructor (cb 34) is free and _Tidy (cb 72) meets a budget of
-// 742, so it expands; retail refused it, which needs a budget below 72.
-// makeArtifactSlotMask never divides that budget: its callee flags (0x708)
-// fail the candidate gate. Removing or moving the explicit bitset<19>
-// instantiation leaves the initializer unchanged.
+// Each entry is a TArtifactSlotMask built from its mask, as the combination
+// table above builds TCombinationArtifact records. The empty mask's
+// constructor is the first of sixteen depth-2 candidates (cb 363
+// initializer, budget 637), so its nested bitset::_Tidy(0) gets 637/16 = 39
+// and retail keeps the call at 0x44cc09; the entry constructors (cb 30)
+// expand into the plain copies. This reproduces all 336 bytes. Failed
+// controls, all of which expand _Tidy (budget 742 or 644) because the
+// variadic builder is never a candidate (callee flags 0x708, or 0x8 without
+// its try block): a plain bitset array (const or not, sized or not),
+// explicit std::bitset<19>(...) element casts, zero-value construction of
+// the empty entry, and moving or removing the explicit bitset<19>
+// instantiation.
 DATA(0x00693898)
-const std::bitset<19> g_artifactSlotMasks[15] = {
-    std::bitset<19>(),
-    makeArtifactSlotMask(1, 0),
-    makeArtifactSlotMask(1, 1),
-    makeArtifactSlotMask(1, 2),
-    makeArtifactSlotMask(1, 3),
-    makeArtifactSlotMask(1, 4),
-    makeArtifactSlotMask(1, 5),
-    makeArtifactSlotMask(2, 6, 7),
-    makeArtifactSlotMask(1, 8),
-    makeArtifactSlotMask(5, 9, 10, 11, 12, 18),
-    makeArtifactSlotMask(1, 13),
-    makeArtifactSlotMask(1, 14),
-    makeArtifactSlotMask(1, 15),
-    makeArtifactSlotMask(1, 16),
-    makeArtifactSlotMask(1, 17),
+const TArtifactSlotMask g_artifactSlotMasks[15] = {
+    TArtifactSlotMask(std::bitset<19>()),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 0)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 1)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 2)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 3)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 4)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 5)),
+    TArtifactSlotMask(makeArtifactSlotMask(2, 6, 7)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 8)),
+    TArtifactSlotMask(makeArtifactSlotMask(5, 9, 10, 11, 12, 18)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 13)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 14)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 15)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 16)),
+    TArtifactSlotMask(makeArtifactSlotMask(1, 17)),
 };
 
 DATA(0x00660b64)

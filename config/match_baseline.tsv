@@ -543,7 +543,7 @@ army	?computeDefenderDamageReduction@army@@QBENE@Z	99.8864	99.8864	100.0000	0x43
 army	?considerAttack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840	tokens1:8c1c623cdd39
 army	?cure@army@@QAEXHHPBVhero@@@Z	99.9485	99.9485	100.0000	0x46500	tokens1:43a8e7b6a274
 army	?damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090	tokens1:770cc2dcfdf8
-army	?doAttack@army@@QAEEPAV1@H@Z	99.7985	99.7985	100.0000	0x41610	tokens1:61939a3e8be8
+army	?doAttack@army@@QAEEPAV1@H@Z	99.8368	99.8368	100.0000	0x41610	tokens1:61939a3e8be8
 army	?doAttack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0	tokens1:769d6e3e78cc
 army	?doFireShield@army@@AAEXJ@Z	99.9324	99.9324	100.0000	0x409c0	tokens1:e29378ace4f0
 army	?doMultiHeadAttack@army@@QAEXIPAH0PAJ@Z	99.9026	99.9026	100.0000	0x40310	tokens1:da1030a81c6d
@@ -654,7 +654,7 @@ armygrp	?swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60	tokens
 armygrp	?windowHandler@TSplitWindow@@UAEHAAVmessage@@@Z	99.9585	99.9585	100.0000	0x4a180	tokens1:47849d4f36a2
 artifact	?_Tidy@?$bitset@$0BD@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0x4d3e0	-
 artifact	?_Xran@?$bitset@$0BD@@std@@ABEXXZ	99.9296	99.9296	100.0000	0x4d400	-
-artifact	?initializeArtifactTraitsTable@@YI_NXZ	89.1941	89.1941	89.9743	0x4cd50	tokens1:8d6718e1e72d
+artifact	?initializeArtifactTraitsTable@@YI_NXZ	89.1941	89.2436	89.9743	0x4cd50	tokens1:8d6718e1e72d
 artifact	?makeArtifactComponentMask@@YA?AV?$bitset@$0JA@@std@@IZZ	99.9485	99.9485	100.0000	0x4c830	tokens1:ebe2ba8fb1b5
 artifact	?makeArtifactSlotMask@@YA?AV?$bitset@$0BD@@std@@IZZ	99.9444	99.9444	100.0000	0x4c720	tokens1:e3aa43646715
 artifact	?set@?$bitset@$0BD@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0x4d380	-
@@ -4035,7 +4035,7 @@ singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMs
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.7312	99.7312	100.0000	0x189b20	tokens1:03b2963ce3e3
 singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:c1f6f3aeee6f
-singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0	tokens1:af1981b52201
+singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	85.8472	85.8472	93.0332	0x189710	tokens1:ab487a2ce852
 singleselectionwindow	?onNameClick@TSingleSelectionWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x18b620	tokens1:3d37b3843298
 singleselectionwindow	?onNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x18b510	tokens1:dfdc0dd1eca7
