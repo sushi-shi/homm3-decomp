@@ -37,23 +37,29 @@ REL32 = 0x0014
 PLACEHOLDER = re.compile(r"(?:data|bss|const|vtbl|fn)_([0-9a-fA-F]+)|\$gap_([0-9a-fA-F]+)")
 
 
-def load_identities(path: Path) -> dict[str, set[int]]:
-    """{name: {rva}} from a generated address_identities.tsv."""
-    out: dict[str, set[int]] = {}
+def load_identities(path: Path) -> dict[tuple[str, str], set[int]]:
+    """{(unit, name): {rva}} from a generated address_identities.tsv; unit is
+    '' for an image-wide identity."""
+    out: dict[tuple[str, str], set[int]] = {}
     if not path.is_file():
         return out
     with path.open(newline="") as stream:
         rows = csv.DictReader((line for line in stream if not line.startswith("#")),
                               delimiter="\t")
         for row in rows:
-            out.setdefault(row["name"], set()).add(int(row["rva"], 0))
+            key = (row.get("unit") or "", row["name"])
+            out.setdefault(key, set()).add(int(row["rva"], 0))
     return out
 
 
 def resolve_name(name: str, symbol_rvas: dict[str, tuple[int, str]],
-                 identities: dict[str, set[int]]) -> int | None:
-    """The one retail address `name` is proven at, else None."""
-    found = set(identities.get(name, ()))
+                 identities: dict[tuple[str, str], set[int]], unit: str = "") -> int | None:
+    """The one retail address `name` is proven at, else None. A unit-scoped
+    identity (that compiland's copy of a content-named datum) decides alone."""
+    scoped = identities.get((unit, name)) if unit else None
+    if scoped:
+        return next(iter(scoped)) if len(scoped) == 1 else None
+    found = set(identities.get(("", name), ()))
     known = symbol_rvas.get(name)
     if known is not None:
         found.add(known[0])
@@ -112,7 +118,8 @@ def _append_symbols(payload: bytearray, coff: canon.CoffObject,
 
 def canonicalize(base_payload: bytes, target_payload: bytes,
                  symbol_rvas: dict[str, tuple[int, str]],
-                 identities: dict[str, set[int]]) -> tuple[bytes, int]:
+                 identities: dict[tuple[str, str], set[int]],
+                 unit: str = "") -> tuple[bytes, int]:
     base = canon.CoffObject(base_payload)
     target = canon.CoffObject(target_payload)
     base_pairs = _pairs(base)
@@ -126,7 +133,7 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
         tsym = target.symbols[trel.symbol_index]
         if bsym.name == tsym.name:
             continue
-        mine = resolve_name(bsym.name, symbol_rvas, identities)
+        mine = resolve_name(bsym.name, symbol_rvas, identities, unit)
         theirs = resolve_name(tsym.name, symbol_rvas, identities)
         if mine is None or theirs is None:
             continue

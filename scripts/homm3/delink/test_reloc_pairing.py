@@ -146,6 +146,25 @@ class DecisionTests(unittest.TestCase):
         self.assertEqual((pairings[0].verdict, pairings[0].reason),
                          ("held", "unanchored addend"))
 
+    def test_content_named_copies_pair_per_unit(self):
+        # Two retail copies of one literal: each compiland's votes agree on
+        # its own copy, so the pairing is scoped, not held or admitted.
+        votes = [rp.Vote("??_C@_03x@", 0x7000, 0x7000, 0, 0x1000, 0x1001, DIR32, "a", "_f"),
+                 rp.Vote("??_C@_03x@", 0x7010, 0x7010, 0, 0x1100, 0x1101, DIR32, "b", "_g")]
+        pairings, _ = decide(votes)
+        self.assertEqual({(p.unit, p.owner, p.verdict) for p in pairings},
+                         {("a", 0x7000, "unit-candidate"), ("b", 0x7010, "unit-candidate")})
+        votes.append(rp.Vote("??_C@_03x@", 0x7010, 0x7010, 0, 0x1200, 0x1201, DIR32, "a", "_h"))
+        pairings, _ = decide(votes)
+        self.assertEqual({(p.unit, p.verdict) for p in pairings},
+                         {("a", "held"), ("b", "unit-candidate")})
+
+    def test_writable_data_at_one_address_stays_a_conflict(self):
+        # Only content-named read-only data may share an address.
+        pairings, _ = decide([vote("?g_smallFont@@3PAVfont@@A", 0x6000),
+                              vote("?g_tinyFont@@3PAVfont@@A", 0x6000)])
+        self.assertEqual({p.verdict for p in pairings}, {"held"})
+
     def test_code_pairings_need_a_body_proof(self):
         pairings, _ = decide([vote("?size@a@@QBEIXZ", 0x2000, typ=REL32)],
                              claimed={0x2000: "?size@b@@QBEIXZ"})
@@ -176,13 +195,13 @@ class IdentityRelocationTests(unittest.TestCase):
 
     def test_folded_name_compares_at_the_same_address(self):
         count, name = self.rewrite("?size@a@@QBEIXZ", "?size@b@@QBEIXZ",
-                                   {"?size@a@@QBEIXZ": {0x2000}},
+                                   {("", "?size@a@@QBEIXZ"): {0x2000}},
                                    {"?size@b@@QBEIXZ": (0x2000, "func")})
         self.assertEqual((count, name), (1, "?size@a@@QBEIXZ"))
 
     def test_different_address_stays_visible(self):
         count, name = self.rewrite("?size@a@@QBEIXZ", "?size@b@@QBEIXZ",
-                                   {"?size@a@@QBEIXZ": {0x3000}},
+                                   {("", "?size@a@@QBEIXZ"): {0x3000}},
                                    {"?size@b@@QBEIXZ": (0x2000, "func")})
         self.assertEqual((count, name), (0, "?size@b@@QBEIXZ"))
 
@@ -191,13 +210,22 @@ class IdentityRelocationTests(unittest.TestCase):
                                 {"?size@b@@QBEIXZ": (0x2000, "func")})
         self.assertEqual(count, 0)
         count, _ = self.rewrite("?size@a@@QBEIXZ", "?size@b@@QBEIXZ",
-                                {"?size@a@@QBEIXZ": {0x2000, 0x3000}},
+                                {("", "?size@a@@QBEIXZ"): {0x2000, 0x3000}},
                                 {"?size@b@@QBEIXZ": (0x2000, "func")})
         self.assertEqual(count, 0)
 
     def test_placeholder_target_resolves_by_its_address(self):
-        count, name = self.rewrite("_memmove", "fn_217590", {"_memmove": {0x217590}}, {})
+        count, name = self.rewrite("_memmove", "fn_217590", {("", "_memmove"): {0x217590}}, {})
         self.assertEqual((count, name), (1, "_memmove"))
+
+    def test_unit_scoped_copy_decides_for_its_unit_only(self):
+        from homm3.build import identity_relocations
+        identities = {("", "??_C@_03x@"): {0x7000},
+                      ("u", "??_C@_03x@"): {0x7010}}
+        self.assertEqual(identity_relocations.resolve_name(
+            "??_C@_03x@", {}, identities, "u"), 0x7010)
+        self.assertEqual(identity_relocations.resolve_name(
+            "??_C@_03x@", {}, identities, "v"), 0x7000)
 
 
 if __name__ == "__main__":

@@ -1103,7 +1103,7 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
     if identities is None:
         identities = identity_relocations.load_identities(ADDRESS_IDENTITIES)
     paired_target, identity_count = identity_relocations.canonicalize(
-        normalized, paired_target, symbol_rvas, identities)
+        normalized, paired_target, symbol_rvas, identities, unit=rel.stem)
     counts["identity"] += identity_count
     if count or base_literal_count or rewrites:
         normalized_base.write_bytes(normalized)

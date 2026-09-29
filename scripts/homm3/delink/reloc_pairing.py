@@ -96,6 +96,7 @@ class Pairing:
     votes: list = field(default_factory=list)
     verdict: str = ""
     reason: str = ""
+    unit: str = ""                 # set for a unit-scoped identity
 
     @property
     def functions(self) -> set[int]:
@@ -113,6 +114,17 @@ def stable_name(name: str) -> bool:
     if "?%" in name or "$S" in name or "$RVA" in name or "__h3cg$" in name:
         return False
     return msvc_names.mask(name) == name
+
+
+#: COMDAT data whose name is derived from its content: string literals and
+#: floating-point constants. Retail may hold several identical copies (one
+#: per compiland without string pooling) or fold them onto other read-only
+#: data; the content, not the name, identifies the bytes.
+CONTENT_NAMED = ("??_C@", "__real@")
+
+
+def content_named(name: str) -> bool:
+    return name.startswith(CONTENT_NAMED)
 
 
 def is_placeholder(name: str) -> bool:
@@ -133,6 +145,7 @@ class CandidateObject:
         from homm3.compare.canonicalize import CoffObject
         absolute = absolute or {}
         coff = CoffObject(payload)
+        self.coff = coff
         by_section: dict[int, list] = defaultdict(list)
         for symbol in coff.symbols.values():
             if symbol.section <= 0 or symbol.storage_class not in (EXTERNAL, STATIC):
@@ -180,6 +193,24 @@ class CandidateObject:
                 self.functions[symbol.name] = (bytes(body), relocs)
         for name in duplicate:
             del self.functions[name]
+
+
+def data_content(candidate: CandidateObject, name: str) -> tuple[bytes, list[int]] | None:
+    """(bytes, relocation sites) of a data symbol that alone fills its
+    section (zeros for uninitialized storage), else None."""
+    coff = candidate.coff
+    found = [s for s in coff.symbols.values() if s.name == name and s.section > 0]
+    if len(found) != 1 or found[0].value:
+        return None
+    section = coff.sections[found[0].section - 1]
+    if section.characteristics & CNT_CODE:
+        return None
+    members = [s for s in coff.symbols.values() if s.section == section.index
+               and not s.name.startswith(".") and s.storage_class in (EXTERNAL, STATIC)]
+    if len(members) != 1:
+        return None
+    sites = [r.site for r in coff.relocations if r.section == section.index]
+    return coff.section_bytes(section), sites
 
 
 def _masked(body: bytes, sites: Iterable[int]) -> bytes:
@@ -288,11 +319,30 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     by_owner: dict[int, set[str]] = defaultdict(set)
     for vote in votes:
         by_symbol[vote.symbol].append(vote)
-        by_owner[vote.owner].add(vote.symbol)
+        if not content_named(vote.symbol):
+            by_owner[vote.owner].add(vote.symbol)
     pairings: list[Pairing] = []
     aliases: list[Vote] = []
     for symbol, rows in sorted(by_symbol.items()):
         owners = sorted({v.owner for v in rows})
+        if content_named(symbol) and (
+                len(owners) > 1 or claimed_name_at(owners[0]) not in (None, symbol)):
+            # Identical copies, or a copy folded onto other read-only data:
+            # each compiland's votes must agree on its copy, and the caller
+            # proves the bytes (`unit-candidate`).
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                places = {v.owner for v in mine}
+                pairing = Pairing(symbol, min(places), "data", mine, unit=unit)
+                pairings.append(pairing)
+                if len(places) > 1:
+                    pairing.verdict, pairing.reason = "held", (
+                        "unit votes for " + ",".join(f"{o:#x}" for o in sorted(places)))
+                elif any(v.addend for v in mine):
+                    pairing.verdict, pairing.reason = "held", "interior operand of a copy"
+                else:
+                    pairing.verdict, pairing.reason = "unit-candidate", "needs content proof"
+            continue
         for owner in owners:
             mine = [v for v in rows if v.owner == owner]
             region = region_of(owner)
@@ -309,6 +359,11 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
                 elif len(owners) > 1:
                     pairing.verdict, pairing.reason = "held", (
                         "symbol votes for " + ",".join(f"{o:#x}" for o in owners))
+                elif bound is not None and bound != owner:
+                    # Two identical retail bodies: the candidate's name is
+                    # claimed at the other, so this call reaches a different
+                    # instantiation than the candidate names.
+                    pairing.verdict, pairing.reason = "held", f"symbol claimed at {bound:#x}"
                 elif any(v.addend not in (0, -4) or v.target != owner
                          and v.typ == DIR32 for v in mine):
                     pairing.verdict, pairing.reason = "held", "interior code operand"
@@ -363,10 +418,10 @@ def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None]
 
 
 PAIRINGS_HEADER = ["owner_rva", "symbol", "kind", "verdict", "reason", "votes",
-                   "functions", "addends", "example_function", "example_site"]
+                   "functions", "addends", "example_function", "example_site", "unit"]
 ALIAS_HEADER = ["function_rva", "target_rva", "site_rva", "owner", "addend",
                 "occurrences"]
-IDENTITY_HEADER = ["rva", "name", "proof", "evidence"]
+IDENTITY_HEADER = ["rva", "name", "proof", "evidence", "unit"]
 
 
 def _hex(value: int) -> str:
@@ -380,7 +435,7 @@ def pairing_rows(pairings: list[Pairing]) -> list[list[str]]:
         rows.append([f"0x{p.owner:08x}", p.symbol, p.kind, p.verdict, p.reason,
                      str(len(p.votes)), str(len(p.functions)),
                      ",".join(_hex(a) for a in sorted(p.addends)),
-                     first.function, f"0x{first.site_rva:08x}"])
+                     first.function, f"0x{first.site_rva:08x}", p.unit])
     return rows
 
 
@@ -506,6 +561,20 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
         if (pairing.symbol, pairing.owner) in held and pairing.verdict == "admitted":
             pairing.verdict, pairing.reason = "held", "interior operand claimed by another name"
     aliases = [v for v in aliases if (v.symbol, v.owner) not in held]
+    for pairing in pairings:
+        if pairing.verdict != "unit-candidate":
+            continue
+        candidate = objects(pairing.unit)
+        content = data_content(candidate, pairing.symbol) if candidate else None
+        if content is None:
+            pairing.verdict, pairing.reason = "held", "no single-symbol candidate section"
+            continue
+        payload, sites = content
+        retail_bytes = img.pe.read(pairing.owner, len(payload))
+        if retail_bytes is None or _masked(retail_bytes, sites) != _masked(payload, sites):
+            pairing.verdict, pairing.reason = "held", "retail bytes differ from the unit's copy"
+            continue
+        pairing.verdict, pairing.reason = "unit", f"{len(payload)} byte(s) equal the unit's copy"
     _STATE = State(votes, withdrawn, admitted, pairings, aliases,
                    {rva: row["name"] for rva, row in rows.items()})
     return _STATE
@@ -525,7 +594,7 @@ def write_aliases(state: State) -> Path:
 
 
 def address_identities(model, state: State | None = None,
-                       base_dir: Path | None = None) -> list[tuple[int, str, str, str]]:
+                       base_dir: Path | None = None) -> list[tuple[int, str, str, str, str]]:
     """Phase 2 (resolved model): proven extra names of retail code addresses.
 
     Library: every symbol a byte-verified library section defines there.
@@ -541,13 +610,17 @@ def address_identities(model, state: State | None = None,
     from homm3.verify.startup_bodies import Candidate, match
     state = state or _STATE
     base_dir = Path(base_dir or common.HOMM3_DIR / "build/objdiff/base")
-    rows: list[tuple[int, str, str, str]] = []
+    rows: list[tuple[int, str, str, str, str]] = []
     _ranges, _summary, defined = library_ranges(image(), model)
     for rva, names in sorted(defined.items()):
         for name in sorted(names):
-            rows.append((rva, name, "library", "verified library section"))
+            rows.append((rva, name, "library", "verified library section", ""))
     if state is None:
         return rows
+    for pairing in state.pairings:
+        if pairing.verdict == "unit":
+            rows.append((pairing.owner, pairing.symbol, "unit-copy", pairing.reason,
+                         pairing.unit))
 
     sizes = {b.rva: b.size for b in model.functions}
     names_at = {b.rva: b.name for b in model.functions if b.name and b.channel}
@@ -598,14 +671,14 @@ def address_identities(model, state: State | None = None,
             if data_names.get(slot) == "__imp_" + pairing.symbol:
                 pairing.verdict, pairing.reason = "thunk", f"jmp through {data_names[slot]}"
                 rows.append((pairing.owner, pairing.symbol, "thunk",
-                             f"jmp [{data_names[slot]}]"))
+                             f"jmp [{data_names[slot]}]", ""))
                 continue
     prove_folds(state.pairings, name_at=names_at.get, prove=prove)
     for pairing in state.pairings:
         if pairing.kind == "code" and pairing.verdict == "folded":
             first = min(pairing.votes, key=lambda v: v.site_rva)
             rows.append((pairing.owner, pairing.symbol, "fold",
-                         f"{pairing.reason}; called by {first.function}"))
+                         f"{pairing.reason}; called by {first.function}", ""))
     return rows
 
 
@@ -619,8 +692,8 @@ def write_outputs(model) -> None:
     write(gen / IDENTITIES_OUT,
           ["# GENERATED by homm3.delink.reloc_pairing - proven extra names of retail addresses."],
           IDENTITY_HEADER,
-          [[f"0x{rva:08x}", name, proof, evidence]
-           for rva, name, proof, evidence in sorted(set(identities))])
+          [[f"0x{rva:08x}", name, proof, evidence, unit]
+           for rva, name, proof, evidence, unit in sorted(set(identities))])
     if state is not None:
         write(gen / PAIRINGS_OUT,
               ["# GENERATED by homm3.delink.reloc_pairing - relocation pairings and verdicts.",
