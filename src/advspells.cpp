@@ -422,6 +422,10 @@ void advManager::dimensionDoor(TSkillMastery level)
 // older accessor leaves the bytes unchanged. Retain both proven boundaries.
 // DC549 initializes nearest distance before DC552 heroLocation; DC564
 // stores closest_distance_2 before DC565 stores closest_town.
+// DC 561 tests DistanceSquared and DC 564 stores it again with no local
+// between them; retail expands both calls (see struct.h). Mac's single
+// evaluation is its own lowering; a named distance local had lowered
+// Windows to 90.50%.
 // Original local names: TGWindow, closest_town, closest_distance_2,
 // hero_loc, town_loc; normalized below without changing their scopes.
 VA(0x0041d360, 0x5C8) MAC_ADDRESS(0x01e0c8, 0x6c0)  // anchor-vtable TTownGateWindow ctor/dtor, dc 0x22510
@@ -483,9 +487,10 @@ void advManager::townGate(TSkillMastery level)
         for (unsigned i = 0; i < g_game->m_towns.size(); i++) {
             if (g_game->onSameTeam(who->m_owner, g_game->m_towns[i].m_owner)) {
                 type_point townLoc = g_game->getTown(i)->getLocation();
-                int distance2 = heroLoc.distanceSquared(townLoc);
-                if (distance2 < closestDistance2) {
-                    closestDistance2 = distance2;
+                if (heroLoc.distanceSquared(townLoc)
+                    < closestDistance2) {
+                    closestDistance2
+                        = heroLoc.distanceSquared(townLoc);
                     closestTown = i;
                 }
             }

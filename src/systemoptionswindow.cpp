@@ -176,16 +176,25 @@ TSystemOptionsWindow::TSystemOptionsWindow()
             memError();
     }
 
+    // DC 130..136 send the status bits directly: the Dreamcast compiler
+    // never expands widget::set_visible (all 51 DC uses call dc 0x56df8) and
+    // none comes from this compiland. Retail pushes both constants ahead of
+    // each getWidget call, as a direct send does; the setVisible spelling
+    // pushed after it (76.55 -> 98.31).
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->setVisible(0);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->setVisible(1);
+        getWidget(music)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
-        getWidget(effects)->setVisible(0);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->setVisible(1);
+        getWidget(effects)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 

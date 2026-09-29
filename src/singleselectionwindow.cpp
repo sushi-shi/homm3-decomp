@@ -3224,6 +3224,12 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
 VA(0x00580A70, 0x68B) MAC_ADDRESS(0x178b94, 0x33c)  // dc 0x135f04
 void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
 {
+    // DC 2839 constructs msg at procedure scope (DC local sp+0x4c) for
+    // Update(msg); Complete's Update takes none, but the unused local stays
+    // in the source. Dropping it had lowered Windows to 90.15%; with it the
+    // body is exact again (the randomMaps reuse below is Windows byte-flat).
+    message msg;
+
     if (m_inScenarioOptions) {
         turnOffScenarioOptions();
         return;

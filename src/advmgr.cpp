@@ -3976,6 +3976,11 @@ void advManager::reseed(int targetX, int targetY)
 // the current 96.5199%.
 // DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
 // Keep the existing Complete getText calls; they are Windows byte-flat.
+// 2026-09-29: retail reads c_str() straight off getDescription's returned
+// object (`mov eax,[eax+4]`), so the description is an unnamed temporary,
+// not a named string local (98.51 -> 99.17). Describing `grail` itself
+// instead of a second record regresses to 94.99. The rest is the
+// type_artifact store order at the award arm and the temp reset schedule.
 VA(0x0040ec90, 0x5AD) MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4072,9 +4077,8 @@ int advManager::processSearch(int x, int y, int z)
                              -1, 0, -1, 0);
 
                 type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
-                std::string description = describedGrail.getDescription();
-                normalDialog(description.c_str(), 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
+                normalDialog(describedGrail.getDescription().c_str(), 1, -1,
+                             -1, -1, 0, -1, 0, -1, 0, -1, 0);
             }
 
             g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
@@ -7478,27 +7482,41 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
 // Dreamcast lines 9455/9461/9470 name curr and cell and preserve the
 // getCurrHero, getLocation and updateScreen helper boundaries. Restoring those
 // calls removes the duplicated timer body and reproduces all 431 retail bytes.
+// DC 9435..9450 are four separate guard returns (each its own scope and
+// branch), not one conjunction. Both spellings emit this body exactly, but
+// only the guard-return form keeps the body out of line where retail calls
+// it. `vc6 predict-inline 0x41ab00 --trace` shows why: with the guards C1XX
+// no longer saves the body (callee flags 0x2a, no 0x40), whereas the
+// conjunction shipped a cost-169 body that /Ob2 expanded into doAdventureOptions,
+// doSystemOptions, screenScroll, processDeSelect, processRadarSelect and
+// deactivateCurrHero (all back to 100%).
 VA(0x00417680, 0x1AF) MAC_ADDRESS(0x017e58, 0x14c)  // dc 0x1a520
 void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
                                     unsigned char drawChanges)
 {
-    if (!waitingPlayer && g_currentPlayer
-        && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
-        m_curHeroMobile = 0;
-        hero* curr = g_game->getCurrHero();
-        stopCursor(1);
-        curr->obscureCell();
+    if (waitingPlayer)
+        return;
+    if (!g_currentPlayer)
+        return;
+    if (g_currentPlayer->m_currHeroId == -1)
+        return;
+    if (!m_curHeroMobile)
+        return;
 
-        type_point point = curr->getLocation();
-        NewmapCell* cell = getCell(point);
+    m_curHeroMobile = 0;
+    hero* curr = g_game->getCurrHero();
+    stopCursor(1);
+    curr->obscureCell();
 
-        curr->m_facing = m_cursorDirection;
-        m_drawCursor = 0;
+    type_point point = curr->getLocation();
+    NewmapCell* cell = getCell(point);
 
-        if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
-            completeDraw(0);
-            updateScreen(0, 0);
-        }
+    curr->m_facing = m_cursorDirection;
+    m_drawCursor = 0;
+
+    if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 }
 
@@ -8272,7 +8290,9 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
 // Original: advManager::CheckDimHero; advmgr.cpp:10558, dc 0x1c580
 // Complete expands this guard in DoAdvCommand, ProcessKeyPress and
 // ProcessSearch, adding hero-locator and next-hero-button refreshes after
-// the shared ShowRoute call. Preserve those nested source calls.
+// the shared ShowRoute call. Preserve those nested source calls. All three
+// expansions reload gpAdvManager for the next-hero-button refresh, as for
+// the locator refresh, so both reach it through the global.
 MAC_ADDRESS(0x019958, 0xc8)
 void advManager::checkDimHero()
 {
@@ -8281,7 +8301,7 @@ void advManager::checkDimHero()
     if (!g_game->getCurrHero()->isMobile()) {
         showRoute(1, 0, 0);
         g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
-        checkDimNextHeroBut();
+        g_advManager->checkDimNextHeroBut();
     }
 }
 
