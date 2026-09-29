@@ -25,7 +25,6 @@ public:
     int m_frame;
 
     CSpriteWidget(int xPos, int yPos, CSprite* sprite, int spriteFrame);
-    virtual ~CSpriteWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;             // slot 4, retail 0x575750
@@ -109,7 +108,6 @@ public:
 class CHotspotWidget : public widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
-    virtual ~CHotspotWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575290
     // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120, dc 0x12f010.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const {}
