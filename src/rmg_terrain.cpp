@@ -508,6 +508,8 @@ int __fastcall selectTerrainTransition(
 {
     // Retail construction guard byte 0x6a52a1 (tested and set in this body).
     DATA_COMPGEN_GUARD(0x006a52a1, terrainFlipsGuard, flips)
+    // atexit(0x5b45e0): the table's empty cleanup, right after this function.
+    VA_COMPGEN(0x005b45e0, 0x1, STATIC_DTOR, flips)
     DATA(0x006A52B8)
     static TRmgTerrainFlip flips[4] = {
         makeTerrainFlip(0, 0), makeTerrainFlip(0, 1),
@@ -1433,16 +1435,19 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a52a0 (tested and set in this body).
-    DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, offsets)
+    DATA_COMPGEN_GUARD(0x006a52a0, firstDiagonalOffsetsGuard, firstDiagonalOffsets)
+    // The guarded initializer registers atexit(0x5b6df0), this table's empty
+    // cleanup, placed right after this function.
+    VA_COMPGEN(0x005b6df0, 0x1, STATIC_DTOR, firstDiagonalOffsets)
     DATA(0x006A5260)
-    static TPoint offsets[4][2] = {
+    static TPoint firstDiagonalOffsets[4][2] = {
         { TPoint(-1, 1), TPoint(1, -1) },
         { TPoint(1, 1), TPoint(-1, -1) },
         { TPoint(-1, -1), TPoint(1, 1) },
         { TPoint(1, -1), TPoint(-1, 1) }
     };
     int terrain = getTerrain(point);
-    const TPoint* pair = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    const TPoint* pair = firstDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
         tLimit(
             0, static_cast<int>(point.getX()) + pair[0].getX(), static_cast<int>(getWidth()) - 1),
@@ -1462,13 +1467,15 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a3d64 (tested and set in this body).
-    DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, offsets)
+    DATA_COMPGEN_GUARD(0x006a3d64, secondDiagonalOffsetsGuard, secondDiagonalOffsets)
+    // atexit(0x5b6fc0): the table's empty cleanup, right after this function.
+    VA_COMPGEN(0x005b6fc0, 0x1, STATIC_DTOR, secondDiagonalOffsets)
     DATA(0x006A3D68)
-    static TPoint offsets[4] = {
+    static TPoint secondDiagonalOffsets[4] = {
         TPoint(2, 2), TPoint(-2, 2), TPoint(2, -2), TPoint(-2, -2)
     };
     int terrain = getTerrain(point);
-    const TPoint& offset = offsets[(flip.m_flipY << 1) | flip.m_flipX];
+    const TPoint& offset = secondDiagonalOffsets[(flip.m_flipY << 1) | flip.m_flipX];
     TRmgGridPoint nearby(
         tLimit(0, static_cast<int>(point.getX()) + offset.getX(), static_cast<int>(getWidth()) - 1), point.getY());
     if (getTerrain(nearby) != terrain)

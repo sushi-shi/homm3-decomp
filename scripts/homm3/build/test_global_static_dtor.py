@@ -61,6 +61,29 @@ class GlobalStaticDestructorTest(unittest.TestCase):
             with self.subTest(kwargs=kwargs):
                 self.assertEqual(self.bind(fixture(**kwargs)), ({}, ()))
 
+    def interleaved(self, opcode):
+        # push OFFSET $E7; <opcode> [owner]/call; call _atexit
+        coff = fixture()
+        parent = (b"\xb9\0\0\0\0\x68\0\0\0\0" + bytes([opcode]) + b"\0\0\0\0"
+                  + b"\xe8\0\0\0\0\xc3")
+        bodies = [parent, b"\xe8\0\0\0\0\xc3", b"\0\0"]
+        coff.symbols[8] = Symbol(8, 0, "_other", 0, 0, 0, 2, 0)
+        middle = (Relocation(1, 11, 3, DIR32) if opcode == 0xa3
+                  else Relocation(1, 11, 8, 0x14))
+        coff.relocations = [Relocation(1, 1, 3, DIR32), Relocation(1, 6, 2, DIR32),
+                            middle, Relocation(1, 16, 4, 0x14),
+                            Relocation(2, 1, 5, 0x14)]
+        coff.sections[0].raw_size = len(parent)
+        coff.section_bytes = lambda section: bodies[section.index - 1]
+        return self.bind(coff)[0]
+
+    def test_owner_stores_may_separate_the_push_from_atexit(self):
+        # createRiver: the table's stores are scheduled between the two.
+        self.assertEqual(self.interleaved(0xa3), {2: "__h3cg$static_dtor$holder"})
+
+    def test_another_call_between_push_and_atexit_is_not_registration(self):
+        self.assertEqual(self.interleaved(0xe8), {})
+
     def test_extent_gate_still_rejects_a_wrong_sized_claim(self):
         with self.assertRaises(ValueError):
             self.bind(fixture(), size=7)

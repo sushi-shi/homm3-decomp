@@ -945,8 +945,11 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
     def registered_by_owner(index, owner):
         # A function-local static's destructor may use only other globals.
         # Its initializer still takes the owner's address, and registers
-        # the exact callback: push OFFSET callback; call _atexit. A mere
-        # graph edge (or calling the callback) is not registration proof.
+        # the exact callback: push OFFSET callback, then _atexit as the
+        # next call. The scheduler may interleave the owner's own stores
+        # between the two (createRiver's delta table), but no other call.
+        # A mere graph edge (or calling the callback) is not registration
+        # proof.
         for parent, symbol in defined_functions.items():
             names = target_names(parent)
             if not owner_present(names, owner) or "_atexit" not in names:
@@ -956,14 +959,17 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
             body = coff.section_bytes(section)
             relocs = {r.site: r for r in coff.relocations
                       if r.section == symbol.section and start <= r.site < end}
+            calls = sorted(site for site, r in relocs.items()
+                           if r.typ == 0x14 and site > start and body[site - 1] == 0xe8)
             callbacks = set()
             for site, ref in relocs.items():
-                call = relocs.get(site + 5)
+                later = [call for call in calls if call > site]
+                call = relocs[later[0]] if later else None
                 if (ref.typ == DIR32 and ref.symbol_index in volatile
                         and site > start and site + 9 <= end
-                        and body[site - 1] == 0x68 and body[site + 4] == 0xe8
+                        and body[site - 1] == 0x68
                         and body[site:site + 4] == b"\0" * 4
-                        and call is not None and call.typ == 0x14
+                        and call is not None
                         and coff.symbols[call.symbol_index].name == "_atexit"):
                     callbacks.add(ref.symbol_index)
             owners = {coff.symbols[t].name for t in outgoing[parent]
