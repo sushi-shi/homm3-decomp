@@ -24,11 +24,11 @@ rva	function_count	class
 0x23a610	15	TAdventureOptionsWindow
 # retail 0x406e6f: ??0advManager@@QAE@XZ stores this vptr
 0x23a678	3	advManager
-0x23a684	5	
+0x23a684	5	CAdvMgrNetMsgHandler
 # retail 0x41b07a: ??0CAdvPopup@@QAE@HHHHI@Z stores this vptr
 0x23a6a8	15	CAdvPopup
-0x23aba8	3	
-0x23abb4	3	
+0x23aba8	3	TAllocationFailure
+0x23abb4	3	TRuntimeError
 0x23b670	3	
 0x23b67c	3	
 # retail 0x4324db: ??_Gtype_artifact_effect@@UAEPAXI@Z stores this vptr
@@ -82,7 +82,7 @@ rva	function_count	class
 # retail slot 1 names type_elixir_of_life_artifact::getValue; src/ai_player.cpp, declaration in include/ai_player.h
 0x23b778	2	type_elixir_of_life_artifact
 0x23b7d8	1	type_AI_spellcaster
-0x23b8f8	15	
+0x23b8f8	15	TSplitWindow
 0x23b9bc	3	baseManager
 # retail 0x44dfbe: ??0Bitmap16Bit@@QAE@HH@Z stores this vptr
 0x23b9c8	3	Bitmap16Bit
@@ -95,41 +95,41 @@ rva	function_count	class
 0x23ba5c	14	coloredBorderFrame
 # retail 0x450315: ??0bitmapBorder@@QAE@HHHHHPBDH@Z stores this vptr
 0x23ba94	14	bitmapBorder
-0x23bacc	14	
+0x23bacc	14	bitmapBorder16
 # retail 0x450d70: ??1type_bottom_view_window@@UAE@XZ stores this vptr
 0x23bb04	2	type_bottom_view_window
-0x23bb0c	2	
-0x23bb1c	2	
-0x23bb24	2	
+0x23bb0c	2	TBottomViewNewTurn
+0x23bb1c	2	TBottomViewResourceMessage
+0x23bb24	2	TBottomViewMessage
 0x23bb2c	2	
-0x23bb34	2	
+0x23bb34	2	TBottomViewTown
 0x23bb3c	2	
-0x23bb44	2	
+0x23bb44	2	TBottomViewEnemyTurn
 0x23bb54	13	button
 0x23bb88	13	textButton
 0x23bbbc	13	type_func_button
-0x23bc08	9	
+0x23bc08	9	TCampaignSetWindow
 # retail 0x459112: ??0TCampaignBrief@@QAE@_N0@Z stores this vptr
 0x23bc2c	9	TCampaignBrief
-0x23bca4	9	
+0x23bca4	9	TCampaignWindow
 # retail 0x46283e: ??0combatManager@@QAE@XZ stores this vptr
 0x23d3e8	3	combatManager
-0x23d410	4	
-0x23d420	4	
-0x23d430	4	
+0x23d410	4	type_combat_sub_window
+0x23d420	4	TCombatControlSubWindow
+0x23d430	4	TCombatPlacementSubWindow
 0x23d440	1	TCombatHeroSubWindow
 0x23d444	1	TCombatCreatureSubWindow
-0x23d448	9	
+0x23d448	9	TCombatOptionsWindow
 0x23d46c	9	TCombatResultsWindow
-0x23d4bc	27	
-0x23d528	9	
+0x23d4bc	27	CCombatChatEdit
+0x23d528	9	TCombatWindow
 0x23d6b0	3	CSprite
 # retail 0x47c30f: ??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z stores this vptr
 0x23d6bc	3	CSpriteFrame
-0x23d6fc	14	
-0x23d938	8	
-0x23d958	13	
-0x23d98c	13	
+0x23d6fc	14	TCustomCampaignWindow
+0x23d938	8	TCampaignBonus
+0x23d958	13	TCampaignStartOption
+0x23d98c	13	TCampaignStartBonusOption
 0x23d9c0	8	
 0x23d9e0	8	
 0x23da00	8	
@@ -143,44 +143,44 @@ rva	function_count	class
 # retail slots 1/2 -> 0x483f10 read / 0x483f30 write; src/customcampaign.cpp TStreamBufFile
 0x23dacc	3	TStreamBufFile
 0x23dad8	13	
-0x23db0c	13	
+0x23db0c	13	TCampaignStartHeroOption
 # retail 0x48fe0f: ??0TDialogBox@@QAE@HHHHI@Z stores this vptr
 0x23db40	10	TDialogBox
 # retail 0x4907fd: ??0CTextDialog@@QAE@I@Z stores this vptr
 0x23db68	13	CTextDialog
-0x23db9c	15	
-0x23dbd8	15	
+0x23db9c	15	TDimensionDoorWindow
+0x23dbd8	15	TSkuttleBoatWindow
 0x23dc28	62	CDPlay
 0x23dd20	73	CDPlayLobby
 # retail 0x499f00 self-vptr store; src/dxplay.cpp CAutoArray<CDPlayAddressElement> destructor and seven-slot table
 0x23de44	7	?$CAutoArray@VCDPlayAddressElement@@
-0x23de74	6	
-0x23de8c	6	
-0x23dea4	6	
-0x23debc	6	
-0x23ded4	6	
-0x23deec	6	
-0x23df04	6	
-0x23df1c	6	
-0x23df34	6	
-0x23df4c	6	
-0x23df64	6	
-0x23df7c	6	
-0x23e508	2	
+0x23de74	6	type_event_record
+0x23de8c	6	type_record_move_hero
+0x23dea4	6	type_record_teleport
+0x23debc	6	type_record_claim_mine
+0x23ded4	6	type_record_claim_town
+0x23deec	6	type_record_hide_boat
+0x23df04	6	type_record_show_boat
+0x23df1c	6	type_record_erase
+0x23df34	6	type_record_hide_hero
+0x23df4c	6	type_record_show_hero
+0x23df64	6	type_record_player_death
+0x23df7c	6	type_record_shroud
+0x23e508	2	CCombatInitMsg
 0x23e5f4	3	font
 0x23e60c	3	
 0x23e618	7	
-0x23e634	3	
+0x23e634	3	t_create_failure@t_enclosure@force_feedback
 0x23e640	7	
-0x23e6d8	9	
+0x23e6d8	9	TGameTypeWindow
 0x23e704	3	
 # retail 0x4d60e8: ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z stores this vptr
 0x23e710	13	TGzInflateBuf
-0x23e744	2	
+0x23e744	2	TOpenFailure@TGzFile
 # retail 0x4d6c8e: ??0TGzFile@@QAE@PBD0@Z stores this vptr
 0x23e74c	3	TGzFile
 0x23eae8	15	
-0x23eb68	9	
+0x23eb68	9	THillFortWindow
 0x23eb8c	3	highScoreManager
 0x23eb98	9	THighScoreWindow
 0x23ebbc	14	CHSInputDlg
@@ -191,56 +191,56 @@ rva	function_count	class
 0x23fe1c	14
 0x23fe54	3	soundManager
 0x23fe60	15
-0x23ff50	9	
+0x23ff50	9	TMainMenu
 0x240028	4	mouseManager
 0x240038	7
 0x240054	19	
-0x2400a0	14	
-0x2400d8	7	
-0x2400f4	15	
-0x240130	21	
-0x240184	21	
-0x2401d8	14	
-0x240210	21	
-0x240264	3	
-0x240270	2	
+0x2400a0	14	TMultiPlayerWindow
+0x2400d8	7	?$CAutoArray@VCDPlaySession@@
+0x2400f4	15	CMPInputDlg
+0x240130	21	CMPInputEdit
+0x240184	21	CMPEdit
+0x2401d8	14	CHotSeatDlg
+0x240210	21	CHotSeatEdit
+0x240264	3	t_memory_file
+0x240270	2	t_complex_net_message
 0x2402c4	2	
 # TObjectTypeFilter::~TObjectTypeFilter stores this vptr (0x514530).
 # Slots: its deleting destructor 0x516560 and _purecall 0x617d9a.
 0x2402cc	2	TObjectTypeFilter
 0x2402d4	2	
 0x2402dc	2	
-0x2402f4	3	
-0x240320	15	
+0x2402f4	3	invalid_argument@std
+0x240320	15	TOverviewWindow
 0x240368	3	TPalette16
-0x240374	3	
-0x240600	15	
-0x240648	15	
-0x2406a8	9	
-0x2406cc	10	
-0x2406f4	9	
-0x2409c0	3	
-0x2409cc	7	
-0x2409e8	7	
+0x240374	3	TPalette24
+0x240600	15	TPuzzleWindow
+0x240648	15	TQuestLogWindow
+0x2406a8	9	TQuickHeroWindow
+0x2406cc	10	TQuickCreatureWindow
+0x2406f4	9	TQuickTownWindow
+0x2409c0	3	TProgressSink
+0x2409cc	7	type_random_map
+0x2409e8	7	TRmgMapInterface
 0x240a04	7	
-0x240a20	7	
+0x240a20	7	TRmgRoadMapAdapterInterface
 0x240a3c	7	
-0x240a58	7	
-0x240a74	4	
-0x240a84	4	
+0x240a58	7	TRmgMapAdapterInterface
+0x240a74	4	type_object
+0x240a84	4	rmgMonsterObject
 0x240a94	4	
-0x240aa4	4	
-0x240ab4	4	
-0x240ac4	4	
-0x240ad4	4	
-0x240ae4	4	
-0x240af4	4	
-0x240b04	4	
-0x240b14	4	
-0x240b24	4	
-0x240b34	4	
-0x240b44	4	
-0x240b54	4	
+0x240aa4	4	rmgOwnableObject
+0x240ab4	4	rmgArtifactObject
+0x240ac4	4	rmgResourceObject
+0x240ad4	4	rmgBlackBoxObject
+0x240ae4	4	rmgKeyTentObject
+0x240af4	4	rmgQuestArtifactObject
+0x240b04	4	rmgSeerHutObject
+0x240b14	4	rmgHeroObject
+0x240b24	4	rmgScholarObject
+0x240b34	4	rmgShrineObject
+0x240b44	4	rmgSpellScrollObject
+0x240b54	4	rmgWitchHutObject
 0x240b64	3	type_treasure_def
 0x240b70	3	
 0x240b7c	3	type_black_box_creature_def
@@ -259,23 +259,23 @@ rva	function_count	class
 0x240c18	3	
 0x240c24	3	type_spell_scroll_def
 0x240c30	3	
-0x240c3c	2	
-0x240c44	2	
-0x240c4c	9	
-0x240c70	3	
-0x240c7c	9	
+0x240c3c	2	TRmgGeneratorBase
+0x240c44	2	type_random_map_generator
+0x240c4c	9	TRecruitWindow
+0x240c70	3	recruitUnit
+0x240c7c	9	TRecruitQuickWindow
 0x240d04	73	CDPlayHeroes
-0x240e30	25	
-0x240e94	14	
-0x240ecc	14	
-0x240f04	4	
-0x240f14	4	
+0x240e30	25	CChatEdit
+0x240e94	14	CAnimatedDlg
+0x240ecc	14	CWaitForReadyPlayersDlg
+0x240f04	4	CNetMsgHandlerPause
+0x240f14	4	CNetMsgHandler
 # retail 0x5583b0 / 0x558490 self-vptr stores; src/remote.cpp CAutoArray<CDPlayPlayer> proof (old external CNetMsgHandler label was wrong)
 0x240f24	7	?$CAutoArray@VCDPlayPlayer@@
-0x240f40	14	
-0x240f78	14	
-0x240fb0	3	
-0x240fbc	13	
+0x240f40	14	CLevelPickWaitDlg
+0x240f78	14	CWaitForRemoteBattleDlg
+0x240fb0	3	CSaveScreen
+0x240fbc	13	CGameTransferDlg
 0x240ffc	3	resource
 0x241024	1	TResourceDisplay
 # retail 0x55d50d / 0x55d559: ??0/??1basic_ostringstream<char> (src/resourcemanager.cpp) store this basic_ios-subobject vptr; the candidate COMDAT has one slot, retail's names ??_G at 0x55dae0
@@ -285,98 +285,98 @@ rva	function_count	class
 0x241134	3	
 0x241174	7	
 0x241190	7	
-0x2411f0	7	
-0x24120c	7	
-0x241540	14	
-0x241578	14	
-0x2415b0	14	
-0x2415e8	14	
-0x241620	15	
-0x24165c	14	
-0x241694	15	
+0x2411f0	7	TRmgRoadLinePainter
+0x24120c	7	TRmgRoadPainter
+0x241540	14	type_doll_slot_widget
+0x241578	14	type_backpack_slot_widget
+0x2415b0	14	type_artifact_offering_widget
+0x2415e8	14	type_army_slot_widget
+0x241620	15	type_sacrifice_window
+0x24165c	14	type_transformer_slot
+0x241694	15	type_skeleton_window
 0x2416d0	3	sample
-0x2416dc	13	
+0x2416dc	13	CScenarioPlayerInfoWidget
 0x241710	15	CScenarioInfoDlg
-0x24174c	15	
+0x24174c	15	type_quest
 0x241788	15	
 0x2417c4	15	
 0x241800	15	
 0x24183c	15	
-0x241878	15	
+0x241878	15	type_artifact_quest
 0x2418b4	15	
 0x2418f0	15	
 0x24192c	15	
 0x241968	15	
-0x2419a4	13	
-0x2419d8	10	
-0x241a00	13	
-0x241a34	13	
-0x241a68	10	
-0x241a90	10	
-0x241ab8	10	
-0x241b14	3	
-0x241b20	2	
+0x2419a4	13	CHotspotWidget
+0x2419d8	10	CBonusDlg
+0x241a00	13	CSpriteWidget
+0x241a34	13	CBitmapWidget
+0x241a68	10	CHeroDlg
+0x241a90	10	CTownDlg
+0x241ab8	10	CTeamAlignmentDlg
+0x241b14	3	TRandomMapProgress
+0x241b20	2	CGameHeaderInfoMsg
 0x241b28	25	
 0x241b8c	17	
 0x241bd0	3	
-0x241bdc	14	
+0x241bdc	14	CChatWidget
 0x241c14	19	
 0x241c60	19	
-0x241cac	15	
+0x241cac	15	TSingleSelectionWindow
 0x241ce8	4	
 0x241cf8	14	
-0x241d30	2	
-0x241d38	3	
-0x241d44	3	
+0x241d30	2	CNewMapHeaderInfoMsg
+0x241d38	3	t_map_list_update
+0x241d44	3	CNewPlayerUpdateProc
 0x241d50	17	slider
-0x241dcc	15	
+0x241dcc	15	TSpellbookWindow
 0x24234c	1	TSubWindow
-0x242350	27	
-0x2423bc	27	
-0x242428	9	
-0x24244c	3	
-0x242458	4	
-0x242468	15	
+0x242350	27	CSwapManagerChatEdit
+0x2423bc	27	CGameChatEdit
+0x242428	9	TSwapWindow
+0x24244c	3	swapManager
+0x242458	4	CSwapMgrNetMsgHandler
+0x242468	15	TSystemOptionsWindow
 # TRmgTerrainRule::~TRmgTerrainRule stores this vptr (0x5b3850).
 # All six slots are _purecall, including the pure virtual destructor.
 0x242c80	6	TRmgTerrainRule
-0x242c98	6	
-0x242cb0	6	
-0x242cc8	17	
-0x242d0c	13	
+0x242c98	6	TRmgPatternTerrainRule
+0x242cb0	6	TRmgTableTerrainRule
+0x242cc8	17	type_text_slider
+0x242d0c	13	type_text_scroller
 0x242d40	19	textEntryWidget
-0x242d8c	3	
+0x242d8c	3	CTextEntrySave
 0x242d98	3	TTextResource
 0x242da4	3	TSpreadsheetResource
 0x242db0	14	textWidget
-0x242de8	14	
-0x242e30	15	
-0x243720	3	
-0x24372c	9	
-0x243750	5	
-0x243764	15	
-0x2437a0	15	
-0x2437dc	15	
-0x243818	15	
-0x243854	15	
-0x243890	15	
-0x2438cc	15	
-0x243908	15	
-0x243944	15	
-0x243980	15	
-0x2439bc	15	
-0x2439f8	15	
-0x243a34	15	
-0x243a70	15	
-0x243aac	15	
-0x243ae8	15	
-0x243ba0	14	
-0x243bd8	15	
+0x242de8	14	bitmapBackedTextWidget
+0x242e30	15	TTownGateWindow
+0x243720	3	townManager
+0x24372c	9	TTownScreenWindow
+0x243750	5	CTownNetMsgHandler
+0x243764	15	TThievesGuildWindow
+0x2437a0	15	THallWindow
+0x2437dc	15	TMageGuildWindow
+0x243818	15	type_garrison_base_window
+0x243854	15	type_monster_join_window
+0x243890	15	TGarrisonWindow
+0x2438cc	15	TBlacksmithWindow
+0x243908	15	TShipWindow
+0x243944	15	TBuyBuildWindow
+0x243980	15	TTavernWindow
+0x2439bc	15	TCastleWindow
+0x2439f8	15	TTradeResourceWindow
+0x243a34	15	TGiveResourceWindow
+0x243a70	15	TBuyArtifactWindow
+0x243aac	15	TSellArtifactWindow
+0x243ae8	15	TSellCreatureWindow
+0x243ba0	14	type_university_skill_button
+0x243bd8	15	type_university_window
 0x243c14	15	TViewArmyWindow
-0x243c54	15	
+0x243c54	15	TViewWorldWindow
 0x243c90	13	widget
 0x243cc4	9	heroWindow
-0x243ce8	14	
+0x243ce8	14	CHeroWindowEx
 0x243d20	11	File
 0x243d4c	3	heroWindowManager
 # LIBCPMT/LIBCMT string.obj#18: the verified library section defines ??_7length_error@std@@6B@ here
