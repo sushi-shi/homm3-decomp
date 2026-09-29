@@ -687,7 +687,7 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None)
                 name = objects[unit].sym_name(idx)
                 members[unit][msvc_names.mask(name)].append((value, section))
                 canonical = normalize_anon_ns_name(name, unit)
-                if canonical != name:
+                if msvc_names.mask(canonical) != msvc_names.mask(name):
                     # A reviewed anonymous namespace: the model spells the
                     # retail scope, the object the compiling path.
                     members[unit][msvc_names.mask(canonical)].append((value, section))

@@ -201,8 +201,9 @@ def destination_comparisons(dynamic, pe, base_dir=None):
         if not path.is_file():
             result['reason'] = 'witness object missing'; continue
         obj = objects.setdefault(path, Obj(path))
+        wanted = msvc_names.mask(owner['symbol'])
         hits = [(v, sn) for i, v, sn in obj.iter_symbols()
-                if sn > 0 and obj.sym_name(i) == owner['symbol']]
+                if sn > 0 and msvc_names.mask(obj.sym_name(i)) == wanted]
         if len(hits) != 1:
             result['reason'] = 'candidate definition absent or ambiguous'; continue
         offset, sn = hits[0]
