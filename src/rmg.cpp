@@ -4603,6 +4603,9 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // no erase call, the inline MSL pop_back; keep that call. Under VC6 it leaves
 // the push_back internals more /Ob2 budget than retail spent (retail retains
 // 20 calls, including _Ucopy/_Ufill/copy, against 6 here), 53.60%.
+// Controls: the single-position erase(end() - 1) that pop_back wraps gives
+// 89.43% (its one fewer inline level); back(), [size() - 1] and
+// *(end() - 1) tops and size()/empty()/size() > 0 loop tests are flat.
 // Earlier matching found 18 seed/pop/insertion forms favoring erasing the
 // consumed one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
 // and lower span seeds at function scope reaches 90.0984%; nine bounds/span

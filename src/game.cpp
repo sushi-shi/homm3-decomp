@@ -6737,7 +6737,11 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 }
 
 // DC game.cpp:7462 names NewfullMap::cell directly, and DC 7484 calls
-// type_point::operator== for the shipyard search.
+// type_point::operator== for the shipyard search; Mac 0xdd1bc..0xdd224
+// expands the operator's Boolean chain. Keep it (72.12%; three field tests
+// reach 99.97%). Retail spills `this` into a 0x2c frame; while/for loops,
+// either operand order, this->getHero and the getCell wrapper reach at
+// most 73.04%.
 VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
