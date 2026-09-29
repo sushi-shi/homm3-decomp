@@ -894,6 +894,28 @@ def write_aliases(state: State) -> Path:
     return out
 
 
+def proof_targets(bindings, defined: dict[int, Iterable[str]],
+                  pairings: list[Pairing]) -> dict[str, set[int]]:
+    """{masked name: {rva}} a body proof resolves named references by.
+
+    Model bindings and their aliases, verified library symbols, and admitted
+    data pairings: the resolved model carries an admitted owner as an
+    unnamed zero-sized anchor, yet a body proof must still know where it is
+    (`basic_string::npos`, `_Nullstr`'s literal)."""
+    targets: dict[str, set[int]] = defaultdict(set)
+    for b in bindings:
+        for entry in (b, *b.aliases):
+            if entry.name:
+                targets[msvc_names.mask(entry.name)].add(b.rva)
+    for rva, names in defined.items():
+        for name in names:
+            targets[name].add(rva)
+    for pairing in pairings:
+        if pairing.kind == "data" and pairing.verdict == "admitted":
+            targets[msvc_names.mask(pairing.symbol)].add(pairing.owner)
+    return targets
+
+
 def address_identities(model, state: State | None = None,
                        base_dir: Path | None = None) -> list[tuple[int, str, str, str, str]]:
     """Phase 2 (resolved model): proven extra names of retail code addresses.
@@ -928,14 +950,7 @@ def address_identities(model, state: State | None = None,
     names_at = {b.rva: b.name for b in model.functions if b.name and b.channel}
     data_names = dict(state.names)
     data_names.update((b.rva, b.name) for b in model.data if b.name)
-    targets: dict[str, set[int]] = defaultdict(set)
-    for b in model.functions + model.data:
-        for entry in (b, *b.aliases):
-            if entry.name:
-                targets[msvc_names.mask(entry.name)].add(b.rva)
-    for rva, names in defined.items():
-        for name in names:
-            targets[name].add(rva)
+    targets = proof_targets(model.functions + model.data, defined, state.pairings)
     img = retail()
     definers: dict[str, list[str]] = defaultdict(list)
     candidates: dict[str, Candidate] = {}

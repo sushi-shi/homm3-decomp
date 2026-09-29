@@ -302,6 +302,20 @@ class CompilandPrivateTests(unittest.TestCase):
         self.assertFalse(rp.compiland_private("_g_x", obj))
 
 
+class ProofTargetTests(unittest.TestCase):
+    def test_admitted_anchor_resolves_in_body_proofs(self):
+        from types import SimpleNamespace
+        npos = "?npos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@2IB"
+        pairings, _ = decide([vote(npos, 0x6000), vote("?g_x@@3HA", 0x6010),
+                              vote("?g_x@@3HA", 0x6020, function=0x1100)])
+        bindings = [SimpleNamespace(rva=0x7000, name="?g_y@@3HA", aliases=())]
+        targets = rp.proof_targets(bindings, {0x8000: ["_strlen"]}, pairings)
+        self.assertEqual(targets[npos], {0x6000})
+        self.assertEqual(targets["?g_y@@3HA"], {0x7000})
+        self.assertEqual(targets["_strlen"], {0x8000})
+        self.assertNotIn("?g_x@@3HA", targets)     # held: two places
+
+
 class EhThunkTests(unittest.TestCase):
     PROLOGUE = b"\x55\x8b\xec\x6a\xff\x68"
 
