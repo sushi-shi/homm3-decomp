@@ -889,10 +889,11 @@ int game::saveMinePool(TAbstractFile* outfile)
 }
 
 // DC game.cpp:1024..1068 records int count, int x and separate unsigned/signed
-// byte staging locals for the five shared reads. Complete adds saveVersion's
-// removable-troops branch with its own byte local. Direct virtual reads give
-// 99.91% (93.30% through readValue); the residual is the ICF-folded
-// vector<garrison>::insert that retail names as vector<mine>::insert.
+// byte staging locals for the five shared gzread calls, which stay direct.
+// Complete adds saveVersion's removable-troops branch; Mac 0xcba68..0xcba80
+// sign-extends its independent by-value read, so that arm keeps readValue.
+// The residual includes the ICF-folded vector<garrison>::insert that retail
+// names as vector<mine>::insert.
 VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
@@ -930,9 +931,8 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
         if (saveVersion < 28) {
             m_garrisons[x].m_removableTroops = !g_inCampaign;
         } else {
-            unsigned char value;
-            infile->read(&value, sizeof(value));
-            m_garrisons[x].m_removableTroops = value != 0;
+            m_garrisons[x].m_removableTroops =
+                readValue<char>(infile) != 0;
         }
     }
     return 0;
@@ -1182,7 +1182,6 @@ bool playerData::hasCapitol()
     return false;
 }
 
-// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x004b9fc0, 0x167) MAC_ADDRESS(0x0cc4fc, 0x1bc)  // dc 0xa4ee8
 unsigned char playerData::addGarrisonHero(town* ourTown)
 {
@@ -1196,8 +1195,7 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
         return 0;
 
     ourHero = g_game->getHero(ourTown->m_visitingHeroId);
-    if (!ourHero->m_army.merge(const_cast<armyGroup*>(
-            &static_cast<const town*>(ourTown)->getArmy())))
+    if (!ourHero->m_army.merge(&ourTown->getArmy()))
         return 0;
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
@@ -1792,16 +1790,14 @@ bool playerData::isHuman() const
     return false;
 }
 
-// DC game.cpp:1959 tests IsHuman() twice. Complete's body bytes are the same
-// either way, but setSpecialRumour (0x4cd170) expands all four getPlayerName
-// -> getName copies only with the direct field tests: the two isHuman()
-// calls raise getName's /Ob2 cost so the first copy stays a call (81.52%).
+// DC game.cpp:1959 tests IsHuman() twice and Mac 0xcdc1c/0xcdc58 retains
+// both isHuman calls.
 VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
 char* playerData::getName()
 {
-    if ((!m_isHuman && _strcmpi(m_name, g_generalText->getText(
+    if ((!isHuman() && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
-        (m_isHuman && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
+        (isHuman() && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
         strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
@@ -4584,9 +4580,9 @@ void game::matchUndergroundGates()
 // DC records int new_owner; Mac 0xd7f08..0xd7f50 widens the saved byte
 // before passing it to claimShipyard. Keep that procedure local and the
 // point constructors as call-argument temporaries at the recorded push_back
-// and claim sites; all canonical helper calls remain intact. The refugee
-// camp arm is written in place: routing it through perWeek's
-// randomizeRefugeeCamp helper costs Windows 84.79 -> 80.00%.
+// and claim sites; all canonical helper calls remain intact. Mac 0xd7dfc
+// calls randomizeRefugeeCamp, so the refugee-camp arm uses that shared helper
+// (80.00%; 84.79% with its body written in place).
 VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
 void game::randomizeEvents()
 {
@@ -4935,12 +4931,7 @@ void game::randomizeEvents()
                     break;
 
                 case REFUGEE_CAMP:
-                    {
-                        TCreatureType creature = getRandomMonster(0, 6);
-                        tempCell->m_objectIndex = creature;
-                        tempCell->m_extraInfo =
-                            g_creatureTypeTraits[creature].m_growthRate;
-                    }
+                    randomizeRefugeeCamp(tempCell);
                     break;
 
                 case RESOURCE:
@@ -5282,12 +5273,12 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customExperience = 1;
-            heroRecord->m_experience = readValue<int>(mapFile);
+            heroRecord->m_experience = readLittleEndianValue<int>(mapFile);
         }
 
         if (readValue<char>(mapFile)) {
             heroRecord->m_customSecondarySkills = 1;
-            heroRecord->m_numSecondarySkills = readValue<int>(mapFile);
+            heroRecord->m_numSecondarySkills = readLittleEndianValue<int>(mapFile);
             for (int skill = 0;
                  skill < heroRecord->m_numSecondarySkills; ++skill) {
                 heroRecord->m_secondarySkill[skill] = readValue<char>(mapFile);
@@ -5301,16 +5292,16 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             for (int equipped = 0; equipped < 19; ++equipped) {
                 heroRecord->m_artifacts[equipped] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_numInBackpack =
-                static_cast<unsigned char>(readValue<short>(mapFile));
+                static_cast<unsigned char>(readLittleEndianValue<short>(mapFile));
             for (int carried = 0;
                  carried < heroRecord->m_numInBackpack; ++carried) {
                 heroRecord->m_backpack[carried] =
                     // Complete map input stores a signed 16-bit artifact ordinal; the in-memory record retains DC's TArtifact constructor.
-                    type_artifact(static_cast<TArtifact>(readValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
+                    type_artifact(static_cast<TArtifact>(readLittleEndianValue<short>(mapFile)) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
             }
 
             heroRecord->m_artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
@@ -5331,9 +5322,8 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
             unsigned char spellMask[9];
             mapFile->read(spellMask, sizeof(spellMask));
             for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                heroRecord->m_spells.set(
-                    spell,
-                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0);
+                heroRecord->m_spells[spell] =
+                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
             }
         }
 
@@ -6033,9 +6023,7 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_difficulty = ucharBuffer;
 
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        char charBuffer;
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_maxHeroLevel = charBuffer;
+        m_maxHeroLevel = readValue<char>(infile);
     } else {
         m_maxHeroLevel = 0;
     }
@@ -6140,13 +6128,12 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 
     m_placeholders.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-        // Complete retail tests this dword for zero, not signed positivity.
-        unsigned int count;
-        infile->read(&count, sizeof(count));
+        // Mac 0xdb36c decodes this saved dword with lwbrx. Windows tests
+        // it for zero and decrements after the append, not signed positivity.
+        unsigned int count = readLittleEndianValue<unsigned int>(infile);
         if (count > 0) {
             do {
-                infile->read(&x, sizeof(unsigned char));
-                x &= 0xff;
+                x = readValue<unsigned char>(infile);
                 m_placeholders.push_back(H3_ENUM_DECODE(HeroId, x));
             } while (--count != 0);
         }
@@ -6155,16 +6142,13 @@ int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
     m_heroPlayerSetups.clear();
     if (m_version != MAP_FORMAT_RESTORATION_OF_ERATHIA
         && m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        infile->read(&x, sizeof(unsigned char));
-        x &= 0xff;
+        x = readValue<unsigned char>(infile);
         if (static_cast<unsigned int>(x) > 0) {
             int count = x;
             do {
-                infile->read(&x, sizeof(unsigned char));
-                int heroKey = x & 0xff;
+                int heroKey = readValue<unsigned char>(infile);
 
-                unsigned char savedHeroId;
-                infile->read(&savedHeroId, sizeof(savedHeroId));
+                unsigned char savedHeroId = readValue<unsigned char>(infile);
                 int heroId = savedHeroId;
                 if (savedHeroId == g_savedHeroNone)
                     heroId = -1;
@@ -6236,8 +6220,11 @@ void game::applyMapHeaderAvailability()
 // hero name; Mac 0xdb804+0x40c retains that constructor call. Direct
 // construction raises VC6 from 89.9519% to 90.3579% and gives the Mac
 // candidate the same 1776-byte extent as retail, with one direct-call gap.
-// Direct virtual writes through the staging locals give 90.77%; the
-// writeValue/writeLittleEndianValue template staging scores 86.49%.
+// DC 0xb0754's twenty gzwrite calls stage each field DC shares through a
+// local buffer, so those writes stay direct. Mac swaps the Complete-only
+// alignment and name length as owned values, which keep writeValue; the
+// setup key and portrait reuse enumBuffer like the other enum writes
+// (95.51%; writeValue<char> for those two gives 78.12%).
 VA(0x004c4f10, 0x71D) MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
 int NewSMapHeader::save(TAbstractFile* outfile)
 {
@@ -6245,7 +6232,6 @@ int NewSMapHeader::save(TAbstractFile* outfile)
     int count;
     int i;
     unsigned char ucharBuffer;
-    char charBuffer;
     char boolBuffer;
     char sbyteBuffer;
 
@@ -6275,8 +6261,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         < sizeof(ucharBuffer))
         return -1;
 
-    charBuffer = m_maxHeroLevel;
-    outfile->write(&charBuffer, sizeof(charBuffer));
+    writeValue<char>(outfile, m_maxHeroLevel);
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
@@ -6296,8 +6281,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
             < sizeof(enumBuffer))
             return -1;
 
-        unsigned short alignmentBuffer = player->m_legalAlignments;
-        outfile->write(&alignmentBuffer, sizeof(alignmentBuffer));
+        writeValue<unsigned short>(outfile,
+            LITTLE_ENDIAN_SHORT(player->m_legalAlignments));
 
         boolBuffer = player->m_hasRandomAlignment;
         if (outfile->write(&boolBuffer, sizeof(boolBuffer))
@@ -6365,8 +6350,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
             return -1;
     }
 
-    ucharBuffer = m_heroPlayerSetups.size();
-    outfile->write(&ucharBuffer, sizeof(ucharBuffer));
+    writeValue<unsigned char>(outfile, m_heroPlayerSetups.size());
     for (std::map<int, type_map_hero_info>::iterator it =
              m_heroPlayerSetups.begin();
          it != m_heroPlayerSetups.end(); ++it) {
@@ -6376,7 +6360,7 @@ int NewSMapHeader::save(TAbstractFile* outfile)
         outfile->write(&enumBuffer, sizeof(enumBuffer));
 
         count = it->second.m_name.length();
-        outfile->write(&count, sizeof(count));
+        writeValue<int>(outfile, LITTLE_ENDIAN_LONG(count));
         outfile->write(it->second.m_name.c_str(), count);
 
         ucharBuffer = 0;
@@ -6408,9 +6392,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char enumBuffer;
     int count;
     int i;
-    unsigned int availabilityIndex;
     unsigned char ucharBuffer;
-    char charBuffer;
     char boolBuffer;
     int x;
 
@@ -6441,8 +6423,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     m_difficulty = ucharBuffer;
 
     if (saveVersion >= g_saveVersionMaxHeroLevel) {
-        infile->read(&charBuffer, sizeof(charBuffer));
-        m_maxHeroLevel = charBuffer;
+        m_maxHeroLevel = readValue<char>(infile);
     } else {
         m_maxHeroLevel = 0;
     }
@@ -6479,9 +6460,7 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             infile->read(&ucharBuffer, sizeof(ucharBuffer));
             player->m_legalAlignments = ucharBuffer;
         } else {
-            unsigned short shortBuffer;
-            infile->read(&shortBuffer, sizeof(shortBuffer));
-            player->m_legalAlignments = shortBuffer;
+            player->m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
         }
 
         if (infile->read(&boolBuffer, sizeof(boolBuffer))
@@ -6557,34 +6536,22 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 
-    infile->read(&x, sizeof(unsigned char));
-    x &= 0xff;
+    x = readValue<unsigned char>(infile);
     if (static_cast<unsigned int>(x) <= 0)
         return 0;
     count = x;
 
     do {
-        infile->read(&x, sizeof(unsigned char));
-        int heroKey = x & 0xff;
+        int heroKey = readValue<unsigned char>(infile);
 
-        int heroId;
-        infile->read(&heroId, sizeof(unsigned char));
-        heroId &= 0xff;
+        int heroId = readValue<unsigned char>(infile);
         if (heroId == g_savedHeroNone)
             heroId = -1;
 
         std::string strTemp = readLengthPrefixedString(infile);
-        std::bitset<8> availability;
-        if (saveVersion >= g_saveVersionCustomHeroAvailability) {
-            infile->read(&ucharBuffer, sizeof(ucharBuffer));
-            for (availabilityIndex = 0;
-                 availabilityIndex < 8; ++availabilityIndex) {
-                availability[availabilityIndex] =
-                    (ucharBuffer & (1 << (availabilityIndex & 7))) != 0;
-            }
-        } else {
-            availability.set();
-        }
+        std::bitset<8> availability =
+            saveVersion >= g_saveVersionCustomHeroAvailability
+                ? readPackedBits<8>(infile) : ~std::bitset<8>();
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(
@@ -6682,8 +6649,7 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     if (isRemoteMove)
         return;
 
-    const_cast<armyGroup&>(
-        static_cast<const town*>(thisTown)->getArmy()).initialize();
+    thisTown->getArmy().initialize();
     if (thisTown->m_owner != -1) {
         m_players[newPlayerOwner].m_townIds[m_players[newPlayerOwner].m_numTowns] =
             static_cast<char>(townId);
@@ -6770,10 +6736,8 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
-// DC game.cpp:7462 names NewfullMap::cell directly. DC 7484 calls
-// type_point::operator== for the shipyard search, but Windows retail's
-// per-field xor/mask loop is the field-wise comparison: the inline operator
-// scores 72.12% against 99.97% for the three field tests.
+// DC game.cpp:7462 names NewfullMap::cell directly, and DC 7484 calls
+// type_point::operator== for the shipyard search.
 VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
@@ -6792,9 +6756,7 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
             playerData* oldPlayer = &m_players[shipyardInfo->m_owner];
             long index = 0;
             while (index < oldPlayer->m_shipyards.size()) {
-                if (oldPlayer->m_shipyards[index].m_x == location.m_x &&
-                    oldPlayer->m_shipyards[index].m_y == location.m_y &&
-                    oldPlayer->m_shipyards[index].m_z == location.m_z)
+                if (oldPlayer->m_shipyards[index] == location)
                     break;
                 ++index;
             }
@@ -8050,9 +8012,10 @@ void game::randomizeHeroPool()
     }
 }
 
-// Windows retail indexes m_heroes directly for the army and both artifact
-// arms and builds each type_artifact by assignment: exact, where the getHero
-// receiver with constructed artifacts scores 73.43%.
+// Windows retail and Mac 0xe0918..0xe0928 index m_heroes without getHero's
+// -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
+// stores each artifact id before its -1 payload: the converting
+// type_artifact constructor builds both war-machine artifacts.
 VA(0x004c9730, 0x159) MAC_ADDRESS(0x0e0910, 0x1c4)  // dc 0xb5094
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
@@ -8083,12 +8046,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     i = 1;
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
-            type_artifact artifact;
-            artifact.m_artifactId = ARTIFACT_BALLISTA;
+            type_artifact artifact(ARTIFACT_BALLISTA);
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
-            type_artifact artifact;
-            artifact.m_artifactId = ARTIFACT_FIRST_AID_TENT;
+            type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
             m_heroes[hero].giveArtifact(&artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;
