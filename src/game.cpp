@@ -8612,11 +8612,6 @@ DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
 static TPickRandomTownName g_randomTownNames[9];
 
-// Retail indexes this table with a 16-pointer faction stride (`shl 4`),
-// agreeing with initializeTownNameText's sixteen filled slots per faction.
-DATA(0x006a6048)
-const char* g_townNames[9][16];
-
 // E:\gamedcs\game.cpp:9803, dc 0xb6944.
 // Mac retains this helper at 0:0xe1f18; VC6 expands its call in
 // processOnMapTowns.

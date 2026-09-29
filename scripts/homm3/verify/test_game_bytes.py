@@ -51,6 +51,45 @@ def _category_at(rows, address):
     return next(r for r in rows if r['start'] <= address < r['end'])
 
 
+class LocalStaticAlignmentTests(unittest.TestCase):
+    def test_anonymous_element_type_joins_the_emitting_units_layout(self):
+        from homm3.core.msvc_names import mask
+        from homm3.verify.layout import Layout
+
+        source = '_?levels@?1??initialize@@YIXH@Z@4PAY02VTAutoStrPtr@?A0xB5931CA@@A'
+        emitted = r'_?levels@?BC@??initialize@@YIXH@Z@4PAY02VTAutoStrPtr@?%Z:\repo\src\probe.cpp42@@A'
+        element = dict(k='rec', sz=4, m=[[0, '.m_ptr', dict(k='ptr', sz=4)]])
+        row = dict(k='arr', sz=12, n=3, el=element)
+        declaration = dict(t=dict(k='arr', sz=336, n=28, el=row), sz=336)
+        layout = Layout(dict(types=[], units={'probe': {'vars': {source: declaration}}}))
+        comparison = dict(storage='bss', unit='probe', name=mask(emitted),
+                          rva=0x298b9c, size=336, alignment_bound=16,
+                          verdict='exact')
+        with patch('homm3.model._EMITTED', {'probe': {emitted}}):
+            gb.judge_alignment([comparison], layout)
+        self.assertEqual((comparison['aligned'], comparison['alignment']), (True, 4))
+        self.assertEqual(gb.data_status([comparison])[comparison['name']][0].category,
+                         gb.GAME_BSS_EXACT)
+
+        # Equal type layouts do not let another module's anonymous type
+        # supply this declaration's identity or prove its alignment.
+        comparison.pop('aligned')
+        comparison.pop('alignment')
+        foreign = emitted.replace('probe.cpp', 'other.cpp')
+        comparison['name'] = mask(foreign)
+        with patch('homm3.model._EMITTED', {'probe': {foreign}}):
+            gb.judge_alignment([comparison], layout)
+        self.assertIsNone(comparison['aligned'])
+
+        # A bridge with multiple emitted definitions remains unresolved.
+        comparison.pop('aligned')
+        comparison['name'] = mask(emitted)
+        with patch('homm3.model._EMITTED',
+                   {'probe': {emitted, emitted.replace('?BC@??', '?BD@??')}}):
+            gb.judge_alignment([comparison], layout)
+        self.assertIsNone(comparison['aligned'])
+
+
 class DefinitionExtentTests(unittest.TestCase):
     def test_undersized_array_is_never_exact_past_its_definition(self):
         # Retail's table has 8 ints; the candidate defines 4, then a neighbour.

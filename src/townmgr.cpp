@@ -4843,7 +4843,9 @@ int townManager::main(message& msg)
     {
         int delta = GameTime::elapsedSince(g_timers[0]);
         if (delta >= 0) {
-            g_timers[0] += cppMin(delta, 150);
+            // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
+            // the larger interval, keeping panorama updates 150 ms apart.
+            g_timers[0] += max(150, delta);
             drawTown(1, 1, 0);
         }
     }

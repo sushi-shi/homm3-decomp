@@ -181,7 +181,7 @@ advmgr	?updBottomViewNewTurn@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?updBottomViewResMsg@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x16160	tokens1:bf043bf12df7
 advmgr	?updBottomViewTown@advManager@@AAEEE@Z	100.0000	100.0000	100.0000	0x164f0	tokens1:0c7f45b4b817
 advmgr	?updateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790	tokens1:a45831bfb7b7
-advmgr	?updateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	91.2459	91.2459	91.2477	0x12c40	tokens1:bdea6a50efba
+advmgr	?updateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.5349	90.5349	91.2477	0x12c40	tokens1:3d3f5edbc07c
 advmgr	?updateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270	tokens1:e97a1d8db3b7
 advmgr	?viewPuzzle@advManager@@QAEXXZ	96.4643	96.4643	96.4911	0x1a7f0	tokens1:48caadd65534
 advmgr	?what@logic_error@std@@UBEPBDXZ	100.0000	100.0000	100.0000	0x1bc00	-
@@ -2421,7 +2421,7 @@ kb	?doSinglePlayerWindow@@YIHXZ	99.1409	99.1409	99.1549	0xf0490	tokens1:c2597a75
 kb	?draw@Bitmap16Bit@@QBEXHHHHPAV1@HH_N@Z	100.0000	100.0000	100.0000	0xf0010	tokens1:9d47bed3d147
 kb	?draw@CSprite@@QBEXHHHHHHPAVBitmap16Bit@@HH_N1@Z	100.0000	100.0000	100.0000	0xf0050	tokens1:4ce1fa236a75
 kb	?drawProgressCount@@YIXXZ	100.0000	100.0000	100.0000	0xed230	tokens1:e326c6d5ce56
-kb	?earlySetup@@YIHXZ	99.5702	99.5702	99.5994	0xed650	tokens1:8fdb1583f02a
+kb	?earlySetup@@YIHXZ	98.9854	98.9854	99.5994	0xed650	tokens1:f54debb09f6e
 kb	?eventWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf0fc0	tokens1:f34baf899132
 kb	?extendedDialog@@YIXPBDAAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@JJJ@Z	100.0000	100.0000	100.0000	0xf7690	tokens1:36a50dc77ce8
 kb	?fileError@@YIXPBD@Z	100.0000	100.0000	100.0000	0xf3a60	tokens1:546959352bc6
@@ -2648,7 +2648,7 @@ misc	?sRand@@YIXH@Z	100.0000	100.0000	100.0000	0x10c5f0	tokens1:d2d3a3638580
 misc	?safeRandom@@YIHHH@Z	100.0000	100.0000	100.0000	0x10b1d0	tokens1:42b2d8f6c08f
 misc	?setDefaultCombatOptions@@YIXXZ	100.0000	100.0000	100.0000	0x10b700	tokens1:8fdb81d12bc6
 misc	?setGameDefaults@@YIXXZ	100.0000	100.0000	100.0000	0x10b4d0	tokens1:f18809fcceca
-misc	?setupCDDrive@@YIHXZ	100.0000	100.0000	100.0000	0x10c1c0	tokens1:ed795eb0fca9
+misc	?setupCDDrive@@YIHXZ	100.0000	100.0000	100.0000	0x10c1c0	tokens1:65afcad06a70
 misc	?writePrefs@@YIXXZ	100.0000	100.0000	100.0000	0x10c1b0	tokens1:62ee6b394fe6
 misc	?writePrefsToRegistry@@YIXXZ	100.0000	100.0000	100.0000	0x10be10	tokens1:6ad2c72560d9
 monframeinfo	?initializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x10ca00	tokens1:34d0b956b772
@@ -4503,7 +4503,7 @@ townmgr	?handleGiftMsg@CTownNetMsgHandler@@UAEXPAVCNetMsg@@@Z	100.0000	100.0000	
 townmgr	?handleHallClick@townManager@@AAEXXZ	100.0000	100.0000	100.0000	0x1d30d0	tokens1:6172e99514e5
 townmgr	?handleMageGuildClick@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ce560	tokens1:6f1ed1dceac2
 townmgr	?initializeMagicSkills@type_university@@QAEPAU1@XZ	100.0000	100.0000	100.0000	0x1d2d80	tokens1:43f8f3500567
-townmgr	?main@townManager@@UAEHAAVmessage@@@Z	90.2530	90.2530	91.2622	0x1d3240	tokens1:b5416e8e771b
+townmgr	?main@townManager@@UAEHAAVmessage@@@Z	89.6668	89.6668	91.2622	0x1d3240	tokens1:d1ebd2cc31c4
 townmgr	?moveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220	tokens1:be543fee2ce3
 townmgr	?newStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10	tokens1:dfa462667662
 townmgr	?open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20	tokens1:c3d548988bd3

@@ -3,6 +3,36 @@
 This records where the data-matching campaign stands and how to continue it.
 Read [AGENTS.md](../../AGENTS.md) first; it is the policy for all matching work.
 
+## Continuation instructions (2026-09-30)
+
+The user requested solo continuation in the primary checkout,
+`/home/sheep/Projects/homm3/homm3-decomp`. Work continues on
+`codex/data-campaign-solo-20260930`, starting at handoff commit `33c82d97b`.
+The pre-existing `cc_wrap.py` Wine timeout edit is preserved separately.
+
+When ready, merge #113 into #112. **Do not merge #112 into the default
+branch:** the user will review it first. The user also authorized bringing
+the needed link and startup fixes **from #78 into this campaign**. These
+instructions supersede the landing order and undecided merge method below.
+
+Checkpoint in the primary checkout:
+
+- Full VC6/Mac build passes, including the new mandatory full executable link:
+  153 objects, zero unresolved externals and zero duplicate-symbol warnings.
+- The duplicate town-name table is now owned by `text.cpp`. The no-CD sentinel,
+  radar byte stride and town animation timer fixes from #78 are integrated.
+  These three inexact functions reset MAX to 98.99%, 90.53% and 89.67%; HIST
+  retains their previous peaks. Exact README MAX remains 4,386.
+- All seven recovered startup initializers occur once in the linked CRT table;
+  game-context binding precedes its network consumer.
+- Local-static alignment lookup now uses the unique, per-unit emitted VC6 name
+  bridge. Its regression test includes foreign-unit and ambiguous-name controls.
+- Tooling tests: 30 data/header tests and 27 build/link tests pass.
+- Reviewed 13 proven-end padding rows (53 bytes); two stale rows (9 bytes)
+  are retired. Fresh coverage has 989 missing file bytes, 2,430 missing image
+  bytes, 711/2,515 unverified data bytes, zero data mismatches and zero overlaps.
+
+
 ## Goal and landing condition
 
 - **#112** (`codex/gruntz-data-model-20260928`) adopts the Gruntz data model,
@@ -46,7 +76,7 @@ A backup bundle of every older branch and worktree snapshot is at
 
 | Measure | Value |
 |---|---:|
-| Exact functions, README (MAX) | **4,386 / 4,785** (91.7%); 9 short of the bar |
+| Exact functions, README (MAX) | **4,386 / 4,785** (91.7%); 10 short of exceeding the bar |
 | Exact functions, ledger rows at 100 | 4,394 / 4,802 |
 | Weighted executable MAX | 98.15% |
 | Game data: exact / unverified / mismatch (file bytes) | 283,497 / 711 / **0** |
@@ -161,7 +191,7 @@ The full list with context is in
    (`updateQuestLogButton`).
 10. **When workers resume, and how many.** There is currently a pause on new workers.
 
-## Known issues
+## Known issues at the handoff
 
 - **No link gate.** `g_townNames[9][16]` is defined in both `src/text.cpp` and
   `src/game.cpp`. A real link reports a duplicate; the matching pipeline never

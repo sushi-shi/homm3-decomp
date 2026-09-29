@@ -722,7 +722,7 @@ void writePrefs()
 VA(0x0050c1c0, 0x6) MAC_ADDRESS(0x13137c, 0x114)  // dc 0xfe064
 int setupCDDrive()
 {
-    return 7;
+    return CD_DRIVE_NUMBER_NO_CD_REQUIRED;
 }
 
 VA(0x0050c5a0, 0x49)  // dc 0xfe068
