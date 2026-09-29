@@ -2251,6 +2251,8 @@ static int handleGetTeleportDestination(message& msg)
 // army::can_cast_spell's `return call;` arms branch straight to the epilogue:
 // a named result with a final return. The Sacrifice then/else bodies have a
 // single scope each (a braced body has two), so they stay unbraced.
+// Retail's retained calls need cost >= 176; this form costs 173 and is still
+// saved. Neither DC nor Mac shows an accessor or local that supplies the rest.
 VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,

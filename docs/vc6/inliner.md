@@ -1940,6 +1940,21 @@ scope pair (see docs/matching/dc-line-tables.md, "Braced bodies").
 - In game.cpp's save helpers, braced returns cost 2 each and were not
   adopted.
 
+Missing accessor and helper calls are the first hypothesis for a wrong
+cost, before any brace. Each inline helper call adds IL to its caller and a
+candidate site to C2's divisor even when it expands to nothing new:
+
+- `ExtraInfoUnion::getCampfireResource` returning the Dreamcast
+  `EGameResource` (not `int`) is what crossed the campfire cliff.
+- `combatManager::freeIcons` pasted `->dispose()` where Dreamcast calls
+  `ResourceManager::Dispose`; the existing inline helper restores retail's
+  retained `vector::_Destroy` call (94.33% -> 99.94%).
+- Passing a local `SLimitData` by value to `updateCombatArea` moved
+  retail's register allocation in the missile animators (99.98% -> 95.14%),
+  while the same call on `m_drawbridgeBounds` raised `army::attackWall`
+  (89.90% -> 90.91%). Measure each site; a by-value temporary is a real
+  codegen fact, not budget noise.
+
 ### The retained final `string::assign` has no shared cause
 
 Five callers keep `basic_string::assign(str, pos, n)` (cost 307) out of line
