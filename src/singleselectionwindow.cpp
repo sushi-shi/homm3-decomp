@@ -6730,6 +6730,10 @@ void TSingleSelectionWindow::onNameSlider(int newIndex)
 {
 }
 
+// Retail restores monthTypeExtra before monthType (+0xea/+0xf0) and
+// allocates their saved copies in that order; DC 6807-6810/6818-6821 keeps
+// the older monthType-first order. Saving and restoring the extra first
+// closes the body (99.78 -> 100); swapping either side alone is flat.
 VA(0x00589b20, 0x13C) MAC_ADDRESS(0x1812dc, 0x168)  // dc 0x1406ec
 unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
 {
@@ -6751,8 +6755,8 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
         return 0;
     }
 
-    int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
+    int monthType = g_monthType;
     int weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
@@ -6763,8 +6767,8 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
         0, 0, 0, 1);
 
-    g_monthType = monthType;
     g_monthTypeExtra = monthTypeExtra;
+    g_monthType = monthType;
     g_weekType = weekType;
     g_weekTypeExtra = weekTypeExtra;
     g_curWatchPlayer = g_localGamePos;
