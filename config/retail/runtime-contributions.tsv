@@ -1880,6 +1880,10 @@ rva	size	kind	library	member	section	symbol	evidence
 0x25f210	4	data	LIBCMT.LIB	crt0init.obj	3	___xt_a	crt-pointer
 0x25f214	4	data	LIBCMT.LIB	unhandld.obj	1	_pterm	crt-pointer
 0x25f218	4	data	LIBCMT.LIB	crt0init.obj	2	___xt_z	crt-pointer
+0x260da4	2	data	LIBCPMT.LIB	locale0.obj	30	??_C@_01FKHJ@C?$AA@	Locale constructors and use_facet reference this pooled C locale name; pinned locale0.obj COMDAT emits exactly C+NUL.
+0x2830a0	2	data	LIBCPMT.LIB	fiopen.obj	15	??_C@_01LLF@w?$AA@	Pinned fiopen.obj mods table offsets +4 and +8 both reference this w+NUL COMDAT.
+0x28c844	2	data	LIBCPMT.LIB	fiopen.obj	14	??_C@_01FNLH@a?$AA@	Pinned fiopen.obj mods table offset +12 references this a+NUL COMDAT.
+0x28c848	2	data	LIBCPMT.LIB	fiopen.obj	16	??_C@_01LHO@r?$AA@	Pinned fiopen.obj mods table offset +0 references this r+NUL COMDAT.
 0x28d77c	4	data	zlib	deflate.obj	2	_?my_version@?1??deflateInit2_@@9@9	-
 0x28d780	16	data	zlib	inflate.obj	13	??_C@_0BA@FKCH@need?5dictionary?$AA@	-
 0x28d790	21	data	zlib	inflate.obj	14	??_C@_0BF@OBFI@incorrect?5data?5check?$AA@	-
@@ -2048,6 +2052,11 @@ rva	size	kind	library	member	section	symbol	evidence
 0x290f20	700	data	LIBCMT.LIB	constpow.obj	1	__pow10neg	-
 0x290f20	0	data	LIBCMT.LIB	strnicmp.obj	2	-	empty-section-by-layout
 0x290f20	0	data	LIBCMT.LIB	strrev.obj	2	-	empty-section-by-layout
+0x294d9c	4	bss	LIBCPMT.LIB	locale.obj	350	?_Facsav@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x294da0	4	bss	LIBCPMT.LIB	locale.obj	354	?_Facsav@?$_Tidyfac@V?$numpunct@D@std@@@std@@0PAV?$numpunct@D@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x296940	4	bss	LIBCPMT.LIB	locale.obj	358	?_Facsav@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@0PAV?$codecvt@DDH@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x29cbb0	4	bss	LIBCPMT.LIB	locale.obj	342	?_Facsav@?$_Tidyfac@V?$ctype@D@std@@@std@@0PAV?$ctype@D@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x29cbb4	4	bss	LIBCPMT.LIB	locale.obj	346	?_Facsav@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
 0x2ab160	49	bss	LIBCPMT.LIB	ios.obj	2	?_Index@ios_base@std@@0HA	-
 0x2ab194	1	bss	zlib	gzio.obj	54	??_C@_00A@?$AA@	copies=7,member-by-link-order,placed-by-layout
 0x2ab198	28	bss	LIBCPMT.LIB	xlock.obj	2	__InitFlag	-

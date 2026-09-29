@@ -15,27 +15,45 @@ branch:** the user will review it first. The user also authorized bringing
 the needed link and startup fixes **from #78 into this campaign**. These
 instructions supersede the landing order and undecided merge method below.
 
-Checkpoint in the primary checkout:
+Latest checkpoint in the primary checkout:
 
 - Full VC6/Mac build passes, including the new mandatory full executable link:
   153 objects, zero unresolved externals and zero duplicate-symbol warnings.
 - The duplicate town-name table is now owned by `text.cpp`. The no-CD sentinel,
   radar byte stride and town animation timer fixes from #78 are integrated.
   These three inexact functions reset MAX to 98.99%, 90.53% and 89.67%; HIST
-  retains their previous peaks. Exact README MAX remains 4,386.
+  retains their previous peaks.
 - All seven recovered startup initializers occur once in the linked CRT table;
   game-context binding precedes its network consumer.
 - The isolated Wine smoke reaches the main menu and loads Arrogance, including
   its adventure map, minimap and opening event dialog.
-- Terrain-rule constructor/cleanup identities add 20 exact ledger matches
-  (4,414/4,813 total). These are excluded startup bodies, so README MAX is
-  still 4,386; they do not satisfy the function-count landing condition.
+- Terrain-rule constructor/cleanup identities add 20 exact ledger matches.
+  These are startup bodies excluded from the README function count.
+- Five narrow locale facet pointers are now verified against their pinned
+  `LIBCPMT.LIB` COMDATs. Their address identities close all ten `_Save`/`_Tidy`
+  helpers: **README exact MAX is 4,396 / 4,785**, exceeding the 4,395 bar.
+  The complete ledger is 4,424 / 4,813 exact; weighted executable MAX is 98.15%.
+- Eight literal bytes (`C`, `r`, `w`, `a`, including terminators) are verified
+  against the pinned runtime archive. The remaining CD literals total 101 B,
+  not the older decision list's 109 B. Runtime comparison has zero findings.
 - Local-static alignment lookup now uses the unique, per-unit emitted VC6 name
   bridge. Its regression test includes foreign-unit and ambiguous-name controls.
 - Tooling tests: 30 data/header tests and 27 build/link tests pass.
-- Reviewed 13 proven-end padding rows (53 bytes); two stale rows (9 bytes)
-  are retired. Fresh coverage has 989 missing file bytes, 2,430 missing image
-  bytes, 711/2,515 unverified data bytes, zero data mismatches and zero overlaps.
+- Compiled negative controls restore the pre-fix zero values for the six
+  startup initializers: both RLE constants, game-context binding, seer-name
+  binding, sound descriptors and archive contexts. All six lose their exact
+  initializer comparison; unchanged scratch copies compare exact. A 156-row
+  hero-table probe is rejected as `extent beyond candidate definition`
+  (14,352 emitted bytes versus 14,996 required). Probe sources and objects
+  stay under ignored `build/solo-startup-negative/`.
+- Reviewed 13 proven-end padding rows (53 bytes), plus eight four-byte gaps
+  between fixed-size terrain records; two stale rows (9 bytes) are retired.
+  Fresh coverage has **989 missing file bytes / 2,378 missing image bytes**,
+  **703 / 2,507 unverified data bytes**, zero data mismatches and zero overlaps.
+  No stale padding rows remain. The zero-byte landing condition is still open.
+- A review preference is pending with the user: integrate #113 into #112 with
+  these gaps explicit, or keep them separate until the zero-byte condition is
+  met. In either case #112 must remain open for their default-branch review.
 
 
 ## Goal and landing condition
@@ -225,9 +243,12 @@ to make the game start.
 - **Three code fixes are not found yet:** the `earlySetup` no-CD guard, the
   radar row stride, and the town animation timer (`max(150, delta)`). They sit
   in functions that are not exact yet.
-- **Not yet run:** a revert-and-detect test. Revert each #78 data fix on a
-  scratch copy and confirm the byte accounting flags it. That is the real
-  measure of whether the tooling would have found these bugs on its own.
+- **Now verified in the continuation:** compiled scratch copies restore the
+  six pre-fix zero initializers and shorten the hero table to 156 rows. The
+  comparisons reject all seven defects; unchanged copies compare exact. The
+  reference-binding probes keep the current reference types while restoring
+  the old null binding, and the two archive probes use zero constructor
+  arguments to restore the old zero-filled records.
 
 ## Landing steps once past 4,395
 
