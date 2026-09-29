@@ -395,6 +395,7 @@ unsigned char NewmapCell::isDiggable() const
     return 1;
 }
 
+// DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
 VA(0x004fcdc0, 0x58) MAC_ADDRESS(0x11e5f8, 0xb4)  // dc 0xec324
 const unsigned char NewmapCell::hasTriggerableEvent() const
 {

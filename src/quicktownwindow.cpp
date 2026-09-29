@@ -200,6 +200,7 @@ TQuickTownWindow::~TQuickTownWindow()
     }
 }
 
+// Retail +0x1de and +0x272 push "tiny.fnt" (0x660cb4) for the quantities.
 VA(0x00530990, 0x303) MAC_ADDRESS(0x14cb8c, 0x340)  // dc 0x118564
 void TQuickTownWindow::initializeArmyDisplay(
     const armyGroup& currentArmyGroup, TQuickTownWindow::TViewLevel viewLevel)

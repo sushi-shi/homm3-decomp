@@ -131,7 +131,7 @@ DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusi
 // current variable-length CampaignScenarioInfo vector.
 // Pinned Windows 0x63d8c8 and Mac code 0x2a4698 contain the same
 // seven four-entry rows; these are initialized ordinals, not BSS.
-DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4] = {
+DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 1, 0, 0},
@@ -3498,11 +3498,27 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // hero::operator= called and both pointers stepping by 0x492. The const and
 // non-const source overloads compile to the same bytes and /OPT:ICF folded
 // them, so one claim names the row and the other spelling is its alias.
+// out_of_range's string constructor, not the CatchableType copy constructor
+// at 0x404700. Its retail callers are giveCrossoverArtifacts here, mapcell's
+// readTownData and four RMG sites; it sits in this unit's COMDAT band.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
+
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
+
+// std::copy over vector<hero> values: retail's only callers of the 710-byte
+// body at 0x48e220 are SCampaign::selectCampaign (0x489655) and
+// SCampaign::operator= (0x4bddc1). The carcass label formerly in
+// singleselectionwindow joined this row to copy<const HeroId*>, whose
+// 48-byte body belongs with the folded int copies instead.
+VA_COMPGEN(0x0048e220, 0x2C6, STD_COPY, hero_vector)
 
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
+
+// bitset<129>::reference::operator= - called by ScenarioStruct::read here
+// and by game::loadMap; game emits no out-of-line copy.
+VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
 
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
 

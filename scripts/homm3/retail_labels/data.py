@@ -91,8 +91,15 @@ def _declarations(path: Path, profiles, *, bodies=False):
         if size < 0 or not cursor.mangled_name:
             errors.append(f'{cursor.location}: DATA declaration has no complete type/name')
             continue
-        name = msvc_names.data(cursor.mangled_name, decorated=True,
-                               internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
+        parent = cursor.semantic_parent
+        if (cursor.storage_class == cx.StorageClass.STATIC
+                and parent is not None and parent.kind == cx.CursorKind.NAMESPACE
+                and not parent.spelling
+                and parent.semantic_parent.kind == cx.CursorKind.TRANSLATION_UNIT):
+            name = msvc_names.anonymous_static(cursor.spelling)
+        else:
+            name = msvc_names.data(cursor.mangled_name, decorated=True,
+                                   internal=cursor.linkage != cx.LinkageKind.EXTERNAL)
         fact = dict(name=name, size=size, type=cursor.type.spelling,
                     defined=cursor.is_definition(),
                     internal=cursor.linkage != cx.LinkageKind.EXTERNAL,

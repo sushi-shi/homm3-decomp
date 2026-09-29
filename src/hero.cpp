@@ -1170,16 +1170,13 @@ const char* hero::heroFn004D8F70()
 }
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
-// when the +0x3d9 flag is set (falling back to the empty literal at
-// 0x63a608), otherwise strcmp's the +0x23 name band against
+// when the +0x3d9 flag is set (c_str() falls back to basic_string's
+// _Nullstr byte at 0x63a608), otherwise strcmp's the +0x23 name band against
 // akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
 // only while the live name still equals its default.
 VA(0x004d8fb0, 0xA0) MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::heroFn004D8FB0()
 {
-    const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
-                                         "");
-
     if (m_hasCustomName)
         return m_customName.c_str();
 
@@ -6371,3 +6368,6 @@ VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
 // and in mapcell. All 37 bytes agree, including the three-word fill and
 // six-bit high-word mask; there are no relocations or added source calls.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
+// bitset<70>::reference::operator= - called by markArtifactSpells here
+// and by game::loadMap; game expands its uses, this unit emits the body.
+VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)

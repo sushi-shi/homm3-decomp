@@ -633,7 +633,8 @@ void combatManager::setupGridForArmy(const army* thisArmy)
         return;
     if (thisArmy->m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)
         return;
-    if (!g_config.m_showCombatGrid && !m_creaturePlacement)
+    // DC 0x842c8 and retail +0x26 test gConfig+0x6c, the shade preference.
+    if (!g_config.m_combatShadeLevel && !m_creaturePlacement)
         return;
 
     thisArmy->getAttackMask(thisArmy->m_gridIndex, 2, -1);

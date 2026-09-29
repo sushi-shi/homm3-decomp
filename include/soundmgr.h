@@ -254,7 +254,7 @@ void __cdecl processStopAndPlayMP3(void* arglist);
 // "Underground"). The folded base retail encodes is 0x684ae0 = the
 // array minus the two-dword bias, which is why the delinker invented a
 // data symbol there.
-extern const char* const g_terrainMusic[9];
+extern const char* g_terrainMusic[9];
 
 // Retail .data 0x678330: terrain -> music id, the nine bytes
 // {8,7,3,4,5,9,10,6,2} read straight from the image. SetMusicVolume

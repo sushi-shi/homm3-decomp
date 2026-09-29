@@ -3708,8 +3708,9 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
         angle = deltaY > 0 ? 90.0 : -90.0;
     } else {
         angle = atan(-static_cast<double>(deltaY) / fabs(deltaX))
+                // Retail's double is 180/3.1415926535, not 180/PI.
                 * DATA_COMPGEN(0x0063d408, radiansToDegrees,
-                               57.29577951308232);
+                               57.29577951471995);
     }
 
     if (missile) {

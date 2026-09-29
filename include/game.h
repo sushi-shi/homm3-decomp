@@ -1770,14 +1770,14 @@ extern int g_mineProduction[7];
 // Six weighted neutral-town dwelling levels, byte-proven as
 // {2,3,4,5,4,3} by game::GiveTroopsToNeutralTown.
 extern double g_productionHandicap[];
-extern const int g_neutralTownLevelWeights[6];
-extern const int g_tutorialStartingResources[NUM_RESOURCES];
+extern int g_neutralTownLevelWeights[6];
+extern int g_tutorialStartingResources[NUM_RESOURCES];
 // NewMap's seven-resource rows, indexed by setup.difficulty.
-extern const int g_initResourcesHuman[][NUM_RESOURCES];
+extern int g_initResourcesHuman[][NUM_RESOURCES];
 // NewMap reads one dword per player here before narrowing the selected value
 // into setup.startingBonus.  The other known readers do not yet prove a
 // broader semantic name, so keep the address-bearing role provisional.
-extern const int g_initResourcesComputer[][NUM_RESOURCES];
+extern int g_initResourcesComputer[][NUM_RESOURCES];
 // SetupFirstPlayer writes its first-human scan result here alongside
 // gNetLocalGamePos.  StartLocalPlayerTurn later consumes the same cell;
 // no surviving symbol attests a semantic spelling.

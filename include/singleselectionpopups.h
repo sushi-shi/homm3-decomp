@@ -18,7 +18,10 @@ enum TTownType;
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
-// independently fixes the four overrides below.
+// independently fixes the four overrides below. Its destructor is implicit:
+// the deleting destructor 0x5757b0 calls the shared `jmp ~widget` body at
+// 0x575a60 without a vptr store, as for CBitmapWidget and CHotspotWidget
+// (DC gives all three the same 24-byte compiler-generated body).
 class CSpriteWidget : public widget {
 public:
     CSprite* m_sprite;

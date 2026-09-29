@@ -9,13 +9,13 @@
 #include "victor.h"
 
 // Retail RGB triples and per-decoding-mode scratch-row multipliers.
-DATA(0x0068d2a0) const unsigned char g_victorPcxDefaultPalette[48] = {
+DATA(0x0068d2a0) unsigned char g_victorPcxDefaultPalette[48] = {
     0,0,0, 0,0,168, 0,168,0, 0,168,168,
     168,0,0, 168,0,168, 168,84,0, 168,168,168,
     84,84,84, 84,84,252, 84,252,84, 84,252,252,
     252,84,84, 252,84,252, 252,252,84, 252,252,252
 };
-DATA(0x0068d2d0) const unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
+DATA(0x0068d2d0) unsigned char g_victorPcxScratchRows[5] = {1,1,1,2,2};
 
 // Dreamcast confirms the public fname/desimg API but contains only a stub.
 // Retail proves five decode modes, bounded input refills, paired RGB plane

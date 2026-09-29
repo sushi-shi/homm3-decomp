@@ -62,7 +62,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x0063d570) const TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
 DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
     { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
     { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
@@ -71,14 +71,14 @@ DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
-DATA(0x00678170) const int g_initResourcesHuman[5][7] = {
+DATA(0x00678170) int g_initResourcesHuman[5][7] = {
     { 30, 15, 30, 15, 15, 15, 30000 },
     { 20, 10, 20, 10, 10, 10, 20000 },
     { 15, 7, 15, 7, 7, 7, 15000 },
     { 10, 4, 10, 4, 4, 4, 10000 },
     { 0, 0, 0, 0, 0, 0, 0 }
 };
-DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
+DATA(0x006781fc) int g_initResourcesComputer[5][7] = {
     { 5, 2, 5, 2, 2, 2, 5000 },
     { 10, 4, 10, 4, 4, 4, 7500 },
     { 15, 7, 15, 7, 7, 7, 10000 },
@@ -113,9 +113,9 @@ DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVC
 DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
 DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
 DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
-DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 // Retail newMap copies this independent seven-resource tutorial row.
-DATA(0x006779c8) const int g_tutorialStartingResources[NUM_RESOURCES] =
+DATA(0x006779c8) int g_tutorialStartingResources[NUM_RESOURCES] =
     { 50, 50, 50, 50, 50, 50, 50000 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
 DATA(0x0069fb24) int g_startingHeroOverrides[8];
@@ -125,8 +125,10 @@ DATA(0x00697294) TTextResource* g_randomTavernText;
 DATA(0x0069774c) bool g_inCampaign;
 DATA(0x00697750) int g_weekType;
 DATA(0x006983fc) int g_weekTypeExtra;
-DATA(0x00697748) int g_monthType;
-DATA(0x00698834) int g_monthTypeExtra;
+// DC PerMonth stores the effect to giMonthType and the creature to
+// giMonthTypeExtra; retail perMonth writes the effect to 0x698834.
+DATA(0x00698834) int g_monthType;
+DATA(0x00697748) int g_monthTypeExtra;
 DATA(0x006783c8) int g_mapWidth = 72;
 DATA(0x006783cc) int g_mapHeight = 72;
 // Original DC name: g_playerTurn; StartLocalPlayerTurn and remote turn handoff.
@@ -191,6 +193,9 @@ const int g_campaignVictoryOverrideDays = 112;
 // 0x2ffc). Complete retains the same four rare-resource ids in retail
 // game.obj at 0x63e668; PerDay indexes it with Random(0, 3) for the
 // Rampart's Mystic Pond.
+// saveGame and loadGame share one .rdata copy (0x63e65c) ahead of this
+// unit's other constant tables; the pooled "%s%s" format stays in .data.
+DATA(0x0063e65c) static const char g_gamesDirectoryPrefix[] = ".\\GAMES\\";
 DATA(0x0063e668) static const int g_resources[4] = {
     MERCURY, SULFUR, CRYSTAL, GEMS
 };
@@ -522,7 +527,7 @@ void generator::initialize(long newOwner)
     }
     m_guards.initialize();
 
-    TCreatureType* types;
+    const TCreatureType* types;
     int typeCount;
     if (m_genClass == CREATURE_GENERATOR_1) {
         int generatorType = m_genType;
@@ -3454,7 +3459,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
     } else {
         sprintf(fullPath,
                 DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
-                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                g_gamesDirectoryPrefix,
                 saveName);
         // General text 77 and 109 are the two reserved auto-save names;
         // a save under either of them does not become the remembered one.
@@ -3493,8 +3498,8 @@ void game::setupOrigData()
     g_normalVictory = 0;
     g_grailOwner = -1;
     m_difficultyRating = 1;
-    g_monthTypeExtra = 0;
     g_monthType = 0;
+    g_monthTypeExtra = 0;
     g_weekType = 0;
     g_weekTypeExtra = 0;
     m_isCheater = 0;
@@ -3555,7 +3560,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     } else {
         sprintf(buf,
                 DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
-                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                g_gamesDirectoryPrefix,
                 filename);
     }
 
@@ -7744,18 +7749,18 @@ void game::perMonth()
     ++m_month;
     int monthRoll = random(1, g_monthRollMax);
     if (g_weekType == g_weekTypeInfernoGrail) {
-        g_monthTypeExtra = g_monthEffectCreature;
-        g_monthType = g_creatureImpId;
+        g_monthType = g_monthEffectCreature;
+        g_monthTypeExtra = g_creatureImpId;
     } else if (monthRoll > g_monthNormalRollMax && !m_isTutorial) {
         if (monthRoll <= g_monthCreatureRollMax) {
-            g_monthTypeExtra = g_monthEffectCreature;
-            g_monthType = g_monType[random(0, g_monthCreatureTableLast)];
+            g_monthType = g_monthEffectCreature;
+            g_monthTypeExtra = g_monType[random(0, g_monthCreatureTableLast)];
         } else {
-            g_monthTypeExtra = g_monthEffectPlague;
+            g_monthType = g_monthEffectPlague;
         }
     } else {
-        g_monthTypeExtra = g_monthEffectNormal;
-        g_monthType = random(0, g_monthCreatureRollMax);
+        g_monthType = g_monthEffectNormal;
+        g_monthTypeExtra = random(0, g_monthCreatureRollMax);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
@@ -7763,15 +7768,15 @@ void game::perMonth()
             currTown = getTown(i);
             growth = currTown->getGrowthRate(j);
             if (growth > 0) {
-                if (g_monthTypeExtra == g_monthEffectCreature
+                if (g_monthType == g_monthEffectCreature
                     && g_weekType != g_weekTypeInfernoGrail
                     && g_townDwellingCreatures[
                         currTown->m_type * TOWN_DWELLING_SLOTS + j]
-                       == g_monthType) {
+                       == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
 
-                if (g_monthTypeExtra == g_monthEffectPlague) {
+                if (g_monthType == g_monthEffectPlague) {
                     growth = currTown->getGrowthRate(j);
                     currTown->m_population[j] -= growth;
                     if (currTown->m_population[j] < 0)
@@ -7782,7 +7787,7 @@ void game::perMonth()
         }
     }
 
-    if (g_monthTypeExtra == g_monthEffectCreature) {
+    if (g_monthType == g_monthEffectCreature) {
         for (z = 0; z < getNumMapLevels(); ++z) {
             for (y = 0; y < g_mapWidth; ++y) {
                 for (x = 0; x < g_mapHeight; ++x) {
@@ -7794,8 +7799,8 @@ void game::perMonth()
                         && tempCell->m_type != EVENT
                         && random(1, g_monthMonsterSpawnRollMax) == 1) {
                         insertObject(x, y, z, RANDOM_MONSTER,
-                                     g_monthType, 0);
-                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthType);
+                                     g_monthTypeExtra, 0);
+                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthTypeExtra);
                         tempCell->m_monsterInfo.m_disposition =
                             random(1, g_monthMonsterDispositionMax);
                     }
@@ -9402,7 +9407,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_config.m_scFile);
+            g_config.m_rcFile);
     int handle = _open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
@@ -9506,13 +9511,13 @@ void game::doNewTurn()
                                     "newweek.wav"));
 
     if (m_week == 1 && g_weekType == g_weekTypeNormal) {
-        if (g_monthTypeExtra == g_monthEffectNormal) {
-            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
-        } else if (g_monthTypeExtra == g_monthEffectCreature) {
-            strcpy(temp, getArmyName(g_monthType, 1));
+        if (g_monthType == g_monthEffectNormal) {
+            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthTypeExtra]);
+        } else if (g_monthType == g_monthEffectCreature) {
+            strcpy(temp, getArmyName(g_monthTypeExtra, 1));
             temp[0] = toupper(temp[0]);
             sprintf(g_text, g_newTurn[3],
-                    getArmyName(g_monthType, 1), temp);
+                    getArmyName(g_monthTypeExtra, 1), temp);
         } else {
             strcpy(g_text, g_newTurn[4]);
         }
@@ -10254,7 +10259,6 @@ VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg) MAC_COMPGEN_ADDRES
 VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
 
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
-VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
 // The shared bitset<4>::test at 0x4cf960 expands here and remains
 // emitted in singleselectionwindow, alongside its retained _Xran body.
@@ -10274,7 +10278,9 @@ VA_COMPGEN(0x004cf800, 0x67, BITSET_REFERENCE_ASSIGN, Bitset5)
 VA_COMPGEN(0x004cf870, 0x53, BITSET_CTOR, Bitset28)
 VA_COMPGEN(0x004cf8d0, 0x1C, BITSET_COUNT, Bitset28)
 VA_COMPGEN(0x004cf8f0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset28)
-VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, type_university)
+// SCampaign::operator= reaches this capacity through vector<vector<hero>>;
+// the vector<vector<type_artifact>> spelling folds onto the same body.
+VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, hero_vector)
 VA_COMPGEN(0x004cfa60, 0x63, BITSET_SET, Bitset145)
 VA_COMPGEN(0x004cfad0, 0x37, BITSET_TEST, Bitset145)
 // readMapPlayerSlot retains the three-argument insert reached by its expanded
@@ -10499,7 +10505,6 @@ VA_COMPGEN(0x0045f5e0, 0x1CD, VECTOR_COPY_ASSIGN, hero_vector)
 
 VA_COMPGEN(0x0048e9f0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset144)
 VA_COMPGEN(0x0048ea60, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset145)
-VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
 
 // COMDAT pairing: vector<vector<hero>>::~vector - reached from
 // TCampaignWindow's constructor, ~SavedGameHeader and three
@@ -10537,10 +10542,6 @@ VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
-
-// The string overload, not the CatchableType copy constructor at 0x404700.
-// Keep this identity missing when all string-ctor uses expand in this TU.
-VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
 
 // Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
 // vector<vector<hero>>::operator= and vector<vector<hero>>::insert all reach.

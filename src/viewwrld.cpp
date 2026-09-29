@@ -1292,11 +1292,6 @@ TViewWorldWindow::TViewWorldWindow()
 
 VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
 
-// The two retained vector<widget*>::insert overloads at 0x5fd390 and
-// 0x5fdd60 both call this guarded four-byte fill loop. viewwrld.obj emits
-// the same specialization from the recovered widget-vector operations.
-VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, widget)
-
 VA(0x005fbd60, 0x86) MAC_ADDRESS(0x208d70, 0xe8)  // dc 0x195ac4
 TViewWorldWindow::~TViewWorldWindow()
 {

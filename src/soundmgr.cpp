@@ -17,7 +17,7 @@
 #include "terrain.h"
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00684ae8) const char* const g_terrainMusic[9] = { "Water", "Grass", "Snow", "Swamp", "Lava", "Sand", "Dirt", "Rough", "Underground" };
+DATA(0x00684ae8) const char* g_terrainMusic[9] = { "Water", "Grass", "Snow", "Swamp", "Lava", "Sand", "Dirt", "Rough", "Underground" };
 DATA(0x00678330) unsigned char g_terrainMusicIds[9] = { 8, 7, 3, 4, 5, 9, 10, 6, 2 };
 
 // Shared Miles state. All handles and playback flags begin cleared.

@@ -84,6 +84,15 @@ def data(name: str, *, internal: bool, decorated: bool = False) -> str:
     return mask(out)
 
 
+def anonymous_static(identifier: str) -> str:
+    """cl 12's spelling of a `static` variable declared directly in a source
+    file's anonymous namespace: the C name `_identifier`, as for a file
+    static. (Without `static`, cl mangles the anonymous scope `?%<path>@`;
+    clang mangles both as `?A0x<hash>@`.) Retail-pinned by rmg.obj's
+    g_landRiverDeltaIndex, g_rmgTownNativeTerrains and g_rmg*Names."""
+    return "_" + identifier
+
+
 def discriminate(name: str, rva: int, *, internal: bool = False) -> str | None:
     """`name` respelled for one rva, or None when the family has no room.
 

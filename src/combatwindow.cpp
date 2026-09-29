@@ -35,23 +35,25 @@ DATA(0x00695000) static TCombatWindow* g_combatWindow;
 VA(0x00472010, 0x1C0) MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
+    // Retail keeps every cheat code as its own .rdata array in source
+    // order (the combat copies of shared codes are separate objects),
+    // not as a pooled .data literal.
+    DATA(0x0063d490) static const char bluePillCode[] = "ajpoyhrcvyy";
+    DATA(0x0063d49c) static const char redPillCode[] = "ajperqcvyy";
+    DATA(0x0063d4a8) static const char allSpellsCode[] = "ajpgurervfabfcbba";
     hero* currentHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
     std::string* chat = &chatString;
     bool recognized = 0;
     TCheatCode code(chat->c_str());
 
-    if (code.compare(DATA_COMPGEN(
-            0x0063d490, combatCheatBluePill, "ajpoyhrcvyy"))) {
+    if (code.compare(bluePillCode)) {
         recognized = 1;
         g_combatManager->unnamed4693a0(g_combatManager->m_currentSide);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063d49c, combatCheatRedPill, "ajperqcvyy"))) {
+    } else if (code.compare(redPillCode)) {
         recognized = 1;
         g_combatManager->unnamed4693a0(1 - g_combatManager->m_currentSide);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063d4a8, combatCheatAllSpells,
-                   "ajpgurervfabfcbba"))
+    } else if (code.compare(allSpellsCode)
                && currentHero) {
         recognized = 1;
         currentHero->m_mana = 999;

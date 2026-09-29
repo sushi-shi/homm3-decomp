@@ -11,6 +11,7 @@ unchanged from the pre-port homm3.build.labels.
 
 from __future__ import annotations
 
+import re
 import struct
 from pathlib import Path
 
@@ -48,23 +49,40 @@ def implib_decorations(libdir: Path) -> dict:
     return out
 
 
-def undecorated_import_symbol(name: str) -> str:
-    """`__imp_` COFF symbol for an import-directory name no library proves.
+#: An import-by-name that is already a complete C stdcall symbol
+#: (`_SmackToBuffer@28`): the DLL exports the decorated spelling, so the
+#: import library imported it by exact name and its `__imp_` symbol prefixes
+#: that name unchanged.
+DECORATED_STDCALL = re.compile(r"_[A-Za-z_][A-Za-z0-9_]*@[0-9]+")
 
-    C++ names and vendor exports that are already stdcall-decorated
-    (mss32/smackw32/binkw32 export "_SmackClose@4") take a bare `__imp_`
-    prefix, the convention homm3.delink.implib documents: cl's reference
-    to the SDK declaration is `__imp__SmackClose@4`. An undecorated C
-    export takes the C underscore as well."""
-    decorated = name.startswith("_") and "@" in name
-    if name.startswith("?") or decorated:
-        return "__imp_" + name
-    return "__imp__" + name
+
+def import_symbol(name: str) -> tuple[str, str]:
+    """(__imp_ spelling, channel) of a by-name import no pinned library proves.
+
+    A C++ (`?`) or already-decorated stdcall name is its own symbol; any other
+    name keeps the cdecl placeholder spelling until a library proves it."""
+    if name.startswith("?") or DECORATED_STDCALL.fullmatch(name):
+        return "__imp_" + name, "iat-decorated"
+    return "__imp__" + name, "iat-undecorated"
+
+
+def ordinal_symbol(dll: str, ordinal: int, ordinals: dict) -> tuple[str, str]:
+    """(__imp_ spelling, channel) of an ordinal import: the import library's
+    own binding when it proves one, else the placeholder."""
+    proven = ordinals.get((dll.lower(), ordinal))
+    if proven:
+        return proven, "iat-implib-ordinal"
+    stem = dll.rsplit(".", 1)[0].lower()
+    return f"__imp__{stem}_ordinal_{ordinal}", "iat-ordinal"
 
 
 def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
     """slot rva -> (__imp_ spelling, channel), from the import directory."""
     decorations = implib_decorations(libdir)
+    from homm3.delink.implib import collect_ordinal_decorations
+    libraries = sorted(p for p in libdir.iterdir()
+                       if p.suffix.lower() == ".lib" and p.is_file()) if libdir.is_dir() else []
+    ordinals = collect_ordinal_decorations(libraries)
     data = exe_path.read_bytes()
     pe = struct.unpack_from("<I", data, 0x3C)[0]
     nsec = struct.unpack_from("<H", data, pe + 6)[0]
@@ -99,9 +117,9 @@ def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
                 break
             slot = iat + index * 4
             if thunk & 0x80000000:
-                stem = dll.rsplit(".", 1)[0].lower()
-                slots[slot] = (f"__imp__{stem}_ordinal_{thunk & 0xFFFF}",
-                               "iat-ordinal")
+                # The PE names no ordinal import; the pinned import library's
+                # own ordinal binding does (WSOCK32 ordinal 3 is closesocket).
+                slots[slot] = ordinal_symbol(dll, thunk & 0xFFFF, ordinals)
             else:
                 name = data[raw(thunk) + 2:raw(thunk) + 2 + 256] \
                     .split(b"\0")[0].decode("latin-1")
@@ -110,8 +128,7 @@ def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
                 if proven:
                     slots[slot] = (proven, "iat-implib")
                 else:
-                    slots[slot] = (undecorated_import_symbol(name),
-                                   "iat-undecorated")
+                    slots[slot] = import_symbol(name)
             index += 1
         off += 20
     return slots

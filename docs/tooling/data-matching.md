@@ -57,6 +57,28 @@ Vostok consumes `config/retail/relocs.tsv` through its native
 `--reloc-manifest` support. The reviewed alias table retains explicit owner and
 addend evidence. No pointer-shaped integer scan replaces those inputs.
 
+`homm3.delink.reloc_pairing` generates relocation identities from paired code
+on every model run. A voter is a claimed function whose candidate body equals
+retail apart from relocated operands (same length, masked bytes and absolute
+relocation sites). Each of its relocations votes the candidate symbol at the
+retail operand minus the candidate addend. A data owner is admitted only when
+the votes are unanimous in both directions, nothing else claims the address or
+binds the symbol, and some vote has addend 0 (or two addends agree on the
+base). Admitted owners become zero-sized model anchors, or the identity of an
+unnamed census vtable; interior operands become exact-site rows appended to
+the reviewed alias table in `build/gen/reloc_aliases.tsv`. Conflicting votes
+are held in `build/gen/reloc_pairings.tsv`; they usually expose a candidate
+that reads the wrong global.
+
+`build/gen/address_identities.tsv` lists further proven names of retail code
+addresses: symbols a byte-verified library section defines, candidate
+functions a voter calls at a claimed function whose candidate body is exactly
+that retail body (identical-code folding), and import thunks. Normalization
+(`homm3.build.identity_relocations`) compares a paired target relocation
+under the candidate's symbol only when that symbol has one proven address and
+both sides resolve to the same address and addend. A pairing names an address;
+extents and bytes still come from declarations and byte verification.
+
 The Gruntz data and section manifests are generated under `build/gen/`.
 Candidate COFF contributes emission and section topology. Retail contributes
 the bytes. A target section ordinal is not a candidate object section number.

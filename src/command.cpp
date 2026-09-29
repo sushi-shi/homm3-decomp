@@ -2367,6 +2367,7 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
     return 0;
 }
 
+// Retail +0x61 scales the first-aid factor by the float 25.0 (0x63b76c).
 VA(0x00478b90, 0x1E5) MAC_ADDRESS(0x086fa4, 0x22c)  // dc 0x6f824
 void combatManager::processFirstAid(army* currentArmy)
 {

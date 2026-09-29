@@ -375,7 +375,7 @@ TBottomViewMessage::~TBottomViewMessage()
 // own cursor against &[2] for the "power and knowledge floor at 1"
 // arm, which is what proves the row is a table and not four literals.
 DATA(0x00660bb0)
-static const int g_heroStatCoords[4][2] = {
+static int g_heroStatCoords[4][2] = {
     { 65, 51 }, { 92, 51 }, { 120, 51 }, { 148, 51 }
 };
 
@@ -383,7 +383,7 @@ static const int g_heroStatCoords[4][2] = {
 // table above in retail .data, but a separate object: the stat loop
 // stops at this table's first byte and the army loop starts there.
 DATA(0x00660bd0)
-static const int g_heroArmyCoords[7][2] = {
+static int g_heroArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -535,7 +535,7 @@ TBottomViewHero::~TBottomViewHero()
 // .data, but a separate object: the hero loop's cursor stops at this
 // table's first byte and this loop's cursor starts there.
 DATA(0x00660c08)
-static const int g_townArmyCoords[7][2] = {
+static int g_townArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };

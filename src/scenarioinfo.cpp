@@ -376,6 +376,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
 }
 
+// Retail draws the player name with g_smallFont and every later label with
+// g_tinyFont (0x698a04).
 VA(0x005693a0, 0x394) MAC_ADDRESS(0x160de8, 0x4cc)
 void CScenarioPlayerInfoWidget::draw() const
 {

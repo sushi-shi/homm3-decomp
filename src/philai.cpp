@@ -946,8 +946,8 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 
 // Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
 // Complete expands this ordinary static helper into valueOfStables with the
-// Cavalier/Champion pair. An existing destination stack raises the award by
-// 1.2 (retail's fmul reads the double 1.2 at 0x63ac20).
+// Cavalier/Champion pair. An existing destination stack scales the award
+// by 1.2 (retail valueOfStables +0xba multiplies by the double at 0x63ac20).
 MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
 {
@@ -2279,7 +2279,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
             g_advManager->demobilizeCurrHero(0, 1);
             g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
             memset(dangerZones, 0,
-                   g_mapHeight * g_mapWidth * g_game->getNumMapLevels()
+                   g_mapWidth * g_mapHeight * g_game->getNumMapLevels()
                        * sizeof(long));
             if (g_game->m_setup.m_difficulty > 0
                 || g_game->isHumanAlly(g_netLocalGamePos))

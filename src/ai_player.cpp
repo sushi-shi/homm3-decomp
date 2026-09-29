@@ -3696,7 +3696,7 @@ static unsigned char checkMoveSpell(hero* currentHero,
 }
 
 // E:\gamedcs\ai_player.cpp:4000
-DATA(0x00660500) static const long g_constThresholds[6] = {
+DATA(0x00660500) static long g_constThresholds[6] = {
     1000, 150, 100, 75, 50, 25
 };
 
@@ -5392,7 +5392,7 @@ type_AI_initializer::type_AI_initializer()
 {
     // Original: const_one_use_events.
     DATA(0x00660540)
-    static const int g_constOneUseEvents[] = {
+    static int g_constOneUseEvents[] = {
         5, 6, 9, 10, 12, 13, 16, 22, 24, 29, 37, 39,
         42, 48, 53, 54, 55, 57, 58, 59, 60, 62, 63, 79,
         80, 81, 82, 84, 85, 86, 93, 99, 101, 105, 108, 109,
@@ -5402,7 +5402,7 @@ type_AI_initializer::type_AI_initializer()
     // ended by a (0, 0) pair: Windows and the Mac data section both store
     // the second zero directly after the first, before the next object.
     DATA(0x006605d8)
-    static const int g_constVisibilityValues[] = {
+    static int g_constVisibilityValues[] = {
         2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
         11, 1, 12, 10, 13, 1000, 14, 1, 15, 1, 16, 10,
         17, 10, 20, 10, 22, 1, 23, 100, 24, 10, 25, 10,

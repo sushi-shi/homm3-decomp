@@ -67,13 +67,13 @@ DATA(0x006412fc) static const TCreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
 };
 
-DATA(0x006830a8) static const long g_constCreatureSources[2][2] = {
+DATA(0x006830a8) static long g_constCreatureSources[2][2] = {
     {45, 109}, {128, 305}
 };
-DATA(0x006830b8) static const long g_constSourceSizes[2][2] = {
+DATA(0x006830b8) static long g_constSourceSizes[2][2] = {
     {3, 2}, {1, 1}
 };
-DATA(0x006830c8) static const long g_constCreatureOfferings[2][2] = {
+DATA(0x006830c8) static long g_constCreatureOfferings[2][2] = {
     {334, 109}, {417, 305}
 };
 
@@ -246,7 +246,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
-        44, 468, 66, 16, "", "smalfont.fnt",
+        44, 468, 66, 16, "0", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceWidget);
 
@@ -256,7 +256,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
-        41, 536, 66, 16, "", "smalfont.fnt",
+        41, 536, 66, 16, "0", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceTotalWidget);
 
