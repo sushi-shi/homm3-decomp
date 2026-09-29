@@ -48,23 +48,53 @@ def runtime_map(path: Path | None = None) -> list[Claim]:
                   None, "", {}) for r in raw]
 
 
-def runtime_data_symbols(path: Path | None = None) -> list[Claim]:
+def runtime_data_symbols(path: Path | None = None,
+                         libraries: dict | None = None) -> list[Claim]:
     """Library data symbols proven by the reviewed runtime placements.
 
-    Each placed data/bss COFF section of a pinned archive member names the
-    symbol defined at its start (DXGUID's `_DPAID_ServiceProvider`,
-    LIBCPMT's `?_Fpz@std@@3_JB`). Label-only: the model applies these names
-    where it would otherwise invent a dense `const_`/`data_`/`bss_` label,
-    so a game reference to the library object compares by its real name.
+    Each placed data/bss COFF section of a pinned archive member defines the
+    external symbols in its symbol table at their section offsets
+    (DXGUID's `_DPAID_ServiceProvider`, LIBCPMT's `?_Id_cnt@id@locale@std@@0HA`).
+    When the pinned archive is unavailable, the row's own symbol names the
+    section start. Label-only: the model applies these names where it would
+    otherwise invent a dense `const_`/`data_`/`bss_` label, so a game
+    reference to the library object compares by its real name.
     """
     _b, _h, raw = read_tsv(path or RUNTIME_CONTRIBUTIONS)
-    rows = [r for r in raw if r.get("kind") in ("data", "bss")
-            and r.get("library") != "zlib"
-            and (r.get("symbol") or "-")[:1] in ("_", "?")]
+    if libraries is None:
+        libraries = _pinned_library_members()
+    found: list[tuple[int, str]] = []
+    for r in raw:
+        if r.get("kind") not in ("data", "bss") or r.get("library") == "zlib":
+            continue
+        rva = int(r["rva"], 16)
+        obj = libraries.get(r["library"], {}).get(r["member"])
+        if obj is None:
+            found.append((rva, r.get("symbol") or "-"))
+            continue
+        number = int(r["section"])
+        found.extend((rva + symbol.value, symbol.name)
+                     for symbol in obj.symbols.values()
+                     if symbol.section == number and symbol.storage_class == 2)
+    found = [(rva, name) for rva, name in found if name[:1] in ("_", "?")]
     # Member-local statics ($T, $S) and repeated names identify no one object.
-    counts = Counter(r["symbol"] for r in rows)
-    return [Claim(int(r["rva"], 16), r["symbol"], "data", "runtime-data",
-                  None, "", {}) for r in rows if counts[r["symbol"]] == 1]
+    names = Counter(name for _rva, name in found)
+    rvas = Counter(rva for rva, _name in found)
+    return [Claim(rva, name, "data", "runtime-data", None, "", {})
+            for rva, name in sorted(set(found))
+            if names[name] == 1 and rvas[rva] == 1]
+
+
+def _pinned_library_members() -> dict:
+    """{library: {member: CoffObject}} for the pinned runtime/GUID archives."""
+    try:
+        from homm3.core.paths import msvc_dir
+        from homm3.verify import library_code
+        root = Path(msvc_dir()) / "lib"
+        return {name: library_code.archive(root / name)[0]
+                for name in library_code.RUNTIME_LIBRARIES + library_code.GUID_LIBRARIES}
+    except (OSError, ValueError, ImportError):
+        return {}
 
 
 def reloc_aliases(path: Path | None = None) -> list[Claim]:

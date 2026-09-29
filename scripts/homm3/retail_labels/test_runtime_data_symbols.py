@@ -13,7 +13,7 @@ class RuntimeDataSymbolsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "runtime-contributions.tsv"
             path.write_text(HEADER + "".join("\t".join(r) + "\n" for r in rows))
-            return {c.rva: c.name for c in providers.runtime_data_symbols(path)}
+            return {c.rva: c.name for c in providers.runtime_data_symbols(path, libraries={})}
 
     def test_external_library_data_is_named(self):
         got = self.claims([
