@@ -1913,6 +1913,18 @@ standalone bytes and the callers' skeletons after every step. Sweep the
 callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
 `town::buildBuilding` moved with these costs, the exact rows did not.
 
+### The save cliff decides "refused far below budget"
+
+A retail call to an ordinary (not `inline`) callee that no budget explains is
+usually a body C1XX never saved. `predict-inline --trace` lists every
+candidate's flags: `0x6a` is an auto-inline candidate with a saved body,
+`0x2a` has no `0x40` and is never tested. `advManager::dispatchEvent`
+(0x4a84f0, 88.58% -> 99.997%) expanded five ordinary visitors at budgets
+near 9000 while retail called them. Their costs were 169..172; the Dreamcast
+else-scope and braced guarded calls raise them to 176..177 with the same
+bytes, and the flags fall to `0x2a`. Measured on that TU: cost 174 is saved,
+176 is not. Read the flags before modelling budgets.
+
 ## The vector single-insert wrapper is refused only one level down
 
 Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around

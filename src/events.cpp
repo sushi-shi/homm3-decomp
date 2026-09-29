@@ -1485,16 +1485,18 @@ void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
     int qty = cell->getCampfireSize();
     int resource = cell->getCampfireResource();
 
-    if (humanPlayer)
+    if (humanPlayer) {
         normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_CAMPFIRE],
                      1, -1, -1, GOLD, qty * 100, resource, qty,
                      -1, 0, -1, 0);
+    }
     currentHero->giveResource(GOLD, qty * 100);
     currentHero->giveResource(resource, qty);
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
-    if (humanPlayer)
+    if (humanPlayer) {
         setEnvironmentOrigin(currentHero->getLocation(), 1);
+    }
 }
 
 VA(0x004a12f0, 0x1B3) MAC_ADDRESS(0x0ac500, 0x324)  // dc 0x923b0
@@ -1736,14 +1738,15 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER],
+                         1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(1, 1);
+        g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
+        currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER],
-                     1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(1, 1);
-    g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
-    currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
 }
 
 VA(0x004a2140, 0xE8) MAC_ADDRESS(0x0ad5d8, 0x18c)  // dc 0x92dec
@@ -1884,14 +1887,15 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN],
+                         1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(3, 1);
+        g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
+        currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN],
-                     1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(3, 1);
-    g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
-    currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
 }
 
 // Dreamcast keeps these object visitors as named source boundaries. Mac also
@@ -2388,14 +2392,15 @@ void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP],
+                         1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(0, 1);
+        g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
+        currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP],
-                     1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(0, 1);
-    g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
-    currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
 }
 
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
@@ -2514,14 +2519,15 @@ void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL],
+                         1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(2, 1);
+        g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
+        currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL],
-                     1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(2, 1);
-    g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
-    currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
 }
 
 VA(0x004a3eb0, 0x376) MAC_ADDRESS(0x0b0870, 0x348)  // dc 0x94760
@@ -4140,19 +4146,18 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // were byte-flat; force-inlining GetTeam regressed this row to 99.13% and its
 // independently exact COMDAT to zero, so only its attested inline declaration
 // is retained.
-// With all four primary-skill handlers' DC-proven text subscripts restored,
-// removing their four call pins still expands the handlers (90.77%, versus
-// pinned 99.4678%). Text-wrapper flattening was real source debt, but not the
-// cause of these four retained-call decisions.
-// Garden-specific control: replacing its visited early return with an else
-// leaves the retained helper at 100% and this dispatcher at 99.4678%. Removing
-// only the Garden pin gives 97.8007% under either structure; four distinct
-// reproduced objects rule out that branch spelling as the call-boundary fix.
-// Removing the four depth-zero pins restores natural compiler settings;
-// CodeWarrior rejects the empty reset, which otherwise disables later inlining.
-// Windows retains DefenseTower/Garden/MercenaryCamp/PowerSchool calls at
-// 0x4a8d4b/0x4a9049/0x4a9676/0x4a9c95. The unpinned caller currently expands
-// them (88.61% vs HIST99.99%); recover these boundaries through source structure.
+// Retail calls the five ordinary handlers with retained bodies (Campfire,
+// DefenseTower, Garden, MercenaryCamp, PowerSchool) because C1XX does not save
+// their bodies for /Ob2: the traced save cliff lies between cost 174 (saved)
+// and 176 (flags 0x2a, never a candidate). The Dreamcast scopes give the four
+// primary-skill visitors an else branch and a gap before its dialog (else
+// alone is 174 and still saved; else plus the braced dialog is 176). Campfire
+// has a gap before its closing setEnvironmentOrigin; bracing that call alone
+// is 174, bracing both guarded calls 176. These forms keep all five bodies
+// byte-exact and close this row (88.58% -> 100%). The earlier depth-zero pins
+// and early-return controls are superseded. Residual 99.997%: in the faerie
+// ring arm retail loads the nested getTeam byte as [ecx+eax] while the loop
+// keeps [eax+ecx]; the identical mermaid arm matches the base form.
 VA(0x004a84f0, 0x2542) MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
