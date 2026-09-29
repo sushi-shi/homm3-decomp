@@ -31,8 +31,10 @@ Latest checkpoint in the primary checkout:
   These are startup bodies excluded from the README function count.
 - Five narrow locale facet pointers are now verified against their pinned
   `LIBCPMT.LIB` COMDATs. Their address identities close all ten `_Save`/`_Tidy`
-  helpers: **README exact MAX is 4,396 / 4,785**, exceeding the 4,395 bar.
-  The complete ledger is 4,424 / 4,813 exact; weighted executable MAX is 98.15%.
+  helpers. Five additional pinned `use_facet` cache pointers close eleven
+  more functions. **README exact MAX is 4,407 / 4,785**, exceeding 4,395.
+  The complete ledger is 4,435 / 4,813 exact; weighted executable MAX is 98.15%.
+  These changes preserve the strict relocation comparison policy.
 - Eight literal bytes (`C`, `r`, `w`, `a`, including terminators) are verified
   against the pinned runtime archive. The remaining CD literals total 101 B,
   not the older decision list's 109 B. Runtime comparison has zero findings.
@@ -47,13 +49,32 @@ Latest checkpoint in the primary checkout:
   (14,352 emitted bytes versus 14,996 required). Probe sources and objects
   stay under ignored `build/solo-startup-negative/`.
 - Reviewed 13 proven-end padding rows (53 bytes), plus eight four-byte gaps
-  between fixed-size terrain records; two stale rows (9 bytes) are retired.
-  Fresh coverage has **989 missing file bytes / 2,378 missing image bytes**,
-  **703 / 2,507 unverified data bytes**, zero data mismatches and zero overlaps.
-  No stale padding rows remain. The zero-byte landing condition is still open.
-- A review preference is pending with the user: integrate #113 into #112 with
-  these gaps explicit, or keep them separate until the zero-byte condition is
-  met. In either case #112 must remain open for their default-branch review.
+  between fixed-size terrain records and 27 further typed BSS gaps (119 B);
+  two stale rows (9 bytes) are retired. The five `use_facet` cache pointers
+  account for another 20 B. Fresh coverage has **982 missing file bytes /
+  2,239 missing image bytes**, **703 / 2,507 unverified data bytes**, zero
+  data mismatches, zero overlaps and zero extent violations. No stale padding
+  rows remain. The zero-byte landing condition is still open.
+- The user approved preparing **#112 for review with these gaps explicit**.
+  Merge #113 into #112 after validation; keep #112 open for their review.
+  This authorizes integration despite the remaining byte gaps, but does not
+  authorize merging #112 into the default branch.
+
+### Score changes for review against #112
+
+The full-build checkpoint passes comparison against the preceding solo commit.
+Comparison against #112's original `14c3d6415e` reports seven source-edit MAX
+drops. HIST retains every previous peak; these remain review items:
+
+| Function | #112 MAX | Current MAX | Source evidence / reason |
+|---|---:|---:|---|
+| `advManager::updateRadar` | 91.25% | 90.53% | #78 byte-stride correctness fix |
+| `army::canCastSpell` | 99.99% | 76.10% | Mac byte-result structure and helper calls; Windows shared-tail recovery remains open |
+| `earlySetup` | 99.57% | 98.99% | #78 no-CD sentinel guard |
+| `NewfullMap::loadMapObjects` | 99.77% | 98.04% | Restored Dreamcast-evidenced `ResourceManager::dispose` call |
+| `NewfullMap::readMapObjects` | 99.37% | 96.27% | Same canonical resource cleanup helper |
+| `ResourceManager::getBitmapResourceSize` | 96.77% | 96.45% | Recovered game-context reference and const archive lists |
+| `townManager::main` | 90.25% | 89.67% | #78 animation timer correctness fix |
 
 
 ## Goal and landing condition
@@ -71,9 +92,14 @@ Latest checkpoint in the primary checkout:
   withdrawn. Ask before merging.
 - After landing, test #78 (the startup fix) against the result. #80 is parked.
 
-## Where the state is
+## Historical state at the original handoff
 
-**Nothing below is pushed.** Branch refs live in the main repository's `.git`,
+The table below records the original, unpushed state at `70d038774`.
+The combined campaign and subsequent solo checkpoints are now pushed to
+#113's `codex/retail-data-recovery-20260928` branch. #112 remains unchanged
+and open; the default branch has not been updated.
+
+Branch refs live in the main repository's `.git`,
 so the commits survive a wiped `/tmp`; the worktrees and their `build/`
 directories do not.
 
@@ -214,15 +240,14 @@ The full list with context is in
    (`updateQuestLogButton`).
 10. **When workers resume, and how many.** There is currently a pause on new workers.
 
-## Known issues at the handoff
+## Issues recorded at the original handoff
 
-- **No link gate.** `g_townNames[9][16]` is defined in both `src/text.cpp` and
-  `src/game.cpp`. A real link reports a duplicate; the matching pipeline never
-  links, so no gate catches it. #78 unifies it in `text.cpp`.
-- **One local static unverified.** `initializeSSkillTraits`'s
-  `secondarySkillLevelNames` (336 B, `.bss`) stays `bss-alignment-unknown`: its
-  alignment lookup still misses under the canonical local-scope spelling.
-  2152a8ef9 fixed the same class of lookup for anonymous-namespace data.
+- **Resolved: missing link gate.** Full builds now link the executable and
+  propagate link failures. `text.cpp` owns the single `g_townNames[9][16]`
+  definition; the duplicate in `game.cpp` was removed.
+- **Resolved: local-static alignment lookup.** The emitted-name bridge handles
+  `initializeSSkillTraits`'s `secondarySkillLevelNames` (336 B, `.bss`) when
+  Clang and VC6 use different local-scope spellings. Its comparison is exact.
 - **Pre-existing test failures:** `verify/test_gruntz_data_contracts`
   (harvest), `build/test_worktree_paths` and `core/test_project_flow`.
 - **The forcefeedback `t_initialize_failure` EH records** stay "unresolved" in
@@ -240,7 +265,7 @@ to make the game start.
   with identical identifiers.
 - **One code fix was found independently.** The Host widget null guard in
   `TMultiPlayerWindow`, via Dreamcast lines 938–940.
-- **Three code fixes are not found yet:** the `earlySetup` no-CD guard, the
+- **Three code fixes subsequently integrated from #78:** the `earlySetup` no-CD guard, the
   radar row stride, and the town animation timer (`max(150, delta)`). They sit
   in functions that are not exact yet.
 - **Now verified in the continuation:** compiled scratch copies restore the
@@ -250,11 +275,13 @@ to make the game start.
   the old null binding, and the two archive probes use zero constructor
   arguments to restore the old zero-filled records.
 
-## Landing steps once past 4,395
+## Authorized review integration
 
-1. Push `codex/retail-data-recovery-20260928`; #112's branch may also need its
-   tooling commits.
-2. Refresh the #113 description: byte-accounting categories, finish-line
-   numbers, and the decisions taken.
-3. Confirm the merge method with the user, then land #112 and #113.
-4. Test #78 against the result.
+1. Push the validated checkpoint to `codex/retail-data-recovery-20260928`.
+2. Refresh the #113 description with the latest evidence and explicit gaps.
+3. Merge #113 into #112, preserving the campaign history, and verify the
+   resulting tree against the full-build checkpoint.
+4. Refresh #112 for review with the same gaps and validation results.
+5. Leave #112 open. The user will review before merging it into the default
+   branch. The needed #78 fixes and isolated runtime smoke are already covered
+   by the continuation above.

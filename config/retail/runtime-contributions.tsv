@@ -2052,9 +2052,14 @@ rva	size	kind	library	member	section	symbol	evidence
 0x290f20	700	data	LIBCMT.LIB	constpow.obj	1	__pow10neg	-
 0x290f20	0	data	LIBCMT.LIB	strnicmp.obj	2	-	empty-section-by-layout
 0x290f20	0	data	LIBCMT.LIB	strrev.obj	2	-	empty-section-by-layout
+0x294d94	4	bss	LIBCPMT.LIB	locale.obj	313	?_Psave@?1??use_facet@std@@YAABV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	Admitted raw relocation pairing: 2 sites in 1 exact-shape bodies, e.g. operand 0x00053abe; pinned 4-byte use_facet cache COMDAT.
+0x294d98	4	bss	LIBCPMT.LIB	locale.obj	317	?_Psave@?1??use_facet@std@@YAABV?$numpunct@D@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	Admitted raw relocation pairing: 12 sites in 6 exact-shape bodies, e.g. operand 0x000547d8; pinned 4-byte use_facet cache COMDAT.
 0x294d9c	4	bss	LIBCPMT.LIB	locale.obj	350	?_Facsav@?$_Tidyfac@V?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
 0x294da0	4	bss	LIBCPMT.LIB	locale.obj	354	?_Facsav@?$_Tidyfac@V?$numpunct@D@std@@@std@@0PAV?$numpunct@D@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x29693c	4	bss	LIBCPMT.LIB	locale.obj	321	?_Psave@?1??use_facet@std@@YAABV?$codecvt@DDH@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	Admitted raw relocation pairing: 2 sites in 1 exact-shape bodies, e.g. operand 0x0008d62f; pinned 4-byte use_facet cache COMDAT.
 0x296940	4	bss	LIBCPMT.LIB	locale.obj	358	?_Facsav@?$_Tidyfac@V?$codecvt@DDH@std@@@std@@0PAV?$codecvt@DDH@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
+0x29cba8	4	bss	LIBCPMT.LIB	locale.obj	309	?_Psave@?1??use_facet@std@@YAABV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	Admitted raw relocation pairing: 2 sites in 1 exact-shape bodies, e.g. operand 0x00115316; pinned 4-byte use_facet cache COMDAT.
+0x29cbac	4	bss	LIBCPMT.LIB	locale.obj	295	?_Psave@?1??use_facet@std@@YAABV?$ctype@D@2@ABVlocale@2@PBV32@_N@Z@4PBVfacet@42@B	Admitted raw relocation pairing: 6 sites in 3 exact-shape bodies, e.g. operand 0x00115d7d; pinned 4-byte use_facet cache COMDAT.
 0x29cbb0	4	bss	LIBCPMT.LIB	locale.obj	342	?_Facsav@?$_Tidyfac@V?$ctype@D@std@@@std@@0PAV?$ctype@D@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
 0x29cbb4	4	bss	LIBCPMT.LIB	locale.obj	346	?_Facsav@?$_Tidyfac@V?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@std@@@std@@0PAV?$num_get@DV?$istreambuf_iterator@DU?$char_traits@D@std@@@std@@@2@A	Raw VC6 _Save/_Tidy relocation identity; same 4-byte pointer COMDAT in pinned LIBCPMT.LIB.
 0x2ab160	49	bss	LIBCPMT.LIB	ios.obj	2	?_Index@ios_base@std@@0HA	-
