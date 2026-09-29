@@ -742,7 +742,7 @@ bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	97.7487	97.7487	97
 bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.5083	98.5083	98.5213	0x52b80	tokens1:a98b42125081
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.9688	99.9688	100.0000	0x51820	tokens1:bf1da83bb895
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	99.9806	99.9806	100.0000	0x50dd0	tokens1:1245c50fac02
-bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.9493	99.9493	100.0000	0x51220	tokens1:adf5affa5312
+bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	99.9831	99.9831	100.0000	0x51220	tokens1:adf5affa5312
 bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.7919	94.7919	98.7476	0x521f0	tokens1:eea1e18aec74
 bottomviewsubwindow	??0bad_cast@std@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x53cd0	-
 bottomviewsubwindow	??0bad_cast@std@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x54a10	-
@@ -1256,6 +1256,7 @@ customcampaign	?applyBriefingChoice@SCampaign@@QAEXH@Z	100.0000	100.0000	100.000
 customcampaign	?campaignComplete@SCampaign@@QAE_NXZ	100.0000	100.0000	100.0000	0x897d0	tokens1:10b63fd744c5
 customcampaign	?capacity@?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x8ce20	-
 customcampaign	?completeCurrentMap@SCampaign@@QAEXPAX@Z	85.8314	85.8314	87.6437	0x89820	tokens1:8ba9dc28c38e
+customcampaign	?copy@std@@YIPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x8e220	tokens1:a5d3472fc56f
 customcampaign	?copy@std@@YIPAVhero@@PBV2@0PAV2@@Z	100.0000	100.0000	100.0000	0x8dc80	-
 customcampaign	?copy_backward@std@@YIPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x8e690	-
 customcampaign	?copy_backward@std@@YIPAV?$vector@Vhero@@V?$allocator@Vhero@@@std@@@1@PAV21@00@Z	100.0000	100.0000	100.0000	0x8df50	-
@@ -2339,7 +2340,7 @@ hiscore	??1THighScoreWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe9dc0	tokens1:3
 hiscore	??1highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9090	tokens1:7bdda722d546
 hiscore	??_GCHSInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9800	-
 hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90	-
-hiscore	?addScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	99.9483	99.9483	100.0000	0xe91d0	tokens1:bf85222769cd
+hiscore	?addScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	100.0000	100.0000	100.0000	0xe91d0	tokens1:bf85222769cd
 hiscore	?getMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830	tokens1:4967c0a19da5
 hiscore	?getRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0	tokens1:f32917d6046f
 hiscore	?highScoreWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xea1d0	tokens1:85c0ccf6812a
@@ -3530,9 +3531,10 @@ rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	token
 rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	tokens1:2f208ced9a18
 rmg_support	??_GTRmgRiverPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15eed0	-
 rmg_support	??_GTRmgRoadPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15f430	-
+rmg_support	?_Ufill@?$vector@PAUTRmgBoundaryVertex@@V?$allocator@PAUTRmgBoundaryVertex@@@std@@@std@@IAEXPAPAUTRmgBoundaryVertex@@IABQAU3@@Z	100.0000	100.0000	100.0000	0x1fdf20	-
 rmg_support	?addSite@TRmgVoronoi@@QAEXUTPoint@@PAUTRmgZone@@@Z	100.0000	100.0000	100.0000	0x1fd790	tokens1:b6b1525cc80e
 rmg_support	?canPaint@TRmgLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15ee00	tokens1:08819aecb279
-rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@PAUTRmgZone@@01@Z	99.9000	99.9000	100.0000	0x1fd390	tokens1:84df41a5ba8f
+rmg_support	?createEdge@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@PAUTRmgZone@@01@Z	99.9500	99.9500	100.0000	0x1fd390	tokens1:84df41a5ba8f
 rmg_support	?detach@TRmgBoundaryVertex@@QAEXXZ	100.0000	100.0000	100.0000	0x1fcfa0	tokens1:68bb318f1ee8
 rmg_support	?getLand@TRmgLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15ee30	tokens1:bfd7c6f03d85
 rmg_support	?getLand@TRmgRoadLinePainter@@UAEHABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15f390	tokens1:072279815f10
@@ -3540,7 +3542,7 @@ rmg_support	?getPattern@TRmgLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.000
 rmg_support	?getPattern@TRmgRoadLinePainter@@UAEPAUTRmgLinePatternTable@@H@Z	100.0000	100.0000	100.0000	0x15f320	tokens1:e07de0262ee4
 rmg_support	?getRmgPointOrientation@@YIHUTPoint@@00@Z	100.0000	100.0000	100.0000	0x1fdae0	tokens1:ce55864794e6
 rmg_support	?getTile@TRmgRoadLinePainter@@UAEXABU?$TRmgCoordinatePoint@I@@AAUrmgTerrainTile@@@Z	100.0000	100.0000	100.0000	0x15f350	tokens1:17949f0acf84
-rmg_support	?insert@?$vector@PAUTRmgBoundaryVertex@@V?$allocator@PAUTRmgBoundaryVertex@@@std@@@std@@QAEPAPAUTRmgBoundaryVertex@@PAPAU3@ABQAU3@@Z	99.9425	99.9425	100.0000	0x1fdd60	-
+rmg_support	?insert@?$vector@PAUTRmgBoundaryVertex@@V?$allocator@PAUTRmgBoundaryVertex@@@std@@@std@@QAEPAPAUTRmgBoundaryVertex@@PAPAU3@ABQAU3@@Z	99.9713	99.9713	100.0000	0x1fdd60	-
 rmg_support	?length@TRmgVector@@QBEHXZ	100.0000	100.0000	100.0000	0x1fceb0	tokens1:2c4e7ac68693
 rmg_support	?locate@TRmgVoronoi@@QAEPAUTRmgBoundaryVertex@@UTPoint@@@Z	100.0000	100.0000	100.0000	0x1fd6b0	tokens1:665c94545b9d
 rmg_support	?removeEdge@TRmgVoronoi@@QAEXPAUTRmgBoundaryVertex@@@Z	100.0000	100.0000	100.0000	0x1fd5b0	tokens1:32b05fee71af
@@ -3973,7 +3975,6 @@ singleselectionwindow	?checkHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetM
 singleselectionwindow	?checkMissingHeaders@TSingleSelectionWindow@@QAEEK@Z	99.9000	99.9000	100.0000	0x1895c0	tokens1:83c431ff2957
 singleselectionwindow	?copy@std@@YIPAUGameSelectionHeadersStruct@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x18f160	-
 singleselectionwindow	?copy@std@@YIPAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@1@PBV21@0PAV21@@Z	100.0000	100.0000	100.0000	0xd2c90	-
-singleselectionwindow	?copy@std@@YIPAW4HeroId@@PBW42@0PAW42@@Z	5.9015	5.9015	100.0000	0x8e220	tokens1:a5d3472fc56f
 singleselectionwindow	?copy_backward@std@@YIPAUGameSelectionHeadersStruct@@PAU2@00@Z	100.0000	100.0000	100.0000	0x191650	-
 singleselectionwindow	?createFilterWidgets@TSingleSelectionWindow@@QAEXXZ	89.2251	89.2251	100.0000	0x17d170	tokens1:b917c4e819a5
 singleselectionwindow	?deletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90	tokens1:efedee50fc4b
@@ -4269,7 +4270,7 @@ subwindow	?draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0	tokens
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470	tokens1:3b99479ee9cd
 subwindow	?restoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610	tokens1:4c1cb3770b35
 subwindow	?saveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560	tokens1:ed13dd9e7fa5
-swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	99.9963	99.9963	100.0000	0x1aaa80	tokens1:442ab1db1a13
+swapmgr	??0TSwapWindow@@QAE@PAPAVhero@@@Z	99.9972	99.9972	100.0000	0x1aaa80	tokens1:442ab1db1a13
 swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500	tokens1:b368ca6b74ad
 swapmgr	??1CHeroUpdateMsg@@QAE@XZ	100.0000	100.0000	100.0000	0x1afd70	tokens1:e188f510dde5
 swapmgr	??1TSwapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1ae3c0	tokens1:18393a1f8ca4
@@ -4692,7 +4693,6 @@ viewarmywindow	?windowHandler@TViewArmyWindow@@UAEHAAVmessage@@@Z	92.5392	92.539
 viewwrld	??0TViewWorldWindow@@QAE@XZ	99.9734	99.9734	100.0000	0x1fa600	tokens1:18146aca4d6e
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60	tokens1:8fe5854cf6e0
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30	-
-viewwrld	?_Ufill@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@IAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x1fdf20	-
 viewwrld	?init@TViewWorldWindow@@QAEXUtype_point@@E@Z	100.0000	100.0000	100.0000	0x1fc240	tokens1:73445ce48f79
 viewwrld	?updateRadar@TViewWorldWindow@@AAEXHHM@Z	100.0000	100.0000	100.0000	0x1fc8f0	tokens1:a810daddc7d0
 viewwrld	?updateViewWorld@TViewWorldWindow@@AAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fc7a0	tokens1:0f40a234989a

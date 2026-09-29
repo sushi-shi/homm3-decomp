@@ -3492,6 +3492,13 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // them, so one claim names the row and the other spelling is its alias.
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
 
+// std::copy over vector<hero> values: retail's only callers of the 710-byte
+// body at 0x48e220 are SCampaign::selectCampaign (0x489655) and
+// SCampaign::operator= (0x4bddc1). The carcass label formerly in
+// singleselectionwindow joined this row to copy<const HeroId*>, whose
+// 48-byte body belongs with the folded int copies instead.
+VA_COMPGEN(0x0048e220, 0x2C6, STD_COPY, hero_vector)
+
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)

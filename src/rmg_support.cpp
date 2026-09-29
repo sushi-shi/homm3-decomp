@@ -602,3 +602,8 @@ int getRmgPointOrientation(TPoint first, TPoint second, TPoint third)
 // Four-byte elements, ret 8 and the owning m_edges vector identify this
 // ordinary Dinkumware specialization independently of its ICF helper names.
 VA_COMPGEN(0x005FDD60, 0x1B1, VECTOR_INSERT_SINGLE, TRmgBoundaryVertex)
+// Retail's only callers of the four-byte fill at 0x5fdf20 are
+// TRmgVoronoi::createEdge (0x5fd4b9, 0x5fd53d) and the boundary-vertex insert
+// above (0x5fde8c): it is this unit's vector<TRmgBoundaryVertex*> _Ufill.
+// Widget vectors reach the folded copy at 0x48d940 instead.
+VA_COMPGEN(0x005FDF20, 0x26, VECTOR_UFILL, TRmgBoundaryVertex)
