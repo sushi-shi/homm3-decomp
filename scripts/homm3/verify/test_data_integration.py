@@ -53,11 +53,11 @@ class InputAdapterTests(unittest.TestCase):
                 self.assertEqual(parse.call_count, 2)
 
 
-def literal_object(name, payload, raw=True):
+def literal_object(name, payload, raw=True, section='.data'):
     """A candidate COFF holding one `??_C@` COMDAT at offset 0."""
     return SimpleNamespace(iter_symbols=lambda: [(0, 0, 1)],
                            sym_name=lambda _: name,
-                           section_table=[{'size': len(payload)}],
+                           section_table=[{'size': len(payload), 'name': section}],
                            section_payload=lambda _: payload if raw else b'')
 
 
@@ -88,6 +88,23 @@ class StringStorageTests(unittest.TestCase):
             self.assertEqual(sorted((r['name'], r['rva'], r['size']) for r in rows),
                              [('??_C@binary', 0x1000, 4), ('??_C@empty', 0x2000, 1)])
             self.assertEqual(withheld, [])
+
+    def test_zero_tail_literal_takes_the_candidate_section_storage(self):
+        # cl emits "" as an uninitialized .bss COMDAT; at .data's zero raw
+        # edge a paired literal takes the storage cl gave it, never .data.
+        from homm3.delink import data_manifest
+        for section, storage in (('.bss', 'bss'), ('.data', 'data')):
+            objects = [('a', literal_object('??_C@empty', b'\0', raw=False, section=section))]
+            image = bytearray(0x3000)
+            with patch.object(data_manifest.coffx, 'objects', return_value=objects), \
+                 patch.object(data_manifest, 'retail', return_value=retail_image(image)), \
+                 patch.object(data_manifest, '_reloc_data_rvas', return_value=[0x2000]), \
+                 patch.object(data_manifest, '_classify', return_value='data-unprovable-tail'):
+                rows, withheld = data_manifest.string_rows(votes={'??_C@empty': {0x2000}})
+                self.assertEqual([(r['rva'], r['storage']) for r in rows], [(0x2000, storage)])
+                # Without a paired reference the zero run stays unenrolled.
+                rows, withheld = data_manifest.string_rows()
+                self.assertEqual(rows, [])
 
     def test_typed_storage_excludes_numeric_and_aggregate_interiors(self):
         from homm3.delink import data_manifest

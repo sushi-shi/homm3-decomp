@@ -675,6 +675,10 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
     # literal sharing its leading C string.
     owners: dict[bytes, dict[str, str]] = defaultdict(dict)
     by_prefix: dict[bytes, set[bytes]] = defaultdict(set)
+    # The COFF section cl emitted each payload into. cl gives "" an
+    # uninitialized `.bss` COMDAT, which LINK places after all initialized
+    # data: in the zero run at .data's raw edge it is loader-zero storage.
+    sections: dict[bytes, set[str]] = defaultdict(set)
     for stem, c in coffx.objects(base_dir):
         for idx, value, secnum in c.iter_symbols():
             name = c.sym_name(idx)
@@ -690,6 +694,7 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
                 cs = whole[:whole.index(b"\0")]
                 owners[whole][stem] = name
                 by_prefix[cs].add(whole)
+                sections[whole].add(sec.get("name", ".data"))
 
     img = retail()
     rows, withheld, by_name = [], [], defaultdict(list)
@@ -712,8 +717,14 @@ def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
             paired = any(rva in (votes or {}).get(n, ()) for n in units.values())
             if start == end == "data-unprovable-tail" and paired:
                 # The zero tail cannot tell a literal from padding by its
-                # bytes; paired relocations naming this literal can.
-                start = end = "data-initialized"
+                # bytes; paired relocations naming this literal can, and the
+                # candidate's own section says which side of the initialized
+                # content LINK put it (the claim_rows tail oracle, for "").
+                emitted = sections[whole]
+                if emitted == {".bss"}:
+                    start = end = "data-loader-zero-tail"
+                elif ".bss" not in emitted:
+                    start = end = "data-initialized"
             if start not in STORAGE or start != end:
                 withheld.append((rva, next(iter(units.values())),
                                  f"string storage {start} not enrollable"))
