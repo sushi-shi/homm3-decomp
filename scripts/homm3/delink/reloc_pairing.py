@@ -130,6 +130,23 @@ CONTENT_NAMED = ("??_C@", "__real@")
 LOCAL_FUNCTION = re.compile(r"_?\$E[0-9]+")
 
 
+#: A function-local static's guard byte (`_?$S27@?1??f@@...@4EA`): cl's
+#: private ordinal names it, so its identity is unit-scoped as well.
+LOCAL_GUARD = re.compile(r"_\?\$S[0-9]+@.+@4EA")
+
+
+def unit_local(name: str) -> bool:
+    return bool(LOCAL_FUNCTION.fullmatch(name) or LOCAL_GUARD.fullmatch(name))
+
+
+def comparison_spelling(name: str, unit: str) -> str:
+    """The spelling normalization gives a unit-local name (anonymous scope
+    and local-static scope canonical)."""
+    from homm3.compare.canonicalize import normalize_anon_ns_name
+    return msvc_names.LOCAL_STATIC_SCOPE.sub(
+        msvc_names.CANONICAL_SCOPE, normalize_anon_ns_name(name, unit))
+
+
 def content_named(name: str) -> bool:
     return name.startswith(CONTENT_NAMED)
 
@@ -278,7 +295,9 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
     votes = []
     for site, typ, name, addend, target in operand_targets(
             body, relocs, retail, voter.rva, image_base):
-        if not stable_name(name) and not LOCAL_FUNCTION.fullmatch(name):
+        if unit_local(name):
+            name = comparison_spelling(name, voter.unit)
+        elif not stable_name(name):
             continue
         votes.append(Vote(rename(name), target - addend, target, addend,
                           voter.rva, voter.rva + site, typ, voter.unit, voter.name))
@@ -332,19 +351,24 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     aliases: list[Vote] = []
     for symbol, rows in sorted(by_symbol.items()):
         owners = sorted({v.owner for v in rows})
-        if LOCAL_FUNCTION.fullmatch(symbol):
+        if unit_local(symbol):
+            guard = bool(LOCAL_GUARD.fullmatch(symbol))
             for unit in sorted({v.unit for v in rows}):
                 mine = [v for v in rows if v.unit == unit]
                 places = {v.owner for v in mine}
-                pairing = Pairing(symbol, min(places), "code", mine, unit=unit)
+                pairing = Pairing(symbol, min(places), "data" if guard else "code",
+                                  mine, unit=unit)
                 pairings.append(pairing)
+                region = region_of(pairing.owner)
                 if len(places) > 1:
                     pairing.verdict, pairing.reason = "held", (
                         "unit votes for " + ",".join(f"{o:#x}" for o in sorted(places)))
-                elif region_of(pairing.owner) != "text" or any(v.addend for v in mine):
-                    pairing.verdict, pairing.reason = "held", "not a function entry"
+                elif any(v.addend for v in mine) or (
+                        region not in ("data", "bss") if guard else region != "text"):
+                    pairing.verdict, pairing.reason = "held", "not the start of a local"
                 else:
-                    pairing.verdict, pairing.reason = "unit-candidate", "needs body proof"
+                    pairing.verdict, pairing.reason = "unit-candidate", (
+                        "needs a zero guard byte" if guard else "needs body proof")
             continue
         if content_named(symbol) and (
                 len(owners) > 1 or claimed_name_at(owners[0]) not in (None, symbol)):
@@ -623,6 +647,13 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
     aliases = [v for v in aliases if (v.symbol, v.owner) not in held]
     for pairing in pairings:
         if pairing.kind != "data" or pairing.verdict != "unit-candidate":
+            continue
+        if LOCAL_GUARD.fullmatch(pairing.symbol):
+            # A guard is one uninitialized byte; the unit's votes decide which.
+            if img.pe.read(pairing.owner, 1) == b"\0":
+                pairing.verdict, pairing.reason = "unit", "zero guard byte"
+            else:
+                pairing.verdict, pairing.reason = "held", "retail guard byte is not zero"
             continue
         candidate = objects(pairing.unit)
         content = data_content(candidate, pairing.symbol) if candidate else None

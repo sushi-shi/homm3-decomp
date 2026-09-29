@@ -233,6 +233,14 @@ class FoldEvidenceTests(unittest.TestCase):
         self.assertEqual((pairings[0].verdict, pairings[0].reason),
                          ("held", "symbol claimed at 0x3000"))
 
+    def test_local_guard_pairs_per_unit_as_data(self):
+        guard = "_?$S27@?1??init@@YIXXZ@4EA"
+        votes = [rp.Vote(guard, 0x6000, 0x6000, 0, 0x1000, 0x1001, DIR32, "a", "_f"),
+                 rp.Vote(guard, 0x6100, 0x6100, 0, 0x1100, 0x1101, DIR32, "b", "_g")]
+        pairings, _ = decide(votes)
+        self.assertEqual({(p.unit, p.kind, p.verdict) for p in pairings},
+                         {("a", "data", "unit-candidate"), ("b", "data", "unit-candidate")})
+
     def test_local_function_pairs_per_unit(self):
         votes = [rp.Vote("_$E47", 0x2000, 0x2000, 0, 0x1000, 0x1001, DIR32, "a", "_f"),
                  rp.Vote("_$E47", 0x2100, 0x2100, 0, 0x1100, 0x1101, DIR32, "b", "_g")]
