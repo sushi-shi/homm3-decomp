@@ -1481,6 +1481,8 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 // inside it in turn; with the sound fixed at PICKUP the fizzle's switch
 // folds to the sprintf arm alone.
 
+// DC 1361 gives the dialog one if-body scope (unbraced); 1369 has two
+// coincident scopes, so only the closing setEnvironmentOrigin is braced.
 VA(0x004a1120, 0x1C4) MAC_ADDRESS(0x0ac3dc, 0x124)  // dc 0x922e8
 void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
@@ -1488,11 +1490,10 @@ void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
     int qty = cell->getCampfireSize();
     int resource = cell->getCampfireResource();
 
-    if (humanPlayer) {
+    if (humanPlayer)
         normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_CAMPFIRE],
                      1, -1, -1, GOLD, qty * 100, resource, qty,
                      -1, 0, -1, 0);
-    }
     currentHero->giveResource(GOLD, qty * 100);
     currentHero->giveResource(resource, qty);
 
@@ -4153,11 +4154,10 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // DefenseTower, Garden, MercenaryCamp, PowerSchool) because C1XX does not save
 // their bodies for /Ob2: the traced save cliff lies between cost 174 (saved)
 // and 176 (flags 0x2a, never a candidate). The Dreamcast scopes give the four
-// primary-skill visitors an else branch and a gap before its dialog (else
-// alone is 174 and still saved; else plus the braced dialog is 176). Campfire
-// has a gap before its closing setEnvironmentOrigin; bracing that call alone
-// is 174, bracing both guarded calls 176. These forms keep all five bodies
-// byte-exact and close this row (88.58% -> 100%). The earlier depth-zero pins
+// primary-skill visitors an else branch and a braced else-dialog (two
+// coincident scopes; 176). Campfire braces only its closing call (DC 1369);
+// ExtraInfoUnion::getCampfireResource's DC EGameResource return supplies the
+// rest. All five bodies stay byte-exact (88.58% -> 100%). The earlier depth-zero pins
 // and early-return controls are superseded. Residual 99.997%: in the faerie
 // ring arm retail loads the nested getTeam byte as [ecx+eax] while the loop
 // keeps [eax+ecx]; the identical mermaid arm matches the base form.

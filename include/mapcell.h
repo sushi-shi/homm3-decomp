@@ -713,7 +713,7 @@ public:
     ArtifactPrices getArtifactPrice() const;
     bool isDefendedArtifact() const;
     short getCampfireSize() const;
-    int getCampfireResource() const;
+    enum EGameResource getCampfireResource() const;
     enum EGameResource getArtifactResourceCost() const;
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
@@ -1536,10 +1536,15 @@ inline bool ExtraInfoUnion::isDefendedArtifact() const
 }
 
 // MapCell.h:959/964, dc 0x9c7b4 / 0x9c7c0. DoEventCampfire (0x4a1120)
-// proves the short size truncation and unsigned resource lane.
+// proves the short size truncation and unsigned resource lane. The DC public
+// ?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ returns the
+// enum; its conversion is what takes doEventCampfire past the /Ob2 save cliff.
 inline short ExtraInfoUnion::getCampfireSize() const { return m_campfireInfo.m_size; }
 
-inline int ExtraInfoUnion::getCampfireResource() const { return m_campfireInfo.m_resource; }
+inline enum EGameResource ExtraInfoUnion::getCampfireResource() const
+{
+    return EGameResource(m_campfireInfo.m_resource);
+}
 
 inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
 

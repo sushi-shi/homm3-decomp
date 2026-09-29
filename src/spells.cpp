@@ -2247,12 +2247,10 @@ static int handleGetTeleportDestination(message& msg)
 // DC 2614..2618 has Sacrifice's explicit two arms, then Resurrection
 // (2621), Animate Dead (2625), and the default GetArmy (2629). Preserve
 // both GetArmy source calls rather than merging them into a shared tail.
-// DC holds every arm's result in one register until the shared exit and
-// scopes the Sacrifice branches as blocks: a named result with a final
-// return and braced Sacrifice arms. That form costs about 177 (direct
-// returns 160, named result alone 173), above the /Ob2 save cliff, so
-// C1XX no longer saves the body and retail's retained calls reappear in
-// validSpellTarget (73.49 -> 96.60), initiateSpell and castSpell.
+// DC routes every arm's result through r4 to one shared move at 2633, while
+// army::can_cast_spell's `return call;` arms branch straight to the epilogue:
+// a named result with a final return. The Sacrifice then/else bodies have a
+// single scope each (a braced body has two), so they stay unbraced.
 VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,
@@ -2263,11 +2261,10 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
     army* target;
     switch (spell) {
     case SPELL_SACRIFICE:
-        if (firstTarget) {
+        if (firstTarget)
             target = findResurrectionTarget(side, hex, creatureSpell);
-        } else {
+        else
             target = m_cells[hex].getArmy();
-        }
         break;
     case SPELL_RESURRECTION:
         target = findResurrectionTarget(side, hex, creatureSpell);
