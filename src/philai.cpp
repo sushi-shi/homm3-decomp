@@ -946,7 +946,8 @@ long type_spellvalue::getValueOfIncrease(long baseValue,
 
 // Original: ComputeUpgradeValue; philai.cpp:1833, dc 0x1102e4.
 // Complete expands this ordinary static helper into valueOfStables with the
-// Cavalier/Champion pair. The existing destination stack halves the award.
+// Cavalier/Champion pair. An existing destination stack raises the award by
+// 1.2 (retail's fmul reads the double 1.2 at 0x63ac20).
 MAC_ADDRESS(0x141e50, 0xc4)
 static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
 {
@@ -956,7 +957,7 @@ static int computeUpgradeValue(hero* currentHero, int sourceType, int destType)
     int value = (g_creatureTypeTraits[destType].m_aiValue
                  - g_creatureTypeTraits[sourceType].m_aiValue) * number;
     if (currentHero->creatureTypeCount(destType) != 0)
-        value = static_cast<int>(value * 0.5);
+        value = static_cast<int>(value * 1.2);
     return value;
 }
 
@@ -2245,6 +2246,7 @@ void philAI::doAI(int whichPlayer)
 // DC records this helper as file-static with explore_mode by reference.
 // Keep the canonical definitions in DC source order; the VA tag here lets
 // both compilers extract this same body.
+// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x005261f0, 0x5ba) MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee, dc 0x10ec58
 static void moveHero(hero* currentHero, long* dangerZones,
                      unsigned char isLastHero, unsigned char& exploreMode)
@@ -2307,8 +2309,10 @@ static void moveHero(hero* currentHero, long* dangerZones,
                         currentTown->m_garrisonHeroId);
                     if ((garrisonHero->m_movePoints > 0
                          && !garrisonHero->m_isSleeping)
-                        || (currentTown->getArmy().getCreatureTotal() > 0
-                            && currentTown->getArmy().getAIValue()
+                        || (static_cast<const town*>(currentTown)
+                                    ->getArmy().getCreatureTotal() > 0
+                            && static_cast<const town*>(currentTown)
+                                       ->getArmy().getAIValue()
                                    < currentHero->m_army.getAIValue()))
                         currentTown->swapHeroes();
                 }
@@ -3384,6 +3388,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     return min(value, 5000000L);
 }
 
+// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x0052b090, 0x14e) MAC_ADDRESS(0x144e60, 0x1a0)  // dc 0x112830
 long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
@@ -3400,11 +3405,11 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
-        &currentTown->getArmy(), garrisonHero,
+        &static_cast<const town*>(currentTown)->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army, currentHero->getMorale(0, 0, 1),
-        &currentTown->getArmy(), player->m_resources,
+        &static_cast<const town*>(currentTown)->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
     if (moveCost >= 400

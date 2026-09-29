@@ -486,8 +486,9 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
         }
     }
 
+    // Retail multiplies by 3.0 (the double at 0x63ac28), not 1.2.
     if (static_cast<double>(count) / estimate.m_friendlyCombatValue
-            <= static_cast<double>(bestValue) * 1.2 / estimate.m_enemyCombatValue)
+            <= static_cast<double>(bestValue) * 3.0 / estimate.m_enemyCombatValue)
         return 0;
 
     long weakest = 100;

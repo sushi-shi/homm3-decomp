@@ -1725,6 +1725,7 @@ void type_AI_player::purchaseBuildings()
 // out of line. The dwelling scan walks bitNumber[DWELLING_0_ID..DWELLING_6_ID]
 // against get_buildable_mask and prices each candidate through the
 // single-candidate set overload with the leftover supply as funds.
+// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x0042ba60, 0x447) MAC_ADDRESS(0x02f26c, 0x3f4)  // retail callee set + arity, dc 0x310f4
 void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 {
@@ -1737,14 +1738,18 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
 
     unsigned char alliance = g_game->m_players[currentHero->m_owner]
         .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
-    purchaser.doSwap(currentHero, &currentTown->getArmy(),
-                     garrisonHero, alliance);
+    purchaser.doSwap(currentHero,
+                      const_cast<armyGroup*>(
+                          &static_cast<const town*>(currentTown)->getArmy()),
+                      garrisonHero, alliance);
 
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1),
-                          &currentTown->getArmy(), player->m_resources,
-                          1, alliance);
+                          const_cast<armyGroup*>(
+                              &static_cast<const town*>(currentTown)
+                                   ->getArmy()),
+                          player->m_resources, 1, alliance);
 
     // DC ai_player.cpp:1869/1873 has two early exits; 1893 records short
     // morale, and amount/funds/traits belong to function scope. Retail
@@ -1777,8 +1782,6 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
     // 29/29 Windows call sites and 42/42 CFG blocks now agree with retail.
     // Mac still has 22/22 ordered calls; its MSL vector destructor is a
     // separately unresolved library relocation in the current matcher.
-    // Twelve mask/bit const, value/reference and operand-order controls do
-    // not improve the remaining four 64-bit-mask load-register differences.
     if (g_game->townAlreadyBuiltOn(currentTown->m_id))
         return;
     if (!g_game->m_setup.m_difficulty
@@ -1814,7 +1817,8 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
                 purchaser.set(creature, &amount);
                 long value = purchaser.getPurchaseValue(
                     &currentHero->m_army, morale,
-                    &currentTown->getArmy(),
+                    &static_cast<const town*>(currentTown)
+                         ->getArmy(),
                     funds, alliance);
                 if (value > bestValue) {
                     bestValue = value;
@@ -1831,8 +1835,10 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
             player->m_resources[resource] -= cost[resource];
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
-                              &currentTown->getArmy(), player->m_resources,
-                              1, alliance);
+                              const_cast<armyGroup*>(
+                                  &static_cast<const town*>(
+                                       currentTown)->getArmy()),
+                              player->m_resources, 1, alliance);
     }
 }
 
@@ -4254,6 +4260,7 @@ bool considerHiring(long playerId, hero* candidate)
 // separate and for-scoped destination indices (byte-flat), swapping the
 // two hero-counter initializers (99.70), unifying all three indices (98.20),
 // and block-scoping cell/monster_cell per loop (94.40).
+// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x00431bd0, 0x64b) MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d), dc 0x34fb8
 long valueOfHiring(town* currentTown, hero* candidate,
                      searchArray* currentSearchArray)
@@ -4261,7 +4268,8 @@ long valueOfHiring(town* currentTown, hero* candidate,
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
     armyGroup heroArmy = candidate->m_army;
-    armyGroup townArmy = currentTown->getArmy();
+    armyGroup townArmy =
+        static_cast<const town*>(currentTown)->getArmy();
     type_AI_creature_purchaser purchaser(playerId, currentTown);
 
     candidate->m_turnExperienceToRvRatio = 0;

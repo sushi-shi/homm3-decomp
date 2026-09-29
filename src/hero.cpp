@@ -1777,10 +1777,9 @@ int hero::getExperience(int level)
 {
     if (level <= 12)
         return g_experienceForLevel[level - 1];
-    int total = g_experienceForLevel[11];
     int increment = static_cast<int>(
-        (total - g_experienceForLevel[10]) * 1.2);
-    total += increment;
+        (g_experienceForLevel[11] - g_experienceForLevel[10]) * 1.2);
+    int total = g_experienceForLevel[11] + increment;
     for (int i = 13; i < level; i++) {
         increment *= 1.2;
         total += increment;

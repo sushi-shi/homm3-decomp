@@ -1182,6 +1182,7 @@ bool playerData::hasCapitol()
     return false;
 }
 
+// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x004b9fc0, 0x167) MAC_ADDRESS(0x0cc4fc, 0x1bc)  // dc 0xa4ee8
 unsigned char playerData::addGarrisonHero(town* ourTown)
 {
@@ -1195,7 +1196,8 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
         return 0;
 
     ourHero = g_game->getHero(ourTown->m_visitingHeroId);
-    if (!ourHero->m_army.merge(&ourTown->getArmy()))
+    if (!ourHero->m_army.merge(const_cast<armyGroup*>(
+            &static_cast<const town*>(ourTown)->getArmy())))
         return 0;
 
     g_game->recordHideHero(ourHero, ourHero->m_owner, 0);
@@ -6406,22 +6408,24 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     char enumBuffer;
     int count;
     int i;
+    unsigned int availabilityIndex;
     unsigned char ucharBuffer;
+    char charBuffer;
     char boolBuffer;
     int x;
 
-    if (readLittleEndianValue(infile, m_version) < sizeof(m_version))
+    if (infile->read(&m_version, sizeof(m_version)) < sizeof(m_version))
         return -1;
 
-    if (readValue(infile, boolBuffer)
+    if (infile->read(&boolBuffer, sizeof(boolBuffer))
         < sizeof(boolBuffer))
         return -1;
     m_isPlayable = boolBuffer != 0;
 
-    if (readLittleEndianValue(infile, m_size) < sizeof(m_size))
+    if (infile->read(&m_size, sizeof(m_size)) < sizeof(m_size))
         return -1;
 
-    if (readValue(infile, boolBuffer)
+    if (infile->read(&boolBuffer, sizeof(boolBuffer))
         < sizeof(boolBuffer))
         return -1;
     m_hasTwoLayers = boolBuffer != 0;
@@ -6431,13 +6435,14 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (game::loadString(infile, m_mapDescription) < 0)
         return -1;
 
-    if (readValue(infile, ucharBuffer)
+    if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
         < sizeof(ucharBuffer))
         return -1;
     m_difficulty = ucharBuffer;
 
     if (saveVersion >= g_saveVersionMaxHeroLevel) {
-        m_maxHeroLevel = readValue<char>(infile);
+        infile->read(&charBuffer, sizeof(charBuffer));
+        m_maxHeroLevel = charBuffer;
     } else {
         m_maxHeroLevel = 0;
     }
@@ -6448,17 +6453,17 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 
     TPlayerSlotAttributes* player = m_playerSlotAttributes;
     for (i = 0; i < 8; ++i, ++player) {
-        if (readValue(infile, boolBuffer)
+        if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
             return -1;
         player->m_canBeHuman = boolBuffer != 0;
 
-        if (readValue(infile, boolBuffer)
+        if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
             return -1;
         player->m_canBeComputer = boolBuffer != 0;
 
-        if (readValue(infile, enumBuffer)
+        if (infile->read(&enumBuffer, sizeof(enumBuffer))
             < sizeof(enumBuffer))
             return -1;
         player->m_aiStrategy = enumBuffer;
@@ -6471,32 +6476,34 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
             ++m_numPlayers;
 
         if (saveVersion < g_saveVersionWideAlignments) {
-            readValue(infile, ucharBuffer);
+            infile->read(&ucharBuffer, sizeof(ucharBuffer));
             player->m_legalAlignments = ucharBuffer;
         } else {
-            player->m_legalAlignments = readLittleEndianValue<unsigned short>(infile);
+            unsigned short shortBuffer;
+            infile->read(&shortBuffer, sizeof(shortBuffer));
+            player->m_legalAlignments = shortBuffer;
         }
 
-        if (readValue(infile, boolBuffer)
+        if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
             return -1;
         player->m_hasRandomAlignment = boolBuffer != 0;
 
-        if (readValue(infile, boolBuffer)
+        if (infile->read(&boolBuffer, sizeof(boolBuffer))
             < sizeof(boolBuffer))
             return -1;
         player->m_generateHero = boolBuffer != 0;
 
         if (player->m_generateHero) {
-            if (readValue(infile, ucharBuffer)
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_x = ucharBuffer;
-            if (readValue(infile, ucharBuffer)
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_y = ucharBuffer;
-            if (readValue(infile, ucharBuffer)
+            if (infile->read(&ucharBuffer, sizeof(ucharBuffer))
                 < sizeof(ucharBuffer))
                 return -1;
             player->m_castleLoc.m_z = ucharBuffer;
@@ -6519,27 +6526,24 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (!m_minNumHumanPlayers)
         m_minNumHumanPlayers = 1;
 
-    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
-    x = ucharBuffer;
     m_victoryCondition.m_type = x;
     m_victoryCondition.m_gameWon = 0;
     m_victoryCondition.m_playerWinner = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadVictoryCondition(x, infile, saveVersion);
 
-    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
-    x = ucharBuffer;
     m_lossCondition.m_type = x;
     m_lossCondition.m_gameLost = 0;
     m_lossCondition.m_playerLoser = -1;
     if (static_cast<unsigned char>(x) != g_savedHeroNone)
         loadLossCondition(x, infile, saveVersion);
 
-    if (readValue(infile, ucharBuffer) < sizeof(ucharBuffer))
+    if (infile->read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
         return -1;
-    x = ucharBuffer;
     m_numTeams = x;
     if (m_numTeams) {
         if (infile->read(m_teamInfo, sizeof(m_teamInfo)) < sizeof(m_teamInfo))
@@ -6553,22 +6557,34 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion < g_saveVersionCustomHeroSetups)
         return 0;
 
-    x = readValue<unsigned char>(infile);
+    infile->read(&x, sizeof(unsigned char));
+    x &= 0xff;
     if (static_cast<unsigned int>(x) <= 0)
         return 0;
     count = x;
 
     do {
-        int heroKey = readValue<unsigned char>(infile);
+        infile->read(&x, sizeof(unsigned char));
+        int heroKey = x & 0xff;
 
-        int heroId = readValue<unsigned char>(infile);
+        int heroId;
+        infile->read(&heroId, sizeof(unsigned char));
+        heroId &= 0xff;
         if (heroId == g_savedHeroNone)
             heroId = -1;
 
         std::string strTemp = readLengthPrefixedString(infile);
-        std::bitset<8> availability =
-            saveVersion >= g_saveVersionCustomHeroAvailability
-                ? readPackedBits<8>(infile) : ~std::bitset<8>();
+        std::bitset<8> availability;
+        if (saveVersion >= g_saveVersionCustomHeroAvailability) {
+            infile->read(&ucharBuffer, sizeof(ucharBuffer));
+            for (availabilityIndex = 0;
+                 availabilityIndex < 8; ++availabilityIndex) {
+                availability[availabilityIndex] =
+                    (ucharBuffer & (1 << (availabilityIndex & 7))) != 0;
+            }
+        } else {
+            availability.set();
+        }
 
         m_heroPlayerSetups.insert(
             std::pair<const int, type_map_hero_info>(

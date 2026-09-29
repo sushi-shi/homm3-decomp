@@ -5885,6 +5885,8 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // counted loops. Putting its scalar fields before both copies, whether by
 // assignment or initializer list, gives 94.5662 here; putting numSSs between
 // the copies is flat. DC's scheduled store alone does not settle the spelling.
+// Windows retail has no separate draw arm after quick combat: the winner
+// selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
 VA(0x004ad470, 0x1531) MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
 {
@@ -5906,30 +5908,18 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
-                            target))
+                            target)) {
+            winningPlayer = leftPlayer;
             winner = 0;
-        else
-            winner = 1;
-        // Mac 0xbaf6c retains the draw check even though quick combat
-        // currently selects only the left or right winner.
-        if (winner == COMBAT_WINNER_NONE) {
-            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                    leftPlayer, rightHero)
-                || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                       rightPlayer, leftHero))
-                checkEndGame(0);
+            loser = rightHero;
         } else {
-            if (winner == COMBAT_WINNER_LEFT) {
-                winningPlayer = leftPlayer;
-                loser = rightHero;
-            } else if (winner == COMBAT_WINNER_RIGHT) {
-                winningPlayer = rightPlayer;
-                loser = leftHero;
-            }
-            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                    winningPlayer, loser))
-                checkEndGame(0);
+            winner = 1;
+            winningPlayer = rightPlayer;
+            loser = leftHero;
         }
+        if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                winningPlayer, loser))
+            checkEndGame(0);
         mobilizeCurrHero(0, 0, 1);
         return winner;
     }
