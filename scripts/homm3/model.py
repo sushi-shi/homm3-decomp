@@ -151,7 +151,8 @@ def resolve(rows=None) -> Model:
                 'runtime-map': 'functions_static_libs', 'src-DATA': 'src',
                 'src-DATA_COMPGEN': 'src_data_compgen',
                 'src-DATA_COMPGEN_GUARD': 'data_compgen',
-                'vtable': 'data_vtables', 'vtable-name': 'data_vtables'}
+                'vtable': 'data_vtables', 'vtable-name': 'data_vtables',
+                'vtable-pairing': 'data_vtables'}
     functions, data, violations = [], [], []
     for rva, row in sorted(rows.items()):
         source = claims.get((row['kind'], rva), [])
@@ -474,6 +475,24 @@ def _collect_inventory():
     for c in iat.claims(Path(info["path"]), project.toolchain / "lib"):
         put(c.rva, c.name, "", c.size, "data", c.channel)
 
+    # Relocation pairings: generated identities of unclaimed data owners,
+    # read off instruction-identical candidate/retail function pairs
+    # (homm3.delink.reloc_pairing). They name addresses only: an admitted
+    # owner is a zero-sized anchor, or the identity of a census vtable.
+    from homm3.delink import reloc_pairing
+    pairing_state = reloc_pairing.data_pairings(src_claims, functions, rows)
+    for pairing in pairing_state.pairings:
+        if pairing.kind != "data" or pairing.verdict != "admitted":
+            continue
+        row = rows.get(pairing.owner)
+        if row is None:
+            put(pairing.owner, pairing.symbol, "", "", "data", "reloc-pairing")
+        elif row["provenance"] == "vtable":
+            row.update(name=pairing.symbol, provenance="vtable-pairing")
+        else:
+            row.update(name=pairing.symbol, unit="", kind="data",
+                       provenance="reloc-pairing")
+
     # dense naming for every absolute-relocation target, required because
     # vostok panics on an .rdata target below every named constant and
     # skips targets outside known symbol sizes
@@ -543,6 +562,8 @@ def generate() -> Path:
     rows, skipped_targets = _collect_inventory()
     model = resolve(rows)
     serialize(model)
+    from homm3.delink import reloc_pairing
+    reloc_pairing.write_outputs(model)
     for binding in model.data:
         if binding.name:
             rows[binding.rva].update(name=binding.name, size=binding.size)

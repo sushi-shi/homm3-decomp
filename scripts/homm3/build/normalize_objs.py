@@ -59,6 +59,7 @@ TEXT_PAD_TRIM_LIMIT = 15
 ASSOCIATIVE_COMDAT = 5
 UNWIND_OWNER = re.compile(r"(?:^|_)unwind[0-9]+$")
 SYMBOL_NAMES = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+ADDRESS_IDENTITIES = common.HOMM3_DIR / "build/gen/address_identities.tsv"
 FUNCLETS = common.HOMM3_DIR / "config/retail/funclets.tsv"
 FUNCTIONS = common.HOMM3_DIR / "config/retail/functions.tsv"
 
@@ -1019,7 +1020,8 @@ def _canonicalize_side(side: str, obj: Path, context=None) -> bool:
     return True
 
 
-def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Counter:
+def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
+               identities=None) -> Counter:
     """The paired base/target passes for one unit (padding retention,
     __except_list literals, equivalent relocations, EH handler owners);
     a no-op unless both normalized copies exist."""
@@ -1041,7 +1043,8 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
         "raw": target_obj, "base": base_obj, "symbol_names": SYMBOL_NAMES,
     }
     for label, inventory in (("retail_funclets", FUNCLETS),
-                             ("retail_functions", FUNCTIONS)):
+                             ("retail_functions", FUNCTIONS),
+                             ("address_identities", ADDRESS_IDENTITIES)):
         if inventory.is_file():
             stamp_inputs[label] = inventory
             target_stamp_inputs[label] = inventory
@@ -1077,9 +1080,15 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
         paired_base, paired_target, symbol_rvas=symbol_rvas,
         funclet_owners=_retail_funclet_owners())
     counts["eh"] += len(rewrites)
+    from homm3.build import identity_relocations
+    if identities is None:
+        identities = identity_relocations.load_identities(ADDRESS_IDENTITIES)
+    paired_target, identity_count = identity_relocations.canonicalize(
+        normalized, paired_target, symbol_rvas, identities)
+    counts["identity"] += identity_count
     if count or base_literal_count or rewrites:
         normalized_base.write_bytes(normalized)
-    if literal_count or aggregate_count:
+    if literal_count or aggregate_count or identity_count:
         normalized_target.write_bytes(paired_target)
     # Padding is a paired normalization decision, so the base copy is
     # stale whenever either raw input changes, even when this run found no
@@ -1129,14 +1138,18 @@ def normalize_all() -> Counter:
     counts: Counter = Counter()
     symbol_rvas = _retail_symbol_rvas()
     image_base = retail_image_base()
+    from homm3.build import identity_relocations
+    identities = identity_relocations.load_identities(ADDRESS_IDENTITIES)
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
-        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context, image_base=image_base))
+        counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context,
+                                 image_base=image_base, identities=identities))
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
           f"{counts['retained']} target-padding span(s) retained "
           f"{counts['eh']} EH handler-owner relocation(s) canonicalized "
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
+          f"{counts['identity']} relocation(s) compared by proven address "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts
