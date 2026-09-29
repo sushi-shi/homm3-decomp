@@ -18,7 +18,8 @@ verbatim from the pre-port build.labels monolith:
 
   * authority order per rva, first writer wins: src claims > zlib-map >
     runtime-map > working-label (functions); reloc-alias > vtable census >
-    IAT slots > reloc-target dense names (data);
+    IAT slots > runtime-data library symbols > reloc-target dense names
+    (data);
   * the scan-order dedup of label-grade names replays over the fragments'
     RAW declarator spellings, then joined base-obj spellings take over;
     a second global pass suffixes remaining label-grade collisions and
@@ -477,9 +478,15 @@ def _collect_inventory():
     # dense naming for every absolute-relocation target, required because
     # vostok panics on an .rdata target below every named constant and
     # skips targets outside known symbol sizes
+    # Reviewed library data placements name the objects game code references
+    # (DirectPlay GUIDs, LIBCPMT statics); they replace only dense names.
+    library_data = {c.rva: c.name for c in providers.runtime_data_symbols()}
     skipped_targets = 0
     for target in providers.reloc_targets():
         if target in rows:
+            continue
+        if target in library_data:
+            put(target, library_data[target], "", "", "data", "runtime-data")
             continue
         if rdata.rva <= target < rdata.rva + rdata.mapped:
             put(target, f"const_{target:x}", "", "", "data", "reloc-target")

@@ -202,18 +202,9 @@ void closeSmacker();
 // the CE stubs contain no data accesses that could prove these VA bindings.
 DATA(0x0069fdf4) bool SmackManager::g_updateScreen;     // ShowVideo arg 7: pump its own VideoDrawRects
 DATA(0x0069fdf5) bool SmackManager::g_needsUpdate;        // decoded frame awaits a blit
-DATA(0x0069fdf8) Smack* g_smackVideo;               // video track handle
-DATA(0x0069fdfc) Smack* g_smackVideo2;              // audio-only track handle
-DATA(0x0069fe00) int g_smackX;                      // blit origin on the screen bitmap
-// ShowVideo latches its own arguments into this quartet for the pump to
-// read back: the requested extent, the id it dispatched on, whether the
-// last frame loops, and whether NextSmackerFrame may advance at all.
-DATA(0x0069fe04) int g_smackY;
-DATA(0x0069fe08) int g_smackReqWidth;               // ShowVideo arg 4
-DATA(0x0069fe0c) int g_smackReqHeight;              // ShowVideo arg 5
-DATA(0x0069fe10) int g_smackVideoId;                // ShowVideo arg 1
-DATA(0x0069fe14) int g_smackLoop;                   // ShowVideo arg 6
-DATA(0x0069fe1c) int g_smackAdvance;                // ShowVideo arg 8 (byte-narrowed on the way in)
+// Mac and Windows agree on this eleven-field playback record; see
+// SmackManagerStruct in smackmgr.h.
+DATA(0x0069fdf8) SmackManager::SmackManagerStruct SmackManager::g_playingSmack;
 // DC bSmackNum. ShowVideo uses this descriptor row's audio-track flag; it is
 // distinct from the video id latched above.
 DATA(0x0069fdec) static unsigned char g_smackNum;
@@ -223,8 +214,6 @@ DATA(0x0069fe58) static int g_smackSound;
 DATA(0x0069fde4) int g_videoCount1;
 DATA(0x0069fe34) int g_videoCount2;
 DATA(0x0069fe3c) int g_videoCount3;
-DATA(0x0069fe18) int g_smackPaused;
-DATA(0x0069fe20) unsigned long g_smackBufferFlags;  // SMACKBUFFER555/565
 DATA(0x0069fddc) static int g_redShift;
 DATA(0x0069fdd8) static int g_redBits;
 DATA(0x0069fe40) static int g_greenShift;
@@ -269,7 +258,7 @@ DATA(0x0069e5ac) int g_soundCountCampaign;
 VA(0x005971b0, 0x3B) MAC_ADDRESS(0x25e3f8, 0x6c)  // dc 0x14ac30
 void videoSoundOnOff(int on)
 {
-    if (g_smackVideo || g_smackVideo2)
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
         g_soundManager->serviceSounds();
     else if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2)
         g_soundManager->serviceSounds();
@@ -278,18 +267,18 @@ void videoSoundOnOff(int on)
 VA(0x005971f0, 0xD9) MAC_ADDRESS(0x25e464, 0x104)  // dc 0x14ac34
 void videoRealignBuffers()
 {
-    g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
+    SmackManager::g_playingSmack.m_bufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
-    if (g_smackVideo)
-        SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+    if (SmackManager::g_playingSmack.m_smack)
+        SmackToBuffer(SmackManager::g_playingSmack.m_smack, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-    if (g_smackVideo2)
-        SmackToBuffer(g_smackVideo2, g_smackX, g_smackY,
+            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+    if (SmackManager::g_playingSmack.m_smack2)
+        SmackToBuffer(SmackManager::g_playingSmack.m_smack2, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     BinkManager::g_surfaceType = BinkDDSurfaceType(g_ddsBack);
     BinkManager::g_playingBink.m_screen = g_windowManager->m_screenBitmap->getMap(
         BinkManager::g_playingBink.m_x, BinkManager::g_playingBink.m_y);
@@ -341,8 +330,8 @@ void videoNextFrame()
     if (g_insideNextFrame)
         return;
     g_insideNextFrame = 1;
-    if (g_smackVideo || g_smackVideo2) {
-        if (!g_smackPaused)
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) {
+        if (!SmackManager::g_playingSmack.m_paused)
             SmackManager::nextSmackerFrame();
     }
     if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) {
@@ -359,15 +348,15 @@ void videoNextFrame()
 VA(0x00598e80, 0x25) MAC_ADDRESS(0x25f948, 0xc8)
 void SmackManager::drawSmackerFrame()
 {
-    if (g_smackVideo && SmackManager::g_playingSmacker && !g_smackPaused)
-        SmackDoFrame(g_smackVideo);
+    if (SmackManager::g_playingSmack.m_smack && SmackManager::g_playingSmacker && !SmackManager::g_playingSmack.m_paused)
+        SmackDoFrame(SmackManager::g_playingSmack.m_smack);
 }
 
 VA(0x00597740, 0x53) MAC_ADDRESS(0x25e748, 0x80)  // dc 0x14ac48
 void videoDrawCurrentFrame()
 {
-    if (g_smackVideo || g_smackVideo2) {
-        if (!g_smackPaused)
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) {
+        if (!SmackManager::g_playingSmack.m_paused)
             SmackManager::drawSmackerFrame();
     }
     if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) {
@@ -381,8 +370,8 @@ void videoPause()
 {
     if (++g_videoPauseCount > 1)
         return;
-    if (g_smackVideo || g_smackVideo2)
-        g_smackPaused = 1;
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
+        SmackManager::g_playingSmack.m_paused = 1;
     if (BinkManager::g_playingBink.m_bink) {
         BinkManager::g_playingBink.m_paused = 1;
         BinkPause(BinkManager::g_playingBink.m_bink, 1);
@@ -395,14 +384,15 @@ void videoPause()
 }
 
 VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)  // dc 0x14ac50
-// Splitting the pause-count early guards is byte-flat in the retained
-// Windows body and showVideo; it does not recover their nested call choices.
+// The implicit zero tests are byte-identical to `== 0`/`!= 0` here but cost
+// 4 fewer /Ob2 IL units; showVideo's third videoClose expansion only admits
+// this body at that cost. Splitting the guard into two returns costs more.
 void videoResume()
 {
-    if (g_videoPauseCount == 0 || --g_videoPauseCount != 0)
+    if (!g_videoPauseCount || --g_videoPauseCount)
         return;
-    if (g_smackVideo || g_smackVideo2)
-        g_smackPaused = 0;
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
+        SmackManager::g_playingSmack.m_paused = 0;
     if (BinkManager::g_playingBink.m_bink) {
         BinkManager::g_playingBink.m_paused = 0;
         BinkPause(BinkManager::g_playingBink.m_bink, 0);
@@ -424,8 +414,8 @@ void videoRestart()
 VA(0x00597930, 0x5A) MAC_ADDRESS(0x25e96c, 0x90)  // dc 0x14ac58
 bool videoNeedsUpdate()
 {
-    if (g_smackVideo || g_smackVideo2)
-        return SmackManager::g_needsUpdate && !g_smackPaused;
+    if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
+        return SmackManager::g_needsUpdate && !SmackManager::g_playingSmack.m_paused;
     else if (BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2)
         return BinkManager::g_needsUpdate && !BinkManager::g_playingBink.m_paused;
     return 0;
@@ -434,7 +424,7 @@ bool videoNeedsUpdate()
 VA(0x00597990, 0x3F) MAC_ADDRESS(0x25e9fc, 0x68)  // dc 0x14ac5c
 bool videoPlaying()
 {
-    if ((g_smackVideo || g_smackVideo2) && !g_smackPaused)
+    if ((SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) && !SmackManager::g_playingSmack.m_paused)
         return 1;
     if ((BinkManager::g_playingBink.m_bink || BinkManager::g_playingBink.m_bink2) && !BinkManager::g_playingBink.m_paused)
         return 1;
@@ -492,20 +482,20 @@ void videoDrawRects()
     long& w = bounds.Width;
     long& h = bounds.Height;
 
-    if ((g_smackVideo || g_smackVideo2) && !g_smackPaused) {
+    if ((SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) && !SmackManager::g_playingSmack.m_paused) {
         Smack* smk;
 
         smk = 0;
-        if (g_smackVideo)
-            smk = g_smackVideo;
-        else if (g_smackVideo2)
-            smk = g_smackVideo2;
-        SmackToBufferRect(smk, g_smackBufferFlags);
+        if (SmackManager::g_playingSmack.m_smack)
+            smk = SmackManager::g_playingSmack.m_smack;
+        else if (SmackManager::g_playingSmack.m_smack2)
+            smk = SmackManager::g_playingSmack.m_smack2;
+        SmackToBufferRect(smk, SmackManager::g_playingSmack.m_bufferFlags);
         w = smk->LastRectw;
         h = smk->LastRecth;
         x = smk->LastRectx;
         y = smk->LastRecty;
-        while (SmackToBufferRect(smk, g_smackBufferFlags)) {
+        while (SmackToBufferRect(smk, SmackManager::g_playingSmack.m_bufferFlags)) {
             if (smk->LastRectx < x)
                 x = smk->LastRectx;
             if (smk->LastRecty < y)
@@ -887,12 +877,13 @@ void SmackManager::setPixelFormat(unsigned long redMask,
 VA(0x00598af0, 0x385) MAC_ADDRESS(0x25f6e4, 0x264)
 // VideoOpen's DC-proven Boolean flags pass unchanged into this Windows
 // opener. Retail reads autoDraw as a byte and widens advance's low byte.
-// Retail also computes the id-selected descriptor row once and carries it
-// across both track opens; the const reference recovers that lifetime and
-// raises this body from 60.4981% to 76.2394%. Declaring it earlier as either
-// a pointer or reference raises the score only to 76.3089% while incorrectly
-// growing retail's 8-byte frame to 12 bytes. Rechecking if/logical sound
-// publication and conditional/zero-then-if SDK masks adds no further gain.
+// Retail refuses videoResume at the first two videoClose expansions and
+// accepts it at the third, then calls closeSmacker and videoSoundOnOff.
+// That split needs both the SmackManagerStruct member accesses here (caller
+// IL) and videoResume's implicit pause-count tests (callee IL, 112 against a
+// nested budget of 114). With them the two plain descriptor subscripts give
+// retail's id*20 index; the former const-reference row (76.24%) put a
+// pointer on the frame instead.
 void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
@@ -910,57 +901,56 @@ void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
         g_videoDescriptors[g_smackNum].m_noFrameSkip
             ? SMACKPRELOADALL : 0;
 
-    g_smackVideoId = id;
-    g_smackPaused = 0;
-    g_smackVideo2 = 0;
-    g_smackBufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
+    SmackManager::g_playingSmack.m_id = id;
+    SmackManager::g_playingSmack.m_paused = 0;
+    SmackManager::g_playingSmack.m_smack2 = 0;
+    SmackManager::g_playingSmack.m_bufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
                             ? SMACKBUFFER565 : SMACKBUFFER555;
-    g_smackAdvance = advance;
+    SmackManager::g_playingSmack.m_advance = advance;
 
-    const SVideoDescriptor& descriptor = g_videoDescriptors[id];
-    if (descriptor.m_smkAudioStem != "") {
-        g_smackVideo2 = openSmackerTrack(descriptor.m_smkAudioStem,
+    if (g_videoDescriptors[id].m_smkAudioStem != "") {
+        SmackManager::g_playingSmack.m_smack2 = openSmackerTrack(g_videoDescriptors[id].m_smkAudioStem,
             trackMask, SMACKPRELOADALL);
-        if (!g_smackVideo2) {
+        if (!SmackManager::g_playingSmack.m_smack2) {
             videoClose();
             return;
         }
-        SmackVolumePan(g_smackVideo2, SMACKTRACKS,
+        SmackVolumePan(SmackManager::g_playingSmack.m_smack2, SMACKTRACKS,
             3640 * g_config.m_soundVolume, 0x8000);
-        SmackToBuffer(g_smackVideo2, x, y,
+        SmackToBuffer(SmackManager::g_playingSmack.m_smack2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     }
 
-    g_smackVideo = openSmackerTrack(descriptor.m_smkStem,
+    SmackManager::g_playingSmack.m_smack = openSmackerTrack(g_videoDescriptors[id].m_smkStem,
         trackMask, videoMode);
-    if (!g_smackVideo) {
+    if (!SmackManager::g_playingSmack.m_smack) {
         videoClose();
         return;
     }
 
     SmackManager::g_updateScreen = autoDraw;
     if (w <= 0)
-        w = g_smackVideo->Width;
+        w = SmackManager::g_playingSmack.m_smack->Width;
     if (h <= 0)
-        h = g_smackVideo->Height;
-    g_smackReqWidth = w;
-    g_smackReqHeight = h;
-    g_smackLoop = loop;
-    g_smackX = x;
-    g_smackY = y;
-    SmackVolumePan(g_smackVideo, SMACKTRACKS,
+        h = SmackManager::g_playingSmack.m_smack->Height;
+    SmackManager::g_playingSmack.m_w = w;
+    SmackManager::g_playingSmack.m_h = h;
+    SmackManager::g_playingSmack.m_loop = loop;
+    SmackManager::g_playingSmack.m_x = x;
+    SmackManager::g_playingSmack.m_y = y;
+    SmackVolumePan(SmackManager::g_playingSmack.m_smack, SMACKTRACKS,
         3640 * g_config.m_soundVolume, 0x8000);
-    SmackToBuffer(g_smackVideo, x, y,
+    SmackToBuffer(SmackManager::g_playingSmack.m_smack, x, y,
         g_windowManager->m_screenBitmap->getPitch(),
         g_windowManager->m_screenBitmap->getHeight(),
-        g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
-    if (g_smackVideo2)
-        SmackToBuffer(g_smackVideo2, x, y,
+        g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
+    if (SmackManager::g_playingSmack.m_smack2)
+        SmackToBuffer(SmackManager::g_playingSmack.m_smack2, x, y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
     SmackManager::g_playingSmacker = 1;
 }
 
@@ -975,35 +965,35 @@ namespace SmackManager {
 MAC_ADDRESS(0x25fa10, 0x44)
 void restartSmacker()
 {
-    if (g_smackVideo) {
-        SmackGoto(g_smackVideo, 1);
-        SmackDoFrame(g_smackVideo);
+    if (SmackManager::g_playingSmack.m_smack) {
+        SmackGoto(SmackManager::g_playingSmack.m_smack, 1);
+        SmackDoFrame(SmackManager::g_playingSmack.m_smack);
     }
 }
 
 VA(0x00598eb0, 0x193) MAC_ADDRESS(0x25fa54, 0x224)  // dc 0x14adfc
 void nextSmackerFrame()
 {
-    Smack* smk = g_smackVideo;
+    Smack* smk = SmackManager::g_playingSmack.m_smack;
     if (!smk)
-        smk = g_smackVideo2;
-    SmackManager::g_needsUpdate = smk && SmackManager::g_playingSmacker && !SmackWait(smk) && g_smackAdvance;
+        smk = SmackManager::g_playingSmack.m_smack2;
+    SmackManager::g_needsUpdate = smk && SmackManager::g_playingSmacker && !SmackWait(smk) && SmackManager::g_playingSmack.m_advance;
     if (!SmackManager::g_needsUpdate)
         return;
-    if (g_smackPaused)
+    if (SmackManager::g_playingSmack.m_paused)
         return;
     SmackDoFrame(smk);
     if (smk->FrameNum < smk->Frames - 1) {
         SmackNextFrame(smk);
-    } else if (g_smackLoop) {
-        if (g_smackVideo && g_smackVideo2) {
-            if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
+    } else if (SmackManager::g_playingSmack.m_loop) {
+        if (SmackManager::g_playingSmack.m_smack && SmackManager::g_playingSmack.m_smack2) {
+            if (g_videoDescriptors[SmackManager::g_playingSmack.m_id].m_fadeOnAbort)
                 g_windowManager->fadeScreen(1, 4, 0);
             g_soundManager->serviceSounds();
-            SmackClose(g_smackVideo);
-            g_smackVideo = 0;
-            if (g_videoDescriptors[g_smackVideoId].m_fadeInSecondTrack) {
-                SmackDoFrame(g_smackVideo2);
+            SmackClose(SmackManager::g_playingSmack.m_smack);
+            SmackManager::g_playingSmack.m_smack = 0;
+            if (g_videoDescriptors[SmackManager::g_playingSmack.m_id].m_fadeInSecondTrack) {
+                SmackDoFrame(SmackManager::g_playingSmack.m_smack2);
                 g_windowManager->fadeScreen(0, 4, 0);
             }
         } else {
@@ -1011,7 +1001,7 @@ void nextSmackerFrame()
         }
     } else {
         closeSmacker();
-        if (g_videoDescriptors[g_smackVideoId].m_fadeOnAbort)
+        if (g_videoDescriptors[SmackManager::g_playingSmack.m_id].m_fadeOnAbort)
             g_windowManager->fadeScreen(1, 4, 0);
         else
             g_windowManager->updateScreen(0, 0, 0x320, 0x258);
@@ -1024,13 +1014,13 @@ void nextSmackerFrame()
 VA(0x00599050, 0x43) MAC_ADDRESS(0x25fc78, 0x74)  // dc 0x14ae00
 void closeSmacker()
 {
-    if (g_smackVideo)
-        SmackClose(g_smackVideo);
-    if (g_smackVideo2)
-        SmackClose(g_smackVideo2);
-    g_smackVideo2 = 0;
-    g_smackVideo = 0;
-    g_smackPaused = 0;
+    if (SmackManager::g_playingSmack.m_smack)
+        SmackClose(SmackManager::g_playingSmack.m_smack);
+    if (SmackManager::g_playingSmack.m_smack2)
+        SmackClose(SmackManager::g_playingSmack.m_smack2);
+    SmackManager::g_playingSmack.m_smack2 = 0;
+    SmackManager::g_playingSmack.m_smack = 0;
+    SmackManager::g_playingSmack.m_paused = 0;
     SmackManager::g_playingSmacker = 0;
     SmackManager::g_needsUpdate = 0;
 }
@@ -1043,7 +1033,7 @@ int playSmacker(int id, int x, int y, int w, int h)
 {
     g_soundManager->m_playSounds = 1;
     unsigned char result = playSmackerCore(id, x, y, w, h);
-    g_smackPaused = 0;
+    SmackManager::g_playingSmack.m_paused = 0;
     g_playingSmacker = 0;
     return result;
 }
@@ -1051,8 +1041,8 @@ int playSmacker(int id, int x, int y, int w, int h)
 VA(0x005990a0, 0x1C) MAC_ADDRESS(0x25fd40, 0x44)
 void gotoSmackerFrame(unsigned long frame)
 {
-    if (g_smackVideo && SmackManager::g_playingSmacker)
-        SmackGoto(g_smackVideo, frame);
+    if (SmackManager::g_playingSmack.m_smack && SmackManager::g_playingSmacker)
+        SmackGoto(SmackManager::g_playingSmack.m_smack, frame);
 }
 
 // Mac 0:0x25fd84 retains this body; Windows expands it through playSmacker.
@@ -1066,26 +1056,26 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
     vh = h;
     vw = w;
     showVideo(id, x, y, vw, vh, 0, 0, 1);
-    if (!g_smackVideo) {
+    if (!SmackManager::g_playingSmack.m_smack) {
         result = 0;
     } else {
         g_mouseManager->hidePointer();
         if (vw < 0)
-            vw = g_smackVideo->Width;
+            vw = SmackManager::g_playingSmack.m_smack->Width;
         if (vh < 0)
-            vh = g_smackVideo->Height;
-        g_smackX = x + (vw - g_smackVideo->Width) / 2;
-        g_smackY = y + (vh - g_smackVideo->Height) / 2;
-        pos.x = g_smackX;
-        pos.y = g_smackY;
-        SmackToBuffer(g_smackVideo, g_smackX, g_smackY,
+            vh = SmackManager::g_playingSmack.m_smack->Height;
+        SmackManager::g_playingSmack.m_x = x + (vw - SmackManager::g_playingSmack.m_smack->Width) / 2;
+        SmackManager::g_playingSmack.m_y = y + (vh - SmackManager::g_playingSmack.m_smack->Height) / 2;
+        pos.x = SmackManager::g_playingSmack.m_x;
+        pos.y = SmackManager::g_playingSmack.m_y;
+        SmackToBuffer(SmackManager::g_playingSmack.m_smack, SmackManager::g_playingSmack.m_x, SmackManager::g_playingSmack.m_y,
             g_windowManager->m_screenBitmap->getPitch(),
             g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getMap(0, 0), g_smackBufferFlags);
+            g_windowManager->m_screenBitmap->getMap(0, 0), SmackManager::g_playingSmack.m_bufferFlags);
         aborted = 0;
         g_inputManager->flush();
         while (1) {
-            if (g_smackVideo == 0)
+            if (SmackManager::g_playingSmack.m_smack == 0)
                 break;
             pollSound();
             process1WindowsMessage();

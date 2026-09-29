@@ -232,7 +232,7 @@ void TQuickTownWindow::initializeArmyDisplay(
                 m_widgets.push_back(new textWidget(
                     g_quickTownArmyPositions[displaySlot][0],
                     g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
-                    quantityText.str(), "smalfont.fnt", font::WHITE, -1,
+                    quantityText.str(), "tiny.fnt", font::WHITE, -1,
                     1, 0, 8));
             } else {
                 quantityText << armyGroup::getArmySizeName(count, 0)
@@ -240,7 +240,7 @@ void TQuickTownWindow::initializeArmyDisplay(
                 m_widgets.push_back(new textWidget(
                     g_quickTownArmyPositions[displaySlot][0],
                     g_quickTownArmyPositions[displaySlot][1] + 34, 32, 13,
-                    quantityText.str(), "smalfont.fnt", font::WHITE,
+                    quantityText.str(), "tiny.fnt", font::WHITE,
                     widgetId++, 1, 0, 8));
             }
             quantityText.freeze(false);
