@@ -3353,18 +3353,23 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 // Complete expands both into separate point temporaries at entry. DC's
 // GetNumMapLevels product at line 3054 has no retained retail use, so the
 // indexed distance map keeps only its single-level stride.
+// DC 0x32a84 reads the hero through get_location for the danger query and
+// the seed (lines 3060/3078), constructs the friend's cell point from its
+// coordinates (3102), and fills the function-scope point field by field
+// from the path target and then the position (3109..3115). Accessor
+// getTarget()/getLocation() for the friend cost Windows 91.17 -> 83.69%;
+// the DC form reaches 92.35%. Residual: whole-body EBX/EDI role swap for
+// currentHero (why-reg: only a synthetic zero-local carrier moves it).
 VA(0x0042f570, 0x40e) MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity, dc 0x32a84
 long markDestinations(hero* currentHero, long maxDistance,
                        searchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType)
 {
-    int mapCells = g_mapHeight * g_mapWidth;
+    int mapCells = g_mapWidth * g_mapHeight;
     searchArray friendlySearch;
     long movePoints = currentHero->m_movePoints;
     long heroDanger;
-    // DC records point and map_cell at function scope. Reuse the point
-    // for the friend's target and fallback; these lifetimes are VC6-flat.
     type_point point;
     NewmapCell* targetCell;
     heroDanger = currentSearchArray->getDangerValue(
@@ -3380,15 +3385,19 @@ long markDestinations(hero* currentHero, long maxDistance,
         hero* friendly = g_game->getHero(g_currentPlayer->m_heroes[i]);
         if (friendly == currentHero)
             continue;
-        type_point friendPoint = friendly->getLocation();
+        type_point friendPoint(friendly->m_x, friendly->m_y, friendly->m_z);
         pathCell* friendCell = currentSearchArray->getCell(friendPoint, 0);
         if (!friendCell->m_visited)
             continue;
 
-        point = friendly->getTarget();
+        point.m_x = friendly->m_pathTargetX;
+        point.m_y = friendly->m_pathTargetY;
+        point.m_z = friendly->m_pathTargetZ;
         unsigned short extraCost;
         if (!point.isValid()) {
-            point = friendly->getLocation();
+            point.m_x = friendly->m_x;
+            point.m_y = friendly->m_y;
+            point.m_z = friendly->m_z;
             extraCost = 0;
         } else {
             extraCost = friendly->m_targetDistance;

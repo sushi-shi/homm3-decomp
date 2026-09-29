@@ -11,6 +11,7 @@
 #include "va.h"
 #include "includes.h"
 #include "bitset_iterator.h"
+#include "homm3_minmax.h"
 
 #include <algorithm>
 #include <bitset>
@@ -4571,8 +4572,10 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
     TRmgVector delta(center.m_x - point.m_x, center.m_y - point.m_y);
     int length = delta.length();
     if (length > 0) {
-        long displacement = max(4, length / 4);
-        displacement = min(displacement, length / 2);
+        // Both clamps bind long references (retail's two-temporary
+        // selector shape); the by-value int helpers score 75.89%.
+        long displacement = std::max<long>(4, length / 4);
+        displacement = std::min<long>(displacement, length / 2);
         delta = delta * displacement / length;
         point += delta;
     }
@@ -4582,8 +4585,8 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
         delta = TRmgVector(center.m_x - point.m_x, center.m_y - point.m_y);
         length = delta.length();
         if (length > 0) {
-            long displacement = max(4, length / 4);
-            displacement = min(displacement, length / 2);
+            long displacement = std::max<long>(4, length / 4);
+            displacement = std::min<long>(displacement, length / 2);
             delta = delta * displacement / length;
             point += delta;
         }
