@@ -529,6 +529,13 @@ std::string type_skill_quest::skillRequirementText(
 // Lifetime-extended requirement/result references do not recover it: six
 // unpinned ordinary-assignment forms reproduce 49.3657/50.4925%. The retained
 // assign boundary, not a missing temporary lifetime, remains the first issue.
+// Lane A r4 budget arithmetic: the floor budget 1000 less questTextRow's 51
+// leaves 949 / 3 remaining candidates = 316 >= 307 at the second assignment,
+// so its assign(str, pos, n) expands. Retail needs <= 920 there: giving
+// questTexts a row local (cost > 40, subtracted) makes this body exact and
+// also reproduces retail's _Tidy call/expansion split, but drops six other
+// quest-text callers (monster 95.53 -> 72.12, doQuestLog 96.54 -> 86.43);
+// calling questTexts() per use instead of the texts local gives 55.47%.
 VA(0x0056e0d0, 0x169) MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {

@@ -6736,7 +6736,8 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
-// DC game.cpp:7462 names NewfullMap::cell directly, and DC 7484 calls
+// DC game.cpp:7462 calls NewfullMap::cell(int, int, int) with the three
+// location fields (byte-neutral against cell(type_point)), and DC 7484 calls
 // type_point::operator== for the shipyard search; Mac 0xdd1bc..0xdd224
 // expands the operator's Boolean chain. Keep it (72.12%; three field tests
 // reach 99.97%). Retail spills `this` into a 0x2c frame; while/for loops,
@@ -6746,7 +6747,7 @@ VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
     hero* obscuringHero = 0;
-    NewmapCell* mapCell = m_worldMap.cell(location);
+    NewmapCell* mapCell = m_worldMap.cell(location.m_x, location.m_y, location.m_z);
     if (mapCell->m_type == HERO) {
         obscuringHero = g_game->getHero(mapCell->m_extraInfo);
         obscuringHero->restoreCell();
