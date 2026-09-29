@@ -567,10 +567,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_canStop = 0;
         }
 
-        if (!(getMapExtra(candidate.m_point) & g_mapVisibilityBit)
+        if (!(getMapExtra(candidate.m_point) & g_curPlayerBit)
                 && searchType != const_AI_enemy_search
                 && (g_currentPlayer->isHuman()
-                    || (!(getMapExtra(source->m_point) & g_mapVisibilityBit)
+                    || (!(getMapExtra(source->m_point) & g_curPlayerBit)
                         && g_currentPlayer->m_numTowns > 0))) {
             blocked = 1;
             candidate.m_canStop = 0;

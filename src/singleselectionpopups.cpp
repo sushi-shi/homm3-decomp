@@ -186,10 +186,9 @@ void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
-CSpriteWidget::~CSpriteWidget()
-{
-}
-
+// The destructor is implicit: Dreamcast attributes its 24-byte body to
+// line 73 beside Draw, as it does CBitmapWidget's, and retail's deleting
+// destructor reaches the folded vptr-free ~CBitmapWidget jump.
 VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // dc 0x12f11c
 
 VA(0x005757e0, 0x226) MAC_ADDRESS(0x16bf54, 0x25c)  // dc 0x12e1cc
@@ -250,9 +249,8 @@ void CBitmapWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
-CHotspotWidget::~CHotspotWidget()
-{
-}
+// ~CHotspotWidget is implicit (DC 0x12f2ec is attributed to the ctor's
+// line 121); an empty user body would store the vtable before ~widget.
 
 VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
 
