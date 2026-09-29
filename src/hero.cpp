@@ -1167,16 +1167,13 @@ const char* hero::heroFn004D8F70()
 }
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
-// when the +0x3d9 flag is set (falling back to the empty literal at
-// 0x63a608), otherwise strcmp's the +0x23 name band against
+// when the +0x3d9 flag is set (c_str() falls back to basic_string's
+// _Nullstr byte at 0x63a608), otherwise strcmp's the +0x23 name band against
 // akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
 // only while the live name still equals its default.
 VA(0x004d8fb0, 0xA0) MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::heroFn004D8FB0()
 {
-    const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
-                                         "");
-
     if (m_hasCustomName)
         return m_customName.c_str();
 

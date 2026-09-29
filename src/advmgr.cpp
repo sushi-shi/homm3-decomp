@@ -2191,9 +2191,7 @@ static void setTownHelp(char* buffer, const NewmapCell* cell)
 {
     const town* mapTown = g_game->getTown(cell->m_extraInfo);
     const char* townTypeName = townManager::getTownTypeName(cell->m_objectIndex);
-    const char* townName = mapTown->m_name.begin();
-    if (!townName)
-        townName = DATA_COMPGEN(0x0063a608, townRolloverEmptyText, "");
+    const char* townName = mapTown->m_name.c_str();
     sprintf(buffer, DATA_COMPGEN(
         0x0065f3d4, rolloverTownFormat, "%s, %s"),
         townName, townTypeName);

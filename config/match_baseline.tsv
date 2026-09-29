@@ -40,7 +40,7 @@ adventuremapwindow	?highlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.
 adventuremapwindow	?onEscape@CGameChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x2240	tokens1:0468c30ab8f3
 adventuremapwindow	?onKeyPress@CGameChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x21f0	tokens1:ecbafb796b7d
 adventuremapwindow	?open@TAdventureMapWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1400	tokens1:f725540e50ef
-adventuremapwindow	?processHover@TAdventureMapWindow@@QAEEHH@Z	99.9719	99.9719	100.0000	0x3010	tokens1:9b558a805249
+adventuremapwindow	?processHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010	tokens1:c02e95670c38
 adventuremapwindow	?processRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x2e70	tokens1:6627d69f0acf
 adventuremapwindow	?sendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	77.1709	77.1709	77.4872	0x22e0	tokens1:4dec8d4ef610
 adventuremapwindow	?sendChatCleanup@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x2280	tokens1:3bf8133dd3f2
@@ -163,7 +163,7 @@ advmgr	?seedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a
 advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x183d0	tokens1:71ec8212bfb8
 advmgr	?setHeroContext@advManager@@QAEXHHEE@Z	97.0315	97.0315	99.2746	0x17b20	tokens1:f9f7620d4411
 advmgr	?setInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	tokens1:90a20d4437f6
-advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	95.5815	95.5815	96.9535	0xb150	tokens1:ff82ee31a241
+advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	95.5832	95.5832	96.9535	0xb150	tokens1:ff82ee31a241
 advmgr	?setShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	tokens1:8ed9ffbc97e7
 advmgr	?setTownContext@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x17830	tokens1:105f1030b92e
 advmgr	?setTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00	tokens1:88e3d60c814b
@@ -2254,7 +2254,7 @@ hero	?giveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600	tokens1:7cf
 hero	?giveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0	tokens1:b7eb1dec2edc
 hero	?hasArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91b0	tokens1:29e20864179b
 hero	?heroFn004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70	tokens1:a7b262fd1450
-hero	?heroFn004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0	tokens1:aca75ef8f602
+hero	?heroFn004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0	tokens1:9e8ae6d372f6
 hero	?heroFn004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30	tokens1:eef4ecf40257
 hero	?heroFn004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0	tokens1:0d02bf03c351
 hero	?heroFn004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80	tokens1:f0ba83268db5

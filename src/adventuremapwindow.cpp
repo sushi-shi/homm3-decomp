@@ -914,11 +914,8 @@ town_rollover: {
                     break;
 
                 const town* mapTown = g_game->getTown(townID);
-                const char* townName = DATA_COMPGEN(
-                    0x0063a608, adventureTownRolloverEmptyText, "");
-                const char* actualTownName = mapTown->m_name.begin();
-                if (actualTownName)
-                    townName = actualTownName;
+                // 0x63a608 is basic_string::_Nullstr's byte: c_str().
+                const char* townName = mapTown->m_name.c_str();
                 sprintf(g_text, DATA_COMPGEN(
                     0x0065f3d4, adventureTownRolloverFormat, "%s, %s"),
                     townName, mapTown->getTypeName());
