@@ -3130,6 +3130,11 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 //     subscript, which retail keeps inline.
 //   * the heroes loop's teardown is emitted after the heroAvailability
 //     write's (0x1e before 0x1c) where retail emits them in order.
+// Lane A r5 (unpinned trace): the first lithPools saveVector (cost 96) gets
+// budget 124 and expands; retail calls all seven and still expands the
+// following ~SavedGameHeader, so retail's budget there is 67..95. Bracing
+// the save helpers' eight guarded returns lowers it only to 108, and an
+// explicit empty ~SavedGameHeader keeps cost 67. Neither was adopted.
 
 VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::save(TAbstractFile* outfile)

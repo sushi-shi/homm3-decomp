@@ -1263,6 +1263,9 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
+                    // Mac 0xab3c8..0xab3e8 assigns formatString's result
+                    // straight into message (no copy constructor); that
+                    // direct form scores 95.28% here against 96.35% (r5).
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(
                             g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),

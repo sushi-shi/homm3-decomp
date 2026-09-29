@@ -1925,6 +1925,37 @@ else-scope and braced guarded calls raise them to 176..177 with the same
 bytes, and the flags fall to `0x2a`. Measured on that TU: cost 174 is saved,
 176 is not. Read the flags before modelling budgets.
 
+The same cliff closed two more families. `combatManager::findSpellTarget`
+(cost 160) expanded in all its callers; the Dreamcast named result and
+braced Sacrifice arms cost about 177, so `validSpellTarget` went from 73.49%
+to 96.60% and `initiateSpell` and `castSpell` rose too. The sell-artifact
+`computeTradeRatios` went from 157 to 166 with its market-value row. That
+stays below the cliff, but the first window-handler site (budget 165) now
+refuses it, as retail does (83.13% -> 93.60%). In game.cpp's save helpers,
+braced returns cost 2 each and were not adopted.
+
+### The retained final `string::assign` has no shared cause
+
+Five callers keep `basic_string::assign(str, pos, n)` (cost 307) out of line
+where VC6 expanded it. In each, it sits at depth 3 under `operator=` (29) and
+`assign(const&)` (35). Both are free, so no header cost is charged and no
+callee cost fits all five. The traces need different local facts:
+
+- `type_skill_quest::setDefaultText` has 316 at the second assignment and
+  needs one more candidate after it, or 29 more units charged before it.
+- `type_quest::loadFromMap` needs two or three more candidates after the last
+  temporary's destructor.
+- `hero::initialize` has 431 at its assignment. It needs two more candidates
+  after it, or a caller cost of 805 or less against 1055.
+
+A dearer `assign(const&)` would also refuse skill quest's first assignment,
+which retail expands. `readMapPlayerSlot` (313, 74.02% -> 95.89%) closed on
+two source facts that add candidates after its feature test. Mac constructs
+an unused string and destroys it after the loop; Dreamcast names it strTemp.
+The feature test also reads through the bitset reference proxy. Check Mac for
+ctor/dtor pairs that no call consumes. They mark unused locals whose extra
+destructor sites move Windows budgets.
+
 ## The vector single-insert wrapper is refused only one level down
 
 Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around

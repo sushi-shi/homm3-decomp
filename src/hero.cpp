@@ -1048,6 +1048,9 @@ void hero::initialize(short index)
 // The enum-valued backpack fill constructs each empty artifact inside the
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
+// Lane A r5 trace: m_customName's assign(str, pos, n) gets 1726 / 4 = 431
+// under operator=; retail's call needs two more candidates after it or a
+// caller cost of 805 or less (1055 here). See docs/vc6/inliner.md.
 VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
