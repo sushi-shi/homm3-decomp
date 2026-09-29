@@ -66,9 +66,16 @@ def func(name: str, *, decorated: bool = False) -> str:
     return mask(out if decorated else decorate(out))
 
 
+#: a data reference (`A` type code after the variable/static-member digit):
+#: Clang spells its storage class `B` where cl 6 emits `A`
+#: (`const T (&g_x)[N]` is `...$$CBUT@@A` in every VC6 object).
+REFERENCE_STORAGE = re.compile(r"(@@[0-9]A.*)B$")
+
+
 def data(name: str, *, internal: bool, decorated: bool = False) -> str:
     """VC6 DATA spelling from a Clang declaration; linkage needs no wrapper."""
     out = name if decorated else decorate(name)
+    out = REFERENCE_STORAGE.sub(r"\1A", out)
     if internal and out.startswith("?") and LOCAL_STATIC_SCOPE.search(out):
         out = "_" + out
     return mask(out)
