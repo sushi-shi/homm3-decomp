@@ -3729,6 +3729,9 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // aligns 435/677 instructions with both calls, versus 433/677 when the
 // latter helper is omitted. Keep the
 // source-backed helper boundaries through this compiler-state score dip.
+// DC 4595 reads the level-change guard's hero through GetHero(player's
+// current id), not GetCurrHero; restoring it gives 87.38 -> 88.60. Mac
+// calls getCurrHero there (a platform difference).
 VA(0x0040e360, 0x918) MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee, dc 0xf3a8
 int advManager::processHover(int mouseX, int mouseY)
 {
@@ -3756,7 +3759,7 @@ int advManager::processHover(int mouseX, int mouseY)
         setRolloverText(currCell, rx, ry);
 
         if (g_currentPlayer->m_currHeroId != -1
-            && g_game->getCurrHero()->m_z
+            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
@@ -6035,6 +6038,11 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // GetItemId. It is not evidence for a copied helper body in this caller.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
+// The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
+// sprintf pair: retail cross-jumps the visited arm into the unvisited arm's
+// call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
+// A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
+// a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
 VA(0x004137c0, 0x25A0) MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {

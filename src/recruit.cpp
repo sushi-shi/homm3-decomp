@@ -760,6 +760,12 @@ int finishRecruitUnit(message& msg)
 // second slot; VC6 currently reuses one for all four. DC and the bounded Mac
 // counterpart each retain four distinct shadowed locals, so this does not
 // justify a synthetic Windows-only object or scope.
+// The timeout and remote-abort checks share one abortDialog flag and one
+// exitRecruitUnit call. DC 707/723 and Mac 0x14fb94/0x14fc10 show two helper
+// calls, but retail Windows jumps from the timeout test forward into the
+// single tail after the network check; two `return exitRecruitUnit(msg)`
+// sites leave VC6 with two tails (95.74%), the shared flag 99.89% (the
+// explicit four stores instead of the helper call are byte-identical).
 // The admitted Mac Main pair is currently unavailable: CodeWarrior emits an
 // anonymous 16-byte zero template for DC's const monType[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
@@ -767,18 +773,20 @@ int finishRecruitUnit(message& msg)
 VA(0x00550940, 0xA08) MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket, dc 0x11a30c
 int recruitUnit::main(message& msg)
 {
-    if (g_turnDuration.isExpired())
-        return exitRecruitUnit(msg);
+    unsigned char abortDialog = g_turnDuration.isExpired();
 
-    if (g_remoteOn) {
+    if (!abortDialog && g_remoteOn) {
         unsigned char msgReceived = 0;
         CNetMsgHandler* handler = g_dPlay->getNetMsgHandler();
         if (handler) {
             handler->checkHandleNet(1, &msgReceived);
             if (msgReceived && handler->getAbortPopupMsg())
-                return exitRecruitUnit(msg);
+                abortDialog = 1;
         }
     }
+
+    if (abortDialog)
+        return exitRecruitUnit(msg);
 
     long elapsed = GameTime::get()
                    - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];

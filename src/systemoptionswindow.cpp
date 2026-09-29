@@ -356,6 +356,10 @@ void TSystemOptionsWindow::doModal()
 // and unconfirmed commands' break to reach common translation. Confirmation
 // stays before translation; both joins are removed with all 1526 compiled
 // bytes and 96 references/addends unchanged at 94.3957%.
+// The slider arms send WIDGET_CLEAR/SET_STATUS directly, as DC's rows name
+// send_message here (DC never expands widget::set_visible; all 51 of its
+// uses call dc 0x56df8). Retail pushes both constants before getWidget, as
+// a direct send does: 96.70 -> 100 (2026-09-29).
 VA(0x005b3140, 0x61E) MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
@@ -511,9 +515,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         }
                         g_config.m_musicVolume = id - MUSIC_VOLUME_0_ID;
                         for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                            getWidget(i)->setVisible(0);
+                            getWidget(i)->sendMessage(
+                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
-                            ->setVisible(1);
+                            ->sendMessage(
+                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
                         save = g_soundManager->m_playSounds;
@@ -547,9 +553,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_config.m_soundVolume = id - EFFECTS_VOLUME_0_ID;
                         g_config.m_lastSoundVolume = g_config.m_soundVolume;
                         for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                            getWidget(i)->setVisible(0);
+                            getWidget(i)->sendMessage(
+                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
-                            ->setVisible(1);
+                            ->sendMessage(
+                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
                         save = g_soundManager->m_playSounds;
