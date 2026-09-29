@@ -949,10 +949,15 @@ def report(model=None):
     # Link-alignment zero fill is proposed only where every other pass left a gap.
     inferred += retail_records.alignment_padding(pe, domains['image'], records, sections)
     comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
-    from homm3.verify.game_bytes import destination_comparisons, verify_game
+    from homm3.verify.game_bytes import (destination_comparisons, header_compilands,
+                                         verify_game)
     destinations = destination_comparisons(dynamic, pe)
+    markers = {name: rva for rva, ns in library_names.items() for name in ns}
+    compilands = (header_compilands(pe, dynamic.get('matches', ()), markers['___xc_a'],
+                                    markers['___xc_z'])
+                  if '___xc_a' in markers and '___xc_z' in markers else [])
     domains, verification = verify_game(pe, model, domains, comparisons + destinations,
-                                        inferred=inferred)
+                                        inferred=inferred, compilands=compilands)
     verification['destinations'] = destinations
     reviewed_padding.write_proposals(verification['padding']['proposals'])
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,

@@ -15,6 +15,7 @@ Wine remains the verdict. Do not use leaked compiler source as evidence.
 | Control flow and object lifetimes | [Control flow](control-flow.md), [EH cleanup](eh-cleanup.md) |
 | Candidate debug information | [Debug lines](debug-lines.md) |
 | Variadic member functions | [Variadic members](variadic-members.md) |
+| Global and static data placement | [Data layout](data-layout.md) |
 | Compiler generation comparison | [RTM generation](rtm-generation.md) |
 | Compiler instrumentation | [Shim](shim.md) |
 | Known compiler behavior | [Behavior catalog](behavior-catalog.md) |

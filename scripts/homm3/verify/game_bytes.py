@@ -194,6 +194,7 @@ def destination_comparisons(dynamic, pe, base_dir=None):
         identity = f"{owner['source']}:{owner['name']}@{row['destination']:x}"
         start, size = row['destination'], owner['size']
         result = dict(unit=row.get('witness'), name=identity, rva=start, size=size,
+                      type=owner.get('type', ''),
                       verdict='unavailable', different=0, unresolved=0, reason='')
         out.append(result)
         path = base_dir / f"{row.get('witness')}.obj"
@@ -593,18 +594,119 @@ def end_proven(identity, category, type_text):
     return True, f'declared {type_text}'
 
 
-def size_from_slot(claims_by_rva, annotation, pe, next_start, dreamcast=None, root=None):
+def placement_alignment(type_text, size):
+    """VC6's placement alignment of a global or static in `.data`/`.bss`.
+
+    Measured with the pinned compiler (docs/vc6/data-layout.md): an array
+    is placed at max(4, its element's alignment), whatever its element
+    type; any other object of 1, 2 or 4 bytes on its size, and of 8 bytes
+    or more on 8 (a class of chars included). Other sizes (3, 5, 6, 7)
+    are placed irregularly and give None, as does an unknown type.
+    """
+    text = (type_text or '').strip()
+    if not text or not size:
+        return None
+    m = _ARRAY.match(text)
+    if m:
+        count = 1
+        for bound in re.findall(r'\[(\d*)\]', m.group(2)):
+            if not bound or not int(bound):
+                return None
+            count *= int(bound)
+        if size % count:
+            return None
+        element = placement_alignment(m.group(1), size // count)
+        return None if element is None else max(4, element)
+    if size in (1, 2, 4):
+        return size
+    return 8 if size >= 8 else None
+
+
+#: VC6 emits game `.data`/`.bss` sections aligned to 4, or to 8 when they
+#: hold an 8-aligned object; LINK starts each contribution on that boundary.
+CONTRIBUTION_ALIGNMENTS = (4, 8)
+
+
+def next_symbol_bound(rva, following, following_alignment, same_compiland):
+    """(lowest size, slot, effective alignment) the next symbol allows.
+
+    Inside one section contribution VC6 packs objects without gaps beyond
+    the following object's own alignment, so the buffer ends fewer than
+    that many bytes before it. Where no evidence places both in one
+    compiland and the following start could open another contribution
+    (it is 4-aligned), LINK's contribution alignment bounds the gap too.
+    """
+    slot = following - rva
+    alignment = following_alignment
+    if not same_compiland and not following % 4:
+        alignment = max([alignment] + [a for a in CONTRIBUTION_ALIGNMENTS
+                                       if not following % a])
+    return max(1, slot - alignment + 1), slot, alignment
+
+
+def header_compilands(pe, matches, xc_a, xc_z):
+    """[(lo, hi, header)] address hulls that lie inside one compiland.
+
+    Each compiland that includes a header with dynamically initialized
+    statics emits their `.CRT$XCU` entries consecutively in declaration
+    order, and its `.bss` contribution is contiguous. A run of consecutive
+    slots whose exact bodies initialize every such static of one header,
+    in line order, therefore belongs to one compiland, and the hull of
+    their destinations lies inside its contribution.
+    """
+    import struct
+    bodies, headers = {}, defaultdict(dict)
+    for row in matches:
+        owner = row.get('owner') or {}
+        source = owner.get('source', '')
+        if row.get('verdict') != 'exact' or not source.startswith('include/'):
+            continue
+        bodies[row['rva']] = (source, owner['name'], row['destination'], owner.get('size') or 0)
+        headers[source][owner['name']] = owner.get('line', 0)
+    order = {h: sorted(names, key=lambda n: (names[n], n)) for h, names in headers.items()}
+    slots = []
+    for address in range(xc_a + 4, xc_z, 4):
+        word = pe.read(address, 4)
+        target = struct.unpack('<I', word)[0] - pe.image_base if word else None
+        slots.append((address, bodies.get(target)))
+    out = []
+    for k, (address, body) in enumerate(slots):
+        if body is None or len(order[body[0]]) < 2 or body[1] != order[body[0]][0]:
+            continue
+        run = slots[k:k + len(order[body[0]])]
+        if [b and (b[0], b[1]) for _a, b in run] != [(body[0], n) for n in order[body[0]]]:
+            continue
+        out.append((min(b[2] for _a, b in run), max(b[2] + b[3] for _a, b in run), body[0]))
+    return out
+
+
+def size_from_slot(claims_by_rva, annotation, pe, next_start, dreamcast=None, root=None,
+                   *, following=None, verified_at=None, compilands=(), touched=None):
     """Byte-array claims whose element count only fills the retail slot.
 
     A declaration with a literal bound (not a named constant and not sized
     by its initializer) whose extent ends at the next claim or an aligned
     boundary, with retail zeros at its end, has a size the retail slot
-    allows but no type or consumer proves. A Dreamcast CodeView record of
-    the same compiland that types the declared or cited name as an array
-    of exactly this many bytes proves the count. Returns
-    [(start, end, zero-tail start, identity, type, file:line)].
+    allows. Proofs, in order:
+    - `dreamcast-record`: a Dreamcast CodeView record of the same
+      compiland types the declared or cited name as an array of exactly
+      this many bytes;
+    - `next-symbol`: the next claim starts at a verified address and VC6's
+      placement rule leaves no room for a shorter array before it (its
+      alignment is 1, or the slot minus its alignment slack is still the
+      declared size);
+    - `next-symbol+usage`: the remaining slack is closed by a retail access
+      that touches the buffer's last bytes (`touched`).
+    `following(address)` gives the (size, type) of the claim there,
+    `verified_at(address)` whether that claim's first byte verifies without
+    this pass, `compilands` are hulls known to lie in one compiland and
+    `touched(start, end)` the end of the retail direct accesses inside a
+    buffer. Returns (flagged, proven): flagged is
+    [(start, end, zero-tail start, identity, type, file:line, detail)],
+    detail holding the residual size `range` and the `reason` it stays
+    open; proven is [dict(rva, name, size, proof, evidence)].
     """
-    out = []
+    flagged, proven = [], []
     for rva, (identity, size, type_text) in sorted(claims_by_rva.items()):
         where, _kind, declaration = annotation.get(rva, ('', '', ''))
         if not byte_array(type_text) or not size:
@@ -612,20 +714,75 @@ def size_from_slot(claims_by_rva, annotation, pe, next_start, dreamcast=None, ro
         bound = re.search(r'\[([^\]]*)\]', declaration)
         if not bound or not re.fullmatch(r'\s*(0x[0-9a-fA-F]+|\d+)\s*', bound.group(1)):
             continue
-        if dreamcast and size in dreamcast_proven_sizes(where, declaration, dreamcast, root):
-            continue
         end = rva + size
-        following = next_start(end)
-        if following != end and end % 4:
+        nxt = next_start(end)
+        if nxt != end and end % 4:
             continue
         data = pe.read(rva, size)
         if data is None or data[-1]:
             continue
         content = len(data.rstrip(b'\0'))
         tail = rva + (content + 1 if content else 0)
-        if tail < end:
-            out.append((rva, end, tail, identity, type_text, where))
-    return out
+        if tail >= end:
+            continue
+        recorded = (dreamcast_proven_sizes(where, declaration, dreamcast, root)
+                    if dreamcast else set())
+        if size in recorded:
+            proven.append(dict(rva=rva, name=identity, size=size, proof='dreamcast-record',
+                               evidence=f'Dreamcast types it as {size} bytes'))
+            continue
+        detail = _slot_detail(rva, size, content, nxt, recorded, following,
+                              verified_at, compilands, touched)
+        if detail.get('proof'):
+            proven.append(dict(rva=rva, name=identity, size=size, proof=detail['proof'],
+                               evidence=detail['evidence']))
+            continue
+        flagged.append((rva, end, tail, identity, type_text, where, detail))
+    return flagged, proven
+
+
+def _slot_detail(rva, size, content, nxt, recorded, following, verified_at, compilands,
+                 touched):
+    """The next-symbol and usage verdict for one size-from-slot claim."""
+    low = content + 1 if content else 1
+    if nxt is None or following is None or verified_at is None or not verified_at(nxt):
+        return dict(range=[low, None], reason='the next symbol is not verified',
+                    settle='verify the claim that follows, or a consumer bound')
+    next_size, next_type = following(nxt) or (0, '')
+    alignment = placement_alignment(next_type, next_size)
+    if alignment is None or nxt % alignment:
+        return dict(range=[low, nxt - rva], reason=f'the next symbol ({next_type or "?"}) '
+                    'has no measured placement alignment',
+                    settle='a consumer bound or a Dreamcast record')
+    same = bool(nxt % 4) or any(lo <= rva and nxt < hi for lo, hi, *_ in compilands)
+    lowest, slot, effective = next_symbol_bound(rva, nxt, alignment, same)
+    lowest = max(lowest, low)
+    used = (touched(rva, nxt) or rva) - rva if touched else 0
+    detail = dict(slot=slot, next_alignment=alignment, alignment=effective,
+                  same_compiland=same)
+    if used > lowest:
+        detail['usage'] = used
+    low_bound = max(lowest, used)
+    if low_bound >= slot == size:
+        what = (f'{next_type} follows at +{slot:#x} (placed on {alignment})'
+                + ('' if same else f', contribution alignment {effective}'))
+        if lowest >= slot:
+            return dict(detail, proof='next-symbol', evidence=what)
+        return dict(detail, proof='next-symbol+usage',
+                    evidence=f'{what}; retail touches up to +{used:#x}')
+    detail['range'] = [low_bound, slot]
+    contradicted = sorted(n for n in recorded if not low_bound <= n <= slot)
+    if contradicted:
+        detail['dreamcast'] = contradicted
+    if not same and effective > alignment:
+        detail['reason'] = (f'the next symbol could open another compiland\'s '
+                            f'{effective}-aligned contribution')
+        detail['settle'] = 'evidence that both lie in one compiland, or a consumer bound'
+    else:
+        detail['reason'] = f'{next_type} is placed on {alignment} bytes'
+        detail['settle'] = ('a consumer bound (a length argument, a loop bound, an access '
+                            'to the last bytes) or a Dreamcast record')
+    return detail
 
 
 def dreamcast_array_sizes():
@@ -688,7 +845,7 @@ def dreamcast_proven_sizes(where, declaration, dreamcast, root=None):
 # -------------------------------------------------------------- driver ---
 
 def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
-                layout=None, root=None, inferred=()):
+                layout=None, root=None, inferred=(), compilands=(), accesses=()):
     """Replace `game` with the GAME_* categories in both domains.
 
     Returns (domains, verification). Code verdicts come from the current
@@ -709,7 +866,7 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
         try:
             from homm3.verify.data_access import analysis
             audit = analysis()
-            findings, layout = audit[4], audit[0].layout
+            findings, layout, accesses = audit[4], audit[0].layout, audit[1]
         except Exception as exc:  # the audit needs a built tree
             findings = ()
             notes.append(f'retail access audit unavailable: {exc}')
@@ -754,13 +911,37 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
     except Exception as exc:  # the Dreamcast image is optional evidence
         dreamcast = {}
         notes.append(f'Dreamcast array records unavailable: {exc}')
-    slots = size_from_slot(data_claims, annotation, pe, next_start, dreamcast, root)
-    disputes += [(tail, end, 'size-from-slot') for _s, end, tail, *_ in slots]
-
     text = pe.section('.text')
     text_range = (text['va'], text['va'] + text['vsize'])
+    status = data_status(comparisons)
+    # The next-symbol bound needs the following claim's own verdict, before
+    # this pass disputes any slot.
+    first = sorted(game_runs(image, text=text_range, functions=functions, code=code,
+                             data=status, labels=labels, disputes=disputes),
+                   key=lambda r: r.start)
+    first_starts = [r.start for r in first]
+
+    def verified_at(address):
+        k = bisect.bisect_right(first_starts, address) - 1
+        return (k >= 0 and first[k].start <= address < first[k].end
+                and first[k].category in (GAME_DATA_EXACT, GAME_BSS_EXACT))
+    sizes = {r['rva']: (r['size'], r.get('type', '')) for r in comparisons
+             if r.get('rva') is not None and r.get('size')}
+    sizes.update({rva: (size, type_text) for rva, (_n, size, type_text) in data_claims.items()})
+    direct = sorted((a.target_rva, a.end_rva) for a in accesses
+                    if a.form == 'direct' and a.width)
+    direct_starts = [a for a, _b in direct]
+
+    def touched(start, end):
+        lo, hi = bisect.bisect_left(direct_starts, start), bisect.bisect_left(direct_starts, end)
+        return max((min(b, end) for _a, b in direct[lo:hi]), default=None)
+    slots, slot_proofs = size_from_slot(
+        data_claims, annotation, pe, next_start, dreamcast, root, following=sizes.get,
+        verified_at=verified_at, compilands=compilands, touched=touched)
+    disputes += [(tail, end, 'size-from-slot') for _s, end, tail, *_ in slots]
+
     runs = game_runs(image, text=text_range, functions=functions, code=code,
-                     data=data_status(comparisons), labels=labels, disputes=disputes)
+                     data=status, labels=labels, disputes=disputes)
 
     def to_rva(offset):
         for sec in pe.sections:
@@ -797,7 +978,8 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
     game_fns = {b.rva for b in model.functions if b.channel in GAME_CODE_CHANNELS and b.size}
     exact_fns = {rva for rva in game_fns if code.get(rva, (False, ''))[0]}
     worklist = build_worklist(out['image'], pe, comparisons, data_claims, annotation,
-                              layout, model, text_range)
+                              layout, model, text_range,
+                              slots={x[0]: x[6] for x in slots})
     write_worklist(worklist)
     pending = pending_functions(out['image'])
     units_of = {b.name: b.unit for b in model.functions if b.name}
@@ -806,8 +988,9 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
          for owner, size in pending.items()}, indent=1) + '\n')
     verification = dict(
         violations=violations, notes=notes,
-        size_from_slot=[dict(rva=s, end=e, zero_tail=t, name=n, type=ty, source=w)
-                        for s, e, t, n, ty, w in slots],
+        size_from_slot=[dict(rva=s, end=e, zero_tail=t, name=n, type=ty, source=w, **d)
+                        for s, e, t, n, ty, w, d in slots],
+        size_from_slot_proven=slot_proofs,
         functions=dict(exact=len(exact_fns), unverified=len(game_fns) - len(exact_fns)),
         worklist=sum(i['category'] in FINISH_LINE for i in worklist),
         pending_functions=pending,
@@ -846,7 +1029,7 @@ def unit_sources(comparisons, model):
 
 
 def build_worklist(rows, pe, comparisons, data_claims, annotation, layout, model,
-                   text=(0, 0)):
+                   text=(0, 0), slots=None):
     """One actionable row per finish-line run (image rvas, by address)."""
     units = unit_sources(comparisons, model)
     by_name = defaultdict(list)
@@ -891,7 +1074,7 @@ def build_worklist(rows, pe, comparisons, data_claims, annotation, layout, model
         item = dict(start=start, end=end, size=end - start, category=row['category'],
                     reason=row.get('reason', ''), retail=data.hex(), owner=owner,
                     previous=before, next=after, code=text[0] <= start < text[1])
-        item['diagnosis'] = diagnose(item, by_name, layout, symbols, pe)
+        item['diagnosis'] = diagnose(item, by_name, layout, symbols, pe, slots)
         item['source'] = ((owner or {}).get('source') or (before or {}).get('source')
                           or (after or {}).get('source') or '')
         out.append(item)
@@ -919,7 +1102,7 @@ def _field(layout, comparison, offset):
         return ''
 
 
-def diagnose(item, by_name, layout, symbols, pe):
+def diagnose(item, by_name, layout, symbols, pe, slots=None):
     """A sentence that says what to change in the source."""
     start, end, size = item['start'], item['end'], item['size']
     before, after, owner = item['previous'], item['next'], item['owner']
@@ -965,9 +1148,16 @@ def diagnose(item, by_name, layout, symbols, pe):
                 f"definition; bytes {start:#x}..{end:#x} are emitted by no definition of "
                 f"this claim. Enlarge the declaration or split the claim.")
     if reason == 'size-from-slot':
+        detail = (slots or {}).get((owner or {}).get('rva'), {})
+        low, high = detail.get('range') or (None, None)
+        bound = (f" The retail size is {low}..{high if high is not None else '?'} bytes: "
+                 f"{detail.get('reason', '')}." if low is not None else '')
+        if detail.get('dreamcast'):
+            bound += (f" Dreamcast's {'/'.join(map(str, detail['dreamcast']))} bytes lie "
+                      f"outside that bound.")
         return (f"{_describe_claim(owner)}: its bound only fills the retail slot; the zero "
-                f"tail {start:#x}..{end:#x} is unproven. Prove the element count from its "
-                f"type or consumers (a named constant, a loop bound, Dreamcast).")
+                f"tail {start:#x}..{end:#x} is unproven.{bound} Settle it with "
+                f"{detail.get('settle') or 'a type or consumer bound (a named constant, a loop bound, Dreamcast)'}.")
     if reason == 'candidate-larger-than-extent':
         return (f"{_describe_claim(owner)}: the candidate definition is larger than the "
                 f"claimed extent; fix the claim's size.")
