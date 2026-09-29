@@ -43,6 +43,12 @@ DATA(0x00694de0) static unsigned char g_campaignBriefReady;
 // next-frame deadline beside the ready latch; Dreamcast proves the same
 // six/125 sequence and the GameTime helper boundary independently.
 DATA(0x00694dec) static int g_campaignBriefFlashLeft;
+// Original DC names: lastIzHoverID and lastIMHoverID, campaignbrief.obj's two
+// hover statics (-1 in both builds), in Dreamcast's order. No Windows code
+// reads them; retail keeps them directly before this TU's difficulty-arrow
+// sprite name (0x660e1c).
+DATA(0x00660e14) static int g_lastIzHoverId = -1;
+DATA(0x00660e18) static int g_lastImHoverId = -1;
 DATA(0x00694db0) static unsigned long g_campaignBriefFlashTime;
 
 void backupGameHeaders(game* dest, game* src);

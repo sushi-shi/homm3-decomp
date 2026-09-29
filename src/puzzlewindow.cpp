@@ -104,6 +104,10 @@ DATA(0x00681f64) short g_puzzlePieceOrder[432] = {
     17, 11, 35, 5, 8, 30, 24, 13,
     34, 21, 16, 38, 22, 26, 29, 20
 };
+// Original DC name: lastIMHoverID, puzzlewindow.obj's only hover static
+// (-1 in both builds). No Windows code reads it; retail keeps it between the
+// two tables.
+DATA(0x006822c4) static int g_lastImHoverId = -1;
 DATA(0x006822c8) double g_puzzleGuessThreshold[5] = { 1.1, 0.5, 0.25, 0.0, 0.0 };
 DATA(0x00681880) const char* g_puzzleFilePrefixes[9] = { "cas", "ram", "tow", "inf", "nec", "dun", "str", "for", "Ele" };
 

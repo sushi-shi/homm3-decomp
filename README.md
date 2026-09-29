@@ -36,7 +36,7 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `init/cleanup thunks` |     1,173 |   95,322 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
-**Byte accountability:** 4,707 file bytes unclaimed; 0 bytes with conflicting claims; 12,379 unverified, 0 mismatching and 12,889 provisional-padding game data bytes. 11,112 / 11,160 enrolled initializer comparisons exact. 971 source-emitted CRT bodies exact (88,839 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
+**Byte accountability:** 1,927 file bytes unclaimed; 0 bytes with conflicting claims; 12,409 unverified, 0 mismatching and 12,904 provisional-padding game data bytes. 11,175 / 11,224 enrolled initializer comparisons exact. 971 source-emitted CRT bodies exact (88,839 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
 
 <!-- match-score:end -->
 

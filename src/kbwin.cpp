@@ -448,8 +448,13 @@ HMENU g_gameMenu;
 DATA(0x0067f820)
 char g_appName[] = "Heroes III";
 
+// A MAX_PATH buffer: retail's next object, g_menuEnableStatus, starts
+// 0x104 bytes after it. kbwin's .data section holds exactly g_appName,
+// g_title and g_menuEnableStatus, and only the 260-byte buffer places the
+// third at retail's +0x110 from the first (a 30-byte title placed it at
+// +0x30).
 DATA(0x0067f82c)
-char g_title[] = "Heroes of Might and Magic III";
+char g_title[MAX_PATH] = "Heroes of Might and Magic III";
 
 DATA(0x0069960c)
 HANDLE g_gameEvent;

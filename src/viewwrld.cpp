@@ -62,6 +62,10 @@ static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
 static unsigned char g_viewArtifacts;
+// Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
+// Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
+// as these two retail flags.
+DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
 static unsigned char g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;

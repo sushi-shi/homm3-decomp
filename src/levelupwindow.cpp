@@ -35,6 +35,10 @@ DATA(0x00697784) unsigned long g_dialogDeadline;
 // stores its object through the first, and this handler is the only consumer
 // of the second.
 DATA(0x00699634) static TLevelUpWindow* g_levelUpWindow;
+// Dreamcast's handler declares a second static lastIMHoverID; retail keeps
+// its -1 cell directly before the one this handler reads, and no code reads
+// it. The distinct file-scope name is invented.
+DATA(0x0067fa30) static int g_otherImHoverId = -1;
 DATA(0x0067fa34) static int g_lastImHoverId = -1;
 
 // Text tables read directly by the retail constructor. The shared four-entry

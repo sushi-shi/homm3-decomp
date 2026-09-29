@@ -37,6 +37,10 @@
 # alignment places the next contribution; `crt-pointer` a .CRT$ table entry
 # whose function pointers match exactly; `declared-by=N`/`game-declares=N`
 # COMMON declarations in linked members / game objects.
+# UUID.LIB/DXGUID.LIB rows are Platform SDK GUID data that game code
+# references; retail keeps dxguid.obj's COMDATs in section order. The
+# DirectPlay 6 identifiers (IID_IDirectPlay4A, IID_IDirectPlayLobby3A) exist
+# only in the SP3 lib/ DXGUID.LIB, not in lib-rtm/.
 rva	size	kind	library	member	section	symbol	evidence
 0x20ab30	11	code	LIBCMT.LIB	delete.obj	1	??3@YAXPAX@Z	copies=2,member-by-archive-order
 0x20ab3b	90	code	LIBCPMT.LIB	string.obj	3	?_Xlen@std@@YAXXZ	-
@@ -1105,6 +1109,20 @@ rva	size	kind	library	member	section	symbol	evidence
 0x2395c0	18	code	LIBCPMT.LIB	xlocale.obj	419	-	-
 0x2395d4	18	code	LIBCPMT.LIB	xlocale.obj	422	-	-
 0x2395e8	18	code	LIBCPMT.LIB	xlocale.obj	425	-	-
+0x243d58	16	data	UUID.LIB	cguid_i_guid0.obj	2	_GUID_NULL	-
+0x243d68	16	data	DXGUID.LIB	dxguid.obj	120	_DPAID_ComPort	-
+0x243d78	16	data	DXGUID.LIB	dxguid.obj	123	_DPAID_INet	-
+0x243d88	16	data	DXGUID.LIB	dxguid.obj	125	_DPAID_Modem	-
+0x243d98	16	data	DXGUID.LIB	dxguid.obj	127	_DPAID_Phone	-
+0x243da8	16	data	DXGUID.LIB	dxguid.obj	129	_DPAID_ServiceProvider	-
+0x243db8	16	data	DXGUID.LIB	dxguid.obj	135	_CLSID_DirectPlayLobby	-
+0x243dc8	16	data	DXGUID.LIB	dxguid.obj	136	_IID_IDirectPlayLobby3A	-
+0x243dd8	16	data	DXGUID.LIB	dxguid.obj	143	_DPSPGUID_MODEM	-
+0x243de8	16	data	DXGUID.LIB	dxguid.obj	144	_DPSPGUID_SERIAL	-
+0x243df8	16	data	DXGUID.LIB	dxguid.obj	145	_DPSPGUID_TCPIP	-
+0x243e08	16	data	DXGUID.LIB	dxguid.obj	146	_DPSPGUID_IPX	-
+0x243e18	16	data	DXGUID.LIB	dxguid.obj	147	_CLSID_DirectPlay	-
+0x243e28	16	data	DXGUID.LIB	dxguid.obj	148	_IID_IDirectPlay4A	-
 0x244450	176	data	zlib	deflate.obj	4	_deflate_copyright	-
 0x244500	1024	data	zlib	crc32.obj	2	_crc_table	-
 0x244900	4	data	zlib	inflate.obj	2	_?mark@?3??inflateSync@@9@9	placed-by-bytes

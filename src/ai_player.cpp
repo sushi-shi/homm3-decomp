@@ -5384,7 +5384,9 @@ type_AI_initializer::type_AI_initializer()
         80, 81, 82, 84, 85, 86, 93, 99, 101, 105, 108, 109,
         112, 0
     };
-    // Original: const_visibility_values; alternating event/value pairs.
+    // Original: const_visibility_values; alternating event/value pairs,
+    // ended by a (0, 0) pair: Windows and the Mac data section both store
+    // the second zero directly after the first, before the next object.
     DATA(0x006605d8)
     static const int g_constVisibilityValues[] = {
         2, 1, 4, 100, 5, 200, 6, 400, 8, 100, 10, 500,
@@ -5399,7 +5401,7 @@ type_AI_initializer::type_AI_initializer()
         86, 10, 88, 10, 89, 10, 90, 10, 93, 10, 94, 10,
         96, 1, 98, 200, 100, 50, 101, 20, 102, 100, 104, 50,
         105, 1, 106, 1, 107, 50, 108, 10, 109, 10, 110, 1,
-        111, 50, 112, 10, 113, 50, 0
+        111, 50, 112, 10, 113, 50, 0, 0
     };
     memset(g_oneUseEvents, 0, sizeof(g_oneUseEvents));
     for (int event = 0; g_constOneUseEvents[event]; ++event)
