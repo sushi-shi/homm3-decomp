@@ -49,19 +49,22 @@ DATA(0x00643ef8) extern const unsigned char g_victorJpegChrominanceQuantizer[64]
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99
 };
 // ITU T.81 Annex K.3 Huffman tables: 16 code-length counts, then the values.
-DATA(0x00643f38) extern const unsigned char g_victorJpegDcLuminanceBits[16] = {
+// The format fixes the BITS lists at sixteen counts (code lengths 1..16), so
+// the four lists are sized by their complete initializers, trailing zeros
+// included.
+DATA(0x00643f38) extern const unsigned char g_victorJpegDcLuminanceBits[] = {
     0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0
 };
 DATA(0x00643f48) extern const unsigned char g_victorJpegDcLuminanceValues[12] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 };
-DATA(0x00643f58) extern const unsigned char g_victorJpegDcChrominanceBits[16] = {
+DATA(0x00643f58) extern const unsigned char g_victorJpegDcChrominanceBits[] = {
     0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
 };
 DATA(0x00643f68) extern const unsigned char g_victorJpegDcChrominanceValues[12] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 };
-DATA(0x00643f78) extern const unsigned char g_victorJpegAcLuminanceBits[16] = {
+DATA(0x00643f78) extern const unsigned char g_victorJpegAcLuminanceBits[] = {
     0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 125
 };
 DATA(0x00643f88) extern const unsigned char g_victorJpegAcLuminanceValues[162] = {
@@ -80,7 +83,7 @@ DATA(0x00643f88) extern const unsigned char g_victorJpegAcLuminanceValues[162] =
     0xe3, 0xe4, 0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xf1, 0xf2, 0xf3, 0xf4,
     0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa
 };
-DATA(0x00644030) extern const unsigned char g_victorJpegAcChrominanceBits[16] = {
+DATA(0x00644030) extern const unsigned char g_victorJpegAcChrominanceBits[] = {
     0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119
 };
 DATA(0x00644040) extern const unsigned char g_victorJpegAcChrominanceValues[162] = {
@@ -264,8 +267,9 @@ DATA(0x0068d518) VictorTiffIfd g_victorTiffIfdTemplate = {
     },
     0
 };
-// TIFF 6.0 little-endian file header: "II", 42, first IFD at offset 8.
-DATA(0x0068d650) unsigned char g_victorTiffHeader[8] = { 'I', 'I', 42, 0, 8, 0, 0, 0 };
+// TIFF 6.0 little-endian file header: "II", 42, first IFD at offset 8. The
+// format fixes the header at these eight bytes.
+DATA(0x0068d650) unsigned char g_victorTiffHeader[] = { 'I', 'I', 42, 0, 8, 0, 0, 0 };
 // TGA 2.0 footer signature and the software name.
 DATA(0x0068d740) char g_victorTgaSignature[18] = "TRUEVISION-XFILE.";
 DATA(0x0068d754) const char* g_victorSoftwareName =

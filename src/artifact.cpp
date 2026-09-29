@@ -17,8 +17,10 @@
 #include "resourcemanager.h"
 #include "textresource.h"
 
-// Initial contents recovered from the pinned Complete image.
-DATA(0x0063e758) const signed char g_artifactPrimarySkillBonuses[144][4] = {
+// Initial contents recovered from the pinned Complete image. One row per
+// artifact: hero.cpp's combination walks read rows 0..143, and retail bounds
+// that pointer walk at 0x63e998, exactly ARTIFACT_COUNT rows past the start.
+DATA(0x0063e758) const signed char g_artifactPrimarySkillBonuses[ARTIFACT_COUNT][4] = {
     { 0, 0, 0, 0 },
     { 0, 0, 0, 0 },
     { 0, 0, 0, 0 },
