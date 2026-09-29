@@ -4620,6 +4620,12 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // apart from the strength-reduced set position (edi), so the two positions
 // are not one shared `pos` expression. Source-mask subscripts assigned
 // reference-to-reference (test at depth 3) fall to 41.91%.
+// Lane A r5: that form for draw/passable only refuses both tests at depth 3
+// (budgets 31/34) and calls set, as retail does, but the shadow/trigger
+// _Xran<48> then expands at 70/71 (retail calls it; needs <= 64, one or two
+// more candidates after each test) and the terrain loop still calls
+// test<10> (52 < 58) and expands set<10> (155), the reverse of retail
+// (44.72%). Not adopted.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {

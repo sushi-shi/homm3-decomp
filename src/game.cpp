@@ -5862,6 +5862,13 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
 // Mac 0xdaa84 decodes the count once; 0xdaafc..0xdab08 increments an
 // independent index against it. Preserve that counted loop and the scalar
 // readers; counting the saved total down changes the Windows inline frontier.
+// Mac 0xdaa94 constructs a string at r1+0xa8 before the resize call, passes
+// it nowhere, and destroys it after the loop (0xdab14): an unused function-
+// level string local, DC NewSMapHeader::Read's std::string strTemp. Windows
+// retail shows the same extra _Tidy call and delete. The feature test reads through the bitset's reference proxy, which
+// puts test() at depth 2 where retail refuses it (.test(1) gives 95.21%).
+// Together 74.02 -> 95.89%; retail still calls one more vector size() inside
+// the resize expansion (budget 103/61 here; retail refuses the second).
 
 VA(0x004c3ef0, 0x498) MAC_ADDRESS(0x0da6b4, 0x478)  // sole NewSMapHeader::Read caller + slot stride/layout
 void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
@@ -5882,7 +5889,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     m_hasRandomAlignment = readValue<signed char>(infile) != 0;
     if (m_hasRandomAlignment)
         m_legalAlignments |= 0x100;
-    if (!g_gameContextFeatures[g_videoGameState].test(1))
+    if (!g_gameContextFeatures[g_videoGameState][1])
         m_legalAlignments &= 0xfeff;
 
     m_hasMainTown = readValue<signed char>(infile) != 0;
@@ -5923,6 +5930,7 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
     m_defaultPlaceholders = readValue<unsigned char>(infile);
 
     int heroCount = readLittleEndianValue<int>(infile);
+    std::string temp;
     m_heroes.resize(heroCount);
     for (int heroIndex = 0; heroIndex < heroCount; ++heroIndex) {
         // The version-14 return above makes readHeroId's legacy
