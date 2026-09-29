@@ -1661,7 +1661,7 @@ events	?doCustomSpellScroll@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@
 events	?doEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaaaa0	tokens1:4328dc9726f4
 events	?doEventAnchor@advManager@@AAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x9e670	tokens1:4a8742b85418
 events	?doEventArena@advManager@@AAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0x9e7d0	tokens1:6c168c0b63d4
-events	?doEventArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	85.8144	85.8144	85.8144	0x9f7e0	tokens1:7545ce8816c3
+events	?doEventArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9f7e0	tokens1:7545ce8816c3
 events	?doEventBlackBox@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9758	99.9758	100.0000	0xa0c50	tokens1:f8e2e02abc81
 events	?doEventBoat@advManager@@AAEXPAVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xa1010	tokens1:c959ef0c5123
 events	?doEventCampfire@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa1120	tokens1:fc5936d8c1e7
