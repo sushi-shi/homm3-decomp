@@ -63,6 +63,23 @@ void clean() { DATA(0x00401000) static unsigned char values[5] = { 1 }; }
         self.assertEqual(facts[0x1000]['size'], 5)
         self.assertTrue(facts[0x1000]['source'].startswith('probe.cpp:'))
 
+    def test_static_in_anonymous_namespace_takes_cl_c_name(self):
+        # cl 12 names `static` data in a source file's anonymous namespace
+        # `_name` (retail rmg.obj); without `static` the scope stays mangled.
+        facts, errors = self.parse('''
+namespace {
+DATA(0x00401000) static const int table[4] = { 2, 0, 3, 1 };
+DATA(0x00402000) int plain[2] = { 1, 2 };
+}
+namespace named { DATA(0x00403000) static int inner = 1; }
+DATA(0x00404000) static int fileStatic = 1;
+''')
+        self.assertFalse(errors)
+        self.assertEqual(facts[0x1000]['name'], '_table')
+        self.assertIn('?A0x', facts[0x2000]['name'])
+        self.assertNotEqual(facts[0x3000]['name'], '_inner')
+        self.assertEqual(facts[0x4000]['name'], '_fileStatic')
+
 
 class StaticGuardExtentTest(unittest.TestCase):
     def test_adjacent_local_static_guards_own_one_byte_each(self):
