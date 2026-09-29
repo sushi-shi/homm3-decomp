@@ -481,7 +481,9 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 
 // E:\gamedcs\advmgr.cpp:713
 // Original: CAdvMgrNetMsgHandler::HandleTradeRequestMsg; advmgr.cpp:713, dc 0x6428.
-// DC716/717 assign the two heroes and DC719 calls HeroSwap. Complete
+// DC716/717 assign the two heroes and DC719 calls HeroSwap on their table
+// entries: neither DC 719, Mac +0x6fd4 nor retail applies GetHero's -1
+// guard, which restores handleNetMsg to 100% (from 96.62%). Complete
 // expands this ordinary helper in handleNetMsg's RS_TRADE_REQUEST arm
 // (0x4062b4..0x406343); it has no retained standalone retail body.
 MAC_ADDRESS(0x006890, 0x794)
@@ -490,8 +492,8 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
     CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
     g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
     g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-    g_advManager->heroSwap(g_game->getHero(msg->m_left.m_id),
-                           g_game->getHero(msg->m_right.m_id));
+    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
+                           &g_game->m_heroes[msg->m_right.m_id]);
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -4668,7 +4670,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* cellObjects = thisCell;
     if (cellObjects->m_objects.size() > 0) {
-        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        // DC records int row, but retail tests the back edge unsigned (jbe).
+        for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (int numObj = 0; numObj < cellObjects->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];

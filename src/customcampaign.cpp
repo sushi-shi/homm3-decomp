@@ -1931,6 +1931,15 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // 291. All three retail decisions fit a caller cb of at most about 615, so
 // this reader's IL is heavier than retail's by roughly 190 units; no
 // source-backed trim has been found yet.
+// Budget replay (2026-09-29) over the traced tree: with readPackedBits
+// delegating to decodePackedBits (cost 81), no caller cb reproduces retail's
+// set. Retail expands bitset::operator[] inside each decode loop, which needs
+// a decode child budget of 41..83 and so a depth-1 budget near 1400 at the
+// first plane, yet the hero-option constructor stays called, which needs
+// under 235 at the option switch. A free (<= 40) decode body or a loop kept
+// in readPackedBits reproduces every other decision near cb 650..710; the
+// copy loop's legacy dereference still differs. DC and Mac show no extra
+// accessor calls in this Complete-only reader.
 VA(0x00487e40, 0x586) MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,

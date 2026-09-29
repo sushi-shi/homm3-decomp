@@ -1780,6 +1780,10 @@ public:
 // constructors costing at most 40). An initializer-list CScrollMsg is flat.
 // All other blocks agree. In-class bodies, ordinary member initializers
 // and the equivalent nested/flat option chains are byte-flat controls.
+// Budget replay (2026-09-29): retail's set needs sendSetupInfo at IL cost
+// 132..159 (ours 174) or this caller at cb 508..521 (ours 355). Copying the
+// eight extras with memcpy emits rep movsd (73.51%). DC and Mac show no
+// accessor calls in either body.
 // E:\gamedcs\singleselectionwindow.cpp:1393
 VA(0x005795A0, 0x2CA) MAC_ADDRESS(0x170950, 0x240)  // anchor-vtable CNewPlayerUpdateProc vtbl 0x641d44 slot2, dc 0x1484c8
 void CNewPlayerUpdateProc::finish()

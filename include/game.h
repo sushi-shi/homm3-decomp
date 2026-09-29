@@ -699,7 +699,7 @@ SIZE(SGameSetupOptions, 0x1cc);
 
 struct CampaignScenarioPreview : public NewSMapHeader {
     SGameSetupOptions m_gameSetup;
-    bool m_available;
+    unsigned char m_available;
 };
 SIZE(CampaignScenarioPreview, 0x4d4);
 

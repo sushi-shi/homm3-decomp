@@ -385,22 +385,10 @@ int CHotSeatEdit::onKeyPress(message* msg)
     return handled;
 }
 
-// Residual (80.46%): every widget, its screen coordinates, def/pcx name,
-// widget id and the whole add order (push_back for the members, single-element
-// insert for the slider / session rows / map border) are byte-exact, and the
-// frame matches retail's 0x1e0. Two pervasive CL-generation deltas remain, both
-// register/inliner rather than source: (1) retail hoists 0 into ebx at entry
-// (`xor ebx,ebx`) and reuses it for the base-ctor zero args, hostJoinScreen,
-// the EH-state clears and every `new` null test (`cmp eax,ebx`); our SP3 CL
-// materialises those as immediates and establishes ebx=0 later - and it swaps
-// the EH-state-byte store past the null test at each `new` site. (2) the STL
-// single-element `insert` over-inlines `_Ucopy` (7 sites vs retail's 12); the
-// caller is already maximal so no shrink lever applies. Storing the slider/map
-// widgets through a local before the insert (rather than re-reading the member)
-// was worth +1.5.
-// Current residual (83.43%): DeleteTempSaveGame and CHeroSessions expand,
-// including the proven DeleteFileA path. Nested widget-vector insert/copy
-// operations still over-expand; retail retains fourteen additional call sites.
+// DC's derived member types make each push_back convert through a widget*
+// temporary, as retail does, and DC 938..940 guards the host button's push
+// like the hot-seat one. Together they raise this constructor from 83.92% to
+// 99.95%; the remaining differences are ICF-folded STL helper names.
 // DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
 // Complete's existing getText helper is byte-flat under VC6 here.
 VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
@@ -455,7 +443,8 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     m_widgets.push_back(m_modem);
     m_widgets.push_back(m_direct);
     m_widgets.push_back(m_online);
-    m_widgets.push_back(m_host);
+    if (m_host)
+        m_widgets.push_back(m_host);
     m_widgets.push_back(m_join);
     m_widgets.push_back(m_search);
     m_widgets.push_back(m_cancel);
@@ -467,10 +456,9 @@ TMultiPlayerWindow::TMultiPlayerWindow()
                                     font::PRIMARY, 123, 1, 32, 8);
     m_widgets.push_back(m_rolloverWidget);
 
-    widget* gs = new slider(337, 81, 16, 330, 122, 10, sliderGames,
-                            slider::BLUE, 0, 0);
-    m_gameSlider = gs;
-    m_widgets.push_back(gs);
+    m_gameSlider = new slider(337, 81, 16, 330, 122, 10, sliderGames,
+                              slider::BLUE, 0, 0);
+    m_widgets.push_back(m_gameSlider);
 
     // Mac bounds the row index at twelve; DC line 956 retains 112 + i * 25.
     for (int i = 0; i < 12; i++)
@@ -478,13 +466,12 @@ TMultiPlayerWindow::TMultiPlayerWindow()
                                       "smalfont.fnt", font::PRIMARY, 110 + i, 1,
                                       0, 8));
 
-    widget* mapBorder = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
-    m_splash = mapBorder;
-    m_widgets.push_back(mapBorder);
+    m_splash = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
+    m_widgets.push_back(m_splash);
 
     addWidgetsToMessageStream();
     setFocus(m_playerName->m_id);
-    static_cast<slider*>(m_gameSlider)->setResolution(0);
+    m_gameSlider->setResolution(0);
 
     m_sessions = new CHeroSessions;
     m_sessTimer = 0;
@@ -696,7 +683,7 @@ void TMultiPlayerWindow::refreshSessions()
     m_sessions->destroy();
     g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
-    static_cast<slider*>(m_gameSlider)->updateResolution(
+    m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
     update();
 }
@@ -1393,7 +1380,7 @@ unsigned char TMultiPlayerWindow::onTCP()
     m_sessions->destroy();
     g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
     m_sessTimer = GameTime::get();
-    static_cast<slider*>(m_gameSlider)->updateResolution(
+    m_gameSlider->updateResolution(
         m_sessions->getCount() - 12);
     update();
     return 1;
