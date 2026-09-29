@@ -11,7 +11,7 @@ DIR32, REL32 = 0x6, 0x14
 BASE = 0x400000
 
 
-def coff(functions, *, externals=()):
+def coff(functions, *, externals=(), statics=()):
     """A minimal i386 COFF: one .text section holding `functions`
     [(name, body, [(site, symbol name, type)])] back to back."""
     text = b"".join(body for _name, body, _relocs in functions)
@@ -42,7 +42,8 @@ def coff(functions, *, externals=()):
             strings += encoded + b"\0"
         defined = name in values
         records += field + struct.pack("<IhHBB", values.get(name, 0),
-                                       1 if defined else 0, 0x20, 2, 0)
+                                       1 if defined else 0, 0x20,
+                                       3 if name in statics else 2, 0)
     out = bytearray(struct.pack("<HHIIIHH", 0x14C, 1, 0, symtab, 1 + len(names), 0, 0))
     out += b".text\0\0\0" + struct.pack("<IIIIIIHHI", 0, 0, len(text), raw, reloc_at,
                                         0, len(relocs), 0, 0x60000020)
@@ -209,6 +210,62 @@ class DecisionTests(unittest.TestCase):
                        prove=lambda symbol, rva: "body size differs")
         self.assertEqual((pairings[0].verdict, pairings[0].reason),
                          ("held", "body size differs"))
+
+
+def private_vote(symbol, target, unit, addend=0, function=0x1000, typ=DIR32):
+    return rp.Vote(symbol, target - addend, target, addend, function,
+                   function + target % 0x100, typ, unit, "_f", True, symbol)
+
+
+class CompilandPrivateTests(unittest.TestCase):
+    def test_same_named_statics_pair_per_compiland(self):
+        # redHue: two compilands' local statics, one retail copy each.
+        name = "_?redHue@?1??rgbToHSV@@YIXIIIPAM00@Z@4MB"
+        pairings, _ = decide([private_vote(name, 0x6000, "bitmap24"),
+                              private_vote(name, 0x6100, "palette", function=0x1100)])
+        self.assertEqual({(p.unit, p.owner, p.verdict) for p in pairings},
+                         {("bitmap24", 0x6000, "unit"), ("palette", 0x6100, "unit")})
+
+    def test_a_unit_with_two_places_or_a_shared_address_holds(self):
+        name = "_g_leftRightSave"
+        pairings, _ = decide([private_vote(name, 0x6000, "button"),
+                              private_vote(name, 0x6100, "button", function=0x1100)])
+        self.assertEqual({p.verdict for p in pairings}, {"held"})
+        pairings, _ = decide([private_vote(name, 0x6000, "button"),
+                              private_vote(name, 0x6000, "slider", function=0x1100)])
+        self.assertEqual({p.verdict for p in pairings}, {"held"})
+        pairings, _ = decide([private_vote(name, 0x6000, "button"),
+                              vote("_g_other", 0x6000, function=0x1100)])
+        self.assertEqual({p.verdict for p in pairings}, {"held"})
+
+    def test_claimed_static_confirms_by_its_masked_name(self):
+        pairings, _ = decide([private_vote("_g_lastImHoverId", 0x6000, "mainmenu"),
+                              private_vote("_g_lastImHoverId", 0x6100, "puzzlewindow",
+                                           function=0x1100)],
+                             claimed={0x6000: "_g_lastImHoverId$RVA6000",
+                                      0x6100: "_g_lastImHoverId$RVA6100"})
+        self.assertEqual({p.verdict for p in pairings}, {"confirmed"})
+        pairings, _ = decide([private_vote("_g_lastImHoverId", 0x6000, "mainmenu")],
+                             claimed={0x6000: "_g_other"})
+        self.assertEqual((pairings[0].verdict, pairings[0].reason),
+                         ("held", "address claimed as _g_other"))
+
+    def test_private_code_needs_its_own_units_body(self):
+        pairings, _ = decide([private_vote("??1TAutoStrPtr@?A0x1@@QAE@XZ", 0x2000,
+                                           "spelldefs", typ=REL32)],
+                             claimed={0x2000: "??1TAutoStrPtr@?A0x2@@QAE@XZ"})
+        self.assertEqual((pairings[0].unit, pairings[0].verdict, pairings[0].raw),
+                         ("spelldefs", "unit-candidate", "??1TAutoStrPtr@?A0x1@@QAE@XZ"))
+
+    def test_candidate_object_lists_static_definitions(self):
+        body = mov_eax(0) + b"\xc3"
+        obj = rp.CandidateObject(coff([("_f", body, [(1, "_g_x", DIR32)])]))
+        self.assertEqual(obj.private, set())
+        obj = rp.CandidateObject(coff([("_f", body, [(1, "_s", DIR32)]),
+                                       ("_s", b"\xc3", [])], statics=("_s",)))
+        self.assertEqual(obj.private, {"_s"})
+        self.assertTrue(rp.compiland_private("?g@?%C:\\src\\a.cpp12@@3HA", obj))
+        self.assertFalse(rp.compiland_private("_g_x", obj))
 
 
 class OutsideOperandTests(unittest.TestCase):

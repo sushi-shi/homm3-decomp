@@ -87,6 +87,8 @@ class Vote(NamedTuple):
     typ: int
     unit: str
     function: str
+    private: bool = False   # the candidate symbol is private to `unit`
+    raw: str = ""           # the candidate's own spelling, when respelled
 
 
 @dataclass
@@ -98,6 +100,7 @@ class Pairing:
     verdict: str = ""
     reason: str = ""
     unit: str = ""                 # set for a unit-scoped identity
+    raw: str = ""                  # the candidate's spelling of `symbol`
 
     @property
     def functions(self) -> set[int]:
@@ -137,6 +140,14 @@ LOCAL_GUARD = re.compile(r"_\?\$S[0-9]+@.+@4EA")
 
 def unit_local(name: str) -> bool:
     return bool(LOCAL_FUNCTION.fullmatch(name) or LOCAL_GUARD.fullmatch(name))
+
+
+def compiland_private(name: str, candidate: "CandidateObject") -> bool:
+    """A name only its own compiland can mean: a STATIC-class definition in
+    the candidate object (file static, local static, static function) or a
+    source-file anonymous namespace (`?%<path><nonce>@`). Two compilands'
+    same-spelled private names are different entities."""
+    return name in candidate.private or "?%" in name
 
 
 def comparison_spelling(name: str, unit: str) -> str:
@@ -182,6 +193,12 @@ class CandidateObject:
         relocations: dict[int, list] = defaultdict(list)
         for relocation in coff.relocations:
             relocations[relocation.section].append(relocation)
+        # Names private to this compiland: file statics, a function's local
+        # statics and static functions (storage class STATIC). Another
+        # object's symbol of the same name is a different entity.
+        self.private = {s.name for s in coff.symbols.values()
+                        if s.section > 0 and s.storage_class == STATIC
+                        and not s.name.startswith((".", "$"))}
         self.functions: dict[str, tuple[bytes, list]] = {}
         duplicate = set()
         for index, symbols in by_section.items():
@@ -295,12 +312,18 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
     votes = []
     for site, typ, name, addend, target in operand_targets(
             body, relocs, retail, voter.rva, image_base):
+        raw, private = name, False
         if unit_local(name):
-            name = comparison_spelling(name, voter.unit)
+            name, private = comparison_spelling(name, voter.unit), True
+        elif compiland_private(name, candidate):
+            name, private = comparison_spelling(name, voter.unit), True
+            if not stable_name(name):
+                continue
         elif not stable_name(name):
             continue
         votes.append(Vote(rename(name), target - addend, target, addend,
-                          voter.rva, voter.rva + site, typ, voter.unit, voter.name))
+                          voter.rva, voter.rva + site, typ, voter.unit, voter.name,
+                          private, raw))
     return votes, ""
 
 
@@ -377,15 +400,21 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     neighbouring object, the candidate by this one plus its addend.
     """
     by_symbol: dict[str, list[Vote]] = defaultdict(list)
-    by_owner: dict[int, set[str]] = defaultdict(set)
+    by_owner: dict[int, set[tuple[str, str]]] = defaultdict(set)
     for vote in votes:
         by_symbol[vote.symbol].append(vote)
         if not content_named(vote.symbol):
-            by_owner[vote.owner].add(vote.symbol)
+            by_owner[vote.owner].add((vote.symbol, vote.unit if vote.private else ""))
     pairings: list[Pairing] = []
     aliases: list[Vote] = []
     for symbol, rows in sorted(by_symbol.items()):
         owners = sorted({v.owner for v in rows})
+        if not unit_local(symbol) and any(v.private for v in rows):
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                pairings.append(_private_pairing(
+                    symbol, unit, mine, by_owner, region_of, claimed_name_at))
+            continue
         if unit_local(symbol):
             guard = bool(LOCAL_GUARD.fullmatch(symbol))
             for unit in sorted({v.unit for v in rows}):
@@ -454,7 +483,7 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
                     "symbol votes for " + ",".join(f"{o:#x}" for o in owners))
             elif len(by_owner[owner]) > 1:
                 pairing.verdict, pairing.reason = "held", (
-                    "address votes for " + ",".join(sorted(by_owner[owner])))
+                    "address votes for " + ",".join(sorted(n for n, _u in by_owner[owner])))
             elif region is None or any(region_of(v.target) != region for v in mine):
                 pairing.verdict, pairing.reason = "held", "owner outside the operand's region"
             elif claimed == symbol:
@@ -474,6 +503,49 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
             if pairing.verdict == "admitted":
                 aliases.extend(v for v in mine if v.addend and v.typ == DIR32)
     return pairings, aliases
+
+
+def _private_pairing(symbol: str, unit: str, mine: list[Vote], by_owner,
+                     region_of, claimed_name_at) -> Pairing:
+    """One compiland's pairing of a name private to it (`compiland_private`).
+
+    Code needs a body proof of that unit's own body (`unit-candidate`).
+    Data is admitted for the unit alone (`unit`) on the same evidence as a
+    global anchor: one place, no other vote for the address, anchored,
+    inside the operand's region and not claimed by another name. A claim
+    of the same name at the address confirms it."""
+    from homm3.core.msvc_names import mask
+    places = sorted({v.owner for v in mine})
+    owner = places[0]
+    region = region_of(owner)
+    kind = "code" if region == "text" else "data"
+    pairing = Pairing(symbol, owner, kind, mine, unit=unit, raw=mine[0].raw)
+    claimed = claimed_name_at(owner)
+    addends = pairing.addends
+    if len(places) > 1:
+        pairing.verdict, pairing.reason = "held", (
+            "unit votes for " + ",".join(f"{o:#x}" for o in places))
+    elif claimed is not None and mask(claimed) == mask(symbol):
+        pairing.verdict, pairing.reason = "confirmed", "claim agrees"
+    elif kind == "code":
+        if any(addends):
+            pairing.verdict, pairing.reason = "held", "interior code operand"
+        else:
+            pairing.verdict, pairing.reason = "unit-candidate", "needs body proof"
+    elif len(by_owner[owner]) > 1:
+        pairing.verdict, pairing.reason = "held", (
+            "address votes for " + ",".join(sorted(n for n, _u in by_owner[owner])))
+    elif region is None or any(region_of(v.target) != region for v in mine):
+        pairing.verdict, pairing.reason = "held", "owner outside the operand's region"
+    elif claimed is not None:
+        pairing.verdict, pairing.reason = "held", f"address claimed as {claimed}"
+    elif 0 not in addends and len(addends) < 2:
+        pairing.verdict, pairing.reason = "held", "unanchored addend"
+    elif any(a < 0 for a in addends):
+        pairing.verdict, pairing.reason = "held", "negative addend"
+    else:
+        pairing.verdict, pairing.reason = "unit", "compiland-private datum"
+    return pairing
 
 
 def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None],
@@ -802,7 +874,8 @@ def address_identities(model, state: State | None = None,
         return rows
     for pairing in state.pairings:
         if pairing.verdict == "unit":
-            rows.append((pairing.owner, pairing.symbol, "unit-copy", pairing.reason,
+            rows.append((pairing.owner, pairing.symbol,
+                         "unit-private" if pairing.raw else "unit-copy", pairing.reason,
                          pairing.unit))
 
     sizes = {b.rva: b.size for b in model.functions}
@@ -869,8 +942,8 @@ def address_identities(model, state: State | None = None,
         if pairing.kind != "code" or pairing.verdict != "unit-candidate":
             continue
         candidate = candidates.get(pairing.unit)
-        verdict, _deps, why = (match(candidate, pairing.symbol, pairing.owner, img,
-                                     sizes, targets) if candidate else
+        verdict, _deps, why = (match(candidate, pairing.raw or pairing.symbol,
+                                     pairing.owner, img, sizes, targets) if candidate else
                                ("unresolved", [], "no candidate object"))
         if verdict == "exact":
             pairing.verdict, pairing.reason = "unit", "the unit's body equals retail"
