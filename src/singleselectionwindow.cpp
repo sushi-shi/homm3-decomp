@@ -6747,8 +6747,9 @@ unsigned char TSingleSelectionWindow::onGameTransmitInitMsg(CNetMsg* netMsg)
     int weekType = g_weekType;
     int weekTypeExtra = g_weekTypeExtra;
 
-    g_game->loadGame(
-        DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"), 0, 1);
+    // Retail loads the received file named by g_config+0x98, then saves the
+    // original-game snapshot, as advManager::loadRemote does.
+    g_game->loadGame(g_config.m_rcFile, 0, 1);
     g_game->saveGame(
         DATA_COMPGEN(0x00660410, remoteOriginalSaveName, "orig.dat"),
         0, 0, 0, 1);

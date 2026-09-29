@@ -448,13 +448,15 @@ static bool openArchiveResource(int archiveIndex)
 // Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
 // Resource loaders call them directly; the public pointTo* wrappers near
 // the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
+// Both bind the selected context row (Mac 0:0x1523a0 forms base + state*0x18;
+// retail inlined bitmap searches keep a dead lea of that row, not +8).
 MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[g_videoGameState].m_sprites;
-    int remaining = archives.m_count;
-    const int* archive = archives.m_indices;
+    TResourceArchiveContext& context =
+        g_resourceArchiveContexts[g_videoGameState];
+    int remaining = context.m_sprites.m_count;
+    const int* archive = context.m_sprites.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {
@@ -470,10 +472,10 @@ static LODFile* findSpriteResource(const char* name)
 MAC_ADDRESS(0x152374, 0x88)
 static LODFile* findBitmapResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    const int* archive = archives.m_indices;
+    TResourceArchiveContext& context =
+        g_resourceArchiveContexts[g_videoGameState];
+    int remaining = context.m_bitmaps.m_count;
+    const int* archive = context.m_bitmaps.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {

@@ -376,6 +376,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
     m_heroSpecificAbility = ResourceManager::getSprite("un44.def");
 }
 
+// Retail draws the player name with g_smallFont and every later label with
+// g_tinyFont (0x698a04).
 VA(0x005693a0, 0x394) MAC_ADDRESS(0x160de8, 0x4cc)
 void CScenarioPlayerInfoWidget::draw() const
 {
@@ -393,13 +395,13 @@ void CScenarioPlayerInfoWidget::draw() const
         m_playerName, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 124,
         97, 17, font::PRIMARY, font::CENTER_JUSTIFIED, -1);
-    g_smallFont->drawBoundedString(
+    g_tinyFont->drawBoundedString(
         m_playerTypeText, g_windowManager->m_screenBitmap,
         windowX + 59, windowY + m_playerPosition * 50 + 145,
         46, 24, font::WHITE,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     if (g_game->isMultiplayer()) {
-        g_smallFont->drawBoundedString(
+        g_tinyFont->drawBoundedString(
             m_handicapText, g_windowManager->m_screenBitmap,
             windowX + 107, windowY + m_playerPosition * 50 + 145,
             50, 24, font::WHITE,
@@ -411,7 +413,7 @@ void CScenarioPlayerInfoWidget::draw() const
                      g_windowManager->m_screenBitmap,
                      windowX + 173, windowY + m_playerPosition * 50 + 124,
                      0, 1);
-    g_smallFont->drawBoundedString(
+    g_tinyFont->drawBoundedString(
         g_townTypeNames[m_townType + 1], g_windowManager->m_screenBitmap,
         windowX + 161, windowY + m_playerPosition * 50 + 156,
         71, 16, font::WHITE,
@@ -424,13 +426,13 @@ void CScenarioPlayerInfoWidget::draw() const
                            windowY + m_playerPosition * 50 + 124, 0);
     }
     if (m_startingHero) {
-        g_smallFont->drawBoundedString(
+        g_tinyFont->drawBoundedString(
             m_startingHero->m_name, g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     } else {
-        g_smallFont->drawBoundedString(
+        g_tinyFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_NO_HERO), g_windowManager->m_screenBitmap,
             windowX + 237, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
@@ -460,13 +462,13 @@ void CScenarioPlayerInfoWidget::draw() const
                       0, 1);
 
     if (m_startingBonus == NEW_MAP_BONUS_RANDOM) {
-        g_smallFont->drawBoundedString(
+        g_tinyFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_RANDOM_HERO), g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,
             font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, -1);
     } else {
-        g_smallFont->drawBoundedString(
+        g_tinyFont->drawBoundedString(
             g_agrText[m_startingBonus], g_windowManager->m_screenBitmap,
             windowX + 313, windowY + m_playerPosition * 50 + 156,
             71, 16, font::WHITE,

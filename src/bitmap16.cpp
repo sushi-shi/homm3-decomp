@@ -404,9 +404,9 @@ void Bitmap16Bit::darken(int x, int y, int w, int h)
 
     if (w && h) {
         unsigned long shiftMask =
-            ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask)
+            ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask)
             | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
-            | ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask);
+            | ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask);
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);
 
@@ -442,9 +442,9 @@ void Bitmap16Bit::darken(int x, int y, int w, int h, Bitmap816* mask,
 
     if (w && h) {
         unsigned int shiftMask =
-            ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask)
+            ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask)
             | ((Bitmap16Bit::s_greenMask >> 1) & Bitmap16Bit::s_greenMask)
-            | ((Bitmap16Bit::s_redMask >> 1) & Bitmap16Bit::s_redMask);
+            | ((Bitmap16Bit::s_blueMask >> 1) & Bitmap16Bit::s_blueMask);
         unsigned char* maskRow = mask->getMap(sx, sy);
         Bitmap16MapPointer row;
         row.m_pixels = getMap(x, y);

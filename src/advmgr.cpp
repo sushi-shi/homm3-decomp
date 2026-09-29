@@ -8210,7 +8210,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     steps = g_searchArray->buildPath(curr, 0xea5f);
     if (g_searchArray->getPathSteps() > 0 && steps > 0) {
         memset(m_routeArray, 0,
-               g_game->getNumMapLevels() * g_mapHeight * g_mapWidth
+               g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
                    * sizeof(unsigned short));
         m_showRoute = 1;
         testMobility = curr->m_movePoints;
@@ -8677,19 +8677,19 @@ void advManager::loadRemote(unsigned char makeOrig)
     g_turnDuration.clear();
     CHourGlass hourGlass(1);
 
-    int weekTypeExtra = g_weekTypeExtra;
-    int weekType = g_weekType;
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
+    int weekType = g_weekType;
+    int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_config.m_rcFile, 0, 1);
     if (makeOrig)
         g_game->saveGame("orig.dat", 0, 0, 0, 1);
 
-    g_weekTypeExtra = weekTypeExtra;
-    g_weekType = weekType;
     g_monthType = monthType;
     g_monthTypeExtra = monthTypeExtra;
+    g_weekType = weekType;
+    g_weekTypeExtra = weekTypeExtra;
 
     hourGlass.stop();
     startLocalPlayerTurn();

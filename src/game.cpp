@@ -125,8 +125,10 @@ DATA(0x00697294) TTextResource* g_randomTavernText;
 DATA(0x0069774c) bool g_inCampaign;
 DATA(0x00697750) int g_weekType;
 DATA(0x006983fc) int g_weekTypeExtra;
-DATA(0x00697748) int g_monthType;
-DATA(0x00698834) int g_monthTypeExtra;
+// DC PerMonth stores the effect to giMonthType and the creature to
+// giMonthTypeExtra; retail perMonth writes the effect to 0x698834.
+DATA(0x00698834) int g_monthType;
+DATA(0x00697748) int g_monthTypeExtra;
 DATA(0x006783c8) int g_mapWidth = 72;
 DATA(0x006783cc) int g_mapHeight = 72;
 // Original DC name: g_playerTurn; StartLocalPlayerTurn and remote turn handoff.
@@ -3484,10 +3486,10 @@ void game::setupOrigData()
     g_normalVictory = 0;
     g_grailOwner = -1;
     m_difficultyRating = 1;
-    g_weekTypeExtra = 0;
-    g_weekType = 0;
     g_monthType = 0;
     g_monthTypeExtra = 0;
+    g_weekType = 0;
+    g_weekTypeExtra = 0;
     m_isCheater = 0;
 
     strncpy(m_saveFileName, g_generalText->getText(GENERAL_TEXT_NEW_GAME_SAVE_NAME), sizeof(m_saveFileName));
@@ -7603,18 +7605,18 @@ void game::perMonth()
     ++m_month;
     int monthRoll = random(1, g_monthRollMax);
     if (g_weekType == g_weekTypeInfernoGrail) {
-        g_monthTypeExtra = g_monthEffectCreature;
-        g_monthType = g_creatureImpId;
+        g_monthType = g_monthEffectCreature;
+        g_monthTypeExtra = g_creatureImpId;
     } else if (monthRoll > g_monthNormalRollMax && !m_isTutorial) {
         if (monthRoll <= g_monthCreatureRollMax) {
-            g_monthTypeExtra = g_monthEffectCreature;
-            g_monthType = g_monType[random(0, g_monthCreatureTableLast)];
+            g_monthType = g_monthEffectCreature;
+            g_monthTypeExtra = g_monType[random(0, g_monthCreatureTableLast)];
         } else {
-            g_monthTypeExtra = g_monthEffectPlague;
+            g_monthType = g_monthEffectPlague;
         }
     } else {
-        g_monthTypeExtra = g_monthEffectNormal;
-        g_monthType = random(0, g_monthCreatureRollMax);
+        g_monthType = g_monthEffectNormal;
+        g_monthTypeExtra = random(0, g_monthCreatureRollMax);
     }
 
     for (i = 0; i < m_towns.size(); ++i) {
@@ -7622,15 +7624,15 @@ void game::perMonth()
             currTown = getTown(i);
             growth = currTown->getGrowthRate(j);
             if (growth > 0) {
-                if (g_monthTypeExtra == g_monthEffectCreature
+                if (g_monthType == g_monthEffectCreature
                     && g_weekType != g_weekTypeInfernoGrail
                     && g_townDwellingCreatures[
                         currTown->m_type * TOWN_DWELLING_SLOTS + j]
-                       == g_monthType) {
+                       == g_monthTypeExtra) {
                     currTown->m_population[j] *= 2;
                 }
 
-                if (g_monthTypeExtra == g_monthEffectPlague) {
+                if (g_monthType == g_monthEffectPlague) {
                     growth = currTown->getGrowthRate(j);
                     currTown->m_population[j] -= growth;
                     if (currTown->m_population[j] < 0)
@@ -7641,7 +7643,7 @@ void game::perMonth()
         }
     }
 
-    if (g_monthTypeExtra == g_monthEffectCreature) {
+    if (g_monthType == g_monthEffectCreature) {
         for (z = 0; z < getNumMapLevels(); ++z) {
             for (y = 0; y < g_mapWidth; ++y) {
                 for (x = 0; x < g_mapHeight; ++x) {
@@ -7653,8 +7655,8 @@ void game::perMonth()
                         && tempCell->m_type != EVENT
                         && random(1, g_monthMonsterSpawnRollMax) == 1) {
                         insertObject(x, y, z, RANDOM_MONSTER,
-                                     g_monthType, 0);
-                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthType);
+                                     g_monthTypeExtra, 0);
+                        tempCell->m_monsterInfo.m_qty = 2 * getRandomNumTroops(g_monthTypeExtra);
                         tempCell->m_monsterInfo.m_disposition =
                             random(1, g_monthMonsterDispositionMax);
                     }
@@ -9266,7 +9268,7 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     sprintf(fileName,
             DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
             DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
-            g_config.m_scFile);
+            g_config.m_rcFile);
     int handle = _open(fileName,
                        _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
                        _S_IWRITE);
@@ -9370,13 +9372,13 @@ void game::doNewTurn()
                                     "newweek.wav"));
 
     if (m_week == 1 && g_weekType == g_weekTypeNormal) {
-        if (g_monthTypeExtra == g_monthEffectNormal) {
-            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthType]);
-        } else if (g_monthTypeExtra == g_monthEffectCreature) {
-            strcpy(temp, getArmyName(g_monthType, 1));
+        if (g_monthType == g_monthEffectNormal) {
+            sprintf(g_text, g_newTurn[2], g_monthNames[g_monthTypeExtra]);
+        } else if (g_monthType == g_monthEffectCreature) {
+            strcpy(temp, getArmyName(g_monthTypeExtra, 1));
             temp[0] = toupper(temp[0]);
             sprintf(g_text, g_newTurn[3],
-                    getArmyName(g_monthType, 1), temp);
+                    getArmyName(g_monthTypeExtra, 1), temp);
         } else {
             strcpy(g_text, g_newTurn[4]);
         }

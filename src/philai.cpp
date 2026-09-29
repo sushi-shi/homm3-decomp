@@ -2278,7 +2278,7 @@ static void moveHero(hero* currentHero, long* dangerZones,
             g_advManager->demobilizeCurrHero(0, 1);
             g_advManager->setHeroContext(currentHero->m_id, 1, 0, 1);
             memset(dangerZones, 0,
-                   g_mapHeight * g_mapWidth * g_game->getNumMapLevels()
+                   g_mapWidth * g_mapHeight * g_game->getNumMapLevels()
                        * sizeof(long));
             if (g_game->m_setup.m_difficulty > 0
                 || g_game->isHumanAlly(g_netLocalGamePos))
