@@ -211,6 +211,68 @@ class DecisionTests(unittest.TestCase):
                          ("held", "body size differs"))
 
 
+class OutsideOperandTests(unittest.TestCase):
+    def aliases(self, votes, extent, claimed="_g_t"):
+        pairings, aliases = rp.decide(
+            votes, region_of=lambda rva: "data", claimed_name_at={0x6000: claimed}.get,
+            claimed_rva_of=lambda name: None, extent_of={0x6000: extent}.get)
+        return pairings, sorted((a.target, a.addend) for a in aliases)
+
+    def test_one_past_the_end_names_the_claimed_array(self):
+        # int g_t[4] at 0x6000: a loop bound g_t + 0x10 lands on the next
+        # object; the candidate names g_t, so the site keeps g_t + 0x10.
+        pairings, aliases = self.aliases(
+            [vote("_g_t", 0x6000), vote("_g_t", 0x6010, addend=0x10)], (0x10, 4))
+        self.assertEqual(pairings[0].verdict, "confirmed")
+        self.assertEqual(aliases, [(0x6010, 0x10)])
+
+    def test_field_of_the_element_past_the_end(self):
+        # SWinSetup[37] (8 bytes each): &g_t[37].field at +0x12a.
+        _p, aliases = self.aliases([vote("_g_t", 0x612a, addend=0x12a)], (0x128, 8))
+        self.assertEqual(aliases, [(0x612a, 0x12a)])
+
+    def test_one_element_before_the_start(self):
+        _p, aliases = self.aliases([vote("_g_t", 0x5ff8, addend=-8),
+                                    vote("_g_t", 0x5ffc, addend=-4)], (0x200, 8))
+        self.assertEqual(aliases, [(0x5ff8, -8), (0x5ffc, -4)])
+
+    def test_negative_addend_is_written_as_vostok_u32(self):
+        (row,) = rp.alias_rows(
+            [a for a in rp.decide([vote("_g_t", 0x5ffc, addend=-4)],
+                                  region_of=lambda rva: "data",
+                                  claimed_name_at={0x6000: "_g_t"}.get,
+                                  claimed_rva_of=lambda name: None,
+                                  extent_of={0x6000: (0x10, 4)}.get)[1]], [])
+        self.assertEqual(row[3:5], ["_g_t", "0xfffffffc"])
+
+    def test_interior_and_distant_operands_are_left_alone(self):
+        _p, aliases = self.aliases([vote("_g_t", 0x6004, addend=4),
+                                    vote("_g_t", 0x6018, addend=0x18),
+                                    vote("_g_t", 0x5ff0, addend=-0x10)], (0x10, 4))
+        self.assertEqual(aliases, [])
+
+    def test_non_array_allows_exactly_one_past_the_end(self):
+        _p, aliases = self.aliases([vote("_g_t", 0x6008, addend=8),
+                                    vote("_g_t", 0x6009, addend=9),
+                                    vote("_g_t", 0x5ffc, addend=-4)], (8, 8))
+        self.assertEqual(aliases, [(0x6008, 8)])
+
+    def test_unconfirmed_or_unsized_claims_emit_nothing(self):
+        pairings, aliases = self.aliases([vote("_g_t", 0x6010, addend=0x10)], (0x10, 4),
+                                         claimed="_g_other")
+        self.assertEqual((pairings[0].verdict, aliases), ("held", []))
+        _p, aliases = self.aliases([vote("_g_t", 0x6010, addend=0x10)], None)
+        self.assertEqual(aliases, [])
+
+    def test_claim_extent_reads_the_outer_array_element(self):
+        self.assertEqual(rp.claim_extent(0x60, "int[12][2]"), (0x60, 8))
+        self.assertEqual(rp.claim_extent(0x128, "SWinSetup[37]"), (0x128, 8))
+        self.assertEqual(rp.claim_extent(0xc, "const char *[3]"), (0xc, 4))
+        self.assertEqual(rp.claim_extent(8, "TPoint"), (8, 8))
+        self.assertEqual(rp.claim_extent(4, "char (*)[4]"), (4, 4))
+        self.assertIsNone(rp.claim_extent(None, "int[4]"))
+
+
 class FoldEvidenceTests(unittest.TestCase):
     def pairing(self):
         pairings, _ = decide([vote("?size@a@@QBEIXZ", 0x2000, typ=REL32)],

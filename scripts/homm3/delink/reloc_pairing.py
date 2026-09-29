@@ -330,16 +330,51 @@ def collect(voters: Iterable[Voter], objects: Callable[[str], CandidateObject | 
     return votes, dict(withdrawn), admitted
 
 
+def outside_operand(addend: int, extent: tuple[int, int] | None) -> bool:
+    """A claimed object's operand just outside its extent, as cl forms it.
+
+    `extent` is (size, element): an array's element stride, or the object
+    size for a non-array. One past the end is `object + sizeof`; a
+    strength-reduced loop bound adds the field offset to it
+    (`&a[N].field`), and a folded `a[i - 1]` starts one element before the
+    array. Anything further out is not read as this object."""
+    if extent is None:
+        return False
+    size, element = extent
+    if size <= 0 or element <= 0:
+        return False
+    if element == size:
+        return addend == size
+    return size <= addend < size + element or -element <= addend < 0
+
+
+def claim_extent(size: int | None, type_spelling: str) -> tuple[int, int] | None:
+    """(size, element) of a typed DATA claim: an array's outer element, or
+    the object itself; None without a size."""
+    if not size:
+        return None
+    match = re.search(r"\[([0-9]+)\]", type_spelling or "")
+    if match and "(" not in type_spelling and int(match[1]) and size % int(match[1]) == 0:
+        return size, size // int(match[1])
+    return size, size
+
+
 def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
            claimed_name_at: Callable[[int], str | None],
            claimed_rva_of: Callable[[str], int | None],
+           extent_of: Callable[[int], tuple[int, int] | None] = lambda rva: None,
            ) -> tuple[list[Pairing], list[Vote]]:
     """Admit unanimous, anchored, unclaimed DATA pairings; hold the rest.
 
     ``region_of(rva)`` -> 'text'/'rdata'/'data'/'bss'/None;
     ``claimed_name_at(rva)`` -> a non-placeholder name owning that rva;
-    ``claimed_rva_of(name)`` -> where a non-placeholder claim binds that name.
+    ``claimed_rva_of(name)`` -> where a non-placeholder claim binds that name;
+    ``extent_of(rva)`` -> (size, element) of the claim there.
     Code votes are returned as 'code' pairings for `identities` to prove.
+
+    A confirmed claim's operand just outside its extent (`outside_operand`)
+    becomes an exact-site alias: retail's image names that address by the
+    neighbouring object, the candidate by this one plus its addend.
     """
     by_symbol: dict[str, list[Vote]] = defaultdict(list)
     by_owner: dict[int, set[str]] = defaultdict(set)
@@ -424,6 +459,8 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
                 pairing.verdict, pairing.reason = "held", "owner outside the operand's region"
             elif claimed == symbol:
                 pairing.verdict, pairing.reason = "confirmed", "claim agrees"
+                aliases.extend(v for v in mine if v.typ == DIR32
+                               and outside_operand(v.addend, extent_of(owner)))
             elif claimed is not None:
                 pairing.verdict, pairing.reason = "held", f"address claimed as {claimed}"
             elif bound is not None and bound != owner:
@@ -584,7 +621,8 @@ def alias_rows(aliases: list[Vote], reviewed: list[dict]) -> list[list[str]]:
                 (vote.function_rva, vote.target, f"0x{vote.site_rva:08x}") in covered):
             continue
         out.append([f"0x{vote.function_rva:08x}", f"0x{vote.target:08x}",
-                    f"0x{vote.site_rva:08x}", vote.symbol, f"{vote.addend:#x}", "1"])
+                    f"0x{vote.site_rva:08x}", vote.symbol,
+                    f"{vote.addend & 0xFFFFFFFF:#x}", "1"])   # vostok: u32 two's complement
     return out
 
 
@@ -679,12 +717,19 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
         if row is None or is_placeholder(row["name"]):
             return None
         return row["name"]
+    extents = {c.rva: claim_extent(c.size, c.meta.get("type", "")) for c in claims
+               if c.kind == "data" and c.channel == "src-DATA"}
     pairings, aliases = decide(votes, region_of=_region_of(img.pe),
                                claimed_name_at=claimed_name_at,
-                               claimed_rva_of=by_name.get)
-    # An interior operand must not already be another claimed object.
+                               claimed_rva_of=by_name.get, extent_of=extents.get)
+    # An admitted anchor's interior operand must not already be another
+    # claimed object. (A confirmed claim's operand outside its extent names
+    # the neighbour's address by design.)
+    admitted = {(p.symbol, p.owner) for p in pairings if p.verdict == "admitted"}
     held = set()
     for vote in aliases:
+        if (vote.symbol, vote.owner) not in admitted:
+            continue
         other = claimed_name_at(vote.target)
         if other is not None and other != vote.symbol:
             held.add((vote.symbol, vote.owner))
