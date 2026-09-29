@@ -6038,6 +6038,11 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // GetItemId. It is not evidence for a copied helper body in this caller.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
+// The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
+// sprintf pair: retail cross-jumps the visited arm into the unvisited arm's
+// call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
+// A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
+// a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
 VA(0x004137c0, 0x25A0) MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {
