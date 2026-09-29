@@ -3490,6 +3490,11 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // hero::operator= called and both pointers stepping by 0x492. The const and
 // non-const source overloads compile to the same bytes and /OPT:ICF folded
 // them, so one claim names the row and the other spelling is its alias.
+// out_of_range's string constructor, not the CatchableType copy constructor
+// at 0x404700. Its retail callers are giveCrossoverArtifacts here, mapcell's
+// readTownData and four RMG sites; it sits in this unit's COMDAT band.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
+
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
 
 // std::copy over vector<hero> values: retail's only callers of the 710-byte

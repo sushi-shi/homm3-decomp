@@ -10143,7 +10143,9 @@ VA_COMPGEN(0x004cf800, 0x67, BITSET_REFERENCE_ASSIGN, Bitset5)
 VA_COMPGEN(0x004cf870, 0x53, BITSET_CTOR, Bitset28)
 VA_COMPGEN(0x004cf8d0, 0x1C, BITSET_COUNT, Bitset28)
 VA_COMPGEN(0x004cf8f0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset28)
-VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, type_university)
+// SCampaign::operator= reaches this capacity through vector<vector<hero>>;
+// the vector<vector<type_artifact>> spelling folds onto the same body.
+VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, hero_vector)
 VA_COMPGEN(0x004cfa60, 0x63, BITSET_SET, Bitset145)
 VA_COMPGEN(0x004cfad0, 0x37, BITSET_TEST, Bitset145)
 // readMapPlayerSlot retains the three-argument insert reached by its expanded
@@ -10406,10 +10408,6 @@ VA_COMPGEN(0x0045f810, 0x1CD, VECTOR_COPY_ASSIGN, type_artifact_vector)
 // _Ucopy resemble this address; type_university wins on agreement (0.907
 // against 0.810 for the next) and `ret 0xc` matches its three pointers.
 VA_COMPGEN(0x00434c70, 0x49, VECTOR_UCOPY, type_university)
-
-// The string overload, not the CatchableType copy constructor at 0x404700.
-// Keep this identity missing when all string-ctor uses expand in this TU.
-VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
 
 // Slot 5 of that zip: vector<hero>::~vector, the row ~SCampaign,
 // vector<vector<hero>>::operator= and vector<vector<hero>>::insert all reach.
