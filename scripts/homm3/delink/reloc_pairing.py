@@ -441,7 +441,8 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
 
 def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None],
                 prove: Callable[[str, int], str],
-                twins: Callable[[int], list[int]] = lambda rva: []) -> None:
+                twins: Callable[[int], list[int]] = lambda rva: [],
+                bound_at: Callable[[int], Iterable[str]] = lambda rva: ()) -> None:
     """Admit code pairings whose candidate body is the retail body.
 
     ``prove(symbol, rva)`` returns '' when some candidate object's body of
@@ -451,16 +452,59 @@ def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None]
 
     Retail keeps some byte-identical bodies unfolded. When `twins(rva)`
     names another retail function with the very same bytes and call
-    targets, the candidate symbol could be folded onto either copy; the
-    vote alone does not decide it, so the pairing is held.
+    targets, the candidate symbol could be folded onto either copy, so the
+    pairing is held unless every twin is independently another function:
+    see `twin_identity`.
     """
+    # A unit-scoped pairing (`$E<n>`) is its own symbol per compiland.
+    voted: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    places: dict[tuple[str, str], set[int]] = defaultdict(set)
+    standing: set[tuple[str, str]] = set()
+    for pairing in pairings:
+        if pairing.kind == "code":
+            key = (pairing.symbol, pairing.unit)
+            voted[pairing.owner].add(key)
+            places[key].add(pairing.owner)
+            if pairing.verdict != "held":
+                standing.add(key)
+
+    def twin_identity(twin: int, symbol: str, unit: str) -> tuple[str, str]:
+        """(other symbol, '') when `twin` is independently bound to another
+        function and no vote for `symbol` reaches it, else ('', reason).
+
+        Independent: a source claim or a generated binding (`bound_at`: a
+        verified library symbol or import thunk) names the twin, or every
+        vote reaching the twin names one other symbol, all of whose votes
+        reach it and whose pairing `decide` did not hold. Any vote or binding for `symbol` itself at the twin is a
+        conflict."""
+        if (symbol, unit) in voted[twin]:
+            return "", f"a vote for the symbol reaches twin {twin:#x}"
+        names = set(bound_at(twin))
+        claimed = name_at(twin)
+        if claimed:
+            names.add(claimed)
+        if len(voted[twin]) == 1:
+            (only,) = voted[twin]
+            if places[only] == {twin} and only in standing:
+                names.add(only[0])
+        if symbol in names:
+            return "", f"twin {twin:#x} is bound to the symbol"
+        if not names:
+            return "", f"identical retail twin at {twin:#x} is unidentified"
+        return min(names), ""
+
     for pairing in pairings:
         if pairing.kind != "code" or pairing.verdict not in ("candidate", "unit-candidate"):
             continue
         others = twins(pairing.owner)
-        if others:
-            pairing.verdict, pairing.reason = "held", (
-                "identical retail twin at " + ",".join(f"{t:#x}" for t in others[:4]))
+        identified = []
+        for twin in others:
+            other, why = twin_identity(twin, pairing.symbol, pairing.unit)
+            if why:
+                pairing.verdict, pairing.reason = "held", why
+                break
+            identified.append((twin, other))
+        if pairing.verdict == "held":
             continue
         if pairing.verdict == "unit-candidate":
             continue
@@ -472,6 +516,9 @@ def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None]
             pairing.verdict, pairing.reason = "held", why
         else:
             pairing.verdict, pairing.reason = "folded", f"identical body of {name_at(pairing.owner)}"
+            if identified:
+                pairing.reason += "; twin " + ", ".join(
+                    f"{twin:#x} is {other}" for twin, other in identified[:4])
 
 
 class RetailTwins:
@@ -765,7 +812,14 @@ def address_identities(model, state: State | None = None,
                              f"jmp [{data_names[slot]}]", ""))
                 continue
     twin_index = RetailTwins(img, sizes)
-    prove_folds(state.pairings, name_at=names_at.get, prove=prove, twins=twin_index)
+    bindings: dict[int, set[str]] = defaultdict(set)
+    for rva, names in library_names.items():
+        bindings[rva].update(names)
+    for pairing in state.pairings:
+        if pairing.kind == "code" and pairing.verdict == "thunk":
+            bindings[pairing.owner].add(pairing.symbol)
+    prove_folds(state.pairings, name_at=names_at.get, prove=prove, twins=twin_index,
+                bound_at=lambda rva: bindings.get(rva, ()))
     for pairing in state.pairings:
         if pairing.kind != "code" or pairing.verdict != "unit-candidate":
             continue

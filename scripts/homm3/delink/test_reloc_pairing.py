@@ -226,6 +226,73 @@ class FoldEvidenceTests(unittest.TestCase):
         self.assertEqual(pairings[0].verdict, "held")
         self.assertIn("twin", pairings[0].reason)
 
+    def twin_verdict(self, votes, claimed, twins=(0x3000,)):
+        pairings, _ = decide(votes, claimed=claimed)
+        rp.prove_folds(pairings, name_at=claimed.get, prove=lambda symbol, rva: "",
+                       twins=lambda rva: [t for t in (0x2000, *twins) if t != rva])
+        return {(p.symbol, p.owner): (p.verdict, p.reason) for p in pairings}
+
+    def test_confirmed_twin_without_a_conflicting_vote_admits_the_fold(self):
+        # _Ufill<widget*> votes reach only 0x2000 (_Ufill<int>); the twin at
+        # 0x3000 is claimed as another instantiation that no widget vote
+        # reaches, so the symbol's address is unambiguous.
+        verdicts = self.twin_verdict(
+            [vote("?_Ufill@w@@", 0x2000, typ=REL32),
+             vote("?_Ufill@v@@", 0x3000, typ=REL32, function=0x1100)],
+            {0x2000: "?_Ufill@i@@", 0x3000: "?_Ufill@v@@"})
+        verdict, reason = verdicts[("?_Ufill@w@@", 0x2000)]
+        self.assertEqual(verdict, "folded")
+        self.assertIn("twin 0x3000 is ?_Ufill@v@@", reason)
+
+    def test_unanimous_vote_confirms_an_unclaimed_twin(self):
+        verdicts = self.twin_verdict(
+            [vote("?_Ufill@w@@", 0x2000, typ=REL32),
+             vote("?_Ufill@v@@", 0x3000, typ=REL32, function=0x1100)],
+            {0x2000: "?_Ufill@i@@"})
+        self.assertEqual(verdicts[("?_Ufill@w@@", 0x2000)][0], "folded")
+
+    def test_generated_binding_confirms_a_twin(self):
+        pairings = self.pairing()
+        rp.prove_folds(pairings, name_at={0x2000: "?size@b@@QBEIXZ"}.get,
+                       prove=lambda symbol, rva: "", twins=lambda rva: [0x3000],
+                       bound_at={0x3000: {"_strlen"}}.get)
+        self.assertEqual(pairings[0].verdict, "folded")
+
+    def test_unconfirmed_twin_holds_the_fold(self):
+        verdicts = self.twin_verdict([vote("?_Ufill@w@@", 0x2000, typ=REL32)],
+                                     {0x2000: "?_Ufill@i@@"})
+        self.assertEqual(verdicts[("?_Ufill@w@@", 0x2000)],
+                         ("held", "identical retail twin at 0x3000 is unidentified"))
+        # A twin whose votes disagree is not confirmed either.
+        verdicts = self.twin_verdict(
+            [vote("?_Ufill@w@@", 0x2000, typ=REL32),
+             vote("?_Ufill@v@@", 0x3000, typ=REL32, function=0x1100),
+             vote("?_Ufill@u@@", 0x3000, typ=REL32, function=0x1200)],
+            {0x2000: "?_Ufill@i@@"})
+        self.assertEqual(verdicts[("?_Ufill@w@@", 0x2000)][0], "held")
+
+    def test_conflicting_vote_at_the_twin_holds_the_fold(self):
+        # One widget call reaches the twin: both places are held.
+        verdicts = self.twin_verdict(
+            [vote("?_Ufill@w@@", 0x2000, typ=REL32),
+             vote("?_Ufill@w@@", 0x3000, typ=REL32, function=0x1100)],
+            {0x2000: "?_Ufill@i@@", 0x3000: "?_Ufill@v@@"})
+        self.assertEqual({v for v, _r in verdicts.values()}, {"held"})
+        # A unit-scoped candidate reached at the twin by its own unit's vote.
+        pairings = [rp.Pairing("_$E4", 0x2000, "code", [], "unit-candidate", "", "a"),
+                    rp.Pairing("_$E4", 0x3000, "code", [], "held", "", "a")]
+        rp.prove_folds(pairings, name_at={0x3000: "?g@@"}.get,
+                       prove=lambda symbol, rva: "", twins=lambda rva: [0x3000])
+        self.assertEqual(pairings[0].verdict, "held")
+        # A twin bound to the very symbol is a conflict, not a confirmation.
+        pairings, _ = decide([vote("?_Ufill@w@@", 0x2000, typ=REL32)],
+                             claimed={0x2000: "?_Ufill@i@@"})
+        rp.prove_folds(pairings, name_at={0x2000: "?_Ufill@i@@"}.get,
+                       prove=lambda symbol, rva: "", twins=lambda rva: [0x3000],
+                       bound_at={0x3000: {"?_Ufill@w@@"}}.get)
+        self.assertEqual((pairings[0].verdict, pairings[0].reason),
+                         ("held", "twin 0x3000 is bound to the symbol"))
+
     def test_symbol_claimed_elsewhere_is_not_a_fold(self):
         pairings, _ = decide([vote("?size@a@@QBEIXZ", 0x2000, typ=REL32)],
                              claimed={0x2000: "?size@b@@QBEIXZ"},
