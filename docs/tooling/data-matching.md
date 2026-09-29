@@ -378,6 +378,7 @@ never cover a byte on their own.
 | `game-data-exact` | The claim's own candidate definition emits this byte at this address with the retail value. A `DATA_COMPGEN` string literal whose source text and NUL equal retail also counts. |
 | `game-bss-exact` | Uninitialized storage whose candidate definition has the retail size and is zero in the image, at a compatible address. The address is compatible when it is a multiple of the power of two dividing the member's size, its section offset and its section alignment, or of the declared type's alignment from the layout oracle. Verified game COMMONs also count. |
 | `game-data-mismatch` | A byte the candidate emits with a different value, reported byte by byte. A pointer word naming another referent or addend counts. |
+| `game-data-pending-function` | An exception record (FuncInfo or unwind map) of a claimed function that is not yet byte-exact. The function's own score tracks it; it is not a finish-line category. |
 | `game-data-unverified` | Every other game-claimed data byte, with a reason. |
 | `padding` | Fill named by a reviewed padding row; its content is not compared. |
 
@@ -393,7 +394,13 @@ or to the section end.
 The retail access audit (`homm3 verify data-access`) adds disputes: a
 shortfall, undercount, adjacency or stride finding on a claim makes the
 whole claim unverified. Retail touches past a claim's end into padding
-re-attribute that padding to the claim as unverified.
+re-attribute that padding to the claim as unverified. An index's stride is
+the operand's real step (`[ecx+ecx*2+base]` steps by 3); an index into a
+record whose offset 0 lies in an array member of that element size walks
+the member (a bitset's words, `configStruct::m_walkSpeed`), not a table;
+and a wide read the owning unit's own compiled code makes through the
+symbol (VC6 reads an `unsigned short` mask with `and ebx, dword ptr`) is
+codegen, not a larger datum.
 
 Other `game-data-unverified` reasons:
 - `unavailable:<reason>` and `unresolved-pointer`: a comparison that could
@@ -406,6 +413,18 @@ Other `game-data-unverified` reasons:
   slot. The zero tail past its content stays unverified until a type or a
   consumer proves the count; `game_verification.size_from_slot` lists these
   claims.
+
+VC6 emits a function's `.xdata$x` records from its body, so while the body
+differs the records cannot be compared. Such records are
+`game-data-pending-function` (reason `pending-function:<owner>`) instead of
+`game-data-unverified`: they belong to the function matching loop. The
+comparison runs on every build, so the records become `game-data-exact` as
+soon as the owner is exact and they agree (and a mismatch then, not a
+pending verdict). A record that already agrees while its owner still differs
+is exact too. `build/gen/pending_function_records.json` lists the pending
+bytes per owner; `homm3 status functions`, `homm3 sema diff --summary` and
+the worklist (`--category game-data-pending-function`) show "N EH-record
+bytes verify when this function becomes exact".
 
 The finish line is zero `missing`, `game-data-unverified` and
 `game-data-mismatch` bytes, except post-link

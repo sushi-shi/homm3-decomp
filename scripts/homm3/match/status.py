@@ -837,6 +837,7 @@ def cmd_functions(report: dict, filters: list[str]) -> int:
     rows = load_baseline()
     current = fn_fuzzy(report)
     needles = [value.lower() for value in filters]
+    pending = _pending_function_records()
     print("  MAX       CUR      HIST      RVA       Unit / function")
     print("  " + "-" * 78)
     for key in sorted(set(rows) | set(current)):
@@ -853,7 +854,21 @@ def cmd_functions(report: dict, filters: list[str]) -> int:
         addr = "-" if rva is None else f"0x{rva:06x}"
         print(f"  {pct(maximum)}  {pct(cur)}  {pct(historical)}  "
               f"{addr:<8}  {key[0]} / {key[1]}")
+        held = pending.get(key[1])
+        if held and held.get("unit", key[0]) in ("", key[0]):
+            print(f"{'':42}{held['bytes']} EH-record byte(s) verify when this "
+                  f"function becomes exact")
     return 0
+
+
+def _pending_function_records() -> dict:
+    """{owner: {unit, bytes}} from the last byte accounting, if any."""
+    import json
+    path = common.HOMM3_DIR / "build/gen/pending_function_records.json"
+    try:
+        return json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {}
 
 
 RM_START, RM_END = "<!-- match-score:start -->", "<!-- match-score:end -->"
@@ -1007,6 +1022,8 @@ def write_readme(report: dict, *, data_accounting: dict | None = None) -> None:
                            if dynamic else "")
         unproven = (f"{totals.get('game-data-unverified', 0):,} unverified and "
                     f"{totals.get('game-data-mismatch', 0):,} mismatching game data bytes; "
+                    f"{totals.get('game-data-pending-function', 0):,} bytes of exception "
+                    f"records pending their functions' matches; "
                     f"{totals.get('padding', 0):,} bytes of reviewed padding. ")
         block += ["", f"**Byte accountability:** {totals.get('missing', 0):,} file bytes "
                   f"unclaimed; {totals.get('overlap', 0):,} bytes with conflicting claims; "

@@ -14,6 +14,11 @@ replaces that ownership with verdicts, in the image and file domains alike:
     game-data-mismatch     a byte the candidate definition emits with a
                            different value (pointers: a different referent or
                            addend), byte-precise
+    game-data-pending-function
+                           exception records (FuncInfo, unwind map) of a
+                           claimed function that is not yet byte-exact: the
+                           function's score tracks them, and they compare as
+                           soon as it matches; not a finish-line category
     game-data-unverified   every other game-claimed data byte, with a reason
 
 Padding is accounted only through reviewed rows (`homm3.verify.padding`);
@@ -26,7 +31,9 @@ slot sizes and zero-ness never cover a byte on their own.
 Every run in a finish-line category (missing, game-data-unverified,
 game-data-mismatch) is written to
 build/gen/data_worklist.{json,tsv} with the neighbouring claims and a
-diagnosis; `homm3 verify data-worklist` lists it.
+diagnosis; `homm3 verify data-worklist` lists it. Pending-function runs are
+listed there too, and per function in build/gen/pending_function_records.json
+(`homm3 status functions` shows them).
 """
 from __future__ import annotations
 
@@ -43,11 +50,20 @@ from homm3.core.paths import BUILD
 GAME_CODE_EXACT, GAME_CODE_UNVERIFIED = 'game-code-exact', 'game-code-unverified'
 GAME_DATA_EXACT, GAME_BSS_EXACT = 'game-data-exact', 'game-bss-exact'
 GAME_DATA_MISMATCH, GAME_DATA_UNVERIFIED = 'game-data-mismatch', 'game-data-unverified'
+GAME_DATA_PENDING_FUNCTION = 'game-data-pending-function'
 PADDING_PROVISIONAL = 'padding-provisional'
 GAME_CATEGORIES = (GAME_CODE_EXACT, GAME_CODE_UNVERIFIED, GAME_DATA_EXACT,
-                   GAME_BSS_EXACT, GAME_DATA_MISMATCH, GAME_DATA_UNVERIFIED)
+                   GAME_BSS_EXACT, GAME_DATA_MISMATCH, GAME_DATA_UNVERIFIED,
+                   GAME_DATA_PENDING_FUNCTION)
 #: Categories that must reach zero (post-link residue excepted).
 FINISH_LINE = ('missing', GAME_DATA_UNVERIFIED, GAME_DATA_MISMATCH)
+#: Worklist categories: the finish line plus records pending their function.
+WORKLIST_CATEGORIES = FINISH_LINE + (GAME_DATA_PENDING_FUNCTION,)
+#: EH record prefixes (eh_records): the owning function follows the prefix.
+EH_RECORD_PREFIXES = ('__ehfuncinfo$', '__ehunwindmap$')
+#: eh_records' reason when the owner's body still differs from retail.
+PENDING_FUNCTION_REASON = 'owning function is not yet byte-exact'
+PENDING = BUILD / 'gen/pending_function_records.json'
 #: Accounted fill that a claim's own evidence may re-attribute.
 PADDING = ('padding', 'alignment-padding', 'linker-padding')
 #: Categories whose contributions have a size fixed by pinned bytes or a
@@ -258,6 +274,11 @@ def data_status(comparisons):
             continue
         name, verdict, extent = r['name'], r['verdict'], r.get('extent', 'ok')
         if verdict == 'unavailable':
+            owner = pending_owner(name, r.get('reason') or '')
+            if owner:
+                out[name].append(Status(start, start + size, GAME_DATA_PENDING_FUNCTION,
+                                        f'pending-function:{owner}'))
+                continue
             out[name].append(Status(start, start + size, GAME_DATA_UNVERIFIED,
                                     f"unavailable:{r.get('reason') or 'unknown'}"))
             continue
@@ -300,7 +321,28 @@ def data_status(comparisons):
     return out
 
 
-_RANK = {GAME_DATA_EXACT: 0, GAME_BSS_EXACT: 0, GAME_DATA_MISMATCH: 1, GAME_DATA_UNVERIFIED: 2}
+_RANK = {GAME_DATA_EXACT: 0, GAME_BSS_EXACT: 0, GAME_DATA_MISMATCH: 1,
+         GAME_DATA_PENDING_FUNCTION: 2, GAME_DATA_UNVERIFIED: 2}
+
+
+def pending_owner(name, reason):
+    """The owning function of an EH record whose comparison waits on it."""
+    if not reason.startswith(PENDING_FUNCTION_REASON):
+        return None
+    for prefix in EH_RECORD_PREFIXES:
+        if name.startswith(prefix):
+            return name[len(prefix):]
+    return None
+
+
+def pending_functions(rows):
+    """{owner: pending bytes} from GAME_DATA_PENDING_FUNCTION runs."""
+    out = defaultdict(int)
+    for row in rows:
+        if row['category'] == GAME_DATA_PENDING_FUNCTION:
+            owner = (row.get('reason') or '').removeprefix('pending-function:')
+            out[owner] += row['end'] - row['start']
+    return dict(sorted(out.items()))
 
 
 def _identity_status(identity, start, end, statuses, labels):
@@ -691,12 +733,18 @@ def verify_game(pe, model, domains, comparisons, *, report=None, findings=None,
     worklist = build_worklist(out['image'], pe, comparisons, data_claims, annotation,
                               layout, model, text_range)
     write_worklist(worklist)
+    pending = pending_functions(out['image'])
+    units_of = {b.name: b.unit for b in model.functions if b.name}
+    PENDING.write_text(json.dumps(
+        {owner: dict(unit=units_of.get(owner, ''), bytes=size)
+         for owner, size in pending.items()}, indent=1) + '\n')
     verification = dict(
         violations=violations, notes=notes,
         size_from_slot=[dict(rva=s, end=e, zero_tail=t, name=n, type=ty, source=w)
                         for s, e, t, n, ty, w in slots],
         functions=dict(exact=len(exact_fns), unverified=len(game_fns) - len(exact_fns)),
-        worklist=len(worklist),
+        worklist=sum(i['category'] in FINISH_LINE for i in worklist),
+        pending_functions=pending,
         padding=dict(proposals=proposals,
                      reviewed={proof: dict(rows=n, bytes=b) for proof, (n, b) in by_proof.items()}))
     return out, verification
@@ -766,7 +814,7 @@ def build_worklist(rows, pe, comparisons, data_claims, annotation, layout, model
 
     out = []
     for row in rows:
-        if row['category'] not in FINISH_LINE:
+        if row['category'] not in WORKLIST_CATEGORIES:
             continue
         start, end = row['start'], row['end']
         data = pe.read(start, min(end - start, 64)) or b''
@@ -810,6 +858,10 @@ def diagnose(item, by_name, layout, symbols, pe):
     start, end, size = item['start'], item['end'], item['size']
     before, after, owner = item['previous'], item['next'], item['owner']
     category, reason = item['category'], item['reason']
+    if category == GAME_DATA_PENDING_FUNCTION:
+        owner_name = reason.removeprefix('pending-function:')
+        return (f"{size} EH-record byte(s) verify when {owner_name} becomes exact; the "
+                f"function's score tracks them, not the finish line.")
     if category == 'missing' and item.get('code'):
         return (f"{size} byte(s) of code ({item['retail'][:32]}) between "
                 f"{_describe_claim(before)} and {_describe_claim(after)} are claimed by no "
@@ -863,7 +915,8 @@ def write_worklist(items):
     WORKLIST.with_suffix('.json').write_text(json.dumps(items, indent=1) + '\n')
     from homm3.core.tsv import write
     write(WORKLIST.with_suffix('.tsv'),
-          ['# GENERATED by homm3.verify.game_bytes: finish-line runs, by address.'],
+          ['# GENERATED by homm3.verify.game_bytes: finish-line runs and records '
+           'pending their function, by address.'],
           ['start', 'end', 'size', 'category', 'reason', 'source', 'owner',
            'previous', 'next', 'retail', 'diagnosis'],
           [[hex(i['start']), hex(i['end']), i['size'], i['category'], i['reason'],
@@ -879,7 +932,7 @@ def main(argv=None) -> int:
                                              'byte accounting (homm3 build or '
                                              'homm3 verify data-coverage --all-bytes).')
     ap.add_argument('--unit', help='only runs whose source file is src/<unit>.cpp')
-    ap.add_argument('--category', choices=FINISH_LINE)
+    ap.add_argument('--category', choices=WORKLIST_CATEGORIES)
     ap.add_argument('--reason', help='substring of the reason')
     ap.add_argument('--limit', type=int, default=0)
     a = ap.parse_args(argv)
@@ -888,6 +941,12 @@ def main(argv=None) -> int:
         print(f'{path} is absent: run homm3 build first')
         return 1
     items = json.loads(path.read_text())
+    if not a.category:
+        pending = [i for i in items if i['category'] == GAME_DATA_PENDING_FUNCTION]
+        if pending:
+            print(f"({len(pending)} run(s), {sum(i['size'] for i in pending):,} B of EH records "
+                  f"pending their functions: --category {GAME_DATA_PENDING_FUNCTION})")
+        items = [i for i in items if i['category'] in FINISH_LINE]
     if a.unit:
         items = [i for i in items if Path(i['source'].split(':')[0]).stem == a.unit]
     if a.category:

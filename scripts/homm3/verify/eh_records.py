@@ -84,7 +84,9 @@ def compare(model, enrolled, pe, names, base_dir):
         obj, table = objects[unit]
         found = _candidate_record(obj, table, owner)
         if found is None:
-            emit('unavailable', 'candidate FuncInfo not found through the function')
+            emit('unavailable', 'candidate FuncInfo not found through the function'
+                 if exact(unit, owner) else 'owning function is not yet byte-exact; '
+                 'the candidate emits no record for it')
             continue
         xsec, offset, textx = found
         start = int(rows['info']['rva'], 0)
