@@ -180,6 +180,36 @@ class DecisionTests(unittest.TestCase):
                          ("held", "body size differs"))
 
 
+class FoldEvidenceTests(unittest.TestCase):
+    def pairing(self):
+        pairings, _ = decide([vote("?size@a@@QBEIXZ", 0x2000, typ=REL32)],
+                             claimed={0x2000: "?size@b@@QBEIXZ"})
+        return pairings
+
+    def test_identical_retail_twin_holds_a_fold(self):
+        # Retail keeps an unfolded copy with the same bytes at 0x3000: the
+        # candidate symbol could be either copy, so the vote does not decide.
+        pairings = self.pairing()
+        rp.prove_folds(pairings, name_at={0x2000: "?size@b@@QBEIXZ"}.get,
+                       prove=lambda symbol, rva: "", twins=lambda rva: [0x3000])
+        self.assertEqual(pairings[0].verdict, "held")
+        self.assertIn("twin", pairings[0].reason)
+
+    def test_symbol_claimed_elsewhere_is_not_a_fold(self):
+        pairings, _ = decide([vote("?size@a@@QBEIXZ", 0x2000, typ=REL32)],
+                             claimed={0x2000: "?size@b@@QBEIXZ"},
+                             bound={"?size@a@@QBEIXZ": 0x3000})
+        self.assertEqual((pairings[0].verdict, pairings[0].reason),
+                         ("held", "symbol claimed at 0x3000"))
+
+    def test_local_function_pairs_per_unit(self):
+        votes = [rp.Vote("_$E47", 0x2000, 0x2000, 0, 0x1000, 0x1001, DIR32, "a", "_f"),
+                 rp.Vote("_$E47", 0x2100, 0x2100, 0, 0x1100, 0x1101, DIR32, "b", "_g")]
+        pairings, _ = decide(votes)
+        self.assertEqual({(p.unit, p.owner, p.verdict) for p in pairings},
+                         {("a", 0x2000, "unit-candidate"), ("b", 0x2100, "unit-candidate")})
+
+
 class IdentityRelocationTests(unittest.TestCase):
     def rewrite(self, base_target, target_target, identities, symbol_rvas,
                 base_addend=0, target_addend=0):

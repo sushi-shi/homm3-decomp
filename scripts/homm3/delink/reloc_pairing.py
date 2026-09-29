@@ -47,6 +47,7 @@ Outputs (under build/gen/):
 from __future__ import annotations
 
 import bisect
+import re
 import struct
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -121,6 +122,12 @@ def stable_name(name: str) -> bool:
 #: per compiland without string pooling) or fold them onto other read-only
 #: data; the content, not the name, identifies the bytes.
 CONTENT_NAMED = ("??_C@", "__real@")
+
+
+#: A compiler-generated local function (`$E<n>`: a local static's dynamic
+#: initializer or its atexit destructor). The ordinal is private to its
+#: object, so its identity is unit-scoped and needs a body proof.
+LOCAL_FUNCTION = re.compile(r"_?\$E[0-9]+")
 
 
 def content_named(name: str) -> bool:
@@ -271,7 +278,7 @@ def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | Non
     votes = []
     for site, typ, name, addend, target in operand_targets(
             body, relocs, retail, voter.rva, image_base):
-        if not stable_name(name):
+        if not stable_name(name) and not LOCAL_FUNCTION.fullmatch(name):
             continue
         votes.append(Vote(rename(name), target - addend, target, addend,
                           voter.rva, voter.rva + site, typ, voter.unit, voter.name))
@@ -325,6 +332,20 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
     aliases: list[Vote] = []
     for symbol, rows in sorted(by_symbol.items()):
         owners = sorted({v.owner for v in rows})
+        if LOCAL_FUNCTION.fullmatch(symbol):
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                places = {v.owner for v in mine}
+                pairing = Pairing(symbol, min(places), "code", mine, unit=unit)
+                pairings.append(pairing)
+                if len(places) > 1:
+                    pairing.verdict, pairing.reason = "held", (
+                        "unit votes for " + ",".join(f"{o:#x}" for o in sorted(places)))
+                elif region_of(pairing.owner) != "text" or any(v.addend for v in mine):
+                    pairing.verdict, pairing.reason = "held", "not a function entry"
+                else:
+                    pairing.verdict, pairing.reason = "unit-candidate", "needs body proof"
+            continue
         if content_named(symbol) and (
                 len(owners) > 1 or claimed_name_at(owners[0]) not in (None, symbol)):
             # Identical copies, or a copy folded onto other read-only data:
@@ -364,8 +385,7 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
                     # claimed at the other, so this call reaches a different
                     # instantiation than the candidate names.
                     pairing.verdict, pairing.reason = "held", f"symbol claimed at {bound:#x}"
-                elif any(v.addend not in (0, -4) or v.target != owner
-                         and v.typ == DIR32 for v in mine):
+                elif any(v.addend for v in mine):
                     pairing.verdict, pairing.reason = "held", "interior code operand"
                 else:
                     pairing.verdict, pairing.reason = "candidate", "needs body proof"
@@ -396,16 +416,29 @@ def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
 
 
 def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None],
-                prove: Callable[[str, int], str]) -> None:
+                prove: Callable[[str, int], str],
+                twins: Callable[[int], list[int]] = lambda rva: []) -> None:
     """Admit code pairings whose candidate body is the retail body.
 
     ``prove(symbol, rva)`` returns '' when some candidate object's body of
     `symbol` is exactly the retail function at `rva` (named relocations
     included), else the reason. A code pairing at an address the model
     names differently is then a proven fold of the two names.
+
+    Retail keeps some byte-identical bodies unfolded. When `twins(rva)`
+    names another retail function with the very same bytes and call
+    targets, the candidate symbol could be folded onto either copy; the
+    vote alone does not decide it, so the pairing is held.
     """
     for pairing in pairings:
-        if pairing.kind != "code" or pairing.verdict != "candidate":
+        if pairing.kind != "code" or pairing.verdict not in ("candidate", "unit-candidate"):
+            continue
+        others = twins(pairing.owner)
+        if others:
+            pairing.verdict, pairing.reason = "held", (
+                "identical retail twin at " + ",".join(f"{t:#x}" for t in others[:4]))
+            continue
+        if pairing.verdict == "unit-candidate":
             continue
         if name_at(pairing.owner) is None:
             pairing.verdict, pairing.reason = "held", "no retail function at the address"
@@ -415,6 +448,33 @@ def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None]
             pairing.verdict, pairing.reason = "held", why
         else:
             pairing.verdict, pairing.reason = "folded", f"identical body of {name_at(pairing.owner)}"
+
+
+class RetailTwins:
+    """Retail functions with byte-identical bodies and call targets."""
+
+    def __init__(self, img, sizes: dict[int, int]):
+        self.img, self.sizes = img, sizes
+        self._index: dict[bytes, list[int]] | None = None
+
+    def key(self, rva: int) -> bytes:
+        from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+        size = self.sizes.get(rva, 0)
+        body = bytearray(self.img.pe.read(rva, size) or b"")
+        for ins in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(body), 0):
+            if ins.bytes[0] in (0xE8, 0xE9) and ins.size == 5:
+                target = rva + ins.address + 5 + struct.unpack_from("<i", ins.bytes, 1)[0]
+                body[ins.address + 1:ins.address + 5] = struct.pack("<I", target & 0xFFFFFFFF)
+        return bytes(body)
+
+    def __call__(self, rva: int) -> list[int]:
+        if self._index is None:
+            index: dict[bytes, list[int]] = defaultdict(list)
+            for start, size in self.sizes.items():
+                if size:
+                    index[self.key(start)].append(start)
+            self._index = index
+        return [other for other in self._index.get(self.key(rva), ()) if other != rva]
 
 
 PAIRINGS_HEADER = ["owner_rva", "symbol", "kind", "verdict", "reason", "votes",
@@ -562,7 +622,7 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
             pairing.verdict, pairing.reason = "held", "interior operand claimed by another name"
     aliases = [v for v in aliases if (v.symbol, v.owner) not in held]
     for pairing in pairings:
-        if pairing.verdict != "unit-candidate":
+        if pairing.kind != "data" or pairing.verdict != "unit-candidate":
             continue
         candidate = objects(pairing.unit)
         content = data_content(candidate, pairing.symbol) if candidate else None
@@ -673,7 +733,22 @@ def address_identities(model, state: State | None = None,
                 rows.append((pairing.owner, pairing.symbol, "thunk",
                              f"jmp [{data_names[slot]}]", ""))
                 continue
-    prove_folds(state.pairings, name_at=names_at.get, prove=prove)
+    twin_index = RetailTwins(img, sizes)
+    prove_folds(state.pairings, name_at=names_at.get, prove=prove, twins=twin_index)
+    for pairing in state.pairings:
+        if pairing.kind != "code" or pairing.verdict != "unit-candidate":
+            continue
+        candidate = candidates.get(pairing.unit)
+        verdict, _deps, why = (match(candidate, pairing.symbol, pairing.owner, img,
+                                     sizes, targets) if candidate else
+                               ("unresolved", [], "no candidate object"))
+        if verdict == "exact":
+            pairing.verdict, pairing.reason = "unit", "the unit's body equals retail"
+            rows.append((pairing.owner, pairing.symbol, "unit-body",
+                         f"called by {min(pairing.votes, key=lambda v: v.site_rva).function}",
+                         pairing.unit))
+        else:
+            pairing.verdict, pairing.reason = "held", why or verdict
     for pairing in state.pairings:
         if pairing.kind == "code" and pairing.verdict == "folded":
             first = min(pairing.votes, key=lambda v: v.site_rva)
