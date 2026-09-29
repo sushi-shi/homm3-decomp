@@ -192,13 +192,13 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     for (int walk = HERO_SPEED_WALK_ID; walk <= HERO_SPEED_JUMP_ID; ++walk)
         getWidget(walk)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_walkSpeed + MUSIC_TYPE_MIDI_ID)->sendMessage(
+    getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
     for (int ai = AI_SPEED_CANTER_ID; ai <= AI_SPEED_NONE_ID; ++ai)
         getWidget(ai)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_computerWalkSpeed
+    getWidget(g_config.m_walkSpeed[0]
             + HERO_SPEED_GALLOP_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
@@ -458,11 +458,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case HERO_SPEED_GALLOP_ID:
                     case HERO_SPEED_JUMP_ID:
                     {
-                        g_config.m_walkSpeed = id - MUSIC_TYPE_MIDI_ID;
+                        g_config.m_walkSpeed[1] = id - MUSIC_TYPE_MIDI_ID;
                         for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
                             getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                                       widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_walkSpeed + MUSIC_TYPE_MIDI_ID)
+                        getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
                         prefsChanged = 1;
@@ -475,14 +475,14 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case AI_SPEED_JUMP_ID:
                     case AI_SPEED_NONE_ID:
                     {
-                        g_config.m_computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
+                        g_config.m_walkSpeed[0] = id - HERO_SPEED_GALLOP_ID;
                         g_config.m_blackoutComputer =
-                            g_config.m_computerWalkSpeed ==
+                            g_config.m_walkSpeed[0] ==
                             AI_SPEED_BLACKOUT_VALUE;
                         for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
                             getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                                       widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_computerWalkSpeed +
+                        getWidget(g_config.m_walkSpeed[0] +
                                   HERO_SPEED_GALLOP_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);

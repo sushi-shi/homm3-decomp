@@ -735,7 +735,7 @@ int advManager::open(int newPriority)
         m_soundArray[i].m_priority = 0x7f;
         m_touchedSounds = 0;
     }
-    getCursorSampleSet(g_config.m_walkSpeed);
+    getCursorSampleSet(g_config.m_walkSpeed[1]);
 
     if (!g_currentPlayer->isLocalHuman()) {
         g_game->turnOnAIMusic();
@@ -8998,7 +8998,7 @@ unsigned char advManager::doSystemOptions()
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
-    int walkSpeed = g_config.m_walkSpeed;
+    int walkSpeed = g_config.m_walkSpeed[1];
     demobilizeCurrHero(0, 1);
 
     {
@@ -9027,11 +9027,11 @@ unsigned char advManager::doSystemOptions()
     if (saveMobile)
         mobilizeCurrHero(0, 0, 1);
 
-    if (g_config.m_walkSpeed != walkSpeed) {
+    if (g_config.m_walkSpeed[1] != walkSpeed) {
         int i;
         for (i = 0; i < 10; i++)
             m_heroSamples[i]->dispose();
-        getCursorSampleSet(g_config.m_walkSpeed);
+        getCursorSampleSet(g_config.m_walkSpeed[1]);
     }
 
     if (saveMobile)

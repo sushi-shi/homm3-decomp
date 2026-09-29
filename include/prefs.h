@@ -16,8 +16,10 @@
 // MEMBERS and not neighbours.
 
 struct configStruct {
-    int m_computerWalkSpeed;        // +0x00  "Computer Walk Speed"
-    int m_walkSpeed;                // +0x04  "Walk Speed"
+    // Original DC member: int walkSpeed[2]. Index 0 is "Computer Walk
+    // Speed" and 1 is "Walk Speed"; animateMove indexes it with the local
+    // human flag (`[eax*4+0x698758]`).
+    int m_walkSpeed[2];             // +0x00
     int m_musicVolume;              // +0x08  "Music Volume"
     int m_soundVolume;              // +0x0c  "Sound Volume"
     int m_lastMusicVolume;          // +0x10  "Last Music Volume"

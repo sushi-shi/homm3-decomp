@@ -171,6 +171,68 @@ def _widths(accs):
 NEG_ADDEND_WINDOW = 16
 
 
+_COMPILED_WIDTHS: dict = {}
+
+
+def compiled_access_widths(unit, name):
+    """Operand widths of the memory accesses `unit`'s compiled code makes
+    through a DIR32 relocation to `name` (masked), read off the raw object."""
+    if not unit or not name:
+        return set()
+    key = (unit, name)
+    if key in _COMPILED_WIDTHS:
+        return _COMPILED_WIDTHS[key]
+    from capstone import CS_ARCH_X86, CS_MODE_32, Cs
+    from capstone.x86 import X86_OP_MEM
+    from homm3.core import msvc_names
+    from homm3.core.paths import BUILD
+    from homm3.delink.coffx import Obj
+    widths = set()
+    path = BUILD / "objdiff/base" / f"{unit}.obj"
+    if path.is_file():
+        obj, want = Obj(path), msvc_names.mask(name)
+        md = Cs(CS_ARCH_X86, CS_MODE_32)
+        md.detail = True
+        for sec in obj.section_table:
+            if not sec["characteristics"] & 0x20000000:
+                continue
+            sites = {site for site, sym in obj.relocations(sec["index"]).items()
+                     if msvc_names.mask(sym) == want}
+            if not sites:
+                continue
+            for insn in md.disasm(obj.section_payload(sec["index"]), 0):
+                if not any(insn.address <= x < insn.address + insn.size for x in sites):
+                    continue
+                for op in insn.operands:
+                    if op.type == X86_OP_MEM and op.size:
+                        widths.add(op.size)
+    _COMPILED_WIDTHS[key] = widths
+    return widths
+
+
+def index_stride(ac):
+    """The byte stride of an indexed operand: `[r + r*2 + base]` steps by 3."""
+    if ac.base_reg and ac.base_reg == ac.index_reg:
+        return ac.scale + 1
+    return ac.scale
+
+
+def leading_member_array(layout, node, depth=0):
+    """(path, element size) of the array a record's offset 0 lies in, if any."""
+    while node is not None and node.get("k") == "rec" and not node.get("u") \
+            and depth < 8:
+        members = [m for m in node.get("m") or [] if m[0] == 0]
+        if not members:
+            return None
+        node = layout.node(members[0][2])
+        depth += 1
+    if node is not None and node.get("k") == "arr":
+        _count, el = layout.element(node)
+        size = (el or {}).get("sz")
+        return (layout.spelling(node), size) if size else None
+    return None
+
+
 def _explained_by_next_claim(spine, ac, window=NEG_ADDEND_WINDOW):
     """Is an unclaimed-looking access just a claim's negative-addend spelling?
 
@@ -586,14 +648,21 @@ def derive_findings(spine, accesses, cells, owners, trace=None):
         scales = Counter()
         for ac in per[c.rva]:
             if ac.form == "indexed" and ac.scale and ac.target_rva == c.rva:
-                scales[ac.scale] += 1
+                scales[index_stride(ac)] += 1
         if not scales or c.node is None:
             continue
         count, el = layout.element(c.node)
         elem = (el or {}).get("sz") or None
         is_array = c.node.get("k") == "arr"
         spell = layout.spelling(c.node)
+        member = None if is_array else leading_member_array(layout, c.node)
         for sc, n in sorted(scales.items()):
+            if member is not None and member[1] % sc == 0:
+                # `[i*4 + &obj]` walks the record's leading array member
+                # (configStruct::m_walkSpeed, a bitset's words): the
+                # record is not a table.
+                skip("stride-skip-member-array", c.name, 0)
+                continue
             # An index into a claim declared with ONE element is under-COUNTED
             # or falsely split from a larger object, independently of whether
             # the element WIDTH matches. The variable index proves a length >=
@@ -652,6 +721,12 @@ def derive_findings(spine, accesses, cells, owners, trace=None):
         spans[(a.rva, b.rva, ac.width)] += 1
     for (arva, brva, w), n in sorted(spans.items(), key=lambda kv: -kv[1]):
         a, b = spine.by_rva[arva], spine.by_rva[brva]
+        if w in compiled_access_widths(a.unit, a.name):
+            # VC6 itself widens the read (`and ebx, dword ptr [s_div2mask]`
+            # for an unsigned short): the owning unit's compiled code makes
+            # the same access, so it is codegen, not a larger datum.
+            skip("adjacent-skip-compiled-width", a.name, 0)
+            continue
         rows.append(("adjacent", "high", arva, a.name, brva,
                      f"one {w}-byte access at {a.name} runs past its 0x"
                      f"{a.extent:x}-byte extent into {b.name} - one object",
@@ -915,7 +990,7 @@ def injection_plans(spine, accesses):
         if a.fpu:
             fpu[c.rva][(a.target_rva - c.rva, a.fpu)] += 1
         if a.form == "indexed" and a.scale and a.target_rva == c.rva:
-            scale[c.rva][a.scale] += 1
+            scale[c.rva][index_stride(a)] += 1
         if "w" in a.rw:
             wrote[c.rva].add(a.target_rva - c.rva)
 

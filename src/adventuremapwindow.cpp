@@ -494,8 +494,8 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
         g_config.m_combatFirstAidTent = 1;
         g_config.m_combatAutoSpells = 1;
         g_config.m_combatSpeed = 2;
-        g_config.m_computerWalkSpeed = 4;
-        g_config.m_walkSpeed = 4;
+        g_config.m_walkSpeed[0] = 4;
+        g_config.m_walkSpeed[1] = 4;
     }
 
     ::sendChat(chatString.c_str(), toWho);

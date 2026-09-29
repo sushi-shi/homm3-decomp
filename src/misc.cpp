@@ -106,12 +106,12 @@ void checkConfigFile()
     if (g_config.m_windowScrollSpeed < 0 ||
             g_config.m_windowScrollSpeed > 2)
         g_config.m_windowScrollSpeed = 1;
-    if (g_config.m_computerWalkSpeed < 2 ||
-            g_config.m_computerWalkSpeed > 5)
-        g_config.m_computerWalkSpeed = 3;
-    if (g_config.m_walkSpeed <= 0 ||
-            g_config.m_walkSpeed > 4)
-        g_config.m_walkSpeed = 2;
+    if (g_config.m_walkSpeed[0] < 2 ||
+            g_config.m_walkSpeed[0] > 5)
+        g_config.m_walkSpeed[0] = 3;
+    if (g_config.m_walkSpeed[1] <= 0 ||
+            g_config.m_walkSpeed[1] > 4)
+        g_config.m_walkSpeed[1] = 2;
     if (g_config.m_musicVolume < 0 ||
             g_config.m_musicVolume > 9)
         g_config.m_musicVolume = 5;
@@ -149,8 +149,8 @@ static void setDefaultSystemOptions()
     g_config.m_videoSubtitles = 1;
     g_config.m_townOutlines = 1;
     g_config.m_windowScrollSpeed = 1;
-    g_config.m_computerWalkSpeed = 3;
-    g_config.m_walkSpeed = 2;
+    g_config.m_walkSpeed[0] = 3;
+    g_config.m_walkSpeed[1] = 2;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -455,10 +455,10 @@ void readPrefsFromRegistry()
                 &g_config.m_lastSoundVolume)), &cbData);
         RegQueryValueExA(key, g_prefWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_walkSpeed)), &cbData);
+                &g_config.m_walkSpeed[1])), &cbData);
         RegQueryValueExA(key, g_prefComputerWalkSpeed, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
-                &g_config.m_computerWalkSpeed)), &cbData);
+                &g_config.m_walkSpeed[0])), &cbData);
         RegQueryValueExA(key, g_prefShowRoute, 0, &type,
             static_cast<BYTE*>(static_cast<void*>(
                 &g_config.m_showRoute)), &cbData);
@@ -610,10 +610,10 @@ void writePrefsToRegistry()
                 &g_config.m_lastSoundVolume)), 4);
         RegSetValueExA(key, g_prefWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_walkSpeed)), 4);
+                &g_config.m_walkSpeed[1])), 4);
         RegSetValueExA(key, g_prefComputerWalkSpeed, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
-                &g_config.m_computerWalkSpeed)), 4);
+                &g_config.m_walkSpeed[0])), 4);
         RegSetValueExA(key, g_prefShowRoute, 0, REG_DWORD,
             static_cast<const BYTE*>(static_cast<const void*>(
                 &g_config.m_showRoute)), 4);

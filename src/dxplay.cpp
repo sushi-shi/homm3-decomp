@@ -31,8 +31,10 @@ int __stdcall enumGroupsCallback(unsigned long, unsigned long, const DPNAME*, un
 int __stdcall enumPlayersCallback(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
 
 // One-shot COM apartment guard: the CDPlay base constructor CoInitializes the
-// process the first time any DirectPlay object is built.
-static unsigned char g_coInitialized = 0;
+// process the first time any DirectPlay object is built. Retail's inlined copy
+// in the CDPlayLobby constructor tests and sets this byte around CoInitialize
+// (0x4988ca/0x4988d9).
+DATA(0x006969d8) static unsigned char g_coInitialized = 0;
 
 // E:\gamedcs\dxplay.cpp:66 - the CDPlay base ctor has no standalone retail body;
 // it is emitted only inlined into the CDPlayLobby (and CDPlayHeroes) ctors. The

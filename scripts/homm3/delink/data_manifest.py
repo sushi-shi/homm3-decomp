@@ -336,6 +336,7 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
     raw-size edge."""
     common_owner = _common_owner()
     rows, withheld, skipped = [], [], Counter()
+    guard_owner_rva = None
     for b in model.data:
         if b.channel not in _ENROLL_CHANNELS or not b.name:
             if b.channel == "data_vtables":
@@ -359,6 +360,19 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
         end = _classify(b.rva + size - 1)
         oracle = (tail_oracle.get((f"{unit}.c", msvc_names.mask(b.name)))
                   if "data-unprovable-tail" in (start, end) else None)
+        if oracle is None and "data-unprovable-tail" in (start, end) \
+                and "$static_init_guard$" in b.name:
+            # cl names a guard `$S<n>` in its owner static's scope and emits
+            # both into one section: the owner's storage is the guard's.
+            if guard_owner_rva is None:
+                from homm3.core.common import HOMM3_DIR
+                from homm3.verify.byte_accounting import _guard_owners
+                named = {x.rva: x.name for x in model.data if x.name}
+                guard_owner_rva = {g: named.get(rva) for g, (_o, rva)
+                                   in _guard_owners(HOMM3_DIR).items()}
+            owner = guard_owner_rva.get(b.name)
+            if owner:
+                oracle = tail_oracle.get((f"{unit}.c", msvc_names.mask(owner)))
         if oracle in ("data", "bss"):
             # The PE alone cannot split FileAlignment slack from content at
             # the .data raw-size edge - the claiming unit's own base obj can:
@@ -538,11 +552,12 @@ def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
     from the game object at that address.
     """
     comdats = defaultdict(list)
+    comdat_storage = {**ORDINARY_STORAGE, ".bss": "bss"}
     for stem, c in coffx.objects(base_dir):
         for sec in c.section_table:
             if not sec["characteristics"] & LNK_COMDAT \
                     or sec["characteristics"] & MEM_EXECUTE \
-                    or sec["name"] not in ORDINARY_STORAGE:
+                    or sec["name"] not in comdat_storage:
                 continue
             members = c.defined_symbols(sec["index"])
             if len(members) != 1 or members[0][0] != 0 \
@@ -574,15 +589,19 @@ def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
             withheld.append((rva, name, "COMDAT copies disagree on the extent"))
             continue
         size = sizes.pop()
-        at = img.off(rva)
-        if at is None:
-            continue
-        retail_bytes = bytearray(img.data[at:at + size])
         _stem, sec, masked, sites = copies[0]
+        storage = _classify(rva)
+        at = img.off(rva)
+        if at is None and STORAGE.get(storage) == "bss" == comdat_storage[sec["name"]]:
+            # Loader-zeroed storage past .data's raw data: retail holds zeros.
+            retail_bytes = bytearray(size)
+        elif at is None:
+            continue
+        else:
+            retail_bytes = bytearray(img.data[at:at + size])
         for site in sites:
             retail_bytes[site:site + 4] = b"\0\0\0\0"
-        storage = _classify(rva)
-        if bytes(retail_bytes) != masked or STORAGE.get(storage) != ORDINARY_STORAGE[sec["name"]]:
+        if bytes(retail_bytes) != masked or STORAGE.get(storage) != comdat_storage[sec["name"]]:
             withheld.append((rva, name, "retail bytes or storage contradict the COMDAT"))
             continue
         for stem, csec, _m, _r in copies:
