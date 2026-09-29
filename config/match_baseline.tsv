@@ -128,7 +128,7 @@ advmgr	?getUniversity@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.000
 advmgr	?get_mouse_map_point@advManager@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x7b10	tokens1:167d654cf1e5
 advmgr	?handleGiftMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0	tokens1:4d55f6a7b728
 advmgr	?handleGiftRequestMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20	tokens1:20627cdf3ab0
-advmgr	?handleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	96.6207	96.6207	100.0000	0x5e30	tokens1:56a68d564905
+advmgr	?handleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x5e30	tokens1:56a68d564905
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0	tokens1:fed515a5a129
 advmgr	?heroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590	tokens1:04aed3e62f5e
 advmgr	?hideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300	tokens1:7dfe64e07c7b
