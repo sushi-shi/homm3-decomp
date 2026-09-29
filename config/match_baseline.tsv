@@ -856,7 +856,7 @@ campaignbrief	??0CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a990	-
 campaignbrief	??0LossConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0x5bac0	tokens1:ddb69485cbe9
 campaignbrief	??0NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5a7a0	tokens1:6a1c8c81cc28
 campaignbrief	??0SGameSetupOptions@@QAE@XZ	100.0000	100.0000	100.0000	0x5ac20	tokens1:f89004b5f627
-campaignbrief	??0TCampaignBrief@@QAE@_N0@Z	90.3869	90.3869	91.1880	0x590c0	tokens1:d5dbc881aceb
+campaignbrief	??0TCampaignBrief@@QAE@_N0@Z	92.7126	92.7126	92.7126	0x590c0	tokens1:96848343aaed
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@ABV01@@Z	100.0000	100.0000	100.0000	0x5da70	-
 campaignbrief	??0TPlayerSlotAttributes@CMapHeaderData@@QAE@XZ	100.0000	100.0000	100.0000	0x5a950	tokens1:b272eba2a990
 campaignbrief	??1?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@std@@QAE@XZ	100.0000	100.0000	100.0000	0x5b140	-

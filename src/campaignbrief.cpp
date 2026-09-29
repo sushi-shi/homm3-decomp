@@ -194,8 +194,8 @@ void TCampaignBrief::setupCurrentTerritory()
     if (g_campaignBriefViewFromGame) {
         m_selectedScenario = g_game->m_campaign.m_currentMap;
     } else {
-        for (unsigned int selectedIndex = 0;
-             selectedIndex < static_cast<int>(m_scenarios.size());
+        for (int selectedIndex = 0;
+             selectedIndex < m_campaign->getScenarioCount();
              ++selectedIndex) {
             if (m_scenarios[selectedIndex].m_available) {
                 m_selectedScenario = selectedIndex;
@@ -483,10 +483,13 @@ void TCampaignBrief::updateDifficultyButtons()
 // Older insert(end(), value) experiments changed VC6's inline depth, but
 // did not establish original source spelling. Keep ordinary push_back
 // appends, as in the DC widget-construction sequence.
-// LOOP-COUNTER SIGNEDNESS (docs/vc6/behavior-catalog.md D23): four of this
-// body's nine zero-initialised `for` counters are `unsigned int`, not `int`.
-// They only pay TOGETHER - 89.0593 / 90.0586 / 90.1377 / 90.9771 / 91.1880 as
-// they accumulate - and the fifth through ninth all fall back.
+// Loop-counter signedness follows each retail compare: the preview append,
+// territory scan, flag and button loops test with jge/jl, and only the
+// availability copy against m_scenarios.size() is unsigned. Mac's expanded
+// setupCurrentTerritory bounds its scan by the campaign's signed scenario
+// count, as clearSelected does. Retail copies the availability byte without
+// a bool normalization and sign-extends the region colour. Together these
+// raise the constructor from 90.39% to 92.71%.
 // Current residual (85.29%): setupCurrentTerritory expands, but nested STL
 // construction, string assignment and widget-insert boundaries still differ.
 // Keep the ordinary helper and its source calls while resolving those sites.
@@ -549,7 +552,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         CampaignScenarioPreview preview;
         static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
         preview.m_gameSetup = g_game->m_setup;
-        for (unsigned int i = 0;
+        for (int i = 0;
              i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
             m_scenarios.push_back(preview);
         }
@@ -597,7 +600,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                                 region.m_offsetX, region.m_offsetY, 20, 20,
                                 MAP_CONQUERED_1_ID + regionIndex,
                                 region.m_conqueredImageName[color], 0x800));
-                m_scenarios[regionIndex].m_available = false;
+                m_scenarios[regionIndex].m_available = 0;
             }
             if (m_scenarios[regionIndex].m_available) {
                 widgets.push_back(new bitmapBorder(
@@ -610,7 +613,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                                 region.m_selectedImageName[color], 0x800));
             }
         } else {
-            m_scenarios[regionIndex].m_available = false;
+            m_scenarios[regionIndex].m_available = 0;
         }
     }
 
@@ -702,7 +705,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
                     DATA_COMPGEN(0x0065f2f8, campaignBriefSmallFont, "smalfont.fnt"),
                     font::WHITE, 100, 6, 0, 8));
 
-    for (unsigned int flagIndex = 0; flagIndex < 8; ++flagIndex) {
+    for (int flagIndex = 0; flagIndex < 8; ++flagIndex) {
         w = new iconWidget(
             526 + flagIndex * 15, 406, 15, 20,
             ALLY_FLAG1_ID + flagIndex,
@@ -740,7 +743,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     m_campaign->startMusic();
 
     if (viewFromGame) {
-        for (unsigned int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
+        for (int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
             w = getWidget(232 + buttonIndex);
             if (w) {
                 w->sendMessage(
