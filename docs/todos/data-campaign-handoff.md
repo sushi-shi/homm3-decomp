@@ -25,6 +25,11 @@ Checkpoint in the primary checkout:
   retains their previous peaks. Exact README MAX remains 4,386.
 - All seven recovered startup initializers occur once in the linked CRT table;
   game-context binding precedes its network consumer.
+- The isolated Wine smoke reaches the main menu and loads Arrogance, including
+  its adventure map, minimap and opening event dialog.
+- Terrain-rule constructor/cleanup identities add 20 exact ledger matches
+  (4,414/4,813 total). These are excluded startup bodies, so README MAX is
+  still 4,386; they do not satisfy the function-count landing condition.
 - Local-static alignment lookup now uses the unique, per-unit emitted VC6 name
   bridge. Its regression test includes foreign-unit and ambiguous-name controls.
 - Tooling tests: 30 data/header tests and 27 build/link tests pass.
