@@ -6369,3 +6369,6 @@ VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
 // and in mapcell. All 37 bytes agree, including the three-word fill and
 // six-bit high-word mask; there are no relocations or added source calls.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
+// bitset<70>::reference::operator= - called by markArtifactSpells here
+// and by game::loadMap; game expands its uses, this unit emits the body.
+VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)

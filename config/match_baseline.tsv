@@ -1201,6 +1201,7 @@ customcampaign	??1TCampaignStartHeroOption@@UAE@XZ	100.0000	100.0000	100.0000	0x
 customcampaign	??1TCampaignStartOption@@UAE@XZ	100.0000	100.0000	100.0000	0x84f40	tokens1:369791d7f57c
 customcampaign	??1TStreamBufFile@@UAE@XZ	100.0000	100.0000	100.0000	0x87e00	1c728b11ec68
 customcampaign	??4?$vector@Vhero@@V?$allocator@Vhero@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x5ff30	-
+customcampaign	??4reference@?$bitset@$0IB@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x8ead0	-
 customcampaign	??RCrossoverHeroStronger@@QBE_NAAVhero@@0@Z	100.0000	100.0000	100.0000	0x83f80	tokens1:6a48c7d588fd
 customcampaign	??_G?$basic_filebuf@DU?$char_traits@D@std@@@std@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x8bd20	-
 customcampaign	??_G?$codecvt@DDH@std@@UAEPAXI@Z	99.6429	99.6429	100.0000	0x8ec30	-
@@ -2135,9 +2136,7 @@ game	?validateVictoryLossConditions@game@@QAEXE@Z	94.8833	94.8833	94.8833	0xbf78
 game	?viewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	100.0000	100.0000	100.0000	0xc6c50	tokens1:ad7644e5de3f
 game	?waitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840	tokens1:2f41bc5ced6d
 game	__h3cg$game$bitset_ctor$Bitset28	0.0000	0.0000	100.0000	0xcf870	-
-game	__h3cg$game$bitset_reference_assign$Bitset129	0.0000	0.0000	100.0000	0x8ead0	-
 game	__h3cg$game$bitset_reference_assign$Bitset28	0.0000	0.0000	100.0000	0xcf8f0	-
-game	__h3cg$game$bitset_reference_assign$Bitset70	0.0000	0.0000	100.0000	0xcefa0	-
 game	__h3cg$game$bitset_set$Bitset128	0.0000	0.0000	100.0000	0xd4de0	-
 game	__h3cg$game$tree_min$type_map_hero_info	0.0000	0.0000	100.0000	0xd2050	-
 gamecontext	?set@?$bitset@$03@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xecde0	-
@@ -2181,6 +2180,7 @@ hero	??0THeroScreenWindow@@QAE@XZ	99.9976	99.9976	100.0000	0xde710	tokens1:944c3
 hero	??0hero@@QAE@XZ	100.0000	100.0000	100.0000	0xd85f0	tokens1:934b68c425fb
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470	tokens1:b734f6aaa77f
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550	tokens1:a66706cb6c89
+hero	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0	-
 hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520	-
 hero	?_Tidy@?$bitset@$0EG@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcfa10	-
 hero	?_Ufill@?$vector@HV?$allocator@H@std@@@std@@IAEXPAHIABH@Z	100.0000	100.0000	100.0000	0x8d940	-
@@ -2279,7 +2279,7 @@ hero	?isMobile@hero@@QBEEXZ	100.0000	100.0000	100.0000	0xe5f30	tokens1:aac7d4659
 hero	?isWieldingArtifact@hero@@QBEEH@Z	100.0000	100.0000	100.0000	0xd91f0	tokens1:e365675044f1
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	94.9221	94.9221	94.9316	0xd7a20	tokens1:e56381388c80
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0	tokens1:099207a76ebe
-hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	97.4346	97.4346	97.5612	0xd9350	tokens1:748340d1cb90
+hero	?markArtifactSpells@@YI?AV?$bitset@$0EG@@std@@H@Z	97.5401	97.5401	97.5612	0xd9350	tokens1:748340d1cb90
 hero	?modifySpellDamage@hero@@QBEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760	tokens1:7fa269e7c30b
 hero	?obscureCell@type_obscuring_object@@IAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0	tokens1:5dbb8ede82c2
 hero	?placeInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900	tokens1:5b534aa49fff

@@ -3508,6 +3508,10 @@ VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
 
+// bitset<129>::reference::operator= - called by ScenarioStruct::read here
+// and by game::loadMap; game emits no out-of-line copy.
+VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
+
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
 
 VA_COMPGEN(0x0054ded0, 0x63, BITSET_SET, Bitset129)

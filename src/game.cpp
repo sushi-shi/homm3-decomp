@@ -10123,7 +10123,6 @@ VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg) MAC_COMPGEN_ADDRES
 VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
 
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
-VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
 // The shared bitset<4>::test at 0x4cf960 expands here and remains
 // emitted in singleselectionwindow, alongside its retained _Xran body.
@@ -10370,7 +10369,6 @@ VA_COMPGEN(0x0045f5e0, 0x1CD, VECTOR_COPY_ASSIGN, hero_vector)
 
 VA_COMPGEN(0x0048e9f0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset144)
 VA_COMPGEN(0x0048ea60, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset145)
-VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
 
 // COMDAT pairing: vector<vector<hero>>::~vector - reached from
 // TCampaignWindow's constructor, ~SavedGameHeader and three
