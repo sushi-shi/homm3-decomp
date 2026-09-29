@@ -2809,23 +2809,30 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     }
 }
 
+// DC scopes both artifact reads and the clamp as blocks and gives the market
+// value its own row (2240) before the division. That form costs 166 against
+// 157 for the unbraced single expression, with the same bytes; the sell
+// window handler then refuses its first setupNewTrade expansion (budget 165)
+// and keeps retail's one computeTradeRatios call (83.13 -> 93.60).
 VA(0x005ecdc0, 0xbb) MAC_ADDRESS(0x1f845c, 0x118)  // dc 0x18afd4
 void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
     if (inLeftResource < 18) {
         artifact = g_marketHero->getArtifact(TArtifactSlot(inLeftResource));
-    }
-    else
+    } else {
         artifact = g_marketHero->getBackpack(inLeftResource - 18);
+    }
 
     float leftValue =
         static_cast<float>(g_artifactTraits[artifact.m_artifactId].m_cost)
         * g_artifactPurchaseEfficency[g_marketCount];
-    float result =
-        leftValue / static_cast<float>(getMarketValue(EGameResource(inRightResource)));
-    if (result < 1.0f)
+    float marketValue =
+        static_cast<float>(getMarketValue(EGameResource(inRightResource)));
+    float result = leftValue / marketValue;
+    if (result < 1.0f) {
         result = 1.0f;
+    }
 
     *inLeftDenominated = 1;
     *inTradeRatio = static_cast<long>(result + 0.5);

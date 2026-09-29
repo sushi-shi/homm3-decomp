@@ -2247,8 +2247,12 @@ static int handleGetTeleportDestination(message& msg)
 // DC 2614..2618 has Sacrifice's explicit two arms, then Resurrection
 // (2621), Animate Dead (2625), and the default GetArmy (2629). Preserve
 // both GetArmy source calls rather than merging them into a shared tail.
-// This and a named-result/final-return interpretation both retain 100%
-// for the standalone body; neither alone prevents its caller expansion.
+// DC holds every arm's result in one register until the shared exit and
+// scopes the Sacrifice branches as blocks: a named result with a final
+// return and braced Sacrifice arms. That form costs about 177 (direct
+// returns 160, named result alone 173), above the /Ob2 save cliff, so
+// C1XX no longer saves the body and retail's retained calls reappear in
+// validSpellTarget (73.49 -> 96.60), initiateSpell and castSpell.
 VA(0x005a3950, 0x68) MAC_ADDRESS(0x194120, 0xd8)  // dc 0x152dec
 army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
                                        unsigned char firstTarget,
@@ -2256,19 +2260,26 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 {
     if (!validHex(hex))
         return 0;
+    army* target;
     switch (spell) {
     case SPELL_SACRIFICE:
-        if (firstTarget)
-            return findResurrectionTarget(side, hex, creatureSpell);
-        else
-            return m_cells[hex].getArmy();
+        if (firstTarget) {
+            target = findResurrectionTarget(side, hex, creatureSpell);
+        } else {
+            target = m_cells[hex].getArmy();
+        }
+        break;
     case SPELL_RESURRECTION:
-        return findResurrectionTarget(side, hex, creatureSpell);
+        target = findResurrectionTarget(side, hex, creatureSpell);
+        break;
     case SPELL_ANIMATE_DEAD:
-        return findAnimateDeadTarget(side, hex);
+        target = findAnimateDeadTarget(side, hex);
+        break;
     default:
-        return m_cells[hex].getArmy();
+        target = m_cells[hex].getArmy();
+        break;
     }
+    return target;
 }
 
 // E:\gamedcs\spells.cpp:2645
@@ -2277,18 +2288,15 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // InInvisibleColumn, HasArmy, GridY and RowIsOdd calls, plus the advanced
 // arm's const unsigned attributes and const unsigned char base_row_is_odd.
 // Restoring these boundaries and removing the finder pin gives 72.67%
-// (old pinned source 88.4937%). The finder remains 100% standalone but
-// expands here; this is unfinished inline selection, not a solved match.
+// (old pinned source 88.4937%). The finder expanded here until its DC
+// named-result form took it past the save cliff (see findSpellTarget).
 // Compound wall guards follow the single DC rows 2712/2745. The mastery
 // switch's successful early returns and advanced-local scope follow
 // 2675..2690; retaining the old inverted exits gives 71.04%.
 // Passive C2 trace reproduces the object: caller cb=575, initial budget
 // 1150; findSpellTarget costs 160 and reaches its first-level test with
-// all 1150 units available. This is not a marginal budget refusal.
-// Eight natural guard/wall-length/shape-selection forms produce four
-// reproduced objects; the conditional shape initializer reaches 72.7004%,
-// but none restores the retained finder call. Keep the helper boundaries
-// while investigating the remaining TU/compiler-state difference.
+// all 1150 units available. This was not a budget refusal but the
+// finder's saved body; the save-cliff form above retains the call.
 // "Could this spell be aimed at this cell", and the body is three
 // independent rules stacked on one shared pair of exits.
 
