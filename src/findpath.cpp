@@ -567,10 +567,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             candidate.m_canStop = 0;
         }
 
-        if (!(getMapExtra(candidate.m_point) & g_mapVisibilityBit)
+        if (!(getMapExtra(candidate.m_point) & g_curPlayerBit)
                 && searchType != const_AI_enemy_search
                 && (g_currentPlayer->isHuman()
-                    || (!(getMapExtra(source->m_point) & g_mapVisibilityBit)
+                    || (!(getMapExtra(source->m_point) & g_curPlayerBit)
                         && g_currentPlayer->m_numTowns > 0))) {
             blocked = 1;
             candidate.m_canStop = 0;
@@ -1006,7 +1006,8 @@ void searchArray::setMoat(const army* currentArmy)
         m_isMoatSlowed[currentArmy->getSecondGridIndex()] = 0;
 }
 
-// E:\gamedcs\findpath.cpp:1136, dc 0xa0970
+// E:\gamedcs\findpath.cpp:1136, dc 0xa0970. DC 1143/1165 test the result
+// vector's own size, and retail's expansion compares it unsigned (seta).
 MAC_ADDRESS(0x0c6bd8, 0x170)
 bool searchArray::buildCombatPath(const army* currentArmy,
                                  int startHex, int endHex, int destination)
@@ -1016,7 +1017,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
     if (currentArmy->m_side == -1) {
         if (endHex != destination)
             return 0;
-    } else if (getPathSteps() == 0) {
+    } else if (m_result.size() == 0) {
         return 0;
     }
 
@@ -1026,7 +1027,7 @@ bool searchArray::buildCombatPath(const army* currentArmy,
         endHex = currentArmy->getAdjacentCellIndex(
             endHex, oppositeDirection(stepCell->m_direction));
     }
-    return getPathSteps() > 0;
+    return m_result.size() > 0;
 }
 
 // E:\gamedcs\findpath.cpp:1172
@@ -1265,8 +1266,9 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             m_result.push_back(reached);
         }
 
-        if (getPathSteps() > 0) {
-            bestHex = getStepCell(0)->m_lastPoint.m_x;
+        // DC 1358/1360 read the result vector directly here as well.
+        if (m_result.size() > 0) {
+            bestHex = m_result[0]->m_lastPoint.m_x;
             break;
         }
     }

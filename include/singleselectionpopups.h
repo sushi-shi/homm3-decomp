@@ -18,14 +18,16 @@ enum TTownType;
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
-// independently fixes the four overrides below.
+// independently fixes the four overrides below. Its destructor is implicit:
+// the deleting destructor 0x5757b0 calls the shared `jmp ~widget` body at
+// 0x575a60 without a vptr store, as for CBitmapWidget and CHotspotWidget
+// (DC gives all three the same 24-byte compiler-generated body).
 class CSpriteWidget : public widget {
 public:
     CSprite* m_sprite;
     int m_frame;
 
     CSpriteWidget(int xPos, int yPos, CSprite* sprite, int spriteFrame);
-    virtual ~CSpriteWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575a10
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const; // slot 3
     virtual void draw() const;             // slot 4, retail 0x575750
@@ -109,7 +111,6 @@ public:
 class CHotspotWidget : public widget {
 public:
     CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
-    virtual ~CHotspotWidget();
     virtual int main(message& msg);  // slot 2, retail 0x575290
     // Original: CHotspotWidget::zBufferDraw; singleselectionpopups.h:120, dc 0x12f010.
     virtual void zBufferDraw(unsigned short* zBuffer, int id) const {}

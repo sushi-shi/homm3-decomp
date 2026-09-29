@@ -175,7 +175,7 @@ extern const char* g_resourceNames[8];
 // tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
-extern const int g_mineCharacteristics[7];
+extern int g_mineCharacteristics[7];
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
@@ -184,7 +184,7 @@ extern const int g_mineCharacteristics[7];
 // 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
 // unrelated float data.
 extern const char* g_mineEventText[];
-extern const signed char g_routeArrowFrames[8][8];
+extern signed char g_routeArrowFrames[8][8];
 
 // advManager::advCommand's domain. The Dreamcast prints the member as a
 // plain T_INT4 (classes.csv list[171], offset 84) and no surviving symbol

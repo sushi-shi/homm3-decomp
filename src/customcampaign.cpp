@@ -131,7 +131,7 @@ DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusi
 // current variable-length CampaignScenarioInfo vector.
 // Pinned Windows 0x63d8c8 and Mac code 0x2a4698 contain the same
 // seven four-entry rows; these are initialized ordinals, not BSS.
-DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4] = {
+DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 1, 0, 0},
@@ -1923,6 +1923,23 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // Byte versus promoted result locals for color, difficulty and retention flags,
 // coupled with the size result lifetime: 36 states / 24 objects reproduce no
 // improvement over 84.5181%. Preserve the actual serialized widths and helpers.
+// Budget lead (2026-09-29 trace): retail calls vector<unsigned char>::insert
+// (the h3cg vector_insert_single COMDAT, 0% until emitted) from push_back and
+// keeps the TCampaignStartHeroOption constructor and both option vector
+// constructors out of line. This body's cb 807 gives budget 1614: push_back's
+// child 1614/23 = 70 admits insert (62), and the hero-option site still has
+// 291. All three retail decisions fit a caller cb of at most about 615, so
+// this reader's IL is heavier than retail's by roughly 190 units; no
+// source-backed trim has been found yet.
+// Budget replay (2026-09-29) over the traced tree: with readPackedBits
+// delegating to decodePackedBits (cost 81), no caller cb reproduces retail's
+// set. Retail expands bitset::operator[] inside each decode loop, which needs
+// a decode child budget of 41..83 and so a depth-1 budget near 1400 at the
+// first plane, yet the hero-option constructor stays called, which needs
+// under 235 at the option switch. A free (<= 40) decode body or a loop kept
+// in readPackedBits reproduces every other decision near cb 650..710; the
+// copy loop's legacy dereference still differs. DC and Mac show no extra
+// accessor calls in this Complete-only reader.
 VA(0x00487e40, 0x586) MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
@@ -2043,9 +2060,8 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
-// Complete's constructor lives before its callers in this TU. VC6 expands it
-// in selectCampaign; other TUs retain source calls. The destructor has its
-// Windows retail body in campaignbrief.cpp.
+// Complete's constructor and destructor live before their callers in this
+// TU. VC6 expands them in selectCampaign; other TUs retain source calls.
 VA(0x004885d0, 0xCB) MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
@@ -2054,6 +2070,17 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_data = 0;
     m_stream = 0;
     m_fileError = CAMPAIGN_FILE_OK;
+}
+
+// Retail 0x4886a0 sits between the constructor above and freeData in this
+// TU's .text contribution, and every campaignbrief caller (TCampaignBrief's
+// constructor 0x459362 and destructor 0x45b05b) retains the call. With the
+// body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
+// (62.61%); owning it here restores that destructor and selectCampaign.
+VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    clearScenarios();
 }
 
 // Complete-only; also reached from the custom-campaign list scanner
@@ -2196,6 +2223,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         TAbstractFile* file = &streamFile;
         // Mac 0x96fa4 decodes the version with lwbrx, then reads an
         // unsigned region byte and separate signed difficulty/music bytes.
+        // Probe (2026-09-29): the older Windows spelling (one int buffer for
+        // version and masked region, one char buffer for difficulty/music)
+        // under a platform fork measured 82.28% against 83.40%; VC6 still
+        // expands CMapHeaderData's constructor inside mapHeader's, which
+        // retail calls (retail FuncInfo has 19 states; the two extra
+        // vector/player-array states here are that ctor's members).
         int version = readLittleEndianValue<int>(file);
         m_campaignVersion = version;
         if (m_campaignVersion < 4) {
@@ -2232,6 +2265,14 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     }
     return true;
 }
+
+// clearScenarios' delete loop naturally retains ScenarioStruct's
+// compiler-generated deleting wrapper. Retail CampaignHeaderStruct::load,
+// the destructor above and selectCampaign call this shared 0x488eb0 copy,
+// which lies in this TU's contribution: campaignbrief no longer expands the
+// destructor, so it emits no copy. All 33 bytes agree: the ordinary
+// destructor stays at 0x485fe0, then flags&1 gates operator delete.
+VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
 
 VA(0x00488ee0, 0x1D) MAC_ADDRESS(0x097548, 0x44)
 void TCampaignBrief::CampaignHeaderStruct::startMusic()
@@ -2373,7 +2414,7 @@ void TCampaignBrief::MapTextStruct::play()
     }
 
     long videoEnd;
-    if (!g_smackVideo2) {
+    if (!SmackManager::g_playingSmack.m_smack2) {
         videoDone = 1;
         videoEnd = GameTime::get();
     }
@@ -2461,7 +2502,7 @@ void TCampaignBrief::MapTextStruct::play()
 
             if (g_config.m_videoSubtitles)
                 redraw = 1;
-            if (!videoDone && !g_smackVideo) {
+            if (!videoDone && !SmackManager::g_playingSmack.m_smack) {
                 videoDone = 1;
                 videoEnd = GameTime::get();
             }
@@ -3466,11 +3507,27 @@ VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
 // hero::operator= called and both pointers stepping by 0x492. The const and
 // non-const source overloads compile to the same bytes and /OPT:ICF folded
 // them, so one claim names the row and the other spelling is its alias.
+// out_of_range's string constructor, not the CatchableType copy constructor
+// at 0x404700. Its retail callers are giveCrossoverArtifacts here, mapcell's
+// readTownData and four RMG sites; it sits in this unit's COMDAT band.
+VA_COMPGEN(0x00487bd0, 0x160, CLASS_NONCOPY_CTOR, out_of_range)
+
 VA_COMPGEN(0x0048dc80, 0x3B, STD_COPY, hero)
+
+// std::copy over vector<hero> values: retail's only callers of the 710-byte
+// body at 0x48e220 are SCampaign::selectCampaign (0x489655) and
+// SCampaign::operator= (0x4bddc1). The carcass label formerly in
+// singleselectionwindow joined this row to copy<const HeroId*>, whose
+// 48-byte body belongs with the folded int copies instead.
+VA_COMPGEN(0x0048e220, 0x2C6, STD_COPY, hero_vector)
 
 VA_COMPGEN(0x0048ece0, 0x37, BITSET_TEST, Bitset129)
 
 VA_COMPGEN(0x0048ed20, 0x25, BITSET_TIDY, Bitset129)
+
+// bitset<129>::reference::operator= - called by ScenarioStruct::read here
+// and by game::loadMap; game emits no out-of-line copy.
+VA_COMPGEN(0x0048ead0, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset129)
 
 VA_COMPGEN(0x0054c6f0, 0x39, VECTOR_ERASE, type_artifact)
 

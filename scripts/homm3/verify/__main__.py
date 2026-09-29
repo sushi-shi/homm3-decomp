@@ -9,6 +9,9 @@ COMMANDS = {
     'data-coverage': 'data_coverage',
     'data-tu-order': 'data_tu_order',
     'library-data-refs': 'library_data_refs',
+    'library-code': 'library_code',
+    'data-worklist': 'game_bytes',
+    'padding': 'padding',
 }
 
 

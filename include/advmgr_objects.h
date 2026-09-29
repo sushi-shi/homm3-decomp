@@ -133,7 +133,7 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-extern TCreatureType g_creatureGenerator1Types[];
+extern const TCreatureType g_creatureGenerator1Types[];
 extern TCreatureType g_creatureGenerator4Types[][4];
 
 class CObjectType;

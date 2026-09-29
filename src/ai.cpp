@@ -486,8 +486,9 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
         }
     }
 
+    // Retail +0xee multiplies by the double 3.0 at 0x63ac28, not 1.2.
     if (static_cast<double>(count) / estimate.m_friendlyCombatValue
-            <= static_cast<double>(bestValue) * 1.2 / estimate.m_enemyCombatValue)
+            <= static_cast<double>(bestValue) * 3.0 / estimate.m_enemyCombatValue)
         return 0;
 
     long weakest = 100;
@@ -675,9 +676,10 @@ long combatManager::getAttackChange(const army* currentArmy, const army* enemy, 
     return committed + bestOther;
 }
 
-// The remaining placement-boundary call loads the owner into EDX rather
-// than retail's EAX. Three named owner types lower the score; a named
-// conditional placement result is byte-flat. Keep the canonical accessor.
+// DC 0x24b64 calls get_spell_time but reads the side without a call. The
+// owner loads EAX at the placement boundary only through the stored
+// m_combatSide; the inline getOwningSide accessor left EDX (99.96%).
+// Mac is byte-flat between the two forms (40.95%).
 VA(0x0041f580, 0x304) MAC_ADDRESS(0x0210f0, 0x3cc)  // dc 0x24b64
 unsigned char combatManager::moveToward(const army* currentArmy, long targetHex, const long* enemyAttacks, unsigned char considerWaiting)
 {
@@ -702,7 +704,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                 moveLeft = pathIndex + 1;
             if (m_creaturePlacement || isInSecondPhase())
                 considerWaiting = 0;
-            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->getOwningSide()])
+            if (g_game->m_setup.m_difficulty < 2 && !m_sideIsAi[currentArmy->m_combatSide])
                 considerWaiting = 0;
             if (enemyAttacks == 0) {
                 considerWaiting = 0;
@@ -736,7 +738,7 @@ unsigned char combatManager::moveToward(const army* currentArmy, long targetHex,
                                     && enemyAttacks[secondHex] >= bestDanger)) {
                             if (!m_creaturePlacement
                                     || !isOutsidePlacementBoundry(
-                                            currentArmy->getOwningSide(), hex)) {
+                                            currentArmy->m_combatSide, hex)) {
                                 m_nextActionGridIndex = hex;
                                 committed = 1;
                                 if (enemyAttacks != 0) {

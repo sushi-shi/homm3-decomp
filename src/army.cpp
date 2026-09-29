@@ -38,8 +38,8 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00660878) const long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
-DATA(0x00660898) const long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
+DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
+DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00660868) int g_walkingFrom = -1;
@@ -1220,6 +1220,9 @@ void army::animateMissile(army* armyToAttack)
             // SLimitData::Include and Clip; VC6 expands both methods.
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
+            // DC army.cpp:1335/1336 scrolls and calls UpdateCombatArea with
+            // this local by value; that form moves retail's register
+            // allocation (99.98 -> 95.14), so the Windows update stays direct.
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -1228,7 +1231,7 @@ void army::animateMissile(army* armyToAttack)
         }
     }
     saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
-    g_windowManager->updateScreen(x, y, width, height);
+    g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
 }
 
 // E:\gamedcs\army.cpp:1356
@@ -1283,7 +1286,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            spr->dispose();
+            ResourceManager::dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -1347,7 +1350,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            spr->dispose();
+            ResourceManager::dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -4094,13 +4097,13 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                         g_windowManager->m_screenBitmap,
                         targetX - explosion->getWidth() / 2,
                         targetY - explosion->getHeight() / 2, 0, 1);
-        g_windowManager->updateScreen(
-            g_combatManager->m_drawbridgeBounds.m_minX,
-            g_combatManager->m_drawbridgeBounds.m_minY,
-            g_combatManager->m_drawbridgeBounds.width(),
-            g_combatManager->m_drawbridgeBounds.height());
+        // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
+        if (!g_combatManager->scrollTo(g_combatManager->m_drawbridgeBounds,
+                                       true, true, true))
+            g_combatManager->updateCombatArea(
+                g_combatManager->m_drawbridgeBounds);
     }
-    explosion->dispose();
+    ResourceManager::dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
     g_soundManager->waitSample(shootMemSample, -1);
     g_soundManager->waitSample(wallMemSample, -1);
@@ -4632,6 +4635,11 @@ void army::faerieDragonSpell()
     }
 }
 
+// Mac retains a byte result for each target-dependent spell case: initialize
+// it from target presence, then assign the retained helper result directly.
+// The shared result reproduces the complete 824-byte Mac body. Windows still
+// retains six validSpellTargetArmy calls where retail merges them to one;
+// recover that shared tail while preserving the helpers and byte result.
 VA(0x004476c0, 0x3BA) MAC_ADDRESS(0x053bc8, 0x338)  // dc 0x4beec
 unsigned char army::canCastSpell(long hex) const
 {
@@ -4642,6 +4650,7 @@ unsigned char army::canCastSpell(long hex) const
     if (!combatManager::validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
+    unsigned char canCast;
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
     case ARMY_CREATURE_PIT_LORD:
@@ -4649,35 +4658,43 @@ unsigned char army::canCastSpell(long hex) const
     case CREATURE_MASTER_GENIE:
         return target && getValidCaliphSpells(target) > 0;
     case CREATURE_FAERIE_DRAGON:
-        return target
-               && g_combatManager->validSpellTargetArmy(m_faerieDragonSpell,
-                                                  getControllingSide(),
-                                                  target, 1, 1);
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
+                m_faerieDragonSpell, getControllingSide(), target, 1, 1);
+        return canCast;
     case CREATURE_STORM_ELEMENTAL:
-        return target
-               && g_combatManager->validSpellTargetArmy(SPELL_PROTECTION_FROM_AIR,
-                                                  getControllingSide(),
-                                                  target, 1, 1);
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, 1, 1);
+        return canCast;
     case CREATURE_ICE_ELEMENTAL:
-        return target
-               && g_combatManager->validSpellTargetArmy(
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_WATER, getControllingSide(), target,
                 1, 1);
+        return canCast;
     case CREATURE_ENERGY_ELEMENTAL:
-        return target
-               && g_combatManager->validSpellTargetArmy(SPELL_PROTECTION_FROM_FIRE,
-                                                  getControllingSide(),
-                                                  target, 1, 1);
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, 1, 1);
+        return canCast;
     case CREATURE_MAGMA_ELEMENTAL:
-        return target
-               && g_combatManager->validSpellTargetArmy(
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target,
                 1, 1);
+        return canCast;
     case CREATURE_OGRE_MAGE:
-        return target
-               && g_combatManager->validSpellTargetArmy(SPELL_BLOODLUST,
-                                                  getControllingSide(),
-                                                  target, 1, 1);
+        canCast = target != 0;
+        if (canCast)
+            canCast = g_combatManager->validSpellTargetArmy(
+                SPELL_BLOODLUST, getControllingSide(), target, 1, 1);
+        return canCast;
     }
     return 0;
 }
@@ -5130,6 +5147,11 @@ int army::getSpeed() const
     }
     return speed;
 }
+
+// The nine-byte default constructor at 0x448d20 is army.obj's retained
+// TResourceHandle<sample> COMDAT (ICF-folded with identical four-byte
+// null constructors); vector iterators elsewhere pass its address.
+VA_COMPGEN(0x00448d20, 0x9, CLASS_CTOR, TResourceHandle)
 
 VA_COMPGEN(0x004490b0, 0x73, DEQUE_FREEFRONT, int)
 VA_COMPGEN(0x00449130, 0x8E, DEQUE_FREEBACK, int)

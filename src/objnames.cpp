@@ -94,6 +94,11 @@ VA(0x0041b500, 0x28B) MAC_ADDRESS(0x21d350, 0x6dc)
 void initializeAdventureObjectNames()
 {
     // Mac 0:0x21d918/0x21d95c retains array-owner assignment/cleanup.
+    // Retail guards the static with bit 0 of 0x691690 and registers its
+    // 22-byte destructor at 0x41b790 with _atexit.
+    DATA_COMPGEN_GUARD(0x00691690, nameBufferGuard, nameBuffer)
+    VA_COMPGEN(0x0041b790, 0x16, STATIC_DTOR, nameBuffer)
+    DATA(0x00691688)
     static TAutoArrayPtr<char> nameBuffer;
 
     int i;

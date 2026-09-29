@@ -57,6 +57,11 @@
 // Initial contents recovered from the pinned Complete image.
 DATA(0x0063cf7c) const float g_combatSpeedFactors[3] = { 1.0f, 0.6299999952316284f, 0.4000000059604645f };
 DATA(0x0063bd00) const unsigned char g_castleWallColumns[11] = { 12, 29, 45, 62, 78, 96, 112, 130, 147, 165, 182 };
+// Retail follows the wall-column table with the eleven column-1 hexes (one
+// per grid row, stride 17) at 0x63bd0c. No retail instruction or datum
+// references it (external linkage keeps it emitted, as in retail); the name
+// is descriptive, not recovered.
+DATA(0x0063bd0c) extern const unsigned char g_firstColumnHexes[11] = { 1, 18, 35, 52, 69, 86, 103, 120, 137, 154, 171 };
 DATA(0x0063d368) const int g_boatBlockedHexes[32] = { 6, 7, 8, 9, 24, 25, 26, 58, 59, 60, 75, 76, 77, 92, 93, 94, 109, 110, 111, 126, 127, 128, 159, 160, 161, 162, 163, 176, 177, 178, 179, 180 };
 DATA(0x0063d0a8) const int g_combatDeployHexes[2][7] = {
     { 1, 35, 69, 86, 103, 137, 171 },
@@ -342,16 +347,190 @@ DATA(0x0063bec0) const combatManager::SElevationOverlay combatManager::s_elevati
     { 0, 256, 277, 218, { 60, 61, 75, 76, 77, 91, 92, 93, 94, 95, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObRLL00.pcx" },
     { 0, 512, 300, 214, { 59, 60, 74, 75, 76, 93, 94, 95, 111, 112, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, "ObMCL00.pcx" }
 };
-DATA(0x0066d84c) combatManager::TWallTraits combatManager::s_wallTraits[9][18] = {
-    { { -1, 0, -552, 102, { "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0, 0 }, 0, 400, 276 }, { -1, 0, 0, 0, { "SgCsDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, -616, 102, { 0, 0, 0, 0, 0 }, 0, 403, 80 }, { -1, 0, -632, 102, { 0, 0, 0, 0, 0 }, 0, 600, 49 }, { -1, 0, -648, 102, { 0, 0, 0, 0, 0 }, 0, 569, 35 }, { 255, 0, -664, 102, { "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", 0 }, 0, 524, 32 }, { 45, 0, 0, 0, { "SgCsWa62.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", 0 }, 0, 489, 79 }, { 62, 0, -724, 102, { 0, 0, 0, 0, 0 }, 0, 470, 127 }, { 78, 0, 0, 0, { "SgCsWa42.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", 0 }, 0, 477, 238 }, { 112, 0, -772, 102, { "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", 0 }, 0, 469, 291 }, { 130, 0, 0, 0, { "SgCsWa32.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", 0 }, 0, 512, 347 }, { 165, 0, -816, 102, { 0, 0, 0, 0, 0 }, 0, 528, 350 }, { 182, 0, 0, 0, { "SgCsWa12.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", 0 }, 0, 602, 500 }, { 251, 0, -864, 102, { "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", 0 }, 0, 720, 158 }, { 135, 0, -896, 102, { "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", 0 }, 0, 720, 158 }, { 135, 0, 0, 0, { "SgCsManC.pcx", 0, 0, 0, 0 }, 0, 602, 500 }, { 251, 0, 0, 0, { "SgCsTw1C.pcx", 0, 0, 0, 0 }, 0, 557, 24 }, { 255, 0, 0, 0, { "SgCsTw2C.pcx", 0, 0, 0, 0 }, 0, 404, 271 } },
-    { { -1, 0, -976, 102, { "SgRmDrw2.pcx", "SgRmDrw1.pcx", 0, 0, 0 }, 0, 404, 271 }, { -1, 0, 0, 0, { "SgRmDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 77 }, { -1, 0, -1040, 102, { 0, 0, 0, 0, 0 }, 0, 410, 97 }, { -1, 0, -1056, 102, { 0, 0, 0, 0, 0 }, 0, 608, 46 }, { -1, 0, -1072, 102, { 0, 0, 0, 0, 0 }, 0, 565, 31 }, { 255, 0, -1088, 102, { "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", 0 }, 0, 530, 57 }, { 45, 0, 0, 0, { "SgRmWa62.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", 0 }, 0, 492, 103 }, { 62, 0, -1148, 102, { 0, 0, 0, 0, 0 }, 0, 469, 186 }, { 78, 0, 0, 0, { "SgRmWa42.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", 0 }, 0, 460, 220 }, { 112, 0, -1196, 102, { "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", 0 }, 0, 469, 309 }, { 130, 0, 0, 0, { "SgRmWa32.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", 0 }, 0, 510, 364 }, { 165, 0, -1240, 102, { 0, 0, 0, 0, 0 }, 0, 549, 451 }, { 182, 0, 0, 0, { "SgRmWa12.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", 0 }, 0, 594, 511 }, { 251, 0, -1288, 102, { "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", 0 }, 0, 724, 189 }, { 135, 0, -1320, 102, { "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", 0 }, 0, 724, 189 }, { 135, 0, 0, 0, { "SgRmManC.pcx", 0, 0, 0, 0 }, 0, 594, 511 }, { 251, 0, 0, 0, { "SgRmTw1C.pcx", 0, 0, 0, 0 }, 0, 566, 31 }, { 255, 0, 0, 0, { "SgRmTw2C.pcx", 0, 0, 0, 0 }, 0, 401, 253 } },
-    { { -1, 0, -1400, 102, { "SgTwDrw2.pcx", "SgTwDrw1.pcx", 0, 0, 0 }, 0, 401, 253 }, { -1, 0, 0, 0, { "SgTwDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, 0, 0, { 0, 0, 0, 0, 0 }, 0, 403, 80 }, { -1, 0, 0, 0, { 0, 0, 0, 0, 0 }, 0, 615, 57 }, { -1, 0, -1464, 102, { 0, 0, 0, 0, 0 }, 0, 580, 36 }, { 255, 0, -1480, 102, { "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", 0 }, 0, 547, 66 }, { 45, 0, 0, 0, { "SgTwWa62.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", 0 }, 0, 514, 79 }, { 62, 0, -1540, 102, { 0, 0, 0, 0, 0 }, 0, 488, 190 }, { 78, 0, 0, 0, { "SgTwWa42.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", 0 }, 0, 471, 187 }, { 112, 0, -1588, 102, { "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", 0 }, 0, 475, 298 }, { 130, 0, 0, 0, { "SgTwWa32.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", 0 }, 0, 517, 365 }, { 165, 0, -1632, 102, { 0, 0, 0, 0, 0 }, 0, 547, 452 }, { 182, 0, 0, 0, { "SgTwWa12.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", 0 }, 0, 592, 516 }, { 251, 0, -1680, 102, { "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", 0 }, 0, 726, 148 }, { 135, 0, -1712, 102, { "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", 0 }, 0, 726, 148 }, { 135, 0, 0, 0, { "SgTwManC.pcx", 0, 0, 0, 0 }, 0, 592, 516 }, { 251, 0, 0, 0, { "SgTwTw1C.pcx", 0, 0, 0, 0 }, 0, 580, 36 }, { 255, 0, 0, 0, { "SgTwTw2C.pcx", 0, 0, 0, 0 }, 0, 409, 254 } },
-    { { -1, 0, -1792, 102, { "SgInDrw2.pcx", "SgInDrw1.pcx", 0, 0, 0 }, 0, 409, 254 }, { -1, 0, 0, 0, { "SgInDrwC.pcx", 0, 0, 0, 0 }, 0, 403, 68 }, { -1, 0, -1856, 102, { 0, 0, 0, 0, 0 }, 0, 403, 68 }, { -1, 0, -1872, 102, { 0, 0, 0, 0, 0 }, 0, 606, 52 }, { -1, 0, -1888, 102, { 0, 0, 0, 0, 0 }, 0, 569, 27 }, { 255, 0, -1904, 102, { "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", 0 }, 0, 532, 71 }, { 45, 0, 0, 0, { "SgInWa62.pcx", "SgInWa61.pcx", "SgInWa61.pcx", "SgInWa61.pcx", 0 }, 0, 502, 92 }, { 62, 0, -1964, 102, { 0, 0, 0, 0, 0 }, 0, 480, 151 }, { 78, 0, 0, 0, { "SgInWa42.pcx", "SgInWa41.pcx", "SgInWa41.pcx", "SgInWa41.pcx", 0 }, 0, 477, 221 }, { 112, 0, -2012, 102, { "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", 0 }, 0, 485, 316 }, { 130, 0, 0, 0, { "SgInWa32.pcx", "SgInWa31.pcx", "SgInWa31.pcx", "SgInWa31.pcx", 0 }, 0, 522, 376 }, { 165, 0, -2056, 102, { 0, 0, 0, 0, 0 }, 0, 561, 451 }, { 182, 0, 0, 0, { "SgInWa12.pcx", "SgInWa11.pcx", "SgInWa11.pcx", "SgInWa11.pcx", 0 }, 0, 595, 514 }, { 251, 0, -2104, 102, { "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", 0 }, 0, 730, 179 }, { 135, 0, -2136, 102, { "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", 0 }, 0, 730, 179 }, { 135, 0, 0, 0, { "SgInManC.pcx", 0, 0, 0, 0 }, 0, 595, 514 }, { 251, 0, 0, 0, { "SgInTw1C.pcx", 0, 0, 0, 0 }, 0, 569, 27 }, { 255, 0, 0, 0, { "SgInTw2C.pcx", 0, 0, 0, 0 }, 0, 402, 262 } },
-    { { -1, 0, -2216, 102, { "SgNcDrw2.pcx", "SgNcDrw1.pcx", 0, 0, 0 }, 0, 402, 262 }, { -1, 0, 0, 0, { "SgNcDrwC.pcx", 0, 0, 0, 0 }, 0, 406, 77 }, { -1, 0, -2280, 102, { 0, 0, 0, 0, 0 }, 0, 474, 109 }, { -1, 0, -2296, 102, { 0, 0, 0, 0, 0 }, 0, 604, 58 }, { -1, 0, -2312, 102, { 0, 0, 0, 0, 0 }, 0, 561, 26 }, { 255, 0, -2328, 102, { "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", 0 }, 0, 543, 66 }, { 45, 0, 0, 0, { "SgNcWa62.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", 0 }, 0, 504, 97 }, { 62, 0, -2388, 102, { 0, 0, 0, 0, 0 }, 0, 487, 164 }, { 78, 0, 0, 0, { "SgNcWa42.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", 0 }, 0, 474, 240 }, { 112, 0, -2436, 102, { "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", 0 }, 0, 478, 323 }, { 130, 0, 0, 0, { "SgNcWa32.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", 0 }, 0, 509, 372 }, { 165, 0, -2480, 102, { 0, 0, 0, 0, 0 }, 0, 536, 445 }, { 182, 0, 0, 0, { "SgNcWa12.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", 0 }, 0, 592, 512 }, { 251, 0, -2528, 102, { "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", 0 }, 0, 730, 164 }, { 135, 0, -2560, 102, { "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", 0 }, 0, 730, 164 }, { 135, 0, 0, 0, { "SgNcManC.pcx", 0, 0, 0, 0 }, 0, 592, 512 }, { 251, 0, 0, 0, { "SgNcTw1C.pcx", 0, 0, 0, 0 }, 0, 561, 26 }, { 255, 0, 0, 0, { "SgNcTw2C.pcx", 0, 0, 0, 0 }, 0, 396, 260 } },
-    { { -1, 0, -2640, 102, { "SgDnDrw2.pcx", "SgDnDrw1.pcx", 0, 0, 0 }, 0, 396, 260 }, { -1, 0, 0, 0, { "SgDnDrwC.pcx", 0, 0, 0, 0 }, 0, 283, 94 }, { -1, 0, -2704, 102, { 0, 0, 0, 0, 0 }, 0, 283, 94 }, { -1, 0, -2720, 102, { 0, 0, 0, 0, 0 }, 0, 608, 50 }, { -1, 0, -2736, 102, { 0, 0, 0, 0, 0 }, 0, 565, 15 }, { 255, 0, -2752, 102, { "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", 0 }, 0, 523, 56 }, { 45, 0, 0, 0, { "SgDnWa62.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", 0 }, 0, 494, 53 }, { 62, 0, -2812, 102, { 0, 0, 0, 0, 0 }, 0, 477, 180 }, { 78, 0, 0, 0, { "SgDnWa42.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", 0 }, 0, 471, 164 }, { 112, 0, -2860, 102, { "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", 0 }, 0, 471, 296 }, { 130, 0, 0, 0, { "SgDnWa32.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", 0 }, 0, 522, 305 }, { 165, 0, -2904, 102, { 0, 0, 0, 0, 0 }, 0, 559, 448 }, { 182, 0, 0, 0, { "SgDnWa12.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", 0 }, 0, 600, 495 }, { 251, 0, -2952, 102, { "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", 0 }, 0, 732, 162 }, { 135, 0, -2984, 102, { "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", 0 }, 0, 732, 162 }, { 135, 0, 0, 0, { "SgDnManC.pcx", 0, 0, 0, 0 }, 0, 600, 495 }, { 251, 0, 0, 0, { "SgDnTw1C.pcx", 0, 0, 0, 0 }, 0, 565, 15 }, { 255, 0, 0, 0, { "SgDnTw2C.pcx", 0, 0, 0, 0 }, 0, 408, 267 } },
-    { { -1, 0, -3064, 102, { "SgStDrw2.pcx", "SgStDrw1.pcx", 0, 0, 0 }, 0, 408, 267 }, { -1, 0, 0, 0, { "SgStDrwC.pcx", 0, 0, 0, 0 }, 0, 410, 90 }, { -1, 0, -3128, 102, { 0, 0, 0, 0, 0 }, 0, 410, 91 }, { -1, 0, -3144, 102, { 0, 0, 0, 0, 0 }, 0, 617, 62 }, { -1, 0, -3160, 102, { 0, 0, 0, 0, 0 }, 0, 568, 30 }, { 255, 0, -3176, 102, { "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", 0 }, 0, 534, 69 }, { 45, 0, 0, 0, { "SgStWa62.pcx", "SgStWa61.pcx", "SgStWa61.pcx", "SgStWa61.pcx", 0 }, 0, 499, 107 }, { 62, 0, -3236, 102, { 0, 0, 0, 0, 0 }, 0, 476, 189 }, { 78, 0, 0, 0, { "SgStWa42.pcx", "SgStWa41.pcx", "SgStWa41.pcx", "SgStWa41.pcx", 0 }, 0, 478, 235 }, { 112, 0, -3284, 102, { "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", 0 }, 0, 483, 304 }, { 130, 0, 0, 0, { "SgStWa32.pcx", "SgStWa31.pcx", "SgStWa31.pcx", "SgStWa31.pcx", 0 }, 0, 511, 380 }, { 165, 0, -3328, 102, { 0, 0, 0, 0, 0 }, 0, 553, 440 }, { 182, 0, 0, 0, { "SgStWa12.pcx", "SgStWa11.pcx", "SgStWa11.pcx", "SgStWa11.pcx", 0 }, 0, 586, 508 }, { 251, 0, -3376, 102, { "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", 0 }, 0, 731, 168 }, { 135, 0, -3408, 102, { "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", 0 }, 0, 731, 168 }, { 135, 0, 0, 0, { "SgStManC.pcx", 0, 0, 0, 0 }, 0, 586, 508 }, { 251, 0, 0, 0, { "SgStTw1C.pcx", 0, 0, 0, 0 }, 0, 568, 30 }, { 255, 0, 0, 0, { "SgStTw2C.pcx", 0, 0, 0, 0 }, 0, 393, 253 } },
-    { { -1, 0, -3488, 102, { "SgFrDrw2.pcx", "SgFrDrw1.pcx", 0, 0, 0 }, 0, 393, 253 }, { -1, 0, 0, 0, { "SgFrDrwC.pcx", 0, 0, 0, 0 }, 0, 383, 95 }, { -1, 0, -3552, 102, { 0, 0, 0, 0, 0 }, 0, 376, 70 }, { -1, 0, -3568, 102, { 0, 0, 0, 0, 0 }, 0, 599, 62 }, { -1, 0, -3584, 102, { 0, 0, 0, 0, 0 }, 0, 548, 27 }, { 255, 0, -3600, 102, { "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", 0 }, 0, 526, 80 }, { 45, 0, 0, 0, { "SgFrWa62.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", 0 }, 0, 508, 130 }, { 62, 0, -3660, 102, { 0, 0, 0, 0, 0 }, 0, 498, 184 }, { 78, 0, 0, 0, { "SgFrWa42.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", 0 }, 0, 483, 236 }, { 112, 0, -3708, 102, { "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", 0 }, 0, 487, 306 }, { 130, 0, 0, 0, { "SgFrWa32.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", 0 }, 0, 522, 382 }, { 165, 0, -3752, 102, { 0, 0, 0, 0, 0 }, 0, 546, 441 }, { 182, 0, 0, 0, { "SgFrWa12.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", 0 }, 0, 599, 505 }, { 251, 0, -3800, 102, { "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", 0 }, 0, 721, 178 }, { 135, 0, -3832, 102, { "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", 0 }, 0, 721, 178 }, { 135, 0, 0, 0, { "SgFrManC.pcx", 0, 0, 0, 0 }, 0, 599, 505 }, { 251, 0, 0, 0, { "SgFrTw1C.pcx", 0, 0, 0, 0 }, 0, 548, 27 }, { 255, 0, 0, 0, { "SgFrTw2C.pcx", 0, 0, 0, 0 }, 0, 409, 254 } },
-    { { -1, 0, -3912, 102, { "SgElDrw2.pcx", "SgElDrw1.pcx", 0, 0, 0 }, 0, 409, 254 }, { -1, 0, 0, 0, { "SgElDrwC.pcx", 0, 0, 0, 0 }, 0, 407, 80 }, { -1, 0, -3976, 102, { 0, 0, 0, 0, 0 }, 0, 407, 80 }, { -1, 0, -3992, 102, { 0, 0, 0, 0, 0 }, 0, 600, 50 }, { -1, 0, -4008, 102, { 0, 0, 0, 0, 0 }, 0, 576, 28 }, { 255, 0, -4024, 102, { "SgElTw21.pcx", "SgElTw21.pcx", "SgElTw22.pcx", 0, 0 }, 0, 521, 41 }, { 45, 0, 0, 0, { "SgElWa62.pcx", "SgElWa61.pcx", "SgElWa61.pcx", 0, 0 }, 0, 490, 97 }, { 62, 0, -4084, 102, { 0, 0, 0, 0, 0 }, 0, 471, 147 }, { 78, 0, 0, 0, { "SgElWa42.pcx", "SgElWa41.pcx", "SgElWa41.pcx", 0, 0 }, 0, 486, 232 }, { 112, 0, -4132, 102, { "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", 0, 0 }, 0, 468, 299 }, { 130, 0, 0, 0, { "SgElWa32.pcx", "SgElWa31.pcx", "SgElWa31.pcx", 0, 0 }, 0, 509, 346 }, { 165, 0, -4176, 102, { 0, 0, 0, 0, 0 }, 0, 509, 346 }, { 182, 0, 0, 0, { "SgElWa12.pcx", "SgElWa11.pcx", "SgElWa11.pcx", 0, 0 }, 0, 608, 505 }, { 251, 0, -4224, 102, { "SgElTw11.pcx", "SgElTw11.pcx", "SGElTw11.pcx", 0, 0 }, 0, 736, 159 }, { 135, 0, -4272, 102, { "SgElMan1.pcx", "SgElMan1.pcx", "SgElMan1.pcx", 0, 0 }, 0, 736, 159 }, { 135, 0, 0, 0, { "SgElManC.pcx", 0, 0, 0, 0 }, 0, 608, 505 }, { 251, 0, 0, 0, { "SgElTw1C.pcx", 0, 0, 0, 0 }, 0, 576, 28 }, { 255, 0, 0, 0, { "SgElTw2C.pcx", 0, 0, 0, 0 }, 0, 26451, 27717 } }
+// Original DC name: akWallTraits.
+// LoadIcons computes 0x66d848 + town * 648; LoadWallTraitsTable writes
+// name/hitpoints at row + 0x1c/+0x20. Each 36-byte record starts with x/y.
+DATA(0x0066d848) combatManager::TWallTraits combatManager::s_wallTraits[9][18] = {
+    { // Castle
+        { 400, 276, -1, 0, { "SgCsDrw3.pcx", "SgCsDrw2.pcx", "SgCsDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 400, 276, -1, 0, { 0, "SgCsDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 410, 90, -1, 0, { "SgCsMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 403, 80, -1, 0, { "SgCsMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 600, 49, -1, 0, { "SgCsTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 569, 35, 255, 0, { "SgCsTw22.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx", "SgCsTw21.pcx" }, 0, 0, 0 },
+        { 524, 32, 45, 0, { 0, "SgCsWa62.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx", "SgCsWa61.pcx" }, 0, 0, 0 },
+        { 489, 79, 62, 0, { "SgCsWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 470, 127, 78, 0, { 0, "SgCsWa42.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx", "SgCsWa41.pcx" }, 0, 0, 0 },
+        { 477, 238, 112, 0, { "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx", "SgCsArch.pcx" }, 0, 0, 0 },
+        { 469, 291, 130, 0, { 0, "SgCsWa32.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx", "SgCsWa31.pcx" }, 0, 0, 0 },
+        { 512, 347, 165, 0, { "SgCsWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 528, 350, 182, 0, { 0, "SgCsWa12.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx", "SgCsWa11.pcx" }, 0, 0, 0 },
+        { 602, 500, 251, 0, { "SgCsTw12.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx", "SgCsTw11.pcx" }, 0, 0, 0 },
+        { 720, 158, 135, 0, { "SgCsMan2.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx", "SgCsMan1.pcx" }, 0, 0, 0 },
+        { 720, 158, 135, 0, { 0, "SgCsManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 602, 500, 251, 0, { 0, "SgCsTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 557, 24, 255, 0, { 0, "SgCsTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Rampart
+        { 404, 271, -1, 0, { "SgRmDrw3.pcx", "SgRmDrw2.pcx", "SgRmDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 404, 271, -1, 0, { 0, "SgRmDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 410, 77, -1, 0, { "SgRmMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 410, 97, -1, 0, { "SgRmMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 608, 46, -1, 0, { "SgRmTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 565, 31, 255, 0, { "SgRmTw22.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx", "SgRmTw21.pcx" }, 0, 0, 0 },
+        { 530, 57, 45, 0, { 0, "SgRmWa62.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx", "SgRmWa61.pcx" }, 0, 0, 0 },
+        { 492, 103, 62, 0, { "SgRmWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 469, 186, 78, 0, { 0, "SgRmWa42.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx", "SgRmWa41.pcx" }, 0, 0, 0 },
+        { 460, 220, 112, 0, { "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx", "SgRmArch.pcx" }, 0, 0, 0 },
+        { 469, 309, 130, 0, { 0, "SgRmWa32.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx", "SgRmWa31.pcx" }, 0, 0, 0 },
+        { 510, 364, 165, 0, { "SgRmWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 549, 451, 182, 0, { 0, "SgRmWa12.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx", "SgRmWa11.pcx" }, 0, 0, 0 },
+        { 594, 511, 251, 0, { "SgRmTw12.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx", "SgRmTw11.pcx" }, 0, 0, 0 },
+        { 724, 189, 135, 0, { "SgRmMan2.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx", "SgRmMan1.pcx" }, 0, 0, 0 },
+        { 724, 189, 135, 0, { 0, "SgRmManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 594, 511, 251, 0, { 0, "SgRmTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 566, 31, 255, 0, { 0, "SgRmTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Tower
+        { 401, 253, -1, 0, { "SgTwDrw3.pcx", "SgTwDrw2.pcx", "SgTwDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 401, 253, -1, 0, { 0, "SgTwDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 410, 90, -1, 0, { 0, 0, 0, 0, 0 }, 0, 0, 0 },
+        { 403, 80, -1, 0, { 0, 0, 0, 0, 0 }, 0, 0, 0 },
+        { 615, 57, -1, 0, { "SgTwTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 580, 36, 255, 0, { "SgTwTw22.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx", "SgTwTw21.pcx" }, 0, 0, 0 },
+        { 547, 66, 45, 0, { 0, "SgTwWa62.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx", "SgTwWa61.pcx" }, 0, 0, 0 },
+        { 514, 79, 62, 0, { "SgTwWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 488, 190, 78, 0, { 0, "SgTwWa42.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx", "SgTwWa41.pcx" }, 0, 0, 0 },
+        { 471, 187, 112, 0, { "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx", "SgTwArch.pcx" }, 0, 0, 0 },
+        { 475, 298, 130, 0, { 0, "SgTwWa32.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx", "SgTwWa31.pcx" }, 0, 0, 0 },
+        { 517, 365, 165, 0, { "SgTwWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 547, 452, 182, 0, { 0, "SgTwWa12.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx", "SgTwWa11.pcx" }, 0, 0, 0 },
+        { 592, 516, 251, 0, { "SgTwTw12.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx", "SgTwTw11.pcx" }, 0, 0, 0 },
+        { 726, 148, 135, 0, { "SgTwMan2.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx", "SgTwMan1.pcx" }, 0, 0, 0 },
+        { 726, 148, 135, 0, { 0, "SgTwManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 592, 516, 251, 0, { 0, "SgTwTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 580, 36, 255, 0, { 0, "SgTwTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Inferno
+        { 409, 254, -1, 0, { "SgInDrw3.pcx", "SgInDrw2.pcx", "SgInDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 409, 254, -1, 0, { 0, "SgInDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 403, 68, -1, 0, { "SgInMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 403, 68, -1, 0, { "SgInMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 606, 52, -1, 0, { "SgInTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 569, 27, 255, 0, { "SgInTw22.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx", "SgInTw21.pcx" }, 0, 0, 0 },
+        { 532, 71, 45, 0, { 0, "SgInWa62.pcx", "SgInWa61.pcx", "SgInWa61.pcx", "SgInWa61.pcx" }, 0, 0, 0 },
+        { 502, 92, 62, 0, { "SgInWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 480, 151, 78, 0, { 0, "SgInWa42.pcx", "SgInWa41.pcx", "SgInWa41.pcx", "SgInWa41.pcx" }, 0, 0, 0 },
+        { 477, 221, 112, 0, { "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx", "SgInArch.pcx" }, 0, 0, 0 },
+        { 485, 316, 130, 0, { 0, "SgInWa32.pcx", "SgInWa31.pcx", "SgInWa31.pcx", "SgInWa31.pcx" }, 0, 0, 0 },
+        { 522, 376, 165, 0, { "SgInWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 561, 451, 182, 0, { 0, "SgInWa12.pcx", "SgInWa11.pcx", "SgInWa11.pcx", "SgInWa11.pcx" }, 0, 0, 0 },
+        { 595, 514, 251, 0, { "SgInTw12.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx", "SgInTw11.pcx" }, 0, 0, 0 },
+        { 730, 179, 135, 0, { "SgInMan2.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx", "SgInMan1.pcx" }, 0, 0, 0 },
+        { 730, 179, 135, 0, { 0, "SgInManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 595, 514, 251, 0, { 0, "SgInTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 569, 27, 255, 0, { 0, "SgInTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Necropolis
+        { 402, 262, -1, 0, { "SgNcDrw3.pcx", "SgNcDrw2.pcx", "SgNcDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 402, 262, -1, 0, { 0, "SgNcDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 406, 77, -1, 0, { "SgNcMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 474, 109, -1, 0, { "SgNcMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 604, 58, -1, 0, { "SgNcTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 561, 26, 255, 0, { "SgNcTw22.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx", "SgNcTw21.pcx" }, 0, 0, 0 },
+        { 543, 66, 45, 0, { 0, "SgNcWa62.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx", "SgNcWa61.pcx" }, 0, 0, 0 },
+        { 504, 97, 62, 0, { "SgNcWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 487, 164, 78, 0, { 0, "SgNcWa42.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx", "SgNcWa41.pcx" }, 0, 0, 0 },
+        { 474, 240, 112, 0, { "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx", "SgNcArch.pcx" }, 0, 0, 0 },
+        { 478, 323, 130, 0, { 0, "SgNcWa32.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx", "SgNcWa31.pcx" }, 0, 0, 0 },
+        { 509, 372, 165, 0, { "SgNcWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 536, 445, 182, 0, { 0, "SgNcWa12.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx", "SgNcWa11.pcx" }, 0, 0, 0 },
+        { 592, 512, 251, 0, { "SgNcTw12.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx", "SgNcTw11.pcx" }, 0, 0, 0 },
+        { 730, 164, 135, 0, { "SgNcMan2.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx", "SgNcMan1.pcx" }, 0, 0, 0 },
+        { 730, 164, 135, 0, { 0, "SgNcManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 592, 512, 251, 0, { 0, "SgNcTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 561, 26, 255, 0, { 0, "SgNcTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Dungeon
+        { 396, 260, -1, 0, { "SgDnDrw3.pcx", "SgDnDrw2.pcx", "SgDnDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 396, 260, -1, 0, { 0, "SgDnDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 283, 94, -1, 0, { "SgDnMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 283, 94, -1, 0, { "SgDnMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 608, 50, -1, 0, { "SgDnTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 565, 15, 255, 0, { "SgDnTw22.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx", "SgDnTw21.pcx" }, 0, 0, 0 },
+        { 523, 56, 45, 0, { 0, "SgDnWa62.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx", "SgDnWa61.pcx" }, 0, 0, 0 },
+        { 494, 53, 62, 0, { "SgDnWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 477, 180, 78, 0, { 0, "SgDnWa42.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx", "SgDnWa41.pcx" }, 0, 0, 0 },
+        { 471, 164, 112, 0, { "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx", "SgDnArch.pcx" }, 0, 0, 0 },
+        { 471, 296, 130, 0, { 0, "SgDnWa32.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx", "SgDnWa31.pcx" }, 0, 0, 0 },
+        { 522, 305, 165, 0, { "SgDnWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 559, 448, 182, 0, { 0, "SgDnWa12.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx", "SgDnWa11.pcx" }, 0, 0, 0 },
+        { 600, 495, 251, 0, { "SgDnTw12.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx", "SgDnTw11.pcx" }, 0, 0, 0 },
+        { 732, 162, 135, 0, { "SgDnMan2.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx", "SgDnMan1.pcx" }, 0, 0, 0 },
+        { 732, 162, 135, 0, { 0, "SgDnManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 600, 495, 251, 0, { 0, "SgDnTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 565, 15, 255, 0, { 0, "SgDnTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Stronghold
+        { 408, 267, -1, 0, { "SgStDrw3.pcx", "SgStDrw2.pcx", "SgStDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 408, 267, -1, 0, { 0, "SgStDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 410, 90, -1, 0, { "SgStMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 410, 91, -1, 0, { "SgStMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 617, 62, -1, 0, { "SgStTpW1.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 568, 30, 255, 0, { "SgStTw22.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx", "SgStTw21.pcx" }, 0, 0, 0 },
+        { 534, 69, 45, 0, { 0, "SgStWa62.pcx", "SgStWa61.pcx", "SgStWa61.pcx", "SgStWa61.pcx" }, 0, 0, 0 },
+        { 499, 107, 62, 0, { "SgStWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 476, 189, 78, 0, { 0, "SgStWa42.pcx", "SgStWa41.pcx", "SgStWa41.pcx", "SgStWa41.pcx" }, 0, 0, 0 },
+        { 478, 235, 112, 0, { "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx", "SgStArch.pcx" }, 0, 0, 0 },
+        { 483, 304, 130, 0, { 0, "SgStWa32.pcx", "SgStWa31.pcx", "SgStWa31.pcx", "SgStWa31.pcx" }, 0, 0, 0 },
+        { 511, 380, 165, 0, { "SgStWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 553, 440, 182, 0, { 0, "SgStWa12.pcx", "SgStWa11.pcx", "SgStWa11.pcx", "SgStWa11.pcx" }, 0, 0, 0 },
+        { 586, 508, 251, 0, { "SgStTw12.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx", "SgStTw11.pcx" }, 0, 0, 0 },
+        { 731, 168, 135, 0, { "SgStMan2.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx", "SgStMan1.pcx" }, 0, 0, 0 },
+        { 731, 168, 135, 0, { 0, "SgStManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 586, 508, 251, 0, { 0, "SgStTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 568, 30, 255, 0, { 0, "SgStTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Fortress
+        { 393, 253, -1, 0, { "SgFrDrw3.pcx", "SgFrDrw2.pcx", "SgFrDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 393, 253, -1, 0, { 0, "SgFrDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 383, 95, -1, 0, { "SgFrMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 376, 70, -1, 0, { "SgFrMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 599, 62, -1, 0, { "SgFrTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 548, 27, 255, 0, { "SgFrTw22.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx", "SgFrTw21.pcx" }, 0, 0, 0 },
+        { 526, 80, 45, 0, { 0, "SgFrWa62.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx", "SgFrWa61.pcx" }, 0, 0, 0 },
+        { 508, 130, 62, 0, { "SgFrWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 498, 184, 78, 0, { 0, "SgFrWa42.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx", "SgFrWa41.pcx" }, 0, 0, 0 },
+        { 483, 236, 112, 0, { "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx", "SgFrArch.pcx" }, 0, 0, 0 },
+        { 487, 306, 130, 0, { 0, "SgFrWa32.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx", "SgFrWa31.pcx" }, 0, 0, 0 },
+        { 522, 382, 165, 0, { "SgFrWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 546, 441, 182, 0, { 0, "SgFrWa12.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx", "SgFrWa11.pcx" }, 0, 0, 0 },
+        { 599, 505, 251, 0, { "SgFrTw12.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx", "SgFrTw11.pcx" }, 0, 0, 0 },
+        { 721, 178, 135, 0, { "SgFrMan2.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx", "SgFrMan1.pcx" }, 0, 0, 0 },
+        { 721, 178, 135, 0, { 0, "SgFrManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 599, 505, 251, 0, { 0, "SgFrTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 548, 27, 255, 0, { 0, "SgFrTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    },
+    { // Conflux
+        { 409, 254, -1, 0, { "SgElDrw3.pcx", "SgElDrw2.pcx", "SgElDrw1.pcx", 0, 0 }, 0, 0, 0 },
+        { 409, 254, -1, 0, { 0, "SgElDrwC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 407, 80, -1, 0, { "SgElMoat.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 407, 80, -1, 0, { "SgElMlip.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 600, 50, -1, 0, { "SgElTpWl.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 576, 28, 255, 0, { "SgElTw22.pcx", "SgElTw21.pcx", "SgElTw21.pcx", "SgElTw22.pcx", 0 }, 0, 0, 0 },
+        { 521, 41, 45, 0, { 0, "SgElWa62.pcx", "SgElWa61.pcx", "SgElWa61.pcx", 0 }, 0, 0, 0 },
+        { 490, 97, 62, 0, { "SgElWa5.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 471, 147, 78, 0, { 0, "SgElWa42.pcx", "SgElWa41.pcx", "SgElWa41.pcx", 0 }, 0, 0, 0 },
+        { 486, 232, 112, 0, { "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", "SgElArch.pcx", 0 }, 0, 0, 0 },
+        { 468, 299, 130, 0, { 0, "SgElWa32.pcx", "SgElWa31.pcx", "SgElWa31.pcx", 0 }, 0, 0, 0 },
+        { 509, 346, 165, 0, { "SgElWa2.pcx", 0, 0, 0, 0 }, 0, 0, 0 },
+        { 509, 346, 182, 0, { 0, "SgElWa12.pcx", "SgElWa11.pcx", "SgElWa11.pcx", 0 }, 0, 0, 0 },
+        { 608, 505, 251, 0, { "SgElTw12.pcx", "SgElTw11.pcx", "SgElTw11.pcx", "SGElTw11.pcx", 0 }, 0, 0, 0 },
+        { 736, 159, 135, 0, { "SgElMan2.pcx", "SgElMan1.pcx", "SgElMan1.pcx", "SgElMan1.pcx", 0 }, 0, 0, 0 },
+        { 736, 159, 135, 0, { 0, "SgElManC.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 608, 505, 251, 0, { 0, "SgElTw1C.pcx", 0, 0, 0 }, 0, 0, 0 },
+        { 576, 28, 255, 0, { 0, "SgElTw2C.pcx", 0, 0, 0 }, 0, 0, 0 }
+    }
 };
 DATA(0x0063be60) const combatManager::TWallTarget combatManager::s_wallTargets[8] = {
     { 255, -1, 586, 48, TWallSection(5) },
@@ -380,7 +559,10 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
 };
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
+// getBackgroundName indexes the rows with the hero's terrain type, so there
+// is one row per terrain (eTerrainDirt..eTerrainRock, ten): retail's twelve
+// zero bytes after the water row are the rock row.
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[10][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
@@ -389,6 +571,7 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
     { "CmBkRgh.pcx", "CmBkRgh.pcx", "CmBkRgh.pcx" },
     { "CmBkSub.pcx", "CmBkSub.pcx", "CmBkSub.pcx" },
     { "CmBkLava.pcx", "CmBkLava.pcx", "CmBkLava.pcx" },
+    { 0, 0, 0 },
     { 0, 0, 0 }
 };
 DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };
@@ -441,7 +624,7 @@ unsigned char combatManager::loadWallTraitsTable()
     if (!sheet)
         return 0;
     if (sheet->getNumberOfRows() < 179) {
-        sheet->dispose();
+        ResourceManager::dispose(sheet);
         return 0;
     }
 
@@ -480,6 +663,7 @@ int combatManager::open(int newPriority)
     g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
+    ResourceManager::delSprFromCache();  // DC cmbtmgr.cpp:599
 
     if (!isQuickCombat()) {
         char name[20];
@@ -680,28 +864,28 @@ void combatManager::freeIcons()
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_combatIcons[group][icon])
-                m_combatIcons[group][icon]->dispose();
+                ResourceManager::dispose(m_combatIcons[group][icon]);
         }
     }
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
-            obstacle->m_sprite->dispose();
+            ResourceManager::dispose(obstacle->m_sprite);
     }
     m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
-            m_creatureSprites[side]->dispose();
+            ResourceManager::dispose(m_creatureSprites[side]);
         if (m_heroFlagSprites[side])
-            m_heroFlagSprites[side]->dispose();
+            ResourceManager::dispose(m_heroFlagSprites[side]);
     }
 
     loadSpellEffect(-1);
-    m_combatGridBitmap->dispose();
-    m_combatCellGridBitmap->dispose();
-    m_combatShadowBitmap->dispose();
+    ResourceManager::dispose(m_combatGridBitmap);
+    ResourceManager::dispose(m_combatCellGridBitmap);
+    ResourceManager::dispose(m_combatShadowBitmap);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1004
@@ -2317,7 +2501,7 @@ void combatManager::removeObstacle(int index)
     hexcell& anchor = m_cells[obstacle->m_hex];
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
-    obstacle->m_sprite->dispose();
+    ResourceManager::dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
 }
 
@@ -2478,22 +2662,12 @@ void combatManager::lowerDoor()
     waitEndSample(sample, -1);
 }
 
-VA(0x004672e0, 0x177) MAC_ADDRESS(0x0734ac, 0xd0)  // dc 0x61034
+// E:\gamedcs\cmbtmgr.cpp:3400, dc 0x61034. The drawbridge animation alone,
+// as in Dreamcast and Mac (0x734ac, whose only caller is testRaiseDoor).
+// Retail has no standalone body: VC6 expands it into its sole caller below.
+MAC_ADDRESS(0x0734ac, 0xd0)
 void combatManager::raiseDoor()
 {
-    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
-        return;
-    if (m_cells[COMBAT_HEX_GATE].hasArmy()
-            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
-        return;
-    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
-            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
-        return;
-    if (m_defendingTown->m_type == TOWN_FORTRESS
-            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
-                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
-        return;
-
     if (isQuickCombat()) {
         m_drawbridgeState = DRAWBRIDGE_UP;
         return;
@@ -2508,12 +2682,26 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0.
-// Complete moved the occupancy guards into RaiseDoor itself. WalkTo, FlyTo,
-// TeleportTo and ProcessNextAction retain this forwarding source boundary.
-MAC_ADDRESS(0x07357c, 0x94)
+// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0. The occupancy guards, then the
+// animation: Mac 0x7357c has exactly retail's guard sequence before its one
+// call to raiseDoor, and walkTo, flyTo, teleportTo and processNextAction all
+// branch to it. Retail's 0x4672e0 is this function with raiseDoor expanded.
+VA(0x004672e0, 0x177) MAC_ADDRESS(0x07357c, 0x94)  // dc 0x610e0
 void combatManager::testRaiseDoor()
 {
+    if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
+        return;
+    if (m_cells[COMBAT_HEX_GATE].hasArmy()
+            || m_cells[COMBAT_HEX_GATE].m_bodiesInHex)
+        return;
+    if (m_cells[COMBAT_HEX_GATE_MOAT].hasArmy()
+            || m_cells[COMBAT_HEX_GATE_MOAT].m_bodiesInHex)
+        return;
+    if (m_defendingTown->m_type == TOWN_FORTRESS
+            && (m_cells[COMBAT_HEX_OUTER_MOAT].hasArmy()
+                || m_cells[COMBAT_HEX_OUTER_MOAT].m_bodiesInHex))
+        return;
+
     raiseDoor();
 }
 
@@ -2872,6 +3060,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
             updateArea.include(SLimitData(x, y, right, bottom));
             updateArea.clip(g_combatDrawLimits);
+            // DC cmbtmgr.cpp:3874 passes this local to UpdateCombatArea by
+            // value; that form moves retail's register allocation.
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -2885,8 +3075,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     saved.draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
-    g_windowManager->updateScreen(x, y, width, height);
-    missile->dispose();
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:3890
+    ResourceManager::dispose(missile);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902
@@ -3004,6 +3194,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         updateArea.clip(g_combatDrawLimits);
+        // DC cmbtmgr.cpp:4022 passes this local by value (see above).
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
                                       updateArea.height());
@@ -3014,7 +3205,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                g_windowManager->m_screenBitmap->getWidth(),
                g_windowManager->m_screenBitmap->getHeight(),
                g_windowManager->m_screenBitmap->getPitch(), false);
-    g_windowManager->updateScreen(x, y, width, height);
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }
 
 VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)  // dc 0x622bc
@@ -3321,6 +3512,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
+            // DC cmbtmgr.cpp:4389 calls UpdateCombatArea(bounds); the by-value
+            // form lowers this row 96.16 -> 95.81, so it stays direct.
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
                 m_drawbridgeBounds.width(),
@@ -3525,8 +3718,9 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
         angle = deltaY > 0 ? 90.0 : -90.0;
     } else {
         angle = atan(-static_cast<double>(deltaY) / fabs(deltaX))
+                // Retail's double is 180/3.1415926535, not 180/PI.
                 * DATA_COMPGEN(0x0063d408, radiansToDegrees,
-                               57.29577951308232);
+                               57.29577951471995);
     }
 
     if (missile) {

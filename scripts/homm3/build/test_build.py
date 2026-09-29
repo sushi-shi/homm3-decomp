@@ -39,6 +39,7 @@ class BuildModeTest(unittest.TestCase):
         for name, module, function, result in [
             ("configure", configure, "configure", None),
             ("compile", build, "_run", 0),
+            ("link", build, "_link", 0),
             ("delink", delink, "run", 0),
             ("normalize", normalize_objs, "normalize_all", 0),
             ("report", status, "refresh_report", {}),
@@ -66,7 +67,7 @@ class BuildModeTest(unittest.TestCase):
     def test_full_build_refreshes_existing_targets_before_checkpoint(self):
         self.assertEqual(build.main([]), 0)
         self.assertEqual(self.events, ["configure", "compile", "delink", "report",
-                                      "fingerprints", "mac", "history", "check", "checkpoint", "banked", "claims",
+                                      "fingerprints", "mac", "history", "check", "checkpoint", "link", "banked", "claims",
                                       "single_view", "origins", "ownership", "inventory", "cleanliness", "data_accounting", "readme"])
         self.mocks["compile"].assert_called_once_with("ninja")
         self.mocks["normalize"].assert_not_called()  # delink already normalizes
@@ -75,6 +76,14 @@ class BuildModeTest(unittest.TestCase):
         self.mocks["origins"].assert_called_once_with(include_declarations=True)
         self.mocks["ownership"].assert_called_once_with(origins=[])
         self.mocks["cleanliness"].assert_called_once_with(write=True, dc_origins=[])
+
+    def test_link_failure_fails_checkpoint_but_keeps_evidence_gates(self):
+        self.mocks['link'].side_effect = lambda: 1
+        self.assertEqual(build.main([]), 1)
+        self.mocks['claims'].assert_called_once()
+        self.mocks['data_accounting'].assert_called_once()
+        self.mocks['readme'].assert_called_once()
+        self.mocks['cleanliness'].assert_called_once_with(write=False, dc_origins=[])
 
     def test_unavailable_byte_accounting_fails_without_hiding_other_gates(self):
         self.mocks['data_accounting'].side_effect = ValueError('invalid extent')
@@ -134,6 +143,7 @@ class BuildModeTest(unittest.TestCase):
         self.assertEqual(self.target.read_bytes(), b"existing retail target")
         self.mocks["delink"].assert_not_called()
         self.mocks["checkpoint"].assert_not_called()
+        self.mocks["link"].assert_not_called()
         self.preflight.assert_not_called()
         self.mocks["mac"].assert_called_once_with({"cursor"}, checkpoint=False)
         self.mocks["fast_max"].assert_called_once_with({}, {"cursor"}, ({}, {}))

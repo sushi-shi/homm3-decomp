@@ -130,13 +130,6 @@ type_bottom_view_window::type_bottom_view_window(heroWindow* parentWindow)
     initialize(614, 400, 176, 166, parentWindow);
 }
 
-// The four new-week announcement icons, indexed by the game's week number
-// 1..4; slot 0 is never read, which is why retail's dword there is null.
-DATA(0x00660b9c)
-static const char* g_newWeekIcons[5] = {
-    0, "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
-};
-
 // The new-turn banner, and the first of the seven big derived
 // constructors. Every literal is read off the body:
 
@@ -184,11 +177,17 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     m_frame = 0;
 
     std::string text;
+    // DC names: local static char*[4] (type 0x581a, 16 bytes).
+    // Mac 0x5f3fc reads names[week - 1]; VC6 folds -4 into the
+    // indexed address. 0x660b9c terminates the preceding ".bik" literal.
+    DATA(0x00660ba0)
+    static char* names[4] = {
+        "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
+    };
     const char* iconName;
     if (g_game->m_day == 1
         && !(g_game->m_week == 1 && g_game->m_month == 1)) {
-        iconName = g_newWeekIcons[
-            static_cast<unsigned short>(g_game->m_week)];
+        iconName = names[static_cast<unsigned short>(g_game->m_week) - 1];
         text = formatString("%s %d", (*g_generalText)[GENERAL_TEXT_CALENDAR_WEEK],
             static_cast<unsigned short>(g_game->m_week));
     } else {
@@ -376,7 +375,7 @@ TBottomViewMessage::~TBottomViewMessage()
 // own cursor against &[2] for the "power and knowledge floor at 1"
 // arm, which is what proves the row is a table and not four literals.
 DATA(0x00660bb0)
-static const int g_heroStatCoords[4][2] = {
+static int g_heroStatCoords[4][2] = {
     { 65, 51 }, { 92, 51 }, { 120, 51 }, { 148, 51 }
 };
 
@@ -384,7 +383,7 @@ static const int g_heroStatCoords[4][2] = {
 // table above in retail .data, but a separate object: the stat loop
 // stops at this table's first byte and the army loop starts there.
 DATA(0x00660bd0)
-static const int g_heroArmyCoords[7][2] = {
+static int g_heroArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };
@@ -536,7 +535,7 @@ TBottomViewHero::~TBottomViewHero()
 // .data, but a separate object: the hero loop's cursor stops at this
 // table's first byte and this loop's cursor starts there.
 DATA(0x00660c08)
-static const int g_townArmyCoords[7][2] = {
+static int g_townArmyCoords[7][2] = {
     { 36, 73 }, { 72, 73 }, { 108, 73 },
     { 18, 121 }, { 54, 121 }, { 90, 121 }, { 126, 121 }
 };

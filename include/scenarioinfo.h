@@ -6,10 +6,6 @@
 class CSprite;
 class Bitmap816;
 
-// Dreamcast publishes the original name; retail scenarioinfo.obj passes this
-// exact 0x6a6ca0 table to CHeroWindowEx::SetHelpText.
-DATA(0x006a6ca0) extern THelpText g_singleSelectionHelp[];
-
 // Retail's stack owner at 0x513740 reserves 0xb4 bytes for this object.
 // The vtable at 0x641710 has the inherited 15-slot CAdvPopup shape, with
 // retail overrides in slots 0, 11, and 12. The sprite fields and their order

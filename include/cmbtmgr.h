@@ -363,6 +363,8 @@ public:
     static const SLimitData s_rightHeroLimits;
     static const SLimitData s_mainBuildingLimits;
     static const SLimitData s_upperTowerLimits;
+    // Original: CombatAreaLimits_Visible.
+    static const SLimitData s_visibleCombatAreaLimits;
     // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
@@ -1991,7 +1993,7 @@ extern TDrawbridgeBounds g_combatDrawLimits;
 // are all direct retail data.
 extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const g_terrainCombatBackgrounds[9][3];    // 0x63d2f0
+extern const char* const g_terrainCombatBackgrounds[10][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each

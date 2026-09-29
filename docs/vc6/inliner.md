@@ -1913,6 +1913,70 @@ standalone bytes and the callers' skeletons after every step. Sweep the
 callers' whole units: `hero::getLuckDescription` (93.7%, unproven) and
 `town::buildBuilding` moved with these costs, the exact rows did not.
 
+### The save cliff decides "refused far below budget"
+
+A retail call to an ordinary (not `inline`) callee that no budget explains is
+usually a body C1XX never saved. `predict-inline --trace` lists every
+candidate's flags: `0x6a` is an auto-inline candidate with a saved body,
+`0x2a` has no `0x40` and is never tested. Measured in events.cpp: cost 174
+is saved, 176 is not. Read the flags before modelling budgets, then cross
+the cliff only with evidenced source: every brace must match a Dreamcast
+scope pair (see docs/matching/dc-line-tables.md, "Braced bodies").
+
+- `advManager::dispatchEvent` (0x4a84f0) expanded five ordinary visitors
+  near budget 9000 while retail called them (88.58%). The four primary-skill
+  visitors' Dreamcast else-scopes and braced else-dialogs raise them to
+  176..177. Campfire's first dialog has one scope (unbraced); its missing
+  cost was the Dreamcast return type of `ExtraInfoUnion::getCampfireResource`
+  (`EGameResource`, not `int`). With that, all five retain calls (100%).
+- `combatManager::findSpellTarget` keeps the Dreamcast named result (173,
+  still saved). The braced Sacrifice arms that took it to 177 have no
+  Dreamcast scope pair and were reverted in the round-6 audit;
+  `validSpellTarget`, `initiateSpell` and `castSpell` returned to 73.65%,
+  90.79% and their pre-cliff values.
+- The sell-artifact `computeTradeRatios` keeps its Dreamcast market-value
+  row; its braces were unsupported and reverted, so the sell handler's first
+  `setupNewTrade` site (budget 165) again expands it (93.60% -> 83.13%).
+- In game.cpp's save helpers, braced returns cost 2 each and were not
+  adopted.
+
+Missing accessor and helper calls are the first hypothesis for a wrong
+cost, before any brace. Each inline helper call adds IL to its caller and a
+candidate site to C2's divisor even when it expands to nothing new:
+
+- `ExtraInfoUnion::getCampfireResource` returning the Dreamcast
+  `EGameResource` (not `int`) is what crossed the campfire cliff.
+- `combatManager::freeIcons` pasted `->dispose()` where Dreamcast calls
+  `ResourceManager::Dispose`; the existing inline helper restores retail's
+  retained `vector::_Destroy` call (94.33% -> 99.94%).
+- Passing a local `SLimitData` by value to `updateCombatArea` moved
+  retail's register allocation in the missile animators (99.98% -> 95.14%),
+  while the same call on `m_drawbridgeBounds` raised `army::attackWall`
+  (89.90% -> 90.91%). Measure each site; a by-value temporary is a real
+  codegen fact, not budget noise.
+
+### The retained final `string::assign` has no shared cause
+
+Five callers keep `basic_string::assign(str, pos, n)` (cost 307) out of line
+where VC6 expanded it. In each, it sits at depth 3 under `operator=` (29) and
+`assign(const&)` (35). Both are free, so no header cost is charged and no
+callee cost fits all five. The traces need different local facts:
+
+- `type_skill_quest::setDefaultText` has 316 at the second assignment and
+  needs one more candidate after it, or 29 more units charged before it.
+- `type_quest::loadFromMap` needs two or three more candidates after the last
+  temporary's destructor.
+- `hero::initialize` has 431 at its assignment. It needs two more candidates
+  after it, or a caller cost of 805 or less against 1055.
+
+A dearer `assign(const&)` would also refuse skill quest's first assignment,
+which retail expands. `readMapPlayerSlot` (313, 74.02% -> 95.89%) closed on
+two source facts that add candidates after its feature test. Mac constructs
+an unused string and destroys it after the loop; Dreamcast names it strTemp.
+The feature test also reads through the bitset reference proxy. Check Mac for
+ctor/dtor pairs that no call consumes. They mark unused locals whose extra
+destructor sites move Windows budgets.
+
 ## The vector single-insert wrapper is refused only one level down
 
 Dinkumware's `vector::insert(iterator, const T&)` is a 64-unit wrapper around
@@ -2454,3 +2518,31 @@ reproduces three distinct objects across all 22 affected TUs; all 1102 Fly
 bytes and 54 relocation operands agree with retail. Ordinary definitions of
 its two local search helpers and removal of the redundant outer loop block
 also preserve all five exact Fly targets (four states, two reproduced objects).
+
+## Array initializers: an entry type's constructor is a site per element
+
+A namespace-scope array initializer is its own `$E` body (a cb-16 wrapper
+expands it at depth 1), so its site list is the element constructions.
+Temporary copies into a plain class array are bitwise and add no sites, and a
+variadic builder is never collected (flags without 0x40). When retail refuses
+a nested expansion that no spelling of a plain array refuses, test an entry
+type with a one-argument constructor taking the built value: each
+`Entry(value)` adds a free (cb 30) site after the value's construction and
+emits only the copy.
+
+The slot-class table at 0x44cc00 needs `_Tidy` below 72 at the empty entry;
+the plain array gives it 742 (1000 minus the cb-258 initializer, one site).
+With fifteen entry constructors the empty mask's constructor is the first
+of sixteen sites and `_Tidy` gets 637/16 = 39, reproducing all 336 bytes.
+The game-context table at 0x4ecd00 needs all four `set` calls refused; with
+eight sites they get 29, 35, 46 and 82 against cb 91 while `_Tidy` still
+expands, reproducing all 224 bytes. An entry constructor taking the
+unsigned long instead of the bitset gives 272 bytes. CodeWarrior reserves a
+second stack temporary per element for such an entry type, which Mac's
+artifact initializer shows (entries 8 bytes apart) and its game-context
+equivalent does not.
+
+How readers name the bitset matters as much: a `std::bitset` member adds
+access cost to every reader, and in `updateMainWindow` that changes its
+expansion into `onSetAsHostMsg` (100% to 25.5976%). Deriving the entry type
+from the bitset leaves the readers' source and costs unchanged.

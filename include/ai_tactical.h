@@ -388,7 +388,7 @@ SIZE(type_AI_spellcaster, 0x410);
 // (0x43a500) is its only located consumer, and the slot sits in the
 // literal pool right behind a string, so the owning TU is unproven -
 // no DATA claim until it is.
-extern const long g_hypnotizeTurns[4];
+extern long g_hypnotizeTurns[4];
 // Retail 0x63b7c8, four dwords {4, 4, 5, 5} read as [mastery]: how
 // many stacks a chain lightning at that mastery bounces through.
 // get_chain_lightning_value (0x437190) is its only consumer and the

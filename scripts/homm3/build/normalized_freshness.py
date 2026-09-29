@@ -85,7 +85,8 @@ def implementation_inputs() -> dict[str, Path]:
     """
     directory = Path(__file__).parent
     paths = {"tool:" + name: directory / name for name in (
-        "normalized_freshness.py", "normalize_objs.py", "canonicalize_data_symbols.py")}
+        "normalized_freshness.py", "normalize_objs.py", "canonicalize_data_symbols.py",
+        "identity_relocations.py")}
     for name in ("project.py", "image.py", "inputs.py"):
         paths["tool:core/" + name] = directory.parent / "core" / name
     for name in ("compare/canonicalize.py", "core/msvc_names.py"):

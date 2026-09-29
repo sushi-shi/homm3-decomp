@@ -186,10 +186,6 @@ void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
-CSpriteWidget::~CSpriteWidget()
-{
-}
-
 VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // dc 0x12f11c
 
 VA(0x005757e0, 0x226) MAC_ADDRESS(0x16bf54, 0x25c)  // dc 0x12e1cc
@@ -247,10 +243,6 @@ int CBitmapWidget::main(message& msg)
 
 // Original: CBitmapWidget::zBufferDraw; singleselectionpopups.cpp:99, dc 0x12f1f8.
 void CBitmapWidget::zBufferDraw(unsigned short* zBuffer, int id) const
-{
-}
-
-CHotspotWidget::~CHotspotWidget()
 {
 }
 

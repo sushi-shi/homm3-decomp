@@ -273,5 +273,20 @@ class LabelGateTest(unittest.TestCase):
             self.assertEqual(main(['--unit', 'example']), 1)
 
 
+class DataSpellingTest(unittest.TestCase):
+    def test_clang_anonymous_scope_and_local_scope_bridge_to_vc6(self):
+        from homm3.retail_labels.source import vc6_data_name
+        clang = "_?names@?1??init@@YIXXZ@4PAVTAutoStrPtr@?A0x23B9B69E@@A"
+        vc6 = r"_?names@?BC@??init@@YIXXZ@4PAVTAutoStrPtr@?%Z:\tmp\src\herodefs.cpp1919@@A"
+        self.assertEqual(vc6_data_name(clang, {vc6}, "herodefs"), vc6)
+        # The anonymous scope must be the owning unit's own source file.
+        self.assertIsNone(vc6_data_name(clang, {vc6}, "spelldefs"))
+        # Two candidates that agree once masked are ambiguous.
+        twin = vc6.replace("?BC@??", "?8??")
+        self.assertIsNone(vc6_data_name(clang, {vc6, twin}, "herodefs"))
+        # Any other difference stays unbridged.
+        self.assertIsNone(vc6_data_name(clang.replace("names", "other"), {vc6}, "herodefs"))
+
+
 if __name__ == '__main__':
     unittest.main()

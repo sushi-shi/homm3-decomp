@@ -41,7 +41,7 @@
 DATA(0x0069cbbc) static int g_overviewItemCounts[2];
 // Dreamcast names the overview screen's resource strip. Complete proves the
 // intervening pointer cell by both recruit-dialog refresh paths below.
-DATA(0x0069cbc4) static unsigned char g_overviewBackpackStart[8];
+DATA(0x0069cbc4) static unsigned char g_overviewBackpackStart[playerData::HERO_SLOT_COUNT];
 DATA(0x0069cbcc) static TResourceDisplay* g_overviewBank;
 DATA(0x0069cbd0) static int g_lastDynamicTop;
 // One artifact-page byte per local-player hero slot. The original source name
@@ -50,7 +50,7 @@ DATA(0x0069cbd4) static slider* g_overviewSlider;
 // The hero-id half of the overview roster: UpdateBackpack indexes it with
 // giOverviewTop[giOverviewType] + iSlot, and the retail GetHero expansion
 // proves dword elements. The following four-dword gap is the town roster.
-DATA(0x0069cc10) static unsigned char g_overviewHeroArtifactPage[8];
+DATA(0x0069cc10) static unsigned char g_overviewHeroArtifactPage[playerData::HERO_SLOT_COUNT];
 DATA(0x0069cbec) static int g_overviewHeroIds[8];
 DATA(0x0069cc1c) static textWidget* g_textWidgetTitle[3];
 // The retail window is TOverviewWindow, whose derived layout is not needed by

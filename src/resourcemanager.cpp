@@ -125,6 +125,10 @@ TResourceLODSlot::TResourceLODSlot(const char* name)
 {
 }
 
+// The archive-array cleanup takes this implicit destructor's address.
+// Retail adds four to this, then tail-calls LODFile::~LODFile.
+VA_COMPGEN(0x00559220, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
+
 VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 
 VA(0x005594b0, 0x40) MAC_ADDRESS(0x1521d0, 0x40)  // dc 0x122984
@@ -444,13 +448,15 @@ static bool openArchiveResource(int archiveIndex)
 // Mac retains the archive searches at 0:0x1522ec and 0:0x152374.
 // Resource loaders call them directly; the public pointTo* wrappers near
 // the end of this file remain separate calls at 0:0x154660 and 0:0x154680.
+// Both bind the selected context row (Mac 0:0x1523a0 forms base + state*0x18;
+// retail inlined bitmap searches keep a dead lea of that row, not +8).
 MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_sprites;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
+    TResourceArchiveContext& context =
+        g_resourceArchiveContexts[g_videoGameState];
+    int remaining = context.m_sprites.m_count;
+    const int* archive = context.m_sprites.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {
@@ -466,10 +472,10 @@ static LODFile* findSpriteResource(const char* name)
 MAC_ADDRESS(0x152374, 0x88)
 static LODFile* findBitmapResource(const char* name)
 {
-    TResourceArchiveList& archives =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps;
-    int remaining = archives.m_count;
-    int* archive = archives.m_indices;
+    TResourceArchiveContext& context =
+        g_resourceArchiveContexts[g_videoGameState];
+    int remaining = context.m_bitmaps.m_count;
+    const int* archive = context.m_bitmaps.m_indices;
     LODFile* file = &g_resourceLodSlots[*archive].m_file;
 
     while (!file->pointAt(name)) {
@@ -522,11 +528,11 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
         try {
             TResourceArchiveContext* context =
-                &g_resourceArchiveContexts[*g_videoGameState];
+                &g_resourceArchiveContexts[g_videoGameState];
 
             if (openSprites) {
                 int remaining = context->m_sprites.m_count;
-                int* archive = context->m_sprites.m_indices;
+                const int* archive = context->m_sprites.m_indices;
                 do {
                     int archiveIndex = *archive;
                     bool opened = openArchiveResource(archiveIndex);
@@ -542,7 +548,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 
             if (openBitmaps) {
                 int remaining = context->m_bitmaps.m_count;
-                int* archive = context->m_bitmaps.m_indices;
+                const int* archive = context->m_bitmaps.m_indices;
                 do {
                     int archiveIndex = *archive;
                     bool opened = openArchiveResource(archiveIndex);
@@ -689,8 +695,10 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
 
-            const char* fallbackName = DATA_COMPGEN(
-                0x0064108c, defaultBitmap816Name, "default.pcx");
+            // Each loader owns its fallback name as .rdata array storage:
+            // retail keeps two separate "default.pal" copies (0x6410b8,
+            // 0x6410c4) beside the pooled .data error-context literals.
+            DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
             lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
@@ -773,8 +781,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                              "GetBitmap16"),
                 RESOURCE_TYPE_BITMAP16, name);
 
-            const char* fallbackName = DATA_COMPGEN(
-                0x006410a8, defaultBitmap24Name, "dfault24.pcx");
+            DATA(0x006410a8) static const char fallbackName[] = "dfault24.pcx";
             lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
@@ -873,8 +880,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
                          "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
-        const char* fallbackName = DATA_COMPGEN(
-            0x006410b8, defaultPalette16Name, "default.pal");
+        DATA(0x006410b8) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -960,8 +966,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
-        const char* fallbackName =
-            DATA_COMPGEN(0x006410c4, defaultPaletteName, "default.pal");
+        DATA(0x006410c4) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -1057,8 +1062,7 @@ font* ResourceManager::loadFont(const char* name)
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
             RESOURCE_TYPE_FONT, name);
 
-        const char* fallbackName =
-            DATA_COMPGEN(0x006410d0, defaultFontName, "default.fnt");
+        DATA(0x006410d0) static const char fallbackName[] = "default.fnt";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -1276,8 +1280,20 @@ namespace ResourceManager {
 bool getSoundFile(const char* localName, std::auto_ptr<char>& data, int* size);
 }
 
+TSoundHeaderDescriptor::TSoundHeaderDescriptor(
+    SoundHeaderStruct** sounds, int* count, HANDLE* file)
+    : m_sounds(sounds), m_count(count), m_file(file)
+{
+}
+
+// Retail CRT 0x5592b0 binds campaign, installed, then CD sound archives.
 DATA(0x0069e500)
-TSoundHeaderDescriptor g_soundHeaderDescriptors[3];
+TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
+    TSoundHeaderDescriptor(&g_soundHeaderCampaign, &g_soundCountCampaign,
+                           &g_soundFileCampaign),
+    TSoundHeaderDescriptor(&g_soundHeader, &g_soundCount, &g_soundFile),
+    TSoundHeaderDescriptor(&g_soundHeaderCd, &g_soundCountCd, &g_soundFileCd)
+};
 
 // ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
 // Win32 file read replaces Dreamcast's separate data/header outputs.
@@ -1293,9 +1309,9 @@ bool ResourceManager::getSoundFile(const char* localName,
         soundName.erase(extension);
 
     TResourceArchiveContext* context =
-        &g_resourceArchiveContexts[*g_videoGameState];
+        &g_resourceArchiveContexts[g_videoGameState];
     int remaining = context->m_sounds.m_count;
-    int* archive = context->m_sounds.m_indices;
+    const int* archive = context->m_sounds.m_indices;
     int x;
 
     do {
@@ -1367,8 +1383,7 @@ sample* ResourceManager::loadSample(const char* name)
     int size;
     if (!getSoundFile(name, data, &size)) {
         reportMissingSample(name);
-        const char* fallbackName = DATA_COMPGEN(
-            0x006410dc, defaultSampleName, "default.wav");
+        DATA(0x006410dc) static const char fallbackName[] = "default.wav";
         if (!getSoundFile(fallbackName, data, &size)) {
             reportMissingSample(fallbackName);
             return 0;
@@ -1610,11 +1625,6 @@ CSprite* ResourceManager::getSprite(const char* name)
     return sprite;
 }
 
-// The pointee's exact domain name is not yet proven; retail consumers agree
-// that this global points at the small active game/resource-context ordinal.
-DATA(0x0069923c)
-int* g_videoGameState;
-
 DATA(0x0069d870)
 TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
@@ -1627,8 +1637,45 @@ TResourceLODSlot g_resourceLodSlots[8] = {
     DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod")
 };
 
+// Retail CRT 0x559320 supplies these twelve read-only lists and their
+// counts. LOD indices address g_resourceLodSlots; sound indices address
+// g_soundHeaderDescriptors. Context numbers follow g_videoGameState.
+DATA(0x00641028) static const int g_context0Sprites[2] = { 5, 1 };
+DATA(0x00641030) static const int g_context0Bitmaps[2] = { 4, 0 };
+DATA(0x00641038) static const int g_context0Sounds[2] = { 1, 0 };
+DATA(0x00641040) static const int g_context1Sprites[3] = { 7, 3, 1 };
+DATA(0x0064104c) static const int g_context1Bitmaps[3] = { 6, 2, 0 };
+DATA(0x00641058) static const int g_context1Sounds[3] = { 2, 1, 0 };
+DATA(0x00641064) static const int g_context2Sprites[1] = { 1 };
+DATA(0x00641068) static const int g_context2Bitmaps[1] = { 0 };
+DATA(0x0064106c) static const int g_context2Sounds[2] = { 1, 0 };
+DATA(0x00641074) static const int g_context3Sprites[2] = { 1, 3 };
+DATA(0x0064107c) static const int g_context3Bitmaps[2] = { 0, 2 };
+DATA(0x00641084) static const int g_context3Sounds[2] = { 1, 0 };
+
+TResourceArchiveContext::TResourceArchiveContext(
+    int spriteCount, const int* sprites, int bitmapCount, const int* bitmaps,
+    int soundCount, const int* sounds)
+{
+    m_sprites.m_count = spriteCount;
+    m_sprites.m_indices = sprites;
+    m_bitmaps.m_count = bitmapCount;
+    m_bitmaps.m_indices = bitmaps;
+    m_sounds.m_count = soundCount;
+    m_sounds.m_indices = sounds;
+}
+
 DATA(0x0069e538)
-TResourceArchiveContext g_resourceArchiveContexts[4];
+TResourceArchiveContext g_resourceArchiveContexts[4] = {
+    TResourceArchiveContext(2, g_context0Sprites, 2, g_context0Bitmaps,
+                           2, g_context0Sounds),
+    TResourceArchiveContext(3, g_context1Sprites, 3, g_context1Bitmaps,
+                           3, g_context1Sounds),
+    TResourceArchiveContext(1, g_context2Sprites, 1, g_context2Bitmaps,
+                           2, g_context2Sounds),
+    TResourceArchiveContext(2, g_context3Sprites, 2, g_context3Bitmaps,
+                           2, g_context3Sounds)
+};
 
 VA(0x0055cf00, 0x4B) MAC_ADDRESS(0x1545e4, 0x7c)
 void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
@@ -1677,8 +1724,8 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 VA(0x0055d070, 0x5C) MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
-    int* archive =
-        g_resourceArchiveContexts[*g_videoGameState].m_bitmaps.m_indices;
+    const int* archive =
+        g_resourceArchiveContexts[g_videoGameState].m_bitmaps.m_indices;
     for (;;) {
         LODEntry* entry = g_resourceLodSlots[*archive].m_file.getItemIndex(name);
         if (entry)

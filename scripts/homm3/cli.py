@@ -291,7 +291,7 @@ def _dispatch(argv: list[str]) -> int:
                    help="fresh Clang/VC6 warning report (homm3 warnings --help)")
     sub.add_parser('compare', add_help=False, help='compare existing objects without compiling or banking scores')
     sub.add_parser('verify', add_help=False,
-                   help='data-relocs / data-access / data-coverage / data-tu-order / library-data-refs')
+                   help='data-relocs / data-access / data-coverage / data-tu-order / library-data-refs / library-code')
 
     p = sub.add_parser(
         "build", help="compile + delink + report + evidence/source gates")

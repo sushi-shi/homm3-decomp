@@ -64,6 +64,10 @@ def run() -> DelinkResult:
     if rc:
         raise RuntimeError("source label extraction failed; delinking stopped")
     inventory = model.generate()
+    from homm3.delink import reloc_pairing
+    aliases = reloc_pairing.write_aliases(reloc_pairing._STATE) \
+        if reloc_pairing._STATE is not None else \
+        common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
     pdb = synth_pdb.generate(inventory)
     data_manifest.generate(model.resolve())
     data = data_manifest.OUTPUT
@@ -78,8 +82,7 @@ def run() -> DelinkResult:
          "--engine-path", "c:\\proj\\",
          "--reloc-manifest", str(common.HOMM3_DIR /
                                  "config/retail/relocs.tsv"),
-         "--reloc-alias-manifest", str(common.HOMM3_DIR /
-                                       "config/retail/reloc-aliases.tsv"),
+         "--reloc-alias-manifest", str(aliases),
          "--data-manifest", str(data),
          "--data-section-manifest", str(data_manifest.SECTION_OUTPUT)],
         check=True)

@@ -59,7 +59,7 @@ const char* g_townCommand[35];
 DATA(0x006a5e20)
 const char* g_mineEventText[8];
 
-// 0x006a5e40 - datum claimed at src/townmgr.cpp:385
+DATA(0x006a5e40)
 const char* g_tavernInfo[8];
 
 DATA(0x006a5e60)
@@ -85,7 +85,9 @@ TTextResource* g_mineEventTextResource;
 DATA(0x006a6040)
 TSpreadsheetResource* g_specialBuildingText;
 
-// 0x006a6048 - datum claimed at src/game.cpp:10974
+// Retail's writer (0x5b9647) and reader (0x4cad13) share this table,
+// with sixteen pointers per faction. Keep its sole definition here.
+DATA(0x006a6048)
 const char* g_townNames[9][16];
 
 DATA(0x006a6288)
@@ -194,12 +196,15 @@ const char* g_campaignRegionNames[23];
 
 DATA(0x006a8014)
 const char* g_heroScreen[33];
-// --- Help.txt's 23 THelpText tables (below), Dreamcast-named ---
+// Help.txt tables share storage with every window that consumes them.
+// initializeHelpText (0x5b98b0) proves each base and populated row count.
+// Original names include gSpellbookHelp, gGiveResourceWindowHelp,
+// gResourceWindowHelp, gSingleSelectionHelp and gUniversityWindowHelp.
 
-// 0x006a52d0 - datum claimed at src/spellbookwindow.cpp:52 (gSpellbookHelpText)
+DATA(0x006a52d0)
 THelpText g_spellbookHelp[11];
 
-// 0x006a53a8 - datum claimed at src/tradpost.cpp:1341 (gGiveHelpText)
+DATA(0x006a53a8)
 THelpText g_giveResourceWindowHelp[5];
 
 DATA(0x006a55a8)
@@ -208,7 +213,7 @@ THelpText g_combatOptionsHelp[39];
 DATA(0x006a56e0)
 THelpText g_adventureWindowHelp[27];
 
-// 0x006a5868 - datum claimed at src/tradpost.cpp:1342 (gMarketHelpText)
+DATA(0x006a5868)
 THelpText g_resourceWindowHelp[6];
 
 DATA(0x006a59c8)
@@ -217,7 +222,7 @@ THelpText g_campaignBriefHelp[62];
 DATA(0x006a5f80)
 THelpText g_campaignWindowHelp[24];
 
-// 0x006a6530 - datum claimed at src/adventureoptionswindow.cpp:20
+DATA(0x006a6530)
 THelpText g_adventureOptionsHelp[7];
 
 DATA(0x006a6570)
@@ -235,13 +240,13 @@ THelpText g_newGameHelp[5];
 DATA(0x006a6c20)
 THelpText g_mainMenuHelp[5];
 
-// 0x006a6c50 - datum claimed at src/tradpost.cpp:1343 (gSellArtHelpText)
+DATA(0x006a6c50)
 THelpText g_sellArtifactWindowHelp[5];
 
 DATA(0x006a6c80)
 THelpText g_singleSelectionHelp[245];
 
-// 0x006a7458 - datum claimed at src/viewarmywindow.cpp:156
+DATA(0x006a7458)
 THelpText g_viewArmyHelp[15];
 
 DATA(0x006a7518)
@@ -259,13 +264,13 @@ THelpText g_mpHelp[8];
 DATA(0x006a77d0)
 THelpText g_transformerWindowHelp[3];
 
-// 0x006a7da8 - datum claimed at src/tradpost.cpp:1344 (gBuyArtHelpText)
+DATA(0x006a7da8)
 THelpText g_buyArtifactWindowHelp[5];
 
-// 0x006a7dd8 - datum claimed at src/university_window.cpp:33 (gUniversityWindowHelp)
-THelpText g_universityWindowHelp2[4];
+DATA(0x006a7dd8)
+THelpText g_universityWindowHelp[4];
 
-// 0x006a7e98 - datum claimed at src/tradpost.cpp:1345 (gSellCreaHelpText)
+DATA(0x006a7e98)
 THelpText g_sellCreatureWindowHelp[5];
 // --- Arraytxt.txt's 24 destination tables (below), Dreamcast-named ---
 
@@ -324,10 +329,10 @@ const char* g_constWiseTreePriceText[3];
 DATA(0x006a74f0)
 const char* g_townTypeNames[10];
 
-// 0x006a7540 - datum claimed at src/hero.cpp:121 (gStatDesc)
+DATA(0x006a7540)
 const char* g_statDesc[4];
 
-// 0x006a7710 - datum claimed at src/game.cpp:446
+DATA(0x006a7710)
 const char* g_weekNames[15];
 
 DATA(0x006a7794)
@@ -342,7 +347,7 @@ const char* g_difficulty[5];
 DATA(0x006a7800)
 const char* g_handiText[3];
 
-// 0x006a79c4 - datum claimed at src/game.cpp:445
+DATA(0x006a79c4)
 const char* g_monthNames[10];
 
 DATA(0x006a7d94)
@@ -934,8 +939,8 @@ unsigned char initializeHelpText()
         const TSpreadsheetResource::TStringVector& row =
             g_helpText->getRow(i);
 
-        g_universityWindowHelp2[j].m_text = row[0];
-        g_universityWindowHelp2[j].m_rclick = row[1];
+        g_universityWindowHelp[j].m_text = row[0];
+        g_universityWindowHelp[j].m_rclick = row[1];
     }
     return 1;
 }

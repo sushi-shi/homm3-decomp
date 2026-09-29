@@ -506,7 +506,7 @@ void searchArray::checkTownPortal(const hero* currentHero,
         newCell.m_point.m_z = destinations[destinationIndex].m_z;
         newCell.m_townPortal = 1;
         int distance = abs(newCell.m_point.m_z - startCell->m_point.m_z)
-                * (g_mapHeight + g_mapWidth) / 2
+                * (g_mapWidth + g_mapHeight) / 2
             + abs(newCell.m_point.m_x - startCell->m_point.m_x)
             + abs(newCell.m_point.m_y - startCell->m_point.m_y);
         newCell.m_adjustedCost += (distance + 4) * 50;

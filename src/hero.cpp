@@ -68,7 +68,6 @@ DATA(0x00698a44) int g_heroScreenArmyStripLive;
 // storage addresses and access widths are byte-proven; no public symbol
 // roster survives for the two name-table pointer spellings, so they are
 // provisional. gpCurrentHero and the hero-screen globals live in hero.h.
-DATA(0x006a7540) extern const char* g_statDesc[4];
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
 // cells and their roles; no surviving public names them, so the spellings
 // remain provisional.
@@ -97,41 +96,41 @@ const type_ballistics_traits (&g_constBallisticsTraits)[4] =
 // four-int band as the two rows below).
 // Luck's own mastery row (retail 0x63e998) and Leadership's (0x63e9a8),
 // the two four-int rows below the float band.
-static const int g_luckBonuses[kNumMasteries] = { 0, 1, 2, 3 };
-static const int g_leadershipBonuses[kNumMasteries] = { 0, 1, 2, 3 };
-static const int g_mysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
-static const int g_scoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
+DATA(0x0063e998) static const int g_luckBonuses[kNumMasteries] = { 0, 1, 2, 3 };
+DATA(0x0063e9a8) static const int g_leadershipBonuses[kNumMasteries] = { 0, 1, 2, 3 };
+DATA(0x0063e9c8) static const int g_mysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
+DATA(0x0063e9d8) static const int g_scoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
 // Estates gold per day by mastery (retail 0x63ea18, the same band).
-static const int g_estatesGold[kNumMasteries] = { 0, 125, 250, 500 };
-static const float g_archeryFactors[kNumMasteries] =
+DATA(0x0063ea18) static const int g_estatesGold[kNumMasteries] = { 0, 125, 250, 500 };
+DATA(0x0063e9e8) static const float g_archeryFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.25f, 0.5f };
-static const float g_eagleEyeFactors[kNumMasteries] =
+DATA(0x0063ea28) static const float g_eagleEyeFactors[kNumMasteries] =
     { 0.0f, 0.4f, 0.5f, 0.6f };
-static const float g_diplomacyFactors[kNumMasteries] =
+DATA(0x0063ea38) static const float g_diplomacyFactors[kNumMasteries] =
     { 0.0f, 0.2f, 0.4f, 0.6f };
-static const float g_magicResistanceFactors[kNumMasteries] =
+DATA(0x0063ea48) static const float g_magicResistanceFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.2f };
-static const float g_offenseFactors[kNumMasteries] =
+DATA(0x0063e9f8) static const float g_offenseFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
-static const float g_defenseFactors[kNumMasteries] =
+DATA(0x0063ea08) static const float g_defenseFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
-static const float g_learningFactors[kNumMasteries] =
+DATA(0x0063ea58) static const float g_learningFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
-static const float g_intelligenceFactors[kNumMasteries] =
+DATA(0x0063ea88) static const float g_intelligenceFactors[kNumMasteries] =
     { 0.0f, 0.25f, 0.5f, 1.0f };
-static const float g_firstAidFactors[kNumMasteries] =
+DATA(0x0063ea98) static const float g_firstAidFactors[kNumMasteries] =
     { 0.0f, 1.0f, 2.0f, 3.0f };
 // Sorcery's spell-damage bonus by mastery (retail 0x63ea78).
 // Necromancy's raise-rate by mastery (retail 0x63e9b8, same band).
-static const float g_necromancyFactors[kNumMasteries] =
+DATA(0x0063e9b8) static const float g_necromancyFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
-static const float g_sorceryFactors[kNumMasteries] =
+DATA(0x0063ea78) static const float g_sorceryFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
 // The two SPELL-specialty ladders GetHeroSpellBonus (0x4e5ff0) indexes
 // by the target creature's level, seven entries each: retail 0x63eaa8
 // (shared by the six buff spells) and 0x63eac4 (Slayer's own).
-static const int g_buffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
-static const int g_slayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
+DATA(0x0063eaa8) static const int g_buffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
+DATA(0x0063eac4) static const int g_slayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
 // These three switch-only ids remain source-private because adding otherwise
 // unused enumerators to armygrp.h changes initialize.obj's VC6 include
 // personality. Retail and the DC SpellID roster prove the values.
@@ -196,8 +195,8 @@ static short g_experienceForLevel[12] = {
 // get_skill_award's campaign arm, where it REPLACES the scenario's own
 // gpGame->field_4e658 row. Values read from the pinned image.
 DATA(0x00679ca0) static char g_campaignDisabledSkills[kNumSecSkills] = {
-    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1,
-    1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0
 };
 
 // The four magic schools as a table, retail .DATA 0x679cbc. NOT const:
@@ -213,7 +212,164 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[4] = {
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
-THeroSpecificAbility g_heroSpecificAbilitiesImp[156];
+THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
+    { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
+    { eHeroAbilityCreature, { 2 } },
+    { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
+    { eHeroAbilitySecondarySkill, { eSecSkillNavigation } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEstates } },
+    { eHeroAbilityCreature, { 6 } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { CREATURE_CAVALIER } },
+    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
+    { eHeroAbilitySpell, { 41 } },
+    { eHeroAbilitySpell, { 45 } },
+    { eHeroAbilitySpell, { 20 } },
+    { eHeroAbilityCreature, { 8 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySpell, { 48 } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilityCreature, { CREATURE_DWARF } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityCreature, { CREATURE_DENDROID_GUARD } },
+    { eHeroAbilitySecondarySkill, { eSecSkillMagicResistance } },
+    { eHeroAbilityCreature, { CREATURE_WOOD_ELF } },
+    { eHeroAbilityCreature, { 24 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilitySpell, { 55 } },
+    { eHeroAbilitySpell, { 37 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
+    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySpell, { 51 } },
+    { eHeroAbilitySpell, { 16 } },
+    { eHeroAbilityCreature, { CREATURE_PEGASUS } },
+    { eHeroAbilityCreature, { CREATURE_STONE_GARGOYLE } },
+    { eHeroAbilityCreature, { 36 } },
+    { eHeroAbilityCreature, { CREATURE_STONE_GOLEM } },
+    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { CREATURE_NAGA_SENTINEL } },
+    { eHeroAbilityResource, { 1 } },
+    { eHeroAbilityCreature, { 36 } },
+    { eHeroAbilitySpell, { 60 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySpell, { 51 } },
+    { eHeroAbilityCreature, { CREATURE_MAGE } },
+    { eHeroAbilitySpell, { 19 } },
+    { eHeroAbilitySpell, { 53 } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityCreature, { 46 } },
+    { eHeroAbilityCreature, { 52 } },
+    { eHeroAbilityCreature, { 48 } },
+    { eHeroAbilityCreature, { CREATURE_IMP } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityCreature, { 44 } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { 50 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
+    { eHeroAbilitySpell, { 22 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
+    { eHeroAbilitySpell, { 45 } },
+    { eHeroAbilityResource, { 3 } },
+    { eHeroAbilitySpell, { 43 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySpell, { 21 } },
+    { eHeroAbilityCreature, { CREATURE_WALKING_DEAD } },
+    { eHeroAbilityCreature, { CREATURE_VAMPIRE } },
+    { eHeroAbilityCreature, { CREATURE_LICH } },
+    { eHeroAbilityCreature, { CREATURE_WIGHT } },
+    { eHeroAbilityCreature, { CREATURE_BLACK_KNIGHT } },
+    { eHeroAbilitySecondarySkill, { eSecSkillNecromancy } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityCreature, { CREATURE_SKELETON } },
+    { eHeroAbilitySpell, { 24 } },
+    { eHeroAbilitySpell, { 23 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySpell, { 39 } },
+    { eHeroAbilitySpell, { 46 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillNecromancy } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityCreature, { 72 } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { CREATURE_MINOTAUR } },
+    { eHeroAbilityCreature, { 74 } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilityCreature, { 80 } },
+    { eHeroAbilityCreature, { CREATURE_TROGLODYTE } },
+    { eHeroAbilitySpell, { 38 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
+    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySpell, { 38 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilitySpell, { 23 } },
+    { eHeroAbilityResource, { 4 } },
+    { eHeroAbilitySpell, { 46 } },
+    { eHeroAbilityCreature, { CREATURE_CYCLOPS } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { 88 } },
+    { eHeroAbilityCreature, { 92 } },
+    { eHeroAbilityCreature, { 84 } },
+    { eHeroAbilityCreature, { 90 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillOffense } },
+    { eHeroAbilityCreature, { 86 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilityCreature, { 90 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillLogistics } },
+    { eHeroAbilitySpell, { 53 } },
+    { eHeroAbilitySpell, { 44 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillOffense } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilityResource, { 5 } },
+    { eHeroAbilityCreature, { CREATURE_BASILISK } },
+    { eHeroAbilityCreature, { 98 } },
+    { eHeroAbilityCreature, { 100 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillDefense } },
+    { eHeroAbilityCreature, { 102 } },
+    { eHeroAbilityCreature, { 104 } },
+    { eHeroAbilityCreature, { CREATURE_BALLISTA } },
+    { eHeroAbilityCreature, { CREATURE_WYVERN } },
+    { eHeroAbilitySpell, { 45 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillMysticism } },
+    { eHeroAbilitySecondarySkill, { eSecSkillNavigation } },
+    { eHeroAbilitySecondarySkill, { eSecSkillFirstAid } },
+    { eHeroAbilitySpell, { 46 } },
+    { eHeroAbilitySecondarySkill, { eSecSkillSorcery } },
+    { eHeroAbilitySecondarySkill, { eSecSkillIntelligence } },
+    { eHeroAbilitySecondarySkill, { eSecSkillEagleEye } },
+    { eHeroAbilityCreatureUniversal, { CREATURE_PSYCHIC_ELEMENTAL }, 3, 3, 0 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_EARTH_ELEMENTAL }, 2, 1, 5 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_FIRE_ELEMENTAL }, 1, 2, 2 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_WATER_ELEMENTAL }, 2, 0, 0 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_PSYCHIC_ELEMENTAL }, 3, 3, 0 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_EARTH_ELEMENTAL }, 2, 1, 5 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_FIRE_ELEMENTAL }, 1, 2, 2 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_WATER_ELEMENTAL }, 2, 0, 0 },
+    { eHeroAbilitySpell, { 13 } },
+    { eHeroAbilitySpell, { 53 } },
+    { eHeroAbilitySpell, { 15 } },
+    { eHeroAbilitySpell, { 46 } },
+    { eHeroAbilitySpell, { 43 } },
+    { eHeroAbilitySpell, { 47 } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityResource, { 6 } },
+    { eHeroAbilityKind5, { 2 } },
+    { -1, { 0 } },
+    { eHeroAbilityCreature, { 6 } },
+    { eHeroAbilityCreatureUpgrade, { 8 }, 0, 0, 0, CREATURE_MAGE, CREATURE_ENCHANTER },
+    { eHeroAbilityCreatureUpgrade, { 2 }, 0, 0, 0, CREATURE_WOOD_ELF, CREATURE_SHARPSHOOTER },
+    { eHeroAbilityCreatureUniversal, { 96 }, 5, 5, 10 },
+    { eHeroAbilityCreatureUniversal, { CREATURE_BLACK_KNIGHT }, 5, 5, 10 },
+    { eHeroAbilityDragons, { 0 }, 5, 5, 0 },
+    { eHeroAbilityCreature, { 7 } },
+    { eHeroAbilityDragons, { 0 }, 5, 5, 0 },
+    { eHeroAbilityCreature, { 90 } },
+    { eHeroAbilityCreatureUniversal, { CREATURE_DEVIL }, 4, 2, 0 }
+};
 
 DATA(0x00679c80)
 const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
@@ -223,12 +379,12 @@ VA(0x004d71a0, 0x71) MAC_ADDRESS(0x0f1cac, 0xec)  // dc 0xca728
 unsigned char initializeHeroSpecificAbilitiesTable()
 {
     TSpreadsheetResource* text = ResourceManager::getSpreadsheet(
-        DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "herospec.txt"));
+        DATA_COMPGEN(0x00679ccc, heroSpecificAbilityTextName, "HeroSpec.txt"));
     if (text == 0)
         return 0;
 
     if (text->getNumberOfRows() < 158) {
-        text->dispose();
+        ResourceManager::dispose(text);
         return 0;
     }
 
@@ -306,7 +462,7 @@ unsigned char initializeBallisticsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 6) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -326,7 +482,7 @@ unsigned char initializeBallisticsTable()
                 atoi(values[column++]);
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return initializeMoveConstants();
 }
 
@@ -892,6 +1048,9 @@ void hero::initialize(short index)
 // The enum-valued backpack fill constructs each empty artifact inside the
 // loop in Mac; a preconstructed value changes that lifetime. Its equipped-slot test
 // reads the field directly, without an additional getArtifact helper call.
+// Lane A r5 trace: m_customName's assign(str, pos, n) gets 1726 / 4 = 431
+// under operator=; retail's call needs two more candidates after it or a
+// caller cost of 805 or less (1055 here). See docs/vc6/inliner.md.
 VA(0x004d8b30, 0x434) MAC_ADDRESS(0x0f454c, 0x528)  // Complete member interface, ret 4
 void hero::initialize(const HeroExtra* setup)
 {
@@ -1011,16 +1170,13 @@ const char* hero::heroFn004D8F70()
 }
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
-// when the +0x3d9 flag is set (falling back to the empty literal at
-// 0x63a608), otherwise strcmp's the +0x23 name band against
+// when the +0x3d9 flag is set (c_str() falls back to basic_string's
+// _Nullstr byte at 0x63a608), otherwise strcmp's the +0x23 name band against
 // akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
 // only while the live name still equals its default.
 VA(0x004d8fb0, 0xA0) MAC_ADDRESS(0x0f4af8, 0xc8)
 const char* hero::heroFn004D8FB0()
 {
-    const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
-                                         "");
-
     if (m_hasCustomName)
         return m_customName.c_str();
 
@@ -1621,10 +1777,9 @@ int hero::getExperience(int level)
 {
     if (level <= 12)
         return g_experienceForLevel[level - 1];
-    int total = g_experienceForLevel[11];
     int increment = static_cast<int>(
-        (total - g_experienceForLevel[10]) * 1.2);
-    total += increment;
+        (g_experienceForLevel[11] - g_experienceForLevel[10]) * 1.2);
+    int total = g_experienceForLevel[11] + increment;
     for (int i = 13; i < level; i++) {
         increment *= 1.2;
         total += increment;
@@ -3630,16 +3785,17 @@ int THeroScreenWindow::windowHandler(message& msg)
             if (nth >= g_currentHero->m_skillCount)
                 break;
             int skill = g_currentHero->getNthSS(nth);
+            // Both reads index the byte array directly: the typed
+            // getSecondarySkill facade widens through TSkillMastery and
+            // scores 88.09% against this form's 92.07%.
             strcpy(g_text,
                    g_sSkillTraits[skill]
-                       .m_levelNames[
-                           g_currentHero->getSecondarySkill(TSecondarySkill(skill)) - 1]);
+                       .m_levelNames[g_currentHero->m_skillLevel[skill] - 1]);
             normalDialog(g_text,
                          rightMouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                      : hero::PRIMARY_STAT_DIALOG_TYPE,
                          -1, -1, 0x14,
-                         3 * skill
-                             + g_currentHero->getSecondarySkill(TSecondarySkill(skill)) + 2,
+                         3 * skill + g_currentHero->m_skillLevel[skill] + 2,
                          -1, 0, -1, 0, -1, 0);
             break;
         }
@@ -3672,6 +3828,7 @@ VA(0x004de710, 0x2C52) MAC_ADDRESS(0x0fa5f0, 0x78b4)  // dc 0xd0184
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC hero.cpp:3965
     m_topHero = 0;
     m_widgets.reserve(121);
     m_field64 = m_widgets.back();
@@ -5075,7 +5232,9 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.isHuman()) {
+                        } else if (!player.m_isHuman) {
+                            // Retail reads the byte; playerData::isHuman is
+                            // an out-of-line game.cpp body (called: 94.67%).
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
@@ -5488,7 +5647,7 @@ float hero::getExperienceBonusFactor() const
 
 // Logistics' land-movement factor by mastery (retail .rdata 0x63ea68,
 // the same four-float band as the specialty rows above).
-static const float g_logisticsFactors[kNumMasteries] =
+DATA(0x0063ea68) static const float g_logisticsFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.2f, 0.3f };
 
 // E:\gamedcs\hero.cpp:5709.
@@ -6164,10 +6323,11 @@ int* std::vector<int>::end()
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }
 
-// std::vector<T>::push_back(const T&) - 434 B, `ret 4`; see the note
-// above for why this is push_back and not either insert overload.
-VA(0x004e6500, 0x1B2)  // stl-comdat, retail-only
-void std::vector<int>::push_back(const int& _X)
+// std::vector<T*>::push_back(T* const&) - 434 B, `ret 4`: one ICF-folded
+// body for every pointer-element vector. hero.obj emits it for the hero
+// screen's widget list, so that instantiation owns the claim.
+VA_COMPGEN(0x004e6500, 0x1B2, VECTOR_PUSH_BACK, widget)
+void std::vector<widget*>::push_back(widget* const& _X)
 {
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }
@@ -6209,3 +6369,6 @@ VA_COMPGEN(0x0044d4d0, 0x37, BITSET_TEST, Bitset144)
 // and in mapcell. All 37 bytes agree, including the three-word fill and
 // six-bit high-word mask; there are no relocations or added source calls.
 VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
+// bitset<70>::reference::operator= - called by markArtifactSpells here
+// and by game::loadMap; game expands its uses, this unit emits the body.
+VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)

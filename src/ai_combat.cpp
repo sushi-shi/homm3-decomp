@@ -787,10 +787,9 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
     }
 }
 
-// All 92 Windows CFG blocks and 23 calls agree; the residual is register
-// homing. Named mutable/const locals for defender.getArmy() leave 99.7461%
-// unchanged in a reproduced three-state family. Header getter-body order is
-// also flat across all 60 emitted function code sections.
+// Reading the defender's m_currentArmy and m_currentHero fields directly
+// (not through getArmy/getHero) fixes the last register homes: 99.7461% ->
+// exact, with Mac rising 89.90% -> 93.02%.
 // Mac retains the same 18 direct game calls in the same order, including both
 // getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
 // register probe on this body found no closer binding than the current one.
@@ -827,7 +826,7 @@ void type_AI_combat_data::castSpell(
             continue;
 
         mastery = m_currentHero->getSpellLevel(spell, m_terrain);
-        long manaCost = m_currentHero->getManaCost(spell, defender.getArmy(), m_terrain);
+        long manaCost = m_currentHero->getManaCost(spell, defender.m_currentArmy, m_terrain);
         if (manaCost > m_mana)
             continue;
 
@@ -861,7 +860,7 @@ void type_AI_combat_data::castSpell(
         return;
 
     m_mana -= bestManaCost;
-    if (defender.getHero() && defender.hasCreature(CREATURE_FAMILIAR))
+    if (defender.m_currentHero && defender.hasCreature(CREATURE_FAMILIAR))
         defender.m_mana += bestManaCost / 5;
 
     switch (g_spellTraits[bestChoice.m_spell].m_flags

@@ -41,7 +41,59 @@ DATA(0x0067ff38) const char* g_pointerSetSprites[mouseManager::MAX_POINTER_SETS]
 
 // Five pointer sets, 144 frames per set, one POINT per frame. The extent
 // closes exactly at the first pointer-name string at 0x6815d0.
-DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
+DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144] = {
+    {
+        { 0, 0 }, { 0, 0 }, { 10, 12 }
+    },
+    {
+        { 0, 0 }, { 10, 12 }, { 12, 10 }, { 12, 12 }, { 14, 13 }, { 12, 13 },
+        { 20, 22 }, { 12, 16 }, { 8, 9 }, { 14, 14 }, { 14, 13 }, { 12, 13 },
+        { 20, 22 }, { 12, 16 }, { 8, 9 }, { 14, 14 }, { 14, 13 }, { 12, 13 },
+        { 20, 22 }, { 12, 16 }, { 8, 9 }, { 14, 14 }, { 14, 13 }, { 12, 13 },
+        { 20, 22 }, { 12, 16 }, { 8, 9 }, { 14, 14 }, { 20, 22 }, { 20, 22 },
+        { 20, 22 }, { 20, 22 }, { 6, 0 }, { 16, 1 }, { 22, 6 }, { 16, 17 },
+        { 6, 22 }, { 0, 17 }, { 0, 5 }, { 0, 1 }, { 0, 0 }, { 12, 14 },
+        { 20, 26 }
+    },
+    {
+        { 8, 9 }, { 10, 11 }, { 12, 10 }, { 12, 12 }, { 12, 10 }, { 6, 9 },
+        { 0, 0 }, { 22, 0 }, { 30, 6 }, { 20, 21 }, { 0, 21 }, { 0, 6 },
+        { 0, 0 }, { 6, 0 }, { 6, 31 }, { 14, 0 }, { 12, 12 }, { 12, 10 },
+        { 12, 12 }, { 12, 12 }
+    },
+    {
+        { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 },
+        { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 },
+        { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 }, { 18, 27 },
+        { 18, 27 }, { 18, 27 }
+    },
+    {
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 },
+        { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }, { 22, 22 }
+    }
+};
 
 // E:\gamedcs\mousemgr.cpp:291
 // mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
@@ -50,9 +102,16 @@ DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 // is the unwind scaffolding).
 class TCSLock {
 public:
+    // DC 0xff7e0 records only frame line 291 and closing line 294; the
+    // unrecorded 292..293 hold the non-null invariant and the member store.
+    // Retail proves the invariant's IL cost: checkUpdate's nested hidePointer
+    // expansion keeps this constructor as a call (0x50d890) at budget 21,
+    // which requires cb > 40. The plain store+call body costs 39 (free, so
+    // always expanded; checkUpdate 96.73%); the release VERIFY costs 46.
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
-    TCSLock(CRITICAL_SECTION* criticalSection)
-        : m_section(criticalSection) {
+    TCSLock(CRITICAL_SECTION* criticalSection) {
+        HOMM3_RELEASE_VERIFY(criticalSection != 0);
+        m_section = criticalSection;
         EnterCriticalSection(m_section);
     }
     VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
@@ -466,21 +525,30 @@ void mouseManager::checkUpdate()
     static unsigned long updateTime = GameTime::get() + 33;
     DATA(0x0069ca1c)
     static unsigned long animateTime = GameTime::get() + 100;
+    // DC 986..999 tests the off-screen case first (showSystemCursor(1)) and
+    // keeps the on-screen reset in a separate else block. Retail's EH map
+    // agrees: state 1 is the live hidePointer lock from the first expansion
+    // and state 2 is the null entry left by the second, dead expansion.
+    // Residual (99.88%): retail tests the second guard bit through a
+    // register (mov al,2; test al,cl) where this compile uses immediates;
+    // a single two-declarator static declaration was byte-flat.
     if (IsIconic(g_hwndApp))
         return;
     if (GameTime::isPast(updateTime) && !isBusy()) {
         updateTime = GameTime::nextFrameTime(updateTime, 33);
         update(0);
         if (GetWindowThreadProcessId(g_hwndApp, 0) == GetCurrentThreadId()) {
-            if (m_currentX >= 0 && m_currentX < 800
-                && m_currentY >= 0 && m_currentY < 600) {
+            if (m_currentX < 0 || m_currentX >= 800
+                || m_currentY < 0 || m_currentY >= 600) {
+                if (!m_systemPointerIsOn) {
+                    showSystemCursor(1);
+                    m_systemPointerIsOn = 1;
+                }
+            } else {
                 if (m_systemPointerIsOn) {
                     showSystemCursor(0);
                     m_systemPointerIsOn = 0;
                 }
-            } else if (!m_systemPointerIsOn) {
-                showSystemCursor(1);
-                m_systemPointerIsOn = 1;
             }
         }
     }

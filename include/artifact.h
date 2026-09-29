@@ -101,9 +101,25 @@ struct TCombinationArtifact {
 };
 SIZE(TCombinationArtifact, 24);
 
+// One allowable-slot class: the slots an artifact of that class may occupy.
+// Like TCombinationArtifact, each table entry is constructed from a
+// separately built mask. The cinit at 0x44cc00 proves the one-argument
+// constructor: its sixteen inline candidate sites divide the budget so that
+// the empty entry's nested bitset::_Tidy stays a call (0x44cc09), which a
+// plain bitset array expands. Mac 0x5ba74..0x5bbe0 reserves the matching
+// second stack temporary per entry (0x108, 0x100, 0xf8, ...), as CodeWarrior
+// does for this type and not for bitset elements. Readers use each entry as
+// the bitset itself, as the game-context table's readers must (see
+// gamecontext.cpp); a bitset member here leaves the hero and swapmgr readers
+// unchanged. The original type name is unknown.
+struct TArtifactSlotMask : public std::bitset<19> {
+    TArtifactSlotMask(const std::bitset<19>& slots) : std::bitset<19>(slots) {}
+};
+SIZE(TArtifactSlotMask, 4);
+
 // Cinit-owned tables consumed by artifact.cpp's ordinary source body.
 DATA(0x00693898)
-extern const std::bitset<19> g_artifactSlotMasks[15];
+extern const TArtifactSlotMask g_artifactSlotMasks[15];
 DATA(0x006938d8)
 extern const TCombinationArtifact g_combinationArtifactTable[12];
 
@@ -136,7 +152,7 @@ inline unsigned char artifactAllowedInSlot(TArtifact artifact, TArtifactSlot slo
 // town-entry path. The record itself is completed by hero.h; an extern
 // array of unknown bound can retain that single owning declaration here.
 struct type_artifact;
-extern type_artifact g_blacksmithArtifacts[];
+extern const type_artifact g_blacksmithArtifacts[];
 
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real

@@ -87,7 +87,7 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
-from homm3.core import clang, common
+from homm3.core import clang, common, msvc_names
 from homm3.core.tsv import write as write_tsv
 from homm3.retail_labels.fragments import FRAGMENTS, HEADER, fragment_path
 
@@ -265,6 +265,7 @@ CHAR_STREAM_MEMBERS = (
     ("?max_size@?$basic_string@D", "QBEIXZ", "basic_string_max_size"),
     ("?_Grow@?$basic_string@D", None, "basic_string_grow"),
     ("?_Copy@?$basic_string@D", "AAEXI@Z", "basic_string_copy"),
+    ("?_Tidy@?$basic_string@D", "AAEX_N@Z", "basic_string_tidy"),
     ("?append@?$basic_string@D", "@ABV12@II@Z", "basic_string_append_str"),
     ("?append@?$basic_string@D", "@PBDI@Z", "basic_string_append_ptr"),
     ("?assign@?$basic_string@D", "@ABV12@II@Z",
@@ -469,6 +470,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE", "TREE_ERASE_KEY",
                  "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
+                 "VECTOR_PUSH_BACK",
                  "EXCEPTION_DORAISE",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
                  "DEQUE_CONST_ITERATOR_ADD",
@@ -874,7 +876,10 @@ def scan_file(path, functions: set[int],
                          "ckind": kind, "owner": owner})
         elif macro == "DATA_COMPGEN_GUARD":
             name = _arg(args[1], IDENT_ARG_RE, "name", where)
-            rows.append({"rva": rva, "unit": unit, "size": 4,
+            # VC6 local-static guards are unsigned char (the emitted $S
+            # symbols end in @4EA). Retail byte accesses and the adjacent
+            # herodefs guards at 0x698b98/99/9a independently confirm this.
+            rows.append({"rva": rva, "unit": unit, "size": 1,
                          "kind": "data",
                          "name": f"__h3cg${unit}$static_init_guard${name}",
                          "channel": "src-DATA_COMPGEN_GUARD"})
@@ -1395,6 +1400,8 @@ def _demangle_key(mangled: str):
         return f"{vector_owner}@vector_capacity"
     if mangled.startswith("?clear@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_clear"
+    if mangled.startswith("?push_back@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_push_back"
     if mangled.startswith("?reserve@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_reserve"
     if mangled.startswith("?resize@?$vector@") and vector_owner:
@@ -1809,6 +1816,37 @@ def vc6_function_name(mangled: str, candidates, unit: str) -> str | None:
         if not origin or Path(origin.group(1).replace('\\', '/')).stem.lower() != unit.lower():
             continue
         if candidate[:anon.start()] + "@?anonymous@" + candidate[anon.end():] == expected:
+            matches.append(candidate)
+    return matches[0] if len(matches) == 1 else None
+
+
+def vc6_data_name(mangled: str, candidates, unit: str) -> str | None:
+    """VC6's emitted spelling of a clang-typed DATA declaration, or None.
+
+    Clang hashes an anonymous namespace (`?A0x<hash>@`) where VC6 embeds the
+    declaring file (`?%<path><n>@`), and the two number a function-local
+    static's lexical scope differently (`?1??` versus `?BC@??`). Everything
+    else must agree exactly, an anonymous scope must come from the owning
+    unit's own source file, and exactly one emitted name may match.
+    """
+    if mangled in candidates:
+        return mangled
+    clang_anon = re.compile(r"\?A0x[0-9A-Fa-f]+@")
+    if not (clang_anon.search(mangled) or msvc_names.LOCAL_STATIC_SCOPE.search(mangled)):
+        return None
+
+    def key(name: str) -> str:
+        return msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, name)
+    expected = key(clang_anon.sub("?anonymous@", mangled))
+    matches = []
+    vc6_anon = re.compile(r"\?%([^@]+)@")
+    for candidate in candidates:
+        origins = [re.fullmatch(r"(.+\.(?:cpp|cxx|cc|c|h|hpp|inl))\d+", m.group(1), re.I)
+                   for m in vc6_anon.finditer(candidate)]
+        if any(not origin or Path(origin.group(1).replace('\\', '/')).stem.lower()
+               != unit.lower() for origin in origins):
+            continue
+        if key(vc6_anon.sub("?anonymous@", candidate)) == expected:
             matches.append(candidate)
     return matches[0] if len(matches) == 1 else None
 
@@ -2361,7 +2399,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
             continue
         simple = next(
-            (kind for kind in ("vector_clear", "exception_doraise",
+            (kind for kind in ("vector_clear", "vector_push_back",
+                               "exception_doraise",
                                "functor_call", "deque_iterator_add_assign",
                                "deque_const_iterator_add")
              if f"${kind}$" in row["name"]), None)

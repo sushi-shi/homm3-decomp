@@ -18,7 +18,8 @@ verbatim from the pre-port build.labels monolith:
 
   * authority order per rva, first writer wins: src claims > zlib-map >
     runtime-map > working-label (functions); reloc-alias > vtable census >
-    IAT slots > reloc-target dense names (data);
+    IAT slots > runtime-data library symbols > reloc-target dense names
+    (data);
   * the scan-order dedup of label-grade names replays over the fragments'
     RAW declarator spellings, then joined base-obj spellings take over;
     a second global pass suffixes remaining label-grade collisions and
@@ -147,10 +148,12 @@ def resolve(rows=None) -> Model:
                      if c.meta.get('internal') == '1'}
     channels = {'src-VA': 'src', 'src-VA+ir': 'src', 'src-VA+base': 'src',
                 'src-VA_COMPGEN': 'src_compgen', 'zlib-map': 'functions_zlib',
+                'zlib-data-map': 'data_zlib',
                 'runtime-map': 'functions_static_libs', 'src-DATA': 'src',
                 'src-DATA_COMPGEN': 'src_data_compgen',
                 'src-DATA_COMPGEN_GUARD': 'data_compgen',
-                'vtable': 'data_vtables', 'vtable-name': 'data_vtables'}
+                'vtable': 'data_vtables', 'vtable-name': 'data_vtables',
+                'vtable-pairing': 'data_vtables'}
     functions, data, violations = [], [], []
     for rva, row in sorted(rows.items()):
         source = claims.get((row['kind'], rva), [])
@@ -174,7 +177,7 @@ def resolve(rows=None) -> Model:
                 channel = ''
             else:
                 winner = next(c for c in sized if c.meta.get('defined') == '1')
-                name, size = winner.name, winner.size
+                name, size = data_spelling(winner.name, winner.unit), winner.size
         if not size:
             channel = ''
         space = next((key for key, (lo, hi) in regions.items() if lo <= rva < hi), '')
@@ -195,7 +198,23 @@ def resolve(rows=None) -> Model:
             else:
                 violations.append(f'data identity {b.name} binds multiple retail addresses')
         result.append(b)
-    return Model(functions, result, violations)
+    model = Model(functions, result, violations)
+    from homm3.core.project import Project
+    from homm3.verify.source_static_data import recover as recover_statics
+    project = Project(common.HOMM3_DIR)
+    static_data = recover_statics(model, project, BUILD / 'objdiff/base')
+    if static_data:
+        data_by_address = {b.rva: b for b in model.data}
+        data_by_address.update((b.rva, b) for b in static_data)
+        model = model._replace(data=[data_by_address[rva] for rva in sorted(data_by_address)])
+    from homm3.verify.source_function_aliases import recover
+    from collections import defaultdict
+    aliases = defaultdict(list)
+    for alias in recover(model, project, BUILD / 'objdiff/base'):
+        aliases[alias.rva].append(alias)
+    return model._replace(functions=[
+        b._replace(aliases=b.aliases + tuple(aliases[b.rva]))
+        if b.rva in aliases else b for b in functions])
 
 
 def serialize(model: Model):
@@ -338,6 +357,39 @@ def _write_compgen(src_claims) -> None:
                              c.meta["owner"], f"0x{c.size:x}"])
 
 
+_EMITTED: dict[str, set[str]] = {}
+
+
+def data_spelling(name: str, unit: str) -> str:
+    """The owning object's emitted spelling of a clang-typed DATA name.
+
+    Clang and VC6 spell anonymous namespaces and local-static scopes
+    differently; `vc6_data_name` bridges only a unique, otherwise identical
+    emitted name of the declaring unit. Anything else keeps clang's name."""
+    if "?A0x" not in name and not msvc_names_scope(name):
+        return name
+    if unit not in _EMITTED:
+        from homm3.core.coff import Coff
+        path = BUILD / "objdiff/base" / f"{unit}.obj"
+        try:
+            _EMITTED[unit] = Coff(path).all_names()
+        except (OSError, ValueError):
+            _EMITTED[unit] = set()
+    bridged = labels_source.vc6_data_name(name, _EMITTED[unit], unit)
+    if bridged is None:
+        return name
+    # Keep the join spelling of a local-static scope (`mask`); only the
+    # anonymous-namespace identity comes from the emitted name.
+    from homm3.core import msvc_names
+    return normalize_anon_ns_name(
+        msvc_names.LOCAL_STATIC_SCOPE.sub(msvc_names.CANONICAL_SCOPE, bridged), unit)
+
+
+def msvc_names_scope(name: str) -> bool:
+    from homm3.core import msvc_names
+    return bool(msvc_names.LOCAL_STATIC_SCOPE.search(name))
+
+
 def _upgrade_dense_data_alias(row: dict, claim) -> dict:
     """Let a reviewed owner replace only a source DATA dense placeholder.
 
@@ -393,10 +445,11 @@ def _collect_inventory():
         if name in seen_names:
             name = f"{name}_{c.rva:x}"
         seen_names.add(name)
-        if c.channel in ("src-VA+ir", "src-VA+base") or (
-                c.channel == "src-DATA" and c.meta.get("type")
-                and c.meta.get('defined') == '1'):
+        if c.channel in ("src-VA+ir", "src-VA+base"):
             name = c.name
+        elif (c.channel == "src-DATA" and c.meta.get("type")
+                and c.meta.get('defined') == '1'):
+            name = data_spelling(c.name, c.unit)
         if c.channel in POOLED_CHANNELS:
             if c.rva in pooled:
                 continue        # one pooled datum, many claiming TUs
@@ -408,7 +461,7 @@ def _collect_inventory():
     # so the delinked objects pair 1:1 against our compiled base objs
     # (inflate.c.obj vs base/inflate.obj)
     for c in providers.zlib_map():
-        put(c.rva, c.name, c.unit, c.size, "func", c.channel)
+        put(c.rva, c.name, c.unit, c.size, c.kind, c.channel)
 
     # 3. runtime map (sizes from the universe)
     for c in providers.runtime_map():
@@ -445,7 +498,10 @@ def _collect_inventory():
         if r["rva"] in rows:
             continue  # a src claim owns the address
         cls = r["class"] or None
-        name = f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}"
+        # A dllimport class's locally emitted table is `??_S` (VC6's local
+        # vftable); its census row spells the complete symbol.
+        name = (cls if cls and cls.startswith("??_") else
+                f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}")
         put(r["rva"], name, "", r["count"] * 4, "data",
             "vtable-name" if cls else "vtable")
 
@@ -454,12 +510,36 @@ def _collect_inventory():
     for c in iat.claims(Path(info["path"]), project.toolchain / "lib"):
         put(c.rva, c.name, "", c.size, "data", c.channel)
 
+    # Relocation pairings: generated identities of unclaimed data owners,
+    # read off instruction-identical candidate/retail function pairs
+    # (homm3.delink.reloc_pairing). They name addresses only: an admitted
+    # owner is a zero-sized anchor, or the identity of a census vtable.
+    from homm3.delink import reloc_pairing
+    pairing_state = reloc_pairing.data_pairings(src_claims, functions, rows)
+    for pairing in pairing_state.pairings:
+        if pairing.kind != "data" or pairing.verdict != "admitted":
+            continue
+        row = rows.get(pairing.owner)
+        if row is None:
+            put(pairing.owner, pairing.symbol, "", "", "data", "reloc-pairing")
+        elif row["provenance"] == "vtable":
+            row.update(name=pairing.symbol, provenance="vtable-pairing")
+        else:
+            row.update(name=pairing.symbol, unit="", kind="data",
+                       provenance="reloc-pairing")
+
     # dense naming for every absolute-relocation target, required because
     # vostok panics on an .rdata target below every named constant and
     # skips targets outside known symbol sizes
+    # Reviewed library data placements name the objects game code references
+    # (DirectPlay GUIDs, LIBCPMT statics); they replace only dense names.
+    library_data = {c.rva: c.name for c in providers.runtime_data_symbols()}
     skipped_targets = 0
     for target in providers.reloc_targets():
         if target in rows:
+            continue
+        if target in library_data:
+            put(target, library_data[target], "", "", "data", "runtime-data")
             continue
         if rdata.rva <= target < rdata.rva + rdata.mapped:
             put(target, f"const_{target:x}", "", "", "data", "reloc-target")
@@ -523,6 +603,8 @@ def generate() -> Path:
     rows, skipped_targets = _collect_inventory()
     model = resolve(rows)
     serialize(model)
+    from homm3.delink import reloc_pairing
+    reloc_pairing.write_outputs(model)
     for binding in model.data:
         if binding.name:
             rows[binding.rva].update(name=binding.name, size=binding.size)

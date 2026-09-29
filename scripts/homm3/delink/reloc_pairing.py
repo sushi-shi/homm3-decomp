@@ -1,0 +1,1041 @@
+"""homm3.delink.reloc_pairing - retail relocation identities from paired code.
+
+A retail relocation target that no source declaration claims is only a
+zero-sized address anchor (`data_<rva>`, `const_<rva>`, `vtbl_<rva>`), and an
+address the linker folded several bodies onto carries only one of their
+names. Strict relocation comparison then fails functions whose instructions
+are byte-identical: the candidate names `?g_foo@@3HA` or
+`?size@?$vector@PAVwidget@@...`, retail the anchor or the other folded name.
+
+This generator derives those identities at build time from the compiled
+candidate objects, the retail image and the reviewed inventories. Nothing is
+hand-admitted; deleting its outputs and rebuilding reproduces them.
+
+VOTES. A voter is a source-claimed function whose candidate body equals the
+retail body apart from relocated operands: the same length (the candidate
+may carry trailing NOP/INT3 fill), identical bytes once every relocation
+field is masked, exactly the retail absolute-relocation sites, and only
+DIR32/REL32 relocations. Any other difference withdraws all of its votes.
+Each relocation of a voter pairs candidate `S + a` with the retail operand
+`V`; the vote is `S` at owner address `V - a`. Only spellings both comparison
+sides keep verbatim vote.
+
+DATA PAIRINGS (`decide`). A data owner is admitted only when every vote for
+`S` names one address, every vote for that address names `S`, no other name
+claims the address, `S` is bound nowhere else, and the owner is anchored:
+some vote has addend 0, or votes with two different addends agree on the
+base. The rest are held with their reason. Admitted owners enter the model
+as zero-sized anchors (or name a census vtable, whose extent the census
+states); an interior operand becomes a generated relocation-alias row. A
+pairing names an address; extents and bytes still come from declarations and
+the byte verification.
+
+ADDRESS IDENTITIES (`identities`). Retail code addresses can carry several
+proven names: every symbol a byte-verified library section defines at its
+offset, and every candidate function a voter calls at a claimed retail
+function whose candidate body is exactly that retail body (an identical-code
+fold). Normalization uses these names to compare a candidate relocation
+against the retail one only when both resolve to the same address.
+
+Outputs (under build/gen/):
+
+    reloc_pairings.tsv        every data/code pairing, verdict and evidence
+    reloc_aliases.tsv         reviewed + generated alias rows for vostok
+    address_identities.tsv    proven extra names of retail addresses
+"""
+
+from __future__ import annotations
+
+import bisect
+import re
+import struct
+from collections import defaultdict
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Callable, Iterable, NamedTuple
+
+from homm3.core import msvc_names
+
+DIR32 = 0x0006
+REL32 = 0x0014
+CNT_CODE = 0x00000020
+FUNCTION_TYPE = 0x0020
+EXTERNAL = 2
+STATIC = 3
+LABEL = 6
+FILL = frozenset(b"\x90\xcc")
+
+#: Placeholder spellings a pairing may replace: the model's dense anchors and
+#: census vtables without a reviewed class.
+PLACEHOLDER_PREFIXES = ("data_", "const_", "bss_", "vtbl_")
+
+
+class Voter(NamedTuple):
+    """One source-claimed function: retail rva/size and its candidate object."""
+    unit: str
+    name: str
+    rva: int
+    size: int
+
+
+class Vote(NamedTuple):
+    symbol: str
+    owner: int          # retail owner rva (V - addend)
+    target: int         # retail operand rva V
+    addend: int
+    function_rva: int
+    site_rva: int
+    typ: int
+    unit: str
+    function: str
+    private: bool = False   # the candidate symbol is private to `unit`
+    raw: str = ""           # the candidate's own spelling, when respelled
+
+
+@dataclass
+class Pairing:
+    symbol: str
+    owner: int
+    kind: str                      # 'data' | 'code'
+    votes: list = field(default_factory=list)
+    verdict: str = ""
+    reason: str = ""
+    unit: str = ""                 # set for a unit-scoped identity
+    raw: str = ""                  # the candidate's spelling of `symbol`
+
+    @property
+    def functions(self) -> set[int]:
+        return {v.function_rva for v in self.votes}
+
+    @property
+    def addends(self) -> set[int]:
+        return {v.addend for v in self.votes}
+
+
+def stable_name(name: str) -> bool:
+    """A spelling both comparison sides keep verbatim."""
+    if not name or name[0] in "$." or name.startswith("_$"):
+        return False
+    if "?%" in name or "$S" in name or "$RVA" in name or "__h3cg$" in name:
+        return False
+    return msvc_names.mask(name) == name
+
+
+#: COMDAT data whose name is derived from its content: string literals and
+#: floating-point constants. Retail may hold several identical copies (one
+#: per compiland without string pooling) or fold them onto other read-only
+#: data; the content, not the name, identifies the bytes.
+CONTENT_NAMED = ("??_C@", "__real@")
+
+
+#: A compiler-generated local function (`$E<n>`: a local static's dynamic
+#: initializer or its atexit destructor). The ordinal is private to its
+#: object, so its identity is unit-scoped and needs a body proof.
+LOCAL_FUNCTION = re.compile(r"_?\$E[0-9]+")
+
+
+#: A function-local static's guard byte (`_?$S27@?1??f@@...@4EA`): cl's
+#: private ordinal names it, so its identity is unit-scoped as well.
+LOCAL_GUARD = re.compile(r"_\?\$S[0-9]+@.+@4EA")
+
+
+def unit_local(name: str) -> bool:
+    return bool(LOCAL_FUNCTION.fullmatch(name) or LOCAL_GUARD.fullmatch(name))
+
+
+def compiland_private(name: str, candidate: "CandidateObject") -> bool:
+    """A name only its own compiland can mean: a STATIC-class definition in
+    the candidate object (file static, local static, static function) or a
+    source-file anonymous namespace (`?%<path><nonce>@`). Two compilands'
+    same-spelled private names are different entities."""
+    return name in candidate.private or "?%" in name
+
+
+def comparison_spelling(name: str, unit: str) -> str:
+    """The spelling normalization gives a unit-local name (anonymous scope
+    and local-static scope canonical)."""
+    from homm3.compare.canonicalize import normalize_anon_ns_name
+    return msvc_names.LOCAL_STATIC_SCOPE.sub(
+        msvc_names.CANONICAL_SCOPE, normalize_anon_ns_name(name, unit))
+
+
+def content_named(name: str) -> bool:
+    return name.startswith(CONTENT_NAMED)
+
+
+def is_placeholder(name: str) -> bool:
+    if not name.startswith(PLACEHOLDER_PREFIXES):
+        return False
+    tail = name.split("_", 1)[1]
+    try:
+        int(tail, 16)
+    except ValueError:
+        return False
+    return True
+
+
+class CandidateObject:
+    """Code symbols, bodies and relocations of one compiled object."""
+
+    def __init__(self, payload: bytes, absolute: dict[str, int] | None = None):
+        from homm3.compare.canonicalize import CoffObject
+        absolute = absolute or {}
+        coff = CoffObject(payload)
+        self.coff = coff
+        by_section: dict[int, list] = defaultdict(list)
+        for symbol in coff.symbols.values():
+            if symbol.section <= 0 or symbol.storage_class not in (EXTERNAL, STATIC):
+                continue
+            if symbol.name.startswith("."):
+                continue
+            section = coff.sections[symbol.section - 1]
+            if section.characteristics & CNT_CODE:
+                by_section[symbol.section].append(symbol)
+        relocations: dict[int, list] = defaultdict(list)
+        for relocation in coff.relocations:
+            relocations[relocation.section].append(relocation)
+        # Names private to this compiland: file statics, a function's local
+        # statics and static functions (storage class STATIC). Another
+        # object's symbol of the same name is a different entity.
+        self.private = {s.name for s in coff.symbols.values()
+                        if s.section > 0 and s.storage_class == STATIC
+                        and not s.name.startswith((".", "$"))}
+        # VC6's frame-handler thunk (`mov eax, OFFSET FuncInfo; jmp
+        # ___CxxFrameHandler`): the local label ending a function's
+        # associative `.text$x` section, which its EH prologue pushes.
+        self.eh_thunks: set[str] = set()
+        for s in coff.symbols.values():
+            if s.section <= 0 or s.storage_class != LABEL:
+                continue
+            section = coff.sections[s.section - 1]
+            if section.name != ".text$x" or not section.characteristics & CNT_CODE:
+                continue
+            data = coff.section_bytes(section)
+            if (s.value + 10 == section.raw_size and data[s.value] == 0xB8
+                    and data[s.value + 5] == 0xE9):
+                self.eh_thunks.add(s.name)
+        self.functions: dict[str, tuple[bytes, list]] = {}
+        duplicate = set()
+        for index, symbols in by_section.items():
+            section = coff.sections[index - 1]
+            data = coff.section_bytes(section)
+            starts = sorted({s.value for s in symbols})
+            for symbol in symbols:
+                if symbol.typ != FUNCTION_TYPE:
+                    continue
+                later = [v for v in starts if v > symbol.value]
+                end = later[0] if later else section.raw_size
+                # An absolute symbol (`__except_list`, defined by the runtime
+                # library) is a linker constant, not an image relocation: its
+                # field holds inline + value and compares as ordinary bytes.
+                body = bytearray(data[symbol.value:end])
+                relocs = []
+                for r in relocations[index]:
+                    if not symbol.value <= r.site < end:
+                        continue
+                    target = coff.symbols[r.symbol_index]
+                    site = r.site - symbol.value
+                    constant = (target.value if target.section == -1 else
+                                absolute.get(target.name) if target.section == 0
+                                else None)
+                    if constant is not None and r.typ == DIR32 and site + 4 <= len(body):
+                        inline = struct.unpack_from("<I", body, site)[0]
+                        struct.pack_into("<I", body, site, (inline + constant) & 0xFFFFFFFF)
+                        continue
+                    relocs.append((site, r.typ, target.name))
+                relocs.sort(key=lambda row: row[0])
+                if symbol.name in self.functions:
+                    duplicate.add(symbol.name)
+                self.functions[symbol.name] = (bytes(body), relocs)
+        for name in duplicate:
+            del self.functions[name]
+
+
+def data_content(candidate: CandidateObject, name: str) -> tuple[bytes, list[int]] | None:
+    """(bytes, relocation sites) of a data symbol that alone fills its
+    section (zeros for uninitialized storage), else None."""
+    coff = candidate.coff
+    found = [s for s in coff.symbols.values() if s.name == name and s.section > 0]
+    if len(found) != 1 or found[0].value:
+        return None
+    section = coff.sections[found[0].section - 1]
+    if section.characteristics & CNT_CODE:
+        return None
+    members = [s for s in coff.symbols.values() if s.section == section.index
+               and not s.name.startswith(".") and s.storage_class in (EXTERNAL, STATIC)]
+    if len(members) != 1:
+        return None
+    sites = [r.site for r in coff.relocations if r.section == section.index]
+    return coff.section_bytes(section), sites
+
+
+def _masked(body: bytes, sites: Iterable[int]) -> bytes:
+    out = bytearray(body)
+    for site in sites:
+        out[site:site + 4] = b"\0\0\0\0"
+    return bytes(out)
+
+
+def compare_body(body: bytes, relocs: list, retail: bytes | None, size: int,
+                 retail_sites: list[int]) -> str:
+    """'' when `body` equals `retail` apart from relocated operands."""
+    if retail is None or len(retail) != size:
+        return "no retail body"
+    if len(body) < size:
+        return "instruction: shorter"
+    if any(site + 4 > size for site, _t, _s in relocs):
+        return "instruction: relocation past retail end"
+    if len(body) > size and not set(body[size:]) <= FILL:
+        return "instruction: longer"
+    if any(typ not in (DIR32, REL32) for _site, typ, _s in relocs):
+        return "instruction: relocation type"
+    absolute = {site for site, typ, _s in relocs if typ == DIR32}
+    if absolute - set(retail_sites):
+        return "instruction: absolute relocation sites"
+    # The stripped image's reviewed operand inventory can list an honest
+    # literal whose value happens to be a VA (`mov edi, 5000000`). Where the
+    # candidate holds the very same four bytes without a relocation, the
+    # instruction is identical; normalization removes the same false row.
+    for site in set(retail_sites) - absolute:
+        if site + 4 > size or body[site:site + 4] != retail[site:site + 4]:
+            return "instruction: absolute relocation sites"
+    sites = [site for site, _t, _s in relocs]
+    if _masked(body[:size], sites) != _masked(retail, sites):
+        return "instruction: bytes"
+    return ""
+
+
+def operand_targets(body: bytes, relocs: list, retail: bytes, rva: int,
+                    image_base: int) -> list[tuple[int, int, str, int, int]]:
+    """[(site, typ, name, addend, retail target rva)] for a compared body."""
+    out = []
+    for site, typ, name in relocs:
+        addend = struct.unpack_from("<i", body, site)[0]
+        if typ == REL32:
+            target = rva + site + 4 + struct.unpack_from("<i", retail, site)[0]
+        else:
+            target = struct.unpack_from("<I", retail, site)[0] - image_base
+        out.append((site, typ, name, addend, target))
+    return out
+
+
+def function_votes(voter: Voter, candidate: CandidateObject, retail: bytes | None,
+                   retail_sites: list[int], image_base: int,
+                   rename: Callable[[str], str] = lambda name: name,
+                   ) -> tuple[list[Vote], str]:
+    """(votes, '') for a voter, or ([], reason) when its instructions differ."""
+    found = candidate.functions.get(voter.name)
+    if found is None:
+        return [], "no candidate body"
+    body, relocs = found
+    reason = compare_body(body, relocs, retail, voter.size,
+                          [site - voter.rva for site in retail_sites])
+    if reason:
+        return [], reason
+    votes = []
+    for site, typ, name, addend, target in operand_targets(
+            body, relocs, retail, voter.rva, image_base):
+        raw, private = name, False
+        if name in candidate.eh_thunks:
+            if typ != DIR32 or addend:
+                continue
+            private = True
+        elif unit_local(name):
+            name, private = comparison_spelling(name, voter.unit), True
+        elif compiland_private(name, candidate):
+            name, private = comparison_spelling(name, voter.unit), True
+            if not stable_name(name):
+                continue
+        elif not stable_name(name):
+            continue
+        votes.append(Vote(rename(name), target - addend, target, addend,
+                          voter.rva, voter.rva + site, typ, voter.unit, voter.name,
+                          private, raw))
+    return votes, ""
+
+
+def collect(voters: Iterable[Voter], objects: Callable[[str], CandidateObject | None],
+            read_retail: Callable[[int, int], bytes | None],
+            retail_sites: list[int], image_base: int,
+            ) -> tuple[list[Vote], dict[str, int], int]:
+    sites = sorted(retail_sites)
+    votes: list[Vote] = []
+    withdrawn: dict[str, int] = defaultdict(int)
+    admitted = 0
+    for voter in voters:
+        candidate = objects(voter.unit)
+        if candidate is None:
+            withdrawn["no candidate object"] += 1
+            continue
+        lo = bisect.bisect_left(sites, voter.rva)
+        hi = bisect.bisect_left(sites, voter.rva + voter.size)
+        found, reason = function_votes(
+            voter, candidate, read_retail(voter.rva, voter.size), sites[lo:hi],
+            image_base)
+        if reason:
+            withdrawn[reason] += 1
+            continue
+        admitted += 1
+        votes.extend(found)
+    return votes, dict(withdrawn), admitted
+
+
+def outside_operand(addend: int, extent: tuple[int, int] | None) -> bool:
+    """A claimed object's operand just outside its extent, as cl forms it.
+
+    `extent` is (size, element): an array's element stride, or the object
+    size for a non-array. One past the end is `object + sizeof`; a
+    strength-reduced loop bound adds the field offset to it
+    (`&a[N].field`), and a folded `a[i - 1]` starts one element before the
+    array. Anything further out is not read as this object."""
+    if extent is None:
+        return False
+    size, element = extent
+    if size <= 0 or element <= 0:
+        return False
+    if element == size:
+        return addend == size
+    return size <= addend < size + element or -element <= addend < 0
+
+
+def claim_extent(size: int | None, type_spelling: str) -> tuple[int, int] | None:
+    """(size, element) of a typed DATA claim: an array's outer element, or
+    the object itself; None without a size."""
+    if not size:
+        return None
+    match = re.search(r"\[([0-9]+)\]", type_spelling or "")
+    if match and "(" not in type_spelling and int(match[1]) and size % int(match[1]) == 0:
+        return size, size // int(match[1])
+    return size, size
+
+
+def decide(votes: list[Vote], *, region_of: Callable[[int], str | None],
+           claimed_name_at: Callable[[int], str | None],
+           claimed_rva_of: Callable[[str], int | None],
+           extent_of: Callable[[int], tuple[int, int] | None] = lambda rva: None,
+           ) -> tuple[list[Pairing], list[Vote]]:
+    """Admit unanimous, anchored, unclaimed DATA pairings; hold the rest.
+
+    ``region_of(rva)`` -> 'text'/'rdata'/'data'/'bss'/None;
+    ``claimed_name_at(rva)`` -> a non-placeholder name owning that rva;
+    ``claimed_rva_of(name)`` -> where a non-placeholder claim binds that name;
+    ``extent_of(rva)`` -> (size, element) of the claim there.
+    Code votes are returned as 'code' pairings for `identities` to prove.
+
+    A confirmed claim's operand just outside its extent (`outside_operand`)
+    becomes an exact-site alias: retail's image names that address by the
+    neighbouring object, the candidate by this one plus its addend.
+    """
+    by_symbol: dict[str, list[Vote]] = defaultdict(list)
+    by_owner: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    for vote in votes:
+        by_symbol[vote.symbol].append(vote)
+        if not content_named(vote.symbol):
+            by_owner[vote.owner].add((vote.symbol, vote.unit if vote.private else ""))
+    pairings: list[Pairing] = []
+    aliases: list[Vote] = []
+    for symbol, rows in sorted(by_symbol.items()):
+        owners = sorted({v.owner for v in rows})
+        if not unit_local(symbol) and any(v.private for v in rows):
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                pairings.append(_private_pairing(
+                    symbol, unit, mine, by_owner, region_of, claimed_name_at))
+            continue
+        if unit_local(symbol):
+            guard = bool(LOCAL_GUARD.fullmatch(symbol))
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                places = {v.owner for v in mine}
+                pairing = Pairing(symbol, min(places), "data" if guard else "code",
+                                  mine, unit=unit)
+                pairings.append(pairing)
+                region = region_of(pairing.owner)
+                if len(places) > 1:
+                    pairing.verdict, pairing.reason = "held", (
+                        "unit votes for " + ",".join(f"{o:#x}" for o in sorted(places)))
+                elif any(v.addend for v in mine) or (
+                        region not in ("data", "bss") if guard else region != "text"):
+                    pairing.verdict, pairing.reason = "held", "not the start of a local"
+                else:
+                    pairing.verdict, pairing.reason = "unit-candidate", (
+                        "needs a zero guard byte" if guard else "needs body proof")
+            continue
+        if content_named(symbol) and (
+                len(owners) > 1 or claimed_name_at(owners[0]) not in (None, symbol)):
+            # Identical copies, or a copy folded onto other read-only data:
+            # each compiland's votes must agree on its copy, and the caller
+            # proves the bytes (`unit-candidate`).
+            for unit in sorted({v.unit for v in rows}):
+                mine = [v for v in rows if v.unit == unit]
+                places = {v.owner for v in mine}
+                pairing = Pairing(symbol, min(places), "data", mine, unit=unit)
+                pairings.append(pairing)
+                if len(places) > 1:
+                    pairing.verdict, pairing.reason = "held", (
+                        "unit votes for " + ",".join(f"{o:#x}" for o in sorted(places)))
+                elif any(v.addend for v in mine):
+                    pairing.verdict, pairing.reason = "held", "interior operand of a copy"
+                else:
+                    pairing.verdict, pairing.reason = "unit-candidate", "needs content proof"
+            continue
+        for owner in owners:
+            mine = [v for v in rows if v.owner == owner]
+            region = region_of(owner)
+            kind = "code" if region == "text" else "data"
+            pairing = Pairing(symbol, owner, kind, mine)
+            pairings.append(pairing)
+            claimed = claimed_name_at(owner)
+            bound = claimed_rva_of(symbol)
+            if kind == "code":
+                # Several names at one code address are ordinary linker
+                # folding; `identities` decides them from body evidence.
+                if claimed == symbol:
+                    pairing.verdict, pairing.reason = "confirmed", "claim agrees"
+                elif len(owners) > 1:
+                    pairing.verdict, pairing.reason = "held", (
+                        "symbol votes for " + ",".join(f"{o:#x}" for o in owners))
+                elif bound is not None and bound != owner:
+                    # Two identical retail bodies: the candidate's name is
+                    # claimed at the other, so this call reaches a different
+                    # instantiation than the candidate names.
+                    pairing.verdict, pairing.reason = "held", f"symbol claimed at {bound:#x}"
+                elif any(v.addend for v in mine):
+                    pairing.verdict, pairing.reason = "held", "interior code operand"
+                else:
+                    pairing.verdict, pairing.reason = "candidate", "needs body proof"
+                continue
+            if len(owners) > 1:
+                pairing.verdict, pairing.reason = "held", (
+                    "symbol votes for " + ",".join(f"{o:#x}" for o in owners))
+            elif len(by_owner[owner]) > 1:
+                pairing.verdict, pairing.reason = "held", (
+                    "address votes for " + ",".join(sorted(n for n, _u in by_owner[owner])))
+            elif region is None or any(region_of(v.target) != region for v in mine):
+                pairing.verdict, pairing.reason = "held", "owner outside the operand's region"
+            elif claimed == symbol:
+                pairing.verdict, pairing.reason = "confirmed", "claim agrees"
+                aliases.extend(v for v in mine if v.typ == DIR32
+                               and outside_operand(v.addend, extent_of(owner)))
+            elif claimed is not None:
+                pairing.verdict, pairing.reason = "held", f"address claimed as {claimed}"
+            elif bound is not None and bound != owner:
+                pairing.verdict, pairing.reason = "held", f"symbol claimed at {bound:#x}"
+            elif 0 not in pairing.addends and len(pairing.addends) < 2:
+                pairing.verdict, pairing.reason = "held", "unanchored addend"
+            elif any(v.addend < 0 for v in mine):
+                pairing.verdict, pairing.reason = "held", "negative addend"
+            else:
+                pairing.verdict, pairing.reason = "admitted", ""
+            if pairing.verdict == "admitted":
+                aliases.extend(v for v in mine if v.addend and v.typ == DIR32)
+    return pairings, aliases
+
+
+def eh_thunk_at(read: Callable[[int, int], bytes | None], rva: int) -> bool:
+    """Retail holds a frame-handler thunk (`mov eax, imm32; jmp rel32`)."""
+    body = read(rva, 10) or b""
+    return len(body) == 10 and body[0] == 0xB8 and body[5] == 0xE9
+
+
+def _private_pairing(symbol: str, unit: str, mine: list[Vote], by_owner,
+                     region_of, claimed_name_at) -> Pairing:
+    """One compiland's pairing of a name private to it (`compiland_private`).
+
+    Code needs a body proof of that unit's own body (`unit-candidate`).
+    Data is admitted for the unit alone (`unit`) on the same evidence as a
+    global anchor: one place, no other vote for the address, anchored,
+    inside the operand's region and not claimed by another name. A claim
+    of the same name at the address confirms it."""
+    from homm3.core.msvc_names import mask
+    places = sorted({v.owner for v in mine})
+    owner = places[0]
+    region = region_of(owner)
+    kind = "code" if region == "text" else "data"
+    pairing = Pairing(symbol, owner, kind, mine, unit=unit, raw=mine[0].raw)
+    claimed = claimed_name_at(owner)
+    addends = pairing.addends
+    if len(places) > 1:
+        pairing.verdict, pairing.reason = "held", (
+            "unit votes for " + ",".join(f"{o:#x}" for o in places))
+    elif claimed is not None and mask(claimed) == mask(symbol):
+        pairing.verdict, pairing.reason = "confirmed", "claim agrees"
+    elif kind == "code":
+        if any(addends):
+            pairing.verdict, pairing.reason = "held", "interior code operand"
+        else:
+            pairing.verdict, pairing.reason = "unit-candidate", "needs body proof"
+    elif len(by_owner[owner]) > 1:
+        pairing.verdict, pairing.reason = "held", (
+            "address votes for " + ",".join(sorted(n for n, _u in by_owner[owner])))
+    elif region is None or any(region_of(v.target) != region for v in mine):
+        pairing.verdict, pairing.reason = "held", "owner outside the operand's region"
+    elif claimed is not None:
+        pairing.verdict, pairing.reason = "held", f"address claimed as {claimed}"
+    elif 0 not in addends and len(addends) < 2:
+        pairing.verdict, pairing.reason = "held", "unanchored addend"
+    elif any(a < 0 for a in addends):
+        pairing.verdict, pairing.reason = "held", "negative addend"
+    else:
+        pairing.verdict, pairing.reason = "unit", "compiland-private datum"
+    return pairing
+
+
+def prove_folds(pairings: list[Pairing], *, name_at: Callable[[int], str | None],
+                prove: Callable[[str, int], str],
+                twins: Callable[[int], list[int]] = lambda rva: [],
+                bound_at: Callable[[int], Iterable[str]] = lambda rva: ()) -> None:
+    """Admit code pairings whose candidate body is the retail body.
+
+    ``prove(symbol, rva)`` returns '' when some candidate object's body of
+    `symbol` is exactly the retail function at `rva` (named relocations
+    included), else the reason. A code pairing at an address the model
+    names differently is then a proven fold of the two names.
+
+    Retail keeps some byte-identical bodies unfolded. When `twins(rva)`
+    names another retail function with the very same bytes and call
+    targets, the candidate symbol could be folded onto either copy, so the
+    pairing is held unless every twin is independently another function:
+    see `twin_identity`.
+    """
+    # A unit-scoped pairing (`$E<n>`) is its own symbol per compiland.
+    voted: dict[int, set[tuple[str, str]]] = defaultdict(set)
+    places: dict[tuple[str, str], set[int]] = defaultdict(set)
+    standing: set[tuple[str, str]] = set()
+    for pairing in pairings:
+        if pairing.kind == "code":
+            key = (pairing.symbol, pairing.unit)
+            voted[pairing.owner].add(key)
+            places[key].add(pairing.owner)
+            if pairing.verdict != "held":
+                standing.add(key)
+
+    def twin_identity(twin: int, symbol: str, unit: str) -> tuple[str, str]:
+        """(other symbol, '') when `twin` is independently bound to another
+        function and no vote for `symbol` reaches it, else ('', reason).
+
+        Independent: a source claim or a generated binding (`bound_at`: a
+        verified library symbol or import thunk) names the twin, or every
+        vote reaching the twin names one other symbol, all of whose votes
+        reach it and whose pairing `decide` did not hold. Any vote or binding for `symbol` itself at the twin is a
+        conflict."""
+        if (symbol, unit) in voted[twin]:
+            return "", f"a vote for the symbol reaches twin {twin:#x}"
+        names = set(bound_at(twin))
+        claimed = name_at(twin)
+        if claimed:
+            names.add(claimed)
+        if len(voted[twin]) == 1:
+            (only,) = voted[twin]
+            if places[only] == {twin} and only in standing:
+                names.add(only[0])
+        if symbol in names:
+            return "", f"twin {twin:#x} is bound to the symbol"
+        if not names:
+            return "", f"identical retail twin at {twin:#x} is unidentified"
+        return min(names), ""
+
+    for pairing in pairings:
+        if pairing.kind != "code" or pairing.verdict not in ("candidate", "unit-candidate"):
+            continue
+        others = twins(pairing.owner)
+        identified = []
+        for twin in others:
+            other, why = twin_identity(twin, pairing.symbol, pairing.unit)
+            if why:
+                pairing.verdict, pairing.reason = "held", why
+                break
+            identified.append((twin, other))
+        if pairing.verdict == "held":
+            continue
+        if pairing.verdict == "unit-candidate":
+            continue
+        if name_at(pairing.owner) is None:
+            pairing.verdict, pairing.reason = "held", "no retail function at the address"
+            continue
+        why = prove(pairing.symbol, pairing.owner)
+        if why:
+            pairing.verdict, pairing.reason = "held", why
+        else:
+            pairing.verdict, pairing.reason = "folded", f"identical body of {name_at(pairing.owner)}"
+            if identified:
+                pairing.reason += "; twin " + ", ".join(
+                    f"{twin:#x} is {other}" for twin, other in identified[:4])
+
+
+class RetailTwins:
+    """Retail functions with byte-identical bodies and call targets."""
+
+    def __init__(self, img, sizes: dict[int, int]):
+        self.img, self.sizes = img, sizes
+        self._index: dict[bytes, list[int]] | None = None
+
+    def key(self, rva: int) -> bytes:
+        from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+        size = self.sizes.get(rva, 0)
+        body = bytearray(self.img.pe.read(rva, size) or b"")
+        for ins in Cs(CS_ARCH_X86, CS_MODE_32).disasm(bytes(body), 0):
+            if ins.bytes[0] in (0xE8, 0xE9) and ins.size == 5:
+                target = rva + ins.address + 5 + struct.unpack_from("<i", ins.bytes, 1)[0]
+                body[ins.address + 1:ins.address + 5] = struct.pack("<I", target & 0xFFFFFFFF)
+        return bytes(body)
+
+    def __call__(self, rva: int) -> list[int]:
+        if self._index is None:
+            index: dict[bytes, list[int]] = defaultdict(list)
+            for start, size in self.sizes.items():
+                if size:
+                    index[self.key(start)].append(start)
+            self._index = index
+        return [other for other in self._index.get(self.key(rva), ()) if other != rva]
+
+
+PAIRINGS_HEADER = ["owner_rva", "symbol", "kind", "verdict", "reason", "votes",
+                   "functions", "addends", "example_function", "example_site", "unit"]
+ALIAS_HEADER = ["function_rva", "target_rva", "site_rva", "owner", "addend",
+                "occurrences"]
+IDENTITY_HEADER = ["rva", "name", "proof", "evidence", "unit"]
+
+
+def _hex(value: int) -> str:
+    return f"{value:#x}" if value >= 0 else f"-{-value:#x}"
+
+
+def pairing_rows(pairings: list[Pairing]) -> list[list[str]]:
+    rows = []
+    for p in sorted(pairings, key=lambda p: (p.kind, p.verdict, p.owner, p.symbol)):
+        first = min(p.votes, key=lambda v: v.site_rva)
+        rows.append([f"0x{p.owner:08x}", p.symbol, p.kind, p.verdict, p.reason,
+                     str(len(p.votes)), str(len(p.functions)),
+                     ",".join(_hex(a) for a in sorted(p.addends)),
+                     first.function, f"0x{first.site_rva:08x}", p.unit])
+    return rows
+
+
+def alias_rows(aliases: list[Vote], reviewed: list[dict]) -> list[list[str]]:
+    """Reviewed rows verbatim, then generated exact-site rows for sites no
+    reviewed row covers."""
+    covered = set()
+    out = []
+    for row in reviewed:
+        out.append([row[k] for k in ALIAS_HEADER])
+        covered.add((int(row["function_rva"], 16), int(row["target_rva"], 16),
+                     row["site_rva"]))
+    for vote in sorted(aliases, key=lambda v: v.site_rva):
+        if ((vote.function_rva, vote.target, "*") in covered or
+                (vote.function_rva, vote.target, f"0x{vote.site_rva:08x}") in covered):
+            continue
+        out.append([f"0x{vote.function_rva:08x}", f"0x{vote.target:08x}",
+                    f"0x{vote.site_rva:08x}", vote.symbol,
+                    f"{vote.addend & 0xFFFFFFFF:#x}", "1"])   # vostok: u32 two's complement
+    return out
+
+
+# ------------------------------------------------------------ build driver --
+
+def _gen_dir() -> Path:
+    from homm3.core import common
+    return common.HOMM3_DIR / "build/gen"
+
+
+PAIRINGS_OUT = "reloc_pairings.tsv"
+ALIASES_OUT = "reloc_aliases.tsv"
+IDENTITIES_OUT = "address_identities.tsv"
+
+
+class Objects:
+    """Lazily parsed candidate objects under build/objdiff/base."""
+
+    def __init__(self, base_dir: Path, absolute: dict[str, int]):
+        self.base_dir = Path(base_dir)
+        self.absolute = absolute
+        self.cache: dict[str, CandidateObject | None] = {}
+
+    def __call__(self, unit: str) -> CandidateObject | None:
+        if unit not in self.cache:
+            path = self.base_dir / f"{unit}.obj"
+            try:
+                self.cache[unit] = CandidateObject(path.read_bytes(), self.absolute)
+            except (OSError, ValueError):
+                self.cache[unit] = None
+        return self.cache[unit]
+
+
+@dataclass
+class State:
+    votes: list
+    withdrawn: dict
+    voters: int
+    pairings: list = field(default_factory=list)
+    aliases: list = field(default_factory=list)
+    names: dict = field(default_factory=dict)      # inventory rva -> name
+
+
+_STATE: State | None = None
+
+
+def _library():
+    from homm3.verify.library_code import load_libraries
+    return load_libraries(zlib_units=())
+
+
+def _region_of(pe):
+    lo, hi = pe.text_span()
+    regions = pe.data_regions()
+
+    def region_of(rva: int) -> str | None:
+        if lo <= rva < hi:
+            return "text"
+        for name, (start, end) in regions.items():
+            if start <= rva < end:
+                return name
+        return None
+    return region_of
+
+
+def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
+                  base_dir: Path | None = None) -> State:
+    """Phase 1 (model inventory): votes and data-pairing verdicts.
+
+    `claims` are the source fragments' Claims, `sizes` the census extents and
+    `rows` the model's inventory so far ({rva: {name, provenance, ...}})."""
+    global _STATE
+    from homm3.core import common
+    from homm3.delink.image import retail
+    base_dir = Path(base_dir or common.HOMM3_DIR / "build/objdiff/base")
+    img = retail()
+    voters = [Voter(c.unit, c.name, c.rva, sizes[c.rva]) for c in claims
+              if c.kind == "func" and c.channel in ("src-VA+ir", "src-VA+base")
+              and c.rva in sizes]
+    library = _library()
+    objects = Objects(base_dir, dict(library.absolute))
+    votes, withdrawn, admitted = collect(
+        voters, objects, lambda rva, size: img.pe.read(rva, size),
+        img.reloc_sites, img.image_base)
+    by_name = {}
+    for rva, row in rows.items():
+        if not is_placeholder(row["name"]):
+            by_name.setdefault(row["name"], rva)
+
+    def claimed_name_at(rva):
+        row = rows.get(rva)
+        if row is None or is_placeholder(row["name"]):
+            return None
+        return row["name"]
+    thunks = {(unit, name) for unit in {v.unit for v in votes}
+              for name in (objects(unit).eh_thunks if objects(unit) else ())}
+    extents = {c.rva: claim_extent(c.size, c.meta.get("type", "")) for c in claims
+               if c.kind == "data" and c.channel == "src-DATA"}
+    pairings, aliases = decide(votes, region_of=_region_of(img.pe),
+                               claimed_name_at=claimed_name_at,
+                               claimed_rva_of=by_name.get, extent_of=extents.get)
+    # A frame-handler thunk label is its unit's own: the parent's EH
+    # prologue pushes it, and retail's operand must be a thunk as well.
+    for pairing in pairings:
+        if (pairing.unit, pairing.symbol) not in thunks:
+            continue
+        if pairing.verdict == "held":
+            continue
+        if eh_thunk_at(img.pe.read, pairing.owner):
+            pairing.kind, pairing.verdict, pairing.reason = "code", "unit", "EH handler thunk"
+        else:
+            pairing.verdict, pairing.reason = "held", "retail operand is not a handler thunk"
+    # An admitted anchor's interior operand must not already be another
+    # claimed object. (A confirmed claim's operand outside its extent names
+    # the neighbour's address by design.)
+    anchors = {(p.symbol, p.owner) for p in pairings if p.verdict == "admitted"}
+    held = set()
+    for vote in aliases:
+        if (vote.symbol, vote.owner) not in anchors:
+            continue
+        other = claimed_name_at(vote.target)
+        if other is not None and other != vote.symbol:
+            held.add((vote.symbol, vote.owner))
+    for pairing in pairings:
+        if (pairing.symbol, pairing.owner) in held and pairing.verdict == "admitted":
+            pairing.verdict, pairing.reason = "held", "interior operand claimed by another name"
+    aliases = [v for v in aliases if (v.symbol, v.owner) not in held]
+    for pairing in pairings:
+        if pairing.kind != "data" or pairing.verdict != "unit-candidate":
+            continue
+        if LOCAL_GUARD.fullmatch(pairing.symbol):
+            # A guard is one uninitialized byte; the unit's votes decide which.
+            if img.pe.read(pairing.owner, 1) == b"\0":
+                pairing.verdict, pairing.reason = "unit", "zero guard byte"
+            else:
+                pairing.verdict, pairing.reason = "held", "retail guard byte is not zero"
+            continue
+        candidate = objects(pairing.unit)
+        content = data_content(candidate, pairing.symbol) if candidate else None
+        if content is None:
+            pairing.verdict, pairing.reason = "held", "no single-symbol candidate section"
+            continue
+        payload, sites = content
+        retail_bytes = img.pe.read(pairing.owner, len(payload))
+        if retail_bytes is None or _masked(retail_bytes, sites) != _masked(payload, sites):
+            pairing.verdict, pairing.reason = "held", "retail bytes differ from the unit's copy"
+            continue
+        pairing.verdict, pairing.reason = "unit", f"{len(payload)} byte(s) equal the unit's copy"
+    _STATE = State(votes, withdrawn, admitted, pairings, aliases,
+                   {rva: row["name"] for rva, row in rows.items()})
+    return _STATE
+
+
+def write_aliases(state: State) -> Path:
+    """Reviewed alias rows plus generated exact-site rows, for vostok."""
+    from homm3.core.paths import RETAIL
+    from homm3.core.tsv import read, write
+    banner, _header, reviewed = read(RETAIL / "reloc-aliases.tsv")
+    out = _gen_dir() / ALIASES_OUT
+    out.parent.mkdir(parents=True, exist_ok=True)
+    write(out, ["# GENERATED by homm3.delink.reloc_pairing: config/retail/reloc-aliases.tsv",
+                "# plus exact-site rows of admitted relocation pairings."],
+          ALIAS_HEADER, alias_rows(state.aliases, reviewed))
+    return out
+
+
+def proof_targets(bindings, defined: dict[int, Iterable[str]],
+                  pairings: list[Pairing]) -> dict[str, set[int]]:
+    """{masked name: {rva}} a body proof resolves named references by.
+
+    Model bindings and their aliases, verified library symbols, and admitted
+    data pairings: the resolved model carries an admitted owner as an
+    unnamed zero-sized anchor, yet a body proof must still know where it is
+    (`basic_string::npos`, `_Nullstr`'s literal)."""
+    targets: dict[str, set[int]] = defaultdict(set)
+    for b in bindings:
+        for entry in (b, *b.aliases):
+            if entry.name:
+                targets[msvc_names.mask(entry.name)].add(b.rva)
+    for rva, names in defined.items():
+        for name in names:
+            targets[name].add(rva)
+    for pairing in pairings:
+        if pairing.kind == "data" and pairing.verdict == "admitted":
+            targets[msvc_names.mask(pairing.symbol)].add(pairing.owner)
+    return targets
+
+
+def address_identities(model, state: State | None = None,
+                       base_dir: Path | None = None) -> list[tuple[int, str, str, str, str]]:
+    """Phase 2 (resolved model): proven extra names of retail code addresses.
+
+    Library: every symbol a byte-verified library section defines there.
+    Fold: a code pairing whose candidate body is exactly the retail body at a
+    differently named claimed function. Thunk: a candidate import thunk name
+    at a retail `jmp [slot]` whose IAT slot the model names `__imp_<name>`.
+    """
+    from homm3.core import common
+    from homm3.core.pe import image
+    from homm3.delink.coffx import Obj
+    from homm3.delink.image import retail
+    from homm3.verify.byte_accounting import library_ranges
+    from homm3.verify.startup_bodies import Candidate, match
+    state = state or _STATE
+    base_dir = Path(base_dir or common.HOMM3_DIR / "build/objdiff/base")
+    rows: list[tuple[int, str, str, str, str]] = []
+    _ranges, _summary, defined = library_ranges(image(), model)
+    for rva, names in sorted(defined.items()):
+        for name in sorted(names):
+            rows.append((rva, name, "library", "verified library section", ""))
+    if state is None:
+        return rows
+    for pairing in state.pairings:
+        if pairing.verdict == "unit":
+            rows.append((pairing.owner, pairing.symbol,
+                         "unit-private" if pairing.raw else "unit-copy", pairing.reason,
+                         pairing.unit))
+
+    sizes = {b.rva: b.size for b in model.functions}
+    names_at = {b.rva: b.name for b in model.functions if b.name and b.channel}
+    data_names = dict(state.names)
+    data_names.update((b.rva, b.name) for b in model.data if b.name)
+    targets = proof_targets(model.functions + model.data, defined, state.pairings)
+    img = retail()
+    definers: dict[str, list[str]] = defaultdict(list)
+    candidates: dict[str, Candidate] = {}
+    for path in sorted(base_dir.glob("*.obj")):
+        try:
+            obj = Obj(path)
+        except (OSError, ValueError, struct.error):
+            continue
+        candidate = Candidate(obj)
+        candidates[path.stem] = candidate
+        for name, places in candidate.symbols.items():
+            if any(obj.section_table[section - 1]["characteristics"] & CNT_CODE
+                   for _offset, section in places):
+                definers[name].append(path.stem)
+
+    def prove(symbol: str, rva: int) -> str:
+        reasons = []
+        for unit in dict.fromkeys(definers.get(symbol, ())):
+            verdict, _deps, why = match(candidates[unit], symbol, rva, img, sizes, targets)
+            if verdict == "exact":
+                return ""
+            reasons.append(f"{unit}: {why}")
+        return "; ".join(reasons[:2]) or "no candidate body"
+
+    library_names = {rva: names for rva, names in defined.items()}
+    for pairing in state.pairings:
+        if pairing.kind != "code" or pairing.verdict != "candidate":
+            continue
+        if pairing.symbol in library_names.get(pairing.owner, ()):
+            pairing.verdict, pairing.reason = "library", "verified library symbol"
+            continue
+        body = img.pe.read(pairing.owner, 6) or b""
+        if body[:2] == b"\xff\x25":
+            slot = struct.unpack_from("<I", body, 2)[0] - img.image_base
+            if data_names.get(slot) == "__imp_" + pairing.symbol:
+                pairing.verdict, pairing.reason = "thunk", f"jmp through {data_names[slot]}"
+                rows.append((pairing.owner, pairing.symbol, "thunk",
+                             f"jmp [{data_names[slot]}]", ""))
+                continue
+    twin_index = RetailTwins(img, sizes)
+    bindings: dict[int, set[str]] = defaultdict(set)
+    for rva, names in library_names.items():
+        bindings[rva].update(names)
+    for pairing in state.pairings:
+        if pairing.kind == "code" and pairing.verdict == "thunk":
+            bindings[pairing.owner].add(pairing.symbol)
+    prove_folds(state.pairings, name_at=names_at.get, prove=prove, twins=twin_index,
+                bound_at=lambda rva: bindings.get(rva, ()))
+    for pairing in state.pairings:
+        if pairing.kind != "code" or pairing.verdict != "unit-candidate":
+            continue
+        candidate = candidates.get(pairing.unit)
+        verdict, _deps, why = (match(candidate, pairing.raw or pairing.symbol,
+                                     pairing.owner, img, sizes, targets) if candidate else
+                               ("unresolved", [], "no candidate object"))
+        if verdict == "exact":
+            pairing.verdict, pairing.reason = "unit", "the unit's body equals retail"
+            rows.append((pairing.owner, pairing.symbol, "unit-body",
+                         f"called by {min(pairing.votes, key=lambda v: v.site_rva).function}",
+                         pairing.unit))
+        else:
+            pairing.verdict, pairing.reason = "held", why or verdict
+    for pairing in state.pairings:
+        if pairing.kind == "code" and pairing.verdict == "folded":
+            first = min(pairing.votes, key=lambda v: v.site_rva)
+            rows.append((pairing.owner, pairing.symbol, "fold",
+                         f"{pairing.reason}; called by {first.function}", ""))
+    return rows
+
+
+def write_outputs(model) -> None:
+    """Phase 2 outputs: identities plus the final pairing report."""
+    from homm3.core.tsv import write
+    state = _STATE
+    identities = address_identities(model, state)
+    gen = _gen_dir()
+    gen.mkdir(parents=True, exist_ok=True)
+    write(gen / IDENTITIES_OUT,
+          ["# GENERATED by homm3.delink.reloc_pairing - proven extra names of retail addresses."],
+          IDENTITY_HEADER,
+          [[f"0x{rva:08x}", name, proof, evidence, unit]
+           for rva, name, proof, evidence, unit in sorted(set(identities))])
+    if state is not None:
+        write(gen / PAIRINGS_OUT,
+              ["# GENERATED by homm3.delink.reloc_pairing - relocation pairings and verdicts.",
+               f"# voters: {state.voters}; withdrawn: " + ", ".join(
+                   f"{k}={v}" for k, v in sorted(state.withdrawn.items()))],
+              PAIRINGS_HEADER, pairing_rows(state.pairings))

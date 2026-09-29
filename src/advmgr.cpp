@@ -55,8 +55,11 @@
 #include "window.h"
 #include "winmgr.h"
 
-// Initial contents recovered from the pinned Complete image.
-DATA(0x00691268) char g_saveGameSuffix[20];
+// DC name: suffix (char[20] in the Dreamcast build). Retail saveGame passes
+// 0x691268 to sprintf/strcat, and this TU's verified terrain-mask initializers
+// write independent objects at 0x691270, 0x691274 and 0x691278, so the retail
+// buffer ends eight bytes in. The observed suffixes need five bytes.
+DATA(0x00691268) char g_saveGameSuffix[8];
 
 // Retail static constructor 0x405db0.
 DATA(0x00691250) SLimitData g_advMapViewLimits(8, 8, 615, 551);
@@ -102,12 +105,12 @@ DATA(0x00660388) char g_completeDrawFpsFormat[] = "FPS: %10.2f";
 DATA(0x00699544) unsigned long g_forceSwitchMusic;
 // Original DC name: giViewWorldScaleFloat; ViewWorld selects the floating tile scale.
 DATA(0x0068c6b8) float g_viewWorldScaleFloat = 11.84f;
-DATA(0x0067f574) unsigned char g_colorCyclingEnabled;
+DATA(0x0067f574) unsigned char g_colorCyclingEnabled = 1;
 
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00678288) const int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
-DATA(0x006782ac) const signed char g_routeArrowFrames[8][8] = {
+DATA(0x00678288) int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x006782ac) signed char g_routeArrowFrames[8][8] = {
     { 8, 0, 0, 0, 8, 16, 16, 16 },
     { 17, 9, 1, 1, 1, 9, 17, 17 },
     { 18, 18, 10, 2, 2, 2, 10, 18 },
@@ -134,6 +137,12 @@ DATA(0x006aac3c) int g_inViewWorld;
 // in ScreenScroll or CheckScreenScroll.
 DATA(0x00691674) static unsigned long g_lastMapScrollTime;
 DATA(0x0065f690) int g_completeDrawFpsFrame = -1;
+// Original DC names: giDeferObjDrawX, giDeferObjDrawY (int, -1 in both
+// builds). Dreamcast orders giDebugBuildingToBuild, giTerrainToMusicTrack,
+// these two, fTradingPostEfficency at the same offsets as retail's
+// 0x67832c..0x678344; no Windows code reads them.
+DATA(0x0067833c) int g_deferObjDrawX = -1;
+DATA(0x00678340) int g_deferObjDrawY = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
 DATA(0x00691208) unsigned char g_goSoloTest;
@@ -472,7 +481,9 @@ void CAdvMgrNetMsgHandler::handleGiftMsg(CNetMsg* netMsg)
 
 // E:\gamedcs\advmgr.cpp:713
 // Original: CAdvMgrNetMsgHandler::HandleTradeRequestMsg; advmgr.cpp:713, dc 0x6428.
-// DC716/717 assign the two heroes and DC719 calls HeroSwap. Complete
+// DC716/717 assign the two heroes and DC719 calls HeroSwap on their table
+// entries: neither DC 719, Mac +0x6fd4 nor retail applies GetHero's -1
+// guard, which restores handleNetMsg to 100% (from 96.62%). Complete
 // expands this ordinary helper in handleNetMsg's RS_TRADE_REQUEST arm
 // (0x4062b4..0x406343); it has no retained standalone retail body.
 MAC_ADDRESS(0x006890, 0x794)
@@ -481,8 +492,8 @@ void CAdvMgrNetMsgHandler::handleTradeRequestMsg(CNetMsg* netMsg)
     CTradeRequestMsg* msg = static_cast<CTradeRequestMsg*>(netMsg);
     g_game->m_heroes[msg->m_left.m_id] = msg->m_left;
     g_game->m_heroes[msg->m_right.m_id] = msg->m_right;
-    g_advManager->heroSwap(g_game->getHero(msg->m_left.m_id),
-                           g_game->getHero(msg->m_right.m_id));
+    g_advManager->heroSwap(&g_game->m_heroes[msg->m_left.m_id],
+                           &g_game->m_heroes[msg->m_right.m_id]);
 }
 
 // E:\gamedcs\advmgr.cpp:734
@@ -577,19 +588,22 @@ advManager::advManager()
 // dirtrd/gravrd/cobbrd, ah00_..ah17_, af00..af07, ab01_..ab03_,
 // abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
-DATA(0x0065f4c4) const char* const g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
-DATA(0x0065f55c) const char* const g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
-DATA(0x0065f588) const char* const g_riverTilesetNames[4] = { "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
-DATA(0x0065f59c) const char* const g_roadTilesetNames[3] = { "dirtrd.def", "gravrd.def", "cobbrd.def" };
-DATA(0x0065f5a8) const char* const g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
-DATA(0x0065f5f0) const char* const g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
-DATA(0x0065f610) const char* const g_boatFlagIconNames[3][8] = {
+DATA(0x0065f4c4) const char* g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
+DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
+// River and road tilesets are indexed by type; type 0 (none) names "".
+// Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
+// loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
+DATA(0x0065f584) const char* g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
+DATA(0x0065f598) const char* g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
+DATA(0x0065f5a8) const char* g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
+DATA(0x0065f5f0) const char* g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
+DATA(0x0065f610) const char* g_boatFlagIconNames[3][8] = {
     { "abf01l.def", "abf01g.def", "abf01r.def", "abf01d.def", "abf01b.def", "abf01p.def", "abf01w.def", "abf01k.def" },
     { "abf02l.def", "abf02g.def", "abf02r.def", "abf02d.def", "abf02b.def", "abf02p.def", "abf02w.def", "abf02k.def" },
     { "abf03l.def", "abf03g.def", "abf03r.def", "abf03d.def", "abf03b.def", "abf03p.def", "abf03w.def", "abf03k.def" }
 };
-DATA(0x0065f670) const char* const g_boatIconNames[3] = { "ab01_.def", "ab02_.def", "ab03_.def" };
-DATA(0x0065f67c) const char* const g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.def", "abm03_.def" };
+DATA(0x0065f670) const char* g_boatIconNames[3] = { "ab01_.def", "ab02_.def", "ab03_.def" };
+DATA(0x0065f67c) const char* g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.def", "abm03_.def" };
 
 // E:\gamedcs\advmgr.cpp:837
 
@@ -674,11 +688,11 @@ int advManager::open(int newPriority)
     for (i = 0; i < 10; i++)
         m_groundTileset[i] = ResourceManager::getSprite(g_groundTilesetNames[i]);
     incProgressBar(1);
-    for (i = 0; i < 4; i++)
-        m_riverTileset[i + 1] = ResourceManager::getSprite(g_riverTilesetNames[i]);
+    for (i = 1; i < 5; i++)
+        m_riverTileset[i] = ResourceManager::getSprite(g_riverTilesetNames[i]);
     incProgressBar(1);
-    for (i = 0; i < 3; i++)
-        m_roadTileset[i + 1] = ResourceManager::getSprite(g_roadTilesetNames[i]);
+    for (i = 1; i < 4; i++)
+        m_roadTileset[i] = ResourceManager::getSprite(g_roadTilesetNames[i]);
     incProgressBar(1);
     m_borderTileset =
         ResourceManager::getSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));
@@ -723,7 +737,7 @@ int advManager::open(int newPriority)
         m_soundArray[i].m_priority = 0x7f;
         m_touchedSounds = 0;
     }
-    getCursorSampleSet(g_config.m_walkSpeed);
+    getCursorSampleSet(g_config.m_walkSpeed[1]);
 
     if (!g_currentPlayer->isLocalHuman()) {
         g_game->turnOnAIMusic();
@@ -2179,9 +2193,7 @@ static void setTownHelp(char* buffer, const NewmapCell* cell)
 {
     const town* mapTown = g_game->getTown(cell->m_extraInfo);
     const char* townTypeName = townManager::getTownTypeName(cell->m_objectIndex);
-    const char* townName = mapTown->m_name.begin();
-    if (!townName)
-        townName = DATA_COMPGEN(0x0063a608, townRolloverEmptyText, "");
+    const char* townName = mapTown->m_name.c_str();
     sprintf(buffer, DATA_COMPGEN(
         0x0065f3d4, rolloverTownFormat, "%s, %s"),
         townName, townTypeName);
@@ -3717,6 +3729,9 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // aligns 435/677 instructions with both calls, versus 433/677 when the
 // latter helper is omitted. Keep the
 // source-backed helper boundaries through this compiler-state score dip.
+// DC 4595 reads the level-change guard's hero through GetHero(player's
+// current id), not GetCurrHero; restoring it gives 87.38 -> 88.60. Mac
+// calls getCurrHero there (a platform difference).
 VA(0x0040e360, 0x918) MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee, dc 0xf3a8
 int advManager::processHover(int mouseX, int mouseY)
 {
@@ -3744,7 +3759,7 @@ int advManager::processHover(int mouseX, int mouseY)
         setRolloverText(currCell, rx, ry);
 
         if (g_currentPlayer->m_currHeroId != -1
-            && g_game->getCurrHero()->m_z
+            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
@@ -3937,30 +3952,20 @@ void advManager::reseed(int targetX, int targetY)
 // movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
 // split, every player's puzzle refresh and the post-action route/button cleanup.
 
-// 91.44 -> 92.19 (2026-08-20): the frame sweep's 0x38-vs-0x30 pointed at
-// the two artifact records. Both are TWO-ARG CTOR declarations at their
-// use sites, not default-then-assign: a top-level `type_artifact grail;`
-// runs the header's defaulting ctor, and our compile spilled {-1,-1} into
-// two slots at ENTRY (`or edi,-1` + two stores) and CSE'd that -1 into
-// GetCurrHero's `cmp edx,edi` - retail compares the IMMEDIATE and writes
-// each record exactly twice at its use site ({2,-1} at [ebp-0x2c] for
-// grail, [ebp-0x24] for describedGrail). `type_artifact grail(
-// ARTIFACT_HOLY_GRAIL, -1)` inside the award arm is the faithful form.
-
-// Residual (92.19%): flow-distance 0; a whole-body EBX/EDI role swap
-// (currHero edi on retail, ebx ours; z the reverse) why-reg --model
-// proves is C2 handle state - creation order agrees on both sides, the
-// permutation is not source-reachable, capped after one compile. The
-// frame stays 0x38 vs 0x30: our two records do not share slots with the
-// description string temp the way retail packs them.
-
 // DC line 4878 constructs the point argument and calls GetCell on the same
-// row. Restoring that natural temporary and helper raises 93.7323% to 98.5243%.
+// row. Restoring that natural temporary and helper raised 93.7323% to 98.5243%.
 // The CheckDimNextHeroBut tail already uses its canonical source call. DC
-// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat at
-// the current 96.5199%.
+// line 4965 also calls Reseed(0, 0); restoring it is Windows byte-flat.
 // DC 4853/4863/4893/4899/4920/4934/4947 accesses these seven messages.
 // Keep the existing Complete getText calls; they are Windows byte-flat.
+// Retail reads c_str() straight off getDescription's returned object
+// (`mov eax,[eax+4]`), so the description is an unnamed temporary: DC 4936
+// constructs type_artifact(2) and describes it on one row (98.51 -> 99.17).
+// DC 4924/4926 default-construct the award record inside its arm and then
+// assign the Grail id, which is why retail stores the -1 payload before the
+// id. Retail's isHuman branch also jumps straight to giveArtifact, so the
+// ambient-music switch (DC 4937, same scope as the dialogs) belongs to the
+// human-only arm (99.17 -> 100).
 VA(0x0040ec90, 0x5AD) MAC_ADDRESS(0x00f088, 0x668)  // anchor-callee, dc 0xfd84
 int advManager::processSearch(int x, int y, int z)
 {
@@ -4039,7 +4044,8 @@ int advManager::processSearch(int x, int y, int z)
                     (*g_generalText)[GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND],
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            type_artifact grail(ARTIFACT_HOLY_GRAIL);
+            type_artifact grail;
+            grail.m_artifactId = ARTIFACT_HOLY_GRAIL;
 
             if (g_currentPlayer->isHuman()) {
                 g_grailOwner = g_netLocalGamePos;
@@ -4056,13 +4062,12 @@ int advManager::processSearch(int x, int y, int z)
                 normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL);
-                std::string description = describedGrail.getDescription();
-                normalDialog(description.c_str(), 1, -1, -1, -1, 0,
-                             -1, 0, -1, 0, -1, 0);
+                normalDialog(type_artifact(ARTIFACT_HOLY_GRAIL)
+                                 .getDescription().c_str(), 1, -1,
+                             -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
             }
 
-            g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
             currHero->giveArtifact(&grail, 1, 1);
             g_game->m_ultimateArtifactPresent = 0;
         }
@@ -4087,6 +4092,11 @@ int advManager::processSearch(int x, int y, int z)
     reseed(0, 0);
     return 1;
 }
+
+// Original: USMsg, advmgr.cpp:4978. DC's adjacent initializer at 0x104f8
+// calls message::message; retail CRT 0x40f240 clears this object's eight
+// fields through that same constructor. No other retail references survive.
+DATA(0x00691648) message g_updateScreenMessage;
 
 VA(0x0040f270, 0x7D) MAC_ADDRESS(0x00f6f0, 0xb8)  // dc 0x10520
 void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
@@ -4660,7 +4670,8 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     NewmapCell* cellObjects = thisCell;
     if (cellObjects->m_objects.size() > 0) {
-        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        // DC records int row, but retail tests the back edge unsigned (jbe).
+        for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (int numObj = 0; numObj < cellObjects->m_objects.size();
                  ++numObj) {
                 NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];
@@ -5674,26 +5685,31 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     unsigned char visibilityBit = g_mapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
+        // Retail row advances use byte pitch; DC's radarRowStart remains
+        // unsigned short*. Use the existing byte view without doubling it.
+        Bitmap16MapPointer nextRow;
+        nextRow.m_pixels = destRow;
         switch (g_mapHeight) {
         case MAP_DIMENSION_SMALL:
-            destRow += 4 * g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += 4 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_MEDIUM:
-            destRow += 2 * g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += 2 * g_windowManager->m_screenBitmap->getPitch();
             break;
         case MAP_DIMENSION_LARGE:
-            destRow += g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             if (++rowPhase > 2) {
                 rowPhase = 0;
-                destRow += g_windowManager->m_screenBitmap->getPitch();
+                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             } else if (rowPhase == 0) {
-                destRow += g_windowManager->m_screenBitmap->getPitch();
+                nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             }
             break;
         case MAP_DIMENSION_EXTRA_LARGE:
-            destRow += g_windowManager->m_screenBitmap->getPitch();
+            nextRow.m_bytes += g_windowManager->m_screenBitmap->getPitch();
             break;
         }
+        destRow = nextRow.m_pixels;
 
         for (int x = 0; x <= lastColumn; x++) {
             NewmapCell* cell = m_fullMap->cell(x, y, origin.m_z);
@@ -6018,6 +6034,11 @@ void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpda
 // GetItemId. It is not evidence for a copied helper body in this caller.
 // DC records text lookups throughout the quick-info arms. Preserve the
 // Complete getText helper at those sites while checking retail call shape.
+// The one call-count delta (80 vs 79) is WATERING_HOLE's visited/unvisited
+// sprintf pair: retail cross-jumps the visited arm into the unvisited arm's
+// call (+0x210c jmp +0x212a) while every other visit pair keeps two calls.
+// A ternary argument there gives 93.32 and at ARENA 95.64 (it only removes
+// a call retail keeps); both rejected, the if/else pairs stay (2026-09-29).
 VA(0x004137c0, 0x25A0) MAC_ADDRESS(0x0145e8, 0x1fe0)  // linkorder, dc 0x15fdc
 void advManager::quickInfo(int cellX, int cellY, int z)
 {
@@ -7453,27 +7474,41 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
 // Dreamcast lines 9455/9461/9470 name curr and cell and preserve the
 // getCurrHero, getLocation and updateScreen helper boundaries. Restoring those
 // calls removes the duplicated timer body and reproduces all 431 retail bytes.
+// DC 9435..9450 are four separate guard returns (each its own scope and
+// branch), not one conjunction. Both spellings emit this body exactly, but
+// only the guard-return form keeps the body out of line where retail calls
+// it. `vc6 predict-inline 0x41ab00 --trace` shows why: with the guards C1XX
+// no longer saves the body (callee flags 0x2a, no 0x40), whereas the
+// conjunction shipped a cost-169 body that /Ob2 expanded into doAdventureOptions,
+// doSystemOptions, screenScroll, processDeSelect, processRadarSelect and
+// deactivateCurrHero (all back to 100%).
 VA(0x00417680, 0x1AF) MAC_ADDRESS(0x017e58, 0x14c)  // dc 0x1a520
 void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
                                     unsigned char drawChanges)
 {
-    if (!waitingPlayer && g_currentPlayer
-        && g_currentPlayer->m_currHeroId != -1 && m_curHeroMobile) {
-        m_curHeroMobile = 0;
-        hero* curr = g_game->getCurrHero();
-        stopCursor(1);
-        curr->obscureCell();
+    if (waitingPlayer)
+        return;
+    if (!g_currentPlayer)
+        return;
+    if (g_currentPlayer->m_currHeroId == -1)
+        return;
+    if (!m_curHeroMobile)
+        return;
 
-        type_point point = curr->getLocation();
-        NewmapCell* cell = getCell(point);
+    m_curHeroMobile = 0;
+    hero* curr = g_game->getCurrHero();
+    stopCursor(1);
+    curr->obscureCell();
 
-        curr->m_facing = m_cursorDirection;
-        m_drawCursor = 0;
+    type_point point = curr->getLocation();
+    NewmapCell* cell = getCell(point);
 
-        if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
-            completeDraw(0);
-            updateScreen(0, 0);
-        }
+    curr->m_facing = m_cursorDirection;
+    m_drawCursor = 0;
+
+    if (!g_inViewWorld && drawChanges && g_completeDrawEnabled) {
+        completeDraw(0);
+        updateScreen(0, 0);
     }
 }
 
@@ -7833,7 +7868,7 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
 // The looping-sound resource names, one per e_looping_sound_id row.
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
-DATA(0x0065f794) const char* const g_loopingSoundNames[LOOPING_SOUND_COUNT] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
+DATA(0x0065f794) const char* g_loopingSoundNames[LOOPING_SOUND_COUNT] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
 
 // Original: advManager::CheckLoadSample; advmgr.cpp:9929, dc 0x1b520
 MAC_ADDRESS(0x018ccc, 0x6c)
@@ -8167,7 +8202,7 @@ void advManager::showRoute(int updateScreen, int reseed, int changeButton)
     steps = g_searchArray->buildPath(curr, 0xea5f);
     if (g_searchArray->getPathSteps() > 0 && steps > 0) {
         memset(m_routeArray, 0,
-               g_game->getNumMapLevels() * g_mapHeight * g_mapWidth
+               g_game->getNumMapLevels() * g_mapWidth * g_mapHeight
                    * sizeof(unsigned short));
         m_showRoute = 1;
         testMobility = curr->m_movePoints;
@@ -8247,7 +8282,9 @@ void advManager::hideRoute(int updateScreen, int removeTarget,
 // Original: advManager::CheckDimHero; advmgr.cpp:10558, dc 0x1c580
 // Complete expands this guard in DoAdvCommand, ProcessKeyPress and
 // ProcessSearch, adding hero-locator and next-hero-button refreshes after
-// the shared ShowRoute call. Preserve those nested source calls.
+// the shared ShowRoute call. Preserve those nested source calls. All three
+// expansions reload gpAdvManager for the next-hero-button refresh, as for
+// the locator refresh, so both reach it through the global.
 MAC_ADDRESS(0x019958, 0xc8)
 void advManager::checkDimHero()
 {
@@ -8256,7 +8293,7 @@ void advManager::checkDimHero()
     if (!g_game->getCurrHero()->isMobile()) {
         showRoute(1, 0, 0);
         g_advManager->m_advWindow->updateHeroLocators(-1, 1, 1);
-        checkDimNextHeroBut();
+        g_advManager->checkDimNextHeroBut();
     }
 }
 
@@ -8632,19 +8669,19 @@ void advManager::loadRemote(unsigned char makeOrig)
     g_turnDuration.clear();
     CHourGlass hourGlass(1);
 
-    int weekTypeExtra = g_weekTypeExtra;
-    int weekType = g_weekType;
     int monthType = g_monthType;
     int monthTypeExtra = g_monthTypeExtra;
+    int weekType = g_weekType;
+    int weekTypeExtra = g_weekTypeExtra;
 
     g_game->loadGame(g_config.m_rcFile, 0, 1);
     if (makeOrig)
         g_game->saveGame("orig.dat", 0, 0, 0, 1);
 
-    g_weekTypeExtra = weekTypeExtra;
-    g_weekType = weekType;
     g_monthType = monthType;
     g_monthTypeExtra = monthTypeExtra;
+    g_weekType = weekType;
+    g_weekTypeExtra = weekTypeExtra;
 
     hourGlass.stop();
     startLocalPlayerTurn();
@@ -8981,7 +9018,7 @@ unsigned char advManager::doSystemOptions()
     g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
 
     unsigned char saveMobile = m_curHeroMobile;
-    int walkSpeed = g_config.m_walkSpeed;
+    int walkSpeed = g_config.m_walkSpeed[1];
     demobilizeCurrHero(0, 1);
 
     {
@@ -9010,11 +9047,11 @@ unsigned char advManager::doSystemOptions()
     if (saveMobile)
         mobilizeCurrHero(0, 0, 1);
 
-    if (g_config.m_walkSpeed != walkSpeed) {
+    if (g_config.m_walkSpeed[1] != walkSpeed) {
         int i;
         for (i = 0; i < 10; i++)
             m_heroSamples[i]->dispose();
-        getCursorSampleSet(g_config.m_walkSpeed);
+        getCursorSampleSet(g_config.m_walkSpeed[1]);
     }
 
     if (saveMobile)
@@ -9184,6 +9221,13 @@ VA_COMPGEN(0x0041b340, 0xC2, BASIC_STRING_APPEND_PTR, char)
 // Retail's hero assignment (0x406480) and getArmyHelpText (0x40abe0) call
 // it too. It expands in adventuremapwindow but remains naturally emitted
 // here: all 161 bytes agree outside four matching named call relocations.
+// basic_string<char>::_Tidy is game-emitted, not LIBCPMT's: the 60-byte
+// LIBCPMT COMDAT matches nowhere in retail, while this compiland's 80-byte
+// COMDAT (72 game objects emit the same bytes) equals 0x4040f0. Game objects
+// precede the libraries on the link line, so their copy is the one every
+// LIBCPMT caller reaches.
+VA_COMPGEN(0x004040F0, 0x4B, BASIC_STRING_TIDY, char)
+
 VA_COMPGEN(0x00404150, 0xA1, BASIC_STRING_ASSIGN_PTR_SIZE, char)
 
 VA_COMPGEN(0x0041bc00, 0xD, LOGIC_ERROR_WHAT, char)

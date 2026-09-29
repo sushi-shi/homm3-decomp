@@ -22,8 +22,9 @@
 #include "textresource.h"
 #include "winmgr.h"
 
-// Retail scalar state; startup initial values come from the pinned image.
-DATA(0x0069fab8) std::vector<std::string>* g_seerHutNamesPointer;
+// CRT 0x56c3d0 binds this reference to the text loader's vector.
+// The five other retail references only read the binding.
+DATA(0x0069fab8) std::vector<std::string>& g_seerHutNameList = g_seerHutNames;
 
 void aiEquipArtifacts(hero* currentHero);
 void aiJoinDecision(hero* currentHero, TCreatureType creature, short amount);
@@ -528,6 +529,13 @@ std::string type_skill_quest::skillRequirementText(
 // Lifetime-extended requirement/result references do not recover it: six
 // unpinned ordinary-assignment forms reproduce 49.3657/50.4925%. The retained
 // assign boundary, not a missing temporary lifetime, remains the first issue.
+// Lane A r4 budget arithmetic: the floor budget 1000 less questTextRow's 51
+// leaves 949 / 3 remaining candidates = 316 >= 307 at the second assignment,
+// so its assign(str, pos, n) expands. Retail needs <= 920 there: giving
+// questTexts a row local (cost > 40, subtracted) makes this body exact and
+// also reproduces retail's _Tidy call/expansion split, but drops six other
+// quest-text callers (monster 95.53 -> 72.12, doQuestLog 96.54 -> 86.43);
+// calling questTexts() per use instead of the texts local gives 55.47%.
 VA(0x0056e0d0, 0x169) MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
@@ -1839,7 +1847,7 @@ int TQuestGuard::save(TAbstractFile* outfile)
 // construct availability, remove names used by this map, then select one.
 inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
-    std::vector<unsigned char> nameAvailable(g_seerHutNamesPointer->size());
+    std::vector<unsigned char> nameAvailable(g_seerHutNameList.size());
     unsigned int name;
     for (name = 0; name < nameAvailable.size(); ++name)
         nameAvailable[name] = 1;
@@ -2266,7 +2274,7 @@ std::string TSeerHut::getSeerLogText()
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
@@ -2283,7 +2291,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
@@ -2302,7 +2310,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        (*g_seerHutNamesPointer)[m_nameIndex].c_str());
+        g_seerHutNameList[m_nameIndex].c_str());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");

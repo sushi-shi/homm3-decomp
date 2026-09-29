@@ -316,7 +316,7 @@ void TCampaignWindow::doModal()
 // File-static hover latch: the handler is its only image-wide reader and
 // writer, and it sits in the four bytes between the last gCampaignPreviews
 // row and the campaign-filename table.
-DATA(0x0066cad8) static int g_lastCampaignHoverId;
+DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 
 // Mac 0x6aea0/0x6aea8 retains separate exit assignments for selecting
 // a campaign and cancelling. Keeping the two switch breaks also reproduces

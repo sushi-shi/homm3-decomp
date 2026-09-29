@@ -13,8 +13,8 @@ in precedence order:
   zlib          config/retail/zlib-map.tsv: a matching TARGET (vendored
                 sources compile), counted inside the main table.
   init-thunk    config/retail/init-thunks.tsv: `.CRT$XCU` dynamic-
-                initializer bodies (compiler-generated, reconstructed
-                implicitly by VA_COMPGEN).
+                initializer bodies and reviewed atexit cleanups (slot "-").
+                Both are compiler-generated from source declarations.
   import-thunk  a <=8-byte body that is a `FF 25 <IAT slot>` jump, read
                 from the image directly.
   target        everything else: the game code the decompilation exists
@@ -41,8 +41,7 @@ EXCLUDED_NOTES = {
                   "function",
     "runtime": "CRT/C++ runtime, named not matched "
                "(config/retail/runtime-map.tsv)",
-    "init-thunk": ".CRT$XCU dynamic-initializer bodies "
-                  "(compiler-generated)",
+    "init-thunk": "compiler-generated CRT initializer/cleanup bodies",
     "import-thunk": "FF 25 jumps through the IAT",
 }
 
@@ -68,7 +67,8 @@ def classify(image=None):
     for r in _rows(RUNTIME_MAP):
         category.setdefault(int(r[0], 16), "runtime")
     for r in _rows(ZLIB_MAP):
-        category.setdefault(int(r[0], 16), "zlib")
+        if len(r) < 5 or r[4] == 'func':
+            category.setdefault(int(r[0], 16), "zlib")
     for r in _rows(INIT_THUNKS):
         rva = int(r[0], 16)
         if rva in functions:

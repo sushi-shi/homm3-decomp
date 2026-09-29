@@ -45,8 +45,8 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0068a38c) const char* const g_townObjectNames[396] = { "TOCsMag1", "TOCsMag2", "TOCsM301", "TOCsM401", "", "TOCsTav1", "TOCsDkNN", "TOCsCas1", "TOCsCas2", "TOCsCas3", "TOCsH101", "TOCsH201", "TOCsH301", "TOCsH401", "TOCsMrk1", "TOCsMrk2", "TOCsBlak", "TOCsLt01", "TOCsGr1H", "TOCsGr2H", "TOCsDkNS", "TOCsCavM", "TOCsTav2", "", "", "", "TOCsHoly", "", "", "", "TOCsPik1", "TOCsCrs1", "TOCsGr1N", "TOCsSwd1", "TOCsMon1", "TOCsCav1", "TOCsAng1", "TOCsPik2", "TOCsCrs2", "TOCsGr2N", "TOCsSwd2", "TOCsMon2", "TOCsCav2", "TOCsAng2", "TOrmag1", "TOrmag2", "TOrmag3", "TOrmag4", "TOrmag5", "TOrtav", "", "TOrcas1", "TOrcas2", "TOrcas3", "TOrhal1", "TOrhal2", "TOrhal3", "TOrhal4", "TOrmrk1", "TOrmrk2", "TOraid", "TOrgar1a", "TOrdwf1h", "TOrdwf2h", "", "TOrgar2a", "TOrdwft", "", "TOrtre1h", "TOrtre2h", "TOrholy", "", "", "", "TOrcen1a", "TOrdwf1", "TOrelf1", "TOrpeg1a", "TOrtre1", "TOruni1", "TOrdr1aa", "TOrcen2a", "TOrdwf2", "TOrelf2", "TOrpeg2a", "TOrtre2", "TOruni2", "TOrdr2aa", "TOTGld1", "TOTGld2", "TOTGld3", "TOTGld4", "TOTGld5", "TOTTav", "", "TOTCas1", "TOtcas2", "TOTCas3", "TOTHal1", "TOTHal2", "TOTHal3", "TOTHal4", "TOTMrk", "TOTMrkS", "TOTBlkA", "TOTMrkA", "TOTGar1H", "TOTGar2H", "", "TOTCasW", "TOTGldL", "TOTGldW", "", "", "TOTHolyA", "", "", "", "TOTGrm1A", "TOTGar1", "TOTGol1A", "TOTMag1", "TOTGen1", "TOTNag1", "TOTTit1", "TOTGrm2A", "TOTGar2", "TOTGol2A", "TOTMag2", "TOTGen2", "TOTNag2", "TOTTit2", "TOimag1a", "TOimag2a", "TOimag3a", "TOimag4a", "TOimag5a", "TOitav", "", "TOicas1a", "TOicas2a", "TOicas3a", "TOihal1", "TOihal2", "TOihal3", "TOihal4", "TOimar1", "TOimar2", "TOiblka", "", "TOimp1ha", "TOimp2ha", "", "TOicab1a", "TOicasga", "TOipain", "TOihnd1h", "TOihnd2h", "TOiholy", "", "", "", "TOimp1a", "TOigog1a", "TOihnd1", "TOidmn1", "TOipit1", "TOiefr1", "TOidvl1", "TOimp2a", "TOigog2a", "TOihnd2", "TOidmn2", "TOipit2", "TOiefr2", "TOidvl2", "TONMag1", "TONMag2", "TONMag3", "TONMag4", "TONMag5", "TONTav", "TONshpNa", "TONCas1", "TONCas2", "TONCas3", "TONHal1", "TONHal2", "TONHal3", "TONHal4", "TONMrk1", "TOnmrk2", "TONsmita", "TOnshrda", "TONSke1H", "TONSke2H", "TONshpBa", "TOnnecra", "TONSkelT", "", "", "", "TONholya", "", "", "", "TONSkel1", "TONzomb1", "TONwigh1", "TONVam1", "TONLich1", "TONBkn1", "TONBon1", "TONSkel2", "TONzomb2", "TONwigh2", "TONVam2", "TONLich2", "TOnbkn2", "TONBon2", "TODmag1", "TODmag2", "TODmag3", "TODmag4", "TODmag5", "TODtav", "", "TODcas1", "TODcas2", "TODcas3", "TODhall1", "TODhall2", "TODhall3", "TODhall4", "TODmark", "TODsilo", "TODsmith", "TODart", "TODtr1Ha", "TODtr2Ha", "", "TODvor1a", "TODportA", "TODacad", "", "", "TODHoly", "", "", "", "TODtrg1a", "TODhar1", "TODbeh1a", "TODMed1", "TODmin1", "TODman1", "TODdra1a", "TODtrg2a", "TODhar2", "TODbeh2a", "TODMed2", "TODmin2", "TODman2", "TODdra2a", "TOSMag1", "TOSMag2", "TOSMag3", "", "", "TOSTav", "", "TOSCa1", "TOSCa2", "TOSCa3", "TOSHal1a", "TOSHal2a", "TOSHal3a", "TOSHal4a", "TOSMrk1", "TOSMrk2", "TOSBlk1", "TOSCa1Ea", "TOSGob1H", "TOSGob2H", "", "TOSMrk1C", "TOSBlk2", "TOSVah", "", "", "TOSHolya", "", "", "", "TOSGob1", "TOSWol1", "TOSOrc1", "TOSOgr1", "TOSRoc1", "TOSCyc1", "TOSBeh1a", "TOSGob2", "TOSWol2", "TOSOrc2", "TOSOgr2", "TOSRoc2", "TOSCyc2a", "TOSBeh2a", "TOFMag1A", "TOFMag2A", "TOFMag3A", "", "", "TOFTavA", "TOFDck2", "TOFCas1", "TOFCas2", "TOFCas3", "TOFHal1", "TOFHal2", "TOFHal3", "TOFHal4", "TOFMrkAA", "TOFMrk2A", "TOFAidA", "TOFCage", "TOFGnl1H", "TOFGnl2H", "TOFDck1", "TOFCasD", "TOFCasA", "", "", "", "TOFHlyAA", "", "", "", "TOFGnl1", "TOFLiz1", "TOFFly1a", "TOFBas1", "TOFGor1", "TOFWyv1", "TOFHyd1A", "TOFGnl2", "TOFLiz2", "TOFFly2a", "TOFBas2", "TOFGor2", "TOFWyv2", "TOFHyd2A", "TOElmage", "TOElmag2", "TOElmag3", "TOElmag4", "TOElmag5", "TOElTvrn", "ToElDock", "TOElCstl", "TOElcas2", "TOElcas3", "TOElhall", "TOElhal2", "TOElhal3", "ToElhal4", "ToElmark", "ToElsilo", "ToElBlak", "ToElSpec", "ToElHrd1", "ToElHrd2", "ToElBoat", "ToElExt6", "", "", "", "", "ToElHoly", "", "", "", "ToElDw_0", "ToElDw_1", "ToElDw_2", "ToElDw_3", "ToElDw_4", "ToElDw_5", "ToElDw_6", "ToElUp_0", "ToElUp_1", "ToElUp_2", "ToElUp_3", "ToElUp_4", "ToElUp_5", "ToElUp_6" };
-DATA(0x0068a9bc) const short g_townObjectPositions[396][3] = {
+DATA(0x0068a38c) const char* g_townObjectNames[396] = { "TOCsMag1", "TOCsMag2", "TOCsM301", "TOCsM401", "", "TOCsTav1", "TOCsDkNN", "TOCsCas1", "TOCsCas2", "TOCsCas3", "TOCsH101", "TOCsH201", "TOCsH301", "TOCsH401", "TOCsMrk1", "TOCsMrk2", "TOCsBlak", "TOCsLt01", "TOCsGr1H", "TOCsGr2H", "TOCsDkNS", "TOCsCavM", "TOCsTav2", "", "", "", "TOCsHoly", "", "", "", "TOCsPik1", "TOCsCrs1", "TOCsGr1N", "TOCsSwd1", "TOCsMon1", "TOCsCav1", "TOCsAng1", "TOCsPik2", "TOCsCrs2", "TOCsGr2N", "TOCsSwd2", "TOCsMon2", "TOCsCav2", "TOCsAng2", "TOrmag1", "TOrmag2", "TOrmag3", "TOrmag4", "TOrmag5", "TOrtav", "", "TOrcas1", "TOrcas2", "TOrcas3", "TOrhal1", "TOrhal2", "TOrhal3", "TOrhal4", "TOrmrk1", "TOrmrk2", "TOraid", "TOrgar1a", "TOrdwf1h", "TOrdwf2h", "", "TOrgar2a", "TOrdwft", "", "TOrtre1h", "TOrtre2h", "TOrholy", "", "", "", "TOrcen1a", "TOrdwf1", "TOrelf1", "TOrpeg1a", "TOrtre1", "TOruni1", "TOrdr1aa", "TOrcen2a", "TOrdwf2", "TOrelf2", "TOrpeg2a", "TOrtre2", "TOruni2", "TOrdr2aa", "TOTGld1", "TOTGld2", "TOTGld3", "TOTGld4", "TOTGld5", "TOTTav", "", "TOTCas1", "TOtcas2", "TOTCas3", "TOTHal1", "TOTHal2", "TOTHal3", "TOTHal4", "TOTMrk", "TOTMrkS", "TOTBlkA", "TOTMrkA", "TOTGar1H", "TOTGar2H", "", "TOTCasW", "TOTGldL", "TOTGldW", "", "", "TOTHolyA", "", "", "", "TOTGrm1A", "TOTGar1", "TOTGol1A", "TOTMag1", "TOTGen1", "TOTNag1", "TOTTit1", "TOTGrm2A", "TOTGar2", "TOTGol2A", "TOTMag2", "TOTGen2", "TOTNag2", "TOTTit2", "TOimag1a", "TOimag2a", "TOimag3a", "TOimag4a", "TOimag5a", "TOitav", "", "TOicas1a", "TOicas2a", "TOicas3a", "TOihal1", "TOihal2", "TOihal3", "TOihal4", "TOimar1", "TOimar2", "TOiblka", "", "TOimp1ha", "TOimp2ha", "", "TOicab1a", "TOicasga", "TOipain", "TOihnd1h", "TOihnd2h", "TOiholy", "", "", "", "TOimp1a", "TOigog1a", "TOihnd1", "TOidmn1", "TOipit1", "TOiefr1", "TOidvl1", "TOimp2a", "TOigog2a", "TOihnd2", "TOidmn2", "TOipit2", "TOiefr2", "TOidvl2", "TONMag1", "TONMag2", "TONMag3", "TONMag4", "TONMag5", "TONTav", "TONshpNa", "TONCas1", "TONCas2", "TONCas3", "TONHal1", "TONHal2", "TONHal3", "TONHal4", "TONMrk1", "TOnmrk2", "TONsmita", "TOnshrda", "TONSke1H", "TONSke2H", "TONshpBa", "TOnnecra", "TONSkelT", "", "", "", "TONholya", "", "", "", "TONSkel1", "TONzomb1", "TONwigh1", "TONVam1", "TONLich1", "TONBkn1", "TONBon1", "TONSkel2", "TONzomb2", "TONwigh2", "TONVam2", "TONLich2", "TOnbkn2", "TONBon2", "TODmag1", "TODmag2", "TODmag3", "TODmag4", "TODmag5", "TODtav", "", "TODcas1", "TODcas2", "TODcas3", "TODhall1", "TODhall2", "TODhall3", "TODhall4", "TODmark", "TODsilo", "TODsmith", "TODart", "TODtr1Ha", "TODtr2Ha", "", "TODvor1a", "TODportA", "TODacad", "", "", "TODHoly", "", "", "", "TODtrg1a", "TODhar1", "TODbeh1a", "TODMed1", "TODmin1", "TODman1", "TODdra1a", "TODtrg2a", "TODhar2", "TODbeh2a", "TODMed2", "TODmin2", "TODman2", "TODdra2a", "TOSMag1", "TOSMag2", "TOSMag3", "", "", "TOSTav", "", "TOSCa1", "TOSCa2", "TOSCa3", "TOSHal1a", "TOSHal2a", "TOSHal3a", "TOSHal4a", "TOSMrk1", "TOSMrk2", "TOSBlk1", "TOSCa1Ea", "TOSGob1H", "TOSGob2H", "", "TOSMrk1C", "TOSBlk2", "TOSVah", "", "", "TOSHolya", "", "", "", "TOSGob1", "TOSWol1", "TOSOrc1", "TOSOgr1", "TOSRoc1", "TOSCyc1", "TOSBeh1a", "TOSGob2", "TOSWol2", "TOSOrc2", "TOSOgr2", "TOSRoc2", "TOSCyc2a", "TOSBeh2a", "TOFMag1A", "TOFMag2A", "TOFMag3A", "", "", "TOFTavA", "TOFDck2", "TOFCas1", "TOFCas2", "TOFCas3", "TOFHal1", "TOFHal2", "TOFHal3", "TOFHal4", "TOFMrkAA", "TOFMrk2A", "TOFAidA", "TOFCage", "TOFGnl1H", "TOFGnl2H", "TOFDck1", "TOFCasD", "TOFCasA", "", "", "", "TOFHlyAA", "", "", "", "TOFGnl1", "TOFLiz1", "TOFFly1a", "TOFBas1", "TOFGor1", "TOFWyv1", "TOFHyd1A", "TOFGnl2", "TOFLiz2", "TOFFly2a", "TOFBas2", "TOFGor2", "TOFWyv2", "TOFHyd2A", "TOElmage", "TOElmag2", "TOElmag3", "TOElmag4", "TOElmag5", "TOElTvrn", "ToElDock", "TOElCstl", "TOElcas2", "TOElcas3", "TOElhall", "TOElhal2", "TOElhal3", "ToElhal4", "ToElmark", "ToElsilo", "ToElBlak", "ToElSpec", "ToElHrd1", "ToElHrd2", "ToElBoat", "ToElExt6", "", "", "", "", "ToElHoly", "", "", "", "ToElDw_0", "ToElDw_1", "ToElDw_2", "ToElDw_3", "ToElDw_4", "ToElDw_5", "ToElDw_6", "ToElUp_0", "ToElUp_1", "ToElUp_2", "ToElUp_3", "ToElUp_4", "ToElUp_5", "ToElUp_6" };
+DATA(0x0068a9bc) short g_townObjectPositions[396][3] = {
     { 0, 707, 166 },
     { 0, 707, 135 },
     { 11, 704, 107 },
@@ -446,7 +446,7 @@ DATA(0x0068a9bc) const short g_townObjectPositions[396][3] = {
 };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00642eb4) signed char g_townBuildOrder[9][44] = {
+DATA(0x00642eb4) const signed char g_townBuildOrder[9][44] = {
     {
     26, 23, 7, 8, 9, 0, 1, 2,
     3, 14, 15, 36, 43, 30, 37, 31,
@@ -520,8 +520,8 @@ DATA(0x00642eb4) signed char g_townBuildOrder[9][44] = {
     18, 19, -1, -1
 }
 };
-DATA(0x00643040) const char* g_townBackgroundPrefix[9] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
-DATA(0x00643064) const char* g_townBuildingSprites[9][44] = {
+DATA(0x00643040) const char* const g_townBackgroundPrefix[9] = { "TBCs", "TBRm", "TBTw", "TBIn", "TBNc", "TBDn", "TBSt", "TBFr", "TBEl" };
+DATA(0x00643064) const char* const g_townBuildingSprites[9][44] = {
     {
     "TBCsmage", "TBCsmag2", "TBCsmag3", "TBCsmag4", "TBCsmag5", "TBCstvrn", "TBCsdock", "TBCscstl",
     "TBCscas2", "TBCscas3", "TBCshall", "TBCshal2", "TBCshal3", "TBCshal4", "TBCsmark", "TBCssilo",
@@ -595,7 +595,7 @@ DATA(0x00643064) const char* g_townBuildingSprites[9][44] = {
     "TbElUp_3", "TbElUp_4", "TbElUp_5", "TbElUp_6"
 }
 };
-DATA(0x006436bc) const char* g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
+DATA(0x006436bc) const char* const g_townMusic[9] = { "CstleTown", "Rampart", "TowerTown", "InfernoTown", "necroTown", "dungeon", "StrongHold", "FortressTown", "ElemTown" };
 
 // Retail scalar state; startup initial values come from the pinned image.
 // Original DC name: castleOpen; DoTavern brackets the modal window lifetime.
@@ -661,7 +661,7 @@ DATA(0x0067f578) const char* g_townBuildingSpriteNames[9] = {
 // which is what proves the extra leading element rather than a
 // nine-long table read one short. Ten pointers close exactly on
 // gMageGuildDefNames below. Both references are this compiland's.
-DATA(0x0068a2f4) static const char* const g_townCastleDefNames[10] = {
+DATA(0x0068a2f4) static const char* g_townCastleDefNames[10] = {
     "TPCasNeu.pcx", "TPCasCas.pcx", "TPCasRam.pcx", "TPCasTow.pcx",
     "TPCasInf.pcx", "TPCasNec.pcx", "TPCasDun.pcx", "TPCasStr.pcx",
     "TPCasFor.pcx", "TPCasEle.pcx"
@@ -670,7 +670,7 @@ DATA(0x0068a2f4) static const char* const g_townCastleDefNames[10] = {
 // The mage guild background for each town type, indexed by town::type.
 // The table's ONE image-wide reference is the load inside
 // TMageGuildWindow's constructor, so this compiland owns it.
-DATA(0x0068a31c) static const char* const g_mageGuildDefNames[9] = {
+DATA(0x0068a31c) static const char* g_mageGuildDefNames[9] = {
     "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
     "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
     "TPMageEl.pcx"
@@ -680,7 +680,7 @@ DATA(0x0068a31c) static const char* const g_mageGuildDefNames[9] = {
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
 // inside TShipWindow's constructor, so this compiland owns it.
-DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
+DATA(0x0068a340) static const char* g_boatDefNames[9] = {
     "AB02_.def",       "", "",
     "", "AB01_.def",       "",
     "", "AB03_.def",       "AB01_.def"
@@ -702,7 +702,14 @@ DATA(0x0068a340) static const char* const g_boatDefNames[9] = {
 DATA(0x00642e90) static const int g_blacksmithMachines[9] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
-DATA(0x006aa9f8) type_artifact g_blacksmithArtifacts[9];
+// Original: blacksmithArtifactType (const type_artifact[] in Dreamcast).
+// Retail CRT initializer 0x5c2e20 constructs these nine records, in town
+// order, with the ordinary artifact constructor's -1 extra field.
+DATA(0x006aa9f8) const type_artifact g_blacksmithArtifacts[9] = {
+    ARTIFACT_BALLISTA, ARTIFACT_FIRST_AID_TENT, ARTIFACT_AMMO_CART,
+    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA,
+    ARTIFACT_AMMO_CART, ARTIFACT_FIRST_AID_TENT, ARTIFACT_BALLISTA
+};
 
 void setWinText(heroWindow* win, int which);
 
@@ -781,7 +788,6 @@ DATA(0x006aa62c) static TThievesGuildWindow* g_thievesGuildWindow;
 // eight-hero cap (takes the cap as a vararg), 2 the town square is
 // occupied, 3 the selected recruit's name and class, 4 a portrait's
 // name, 5 the thieves' guild button, 6 the rumour panel, 7 cancel.
-DATA(0x006a5e40) extern const char* g_tavernInfo[8];
 
 // The line DoPortalOfSummoning prints when the map has nothing left for
 // the portal to summon. ONE image-wide reference and no writer in the
@@ -841,7 +847,7 @@ DATA(0x006a5e40) extern const char* g_tavernInfo[8];
 // dendroids 4/11, and so on. SetCommandAndText's HORDE arms fold the
 // -HORDE_ID bias into the relocation (0x68a352 / 0x68a360). Names
 // INVENTED (no DC symbol); owner TU unlocated - declared, not defined.
-DATA(0x0068a364) const unsigned char g_hordeDwellingSlot[TOWN_TYPE_COUNT][2] = {
+DATA(0x0068a364) unsigned char g_hordeDwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 2, 9 },
     { 1, 8 },
     { 1, 8 },
@@ -857,7 +863,7 @@ DATA(0x0068a364) const unsigned char g_hordeDwellingSlot[TOWN_TYPE_COUNT][2] = {
 // 0x68a2d4 holds the eight per-player crest sprite names
 // (PRRed.pcx .. PRRose.pcx, read from the image) and 0x6a7794 the
 // personality display names playerData::personality indexes.
-DATA(0x0068a378) const unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = {
+DATA(0x0068a378) unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = {
     { 0, 0 },
     { 4, 11 },
     { 0, 0 },
@@ -868,7 +874,7 @@ DATA(0x0068a378) const unsigned char g_horde2DwellingSlot[TOWN_TYPE_COUNT][2] = 
     { 0, 0 },
     { 0, 0 }
 };
-DATA(0x0068a2d4) const char* const g_playerFlagSprites[8] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
+DATA(0x0068a2d4) const char* g_playerFlagSprites[8] = { "PRRed.pcx", "PRBlue.pcx", "PRTan.pcx", "PRGreen.pcx", "PROrange.pcx", "PRPurple.pcx", "PRTeal.pcx", "PRRose.pcx" };
 // adventuremapwindow.obj owns this eight-byte rollover/right-click record;
 // Dreamcast supplies the public name and THelpText type. The fort page and
 // SetCommandAndText select its two columns through the shared building map.
@@ -1692,6 +1698,7 @@ VA(0x005c63c0, 0x2E1) MAC_ADDRESS(0x1be22c, 0x2f4)  // dc 0x16b718
 int townManager::open(int newPriority)
 {
     g_inputManager->flush();
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:2733
     startMouseThread();
     g_game->checkHeroConsistency();
     pollSound();
@@ -2129,7 +2136,7 @@ void townManager::unloadTown()
 
     for (i = 0; i < 7; i++) {
         if (m_monPix[i])
-            m_monPix[i]->dispose();
+            ResourceManager::dispose(m_monPix[i]);
     }
 
     delete m_heroStrip;
@@ -2147,6 +2154,7 @@ void townManager::unloadTown()
         delete m_panorama;
         m_panorama = 0;
     }
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3169
 }
 
 // The manager's Close, slot 1 of vtable 0x643720 and the second of its
@@ -2720,6 +2728,7 @@ VA(0x005c8190, 0x14C8) MAC_ADDRESS(0x1c085c, 0x21f4)  // dc 0x16d298
 TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     : CAdvPopup(0, 0, 800, 600, 2)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3861
     m_widgets.reserve(30);
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 600, 0,
@@ -2988,6 +2997,7 @@ VA(0x005c9be0, 0x2CF0) MAC_ADDRESS(0x1c3050, 0x351c)  // dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
     const int hallX[9][18] = {
@@ -3219,6 +3229,7 @@ VA(0x005cc980, 0x179F) MAC_ADDRESS(0x1c661c, 0x2804)  // dc 0x170128
 TMageGuildWindow::TMageGuildWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4477
     m_widgets.reserve(77);
 
     m_widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
@@ -3556,6 +3567,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
                                                      armyGroup& garrisonArmy)
     : CAdvPopup(125, 102, 549, 392, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4810
     m_thisHero = inHero;
     m_isJoinDialog = 0;
     m_widgets.reserve(51);
@@ -4074,6 +4086,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
 {
     int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
     m_townType = inTownType;
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5218
     m_widgets.reserve(12);
 
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -4301,6 +4314,7 @@ TShipWindow::TShipWindow(int type)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
     m_boatFrame = 0;
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5396
     m_widgets.reserve(12);
 
     bitmapBorder* background = new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -4829,7 +4843,9 @@ int townManager::main(message& msg)
     {
         int delta = GameTime::elapsedSince(g_timers[0]);
         if (delta >= 0) {
-            g_timers[0] += cppMin(delta, 150);
+            // DC townmgr.cpp:5920 calls max; retail 0x5d33c2 selects
+            // the larger interval, keeping panorama updates 150 ms apart.
+            g_timers[0] += max(150, delta);
             drawTown(1, 1, 0);
         }
     }
@@ -5728,6 +5744,7 @@ VA(0x005d55c0, 0x578) MAC_ADDRESS(0x1d267c, 0xaf8)  // dc 0x178ab8
 TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     : CAdvPopup(x2, y2, 0x18b, 0x208, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:7211
     m_buildingId = id;
     m_widgets.reserve(18);
 
@@ -6862,6 +6879,7 @@ VA(0x005d86f0, 0x445A) MAC_ADDRESS(0x1d6668, 0xa4e0)  // dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
     // Conventional release expansion of VERIFY(Widgets.size() == 0).
     static_cast<void>(m_widgets.size() == 0);
     m_widgets.reserve(156);

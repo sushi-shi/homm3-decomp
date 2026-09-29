@@ -43,7 +43,7 @@ public:
 // zlib's own gzio.c spells the pair exactly this way, and the constructor
 // LOADS both rather than testing immediates, which is what proves it is a
 // table rather than two literals.
-DATA(0x0063e6fc) static int g_gzMagic[2] = {0x1f, 0x8b};
+DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 
 // Mac uses two 4096-byte windows; Windows uses two 512-byte windows.
 // Refill, output bounds, allocation and CRC spans all use the same capacity.

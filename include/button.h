@@ -50,11 +50,7 @@ private:
     int m_normalFrame;
     int m_selectedFrame;
     int m_disabledFrame;
-
-public:
     int m_highlightedFrame;
-
-private:
     unsigned char m_endDialog;
     std::vector<int> m_hotKeyCodes;
     std::string m_text;
@@ -84,6 +80,10 @@ public:
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
     // sequence is reproduced only with this setter in its six loops.
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
+    // The later private highlight frame has no Dreamcast field; its outside
+    // writer (TSingleSelectionWindow::createFilterWidgets) takes the same
+    // setter form beside setDisabledFrame. Project name.
+    void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
     VA(0x004e1370, 0x1AF)
     void setHotkey(int code)
     {

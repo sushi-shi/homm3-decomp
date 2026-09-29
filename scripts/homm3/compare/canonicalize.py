@@ -96,13 +96,20 @@ def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
 
 
 def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
-    """Normalize only reviewed namespace scopes in their owning compiland.
+    """Normalize anonymous-namespace scopes to machine-independent spellings.
 
-    This changes comparison metadata only. Unknown units/scopes are retained,
-    and calls without an owning unit cannot apply a basename-only alias.
+    A reviewed scope takes its retail RTTI-proven path in its owning
+    compiland; calls without an owning unit cannot apply a basename-only
+    alias. Any other scope declared in a repository source file (`src/*.cpp`)
+    takes the path-derived identity `msvc_names.anonymous_namespaces` gives
+    every join, so the checkout path and cl's nonce drop out on both sides.
+    Header and other unknown scopes are retained.
     """
-    if unit is None or "?%" not in name:
+    if "?%" not in name:
         return name
+    from homm3.core.msvc_names import anonymous_namespaces
+    if unit is None:
+        return anonymous_namespaces(name)
     canonical = _load_anon_ns_canonical()
 
     def replace(match):
@@ -112,7 +119,7 @@ def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
         replacement = canonical.get((unit.lower(), basename))
         return match.group(0) if replacement is None else "?%" + replacement + "@"
 
-    return ANON_NS_SCOPE_RE.sub(replace, name)
+    return anonymous_namespaces(ANON_NS_SCOPE_RE.sub(replace, name))
 
 
 def _anon_ns_renames(
@@ -144,6 +151,43 @@ def _anon_ns_renames(
         if previous is not None and previous != symbol.name:
             raise ValueError("anonymous namespace canonical name collision: " + new_name)
         owners[new_name] = symbol.name
+    return renames, rows
+
+
+def _local_scope_renames(
+    symbols: dict[int, "Symbol"],
+    existing_renames: dict[int, str],
+) -> tuple[dict[int, str], list["CanonicalRow"]]:
+    """Canonicalize function-local static scope numbers (`?8??` -> `?1??`).
+
+    cl numbers a local static's lexical scope per function; the model and
+    every join spell it with `msvc_names.CANONICAL_SCOPE` (see `mask`). A
+    name is rewritten only when its canonical spelling is unique in the
+    object: two statics of one function that differ only by scope stay
+    visible.
+    """
+    from homm3.core.msvc_names import CANONICAL_SCOPE, LOCAL_STATIC_SCOPE
+    current = {index: existing_renames.get(index, symbol.name)
+               for index, symbol in symbols.items()}
+    proposed = {}
+    for index, name in current.items():
+        if LOCAL_STATIC_SCOPE.search(name):
+            canonical = LOCAL_STATIC_SCOPE.sub(CANONICAL_SCOPE, name)
+            if canonical != name:
+                proposed[index] = canonical
+    taken: dict[str, set[str]] = defaultdict(set)
+    for index, name in current.items():
+        taken[proposed.get(index, name)].add(name)
+    renames, rows = {}, []
+    for index, canonical in proposed.items():
+        if len(taken[canonical]) != 1:
+            continue
+        renames[index] = canonical
+        rows.append(CanonicalRow(
+            current[index], canonical, "local-static-scope", "symbol",
+            symbols[index].section, symbols[index].value, 0, 0, 0,
+            hashlib.sha256(canonical.encode("latin-1")).hexdigest(),
+            "cl scope ordinal", "msvc_names.CANONICAL_SCOPE"))
     return renames, rows
 
 
@@ -341,6 +385,7 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "BASIC_STRING_MAX_SIZE",
     "BASIC_STRING_GROW",
     "BASIC_STRING_COPY",
+    "BASIC_STRING_TIDY",
     "BASIC_STRING_APPEND_STR",
     "BASIC_STRING_APPEND_PTR",
     "BASIC_STRING_FIND",
@@ -382,6 +427,7 @@ DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
     "BASIC_STRING_SUBSCRIPT",
     "BASIC_STRING_ERASE",
     "VECTOR_CLEAR",
+    "VECTOR_PUSH_BACK",
     "EXCEPTION_DORAISE",
     "DEQUE_ITERATOR_ADD_ASSIGN",
     "DEQUE_CONST_ITERATOR_ADD",
@@ -899,8 +945,11 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
     def registered_by_owner(index, owner):
         # A function-local static's destructor may use only other globals.
         # Its initializer still takes the owner's address, and registers
-        # the exact callback: push OFFSET callback; call _atexit. A mere
-        # graph edge (or calling the callback) is not registration proof.
+        # the exact callback: push OFFSET callback, then _atexit as the
+        # next call. The scheduler may interleave the owner's own stores
+        # between the two (createRiver's delta table), but no other call.
+        # A mere graph edge (or calling the callback) is not registration
+        # proof.
         for parent, symbol in defined_functions.items():
             names = target_names(parent)
             if not owner_present(names, owner) or "_atexit" not in names:
@@ -910,14 +959,17 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...],
             body = coff.section_bytes(section)
             relocs = {r.site: r for r in coff.relocations
                       if r.section == symbol.section and start <= r.site < end}
+            calls = sorted(site for site, r in relocs.items()
+                           if r.typ == 0x14 and site > start and body[site - 1] == 0xe8)
             callbacks = set()
             for site, ref in relocs.items():
-                call = relocs.get(site + 5)
+                later = [call for call in calls if call > site]
+                call = relocs[later[0]] if later else None
                 if (ref.typ == DIR32 and ref.symbol_index in volatile
                         and site > start and site + 9 <= end
-                        and body[site - 1] == 0x68 and body[site + 4] == 0xe8
+                        and body[site - 1] == 0x68
                         and body[site:site + 4] == b"\0" * 4
-                        and call is not None and call.typ == 0x14
+                        and call is not None
                         and coff.symbols[call.symbol_index].name == "_atexit"):
                     callbacks.add(ref.symbol_index)
             owners = {coff.symbols[t].name for t in outgoing[parent]
@@ -1851,6 +1903,9 @@ def canonicalize_coff(payload: bytes,
         coff.symbols, renames, unit, definition_by_symbol)
     renames.update(anon_renames)
     rows.extend(anon_rows)
+    scope_renames, scope_rows = _local_scope_renames(coff.symbols, renames)
+    renames.update(scope_renames)
+    rows.extend(scope_rows)
     normalized = _rewrite_names(coff, renames)
     normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
         coff, normalized)

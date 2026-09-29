@@ -79,16 +79,20 @@ def _coff(sections: tuple[FixtureSection, ...], symbols: tuple[bytes, ...]) -> b
     return bytes(data)
 
 
+STANDARD = b"\x55\x8b\xec\x6a\xff\x68"
+FS_FIRST = b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68"
+
+
 def _base(*, handler_opcode: int = 0xB8,
-          cleanup_storage: int = 6) -> bytes:
-    parent = bytearray(b"\x55\x8b\xec\x6a\xff\x68" + bytes(26))
+          cleanup_storage: int = 6, prologue: bytes = STANDARD) -> bytes:
+    parent = bytearray(prologue + bytes(32 - len(prologue)))
     child = bytearray(21)
     child[0] = 0xC3
     child[11] = handler_opcode
     child[16] = 0xE9
     sections = (
         FixtureSection(".text", bytes(parent), (
-            (6, 6, DIR32),       # direct handler label
+            (len(prologue), 6, DIR32),       # direct handler label
             (20, 7, DIR32),      # unrelated DIR32 negative control
         )),
         FixtureSection(".text$x", bytes(child), (
@@ -109,10 +113,11 @@ def _base(*, handler_opcode: int = 0xB8,
     return _coff(sections, symbols)
 
 
-def _target(funclet_size: int = 11, owner: str = "unwind13") -> bytes:
-    text = bytearray(b"\x55\x8b\xec\x6a\xff\x68" + bytes(26))
-    struct.pack_into("<I", text, 6, funclet_size)
-    sections = (FixtureSection(".text", bytes(text), ((6, 1, DIR32),)),)
+def _target(funclet_size: int = 11, owner: str = "unwind13",
+            prologue: bytes = STANDARD) -> bytes:
+    text = bytearray(prologue + bytes(32 - len(prologue)))
+    struct.pack_into("<I", text, len(prologue), funclet_size)
+    sections = (FixtureSection(".text", bytes(text), ((len(prologue), 1, DIR32),)),)
     symbols = (
         _symbol("ctor", 0, 1, FUNCTION_TYPE, 2),
         _symbol(owner, 0, 0, FUNCTION_TYPE, 2),
@@ -184,6 +189,23 @@ class EhHandlerNormalizationTest(unittest.TestCase):
                              if key != missing},
                 funclet_owners={0x1234: (0x1000, 11)})
             self.assertEqual((after, rewrites), (before, ()))
+
+    def test_fs_first_prologue_is_canonicalized(self):
+        # `mov eax, fs:[0]` scheduled before `push -1` moves the handler
+        # operand to +0xc; the same proof applies there.
+        before = _base(prologue=FS_FIRST)
+        after, rewrites = _canonicalize_matching_eh_handler_owners(
+            before, _target(prologue=FS_FIRST))
+        self.assertEqual(len(rewrites), 1)
+        normalized = CoffObject(after)
+        row = next(r for r in normalized.relocations if r.site == 12)
+        self.assertEqual(normalized.symbols[row.symbol_index].name, "unwind13")
+
+    def test_different_prologue_forms_stay_visible(self):
+        before = _base(prologue=FS_FIRST)
+        after, rewrites = _canonicalize_matching_eh_handler_owners(
+            before, _target())
+        self.assertEqual((after, rewrites), (before, ()))
 
     def test_different_retail_funclet_size_stays_visible(self):
         before = _base()

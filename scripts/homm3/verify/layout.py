@@ -118,7 +118,18 @@ class Layout:
         keyed by the family, so the lookup masks."""
         from homm3.core.msvc_names import mask
         vars_ = self.vars_of(unit)
-        return vars_.get(name) or vars_.get(mask(name))
+        found = vars_.get(name) or vars_.get(mask(name))
+        if found is not None:
+            return found
+        # DATA claims use the owning VC6 object's checked spelling. The
+        # layout harvest keeps Clang's spelling, including anonymous types
+        # in local statics. Use the model's unique, module-checked bridge;
+        # erasing namespace hashes would also join unrelated declarations.
+        from homm3.model import data_spelling
+        wanted = mask(name)
+        matches = [var for key, var in vars_.items()
+                   if mask(data_spelling(key, unit)) == wanted]
+        return matches[0] if len(matches) == 1 else None
 
     def var_node(self, unit: str, name: str) -> dict | None:
         v = self.var(unit, name)

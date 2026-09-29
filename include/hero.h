@@ -1296,11 +1296,12 @@ extern const THeroClassTraits (&g_heroClasses)[18];
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
 // as pointer+index). The IDA-lineage mangling
 // ?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A types it as an array
-// reference. Retail's parser settles the Complete bound: its direct
-// 0x5c-stride walk covers exactly 156 rows. The reference cell's retail
-// value is 0x679dd0; the loader begins at the +0x40 defaultName field.
-extern THeroTraits g_heroTraitsStorage[156];
-extern const THeroTraits (&g_heroTraits)[156];
+// reference. The parser loads the first 156 playable heroes at stride 0x5c.
+// Seven additional portrait records follow at 0x67d5e0, ending at 0x67d864
+// before the aligned class table at 0x67d868. The complete array has 163 rows;
+// the reference cell points to 0x679dd0.
+extern THeroTraits g_heroTraitsStorage[163];
+extern const THeroTraits (&g_heroTraits)[163];
 
 // E:\gamedcs\hero.cpp:267, dc 0xca7e8
 std::bitset<70> markArtifactSpells(int artifactId);

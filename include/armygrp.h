@@ -192,6 +192,8 @@ enum TCreatureType {
     // Dragon 0x84 / Crystal Dragon 0x85 ... Halfling 0x8a, leaving
     // 0x88/0x89 exactly where Enchanter/Sharpshooter sit in it.
     // NH3API spellings; values retail-proven.
+    // Gelu's retail specialty upgrades Wood Elves (0x12) to Sharpshooters.
+    CREATURE_WOOD_ELF = 0x12,
     CREATURE_MAGE = 0x22,
     CREATURE_ARCH_MAGE = 0x23,
     CREATURE_ENCHANTER = 0x88,
@@ -695,18 +697,9 @@ const unsigned int g_ctaAlive = 0x10;
 // akCreatureTypeTraits (a const reference to the 150-entry array).
 extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
 
-// Creature-card background image by town alignment (CrBkgCas.pcx first,
-// CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
-// neutral elemental card, so element -1 lives immediately before the
-// declared address. The owning TU remains unidentified; the claim moved
-// here from armygrp.cpp on 2026-08-14 when viewarmywindow.cpp's
-// create_portrait_widget (0x5f5060) became its second consumer, and it
-// sits behind the opt-in guard for the reason that guard exists:
-// declaring it UNCONDITIONALLY took initialize.obj's
-// initialize_game_data from 100.00% to 96.09% - the include-set class,
-// measured, with no semantic change anywhere. armygrp.cpp and
-// viewarmywindow.cpp are the two TUs that define the macro.
-extern const char* g_creatureBackgrounds[9];
+// CreatureBackgroundNames: neutral first, then the nine town alignments.
+// Index with alignment + 1 so neutral alignment -1 selects the first entry.
+extern const char* g_creatureBackgroundNames[10];
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride

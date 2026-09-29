@@ -16,6 +16,10 @@ void decodePackedBits(const unsigned char* packed, std::bitset<N>& result)
 
 // Complete's map and campaign readers deserialize packed planes through a
 // returned bitset temporary. The source name and header location are inferred.
+// The reader delegates its loop to decodePackedBits (both are expanded in the
+// Mac callers). Controls: a private named-proxy loop here raises
+// NewSMapHeader::read to 94.92% (92.61% delegating); a named proxy inside
+// decodePackedBits lowers it to 89.83%.
 template <size_t N>
 std::bitset<N> readPackedBits(TAbstractFile* infile)
 {

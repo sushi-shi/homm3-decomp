@@ -14,4 +14,4 @@
 # in our compiled anonymous namespace scope.
 # canonical_scope: the <path><hash> body between ?% and @, preserved in RTTI.
 unit	source_basename	canonical_scope
-forcefeedback	forcefeedback.h	C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558
+forcefeedback	forcefeedback.cpp	C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558

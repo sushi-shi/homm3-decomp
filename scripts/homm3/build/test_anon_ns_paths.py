@@ -50,6 +50,27 @@ class AnonymousNamespacePathsTest(unittest.TestCase):
         name = initializer(r"Z:\forcefeedback.h123")
         self.assertEqual(canon.normalize_anon_ns_name(name, "forcefeedback"), name)
 
+    def test_source_file_scope_is_checkout_independent(self):
+        # An unreviewed namespace in a repository .cpp takes the path identity
+        # every join uses; the checkout prefix and cl's nonce drop out.
+        spellings = [initializer(r"Z:\tmp\a\src\creaturetype.cpp153726449"),
+                     initializer(r"Z:\tmp\b\src\creaturetype.cpp2159020358")]
+        normalized = {canon.normalize_anon_ns_name(n, "creaturetype") for n in spellings}
+        self.assertEqual(len(normalized), 1)
+        self.assertRegex(normalized.pop(), r"\?A0x[0-9a-f]{16}@")
+        header = initializer(r"Z:\tmp\a\include\creaturetype.h123")
+        self.assertEqual(canon.normalize_anon_ns_name(header, "creaturetype"), header)
+
+    def test_local_static_scope_is_canonical_unless_ambiguous(self):
+        one = "_?x@?8??f@@YAXXZ@4HA"
+        other = "_?x@?M@??f@@YAXXZ@4HA"
+        payload = canon._rewrite_names(canon.CoffObject(_base()), {0: one})
+        after = canon.CoffObject(canon.canonicalize_coff(payload).data)
+        self.assertEqual(after.symbols[0].name, "_?x@?1??f@@YAXXZ@4HA")
+        payload = canon._rewrite_names(canon.CoffObject(_base()), {0: one, 1: other})
+        after = canon.CoffObject(canon.canonicalize_coff(payload).data)
+        self.assertEqual((after.symbols[0].name, after.symbols[1].name), (one, other))
+
     def test_repeated_scopes_in_catchable_type_names_are_all_normalized(self):
         scope = r"Z:\checkout\forcefeedback.h123"
         name = "__CT??_R0?AVt_initialize_failure@t_initializer@?%" + scope

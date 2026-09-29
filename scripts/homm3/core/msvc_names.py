@@ -66,12 +66,31 @@ def func(name: str, *, decorated: bool = False) -> str:
     return mask(out if decorated else decorate(out))
 
 
+#: A namespace-scope or static-member REFERENCE variable: the storage digit
+#: (`0`..`2` static member by access, `3` global), the reference type code
+#: `A` and its own cv modifier. Clang writes the referent's cv as the
+#: trailing storage class (`const T (&x)[N]` -> `...@@B`); cl 12.00 writes
+#: `A` for every reference, in the defining and the consuming objects alike
+#: (`?g_spellTraits@@3AAY0FB@$$CBUSSpellTraits@@A`).
+REFERENCE_DATA = re.compile(r"^(\?[^@].*?@@[0-3]A[A-D].*)[B-D]$")
+
+
 def data(name: str, *, internal: bool, decorated: bool = False) -> str:
     """VC6 DATA spelling from a Clang declaration; linkage needs no wrapper."""
     out = name if decorated else decorate(name)
+    out = REFERENCE_DATA.sub(r"\1A", out)
     if internal and out.startswith("?") and LOCAL_STATIC_SCOPE.search(out):
         out = "_" + out
     return mask(out)
+
+
+def anonymous_static(identifier: str) -> str:
+    """cl 12's spelling of a `static` variable declared directly in a source
+    file's anonymous namespace: the C name `_identifier`, as for a file
+    static. (Without `static`, cl mangles the anonymous scope `?%<path>@`;
+    clang mangles both as `?A0x<hash>@`.) Retail-pinned by rmg.obj's
+    g_landRiverDeltaIndex, g_rmgTownNativeTerrains and g_rmg*Names."""
+    return "_" + identifier
 
 
 def discriminate(name: str, rva: int, *, internal: bool = False) -> str | None:

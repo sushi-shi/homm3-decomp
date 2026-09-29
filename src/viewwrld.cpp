@@ -43,7 +43,7 @@
 // 0x6aab78/0x6aab79) and mines < artifacts < towns < heroes ascends the
 // same way in both. That correspondence is what fixes the two addresses
 // this file had no reader for until now.
-DATA(0x0068c6bc) int g_viewWorldScale;
+DATA(0x0068c6bc) int g_viewWorldScale = 11;
 DATA(0x006aab68)
 static unsigned char g_viewMines;
 DATA(0x006aab78) bool g_vwTerrains;
@@ -62,6 +62,10 @@ static int g_viewHalfWidth;
 DATA(0x006aab84) int g_scaleLine[32];
 DATA(0x006aac08)
 static unsigned char g_viewArtifacts;
+// Original DC name: eVWLevel. Unreferenced by retail and Dreamcast code; the
+// Dreamcast public sits between iVWArtifacts and iVWTowns at the same offsets
+// as these two retail flags.
+DATA(0x006aac10) TSkillMastery g_vwLevel;
 DATA(0x006aac14)
 static unsigned char g_viewTowns;
 DATA(0x006aac18) int g_vwCenterOffsetW;
@@ -110,6 +114,12 @@ static long ftol(double d)
 // Its left clip computes width as 32 - tilex, while Windows retail emits
 // baseX + 24. Substituting the former here changed Windows control flow and
 // lowered its byte match, so the retail expression remains below.
+// DC 119/120 and 127/128 apply the clipped amount to the zeroed/full tile
+// fields (tilex += 8 - x; tilew -= 8 - x) and 145/146 guard the draw with a
+// positive tilew/tileh block; both forms are byte-identical to the direct
+// assignments and early return (89.00%). Clipping the offset-adjusted x/y
+// parameters and drawing from saved copies instead drops to 84.93%; retail
+// compares the clipped copies (ECX/EAX) where VC6 here compares the originals.
 VA(0x005f73b0, 0x14D) MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
@@ -125,35 +135,35 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     int baseY = drawY;
 
     if (baseX < 8) {
-        tilex = 8 - baseX;
-        tilew = baseX + 24;
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
         baseX = 8;
     }
     if (baseY < 0) {
-        tiley = -baseY;
-        tileh = baseY + 32;
+        tiley -= baseY;
+        tileh += baseY;
         baseY = 0;
     }
     if (baseX + tilew > 600)
         tilew = 600 - baseX;
     if (baseY + tileh > 544)
         tileh = 544 - baseY;
-    if (tilew <= 0 || tileh <= 0)
-        return;
+    if (tilew > 0 && tileh > 0) {
+        int owner = -1;
+        if (thisCell->m_type == HERO)
+            owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
+        else if (hasFlag(thisCell->m_type))
+            owner = getFlaggedObjectOwner(thisCell);
 
-    int owner = -1;
-    if (thisCell->m_type == HERO)
-        owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
-    else if (hasFlag(thisCell->m_type))
-        owner = getFlaggedObjectOwner(thisCell);
+        if (owner >= 0)
+            frame += owner * 19;
+        else
+            frame += 8 * 19;
 
-    if (owner >= 0)
-        frame += owner * 19;
-    else
-        frame += 8 * 19;
-
-    srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
-                  g_windowManager->m_screenBitmap, drawX, drawY, false, true);
+        srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
+                      g_windowManager->m_screenBitmap, drawX, drawY, false,
+                      true);
+    }
 }
 
 inline void vwClipScaleToScreenBuffer(int destX, int destY)
@@ -236,6 +246,13 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
     }
 }
 
+// Residual (95.31%): retail expands the fifth drawHero's getMap, which our
+// trace refuses (budget 23, cost 45). With the four earlier groups consuming
+// getNumFrames+isValidSeq+drawHero+getMap, that needs the group cost sum at
+// most 228 instead of 233 (advmgr::drawHeroPart needs 227). Measured
+// 2026-09-29: getMap through reinterpret_cast costs 43 (floor-gated),
+// isValidSeq without `!= 0` costs 41; both byte-flat here. An if/return
+// getNumFrames is worse (93.30%).
 VA(0x005f7500, 0x3F7) MAC_ADDRESS(0x203150, 0x530)  // dc 0x19308c
 void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {
@@ -896,6 +913,11 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // These two source controls are Windows-flat at 88.3551% (four states,
 // two objects). Both ordinary CodeWarrior and retail retain eleven calls;
 // the remaining shape comparison is not an exact Mac verdict.
+// Probes (2026-09-29): Dreamcast rows 1053..1094 put the draw arm first under
+// the inverted condition, with `if (allBlack) lookup = 0; else ...` (73.91%);
+// retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
+// baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
+// and lookup get real locals where this body reuses the parameter homes.
 VA(0x005f9940, 0x44A) MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer), dc 0x194b48
 void advManager::vwDrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -1269,11 +1291,6 @@ TViewWorldWindow::TViewWorldWindow()
 }
 
 VA_COMPGEN(0x005fbd30, 0x21, SCALAR_DELETING_DTOR, TViewWorldWindow)
-
-// The two retained vector<widget*>::insert overloads at 0x5fd390 and
-// 0x5fdd60 both call this guarded four-byte fill loop. viewwrld.obj emits
-// the same specialization from the recovered widget-vector operations.
-VA_COMPGEN(0x005fdf20, 0x26, VECTOR_UFILL, widget)
 
 VA(0x005fbd60, 0x86) MAC_ADDRESS(0x208d70, 0xe8)  // dc 0x195ac4
 TViewWorldWindow::~TViewWorldWindow()

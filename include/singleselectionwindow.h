@@ -302,7 +302,7 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // TSingleSelectionWindow because that window embeds one at +0x1064.
 // The ctor below seeds version from the game-context cell
 // (resourcemanager.cpp owns the claim).
-extern int* g_videoGameState;
+extern int& g_videoGameState;
 
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:

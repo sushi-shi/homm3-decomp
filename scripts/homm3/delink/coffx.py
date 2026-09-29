@@ -106,6 +106,20 @@ class Obj:
             self._by_section = index
         return index
 
+    def weak_default(self, name: str) -> str | None:
+        """The default symbol named by weak external ``name``'s aux record."""
+        defaults = getattr(self, "_weak_defaults", None)
+        if defaults is None:
+            defaults = {}
+            for idx, _value, _sn in self.iter_symbols():
+                base = self.symptr + idx * 18
+                scl, naux = struct.unpack_from("<BB", self.buf, base + 16)
+                if scl == 105 and naux:
+                    tag = struct.unpack_from("<I", self.buf, base + 18)[0]
+                    defaults[self.sym_name(idx)] = self.sym_name(tag)
+            self._weak_defaults = defaults
+        return defaults.get(name)
+
     def defined_symbols(self, secnum: int):
         """[(offset, name)] of the class-EXTERNAL symbols defined in one section."""
         return [(value, name) for value, name, scl in

@@ -1,6 +1,8 @@
 # Linking the reconstructed game
 
-After `homm3 build`, run:
+`homm3 build` now requires a successful full link and writes
+`build/exe/HEROES3.candidate.EXE`. Fast builds skip linking. To run the link
+separately or select a different output, run:
 
 ```sh
 homm3 link --out build/exe/HEROES3.linked.EXE

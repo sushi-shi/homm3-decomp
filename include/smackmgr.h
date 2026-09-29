@@ -16,6 +16,27 @@ typedef SmackTag Smack;
 SIZE(Smack, 944);
 
 namespace SmackManager {
+// The Smacker playback state parallel to BinkManagerStruct. DC's WinCE port
+// stubs Smacker and records no such type; the names are provisional. The
+// Mac port addresses one 44-byte object through a single TOC base (video
+// +0, video2 +4, x/y +8/+0xc, requested extent +0x10/+0x14, id +0x18,
+// loop +0x1c, paused +0x20, advance +0x24, buffer flags +0x28), and
+// Windows keeps the same eleven fields contiguous at 0x69fdf8..0x69fe23.
+struct SmackManagerStruct {
+    Smack* m_smack;               // +0x00 video track handle
+    Smack* m_smack2;              // +0x04 audio-only track handle
+    int m_x;                      // +0x08 blit origin on the screen bitmap
+    int m_y;                      // +0x0c
+    int m_w;                      // +0x10 requested extent
+    int m_h;                      // +0x14
+    int m_id;                     // +0x18
+    int m_loop;                   // +0x1c
+    int m_paused;                 // +0x20
+    int m_advance;                // +0x24 widened from ShowVideo's bool
+    unsigned long m_bufferFlags;  // +0x28 SMACKBUFFER555/565
+};
+SIZE(SmackManagerStruct, 0x2c);
+extern SmackManagerStruct g_playingSmack;
 // DC namespace globals; Windows VA mappings are documented at definitions.
 extern bool g_updateScreen;
 extern bool g_needsUpdate;
@@ -76,15 +97,8 @@ struct SVideoDescriptor {
 };
 extern SVideoDescriptor g_videoDescriptors[];   // .data 0x6839c0
 
-// The two Smacker track handles smackmgr.obj defines. Declared here for the
-// campaign prologue player, which watches gSmackVideo/gSmackVideo2 to decide
-// when the video half of its wait has finished. Definitions and DATA claims
-// stay in src/smackmgr.cpp.
-extern Smack* g_smackVideo;
-extern Smack* g_smackVideo2;
-
 // Foreign globals without an owning header yet (all provisional):
-extern int* g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
+extern int& g_videoGameState;    // .bss 0x69923c - the forced-bink state pair
 extern int g_firstTimeThrough;        // .bss 0x699524 - nonzero blocks the user abort
        // .bss 0x699290 - nonzero suppresses the video sound tracks
 
@@ -171,5 +185,17 @@ extern int g_videoCount3;
 extern void* g_videoFile1;
 extern void* g_videoFile2;
 extern void* g_videoFile3;
+
+// Archive state populated by the sound loader; ResourceManager binds each
+// header/count/handle trio in its startup descriptor table.
+extern SoundHeaderStruct* g_soundHeader;
+extern SoundHeaderStruct* g_soundHeaderCd;
+extern SoundHeaderStruct* g_soundHeaderCampaign;
+extern int g_soundCount;
+extern int g_soundCountCd;
+extern int g_soundCountCampaign;
+extern void* g_soundFile;
+extern void* g_soundFileCd;
+extern void* g_soundFileCampaign;
 
 #endif  /* HOMM3_SMACKMGR_H */

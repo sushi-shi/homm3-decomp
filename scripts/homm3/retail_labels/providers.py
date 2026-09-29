@@ -10,6 +10,7 @@ a duplicate census row); every cross-channel decision - precedence, the
 
 from __future__ import annotations
 
+from collections import Counter
 from pathlib import Path
 
 from homm3.core import common
@@ -19,14 +20,23 @@ from homm3.retail_labels import Claim
 ZLIB_MAP = common.HOMM3_DIR / "config/retail/zlib-map.tsv"
 RUNTIME_MAP = common.HOMM3_DIR / "config/retail/runtime-map.tsv"
 RELOC_ALIASES = common.HOMM3_DIR / "config/retail/reloc-aliases.tsv"
+RUNTIME_CONTRIBUTIONS = (common.HOMM3_DIR
+                         / "config/retail/runtime-contributions.tsv")
 RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail/reloc-evidence.tsv"
 
 
 def zlib_map(path: Path | None = None) -> list[Claim]:
-    """The reviewed vendored-zlib map: rva, size, name, owning TU."""
+    """The reviewed vendored-zlib function/data map; old rows default to func."""
     _b, _h, raw = read_tsv(path or ZLIB_MAP)
-    return [Claim(int(r["rva"], 16), r["name"], "func", "zlib-map",
-                  int(r["size"]), r["unit"], {}) for r in raw]
+    claims = []
+    for r in raw:
+        kind = r.get('kind', 'func')
+        if kind not in ('func', 'data'):
+            raise ValueError(f'unknown zlib map kind {kind!r} at {r["rva"]}')
+        claims.append(Claim(int(r['rva'], 16), r['name'], kind,
+                            'zlib-map' if kind == 'func' else 'zlib-data-map',
+                            int(r['size']), r['unit'], {}))
+    return claims
 
 
 def runtime_map(path: Path | None = None) -> list[Claim]:
@@ -36,6 +46,55 @@ def runtime_map(path: Path | None = None) -> list[Claim]:
     _b, _h, raw = read_tsv(path or RUNTIME_MAP)
     return [Claim(int(r["rva"], 16), r["name"], "func", "runtime-map",
                   None, "", {}) for r in raw]
+
+
+def runtime_data_symbols(path: Path | None = None,
+                         libraries: dict | None = None) -> list[Claim]:
+    """Library data symbols proven by the reviewed runtime placements.
+
+    Each placed data/bss COFF section of a pinned archive member defines the
+    external symbols in its symbol table at their section offsets
+    (DXGUID's `_DPAID_ServiceProvider`, LIBCPMT's `?_Id_cnt@id@locale@std@@0HA`).
+    When the pinned archive is unavailable, the row's own symbol names the
+    section start. Label-only: the model applies these names where it would
+    otherwise invent a dense `const_`/`data_`/`bss_` label, so a game
+    reference to the library object compares by its real name.
+    """
+    _b, _h, raw = read_tsv(path or RUNTIME_CONTRIBUTIONS)
+    if libraries is None:
+        libraries = _pinned_library_members()
+    found: list[tuple[int, str]] = []
+    for r in raw:
+        if r.get("kind") not in ("data", "bss") or r.get("library") == "zlib":
+            continue
+        rva = int(r["rva"], 16)
+        obj = libraries.get(r["library"], {}).get(r["member"])
+        if obj is None:
+            found.append((rva, r.get("symbol") or "-"))
+            continue
+        number = int(r["section"])
+        found.extend((rva + symbol.value, symbol.name)
+                     for symbol in obj.symbols.values()
+                     if symbol.section == number and symbol.storage_class == 2)
+    found = [(rva, name) for rva, name in found if name[:1] in ("_", "?")]
+    # Member-local statics ($T, $S) and repeated names identify no one object.
+    names = Counter(name for _rva, name in found)
+    rvas = Counter(rva for rva, _name in found)
+    return [Claim(rva, name, "data", "runtime-data", None, "", {})
+            for rva, name in sorted(set(found))
+            if names[name] == 1 and rvas[rva] == 1]
+
+
+def _pinned_library_members() -> dict:
+    """{library: {member: CoffObject}} for the pinned runtime/GUID archives."""
+    try:
+        from homm3.core.paths import msvc_dir
+        from homm3.verify import library_code
+        root = Path(msvc_dir()) / "lib"
+        return {name: library_code.archive(root / name)[0]
+                for name in library_code.RUNTIME_LIBRARIES + library_code.GUID_LIBRARIES}
+    except (OSError, ValueError, ImportError):
+        return {}
 
 
 def reloc_aliases(path: Path | None = None) -> list[Claim]:

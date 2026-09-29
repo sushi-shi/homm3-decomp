@@ -770,7 +770,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 }
 
 // E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
-// short `artifact` local and statement order. Mac doEventArtifact retains
+// short `artifact` local and statement order: line 501 loads the artifact
+// inside the human-player block, which makes doEventArtifact exact. Mac doEventArtifact retains
 // a call to it at 0:0xa9d28; VC6 auto-inlines it into the free arm.
 MAC_ADDRESS(0x0a9d28, 0xa4)
 void advManager::doEventFreeArtifact(hero* currentHero,
@@ -778,10 +779,11 @@ void advManager::doEventFreeArtifact(hero* currentHero,
                                             type_point point,
                                             bool humanPlayer)
 {
-    short artifact = cell->getArtifactIndex();
-    if (humanPlayer)
+    if (humanPlayer) {
+        short artifact = cell->getArtifactIndex();
         normalDialog(g_artifactEventText[artifact],
                      1, -1, -1, 8, artifact, -1, 0, -1, 0, -1, 0);
+    }
     giveArtifact(currentHero, point, humanPlayer);
 }
 
@@ -1001,9 +1003,8 @@ void advManager::doArtifactSkillRequirement(
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
-// Residual (85.81%, 2026-09-07): retail shares the two skill-success
-// dialog/GiveArtifact tails; VC6 still emits separate copies. The free helper's
-// short artifact load also stays before the human test instead of sinking.
+// Exact once doEventFreeArtifact loads its artifact inside the human-player
+// block (DC events.cpp:501); earlier the body stayed at 85.81%.
 // Restoring DoArtifactSkillRequirement's nested DoEventFreeArtifact call and
 // short refusal local fixes the dialog semantics. With the old GiveArtifact
 // reconstruction this measured 0%; recovering its proven constructor and
@@ -1262,6 +1263,9 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
+                    // Mac 0xab3c8..0xab3e8 assigns formatString's result
+                    // straight into message (no copy constructor); that
+                    // direct form scores 95.28% here against 96.35% (r5).
                     if (rewards.size() != 0) {
                         std::string pendingText = formatString(
                             g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
@@ -1477,6 +1481,8 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
 // inside it in turn; with the sound fixed at PICKUP the fizzle's switch
 // folds to the sprintf arm alone.
 
+// DC 1361 gives the dialog one if-body scope (unbraced); 1369 has two
+// coincident scopes, so only the closing setEnvironmentOrigin is braced.
 VA(0x004a1120, 0x1C4) MAC_ADDRESS(0x0ac3dc, 0x124)  // dc 0x922e8
 void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
                                  type_point point, bool humanPlayer)
@@ -1492,8 +1498,9 @@ void advManager::doEventCampfire(hero* currentHero, NewmapCell* cell,
     currentHero->giveResource(resource, qty);
 
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
-    if (humanPlayer)
+    if (humanPlayer) {
         setEnvironmentOrigin(currentHero->getLocation(), 1);
+    }
 }
 
 VA(0x004a12f0, 0x1B3) MAC_ADDRESS(0x0ac500, 0x324)  // dc 0x923b0
@@ -1735,14 +1742,15 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER],
+                         1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(1, 1);
+        g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
+        currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER],
-                     1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(1, 1);
-    g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
-    currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
 }
 
 VA(0x004a2140, 0xE8) MAC_ADDRESS(0x0ad5d8, 0x18c)  // dc 0x92dec
@@ -1883,14 +1891,15 @@ void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN],
+                         1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(3, 1);
+        g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
+        currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN],
-                     1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(3, 1);
-    g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
-    currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
 }
 
 // Dreamcast keeps these object visitors as named source boundaries. Mac also
@@ -2387,14 +2396,15 @@ void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP],
+                         1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(0, 1);
+        g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
+        currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP],
-                     1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(0, 1);
-    g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
-    currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
 }
 
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
@@ -2513,14 +2523,15 @@ void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
+    } else {
+        if (humanPlayer) {
+            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL],
+                         1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
+        }
+        currentHero->adjustPrimarySkill(2, 1);
+        g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
+        currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
     }
-    if (humanPlayer)
-        normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL],
-                     1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
-    currentHero->adjustPrimarySkill(2, 1);
-    g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
-    currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
 }
 
 VA(0x004a3eb0, 0x376) MAC_ADDRESS(0x0b0870, 0x348)  // dc 0x94760
@@ -2877,7 +2888,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
         currentHero->giveResource(GOLD, 1500);
         break;
     case const_sea_chest_artifact:
-        artifact.m_artifactId = TArtifact(cell->getSeaChestArtifact());
+        artifact.m_artifactId = cell->getSeaChestArtifact();
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT_FORMAT],
@@ -3288,7 +3299,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
 {
     if (cell->treasureIsArtifact()) {
         if (currentHero->getNumberInBackpack(1) < 64) {
-            type_artifact artifact(TArtifact(cell->getTreasureArtifact()));
+            type_artifact artifact(cell->getTreasureArtifact());
             if (humanPlayer) {
                 sprintf(g_text,
                         (*g_adventureEventText)[ADV_EVENT_TEXT_TREASURE_ARTIFACT_FORMAT],
@@ -3395,7 +3406,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
 
     if (cell->wagonHasArtifact()
         && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact(TArtifact(cell->getWagonArtifact()));
+        type_artifact artifact(cell->getWagonArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WAGON_ARTIFACT_FORMAT],
@@ -3860,7 +3871,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     if (cell->tombIsFull() && currentHero->getNumberInBackpack(1) < 64) {
-        type_artifact artifact(TArtifact(cell->getTombArtifact()));
+        type_artifact artifact(cell->getTombArtifact());
         if (humanPlayer) {
             sprintf(g_text,
                     (*g_adventureEventText)[ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT_FORMAT],
@@ -4139,19 +4150,17 @@ inline void advManager::doEventWhirlpool(hero* currentHero,
 // were byte-flat; force-inlining GetTeam regressed this row to 99.13% and its
 // independently exact COMDAT to zero, so only its attested inline declaration
 // is retained.
-// With all four primary-skill handlers' DC-proven text subscripts restored,
-// removing their four call pins still expands the handlers (90.77%, versus
-// pinned 99.4678%). Text-wrapper flattening was real source debt, but not the
-// cause of these four retained-call decisions.
-// Garden-specific control: replacing its visited early return with an else
-// leaves the retained helper at 100% and this dispatcher at 99.4678%. Removing
-// only the Garden pin gives 97.8007% under either structure; four distinct
-// reproduced objects rule out that branch spelling as the call-boundary fix.
-// Removing the four depth-zero pins restores natural compiler settings;
-// CodeWarrior rejects the empty reset, which otherwise disables later inlining.
-// Windows retains DefenseTower/Garden/MercenaryCamp/PowerSchool calls at
-// 0x4a8d4b/0x4a9049/0x4a9676/0x4a9c95. The unpinned caller currently expands
-// them (88.61% vs HIST99.99%); recover these boundaries through source structure.
+// Retail calls the five ordinary handlers with retained bodies (Campfire,
+// DefenseTower, Garden, MercenaryCamp, PowerSchool) because C1XX does not save
+// their bodies for /Ob2: the traced save cliff lies between cost 174 (saved)
+// and 176 (flags 0x2a, never a candidate). The Dreamcast scopes give the four
+// primary-skill visitors an else branch and a braced else-dialog (two
+// coincident scopes; 176). Campfire braces only its closing call (DC 1369);
+// ExtraInfoUnion::getCampfireResource's DC EGameResource return supplies the
+// rest. All five bodies stay byte-exact (88.58% -> 100%). The earlier depth-zero pins
+// and early-return controls are superseded. Residual 99.997%: in the faerie
+// ring arm retail loads the nested getTeam byte as [ecx+eax] while the loop
+// keeps [eax+ecx]; the identical mermaid arm matches the base form.
 VA(0x004a84f0, 0x2542) MAC_ADDRESS(0x0b5b24, 0x1f6c)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::dispatchEvent(hero* currentHero, NewmapCell* cell, type_point point, bool humanPlayer)
 {
@@ -5266,10 +5275,14 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
             result += rewardStrings[i];
         }
 
-        // The initialiser form, not default-construct-then-assign: retail
-        // builds the reward line directly into its destination (inlined
-        // `_Tidy`, called `assign`), which is worth 89.3406 -> 91.5867.
-        std::string rewardText = formatString(
+        // Retail FuncInfo 0x64c8e0 has eight states: rewardText (ebp-0x64,
+        // state 6) is alive before the formatted temporary (ebp-0x74, state
+        // 7, nested in 6) that is assigned into it, so the line is default
+        // constructed and then assigned (85.35 -> 89.48%). The initializer
+        // form yields seven states. Residual: retail expands one more string
+        // append chain (_Xlen/_Grow/_Eos calls) in the reward-list loop.
+        std::string rewardText;
+        rewardText = formatString(
             (*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_REWARD_FORMAT],
             getArmyName(leaderMonster, creatureCount), result.c_str());
         extendedDialog(rewardText.c_str(), resources, -1, -1, 0);
@@ -5340,8 +5353,8 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
                                    int numGroups2, TCreatureType monType3,
                                    int numMons3, int numGroups3)
 {
-    static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
-    static const int reorderMap[7][7][7] = {
+    DATA(0x006776e0) static double threshold[6] = { 3.0, 2.0, 1.5, 1.0, 0.67, 0.5 };
+    DATA(0x0063df94) static const int reorderMap[7][7][7] = {
         {
             { 0, 0, 0, 0, 0, 0, 0 },
             { 0, 0, 0, 0, 0, 0, 0 },
@@ -5881,6 +5894,8 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // counted loops. Putting its scalar fields before both copies, whether by
 // assignment or initializer list, gives 94.5662 here; putting numSSs between
 // the copies is flat. DC's scheduled store alone does not settle the spelling.
+// Windows retail has no separate draw arm after quick combat: the winner
+// selects the defeated hero directly (Mac 0xbaf6c's draw check scores 92.78%).
 VA(0x004ad470, 0x1531) MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
 int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
 {
@@ -5902,30 +5917,18 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
-                            target))
+                            target)) {
+            winningPlayer = leftPlayer;
             winner = 0;
-        else
-            winner = 1;
-        // Mac 0xbaf6c retains the draw check even though quick combat
-        // currently selects only the left or right winner.
-        if (winner == COMBAT_WINNER_NONE) {
-            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                    leftPlayer, rightHero)
-                || g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                       rightPlayer, leftHero))
-                checkEndGame(0);
+            loser = rightHero;
         } else {
-            if (winner == COMBAT_WINNER_LEFT) {
-                winningPlayer = leftPlayer;
-                loser = rightHero;
-            } else if (winner == COMBAT_WINNER_RIGHT) {
-                winningPlayer = rightPlayer;
-                loser = leftHero;
-            }
-            if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
-                    winningPlayer, loser))
-                checkEndGame(0);
+            winner = 1;
+            winningPlayer = rightPlayer;
+            loser = leftHero;
         }
+        if (g_game->m_mapHeader.m_victoryCondition.checkForHeroDefeatWin(
+                winningPlayer, loser))
+            checkEndGame(0);
         mobilizeCurrHero(0, 0, 1);
         return winner;
     }

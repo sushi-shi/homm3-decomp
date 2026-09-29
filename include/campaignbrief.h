@@ -97,7 +97,7 @@ public:
         // would push it to +0x40).
         std::vector<unsigned char> m_prerequisites;
         std::string m_regionDesc;
-        unsigned char m_regionColor;
+        signed char m_regionColor;
         signed char m_difficulty;
         // The loader reads regionColor/difficulty as bytes at +0x38/39;
         // prologue starts at +0x3c. These two bytes align the pointer.

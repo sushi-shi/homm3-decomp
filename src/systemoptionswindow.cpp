@@ -176,29 +176,38 @@ TSystemOptionsWindow::TSystemOptionsWindow()
             memError();
     }
 
+    // DC 130..136 send the status bits directly: the Dreamcast compiler
+    // never expands widget::set_visible (all 51 DC uses call dc 0x56df8) and
+    // none comes from this compiland. Retail pushes both constants ahead of
+    // each getWidget call, as a direct send does; the setVisible spelling
+    // pushed after it (76.55 -> 98.31).
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->setVisible(0);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->setVisible(1);
+        getWidget(music)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
 
     for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
          ++effects)
-        getWidget(effects)->setVisible(0);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->setVisible(1);
+        getWidget(effects)->sendMessage(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
     getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
         widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
 
     for (int walk = HERO_SPEED_WALK_ID; walk <= HERO_SPEED_JUMP_ID; ++walk)
         getWidget(walk)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_walkSpeed + MUSIC_TYPE_MIDI_ID)->sendMessage(
+    getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
     for (int ai = AI_SPEED_CANTER_ID; ai <= AI_SPEED_NONE_ID; ++ai)
         getWidget(ai)->sendMessage(widget::WIDGET_CLEAR_STATUS,
             widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_computerWalkSpeed
+    getWidget(g_config.m_walkSpeed[0]
             + HERO_SPEED_GALLOP_ID)->sendMessage(
         widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
 
@@ -356,6 +365,10 @@ void TSystemOptionsWindow::doModal()
 // and unconfirmed commands' break to reach common translation. Confirmation
 // stays before translation; both joins are removed with all 1526 compiled
 // bytes and 96 references/addends unchanged at 94.3957%.
+// The slider arms send WIDGET_CLEAR/SET_STATUS directly, as DC's rows name
+// send_message here (DC never expands widget::set_visible; all 51 of its
+// uses call dc 0x56df8). Retail pushes both constants before getWidget, as
+// a direct send does: 96.70 -> 100 (2026-09-29).
 VA(0x005b3140, 0x61E) MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
@@ -458,11 +471,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case HERO_SPEED_GALLOP_ID:
                     case HERO_SPEED_JUMP_ID:
                     {
-                        g_config.m_walkSpeed = id - MUSIC_TYPE_MIDI_ID;
+                        g_config.m_walkSpeed[1] = id - MUSIC_TYPE_MIDI_ID;
                         for (int i = HERO_SPEED_WALK_ID; i <= HERO_SPEED_JUMP_ID; ++i)
                             getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                                       widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_walkSpeed + MUSIC_TYPE_MIDI_ID)
+                        getWidget(g_config.m_walkSpeed[1] + MUSIC_TYPE_MIDI_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
                         prefsChanged = 1;
@@ -475,14 +488,14 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                     case AI_SPEED_JUMP_ID:
                     case AI_SPEED_NONE_ID:
                     {
-                        g_config.m_computerWalkSpeed = id - HERO_SPEED_GALLOP_ID;
+                        g_config.m_walkSpeed[0] = id - HERO_SPEED_GALLOP_ID;
                         g_config.m_blackoutComputer =
-                            g_config.m_computerWalkSpeed ==
+                            g_config.m_walkSpeed[0] ==
                             AI_SPEED_BLACKOUT_VALUE;
                         for (int i = AI_SPEED_CANTER_ID; i <= AI_SPEED_NONE_ID; ++i)
                             getWidget(i)->sendMessage(widget::WIDGET_CLEAR_STATUS,
                                                       widget::WIDGET_DIMMED);
-                        getWidget(g_config.m_computerWalkSpeed +
+                        getWidget(g_config.m_walkSpeed[0] +
                                   HERO_SPEED_GALLOP_ID)
                             ->sendMessage(widget::WIDGET_SET_STATUS,
                                           widget::WIDGET_DIMMED);
@@ -511,9 +524,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         }
                         g_config.m_musicVolume = id - MUSIC_VOLUME_0_ID;
                         for (int i = MUSIC_VOLUME_0_ID; i <= MUSIC_VOLUME_9_ID; ++i)
-                            getWidget(i)->setVisible(0);
+                            getWidget(i)->sendMessage(
+                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
-                            ->setVisible(1);
+                            ->sendMessage(
+                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
                         save = g_soundManager->m_playSounds;
@@ -547,9 +562,11 @@ int TSystemOptionsWindow::windowHandler(message& msg)
                         g_config.m_soundVolume = id - EFFECTS_VOLUME_0_ID;
                         g_config.m_lastSoundVolume = g_config.m_soundVolume;
                         for (int i = EFFECTS_VOLUME_0_ID; i <= EFFECTS_VOLUME_9_ID; ++i)
-                            getWidget(i)->setVisible(0);
+                            getWidget(i)->sendMessage(
+                                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
-                            ->setVisible(1);
+                            ->sendMessage(
+                                widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
                         getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)
                             ->sendMessage(widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
                         save = g_soundManager->m_playSounds;

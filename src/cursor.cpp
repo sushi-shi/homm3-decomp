@@ -323,8 +323,7 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 
     if (g_completeDrawEnabled) {
         int speedIndex;
-        speedIndex = (&g_config.m_computerWalkSpeed)
-            [g_currentPlayer->isLocalHuman()];
+        speedIndex = g_config.m_walkSpeed[g_currentPlayer->isLocalHuman()];
 
         m_radarOrigin.m_x = curr->m_x - 9;
         m_radarOrigin.m_y = curr->m_y - 8;

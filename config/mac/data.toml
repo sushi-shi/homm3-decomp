@@ -39,7 +39,7 @@ evidence = "IEEE binary64 0x4330000080000000 conversion bias, addressed through 
 
 [[data]]
 retail_va=0x0069923c
-source="src/resourcemanager.cpp"
+source="src/gamecontext.cpp"
 declaration_only=true
 mac_section=1
 mac_offset=0x5c040

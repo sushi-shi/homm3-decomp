@@ -395,17 +395,18 @@ unsigned char NewmapCell::isDiggable() const
     return 1;
 }
 
+// DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
 VA(0x004fcdc0, 0x58) MAC_ADDRESS(0x11e5f8, 0xb4)  // dc 0xec324
 const unsigned char NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
         if (g_currentPlayer->isLocalHuman()
-            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
+            && ((m_extraInfo >> 10) & g_curPlayerBit))
             return 1;
 
         if (!g_currentPlayer->isLocalHuman()
             && (m_extraInfo & 0x40000)
-            && ((m_extraInfo >> 10) & g_mapVisibilityBit))
+            && ((m_extraInfo >> 10) & g_curPlayerBit))
             return 1;
     }
     return 0;
@@ -2624,8 +2625,9 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // Mac 0x124674 and 0x12470c construct bitset reference proxies before the
 // retained assignments at 0x1246b4 and 0x12474c.
 // Map scalars are little endian: native 0x124330 decodes the identifier,
-// 0x124468 the troop count, and 0x124798 the event count. Shared decoding
-// reproduces these CodeWarrior operations and is byte-flat under VC6.
+// 0x124468 the troop count, and 0x124798 the event count. Windows retail
+// reads each scalar through the direct virtual read: the readValue and
+// readLittleEndianValue wrappers cost VC6 90.68% against 97.78%.
 VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2647,21 +2649,21 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
     } else {
-        readValue(infile, intBuffer);
+        infile->read(&intBuffer, sizeof(intBuffer));
         tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
     }
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_playerOwner = charBuffer;
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
         NewSMapHeader::readString(infile, tempTown.m_name);
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
@@ -2669,7 +2671,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            if (readValue(infile, shortBuffer)
+            if (infile->read(&shortBuffer, sizeof(shortBuffer))
                 < sizeof(shortBuffer))
                 return -1;
             shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
@@ -2677,11 +2679,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         }
     }
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_isGrouped = charBuffer;
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customBuildings = charBuffer;
 
@@ -2693,7 +2695,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             return -1;
         memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
-        if (readValue(infile, charBuffer)
+        if (infile->read(&charBuffer, sizeof(charBuffer))
             < sizeof(charBuffer))
             return -1;
         tempTown.m_hasFort = charBuffer;
@@ -2714,7 +2716,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
-    if (readValue(infile, numTownEvents)
+    if (infile->read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
         return -1;
 
@@ -2732,7 +2734,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
     charBuffer = -1;
     if (mapVersion >= 28)
-        readValue(infile, charBuffer);
+        infile->read(&charBuffer, sizeof(charBuffer));
 
     if (m_objectTypes[townObject->m_typeIndex].m_objectType == RANDOM_TOWN) {
         if (charBuffer != -1
@@ -2757,8 +2759,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             // 24-byte archive-set rows at 0x69e538 - so the pointee is a
             // small game/resource-context ordinal, not a video flag.
             int legalAlignments = 0xff;
-            if ((*g_videoGameState == 1
-                 || *g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+            if ((g_videoGameState == 1
+                 || g_videoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
                 && g_game->m_gameVersion >= 1)
                 legalAlignments = 0x1ff;
             tempTown.m_townType = pickAlignment(legalAlignments, 0);
@@ -3545,9 +3547,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     return 1;
 }
 
-// DC records char_buffer, ushort_buffer and count at function scope.
+// DC records char_buffer, ushort_buffer and count at function scope and
+// calls gzwrite directly at each of the four rows (dc 0xf1b3a..0xf1bca).
 // Mac stages the three coordinates through one byte slot and the type index
-// through a separate short slot; preserve those lifetimes around the helper.
+// through a separate short slot. Direct write calls matter to the caller:
+// through the free writeScalar wrapper this body's /Ob2 cost fell to 156 and
+// saveMapObjects expanded it (55.45%); retail and Mac both call it.
 VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
@@ -3556,23 +3561,23 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
     char charBuffer;
 
     charBuffer = tempObject.m_x;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_y;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     charBuffer = tempObject.m_z;
-    count = writeScalar(outfile, charBuffer);
-    if (count < sizeof(char))
+    count = outfile->write(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
 
     ushortBuffer = tempObject.m_typeIndex;
-    count = writeScalar(outfile, ushortBuffer);
-    if (count < sizeof(unsigned short))
+    count = outfile->write(&ushortBuffer, sizeof(ushortBuffer));
+    if (count < sizeof(ushortBuffer))
         return -1;
     return 0;
 }
@@ -4020,15 +4025,14 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int numObjects;
     int count;
     int x;
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer)) {
         return -1;
     }
 
     // Both Mac count fields are read through the same caller-owned integer
-    // slot, then byte-reversed before resize. The decoding wrapper preserves
-    // readValue and its returned count. Its currently retained Mac expansion
-    // remains an inlining difference; there is no retail wrapper to bind.
+    // slot, then byte-reversed before resize. Windows retail reads them
+    // directly (99.84%; the decoding wrapper gives 99.38%).
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4059,13 +4063,17 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
             incProgressBar(1);
     }
 
+    // DC NewfullMap::Read/Load (mapcell.cpp:640/704) release the sprite list
+    // through ResourceManager::Dispose. With the helper the new budgets cost
+    // read 99.94 -> 96.24 and load 99.91 -> 97.99 (retail keeps one more
+    // string _Tidy and vector size call); kept per the helper rule.
     for (x = 0; x < oldSprites.size(); ++x)
-        oldSprites[x]->dispose();
+        ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
 
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer)) {
         return -1;
     }
@@ -4101,8 +4109,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     return 1;
 }
 
-// DC separates int_buffer from write/helper status count and records int x.
-// The retained SaveObject boundary remains an inliner residual in Complete.
+// DC separates int_buffer from write/helper status count, records int x and
+// calls gzwrite directly (dc 0xf3030, 0xf310a).
 VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
@@ -4111,7 +4119,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     int x;
 
     intBuffer = m_objectTypes.size();
-    count = writeScalar(outfile, intBuffer);
+    count = outfile->write(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
 
@@ -4122,7 +4130,7 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     }
 
     intBuffer = m_objects.size();
-    count = writeScalar(outfile, intBuffer);
+    count = outfile->write(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer))
         return -1;
 
@@ -4173,7 +4181,7 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
     }
 
     for (x = 0; x < oldSprites.size(); ++x)
-        oldSprites[x]->dispose();
+        ResourceManager::dispose(oldSprites[x]);
     oldSprites.clear();
 
     incProgressBar(1);
@@ -4608,6 +4616,21 @@ void NewfullMap::setObjectType(CObject* object, int objectType,
 // position locals produced no constructor gain across nine source states.
 // DC CObjectType fieldlist 0x309c (class 0x309b) declares only the generated
 // default/copy constructors (attributes 0x103), with no TObjectType* overload.
+// Lane A r4: retail CALLS bitset<48>::test for the draw and passable cells
+// and expands it (with _Xran) for shadow and trigger; set is always called.
+// Caller cb 454 floors the /Ob2 budget at 1000, so a direct depth-1 test
+// (cb 58, budget 956) cannot be refused: retail's test sits at depth >= 2,
+// where budget/remaining grows as the cell's later candidates are consumed.
+// Retail also keeps the tested position (esi = 0x2f - 8y - x, recomputed)
+// apart from the strength-reduced set position (edi), so the two positions
+// are not one shared `pos` expression. Source-mask subscripts assigned
+// reference-to-reference (test at depth 3) fall to 41.91%.
+// Lane A r5: that form for draw/passable only refuses both tests at depth 3
+// (budgets 31/34) and calls set, as retail does, but the shadow/trigger
+// _Xran<48> then expands at 70/71 (retail calls it; needs <= 64, one or two
+// more candidates after each test) and the terrain loop still calls
+// test<10> (52 < 58) and expands set<10> (155), the reverse of retail
+// (44.72%). Not adopted.
 VA(0x00506080, 0x1D4) MAC_ADDRESS(0x128be8, 0x1c4)  // sole caller NewfullMapFn_00505DA0 + advmgr_objects.h address, retail-only
 CObjectType::CObjectType(TObjectType* source)
 {
@@ -4625,6 +4648,9 @@ CObjectType::CObjectType(TObjectType* source)
         }
     }
 
+    // Mac 0x128d4c..0x128d6c tests and sets each bit through the same
+    // bitset<10> calls either way; keep the project terrain accessor
+    // (46.72%; the direct subscript reaches 61.04%).
     for (int terrain = 0; terrain < 10; terrain++)
         m_mask34[terrain] = source->isRecommendedTerrain(terrain);
 

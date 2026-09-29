@@ -39,6 +39,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from homm3.compare.canonicalize import normalize_anon_ns_name
 from homm3.core import msvc_names
 from homm3.core.paths import BUILD
 from homm3.delink import coffx, eh_band
@@ -206,6 +207,9 @@ def _reloc_data_rvas() -> list[int]:
 
 
 _VTABLE_CHANNELS = ("data_vtables", "data_static_libs")
+#: `??_7` vftables, and `??_S`, the local vftable VC6 emits for a
+#: dllimport class whose constructor is expanded in the client.
+VTABLE_PREFIXES = ("??_7", "??_S")
 
 
 def _vtable_tables(model: Model) -> dict[str, tuple[int, int]]:
@@ -218,11 +222,11 @@ def _vtable_tables(model: Model) -> dict[str, tuple[int, int]]:
     the candidate-COMDAT cross-check needs the same way."""
     out: dict[str, tuple[int, int]] = {}
     for b in model.data:
-        if b.channel in _VTABLE_CHANNELS and b.name.startswith("??_7") \
+        if b.channel in _VTABLE_CHANNELS and b.name.startswith(VTABLE_PREFIXES) \
                 and b.size and b.size % 4 == 0:
             out.setdefault(b.name, (b.rva, b.size // 4))
         for a in b.aliases:
-            if a.channel in _VTABLE_CHANNELS and a.name.startswith("??_7") \
+            if a.channel in _VTABLE_CHANNELS and a.name.startswith(VTABLE_PREFIXES) \
                     and a.size and a.size % 4 == 0:
                 out.setdefault(a.name, (b.rva, a.size // 4))
     return out
@@ -336,6 +340,7 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
     raw-size edge."""
     common_owner = _common_owner()
     rows, withheld, skipped = [], [], Counter()
+    guard_owner_rva = None
     for b in model.data:
         if b.channel not in _ENROLL_CHANNELS or not b.name:
             if b.channel == "data_vtables":
@@ -359,6 +364,19 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
         end = _classify(b.rva + size - 1)
         oracle = (tail_oracle.get((f"{unit}.c", msvc_names.mask(b.name)))
                   if "data-unprovable-tail" in (start, end) else None)
+        if oracle is None and "data-unprovable-tail" in (start, end) \
+                and "$static_init_guard$" in b.name:
+            # cl names a guard `$S<n>` in its owner static's scope and emits
+            # both into one section: the owner's storage is the guard's.
+            if guard_owner_rva is None:
+                from homm3.core.common import HOMM3_DIR
+                from homm3.verify.byte_accounting import _guard_owners
+                named = {x.rva: x.name for x in model.data if x.name}
+                guard_owner_rva = {g: named.get(rva) for g, (_o, rva)
+                                   in _guard_owners(HOMM3_DIR).items()}
+            owner = guard_owner_rva.get(b.name)
+            if owner:
+                oracle = tail_oracle.get((f"{unit}.c", msvc_names.mask(owner)))
         if oracle in ("data", "bss"):
             # The PE alone cannot split FileAlignment slack from content at
             # the .data raw-size edge - the claiming unit's own base obj can:
@@ -378,11 +396,270 @@ def claim_rows(model: Model, tail_oracle) -> tuple[list, list, Counter]:
             continue
         rows.append({"name": b.name, "object": f"{unit}.c", "rva": b.rva,
                      "size": size, "storage": STORAGE[start],
-                     "provenance": "src-DATA-sizeof"})
+                     "provenance": "zlib-source-sizeof" if b.channel == 'data_zlib'
+                                   else "src-DATA-sizeof"})
     return rows, withheld, skipped
 
 
-def string_rows(base_dir=BASE_DIR):
+def nonliteral_storage(model, types):
+    """Named typed objects cannot impersonate anonymous string allocations.
+
+    Keep const character arrays eligible for the existing pooled-alias check.
+    Other DATA objects, including their interior bytes, have distinct storage:
+    an integer 44 in a hotkey table is not a pooled comma string.
+    """
+    return [(b.rva, b.rva + b.size) for b in model.data
+            if b.channel == "src" and b.size and types.get(b.rva)
+            and not re.fullmatch(r"const (?:signed |unsigned )?char(?:\[\d+\])+",
+                                 types[b.rva])]
+
+
+def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} read off retail at relocation sites paired with ours.
+
+    A claimed function's DIR32 sites pair positionally with retail's admitted
+    sites only when both counts agree, and every referent the Model already
+    knows must then equal the address retail wrote (plus our addend). Only
+    such a corroborated pairing may state where a ``wanted`` symbol lives.
+    """
+    import struct
+
+    img = retail()
+    sites = img.reloc_sites
+    from homm3.delink.pdb_synth import UNIT_CHANNELS
+    known, fn_extent = {}, {}
+    for b in model.functions:
+        if b.channel in UNIT_CHANNELS and b.name:
+            known[msvc_names.mask(b.name)] = b.rva
+            fn_extent[msvc_names.mask(b.name)] = (b.rva, b.size)
+    for b in model.data:
+        if b.channel and b.name:
+            known.setdefault(msvc_names.mask(b.name), b.rva)
+    votes: dict[str, set[int]] = defaultdict(set)
+    for _stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & MEM_EXECUTE:
+                continue
+            rel = {site: nm for site, (nm, typ)
+                   in c.typed_relocations(sec["index"]).items()
+                   if typ == COFF_DIR32}
+            if not rel or not any(wanted(n) for n in rel.values()):
+                continue
+            text = c.section_payload(sec["index"])
+            for off, name in c.defined_symbols(sec["index"]):
+                hit = fn_extent.get(msvc_names.mask(name))
+                if hit is None:
+                    continue
+                rva, size = hit
+                mine = sorted((s, n) for s, n in rel.items()
+                              if off <= s < off + size)
+                lo = bisect.bisect_left(sites, rva)
+                hi = bisect.bisect_left(sites, rva + size)
+                theirs = sites[lo:hi]
+                if not mine:
+                    continue
+                # Pair the sites up to the first place the two bodies' site
+                # offsets diverge; past it the code no longer lines up. Each
+                # wanted site must also sit behind the same instruction bytes.
+                found, corroborated, anchored = [], True, 0
+                for (site, sym), target in zip(mine, theirs):
+                    at = img.off(target)
+                    if at is None or target - rva != site - off:
+                        break
+                    head = img.data[at - 2:at]
+                    if wanted(sym) and head != text[site - 2:site]:
+                        break
+                    addend = struct.unpack("<i", text[site:site + 4])[0]
+                    value = struct.unpack("<I", img.data[at:at + 4])[0] \
+                        - img.image_base - addend
+                    if wanted(sym):
+                        found.append((sym, value))
+                        continue
+                    anchor = known.get(msvc_names.mask(sym))
+                    if anchor is not None:
+                        if value != anchor:
+                            corroborated = False
+                            break
+                        anchored += 1
+                exact = len(mine) == len(theirs) and len(found) + anchored > 0
+                if corroborated and (anchored or exact):
+                    for sym, value in found:
+                        votes[sym].add(value)
+    return votes
+
+
+#: COMDAT data other channels already own (literals, vtables, RTTI,
+#: exception records, FP pools).
+_OWNED_COMDAT_PREFIXES = ("??_C@", "??_7", "??_S", "??_R", "__CT", "__TI", "$T")
+
+
+def paired_store_votes(model: Model, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} from immediate stores (`mov r/m32, imm32`) paired in order.
+
+    A claimed function whose compiled body stores exactly as many wanted
+    symbol addresses through `C7 /0` as retail's body stores data addresses
+    the same way pairs them in order: constructors publishing vtables and
+    virtual-base tables are the typical case.
+    """
+    import struct
+    from capstone import Cs, CS_ARCH_X86, CS_MODE_32
+    from homm3.delink.pdb_synth import UNIT_CHANNELS
+    md = Cs(CS_ARCH_X86, CS_MODE_32)
+    img = retail()
+    fn_extent = {msvc_names.mask(b.name): (b.rva, b.size) for b in model.functions
+                 if b.channel in UNIT_CHANNELS and b.name}
+    data_lo = min(s["va"] for s in img.pe.sections if s["name"] in (".rdata", ".data"))
+    data_hi = max(s["va"] + s["vsize"] for s in img.pe.sections if s["name"] in (".rdata", ".data"))
+    votes: dict[str, set[int]] = defaultdict(set)
+    for _stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & MEM_EXECUTE:
+                continue
+            rel = {site: nm for site, (nm, typ)
+                   in c.typed_relocations(sec["index"]).items() if typ == COFF_DIR32}
+            if not any(wanted(n) for n in rel.values()):
+                continue
+            text = c.section_payload(sec["index"])
+            for off, name in c.defined_symbols(sec["index"]):
+                hit = fn_extent.get(msvc_names.mask(name))
+                if hit is None:
+                    continue
+                rva, size = hit
+                mine = []
+                for insn in md.disasm(text[off:off + size], 0):
+                    if insn.bytes[0] == 0xC7 and insn.size >= 6:
+                        site = off + insn.address + insn.size - 4
+                        mine.append(rel.get(site))
+                body = img.pe.read(rva, size) or b""
+                theirs = []
+                for insn in md.disasm(body, 0):
+                    if insn.bytes[0] == 0xC7 and insn.size >= 6:
+                        value = struct.unpack_from("<I", insn.bytes, insn.size - 4)[0] \
+                            - img.image_base
+                        if data_lo <= value < data_hi:
+                            theirs.append(value)
+                mine = [n for n in mine if n is not None]
+                if mine and len(mine) == len(theirs):
+                    for n, value in zip(mine, theirs):
+                        if wanted(n):
+                            votes[n].add(value)
+    return votes
+
+
+def paired_comdat_rows(model: Model, base_dir=BASE_DIR):
+    """Game-emitted COMDAT data placed by corroborated code pairings.
+
+    Constants (`__real@`), virtual-base tables (`??_8`) and template static
+    members are one-symbol COMDAT sections. Where every paired game
+    reference to one names a single retail address and retail holds the
+    section's bytes there (relocation words aside), that COMDAT is linked
+    from the game object at that address.
+    """
+    comdats = defaultdict(list)
+    comdat_storage = {**ORDINARY_STORAGE, ".bss": "bss"}
+    for stem, c in coffx.objects(base_dir):
+        for sec in c.section_table:
+            if not sec["characteristics"] & LNK_COMDAT \
+                    or sec["characteristics"] & MEM_EXECUTE \
+                    or sec["name"] not in comdat_storage:
+                continue
+            members = c.defined_symbols(sec["index"])
+            if len(members) != 1 or members[0][0] != 0 \
+                    or members[0][1].startswith(_OWNED_COMDAT_PREFIXES):
+                continue
+            payload = c.section_payload(sec["index"])[:sec["size"]]
+            masked = bytearray(payload.ljust(sec["size"], b"\0"))
+            for site in c.relocations(sec["index"]):
+                masked[site:site + 4] = b"\0\0\0\0"
+            comdats[members[0][1]].append((stem, sec, bytes(masked),
+                                           set(c.relocations(sec["index"]))))
+    if not comdats:
+        return [], []
+    votes = paired_code_votes(model, lambda name: name in comdats, base_dir)
+    for name, rvas in paired_store_votes(model, lambda name: name in comdats
+                                         and name.startswith("??_8"), base_dir).items():
+        votes[name] |= rvas
+    img = retail()
+    rows, withheld = [], []
+    for name, copies in sorted(comdats.items()):
+        seen = votes.get(name, set())
+        if len(seen) != 1:
+            if len(seen) > 1:
+                withheld.append((min(seen), name, "paired references disagree"))
+            continue
+        rva = next(iter(seen))
+        sizes = {sec["size"] for _stem, sec, _m, _r in copies}
+        if len(sizes) != 1:
+            withheld.append((rva, name, "COMDAT copies disagree on the extent"))
+            continue
+        size = sizes.pop()
+        _stem, sec, masked, sites = copies[0]
+        storage = _classify(rva)
+        at = img.off(rva)
+        if at is None and STORAGE.get(storage) == "bss" == comdat_storage[sec["name"]]:
+            # Loader-zeroed storage past .data's raw data: retail holds zeros.
+            retail_bytes = bytearray(size)
+        elif at is None:
+            continue
+        else:
+            retail_bytes = bytearray(img.data[at:at + size])
+        for site in sites:
+            retail_bytes[site:site + 4] = b"\0\0\0\0"
+        if bytes(retail_bytes) != masked or STORAGE.get(storage) != comdat_storage[sec["name"]]:
+            withheld.append((rva, name, "retail bytes or storage contradict the COMDAT"))
+            continue
+        for stem, csec, _m, _r in copies:
+            rows.append({"name": name, "object": f"{stem}.c", "rva": rva, "size": size,
+                         "storage": STORAGE[storage], "alignment": csec["alignment"],
+                         "section_placed": True,
+                         "provenance": "candidate-COFF-comdat-paired"})
+    return rows, withheld
+
+
+def paired_data_votes(rows, wanted, base_dir=BASE_DIR):
+    """{symbol: {rva}} from pointer words inside enrolled source data.
+
+    A source definition's own COFF relocation at offset k names a ``wanted``
+    symbol; retail's word at the definition's address plus k, less our
+    addend, states where that symbol lives.
+    """
+    import struct
+
+    img = retail()
+    by_object = defaultdict(list)
+    for r in rows:
+        if r.get("provenance") == "src-DATA-sizeof":
+            by_object[r["object"].removesuffix(".c")].append(r)
+    votes: dict[str, set[int]] = defaultdict(set)
+    for stem, c in coffx.objects(base_dir):
+        wanted_rows = by_object.get(stem)
+        if not wanted_rows:
+            continue
+        where = {}
+        for idx, value, secnum in c.iter_symbols():
+            if secnum > 0:
+                where.setdefault(msvc_names.mask(c.sym_name(idx)), []).append((secnum, value))
+        for r in wanted_rows:
+            hits = where.get(msvc_names.mask(r["name"]), [])
+            if len(hits) != 1:
+                continue
+            secnum, value = hits[0]
+            payload = c.section_payload(secnum)
+            rva, size = int(r["rva"]), int(r["size"])
+            for site, (sym, typ) in c.typed_relocations(secnum).items():
+                if typ != COFF_DIR32 or not wanted(sym) \
+                        or not value <= site < value + size - 3 or not payload:
+                    continue
+                at = img.off(rva + site - value)
+                if at is None:
+                    continue
+                addend = struct.unpack("<i", payload[site:site + 4])[0]
+                votes[sym].add(struct.unpack("<I", img.data[at:at + 4])[0]
+                               - img.image_base - addend)
+    return votes
+
+
+def string_rows(base_dir=BASE_DIR, *, nonliteral_ranges=(), votes=None):
     """Enrollable `??_C@` string-literal definitions + the withheld ones.
 
     Both facts are PROVEN: the retail RVA comes from content-matching each
@@ -393,38 +670,80 @@ def string_rows(base_dir=BASE_DIR):
     onto one rva). Identical payloads at two retail RVAs collide on one
     content-derived name; both are withheld.
     """
+    # Keyed by the literal's COMPLETE bytes: a literal with an embedded NUL
+    # (for example "\0\1\1\2...") must not collide with "" or any other
+    # literal sharing its leading C string.
     owners: dict[bytes, dict[str, str]] = defaultdict(dict)
+    by_prefix: dict[bytes, set[bytes]] = defaultdict(set)
+    # The COFF section cl emitted each payload into. cl gives "" an
+    # uninitialized `.bss` COMDAT, which LINK places after all initialized
+    # data: in the zero run at .data's raw edge it is loader-zero storage.
+    sections: dict[bytes, set[str]] = defaultdict(set)
     for stem, c in coffx.objects(base_dir):
         for idx, value, secnum in c.iter_symbols():
             name = c.sym_name(idx)
             if name.startswith("??_C@") and secnum >= 1:
-                cs = c.cstring(secnum, value)
-                if cs is not None:
-                    owners[cs][stem] = name
+                sec = c.section_table[secnum - 1]
+                raw = c.section_payload(secnum)
+                if not raw and value == 0 and sec["size"]:
+                    # cl omits the raw data of an all-zero COMDAT ("").
+                    raw = bytes(sec["size"])
+                if value != 0 or b"\0" not in raw:
+                    continue
+                whole = raw[:sec["size"]]
+                cs = whole[:whole.index(b"\0")]
+                owners[whole][stem] = name
+                by_prefix[cs].add(whole)
+                sections[whole].add(sec.get("name", ".data"))
 
     img = retail()
     rows, withheld, by_name = [], [], defaultdict(list)
     for rva in _reloc_data_rvas():
+        # Typed DATA storage is not a ??_C allocation merely because its
+        # bytes happen to form the same NUL-terminated sequence.
+        if any(start <= rva < end for start, end in nonliteral_ranges):
+            continue
         cs = img.cstring(rva)
-        if cs is None or cs not in owners:
+        if cs is None:
             continue
-        units = owners[cs]
-        size = len(cs) + 1                      # the payload plus its NUL
-        start = _classify(rva)
-        end = _classify(rva + size - 1)
-        if start not in STORAGE or start != end:
-            withheld.append((rva, next(iter(units.values())),
-                             f"string storage {start} not enrollable"))
-            continue
-        for unit, name in sorted(units.items()):
-            by_name[name].append(
-                {"name": name, "object": f"{unit}.c", "rva": rva, "size": size,
-                 "storage": STORAGE[start],
-                 "provenance": "candidate-COFF-string"})
+        for whole in sorted(by_prefix.get(cs, ()), key=len):
+            size = len(whole)
+            at = img.off(rva)
+            if at is None or img.data[at:at + size] != whole:
+                continue
+            units = owners[whole]
+            start = _classify(rva)
+            end = _classify(rva + size - 1)
+            paired = any(rva in (votes or {}).get(n, ()) for n in units.values())
+            if start == end == "data-unprovable-tail" and paired:
+                # The zero tail cannot tell a literal from padding by its
+                # bytes; paired relocations naming this literal can, and the
+                # candidate's own section says which side of the initialized
+                # content LINK put it (the claim_rows tail oracle, for "").
+                emitted = sections[whole]
+                if emitted == {".bss"}:
+                    start = end = "data-loader-zero-tail"
+                elif ".bss" not in emitted:
+                    start = end = "data-initialized"
+            if start not in STORAGE or start != end:
+                withheld.append((rva, next(iter(units.values())),
+                                 f"string storage {start} not enrollable"))
+                continue
+            for unit, name in sorted(units.items()):
+                by_name[name].append(
+                    {"name": name, "object": f"{unit}.c", "rva": rva, "size": size,
+                     "storage": STORAGE[start],
+                     "provenance": "candidate-COFF-string"})
     for name, group in by_name.items():
         addrs = {r["rva"] for r in group}
+        paired = (votes or {}).get(name, set())
         if len(addrs) == 1:
             rows += group
+        elif len(paired) == 1 and paired <= addrs:
+            # Content is ambiguous, but corroborated code relocations that
+            # name this literal all read the same retail address.
+            rows += [dict(r, provenance="candidate-COFF-string-paired")
+                     for r in group if r["rva"] in paired]
         else:
             for r in group:
                 withheld.append((r["rva"], name,
@@ -451,7 +770,9 @@ def vtable_rows(model: Model, base_dir=BASE_DIR):
             if len(members) != 1:
                 continue
             offset, name = members[0]
-            if name.startswith("??_7"):
+            if name.startswith(VTABLE_PREFIXES):
+                # A reviewed anonymous namespace carries its retail spelling.
+                name = normalize_anon_ns_name(name, stem)
                 emitters[name][offset].append((stem, sec))
 
     rows, withheld = [], []
@@ -841,7 +1162,16 @@ def candidates(model: Model):
     tail_oracle = _candidate_member_storage()
     rows, withheld, skipped = claim_rows(model, tail_oracle)
 
-    strings, w = string_rows()
+    types = declared_types()
+    literal = lambda name: name.startswith("??_C@")  # noqa: E731
+    votes = paired_code_votes(model, literal)
+    # Source data pointers are exact offsets; where they state one address,
+    # they take precedence over code pairings for the same literal.
+    for name, rvas in paired_data_votes(rows, literal).items():
+        if len(rvas) == 1:
+            votes[name] = rvas
+    strings, w = string_rows(nonliteral_ranges=nonliteral_storage(model, types),
+                             votes=votes)
     rows += strings
     withheld += w
     vtables, w = vtable_rows(model)
@@ -850,8 +1180,15 @@ def candidates(model: Model):
     rtti, w = rtti_rows(model)
     rows += rtti
     withheld += w
+    from homm3.delink.exception_data import rows as exception_rows
+    exceptions, w = exception_rows(model, BASE_DIR, existing=rtti)
+    rows += exceptions
+    withheld += w
     ehfi, w = ehfuncinfo_rows(model)
     rows += ehfi
+    withheld += w
+    comdat, w = paired_comdat_rows(model)
+    rows += comdat
     withheld += w
 
     # cl's `$T` FP pool. A slot some OTHER channel already names is left to
@@ -1050,7 +1387,8 @@ def section_rows(rows, base_dir=BASE_DIR):
     for r in rows:
         if r.get("provenance") in ("candidate-COFF-string",
                                    "candidate-COFF-vtable",
-                                   "candidate-COFF-rtti"):
+                                   "candidate-COFF-rtti",
+                                   "candidate-COFF-exception-exact"):
             by_obj.setdefault(r["object"], []).append(r)
 
     for obj, rs in sorted(by_obj.items()):
@@ -1066,11 +1404,11 @@ def section_rows(rows, base_dir=BASE_DIR):
             if len(members) != 1:
                 continue
             offset, name = members[0]
-            if (name.startswith("??_C@") or name.startswith("??_R")) \
+            if name.startswith(("??_C@", "??_R", "__CT", "__TI")) \
                     and offset == 0:
                 owner[name] = (sec, 0)
-            elif name.startswith("??_7"):
-                owner[name] = (sec, offset)
+            elif name.startswith(VTABLE_PREFIXES):
+                owner[normalize_anon_ns_name(name, obj[:-2])] = (sec, offset)
         for r in rs:
             hit = owner.get(r["name"])
             if hit is None:
@@ -1079,7 +1417,8 @@ def section_rows(rows, base_dir=BASE_DIR):
                 continue
             sec, offset = hit
             group = sec['name'].split('$', 1)[0]
-            candidate_storage = {'.data': 'data', '.rdata': 'rdata', '.bss': 'bss'}.get(group)
+            candidate_storage = {'.data': 'data', '.rdata': 'rdata',
+                                 '.xdata': 'rdata', '.bss': 'bss'}.get(group)
             if candidate_storage != r['storage']:
                 withheld.append((r['rva'], r['name'],
                                  'candidate section storage differs from retail'))
