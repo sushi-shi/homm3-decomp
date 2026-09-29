@@ -67,13 +67,13 @@ DATA(0x006412fc) static const TCreatureType g_deathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
 };
 
-DATA(0x006830a8) static const long g_constCreatureSources[2][2] = {
+DATA(0x006830a8) static long g_constCreatureSources[2][2] = {
     {45, 109}, {128, 305}
 };
-DATA(0x006830b8) static const long g_constSourceSizes[2][2] = {
+DATA(0x006830b8) static long g_constSourceSizes[2][2] = {
     {3, 2}, {1, 1}
 };
-DATA(0x006830c8) static const long g_constCreatureOfferings[2][2] = {
+DATA(0x006830c8) static long g_constCreatureOfferings[2][2] = {
     {334, 109}, {417, 305}
 };
 

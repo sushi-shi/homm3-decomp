@@ -75,7 +75,7 @@ extern int g_combatResult;
 // soundManager::StartMP3; declared here beside its index rather than in
 // command.h because the two are one datum. DECLARATION ONLY - no TU in
 // this tree defines it yet, so no DATA claim.
-extern const char* const g_combatResultMusic[6];
+extern const char* g_combatResultMusic[6];
 
 int combatResultsWindowHandler(message& msg);
 

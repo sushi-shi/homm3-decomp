@@ -62,7 +62,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0063d570) TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
+DATA(0x0063d570) const TCreatureType g_creatureGenerator1Types[80] = { TCreatureType(106), TCreatureType(96), TCreatureType(74), TCreatureType(66), TCreatureType(68), TCreatureType(10), TCreatureType(14), TCreatureType(112), TCreatureType(12), TCreatureType(94), TCreatureType(54), TCreatureType(104), TCreatureType(16), TCreatureType(113), TCreatureType(52), TCreatureType(18), TCreatureType(114), TCreatureType(30), TCreatureType(36), TCreatureType(86), TCreatureType(98), TCreatureType(84), TCreatureType(44), TCreatureType(102), TCreatureType(26), TCreatureType(4), TCreatureType(72), TCreatureType(46), TCreatureType(110), TCreatureType(42), TCreatureType(100), TCreatureType(34), TCreatureType(80), TCreatureType(76), TCreatureType(78), TCreatureType(8), TCreatureType(38), TCreatureType(48), TCreatureType(90), TCreatureType(88), TCreatureType(50), TCreatureType(82), TCreatureType(92), TCreatureType(28), TCreatureType(40), TCreatureType(22), TCreatureType(70), TCreatureType(115), TCreatureType(60), TCreatureType(108), TCreatureType(20), TCreatureType(24), TCreatureType(64), TCreatureType(62), TCreatureType(56), TCreatureType(58), TCreatureType(0), TCreatureType(2), TCreatureType(6), TCreatureType(118), TCreatureType(120), TCreatureType(130), TCreatureType(132), TCreatureType(133), TCreatureType(134), TCreatureType(135), TCreatureType(136), TCreatureType(137), TCreatureType(24), TCreatureType(112), TCreatureType(113), TCreatureType(114), TCreatureType(115), TCreatureType(138), TCreatureType(139), TCreatureType(140), TCreatureType(141), TCreatureType(142), TCreatureType(143), TCreatureType(144) };
 DATA(0x00677938) TCreatureType g_creatureGenerator4Types[2][4] = {
     { TCreatureType(112), TCreatureType(114), TCreatureType(113), TCreatureType(115) },
     { TCreatureType(32), TCreatureType(33), TCreatureType(116), TCreatureType(117) }
@@ -71,14 +71,14 @@ DATA(0x00677974) const char* g_artifactObjectDefFormat = "ava%04d.def";
 
 // Retail initial data; dimensions follow the typed table consumers.
 DATA(0x00677998) double g_productionHandicap[3] = { 0.0, 0.15, 0.3 };
-DATA(0x00678170) const int g_initResourcesHuman[5][7] = {
+DATA(0x00678170) int g_initResourcesHuman[5][7] = {
     { 30, 15, 30, 15, 15, 15, 30000 },
     { 20, 10, 20, 10, 10, 10, 20000 },
     { 15, 7, 15, 7, 7, 7, 15000 },
     { 10, 4, 10, 4, 4, 4, 10000 },
     { 0, 0, 0, 0, 0, 0, 0 }
 };
-DATA(0x006781fc) const int g_initResourcesComputer[5][7] = {
+DATA(0x006781fc) int g_initResourcesComputer[5][7] = {
     { 5, 2, 5, 2, 2, 2, 5000 },
     { 10, 4, 10, 4, 4, 4, 7500 },
     { 15, 7, 15, 7, 7, 7, 10000 },
@@ -113,9 +113,9 @@ DATA(0x00677a0c) const char* g_townVillageObjectDefs[9] = { "AVCcast0.def", "AVC
 DATA(0x00677a30) const char* g_townFortObjectDefs[9] = { "AVCcasx0.def", "AVCramx0.def", "AVCtowx0.def", "AVCinfx0.def", "AVCnecx0.def", "AVCdunx0.def", "AVCstrx0.def", "AVCftrx0.def", "AVChforx.def" };
 DATA(0x00677a54) const char* g_townCapitolObjectDefs[9] = { "AVCcasz0.def", "AVCramz0.def", "AVCtowz0.def", "AVCinfz0.def", "AVCnecz0.def", "AVCdunz0.def", "AVCstrz0.def", "AVCforz0.def", "AVChforz.def" };
 DATA(0x00677978) int g_mineProduction[7] = { 2, 1, 2, 1, 1, 1, 1000 };
-DATA(0x006779b0) const int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
+DATA(0x006779b0) int g_neutralTownLevelWeights[6] = { 2, 3, 4, 5, 4, 3 };
 // Retail newMap copies this independent seven-resource tutorial row.
-DATA(0x006779c8) const int g_tutorialStartingResources[NUM_RESOURCES] =
+DATA(0x006779c8) int g_tutorialStartingResources[NUM_RESOURCES] =
     { 50, 50, 50, 50, 50, 50, 50000 };
 DATA(0x0069fbf8) int g_newMapStartingBonus[8];
 DATA(0x0069fb24) int g_startingHeroOverrides[8];
@@ -193,6 +193,9 @@ const int g_campaignVictoryOverrideDays = 112;
 // 0x2ffc). Complete retains the same four rare-resource ids in retail
 // game.obj at 0x63e668; PerDay indexes it with Random(0, 3) for the
 // Rampart's Mystic Pond.
+// saveGame and loadGame share one .rdata copy (0x63e65c) ahead of this
+// unit's other constant tables; the pooled "%s%s" format stays in .data.
+DATA(0x0063e65c) static const char g_gamesDirectoryPrefix[] = ".\\GAMES\\";
 DATA(0x0063e668) static const int g_resources[4] = {
     MERCURY, SULFUR, CRYSTAL, GEMS
 };
@@ -524,7 +527,7 @@ void generator::initialize(long newOwner)
     }
     m_guards.initialize();
 
-    TCreatureType* types;
+    const TCreatureType* types;
     int typeCount;
     if (m_genClass == CREATURE_GENERATOR_1) {
         int generatorType = m_genType;
@@ -3447,7 +3450,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
     } else {
         sprintf(fullPath,
                 DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
-                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                g_gamesDirectoryPrefix,
                 saveName);
         // General text 77 and 109 are the two reserved auto-save names;
         // a save under either of them does not become the remembered one.
@@ -3548,7 +3551,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
     } else {
         sprintf(buf,
                 DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
-                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                g_gamesDirectoryPrefix,
                 filename);
     }
 

@@ -63,7 +63,7 @@
 #include "winmgr.h"
 
 // Initial contents recovered from the pinned Complete image.
-DATA(0x0067f558) const float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
+DATA(0x0067f558) float g_mapScoreDifficultyFactor[5] = { 0.800000011920929f, 1.0f, 1.2999999523162842f, 1.600000023841858f, 2.0f };
 
 // Original gText is 768 bytes in DC; retail's next datum starts at +0x300.
 DATA(0x006973d8) char g_text[768];

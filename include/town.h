@@ -544,9 +544,9 @@ extern const char* g_townSizeNames[4];
 // tier 0..3, a percent chance and the low/high Random bounds. Names
 // INVENTED (no DC symbols); owner TU unlocated - extern only, gated:
 // town.obj is the only consumer.
-extern const int g_townInitArmyChance[4];
-extern const int g_townInitArmyLow[4];
-extern const int g_townInitArmyHigh[4];
+extern int g_townInitArmyChance[4];
+extern int g_townInitArmyLow[4];
+extern int g_townInitArmyHigh[4];
 
 // The h3m editor's 41-slot building column order, one row per town
 // type (retail .data 0x6888c0, nine 41-int rows): row content maps the
@@ -556,7 +556,7 @@ extern const int g_townInitArmyHigh[4];
 // give_event_reward translates TTownEvent::BuildBuildings through it.
 // Name INVENTED (no DC symbol); owner TU unlocated - extern only.
 // Gated: town.obj is the only consumer.
-extern const int g_eventBuildingIds[9][41];
+extern int g_eventBuildingIds[9][41];
 
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
@@ -633,7 +633,7 @@ extern TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so
 // Tower's Library can expose it.
-extern const signed char g_mageGuildBaseSpellCounts[5];
+extern signed char g_mageGuildBaseSpellCounts[5];
 
 // Retail .rdata 0x642e20, the four horde building ids in slot order
 // {HORDE_ID, HORDE_UPG_ID, HORDE_2_ID, HORDE_2_UPG_ID} -

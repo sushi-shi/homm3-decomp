@@ -109,8 +109,8 @@ DATA(0x0067f574) unsigned char g_colorCyclingEnabled = 1;
 
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00678288) const int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
-DATA(0x006782ac) const signed char g_routeArrowFrames[8][8] = {
+DATA(0x00678288) int g_mineCharacteristics[7] = { 2, 1, 2, 1, 1, 1, 1000 };
+DATA(0x006782ac) signed char g_routeArrowFrames[8][8] = {
     { 8, 0, 0, 0, 8, 16, 16, 16 },
     { 17, 9, 1, 1, 1, 9, 17, 17 },
     { 18, 18, 10, 2, 2, 2, 10, 18 },
@@ -586,22 +586,22 @@ advManager::advManager()
 // dirtrd/gravrd/cobbrd, ah00_..ah17_, af00..af07, ab01_..ab03_,
 // abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
 // diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
-DATA(0x0065f4c4) const char* const g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
-DATA(0x0065f55c) const char* const g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
+DATA(0x0065f4c4) const char* g_advCachedGraphicNames[38] = { "diboxbck.pcx", "dialgbox.def", "iokay.def", "icancel.def", "resource.def", "artifact.def", "spells.def", "crest58.def", "pskill.def", "twcrport.def", "secskill.def", "imrlb.def", "ilckb.def", "heroqvbk.pcx", "ilck22.def", "imrl22.def", "cprsmall.def", "townqvbk.pcx", "itpt.def", "itmtl.def", "itmcl.def", "CrStkPu.pcx", "iViewCr.def", "iViewCr2.def", "resour82.def", "spellScr.def", "pskill.def", "secsk82.def", "imrl82.def", "ilck82.def", "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def", "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def" };
+DATA(0x0065f55c) const char* g_groundTilesetNames[10] = { "dirttl.def", "sandtl.def", "grastl.def", "snowtl.def", "swmptl.def", "rougtl.def", "subbtl.def", "lavatl.def", "watrtl.def", "rocktl.def" };
 // River and road tilesets are indexed by type; type 0 (none) names "".
 // Retail stores the empty-string pointer at 0x65f584 and 0x65f598 and the
 // loaders walk from entry 1 (0x65f588..0x65f598, 0x65f59c..0x65f5a8).
-DATA(0x0065f584) const char* const g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
-DATA(0x0065f598) const char* const g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
-DATA(0x0065f5a8) const char* const g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
-DATA(0x0065f5f0) const char* const g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
-DATA(0x0065f610) const char* const g_boatFlagIconNames[3][8] = {
+DATA(0x0065f584) const char* g_riverTilesetNames[5] = { "", "clrrvr.def", "icyrvr.def", "mudrvr.def", "lavrvr.def" };
+DATA(0x0065f598) const char* g_roadTilesetNames[4] = { "", "dirtrd.def", "gravrd.def", "cobbrd.def" };
+DATA(0x0065f5a8) const char* g_cursorIconNames[18] = { "ah00_.def", "ah01_.def", "ah02_.def", "ah03_.def", "ah04_.def", "ah05_.def", "ah06_.def", "ah07_.def", "ah08_.def", "ah09_.def", "ah10_.def", "ah11_.def", "ah12_.def", "ah13_.def", "ah14_.def", "ah15_.def", "ah16_.def", "ah17_.def" };
+DATA(0x0065f5f0) const char* g_flagIconNames[8] = { "af00.def", "af01.def", "af02.def", "af03.def", "af04.def", "af05.def", "af06.def", "af07.def" };
+DATA(0x0065f610) const char* g_boatFlagIconNames[3][8] = {
     { "abf01l.def", "abf01g.def", "abf01r.def", "abf01d.def", "abf01b.def", "abf01p.def", "abf01w.def", "abf01k.def" },
     { "abf02l.def", "abf02g.def", "abf02r.def", "abf02d.def", "abf02b.def", "abf02p.def", "abf02w.def", "abf02k.def" },
     { "abf03l.def", "abf03g.def", "abf03r.def", "abf03d.def", "abf03b.def", "abf03p.def", "abf03w.def", "abf03k.def" }
 };
-DATA(0x0065f670) const char* const g_boatIconNames[3] = { "ab01_.def", "ab02_.def", "ab03_.def" };
-DATA(0x0065f67c) const char* const g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.def", "abm03_.def" };
+DATA(0x0065f670) const char* g_boatIconNames[3] = { "ab01_.def", "ab02_.def", "ab03_.def" };
+DATA(0x0065f67c) const char* g_boatFrothIconNames[3] = { "abm01_.def", "abm02_.def", "abm03_.def" };
 
 // E:\gamedcs\advmgr.cpp:837
 
@@ -7876,7 +7876,7 @@ void advManager::setEnvironmentOrigin(type_point point, int reset)
 // The looping-sound resource names, one per e_looping_sound_id row.
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
-DATA(0x0065f794) const char* const g_loopingSoundNames[LOOPING_SOUND_COUNT] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
+DATA(0x0065f794) const char* g_loopingSoundNames[LOOPING_SOUND_COUNT] = { "LoopAnim.wav", "LoopArch.wav", "LoopAren.wav", "LoopBehe.wav", "LoopBird.wav", "LoopBuoy.wav", "LoopCamp.wav", "LoopCave.wav", "LoopDead.wav", "LoopDevl.wav", "LoopDog.wav", "LoopDrag.wav", "LoopFact.wav", "LoopFall.wav", "LoopFire.wav", "LoopFlag.wav", "LoopFoun.wav", "LoopGemP.wav", "LoopGrem.wav", "LoopGrif.wav", "LoopHarp.wav", "LoopHors.wav", "LoopHydr.wav", "LoopLear.wav", "LoopLumb.wav", "LoopMagi.wav", "LoopMark.wav", "LoopMerc.wav", "LoopMill.wav", "LoopMine.wav", "LoopMon1.wav", "LoopMon2.wav", "LoopMonk.wav", "LoopMons.wav", "LoopOrc.wav", "LoopPega.wav", "LoopPike.wav", "LoopSanc.wav", "LoopShrin.wav", "LoopStar.wav", "LoopSulf.wav", "LoopSwar.wav", "LoopSwor.wav", "LoopTita.wav", "LoopUnic.wav", "LoopVolc.wav", "Loopair.wav", "loopcrys.wav", "loopcurs.wav", "loopden.wav", "loopdwar.wav", "loopeart.wav", "loopelf.wav", "loopfaer.wav", "loopgard.wav", "loopgate.wav", "loopgobl.wav", "looplepr.wav", "loopmant.wav", "loopmedu.wav", "loopnaga.wav", "loopogre.wav", "loopsire.wav", "loopskel.wav", "looptav.wav", "loopvent.wav", "loopwind.wav", "loopwhir.wav", "loopwolf.wav", "loopocea.wav" };
 
 // Original: advManager::CheckLoadSample; advmgr.cpp:9929, dc 0x1b520
 MAC_ADDRESS(0x018ccc, 0x6c)

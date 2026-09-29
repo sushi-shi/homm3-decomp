@@ -164,18 +164,18 @@ enum ETownCommand {
 // gTownBuildOrder: `movsx esi,byte [i + type*44 + 0x642eb4]` - a signed
 // char [9][44] of type_building_id values in PANORAMA DRAW ORDER, each
 // row closed by -1 (Castle's is 26,23,7,8,9,0,... then six -1s).
-extern signed char g_townBuildOrder[9][44];
+extern const signed char g_townBuildOrder[9][44];
 // gTownBackgroundPrefix: the "%sBack.pcx" stem, one per faction -
 // TBCs, TBRm, TBTw, TBIn, TBNc, TBDn, TBSt, TBFr, TBEl.
-extern const char* g_townBackgroundPrefix[9];
+extern const char* const g_townBackgroundPrefix[9];
 // gTownBuildingSprites: `[objId + type*44]` scaled by four - a
 // char*[9][44] of the .def stem per faction and building (Castle's row
 // starts TBCsmage, TBCsmag2, TBCsmag3, TBCsmag4, TBCsmag5, TBCstvrn).
-extern const char* g_townBuildingSprites[9][44];
+extern const char* const g_townBuildingSprites[9][44];
 // gTownMusic: the town page's MP3 per faction - CstleTown, Rampart,
 // TowerTown, InfernoTown, necroTown, dungeon, StrongHold,
 // FortressTown, ElemTown.
-extern const char* g_townMusic[9];
+extern const char* const g_townMusic[9];
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar

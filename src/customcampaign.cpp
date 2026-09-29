@@ -131,7 +131,7 @@ DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusi
 // current variable-length CampaignScenarioInfo vector.
 // Pinned Windows 0x63d8c8 and Mac code 0x2a4698 contain the same
 // seven four-entry rows; these are initialized ordinals, not BSS.
-DATA(0x0063d8c8) static int g_legacyCampaignScenarioIndices[7][4] = {
+DATA(0x0063d8c8) static const int g_legacyCampaignScenarioIndices[7][4] = {
     {0, 0, 0, 0},
     {0, 0, 0, 0},
     {0, 1, 0, 0},

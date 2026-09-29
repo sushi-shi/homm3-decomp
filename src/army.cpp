@@ -38,8 +38,8 @@
 #include "winmgr.h"
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x00660878) const long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
-DATA(0x00660898) const long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
+DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
+DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x00660868) int g_walkingFrom = -1;

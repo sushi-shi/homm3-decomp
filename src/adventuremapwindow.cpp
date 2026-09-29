@@ -506,12 +506,30 @@ void CAdventurMapChatEdit::sendChat(const char* chat, int toWho)
 VA(0x00402450, 0x5D3) MAC_ADDRESS(0x0002ac, 0x69c)  // anchor-global, dc 0x3b0
 void checkAdvCheatCode(std::string& chatString)
 {
+    // Retail keeps every cheat code as its own .rdata array in source
+    // order (the combat copies of shared codes are separate objects),
+    // not as a pooled .data literal.
+    DATA(0x0063a480) static const char trinityCode[] = "ajpgevavgl";
+    DATA(0x0063a48c) static const char agentsCode[] = "ajpntragf";
+    DATA(0x0063a498) static const char lotsOfGunsCode[] = "ajpybgfbsthaf";
+    DATA(0x0063a4a8) static const char neoCode[] = "ajparb";
+    DATA(0x0063a4b0) static const char followTheWhiteRabbitCode[] = "ajpsbyybjgurjuvgrenoovg";
+    DATA(0x0063a4c8) static const char nebuchadnezzarCode[] = "ajparohpunqarmmne";
+    DATA(0x0063a4dc) static const char morpheusCode[] = "ajpzbecurhf";
+    DATA(0x0063a4e8) static const char oracleCode[] = "ajpbenpyr";
+    DATA(0x0063a4f4) static const char whatIsTheMatrixCode[] = "ajpjungvfgurzngevk";
+    DATA(0x0063a508) static const char ignoranceIsBlissCode[] = "ajpvtabenaprvfoyvff";
+    DATA(0x0063a51c) static const char theConstructCode[] = "ajpgurpbafgehpg";
+    DATA(0x0063a52c) static const char bluePillCode[] = "ajpoyhrcvyy";
+    DATA(0x0063a538) static const char redPillCode[] = "ajperqcvyy";
+    DATA(0x0063a544) static const char thereIsNoSpoonCode[] = "ajpgurervfabfcbba";
+    DATA(0x0063a558) static const char zionCode[] = "ajpmvba";
+    DATA(0x0063a560) static const char phisherPriceCode[] = "ajpcuvfurecevpr";
     hero* currentHero = g_game->getCurrHero();
     TCheatCode code(chatString.c_str());
     bool cheatUsed = false;
 
-    if (code.compare(DATA_COMPGEN(
-            0x0063a480, advCheatTrinity, "ajpgevavgl"))
+    if (code.compare(trinityCode)
         && currentHero) {
         cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
@@ -519,8 +537,7 @@ void checkAdvCheatCode(std::string& chatString)
                 currentHero->m_army.add(CREATURE_ARCHANGEL, 5, slot);
         }
         g_advManager->updBottomView(1, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a48c, advCheatAgents, "ajpntragf"))
+    } else if (code.compare(agentsCode)
                && currentHero) {
         cheatUsed = true;
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
@@ -528,8 +545,7 @@ void checkAdvCheatCode(std::string& chatString)
                 currentHero->m_army.add(CREATURE_BLACK_KNIGHT, 10, slot);
         }
         g_advManager->updBottomView(1, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a498, advCheatLotsOfGuns, "ajpybgfbsthaf"))
+    } else if (code.compare(lotsOfGunsCode)
                && currentHero) {
         cheatUsed = true;
         if (!currentHero->hasArtifact(ARTIFACT_AMMO_CART)) {
@@ -544,51 +560,40 @@ void checkAdvCheatCode(std::string& chatString)
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
             currentHero->giveArtifact(&artifact, 0, 0);
         }
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4a8, advCheatNeo, "ajparb"))
+    } else if (code.compare(neoCode)
                && currentHero) {
         cheatUsed = true;
         int increment = currentHero->getExperienceIncrement();
         currentHero->giveExperience(increment, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4b0, advCheatFollowTheWhiteRabbit,
-                   "ajpsbyybjgurjuvgrenoovg"))
+    } else if (code.compare(followTheWhiteRabbitCode)
                && currentHero) {
         cheatUsed = true;
         currentHero->m_flags |= 0x00400000;
         g_advManager->updBottomView(1, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4c8, advCheatNebuchadnezzar,
-                   "ajparohpunqarmmne"))
+    } else if (code.compare(nebuchadnezzarCode)
                && currentHero) {
         cheatUsed = true;
         currentHero->m_flags |= 0x01000000;
         int mobility = currentHero->getMobility();
         currentHero->m_movePoints = mobility;
         currentHero->m_maxMovePoints = mobility;
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4dc, advCheatMorpheus, "ajpzbecurhf"))
+    } else if (code.compare(morpheusCode)
                && currentHero) {
         cheatUsed = true;
         currentHero->m_flags |= 0x00800000;
         g_advManager->updBottomView(1, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4e8, advCheatOracle, "ajpbenpyr"))) {
+    } else if (code.compare(oracleCode)) {
         cheatUsed = true;
         g_currentPlayer->m_extraPuzzlePieces = 0x30;
         g_advManager->viewPuzzle();
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a4f4, advCheatWhatIsTheMatrix,
-                   "ajpjungvfgurzngevk"))) {
+    } else if (code.compare(whatIsTheMatrixCode)) {
         cheatUsed = true;
         for (int level = 0; level < g_game->getNumMapLevels(); level++)
             g_game->setVisibility(0, 0, level, g_netLocalGamePos, 200, 0);
         if (currentHero)
             g_advManager->reseed(0, 0);
         g_advManager->redrawAdvScreen(1, 0);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a508, advCheatIgnoranceIsBliss,
-                   "ajpvtabenaprvfoyvff"))) {
+    } else if (code.compare(ignoranceIsBlissCode)) {
         cheatUsed = true;
         for (int level = 0; level < g_game->getNumMapLevels(); level++)
             g_game->resetVisibility(0, 0, level, -1, 200);
@@ -596,25 +601,19 @@ void checkAdvCheatCode(std::string& chatString)
         if (currentHero)
             g_advManager->reseed(0, 0);
         g_advManager->redrawAdvScreen(1, 0);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a51c, advCheatTheConstruct,
-                   "ajpgurpbafgehpg"))) {
+    } else if (code.compare(theConstructCode)) {
         cheatUsed = true;
         for (int resource = 0; resource < 7; resource++)
             g_currentPlayer->m_resources[resource] +=
                 resource == GOLD ? 100000 : 100;
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a52c, advCheatBluePill, "ajpoyhrcvyy"))) {
+    } else if (code.compare(bluePillCode)) {
         cheatUsed = true;
         checkEndGame(2);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a538, advCheatRedPill, "ajperqcvyy"))) {
+    } else if (code.compare(redPillCode)) {
         cheatUsed = true;
         checkEndGame(1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a544, advCheatThereIsNoSpoon,
-                   "ajpgurervfabfcbba"))
+    } else if (code.compare(thereIsNoSpoonCode)
                && currentHero) {
         cheatUsed = true;
         currentHero->m_mana = 999;
@@ -625,13 +624,10 @@ void checkAdvCheatCode(std::string& chatString)
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
             currentHero->addSpell(spell);
         g_advManager->updBottomView(1, 1, 1);
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a558, advCheatZion, "ajpmvba"))) {
+    } else if (code.compare(zionCode)) {
         cheatUsed = true;
         g_buildAllBuildings = !g_buildAllBuildings;
-    } else if (code.compare(DATA_COMPGEN(
-                   0x0063a560, advCheatPhisherPrice,
-                   "ajpcuvfurecevpr"))) {
+    } else if (code.compare(phisherPriceCode)) {
         g_graphicsSaturated = !g_graphicsSaturated;
         if (!g_graphicsSaturated)
             ResourceManager::remapGraphics();

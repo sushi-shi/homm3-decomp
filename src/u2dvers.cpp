@@ -30,11 +30,16 @@ bool TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) con
 {
     // The PC implementation is absent from DC's stub. Retail normalizes
     // both WinAPI results before preserving this byte through cleanup.
+    // Both language/code-page prefixes are .rdata arrays (0x643b24,
+    // 0x643b40), not pooled .data literals.
+    DATA(0x00643b24) static const char usEnglishUnicodeBlock[] =
+        "\\StringFileInfo\\040904B0\\";
+    DATA(0x00643b40) static const char usEnglishAnsiBlock[] =
+        "\\StringFileInfo\\040904e4\\";
     bool found = false;
     if (m_data) {
         std::string subBlock;
-        subBlock = DATA_COMPGEN(0x00643b24, versionInfo040904B0,
-            "\\StringFileInfo\\040904B0\\");
+        subBlock = usEnglishUnicodeBlock;
         subBlock += name;
 
         // VerQueryValue hands back a pointer into the version block, so
@@ -45,8 +50,7 @@ bool TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) con
         found = VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
                 &value, &length) != 0;
         if (!found) {
-            subBlock = DATA_COMPGEN(0x00643b40, versionInfo040904e4,
-                "\\StringFileInfo\\040904e4\\");
+            subBlock = usEnglishAnsiBlock;
             subBlock += name;
             found = VerQueryValueA(m_data, const_cast<char*>(subBlock.c_str()),
                     &value, &length) != 0;

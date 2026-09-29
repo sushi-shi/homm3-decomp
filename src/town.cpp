@@ -23,9 +23,9 @@
 #include "townmgr.h"
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x00688e84) const int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
-DATA(0x00688e94) const int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
-DATA(0x00688ea4) const int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
+DATA(0x00688e84) int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
+DATA(0x00688e94) int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
+DATA(0x00688ea4) int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
 DATA(0x00688eb4) int g_siloIncome[9][7] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 1, 0, 0 },
@@ -37,7 +37,7 @@ DATA(0x00688eb4) int g_siloIncome[9][7] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 1, 0, 0, 0, 0, 0 }
 };
-DATA(0x006888c0) const int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
+DATA(0x006888c0) int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -155,7 +155,7 @@ DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
 };
 
 // Retail table initializers, in the layouts used by their named consumers.
-DATA(0x006782a4) const signed char g_mageGuildBaseSpellCounts[5] = { 5, 4, 3, 2, 1 };
+DATA(0x006782a4) signed char g_mageGuildBaseSpellCounts[5] = { 5, 4, 3, 2, 1 };
 
 // Retail scalar state; startup initial values come from the pinned image.
 DATA(0x0067f570) int g_highMemBuffer = 5;

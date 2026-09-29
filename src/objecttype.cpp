@@ -428,16 +428,16 @@ TObjectType& TObjectType::setImageName(
         imageCache.push_back(TImageInfo(emptySize));
         TImageInfo* record = &imageCache[oldCount];
 
+        // Retail keeps the suffix as .rdata array storage (0x640280), while
+        // "default.msk" below remains a pooled .data literal.
+        DATA(0x00640280) static const char maskExtension[] = ".msk";
         std::basic_string<char, std::char_traits<char>,
                           std::allocator<char> > maskName(name);
         std::string::size_type dot = maskName.rfind('.');
         if (dot != std::string::npos) {
-            maskName.replace(dot, maskName.size() - dot,
-                             DATA_COMPGEN(0x00640280, objectMaskExtension,
-                                          ".msk"));
+            maskName.replace(dot, maskName.size() - dot, maskExtension);
         } else {
-            maskName += DATA_COMPGEN(0x00640280, objectMaskExtension,
-                                     ".msk");
+            maskName += maskExtension;
         }
 
         LODFile* maskFile =

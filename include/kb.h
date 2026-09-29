@@ -237,7 +237,7 @@ void fileError(const char* buf);                        // 0x4f3a60
 // The five .rdata score multipliers game::get_map_score indexes with
 // setup.difficulty. Owning TU not located; extern only (the gTownSizeNames
 // pattern).
-DATA(0x0067f558) extern const float g_mapScoreDifficultyFactor[];
+DATA(0x0067f558) extern float g_mapScoreDifficultyFactor[];
 int handleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void cleanUpMenus();                                     // 0x4f4b50
 int getNextHumanPlayer(int start);                       // 0x4f4ba0

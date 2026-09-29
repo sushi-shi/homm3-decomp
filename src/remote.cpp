@@ -1653,6 +1653,15 @@ void destroyMsg(CNetMsg* netMsg)
     delete netMsg;
 }
 
+// DC remote.obj keeps file-static const arrays cDPLAY_REGISTRY_KEY
+// (const wchar_t[73] on CE) and cEXECUTABLE_NAME (const char[12]); retail
+// holds the registry key, the Windows-only .icd name and the executable
+// name as consecutive .rdata arrays at 0x640ca0/0x640cec/0x640cf8.
+DATA(0x00640ca0) static const char g_dplayRegistryKey[] =
+    "SOFTWARE\\Microsoft\\DirectPlay\\Applications\\Heroes of Might and Magic III";
+DATA(0x00640cec) static const char g_icdName[] = "Heroes3.icd";
+DATA(0x00640cf8) static const char g_executableName[] = "Heroes3.exe";
+
 // DC ?TestIfLobbyLaunched@@YA_NXZ proves the native bool return; retail
 // forwards the already-boolean TestLobbied result or returns 0/1.
 VA(0x00555920, 0x171)  // dc 0x11d900
@@ -1671,24 +1680,19 @@ bool testIfLobbyLaunched()
     if (!g_dPlay)
         return 0;
 
-    char* registryKey = DATA_COMPGEN(
-        0x00640ca0, remoteDPlayRegistryKey,
-        "SOFTWARE\\Microsoft\\DirectPlay\\Applications\\Heroes of Might and Magic III");
+    const char* registryKey = g_dplayRegistryKey;
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryKey, 0, KEY_READ, &key)
         == ERROR_SUCCESS) {
         RegCloseKey(key);
         return g_dPlay->testLobbied();
     }
 
-    char* appNameStart = strrchr(registryKey, '\\');
+    const char* appNameStart = strrchr(registryKey, '\\');
     ++appNameStart;
     strcpy(appName, appNameStart);
-    strcpy(fileName,
-           DATA_COMPGEN(0x00640cec, remoteDPlayIcdName, "Heroes3.icd"));
+    strcpy(fileName, g_icdName);
     commandLine[0] = 0;
-    strcpy(executableName,
-           DATA_COMPGEN(0x00640cf8, remoteDPlayExecutableName,
-                        "Heroes3.exe"));
+    strcpy(executableName, g_executableName);
 
     g_dPlay->registerApp(
         appName, fileName, commandLine, guidHeroes3,

@@ -695,8 +695,10 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
                              "GetBitmap816"),
                 RESOURCE_TYPE_BITMAP, name);
 
-            const char* fallbackName = DATA_COMPGEN(
-                0x0064108c, defaultBitmap816Name, "default.pcx");
+            // Each loader owns its fallback name as .rdata array storage:
+            // retail keeps two separate "default.pal" copies (0x6410b8,
+            // 0x6410c4) beside the pooled .data error-context literals.
+            DATA(0x0064108c) static const char fallbackName[] = "default.pcx";
             lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
@@ -779,8 +781,7 @@ Bitmap16Bit* ResourceManager::loadBitmap16(const char* name)
                              "GetBitmap16"),
                 RESOURCE_TYPE_BITMAP16, name);
 
-            const char* fallbackName = DATA_COMPGEN(
-                0x006410a8, defaultBitmap24Name, "dfault24.pcx");
+            DATA(0x006410a8) static const char fallbackName[] = "dfault24.pcx";
             lodFile = findBitmapResource(fallbackName);
 
             if (!lodFile) {
@@ -879,8 +880,7 @@ TPalette16* ResourceManager::loadPalette(const char* name)
                          "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
-        const char* fallbackName = DATA_COMPGEN(
-            0x006410b8, defaultPalette16Name, "default.pal");
+        DATA(0x006410b8) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -966,8 +966,7 @@ TPalette24* ResourceManager::getPalette24(const char* name)
             DATA_COMPGEN(0x0068304c, loadPaletteErrorContext, "GetPalette"),
             RESOURCE_TYPE_PALETTE, name);
 
-        const char* fallbackName =
-            DATA_COMPGEN(0x006410c4, defaultPaletteName, "default.pal");
+        DATA(0x006410c4) static const char fallbackName[] = "default.pal";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -1063,8 +1062,7 @@ font* ResourceManager::loadFont(const char* name)
             DATA_COMPGEN(0x00683058, loadFontErrorContext, "GetFont"),
             RESOURCE_TYPE_FONT, name);
 
-        const char* fallbackName =
-            DATA_COMPGEN(0x006410d0, defaultFontName, "default.fnt");
+        DATA(0x006410d0) static const char fallbackName[] = "default.fnt";
         lodFile = findBitmapResource(fallbackName);
 
         if (!lodFile) {
@@ -1385,8 +1383,7 @@ sample* ResourceManager::loadSample(const char* name)
     int size;
     if (!getSoundFile(name, data, &size)) {
         reportMissingSample(name);
-        const char* fallbackName = DATA_COMPGEN(
-            0x006410dc, defaultSampleName, "default.wav");
+        DATA(0x006410dc) static const char fallbackName[] = "default.wav";
         if (!getSoundFile(fallbackName, data, &size)) {
             reportMissingSample(fallbackName);
             return 0;

@@ -1052,7 +1052,7 @@ DATA(0x00683440) int g_difficultyRatingPercent[5] = {
 
 // The disk-list pattern table selected by GetFileSpecNbr. The declaration
 // order explains the reverse literal run at 0x683474..0x683494.
-DATA(0x00683458) static const char* const g_fileSpec[5] = {
+DATA(0x00683458) static const char* g_fileSpec[5] = {
     DATA_COMPGEN(0x00683494, mapFileSpec, "*.h3m"),
     DATA_COMPGEN(0x0068348c, savedGameFileSpec, "*.gm?"),
     DATA_COMPGEN(0x00683484, campaignGameFileSpec, "*.cgm"),
