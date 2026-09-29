@@ -733,10 +733,11 @@ def _canonicalize_icf_aliases(
     with the surviving twin's label. At a paired call/data site the two
     references are made to agree only when the retail name is a labelled
     function, the two bodies are ICF-identical, and any retail copy kept
-    under the candidate's own name is that same code: an undefined target
-    reference is renamed to the twin, or, when the candidate object already
-    has the surviving label, the candidate relocation is pointed at it. Every other difference stays
-    visible. Returns (base, target, rewritten reference count).
+    under the candidate's own name is that same code. A single twin's
+    undefined target reference is renamed to the twin; otherwise the
+    candidate relocations point at the surviving label, appended to the
+    candidate object as an undefined external when absent. Every other
+    difference stays visible. Returns (base, target, rewritten references).
     """
     base = canon.CoffObject(base_payload)
     target = canon.CoffObject(target_payload)
@@ -775,30 +776,39 @@ def _canonicalize_icf_aliases(
         sites.setdefault(label, []).append(base_relocation)
     renames: dict[int, str] = {}
     retargets: list[tuple[canon.Relocation, int]] = []
+    pending: list[str] = []
     for label, twins in aliases.items():
-        if len(twins) != 1:
-            continue
-        twin = next(iter(twins))
         authority = symbol_rvas.get(label)
-        if authority is None or authority[1] != "func":
+        surviving = retail.get(label)
+        if authority is None or authority[1] != "func" or surviving is None:
             continue
-        candidate, surviving = candidates.get(twin), retail.get(label)
-        if candidate is None or surviving is None:
-            continue
-        if not _icf_identical(candidate, surviving):
-            continue
-        if twin in symbol_rvas:
-            # Retail kept a separate copy under the twin's own name (an object
-            # linked without folding); this site still reached the folded
-            # label. Accept only when both retail copies are the same code.
-            retained = retail.get(twin)
-            if retained is None or not _icf_identical(retained, surviving):
+        verified = set()
+        for twin in twins:
+            candidate = candidates.get(twin)
+            if candidate is None or not _icf_identical(candidate, surviving):
                 continue
+            if twin in symbol_rvas:
+                # Retail kept a separate copy under the twin's own name (an
+                # object linked without folding); this site still reached the
+                # folded label. Accept only when both copies are the same code.
+                retained = retail.get(twin)
+                if retained is None or not _icf_identical(retained, surviving):
+                    continue
+            verified.add(twin)
+        if verified != twins:
+            continue
         undefined = [symbol.index for symbol in target.symbols.values()
                      if symbol.name == label and symbol.section == 0]
-        if undefined and twin not in target_names:
-            renames.update((symbol, twin) for symbol in undefined)
-        elif label in base_by_name:
+        if len(twins) == 1 and undefined and next(iter(twins)) not in target_names:
+            renames.update((symbol, next(iter(twins))) for symbol in undefined)
+        else:
+            pending.append(label)
+    if pending:
+        missing = [label for label in pending if label not in base_by_name]
+        if missing:
+            base_payload, appended = _append_undefined_symbols(base_payload, missing)
+            base_by_name.update(appended)
+        for label in pending:
             retargets.extend((relocation, base_by_name[label])
                              for relocation in sites[label])
     if retargets:
