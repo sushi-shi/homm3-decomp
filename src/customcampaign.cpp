@@ -2397,7 +2397,7 @@ void TCampaignBrief::MapTextStruct::play()
     }
 
     long videoEnd;
-    if (!g_smackVideo2) {
+    if (!SmackManager::g_playingSmack.m_smack2) {
         videoDone = 1;
         videoEnd = GameTime::get();
     }
@@ -2485,7 +2485,7 @@ void TCampaignBrief::MapTextStruct::play()
 
             if (g_config.m_videoSubtitles)
                 redraw = 1;
-            if (!videoDone && !g_smackVideo) {
+            if (!videoDone && !SmackManager::g_playingSmack.m_smack) {
                 videoDone = 1;
                 videoEnd = GameTime::get();
             }
