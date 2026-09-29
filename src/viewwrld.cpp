@@ -114,6 +114,12 @@ static long ftol(double d)
 // Its left clip computes width as 32 - tilex, while Windows retail emits
 // baseX + 24. Substituting the former here changed Windows control flow and
 // lowered its byte match, so the retail expression remains below.
+// DC 119/120 and 127/128 apply the clipped amount to the zeroed/full tile
+// fields (tilex += 8 - x; tilew -= 8 - x) and 145/146 guard the draw with a
+// positive tilew/tileh block; both forms are byte-identical to the direct
+// assignments and early return (89.00%). Clipping the offset-adjusted x/y
+// parameters and drawing from saved copies instead drops to 84.93%; retail
+// compares the clipped copies (ECX/EAX) where VC6 here compares the originals.
 VA(0x005f73b0, 0x14D) MAC_ADDRESS(0x202fa4, 0x1ac)  // exhaustive dc-order-map inside the VWDrawAdvObj bracket, dc 0x192f4c
 void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
 {
@@ -129,35 +135,35 @@ void vwDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int 
     int baseY = drawY;
 
     if (baseX < 8) {
-        tilex = 8 - baseX;
-        tilew = baseX + 24;
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
         baseX = 8;
     }
     if (baseY < 0) {
-        tiley = -baseY;
-        tileh = baseY + 32;
+        tiley -= baseY;
+        tileh += baseY;
         baseY = 0;
     }
     if (baseX + tilew > 600)
         tilew = 600 - baseX;
     if (baseY + tileh > 544)
         tileh = 544 - baseY;
-    if (tilew <= 0 || tileh <= 0)
-        return;
+    if (tilew > 0 && tileh > 0) {
+        int owner = -1;
+        if (thisCell->m_type == HERO)
+            owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
+        else if (hasFlag(thisCell->m_type))
+            owner = getFlaggedObjectOwner(thisCell);
 
-    int owner = -1;
-    if (thisCell->m_type == HERO)
-        owner = g_game->getHero(thisCell->m_extraInfo)->m_owner;
-    else if (hasFlag(thisCell->m_type))
-        owner = getFlaggedObjectOwner(thisCell);
+        if (owner >= 0)
+            frame += owner * 19;
+        else
+            frame += 8 * 19;
 
-    if (owner >= 0)
-        frame += owner * 19;
-    else
-        frame += 8 * 19;
-
-    srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
-                  g_windowManager->m_screenBitmap, drawX, drawY, false, true);
+        srcIcon->draw(0, frame, tilex, tiley, tilew, tileh,
+                      g_windowManager->m_screenBitmap, drawX, drawY, false,
+                      true);
+    }
 }
 
 inline void vwClipScaleToScreenBuffer(int destX, int destY)
@@ -240,6 +246,13 @@ inline void vwScaleToScreenBuffer(int destX, int destY)
     }
 }
 
+// Residual (95.31%): retail expands the fifth drawHero's getMap, which our
+// trace refuses (budget 23, cost 45). With the four earlier groups consuming
+// getNumFrames+isValidSeq+drawHero+getMap, that needs the group cost sum at
+// most 228 instead of 233 (advmgr::drawHeroPart needs 227). Measured
+// 2026-09-29: getMap through reinterpret_cast costs 43 (floor-gated),
+// isValidSeq without `!= 0` costs 41; both byte-flat here. An if/return
+// getNumFrames is worse (93.30%).
 VA(0x005f7500, 0x3F7) MAC_ADDRESS(0x203150, 0x530)  // dc 0x19308c
 void advManager::vwDrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
 {

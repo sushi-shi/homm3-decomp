@@ -988,6 +988,9 @@ DPLCONNECTION* CDPlayLobby::getConnectionSettings(unsigned long appId, unsigned 
 // Eight native-bool literal/polarity controls under the restored signature
 // emit one reproduced object: true/false versus integer return constants
 // leaves the same branchless result and all sibling scores unchanged.
+// DC compiles 1352..1379 out; GHND 0x42 plus GlobalLock is windowsx.h's
+// GlobalAllocPtr. The DirectPlay-sample goto FAILURE spelling with a
+// FAILED(hr) test falls to 54.30% (2026-09-29).
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
 bool CDPlayLobby::testLobbied()

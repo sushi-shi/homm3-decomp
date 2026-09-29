@@ -1780,6 +1780,9 @@ public:
 
 // Retail expands the nested CNetMsg constructor in the scenario arm and
 // retains it in the filter arm; our object reverses those two choices.
+// By the /Ob2 trace the scenario site sees 57 against CNetMsg's 60; retail
+// needs 15..58 more budget before it (e.g. one of the earlier message
+// constructors costing at most 40). An initializer-list CScrollMsg is flat.
 // All other blocks agree. In-class bodies, ordinary member initializers
 // and the equivalent nested/flat option chains are byte-flat controls.
 // E:\gamedcs\singleselectionwindow.cpp:1393
@@ -2589,6 +2592,12 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // Windows's six button loops and Mac 0x175f88/0x175f94/0x175fe8 reload
 // the array entry for each operation. Keep the pointer conversion temporary,
 // but do not cache the button across the two frame writes.
+// Budget probe (2026-09-29): retail calls insert out of line in loops A-C and
+// expands it from loop D on, which by the /Ob2 trace needs about three more
+// depth-1 candidates than this body has. A setHighlightFrame setter beside
+// setDisabledFrame in the six loops, with direct m_widgets.push_back(new ...)
+// statements, leaves only the ICF-folded _Ufill name (99.97%); the setter
+// alone gives 99.81%. Not adopted: its only evidence is that budget.
 
 VA(0x0057D170, 0x1DF7) MAC_ADDRESS(0x1756bc, 0x1c50)
 void TSingleSelectionWindow::createFilterWidgets()
@@ -4047,6 +4056,13 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 // instead; the final block must resolve its own selection. Repeating every
 // indexed read earlier also discards the description's proved lifetime and
 // is not retained (55.0450% with the old pins; 49.0856% without them).
+// DC 3916/3917 are two memcpy rows with no row of their own for a selected
+// reference; indexing the selection in each copy gives VC6 the extra /Ob2
+// candidate that pushes the second arm's first string assign out of line,
+// as retail does (74.82 -> 79.95). The random-map arm still inlines its
+// second assign where retail calls both: by the budget arithmetic retail has
+// one more depth-1 inline candidate after that arm. A guard written with
+// empty() is byte-flat.
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
@@ -4102,12 +4118,12 @@ void TSingleSelectionWindow::updateGameVars()
 
     if (m_loadMode) {
         // SetText can run widget code; retail resolves this row afterwards.
-        GameSelectionHeadersStruct& savedSelection =
-            m_selectionHeaders[m_currentMap];
-        memcpy(g_game->m_playerDisabled, savedSelection.m_saved.m_deadPlayer,
-               sizeof(savedSelection.m_saved.m_deadPlayer));
-        memcpy(g_wasHuman, savedSelection.m_saved.m_humanPlayer,
-               sizeof(savedSelection.m_saved.m_humanPlayer));
+        memcpy(g_game->m_playerDisabled,
+               m_selectionHeaders[m_currentMap].m_saved.m_deadPlayer,
+               sizeof(m_selectionHeaders[m_currentMap].m_saved.m_deadPlayer));
+        memcpy(g_wasHuman,
+               m_selectionHeaders[m_currentMap].m_saved.m_humanPlayer,
+               sizeof(m_selectionHeaders[m_currentMap].m_saved.m_humanPlayer));
     }
 }
 

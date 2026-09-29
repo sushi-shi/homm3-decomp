@@ -2470,7 +2470,7 @@ kbwin	?process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0	tokens1:
 kbwin	?setMenus@@YIXPAUHMENU__@@H@Z	99.9275	99.9275	100.0000	0xf8220	tokens1:78974230d3ec
 kbwin	?setNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0	tokens1:f9d01955db57
 kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30	tokens1:4e5c6acb751e
-levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.9762	99.9762	100.0000	0xf8880	tokens1:5533c2374757
+levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	99.9604	99.9762	100.0000	0xf8880	tokens1:5533c2374757
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730	tokens1:e26822fd7aa0
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700	-
 levelupwindow	?windowHandler@TLevelUpWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xf9780	tokens1:ba0138a2f141
@@ -3009,7 +3009,7 @@ quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130
 quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x130ca0	tokens1:bb3d922d203c
 quicktownwindow	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990	tokens1:9504d1c511f7
 quicktownwindow	?quickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30	tokens1:955bd9ea3854
-recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	99.2271	99.2271	99.2271	0x14e850	tokens1:b85f5ac8af92
+recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	99.2122	99.2271	99.2271	0x14e850	tokens1:b85f5ac8af92
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	100.0000	100.0000	100.0000	0x151350	tokens1:a25baeb49e81
 recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	100.0000	100.0000	100.0000	0x151460	tokens1:f6d14ef52e86
 recruit	??0recruitUnit@@QAE@PAVtown@@HH@Z	100.0000	100.0000	100.0000	0x151560	tokens1:d746a8086af2
@@ -4092,7 +4092,7 @@ singleselectionwindow	?update@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x18
 singleselectionwindow	?update@TSingleSelectionWindow@@QAEHXZ	100.0000	100.0000	100.0000	0x184550	tokens1:63cfa133b009
 singleselectionwindow	?updateAllyEnemyFlags@TSingleSelectionWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x185300	tokens1:e09f762f0dff
 singleselectionwindow	?updateFilterWidgets@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17ef70	tokens1:4a8f6e4d8197
-singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	74.8198	74.8198	74.8649	0x183580	tokens1:3b025b2e1687
+singleselectionwindow	?updateGameVars@TSingleSelectionWindow@@QAEXXZ	79.9459	79.9459	79.9459	0x183580	tokens1:bc98f13b749a
 singleselectionwindow	?updateMainWindow@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x17fb90	tokens1:a32032a2d75d
 singleselectionwindow	?updateNameLists@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18c960	tokens1:1e2d64ebc5a1
 singleselectionwindow	?updatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x188330	tokens1:da7dc8115fd1
@@ -4711,7 +4711,7 @@ viewwrld	?vwDrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	95.3089	
 viewwrld	?vwDrawRiver@advManager@@QAEXHHHHH@Z	98.3763	98.3763	98.5412	0x1f9220	tokens1:f8fb24c46897
 viewwrld	?vwDrawRoad@advManager@@QAEXHHHHH@Z	98.4057	98.4057	99.5374	0x1f95b0	tokens1:5a18b7f95163
 viewwrld	?vwDrawShroud@advManager@@QAEXHHHHH@Z	88.3551	88.3551	97.9205	0x1f9940	tokens1:8c29ea0989ab
-viewwrld	?vwDrawSprite@@YIXPAVCSprite@@PAVNewmapCell@@HHHH@Z	89.0000	89.0000	89.0420	0x1f73b0	tokens1:76b2132d9558
+viewwrld	?vwDrawSprite@@YIXPAVCSprite@@PAVNewmapCell@@HHHH@Z	89.0000	89.0000	89.0420	0x1f73b0	tokens1:846f8b0613e6
 viewwrld	?vwDrawSymbols@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f80e0	tokens1:96b8752ee8b0
 viewwrld	?vwDrawUnderlay@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1f9ed0	tokens1:27ea8467fe74
 viewwrld	?windowHandler@TViewWorldWindow@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fcb10	tokens1:dbbe52ce7ea6

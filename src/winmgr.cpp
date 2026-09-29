@@ -1007,6 +1007,11 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 // half-brightness frame and the full-brightness image is restored by
 // the Draw below rather than by a pass of its own.
 
+// Retail's inner loop keeps src as its one pointer induction variable and
+// stores through [dst - src + src_next - 4]; this body keeps a separate dst
+// pointer. Probes (2026-09-29, both fades): *dst = ...; dst++ and swapped
+// src/dst declarations are byte-flat; src[x] with dst[x] or *dst++ merges
+// the pointers but makes dst the primary one (88.63/89.35%).
 VA(0x006032e0, 0x1E5) MAC_ADDRESS(0x20ea78, 0x26c)  // anchor-caller, dc 0x19c3b8
 void heroWindowManager::fadeFromBlack(int speed)
 {
