@@ -2671,7 +2671,7 @@ multiplayerwindow	??0CHotSeatDlg@@QAE@XZ	99.9604	99.9604	100.0000	0x111e20	token
 multiplayerwindow	??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x110760	tokens1:aadfd57343a8
 multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	99.9444	99.9444	100.0000	0x110060	tokens1:f7ae79a8454a
 multiplayerwindow	??0CMPInputEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x111cd0	tokens1:e6584d9126f4
-multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	83.9226	83.9226	92.9147	0x10e050	tokens1:539a45e662a8
+multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	99.9534	99.9534	99.9534	0x10e050	tokens1:7d6225a1d14d
 multiplayerwindow	??1CHeroSessions@@UAE@XZ	100.0000	100.0000	100.0000	0x158350	-
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0	tokens1:138f269701ed
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0	tokens1:c5dbf2f4471a
@@ -2709,7 +2709,7 @@ multiplayerwindow	?onNextEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x11085
 multiplayerwindow	?onOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470	tokens1:37b76150e0e7
 multiplayerwindow	?onPrevEdit@CMPEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x110870	tokens1:7031bcaae5c5
 multiplayerwindow	?onSearch@TMultiPlayerWindow@@QAEEXZ	89.7351	89.7351	94.1892	0x111660	tokens1:6871103d57c2
-multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x1113f0	tokens1:10a59777fa8a
+multiplayerwindow	?onTCP@TMultiPlayerWindow@@QAEEXZ	100.0000	100.0000	100.0000	0x1113f0	tokens1:a0289852d442
 multiplayerwindow	?onWidgetDeselect@CHotSeatDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x112420	tokens1:72c4f34fd0a0
 multiplayerwindow	?onWidgetDeselect@CMPInputDlg@@UAEHHAA_N@Z	100.0000	100.0000	100.0000	0x1108f0	tokens1:0fd31c226d1c
 multiplayerwindow	?onWidgetDeselect@TMultiPlayerWindow@@UAEHHAA_N@Z	91.5668	91.5668	98.1199	0x10f4e0	tokens1:47c1d6a2aceb
