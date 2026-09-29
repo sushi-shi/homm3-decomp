@@ -1993,7 +1993,7 @@ extern TDrawbridgeBounds g_combatDrawLimits;
 // are all direct retail data.
 extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
-extern const char* const g_terrainCombatBackgrounds[9][3];    // 0x63d2f0
+extern const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3];    // 0x63d2f0
 
 // The leading two words of each 20-byte obstacle-catalogue row. They
 // are separate declarations because the delinked target relocates each

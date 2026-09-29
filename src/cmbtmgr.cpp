@@ -559,7 +559,10 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     0, "CmBkMag.pcx", "CmBkCur.pcx", "CmBkHG.pcx", "CmBkEF.pcx", "CmBkCF.pcx", "CmBkLP.pcx", "CmBkFF.pcx",
     "CmBkRK.pcx", "CmBkMC.pcx"
 };
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
+// getBackgroundName indexes the rows with the hero's terrain type, so there
+// is one row per terrain: retail's twelve zero bytes after the water row are
+// the rock row.
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },
@@ -568,6 +571,7 @@ DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[9][3] = {
     { "CmBkRgh.pcx", "CmBkRgh.pcx", "CmBkRgh.pcx" },
     { "CmBkSub.pcx", "CmBkSub.pcx", "CmBkSub.pcx" },
     { "CmBkLava.pcx", "CmBkLava.pcx", "CmBkLava.pcx" },
+    { 0, 0, 0 },
     { 0, 0, 0 }
 };
 DATA(0x0063bd18) const int g_moatDamage[9] = { 70, 70, 150, 90, 70, 90, 70, 90, 70 };

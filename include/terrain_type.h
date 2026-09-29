@@ -16,7 +16,9 @@ enum TTerrainType {
     eTerrainSubterranean = 6,
     eTerrainLava = 7,
     eTerrainWater = 8,
-    eTerrainRock = 9
+    eTerrainRock = 9,
+    // Dreamcast's enum carries the count as kNumTerrainTypes.
+    kNumTerrainTypes = 10
 };
 
 #endif  // HOMM3_TERRAIN_TYPE_H
