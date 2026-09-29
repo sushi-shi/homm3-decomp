@@ -745,13 +745,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     if (viewFromGame) {
         for (int buttonIndex = 0; buttonIndex < 3; ++buttonIndex) {
             w = getWidget(232 + buttonIndex);
-            if (w) {
-                w->sendMessage(
-                    buttonIndex == g_game->m_campaign.m_briefingChoice
-                        ? widget::WIDGET_SET_STATUS
-                        : widget::WIDGET_CLEAR_STATUS,
-                    widget::WIDGET_DRAWN);
-            }
+            // DC 970 calls widget::set_visible here.
+            if (w)
+                w->setVisible(buttonIndex == g_game->m_campaign.m_briefingChoice);
         }
     }
 
