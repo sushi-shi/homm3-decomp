@@ -731,11 +731,11 @@ def _canonicalize_icf_aliases(
     folded, so a call to the unlabelled twin cl emitted (a class's inline
     destructor, an empty virtual, vector<T*>::size for another T) pairs
     with the surviving twin's label. At a paired call/data site the two
-    references are made to agree only when the candidate name has no retail
-    address of its own, the retail name is a labelled function, and the two
-    bodies are ICF-identical: an undefined target reference is renamed to the
-    twin, or, when the candidate object already has the surviving label, the
-    candidate relocation is pointed at it. Every other difference stays
+    references are made to agree only when the retail name is a labelled
+    function, the two bodies are ICF-identical, and any retail copy kept
+    under the candidate's own name is that same code: an undefined target
+    reference is renamed to the twin, or, when the candidate object already
+    has the surviving label, the candidate relocation is pointed at it. Every other difference stays
     visible. Returns (base, target, rewritten reference count).
     """
     base = canon.CoffObject(base_payload)
@@ -780,13 +780,20 @@ def _canonicalize_icf_aliases(
             continue
         twin = next(iter(twins))
         authority = symbol_rvas.get(label)
-        if twin in symbol_rvas or authority is None or authority[1] != "func":
+        if authority is None or authority[1] != "func":
             continue
         candidate, surviving = candidates.get(twin), retail.get(label)
         if candidate is None or surviving is None:
             continue
         if not _icf_identical(candidate, surviving):
             continue
+        if twin in symbol_rvas:
+            # Retail kept a separate copy under the twin's own name (an object
+            # linked without folding); this site still reached the folded
+            # label. Accept only when both retail copies are the same code.
+            retained = retail.get(twin)
+            if retained is None or not _icf_identical(retained, surviving):
+                continue
         undefined = [symbol.index for symbol in target.symbols.values()
                      if symbol.name == label and symbol.section == 0]
         if undefined and twin not in target_names:
