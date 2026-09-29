@@ -25,28 +25,33 @@ int& g_videoGameState = g_defaultGameContext;
 // Its successive masks are 1, 3, 5 and 15. Game and single-selection readers
 // index this table by the context selector and test individual feature bits.
 
-// A plain four-element initializer naturally retains set for its last two
-// elements and reproduces the table's construction and stores. Retail retains
-// set for all four elements. That initializer expansion remains a separate
-// compiler-state question; the retained setter itself is byte-exact.
-// Adding <iostream> is a negative control: it introduces unmatched narrow and
-// wide stream initialization, while <bitset> alone already emits the retail
-// 32-byte locale-id guard. No extra stream include or emission caller is needed.
-// Unsuffixed integer literals are byte-flat. An implicit scalar initializer
-// list constructs directly into the array and loses retail's stack temporary,
-// so explicit bitset temporaries are retained.
-// `homm3 vc6 predict-inline --trace` on the initializer: the $E wrapper has
-// cb 16 (budget 1000), the initializer cb 68, each bitset<4>(unsigned long)
-// cb 95 at depth 2 (remaining 4), then _Tidy cb 72 and set cb 91 at depth 3.
-// set's budgets are 137, 121, 88 and 82, so the first two expand. Refusing
-// all four needs a first budget below 91: an initializer cb of at least 254,
-// or at least six depth-2 candidates. Flag-constant masks (FA | FB ...), a
-// returning file-static helper, nested temporaries and unsuffixed literals
-// all still expand the first two, so the retail spelling stays unknown.
+// Each entry is a TGameContextFeatures built from an explicit bitset
+// temporary. Its constructors (cb 30) are inline candidate sites after
+// each bitset<4>(unsigned long) constructor, so the depth-2 site
+// list is eight long: each constructor's nested budget leaves bitset::_Tidy
+// expanded but refuses set (budgets 29, 35, 46 and 82 against its cb 91),
+// and all 224 bytes, including the four retained set calls, match retail.
+// The same per-mask construction reproduces artifact's slot table.
+// Readers use each entry as the bitset: a bitset member reproduces this
+// initializer too, but its added access cost changes updateMainWindow's
+// expansion and drops onSetAsHostMsg from 100% to 25.5976%.
+// Failed controls: a plain bitset array (set budgets 137, 121, 88 and 82 -
+// the first two expand), with flag-constant masks, unsuffixed literals,
+// nested temporaries or a returning file-static helper; an entry type whose
+// constructor takes the unsigned long (272 bytes); and implicit scalar
+// initializers, which construct directly into the array and lose retail's
+// stack temporary. Adding <iostream> introduces unmatched stream
+// initialization, while <bitset> alone emits the retail 32-byte locale-id
+// guard. Mac's table is built by a different compiland's initializer
+// (0x221ee4, which also runs <iostream> and terrain.h initialization) from
+// plain bitset temporaries four bytes apart; this type would reserve a
+// second temporary per entry there, so that Mac spelling is not this unit's.
 DATA(0x00699240)
-std::bitset<4> g_gameContextFeatures[4] = {
-    std::bitset<4>(1ul), std::bitset<4>(3ul),
-    std::bitset<4>(5ul), std::bitset<4>(15ul)
+TGameContextFeatures g_gameContextFeatures[4] = {
+    TGameContextFeatures(std::bitset<4>(1ul)),
+    TGameContextFeatures(std::bitset<4>(3ul)),
+    TGameContextFeatures(std::bitset<4>(5ul)),
+    TGameContextFeatures(std::bitset<4>(15ul))
 };
 
 VA_COMPGEN(0x004ecde0, 0x60, BITSET_SET, bitset4)
