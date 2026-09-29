@@ -89,11 +89,24 @@ DATA(0x0069ccac) static unsigned long g_lastFrameRateTimer;
 // string's (VC6's string _Tidy tests the reference count first), and VC6
 // emits it without a frame only for an internal-linkage `static
 // std::vector<T>` of a trivially destructible T; an external vector keeps a
-// frame. philAI's own facet guard 0x52bd30 and its template bodies precede
-// the root, and a second facet guard 0x52bdf0 follows its cleanup, so the
-// object belongs to a separate compiland linked between philai and
-// puzzlewindow (link order is alphabetical by source name). No retail code
-// reads it; its element type and compiland are unknown.
+// frame. Each game compiland here is laid out as its terrain.h cinit block,
+// its own code, then its template tail and locale-id guard: path's block
+// 0x5236c0 precedes 0x5239d0 and its guard is 0x523ee0, philAI's block
+// 0x523f00 precedes 0x5242d0 and its guard 0x52bd30 is followed by its
+// sort helper 0x52bd50 (called at 0x527005), and puzzlewindow's block
+// 0x52be10 precedes 0x52c1e0. The root, its cleanup and guard 0x52bdf0 are
+// therefore one further compiland between philai and puzzlewindow, with no
+// terrain.h block, no .data or .rdata (philAI's 0x681878 abuts
+// puzzlewindow's 0x681880) and only this object in .bss (philAI's statics
+// end at 0x69ccd7; puzzlewindow's masks start at 0x69cce8). All its code was
+// dead-stripped. `#include <string>` with `#include <vector>` (vector alone
+// emits no guard) and `static std::vector<int> v;` reproduce the root,
+// cleanup, guard and both .CRT$XCU slots byte for byte, and so does any
+// trivially destructible element type. No retail code reads the object,
+// Dreamcast's only compiland in that link slot is playvideo.obj (a WinCE
+// video DLL loader with no vector), and Mac's bare-vector global
+// registrations belong to mapcell, drawing and the seer-hut text, so the
+// element type and compiland name are unknown and are not invented here.
 
 // Dreamcast names this shared cursor-suppression flag bSpecialHideCursor.
 // Its retail cell immediately follows the nine-row town hierarchy table; this
