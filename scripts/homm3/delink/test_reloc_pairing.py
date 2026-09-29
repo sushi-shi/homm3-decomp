@@ -53,6 +53,37 @@ def coff(functions, *, externals=()):
     return bytes(out)
 
 
+def coff_with_datum(body, site, datum, data_section):
+    """.text holding `_f` (DIR32 at `site` to `datum`) plus one data section
+    ('.data' or '.bss') defining `datum`."""
+    text_raw = 20 + 80
+    data_raw = text_raw + len(body)
+    reloc_at = data_raw + (4 if data_section == ".data" else 0)
+    symtab = reloc_at + 10
+    strings = bytearray()
+
+    def field(name):
+        encoded = name.encode()
+        if len(encoded) <= 8:
+            return encoded.ljust(8, b"\0")
+        nonlocal strings
+        out = struct.pack("<II", 0, 4 + len(strings))
+        strings += encoded + b"\0"
+        return out
+    records = (field("_f") + struct.pack("<IhHBB", 0, 1, 0x20, 2, 0) +
+               field(datum) + struct.pack("<IhHBB", 0, 2, 0, 2, 0))
+    flags = 0xC0000040 if data_section == ".data" else 0xC0000080
+    out = bytearray(struct.pack("<HHIIIHH", 0x14C, 2, 0, symtab, 2, 0, 0))
+    out += b".text\0\0\0" + struct.pack("<IIIIIIHHI", 0, 0, len(body), text_raw,
+                                        reloc_at, 0, 1, 0, 0x60000020)
+    out += data_section.encode().ljust(8, b"\0") + struct.pack(
+        "<IIIIIIHHI", 0, 0, 4, data_raw if data_section == ".data" else 0, 0, 0, 0, 0, flags)
+    out += body + (bytes(4) if data_section == ".data" else b"")
+    out += struct.pack("<IIH", site, 1, DIR32)
+    out += records + struct.pack("<I", 4 + len(strings)) + strings
+    return bytes(out)
+
+
 def mov_eax(value):
     return b"\xa1" + struct.pack("<I", value)
 
@@ -243,6 +274,23 @@ class IdentityRelocationTests(unittest.TestCase):
                                 {("", "?size@a@@QBEIXZ"): {0x2000, 0x3000}},
                                 {"?size@b@@QBEIXZ": (0x2000, "func")})
         self.assertEqual(count, 0)
+
+    def test_library_datum_compares_by_its_external_name(self):
+        from homm3.build import identity_relocations
+        from homm3.compare.canonicalize import CoffObject
+        name = "?id@?$numpunct@D@std@@2V0locale@2@A"
+        body = mov_eax(0) + b"\xc3"
+        base = coff_with_datum(body, 1, name, ".bss")
+        target = coff_with_datum(body, 1, name, ".data")
+        identities = {("", name): {0x2ab1d4}}
+        out, count = identity_relocations.canonicalize(
+            base, target, {}, identities, library_names=frozenset({name}))
+        parsed = CoffObject(out)
+        symbol = parsed.symbols[parsed.relocations[0].symbol_index]
+        self.assertEqual((count, symbol.name, symbol.section), (1, name, 0))
+        # Without library proof the local placements stay compared as they are.
+        out, count = identity_relocations.canonicalize(base, target, {}, identities)
+        self.assertEqual((out, count), (target, 0))
 
     def test_placeholder_target_resolves_by_its_address(self):
         count, name = self.rewrite("_memmove", "fn_217590", {("", "_memmove"): {0x217590}}, {})

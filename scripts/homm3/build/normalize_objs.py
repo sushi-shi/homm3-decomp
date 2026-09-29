@@ -1101,9 +1101,11 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None,
     counts["eh"] += len(rewrites)
     from homm3.build import identity_relocations
     if identities is None:
-        identities = identity_relocations.load_identities(ADDRESS_IDENTITIES)
+        identities = (identity_relocations.load_identities(ADDRESS_IDENTITIES),
+                      identity_relocations.load_library_names(ADDRESS_IDENTITIES))
     paired_target, identity_count = identity_relocations.canonicalize(
-        normalized, paired_target, symbol_rvas, identities, unit=rel.stem)
+        normalized, paired_target, symbol_rvas, identities[0], unit=rel.stem,
+        library_names=identities[1])
     counts["identity"] += identity_count
     if count or base_literal_count or rewrites:
         normalized_base.write_bytes(normalized)
@@ -1158,7 +1160,8 @@ def normalize_all() -> Counter:
     symbol_rvas = _retail_symbol_rvas()
     image_base = retail_image_base()
     from homm3.build import identity_relocations
-    identities = identity_relocations.load_identities(ADDRESS_IDENTITIES)
+    identities = (identity_relocations.load_identities(ADDRESS_IDENTITIES),
+                  identity_relocations.load_library_names(ADDRESS_IDENTITIES))
     base_root = OBJDIFF / "base"
     for base_obj in sorted(base_root.rglob("*.obj")):
         counts.update(_pair_unit(base_obj.relative_to(base_root), symbol_rvas, context,

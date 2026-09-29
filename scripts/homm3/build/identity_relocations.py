@@ -17,6 +17,11 @@ when:
 * that address plus the candidate addend equals the target symbol's retail
   address plus the target addend (REL32: the same address and inline value).
 
+A same-named datum that a byte-verified library section owns is compared by
+its external name when the delinker conjured a local definition for it in a
+different section than the candidate's own COMDAT copy (for example
+`locale::id` statics): both sides name the library's one address.
+
 Unproven names, ambiguous identities and different resolved addresses stay
 visible. The candidate symbol is appended to the target's symbol table when
 absent; sections, bytes outside the rewritten operands and every other
@@ -50,6 +55,16 @@ def load_identities(path: Path) -> dict[tuple[str, str], set[int]]:
             key = (row.get("unit") or "", row["name"])
             out.setdefault(key, set()).add(int(row["rva"], 0))
     return out
+
+
+def load_library_names(path: Path) -> frozenset[str]:
+    """Names a byte-verified library section defines (proof `library`)."""
+    if not path.is_file():
+        return frozenset()
+    with path.open(newline="") as stream:
+        rows = csv.DictReader((line for line in stream if not line.startswith("#")),
+                              delimiter="\t")
+        return frozenset(row["name"] for row in rows if row.get("proof") == "library")
 
 
 def resolve_name(name: str, symbol_rvas: dict[str, tuple[int, str]],
@@ -119,12 +134,13 @@ def _append_symbols(payload: bytearray, coff: canon.CoffObject,
 def canonicalize(base_payload: bytes, target_payload: bytes,
                  symbol_rvas: dict[str, tuple[int, str]],
                  identities: dict[tuple[str, str], set[int]],
-                 unit: str = "") -> tuple[bytes, int]:
+                 unit: str = "", library_names: frozenset[str] = frozenset(),
+                 ) -> tuple[bytes, int]:
     base = canon.CoffObject(base_payload)
     target = canon.CoffObject(target_payload)
     base_pairs = _pairs(base)
     target_pairs = _pairs(target)
-    rewrites = []                     # (target relocation, base symbol, addend)
+    rewrites = []                     # (target relocation, base symbol, addend, undefined)
     for key, trel in target_pairs.items():
         brel = base_pairs.get(key)
         if brel is None or brel.typ != trel.typ:
@@ -132,6 +148,22 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
         bsym = base.symbols[brel.symbol_index]
         tsym = target.symbols[trel.symbol_index]
         if bsym.name == tsym.name:
+            # The delinker conjures a local definition for a datum a verified
+            # library section owns; the candidate emits its own COMDAT copy.
+            # Both name the library's one address, so compare the reference
+            # to the external name rather than to either local placement.
+            if (bsym.name in library_names and tsym.section > 0
+                    and trel.typ == DIR32
+                    and resolve_name(bsym.name, symbol_rvas, identities) is not None
+                    and (bsym.section <= 0 or base.sections[bsym.section - 1].name
+                         != target.sections[tsym.section - 1].name)):
+                bdata = base.section_bytes(base.sections[brel.section - 1])
+                tdata = target.section_bytes(target.sections[trel.section - 1])
+                if (brel.site + 4 <= len(bdata) and trel.site + 4 <= len(tdata)
+                        and bdata[brel.site:brel.site + 4] == tdata[trel.site:trel.site + 4]
+                        and _context(bdata, brel.site) == _context(tdata, trel.site)):
+                    rewrites.append((trel, bsym, struct.unpack_from("<i", bdata, brel.site)[0],
+                                     True))
             continue
         mine = resolve_name(bsym.name, symbol_rvas, identities, unit)
         theirs = resolve_name(tsym.name, symbol_rvas, identities)
@@ -150,23 +182,28 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
             continue
         if _context(bdata, brel.site) != _context(tdata, trel.site):
             continue
-        rewrites.append((trel, bsym, badd))
+        rewrites.append((trel, bsym, badd, False))
     if not rewrites:
         return target_payload, 0
 
     data = bytearray(target_payload)
-    existing = {}
+    existing: dict[tuple[str, bool], int] = {}
     for symbol in target.symbols.values():
         if symbol.storage_class == canon.EXTERNAL_STORAGE:
-            existing.setdefault(symbol.name, symbol.index)
+            existing.setdefault((symbol.name, False), symbol.index)
+            if symbol.section == 0:
+                existing.setdefault((symbol.name, True), symbol.index)
     wanted = []
-    for _trel, bsym, _add in rewrites:
-        if bsym.name not in existing and bsym.name not in dict(wanted):
+    for _trel, bsym, _add, undefined in rewrites:
+        if (bsym.name, undefined) not in existing and bsym.name not in dict(wanted):
             wanted.append((bsym.name, bsym.typ))
-    existing.update(_append_symbols(data, target, wanted))
-    for trel, bsym, badd in rewrites:
+    appended = _append_symbols(data, target, wanted)
+    for name, index in appended.items():
+        existing.setdefault((name, False), index)
+        existing[(name, True)] = index
+    for trel, bsym, badd, undefined in rewrites:
         section = target.sections[trel.section - 1]
-        struct.pack_into("<I", data, trel.offset + 4, existing[bsym.name])
+        struct.pack_into("<I", data, trel.offset + 4, existing[(bsym.name, undefined)])
         struct.pack_into("<i", data, section.raw_offset + trel.site, badd)
 
     # Postconditions: topology, unrelated relocations and bytes are unchanged.
@@ -178,7 +215,8 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
         if normalized.symbols[index].name != symbol.name or \
                 normalized.symbols[index].section != symbol.section:
             raise RuntimeError("identity-relocation normalization changed a symbol")
-    changed = {trel.offset: (existing[bsym.name], badd) for trel, bsym, badd in rewrites}
+    changed = {trel.offset: (existing[(bsym.name, undefined)], badd)
+               for trel, bsym, badd, undefined in rewrites}
     before = {(r.section, r.site): r for r in target.relocations}
     for row in normalized.relocations:
         original = before[(row.section, row.site)]
@@ -193,7 +231,7 @@ def canonicalize(base_payload: bytes, target_payload: bytes,
             raise RuntimeError("identity-relocation normalization changed section metadata")
         old = bytearray(target.section_bytes(original))
         new = bytearray(normalized.section_bytes(now))
-        for trel, _bsym, _badd in rewrites:
+        for trel, _bsym, _badd, _undefined in rewrites:
             if trel.section == original.index:
                 old[trel.site:trel.site + 4] = new[trel.site:trel.site + 4] = bytes(4)
         if old != new:
