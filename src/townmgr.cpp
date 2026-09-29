@@ -2135,7 +2135,7 @@ void townManager::unloadTown()
 
     for (i = 0; i < 7; i++) {
         if (m_monPix[i])
-            m_monPix[i]->dispose();
+            ResourceManager::dispose(m_monPix[i]);
     }
 
     delete m_heroStrip;

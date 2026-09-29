@@ -624,7 +624,7 @@ unsigned char combatManager::loadWallTraitsTable()
     if (!sheet)
         return 0;
     if (sheet->getNumberOfRows() < 179) {
-        sheet->dispose();
+        ResourceManager::dispose(sheet);
         return 0;
     }
 
@@ -863,28 +863,28 @@ void combatManager::freeIcons()
     for (int group = 0; group < 18; ++group) {
         for (int icon = 0; icon < 5; ++icon) {
             if (m_combatIcons[group][icon])
-                m_combatIcons[group][icon]->dispose();
+                ResourceManager::dispose(m_combatIcons[group][icon]);
         }
     }
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {
         if (obstacle->m_sprite)
-            obstacle->m_sprite->dispose();
+            ResourceManager::dispose(obstacle->m_sprite);
     }
     m_obstacles.clear();
 
     for (int side = 0; side < 2; ++side) {
         if (m_creatureSprites[side])
-            m_creatureSprites[side]->dispose();
+            ResourceManager::dispose(m_creatureSprites[side]);
         if (m_heroFlagSprites[side])
-            m_heroFlagSprites[side]->dispose();
+            ResourceManager::dispose(m_heroFlagSprites[side]);
     }
 
     loadSpellEffect(-1);
-    m_combatGridBitmap->dispose();
-    m_combatCellGridBitmap->dispose();
-    m_combatShadowBitmap->dispose();
+    ResourceManager::dispose(m_combatGridBitmap);
+    ResourceManager::dispose(m_combatCellGridBitmap);
+    ResourceManager::dispose(m_combatShadowBitmap);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1004
@@ -2500,7 +2500,7 @@ void combatManager::removeObstacle(int index)
     hexcell& anchor = m_cells[obstacle->m_hex];
     anchor.m_attributes &= ~hexcell::obstacleOrigin;
     anchor.m_obstacleIndex = -1;
-    obstacle->m_sprite->dispose();
+    ResourceManager::dispose(obstacle->m_sprite);
     obstacle->m_sprite = 0;
 }
 
@@ -3073,7 +3073,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     saved.draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, width, height);
-    missile->dispose();
+    ResourceManager::dispose(missile);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902

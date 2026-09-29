@@ -384,7 +384,7 @@ unsigned char initializeHeroSpecificAbilitiesTable()
         return 0;
 
     if (text->getNumberOfRows() < 158) {
-        text->dispose();
+        ResourceManager::dispose(text);
         return 0;
     }
 
@@ -462,7 +462,7 @@ unsigned char initializeBallisticsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 6) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -482,7 +482,7 @@ unsigned char initializeBallisticsTable()
                 atoi(values[column++]);
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return initializeMoveConstants();
 }
 

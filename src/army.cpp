@@ -1283,7 +1283,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            spr->dispose();
+            ResourceManager::dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -1347,7 +1347,7 @@ void army::rangeAttack(army* armyToAttack)
                 g_combatManager->updateCombatArea();
             }
             g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
-            spr->dispose();
+            ResourceManager::dispose(spr);
         }
         g_combatManager->clearEffects();
         int killed = 0;
@@ -4100,7 +4100,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
             g_combatManager->m_drawbridgeBounds.width(),
             g_combatManager->m_drawbridgeBounds.height());
     }
-    explosion->dispose();
+    ResourceManager::dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
     g_soundManager->waitSample(shootMemSample, -1);
     g_soundManager->waitSample(wallMemSample, -1);

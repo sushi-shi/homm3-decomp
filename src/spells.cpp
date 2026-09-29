@@ -4651,7 +4651,7 @@ void combatManager::earthquake(int level)
             }
             GameTime::delayTil(frameTil);
         }
-        blast->dispose();
+        ResourceManager::dispose(blast);
         drawFrame(1, 0, 0, 0, 1, 0);
     } else {
         for (int i = 0; i < WALL_TARGET_COUNT; i++) {
@@ -5065,7 +5065,7 @@ CSprite* combatManager::loadSpellEffect(int effect)
 {
     if (m_powSpellEffect != effect) {
         if (m_powSprite)
-            m_powSprite->dispose();
+            ResourceManager::dispose(m_powSprite);
         if (effect != -1)
             m_powSprite = ResourceManager::getSprite(
                 g_spellEffectTraits[effect].m_name);
