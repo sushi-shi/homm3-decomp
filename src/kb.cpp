@@ -103,10 +103,10 @@ DATA(0x00698a14) font* g_calligraphicFont;
 // statics). Neither retail nor Dreamcast code reads them. Each identity is
 // Dreamcast's public symbol at the same offset from both proven neighbours,
 // whose distance matches in both images; the int types are the decorated
-// names' own. Character arrays take the slot both images share; alignment
-// alone would allow up to three fewer elements (Dreamcast's gcTCPAddress is
-// char[21] in a 24-byte slot), except gLastFilename, which ends exactly at
-// the byte flag 0x6985a3.
+// names' own. Character arrays take the slot both images share; VC6 places
+// the next object on 4 bytes, so three fewer elements would fit (seven for
+// gcTCPName before the 8-aligned g_config; DC's gcTCPAddress is char[21]).
+// gLastFilename's 351 is proven: the byte flag at 0x6985a3 follows at once.
 // Original DC name: cOverrideMIDIDriver.
 DATA(0x006972f0) char g_overrideMidiDriver[16];
 // Original DC name: bSaveMusicPosition.

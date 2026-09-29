@@ -248,14 +248,14 @@ DATA(0x0069d80d) unsigned char g_playerDrop;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo g_thisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType g_mpNetProtocol;
-// Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
-// selected setup filename here before refreshing the scenario header. The
-// retail allocation is smaller: g_inputManager, a pointer read by over sixty
-// instructions, occupies 0x6994e0, so this buffer ends 0x100 bytes in.
 DATA(0x00682a38) unsigned char g_followPlayerMode = 1;
+// Dreamcast types gMapName as char[260]; retail cannot: g_inputManager, in the
+// same compiland, starts 0x100 bytes in and VC6 places a pointer on 4 bytes,
+// so the retail array holds 253..256 bytes (256 fills the slot).
+// LobbyLaunchConnect copies the selected setup filename here.
+DATA(0x006993e0) char g_mapName[256];
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
-DATA(0x006993e0) char g_mapName[256];
 DATA(0x0069d818) static unsigned long g_lastActiveUpdate;
 
 static const long g_playerActiveUpdateInterval = 600000;

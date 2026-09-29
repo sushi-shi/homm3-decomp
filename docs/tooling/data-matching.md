@@ -361,7 +361,15 @@ folding (the object's own definition of the named symbol reproduces retail at
 that address) and through identity-preserving spellings that differ only by
 the compiling path (a type's anonymous-namespace hash, VC6's `_name` form for
 statics in an anonymous namespace, a reference's cv letter, a guard's `$S`
-counter symbol in its owner's scope).
+counter symbol in its owner's scope). A VC6 `?%<path><nonce>@` scope listed in
+`config/retail/anon-ns-paths.tsv` is compared under its retail spelling, for
+vtables and exception records as well. A word naming a vendor DLL's decorated
+export resolves to that import's verified thunk.
+
+Vtable identities come from the `class` column of `config/retail/vtables.tsv`.
+A row names `??_7<class>@@6B@`, or spells a complete `??_S` symbol: the local
+vftable VC6 emits and stores after calling a dllimport class's imported
+constructor (IFC's `CImmMouse` and `CImmEnclosure`).
 
 ## Verified game bytes
 
@@ -410,11 +418,34 @@ Other `game-data-unverified` reasons:
 - `reference-only-extent`: a string sized by a retail reference alone.
 - `bss-misaligned` and `bss-alignment-unknown`.
 - `size-from-slot`: a byte array whose literal bound only fills its retail
-  slot. The zero tail past its content stays unverified until a type or a
-  consumer proves the count; `game_verification.size_from_slot` lists these
-  claims. A Dreamcast CodeView record of the same compiland that types the
-  declared name, or a name the comment block above the declaration cites,
-  as an array of exactly the claim's size proves the count as well.
+  slot. The zero tail past its content stays unverified until the count is
+  proven; `game_verification.size_from_slot` lists these claims with the
+  residual `range` of sizes, the `reason` it stays open and what would
+  `settle` it, and `size_from_slot_proven` lists the proven ones with their
+  `proof`:
+  - `dreamcast-record`: a Dreamcast CodeView record of the same compiland
+    types the declared name, or a name the comment block above the
+    declaration cites, as an array of exactly the claim's size.
+  - `next-symbol`: the next symbol bounds the buffer. Its first byte must
+    verify on its own (`game-data-exact` or `game-bss-exact`; a following
+    size-from-slot claim counts, since only its count is open). VC6 packs a
+    section with no gap beyond the following object's placement alignment
+    ([data layout](../vc6/data-layout.md)): an array is placed on
+    max(4, element), another object of 1, 2 or 4 bytes on its size, one of
+    8 or more on 8. The buffer is therefore at least slot − (alignment − 1)
+    bytes. A following start that is 4-aligned could also open another
+    compiland's contribution (VC6 aligns game sections on 4 or 8), and then
+    the contribution alignment bounds the gap unless both lie inside one
+    compiland. That is proven when the following start is not 4-aligned,
+    or when both lie inside the destination hull of one compiland's header
+    statics: consecutive `.CRT$XCU` slots whose exact bodies initialize
+    every dynamic static of one header in line order (`terrain.h`'s ten
+    masks). When the bound leaves one size, it is proven.
+  - `next-symbol+usage`: a retail direct access that touches the buffer's
+    last bytes closes the remaining slack.
+  A Dreamcast size outside the bound is reported as a contradiction
+  (`dreamcast`). A proven size below the slot would leave a gap for a
+  reviewed padding row with proof `proven-end`.
 
 VC6 emits a function's `.xdata$x` records from its body, so while the body
 differs the records cannot be compared. Such records are
