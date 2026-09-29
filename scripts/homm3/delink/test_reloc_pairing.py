@@ -117,6 +117,19 @@ class VoteTests(unittest.TestCase):
         votes, reason = self.voter(body, [(1, "?g_a@@3HA", DIR32)], retail, [])
         self.assertEqual((votes, reason), ([], "instruction: absolute relocation sites"))
 
+    def test_false_literal_retail_site_keeps_the_voter(self):
+        # Retail lists 0x1001 (mov eax, 0x4c4b40 == 5000000) as an address;
+        # the candidate holds the same literal without a relocation.
+        body = mov_eax(0x4C4B40) + mov_eax(0) + b"\xc3"
+        retail = mov_eax(0x4C4B40) + mov_eax(BASE + 0x6000) + b"\xc3"
+        votes, reason = self.voter(body, [(6, "?g_a@@3HA", DIR32)], retail,
+                                   [0x1001, 0x1006])
+        self.assertEqual((reason, [v.owner for v in votes]), ("", [0x6000]))
+        # A different literal at that site is an instruction difference.
+        votes, reason = self.voter(mov_eax(0x4C4B41) + mov_eax(0) + b"\xc3",
+                                   [(6, "?g_a@@3HA", DIR32)], retail, [0x1001, 0x1006])
+        self.assertEqual((votes, reason), ([], "instruction: absolute relocation sites"))
+
     def test_volatile_names_do_not_vote(self):
         body = mov_eax(0) + b"\xc3"
         retail = mov_eax(BASE + 0x5000) + b"\xc3"

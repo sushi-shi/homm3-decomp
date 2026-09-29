@@ -274,8 +274,16 @@ def compare_body(body: bytes, relocs: list, retail: bytes | None, size: int,
         return "instruction: longer"
     if any(typ not in (DIR32, REL32) for _site, typ, _s in relocs):
         return "instruction: relocation type"
-    if [site for site, typ, _s in relocs if typ == DIR32] != sorted(retail_sites):
+    absolute = {site for site, typ, _s in relocs if typ == DIR32}
+    if absolute - set(retail_sites):
         return "instruction: absolute relocation sites"
+    # The stripped image's reviewed operand inventory can list an honest
+    # literal whose value happens to be a VA (`mov edi, 5000000`). Where the
+    # candidate holds the very same four bytes without a relocation, the
+    # instruction is identical; normalization removes the same false row.
+    for site in set(retail_sites) - absolute:
+        if site + 4 > size or body[site:site + 4] != retail[site:site + 4]:
+            return "instruction: absolute relocation sites"
     sites = [site for site, _t, _s in relocs]
     if _masked(body[:size], sites) != _masked(retail, sites):
         return "instruction: bytes"
@@ -797,10 +805,10 @@ def data_pairings(claims, sizes: dict[int, int], rows: dict[int, dict],
     # An admitted anchor's interior operand must not already be another
     # claimed object. (A confirmed claim's operand outside its extent names
     # the neighbour's address by design.)
-    admitted = {(p.symbol, p.owner) for p in pairings if p.verdict == "admitted"}
+    anchors = {(p.symbol, p.owner) for p in pairings if p.verdict == "admitted"}
     held = set()
     for vote in aliases:
-        if (vote.symbol, vote.owner) not in admitted:
+        if (vote.symbol, vote.owner) not in anchors:
             continue
         other = claimed_name_at(vote.target)
         if other is not None and other != vote.symbol:
