@@ -246,7 +246,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceWidget = new textWidget(
-        44, 468, 66, 16, "", "smalfont.fnt",
+        44, 468, 66, 16, "0", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceWidget);
 
@@ -256,7 +256,7 @@ type_sacrifice_window::type_sacrifice_window(hero* newHero, int curPlayer)
         "smalfont.fnt", font::HEADING, widgetId++, 1, 0, 8));
 
     m_experienceTotalWidget = new textWidget(
-        41, 536, 66, 16, "", "smalfont.fnt",
+        41, 536, 66, 16, "0", "smalfont.fnt",
         font::PRIMARY, widgetId++, 1, 0, 8);
     m_widgets.push_back(m_experienceTotalWidget);
 

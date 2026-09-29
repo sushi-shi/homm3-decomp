@@ -2978,7 +2978,7 @@ philai	?valueOfWarFactory@@YIJPBVhero@@W4TArtifact@@J@Z	99.4198	99.4198	99.4198	
 philai	?valueOfWarSchool@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b790	tokens1:c88a184abd98
 philai	?valueOfWitchHut@@YIHPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12b900	tokens1:8bd286e0a4f2
 philai	?wantsSkill@@YIEPBVhero@@W4TSecondarySkill@@E@Z	100.0000	100.0000	100.0000	0x124dd0	tokens1:e6ac3db032ae
-puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	99.9669	99.9669	100.0000	0x12c1e0	tokens1:21c00723c7c1
+puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	99.9834	99.9834	100.0000	0x12c1e0	tokens1:eba27e8c581f
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12c770	tokens1:0aa9bcd9785d
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0	tokens1:600a3f8480ef
 puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12c570	-
@@ -3008,7 +3008,7 @@ quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	99.9912	99.9
 quicktownwindow	??1TQuickTownWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x130920	tokens1:d6dd0e2f0448
 quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1307a0	-
 quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x130ca0	tokens1:bb3d922d203c
-quicktownwindow	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	99.9585	99.9585	100.0000	0x130990	tokens1:9ff74b845702
+quicktownwindow	?initializeArmyDisplay@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990	tokens1:9504d1c511f7
 quicktownwindow	?quickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30	tokens1:955bd9ea3854
 recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	98.9020	98.9020	99.0102	0x14e850	tokens1:f109715efb97
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	100.0000	100.0000	100.0000	0x151350	tokens1:a25baeb49e81
@@ -3627,7 +3627,7 @@ rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSnowRule	99.5455	99.5455	100.000
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSubterraneanRule	99.5455	99.5455	100.0000	0x1b3ce0	-
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgSwampRule	99.5455	99.5455	100.0000	0x1b3c60	-
 rmg_terrain	__h3cg$rmg_terrain$static_ctor$g_rmgWaterRule	99.5455	99.5455	100.0000	0x1b3d60	-
-sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	99.9666	99.9666	100.0000	0x15fdd0	tokens1:67245d1e3527
+sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	99.9889	99.9889	100.0000	0x15fdd0	tokens1:cd1b7e985b24
 sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.2695	98.2695	100.0000	0x1654f0	tokens1:4be6d30016d2
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	99.8876	99.8876	100.0000	0x1623a0	tokens1:2485fecfa941
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60	tokens1:dede5a341820
