@@ -1003,6 +1003,18 @@ static int campaignBriefHandler(message& msg)
                 int helpID = brief->convertID2HelpID(id);
                 if (helpID >= 0) {
                     if (helpID < 100) {
+                        // Retail FuncInfo 0x64a5e0 states 0/1 (strings at
+                        // ebp-0x38/-0x48, the second nested in the first)
+                        // and Mac's 264(SP)-inside-992(SP) string chain both
+                        // prove a default-constructed text assigned from the
+                        // returned temporary (retail 0x45b46a..0x45b4a6 calls
+                        // assign(str, 0, npos) at 0x404860). That form
+                        // reproduces all ten retail EH states but falls to
+                        // 82.12%: VC6 admits the three-argument assign (cb
+                        // 307) at depth-3 budget 308 (2468 / 8 remaining),
+                        // which retail refuses, so 13 more units of earlier
+                        // spending or 7 fewer caller IL units are still
+                        // missing. Copy-initialization stays until then.
                         std::string text =
                             brief->m_campaign->m_scenarios[helpID]
                                 ->getRegionDescription();
@@ -1252,18 +1264,3 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
 
-// CodeView and the delinked Windows retail object place this ordinary body in
-// campaignbrief.cpp. The Mac linker places its counterpart at 0:0x96a68 near
-// customcampaign code; its offset does not determine source TU ownership.
-VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)
-TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
-{
-    clearScenarios();
-}
-
-// This delete loop naturally retains ScenarioStruct's compiler-generated
-// deleting wrapper. Retail CampaignHeaderStruct::load and selectCampaign
-// call the shared 0x488eb0 copy. All 33 bytes and both calls agree: the
-// ordinary destructor stays at 0x485fe0 in customcampaign, then flags&1
-// gates operator delete. Move only the enrollment from the inlining consumer.
-VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)

@@ -2043,9 +2043,8 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     g_game->newMap(&file, playerHeroFaces, this, -1);
 }
 
-// Complete's constructor lives before its callers in this TU. VC6 expands it
-// in selectCampaign; other TUs retain source calls. The destructor has its
-// Windows retail body in campaignbrief.cpp.
+// Complete's constructor and destructor live before their callers in this
+// TU. VC6 expands them in selectCampaign; other TUs retain source calls.
 VA(0x004885d0, 0xCB) MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
@@ -2054,6 +2053,17 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     m_data = 0;
     m_stream = 0;
     m_fileError = CAMPAIGN_FILE_OK;
+}
+
+// Retail 0x4886a0 sits between the constructor above and freeData in this
+// TU's .text contribution, and every campaignbrief caller (TCampaignBrief's
+// constructor 0x459362 and destructor 0x45b05b) retains the call. With the
+// body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
+// (62.61%); owning it here restores that destructor and selectCampaign.
+VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
+TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
+{
+    clearScenarios();
 }
 
 // Complete-only; also reached from the custom-campaign list scanner
@@ -2196,6 +2206,12 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
         TAbstractFile* file = &streamFile;
         // Mac 0x96fa4 decodes the version with lwbrx, then reads an
         // unsigned region byte and separate signed difficulty/music bytes.
+        // Probe (2026-09-29): the older Windows spelling (one int buffer for
+        // version and masked region, one char buffer for difficulty/music)
+        // under a platform fork measured 82.28% against 83.40%; VC6 still
+        // expands CMapHeaderData's constructor inside mapHeader's, which
+        // retail calls (retail FuncInfo has 19 states; the two extra
+        // vector/player-array states here are that ctor's members).
         int version = readLittleEndianValue<int>(file);
         m_campaignVersion = version;
         if (m_campaignVersion < 4) {
@@ -2232,6 +2248,14 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
     }
     return true;
 }
+
+// clearScenarios' delete loop naturally retains ScenarioStruct's
+// compiler-generated deleting wrapper. Retail CampaignHeaderStruct::load,
+// the destructor above and selectCampaign call this shared 0x488eb0 copy,
+// which lies in this TU's contribution: campaignbrief no longer expands the
+// destructor, so it emits no copy. All 33 bytes agree: the ordinary
+// destructor stays at 0x485fe0, then flags&1 gates operator delete.
+VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
 
 VA(0x00488ee0, 0x1D) MAC_ADDRESS(0x097548, 0x44)
 void TCampaignBrief::CampaignHeaderStruct::startMusic()
