@@ -361,6 +361,81 @@ the compiling path (a type's anonymous-namespace hash, VC6's `_name` form for
 statics in an anonymous namespace, a reference's cv letter, a guard's `$S`
 counter symbol in its owner's scope).
 
+## Verified game bytes
+
+Ownership alone is not proof. `homm3.verify.game_bytes` replaces every
+`game` byte of both partitions with a verdict. The invariant is that a
+retail data byte is exact only if a compiled candidate definition emits that
+byte at that address. Retail-side extents, labels, slot sizes and zero-ness
+never cover a byte on their own.
+
+| Category | Meaning |
+| --- | --- |
+| `game-code-exact` | The claimed function's current compiled bytes equal retail (CUR 100% in the objdiff report under the strict relocation policy). |
+| `game-code-unverified` | Any other claimed game function byte. The reason is `mismatch:<CUR>%` or `no-comparison`. |
+| `game-data-exact` | The claim's own candidate definition emits this byte at this address with the retail value. A `DATA_COMPGEN` string literal whose source text and NUL equal retail also counts. |
+| `game-bss-exact` | Uninitialized storage whose candidate definition has the retail size and is zero in the image, at a compatible address. The address is compatible when it is a multiple of the power of two dividing the member's size, its section offset and its section alignment, or of the declared type's alignment from the layout oracle. Verified game COMMONs also count. |
+| `game-data-mismatch` | A byte the candidate emits with a different value, reported byte by byte. A pointer word naming another referent or addend counts. |
+| `game-data-unverified` | Every other game-claimed data byte, with a reason. |
+| `padding-provisional` | Zero fill credited from alignment alone after a definition whose end is not proven. |
+
+Every raw initializer comparison now checks its extent against the
+candidate definition. The definition runs to the next datum of its section,
+or to the section end.
+- `beyond-candidate-definition`: the claim is longer than the definition.
+  Only the definition's bytes are compared, and the rest are unverified.
+- `candidate-larger-than-extent`: the definition is longer than the claim,
+  and the remainder is not member padding. Member padding is zero, shorter
+  than the section alignment, and never occurs in a single-datum COMDAT.
+
+The retail access audit (`homm3 verify data-access`) adds disputes: a
+shortfall, undercount, adjacency or stride finding on a claim makes the
+whole claim unverified. Retail touches past a claim's end into padding
+re-attribute that padding to the claim as unverified.
+
+Other `game-data-unverified` reasons:
+- `unavailable:<reason>` and `unresolved-pointer`: a comparison that could
+  not be completed.
+- `no-comparison`: no comparison exists for the claim.
+- `label-only-extent`: a vtable census extent without a definition.
+- `reference-only-extent`: a string sized by a retail reference alone.
+- `bss-misaligned` and `bss-alignment-unknown`.
+- `size-from-slot`: a byte array whose literal bound only fills its retail
+  slot. The zero tail past its content stays unverified until a type or a
+  consumer proves the count; `game_verification.size_from_slot` lists these
+  claims.
+
+`alignment-padding` and `linker-padding` in data sections survive only after
+a proven end. The contribution before the fill must have a size fixed by
+pinned bytes or a format: library and vendor sections, import records,
+compiler, EH and RTTI metadata, FP constants, guards, or COMMONs. A source
+declaration also proves its end unless it is a byte array.
+- String literals, byte arrays, claims without a known type and unverified
+  claims do not prove their end, so the fill after them is
+  `padding-provisional`.
+- Intra-object padding (`ordinary_members`) already requires the candidate
+  section to emit the same bytes between the same two definitions, and the
+  same end rule applies to it.
+
+The finish line is zero `missing`, `game-data-unverified`,
+`game-data-mismatch` and `padding-provisional` bytes, except post-link
+residue recorded in `docs/todos/import-table-post-link-edits.md`. Each such
+run is written to `build/gen/data_worklist.{json,tsv}`, sorted by address,
+with these fields:
+- the retail bytes;
+- the owning claim and the claims on both sides, each with its annotation
+  file:line, declared type, sizeof and retail extent;
+- mismatching bytes as retail versus candidate, with the field path when
+  the layout oracle knows the type, and both pointer targets;
+- a diagnosis.
+
+List the worklist by TU:
+
+```sh
+homm3 verify data-worklist --unit kbwin
+homm3 verify data-worklist --category game-data-mismatch
+```
+
 ## Provenance
 
 The model and verification implementation was ported from local Gruntz revision

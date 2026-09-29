@@ -701,41 +701,66 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None)
                 definitions = members[unit][bridged]
         hits = [(value, section) for value, section in definitions if section > 0]
         commons = [value for value, section in definitions if section == 0 and value]
+        result['storage'] = r['storage']
         if not hits and len(commons) == 1 and r['storage'] == 'bss':
+            from homm3.verify.library_code import common_alignment
             payload = pe.read(start, size)
+            result.update(definition=commons[0], extent=(
+                'ok' if commons[0] == size else 'beyond-candidate-definition'
+                if commons[0] < size else 'candidate-larger-than-extent'),
+                aligned=not start % common_alignment(commons[0]))
             if commons[0] != size or payload is None:
                 result.update(verdict='mismatch', reason='COMMON extent differs')
             else:
-                wrong = sum(bool(byte) for byte in payload)
-                result.update(verdict='mismatch' if wrong else 'exact', different=wrong)
+                wrong = {i for i, byte in enumerate(payload) if byte}
+                result.update(verdict='mismatch' if wrong else 'exact',
+                              different=len(wrong), span=size)
+                if wrong:
+                    result['wrong'] = [[a, b, bytes(b - a).hex(), payload[a:b][:64].hex()]
+                                       for a, b in _runs(wrong)]
             results.append(result); continue
         if len(hits) != 1:
             result['reason'] = 'candidate definition absent or ambiguous'
             results.append(result); continue
         offset, sn = hits[0]
         sec = obj.section_table[sn-1]
-        if offset + size > sec['size']:
+        # The extent is compared with the candidate definition itself: its
+        # own bytes run to the next datum of its section (or the section end).
+        following = [v for v, n, _scl in obj.section_members(sn) if v > offset]
+        from homm3.verify.game_bytes import alignment_bound, definition_extent
+        extent, definition = definition_extent(
+            size, offset, sec['size'], min(following) if following else None,
+            bool(sec['characteristics'] & 0x1000), sec['alignment'],
+            obj.section_payload(sn))
+        # The declared type's alignment divides both the member's offset in
+        # its aligned section and its size; `verify_game` judges placement.
+        result.update(extent=extent, definition=definition,
+                      alignment_bound=alignment_bound(offset, size, sec['alignment']))
+        # Only the candidate definition's own bytes can reproduce the claim;
+        # bytes past it belong to a neighbour (or to no candidate datum).
+        span = min(size, definition) if extent == 'beyond-candidate-definition' else size
+        if offset + span > sec['size']:
             result['reason'] = 'candidate extent too short'
             result['verdict'] = 'mismatch'
-            result['different'] = max(0, offset+size-sec['size'])
+            result['different'] = max(0, offset+span-sec['size'])
             results.append(result); continue
         raw = obj.section_payload(sn)
-        payload = raw[offset:offset+size] if raw else bytes(size)
-        retail = pe.read(start, size)
-        if retail is None or len(payload) != size:
+        payload = raw[offset:offset+span] if raw else bytes(span)
+        retail = pe.read(start, span)
+        if retail is None or len(payload) != span:
             result['reason'] = 'incomplete raw extent'
             results.append(result); continue
         relocated, wrong, unknown = set(), set(), set()
-        required = {site-start for site in image.relocs_in(start, start+size)}
-        present = set()
+        required = {site-start for site in image.relocs_in(start, start+span)}
+        present, pointers = set(), []
         for off, (name, typ) in obj.typed_relocations(sn).items():
-            if not offset <= off < offset+size:
+            if not offset <= off < offset+span:
                 continue
             relative = off-offset
             present.add(relative)
-            word = set(range(relative, min(relative+4, size)))
+            word = set(range(relative, min(relative+4, span)))
             relocated |= word
-            if relative+4 > size or typ != 6:
+            if relative+4 > span or typ != 6:
                 unknown |= word; continue
             addend = struct.unpack_from('<i', payload, relative)[0]
             key = msvc_names.mask(name)
@@ -765,14 +790,41 @@ def compare_initializers(model, enrolled, pe, base_dir=None, library_names=None)
             actual = struct.unpack_from('<I', retail, relative)[0]
             if relative not in required or expected != actual:
                 wrong |= word
+                pointers.append(dict(offset=relative, symbol=name, addend=addend,
+                                     expected=expected, actual=actual,
+                                     retail_relocated=relative in required))
         for relative in required-present:
-            wrong.update(range(relative, min(relative+4, size)))
+            wrong.update(range(relative, min(relative+4, span)))
+            pointers.append(dict(offset=relative, symbol=None, expected=None,
+                                 actual=struct.unpack_from('<I', retail, relative)[0]
+                                 if relative + 4 <= span else None,
+                                 retail_relocated=True))
         wrong |= {i for i, (a, b) in enumerate(zip(payload, retail))
                   if i not in relocated and a != b}
-        result.update(different=len(wrong), unresolved=len(unknown),
+        result.update(different=len(wrong), unresolved=len(unknown), span=span,
                       verdict='mismatch' if wrong else 'unresolved' if unknown else 'exact')
+        if wrong:
+            result['wrong'] = [[a, b, payload[a:b][:64].hex(), retail[a:b][:64].hex()]
+                               for a, b in _runs(wrong)]
+            result['pointers'] = pointers
+        if unknown:
+            result['unknown'] = [[a, b] for a, b in _runs(unknown)]
+        if span < size:
+            # The claim is not reproduced past its definition.
+            result.update(verdict='mismatch', reason='extent beyond candidate definition')
         results.append(result)
     return results
+
+
+def _runs(offsets):
+    """Sorted [start, end) runs of a set of integers."""
+    out = []
+    for i in sorted(offsets):
+        if out and out[-1][1] == i:
+            out[-1][1] = i + 1
+        else:
+            out.append([i, i + 1])
+    return out
 
 
 def report(model=None):
@@ -885,7 +937,12 @@ def report(model=None):
         domains = account(pe, model, enrolled, sections,
                           initializers=claims + link_padding, **arguments)
     comparisons = compare_initializers(model, enrolled, pe, library_names=library_names)
+    from homm3.verify.game_bytes import destination_comparisons, verify_game
+    destinations = destination_comparisons(dynamic, pe)
+    domains, verification = verify_game(pe, model, domains, comparisons + destinations)
+    verification['destinations'] = destinations
     doc = {'schema': 1, 'domains': domains, 'initializers': comparisons,
+           'game_verification': verification,
            'source_initializers': dynamic,
            'startup_initializers': startup,
            'library_code': library_report,
@@ -904,9 +961,9 @@ def report(model=None):
         doc['totals'][domain] = dict(totals)
         write(BUILD / f'gen/data_coverage_{domain}.tsv',
               ['# GENERATED from the Gruntz model; complete byte accounting.'],
-              ['start', 'end', 'size', 'category', 'owners'],
+              ['start', 'end', 'size', 'category', 'owners', 'reason'],
               [[hex(r['start']), hex(r['end']), r['size'], r['category'],
-                ';'.join(r['owners'])] for r in rows])
+                ';'.join(r['owners']), r.get('reason', '')] for r in rows])
     write(BUILD / 'gen/data_initializer_comparison.tsv',
           ['# GENERATED: raw VC6 initializer bytes and pointer identities.'],
           ['unit', 'name', 'rva', 'size', 'verdict', 'different', 'unresolved', 'reason'],
