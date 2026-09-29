@@ -4645,6 +4645,8 @@ void combatManager::earthquake(int level)
                             g_windowManager->m_screenBitmap,
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
                             0, 1);
+                // DC spells.cpp:5292/5293 scroll, then UpdateCombatArea(*bounds)
+                // by value; that form lowers this row 86.85 -> 83.74.
                 g_windowManager->updateScreen(
                     bounds->m_minX, bounds->m_minY,
                     bounds->width(), bounds->height());

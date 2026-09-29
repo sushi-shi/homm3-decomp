@@ -3831,6 +3831,7 @@ VA(0x004de710, 0x2C52) MAC_ADDRESS(0x0fa5f0, 0x78b4)  // dc 0xd0184
 THeroScreenWindow::THeroScreenWindow()
     : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC hero.cpp:3965
     m_topHero = 0;
     m_widgets.reserve(121);
     m_field64 = m_widgets.back();

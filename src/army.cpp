@@ -1220,6 +1220,9 @@ void army::animateMissile(army* armyToAttack)
             // SLimitData::Include and Clip; VC6 expands both methods.
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
+            // DC army.cpp:1335/1336 scrolls and calls UpdateCombatArea with
+            // this local by value; that form moves retail's register
+            // allocation (99.98 -> 95.14), so the Windows update stays direct.
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -1228,7 +1231,7 @@ void army::animateMissile(army* armyToAttack)
         }
     }
     saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap, x, y, false);
-    g_windowManager->updateScreen(x, y, width, height);
+    g_combatManager->updateCombatArea(x, y, width, height);  // DC army.cpp:1348
 }
 
 // E:\gamedcs\army.cpp:1356
@@ -4094,11 +4097,11 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                         g_windowManager->m_screenBitmap,
                         targetX - explosion->getWidth() / 2,
                         targetY - explosion->getHeight() / 2, 0, 1);
-        g_windowManager->updateScreen(
-            g_combatManager->m_drawbridgeBounds.m_minX,
-            g_combatManager->m_drawbridgeBounds.m_minY,
-            g_combatManager->m_drawbridgeBounds.width(),
-            g_combatManager->m_drawbridgeBounds.height());
+        // DC army.cpp:4719/4720: the fixed-viewport scroll and area update.
+        if (!g_combatManager->scrollTo(g_combatManager->m_drawbridgeBounds,
+                                       true, true, true))
+            g_combatManager->updateCombatArea(
+                g_combatManager->m_drawbridgeBounds);
     }
     ResourceManager::dispose(explosion);
     g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);

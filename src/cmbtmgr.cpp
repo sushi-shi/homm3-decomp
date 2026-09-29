@@ -663,6 +663,7 @@ int combatManager::open(int newPriority)
     g_config.m_showCombatMouseHex = 0;
     m_combatShowIt = 0;
     g_soundManager->stopAllSamples(1);
+    ResourceManager::delSprFromCache();  // DC cmbtmgr.cpp:599
 
     if (!isQuickCombat()) {
         char name[20];
@@ -3059,6 +3060,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
             updateArea.include(SLimitData(x, y, right, bottom));
             updateArea.clip(g_combatDrawLimits);
+            // DC cmbtmgr.cpp:3874 passes this local to UpdateCombatArea by
+            // value; that form moves retail's register allocation.
             g_windowManager->updateScreen(
                 updateArea.m_minX, updateArea.m_minY,
                 updateArea.width(),
@@ -3072,7 +3075,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
     saved.draw(0, 0, width, height,
                g_windowManager->m_screenBitmap, x, y, false);
-    g_windowManager->updateScreen(x, y, width, height);
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:3890
     ResourceManager::dispose(missile);
 }
 
@@ -3191,6 +3194,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         updateArea.clip(g_combatDrawLimits);
+        // DC cmbtmgr.cpp:4022 passes this local by value (see above).
         g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
                                       updateArea.width(),
                                       updateArea.height());
@@ -3201,7 +3205,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                g_windowManager->m_screenBitmap->getWidth(),
                g_windowManager->m_screenBitmap->getHeight(),
                g_windowManager->m_screenBitmap->getPitch(), false);
-    g_windowManager->updateScreen(x, y, width, height);
+    updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }
 
 VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)  // dc 0x622bc
@@ -3508,6 +3512,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
+            // DC cmbtmgr.cpp:4389 calls UpdateCombatArea(bounds); the by-value
+            // form lowers this row 96.16 -> 95.81, so it stays direct.
             g_windowManager->updateScreen(
                 m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
                 m_drawbridgeBounds.width(),

@@ -1698,6 +1698,7 @@ VA(0x005c63c0, 0x2E1) MAC_ADDRESS(0x1be22c, 0x2f4)  // dc 0x16b718
 int townManager::open(int newPriority)
 {
     g_inputManager->flush();
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:2733
     startMouseThread();
     g_game->checkHeroConsistency();
     pollSound();
@@ -2153,6 +2154,7 @@ void townManager::unloadTown()
         delete m_panorama;
         m_panorama = 0;
     }
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3169
 }
 
 // The manager's Close, slot 1 of vtable 0x643720 and the second of its
@@ -2726,6 +2728,7 @@ VA(0x005c8190, 0x14C8) MAC_ADDRESS(0x1c085c, 0x21f4)  // dc 0x16d298
 TThievesGuildWindow::TThievesGuildWindow(int numGuilds)
     : CAdvPopup(0, 0, 800, 600, 2)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:3861
     m_widgets.reserve(30);
 
     bitmapBorder* background = new bitmapBorder(0, 0, 800, 600, 0,
@@ -2994,6 +2997,7 @@ VA(0x005c9be0, 0x2CF0) MAC_ADDRESS(0x1c3050, 0x351c)  // dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4303
     const int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     const int slotY[5] = { 37, 141, 245, 349, 453 };
     const int hallX[9][18] = {
@@ -3225,6 +3229,7 @@ VA(0x005cc980, 0x179F) MAC_ADDRESS(0x1c661c, 0x2804)  // dc 0x170128
 TMageGuildWindow::TMageGuildWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4477
     m_widgets.reserve(77);
 
     m_widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
@@ -3562,6 +3567,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
                                                      armyGroup& garrisonArmy)
     : CAdvPopup(125, 102, 549, 392, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:4810
     m_thisHero = inHero;
     m_isJoinDialog = 0;
     m_widgets.reserve(51);
@@ -4080,6 +4086,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
 {
     int cost = g_creatureTypeTraits[g_blacksmithMachines[inTownType]].m_cost[6];
     m_townType = inTownType;
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5218
     m_widgets.reserve(12);
 
     m_widgets.push_back(new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -4307,6 +4314,7 @@ TShipWindow::TShipWindow(int type)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
     m_boatFrame = 0;
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:5396
     m_widgets.reserve(12);
 
     bitmapBorder* background = new bitmapBorder(0, 0, m_width, m_height, 0,
@@ -5734,6 +5742,7 @@ VA(0x005d55c0, 0x578) MAC_ADDRESS(0x1d267c, 0xaf8)  // dc 0x178ab8
 TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int id)
     : CAdvPopup(x2, y2, 0x18b, 0x208, 0x12)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:7211
     m_buildingId = id;
     m_widgets.reserve(18);
 
@@ -6868,6 +6877,7 @@ VA(0x005d86f0, 0x445A) MAC_ADDRESS(0x1d6668, 0xa4e0)  // dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
     // Conventional release expansion of VERIFY(Widgets.size() == 0).
     static_cast<void>(m_widgets.size() == 0);
     m_widgets.reserve(156);
