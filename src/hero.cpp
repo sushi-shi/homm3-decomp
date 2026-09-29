@@ -6320,10 +6320,11 @@ int* std::vector<int>::end()
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }
 
-// std::vector<T>::push_back(const T&) - 434 B, `ret 4`; see the note
-// above for why this is push_back and not either insert overload.
-VA(0x004e6500, 0x1B2)  // stl-comdat, retail-only
-void std::vector<int>::push_back(const int& _X)
+// std::vector<T*>::push_back(T* const&) - 434 B, `ret 4`: one ICF-folded
+// body for every pointer-element vector. hero.obj emits it for the hero
+// screen's widget list, so that instantiation owns the claim.
+VA_COMPGEN(0x004e6500, 0x1B2, VECTOR_PUSH_BACK, widget)
+void std::vector<widget*>::push_back(widget* const& _X)
 {
     // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
 }

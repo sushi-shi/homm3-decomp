@@ -470,6 +470,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "TREE_ERASE_ITERATOR", "TREE_ERASE_RANGE", "TREE_ERASE_KEY",
                  "TREE_LBOUND", "TREE_UBOUND", "TREE_FIND",
                  "DEQUE_ERASE", "VECTOR_RESERVE", "VECTOR_CLEAR",
+                 "VECTOR_PUSH_BACK",
                  "EXCEPTION_DORAISE",
                  "DEQUE_ITERATOR_ADD_ASSIGN",
                  "DEQUE_CONST_ITERATOR_ADD",
@@ -1399,6 +1400,8 @@ def _demangle_key(mangled: str):
         return f"{vector_owner}@vector_capacity"
     if mangled.startswith("?clear@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_clear"
+    if mangled.startswith("?push_back@?$vector@") and vector_owner:
+        return f"{vector_owner}@vector_push_back"
     if mangled.startswith("?reserve@?$vector@") and vector_owner:
         return f"{vector_owner}@vector_reserve"
     if mangled.startswith("?resize@?$vector@") and vector_owner:
@@ -2365,7 +2368,8 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault("vector_constructor_iterator", []).append(row)
             continue
         simple = next(
-            (kind for kind in ("vector_clear", "exception_doraise",
+            (kind for kind in ("vector_clear", "vector_push_back",
+                               "exception_doraise",
                                "functor_call", "deque_iterator_add_assign",
                                "deque_const_iterator_add")
              if f"${kind}$" in row["name"]), None)
