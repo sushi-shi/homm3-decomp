@@ -48,6 +48,20 @@ def implib_decorations(libdir: Path) -> dict:
     return out
 
 
+def undecorated_import_symbol(name: str) -> str:
+    """`__imp_` COFF symbol for an import-directory name no library proves.
+
+    C++ names and vendor exports that are already stdcall-decorated
+    (mss32/smackw32/binkw32 export "_SmackClose@4") take a bare `__imp_`
+    prefix, the convention homm3.delink.implib documents: cl's reference
+    to the SDK declaration is `__imp__SmackClose@4`. An undecorated C
+    export takes the C underscore as well."""
+    decorated = name.startswith("_") and "@" in name
+    if name.startswith("?") or decorated:
+        return "__imp_" + name
+    return "__imp__" + name
+
+
 def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
     """slot rva -> (__imp_ spelling, channel), from the import directory."""
     decorations = implib_decorations(libdir)
@@ -96,8 +110,8 @@ def iat_slots(exe_path: Path, libdir: Path) -> dict[int, tuple[str, str]]:
                 if proven:
                     slots[slot] = (proven, "iat-implib")
                 else:
-                    prefix = "__imp_" if name.startswith("?") else "__imp__"
-                    slots[slot] = (prefix + name, "iat-undecorated")
+                    slots[slot] = (undecorated_import_symbol(name),
+                                   "iat-undecorated")
             index += 1
         off += 20
     return slots
