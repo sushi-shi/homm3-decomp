@@ -39,6 +39,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+from homm3.compare.canonicalize import normalize_anon_ns_name
 from homm3.core import msvc_names
 from homm3.core.paths import BUILD
 from homm3.delink import coffx, eh_band
@@ -206,6 +207,9 @@ def _reloc_data_rvas() -> list[int]:
 
 
 _VTABLE_CHANNELS = ("data_vtables", "data_static_libs")
+#: `??_7` vftables, and `??_S`, the local vftable VC6 emits for a
+#: dllimport class whose constructor is expanded in the client.
+VTABLE_PREFIXES = ("??_7", "??_S")
 
 
 def _vtable_tables(model: Model) -> dict[str, tuple[int, int]]:
@@ -218,11 +222,11 @@ def _vtable_tables(model: Model) -> dict[str, tuple[int, int]]:
     the candidate-COMDAT cross-check needs the same way."""
     out: dict[str, tuple[int, int]] = {}
     for b in model.data:
-        if b.channel in _VTABLE_CHANNELS and b.name.startswith("??_7") \
+        if b.channel in _VTABLE_CHANNELS and b.name.startswith(VTABLE_PREFIXES) \
                 and b.size and b.size % 4 == 0:
             out.setdefault(b.name, (b.rva, b.size // 4))
         for a in b.aliases:
-            if a.channel in _VTABLE_CHANNELS and a.name.startswith("??_7") \
+            if a.channel in _VTABLE_CHANNELS and a.name.startswith(VTABLE_PREFIXES) \
                     and a.size and a.size % 4 == 0:
                 out.setdefault(a.name, (b.rva, a.size // 4))
     return out
@@ -472,7 +476,7 @@ def paired_code_votes(model: Model, wanted, base_dir=BASE_DIR):
 
 #: COMDAT data other channels already own (literals, vtables, RTTI,
 #: exception records, FP pools).
-_OWNED_COMDAT_PREFIXES = ("??_C@", "??_7", "??_R", "__CT", "__TI", "$T")
+_OWNED_COMDAT_PREFIXES = ("??_C@", "??_7", "??_S", "??_R", "__CT", "__TI", "$T")
 
 
 def paired_store_votes(model: Model, wanted, base_dir=BASE_DIR):
@@ -736,7 +740,9 @@ def vtable_rows(model: Model, base_dir=BASE_DIR):
             if len(members) != 1:
                 continue
             offset, name = members[0]
-            if name.startswith("??_7"):
+            if name.startswith(VTABLE_PREFIXES):
+                # A reviewed anonymous namespace carries its retail spelling.
+                name = normalize_anon_ns_name(name, stem)
                 emitters[name][offset].append((stem, sec))
 
     rows, withheld = [], []
@@ -1371,8 +1377,8 @@ def section_rows(rows, base_dir=BASE_DIR):
             if name.startswith(("??_C@", "??_R", "__CT", "__TI")) \
                     and offset == 0:
                 owner[name] = (sec, 0)
-            elif name.startswith("??_7"):
-                owner[name] = (sec, offset)
+            elif name.startswith(VTABLE_PREFIXES):
+                owner[normalize_anon_ns_name(name, obj[:-2])] = (sec, offset)
         for r in rs:
             hit = owner.get(r["name"])
             if hit is None:

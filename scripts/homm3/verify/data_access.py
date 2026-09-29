@@ -418,7 +418,7 @@ def derive_findings(spine, accesses, cells, owners, trace=None):
     # ---- 3. access width vs the declared field -> wrong type ---------------
     # a `mov [obj+N],&??_7...` is a vptr STAMP, so +N is a base sub-object
     # boundary, not an unmodelled member.
-    vtbl = {c.rva for c in spine.claims if c.name.startswith("??_7")}
+    vtbl = {c.rva for c in spine.claims if c.name.startswith(("??_7", "??_S"))}
     stamps = {ac.insn_rva for ac in accesses
               if ac.form in ("imm", "lea") and ac.target_rva in vtbl}
 

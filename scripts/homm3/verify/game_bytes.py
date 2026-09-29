@@ -542,7 +542,7 @@ def end_proven(identity, category, type_text):
         # EH and RTTI records, FP constants (the name spells the width),
         # one-byte guards and COMDATs sized by LINK's COMMON rule.
         return True, 'size fixed by its format'
-    if identity.startswith('??_7'):
+    if identity.startswith(('??_7', '??_S')):
         return True, 'vtable compared against its class'
     if not type_text:
         return False, 'declared type unknown'

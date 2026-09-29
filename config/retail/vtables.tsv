@@ -4,7 +4,7 @@
 # over hand edits.
 # The class column is the hand-admitted vtable NAME census (moved out
 # of source VTBL() macros 2026-08-06): empty until the identity is
-# byte-proven by explicit review; it feeds ??_7<class>@@6B@ into the
+# byte-proven by explicit review; it feeds ??_7<class>@@6B@ (or a complete ??_S local vftable symbol) into the
 # label map. This file is manual - never regenerate.
 # generator: homm3.carve.vtables
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
@@ -230,11 +230,18 @@ rva	function_count	class
 # ??_7 site paired in order: 0x4acd70 ?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z; 0x4aeb50 ?sendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z (+1 more)
 0x23e508	2	CCombatInitMsg
 0x23e5f4	3	font
-0x23e60c	3	
-0x23e618	7	
+# retail 0x4b633e: ??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z stores this vptr
+0x23e60c	3	t_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558
+# retail 0x4b62d7 (the t_initializer constructor) stores this table right after
+# calling the imported ??0CImmMouse, as forcefeedback.obj stores ??_SCImmMouse:
+# VC6's local vftable of the dllimport class. Slot 0 is the client ??_G at
+# 0x4b6700; slots 1..6 are the IFC20.dll import thunks.
+0x23e618	7	??_SCImmMouse@@6B@
 # ??_7 site paired in order: 0x4b6c60 ??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z
 0x23e634	3	t_create_failure@t_enclosure@force_feedback
-0x23e640	7	
+# retail 0x4b6a99 stores this table right after calling the imported
+# ??0CImmEnclosure, as forcefeedback.obj stores ??_SCImmEnclosure.
+0x23e640	7	??_SCImmEnclosure@@6B@
 # ??_7 site paired in order: 0x4d54c0 ??0TGameTypeWindow@@QAE@E@Z; 0x4d5890 ??1TGameTypeWindow@@UAE@XZ
 0x23e6d8	9	TGameTypeWindow
 # ??_7 site paired in order: 0x4d6050 ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z; 0x4d6690 ??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z (+1 more)

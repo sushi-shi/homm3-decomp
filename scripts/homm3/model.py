@@ -462,7 +462,10 @@ def _collect_inventory():
         if r["rva"] in rows:
             continue  # a src claim owns the address
         cls = r["class"] or None
-        name = f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}"
+        # A dllimport class's locally emitted table is `??_S` (VC6's local
+        # vftable); its census row spells the complete symbol.
+        name = (cls if cls and cls.startswith("??_") else
+                f"??_7{cls}@@6B@" if cls else f"vtbl_{r['rva']:x}")
         put(r["rva"], name, "", r["count"] * 4, "data",
             "vtable-name" if cls else "vtable")
 

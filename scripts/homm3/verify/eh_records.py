@@ -21,6 +21,7 @@ from __future__ import annotations
 from collections import defaultdict
 import struct
 
+from homm3.compare.canonicalize import normalize_anon_ns_name
 from homm3.core import msvc_names
 
 FUNCINFO_SIZE = 32
@@ -75,7 +76,12 @@ def compare(model, enrolled, pe, names, base_dir):
             obj = Obj(path)
             table = defaultdict(list)
             for idx, value, section in obj.iter_symbols():
-                table[obj.sym_name(idx)].append((section, value))
+                name = obj.sym_name(idx)
+                table[name].append((section, value))
+                canonical = normalize_anon_ns_name(name, unit)
+                if canonical != name:
+                    # The model spells a reviewed anonymous namespace's scope.
+                    table[canonical].append((section, value))
             masked = defaultdict(set)
             for name, entries in table.items():
                 masked[msvc_names.mask(name)].update(sec for sec, _v in entries if sec > 0)
