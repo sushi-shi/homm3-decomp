@@ -560,9 +560,9 @@ DATA(0x0063d2c8) const char* const g_magicTerrainCombatBackgrounds[10] = {
     "CmBkRK.pcx", "CmBkMC.pcx"
 };
 // getBackgroundName indexes the rows with the hero's terrain type, so there
-// is one row per terrain: retail's twelve zero bytes after the water row are
-// the rock row.
-DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[kNumTerrainTypes][3] = {
+// is one row per terrain (eTerrainDirt..eTerrainRock, ten): retail's twelve
+// zero bytes after the water row are the rock row.
+DATA(0x0063d2f0) const char* const g_terrainCombatBackgrounds[10][3] = {
     { "CmBkDrDd.pcx", "CmBkDrMt.pcx", "CmBkDrTr.pcx" },
     { "CmBkDes.pcx", "CmBkDes.pcx", "CmBkDes.pcx" },
     { "CmBkGrTr.pcx", "CmBkGrMt.pcx", "CmBkGrTr.pcx" },

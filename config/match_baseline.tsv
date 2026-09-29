@@ -1115,7 +1115,7 @@ crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0	-
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0	tokens1:cb25ee3dc25f
 creature_bank	?initializeCreatureBank@@YIXPAUtype_creature_bank@@W4type_creature_bank_type@@@Z	99.9403	99.9403	100.0000	0x7ad90	tokens1:4c3046893927
 creature_bank	?initializeCreatureBankTraits@@YIEXZ	100.0000	100.0000	100.0000	0x7ab30	tokens1:3f6c1cc30dfc
-creaturetype	??1TAutoStrPtr@?%Z:\tmp\homm3-bytes-lib\src\creaturetype.cpp2817219230@@QAE@XZ	100.0000	100.0000	100.0000	0x7b7b0	tokens1:3ee87be2a632
+creaturetype	??1TAutoStrPtr@?%Z:\tmp\homm3-bytes-lib\src\creaturetype.cpp121614413@@QAE@XZ	100.0000	100.0000	100.0000	0x7b7b0	tokens1:3ee87be2a632
 creaturetype	?downgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	99.8684	99.8684	100.0000	0x7b220	tokens1:feeab7e7f694
 creaturetype	?initializeCreatureTypeTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	99.6482	99.6482	100.0000	0x7b480	tokens1:4c84a5eb5dc0
 creaturetype	?initializeCreatureTypeTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x7b290	tokens1:053799b9fa3f
@@ -3028,7 +3028,7 @@ recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	t
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	99.9222	99.9222	100.0000	0x151780	tokens1:29eb9cd61e5d
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	tokens1:0a78aaf337d9
 recruit	?siegeArtifactToCreature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360	tokens1:ca8b074685ad
-recruit	?update@recruitUnit@@QAEXEJ@Z	97.5406	99.9391	99.9898	0x1503a0	tokens1:1f301a6ce904
+recruit	?update@recruitUnit@@QAEXEJ@Z	99.9391	99.9391	99.9898	0x1503a0	tokens1:1f301a6ce904
 remote	??0CAnimatedDlg@@QAE@XZ	99.6154	99.6154	100.0000	0x154a50	tokens1:9cb7f65c769c
 remote	??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z	99.8837	99.8837	100.0000	0x1541a0	tokens1:014d0118749d
 remote	??0CGameTransferDlg@@QAE@E@Z	99.7619	99.7619	100.0000	0x157720	tokens1:b63d1ed9b628
@@ -3512,7 +3512,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:962fea18ce8c
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3067	96.3161	96.3646	0x149cb0	tokens1:6fbd72185624
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3161	96.3161	96.3646	0x149cb0	tokens1:6fbd72185624
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	0.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
@@ -4410,7 +4410,7 @@ town	?initialize@town@@QAEXPBVTownExtra@@@Z	90.8959	90.8959	100.0000	0x1c0670	to
 town	?initializeBuildingCostsTables@town@@SIEXZ	99.9709	99.9709	100.0000	0x1c14c0	tokens1:6977d74db776
 town	?initializeBuildings@@YIXPAVtown@@PBVTownExtra@@@Z	99.9676	99.9676	100.0000	0x1c08c0	tokens1:e8c1524616de
 town	?initializeHordes@town@@SIXXZ	100.0000	100.0000	100.0000	0x1bdf60	tokens1:12a6d91f4df1
-town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	99.9242	99.9242	100.0000	0x1be600	tokens1:e0ccf5eb7c70
+town	?initializeSpells@town@@QAEXPBVTownExtra@@@Z	99.8598	99.9242	100.0000	0x1be600	tokens1:e0ccf5eb7c70
 town	?isHumanTeam@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0	tokens1:ba2d4954cbc3
 town	?isLegalBuilding@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0	tokens1:d9bc20285f48
 town	?load@town@@QAEHPAVTAbstractFile@@H@Z	99.9718	99.9718	99.9718	0x1bcd60	tokens1:f64ab6c1c019
