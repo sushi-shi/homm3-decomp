@@ -4599,8 +4599,15 @@ void type_random_map_generator::insetIslandZone(TRmgZone* zone)
 // Retail starts at the zone center, or clips it toward the interior ring
 // site with the largest edge clearance. A vector of three-coordinate seeds
 // then drives a scanline fill of cells whose signed zone byte is -1.
-// Residual (90.0984%): 18 seed/pop/insertion forms favor erasing the consumed
-// one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
+// Mac 0x23ef84..0x23efb8 copies back() and decrements the vector size with
+// no erase call, the inline MSL pop_back; keep that call. Under VC6 it leaves
+// the push_back internals more /Ob2 budget than retail spent (retail retains
+// 20 calls, including _Ucopy/_Ufill/copy, against 6 here), 53.60%.
+// Controls: the single-position erase(end() - 1) that pop_back wraps gives
+// 89.43% (its one fewer inline level); back(), [size() - 1] and
+// *(end() - 1) tops and size()/empty()/size() > 0 loop tests are flat.
+// Earlier matching found 18 seed/pop/insertion forms favoring erasing the
+// consumed one-element range (89.9385% versus pop_back's 53.5287%). Keeping the upper
 // and lower span seeds at function scope reaches 90.0984%; nine bounds/span
 // lifetime forms find no further gain, with no other RMG score changes.
 // Assign the initial position from the shared owned-result getter; direct
@@ -4652,7 +4659,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
     pending.push_back(position);
     while (pending.size()) {
         position = pending.back();
-        pending.erase(pending.end() - 1, pending.end());
+        pending.pop_back();
         TRmgMapItem* item = m_map.getMapItem(position);
         unsigned char upperSpan = 0;
         unsigned char lowerSpan = 0;
@@ -5594,6 +5601,9 @@ void type_random_map_generator::repairWaterZoneBorders()
 // A joint zone-count reference-accessor control changes registration, removal
 // and treasure-limit reads together. Both reproduced states give identical
 // caller bytes and equivalent EH/relocations; that lvalue boundary is neutral.
+// The neighbor step keeps the canonical position-plus-direction operator
+// recovered with the Mac-supported helpers (#111): 67.86%, against 71.57%
+// for the field-wise step.
 VA(0x005402A0, 0x32A) MAC_ADDRESS(0x24260c, 0x434) // anchor-vtable + generator/map layouts; retail-only
 void type_random_map_generator::addObject(type_object* object, TRmgMapPosition position)
 {
@@ -5625,10 +5635,7 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 int nextCost = cost;
                 if (direction & 1)
                     ++nextCost;
-                TRmgMapPosition nextPosition;
-                nextPosition.m_x = currentPosition.m_x + g_rmgDirections[direction].m_x;
-                nextPosition.m_y = currentPosition.m_y + g_rmgDirections[direction].m_y;
-                nextPosition.m_z = currentPosition.m_z;
+                TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
                 if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
                     || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
                     continue;
@@ -8344,13 +8351,10 @@ VA_COMPGEN(0x0054df40, 0x25, STD_COPY, const_int)
 // All seven header-consuming TUs were scored; only other rmg.cpp callers
 // moved. No accessor change was adopted: this family supplies no positive
 // evidence for a different helper body at the mismatching expansion.
-// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates, but
-// Windows retail materializes no Boolean here: its CFG tests the four
-// fields directly (93.30%), while every isPassableLand form tried (byte/bool
-// result, field or getLandType body, seven return shapes) scores 75.49%.
-// decorateMap, canPlaceObject and traceOutline do expand the predicate
-// (field tests cost them 9-34 points), so Windows is taken as the owner of
-// this caller's spelling; the Mac pair is unscored.
+// Mac 0x24ab68..0x24abc4 expands two byte-valued land predicates.
+// Direct field-test controls omit those Boolean results; the class-defined
+// shared predicate reproduces them. Windows currently falls 93.3047% to
+// 75.6328%; keep both helper calls while recovering the surrounding lowering.
 // Native 0x24aa6c..0x24aacc copies the full position and local point before
 // translating them; retain the shared position-plus-point operation.
 VA(0x005469B0, 0x2B4) MAC_ADDRESS(0x24a8c0, 0x44c) // anchor-callee 0x547330; thiscall, ret 0x10
@@ -8379,10 +8383,8 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             unsigned char gate = destination->hasSubterraneanGate();
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
             if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
-                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
-                && destination->m_tileData.m_roadPassable
-                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
+                && !source->hasSubterraneanGate() && source->isPassableLand() && !source->isRoadEntrance()
+                && destination->isPassableLand() && !destination->isRoadEntrance()) {
                 if (!destination->m_connection.m_present)
                     destination->m_tileData.m_subterraneanGate = 0;
                 if (source->hasBorderObject() && !destination->m_connection.m_present) {
@@ -8446,9 +8448,10 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
 // expands the constructor retained at retail +0xbd (live C2 cost 47 versus
 // direct-site budget 2404). Position-plus-guard-point reaches 96.9476% but
 // still expands it; restoring the call must precede the old stack-home work.
-// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results;
-// Windows retail tests the fields directly, as in commitTreasureGroup
-// (96.86% versus 81.08% through isPassableLand in any result/body form).
+// Mac 0x24b0c8/0x24b1cc likewise preserves two land-predicate results.
+// Restore the same shared calls and surface-map queries here; Windows
+// currently falls 96.8953% to 81.0773%. Byte/bool result types and seven
+// ordinary predicate return forms do not recover the caller lowering.
 // Native 0x24ae00..0x24ae58 translates the copied position by the guard point;
 // preserve that canonical addition as well (byte-flat with these predicates).
 VA(0x00546C70, 0x452) MAC_ADDRESS(0x24ad0c, 0x6cc) // anchor-callee 0x54721c; thiscall, ret 0x14
@@ -8501,8 +8504,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
     for (direction = firstDirection; direction < lastDirection; ++direction) {
         TPoint point = g_rmgDirections[direction] + TRmgVector(entrance.m_x, entrance.m_y);
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y);
-        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
-            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
+        if (!source->hasSubterraneanGate() || !source->isPassableLand() || source->isRoadEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
@@ -8512,8 +8514,7 @@ unsigned char type_random_map_generator::canPlaceTreasureGroup(TRmgTreasureGroup
             continue;
         TRmgMapItem* destination = m_map.getMapItem(point.m_x, point.m_y, position.m_z);
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
-            && destination->m_tileData.m_roadPassable
-            && destination->m_tile.m_landType != eTerrainRock
+            && destination->isPassableLand()
             && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
             break;
     }
@@ -10079,6 +10080,9 @@ static const int g_rmgQuestArtifactClass = 2;
 // construction/destruction and failure-path map accessor still expand
 // differently. The writable caller remains exact; all controls change only
 // this worker among other RMG functions.
+// Mac 0x2507c4/0x2507dc retains TRmgTreasureGroup::addObject and
+// markPlacementOutline calls; both stay (71.41% with the bodies pasted in,
+// 64.41% through the helpers).
 VA(0x0054B490, 0x42E) MAC_ADDRESS(0x250588, 0x360) // anchor-caller + artifact/group/generator fields; retail-only
 unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObject* object)
 {
@@ -10120,15 +10124,10 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
     type_object* questObject = seerHut;
-    group.m_objects.push_back(questObject);
-    group.m_map.addObject(*questObject, position);
+    group.addObject(questObject, position);
     group.updateBounds();
     group.traceOutline();
-    group.m_ready = 1;
-    for (unsigned int index = 0; index < group.m_outline.size(); ++index) {
-        group.m_map.getMapItem(group.m_outline[index].m_x,
-            group.m_outline[index].m_y, 0)->m_tileData.m_placementOutline = 1;
-    }
+    group.markPlacementOutline();
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
         TRmgMapPosition originalPosition = object->m_position;

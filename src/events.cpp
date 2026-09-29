@@ -770,7 +770,8 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 }
 
 // E:\gamedcs\events.cpp:498. Dreamcast proves this private helper, its
-// short `artifact` local and statement order. Mac doEventArtifact retains
+// short `artifact` local and statement order: line 501 loads the artifact
+// inside the human-player block, which makes doEventArtifact exact. Mac doEventArtifact retains
 // a call to it at 0:0xa9d28; VC6 auto-inlines it into the free arm.
 MAC_ADDRESS(0x0a9d28, 0xa4)
 void advManager::doEventFreeArtifact(hero* currentHero,
@@ -778,10 +779,11 @@ void advManager::doEventFreeArtifact(hero* currentHero,
                                             type_point point,
                                             bool humanPlayer)
 {
-    short artifact = cell->getArtifactIndex();
-    if (humanPlayer)
+    if (humanPlayer) {
+        short artifact = cell->getArtifactIndex();
         normalDialog(g_artifactEventText[artifact],
                      1, -1, -1, 8, artifact, -1, 0, -1, 0, -1, 0);
+    }
     giveArtifact(currentHero, point, humanPlayer);
 }
 
@@ -1001,9 +1003,8 @@ void advManager::doArtifactSkillRequirement(
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
-// Residual (85.81%, 2026-09-07): retail shares the two skill-success
-// dialog/GiveArtifact tails; VC6 still emits separate copies. The free helper's
-// short artifact load also stays before the human test instead of sinking.
+// Exact once doEventFreeArtifact loads its artifact inside the human-player
+// block (DC events.cpp:501); earlier the body stayed at 85.81%.
 // Restoring DoArtifactSkillRequirement's nested DoEventFreeArtifact call and
 // short refusal local fixes the dialog semantics. With the old GiveArtifact
 // reconstruction this measured 0%; recovering its proven constructor and

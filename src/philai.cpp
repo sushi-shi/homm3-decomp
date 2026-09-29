@@ -2246,7 +2246,6 @@ void philAI::doAI(int whichPlayer)
 // DC records this helper as file-static with explore_mode by reference.
 // Keep the canonical definitions in DC source order; the VA tag here lets
 // both compilers extract this same body.
-// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x005261f0, 0x5ba) MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee, dc 0x10ec58
 static void moveHero(hero* currentHero, long* dangerZones,
                      unsigned char isLastHero, unsigned char& exploreMode)
@@ -2309,10 +2308,8 @@ static void moveHero(hero* currentHero, long* dangerZones,
                         currentTown->m_garrisonHeroId);
                     if ((garrisonHero->m_movePoints > 0
                          && !garrisonHero->m_isSleeping)
-                        || (static_cast<const town*>(currentTown)
-                                    ->getArmy().getCreatureTotal() > 0
-                            && static_cast<const town*>(currentTown)
-                                       ->getArmy().getAIValue()
+                        || (currentTown->getArmy().getCreatureTotal() > 0
+                            && currentTown->getArmy().getAIValue()
                                    < currentHero->m_army.getAIValue()))
                         currentTown->swapHeroes();
                 }
@@ -3388,7 +3385,6 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     return min(value, 5000000L);
 }
 
-// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x0052b090, 0x14e) MAC_ADDRESS(0x144e60, 0x1a0)  // dc 0x112830
 long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
@@ -3405,11 +3401,11 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
-        &static_cast<const town*>(currentTown)->getArmy(), garrisonHero,
+        &currentTown->getArmy(), garrisonHero,
         hasAngelicAlliance);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army, currentHero->getMorale(0, 0, 1),
-        &static_cast<const town*>(currentTown)->getArmy(), player->m_resources,
+        &currentTown->getArmy(), player->m_resources,
         hasAngelicAlliance);
 
     if (moveCost >= 400

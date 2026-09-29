@@ -2075,7 +2075,6 @@ void townManager::setupTown(unsigned char fade)
 // draw. The visiting strip's ids start at 0x7c rather than 0x64, and
 // its empty arm draws no group at all.
 
-// Windows retail calls the retained const town::getArmy twin (0x5c1460) here.
 VA(0x005c6e10, 0x29B) MAC_ADDRESS(0x1befc0, 0x308)  // dc 0x16c0e4
 void townManager::newStrips()
 {
@@ -2093,8 +2092,7 @@ void townManager::newStrips()
         m_garrisonStrip = new strip(
             0xf1, 0x183, 0, 0xa1,
             m_townToView->m_owner, m_townToView->m_owner, 0,
-            const_cast<armyGroup*>(
-                &static_cast<const town*>(m_townToView)->getArmy()),
+            &m_townToView->getArmy(),
             0x64, 0, m_townWindow);
         if (!m_garrisonStrip)
             memError();
@@ -6863,10 +6861,9 @@ void townManager::moveHero(town* fromTown, town* toTown)
 // why every group of eight ends in the same if/else and why the else
 // arm's x is the midpoint of the pair it replaces.
 
-// Both Dungeon summoning-portal tests read m_built against g_bitNumber
-// directly; the hasBuilding(EXTRA_1_ID, false) helper leaves one nested
-// vector::insert on the single-value overload (99.74%). With the direct
-// tests every instruction matches (99.95%, ICF-folded helper names only).
+// Residual 99.7962%: one nested vector::insert remains at the single-value
+// overload where retail expands it into the counted overload. A while-form
+// final widget traversal does not recover that boundary. Keep push_back.
 VA(0x005d86f0, 0x445A) MAC_ADDRESS(0x1d6668, 0xa4e0)  // dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -6876,12 +6873,12 @@ TCastleWindow::TCastleWindow()
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType == -1)
         g_townManager->m_townToView->setSummoningGenerator();
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
-        && (g_townManager->m_townToView->m_built & g_bitNumber[EXTRA_1_ID])
+        && (g_townManager->m_townToView->hasBuilding(EXTRA_1_ID, false))
         && g_townManager->m_townToView->m_summoningType != -1) {
         m_widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
         m_use8 = 1;

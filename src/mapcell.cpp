@@ -4628,12 +4628,11 @@ CObjectType::CObjectType(TObjectType* source)
         }
     }
 
-    // The mask crosses through the editor bitset's subscript. Routing it
-    // through the project-named isRecommendedTerrain accessor costs one
-    // /Ob2 level (46.72%); test() or the const accessor keep bitset<10>
-    // calls retail expands (43.35/40.15%). The subscript reaches 61.01%.
+    // Mac 0x128d4c..0x128d6c tests and sets each bit through the same
+    // bitset<10> calls either way; keep the project terrain accessor
+    // (46.72%; the direct subscript reaches 61.04%).
     for (int terrain = 0; terrain < 10; terrain++)
-        m_mask34[terrain] = source->m_recommendedTerrainMask[terrain];
+        m_mask34[terrain] = source->isRecommendedTerrain(terrain);
 
     m_objectType = source->m_objectType;
     m_extra = source->m_subtype;
