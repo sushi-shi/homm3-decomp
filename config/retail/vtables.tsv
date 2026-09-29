@@ -428,10 +428,14 @@ rva	function_count	class
 0x241128	3	t_lod_file_adapter@ResourceManager
 # ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
 0x241134	3	t_stdio_file_adapter@ResourceManager
-0x241174	7	
+# ??_7 site paired in order: 0x55ee50 TRmgRiverPainter ctor; 0x55eda0 ~TRmgRiverPainter.
+# Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
+0x241174	7	TRmgLinePainter
 # ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
 0x241190	7	TRmgRiverPainter
-0x2411f0	7	
+# ??_7 site paired in order: 0x55f3b0 TRmgRoadPainter ctor; 0x55f460 ~TRmgRoadPainter.
+# Slot 6 is _purecall: the destructor is pure here (include/rmg.h).
+0x2411f0	7	TRmgRoadLinePainter
 # ??_7 site paired in order: 0x55f3b0 ??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
 0x24120c	7	TRmgRoadPainter
 # ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z

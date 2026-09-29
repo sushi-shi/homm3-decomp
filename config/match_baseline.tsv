@@ -3512,7 +3512,7 @@ rmg	?write@rmgTownObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0
 rmg	?write@rmgWitchHutObject@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x1340c0	tokens1:9ffb396c8413
 rmg	?write@type_object@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x133170	tokens1:f84e27622dc7
 rmg	?writeMap@type_random_map_generator@@QAEEPAVTAbstractFile@@@Z	99.4123	99.4123	99.4123	0x14abf0	tokens1:962fea18ce8c
-rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3161	96.3161	96.3646	0x149cb0	tokens1:6fbd72185624
+rmg	?writeMapHeader@type_random_map_generator@@QAEXPAVTAbstractFile@@@Z	96.3067	96.3161	96.3646	0x149cb0	tokens1:6fbd72185624
 rmg	?writeRmgObjectPrototype@@YIXPAVTAbstractFile@@PAUTObjectType@@@Z	100.0000	100.0000	100.0000	0x14ae30	tokens1:c9c09a93db3c
 rmg	__h3cg$rmg$list_dtor$TPoint	0.0000	0.0000	100.0000	0x14c6a0	-
 rmg	__h3cg$rmg$static_ctor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x15ed70	-
@@ -3521,12 +3521,12 @@ rmg	__h3cg$rmg$static_dtor$g_rmgRiverPatternTable	100.0000	100.0000	100.0000	0x1
 rmg	__h3cg$rmg$static_dtor$g_rmgRoadPatternTable	100.0000	100.0000	100.0000	0x15f310	-
 rmg_support	??0TRmgBoundaryVertex@@QAE@UTPoint@@PAUTRmgZone@@01@Z	100.0000	100.0000	100.0000	0x1fcef0	tokens1:127d76a3cf91
 rmg_support	??0TRmgLinePatternTable@@QAE@IPBH@Z	100.0000	100.0000	100.0000	0xf9be0	tokens1:9621d4a02b5a
-rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	99.8781	99.8781	100.0000	0x15ee50	tokens1:4f105fe8a501
-rmg_support	??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	99.8781	99.8781	100.0000	0x15f3b0	tokens1:b3b82679abf1
+rmg_support	??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15ee50	tokens1:4f105fe8a501
+rmg_support	??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z	100.0000	100.0000	100.0000	0x15f3b0	tokens1:b3b82679abf1
 rmg_support	??0TRmgVoronoi@@QAE@XZ	99.9833	99.9833	100.0000	0x1fd010	tokens1:956304ea2232
 rmg_support	??1TRmgLinePatternTable@@QAE@XZ	100.0000	100.0000	100.0000	0xf9ca0	tokens1:69b7f1e81907
-rmg_support	??1TRmgRiverPainter@@UAE@XZ	97.5000	97.5000	100.0000	0x15eda0	tokens1:1ec8d6964bdc
-rmg_support	??1TRmgRoadPainter@@UAE@XZ	97.5000	97.5000	100.0000	0x15f460	tokens1:08554644abfe
+rmg_support	??1TRmgRiverPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15eda0	tokens1:1ec8d6964bdc
+rmg_support	??1TRmgRoadPainter@@UAE@XZ	100.0000	100.0000	100.0000	0x15f460	tokens1:08554644abfe
 rmg_support	??1TRmgVoronoi@@QAE@XZ	100.0000	100.0000	100.0000	0x1fd330	tokens1:2f208ced9a18
 rmg_support	??_GTRmgRiverPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15eed0	-
 rmg_support	??_GTRmgRoadPainter@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15f430	-
@@ -4033,7 +4033,7 @@ singleselectionwindow	?onGameHeaderInfoInitMsg@TSingleSelectionWindow@@QAEEPAVCN
 singleselectionwindow	?onGameHeaderInfoInitMsgEx@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	99.9029	99.9029	100.0000	0x18a780	tokens1:b9f9c72a63cb
 singleselectionwindow	?onGameHeaderInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.9805	99.9805	100.0000	0x18aa40	tokens1:e24d4233f25b
 singleselectionwindow	?onGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.7312	99.7312	100.0000	0x189b20	tokens1:03b2963ce3e3
-singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
+singleselectionwindow	?onKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	99.8868	100.0000	100.0000	0x17cdc0	tokens1:19f51582875a
 singleselectionwindow	?onKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0	tokens1:c1f6f3aeee6f
 singleselectionwindow	?onKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0	tokens1:af1981b52201
 singleselectionwindow	?onMapFileNameMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	85.8472	85.8472	93.0332	0x189710	tokens1:ab487a2ce852
