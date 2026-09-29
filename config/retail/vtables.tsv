@@ -17,20 +17,36 @@
 # slot is a census function start. font (0x23e5f4) and TPalette16 (0x240368)
 # have three slots; the former two-slot rows at 0x23e5f8 and 0x24036c were
 # their tails and are replaced.
+# 2026-09-29 vtable review: 213 census-only game rows are admitted by
+# pairing, not by name guesses. A row carrying a "??_7 site paired in order"
+# note is named by claimed source functions (constructors, destructors and
+# functions that construct the object inline) whose compiled ??_7
+# relocations, taken in order, equal the census vtable addresses their
+# retail bodies hold; every such vote is unanimous and names one row. A row
+# carrying a "retail slots" note has no such function yet: its candidate
+# vtable is the only one whose claimed slot functions sit at those retail
+# slots with no slot naming another address. Each admitted row compares
+# game-data-exact against the vtable its owning unit emits.
 rva	function_count	class
-0x23a578	27	
+# ??_7 site paired in order: 0x401510 ??0TAdventureMapWindow@@QAE@XZ
+0x23a578	27	CAdventurMapChatEdit
 # retail 0x401557: ??0TAdventureMapWindow@@QAE@XZ stores this vptr
 0x23a5e4	9	TAdventureMapWindow
 0x23a610	15	TAdventureOptionsWindow
 # retail 0x406e6f: ??0advManager@@QAE@XZ stores this vptr
 0x23a678	3	advManager
-0x23a684	5	
+# ??_7 site paired in order: 0x406fd0 ?open@advManager@@UAEHH@Z
+0x23a684	5	CAdvMgrNetMsgHandler
 # retail 0x41b07a: ??0CAdvPopup@@QAE@HHHHI@Z stores this vptr
 0x23a6a8	15	CAdvPopup
-0x23aba8	3	
-0x23abb4	3	
-0x23b670	3	
-0x23b67c	3	
+# ??_7 site paired in order: 0x4d6050 ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z; 0x41b920 ??0TAllocationFailure@@QAE@ABV0@@Z (+2 more)
+0x23aba8	3	TAllocationFailure
+# ??_7 site paired in order: 0x49a0c0 ??0TRuntimeError@@QAE@PBD@Z; 0x41b7b0 ??0TRuntimeError@@QAE@ABV0@@Z
+0x23abb4	3	TRuntimeError
+# ??_7 site paired in order: 0x428dd0 ?endTurn@type_AI_player@@QAEXXZ; 0x4297c0 ?startTurn@type_AI_player@@QAEXXZ
+0x23b670	3	type_town_threat_checker
+# ??_7 site paired in order: 0x428dd0 ?endTurn@type_AI_player@@QAEXXZ; 0x4297c0 ?startTurn@type_AI_player@@QAEXXZ
+0x23b67c	3	type_garrison_purchaser
 # retail 0x4324db: ??_Gtype_artifact_effect@@UAEPAXI@Z stores this vptr
 0x23b6b0	2	type_artifact_effect
 # retail slot 1 names type_scouting_artifact::getValue; src/ai_player.cpp, declaration in include/ai_player.h
@@ -82,7 +98,8 @@ rva	function_count	class
 # retail slot 1 names type_elixir_of_life_artifact::getValue; src/ai_player.cpp, declaration in include/ai_player.h
 0x23b778	2	type_elixir_of_life_artifact
 0x23b7d8	1	type_AI_spellcaster
-0x23b8f8	15	
+# ??_7 site paired in order: 0x449790 ??0TSplitWindow@@QAE@HHW4TCreatureType@@@Z; 0x449e20 ??1TSplitWindow@@UAE@XZ
+0x23b8f8	15	TSplitWindow
 0x23b9bc	3	baseManager
 # retail 0x44dfbe: ??0Bitmap16Bit@@QAE@HH@Z stores this vptr
 0x23b9c8	3	Bitmap16Bit
@@ -95,92 +112,143 @@ rva	function_count	class
 0x23ba5c	14	coloredBorderFrame
 # retail 0x450315: ??0bitmapBorder@@QAE@HHHHHPBDH@Z stores this vptr
 0x23ba94	14	bitmapBorder
-0x23bacc	14	
+# ??_7 site paired in order: 0x450690 ??0bitmapBorder16@@QAE@HHHHHPBDH@Z; 0x450750 ??1bitmapBorder16@@UAE@XZ
+0x23bacc	14	bitmapBorder16
 # retail 0x450d70: ??1type_bottom_view_window@@UAE@XZ stores this vptr
 0x23bb04	2	type_bottom_view_window
-0x23bb0c	2	
-0x23bb1c	2	
-0x23bb24	2	
-0x23bb2c	2	
-0x23bb34	2	
-0x23bb3c	2	
-0x23bb44	2	
+# ??_7 site paired in order: 0x450dd0 ??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z
+0x23bb0c	2	TBottomViewNewTurn
+# retail slots  are the candidate TBottomViewResourceMessage slot functions; no other census row pairs
+0x23bb1c	2	TBottomViewResourceMessage
+# ??_7 site paired in order: 0x451820 ??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+0x23bb24	2	TBottomViewMessage
+# ??_7 site paired in order: 0x451ab0 ??0TBottomViewHero@@QAE@PAVheroWindow@@@Z
+0x23bb2c	2	TBottomViewHero
+# retail slots  are the candidate TBottomViewTown slot functions; no other census row pairs
+0x23bb34	2	TBottomViewTown
+# ??_7 site paired in order: 0x452b80 ??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z
+0x23bb3c	2	TBottomViewKingdom
+# ??_7 site paired in order: 0x453250 ??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z
+0x23bb44	2	TBottomViewEnemyTurn
 0x23bb54	13	button
 0x23bb88	13	textButton
 0x23bbbc	13	type_func_button
-0x23bc08	9	
+# ??_7 site paired in order: 0x456ec0 ??0TCampaignSetWindow@@QAE@XZ; 0x457230 ??1TCampaignSetWindow@@UAE@XZ
+0x23bc08	9	TCampaignSetWindow
 # retail 0x459112: ??0TCampaignBrief@@QAE@_N0@Z stores this vptr
 0x23bc2c	9	TCampaignBrief
-0x23bca4	9	
+# ??_7 site paired in order: 0x45ea40 ??0TCampaignWindow@@QAE@EH@Z; 0x45f210 ??1TCampaignWindow@@UAE@XZ
+0x23bca4	9	TCampaignWindow
 # retail 0x46283e: ??0combatManager@@QAE@XZ stores this vptr
 0x23d3e8	3	combatManager
-0x23d410	4	
-0x23d420	4	
-0x23d430	4	
+# ??_7 site paired in order: 0x46b610 ??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z; 0x46bbb0 ??1type_combat_sub_window@@UAE@XZ (+2 more)
+0x23d410	4	type_combat_sub_window
+# ??_7 site paired in order: 0x46bc30 ??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z
+0x23d420	4	TCombatControlSubWindow
+# ??_7 site paired in order: 0x46c050 ??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z
+0x23d430	4	TCombatPlacementSubWindow
 0x23d440	1	TCombatHeroSubWindow
 0x23d444	1	TCombatCreatureSubWindow
-0x23d448	9	
+# ??_7 site paired in order: 0x46e3b0 ??0TCombatOptionsWindow@@QAE@XZ; 0x46f700 ??1TCombatOptionsWindow@@UAE@XZ
+0x23d448	9	TCombatOptionsWindow
 0x23d46c	9	TCombatResultsWindow
-0x23d4bc	27	
-0x23d528	9	
+# ??_7 site paired in order: 0x4721d0 ??0TCombatWindow@@QAE@E@Z
+0x23d4bc	27	CCombatChatEdit
+# ??_7 site paired in order: 0x4721d0 ??0TCombatWindow@@QAE@E@Z; 0x472900 ??1TCombatWindow@@UAE@XZ
+0x23d528	9	TCombatWindow
 0x23d6b0	3	CSprite
 # retail 0x47c30f: ??0CSpriteFrame@@QAE@PBDHHPAEHW4TEncodingMethod@@@Z stores this vptr
 0x23d6bc	3	CSpriteFrame
-0x23d6fc	14	
-0x23d938	8	
-0x23d958	13	
-0x23d98c	13	
-0x23d9c0	8	
-0x23d9e0	8	
-0x23da00	8	
-0x23da20	8	
-0x23da40	8	
-0x23da60	8	
-0x23da80	8	
-0x23daa0	8	
+# ??_7 site paired in order: 0x4827b0 ??0TCustomCampaignWindow@@QAE@XZ; 0x482f10 ??1TCustomCampaignWindow@@UAE@XZ
+0x23d6fc	14	TCustomCampaignWindow
+# ??_7 site paired in order: 0x484020 ??_GTCampaignBonus@@UAEPAXI@Z; 0x485370 ??1TCampaignBonus@@UAE@XZ
+0x23d938	8	TCampaignBonus
+# ??_7 site paired in order: 0x484f40 ??1TCampaignStartOption@@UAE@XZ; 0x484f50 ??_GTCampaignStartOption@@UAEPAXI@Z (+3 more)
+0x23d958	13	TCampaignStartOption
+# ??_7 site paired in order: 0x4850a0 ??1TCampaignStartBonusOption@@UAE@XZ
+0x23d98c	13	TCampaignStartBonusOption
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23d9c0	8	TCampaignResourceBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23d9e0	8	TCampaignSecondarySkillBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23da00	8	TCampaignPrimarySkillBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23da20	8	TCampaignSpellScrollBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23da40	8	TCampaignArtifactBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23da60	8	TCampaignBuildingBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23da80	8	TCampaignCreatureBonus
+# ??_7 site paired in order: 0x485190 ?read@TCampaignStartBonusOption@@UAEXPAVTAbstractFile@@@Z
+0x23daa0	8	TCampaignSpellBonus
 # retail 0x487ddb: ??_GTAbstractFile@@UAEPAXI@Z stores this vptr
 0x23dac0	3	TAbstractFile
 # retail slots 1/2 -> 0x483f10 read / 0x483f30 write; src/customcampaign.cpp TStreamBufFile
 0x23dacc	3	TStreamBufFile
-0x23dad8	13	
-0x23db0c	13	
+# retail slots 1:0x485a30, 2:0x4854a0, 3:0x4854c0, 5:0x4859b0, 6:0x485530, 7:0x485090, 8:0x485790, 9:0x4857b0, 12:0x4859e0 are the candidate TCampaignStartCrossoverOption slot functions; no other census row pairs
+0x23dad8	13	TCampaignStartCrossoverOption
+# ??_7 site paired in order: 0x4883d0 ??0TCampaignStartHeroOption@@QAE@XZ
+0x23db0c	13	TCampaignStartHeroOption
 # retail 0x48fe0f: ??0TDialogBox@@QAE@HHHHI@Z stores this vptr
 0x23db40	10	TDialogBox
 # retail 0x4907fd: ??0CTextDialog@@QAE@I@Z stores this vptr
 0x23db68	13	CTextDialog
-0x23db9c	15	
-0x23dbd8	15	
+# ??_7 site paired in order: 0x4916f0 ??0TDimensionDoorWindow@@QAE@XZ; 0x491890 ??1TDimensionDoorWindow@@UAE@XZ
+0x23db9c	15	TDimensionDoorWindow
+# ??_7 site paired in order: 0x491af0 ??0TSkuttleBoatWindow@@QAE@XZ; 0x491c90 ??1TSkuttleBoatWindow@@UAE@XZ
+0x23dbd8	15	TSkuttleBoatWindow
 0x23dc28	62	CDPlay
 0x23dd20	73	CDPlayLobby
 # retail 0x499f00 self-vptr store; src/dxplay.cpp CAutoArray<CDPlayAddressElement> destructor and seven-slot table
 0x23de44	7	?$CAutoArray@VCDPlayAddressElement@@
-0x23de74	6	
-0x23de8c	6	
-0x23dea4	6	
-0x23debc	6	
-0x23ded4	6	
-0x23deec	6	
-0x23df04	6	
-0x23df1c	6	
-0x23df34	6	
-0x23df4c	6	
-0x23df64	6	
-0x23df7c	6	
-0x23e508	2	
+# ??_7 site paired in order: 0x49a5b0 ??_Gtype_event_record@@UAEPAXI@Z; 0x49a650 ?create@type_record_move_hero@@SIPAVtype_event_record@@XZ (+23 more)
+0x23de74	6	type_event_record
+# ??_7 site paired in order: 0x49a650 ?create@type_record_move_hero@@SIPAVtype_event_record@@XZ; 0x49cd50 ?recordMove@game@@QAEXPAVhero@@HUtype_point@@@Z (+1 more)
+0x23de8c	6	type_record_move_hero
+# ??_7 site paired in order: 0x49a980 ?create@type_record_teleport@@SIPAVtype_event_record@@XZ; 0x49cf50 ?recordTeleport@game@@QAEXPAVhero@@Utype_point@@@Z
+0x23dea4	6	type_record_teleport
+# ??_7 site paired in order: 0x49aa40 ?create@type_record_claim_mine@@SIPAVtype_event_record@@XZ; 0x49bf90 ?recordClaimMine@game@@QAEXJJ@Z
+0x23debc	6	type_record_claim_mine
+# ??_7 site paired in order: 0x49abf0 ?create@type_record_claim_town@@SIPAVtype_event_record@@XZ; 0x49c190 ?recordClaimTown@game@@QAEXJJ@Z
+0x23ded4	6	type_record_claim_town
+# ??_7 site paired in order: 0x49acc0 ?create@type_record_hide_boat@@SIPAVtype_event_record@@XZ; 0x49c560 ?recordHideBoat@game@@QAEXPAVboat@@EH@Z (+1 more)
+0x23deec	6	type_record_hide_boat
+# ??_7 site paired in order: 0x49af00 ?create@type_record_show_boat@@SIPAVtype_event_record@@XZ; 0x49c900 ?recordShowBoat@game@@QAEXPAVboat@@Utype_point@@@Z
+0x23df04	6	type_record_show_boat
+# ??_7 site paired in order: 0x49b150 ?create@type_record_erase@@SIPAVtype_event_record@@XZ; 0x49c390 ?recordEraseObject@game@@QAEXPAVNewmapCell@@Utype_point@@@Z
+0x23df1c	6	type_record_erase
+# ??_7 site paired in order: 0x49b400 ?create@type_record_hide_hero@@SIPAVtype_event_record@@XZ; 0x49c720 ?recordHideHero@game@@QAEXPAVhero@@DE@Z (+1 more)
+0x23df34	6	type_record_hide_hero
+# ??_7 site paired in order: 0x49b6a0 ?create@type_record_show_hero@@SIPAVtype_event_record@@XZ; 0x49cb20 ?recordShowHero@game@@QAEXPAVhero@@CUtype_point@@E@Z
+0x23df4c	6	type_record_show_hero
+# ??_7 site paired in order: 0x49ba00 ?create@type_record_player_death@@SIPAVtype_event_record@@XZ
+0x23df64	6	type_record_player_death
+# ??_7 site paired in order: 0x49bc30 ?create@type_record_shroud@@SIPAVtype_event_record@@XZ; 0x49d160 ?setVisibility@game@@QAEXHHHHHE@Z (+1 more)
+0x23df7c	6	type_record_shroud
+# ??_7 site paired in order: 0x4acd70 ?doNetCombat@advManager@@QAEHPAVCNetMsg@@@Z; 0x4aeb50 ?sendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z (+1 more)
+0x23e508	2	CCombatInitMsg
 0x23e5f4	3	font
 0x23e60c	3	
 0x23e618	7	
-0x23e634	3	
+# ??_7 site paired in order: 0x4b6c60 ??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z
+0x23e634	3	t_create_failure@t_enclosure@force_feedback
 0x23e640	7	
-0x23e6d8	9	
-0x23e704	3	
+# ??_7 site paired in order: 0x4d54c0 ??0TGameTypeWindow@@QAE@E@Z; 0x4d5890 ??1TGameTypeWindow@@UAE@XZ
+0x23e6d8	9	TGameTypeWindow
+# ??_7 site paired in order: 0x4d6050 ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z; 0x4d6690 ??0TDataError@TGzInflateBuf@@QAE@ABV01@@Z (+1 more)
+0x23e704	3	TDataError@TGzInflateBuf
 # retail 0x4d60e8: ??0TGzInflateBuf@@QAE@PAV?$basic_streambuf@DU?$char_traits@D@std@@@std@@@Z stores this vptr
 0x23e710	13	TGzInflateBuf
-0x23e744	2	
+# ??_7 site paired in order: 0x4d6c50 ??0TGzFile@@QAE@PBD0@Z; 0x4d6d10 ??0TOpenFailure@TGzFile@@QAE@ABV01@@Z
+0x23e744	2	TOpenFailure@TGzFile
 # retail 0x4d6c8e: ??0TGzFile@@QAE@PBD0@Z stores this vptr
 0x23e74c	3	TGzFile
-0x23eae8	15	
-0x23eb68	9	
+# ??_7 site paired in order: 0x4de710 ??0THeroScreenWindow@@QAE@XZ; 0x4e1550 ??1THeroScreenWindow@@UAE@XZ
+0x23eae8	15	THeroScreenWindow
+# ??_7 site paired in order: 0x4e75f0 ??0THillFortWindow@@QAE@XZ; 0x4e7e10 ??1THillFortWindow@@UAE@XZ
+0x23eb68	9	THillFortWindow
 0x23eb8c	3	highScoreManager
 0x23eb98	9	THighScoreWindow
 0x23ebbc	14	CHSInputDlg
@@ -188,195 +256,350 @@ rva	function_count	class
 0x23ec48	14	iconWidget
 # retail 0x4ec494: ??0inputManager@@QAE@XZ stores this vptr
 0x23fe10	3	inputManager
-0x23fe1c	14
+# ??_7 site paired in order: 0x4f6990 ?doNormalDialog@@YIXUTNormalDialogInfo@@@Z
+0x23fe1c	14	type_normal_dialog_frame
 0x23fe54	3	soundManager
-0x23fe60	15
-0x23ff50	9	
+# ??_7 site paired in order: 0x4f8880 ??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z; 0x4f9730 ??1TLevelUpWindow@@UAE@XZ
+0x23fe60	15	TLevelUpWindow
+# ??_7 site paired in order: 0x4fb2a0 ??0TMainMenu@@QAE@XZ; 0x4fb660 ??1TMainMenu@@UAE@XZ
+0x23ff50	9	TMainMenu
 0x240028	4	mouseManager
-0x240038	7
-0x240054	19	
-0x2400a0	14	
-0x2400d8	7	
-0x2400f4	15	
-0x240130	21	
-0x240184	21	
-0x2401d8	14	
-0x240210	21	
-0x240264	3	
-0x240270	2	
-0x2402c4	2	
+# ??_7 site paired in order: 0x50e050 ??0TMultiPlayerWindow@@QAE@XZ
+0x240038	7	CHeroSessions
+# ??_7 site paired in order: 0x50e050 ??0TMultiPlayerWindow@@QAE@XZ
+0x240054	19	CMultiPlayerWindowEdit
+# ??_7 site paired in order: 0x50e050 ??0TMultiPlayerWindow@@QAE@XZ; 0x50ee40 ??1TMultiPlayerWindow@@UAE@XZ
+0x2400a0	14	TMultiPlayerWindow
+# ??_7 site paired in order: 0x558350 ??1CHeroSessions@@UAE@XZ; 0x512670 ??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z (+1 more)
+0x2400d8	7	?$CAutoArray@VCDPlaySession@@
+# ??_7 site paired in order: 0x50fda0 ?onHost@TMultiPlayerWindow@@QAEEXZ; 0x510060 ??0CMPInputDlg@@QAE@HH@Z (+3 more)
+0x2400f4	15	CMPInputDlg
+# ??_7 site paired in order: 0x510060 ??0CMPInputDlg@@QAE@HH@Z; 0x511cd0 ??0CMPInputEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z
+0x240130	21	CMPInputEdit
+# ??_7 site paired in order: 0x510760 ??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z
+0x240184	21	CMPEdit
+# ??_7 site paired in order: 0x511d40 ?onHotSeat@TMultiPlayerWindow@@QAEEXZ; 0x511e20 ??0CHotSeatDlg@@QAE@XZ (+1 more)
+0x2401d8	14	CHotSeatDlg
+# ??_7 site paired in order: 0x511e20 ??0CHotSeatDlg@@QAE@XZ
+0x240210	21	CHotSeatEdit
+# ??_7 site paired in order: 0x512b00 ??1t_memory_file@@UAE@XZ; 0x512c80 ?remoteFn00512C80@t_complex_net_message@@QAEEK_N0@Z (+2 more)
+0x240264	3	t_memory_file
+# ??_7 site paired in order: 0x512c20 ??0t_complex_net_message@@QAE@XZ; 0x512c50 ??0t_complex_net_message@@QAE@W4eRS_Messages@@@Z
+0x240270	2	t_complex_net_message
+# ??_7 site paired in order: 0x5142a0 ??0TNativeTerrainObjectFilter@@QAE@H@Z
+0x2402c4	2	TNativeTerrainObjectFilter
 # TObjectTypeFilter::~TObjectTypeFilter stores this vptr (0x514530).
 # Slots: its deleting destructor 0x516560 and _purecall 0x617d9a.
 0x2402cc	2	TObjectTypeFilter
-0x2402d4	2	
-0x2402dc	2	
-0x2402f4	3	
-0x240320	15	
+# ??_7 site paired in order: 0x5144b0 ??0TAnyTerrainObjectFilter@@QAE@XZ
+0x2402d4	2	TAnyTerrainObjectFilter
+# ??_7 site paired in order: 0x514510 ??0TSlotCategoryObjectFilter@@QAE@H@Z
+0x2402dc	2	TSlotCategoryObjectFilter
+# ??_7 site paired in order: 0x516f30 ??0invalid_argument@std@@QAE@ABV01@@Z; 0x516e40 ?_Xinv@?$bitset@$0DA@@std@@ABEXXZ (+1 more)
+0x2402f4	3	invalid_argument@std
+# ??_7 site paired in order: 0x51fa40 ??0TOverviewWindow@@QAE@XZ; 0x520d90 ??1TOverviewWindow@@UAE@XZ
+0x240320	15	TOverviewWindow
 0x240368	3	TPalette16
-0x240374	3	
-0x240600	15	
-0x240648	15	
-0x2406a8	9	
-0x2406cc	10	
-0x2406f4	9	
-0x2409c0	3	
-0x2409cc	7	
-0x2409e8	7	
-0x240a04	7	
-0x240a20	7	
-0x240a3c	7	
-0x240a58	7	
-0x240a74	4	
-0x240a84	4	
-0x240a94	4	
-0x240aa4	4	
-0x240ab4	4	
-0x240ac4	4	
-0x240ad4	4	
-0x240ae4	4	
-0x240af4	4	
-0x240b04	4	
-0x240b14	4	
-0x240b24	4	
-0x240b34	4	
-0x240b44	4	
-0x240b54	4	
+# ??_7 site paired in order: 0x522e30 ??0TPalette24@@QAE@XZ; 0x522e80 ??0TPalette24@@QAE@PBE@Z (+3 more)
+0x240374	3	TPalette24
+# ??_7 site paired in order: 0x52c1e0 ??0TPuzzleWindow@@QAE@H@Z; 0x52c5a0 ??1TPuzzleWindow@@UAE@XZ
+0x240600	15	TPuzzleWindow
+# ??_7 site paired in order: 0x52d8c0 ??0TQuestLogWindow@@QAE@XZ; 0x52e1e0 ??1TQuestLogWindow@@UAE@XZ
+0x240648	15	TQuestLogWindow
+# ??_7 site paired in order: 0x52f3d0 ??1TQuickHeroWindow@@UAE@XZ
+0x2406a8	9	TQuickHeroWindow
+# ??_7 site paired in order: 0x52f8c0 ??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z; 0x52fd20 ??1TQuickCreatureWindow@@UAE@XZ
+0x2406cc	10	TQuickCreatureWindow
+# ??_7 site paired in order: 0x530120 ??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z; 0x5307d0 ??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z (+1 more)
+0x2406f4	9	TQuickTownWindow
+# ??_7 site paired in order: 0x530e20 ??0TProgressSink@@QAE@H@Z; 0x530e40 ??_GTProgressSink@@UAEPAXI@Z (+1 more)
+0x2409c0	3	TProgressSink
+# ??_7 site paired in order: 0x530fb0 ??0type_random_map@@QAE@HHH@Z; 0x5310b0 ??1type_random_map@@UAE@XZ (+8 more)
+0x2409cc	7	type_random_map
+# ??_7 site paired in order: 0x5310b0 ??1type_random_map@@UAE@XZ; 0x5361b0 ??_GTRmgMapInterface@@UAEPAXI@Z (+7 more)
+0x2409e8	7	TRmgMapInterface
+# retail slots 1:0x532360, 2:0x5323d0, 4:0x532410, 5:0x532480, 6:0x5324b0 are the candidate TRmgRoadMapAdapter slot functions; no other census row pairs
+0x240a04	7	TRmgRoadMapAdapter
+# ??_7 site paired in order: 0x532350 ??1TRmgRoadMapAdapterInterface@@UAE@XZ; 0x537940 ??_GTRmgRoadMapAdapterInterface@@UAEPAXI@Z
+0x240a20	7	TRmgRoadMapAdapterInterface
+# ??_7 site paired in order: 0x548500 ?createRiverToObject@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z; 0x548df0 ?createRiver@type_random_map_generator@@QAEXUTRmgMapPosition@@@Z
+0x240a3c	7	TRmgMapAdapter
+# ??_7 site paired in order: 0x532510 ??1TRmgMapAdapterInterface@@UAE@XZ; 0x537910 ??_GTRmgMapAdapterInterface@@UAEPAXI@Z (+2 more)
+0x240a58	7	TRmgMapAdapterInterface
+# ??_7 site paired in order: 0x5330e0 ??0type_object@@QAE@PAUTRmgObjectPropertiesRef@@@Z; 0x533120 ??_Gtype_object@@UAEPAXI@Z (+30 more)
+0x240a74	4	type_object
+# ??_7 site paired in order: 0x540b20 ?createGuard@type_random_map_generator@@QAEPAVtype_object@@HPAUTRmgZone@@@Z
+0x240a84	4	rmgMonsterObject
+# ??_7 site paired in order: 0x544d90 ?tryPlaceAdditionalTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHEH@Z; 0x545250 ?tryPlacePrimaryTown@type_random_map_generator@@QAEEPAUTRmgZone@@HHE@Z
+0x240a94	4	rmgTownObject
+# ??_7 site paired in order: 0x534790 ?generate@type_dwelling_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x541ad0 ?createShipyardConnection@type_random_map_generator@@QAEEPAUTRmgZone@@PAUTRmgZoneConnection@@@Z (+1 more)
+0x240aa4	4	rmgOwnableObject
+# ??_7 site paired in order: 0x5341f0 ?generate@type_artifact_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240ab4	4	rmgArtifactObject
+# ??_7 site paired in order: 0x534870 ?generate@type_resource_lump_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x545990 ?tryPlaceMine@type_random_map_generator@@QAEEPAUTRmgZone@@HEH@Z
+0x240ac4	4	rmgResourceObject
+# ??_7 site paired in order: 0x534380 ?generate@type_black_box_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x534410 ?generate@type_black_box_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+2 more)
+0x240ad4	4	rmgBlackBoxObject
+# ??_7 site paired in order: 0x534fd0 ?generate@type_key_tent_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240ae4	4	rmgKeyTentObject
+# ??_7 site paired in order: 0x5339f0 ??1rmgQuestArtifactObject@@UAE@XZ; 0x534b90 ?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+2 more)
+0x240af4	4	rmgQuestArtifactObject
+# ??_7 site paired in order: 0x534b90 ?generate@type_quest_creature_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z; 0x534cc0 ?generate@type_quest_experience_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z (+1 more)
+0x240b04	4	rmgSeerHutObject
+# ??_7 site paired in order: 0x5348d0 ?generate@type_prison_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240b14	4	rmgHeroObject
+# ??_7 site paired in order: 0x534970 ?generate@type_scholar_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240b24	4	rmgScholarObject
+# ??_7 site paired in order: 0x534a00 ?generate@type_shrine_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240b34	4	rmgShrineObject
+# ??_7 site paired in order: 0x534ed0 ?generate@type_spell_scroll_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240b44	4	rmgSpellScrollObject
+# ??_7 site paired in order: 0x534a90 ?generate@type_witch_hut_def@@UAEPAVtype_object@@PAUTRmgObjectPropertiesRef@@PAVtype_random_map_generator@@PAUTRmgZone@@@Z
+0x240b54	4	rmgWitchHutObject
 0x240b64	3	type_treasure_def
-0x240b70	3	
+# retail slots 0:0x5341f0, 1:0x534190 are the candidate type_artifact_def slot functions; no other census row pairs
+0x240b70	3	type_artifact_def
 0x240b7c	3	type_black_box_creature_def
-0x240b88	3	
-0x240b94	3	
-0x240ba0	3	
-0x240bac	3	
-0x240bb8	3	
-0x240bc4	3	
-0x240bd0	3	
-0x240bdc	3	
+# retail slots 0:0x534410, 1:0x534190 are the candidate type_black_box_experience_def slot functions; no other census row pairs
+0x240b88	3	type_black_box_experience_def
+# retail slots 0:0x534490, 1:0x534190 are the candidate type_black_box_gold_def slot functions; no other census row pairs
+0x240b94	3	type_black_box_gold_def
+# retail slots 0:0x534520, 1:0x534190 are the candidate type_black_box_spells_def slot functions; no other census row pairs
+0x240ba0	3	type_black_box_spells_def
+# retail slots 0:0x534790, 1:0x534190 are the candidate type_dwelling_def slot functions; no other census row pairs
+0x240bac	3	type_dwelling_def
+# retail slots 0:0x534790, 1:0x5347f0 are the candidate type_map_dwelling_def slot functions; no other census row pairs
+0x240bb8	3	type_map_dwelling_def
+# retail slots 0:0x534870, 1:0x534190 are the candidate type_resource_lump_def slot functions; no other census row pairs
+0x240bc4	3	type_resource_lump_def
+# retail slots 0:0x5348d0, 1:0x534190 are the candidate type_prison_def slot functions; no other census row pairs
+0x240bd0	3	type_prison_def
+# retail slots 0:0x534970, 1:0x534190 are the candidate type_scholar_def slot functions; no other census row pairs
+0x240bdc	3	type_scholar_def
 0x240be8	3	type_shrine_def
 0x240bf4	3	type_witch_hut_def
-0x240c00	3	
-0x240c0c	3	
-0x240c18	3	
+# retail slots 0:0x534b90, 1:0x534af0 are the candidate type_quest_creature_def slot functions; no other census row pairs
+0x240c00	3	type_quest_creature_def
+# retail slots 0:0x534cc0, 1:0x534c80 are the candidate type_quest_experience_def slot functions; no other census row pairs
+0x240c0c	3	type_quest_experience_def
+# retail slots 0:0x534db0 are the candidate type_quest_gold_def slot functions; no other census row pairs
+0x240c18	3	type_quest_gold_def
 0x240c24	3	type_spell_scroll_def
-0x240c30	3	
-0x240c3c	2	
-0x240c44	2	
-0x240c4c	9	
-0x240c70	3	
-0x240c7c	9	
+# retail slots 0:0x534fd0, 1:0x534fa0 are the candidate type_key_tent_def slot functions; no other census row pairs
+0x240c30	3	type_key_tent_def
+# ??_7 site paired in order: 0x536070 ??0TRmgGeneratorBase@@QAE@HHHPAVTProgressSink@@HH@Z; 0x5363b0 ??1TRmgGeneratorBase@@UAE@XZ
+0x240c3c	2	TRmgGeneratorBase
+# ??_7 site paired in order: 0x537b10 ??0type_random_map_generator@@QAE@HHHHHHHHHPAVTProgressSink@@H@Z; 0x537df0 ??1type_random_map_generator@@UAE@XZ
+0x240c44	2	type_random_map_generator
+# ??_7 site paired in order: 0x54e850 ??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z; 0x54fb20 ??1TRecruitWindow@@UAE@XZ
+0x240c4c	9	TRecruitWindow
+# ??_7 site paired in order: 0x551350 ??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z; 0x551460 ??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z (+1 more)
+0x240c70	3	recruitUnit
+# ??_7 site paired in order: 0x5516e0 ??1TRecruitQuickWindow@@UAE@XZ; 0x551780 ?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z
+0x240c7c	9	TRecruitQuickWindow
 0x240d04	73	CDPlayHeroes
-0x240e30	25	
-0x240e94	14	
-0x240ecc	14	
-0x240f04	4	
-0x240f14	4	
+# ??_7 site paired in order: 0x5541a0 ??0CChatEdit@@QAE@HHHHHPAD0W4TColor@font@@W4EJustify@2@0HHHHHH@Z
+0x240e30	25	CChatEdit
+# ??_7 site paired in order: 0x554a50 ??0CAnimatedDlg@@QAE@XZ; 0x554ab0 ??1CAnimatedDlg@@UAE@XZ (+4 more)
+0x240e94	14	CAnimatedDlg
+# ??_7 site paired in order: 0x554f10 ?waitForReadyToPlayMsg@@YIXXZ
+0x240ecc	14	CWaitForReadyPlayersDlg
+# ??_7 site paired in order: 0x5554e0 ??1CWaitForReadyPlayersDlg@@UAE@XZ; 0x554f10 ?waitForReadyToPlayMsg@@YIXXZ (+4 more)
+0x240f04	4	CNetMsgHandlerPause
+# ??_7 site paired in order: 0x5554e0 ??1CWaitForReadyPlayersDlg@@UAE@XZ; 0x5577f0 ??0CNetMsgHandler@@QAE@XZ (+3 more)
+0x240f14	4	CNetMsgHandler
 # retail 0x5583b0 / 0x558490 self-vptr stores; src/remote.cpp CAutoArray<CDPlayPlayer> proof (old external CNetMsgHandler label was wrong)
 0x240f24	7	?$CAutoArray@VCDPlayPlayer@@
-0x240f40	14	
-0x240f78	14	
-0x240fb0	3	
-0x240fbc	13	
+# ??_7 site paired in order: 0x556ab0 ??0CLevelPickWaitDlg@@QAE@XZ
+0x240f40	14	CLevelPickWaitDlg
+# ??_7 site paired in order: 0x556f20 ??0CWaitForRemoteBattleDlg@@QAE@XZ
+0x240f78	14	CWaitForRemoteBattleDlg
+# ??_7 site paired in order: 0x5572e0 ??0CSaveScreen@@QAE@HH@Z; 0x557600 ?saveScreen@CGameTransferSmack@@QAEXXZ
+0x240fb0	3	CSaveScreen
+# ??_7 site paired in order: 0x557720 ??0CGameTransferDlg@@QAE@E@Z
+0x240fbc	13	CGameTransferDlg
 0x240ffc	3	resource
 0x241024	1	TResourceDisplay
 # retail 0x55d50d / 0x55d559: ??0/??1basic_ostringstream<char> (src/resourcemanager.cpp) store this basic_ios-subobject vptr; the candidate COMDAT has one slot, retail's names ??_G at 0x55dae0
 0x2410e8	1	?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std
-0x2410ec	13	
-0x241128	3	
-0x241134	3	
+# ??_7 site paired in order: 0x55db40 ??1?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@UAE@XZ; 0x55e440 ??0?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAE@H@Z
+0x2410ec	13	?$basic_stringbuf@DU?$char_traits@D@std@@V?$allocator@D@2@@std
+# ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
+0x241128	3	t_lod_file_adapter@ResourceManager
+# ??_7 site paired in order: 0x55b8d0 ?loadFont@ResourceManager@@YIPAVfont@@PBD@Z; 0x55bb90 ?loadText@ResourceManager@@YIPAVTTextResource@@PBD@Z (+1 more)
+0x241134	3	t_stdio_file_adapter@ResourceManager
 0x241174	7	
-0x241190	7	
+# ??_7 site paired in order: 0x55ee50 ??0TRmgRiverPainter@@QAE@PAVTRmgMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
+0x241190	7	TRmgRiverPainter
 0x2411f0	7	
-0x24120c	7	
-0x241540	14	
-0x241578	14	
-0x2415b0	14	
-0x2415e8	14	
-0x241620	15	
-0x24165c	14	
-0x241694	15	
+# ??_7 site paired in order: 0x55f3b0 ??0TRmgRoadPainter@@QAE@PAVTRmgRoadMapAdapterInterface@@HABU?$TRmgCoordinatePoint@I@@@Z
+0x24120c	7	TRmgRoadPainter
+# ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z
+0x241540	14	type_doll_slot_widget
+# ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z
+0x241578	14	type_backpack_slot_widget
+# ??_7 site paired in order: 0x560380 ?createArtifactWidgets@type_sacrifice_window@@AAEXAAJH@Z
+0x2415b0	14	type_artifact_offering_widget
+# ??_7 site paired in order: 0x5610f0 ?createCreatureWidgets@type_sacrifice_window@@AAEXAAJH@Z; 0x561f70 ?createCreatureIcons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z
+0x2415e8	14	type_army_slot_widget
+# ??_7 site paired in order: 0x55fdd0 ??0type_sacrifice_window@@QAE@PAVhero@@H@Z; 0x5623a0 ??1type_sacrifice_window@@UAE@XZ
+0x241620	15	type_sacrifice_window
+# ??_7 site paired in order: 0x566760 ?createCreatureIcons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z
+0x24165c	14	type_transformer_slot
+# ??_7 site paired in order: 0x5654f0 ??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z; 0x565f60 ??1type_skeleton_window@@UAE@XZ
+0x241694	15	type_skeleton_window
 0x2416d0	3	sample
-0x2416dc	13	
+# ??_7 site paired in order: 0x567290 ??0CScenarioInfoDlg@@QAE@XZ; 0x569770 ??1CScenarioPlayerInfoWidget@@UAE@XZ
+0x2416dc	13	CScenarioPlayerInfoWidget
 0x241710	15	CScenarioInfoDlg
-0x24174c	15	
-0x241788	15	
-0x2417c4	15	
-0x241800	15	
-0x24183c	15	
-0x241878	15	
-0x2418b4	15	
-0x2418f0	15	
-0x24192c	15	
-0x241968	15	
-0x2419a4	13	
-0x2419d8	10	
-0x241a00	13	
-0x241a34	13	
-0x241a68	10	
-0x241a90	10	
-0x241ab8	10	
-0x241b14	3	
-0x241b20	2	
-0x241b28	25	
-0x241b8c	17	
-0x241bd0	3	
-0x241bdc	14	
-0x241c14	19	
-0x241c60	19	
-0x241cac	15	
-0x241ce8	4	
-0x241cf8	14	
-0x241d30	2	
-0x241d38	3	
-0x241d44	3	
+# ??_7 site paired in order: 0x56cb80 ??0type_quest@@QAE@E@Z; 0x56cc10 ??1type_quest@@UAE@XZ (+4 more)
+0x24174c	15	type_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x241788	15	type_experience_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x2417c4	15	type_skill_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x241800	15	type_defeat_hero_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x24183c	15	type_monster_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z; 0x574610 ?read@TSeerHut@@QAEXPAVTAbstractFile@@@Z (+1 more)
+0x241878	15	type_artifact_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x2418b4	15	type_creature_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x2418f0	15	type_resource_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x24192c	15	type_be_hero_quest
+# ??_7 site paired in order: 0x573240 ?createQuest@@YIPAVtype_quest@@HE@Z
+0x241968	15	type_belong_to_player_quest
+# ??_7 site paired in order: 0x575220 ??0CHotspotWidget@@QAE@HHHHH@Z
+0x2419a4	13	CHotspotWidget
+# ??_7 site paired in order: 0x575410 ??0CBonusDlg@@QAE@E@Z
+0x2419d8	10	CBonusDlg
+# ??_7 site paired in order: 0x5754f0 ?createWin@CBonusDlg@@QAEEPBDPAVCSprite@@H00@Z; 0x575a90 ?createWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z (+1 more)
+0x241a00	13	CSpriteWidget
+# ??_7 site paired in order: 0x5757e0 ?createWin@CBonusDlg@@QAEEPBDPAVBitmap816@@00@Z; 0x575a90 ?createWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z
+0x241a34	13	CBitmapWidget
+# ??_7 site paired in order: 0x575a70 ??0CHeroDlg@@QAE@E@Z
+0x241a68	10	CHeroDlg
+# ??_7 site paired in order: 0x575e10 ??0CTownDlg@@QAE@E@Z
+0x241a90	10	CTownDlg
+# ??_7 site paired in order: 0x5764d0 ??0CTeamAlignmentDlg@@QAE@E@Z
+0x241ab8	10	CTeamAlignmentDlg
+# ??_7 site paired in order: 0x576f00 ??0TRandomMapProgress@@QAE@H@Z; 0x5770c0 ??1TRandomMapProgress@@UAE@XZ
+0x241b14	3	TRandomMapProgress
+# ??_7 site paired in order: 0x578010 ?handleRequests@CNewPlayerUpdateProc@@QAEXXZ; 0x578a90 ?tick@CNewPlayerUpdateProc@@UAEXXZ (+2 more)
+0x241b20	2	CGameHeaderInfoMsg
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241b28	25	CSingleSelectionChatEdit
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241b8c	17	CChatSlider
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241bd0	3	CChatSave@CChatWidget
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z; 0x57cba0 ??1CChatWidget@@UAE@XZ
+0x241bdc	14	CChatWidget
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241c14	19	CEnterNameEdit
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241c60	19	CSaveGameEdit
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z; 0x583b40 ??1TSingleSelectionWindow@@UAE@XZ
+0x241cac	15	TSingleSelectionWindow
+# ??_7 site paired in order: 0x579960 ??0TSingleSelectionWindow@@QAE@H@Z
+0x241ce8	4	CSingleSelectionNetMsgHandler
+# ??_7 site paired in order: 0x5887a0 ?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z
+0x241cf8	14	CHostWaitDlg
+# ??_7 site paired in order: 0x5887a0 ?handleNetMsg@TSingleSelectionWindow@@QAE_NPAVCNetMsg@@AA_N@Z; 0x58c570 ?beginNewGame@TSingleSelectionWindow@@QAE_NXZ
+0x241d30	2	CNewMapHeaderInfoMsg
+# ??_7 site paired in order: 0x589240 ??0t_map_list_update@@QAE@K@Z
+0x241d38	3	t_map_list_update
+# ??_7 site paired in order: 0x58a280 ?newPlayer@CNewPlayerUpdateMan@@QAEXK@Z
+0x241d44	3	CNewPlayerUpdateProc
 0x241d50	17	slider
-0x241dcc	15	
+# ??_7 site paired in order: 0x59bdf0 ??0TSpellbookWindow@@QAE@ABVhero@@PBVarmyGroup@@W4TSpellContext@0@H@Z; 0x59c8f0 ??1TSpellbookWindow@@UAE@XZ
+0x241dcc	15	TSpellbookWindow
 0x24234c	1	TSubWindow
-0x242350	27	
-0x2423bc	27	
-0x242428	9	
-0x24244c	3	
-0x242458	4	
-0x242468	15	
+# ??_7 site paired in order: 0x5aaa80 ??0TSwapWindow@@QAE@PAPAVhero@@@Z
+0x242350	27	CSwapManagerChatEdit
+# ??_7 site paired in order: 0x5aaa80 ??0TSwapWindow@@QAE@PAPAVhero@@@Z
+0x2423bc	27	CGameChatEdit
+# ??_7 site paired in order: 0x5aaa80 ??0TSwapWindow@@QAE@PAPAVhero@@@Z; 0x5ae3c0 ??1TSwapWindow@@UAE@XZ
+0x242428	9	TSwapWindow
+# ??_7 site paired in order: 0x5ae500 ??0swapManager@@QAE@PAVhero@@0@Z
+0x24244c	3	swapManager
+# ??_7 site paired in order: 0x5ae750 ?open@swapManager@@UAEHH@Z
+0x242458	4	CSwapMgrNetMsgHandler
+# ??_7 site paired in order: 0x5b1790 ??0TSystemOptionsWindow@@QAE@XZ; 0x5b3040 ??1TSystemOptionsWindow@@UAE@XZ
+0x242468	15	TSystemOptionsWindow
 # TRmgTerrainRule::~TRmgTerrainRule stores this vptr (0x5b3850).
 # All six slots are _purecall, including the pure virtual destructor.
 0x242c80	6	TRmgTerrainRule
-0x242c98	6	
-0x242cb0	6	
-0x242cc8	17	
-0x242d0c	13	
+# ??_7 site paired in order: 0x5b3780 ??0TRmgPatternTerrainRule@@QAE@EEHIPBUTRmgTerrainPatternEntry@@@Z
+0x242c98	6	TRmgPatternTerrainRule
+# ??_7 site paired in order: 0x5b3a20 ??0TRmgTableTerrainRule@@QAE@XZ
+0x242cb0	6	TRmgTableTerrainRule
+# ??_7 site paired in order: 0x5b9fb0 ??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z
+0x242cc8	17	type_text_slider
+# ??_7 site paired in order: 0x5b9fb0 ??0type_text_scroller@@QAE@PBDHHHH0W4TColor@font@@W4EGraphics@slider@@@Z; 0x5ba3b0 ??1type_text_scroller@@UAE@XZ
+0x242d0c	13	type_text_scroller
 0x242d40	19	textEntryWidget
-0x242d8c	3	
+# ??_7 site paired in order: 0x5bbac0 ?setAutoDraw@textEntryWidget@@UAEXE@Z
+0x242d8c	3	CTextEntrySave
 0x242d98	3	TTextResource
 0x242da4	3	TSpreadsheetResource
 0x242db0	14	textWidget
-0x242de8	14	
-0x242e30	15	
-0x243720	3	
-0x24372c	9	
-0x243750	5	
-0x243764	15	
-0x2437a0	15	
-0x2437dc	15	
-0x243818	15	
-0x243854	15	
-0x243890	15	
-0x2438cc	15	
-0x243908	15	
-0x243944	15	
-0x243980	15	
-0x2439bc	15	
-0x2439f8	15	
-0x243a34	15	
-0x243a70	15	
-0x243aac	15	
-0x243ae8	15	
-0x243ba0	14	
-0x243bd8	15	
+# ??_7 site paired in order: 0x5bc760 ??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z
+0x242de8	14	bitmapBackedTextWidget
+# ??_7 site paired in order: 0x5c1ab0 ??0TTownGateWindow@@QAE@_N@Z; 0x5c2370 ??1TTownGateWindow@@UAE@XZ
+0x242e30	15	TTownGateWindow
+# ??_7 site paired in order: 0x5c3310 ??0townManager@@QAE@XZ
+0x243720	3	townManager
+# ??_7 site paired in order: 0x5c34d0 ??0TTownScreenWindow@@QAE@XZ; 0x5c58e0 ??1TTownScreenWindow@@UAE@XZ
+0x24372c	9	TTownScreenWindow
+# ??_7 site paired in order: 0x5c63c0 ?open@townManager@@UAEHH@Z
+0x243750	5	CTownNetMsgHandler
+# ??_7 site paired in order: 0x5c8190 ??0TThievesGuildWindow@@QAE@H@Z; 0x5c9690 ??1TThievesGuildWindow@@UAE@XZ
+0x243764	15	TThievesGuildWindow
+# ??_7 site paired in order: 0x5c9be0 ??0THallWindow@@QAE@H@Z; 0x5cc910 ??1THallWindow@@UAE@XZ
+0x2437a0	15	THallWindow
+# ??_7 site paired in order: 0x5cc980 ??0TMageGuildWindow@@QAE@XZ; 0x5ce150 ??1TMageGuildWindow@@UAE@XZ
+0x2437dc	15	TMageGuildWindow
+# ??_7 site paired in order: 0x5ce830 ??0type_garrison_base_window@@QAE@PAVhero@@HAAVarmyGroup@@@Z; 0x5d0580 ??1type_garrison_base_window@@UAE@XZ (+5 more)
+0x243818	15	type_garrison_base_window
+# ??_7 site paired in order: 0x5d0b40 ??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z
+0x243854	15	type_monster_join_window
+# ??_7 site paired in order: 0x5d0e00 ??0TGarrisonWindow@@QAE@PAVhero@@HAAVarmyGroup@@@Z
+0x243890	15	TGarrisonWindow
+# ??_7 site paired in order: 0x5d1360 ??0TBlacksmithWindow@@QAE@HH@Z; 0x5d1a30 ??1TBlacksmithWindow@@UAE@XZ
+0x2438cc	15	TBlacksmithWindow
+# ??_7 site paired in order: 0x5d1ef0 ??0TShipWindow@@QAE@H@Z; 0x5d2530 ??1TShipWindow@@UAE@XZ
+0x243908	15	TShipWindow
+# ??_7 site paired in order: 0x5d55c0 ??0TBuyBuildWindow@@QAE@HHH@Z; 0x5d5b70 ??1TBuyBuildWindow@@UAE@XZ
+0x243944	15	TBuyBuildWindow
+# ??_7 site paired in order: 0x5d70b0 ??0TTavernWindow@@QAE@HH@Z; 0x5d78b0 ??1TTavernWindow@@UAE@XZ
+0x243980	15	TTavernWindow
+# ??_7 site paired in order: 0x5d86f0 ??0TCastleWindow@@QAE@XZ; 0x5dcb80 ??1TCastleWindow@@UAE@XZ
+0x2439bc	15	TCastleWindow
+# ??_7 site paired in order: 0x5df5f0 ??0TTradeResourceWindow@@QAE@HH@Z; 0x5e1650 ??1TTradeResourceWindow@@UAE@XZ
+0x2439f8	15	TTradeResourceWindow
+# ??_7 site paired in order: 0x5e16c0 ??0TGiveResourceWindow@@QAE@HH@Z; 0x5e36c0 ??1TGiveResourceWindow@@UAE@XZ
+0x243a34	15	TGiveResourceWindow
+# ??_7 site paired in order: 0x5e3730 ??0TBuyArtifactWindow@@QAE@HH@Z; 0x5e56c0 ??1TBuyArtifactWindow@@UAE@XZ
+0x243a70	15	TBuyArtifactWindow
+# ??_7 site paired in order: 0x5e5730 ??0TSellArtifactWindow@@QAE@HH@Z; 0x5e7c10 ??1TSellArtifactWindow@@UAE@XZ
+0x243aac	15	TSellArtifactWindow
+# ??_7 site paired in order: 0x5e7c80 ??0TSellCreatureWindow@@QAE@HH@Z; 0x5e9cb0 ??1TSellCreatureWindow@@UAE@XZ
+0x243ae8	15	TSellCreatureWindow
+# ??_7 site paired in order: 0x5ef500 ??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z
+0x243ba0	14	type_university_skill_button
+# ??_7 site paired in order: 0x5ef500 ??0type_university_window@@QAE@PAVhero@@PBUtype_university@@E@Z
+0x243bd8	15	type_university_window
 0x243c14	15	TViewArmyWindow
-0x243c54	15	
+# ??_7 site paired in order: 0x5fa600 ??0TViewWorldWindow@@QAE@XZ; 0x5fbd60 ??1TViewWorldWindow@@UAE@XZ (+1 more)
+0x243c54	15	TViewWorldWindow
 0x243c90	13	widget
 0x243cc4	9	heroWindow
-0x243ce8	14	
+# ??_7 site paired in order: 0x5ff640 ??0CHeroWindowEx@@QAE@HHHHI@Z
+0x243ce8	14	CHeroWindowEx
 0x243d20	11	File
 0x243d4c	3	heroWindowManager
 # LIBCPMT/LIBCMT string.obj#18: the verified library section defines ??_7length_error@std@@6B@ here
