@@ -2624,8 +2624,9 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // Mac 0x124674 and 0x12470c construct bitset reference proxies before the
 // retained assignments at 0x1246b4 and 0x12474c.
 // Map scalars are little endian: native 0x124330 decodes the identifier,
-// 0x124468 the troop count, and 0x124798 the event count. Shared decoding
-// reproduces these CodeWarrior operations and is byte-flat under VC6.
+// 0x124468 the troop count, and 0x124798 the event count. Windows retail
+// reads each scalar through the direct virtual read: the readValue and
+// readLittleEndianValue wrappers cost VC6 90.68% against 97.78%.
 VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2647,21 +2648,21 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         tempTown.m_objRef = 0;
     } else {
-        readValue(infile, intBuffer);
+        infile->read(&intBuffer, sizeof(intBuffer));
         tempTown.m_objRef = LITTLE_ENDIAN_LONG(intBuffer);
     }
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_playerOwner = charBuffer;
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customName = charBuffer;
     if (tempTown.m_customName)
         NewSMapHeader::readString(infile, tempTown.m_name);
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customArmies = charBuffer;
     if (tempTown.m_customArmies) {
@@ -2669,7 +2670,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             tempTown.m_townArmy.m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            if (readValue(infile, shortBuffer)
+            if (infile->read(&shortBuffer, sizeof(shortBuffer))
                 < sizeof(shortBuffer))
                 return -1;
             shortBuffer = LITTLE_ENDIAN_SHORT(shortBuffer);
@@ -2677,11 +2678,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         }
     }
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_isGrouped = charBuffer;
 
-    if (readValue(infile, charBuffer) < sizeof(charBuffer))
+    if (infile->read(&charBuffer, sizeof(charBuffer)) < sizeof(charBuffer))
         return -1;
     tempTown.m_customBuildings = charBuffer;
 
@@ -2693,7 +2694,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
             return -1;
         memcpy(&tempTown.m_buildingDisabledMask, inBuf, sizeof(inBuf));
     } else {
-        if (readValue(infile, charBuffer)
+        if (infile->read(&charBuffer, sizeof(charBuffer))
             < sizeof(charBuffer))
             return -1;
         tempTown.m_hasFort = charBuffer;
@@ -2714,7 +2715,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         tempTown.m_spells[x] =
             (spellBuf[x / 8] & (1 << (x % 8))) != 0;
 
-    if (readValue(infile, numTownEvents)
+    if (infile->read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
         return -1;
 
@@ -2732,7 +2733,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
     charBuffer = -1;
     if (mapVersion >= 28)
-        readValue(infile, charBuffer);
+        infile->read(&charBuffer, sizeof(charBuffer));
 
     if (m_objectTypes[townObject->m_typeIndex].m_objectType == RANDOM_TOWN) {
         if (charBuffer != -1
@@ -4023,15 +4024,14 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     int numObjects;
     int count;
     int x;
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer)) {
         return -1;
     }
 
     // Both Mac count fields are read through the same caller-owned integer
-    // slot, then byte-reversed before resize. The decoding wrapper preserves
-    // readValue and its returned count. Its currently retained Mac expansion
-    // remains an inlining difference; there is no retail wrapper to bind.
+    // slot, then byte-reversed before resize. Windows retail reads them
+    // directly (99.84%; the decoding wrapper gives 99.38%).
     numObjects = intBuffer;
     m_objectTypes.resize(numObjects);
     for (x = 0; x < m_objectTypes.size(); ++x) {
@@ -4068,7 +4068,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     incProgressBar(1);
 
-    count = readLittleEndianValue(infile, intBuffer);
+    count = infile->read(&intBuffer, sizeof(intBuffer));
     if (count < sizeof(intBuffer)) {
         return -1;
     }

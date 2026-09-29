@@ -4652,7 +4652,7 @@ void type_random_map_generator::fillZoneArea(TRmgZone* zone, TRmgBoundaryVertex*
     pending.push_back(position);
     while (pending.size()) {
         position = pending.back();
-        pending.pop_back();
+        pending.erase(pending.end() - 1, pending.end());
         TRmgMapItem* item = m_map.getMapItem(position);
         unsigned char upperSpan = 0;
         unsigned char lowerSpan = 0;
@@ -5625,7 +5625,10 @@ void type_random_map_generator::addObject(type_object* object, TRmgMapPosition p
                 int nextCost = cost;
                 if (direction & 1)
                     ++nextCost;
-                TRmgMapPosition nextPosition = currentPosition + g_rmgDirections[direction];
+                TRmgMapPosition nextPosition;
+                nextPosition.m_x = currentPosition.m_x + g_rmgDirections[direction].m_x;
+                nextPosition.m_y = currentPosition.m_y + g_rmgDirections[direction].m_y;
+                nextPosition.m_z = currentPosition.m_z;
                 if (nextPosition.m_x < 0 || nextPosition.m_x >= m_map.m_mapWidth
                     || nextPosition.m_y < 0 || nextPosition.m_y >= m_map.m_mapHeight)
                     continue;
@@ -10117,10 +10120,15 @@ unsigned char type_random_map_generator::placeQuestArtifact(rmgQuestArtifactObje
     position.m_y = (group.m_map.m_mapHeight + static_cast<unsigned>(prototype->getHeight())) / 2;
     position.m_z = 0;
     type_object* questObject = seerHut;
-    group.addObject(questObject, position);
+    group.m_objects.push_back(questObject);
+    group.m_map.addObject(*questObject, position);
     group.updateBounds();
     group.traceOutline();
-    group.markPlacementOutline();
+    group.m_ready = 1;
+    for (unsigned int index = 0; index < group.m_outline.size(); ++index) {
+        group.m_map.getMapItem(group.m_outline[index].m_x,
+            group.m_outline[index].m_y, 0)->m_tileData.m_placementOutline = 1;
+    }
     if (!placeQuestGroup(&group, origin)) {
         int value = object->m_definition->getValue(origin, this);
         TRmgMapPosition originalPosition = object->m_position;

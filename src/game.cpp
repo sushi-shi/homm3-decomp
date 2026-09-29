@@ -3578,12 +3578,13 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 }
 
 // DC records townArmy as armyGroup&; Mac 0xd4e30 retains the mutable
-// getArmy call. Keep that reference and all army helper calls. The early
-// getTown sentinel guard remains an unresolved caller-shape difference.
+// getArmy call. Keep that reference and all army helper calls. Both builds
+// subscript m_towns directly: getTown's sentinel guard is absent from
+// retail (96.75% -> 99.91%, Mac 23.78% -> 50.00%).
 VA(0x004bf570, 0x203) MAC_ADDRESS(0x0d4d2c, 0x2d4)
 void game::giveTroopsToNeutralTown(int townId)
 {
-    town* currentTown = getTown(townId);
+    town* currentTown = &m_towns[townId];
     long weekNumber = getCurrentTurn() / 7;
     int maxRoll = min(weekNumber, 8) + 1;
     int roll = random(0, maxRoll) + random(0, maxRoll)
@@ -4581,7 +4582,9 @@ void game::matchUndergroundGates()
 // DC records int new_owner; Mac 0xd7f08..0xd7f50 widens the saved byte
 // before passing it to claimShipyard. Keep that procedure local and the
 // point constructors as call-argument temporaries at the recorded push_back
-// and claim sites; all canonical helper calls remain intact.
+// and claim sites; all canonical helper calls remain intact. The refugee
+// camp arm is written in place: routing it through perWeek's
+// randomizeRefugeeCamp helper costs Windows 84.79 -> 80.00%.
 VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
 void game::randomizeEvents()
 {
@@ -4930,7 +4933,12 @@ void game::randomizeEvents()
                     break;
 
                 case REFUGEE_CAMP:
-                    randomizeRefugeeCamp(tempCell);
+                    {
+                        TCreatureType creature = getRandomMonster(0, 6);
+                        tempCell->m_objectIndex = creature;
+                        tempCell->m_extraInfo =
+                            g_creatureTypeTraits[creature].m_growthRate;
+                    }
                     break;
 
                 case RESOURCE:
