@@ -39,10 +39,16 @@ static const int g_angelicAllianceSecondMap = 9;
 // Native retains the campaign base across the special artifact-vector path.
 // The shared reference restores those +2/+4 member accesses; Windows remains
 // 86.10% versus the prior86.11%, with exact siblings unchanged.
-// Retail's isHuman call belongs to an expanded isHumanTeam loop inside
-// isHumanAlly; replacing the wrapper with a direct call removes that loop.
-// The retained Mac isHumanTeam body matches all148bytes. Live VC6 budget
-// capture instead leaves39 after GetTeam46, below the scan's93 cost.
+// DC line 41 names GetTeam and IsHumanTeam directly (no is_human_ally
+// row), and the explicit team local reproduces retail's expanded
+// guarded scan: 85.91 -> 99.59 over the isHumanAlly wrapper (2026-09-29).
+// The SCampaign reference and TArtifact element type are Windows
+// byte-flat against int&/signed char& and vector<int>. Residual: the
+// bitset<144>::test range throw at the tail. `vc6 predict-inline --trace`
+// gives test 153 at depth 1, _Xran 95, and the nested out_of_range ctor
+// (cost 58) only 30, so it stays a call where retail expands it and stores
+// out_of_range's vptr after logic_error's ctor; about 28 more depth-1
+// budget is missing and no evidenced statement supplies it.
 VA(0x005f1610, 0x4FE) MAC_ADDRESS(0x1fd3cc, 0x44c)  // dc 0x18fdf8
 unsigned char VictoryConditionStruct::checkForArtifactWin()
 {
@@ -98,7 +104,8 @@ unsigned char VictoryConditionStruct::checkForArtifactWin()
         || g_game->m_playerDisabled[g_netLocalGamePos])
         return 0;
 
-    if (g_game->isHumanAlly(g_netLocalGamePos) || m_appliesToComputer) {
+    int team = g_game->getTeam(g_netLocalGamePos);
+    if ((team >= 0 && g_game->isHumanTeam(team)) || m_appliesToComputer) {
         int j;
         for (j = 0; j < g_currentPlayer->m_numHeroes; ++j) {
             if (g_game->getHero(g_currentPlayer->m_heroes[j])

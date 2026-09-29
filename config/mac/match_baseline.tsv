@@ -1507,7 +1507,7 @@
 0x005f0a20	university_window	0	0x1fc914	100.0000	100.0000	100.0000	tokens1:4af09bb52a24	1
 0x005f1180	university_window	0	0x1fd0c0	100.0000	100.0000	100.0000	tokens1:bd26a54d2100	1
 0x005f15a0	victorylossconditions	0	0x1fd30c	39.9038	39.9038	39.9038	tokens1:e3386a8c7960	1
-0x005f1610	victorylossconditions	0	0x1fd3cc	42.0000	42.0909	42.0909	tokens1:20eef006e13a	1
+0x005f1610	victorylossconditions	0	0x1fd3cc	61.2100	61.2100	61.2100	tokens1:db1ab8f0ef7c	1
 0x005f1b10	victorylossconditions	0	0x1fd818	18.8017	18.8017	22.1074	tokens1:6fff91ba084f	1
 0x005f1c80	victorylossconditions	0	0x1fd9fc	17.4342	17.4342	26.3158	tokens1:c7e7087a93af	1
 0x005f1d40	victorylossconditions	0	0x1fdb2c	22.1386	22.1386	22.1386	tokens1:a57e3e9943e5	1
