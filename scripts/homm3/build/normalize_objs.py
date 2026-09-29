@@ -79,6 +79,7 @@ class EhHandlerOwnerRewrite:
     funclet_offset: int
     funclet_size: int
     canonical_name: str = ""
+    prologue: int = 6
 
 
 def _retail_symbol_rvas(path: Path = SYMBOL_NAMES) -> dict[str, tuple[int, str]]:
@@ -667,6 +668,22 @@ def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
     return result
 
 
+#: The VC6 frame-handler registration prologues, up to the `push offset
+#: handler` operand: `push ebp; mov ebp, esp; push -1; push offset`, and the
+#: same with `mov eax, fs:[0]` scheduled before `push -1` (its `__except_list`
+#: displacement is the absolute 0).
+EH_PROLOGUES = (b"\x55\x8b\xec\x6a\xff\x68",
+                b"\x55\x8b\xec\x64\xa1\x00\x00\x00\x00\x6a\xff\x68")
+
+
+def _eh_prologue_site(code: bytes, start: int) -> int | None:
+    """Offset of the handler operand after a recognized EH prologue."""
+    for prologue in EH_PROLOGUES:
+        if code[start:start + len(prologue)] == prologue:
+            return len(prologue)
+    return None
+
+
 def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrite, ...]:
     """Find canonical VC6 EH prologues whose operand names the handler thunk.
 
@@ -694,11 +711,12 @@ def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrit
         if relocation.typ != DIR32:
             continue
         owner = canon._function_owner(ranges, relocation.section, relocation.site)
-        if owner is None or relocation.site != owner.value + 6:
+        if owner is None:
             continue
         parent = coff.sections[relocation.section - 1]
         parent_bytes = coff.section_bytes(parent)
-        if parent_bytes[owner.value:owner.value + 6] != b"\x55\x8b\xec\x6a\xff\x68":
+        prologue = _eh_prologue_site(parent_bytes, owner.value)
+        if prologue is None or relocation.site != owner.value + prologue:
             continue
         handler = coff.symbols[relocation.symbol_index]
         if (handler.section <= 0 or
@@ -738,6 +756,7 @@ def _eh_handler_candidates(coff: canon.CoffObject) -> tuple[EhHandlerOwnerRewrit
             owner.name, relocation.section, handler.section,
             relocation.offset, relocation.site, handler.index, funclet.index,
             handler.value, funclet.value, handler.value - funclet.value,
+            prologue=prologue,
         ))
     return tuple(candidates)
 
@@ -774,10 +793,10 @@ def _canonicalize_matching_eh_handler_owners(
         counterpart = counterparts[0]
         target_section = target.sections[counterpart.section - 1]
         target_bytes = target.section_bytes(target_section)
-        target_site = counterpart.value + 6
-        if (target_bytes[counterpart.value:counterpart.value + 6] !=
-                b"\x55\x8b\xec\x6a\xff\x68"):
+        target_prologue = _eh_prologue_site(target_bytes, counterpart.value)
+        if target_prologue != rewrite.prologue:
             continue
+        target_site = counterpart.value + target_prologue
         target_relocation = target_relocations.get(
             (counterpart.section, target_site))
         if target_relocation is None:
