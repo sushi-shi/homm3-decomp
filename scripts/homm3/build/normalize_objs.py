@@ -639,6 +639,169 @@ def _canonicalize_equivalent_relocations(
     return bytes(data), literal_count, aggregate_count
 
 
+@dataclass(frozen=True)
+class FunctionBody:
+    """One external function's bytes and function-relative relocation sites."""
+
+    payload: bytes
+    sites: tuple[int, ...]
+
+
+_ICF_PADDING = frozenset(b"\xcc\x90")
+
+
+def _function_bodies(coff: canon.CoffObject) -> dict[str, FunctionBody]:
+    """External function bodies of one object; ambiguous repeats dropped."""
+    by_section: dict[int, list[canon.Relocation]] = {}
+    for relocation in coff.relocations:
+        by_section.setdefault(relocation.section, []).append(relocation)
+    bodies: dict[str, FunctionBody | None] = {}
+    for section_index, ranges in canon._function_ranges(coff).items():
+        section = coff.sections[section_index - 1]
+        data = coff.section_bytes(section)
+        relocations = by_section.get(section_index, ())
+        for start, end, symbol in ranges:
+            if symbol.storage_class != EXTERNAL_STORAGE:
+                continue
+            body = FunctionBody(data[start:end], tuple(sorted(
+                r.site - start for r in relocations if start <= r.site < end)))
+            if symbol.name in bodies and bodies[symbol.name] != body:
+                bodies[symbol.name] = None
+            else:
+                bodies[symbol.name] = body
+    return {name: body for name, body in bodies.items() if body is not None}
+
+
+def _icf_identical(left: FunctionBody, right: FunctionBody) -> bool:
+    """Bytes equal outside relocation fields, the same relocation sites, and
+    at most linker fill (int3/nop) beyond the shorter body."""
+    if left.sites != right.sites:
+        return False
+    short, long_ = sorted((left.payload, right.payload), key=len)
+    if not short or any(byte not in _ICF_PADDING for byte in long_[len(short):]):
+        return False
+    if left.sites and left.sites[-1] + 4 > len(short):
+        return False
+    masked = [bytearray(short), bytearray(long_[:len(short)])]
+    for site in left.sites:
+        for payload in masked:
+            payload[site:site + 4] = b"\0\0\0\0"
+    return masked[0] == masked[1]
+
+
+_ICF_INDEX: tuple[dict[str, FunctionBody], dict[str, FunctionBody]] | None = None
+
+
+def _icf_index() -> tuple[dict[str, FunctionBody], dict[str, FunctionBody]]:
+    """(candidate bodies, retail bodies) across every normalized object.
+
+    A body defined differently by two objects is ambiguous and omitted.
+    """
+    global _ICF_INDEX
+    if _ICF_INDEX is None:
+        sides = []
+        for side, pattern in (("base", "*.obj"), ("target", "*.c.obj")):
+            merged: dict[str, FunctionBody | None] = {}
+            root = OBJDIFF / "normalized" / side
+            for obj in sorted(root.rglob(pattern)) if root.is_dir() else ():
+                try:
+                    bodies = _function_bodies(canon.CoffObject(obj.read_bytes()))
+                except ValueError:
+                    continue
+                for name, body in bodies.items():
+                    if name in merged and merged[name] != body:
+                        merged[name] = None
+                    else:
+                        merged[name] = body
+            sides.append({n: b for n, b in merged.items() if b is not None})
+        _ICF_INDEX = (sides[0], sides[1])
+    return _ICF_INDEX
+
+
+def _canonicalize_icf_aliases(
+        base_payload: bytes, target_payload: bytes,
+        symbol_rvas: dict[str, tuple[int, str]],
+        index: tuple[dict[str, FunctionBody], dict[str, FunctionBody]],
+        ) -> tuple[bytes, bytes, int]:
+    """Name a retail /OPT:ICF body by the candidate's folded twin.
+
+    Retail labels one address for byte-identical functions that /OPT:ICF
+    folded, so a call to the unlabelled twin cl emitted (a class's inline
+    destructor, an empty virtual, vector<T*>::size for another T) pairs
+    with the surviving twin's label. At a paired call/data site the two
+    references are made to agree only when the candidate name has no retail
+    address of its own, the retail name is a labelled function, and the two
+    bodies are ICF-identical: an undefined target reference is renamed to the
+    twin, or, when the candidate object already has the surviving label, the
+    candidate relocation is pointed at it. Every other difference stays
+    visible. Returns (base, target, rewritten reference count).
+    """
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+    base_ranges = canon._function_ranges(base)
+    target_ranges = canon._function_ranges(target)
+
+    def paired(coff, ranges):
+        rows = {}
+        for relocation in coff.relocations:
+            if relocation.typ not in (REL32, DIR32):
+                continue
+            owner = canon._function_owner(ranges, relocation.section, relocation.site)
+            if owner is not None:
+                rows[(owner.name, relocation.site - owner.value)] = relocation
+        return rows
+
+    base_rows = paired(base, base_ranges)
+    target_rows = paired(target, target_ranges)
+    target_names = {symbol.name for symbol in target.symbols.values()}
+    base_by_name: dict[str, int] = {}
+    for symbol in sorted(base.symbols.values(), key=lambda row: row.index):
+        if symbol.storage_class == EXTERNAL_STORAGE:
+            base_by_name.setdefault(symbol.name, symbol.index)
+    candidates, retail = index
+    sites: dict[str, list[canon.Relocation]] = {}
+    aliases: dict[str, set[str]] = {}
+    for key, target_relocation in target_rows.items():
+        base_relocation = base_rows.get(key)
+        if base_relocation is None or base_relocation.typ != target_relocation.typ:
+            continue
+        twin = base.symbols[base_relocation.symbol_index].name
+        label = target.symbols[target_relocation.symbol_index].name
+        if twin == label:
+            continue
+        aliases.setdefault(label, set()).add(twin)
+        sites.setdefault(label, []).append(base_relocation)
+    renames: dict[int, str] = {}
+    retargets: list[tuple[canon.Relocation, int]] = []
+    for label, twins in aliases.items():
+        if len(twins) != 1:
+            continue
+        twin = next(iter(twins))
+        authority = symbol_rvas.get(label)
+        if twin in symbol_rvas or authority is None or authority[1] != "func":
+            continue
+        candidate, surviving = candidates.get(twin), retail.get(label)
+        if candidate is None or surviving is None:
+            continue
+        if not _icf_identical(candidate, surviving):
+            continue
+        undefined = [symbol.index for symbol in target.symbols.values()
+                     if symbol.name == label and symbol.section == 0]
+        if undefined and twin not in target_names:
+            renames.update((symbol, twin) for symbol in undefined)
+        elif label in base_by_name:
+            retargets.extend((relocation, base_by_name[label])
+                             for relocation in sites[label])
+    if retargets:
+        data = bytearray(base_payload)
+        for relocation, symbol in retargets:
+            struct.pack_into("<I", data, relocation.offset + 4, symbol)
+        base_payload = bytes(data)
+    if renames:
+        target_payload = canon._rewrite_names(target, renames)
+    return base_payload, target_payload, len(renames) + len(retargets)
+
+
 def _associative_parents(coff: canon.CoffObject) -> dict[int, int]:
     """Read IMAGE_COMDAT_SELECT_ASSOCIATIVE parents from section aux rows."""
     result = {}
@@ -1073,13 +1236,16 @@ def _pair_unit(rel: Path, symbol_rvas, context=None, *, image_base=None) -> Coun
             image_base=retail_image_base() if image_base is None else image_base)
     counts["literal"] += literal_count
     counts["aggregate"] += aggregate_count
+    paired_base, paired_target, icf_count = _canonicalize_icf_aliases(
+        paired_base, paired_target, symbol_rvas, _icf_index())
+    counts["icf"] += icf_count
     normalized, rewrites = _canonicalize_matching_eh_handler_owners(
         paired_base, paired_target, symbol_rvas=symbol_rvas,
         funclet_owners=_retail_funclet_owners())
     counts["eh"] += len(rewrites)
-    if count or base_literal_count or rewrites:
+    if count or base_literal_count or rewrites or icf_count:
         normalized_base.write_bytes(normalized)
-    if literal_count or aggregate_count:
+    if literal_count or aggregate_count or icf_count:
         normalized_target.write_bytes(paired_target)
     # Padding is a paired normalization decision, so the base copy is
     # stale whenever either raw input changes, even when this run found no
@@ -1137,6 +1303,7 @@ def normalize_all() -> Counter:
           f"{counts['eh']} EH handler-owner relocation(s) canonicalized "
           f"{counts['literal']} false-literal relocation(s) removed "
           f"{counts['aggregate']} aggregate/field relocation(s) canonicalized "
+          f"{counts['icf']} ICF twin reference(s) named "
           f"-> {OBJDIFF / 'normalized'}")
     counts.update(wrote=wrote, skipped=skipped)
     return counts
