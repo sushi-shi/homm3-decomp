@@ -83,7 +83,7 @@ appearances across translation units count once.
 
 The inventory combines a lexical body review with Clang declaration identity
 under each TU's configured Windows profile. Clang is an analysis aid, not the
-matching compiler. All 139 project TUs were visited. Existing Clang diagnostics
+matching compiler. All 139 project TUs were visited. Baseline and final Clang diagnostics
 in 24 TUs concern vendor inline assembly, legacy `min` overloads and temporary
 reference binding; they must not be mistaken for a VC6 build verdict or a claim
 that every expression was successfully typed. The source-wide compiler pass is
@@ -118,11 +118,46 @@ by a scalar setter.
 The declaration/body inventory visits all 139 project TUs. The implementation
 has no runtime behavior fixtures: VC6 comparisons and native evidence are the
 project's verdict. The affected-header closure selects 111 Windows TUs for
-`homm3 build --fast`, with their paired full-TU CodeWarrior comparisons. This is
+`homm3 build --fast`, with their paired full-TU CodeWarrior comparisons. The integrated score
+freshness check also required rebuilding `widget` and `subwindow` (113 TUs
+in the final validation set). This is
 a source-interface recovery, so any observed byte-score changes are reported
 and retain previous peaks in the score history.
+
+After `homm3 status update --write-readme`, Windows weighted MAX is **97.76%**
+(parent checkpoint: 98.18%); CUR is **97.19%**, and HIST is **98.71%**.
+There are 4,381 exact current-source MAX implementations out of 4,785.
+This is a source-boundary recovery with measured matching debt, not a
+byte-neutral cleanup. The committed ledger preserves historical peaks and
+keeps unchanged-source MAX separate from current compiler output.
+
+The final affected Mac pass scores 1,478 pairs, of which 561 are exact;
+1,691 emitted pairs have unresolved references and 77 claims lack an emitted
+full-TU body. This is a partial comparison, not a full preservation checkpoint.
+The newly lost campaign-completion and river-generation comparisons were
+restored by retaining the existing owner getter body and locating the object
+position getter beside the property interface. Some scored callers still lose
+similarity, for example `getRmgPointOrientation` (100% to 85%) and
+`getRmgSquaredDistance` (100% to 92.8571%) after replacing coordinate reads with
+their established getters. Their prior Mac checkpoints remain in the ledger;
+this pass does not claim Mac score preservation or overwrite that history.
+
+Two previously checkpointed comparisons remain unavailable in the affected
+set: `NewfullMap::readMonsterData` and `CChatWidget::draw`. Both are inherited
+from the parent source. For the chat caller, a fresh full-TU compile of parent
+`47ade15bf` produces exactly the same 284-byte body and named relocations as
+this PR, including the unresolved `Bitmap16Bit::getPitch` call at `+0x6c`.
+The earlier successful parent report used an object predating the nested pitch
+accessor. Native Mac `0x186874` expands that load and retains raw grab, raw draw
+and text-widget draw calls. Restoring the chat flag's public visibility in a
+disposable diagnostic leaves the same call, so weakening access control does
+not resolve it. Preserve the canonical bitmap helper path while investigating
+that inherited inlining boundary.
 
 Temporary extraction and review artifacts live in ignored
 `build/accessor-audit/`. The owning C++ declarations remain the authority for
 names and access; this report is a dated investigation, not a second symbol
-ledger.
+ledger. The final declaration review confirms 144 private and 17 protected
+changes, with no unresolved public backing members left in this reviewed set.
+The 115 added definitions exclude the reward-icon helper introduced by the
+parent branch during integration.

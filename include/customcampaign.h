@@ -180,7 +180,7 @@ public:
     VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
     CampaignScenarioInfo* getCurrentScenario()
     {
-        return &getScenarioInfo(m_currentMap);
+        return &m_mapScores[m_currentMap];
     }
 
 private:

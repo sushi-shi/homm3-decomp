@@ -821,7 +821,10 @@ public:
     char m_tailPadding[3];
 
     type_object(TRmgObjectPropertiesRef* newProperties);
-    TRmgMapPosition getPosition() const;
+    // Inferred value accessor: shipyard probing and Mac CreateRivers
+    // (0x24e17c) copy all three coordinates. Keep the shared property body
+    // beside its setter; original placement is not independently recovered.
+    TRmgMapPosition getPosition() const { return m_position; }
 
     void clearPlacementMarks();
 

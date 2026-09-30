@@ -1429,14 +1429,6 @@ TRmgTownSlot* TRmgTemplate::findZone(int zoneIndex)
     return 0;
 }
 
-// Shipyard water probing copies all three fields from the object before
-// adding offsets. This ordinary value accessor models that copy boundary;
-// the source name is inferred from the Complete-only retail use.
-TRmgMapPosition type_object::getPosition() const
-{
-    return m_position;
-}
-
 VA(0x005330E0, 0x39)
 MAC_ADDRESS(0x2303ec, 0x5c)
 type_object::type_object(TRmgObjectPropertiesRef* newProperties)
