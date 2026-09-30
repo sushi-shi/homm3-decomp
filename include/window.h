@@ -100,6 +100,11 @@ public:
     int broadcastMessage(int id, int codeX, int codeY, int extra);
     int widgetSetStatus(int id, int status);
     int widgetClearStatus(int id, int status);
+    // Project-inferred display operations shared by option-control rows.
+    // Preserve message dispatch (including drawing) rather than raw bit writes.
+    void setExclusiveWidgetStatus(int firstId, int lastId, int selectedId,
+                                  int status);
+    void showVolumeLevel(int firstId, int lastId, int level);
     widget* findWidgetPtr(int mx, int my) const;
     int findWidget(int mx, int my) const;
     void addWidget(widget* newWidget, int newPriority);
@@ -131,6 +136,9 @@ public:
     virtual void doModal(bool fadeIn);
 
 protected:
+    // Project-inferred terminal cleanup. Delete the objects in order without
+    // clearing the vector or unlinking widgets from the message stream.
+    void deleteWidgetObjects();
     void deleteWidgets();
     // DC window.cpp owns the ordinary body. Complete's overview constructor
     // expands this operation across TUs, requiring header body visibility.

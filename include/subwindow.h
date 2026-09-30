@@ -28,6 +28,19 @@ public:
     void saveBackground();
     void restoreBackground();
 
+protected:
+    // Project-inferred collection operations. None clears the vector.
+    // Registration retains its distinct null policies.
+    void addWidgetsToMessageStream();
+    void addHiddenWidgetsToMessageStream();
+    void deleteWidgetObjects();
+    void removeAndDeleteWidgets();
+    void showWithSavedBackground(int extraWidth);
+    void hideAndRestoreBackground();
+
+private:
+    void setWidgetsActiveAndDrawn(bool on);
+
     // DC field-list order: the data follows the methods.
 public:
     int m_x;

@@ -683,21 +683,10 @@ DC_ADDRESS(0x090658, 0x66)
 MAC_ADDRESS(0x0a9980, 0x104)
 void advManager::doEventAnchor(hero* currentHero, bool humanPlayer)
 {
-    if (currentHero->m_flags & 0x40000) {
-        currentHero->m_flags &= ~0x40000;
-        if (!(currentHero->m_flags & 0x1000000)) {
-            if (currentHero->isWieldingArtifact(0x88)) {
-                int oldMaxMovePoints = currentHero->m_maxMovePoints;
-                int oldMovePoints = currentHero->m_movePoints;
-                int newMaxMovePoints = currentHero->getMobility(0);
-                currentHero->m_maxMovePoints = newMaxMovePoints;
-                currentHero->m_movePoints =
-                    newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
-            } else {
-                currentHero->m_movePoints = 0;
-            }
+    if (currentHero->isOnBoat()) {
+        currentHero->setOnBoat(false);
+        if (currentHero->applyBoatMovementCost(0))
             m_advWindow->updateHeroLocator(-1, 1, 1);
-        }
 
         currentHero->m_facing = m_cursorDirection;
         m_cursorType = CURSOR_TYPE_34;
@@ -952,12 +941,7 @@ void advManager::doCustomArtifact(hero* currentHero, NewmapCell* cell,
                 std::string firstGuard;
                 std::string msg;
                 armyGroup guardList;
-                guardList.initialize();
-                for (int i = 0; i < 7; i++) {
-                    if (treasure->m_guardians.m_armies[i] != CREATURE_NONE)
-                        guardList.add(treasure->m_guardians.m_armies[i],
-                                       treasure->m_guardians.m_numTroops[i], -1);
-                }
+                guardList.copyConsolidatedFrom(treasure->m_guardians);
                 long numArmies = guardList.getNumArmies();
                 firstGuardAmount =
                     armyGroup::getArmySizeName(guardList.m_numTroops[0], 2);
@@ -1487,8 +1471,8 @@ void advManager::handleMapEvent(hero* currentHero, NewmapCell* cell,
         checkEndGame(0);
 }
 
-// The movement rewrite only runs for a hero not already at sea (bit
-// 0x1000000), and it PRESERVES THE FRACTION: the new allowance is
+// The movement rewrite is bypassed by unlimited movement (bit
+// 0x1000000); otherwise it PRESERVES THE FRACTION: the new allowance is
 // GetMobility(1) and the remainder is scaled by the old ratio with a
 // signed `imul`/`cdq`/`idiv`. Without the Admiral's Hat (artifact 0x88)
 // the remainder is simply zeroed - boarding costs the rest of the turn.
@@ -1500,22 +1484,10 @@ void advManager::doEventBoat(hero* currentHero, NewmapCell* cell)
     boat* heroBoat = g_game->getBoat(cell->m_extraInfo);
 
     heroBoat->restoreCell();
-    currentHero->m_flags |= 0x40000;
-    currentHero->m_flightLevel = -1;
-    currentHero->m_waterWalkLevel = -1;
-    if (!(currentHero->m_flags & 0x1000000)) {
-        if (currentHero->isWieldingArtifact(0x88)) {
-            int oldMaxMovePoints = currentHero->m_maxMovePoints;
-            int oldMovePoints = currentHero->m_movePoints;
-            int newMaxMovePoints = currentHero->getMobility(1);
-            currentHero->m_maxMovePoints = newMaxMovePoints;
-            currentHero->m_movePoints =
-                newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
-        } else {
-            currentHero->m_movePoints = 0;
-        }
+    currentHero->setOnBoat(true);
+    currentHero->clearMovementSpells();
+    if (currentHero->applyBoatMovementCost(1))
         m_advWindow->updateHeroLocator(-1, 1, 1);
-    }
 
     heroBoat->m_occupyingHero = currentHero->m_id;
     heroBoat->m_occupied = 1;
@@ -1791,6 +1763,41 @@ void advManager::doEventCreatureGenerator(hero* currentHero, NewmapCell* cell,
     }
 }
 
+// Project-inferred common flow for the four permanent +1 primary-skill
+// visitors. The descriptor binds each native handler's texts and info flag;
+// it is not a recovered native table. Hero owns the corresponding visit mask.
+void advManager::doEventPrimarySkillSite(hero* currentHero, NewmapCell* cell,
+                                         bool humanPlayer, TPrimarySkill skill)
+{
+    struct SkillSiteText {
+        EAdventureEventText reward;
+        EAdventureEventText visited;
+        GlobalInfoFlags info;
+    };
+    static const SkillSiteText sites[kNumPrimarySkills] = {
+        { ADV_EVENT_TEXT_MERC_CAMP, ADV_EVENT_TEXT_MERC_CAMP_VISITED, MercCampInfo },
+        { ADV_EVENT_TEXT_DEFENSE_TOWER, ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED, DefenseTowerInfo },
+        { ADV_EVENT_TEXT_POWER_SCHOOL, ADV_EVENT_TEXT_POWER_SCHOOL_VISITED, PowerSchoolInfo },
+        { ADV_EVENT_TEXT_GARDEN, ADV_EVENT_TEXT_GARDEN_VISITED, GardenOfRevelationInfo }
+    };
+    const SkillSiteText& site = sites[skill];
+
+    if (currentHero->visitedPrimarySkillSite(skill, cell->m_extraInfo)) {
+        if (humanPlayer)
+            normalDialog((*g_adventureEventText)[site.visited],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (humanPlayer)
+            normalDialog((*g_adventureEventText)[site.reward],
+                         1, -1, -1, RES_PRIMARY_SKILL_ATTACK + skill, 1,
+                         -1, 0, -1, 0, -1, 0);
+        currentHero->adjustPrimarySkill(skill, 1);
+        g_game->setInfoFlag(site.info, g_netLocalGamePos);
+        // Keep the post-dialog cell read and the final marking stage.
+        currentHero->markPrimarySkillSiteVisited(skill, cell->m_extraInfo);
+    }
+}
+
 // DC1653/1661 call TTextResource::operator[], not GetText directly. The same
 // wrapper is recorded for Garden (1858/1866), MercenaryCamp (2303/2311), and
 // PowerSchool (2492/2500). Restoring all eight calls preserves their exact
@@ -1805,19 +1812,7 @@ MAC_ADDRESS(0x0ad3b4, 0x224)
 void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
                                      bool humanPlayer)
 {
-    if (currentHero->m_defenseTowerFlags & (1 << cell->m_extraInfo)) {
-        if (humanPlayer)
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED],
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (humanPlayer) {
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_DEFENSE_TOWER],
-                         1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
-        }
-        currentHero->adjustPrimarySkill(1, 1);
-        g_game->setInfoFlag(DefenseTowerInfo, g_netLocalGamePos);
-        currentHero->m_defenseTowerFlags |= 1 << cell->m_extraInfo;
-    }
+    doEventPrimarySkillSite(currentHero, cell, humanPlayer, ePriSkillDefense);
 }
 
 // DC events.cpp:1677 isolates the creature-bank empty bit; Mac
@@ -1955,8 +1950,7 @@ void advManager::doEventFountainOfYouth(hero* currentHero, NewmapCell* cell,
     g->setInfoFlag(FountainOfYouthInfo, g_netLocalGamePos);
     currentHero->m_flags |= 0x4000;
     currentHero->m_moraleBonus++;
-    currentHero->m_maxMovePoints += 400;
-    currentHero->m_movePoints += 400;
+    currentHero->addMovementBonus(400);
     if (humanPlayer)
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
@@ -1967,19 +1961,7 @@ MAC_ADDRESS(0x0ae0fc, 0x224)
 void advManager::doEventGarden(hero* currentHero, NewmapCell* cell,
                                bool humanPlayer)
 {
-    if (currentHero->m_gardenOfRevelationFlags & (1 << cell->m_extraInfo)) {
-        if (humanPlayer)
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN_VISITED],
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (humanPlayer) {
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_GARDEN],
-                         1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
-        }
-        currentHero->adjustPrimarySkill(3, 1);
-        g_game->setInfoFlag(GardenOfRevelationInfo, g_netLocalGamePos);
-        currentHero->m_gardenOfRevelationFlags |= 1 << cell->m_extraInfo;
-    }
+    doEventPrimarySkillSite(currentHero, cell, humanPlayer, ePriSkillKnowledge);
 }
 
 // Dreamcast keeps these object visitors as named source boundaries. Mac also
@@ -2502,19 +2484,7 @@ MAC_ADDRESS(0x0afb0c, 0x224)
 void advManager::doEventMercenaryCamp(hero* currentHero, NewmapCell* cell,
                                       bool humanPlayer)
 {
-    if (currentHero->m_mercCampFlags & (1 << cell->m_extraInfo)) {
-        if (humanPlayer)
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP_VISITED],
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (humanPlayer) {
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MERC_CAMP],
-                         1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
-        }
-        currentHero->adjustPrimarySkill(0, 1);
-        g_game->setInfoFlag(MercCampInfo, g_netLocalGamePos);
-        currentHero->m_mercCampFlags |= 1 << cell->m_extraInfo;
-    }
+    doEventPrimarySkillSite(currentHero, cell, humanPlayer, ePriSkillAttack);
 }
 
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
@@ -2625,8 +2595,7 @@ void advManager::doEventOasis(hero* currentHero, NewmapCell* cell,
     game* g = g_game;
     g->setInfoFlag(OasisInfo, g_netLocalGamePos);
     currentHero->m_moraleBonus++;
-    currentHero->m_maxMovePoints += 800;
-    currentHero->m_movePoints += 800;
+    currentHero->addMovementBonus(800);
     if (humanPlayer)
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
@@ -2637,19 +2606,7 @@ MAC_ADDRESS(0x0b064c, 0x224)
 void advManager::doEventPowerSchool(hero* currentHero, NewmapCell* cell,
                                     bool humanPlayer)
 {
-    if (currentHero->m_powerSchoolFlags & (1 << cell->m_extraInfo)) {
-        if (humanPlayer)
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL_VISITED],
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-    } else {
-        if (humanPlayer) {
-            normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_POWER_SCHOOL],
-                         1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
-        }
-        currentHero->adjustPrimarySkill(2, 1);
-        g_game->setInfoFlag(PowerSchoolInfo, g_netLocalGamePos);
-        currentHero->m_powerSchoolFlags |= 1 << cell->m_extraInfo;
-    }
+    doEventPrimarySkillSite(currentHero, cell, humanPlayer, ePriSkillPower);
 }
 
 VA(0x004a3eb0, 0x376)
@@ -2696,15 +2653,13 @@ void advManager::doEventPrison(hero* currentHero, NewmapCell* cell,
     prisoner->m_owner = currentHero->m_owner;
     g_game->m_heroAvailability[heroID] = currentHero->m_owner;
     g_game->m_heroPoolMap[heroID][currentHero->m_owner] = 1;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = heroID;
-    ++g_currentPlayer->m_numHeroes;
+    g_currentPlayer->addHero(heroID);
     prisoner->m_x = point.m_x;
     prisoner->m_y = point.m_y;
     prisoner->m_z = point.m_z;
     prisoner->m_flags = 0;
     prisoner->m_facing = hero::kFacingE;
-    prisoner->m_movePoints = prisoner->getMobility();
-    prisoner->m_maxMovePoints = prisoner->m_movePoints;
+    prisoner->refreshMovement();
     cell->m_isTrigger = 0;
     cell->m_typeValue = 0;
     prisoner->obscureCell();
@@ -2808,8 +2763,7 @@ void advManager::doEventRallyFlag(hero* currentHero, NewmapCell* cell,
     g->setInfoFlag(RallyFlagInfo, g_netLocalGamePos);
     currentHero->m_moraleBonus++;
     currentHero->m_luckBonus++;
-    currentHero->m_maxMovePoints += 400;
-    currentHero->m_movePoints += 400;
+    currentHero->addMovementBonus(400);
     m_advWindow->updateHeroLocators(-1, 0, 0);
     if (humanPlayer)
         m_advWindow->updateHeroLocators(-1, 1, 1);
@@ -3306,10 +3260,7 @@ void advManager::doEventStables(hero* currentHero, NewmapCell* cell,
 {
     char granted = STABLES_NOTHING;
 
-    if (!(currentHero->m_flags & 2)) {
-        currentHero->m_flags |= 2;
-        currentHero->m_maxMovePoints += g_stablesMovementBonus;
-        currentHero->m_movePoints += g_stablesMovementBonus;
+    if (currentHero->grantStablesMovement()) {
         if (humanPlayer)
             m_advWindow->updateHeroLocators(-1, 1, 1);
         granted = STABLES_MOVEMENT;
@@ -3962,8 +3913,7 @@ void advManager::doEventWanderingMonster(NewmapCell* cell, hero* currentHero,
     completeDraw(false);
     updateScreen(0, 0);
     doWanderingMonsterResult(cell, currentHero, point, humanPlayer);
-    m_movingObjectIndex = -1;
-    m_movingObjectSequence = -1;
+    clearMovingObject();
 }
 
 // A human picks from a two-picture dialog (iMBType 10, the primary-skill
@@ -4118,8 +4068,7 @@ void advManager::doEventWateringHole(hero* currentHero, NewmapCell* cell,
     g->setInfoFlag(WateringHoleInfo, g_netLocalGamePos);
     currentHero->m_flags |= 0x40;
     currentHero->m_moraleBonus++;
-    currentHero->m_maxMovePoints += 400;
-    currentHero->m_movePoints += 400;
+    currentHero->addMovementBonus(400);
     if (humanPlayer)
         m_advWindow->updateHeroLocators(-1, 1, 1);
 }
@@ -5803,7 +5752,7 @@ void advManager::doWhirlpool(hero* who)
     if (who->m_army.getNumArmies() > 1) {
         who->m_army.m_numTroops[weakestArmy] >>= 1;
         if (!who->m_army.m_numTroops[weakestArmy])
-            who->m_army.m_armies[weakestArmy] = CREATURE_NONE;
+            who->m_army.dismiss(weakestArmy);
     } else if (who->m_army.m_numTroops[weakestArmy] > 1) {
         who->m_army.m_numTroops[weakestArmy] >>= 1;
     }
@@ -6059,8 +6008,7 @@ inline CTurnDurationPause::CTurnDurationPause()
 {
     g_turnDuration.pause();
     if (g_goSolo) {
-        g_game->m_players[g_soloPos].m_isLocal = 1;
-        g_game->m_players[g_soloPos].setHuman(1);
+        g_game->m_players[g_soloPos].setLocalHuman();
     }
 }
 
@@ -6073,8 +6021,7 @@ inline CTurnDurationPause::~CTurnDurationPause()
 {
     g_turnDuration.resume();
     if (g_goSolo && g_netLocalGamePos == g_soloPos) {
-        g_game->m_players[g_soloPos].m_isLocal = 0;
-        g_game->m_players[g_soloPos].setHuman(0);
+        g_game->m_players[g_soloPos].setComputer();
     }
 }
 

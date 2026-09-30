@@ -921,10 +921,7 @@ TCampaignBrief::~TCampaignBrief()
     if (m_zBuffer)
         delete[] m_zBuffer;
 
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Dreamcast proves this ordinary private helper and its four source-level
@@ -1217,10 +1214,7 @@ static int campaignBriefHandler(message& msg)
     }
 
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

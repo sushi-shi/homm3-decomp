@@ -89,8 +89,7 @@ army::army()
     for (int i = 0; i < MAX_SAMPLES; i++) {
         m_armySample[i] = 0;
     }
-    m_side = -1;
-    m_slot = -1;
+    clearAttackTarget();
     m_attackLimit = 0;
     m_pathTarget = 0;
     m_yModify = 0;
@@ -265,9 +264,8 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     }
     m_facing = 1 - newGroup;
     m_currFrameType = cs_wait;
-    m_side = -1;
+    clearAttackTarget();
     m_combatSide = newGroup;
-    m_slot = -1;
     m_bitIndex = newIndex;
     m_gridIndex = newGridIndex;
     m_numTroopsBattleResurrected = 0;
@@ -301,15 +299,11 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-        cell->m_armySide = static_cast<signed char>(getOwningSide());
-        cell->m_armySlot = static_cast<signed char>(m_bitIndex);
-        cell->m_partOfDouble = -1;
+        cell->setArmy(getOwningSide(), m_bitIndex, -1);
         if (is(creatureDoubleWide)) {
             hexcell& backCell =
                 g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            backCell.m_armySide = static_cast<signed char>(getOwningSide());
-            backCell.m_armySlot = static_cast<signed char>(m_bitIndex);
-            backCell.m_partOfDouble = m_facing != 0;
+            backCell.setArmy(getOwningSide(), m_bitIndex, m_facing != 0);
             cell->m_partOfDouble = m_facing == 0;
         }
         addAura();
@@ -537,24 +531,8 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
         if (getSpellTime(52))
             value -= m_luckPenalty;
 
-        if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-            do {
-                switch (m_monInfo.m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    continue;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    value += 2;
-                    break;
-                }
-            } while (0);
-        }
+        if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD)
+            value += getCloverFieldLuckBonus(m_monInfo.m_townType);
 
         if (m_creatureType == CREATURE_HALFLING && value < 1)
             value = 1;
@@ -584,46 +562,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
         if (getSpellTime(50))
             value -= m_moralePenalty;
 
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            do {
-                switch (m_monInfo.m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    ++value;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    --value;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            } while (0);
-        }
-        do {
-            if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-                switch (m_monInfo.m_townType) {
-                case TOWN_CASTLE:
-                case TOWN_RAMPART:
-                case TOWN_TOWER:
-                    --value;
-                    break;
-                case TOWN_INFERNO:
-                case TOWN_NECROPOLIS:
-                case TOWN_DUNGEON:
-                    ++value;
-                    break;
-                case TOWN_STRONGHOLD:
-                case TOWN_FORTRESS:
-                case TOWN_CONFLUX:
-                    continue;
-                }
-            }
-        } while (0);
+        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
+            || magicTerrain == MAGIC_TERRAIN_EVIL_FOG)
+            value += getTerrainMoraleModifier(m_monInfo.m_townType, magicTerrain);
 
         if ((m_creatureType == CREATURE_MINOTAUR
              || m_creatureType == CREATURE_MINOTAUR_KING)
@@ -2179,7 +2120,7 @@ DC_ADDRESS(0x0472f4, 0x2f8)
 MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
-    m_side = m_slot = -1;
+    clearAttackTarget();
     if (!findPath(destIndex, getSpeed(), 0, 0))
         return 0;
     int saveFacing = m_facing;
@@ -3265,34 +3206,14 @@ void army::processDeath(int fadeElementals)
         } else {
             if (cell->m_bodiesInHex < 14
                 && (!twoHex || cell2->m_bodiesInHex < 14)) {
-                if (g_combatManager->m_cells[m_gridIndex].hasArmy()) {
-                    cell->m_deadArmySide[cell->m_bodiesInHex] =
-                        g_combatManager->m_cells[m_gridIndex].m_armySide;
-                    cell->m_deadArmySlot[cell->m_bodiesInHex] =
-                        g_combatManager->m_cells[m_gridIndex].m_armySlot;
-                    cell->m_deadPartOfDouble[cell->m_bodiesInHex] =
-                        g_combatManager->m_cells[m_gridIndex].m_partOfDouble;
-                    cell->m_bodiesInHex++;
-                }
-                if (is(creatureDoubleWide)) {
-                    if (g_combatManager->m_cells[gi2].hasArmy()) {
-                        cell2->m_deadArmySide[cell2->m_bodiesInHex] =
-                            g_combatManager->m_cells[gi2].m_armySide;
-                        cell2->m_deadArmySlot[cell2->m_bodiesInHex] =
-                            g_combatManager->m_cells[gi2].m_armySlot;
-                        cell2->m_deadPartOfDouble[cell2->m_bodiesInHex] =
-                            g_combatManager->m_cells[gi2].m_partOfDouble;
-                        cell2->m_bodiesInHex++;
-                    }
-                }
+                cell->recordArmyBody();
+                if (is(creatureDoubleWide))
+                    cell2->recordArmyBody();
             }
             g_combatManager->m_highlighterOn = 0;
-            cell->m_armySide = -1;
-            cell->m_armySlot = -1;
-            if (is(creatureDoubleWide)) {
-                cell2->m_armySide = -1;
-                cell2->m_armySlot = -1;
-            }
+            cell->clearArmy();
+            if (is(creatureDoubleWide))
+                cell2->clearArmy();
         }
         if (m_mirrorSourceIndex != -1) {
             army* mirror =
@@ -3793,13 +3714,12 @@ void army::goBerserk()
     getBerserkTargets(berserkTargets);
     int count = berserkTargets.size();
     if (count == 0) {
-        g_combatManager->m_nextAction = 12;
+        g_combatManager->skipArmyAction();
         return;
     }
     army* target = berserkTargets[random(0, count - 1)];
     if (canShoot(0)) {
-        g_combatManager->m_nextAction = 7;
-        g_combatManager->m_nextActionGridIndex = target->m_gridIndex;
+        g_combatManager->queueShot(target->m_gridIndex);
         if (target->getOwningSide() == getOwningSide())
             g_combatManager->m_playDoh[getOwningSide()] = 1;
         return;
@@ -3864,8 +3784,7 @@ DC_ADDRESS(0x04a6a4, 0x108)
 MAC_ADDRESS(0x051968, 0x16c)
 unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 {
-    m_side = -1;
-    m_slot = -1;
+    clearAttackTarget();
     if (!g_combatManager->validHex(hex))
         return 0;
     if (!canFit(hex, 0, 0))
@@ -3906,8 +3825,7 @@ DC_ADDRESS(0x04a7ac, 0x10a)
 MAC_ADDRESS(0x051ad4, 0x1b4)
 unsigned char army::attackHex(int hex, unsigned char restoreFacing)
 {
-    m_side = -1;
-    m_slot = -1;
+    clearAttackTarget();
     if (!g_combatManager->validHex(hex))
         return 0;
     hexcell* cell = &g_combatManager->m_cells[hex];
@@ -3916,8 +3834,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
         return 0;
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
-    m_side = cell->m_armySide;
-    m_slot = cell->m_armySlot;
+    setAttackTarget(cell->m_armySide, cell->m_armySlot);
     m_pathTarget = hex;
     if (canShoot(0)) {
         rangeAttack();

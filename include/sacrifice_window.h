@@ -348,6 +348,8 @@ private:
         iconWidget** iconWidgets, iconWidget** selectionWidgets,
         textWidget** textWidgets);
     void unselect();
+    // Project state-only reset; unlike unselect(), it does not touch widgets.
+    void clearCreatureSelection();
     void update(long group, long index);
     void updateButtons();
     static int allCreatures(message& msg);

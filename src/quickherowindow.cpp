@@ -199,10 +199,7 @@ DC_ADDRESS(0x1177b4, 0x62)
 MAC_ADDRESS(0x14b424, 0xac)
 TQuickHeroWindow::~TQuickHeroWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA_COMPGEN(0x0052f440, 0x47, BASIC_IOS_INIT, char)

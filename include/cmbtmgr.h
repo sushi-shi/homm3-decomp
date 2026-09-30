@@ -604,6 +604,9 @@ public:
     // ORDINALS: no DC layout exists for combatManager at all (the
     // Dreamcast dump carries no fieldlist for it) and no string or
     // roster entry reaches either slot.
+private:
+    // Project-inferred boundary for the pending-action protocol. Original
+    // field access is unknown; preserve the four existing slots in place.
     int m_nextAction;  // +0x3c
     // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
     // acting stack's own gridIndex here when the target is already
@@ -619,6 +622,7 @@ public:
     // choice's own field_18 here, all three behind field_3c = 1.
     // Address ordinal for the same reason its neighbours are.
     int m_nextActionGridIndex2;  // +0x48
+public:
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
@@ -1483,6 +1487,11 @@ public:
 
 private:
     bool automateCatapult();  // 0x473c00
+    // Project-inferred action preparation retains both target hexes until
+    // the UI picker or a complete order supplies them.
+    void prepareAction(int action, int extra);
+    // Targeted command tuple; secondary spell target survives.
+    void setTargetAction(int action, int extra, int targetHex);
     unsigned char attemptShooterDefense(
         const army* currentArmy, searchArray* currentSearchArray,
         const type_AI_combat_parameters* estimate);  // 0x420760
@@ -1519,6 +1528,20 @@ public:
     // "what would clicking this hex do", DoCommand performs it.
     int getCommand(int newIndex);
     void doCommand(int command);
+    // Complete tuple for network reception, spell selection and snapshots.
+    void setPendingAction(int action, int extra, int targetHex,
+                          int secondTargetHex);
+    int getPendingActionCode() const;
+    int getPendingActionExtra() const;
+    int getPendingActionTarget() const;
+    // Interactive spell picking updates one target at a time. Cancellation
+    // invalidates only the opcode; the selected payload/hexes survive.
+    void selectActionTarget(int targetHex);
+    void selectSecondaryActionTarget(int targetHex);
+    void cancelPendingAction();
+    // AI/berserk shots retain the existing extra/secondary payload.
+    void queueShot(int targetHex);
+    void skipArmyAction();
     int rightClick(int newIndex);  // 0x4769c0
     // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
     // spell-book case, which calls it with `this` only, compares the
@@ -1897,6 +1920,11 @@ private:
     void loadArmies(unsigned char isSurrounded);
     void checkNativeTerrain();
     void combineGroups(armyGroup* src, armyGroup* dest);
+    // Project-inferred ordered dismissal shared by input/action transitions.
+    void hideInfoSubWindows();
+    // Project-inferred cell selection plus displayed-command invalidation.
+    // Does not compute a command, update a cursor or force a mouse event.
+    void invalidateCommandForCell(int cell);
 
 public:
     static float computeDamageModifier(int attack, int defense);

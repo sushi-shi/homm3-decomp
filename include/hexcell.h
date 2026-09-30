@@ -112,6 +112,13 @@ public:
     // const enemy_is_adjacent could not compile without it.
     army* getArmy() const;
     army* getDeadArmy(int i) const;
+    // Project-inferred occupancy operations. Death/vanishing clears only
+    // identity; movement and map initialization also reset the double marker.
+    void setArmy(int side, int slot, int partOfDouble);
+    void clearArmy();
+    void resetArmy();
+    // Caller checks capacity for both cells of a double-wide army first.
+    void recordArmyBody();
 
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.

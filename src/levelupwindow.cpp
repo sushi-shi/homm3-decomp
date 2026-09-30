@@ -202,10 +202,7 @@ int TLevelUpWindow::windowHandler(message& msg)
 
     unsigned long deadline = g_dialogDeadline;
     if (deadline && GameTime::isPast(deadline)) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 9999;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 9999);
         g_dialogDeadline = 0;
         return MESSAGE_DISPATCH_FORWARD;
     }
@@ -309,10 +306,7 @@ int TLevelUpWindow::windowHandler(message& msg)
             }
 
             case LEVELUP_ACCEPT_ID:
-                msg.m_id = MESSAGE_WIDGET;
-                g_windowManager->m_dialogReturn = g_levelUpWindow->m_selected;
-                msg.m_codeY = widget::WIDGET_END_DIALOG;
-                msg.m_codeX = widget::WIDGET_END_DIALOG;
+                g_windowManager->finishDialog(msg, g_levelUpWindow->m_selected);
                 return MESSAGE_DISPATCH_FORWARD;
             }
             return 0;

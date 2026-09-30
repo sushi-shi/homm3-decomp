@@ -677,10 +677,7 @@ THighScoreWindow::~THighScoreWindow()
 {
     m_hiScoreBack[1]->dispose();
     m_hiScoreBack[0]->dispose();
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // The two numeric columns are asymmetric, which is what fixes the family
@@ -899,10 +896,7 @@ int highScoreWindowHandler(message& msg)
     }
 
     if (endDialog) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, msg.m_codeY);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

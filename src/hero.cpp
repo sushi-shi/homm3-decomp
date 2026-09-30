@@ -659,8 +659,7 @@ void hero::placeInMap(int playerId, type_point point, unsigned char resetFlags)
     g_game->recordShowHero(this, static_cast<signed char>(playerId),
                              point, 0);
 
-    player->m_heroes[player->m_numHeroes] = m_id;
-    ++player->m_numHeroes;
+    player->addHero(m_id);
     g_game->m_heroAvailability[m_id] = static_cast<char>(playerId);
     g_game->m_heroPoolMap[m_id][playerId] = true;
 
@@ -1015,19 +1014,14 @@ void hero::initialize(short index)
 
     m_equipped[16].m_artifactId = ARTIFACT_CATAPULT;
     MEMSET(m_army.m_armies, CREATURE_NONE, sizeof(m_army.m_armies), i);
-    m_pathTargetY = -1;
-    m_pathTargetX = -1;
+    clearTarget();
     m_level = 1;
 
-    m_mana = static_cast<short>(getMaxMana());
+    resetManaToMaximum();
 
     m_maxMovePoints = 0;
     m_movePoints = 0;
-    m_flightLevel = eMasteryInvalid;
-    m_waterWalkLevel = eMasteryInvalid;
-    m_disguiseLevel = eMasteryInvalid;
-    m_dWalkSpellsCast = 0;
-    m_visionsPower = eMasteryInvalid;
+    resetAdventureSpells();
     m_hasCustomName = 0;
     m_customName = "";
     m_isSleeping = 0;
@@ -1190,8 +1184,8 @@ void hero::initialize(const HeroExtra* setup)
         checkLevel();
     }
 
-    m_mana = static_cast<short>(getMaxMana());
-    m_maxMovePoints = m_movePoints = getMobility();
+    resetManaToMaximum();
+    refreshMovement();
 }
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
@@ -1333,6 +1327,49 @@ unsigned char hero::hasArtifact(int whichArtifact) const
     return 0;
 }
 
+// Project-inferred shared victory query. Count and scan the required mask
+// in ascending artifact order, using the canonical equipment/backpack query.
+// Combination masks are nonempty; retain the original count-terminated scan
+// and bitset range behavior rather than making an empty mask a success.
+bool hero::hasCombinationComponents(const std::bitset<144>& components) const
+{
+    int remaining = components.count();
+    for (int artifact = 0;; ++artifact) {
+        if (components.test(artifact)) {
+            if (!hasArtifact(artifact))
+                return false;
+            if (--remaining == 0)
+                return true;
+        }
+    }
+}
+
+// Project-inferred reservation rule shared by both equipment displays.
+// Combination components reserve empty slots from the end of each class.
+// Occupied slots display their real artifact; inconsistent reservation counts
+// retain the original bitset range behavior during the descending scan.
+bool hero::isArtifactSlotReserved(TArtifactSlot slot) const
+{
+    if (getArtifact(slot).m_artifactId != ARTIFACT_NONE)
+        return false;
+    int type = g_artifactSlotTraits[slot].m_type;
+    unsigned int remaining = m_artifactSlotCounts[type];
+    if (remaining > 0) {
+        const std::bitset<19>& slots = g_artifactSlotMasks[type];
+        for (int i = 19;;) {
+            --i;
+            if (!slots.test(i))
+                continue;
+            if (i == slot)
+                return true;
+            if (getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
+                && --remaining == 0)
+                return false;
+        }
+    }
+    return false;
+}
+
 VA(0x004d91f0, 0x70)
 DC_ADDRESS(0x0cc26c, 0x3c)
 MAC_ADDRESS(0x0f4dfc, 0xc4)
@@ -1387,6 +1424,20 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
             return;
         }
     }
+}
+
+// Project-inferred resource operations from initialization/recruitment and
+// daily regeneration. A reset is unconditional; a raise tests the threshold.
+void hero::resetManaToMaximum()
+{
+    m_mana = static_cast<short>(getMaxMana());
+}
+
+void hero::raiseManaTo(int minimum)
+{
+    // Compare at full width before narrowing into the native SHORT field.
+    if (minimum > m_mana)
+        m_mana = static_cast<short>(minimum);
 }
 
 VA(0x004d92d0, 0x59)
@@ -1778,9 +1829,9 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
         g_advManager->hideRoute(0, 0, 0);
     }
 
-    if (m_flags & 0x40000) {
+    if (isOnBoat()) {
         g_game->getHeroBoat(m_id, 1)->m_allocated = 0;
-        m_flags &= 0xfffbffff;
+        setOnBoat(false);
     }
 
     type_obscuring_object::restoreCell();
@@ -1791,12 +1842,8 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     }
 
     int pos = player->findHero(m_id);
-    if (pos >= 0) {
-        for (int i = pos; i < player->m_numHeroes - 1; i++)
-            player->m_heroes[i] = player->m_heroes[i + 1];
-        player->m_heroes[player->m_numHeroes - 1] = -1;
-        player->m_numHeroes--;
-    }
+    if (pos >= 0)
+        player->removeHeroAt(pos);
     if (player->m_currHeroId == m_id) {
         player->m_currHeroId = -1;
         if (g_netLocalGamePos == m_owner)
@@ -1838,11 +1885,10 @@ void hero::deallocate(unsigned char gameLoaded, unsigned char remoteMove)
     }
 
     m_owner = -1;
-    m_pathTargetY = -1;
-    m_pathTargetX = -1;
+    clearTarget();
     if (!(m_flags & 0x20000)) {
-        m_mana = static_cast<short>(getMaxMana());
-        m_maxMovePoints = m_movePoints = getMobility();
+        resetManaToMaximum();
+        refreshMovement();
     }
 
     if (!g_combatSurrendered)
@@ -2355,25 +2401,8 @@ MAC_ADDRESS(0x0f71ec, 0x124)
 void THeroScreenWindow::updateSlot(TArtifactSlot slot)
 {
     TArtifact artifact = TArtifact(g_currentHero->getArtifact(slot).m_artifactId);
-    if (artifact == ARTIFACT_NONE) {
-        int type = g_artifactSlotTraits[slot].m_type;
-        unsigned int remaining = g_currentHero->m_artifactSlotCounts[type];
-        if (remaining > 0) {
-            int i = ARTIFACT_SLOT_COUNT;
-            while (true) {
-                --i;
-                if (!g_artifactSlotMasks[type].test(i))
-                    continue;
-                if (i == slot) {
-                    artifact = TArtifact(0x91);
-                    break;
-                }
-                if (g_currentHero->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
-                    && --remaining == 0)
-                    break;
-            }
-        }
-    }
+    if (artifact == ARTIFACT_NONE && g_currentHero->isArtifactSlotReserved(slot))
+        artifact = TArtifact(0x91);
 
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE
         && g_currentHero->heroFn004E2840(
@@ -3161,23 +3190,13 @@ std::string hero::getMoraleDescription() const
         morale += 3;
     }
 
-    if (m_owner >= 0) {
-        playerData& player = *getPlayer();
-        for (int i = 0; i < player.m_numTowns; i++) {
-            town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
-            // expands its checkIncluded path against the two active words.
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
-                && ownedTown->m_type == TOWN_CASTLE) {
-                // An explicit LF preserves Mac retail's 0a byte; CodeWarrior
-                // interprets an ordinary \n escape as Mac CR here.
-                result += formatString(
-                    "\x0A%s +2",
-                    getBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
-                morale += 2;
-                break;
-            }
-        }
+    if (m_owner >= 0 && getPlayer()->hasGrailTown(TOWN_CASTLE)) {
+        // An explicit LF preserves Mac retail's 0a byte; CodeWarrior
+        // interprets an ordinary \n escape as Mac CR here.
+        result += formatString(
+            "\x0A%s +2",
+            getBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
+        morale += 2;
     }
 
     // Mac repeats the subtraction before abs in each arm. A named modifier
@@ -3298,22 +3317,13 @@ std::string hero::getLuckDescription() const
         luck += 3;
     }
 
-    if (m_owner >= 0) {
-        playerData& player = *getPlayer();
-        for (int i = 0; i < player.m_numTowns; i++) {
-            town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            // Dreamcast hero.cpp:3149 names town::HasBuilding here.
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, 1)
-                && ownedTown->m_type == TOWN_RAMPART) {
-                // The explicit LF matches the seven-byte shared Mac Grail
-                // format at data 1+0x44c2c.
-                result += formatString(
-                    "\x0A%s +2",
-                    getBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
-                luck += 2;
-                break;
-            }
-        }
+    if (m_owner >= 0 && getPlayer()->hasGrailTown(TOWN_RAMPART)) {
+        // The explicit LF matches the seven-byte shared Mac Grail
+        // format at data 1+0x44c2c.
+        result += formatString(
+            "\x0A%s +2",
+            getBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
+        luck += 2;
     }
 
     // Repeating the difference in the two abs arms matches all 1492 Mac
@@ -3395,9 +3405,7 @@ MAC_ADDRESS(0x0f9684, 0x2c)  // anchor-vtable (slot 14 of 0x63eae8)
 int THeroScreenWindow::exitDialog(message& msg)
 {
     g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = 10;
-    msg.m_codeX = 10;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -3787,11 +3795,8 @@ int THeroScreenWindow::windowHandler(message& msg)
                     } else if (g_currentHero->m_army.m_armies[slot]
                                == g_currentHero->m_army
                                       .m_armies[g_heroScreenArmySlot]) {
-                        g_currentHero->m_army.m_numTroops[slot] +=
-                            g_currentHero->m_army.m_numTroops[g_heroScreenArmySlot];
-                        g_currentHero->m_army.m_numTroops[g_heroScreenArmySlot] = 0;
-                        g_currentHero->m_army.m_armies[g_heroScreenArmySlot] =
-                            CREATURE_NONE;
+                        g_currentHero->m_army.mergeStack(
+                            g_heroScreenArmySlot, &g_currentHero->m_army, slot);
                     } else {
                         g_currentHero->m_army.swap(slot, &g_currentHero->m_army,
                                                  g_heroScreenArmySlot);
@@ -3925,8 +3930,7 @@ int THeroScreenWindow::windowHandler(message& msg)
 
     if (exitFlag) {
         g_windowManager->m_dialogReturn = msg.m_codeY;
-        msg.m_codeY = 10;
-        msg.m_codeX = 10;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -4391,10 +4395,7 @@ THeroScreenWindow::~THeroScreenWindow()
     }
 
     g_heroScreenArmySlot = -1;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x004e1600, 0xCB)
@@ -5117,6 +5118,45 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
     return accepted;
 }
 
+// Project-inferred inverse operations from equipArtifact/removeArtifact.
+// Keep the native per-skill update and its signed-byte storage behavior.
+void hero::adjustArtifactPrimarySkills(int artifact, int direction)
+{
+    for (int skill = 0; skill < 4; skill++)
+        adjustPrimarySkill(skill,
+            direction * g_artifactPrimarySkillBonuses[artifact][skill]);
+}
+
+// Apply/remove each component's stats and extra slot reservation. The first
+// component in the assembled artifact's class uses the actual equipped slot;
+// all others reserve an extra slot. Return only the spell-refresh requirement:
+// the caller still changes the real slot and assembled bonuses in its order.
+bool hero::adjustCombinationBonuses(int artifact, int direction)
+{
+    bool updateSpells = false;
+    int combinationIndex = g_artifactTraits[artifact].m_comboType;
+    if (combinationIndex != -1) {
+        const std::bitset<144>& components =
+            g_combinationArtifacts[combinationIndex].m_components;
+        bool keptSlot = false;
+        for (int component = 0; component < 144; component++) {
+            if (components.test(component)) {
+                adjustArtifactPrimarySkills(component, direction);
+                updateSpells = updateSpells
+                    || g_artifactTraits[component].m_givesSpells;
+                int componentSlot =
+                    g_artifactTraits[component].m_allowableSlotMask;
+                if (componentSlot == g_artifactTraits[artifact].m_allowableSlotMask
+                    && !keptSlot)
+                    keptSlot = true;
+                else
+                    m_artifactSlotCounts[componentSlot] += direction;
+            }
+        }
+    }
+    return updateSpells;
+}
+
 // Original public ?equip_artifact@hero@@QAA_NABUtype_artifact@@J@Z
 // proves bool and const-reference formals. Complete dereferences the
 // supplied record without a null branch; the recursive spellbook case
@@ -5151,36 +5191,8 @@ bool hero::equipArtifact(const type_artifact& artifact, long slot)
         equipArtifact(spellbook, 17);
     }
 
-    bool updateSpells = false;
-    int combinationIndex =
-        g_artifactTraits[artifact.m_artifactId].m_comboType;
-    if (combinationIndex != -1) {
-        const std::bitset<144>& components =
-            g_combinationArtifacts[combinationIndex].m_components;
-        bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
-            if (components.test(component)) {
-                for (int skill = 0; skill < 4; skill++)
-                    adjustPrimarySkill(skill,
-                        g_artifactPrimarySkillBonuses[component][skill]);
-                updateSpells = updateSpells
-                    || g_artifactTraits[component].m_givesSpells;
-                int componentSlot =
-                    g_artifactTraits[component].m_allowableSlotMask;
-                if (componentSlot
-                        == g_artifactTraits[artifact.m_artifactId]
-                               .m_allowableSlotMask
-                    && !keptSlot)
-                    keptSlot = true;
-                else
-                    m_artifactSlotCounts[componentSlot]++;
-            }
-        }
-    }
-
-    for (int skill = 0; skill < 4; skill++)
-        adjustPrimarySkill(skill,
-            g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
+    bool updateSpells = adjustCombinationBonuses(artifact.m_artifactId, 1);
+    adjustArtifactPrimarySkills(artifact.m_artifactId, 1);
 
     if (updateSpells
         || g_artifactTraits[artifact.m_artifactId].m_givesSpells)
@@ -5217,36 +5229,9 @@ void hero::removeArtifact(long slot)
     if (artifact.m_artifactId == ARTIFACT_NONE)
         return;
 
-    bool updateSpells = false;
-    int combinationIndex =
-        g_artifactTraits[artifact.m_artifactId].m_comboType;
-    if (combinationIndex != -1) {
-        const std::bitset<144>& components =
-            g_combinationArtifacts[combinationIndex].m_components;
-        bool keptSlot = false;
-        for (int component = 0; component < 144; component++) {
-            if (components.test(component)) {
-                for (int skill = 0; skill < 4; skill++)
-                    adjustPrimarySkill(skill,
-                        -g_artifactPrimarySkillBonuses[component][skill]);
-                updateSpells = updateSpells
-                    || g_artifactTraits[component].m_givesSpells;
-                int componentSlot =
-                    g_artifactTraits[component].m_allowableSlotMask;
-                if (componentSlot
-                        == g_artifactTraits[artifact.m_artifactId].m_allowableSlotMask
-                    && !keptSlot)
-                    keptSlot = true;
-                else
-                    m_artifactSlotCounts[componentSlot]--;
-            }
-        }
-    }
-
+    bool updateSpells = adjustCombinationBonuses(artifact.m_artifactId, -1);
     m_equipped[slot] = type_artifact(ARTIFACT_NONE);
-    for (int skill = 0; skill < 4; skill++)
-        adjustPrimarySkill(skill,
-            -g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
+    adjustArtifactPrimarySkills(artifact.m_artifactId, -1);
     if (updateSpells
         || g_artifactTraits[artifact.m_artifactId].m_givesSpells)
         updateSpellList();
@@ -5558,17 +5543,8 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
     if (isWieldingArtifact(0x30))
         luck++;
 
-    if (m_owner >= 0) {
-        playerData& player = *getPlayer();
-        for (int i = 0; i < player.m_numTowns; i++) {
-            town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
-                ownedTown->m_type == TOWN_RAMPART) {
-                luck += 2;
-                break;
-            }
-        }
-    }
+    if (m_owner >= 0 && getPlayer()->hasGrailTown(TOWN_RAMPART))
+        luck += 2;
 
     luck += m_luckBonus;
     if (m_flags & 0x400000)
@@ -5607,17 +5583,8 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     if (isWieldingArtifact(0x33))
         morale++;
 
-    if (m_owner >= 0) {
-        playerData& player = *getPlayer();
-        for (int i = 0; i < player.m_numTowns; i++) {
-            town* ownedTown = g_game->getTown(player.m_townIds[i]);
-            if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
-                ownedTown->m_type == TOWN_CASTLE) {
-                morale += 2;
-                break;
-            }
-        }
-    }
+    if (m_owner >= 0 && getPlayer()->hasGrailTown(TOWN_CASTLE))
+        morale += 2;
 
     morale += m_moraleBonus;
     if (m_flags & 0x800000)
@@ -6022,7 +5989,31 @@ DC_ADDRESS(0x0d4d60, 0x50)
 MAC_ADDRESS(0x105be0, 0x38)
 int hero::getMobility() const
 {
-    return getMobility((m_flags >> 18) & 1);
+    return getMobility(isOnBoat());
+}
+
+// Project-inferred operations shared by turn/campaign setup, prison release
+// and adventure rewards. Refresh stores remaining points before allowance;
+// bonuses update allowance before remaining points and never recompute it.
+void hero::refreshMovement()
+{
+    m_movePoints = getMobility();
+    m_maxMovePoints = m_movePoints;
+}
+
+void hero::addMovementBonus(int bonus)
+{
+    m_maxMovePoints += bonus;
+    m_movePoints += bonus;
+}
+
+bool hero::grantStablesMovement()
+{
+    if (m_flags & 2)
+        return false;
+    m_flags |= 2;
+    addMovementBonus(g_stablesMovementBonus);
+    return true;
 }
 
 VA(0x004e4db0, 0x10D)
@@ -6218,6 +6209,33 @@ int hero::getManaFrame() const
     return frame;
 }
 
+// Project-inferred visit interface shared by the event, AI and help paths.
+// Read/write only the selected site's native public mask; serialization and
+// initialization retain their separate field order.
+bool hero::visitedPrimarySkillSite(TPrimarySkill skill, int siteId) const
+{
+    unsigned long visits;
+    switch (skill) {
+    case ePriSkillAttack: visits = m_mercCampFlags; break;
+    case ePriSkillDefense: visits = m_defenseTowerFlags; break;
+    case ePriSkillPower: visits = m_powerSchoolFlags; break;
+    case ePriSkillKnowledge: visits = m_gardenOfRevelationFlags; break;
+    default: return false;
+    }
+    return (visits & (1UL << siteId)) != 0;
+}
+
+void hero::markPrimarySkillSiteVisited(TPrimarySkill skill, int siteId)
+{
+    unsigned long visit = 1UL << siteId;
+    switch (skill) {
+    case ePriSkillAttack: m_mercCampFlags |= visit; break;
+    case ePriSkillDefense: m_defenseTowerFlags |= visit; break;
+    case ePriSkillPower: m_powerSchoolFlags |= visit; break;
+    case ePriSkillKnowledge: m_gardenOfRevelationFlags |= visit; break;
+    }
+}
+
 VA(0x004e53c0, 0x1E)
 DC_ADDRESS(0x0d5060, 0x12)
 MAC_ADDRESS(0x1063d8, 0x28)
@@ -6398,6 +6416,39 @@ long hero::getHitPointBonus(int creatureType) const
     return bonus;
 }
 
+// Project-inferred names for the shared boat-bit predicate and mutation.
+// Playback uses only this mutation; live boarding/landing also charge movement.
+bool hero::isOnBoat() const
+{
+    return (m_flags & 0x40000) != 0;
+}
+
+void hero::setOnBoat(bool onBoat)
+{
+    if (onBoat)
+        m_flags |= 0x40000;
+    else
+        m_flags &= ~0x40000;
+}
+
+// Project-inferred operation shared by doEventBoat and doEventAnchor.
+// Keep the signed multiply/divide order and the original unlimited-move bypass.
+bool hero::applyBoatMovementCost(unsigned char seaMovement)
+{
+    if (m_flags & 0x1000000)
+        return false;
+    if (isWieldingArtifact(0x88)) {
+        int oldMaxMovePoints = m_maxMovePoints;
+        int oldMovePoints = m_movePoints;
+        int newMaxMovePoints = getMobility(seaMovement);
+        m_maxMovePoints = newMaxMovePoints;
+        m_movePoints = newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
+    } else {
+        m_movePoints = 0;
+    }
+    return true;
+}
+
 // DC hero.cpp:6356 names get_location and game::get_cell; VC6 expands both.
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)
@@ -6406,7 +6457,7 @@ unsigned char hero::canLand() const
 {
     NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)
-        == ((m_flags & 0x40000) == 0)) {
+        == (!isOnBoat())) {
         return 0;
     }
     if (!(cell->m_flags0011 & 0x40))
@@ -6414,6 +6465,22 @@ unsigned char hero::canLand() const
     if (cell->m_isTrigger && g_adventureObjectTraits[cell->m_type].m_blocksLanding)
         return 0;
     return 1;
+}
+
+// Project-inferred reset shared by boarding and the complete daily reset.
+// Calling fly(-1) would charge mana; these are spell-state invalidations.
+void hero::clearMovementSpells()
+{
+    m_flightLevel = eMasteryInvalid;
+    walkOnWater(eMasteryInvalid);
+}
+
+void hero::resetAdventureSpells()
+{
+    clearMovementSpells();
+    m_disguiseLevel = eMasteryInvalid;
+    m_dWalkSpellsCast = 0;
+    m_visionsPower = eMasteryInvalid;
 }
 
 VA(0x004e5dd0, 0x10)
@@ -6458,6 +6525,22 @@ unsigned char hero::isInIdentifyRange(const type_point* location) const
     return 0;
 }
 
+// Project-inferred owner rule shared by isMobile and cursor movement.
+// This minimum uses stored spell levels, unlike getTerrainCost's artifact
+// overrides; delegate the terrain calculation to the existing canonical helper.
+int hero::getMinimumTerrainCost(const NewmapCell* cell, int pointsLeft) const
+{
+    if (isOnBoat()) {
+        return minimumTerrainCost(
+            cell, pointsLeft, getSecondarySkill(eSecSkillPathfinding), -1, -1,
+            m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
+    }
+    return minimumTerrainCost(
+        cell, pointsLeft, getSecondarySkill(eSecSkillPathfinding),
+        m_flightLevel, m_waterWalkLevel,
+        m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
+}
+
 // Dreamcast hero.cpp:6407/6414/6418 calls get_location and the typed
 // get_secondary_skill accessor. Both header helpers expand in retail.
 VA(0x004e5f30, 0xBF)
@@ -6466,17 +6549,7 @@ MAC_ADDRESS(0x106e6c, 0x12c)
 unsigned char hero::isMobile() const
 {
     NewmapCell* cell = g_advManager->getCell(getLocation());
-    int cost;
-    if (m_flags & 0x40000) {
-        cost = minimumTerrainCost(
-            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding), -1, -1,
-            m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
-    } else {
-        cost = minimumTerrainCost(
-            cell, m_movePoints, getSecondarySkill(eSecSkillPathfinding),
-            m_flightLevel, m_waterWalkLevel,
-            m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
-    }
+    int cost = getMinimumTerrainCost(cell, m_movePoints);
     return m_movePoints >= cost;
 }
 

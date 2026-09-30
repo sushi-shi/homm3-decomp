@@ -250,7 +250,7 @@ int getTerrainCost(hero* currentHero, type_point start, int direction, int moveL
         flying = 3;
     if (currentHero->isWieldingArtifact(0x5a))
         waterWalking = 3;
-    if (currentHero->m_flags & 0x40000)
+    if (currentHero->isOnBoat())
         waterWalking = flying = -1;
     long mastery = currentHero->getSecondarySkill(eSecSkillPathfinding);
     return calcTerrainCost(from, direction, moveLeft, mastery,

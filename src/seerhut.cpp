@@ -2529,6 +2529,77 @@ static type_quest* readQuestFromMap(TAbstractFile* infile,
     return quest;
 }
 
+// Project owner operation: keep sequential stream reads and their exact
+// signed/packed destinations together. Unknown tags leave payload bytes alone;
+// the enclosing hut still consumes the two reserved bytes after this record.
+void TSeerReward::readFromMap(TAbstractFile* infile, int mapVersion)
+{
+    m_rewardType = readValue<unsigned char>(infile);
+
+    switch (m_rewardType) {
+    case eRewardExperience: {
+        m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardMana: {
+        m_value.m_dwords[0] = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardMorale: {
+        m_value.m_signedLow.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardLuck: {
+        m_value.m_signedLow.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardResource: {
+        m_value.m_resource.m_resourceType = readValue<signed char>(infile);
+        m_value.m_resource.m_quantity = readLittleEndianValue<int>(infile);
+        break;
+    }
+
+    case eRewardPrimarySkill: {
+        m_value.m_primarySkill.m_skillType = readValue<signed char>(infile);
+        m_value.m_primarySkill.m_bonus = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardSecondarySkill: {
+        m_value.m_secondarySkill.m_skillType = readValue<signed char>(infile);
+        m_value.m_secondarySkill.m_bonus = readValue<signed char>(infile);
+        break;
+    }
+
+    case eRewardArtifact:
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_value.m_dwords[0] = readValue<unsigned char>(infile);
+        } else {
+            m_value.m_dwords[0] = readLittleEndianValue<short>(infile);
+        }
+        break;
+
+    case eRewardSpell: {
+        m_value.m_dwords[0] = readValue<unsigned char>(infile);
+        break;
+    }
+
+    case eRewardCreature: {
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            m_value.m_creature.m_creatureType = readValue<unsigned char>(infile);
+        } else {
+            m_value.m_creature.m_creatureType = readLittleEndianValue<short>(infile);
+        }
+        m_value.m_creature.m_count = readLittleEndianValue<unsigned short>(infile);
+        break;
+    }
+    }
+}
+
 VA(0x00574610, 0x480)
 MAC_ADDRESS(0x16aae8, 0x534)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
@@ -2547,70 +2618,7 @@ void TSeerHut::read(TAbstractFile* infile)
     }
 
     m_completedByPlayer = 0;
-    m_reward.setRewardKind(readValue<unsigned char>(infile));
-
-    switch (m_reward.getRewardKind()) {
-    case eRewardExperience: {
-        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardMana: {
-        m_reward.setScalarValue(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardMorale: {
-        m_reward.setBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardLuck: {
-        m_reward.setBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardResource: {
-        m_reward.setResourceType(readValue<signed char>(infile));
-        m_reward.setResourceQuantity(readLittleEndianValue<int>(infile));
-        break;
-    }
-
-    case eRewardPrimarySkill: {
-        m_reward.setPrimarySkillType(readValue<signed char>(infile));
-        m_reward.setPrimarySkillBonus(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardSecondarySkill: {
-        m_reward.setSecondarySkillType(readValue<signed char>(infile));
-        m_reward.setSecondarySkillBonus(readValue<signed char>(infile));
-        break;
-    }
-
-    case eRewardArtifact:
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.setScalarValue(readValue<unsigned char>(infile));
-        } else {
-            m_reward.setScalarValue(readLittleEndianValue<short>(infile));
-        }
-        break;
-
-    case eRewardSpell: {
-        m_reward.setScalarValue(readValue<unsigned char>(infile));
-        break;
-    }
-
-    case eRewardCreature: {
-        if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-            m_reward.setCreatureType(readValue<unsigned char>(infile));
-        } else {
-            m_reward.setCreatureType(readLittleEndianValue<short>(infile));
-        }
-        m_reward.setCreatureCount(readLittleEndianValue<unsigned short>(infile));
-        break;
-    }
-    }
+    m_reward.readFromMap(infile, g_game->m_mapHeader.m_version);
 
     readValue<short>(infile);  // reserved bytes
 

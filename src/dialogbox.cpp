@@ -36,10 +36,7 @@ DC_ADDRESS(0x0817f8, 0x62)
 MAC_ADDRESS(0x0a15c0, 0xac)
 TDialogBox::~TDialogBox()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x0048ff00, 0x833)
@@ -215,10 +212,7 @@ DC_ADDRESS(0x081f98, 0x16)
 MAC_ADDRESS(0x0a2344, 0x2c)
 int CTextDialog::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, msg.m_codeY);
     return MESSAGE_DISPATCH_FORWARD;
 }
 

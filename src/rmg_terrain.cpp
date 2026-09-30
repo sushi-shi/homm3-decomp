@@ -110,9 +110,7 @@ void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint&
         || current.getFlipX() != flipX || current.getFlipY() != flipY) {
         unsigned int frame = table->m_ranges[selected].m_firstIndex
             + rand() % table->m_ranges[selected].m_valueCount;
-        current.setFrame(frame);
-        current.setFlipX(flipX);
-        current.setFlipY(flipY);
+        current.setFrameAndFlips(frame, flipX, flipY);
         tile.setTile(current);
     }
 }
@@ -502,11 +500,8 @@ void rmgTerrainPainter::initializePackedCell(
 {
     rmgTerrainTile tile = m_adapter->getTile(point);
     TRmgPackedTerrainCell& packed = m_packedCells[index];
-    packed.setTerrain(tile.m_terrain);
-    packed.setFrame(tile.getFrame());
-    packed.setFlipX(tile.getFlipX());
-    packed.setFlipY(tile.getFlipY());
-    packed.setInitialized(1);
+    packed.setTile(tile);
+    packed.setInitialized();
 }
 
 VA(0x005B3E40, 0x38)
@@ -800,10 +795,7 @@ void rmgTerrainPainter::setTile(
     m_adapter->setTile(point, tile);
     TRmgPackedTerrainCell& packed = m_packedCells[point.getY() * m_size.getX() + point.getX()];
     packed.setInitialized();
-    packed.setTerrain(tile.m_terrain);
-    packed.setFrame(tile.getFrame());
-    packed.setFlipX(tile.getFlipX());
-    packed.setFlipY(tile.getFlipY());
+    packed.setTile(tile);
 }
 
 // The base-tile block of paintPoint as paintRectangle's own helper: its one
@@ -1254,28 +1246,24 @@ void rmgTerrainPainter::paintTransitions()
 
                 int newFrame;
                 if (transition) {
-                    newFrame = g_rmgTerrainRules[tile.m_terrain]
+                    newFrame = g_rmgTerrainRules[tile.getTerrain()]
                         ->selectTransitionFrame(
                             transition, flip, flip, tile.getFrame());
                 } else {
-                    newFrame = selectBaseFrame(point, tile.m_terrain, tile.getFrame());
+                    newFrame = selectBaseFrame(point, tile.getTerrain(), tile.getFrame());
                 }
 
                 if (tile.getFrame() != newFrame || tile.getFlipX() != flip.m_flipX
                     || tile.getFlipY() != flip.m_flipY) {
-                    tile.setFlipX(flip.m_flipX);
-                    tile.setFlipY(flip.m_flipY);
-                    tile.setFrame(newFrame);
+                    tile.setFrameAndFlips(newFrame, flip.m_flipX, flip.m_flipY);
                     setTile(point, tile);
                 }
             } else {
                 rmgTerrainTile tile = getPackedCell(point)->getTile();
 
-                int newFrame = selectBaseFrame(point, tile.m_terrain, tile.getFrame());
+                int newFrame = selectBaseFrame(point, tile.getTerrain(), tile.getFrame());
                 if (tile.getFrame() != newFrame || tile.getFlipX() || tile.getFlipY()) {
-                    tile.setFrame(newFrame);
-                    tile.setFlipX(0);
-                    tile.setFlipY(0);
+                    tile.setFrameAndFlips(newFrame, 0, 0);
                     setTile(point, tile);
                 }
             }

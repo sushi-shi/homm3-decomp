@@ -169,9 +169,8 @@ VA(0x0055EDC0, 0x36)
 MAC_ADDRESS(0x253ae0, 0x54) // anchor-vtable 0x641174/0x641190/0x6411f0/0x64120c +4
 void TRmgLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.getFrame());
-    snapshot.setFlipX(tile.getFlipX());
-    snapshot.setFlipY(tile.getFlipY());
+    rmgTerrainTile snapshot(tile.getTerrain(), tile.getFrame(),
+                            tile.getFlipX(), tile.getFlipY());
     m_adapter->setTile(point, snapshot);
 }
 
@@ -232,9 +231,8 @@ TRmgLinePatternTable* TRmgRoadLinePainter::getPattern(int)
 MAC_ADDRESS(0x253fc8, 0x54)
 void TRmgRoadLinePainter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile)
 {
-    rmgTerrainTile snapshot(tile.m_terrain, tile.getFrame());
-    snapshot.setFlipX(tile.getFlipX());
-    snapshot.setFlipY(tile.getFlipY());
+    rmgTerrainTile snapshot(tile.getTerrain(), tile.getFrame(),
+                            tile.getFlipX(), tile.getFlipY());
     m_adapter->setTile(point, snapshot);
 }
 

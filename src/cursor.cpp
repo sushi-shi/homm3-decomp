@@ -91,7 +91,7 @@ void advManager::drawCursor(int cellX, int cellY)
 
     hero* curr = g_game->getCurrHero();
     if (curr) {
-        if (curr->m_flags & 0x40000) {
+        if (curr->isOnBoat()) {
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
 
             if (!getCell(curr->getLocation())->m_isBeachBorder) {
@@ -143,7 +143,7 @@ void advManager::drawCursorShadow(int cellX, int cellY)
 
     hero* curr = g_game->getCurrHero();
     if (curr) {
-        if (curr->m_flags & 0x40000) {
+        if (curr->isOnBoat()) {
             boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
             m_boatIcons[currBoat->m_type]->drawHeroShadow(
                 m_cursorSequence, m_cursorFrameCount,
@@ -190,7 +190,7 @@ void advManager::drawCursorAlpha()
 
             hero* curr = g_game->getCurrHero();
 
-            if (curr->m_flags & 0x40000) {
+            if (curr->isOnBoat()) {
                 boat* currBoat = g_game->getHeroBoat(curr->m_id, 1);
                 m_boatFlagIcons[currBoat->m_type][curr->m_owner]->drawHeroAlpha(
                     m_cursorSequence, (m_animCtr + m_cursorFrameCount) % 8,
@@ -272,7 +272,7 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isR
 
     if (!isRemoteMove
         && (origX != curr->m_x || origY != curr->m_y)) {
-        if (!((curr->m_flags & 0x40000)
+        if (!(curr->isOnBoat()
               && returnCell && returnCell->m_type == ANCHOR_POINT)
             && (getMapExtra(curr->m_x, curr->m_y, curr->m_z) & 0x100)
             && (!returnCell || returnCell->m_type != BOAT)) {
@@ -460,18 +460,9 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
 
     curMoveCost = getTerrainCost(curr, curr->getLocation(), direction,
                                  curr->m_movePoints);
-    // DC 617/623 independently expands get_secondary_skill in these arms.
-    if (curr->m_flags & 0x40000) {
-        nextMoveMinCost = minimumTerrainCost(
-            destCell, curr->m_movePoints - curMoveCost, curr->getSecondarySkill(eSecSkillPathfinding),
-            -1, -1,
-            curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
-    } else {
-        nextMoveMinCost = minimumTerrainCost(
-            destCell, curr->m_movePoints - curMoveCost, curr->getSecondarySkill(eSecSkillPathfinding),
-            curr->m_flightLevel, curr->m_waterWalkLevel,
-            curr->m_army.getCreatureTotal(CREATURE_NOMAD) > 0);
-    }
+    // DC 617/623 expands get_secondary_skill in the boat/land arms.
+    nextMoveMinCost = curr->getMinimumTerrainCost(
+        destCell, curr->m_movePoints - curMoveCost);
 
     if (!isRemoteMove && curr->m_movePoints < curMoveCost) {
         *noMove = 1;
@@ -488,13 +479,13 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         turnTo(direction);
     curr->m_facing = direction;
 
-    if ((curr->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT) {
+    if (curr->isOnBoat() && destCell->m_type == ANCHOR_POINT) {
         oldBoat = g_game->getHeroBoat(curr->m_id, 1);
         getCell(curr->getLocation());
 
         if (g_remoteOn && isRemoteMove) {
             curr->restoreCell();
-            curr->m_flags &= ~0x40000;
+            curr->setOnBoat(false);
         }
 
         g_game->recordHideHero(curr, curr->m_owner, 0);
@@ -523,7 +514,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
         && g_advManager->validMoveWithEvent(curr, direction)) {
         switch (destCell->m_type) {
         case BOAT:
-            if (curr->m_flags & 0x40000)
+            if (curr->isOnBoat())
                 return endMoveHero(curr, 0, isRemoteMove,
                                      origX, origY, standEnd,
                                      foughtBattle);
@@ -546,9 +537,9 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
             break;
 
         case HERO:
-            if (curr->m_flags & 0x40000) {
+            if (curr->isOnBoat()) {
                 hero* other = g_game->getHero(destCell->m_extraInfo);
-                if (!(other->m_flags & 0x40000))
+                if (!other->isOnBoat())
                     return endMoveHero(curr, 0, isRemoteMove,
                                          origX, origY, standEnd,
                                          foughtBattle);
@@ -667,7 +658,7 @@ NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& trigg
 
     NewmapCell* eventCell = getCell(triggerPoint);
     if (eventCell->m_isTrigger
-        || ((curr->m_flags & 0x40000)
+        || (curr->isOnBoat()
             && eventCell->m_type == ANCHOR_POINT)) {
         if ((!curr->isFlying(0)
              || curr->getTarget() == triggerPoint)
@@ -789,9 +780,9 @@ int advManager::validMoveWithEvent(hero* who, int direction)
     if (destCell->m_type != HERO)
         return validMove(who, direction, 1, 0);
 
-    if (who->m_flags & 0x40000) {
+    if (who->isOnBoat()) {
         hero* occupant = g_game->getHero(destCell->m_extraInfo);
-        return (occupant->m_flags & 0x40000) ? 1 : 0;
+        return occupant->isOnBoat() ? 1 : 0;
     }
     return 1;
 }
@@ -826,7 +817,7 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
         return 0;
 
     if (destCell->m_groundSet == eTerrainWater) {
-        if (!(currentHero->m_flags & 0x40000)
+        if (!currentHero->isOnBoat()
                 && !(currentHero->canWalkOnWater(0) && !normalMoveOnly)) {
             if (!(destCell->m_type == BOAT && destCell->m_isTrigger)
                     && !(destCell->m_type == SHIPWRECK
@@ -844,9 +835,9 @@ int advManager::validMove(const hero* currentHero, int direction, int withEvent,
                 return 0;
         }
     } else {
-        if ((currentHero->m_flags & 0x40000) && destCell->m_type != ANCHOR_POINT)
+        if (currentHero->isOnBoat() && destCell->m_type != ANCHOR_POINT)
             return 0;
-        if ((currentHero->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT)
+        if (currentHero->isOnBoat() && destCell->m_type == ANCHOR_POINT)
             return 1;
     }
 

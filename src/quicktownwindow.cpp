@@ -200,10 +200,7 @@ DC_ADDRESS(0x1184c4, 0xa0)
 MAC_ADDRESS(0x14cae0, 0xac)
 TQuickTownWindow::~TQuickTownWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Retail +0x1de and +0x272 push "tiny.fnt" (0x660cb4) for the quantities.

@@ -767,6 +767,17 @@ public:
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
 
+    // Project operations for DC groupToAttack/indexToAttack. These identify
+    // the chosen target, independently of this stack's own side and index.
+    void setAttackTarget(int side, int index)
+    {
+        m_side = side;
+        m_slot = index;
+    }
+    void clearAttackTarget() { setAttackTarget(-1, -1); }
+    // Catapult targets use a hex in the index lane and no army side.
+    void setWallAttackTarget(int hex) { setAttackTarget(-1, hex); }
+
 private:
     // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
     // Keep this overload in its attested LF_FIELDLIST position.

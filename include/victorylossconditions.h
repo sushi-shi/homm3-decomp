@@ -77,6 +77,9 @@ public:
     DC_ADDRESS(0x0bccdc, 0x1e)
     VictoryConditionStruct()
       : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
+    // Project-inferred reader transition: reset result, retain condition payload.
+    // Native Type/GameWon/playerWinner remain public.
+    void resetForType(signed char type);
     int appliesToPlayer(long playerId) const;
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
@@ -110,6 +113,11 @@ public:
     unsigned char checkForTimeSurvival();
     bool checkForArtifactWin();
     unsigned char checkForGrailBuildingWin();
+
+private:
+    // Project-inferred complete result update; player-independent wins retain
+    // the existing winner and set only GameWon.
+    void recordWin(signed char player);
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -134,11 +142,17 @@ public:
     DC_ADDRESS(0x0bccfc, 0x22)
     LossConditionStruct()
       : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
+    // Same reader boundary as victory; payload and native-public fields stay.
+    void resetForType(signed char type);
     bool checkForDefeatedHeroLoss(const hero* loser);
     unsigned char heroKilled(const hero* loser);
     bool checkForDefeatedTownLoss(int oldOwner,
                                            const town* lostTown);
     unsigned char checkForTimeLimitExpired();
+
+private:
+    // Project-inferred player/result pair. Hero loss stages the identity later.
+    void recordLoss(signed char player);
 };
 SIZE(LossConditionStruct, 0x24);
 

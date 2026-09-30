@@ -89,6 +89,10 @@ public:
                  int fadeIn);
     int doDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int fadeIn);
+    // Project-inferred callback completion: save the manager result, then
+    // emit the conventional widget/end message with codeY END_DIALOG.
+    // The caller still returns MESSAGE_DISPATCH_FORWARD and owns cleanup.
+    void finishDialog(message& msg, int result);
     void doQuickView(heroWindow* window);
     void sleepAllWindows(unsigned char sleep);
     void updateScreen();

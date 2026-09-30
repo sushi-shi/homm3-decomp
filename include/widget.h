@@ -202,6 +202,10 @@ public:
         }
     }
 
+    // Project-inferred state-only operation used while assembling a redraw.
+    // Unlike show/hide, this does not dispatch messages or draw/update pixels.
+    void setActiveAndDrawn(bool on);
+
     // Dreamcast header inlines used by mode-switch paths.
     DC_ADDRESS(0x05abf4, 0x24)
     void hide()

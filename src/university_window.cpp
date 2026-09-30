@@ -484,9 +484,7 @@ int type_university_window::exitClick(message& msg)
 
     if (msg.m_codeX == widget::WIDGET_DESELECT
         && !(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 0;
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -544,8 +542,6 @@ DC_ADDRESS(0x18faa4, 0x34)
 MAC_ADDRESS(0x1fd0c0, 0x2c)  // link order + vtable slot 14
 int type_university_window::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeX = msg.m_codeY = 10;
+    g_windowManager->finishDialog(msg, 0);
     return MESSAGE_DISPATCH_FORWARD;
 }

@@ -374,6 +374,14 @@ public:
         m_heroIndex = -1;
     }
 
+    // Project operation used when a map or seat changes. Unlike
+    // resetAdvancedOptions, this retains the assigned player position.
+    void resetTownAndHero()
+    {
+        m_heroIndex = -1;
+        m_townIndex = -1;
+    }
+
     // Accessor boundary inferred from the existing property interface and
     // external field operations; these additional names are project names.
     int getPlayerPos() const { return m_playerPos; }

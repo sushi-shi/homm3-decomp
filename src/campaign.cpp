@@ -155,9 +155,7 @@ static int campaignSetSodHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_SOD_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(TCampaignSetWindow::CAMPAIGN_SET_SOD_ID);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -173,9 +171,7 @@ static int campaignSetArmHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_AB_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(TCampaignSetWindow::CAMPAIGN_SET_AB_ID);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -191,9 +187,7 @@ static int campaignSetCusHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CUSTOM_CAMPAIGN_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(TCampaignSetWindow::CUSTOM_CAMPAIGN_ID);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -209,9 +203,7 @@ static int campaignSetExitHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = DIALOG_RETURN_CANCEL;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(DIALOG_RETURN_CANCEL);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -227,9 +219,7 @@ static int campaignSetRoeHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     if (msg.m_codeX == widget::WIDGET_DESELECT && !(msg.m_qualifier & 0x200)) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = TCampaignSetWindow::CAMPAIGN_SET_ROE_ID;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(TCampaignSetWindow::CAMPAIGN_SET_ROE_ID);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;

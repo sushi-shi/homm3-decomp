@@ -1212,7 +1212,7 @@ DC_ADDRESS(0x110c58, 0x36)
 MAC_ADDRESS(0x142b14, 0x84)
 int valueOfDefenseTower(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_defenseTowerFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillDefense, cell->m_extraInfo))
         return 0;
     return static_cast<int>(
         currentHero->getExperienceIncrement()
@@ -1298,7 +1298,7 @@ DC_ADDRESS(0x111004, 0x24)
 MAC_ADDRESS(0x142f84, 0x28)
 int valueOfGarden(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_gardenOfRevelationFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillKnowledge, cell->m_extraInfo))
         return 0;
     return currentHero->getValueOfKnowledge();
 }
@@ -1483,7 +1483,7 @@ MAC_ADDRESS(0x143cb8, 0x84)
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell)
 {
-    if (currentHero->m_mercCampFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->visitedPrimarySkillSite(ePriSkillAttack, cell->m_extraInfo))
         return 0;
     return static_cast<int>(
         currentHero->getExperienceIncrement()
@@ -3241,7 +3241,7 @@ DC_ADDRESS(0x111e34, 0x6e)
 MAC_ADDRESS(0x1442f8, 0x28)
 int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
+    if (currentHero->visitedPrimarySkillSite(ePriSkillPower, cell->m_extraInfo))
         return 0;
     return currentHero->getValueOfPower();
 }

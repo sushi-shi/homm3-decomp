@@ -1491,10 +1491,7 @@ int type_sacrifice_window::exitClick(message& msg)
         type_sacrifice_window* window =
             static_cast<type_sacrifice_window*>(msg.m_window);
         window->clear();
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;
@@ -1761,10 +1758,7 @@ MAC_ADDRESS(0x15b7c8, 0x70)  // anchor-vtable slot 14
 int type_sacrifice_window::exitDialog(message& msg)
 {
     type_artifact_offering* artifact = &m_holdingArtifact;
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, 0);
 
     if (artifact->m_artifactId != -1) {
         returnArtifact(*artifact);
@@ -1813,6 +1807,15 @@ type_transformer_slot::type_transformer_slot(
 // 0x5654f0 - so neither row is an /OPT:ICF fold.
 VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
+// Project helper for the selection pair only. In creatureClick the old
+// indices remain live through both updates, after the border was hidden;
+// unselect() therefore cannot replace the entire intervening sequence.
+void type_skeleton_window::clearCreatureSelection()
+{
+    m_selectedGroup = -1;
+    m_selectedIndex = -1;
+}
+
 // DC proves push_back; its text subscripts forward to getText. At 98.3508%,
 // the final rollover append's growth path retains an extra vector::size.
 // Removing the vector alias or binding its pointer argument locally does
@@ -1827,8 +1830,7 @@ type_skeleton_window::type_skeleton_window(armyGroup* newArmy)
     m_selectedCreatures.initialize();
     m_armies[0] = newArmy;
     m_armies[1] = &m_selectedCreatures;
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 485, widgetId++, "SkTrnBk.pcx", 0x800);
@@ -1921,8 +1923,7 @@ void type_skeleton_window::unselect()
     if (m_selectedGroup < 0)
         return;
     m_selectBorder[m_selectedGroup][m_selectedIndex]->setVisible(0);
-    m_selectedGroup = -1;
-    m_selectedIndex = -1;
+    clearCreatureSelection();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
@@ -2050,8 +2051,7 @@ void type_skeleton_window::creatureClick(
         update(m_selectedGroup, m_selectedIndex);
 
         widget::clearHoverWidget();
-        m_selectedGroup = -1;
-        m_selectedIndex = -1;
+        clearCreatureSelection();
 
         updateButtons();
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -2080,9 +2080,7 @@ int type_skeleton_window::windowHandler(message& msg)
 DC_ADDRESS(0x128080, 0x16)
 int type_skeleton_window::exitDialog(message& msg)
 {
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = 0;
-    msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, 0);
     return MESSAGE_DISPATCH_FORWARD;
 }
 
@@ -2211,10 +2209,7 @@ int type_skeleton_window::exitClick(message& msg)
         type_skeleton_window* window =
             static_cast<type_skeleton_window*>(msg.m_window);
         moveAllArmies(window->m_armies[1], window->m_armies[0]);
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = 0;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, 0);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return 0;

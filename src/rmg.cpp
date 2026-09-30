@@ -404,6 +404,57 @@ void TRmgMapItem::clear()
     m_tileData = tileData;
 }
 
+// Project-inferred shared transitions from openPathPatch, markBorderPatch,
+// guard placement, border repair and the connection builders. Connection
+// decoration protects the current flags from these ordinary cell edits.
+void TRmgMapItem::openPath()
+{
+    if (!hasConnectionDecoration()) {
+        setBorderObject(0);
+        setSubterraneanGate(1);
+    }
+}
+
+void TRmgMapItem::markBorder()
+{
+    if (!hasConnectionDecoration()) {
+        setSubterraneanGate(0);
+        setBorderObject(1);
+    }
+}
+
+// The surrounding border-clearance ring only closes paths; wide route
+// clearing only removes the border mark. Neither is the two-flag transition.
+void TRmgMapItem::closePath()
+{
+    if (!hasConnectionDecoration())
+        setSubterraneanGate(0);
+}
+
+void TRmgMapItem::clearBorder()
+{
+    if (!hasConnectionDecoration())
+        setBorderObject(0);
+}
+
+// Project-inferred marker lifecycle. Installing a new marker first marks
+// the unprotected border; replacing one retains its existing path flags.
+// Clearing a marker removes protection before opening the path. Preserve
+// the packed direction width and the unrelated bits in m_connection.
+void TRmgMapItem::setConnectionDecoration(int direction)
+{
+    markBorder();
+    m_connection.m_direction = direction;
+    m_connection.m_present = 1;
+}
+
+void TRmgMapItem::clearConnectionDecoration()
+{
+    m_connection.m_present = 0;
+    m_connection.m_direction = 0;
+    openPath();
+}
+
 // The allocation uses the initialized dimensions. Both forms emit the exact
 // retained map constructor, but using its parameters instead over-inlines
 // this body into TRmgGeneratorBase::TRmgGeneratorBase (0x536070, 48.0526%).
@@ -465,8 +516,7 @@ unsigned char type_random_map::hasConnectedOutline(
             TRmgMapItem* item = getMapItem(x, y, position.m_z);
             if (!allowEntrances && item->isRoadEntrance())
                 return 0;
-            blocked = !item->getRoadPassable()
-                || item->getLandType() == eTerrainRock || item->isRoadEntrance();
+            blocked = !item->isPassableLand() || item->isRoadEntrance();
             if (requireGate && !item->hasSubterraneanGate())
                 blocked = 1;
             if ((item->getLandType() == eTerrainWater) != waterZone)
@@ -605,8 +655,7 @@ void type_random_map::floodConnectionCosts(TRmgMapPosition position, unsigned ch
                 || nextPosition.getY() < 0 || nextPosition.getY() >= m_mapHeight)
                 continue;
             TRmgMapItem* next = getMapItem(nextPosition);
-            if (next->m_zoneState.m_zone < 0 || !next->getRoadPassable()
-                || next->getLandType() == eTerrainRock)
+            if (next->m_zoneState.m_zone < 0 || !next->isPassableLand())
                 continue;
             if (next->isRoadEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->getObjectType();
@@ -716,10 +765,7 @@ MAC_ADDRESS(0x22e284, 0x1d0) // anchor-callee 0x5441a1; Complete-only, ret 0xc
 void type_random_map::openPathPatch(int x, int y, int level)
 {
     TRmgMapItem* item = getMapItem(x, y, level);
-    if (!item->m_connection.m_present) {
-        item->setBorderObject(0);
-        item->setSubterraneanGate(1);
-    }
+    item->openPath();
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(x - 1, 0);
     bounds.m_minimumY = max(y - 1, 0);
@@ -728,10 +774,7 @@ void type_random_map::openPathPatch(int x, int y, int level)
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, level);
-            if (!nearby->m_connection.m_present) {
-                nearby->setBorderObject(0);
-                nearby->setSubterraneanGate(1);
-            }
+            nearby->openPath();
         }
     }
 }
@@ -741,10 +784,7 @@ MAC_ADDRESS(0x22e454, 0x254) // anchor-callee 0x544343; Complete-only, ret 0xc
 void type_random_map::markBorderPatch(TRmgMapPosition position)
 {
     TRmgMapItem* item = getMapItem(position);
-    if (!item->m_connection.m_present) {
-        item->setSubterraneanGate(0);
-        item->setBorderObject(1);
-    }
+    item->markBorder();
     TRmgZoneBounds bounds;
     bounds.m_minimumX = max(position.getX() - 1, 0);
     bounds.m_minimumY = max(position.getY() - 1, 0);
@@ -753,11 +793,9 @@ void type_random_map::markBorderPatch(TRmgMapPosition position)
     for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
         for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
             TRmgMapItem* nearby = getMapItem(column, row, position.m_z);
-            if (!nearby->isRoadEntrance() && nearby->getRoadPassable()
-                && nearby->getLandType() != eTerrainRock
-                && nearby->getLandType() != eTerrainWater
-                && !nearby->m_connection.m_present)
-                nearby->setSubterraneanGate(0);
+            if (!nearby->isRoadEntrance() && nearby->isPassableLand()
+                && nearby->getLandType() != eTerrainWater)
+                nearby->closePath();
         }
     }
 }
@@ -855,10 +893,7 @@ void type_random_map::addObject(type_object& object, TRmgMapPosition position)
             TRmgMapItem* item = getMapItem(nearby);
             if (prototype.isTriggerCell(maskPoint.getX(), maskPoint.getY())) {
                 item->setRoadEntrance(1);
-                if (!item->m_connection.m_present) {
-                    item->setBorderObject(0);
-                    item->setSubterraneanGate(1);
-                }
+                item->openPath();
                 item->m_objects.push_back(&object);
             } else if (!prototype.isPassableCell(maskPoint.getX(), maskPoint.getY())) {
                 item->setRoadPassable(0);
@@ -876,7 +911,7 @@ void type_random_map::setTile(const TRmgGridPoint& point, const rmgTerrainTile& 
     unsigned char flipY = tile.getFlipY();
     unsigned char flipX = tile.getFlipX();
     int frame = tile.getFrame();
-    int terrain = tile.m_terrain;
+    int terrain = tile.getTerrain();
     item.setTerrain(terrain, frame, flipX, flipY);
 }
 
@@ -915,11 +950,8 @@ MAC_ADDRESS(0x22eb98, 0x80)
 rmgTerrainTile type_random_map::getTile(const TRmgGridPoint& point)
 {
     TRmgMapItem& item = *getMapItem(point.getX(), point.getY());
-    rmgTerrainTile tile;
-    tile.m_terrain = item.getLandType();
-    tile.setFrame(item.getTerrainFrame());
-    tile.setFlipX(item.getTerrainFlipX());
-    tile.setFlipY(item.getTerrainFlipY());
+    rmgTerrainTile tile(item.getLandType(), item.getTerrainFrame(),
+                        item.getTerrainFlipX(), item.getTerrainFlipY());
     return tile;
 }
 
@@ -957,11 +989,8 @@ void TRmgRoadMapAdapter::setTile(
     unsigned char flipY = tile.getFlipY();
     int frame = tile.getFrame();
     unsigned char flipX = tile.getFlipX();
-    int terrain = tile.m_terrain;
-    item.setRoadType(terrain);
-    item.setRoadFrame(frame);
-    item.setRoadFlipX(flipX);
-    item.setRoadFlipY(flipY);
+    int terrain = tile.getTerrain();
+    item.setRoad(terrain, frame, flipX, flipY);
 }
 
 VA(0x005323D0, 0x3C)
@@ -977,11 +1006,8 @@ MAC_ADDRESS(0x22edc4, 0xa0)
 rmgTerrainTile TRmgRoadMapAdapter::getTile(const TRmgGridPoint& point)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.getX(), point.getY());
-    rmgTerrainTile tile;
-    tile.m_terrain = item.getRoadType();
-    tile.setFrame(item.getRoadFrame());
-    tile.setFlipX(item.getRoadFlipX());
-    tile.setFlipY(item.getRoadFlipY());
+    rmgTerrainTile tile(item.getRoadType(), item.getRoadFrame(),
+                        item.getRoadFlipX(), item.getRoadFlipY());
     return tile;
 }
 
@@ -1035,16 +1061,11 @@ void TRmgMapAdapter::setTile(const TRmgGridPoint& point, const rmgTerrainTile& t
 {
     TRmgMapItem& item = *m_map->getMapItem(point.getX(), point.getY());
     unsigned char flipX = tile.getFlipX();
-    int terrain = tile.m_terrain;
+    int terrain = tile.getTerrain();
     unsigned char flipY = tile.getFlipY();
     int frame = tile.getFrame();
-    item.setRiverType(terrain);
-    item.setRiverFrame(frame);
-    item.setRiverFlipX(flipX);
-    item.setRiverFlipY(flipY);
-    unsigned char present = tile.m_terrain != 0;
-    item.setHasRiver(present);
-    if (tile.m_terrain != 0) {
+    item.setRiver(terrain, frame, flipX, flipY);
+    if (tile.getTerrain() != 0) {
         {
             TRmgZoneBounds bounds;
             bounds.m_minimumX = max(static_cast<int>(point.getX()) - 1, 0);
@@ -1082,8 +1103,6 @@ void TRmgMapAdapter::setOverlay(const TRmgGridPoint& point, int value)
 {
     TRmgMapItem& item = *m_map->getMapItem(point.getX(), point.getY());
     item.setRiverType(value);
-    unsigned char present = value != 0;
-    item.setHasRiver(present);
 }
 
 // Both concrete adapter vtables share this exact size forwarding body.
@@ -1111,11 +1130,8 @@ MAC_ADDRESS(0x22f320, 0xa4) // anchor-vtable + packed-field evidence; Complete-o
 rmgTerrainTile TRmgMapAdapter::getTile(const TRmgGridPoint& point)
 {
     const TRmgMapItem& item = *m_map->getMapItem(point.getX(), point.getY());
-    rmgTerrainTile tile;
-    tile.m_terrain = item.getRiverType();
-    tile.setFrame(item.getRiverFrame());
-    tile.setFlipX(item.getRiverFlipX());
-    tile.setFlipY(item.getRiverFlipY());
+    rmgTerrainTile tile(item.getRiverType(), item.getRiverFrame(),
+                        item.getRiverFlipX(), item.getRiverFlipY());
     return tile;
 }
 
@@ -2567,16 +2583,13 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
             TRmgMapItem* item = m_map.getMapItem(position);
             if (item->isRoadEntrance() || !item->isPassableLand())
                 continue;
-            if (!item->m_connection.m_present) {
-                item->setSubterraneanGate(0);
-                item->setBorderObject(1);
-            }
+            item->markBorder();
             for (int x = position.getX() - 1; x <= position.getX() + 1; ++x) {
                 for (int y = position.getY() - 1; y <= position.getY() + 1; ++y) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y);
                     if (nearby->isPassableLand()
-                        && !nearby->isRoadEntrance() && !nearby->m_connection.m_present)
-                        nearby->setSubterraneanGate(0);
+                        && !nearby->isRoadEntrance())
+                        nearby->closePath();
                 }
             }
         }
@@ -2608,10 +2621,7 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
             continue;
         if (guardType == BORDER_GUARD && item->hasBorderObject())
             continue;
-        if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
-        }
+        item->openPath();
         int fanDirection;
         unsigned int count;
         if (direction & 1) {
@@ -2628,9 +2638,8 @@ unsigned char TRmgTreasureGroup::addGuard(type_object* guard)
                 && nearby.getY() >= 0 && nearby.getY() < m_map.getHeight()) {
                 TRmgMapItem* next = m_map.getMapItem(nearby.getX(), nearby.getY());
                 if (!next->hasBorderObject() && !next->hasSubterraneanGate()
-                    && next->isPassableLand() && !next->m_connection.m_present) {
-                    next->setBorderObject(0);
-                    next->setSubterraneanGate(1);
+                    && next->isPassableLand()) {
+                    next->openPath();
                 }
             }
             fanDirection = (fanDirection + 1) & 7;
@@ -3187,7 +3196,7 @@ int TRmgGeneratorBase::scoreObjectPlacement(
             if (!mark)
                 continue;
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
-            if (item->getRoadPassable() && item->getLandType() != eTerrainRock)
+            if (item->isPassableLand())
                 continue;
             int priority;
             if (mark & RMG_PLACEMENT_OVERLAP)
@@ -3198,13 +3207,10 @@ int TRmgGeneratorBase::scoreObjectPlacement(
                 unsigned char wasTouched = object->isPlacementTouched();
                 if (mark & RMG_PLACEMENT_OVERLAP) {
                     object->m_properties->buildOverlapPriorities();
-                    if (object->m_properties->m_overlapPriorities
+                    object->markCandidateOverlap(
+                        object->m_properties->m_overlapPriorities
                             [object->getPosition().getX() - x][object->getPosition().getY() - y]
-                        <= priority)
-                        object->setCandidateCovers(1);
-                    else
-                        object->setCandidateBehind(1);
-                    object->setOverlapsCandidate(1);
+                        <= priority);
                 }
                 if (mark & RMG_PLACEMENT_ADJACENT)
                     object->setAdjacentToCandidate(1);
@@ -3355,10 +3361,8 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
                 for (candidatePosition.setX(bounds.m_minimumX);
                     candidatePosition.getX() < bounds.m_maximumX; candidatePosition.setX(candidatePosition.getX() + 1)) {
                     TRmgMapItem* nearby = m_map.getMapItem(candidatePosition);
-                    if (nearby->hasBorderObject() && nearby->getRoadPassable()
-                        && nearby->getLandType() != eTerrainRock) {
-                        if (!nearby->m_connection.m_present)
-                            nearby->setBorderObject(0);
+                    if (nearby->hasBorderObject() && nearby->isPassableLand()) {
+                        nearby->clearBorder();
                         pending.push_back(candidatePosition);
                     }
                 }
@@ -3421,10 +3425,8 @@ void TRmgGeneratorBase::decorateMap()
     for (position.m_z = 0; position.m_z < m_map.getNumberLevels(); ++position.m_z) {
         for (position.setY(0); position.getY() < m_map.getHeight(); position.setY(position.getY() + 1)) {
             for (position.setX(0); position.getX() < m_map.getWidth(); position.setX(position.getX() + 1), ++item) {
-                if (!item->hasSubterraneanGate() && item->getRoadPassable()
-                    && item->getLandType() != eTerrainRock && !item->m_connection.m_present) {
-                    item->setBorderObject(0);
-                    item->setSubterraneanGate(1);
+                if (!item->hasSubterraneanGate() && item->isPassableLand()) {
+                    item->openPath();
                 }
             }
         }
@@ -5345,9 +5347,8 @@ void type_random_map_generator::createWaterZoneIsland(const TRmgZoneBounds& boun
     for (point.setY(bounds.m_minimumY); point.getY() < bounds.m_maximumY; point.setY(point.getY() + 1)) {
         for (point.setX(bounds.m_minimumX); point.getX() < bounds.m_maximumX; point.setX(point.getX() + 1)) {
             TRmgMapItem* item = m_map.getMapItem(point.getX(), point.getY(), point.m_z);
-            if (item->getLandType() != eTerrainWater && !item->m_connection.m_present) {
-                item->setSubterraneanGate(0);
-                item->setBorderObject(1);
+            if (item->getLandType() != eTerrainWater) {
+                item->markBorder();
             }
         }
     }
@@ -5548,10 +5549,7 @@ void type_random_map_generator::expandObstacleClearance()
                 }
                 if (!found)
                     continue;
-                if (!current->m_connection.m_present) {
-                    current->setSubterraneanGate(0);
-                    current->setBorderObject(1);
-                }
+                current->markBorder();
                 {
                     bounds.m_minimumY = max(position.getY(), 0);
                     bounds.m_minimumX = max(position.getX(), 0);
@@ -5562,10 +5560,8 @@ void type_random_map_generator::expandObstacleClearance()
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
                         if (item->getLandType() != eTerrainWater
-                            && static_cast<int>(item->m_objects.size()) <= 0
-                            && !item->m_connection.m_present) {
-                            item->setSubterraneanGate(0);
-                            item->setBorderObject(1);
+                            && static_cast<int>(item->m_objects.size()) <= 0) {
+                            item->markBorder();
                         }
                     }
                 }
@@ -5579,8 +5575,8 @@ void type_random_map_generator::expandObstacleClearance()
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0 && !item->m_connection.m_present)
-                            item->setSubterraneanGate(0);
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->closePath();
                     }
                 }
             }
@@ -5666,10 +5662,7 @@ void type_random_map_generator::repairWaterZoneBorders()
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (!item->m_connection.m_present) {
-                            item->setSubterraneanGate(0);
-                            item->setBorderObject(1);
-                        }
+                        item->markBorder();
                         if (item->getLandType() == eTerrainWater) {
                             positions.push_back(nearby);
                             terrains.push_back(terrain);
@@ -5690,9 +5683,8 @@ void type_random_map_generator::repairWaterZoneBorders()
                 for (nearby.setY(bounds.m_minimumY); nearby.getY() < bounds.m_maximumY; nearby.setY(nearby.getY() + 1)) {
                     for (nearby.setX(bounds.m_minimumX); nearby.getX() < bounds.m_maximumX; nearby.setX(nearby.getX() + 1)) {
                         TRmgMapItem* item = m_map.getMapItem(nearby);
-                        if (static_cast<int>(item->m_objects.size()) <= 0
-                            && !item->m_connection.m_present)
-                            item->setSubterraneanGate(0);
+                        if (static_cast<int>(item->m_objects.size()) <= 0)
+                            item->closePath();
                     }
                 }
             }
@@ -5880,10 +5872,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
         }
         if (!found) {
             TRmgMapItem* current = m_map.getMapItem(seed);
-            if (!current->m_connection.m_present) {
-                current->setBorderObject(0);
-                current->setSubterraneanGate(1);
-            }
+            current->openPath();
         }
         m_map.floodConnectionCosts(seed, zone->getTerrain() == eTerrainWater);
         pathPosition = zone->getLevelPosition();
@@ -5891,8 +5880,7 @@ void type_random_map_generator::buildZoneConnectionPaths()
             for (pathPosition.setX(bounds.m_minimumX); pathPosition.getX() < bounds.m_maximumX; pathPosition.setX(pathPosition.getX() + 1)) {
                 TRmgMapItem* current = m_map.getMapItem(pathPosition);
                 if (current->m_zoneState.m_zone == zoneIndex
-                    && current->hasSubterraneanGate() && current->getRoadPassable()
-                    && current->getLandType() != eTerrainRock && current->getMovementCost()
+                    && current->hasSubterraneanGate() && current->isPassableLand() && current->getMovementCost()
                     && current->getLandType() != eTerrainWater) {
                     openConnectionPath(pathPosition, 0);
                     m_map.floodConnectionCosts(pathPosition, zone->getTerrain() == eTerrainWater);
@@ -5926,22 +5914,14 @@ void type_random_map_generator::openConnectionPath(
     if (item->getMovementCost() >= 30000)
         return;
     while (item->getMovementCost() > 0) {
-        if (item->m_connection.m_present) {
+        if (item->hasConnectionDecoration()) {
             TRmgObjectPropertiesRef* properties = selectObjectPrototype(
-                eTerrainDirt, BORDER_GUARD, item->m_connection.m_direction);
+                eTerrainDirt, BORDER_GUARD, item->getConnectionDecorationDirection());
             type_object* object = new type_object(properties);
-            item->m_connection.m_present = 0;
-            item->m_connection.m_direction = 0;
-            if (!item->m_connection.m_present) {
-                item->setBorderObject(0);
-                item->setSubterraneanGate(1);
-            }
+            item->clearConnectionDecoration();
             addObject(object, position);
         }
-        if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
-        }
+        item->openPath();
         TRmgMapPosition previous = item->getPreviousTile();
         if (!narrow) {
             TRmgZoneBounds bounds;
@@ -5952,9 +5932,8 @@ void type_random_map_generator::openConnectionPath(
             for (int y = bounds.m_minimumY; y < bounds.m_maximumY; ++y) {
                 for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
                     TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                    if (nearby->m_zoneState.m_zone == zone
-                        && !nearby->m_connection.m_present)
-                        nearby->setBorderObject(0);
+                    if (nearby->m_zoneState.m_zone == zone)
+                        nearby->clearBorder();
                 }
             }
         }
@@ -6059,12 +6038,7 @@ int type_random_map_generator::placeBorderObject(
     for (index = 0; index < count; ++index) {
         type_object* guard = new type_object(guardProperties);
         TRmgMapItem* item = m_map.getMapItem(position);
-        item->m_connection.m_present = 0;
-        item->m_connection.m_direction = 0;
-        if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
-        }
+        item->clearConnectionDecoration();
         addObject(guard, position);
         position.setX(position.getX() + 1);
     }
@@ -6091,12 +6065,7 @@ void type_random_map_generator::markBorderObjectArea(
         for (int x = bounds.m_minimumX; x < bounds.m_maximumX; ++x) {
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
+                item->setConnectionDecoration(direction);
             }
         }
     }
@@ -6104,12 +6073,7 @@ void type_random_map_generator::markBorderObjectArea(
     if (previous.getX() >= 0 && previous.getX() < m_map.getWidth()
         && previous.getY() >= 0 && previous.getY() < m_map.getHeight()) {
         TRmgMapItem* item = m_map.getMapItem(previous);
-        item->m_connection.m_present = 0;
-        item->m_connection.m_direction = 0;
-        if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
-        }
+        item->clearConnectionDecoration();
     }
 }
 
@@ -6344,8 +6308,7 @@ unsigned char type_random_map_generator::canPlaceShipyard(TRmgMapPosition positi
             if (item->getLandType() == eTerrainWater)
                 return 0;
             unsigned char entrance = item->isRoadEntrance();
-            if (entrance || !item->getRoadPassable()
-                || item->getLandType() == eTerrainRock)
+            if (entrance || !item->isPassableLand())
                 return 0;
         }
     }
@@ -6528,10 +6491,7 @@ unsigned char type_random_map_generator::createShipyardConnection(
     for (nearby.setX(position.getX() - prototype->getWidth() + 1);
          nearby.getX() <= position.getX(); nearby.setX(nearby.getX() + 1)) {
         TRmgMapItem* item = m_map.getMapItem(nearby);
-        if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
-        }
+        item->openPath();
         source->m_entrances.push_back(TPoint(nearby.getX(), nearby.getY()));
     }
 
@@ -6681,15 +6641,9 @@ unsigned char type_random_map_generator::createSubterraneanGate(
     position.setY(position.getY() + 1);
     otherPosition.setY(otherPosition.getY() + 1);
     TRmgMapItem* sourceEntrance = m_map.getMapItem(position);
-    if (!sourceEntrance->m_connection.m_present) {
-        sourceEntrance->setBorderObject(0);
-        sourceEntrance->setSubterraneanGate(1);
-    }
+    sourceEntrance->openPath();
     TRmgMapItem* destinationEntrance = m_map.getMapItem(otherPosition);
-    if (!destinationEntrance->m_connection.m_present) {
-        destinationEntrance->setBorderObject(0);
-        destinationEntrance->setSubterraneanGate(1);
-    }
+    destinationEntrance->openPath();
 
     if (connection->m_placeBorderObjects) {
         int direction = placeBorderObject(position, 1, destination);
@@ -6698,23 +6652,13 @@ unsigned char type_random_map_generator::createSubterraneanGate(
             guardValue = 0;
             TRmgMapItem* item = m_map.getMapItem(position);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
+                item->setConnectionDecoration(direction);
             }
 
             position.setX(position.getX() + (2));
             item = m_map.getMapItem(position);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
+                item->setConnectionDecoration(direction);
             }
         }
 
@@ -6723,23 +6667,13 @@ unsigned char type_random_map_generator::createSubterraneanGate(
             otherPosition.setX(otherPosition.getX() - 1);
             TRmgMapItem* item = m_map.getMapItem(otherPosition);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
+                item->setConnectionDecoration(direction);
             }
 
             otherPosition.setX(otherPosition.getX() + (2));
             item = m_map.getMapItem(otherPosition);
             if (item->m_objects.size() == 0) {
-                if (!item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
-                }
-                item->m_connection.m_direction = direction;
-                item->m_connection.m_present = 1;
+                item->setConnectionDecoration(direction);
             }
             return 1;
         }
@@ -6849,12 +6783,7 @@ unsigned char type_random_map_generator::placeMonolithBorder(
             TPoint offset = offsets[direction];
             TRmgMapPosition nearby = position + offset;
             TRmgMapItem* neighbor = m_map.getMapItem(nearby);
-            if (!neighbor->m_connection.m_present) {
-                neighbor->setSubterraneanGate(0);
-                neighbor->setBorderObject(1);
-            }
-            neighbor->m_connection.m_direction = border;
-            neighbor->m_connection.m_present = 1;
+            neighbor->setConnectionDecoration(border);
         }
     }
     return border >= 0;
@@ -7175,8 +7104,7 @@ void type_random_map_generator::decorateUnderground()
     TRmgTerrainBrush brush(&map, eTerrainRock, 4);
     for (scan.setY(0); scan.getY() < m_map.getHeight(); scan.setY(scan.getY() + 1)) {
         for (scan.setX(0); scan.getX() < m_map.getWidth(); scan.setX(scan.getX() + 1), ++item) {
-            if (!item->hasSubterraneanGate() && item->getRoadPassable()
-                && item->getLandType() != eTerrainRock && !item->isRoadEntrance())
+            if (!item->hasSubterraneanGate() && item->isPassableLand() && !item->isRoadEntrance())
                 brush.paintRectangle(scan.getX(), scan.getY(), 1, 1);
         }
     }
@@ -7325,13 +7253,9 @@ void type_random_map_generator::carveBranchingPaths()
     int remaining = m_map.getHeight() * m_map.getWidth() * m_map.getNumberLevels();
     for (; remaining--; ++item) {
         if (!item->m_objects.size()) {
-            if (!item->m_connection.m_present) {
-                item->setSubterraneanGate(0);
-                item->setBorderObject(1);
-            }
-        } else if (!item->m_connection.m_present) {
-            item->setBorderObject(0);
-            item->setSubterraneanGate(1);
+            item->markBorder();
+        } else {
+            item->openPath();
         }
     }
     for (int level = 0; level < m_map.getNumberLevels(); ++level) {
@@ -7418,10 +7342,7 @@ void type_random_map_generator::carveBranchingPaths()
         for (position.setY(0); position.getY() < m_map.getHeight(); position.setY(position.getY() + 1)) {
             for (position.setX(0); position.getX() < m_map.getWidth(); position.setX(position.getX() + 1), ++item) {
                 if (item->getLandType() == eTerrainWater || item->getLandType() == eTerrainRock) {
-                    if (!item->m_connection.m_present) {
-                        item->setBorderObject(0);
-                        item->setSubterraneanGate(1);
-                    }
+                    item->openPath();
                 }
                 if (item->hasBorderObject())
                     m_map.markBorderPatch(position);
@@ -7469,10 +7390,7 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
             y = cppMin<long>(y, m_map.getHeight() - 1);
             TRmgMapItem* item = m_map.getMapItem(x, y, position.m_z);
             if (item->m_zoneState.m_zone == zoneIndex) {
-                if (!item->m_connection.m_present) {
-                    item->setBorderObject(0);
-                    item->setSubterraneanGate(1);
-                }
+                item->openPath();
                 TRmgZoneBounds bounds;
                 bounds.m_minimumX = cppMax<long>(x - 1, 0);
                 bounds.m_minimumY = cppMax<long>(y - 1, 0);
@@ -7481,9 +7399,8 @@ void type_random_map_generator::connectJunctionEntrance(TPoint from, TPoint to,
                 for (int row = bounds.m_minimumY; row < bounds.m_maximumY; ++row) {
                     for (int column = bounds.m_minimumX; column < bounds.m_maximumX; ++column) {
                         TRmgMapItem* nearby = m_map.getMapItem(column, row, position.m_z);
-                        if (nearby->m_zoneState.m_zone == zoneIndex
-                            && !nearby->m_connection.m_present)
-                            nearby->setBorderObject(0);
+                        if (nearby->m_zoneState.m_zone == zoneIndex)
+                            nearby->clearBorder();
                     }
                 }
             }
@@ -7531,10 +7448,8 @@ void type_random_map_generator::prepareJunctionZone(TRmgZone* zone)
                 previous.setY(-1);
                 previous.m_z = -1;
                 item->resetMovement(previous);
-                if (static_cast<int>(item->m_objects.size()) <= 0
-                    && !item->m_connection.m_present) {
-                    item->setSubterraneanGate(0);
-                    item->setBorderObject(1);
+                if (static_cast<int>(item->m_objects.size()) <= 0) {
+                    item->markBorder();
                 }
             }
         }
@@ -7582,8 +7497,7 @@ void type_random_map_generator::prepareZoneConnections()
     for (position.m_z = 0; position.m_z < m_map.getNumberLevels(); ++position.m_z) {
         for (position.setY(0); position.getY() < m_map.getHeight(); position.setY(position.getY() + 1)) {
             for (position.setX(0); position.getX() < m_map.getWidth(); position.setX(position.getX() + 1), ++item) {
-                if (!item->hasBorderObject() && item->getRoadPassable()
-                    && item->getLandType() != eTerrainRock && !item->isRoadEntrance()
+                if (!item->hasBorderObject() && item->isPassableLand() && !item->isRoadEntrance()
                     && static_cast<int>(item->m_objects.size()) <= 0
                     && item->m_zoneState.m_zone < 0 && item->getLandType() != eTerrainWater)
                     m_map.markBorderPatch(position);
@@ -7799,10 +7713,7 @@ unsigned char type_random_map_generator::tryPlaceAdditionalTown(TRmgZone* zone,
     m_roadTargets.push_back(entrance);
     entrance.setY(entrance.getY() + 1);
     TRmgMapItem* item = m_map.getMapItem(entrance.getX(), entrance.getY(), entrance.m_z);
-    if (!item->m_connection.m_present) {
-        item->setBorderObject(0);
-        item->setSubterraneanGate(1);
-    }
+    item->openPath();
     return 1;
 }
 
@@ -7862,10 +7773,7 @@ unsigned char type_random_map_generator::tryPlacePrimaryTown(
     m_roadTargets.push_back(position);
     position.setY(position.getY() + 1);
     TRmgMapItem* item = m_map.getMapItem(position);
-    if (!item->m_connection.m_present) {
-        item->setBorderObject(0);
-        item->setSubterraneanGate(1);
-    }
+    item->openPath();
     return 1;
 }
 
@@ -7931,7 +7839,7 @@ unsigned char type_random_map_generator::placeMineSite(type_object* object,
                 if (x < 0 || x >= m_map.getWidth() || y < 0 || y >= m_map.getHeight() || y > position.getY())
                     continue;
                 TRmgMapItem* nearby = m_map.getMapItem(x, y, position.m_z);
-                if (nearby->getRoadPassable() && nearby->getLandType() != eTerrainRock
+                if (nearby->isPassableLand()
                     && nearby->hasBorderObject())
                     ++borderCount;
             }
@@ -8046,10 +7954,7 @@ unsigned char type_random_map_generator::tryPlaceMine(TRmgZone* zone,
     entrance.setX(entrance.getX() - (trigger.m_x));
     entrance.setY(entrance.getY() + (1 - trigger.m_y));
     TRmgMapItem* item = m_map.getMapItem(entrance);
-    if (!item->m_connection.m_present) {
-        item->setBorderObject(0);
-        item->setSubterraneanGate(1);
-    }
+    item->openPath();
     if (guardValue > 0)
         placeGuard(guardValue, entrance);
     int placed = 0;
@@ -8439,6 +8344,26 @@ void TRmgMapItem::setTerrain(int terrain, int frame,
     m_tileData.m_terrainFlipY = flipY;
 }
 
+// Project operations inferred from the complete adapter writes above.
+// Overlay-only edits remain distinct from these frame/flip replacements.
+void TRmgMapItem::setRoad(int type, int frame,
+    unsigned char flipX, unsigned char flipY)
+{
+    setRoadType(type);
+    m_tileData.m_roadFrame = frame;
+    m_tileData.m_roadFlipX = flipX;
+    m_tileData.m_roadFlipY = flipY;
+}
+
+void TRmgMapItem::setRiver(int type, int frame,
+    unsigned char flipX, unsigned char flipY)
+{
+    setRiverType(type);
+    m_tile.m_riverFrame = frame;
+    m_tileData.m_riverFlipX = flipX;
+    m_tileData.m_riverFlipY = flipY;
+}
+
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
 TRmgMapItem* type_random_map::getMapItem(int x, int y)
 {
@@ -8576,19 +8501,17 @@ void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup* group,
             if (destination->getLandType() != eTerrainWater
                 && !source->hasSubterraneanGate() && source->isPassableLand() && !source->isRoadEntrance()
                 && destination->isPassableLand() && !destination->isRoadEntrance()) {
-                if (!destination->m_connection.m_present)
-                    destination->setSubterraneanGate(0);
-                if (source->hasBorderObject() && !destination->m_connection.m_present) {
-                    destination->setSubterraneanGate(0);
-                    destination->setBorderObject(1);
+                destination->closePath();
+                if (source->hasBorderObject()) {
+                    destination->markBorder();
                 }
             }
-            if (!source->m_connection.m_present) {
+            if (!source->hasConnectionDecoration()) {
                 source->setBorderObject(border);
                 if (border)
                     source->setSubterraneanGate(0);
             }
-            if (!source->m_connection.m_present) {
+            if (!source->hasConnectionDecoration()) {
                 source->setSubterraneanGate(gate);
                 if (gate)
                     source->setBorderObject(0);
@@ -8989,8 +8912,7 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
 
             TRmgMapItem* nextMapItem = m_map.getMapItem(nextPosition);
             if (nextMapItem->getLandType() == eTerrainWater
-                || !nextMapItem->getRoadPassable()
-                || nextMapItem->getLandType() == eTerrainRock)
+                || !nextMapItem->isPassableLand())
                 continue;
 
             unsigned char nextRoadEntrance =

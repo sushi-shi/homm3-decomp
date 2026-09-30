@@ -71,6 +71,76 @@ void TSubWindow::removeWidget(widget* killWidget)
     m_parentWindow->removeWidget(killWidget);
 }
 
+// Project-inferred registration of the already-owned widget vector. Ordinary
+// banners skip null entries; the combat popup constructors only guard the
+// flag change and still pass each entry to addWidget.
+void TSubWindow::addWidgetsToMessageStream()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            addWidget(*it, -1);
+    }
+}
+
+void TSubWindow::addHiddenWidgetsToMessageStream()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        widget* current = *it;
+        if (current)
+            current->setActiveAndDrawn(false);
+        addWidget(current, -1);
+    }
+}
+
+// Project-inferred terminal operations. Combat information popups only
+// delete; replaceable control/bottom-view strips unlink each item immediately
+// before deleting it. Neither operation clears the pointer vector.
+void TSubWindow::deleteWidgetObjects()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+void TSubWindow::removeAndDeleteWidgets()
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        widget* current = *it;
+        if (current) {
+            removeWidget(current);
+            delete current;
+        }
+    }
+}
+
+// Project-inferred popup drawing stages. The derived caller owns its shown
+// guard/flag; hero popups retain their extra screen-update column. Widget
+// flags change without message dispatch before drawing/restoring the image.
+void TSubWindow::setWidgetsActiveAndDrawn(bool on)
+{
+    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+        if (*it)
+            (*it)->setActiveAndDrawn(on);
+    }
+}
+
+void TSubWindow::showWithSavedBackground(int extraWidth)
+{
+    saveBackground();
+    setWidgetsActiveAndDrawn(true);
+    draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    g_windowManager->updateScreen(
+        m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
+        m_width + extraWidth, m_height);
+}
+
+void TSubWindow::hideAndRestoreBackground()
+{
+    setWidgetsActiveAndDrawn(false);
+    restoreBackground();
+}
+
 VA(0x005aa4f0, 0x63)
 DC_ADDRESS(0x158ed0, 0x7c)
 MAC_ADDRESS(0x19ba74, 0xa4)

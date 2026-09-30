@@ -2223,15 +2223,15 @@ void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
         long before = g_combatManager->chooseMeleeAction(ourArmy, 0, 0, m_side);
         long gain = g_combatManager->chooseMeleeAction(ourArmy, 1, 0, m_side)
                     - before;
-        if (g_combatManager->m_nextAction != AI_ORDER_MOVE_AND_ATTACK)
+        if (g_combatManager->getPendingActionCode() != AI_ORDER_MOVE_AND_ATTACK)
             continue;
-        if (g_combatManager->m_nextActionGridIndex == ourArmy->m_gridIndex)
+        if (g_combatManager->getPendingActionTarget() == ourArmy->m_gridIndex)
             continue;
         if (gain <= choice.m_value)
             continue;
         choice.m_value = gain;
         choice.m_target = ourArmy->m_gridIndex;
-        choice.m_secondTargetHex = g_combatManager->m_nextActionExtra;
+        choice.m_secondTargetHex = g_combatManager->getPendingActionExtra();
         choice.m_castNow =
             ourArmy == g_combatManager->getCurrentArmy()
             || ourArmy->isIncapacitated()
@@ -3080,10 +3080,8 @@ bool type_AI_spellcaster::castSpell(bool retreating)
     }
     if (best.m_spell != -1) {
         if (best.m_castNow || retreating) {
-            g_combatManager->m_nextAction = 1;
-            g_combatManager->m_nextActionExtra = best.m_spell;
-            g_combatManager->m_nextActionGridIndex = best.m_target;
-            g_combatManager->m_nextActionGridIndex2 = best.m_secondTargetHex;
+            g_combatManager->setPendingAction(
+                1, best.m_spell, best.m_target, best.m_secondTargetHex);
             return 1;
         }
     }

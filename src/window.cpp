@@ -291,6 +291,26 @@ int heroWindow::widgetClearStatus(int id, int status)
                             id, status);
 }
 
+// Project-inferred row operation. Every member receives the clear before the
+// selected member receives the set; callers retain their DRAWN/DIMMED choice.
+void heroWindow::setExclusiveWidgetStatus(int firstId, int lastId,
+                                          int selectedId, int status)
+{
+    for (int id = firstId; id <= lastId; ++id)
+        getWidget(id)->sendMessage(widget::WIDGET_CLEAR_STATUS, status);
+    getWidget(selectedId)->sendMessage(widget::WIDGET_SET_STATUS, status);
+}
+
+// Project-inferred volume display, shared by construction and user changes.
+// The syslb.def row uses the level both as the selected offset and its frame.
+// Audio adjustment and preference persistence remain with the callers.
+void heroWindow::showVolumeLevel(int firstId, int lastId, int level)
+{
+    setExclusiveWidgetStatus(firstId, lastId, firstId + level,
+                            widget::WIDGET_DRAWN);
+    getWidget(firstId + level)->sendMessage(widget::WIDGET_SET_ICON_FRAME, level);
+}
+
 VA(0x005feff0, 0x22)
 DC_ADDRESS(0x1975a8, 0x30)
 MAC_ADDRESS(0x20b564, 0x28)
@@ -553,15 +573,23 @@ int heroWindow::heroWindowHandler(message& msg)
     return msg.m_window->handleMessage(msg);
 }
 
-VA(0x005ff510, 0x60)
-DC_ADDRESS(0x197c8c, 0x48)
-MAC_ADDRESS(0x20bc50, 0x7c)
-void heroWindow::deleteWidgets()
+// Project-inferred common object deletion. Terminal window destructors leave
+// the pointer vector intact until its own destruction. The existing full
+// cleanup operation below additionally clears it after all deletes finish.
+void heroWindow::deleteWidgetObjects()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
+}
+
+VA(0x005ff510, 0x60)
+DC_ADDRESS(0x197c8c, 0x48)
+MAC_ADDRESS(0x20bc50, 0x7c)
+void heroWindow::deleteWidgets()
+{
+    deleteWidgetObjects();
     m_widgets.clear();
 }
 
@@ -674,9 +702,7 @@ int CHeroWindowEx::windowHandler(message& msg)
         return 0;
     }
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEnd(widget::WIDGET_END_DIALOG);
         return 2;
     }
     return 0;

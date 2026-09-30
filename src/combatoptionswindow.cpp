@@ -165,22 +165,13 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     // slider highlight (set_visible is always an out-of-line call there),
     // and retail pushes the constants before getWidget: 84.58 -> 99.95,
     // and the handler's matching arms 96.92 -> 100.
-    for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
-        getWidget(music)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_musicVolume + MUSIC_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
+    showVolumeLevel(
+        MUSIC_VOLUME_0_ID, MUSIC_VOLUME_9_ID,
+        g_config.m_musicVolume);
 
-    for (int effects = EFFECTS_VOLUME_0_ID; effects <= EFFECTS_VOLUME_9_ID;
-         ++effects)
-        getWidget(effects)->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-    getWidget(g_config.m_soundVolume + EFFECTS_VOLUME_0_ID)->sendMessage(
-        widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
+    showVolumeLevel(
+        EFFECTS_VOLUME_0_ID, EFFECTS_VOLUME_9_ID,
+        g_config.m_soundVolume);
 
     highlightCombatSpeed();
     highlightGrid();
@@ -216,10 +207,7 @@ MAC_ADDRESS(0x07d418, 0xb4)
 TCombatOptionsWindow::~TCombatOptionsWindow()
 {
     g_combatOptionsWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:194
@@ -264,11 +252,8 @@ DC_ADDRESS(0x067a78, 0x52)
 MAC_ADDRESS(0x07d56c, 0x78)
 void TCombatOptionsWindow::highlightCombatSpeed()
 {
-    for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
-        getWidget(speed)->sendMessage(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    getWidget(g_config.m_combatSpeed + COMBAT_SPEED_0_ID)->sendMessage(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+    setExclusiveWidgetStatus(COMBAT_SPEED_0_ID, COMBAT_SPEED_2_ID,
+        g_config.m_combatSpeed + COMBAT_SPEED_0_ID, widget::WIDGET_DIMMED_NODRAW);
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:243
@@ -461,16 +446,10 @@ int combatOptionsWindowHandler(message& msg)
                         break;
                     }
                     g_config.m_musicVolume = id - TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
-                    for (int music = TCombatOptionsWindow::MUSIC_VOLUME_0_ID;
-                         music <= TCombatOptionsWindow::MUSIC_VOLUME_9_ID; ++music)
-                        g_combatOptionsWindow->getWidget(music)->sendMessage(
-                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_config.m_musicVolume
-                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_config.m_musicVolume
-                            + TCombatOptionsWindow::MUSIC_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_config.m_musicVolume);
+                    g_combatOptionsWindow->showVolumeLevel(
+                        TCombatOptionsWindow::MUSIC_VOLUME_0_ID,
+                        TCombatOptionsWindow::MUSIC_VOLUME_9_ID,
+                        g_config.m_musicVolume);
                     g_soundManager->adjustMusicVolumes();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
@@ -496,17 +475,10 @@ int combatOptionsWindowHandler(message& msg)
                     }
                     g_config.m_soundVolume = id - TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
                     g_config.m_lastSoundVolume = g_config.m_soundVolume;
-                    for (int effects = TCombatOptionsWindow::EFFECTS_VOLUME_0_ID;
-                         effects <= TCombatOptionsWindow::EFFECTS_VOLUME_9_ID;
-                         ++effects)
-                        g_combatOptionsWindow->getWidget(effects)->sendMessage(
-                            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_config.m_soundVolume
-                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-                    g_combatOptionsWindow->getWidget(g_config.m_soundVolume
-                            + TCombatOptionsWindow::EFFECTS_VOLUME_0_ID)->sendMessage(
-                        widget::WIDGET_SET_ICON_FRAME, g_config.m_soundVolume);
+                    g_combatOptionsWindow->showVolumeLevel(
+                        TCombatOptionsWindow::EFFECTS_VOLUME_0_ID,
+                        TCombatOptionsWindow::EFFECTS_VOLUME_9_ID,
+                        g_config.m_soundVolume);
                     g_soundManager->adjustSoundVolumes();
                     prefsChanged = 1;
                     g_combatOptionsWindow->m_prefsChanged = 1;
@@ -657,10 +629,7 @@ int combatOptionsWindowHandler(message& msg)
         }
     }
     if (exitFlag) {
-        msg.m_id = MESSAGE_WIDGET;
-        g_windowManager->m_dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        g_windowManager->finishDialog(msg, DIALOG_RETURN_SPLIT_ACCEPT);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

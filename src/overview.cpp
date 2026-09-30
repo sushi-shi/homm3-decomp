@@ -1895,10 +1895,7 @@ DC_ADDRESS(0x108f74, 0x68)
 MAC_ADDRESS(0x139e00, 0xe4)
 TOverviewWindow::~TOverviewWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // Mac retains this method at code 0:139ee4 and the constructor calls it
@@ -2718,8 +2715,7 @@ int TOverviewWindow::windowHandler(message& msg)
     }
 
     if (res == 1) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

@@ -172,10 +172,7 @@ DC_ADDRESS(0x04e11c, 0x62)
 MAC_ADDRESS(0x057158, 0xac)
 TSplitWindow::~TSplitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x00449e90, 0x2EF)
@@ -236,12 +233,12 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
         ag->m_armies[destIndex] = m_armies[srcIndex];
         ag->m_numTroops[destIndex] = g_splitWindow->m_destinationTroops;
         if (!ag->m_numTroops[destIndex])
-            ag->m_armies[destIndex] = CREATURE_NONE;
+            ag->dismiss(destIndex);
 
         m_numTroops[srcIndex] = g_splitWindow->m_totalTroops
             - g_splitWindow->m_destinationTroops;
         if (!m_numTroops[srcIndex])
-            m_armies[srcIndex] = CREATURE_NONE;
+            dismiss(srcIndex);
     }
 
     delete g_splitWindow;
@@ -340,8 +337,7 @@ int TSplitWindow::windowHandler(message& msg)
     }
 
     if (closeDialog == true) {
-        msg.m_codeY = widget::WIDGET_END_DIALOG;
-        msg.m_codeX = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     if (updateArmy)
@@ -621,6 +617,18 @@ void armyGroup::initialize()
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
 
+// Project-inferred operation shared by army help and artifact guardian text.
+// Unlike in-place AI consolidation, this packs slots and retains add()'s
+// negative destination-count normalization. Callers copy a distinct group.
+void armyGroup::copyConsolidatedFrom(const armyGroup& source)
+{
+    initialize();
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (source.m_armies[i] != CREATURE_NONE)
+            add(source.m_armies[i], source.m_numTroops[i], -1);
+    }
+}
+
 VA(0x0044ab20, 0x3A)
 DC_ADDRESS(0x04eb50, 0x36)
 MAC_ADDRESS(0x05814c, 0x48)
@@ -659,6 +667,12 @@ void armyGroup::dismiss(int whichIndex)
 {
     m_armies[whichIndex] = CREATURE_NONE;
     m_numTroops[whichIndex] = 0;
+}
+
+void armyGroup::mergeStack(int srcIndex, armyGroup* destGroup, int destIndex)
+{
+    destGroup->m_numTroops[destIndex] += m_numTroops[srcIndex];
+    dismiss(srcIndex);
 }
 
 VA(0x0044ab80, 0x21)
@@ -708,9 +722,29 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     return count;
 }
 
+// Project boundary shared by the morale value and its explanation. The
+// neutral entry contributes to the census but is never faction-grouped.
+int armyGroup::getMoraleAlignmentCount(unsigned char groupAlignments) const
+{
+    unsigned char alignments[10];
+    int count = getAlignments(alignments);
+    if (groupAlignments) {
+        int grouped = 0;
+        for (int alignment = -1; alignment < 9; ++alignment) {
+            if (alignments[alignment + 1] > 0 && alignment != -1) {
+                if (armyGrpFn0044A460().test(alignment))
+                    ++grouped;
+            }
+        }
+        if (grouped > 1)
+            count += 1 - grouped;
+    }
+    return count;
+}
+
 // Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748
 // Complete getMorale additionally groups allied alignments before applying
-// this adjustment, so that path keeps its explicit alignment census.
+// this adjustment, through getMoraleAlignmentCount's shared census.
 DC_ADDRESS(0x04ec98, 0x16)
 int armyGroup::getHomogeneityMoraleAdjust() const
 {
@@ -803,8 +837,7 @@ void armyGroup::damageGroup(float casualtyRate)
                 --casualties;
             m_numTroops[slot] -= casualties;
             if (m_numTroops[slot] <= 0 || casualtyRate >= 1.0) {
-                m_numTroops[slot] = 0;
-                m_armies[slot] = CREATURE_NONE;
+                dismiss(slot);
             }
             first = 0;
         } else {
@@ -877,19 +910,7 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     int morale = 0;
     if (ownerHero)
         morale = ownerHero->getMorale(otherHero, 0, 0);
-    unsigned char alignments[10];
-    int numAlignments = getAlignments(alignments);
-    if (groupAlignments) {
-        int grouped = 0;
-        for (int a = -1; a < 9; ++a) {
-            if (alignments[a + 1] > 0 && a != -1) {
-                if (armyGrpFn0044A460().test(a))
-                    ++grouped;
-            }
-        }
-        if (grouped > 1)
-            numAlignments += 1 - grouped;
-    }
+    int numAlignments = getMoraleAlignmentCount(groupAlignments);
     morale += 2 - numAlignments;
     if (hasSomeUndead())
         morale--;
@@ -909,10 +930,42 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-// FULLY TRANSCRIBED 2026-08-06. Complete has SIX params (ret 0x18),
-// extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
-// 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
-// to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
+// Project names for the repeated Complete terrain rules. Keep these
+// ordinary definitions with the army-stat operations; callers supply their
+// own alignment source rather than re-querying a combat stack's live traits.
+int getTerrainMoraleModifier(int alignment, int magicTerrain)
+{
+    if (magicTerrain != MAGIC_TERRAIN_HOLY_GROUND
+        && magicTerrain != MAGIC_TERRAIN_EVIL_FOG)
+        return 0;
+    switch (alignment) {
+    case TOWN_CASTLE:
+    case TOWN_RAMPART:
+    case TOWN_TOWER:
+        return magicTerrain == MAGIC_TERRAIN_HOLY_GROUND ? 1 : -1;
+    case TOWN_INFERNO:
+    case TOWN_NECROPOLIS:
+    case TOWN_DUNGEON:
+        return magicTerrain == MAGIC_TERRAIN_HOLY_GROUND ? -1 : 1;
+    default:
+        return 0;
+    }
+}
+
+int getCloverFieldLuckBonus(int alignment)
+{
+    switch (alignment) {
+    case TOWN_STRONGHOLD:
+    case TOWN_FORTRESS:
+    case TOWN_CONFLUX:
+        return 2;
+    default:
+        return 0;
+    }
+}
+
+// Complete adds the magic-terrain mode and grouping argument to the older
+// DC interface; its callers keep the same terrain rule as combat stacks.
 VA(0x0044b100, 0x1C9)
 DC_ADDRESS(0x04f160, 0xac)
 MAC_ADDRESS(0x058b60, 0x270)
@@ -923,48 +976,8 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     if (g_creatureTypeTraits[m_armies[index]].m_attributes & g_ctaNoMorale)
         return 0;
     int morale = getMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
-    if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
-        int type = m_armies[index];
-        do {
-            switch (g_game->getAlignment(type)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale++;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale--;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                continue;
-            }
-        } while (0);
-    }
-    do {
-        if (mode == MAGIC_TERRAIN_EVIL_FOG) {
-            int type = m_armies[index];
-            switch (g_game->getAlignment(type)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                morale--;
-                break;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                morale++;
-                break;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                continue;
-            }
-        }
-    } while (0);
+    if (mode == MAGIC_TERRAIN_HOLY_GROUND || mode == MAGIC_TERRAIN_EVIL_FOG)
+        morale += getTerrainMoraleModifier(g_game->getAlignment(m_armies[index]), mode);
 
     int type = m_armies[index];
     if ((type == CREATURE_MINOTAUR || type == CREATURE_MINOTAUR_KING)
@@ -1012,27 +1025,8 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     int luck = getLuck(ownerHero, ownerTown, 0, 0, 0, 0);
-    if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
-        int creature = m_armies[index];
-        do {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                continue;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                luck += 2;
-                break;
-            default:
-                break;
-            }
-        } while (0);
-    }
+    if (mode == MAGIC_TERRAIN_CLOVER_FIELD)
+        luck += getCloverFieldLuckBonus(g_game->getAlignment(m_armies[index]));
     if (m_armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
     if (applyLimits)
@@ -1114,9 +1108,7 @@ unsigned char armyGroup::merge(armyGroup* ag)
             while (j < ARMY_GROUP_SLOT_COUNT && ag2.m_armies[i] != ag1.m_armies[j])
                 ++j;
             if (j < ARMY_GROUP_SLOT_COUNT) {
-                ag1.m_numTroops[j] += ag2.m_numTroops[i];
-                ag2.m_numTroops[i] = 0;
-                ag2.m_armies[i] = CREATURE_NONE;
+                ag2.mergeStack(i, &ag1, j);
                 ++i;
             } else {
                 j = 0;
@@ -1125,8 +1117,7 @@ unsigned char armyGroup::merge(armyGroup* ag)
                 if (j < ARMY_GROUP_SLOT_COUNT) {
                     ag1.m_numTroops[j] = ag2.m_numTroops[i];
                     ag1.m_armies[j] = ag2.m_armies[i];
-                    ag2.m_numTroops[i] = 0;
-                    ag2.m_armies[i] = CREATURE_NONE;
+                    ag2.dismiss(i);
                     ++i;
                 } else {
                     int a = 0;
@@ -1136,9 +1127,7 @@ unsigned char armyGroup::merge(armyGroup* ag)
                         while (++b < ARMY_GROUP_SLOT_COUNT && ag1.m_armies[a] != ag1.m_armies[b]) {
                         }
                         if (b < ARMY_GROUP_SLOT_COUNT) {
-                            ag1.m_numTroops[a] += ag1.m_numTroops[b];
-                            ag1.m_numTroops[b] = 0;
-                            ag1.m_armies[b] = CREATURE_NONE;
+                            ag1.mergeStack(b, &ag1, a);
                             progress = 1;
                         } else {
                             ++a;
@@ -1210,9 +1199,10 @@ void armyGroup::mergeArmies(armyGroup& source)
 // magic-terrain mode and alignment-grouping byte; ret 24h proves the hidden
 // result and eight explicit parameters. DC lines 1347..1451 retain result,
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
-// Complete's neutral alignment requires the ten-byte array below.
-// Replacing the terrain labels with ordinary switch-arm breaks gives 93.8743%
-// versus 97.3066%, with either explicit neutral arms or an else-if chain.
+// Complete's neutral alignment requires the ten-byte census in
+// getMoraleAlignmentCount.
+// The repeated terrain classification now uses the same project helper as
+// the numeric query; no original inline declaration is claimed for it.
 VA(0x0044b960, 0x859)
 DC_ADDRESS(0x04f708, 0x3aa)
 MAC_ADDRESS(0x059734, 0x714)  // retail-body signature
@@ -1243,82 +1233,20 @@ std::string armyGroup::getMoraleDescription(
     if (ownerHero)
         result = ownerHero->getMoraleDescription();
 
-    // Complete terrain arms: mutate the incoming morale home, then subtract
-    // currentMorale at the tail, as proved by retail 0x44b960.
-    // Mac 0x5983c and 0x59910 expand getAlignment separately in each arm.
-    {
-        if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                goto holyGroundGood;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto holyGroundEvil;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto moraleTerrainDone;
-            }
-            goto moraleTerrainDone;
-
-        holyGroundGood:
-            --morale;
-            result += g_moraleInfo[39];
-            goto moraleTerrainDone;
-
-        holyGroundEvil:
-            ++morale;
-            result += g_moraleInfo[38];
-            goto moraleTerrainDone;
-        }
-        if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-            switch (g_game->getAlignment(creature)) {
-            case TOWN_CASTLE:
-            case TOWN_RAMPART:
-            case TOWN_TOWER:
-                goto evilFogGood;
-            case TOWN_INFERNO:
-            case TOWN_NECROPOLIS:
-            case TOWN_DUNGEON:
-                goto evilFogEvil;
-            case TOWN_STRONGHOLD:
-            case TOWN_FORTRESS:
-            case TOWN_CONFLUX:
-                goto moraleTerrainDone;
-            }
-            goto moraleTerrainDone;
-
-        evilFogGood:
-            ++morale;
-            result += g_moraleInfo[40];
-            goto moraleTerrainDone;
-
-        evilFogEvil:
-            --morale;
-            result += g_moraleInfo[41];
-            goto moraleTerrainDone;
-        }
-
-    moraleTerrainDone:
-        ;
+    // Remove the same terrain contribution used by the numeric query before
+    // explaining the remainder. Positive and negative text rows differ by terrain.
+    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
+        || magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
+        int modifier = getTerrainMoraleModifier(
+            g_game->getAlignment(creature), magicTerrain);
+        morale -= modifier;
+        if (modifier > 0)
+            result += g_moraleInfo[magicTerrain == MAGIC_TERRAIN_HOLY_GROUND ? 39 : 41];
+        else if (modifier < 0)
+            result += g_moraleInfo[magicTerrain == MAGIC_TERRAIN_HOLY_GROUND ? 38 : 40];
     }
 
-    unsigned char alignments[10];
-    int numAlignments = getAlignments(alignments);
-    if (groupAlignments) {
-        int grouped = 0;
-        for (int alignment = -1; alignment < 9; ++alignment) {
-            if (alignments[alignment + 1] > 0 && alignment != -1) {
-                if (armyGrpFn0044A460().test(alignment))
-                    ++grouped;
-            }
-        }
-        if (grouped > 1)
-            numAlignments += 1 - grouped;
-    }
+    int numAlignments = getMoraleAlignmentCount(groupAlignments);
 
     if (numAlignments >= 3) {
         int penalty = numAlignments >= 5 ? -3 : 2 - numAlignments;
@@ -1461,39 +1389,13 @@ std::string armyGroup::getLuckDescription(
     if (ourHero)
         result = ourHero->getLuckDescription();
 
-    // Complete adds the clover-field luck bonus before applying enemy-group
-    // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    // Mac 0x59f68 expands getAlignment before the town switch.
+    // Explain the same clover-field contribution used by the numeric query.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
-        // Nine town values routed to NAMED exits, the recipe GetArmyMorale
-        // (0x44b100) already carries: retail lowers this arm through a
-        // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
-        // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
-        // survives with the neutral cases naming their exit. The bonus can
-        // live in its own arm and default can break, removing two gotos
-        // without changing any score in the 36-state family. Spelled with `return`
-        // in the no-op arms VC6 sees two outcomes, collapses the whole
-        // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
-        // instead of the tables.
-        switch (g_game->getAlignment(creature)) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto clover_done;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            luck -= 2;
+        int bonus = getCloverFieldLuckBonus(g_game->getAlignment(creature));
+        if (bonus) {
+            luck -= bonus;
             result += g_luckInfo[24];
-            break;
-        default:
-            break;
         }
-    clover_done:
-        ;
     }
 
     if (enemyGroup) {

@@ -369,9 +369,9 @@ void advManager::dimensionDoor(TSkillMastery level)
     type_point destination = get_mouse_map_point();
     if (destination.isValid() && g_windowManager->m_dialogReturn == 1) {
         NewmapCell* cell = getCell(destination);
-        if (((who->m_flags & 0x40000) != 0
+        if ((who->isOnBoat()
              && cell->m_groundSet != eTerrainWater)
-            || ((who->m_flags & 0x40000) == 0
+            || (!who->isOnBoat()
                 && cell->m_groundSet == eTerrainWater)) {
             if (g_game->isLocalHuman(who->m_owner)) {
                 normalDialog(
@@ -471,7 +471,7 @@ void advManager::townGate(TSkillMastery level)
         return;
     }
 
-    if ((who->m_flags & 0x40000) != 0) {
+    if (who->isOnBoat()) {
         if (g_game->isLocalHuman(who->m_owner)) {
             normalDialog(
                 (*g_generalText)[GENERAL_TEXT_SPELL_NOT_FROM_BOAT],
@@ -600,7 +600,7 @@ void advManager::flight(TSkillMastery level)
     if (who->isFlying(0))
         return;
 
-    if ((who->m_flags & 0x40000) != 0) {
+    if (who->isOnBoat()) {
         normalDialog(
             g_generalText->getText(GENERAL_TEXT_SPELL_NOT_WHILE_ON_BOAT),
             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);

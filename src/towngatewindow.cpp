@@ -127,10 +127,7 @@ DC_ADDRESS(0x169824, 0x6a)
 MAC_ADDRESS(0x1b8544, 0xc8)
 TTownGateWindow::~TTownGateWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005c2400, 0x1AF)
@@ -267,12 +264,12 @@ int TTownGateWindow::windowHandler(message& msg)
             switch (msg.m_codeY) {
             case DIALOG_RETURN_CANCEL:
                 g_windowManager->m_dialogReturn = -1;
-                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
                 return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_OK:
                 g_windowManager->m_dialogReturn =
                     g_townGateWindow->m_towns[g_townGateWindow->m_selectedTown];
-                msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+                msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
                 return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;

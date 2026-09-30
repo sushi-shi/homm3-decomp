@@ -52,7 +52,7 @@ MAC_ADDRESS(0x20a580, 0x98)
 widget::~widget()
 {
     if (s_lastHoverWidget == this)
-        s_lastHoverWidget = 0;
+        clearHoverWidget();
     if (m_freeText) {
         if (m_rightClick)
             delete[] m_rightClick;
@@ -185,6 +185,16 @@ int widget::main(message& msg)
         break;
     }
     return 0;
+}
+
+// Project-inferred paired flag change. Preserve all other status bits and
+// short storage; callers own any later draw and screen update.
+void widget::setActiveAndDrawn(bool on)
+{
+    if (on)
+        m_status |= WIDGET_ACTIVE | WIDGET_DRAWN;
+    else
+        m_status &= ~(WIDGET_ACTIVE | WIDGET_DRAWN);
 }
 
 VA(0x005fe7c0, 0x40)

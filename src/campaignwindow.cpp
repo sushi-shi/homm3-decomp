@@ -306,10 +306,7 @@ TCampaignWindow::~TCampaignWindow()
     }
 
     g_campaignWindow = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x0045f2c0, 0x2C)
@@ -429,10 +426,7 @@ int campaignWindowHandler(message& msg)
     }
     if (!exitFlag)
         return MESSAGE_DISPATCH_CONSUME;
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, msg.m_codeY);
     return MESSAGE_DISPATCH_FORWARD;
 }
 

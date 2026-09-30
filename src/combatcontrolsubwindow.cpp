@@ -131,10 +131,7 @@ type_combat_sub_window::type_combat_sub_window(
     b->setHotkey(0x39);
     m_widgets.push_back(b);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 
     if (g_combatManager->m_sideIsAi[0] && g_combatManager->m_sideIsAi[1])
         parent->widgetSetStatus(0x7d4, widget::WIDGET_DIMMED_NODRAW);
@@ -147,14 +144,7 @@ DC_ADDRESS(0x064eec, 0x74)
 MAC_ADDRESS(0x077ef0, 0xcc)
 type_combat_sub_window::~type_combat_sub_window()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        widget* item = *it;
-        if (item) {
-            m_parentWindow->removeWidget(item);
-            delete item;
-        }
-    }
+    removeAndDeleteWidgets();
 }
 
 // The combat control bar: the rollover strip and the two message-log
@@ -431,13 +421,7 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
         0x842, 5, 0, 8);
     m_widgets.push_back(m_manaText);
 
-    for (std::vector<widget*>::iterator current = m_widgets.begin();
-         current != m_widgets.end(); ++current) {
-        widget* w = *current;
-        if (w)
-            w->m_status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        addWidget(w, -1);
-    }
+    addHiddenWidgetsToMessageStream();
 
     m_shown = false;
 }
@@ -457,11 +441,7 @@ DC_ADDRESS(0x065ad8, 0x68)
 MAC_ADDRESS(0x079690, 0xb0)
 TCombatHeroSubWindow::~TCombatHeroSubWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x0046cc10, 0x1D7)
@@ -501,16 +481,7 @@ MAC_ADDRESS(0x0799dc, 0xd0)
 void TCombatHeroSubWindow::show()
 {
     if (!m_shown) {
-        saveBackground();
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
-             current != m_widgets.end(); ++current) {
-            if (*current)
-                (*current)->m_status |= widget::WIDGET_ACTIVE |
-                                      widget::WIDGET_DRAWN;
-        }
-        draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        g_windowManager->updateScreen(
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width + 1, m_height);
+        showWithSavedBackground(1);
         m_shown = true;
     }
 }
@@ -521,13 +492,7 @@ MAC_ADDRESS(0x079aac, 0x80)
 void TCombatHeroSubWindow::unShow()
 {
     if (m_shown) {
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
-             current != m_widgets.end(); ++current) {
-            if (*current)
-                (*current)->m_status &= ~(widget::WIDGET_ACTIVE |
-                                        widget::WIDGET_DRAWN);
-        }
-        restoreBackground();
+        hideAndRestoreBackground();
         m_shown = false;
     }
 }
@@ -686,13 +651,7 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     }
 
     m_widgets.push_back(m_spellText);
-    for (std::vector<widget*>::iterator current = m_widgets.begin();
-         current != m_widgets.end(); ++current) {
-        widget* w = *current;
-        if (w)
-            w->m_status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-        addWidget(w, -1);
-    }
+    addHiddenWidgetsToMessageStream();
     m_shown = false;
 }
 
@@ -703,11 +662,7 @@ DC_ADDRESS(0x0665e0, 0x68)
 MAC_ADDRESS(0x07ac18, 0xb0)
 TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
@@ -781,16 +736,7 @@ MAC_ADDRESS(0x07b07c, 0xcc)
 void TCombatCreatureSubWindow::show()
 {
     if (!m_shown) {
-        saveBackground();
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
-             current != m_widgets.end(); ++current) {
-            if (*current)
-                (*current)->m_status |= widget::WIDGET_ACTIVE |
-                                      widget::WIDGET_DRAWN;
-        }
-        draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        g_windowManager->updateScreen(
-            m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
+        showWithSavedBackground(0);
         m_shown = true;
     }
 }
@@ -801,13 +747,7 @@ MAC_ADDRESS(0x07b148, 0x80)
 void TCombatCreatureSubWindow::unShow()
 {
     if (m_shown) {
-        for (std::vector<widget*>::iterator current = m_widgets.begin();
-             current != m_widgets.end(); ++current) {
-            if (*current)
-                (*current)->m_status &= ~(widget::WIDGET_ACTIVE |
-                                        widget::WIDGET_DRAWN);
-        }
-        restoreBackground();
+        hideAndRestoreBackground();
         m_shown = false;
     }
 }

@@ -109,10 +109,7 @@ MAC_ADDRESS(0x11cbc4, 0xb4)
 TMainMenu::~TMainMenu()
 {
     g_mainMenu = 0;
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x004fb6e0, 0x2C)
@@ -255,8 +252,6 @@ static int mainMenuHandler(message& msg)
         }
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    msg.setDialogEnd(widget::WIDGET_END_DIALOG);
     return MESSAGE_DISPATCH_FORWARD;
 }

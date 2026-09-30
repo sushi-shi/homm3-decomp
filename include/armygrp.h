@@ -631,6 +631,12 @@ enum EMagicTerrain {
     MAGIC_TERRAIN_MAGIC_CLOUDS = 0x9
 };
 
+// Project names for the shared terrain rules in stack stats, army queries
+// and their descriptions. Alignment is supplied by the caller: a combat
+// stack uses its copied traits, while armyGroup queries the game's traits.
+int getTerrainMoraleModifier(int alignment, int magicTerrain);
+int getCloverFieldLuckBonus(int alignment);
+
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
 // armies @0 and numTroops @28, corroborated by retail codegen - the
 // 7-slot loops and the CREATURE_NONE sentinel in
@@ -753,7 +759,12 @@ public:
     armyGroup(TCreatureType type, int amount);
     int m_numTroops[ARMY_GROUP_SLOT_COUNT];
     void initialize();
+    // Project operation for display copies; source must be a different group.
+    // Pack occupied slots and combine duplicate types through add().
+    void copyConsolidatedFrom(const armyGroup& source);
     int getAlignments(unsigned char* alignments) const;
+    // Project operation: apply the same faction grouping to stat and text.
+    int getMoraleAlignmentCount(unsigned char groupAlignments) const;
     int getHomogeneityMoraleAdjust() const;
     void damageGroup(float casualtyRate);
     long getAIValue() const;
@@ -817,6 +828,10 @@ public:
     int load(TAbstractFile* infile);
     int add(int armyType, int newNumTroops, int newIndex);
     void dismiss(int whichIndex);
+    // Project operation shared by hero/town stack transfers and merge().
+    // Callers choose matching stacks; this transfers the count and dismisses
+    // the source without clamping counts or changing the destination type.
+    void mergeStack(int srcIndex, armyGroup* destGroup, int destIndex);
     void swap(int srcIndex, armyGroup* destGroup, int destIndex);
     // Older DC armygrp.cpp:804 owns this body; Complete expands the same
     // seven-slot operation across TUs in TBottomViewHero (0x451ab0).

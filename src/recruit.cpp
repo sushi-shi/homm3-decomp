@@ -291,10 +291,7 @@ DC_ADDRESS(0x1197bc, 0x62)
 MAC_ADDRESS(0x14eb7c, 0xac)
 TRecruitWindow::~TRecruitWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // E:\gamedcs\recruit.cpp:302
@@ -1183,10 +1180,7 @@ DC_ADDRESS(0x11af98, 0x62)
 MAC_ADDRESS(0x150ac4, 0xac)
 TRecruitQuickWindow::~TRecruitQuickWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x00551750, 0x24)

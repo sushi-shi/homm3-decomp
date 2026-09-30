@@ -269,10 +269,7 @@ DC_ADDRESS(0x182dc0, 0x62)
 MAC_ADDRESS(0x1e6968, 0xb0)
 TTradeResourceWindow::~TTradeResourceWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005e16c0, 0x1fab)
@@ -492,10 +489,7 @@ DC_ADDRESS(0x183ecc, 0x62)
 MAC_ADDRESS(0x1e9ca0, 0xb0)
 TGiveResourceWindow::~TGiveResourceWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005e3730, 0x1f56)
@@ -702,10 +696,7 @@ DC_ADDRESS(0x1851a4, 0x62)
 MAC_ADDRESS(0x1ecef4, 0xb0)
 TBuyArtifactWindow::~TBuyArtifactWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005e5730, 0x24a7)
@@ -995,10 +986,7 @@ DC_ADDRESS(0x186c34, 0x62)
 MAC_ADDRESS(0x1f16ec, 0xb0)
 TSellArtifactWindow::~TSellArtifactWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 VA(0x005e7c80, 0x1fd5)
@@ -1232,10 +1220,7 @@ DC_ADDRESS(0x18838c, 0x64)
 MAC_ADDRESS(0x1f4a24, 0xb0)
 TSellCreatureWindow::~TSellCreatureWindow()
 {
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 }
 
 // --- the market entry points ------------------------------------------
@@ -1348,6 +1333,35 @@ DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
 // Freelancer-guild captions read quick-view entry 213: Windows
 // 0x6a7d40 = 0x6a79ec + 213*sizeof(char*), Mac base +0x354.
 // This table cell is not separately allocated market storage.
+
+// Project helpers for the repeated state transitions in all five panes.
+// A completed trade retains quantity/backpack position for the subsequent
+// update; opening a pane initializes those too. Neither reset transfers goods.
+static void clearMarketSelection()
+{
+    g_leftResource = -1;
+    g_selectedArtifact = -1;
+}
+
+static void resetMarketSelection()
+{
+    clearMarketSelection();
+    g_leftDenominated = 0;
+}
+
+static void finishMarketTrade()
+{
+    g_leftDenominated = 1;
+    clearMarketSelection();
+}
+
+static void initializeMarketSelection()
+{
+    g_leftDenominated = 0;
+    g_backpackStart = 0;
+    clearMarketSelection();
+    g_rightAmount = 0;
+}
 
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
@@ -1502,11 +1516,7 @@ void doMarket()
             msg.m_codeY = 0;
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_tradeWindow->broadcastMessage(msg);
-            g_leftDenominated = 0;
-            g_backpackStart = 0;
-            g_selectedArtifact = -1;
-            g_leftResource = -1;
-            g_rightAmount = 0;
+            initializeMarketSelection();
             g_tradeWindow->update(0);
             g_tradeWindow->doModal(0);
             delete g_tradeWindow;
@@ -1521,11 +1531,7 @@ void doMarket()
             msg.m_codeY = 0;
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_giveWindow->broadcastMessage(msg);
-            g_leftDenominated = 0;
-            g_backpackStart = 0;
-            g_selectedArtifact = -1;
-            g_leftResource = -1;
-            g_rightAmount = 0;
+            initializeMarketSelection();
             g_giveWindow->m_recipientCount = 0;
             for (int i = 0; i < 8; ++i) {
                 if (i != g_netLocalGamePos && g_game->m_playerDisabled[i] == 0) {
@@ -1548,11 +1554,7 @@ void doMarket()
             msg.m_codeY = 0;
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_buyWindow->broadcastMessage(msg);
-            g_leftDenominated = 0;
-            g_backpackStart = 0;
-            g_selectedArtifact = -1;
-            g_leftResource = -1;
-            g_rightAmount = 0;
+            initializeMarketSelection();
             g_buyWindow->update(0);
             g_buyWindow->doModal(0);
             delete g_buyWindow;
@@ -1567,11 +1569,7 @@ void doMarket()
             msg.m_codeY = 0;
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_sellArtWindow->broadcastMessage(msg);
-            g_leftDenominated = 0;
-            g_backpackStart = 0;
-            g_selectedArtifact = -1;
-            g_leftResource = -1;
-            g_rightAmount = 0;
+            initializeMarketSelection();
             g_sellArtWindow->update(0);
             g_sellArtWindow->doModal(0);
             delete g_sellArtWindow;
@@ -1586,11 +1584,7 @@ void doMarket()
             msg.m_codeY = 0;
             msg.m_extra = g_game->getLocalPlayerGamePos();
             g_sellCreatureWindow->broadcastMessage(msg);
-            g_leftDenominated = 0;
-            g_backpackStart = 0;
-            g_selectedArtifact = -1;
-            g_leftResource = -1;
-            g_rightAmount = 0;
+            initializeMarketSelection();
             g_sellCreatureWindow->update(0);
             g_sellCreatureWindow->doModal(0);
             delete g_sellCreatureWindow;
@@ -3095,9 +3089,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
                     g_giveQuantity * g_rightAmount;
                 g_currentPlayer->m_resources[g_leftResource] += g_rightAmount;
             }
-            g_leftDenominated = 1;
-            g_leftResource = -1;
-            g_selectedArtifact = -1;
+            finishMarketTrade();
             break;
         case MARKET_RIGHT_PANEL_ID:
             g_rightAmount = g_maxTradeUnits;
@@ -3108,9 +3100,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
         case MARKET_TITLE_ID:
             g_windowManager->m_dialogReturn = msg.m_codeY - 0x10;
             exit = 1;
-            g_leftResource = -1;
-            g_selectedArtifact = -1;
-            g_leftDenominated = 0;
+            resetMarketSelection();
             break;
         default:
             return 1;
@@ -3156,7 +3146,7 @@ int TTradeResourceWindow::windowHandler(message& msg)
 
     update(1);
     if (exit) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return 2;
     }
     return 1;
@@ -3280,9 +3270,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                     transmitRemoteData(&m, color, false, true);
                 }
                 updateFlag = 1;
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
+                finishMarketTrade();
                 break;
             }
             case MARKET_RIGHT_PANEL_ID:
@@ -3295,9 +3283,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
                 updateFlag = 1;
                 exit = 1;
                 g_windowManager->m_dialogReturn = msg.m_codeY - MARKET_LEFT_COUNT_ID;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
+                resetMarketSelection();
                 break;
             default:
                 break;
@@ -3325,7 +3311,7 @@ int TGiveResourceWindow::windowHandler(message& msg)
     if (updateFlag)
         update(1);
     if (exit) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return 2;
     }
     return 1;
@@ -3400,9 +3386,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                     g_marketArtifacts[g_leftResource] =
                         ARTIFACT_NONE;
                 }
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
+                finishMarketTrade();
                 break;
 
             case MARKET_LEFT_COUNT_ID:
@@ -3411,9 +3395,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                 g_windowManager->m_dialogReturn =
                     msg.m_codeY - MARKET_LEFT_COUNT_ID;
                 exitFlag = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
+                resetMarketSelection();
                 break;
 
             default:
@@ -3473,7 +3455,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
 
         update(true);
         if (exitFlag) {
-            msg.m_codeX = msg.m_codeY = 10;
+            msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
             return MESSAGE_DISPATCH_FORWARD;
         }
         break;
@@ -3654,9 +3636,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                         g_marketHero->removeBackpackArtifact(slot);
                     }
                 }
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
+                finishMarketTrade();
                 updateFlag = 1;
                 break;
 
@@ -3678,9 +3658,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
                 g_windowManager->m_dialogReturn =
                     msg.m_codeY - MARKET_LEFT_COUNT_ID;
                 exitFlag = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
+                resetMarketSelection();
                 updateFlag = 1;
                 break;
 
@@ -3706,7 +3684,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
     if (updateFlag)
         update(true);
     if (exitFlag) {
-        msg.m_codeX = msg.m_codeY = widget::WIDGET_END_DIALOG;
+        msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -3808,11 +3786,8 @@ int TSellCreatureWindow::windowHandler(message& msg)
                         g_rightAmount;
                 }
                 if (g_marketHero->m_army.m_numTroops[g_selectedArtifact] == 0)
-                    g_marketHero->m_army.m_armies[g_selectedArtifact] =
-                        CREATURE_NONE;
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
+                    g_marketHero->m_army.dismiss(g_selectedArtifact);
+                finishMarketTrade();
                 break;
 
             case MARKET_RIGHT_PANEL_ID:
@@ -3825,9 +3800,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
                 g_windowManager->m_dialogReturn =
                     msg.m_codeY - MARKET_LEFT_COUNT_ID;
                 switchWindow = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                g_leftDenominated = 0;
+                resetMarketSelection();
                 break;
 
             default:
@@ -3877,7 +3850,7 @@ int TSellCreatureWindow::windowHandler(message& msg)
 
         update(true);
         if (switchWindow) {
-            msg.m_codeX = msg.m_codeY = 10;
+            msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
             return MESSAGE_DISPATCH_FORWARD;
         }
         break;

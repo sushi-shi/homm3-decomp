@@ -1608,9 +1608,8 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         currentHero->m_customName = customName;
     }
 
-    currentHero->m_mana = static_cast<short>(currentHero->getMaxMana());
-    currentHero->m_maxMovePoints = currentHero->m_movePoints
-        = currentHero->getMobility();
+    currentHero->resetManaToMaximum();
+    currentHero->refreshMovement();
 
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
@@ -1620,9 +1619,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->m_owner].addHero(currentHero->m_id);
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
@@ -1687,8 +1684,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
     currentHero->m_z = object->m_z;
     currentHero->m_owner = static_cast<signed char>(placeholder->m_owner);
     g_game->setRandomHeroArmies(currentHero->m_id, 0, 0);
-    currentHero->m_maxMovePoints = currentHero->m_movePoints
-        = currentHero->getMobility();
+    currentHero->refreshMovement();
 
     type_point heroLocation = currentHero->getLocation();
     --heroLocation.m_x;
@@ -1698,9 +1694,7 @@ void TCampaignBrief::ScenarioStruct::placeStartingHero(
             --currentHero->m_x;
     }
 
-    g_game->m_players[currentHero->m_owner].m_heroes[
-        g_game->m_players[currentHero->m_owner].m_numHeroes] = currentHero->m_id;
-    ++g_game->m_players[currentHero->m_owner].m_numHeroes;
+    g_game->m_players[currentHero->m_owner].addHero(currentHero->m_id);
     currentHero->obscureCell();
     g_game->m_heroAvailability[currentHero->m_id] = currentHero->m_owner;
     g_game->m_heroPoolMap[currentHero->m_id][currentHero->m_owner] = true;
@@ -2174,8 +2168,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
     int position = getStartOptions()->getPlayer(option);
-    g_game->m_players[position].setHuman(1);
-    g_game->m_players[position].m_isLocal = 1;
+    g_game->m_players[position].setLocalHuman();
 
     int playerHeroFaces[8];
     int i;

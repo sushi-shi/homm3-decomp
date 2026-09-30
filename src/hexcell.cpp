@@ -14,9 +14,7 @@ hexcell::hexcell()
     int none = -1;
     m_obstacleIndex = none;
     m_attributes = 0;
-    m_armySide = none;
-    m_armySlot = none;
-    m_partOfDouble = none;
+    resetArmy();
     m_bodiesInHex = 0;
     m_mouseShaded = 0;
     m_backgroundOffset = none;
@@ -41,4 +39,35 @@ army* hexcell::getDeadArmy(int i) const
     if (m_deadArmySide[i] < 0)
         return 0;
     return &g_combatManager->m_armies[m_deadArmySide[i]][m_deadArmySlot[i]];
+}
+
+// Project-inferred operations shared by army initialization, movement and
+// death. These names/placement do not claim retained native helper symbols.
+void hexcell::setArmy(int side, int slot, int partOfDouble)
+{
+    m_armySide = static_cast<signed char>(side);
+    m_armySlot = static_cast<signed char>(slot);
+    m_partOfDouble = static_cast<signed char>(partOfDouble);
+}
+
+void hexcell::clearArmy()
+{
+    m_armySide = -1;
+    m_armySlot = -1;
+}
+
+void hexcell::resetArmy()
+{
+    clearArmy();
+    m_partOfDouble = -1;
+}
+
+void hexcell::recordArmyBody()
+{
+    if (hasArmy()) {
+        m_deadArmySide[m_bodiesInHex] = m_armySide;
+        m_deadArmySlot[m_bodiesInHex] = m_armySlot;
+        m_deadPartOfDouble[m_bodiesInHex] = m_partOfDouble;
+        ++m_bodiesInHex;
+    }
 }

@@ -847,11 +847,18 @@ public:
     void setAdjacentToCandidate(unsigned char value) { m_adjacentToCandidate = value; }
     unsigned char getBlockedByCandidate() const { return m_blockedByCandidate; }
     void setBlockedByCandidate(unsigned char value) { m_blockedByCandidate = value; }
-    void setOverlapsCandidate(unsigned char value) { m_overlapsCandidate = value; }
     unsigned char getCandidateCovers() const { return m_candidateCovers; }
-    void setCandidateCovers(unsigned char value) { m_candidateCovers = value; }
     unsigned char getCandidateBehind() const { return m_candidateBehind; }
-    void setCandidateBehind(unsigned char value) { m_candidateBehind = value; }
+    // Project operation for one overlapping cell. Relations accumulate:
+    // another cell may already have marked the opposite depth relation.
+    void markCandidateOverlap(bool covers)
+    {
+        if (covers)
+            m_candidateCovers = 1;
+        else
+            m_candidateBehind = 1;
+        m_overlapsCandidate = 1;
+    }
     void setPosition(const TRmgMapPosition& value) { m_position = value; }
 };
 
@@ -1066,15 +1073,32 @@ private:
     TRmgGroundTile m_tile;                  // +0x24
     TRmgGroundTileData m_tileData;          // +0x28
 
-public:
     TRmgConnectionDecoration m_connection;  // +0x2c
 
+public:
     TRmgMapItem();
     void clear();
     void write(TAbstractFile* outfile);
+
+    // Project-inferred cell operations from repeated path/border transitions.
+    // Ordinary edits retain cells with a connection decoration; installing or
+    // removing that decoration owns the ordered flag transition as well.
+    void openPath();
+    void markBorder();
+    // Partial edits: closing retains border, clearing border retains gate.
+    void closePath();
+    void clearBorder();
+    void setConnectionDecoration(int direction);
+    void clearConnectionDecoration();
+    unsigned int hasConnectionDecoration() const { return m_connection.m_present; }
+    unsigned int getConnectionDecorationDirection() const { return m_connection.m_direction; }
+
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
     void setTerrain(int terrain, int frame,
         unsigned char flipX, unsigned char flipY);
+    // Project counterparts for the road/river adapter's complete tile write.
+    void setRoad(int type, int frame, unsigned char flipX, unsigned char flipY);
+    void setRiver(int type, int frame, unsigned char flipX, unsigned char flipY);
 
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
@@ -1193,13 +1217,6 @@ public:
     void setBorderObject(unsigned int value) { m_tileData.m_borderObject = value; }
     void setSubterraneanGate(unsigned int value) { m_tileData.m_subterraneanGate = value; }
     void setRoadEntrance(unsigned int value) { m_tileData.m_roadEntrance = value; }
-    void setTerrainFlipX(unsigned int value) { m_tileData.m_terrainFlipX = value; }
-    void setTerrainFlipY(unsigned int value) { m_tileData.m_terrainFlipY = value; }
-    void setRoadFrame(unsigned int value) { m_tileData.m_roadFrame = value; }
-    void setRoadFlipX(unsigned int value) { m_tileData.m_roadFlipX = value; }
-    void setRoadFlipY(unsigned int value) { m_tileData.m_roadFlipY = value; }
-    void setRiverFlipX(unsigned int value) { m_tileData.m_riverFlipX = value; }
-    void setRiverFlipY(unsigned int value) { m_tileData.m_riverFlipY = value; }
     void setHasRiver(unsigned int value) { m_tileData.m_hasRiver = value; }
     void setImpassable(unsigned int value) { m_tileData.m_impassable = value; }
     void setRiverTarget(unsigned int value) { m_tileData.m_riverTarget = value; }
@@ -1207,11 +1224,14 @@ public:
     void setZoneBoundary(unsigned int value) { m_tileData.m_zoneBoundary = value; }
     void setConnectionVisited(unsigned int value) { m_tileData.m_connectionVisited = value; }
     void setBlockedDirections(unsigned int value) { m_tileData.m_blockedDirections = value; }
-    void setLandType(int value) { m_tile.m_landType = value; }
     void setTerrainFrame(int value) { m_tile.m_terrainFrame = value; }
     void setRoadType(int value) { m_tile.m_roadType = value; }
-    void setRiverType(int value) { m_tile.m_riverType = value; }
-    void setRiverFrame(int value) { m_tile.m_riverFrame = value; }
+    // Overlay changes retain the frame/flips but update river presence too.
+    void setRiverType(int value)
+    {
+        m_tile.m_riverType = value;
+        setHasRiver(value != 0);
+    }
     void setMovementCost(unsigned int value) { m_movement.m_cost = value; }
     void setZonePathCost(unsigned int value) { m_movement.m_zonePathCost = value; }
 };

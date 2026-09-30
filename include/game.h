@@ -430,8 +430,7 @@ public:
             m_generateHero = 0;
             m_hasRandomHero = 0;
             m_nonRandomHeroId = -1;
-            m_nonRandomHeroCustomPortrait = -1;
-            m_nonRandomHeroCustomName[0] = 0;
+            clearHeroCustomization();
             m_defaultPlaceholders = 0;
         }
 
@@ -440,6 +439,8 @@ public:
         // keeps the equivalent logic in the parent reader, so the role name
         // is provisional.
         void readMapPlayerSlot(TAbstractFile* infile, int mapVersion);
+        // Project-inferred empty customization; retain hero ID and name tail.
+        void clearHeroCustomization();
     };
     int m_version;
     unsigned char m_isPlayable;
@@ -477,6 +478,16 @@ public:
     // bitset). Modelled on NewSMapHeader instead, the map's ctor call
     // lands in game::game and shifts every construction after it.
     std::map<int, type_map_hero_info> m_heroPlayerSetups;
+
+    // Project-inferred selection operation: disable both special types while
+    // retaining their payload and any result state in the copied header.
+    void disableSpecialConditions();
+
+protected:
+    // Project-inferred census shared by the derived map/save readers and ctor.
+    // Counts remain native-public; each reader owns its read/failure ordering.
+    void clearPlayerCounts();
+    void countPlayerSlot(const TPlayerSlotAttributes& slot);
 };
 SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
@@ -518,9 +529,7 @@ public:
     {
         m_version = 0;
         m_difficulty = 0;
-        m_numPlayers = 0;
-        m_minNumHumanPlayers = 0;
-        m_maxNumHumanPlayers = 0;
+        clearPlayerCounts();
         m_lastTownNameAssigned = 0;
         m_mapHasNotBeenSaved = 0;
         m_mapName = "";
@@ -629,6 +638,11 @@ public:
     inline void setOwner(long owner);
     void updateBonus();
     void grow(int unusedArg);
+
+private:
+    // Project-inferred shared reset and inverse town-bonus operations.
+    void clearCreatureSlots();
+    void adjustTownBonuses(long change);
 };
 SIZE(generator, 0x5c);
 
@@ -958,10 +972,25 @@ public:
     // resource paths.
     // Retained ordinary body: game.cpp, Windows 0x004bada0.
     bool isHuman() const;
-    // Project mutation and raw-byte copy view. isHuman remains the native
-    // normalized predicate; saving/restoring this flag preserves its byte.
-    void setHuman(unsigned char human) { m_isHuman = human; }
-    unsigned char getHumanFlag() const { return m_isHuman; }
+    // Project names for the paired control transitions used by setup and
+    // solo play. Neither operation discards the player's name or network ID;
+    // disconnecting a player is the separate clearNetInfo operation.
+    void setLocalHuman()
+    {
+        m_isHuman = 1;
+        m_isLocal = 1;
+    }
+    void setComputer()
+    {
+        m_isHuman = 0;
+        m_isLocal = 0;
+    }
+    // Restart restores control bytes without restoring the old connection.
+    void copyControlFrom(const playerData& other)
+    {
+        m_isLocal = other.m_isLocal;
+        m_isHuman = other.m_isHuman;
+    }
     int save(TAbstractFile* outfile);
     // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
     // townManager::SwapHeroes 0x5d5150 calls it on
@@ -973,11 +1002,17 @@ public:
     // precedent), and townmgr.cpp is the only live consumer.
     unsigned char addGarrisonHero(town* ourTown);
     int buildingsOwned(int townType, int buildingId, int mageLevel);
+    // Project-inferred first-match query for morale/luck and their tooltips.
+    bool hasGrailTown(TTownType townType) const;
     bool hasMobileHero();
     int nextHero();
     int nextTown();
     int numOfGivenArtifact(int artifact) const;
     int findHero(int id) const;
+    // Project-inferred roster operations; map placement and selection stay
+    // with the caller. Both require an available/occupied slot respectively.
+    void addHero(int id);
+    void removeHeroAt(int index);
     int findTown(int id) const;
     // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
     bool isLocalHuman() const;
@@ -1418,6 +1453,7 @@ private:
     int loadObeliskPool(TAbstractFile* infile);
     int saveObeliskPool(TAbstractFile* outfile);
     int saveTownPool(TAbstractFile* outfile);
+    void resetHolyGrail();
 
 public:
     // 0x4bf780 (dc 0xaa7e0).

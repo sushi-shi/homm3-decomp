@@ -267,7 +267,7 @@ void type_town_threat_checker::checkTowns()
                 enemyHero->m_bounty = 0;
                 g_searchArray->seedPosition(
                     enemyHero, start, target, mobility,
-                    (enemyHero->m_flags >> 18) & 1,
+                    enemyHero->isOnBoat(),
                     const_AI_enemy_search, mobility, 0);
                 markTowns(enemyHero, g_searchArray);
             }
@@ -2702,9 +2702,7 @@ void aiConsolidateArmy(armyGroup& currentArmy)
                 duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
                 ++duplicate) {
                 if (currentArmy.m_armyTypes[duplicate] == type) {
-                    currentArmy.m_numTroops[first] +=
-                        currentArmy.m_numTroops[duplicate];
-                    currentArmy.dismiss(duplicate);
+                    currentArmy.mergeStack(duplicate, &currentArmy, first);
                 }
             }
         }
@@ -2917,7 +2915,7 @@ static void markDangerZones(const hero* ourHero, hero* enemyHero,
         type_point target(-1, -1, -1);
         g_searchArray->seedPosition(
             enemyHero, start, target, mobility,
-            (enemyHero->m_flags >> 18) & 1,
+            enemyHero->isOnBoat(),
             const_AI_enemy_search, mobility, 0);
 
         for (long visitedIndex =
@@ -3542,7 +3540,7 @@ long markDestinations(hero* currentHero, long maxDistance,
     currentSearchArray->seedPosition(currentHero, currentHero->getLocation(),
                                type_point(-1, -1, -1),
                                maxDistance,
-                               (currentHero->m_flags >> 18) & 1, searchType,
+                               currentHero->isOnBoat(), searchType,
                                movePoints, 0);
 
     for (int i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
@@ -3733,7 +3731,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     triggerPoint = currentPathCell->m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
-    if (currentPathCell->m_inBoat && !(currentHero->m_flags & 0x40000)) {
+    if (currentPathCell->m_inBoat && !currentHero->isOnBoat()) {
         if (!(cell->m_type == BOAT && cell->m_isTrigger)) {
             g_advManager->stopCursor(1);
             if (currentHero->canSummonBoat()) {
@@ -3918,7 +3916,7 @@ static unsigned char attemptTeleport(hero* currentHero,
     if (atManaSource && castsRemaining > 1)
         threshold = 200;
 
-    inBoat = (currentHero->m_flags & 0x40000) != 0;
+    inBoat = currentHero->isOnBoat();
     // Dreamcast decrements this index in get_location's call delay slot. Its
     // placement immediately before that call also reproduces retail VC6's
     // interleaved lifetime; moving it after the call falls to 96.3350%.

@@ -257,7 +257,13 @@ declarations, then group coherent private/protected state without moving fields.
 Do not add accessors for internal-only state or erase proven access distinctions
 merely to reduce the number of access labels.
 Use the canonical operation at unrelated call sites and introduce missing
-accessors as those operations are recovered. Keep original types, data order,
+accessors as those operations are recovered. Read complete caller flows and
+search for repeated groups of reads/writes before designing an interface.
+Prefer the owner's existing reset, copy, transfer or assignment operation to
+a sequence of field setters. Distinguish full resets from partial updates,
+preserve state intentionally retained by a caller, and keep stream reads in
+order. Getter/setter counts and visibility changes alone do not establish that
+the caller expresses the right operation. Keep original types, data order,
 constness and mutation semantics; do not expose mutable scalar references or
 add unsupported friends merely to bypass the interface.
 

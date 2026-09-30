@@ -66,6 +66,8 @@ private:
     TCombatHeroSubWindow* m_heroSubWindows[2];
     TCombatCreatureSubWindow* m_creatureSubWindows[4];
 
+    void clearControlSubWindow();
+
 public:
     virtual ~TCombatWindow();
     virtual void close(unsigned char update);

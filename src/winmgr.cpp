@@ -17,6 +17,37 @@
 #include "window.h"
 #include "wingraph.h"
 
+// Project-inferred message operations shared by modal callbacks and widgets.
+// Native fields remain public; these methods name protocol transitions rather
+// than imposing one meaning on the fields used by every input event.
+void message::setDialogEnd()
+{
+    m_id = MESSAGE_WIDGET;
+    m_codeX = widget::WIDGET_END_DIALOG;
+}
+
+void message::setDialogEndCodes(int result)
+{
+    m_codeY = result;
+    m_codeX = widget::WIDGET_END_DIALOG;
+}
+
+void message::setDialogEnd(int result)
+{
+    m_id = MESSAGE_WIDGET;
+    setDialogEndCodes(result);
+}
+
+// Project-inferred complete callback transition. doDialog's callback arm ends
+// without copying codeY, unlike its widget-broadcast arm. Preserve the saved
+// manager result separately from the conventional END_DIALOG payload.
+void heroWindowManager::finishDialog(message& msg, int result)
+{
+    msg.m_id = MESSAGE_WIDGET;
+    m_dialogReturn = result;
+    msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
+}
+
 // DC gbInDialog and gbSendMouseMoveMessages; the nest counter is retail-only.
 DATA(0x006989cc) int g_inDialog;
 DATA(0x00698a1c) int g_sendMouseMoveMessages;

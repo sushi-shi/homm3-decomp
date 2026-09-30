@@ -185,10 +185,7 @@ TPuzzleWindow::~TPuzzleWindow()
     for (int i = 0; i < 48; ++i)
         m_puzzlePieces[i]->dispose();
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 
     if (m_puzzleResourceBar) {
         delete m_puzzleResourceBar;
@@ -236,10 +233,7 @@ int TPuzzleWindow::windowHandler(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
 
-    msg.m_id = MESSAGE_WIDGET;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeY = widget::WIDGET_END_DIALOG;
-    msg.m_codeX = widget::WIDGET_END_DIALOG;
+    g_windowManager->finishDialog(msg, msg.m_codeY);
     return MESSAGE_DISPATCH_FORWARD;
 }
 

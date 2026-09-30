@@ -318,6 +318,8 @@ class CNewPlayerUpdateMan {
     // t_map_list_update still converts to this immediate base.
 private:
     CNewPlayerUpdateProc* m_procs[8];
+    void startProc(int index, CNewPlayerUpdateProc* proc);
+    void deleteProc(int index);
 
 public:
     ~CNewPlayerUpdateMan();
@@ -1222,8 +1224,7 @@ unsigned char CNetPlayerHandler::setNextPlayer(int pos)
         if (m_humanPlayers[i].isHuman()) {
             m_assignedPos = m_humanPlayers[i].getPlayerPos();
             m_humanPlayers[i].setPlayerPos(pos);
-            m_humanPlayers[i].setHeroIndex(-1);
-            m_humanPlayers[i].setTownIndex(-1);
+            m_humanPlayers[i].resetTownAndHero();
             return 1;
         }
         ++i;
@@ -1655,6 +1656,21 @@ CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
     }
 }
 
+// Project-inferred live-slot operations. Publish the job before its virtual
+// go call; delete a finished/dropped job before making its slot available.
+// Callers retain the available-slot and finished/player-identity guards.
+void CNewPlayerUpdateMan::startProc(int index, CNewPlayerUpdateProc* proc)
+{
+    m_procs[index] = proc;
+    m_procs[index]->go();
+}
+
+void CNewPlayerUpdateMan::deleteProc(int index)
+{
+    delete m_procs[index];
+    m_procs[index] = 0;
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:1466
 DC_ADDRESS(0x148790, 0xa8)
 void CNewPlayerUpdateMan::tick()
@@ -1663,8 +1679,7 @@ void CNewPlayerUpdateMan::tick()
         if (m_procs[i]) {
             m_procs[i]->tick();
             if (m_procs[i]->isFinished()) {
-                delete m_procs[i];
-                m_procs[i] = 0;
+                deleteProc(i);
             }
         }
     }
@@ -3264,8 +3279,7 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     g_game->setupOrigData();
 
     NewSMapHeader header;
-    header.m_lossCondition.m_type = -1;
-    header.m_victoryCondition.m_type = -1;
+    header.disableSpecialConditions();
     header.m_hasTwoLayers = m_randomMapOptions[1] > 1;
     header.m_difficulty = 1;
     header.m_isPlayable = 1;
@@ -3315,10 +3329,8 @@ void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
     applyHeaderToGame(&m_localHeader);
 
     for (int j = 0; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
-        m_players.getHumanPlayer(j)->setHeroIndex(-1);
-        m_players.getHumanPlayer(j)->setTownIndex(-1);
-        m_players.getCompPlayerInPos(j)->setHeroIndex(-1);
-        m_players.getCompPlayerInPos(j)->setTownIndex(-1);
+        m_players.getHumanPlayer(j)->resetTownAndHero();
+        m_players.getCompPlayerInPos(j)->resetTownAndHero();
     }
     setHumanSlot();
     makeHeroFilter();
@@ -4158,8 +4170,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
                 return gameFileProblem;
             strcpy(header->m_description, g_generalText->getText(GENERAL_TEXT_MAP_NOT_PLAYABLE));
         } else {
-            header->m_header.m_lossCondition.m_type = -1;
-            header->m_header.m_victoryCondition.m_type = -1;
+            header->m_header.disableSpecialConditions();
             header->m_header.m_difficulty = 0;
             strcpy(header->m_title, g_generalText->getText(GENERAL_TEXT_OLD_MAP_FORMAT_LABEL));
             strcpy(header->m_description, g_generalText->getText(GENERAL_TEXT_MAP_FORMAT_OUTDATED));
@@ -5066,10 +5077,8 @@ void TSingleSelectionWindow::setCurrentMap(int map, bool update)
         }
         updateGameVars();
         for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
-            m_players.getHumanPlayer(i)->setHeroIndex(-1);
-            m_players.getHumanPlayer(i)->setTownIndex(-1);
-            m_players.getCompPlayerInPos(i)->setHeroIndex(-1);
-            m_players.getCompPlayerInPos(i)->setTownIndex(-1);
+            m_players.getHumanPlayer(i)->resetTownAndHero();
+            m_players.getCompPlayerInPos(i)->resetTownAndHero();
         }
         setHumanSlot();
         makeHeroFilter();
@@ -6132,9 +6141,7 @@ int TSingleSelectionWindow::exitDialog(message& msg)
                             "This player was not found"));
     }
 
-    msg.m_id = 0x200;
-    g_windowManager->m_dialogReturn = msg.m_codeY;
-    msg.m_codeX = msg.m_codeY = 10;
+    g_windowManager->finishDialog(msg, msg.m_codeY);
     return 2;
 }
 
@@ -6313,8 +6320,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
     g_numHumanPlayers = 0;
     int i;
     for (i = 0; i < 8; ++i) {
-        g_game->m_players[i].m_isLocal = 0;
-        g_game->m_players[i].setHuman(0);
+        g_game->m_players[i].setComputer();
     }
 
     if (isMultiPlayer()) {
@@ -6325,8 +6331,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
             if (player && player->isHuman()) {
                 g_game->m_players[i].assignNetInfo(player);
                 if (g_mpNetProtocol == MP_HOTSEAT) {
-                    g_game->m_players[i].m_isLocal = 1;
-                    g_game->m_players[i].setHuman(1);
+                    g_game->m_players[i].setLocalHuman();
                 }
                 ++g_numHumanPlayers;
             } else {
@@ -6336,8 +6341,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         if (g_mpNetProtocol != MP_HOTSEAT) {
             g_localGamePos = getThisPlayerGamePos();
             if (g_localGamePos != -1) {
-                g_game->m_players[g_localGamePos].m_isLocal = 1;
-                g_game->m_players[g_localGamePos].setHuman(1);
+                g_game->m_players[g_localGamePos].setLocalHuman();
             }
             if (isHost() && updateCurPlayer)
                 g_netLocalGamePos = g_localGamePos;
@@ -6347,8 +6351,7 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
         CNetPlayerHandlerPlayer* player = getThisPlayer();
         if (player) {
             g_localGamePos = player->getPlayerPos();
-            g_game->m_players[g_localGamePos].setHuman(1);
-            g_game->m_players[g_localGamePos].m_isLocal = 1;
+            g_game->m_players[g_localGamePos].setLocalHuman();
             g_numHumanPlayers = 1;
         }
     }
@@ -6620,8 +6623,7 @@ void CNewPlayerUpdateMan::playerDropped(unsigned long dpid)
 {
     for (int i = 0; i < 8; ++i) {
         if (m_procs[i] && m_procs[i]->m_dpid == dpid) {
-            delete m_procs[i];
-            m_procs[i] = 0;
+            deleteProc(i);
         }
     }
 }
@@ -7132,8 +7134,7 @@ void CNewPlayerUpdateMan::newPlayer(unsigned long dpid)
 {
     int index = getFirstAvailable();
     if (index != -1) {
-        m_procs[index] = new CNewPlayerUpdateProc(dpid);
-        m_procs[index]->go();
+        startProc(index, new CNewPlayerUpdateProc(dpid));
     }
 }
 
@@ -7143,8 +7144,7 @@ void CNewPlayerUpdateMan::requestMapHeaders(unsigned long dpid)
 {
     int index = getFirstAvailable();
     if (index != -1) {
-        m_procs[index] = new t_map_list_update(dpid);
-        m_procs[index]->go();
+        startProc(index, new t_map_list_update(dpid));
     }
 }
 
@@ -7580,8 +7580,7 @@ void TSingleSelectionWindow::onPlayerPosClick(int pos)
             setup->m_playerPos[player->getPlayerPos()] = setup->m_playerPos[pos];
             setup->m_playerPos[pos] = pos;
             player->setPlayerPos(pos);
-            player->setHeroIndex(-1);
-            player->setTownIndex(-1);
+            player->resetTownAndHero();
             makeHeroFilter();
         }
     }
@@ -8737,11 +8736,7 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
     }
 
     g_singleSelectionWindow = 0;
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        if (*it)
-            delete *it;
-    }
+    deleteWidgetObjects();
 
     if (m_saveMode) {
         backupGameHeaders(g_game, g_saveHeader);

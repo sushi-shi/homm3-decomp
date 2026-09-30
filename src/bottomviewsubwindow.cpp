@@ -66,14 +66,7 @@ DC_ADDRESS(0x055114, 0x74)
 MAC_ADDRESS(0x05f1f0, 0xcc)
 type_bottom_view_window::~type_bottom_view_window()
 {
-    for (std::vector<widget*>::iterator it = m_widgets.begin();
-         it != m_widgets.end(); ++it) {
-        widget* item = *it;
-        if (item) {
-            m_parentWindow->removeWidget(item);
-            delete item;
-        }
-    }
+    removeAndDeleteWidgets();
 }
 
 // The seven derived destructors. Each has an EMPTY body in the source -
@@ -211,10 +204,7 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
         font::WHITE, id++, 1, 0, 8);
     m_widgets.push_back(m_backdrop);
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 
     m_lastStepTime = GameTime::get();
 }
@@ -311,10 +301,7 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         ResourceManager::dispose(sprite);
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00453DD0, 0x16B, OSTREAM_PUT, char)
@@ -373,10 +360,7 @@ TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
         10, 10, 148, 146, message->c_str(), "smalfont.fnt", font::WHITE,
         BOTTOM_VIEW_TEXT_ID, 1, 0, 8));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 }
 
 VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
@@ -539,10 +523,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 }
 
 // UNBLOCKED by the constructor above - its 0x63bb2c store is the one
@@ -791,10 +772,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 }
 
 // UNBLOCKED by the constructor above - its 0x63bb34 store is the one
@@ -908,10 +886,7 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
         }
     }
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-    }
+    addWidgetsToMessageStream();
 }
 
 // UNBLOCKED by the constructor above - its 0x63bb3c store is the one

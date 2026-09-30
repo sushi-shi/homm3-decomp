@@ -2056,11 +2056,7 @@ void updateCurrentPlayers()
             && isValidHuman(playerArray, g_game->m_players[i].m_dpid))
             continue;
 
-        g_game->m_players[i].m_dpid = 0;
-        g_game->m_players[i].setHuman(0);
-        g_game->m_players[i].m_isLocal = 0;
-        strcpy(g_game->m_players[i].m_name,
-               g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+        g_game->m_players[i].clearNetInfo();
     }
 
     g_numHumanPlayers = playerArray.getCount();

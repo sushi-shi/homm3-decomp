@@ -256,17 +256,13 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     if (spellToCast == -1)
         return;
 
-    m_nextAction = 0;
-    m_nextActionExtra = -1;
-    m_nextActionGridIndex = -1;
-    m_nextActionGridIndex2 = -1;
+    setPendingAction(0, -1, -1, -1);
 
     TSkillMastery mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
                                                         m_magicTerrain);
     switch (spellToCast) {
     case SPELL_QUICKSAND:
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_LAND_MINE:
@@ -275,8 +271,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             break;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_EARTHQUAKE:
@@ -285,8 +280,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             break;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         break;
 
     case SPELL_MAGIC_ARROW:
@@ -337,9 +331,9 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             break;
         }
 
-        m_nextAction = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
-                                      : AI_ORDER_CAST_SPELL;
-        m_nextActionExtra = spellToCast;
+        prepareAction(creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                         : AI_ORDER_CAST_SPELL,
+                      spellToCast);
         if (spellTargetsASingleArmy(spellToCast, mastery)) {
             updateSpellTargetFromMouse();
             g_windowManager->doDialog(0, handleCastSpell, 0);
@@ -373,9 +367,9 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_METEOR_SHOWER:
     case SPELL_BERSERK: {
         int shadeLevel = g_config.m_combatShadeLevel;
-        m_nextAction = creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
-                                      : AI_ORDER_CAST_SPELL;
-        m_nextActionExtra = spellToCast;
+        prepareAction(creatureSpell == 1 ? AI_ORDER_CREATURE_SPELL
+                                         : AI_ORDER_CAST_SPELL,
+                      spellToCast);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         updateSpellTargetFromMouse();
@@ -389,8 +383,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_FORCE_FIELD:
     case SPELL_FIRE_WALL: {
         int shadeLevel = g_config.m_combatShadeLevel;
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         if (shadeLevel && g_config.m_showCombatMouseHex)
             setCombatGrid(g_config.m_showCombatGrid, 1, 0, 1);
         g_windowManager->doDialog(0, handleCastWallSpell, 0);
@@ -407,8 +400,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastTeleport, 0);
         if (!m_nextAction)
             break;
@@ -427,8 +419,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleSacrificeBeneficiary, 0);
         if (!m_nextAction)
             break;
@@ -441,8 +432,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastSpell, 0);
         break;
 
@@ -458,8 +448,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        m_nextAction = 1;
-        m_nextActionExtra = spellToCast;
+        prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
         g_windowManager->doDialog(0, handleCastSpell, 0);
         break;
 
@@ -469,8 +458,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_SUMMON_AIR_ELEMENTAL: {
         int side = m_currentSide;
         if (ableToSummonElemental(spellToCast, side)) {
-            m_nextAction = 1;
-            m_nextActionExtra = spellToCast;
+            prepareAction(AI_ORDER_CAST_SPELL, spellToCast);
             break;
         }
         hero* castingHero = m_heroes[side];
@@ -504,9 +492,9 @@ static int updateSpellTarget(long hex)
 {
     combatManager* manager = g_combatManager;
     unsigned char markArea = 0;
-    SpellID spell = manager->m_nextActionExtra;
+    SpellID spell = manager->getPendingActionExtra();
     hero* castingHero = manager->m_heroes[manager->m_currentSide];
-    int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
+    int creatureSpell = manager->getPendingActionCode() == AI_ORDER_CREATURE_SPELL;
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
     TSkillMastery mastery;
     if (!castingHero)
@@ -1863,21 +1851,19 @@ int handleSacrificeBeneficiary(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (!g_sacrificeBeneficiaryValidTarget)
             break;
-        g_combatManager->m_nextActionGridIndex = g_sacrificeBeneficiaryLastIndex;
+        g_combatManager->selectActionTarget(g_sacrificeBeneficiaryLastIndex);
         g_sacrificeBeneficiaryLastIndex = -1;
         g_sacrificeBeneficiaryValidTarget = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
+        g_combatManager->cancelPendingAction();
         g_sacrificeBeneficiaryLastIndex = -1;
         g_sacrificeBeneficiaryValidTarget = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -1907,7 +1893,7 @@ int handleCastSacrifice(message& msg)
                                               g_combatManager->m_currentSide,
                                               0, 0)
             && g_combatManager->m_cells[hex].getArmy()
-                != g_combatManager->m_cells[g_combatManager->m_nextActionGridIndex]
+                != g_combatManager->m_cells[g_combatManager->getPendingActionTarget()]
                        .getArmy()) {
             g_sacrificeIndexIsValid = 1;
             g_mouseManager->setPointer(0x12, mouseManager::COMBAT_SET);
@@ -1925,21 +1911,19 @@ int handleCastSacrifice(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (!g_sacrificeIndexIsValid)
             break;
-        g_combatManager->m_nextActionGridIndex2 = g_sacrificeLastIndex;
+        g_combatManager->selectSecondaryActionTarget(g_sacrificeLastIndex);
         g_sacrificeLastIndex = -1;
         g_sacrificeIndexIsValid = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
+        g_combatManager->cancelPendingAction();
         g_sacrificeLastIndex = -1;
         g_sacrificeIndexIsValid = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2050,9 +2034,8 @@ int handleCastSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castSpellIndexToCastOn == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castSpellIndexToCastOn;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectActionTarget(g_castSpellIndexToCastOn);
+        msg.setDialogEnd();
         clearAreaHighlights();
         g_castSpellIndexToCastOn = -1;
         return MESSAGE_DISPATCH_FORWARD;
@@ -2060,9 +2043,8 @@ int handleCastSpell(message& msg)
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        msg.setDialogEnd();
         g_castSpellIndexToCastOn = -1;
         clearAreaHighlights();
         return MESSAGE_DISPATCH_FORWARD;
@@ -2108,7 +2090,7 @@ int handleCastWallSpell(message& msg)
 {
     hero* castingHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
-    SpellID spell = static_cast<SpellID>(g_combatManager->m_nextActionExtra) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
+    SpellID spell = static_cast<SpellID>(g_combatManager->getPendingActionExtra()) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */;
     g_combatManager->doAnimations();
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE: {
@@ -2147,17 +2129,15 @@ int handleCastWallSpell(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castWallIndexToCastOn == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castWallIndexToCastOn;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->selectActionTarget(g_castWallIndexToCastOn);
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        g_combatManager->cancelPendingAction();
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2203,21 +2183,19 @@ int handleCastTeleport(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_castTeleportArmyHex == -1)
             break;
-        g_combatManager->m_nextActionGridIndex = g_castTeleportArmyHex;
+        g_combatManager->selectActionTarget(g_castTeleportArmyHex);
         g_castTeleportPreviousHex = -1;
         g_castTeleportArmyHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
+        g_combatManager->cancelPendingAction();
         g_castTeleportPreviousHex = -1;
         g_castTeleportArmyHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;
@@ -2264,7 +2242,7 @@ static int handleGetTeleportDestination(message& msg)
         long hex = g_combatManager->getGridIndex(msg.m_codeX, msg.m_codeY);
         if (hex == g_teleportHoverHex)
             break;
-        long sourceHex = g_combatManager->m_nextActionGridIndex;
+        long sourceHex = g_combatManager->getPendingActionTarget();
         const hexcell* sourceCell = &g_combatManager->m_cells[sourceHex];
         if (!g_combatManager->validHex(sourceHex))
             break;
@@ -2285,11 +2263,10 @@ static int handleGetTeleportDestination(message& msg)
     case MESSAGE_LEFT_BUTTON_DOWN:
         if (g_teleportDestinationHex == -1)
             break;
-        g_combatManager->m_nextActionGridIndex2 = g_teleportDestinationHex;
+        g_combatManager->selectSecondaryActionTarget(g_teleportDestinationHex);
         g_teleportHoverHex = -1;
         g_teleportDestinationHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     case MESSAGE_KEY_DOWN:
         // The ESC scancode in the codeX domain, the same value
@@ -2298,11 +2275,10 @@ static int handleGetTeleportDestination(message& msg)
         if (msg.m_codeX != 1)
             break;
     case MESSAGE_RIGHT_BUTTON_DOWN:
-        g_combatManager->m_nextAction = 0;
+        g_combatManager->cancelPendingAction();
         g_teleportHoverHex = -1;
         g_teleportDestinationHex = -1;
-        msg.m_id = MESSAGE_WIDGET;
-        msg.m_codeX = 10;
+        msg.setDialogEnd();
         return MESSAGE_DISPATCH_FORWARD;
     }
     return MESSAGE_DISPATCH_CONSUME;

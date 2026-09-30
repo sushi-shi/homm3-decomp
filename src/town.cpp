@@ -529,10 +529,7 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 
     if (m_type == TOWN_CASTLE && hasBuilding(EXTRA_0_ID, false)
-        && !(townHero->m_flags & 2)) {
-        townHero->m_flags |= 2;
-        townHero->m_maxMovePoints += g_stablesMovementBonus;
-        townHero->m_movePoints += g_stablesMovementBonus;
+        && townHero->grantStablesMovement()) {
         if (g_game->isLocalHuman(townHero->m_owner))
             normalDialog((*g_generalText)[GENERAL_TEXT_STABLES_VISIT], // Stables
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -817,10 +814,7 @@ void town::swapHeroes()
     CMCHideHero hideHero(visitingHero->m_id);
     sendMapChange(&hideHero);
 
-    for (int i = rosterIndex; i < g_currentPlayer->m_numHeroes - 1; ++i)
-        g_currentPlayer->m_heroes[i] = g_currentPlayer->m_heroes[i + 1];
-    --g_currentPlayer->m_numHeroes;
-    g_currentPlayer->m_heroes[g_currentPlayer->m_numHeroes] = -1;
+    g_currentPlayer->removeHeroAt(rosterIndex);
 
     if (g_currentPlayer->m_currHeroId == visitingHero->m_id) {
         g_currentPlayer->m_currHeroId = -1;
@@ -1701,8 +1695,7 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
         }
     } else {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            currentTown->getArmy().m_armies[slot] = -1;
-            currentTown->getArmy().m_numTroops[slot] = 0;
+            currentTown->getArmy().dismiss(slot);
         }
         if (currentTown->m_owner < 0) {
             for (int tier = 0; tier < 4; tier++) {

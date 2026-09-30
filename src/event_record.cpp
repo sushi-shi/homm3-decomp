@@ -801,7 +801,7 @@ inline type_record_show_hero::type_record_show_hero(hero* who, char newOwner,
                                                     unsigned char onBoat)
     : type_record_hide_hero(who, newOwner, 0)
 {
-    m_previousBoat = (who->m_flags >> 18) & 1;
+    m_previousBoat = who->isOnBoat();
     m_onBoat = onBoat;
     m_previousLocation = who->getLocation();
     m_location = location;
@@ -866,10 +866,7 @@ void type_record_show_hero::replay(unsigned char draw)
     m_currentHero->m_z = m_location.m_z;
     m_currentHero->obscureCell();
     m_currentHero->m_owner = m_newOwner;
-    if (m_onBoat)
-        m_currentHero->m_flags |= 0x40000;
-    else
-        m_currentHero->m_flags &= ~0x40000;
+    m_currentHero->setOnBoat(m_onBoat != 0);
 
     if (draw && (getMapExtra(m_location.m_x, m_location.m_y, m_location.m_z)
                  & g_mapVisibilityBit)) {
@@ -896,10 +893,7 @@ void type_record_show_hero::undo()
     m_currentHero->m_x = m_previousLocation.m_x;
     m_currentHero->m_y = m_previousLocation.m_y;
     m_currentHero->m_z = m_previousLocation.m_z;
-    if (m_previousBoat)
-        m_currentHero->m_flags |= 0x40000;
-    else
-        m_currentHero->m_flags &= ~0x40000;
+    m_currentHero->setOnBoat(m_previousBoat != 0);
 }
 
 // E:\gamedcs\event_record.cpp:842

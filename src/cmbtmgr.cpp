@@ -1247,8 +1247,7 @@ void combatManager::initNonVisualVars()
     m_nextAction = 0;
     m_summonedElemental[0] = -1;
     m_summonedElemental[1] = -1;
-    m_lastCellIndex = -1;
-    m_lastCommand = -99;
+    invalidateCommandForCell(-1);
     m_currentSide = 1;
     m_actingSide = 1;
     m_actingSlot = 0;
@@ -1334,8 +1333,7 @@ MAC_ADDRESS(0x06fad4, 0x128)
 void combatManager::updateArmyGroup(int whichSide)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-        m_armyGroups[whichSide]->m_armies[slot] = CREATURE_NONE;
-        m_armyGroups[whichSide]->m_numTroops[slot] = 0;
+        m_armyGroups[whichSide]->dismiss(slot);
     }
 
     for (int index = 0; index < m_numArmies[whichSide]; index++) {
@@ -1382,9 +1380,7 @@ void combatManager::generateMap()
             cell->m_hexBrx = static_cast<short>(cell->m_hexUlx + 44);
             cell->m_hexBry = static_cast<short>(cell->m_hexUly + 42);
             cell->m_fullHexBry = static_cast<short>(cell->m_hexUly + 52);
-            cell->m_armySide = -1;
-            cell->m_armySlot = -1;
-            cell->m_partOfDouble = -1;
+            cell->resetArmy();
             cell->m_obstacleIndex = -1;
             cell->m_attributes = 0;
             cell->m_bodiesInHex = 0;
@@ -1406,8 +1402,8 @@ void combatManager::determineCombatTerrain()
     int terrain;
     if (m_defendingTown) {
         terrain = m_defendingTown->getNativeTerrain();
-    } else if ((m_heroes[0] && (m_heroes[0]->m_flags & 0x40000))
-            || (m_heroes[1] && (m_heroes[1]->m_flags & 0x40000))
+    } else if ((m_heroes[0] && m_heroes[0]->isOnBoat())
+            || (m_heroes[1] && m_heroes[1]->isOnBoat())
             || (m_combatCell->getMapObject() == SHIPWRECK
                 && m_combatCell->m_isTrigger)
             || (m_combatCell->getMapObject() == DERELICT_SHIP
@@ -2435,8 +2431,8 @@ void combatManager::setupAndLoadObstacles()
     // Two boats meeting at sea: the hulls block thirty-two hexes and
     // nothing else is placed at all.
     if (m_terrainType == eTerrainWater
-            && m_heroes[0] && (m_heroes[0]->m_flags & 0x40000)
-            && m_heroes[1] && (m_heroes[1]->m_flags & 0x40000)) {
+            && m_heroes[0] && m_heroes[0]->isOnBoat()
+            && m_heroes[1] && m_heroes[1]->isOnBoat()) {
         for (const int* hex = g_boatBlockedHexes;
                 hex < g_boatBlockedHexes + 32; hex++)
             m_cells[*hex].m_attributes |= hexcell::blocked;
@@ -2690,11 +2686,9 @@ void combatManager::makeCreaturesVanish()
             if (!m_creatureIsDead[side][index])
                 continue;
             const army& stack = m_armies[side][index];
-            m_cells[stack.m_gridIndex].m_armySide = -1;
-            m_cells[stack.m_gridIndex].m_armySlot = -1;
+            m_cells[stack.m_gridIndex].clearArmy();
             if (stack.is(creatureDoubleWide)) {
-                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySide = -1;
-                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].m_armySlot = -1;
+                m_cells[stack.m_gridIndex + stack.offsetToFront(-1)].clearArmy();
             }
         }
     }
@@ -3324,14 +3318,10 @@ DC_ADDRESS(0x062358, 0x74)
 MAC_ADDRESS(0x074c94, 0x7c)
 void combatManager::removeArmyFromGrid(const army& a)
 {
-    m_cells[a.m_gridIndex].m_armySlot = -1;
-    m_cells[a.m_gridIndex].m_armySide = -1;
-    m_cells[a.m_gridIndex].m_partOfDouble = -1;
+    m_cells[a.m_gridIndex].resetArmy();
     if (a.is(creatureDoubleWide)) {
         int hex = a.m_gridIndex + a.offsetToFront(-1);
-        m_cells[hex].m_armySlot = -1;
-        m_cells[hex].m_armySide = -1;
-        m_cells[hex].m_partOfDouble = -1;
+        m_cells[hex].resetArmy();
     }
 }
 
@@ -3350,16 +3340,13 @@ DC_ADDRESS(0x0623cc, 0xac)
 MAC_ADDRESS(0x074d10, 0xbc)
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
-    m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
-    m_cells[hex].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-    m_cells[hex].m_partOfDouble = -1;
+    m_cells[hex].setArmy(a.getOwningSide(), a.m_bitIndex, -1);
     if (a.is(creatureDoubleWide)) {
         m_cells[hex].m_partOfDouble = a.m_facing == 0 ? 1 : 0;
         int owningSide = a.getOwningSide();
         int second = hex + a.offsetToFront(-1);
-        m_cells[second].m_armySide = static_cast<signed char>(owningSide);
-        m_cells[second].m_armySlot = static_cast<signed char>(a.m_bitIndex);
-        m_cells[second].m_partOfDouble = a.m_facing != 0 ? 1 : 0;
+        m_cells[second].setArmy(owningSide, a.m_bitIndex,
+                              a.m_facing != 0 ? 1 : 0);
     }
 }
 

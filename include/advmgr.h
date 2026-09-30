@@ -25,6 +25,7 @@ struct ExtraInfoUnion;
 struct type_creature_bank;
 struct type_university;
 class armyGroup;
+class playerData;
 
 // adventuremapwindow.obj's shared rollover/right-click text table. Dreamcast
 // supplies the name and THelpText row type; Complete fixes its 0x6a56e0 base
@@ -389,6 +390,8 @@ struct soundNode {
 public:
     e_looping_sound_id m_soundId;
     int m_priority;
+    // Project-inferred empty/unranked state; this does not stop playback.
+    void reset();
 };
 SIZE(soundNode, 8);
 
@@ -658,6 +661,9 @@ public:
     virtual void vslot8(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     unsigned char processHover(int hx, int hy);
+    // Project-inferred mapping for callers already in a hero widget band.
+    // Portrait, movement, mana and locator widgets share the five row slots.
+    static int getHeroLocatorSlot(int widgetId);
     void doHeroKnob(unsigned char up);
     void doTownKnob(unsigned char up);
     void updateHeroLocators(int top, unsigned char drawWin,
@@ -691,6 +697,15 @@ public:
     void updateButtons(unsigned char draw, unsigned char update);
 
 private:
+    // Project-inferred shared locator operations. Preserve each caller's
+    // cached player and draw/update stage rather than fetching another player.
+    static void scrollLocatorIntoView(int& top, int selection, int count,
+                                      int visibleCount);
+    void drawSelectedHeroLocator(const playerData& player);
+    void drawSelectedTownLocator(const playerData& player,
+                                 unsigned char update);
+    void drawTownLocatorHighlight(int which, unsigned char update);
+    void showButtonImage(int id, const char* image);
     int convertID2HelpID(int id) const;
 };
 SIZE(TAdventureMapWindow, 0xa0);
@@ -1026,6 +1041,8 @@ public:
     void bvMessage(const char* message);
 
 private:
+    void clearMovingObject();
+    void stopLoopingSound(e_looping_sound_id soundId);
     unsigned char updBottomViewHero(unsigned char forceUpdate);
     unsigned char updBottomViewTown(unsigned char forceUpdate);
     unsigned char updBottomViewKingdom(unsigned char forceUpdate);
@@ -1293,6 +1310,9 @@ public:
                         int drawheight);
 
 private:
+    // Project-inferred common flow for the four permanent +1 skill sites.
+    void doEventPrimarySkillSite(class hero* currentHero, NewmapCell* cell,
+                                 bool humanPlayer, TPrimarySkill skill);
     // human_player is spelled bool: the body forwards it dword-wide to a
     // dozen bool-parameter handlers, and an unsigned char here makes VC6
     // renormalize (`test dl,dl / setne al`) at every one of those sites.
@@ -1521,6 +1541,11 @@ int mapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void computeAdvNetControl();
 bool hasFlag(int objType);
 int getFlaggedObjectOwner(NewmapCell* thisCell);
+// Project operation shared by adventure layers and view-world icon drawing.
+// Trim source offsets/extents together with the clipped destination copies.
+void clipAdventureTile(int& baseX, int& baseY,
+                       int& tileX, int& tileY,
+                       int& tileWidth, int& tileHeight);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
 void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,

@@ -535,9 +535,7 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
         if (strength == weakest && --choice == 0)
             break;
     }
-    m_nextAction = 9;
-    m_nextActionGridIndex = s_wallTargets[walls[target]].m_targetHex;
-    m_nextActionExtra = -1;
+    setTargetAction(9, -1, s_wallTargets[walls[target]].m_targetHex);
     return 1;
 }
 
@@ -563,8 +561,7 @@ void combatManager::chooseShooterAction(const army* currentArmy, bool simulated,
         data.m_killsOnly = 0;
         actionValue = chooseShooterTarget(currentArmy, data, bestValue);
     }
-    m_nextAction = 7;
-    m_nextActionGridIndex = actionValue;
+    queueShot(actionValue);
 }
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
@@ -1925,9 +1922,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
     *actionValue = max(bestValue, bestHexValue);
     if (teleport) {
         if (bestTarget != 0 && *actionValue >= 0) {
-            m_nextAction = 6;
-            m_nextActionExtra = bestHex;
-            m_nextActionGridIndex = bestTarget->m_gridIndex;
+            setTargetAction(6, bestHex, bestTarget->m_gridIndex);
             return 1;
         }
         m_nextAction = 3;
@@ -1991,9 +1986,7 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
 
     *actionValue = bestValue;
     if (bestTime <= 1 && !m_creaturePlacement) {
-        m_nextActionExtra = bestHex;
-        m_nextAction = 6;
-        m_nextActionGridIndex = bestTarget->m_gridIndex;
+        setTargetAction(6, bestHex, bestTarget->m_gridIndex);
         return 1;
     }
     if (bestHex == currentArmy->m_gridIndex)
@@ -2114,8 +2107,7 @@ void combatManager::doCompAI(int whichGroup)
     m_lastMovedArmy = 0;
     turnOffHighlighter(1);
     army* currentArmy = getCurrentArmy();
-    currentArmy->m_side = -1;
-    currentArmy->m_slot = -1;
+    currentArmy->clearAttackTarget();
     long action;
     if (currentArmy->canShoot(0)
             || currentArmy->m_creatureType == CREATURE_BALLISTA)
@@ -2155,8 +2147,7 @@ DC_ADDRESS(0x027200, 0x116)
 MAC_ADDRESS(0x0246f4, 0x1f0)
 void combatManager::berserkAttack(army* currentArmy, const army* target)
 {
-    currentArmy->m_side = target->getOwningSide();
-    currentArmy->m_slot = target->m_bitIndex;
+    currentArmy->setAttackTarget(target->getOwningSide(), target->m_bitIndex);
     long hex = target->m_gridIndex;
     if (inInvisibleColumn(hex) && target->is(creatureDoubleWide))
         hex = target->getSecondGridIndex();
@@ -2167,9 +2158,7 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
         return;
     }
     if (g_searchArray->getPathSteps() == 1) {
-        m_nextAction = 6;
-        m_nextActionExtra = currentArmy->m_gridIndex;
-        m_nextActionGridIndex = target->m_gridIndex;
+        setTargetAction(6, currentArmy->m_gridIndex, target->m_gridIndex);
         if (target->getOwningSide() == currentArmy->getOwningSide())
             m_playDoh[target->getOwningSide()] = 1;
         return;
@@ -2177,14 +2166,11 @@ void combatManager::berserkAttack(army* currentArmy, const army* target)
     long step = g_searchArray->getStepCell(1)->m_point.m_x;
     const pathCell* cell = g_searchArray->getHex(target->m_gridIndex);
     if (cell->m_cost > currentArmy->getSpeed()) {
-        currentArmy->m_side = -1;
-        currentArmy->m_slot = -1;
+        currentArmy->clearAttackTarget();
         moveToward(currentArmy, step, 0, 0);
         return;
     }
-    m_nextAction = 6;
-    m_nextActionExtra = step;
-    m_nextActionGridIndex = target->m_gridIndex;
+    setTargetAction(6, step, target->m_gridIndex);
     if (target->getOwningSide() == currentArmy->getOwningSide())
         m_playDoh[target->getOwningSide()] = 1;
 }
@@ -2372,10 +2358,7 @@ void combatManager::simulateCombat(long ourGroup, unsigned char checkingSurrende
     if (checkingSurrender)
         simulateActions(order, stoppedAt, 1 - ourGroup);
 
-    m_nextAction = saved3c;
-    m_nextActionExtra = saved40;
-    m_nextActionGridIndex = saved44;
-    m_nextActionGridIndex2 = saved48;
+    setPendingAction(saved3c, saved40, saved44, saved48);
 }
 
 // E:\gamedcs\ai.cpp:2608..2693: separate outer/inner pointer

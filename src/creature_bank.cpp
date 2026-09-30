@@ -55,7 +55,7 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
         traits.m_guards.m_numTroops[guard] = atoi(resource[column]);
         column += 2;
         if (traits.m_guards.m_numTroops[guard] == 0)
-            traits.m_guards.m_armyTypes[guard] = CREATURE_NONE;
+            traits.m_guards.dismiss(guard);
     }
 
     ++column;
