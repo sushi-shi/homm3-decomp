@@ -1530,7 +1530,7 @@ public:
     // DC public symbols encode firstTarget, redirected and validation results
     // as native bool (_N); the lowered debug records spell them T_UCHAR.
     // Keep creatureSpell integral for Complete's artifact caster value 2.
-    bool hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
+    bool hasValidSpellTarget(ESpellId spellId, TSkillMastery mastery,
                              long castingSide,
                              bool firstTarget,
                              long creatureSpell);  // 0x5a40d0
@@ -1542,7 +1542,7 @@ public:
     // (spells.cpp:2645 / 3078); DC spells mastery as TSkillMastery.
     // Hero getSpellLevel already returns this enum; callers forward it
     // directly, including eMasteryExpert for the artifact casts.
-    bool validSpellTarget(SpellID spellId, TSkillMastery mastery,
+    bool validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                           long targetIndex, long castingSide,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a39c0

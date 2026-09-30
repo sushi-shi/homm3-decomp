@@ -331,7 +331,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_HYPNOTIZE:
     case SPELL_FORGETFULNESS:
     case SPELL_BLIND: {
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             break;
@@ -402,7 +402,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 
     case SPELL_TELEPORT:
         g_teleportSourcePicked = 0;
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -417,12 +417,12 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         break;
 
     case SPELL_SACRIFICE:
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 0, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 0, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -436,7 +436,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         break;
 
     case SPELL_REMOVE_OBSTACLE:
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_WILL_NOT_AFFECT_ANYTHING), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -453,7 +453,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
-        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -521,7 +521,7 @@ static int updateSpellTarget(long hex)
     int result;
     if (!combatManager::inInvisibleColumn(hex)
             && g_combatManager->validSpellTarget(
-                spell, mastery, hex, g_combatManager->m_currentSide, 1,
+                static_cast<ESpellId>(spell), mastery, hex, g_combatManager->m_currentSide, 1,
                 creatureSpell)
             && (spell != SPELL_CHAIN_LIGHTNING
                 || !g_combatManager->m_cells[hex].hasArmy()
@@ -2119,7 +2119,7 @@ int handleCastWallSpell(message& msg)
             break;
         TSkillMastery mastery = castingHero->getSpellLevel(
             spell, g_combatManager->m_magicTerrain);
-        if (g_combatManager->validSpellTarget(spell, mastery, hex,
+        if (g_combatManager->validSpellTarget(static_cast<ESpellId>(spell), mastery, hex,
                                               g_combatManager->m_currentSide,
                                               1, 0)) {
             g_castWallIndexToCastOn = hex;
@@ -2447,13 +2447,16 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // Mac retains findSpellTarget, validSpellTargetArmy and getSpellWallHex in
 // the same order as this source. DC's ValidHex, InInvisibleColumn and GridY
 // audit leads are the lowercase canonical calls in the obstacle arms below.
+// Original ValidSpellTarget/HasValidSpellTarget DC publics encode W4SpellID@@;
+// ESpellId restores that shared enum through the findSpellTarget path.
+// Explicit conversions remain only at the legacy int spell interfaces.
 // Native bool result/firstTarget contracts preserve CUR 73.6540% and reset
 // the earlier 96.5992% MAX. Explicit target-presence and bool parity-local
 // probes (four source states, one reproduced object) are byte-identical.
 VA(0x005a39c0, 0x2B4)
 DC_ADDRESS(0x152edc, 0x228)
 MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity
-bool combatManager::validSpellTarget(SpellID spellId, TSkillMastery mastery,
+bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
                                      long targetIndex,
                                      long castingSide,
                                      bool firstTarget,
@@ -2463,7 +2466,7 @@ bool combatManager::validSpellTarget(SpellID spellId, TSkillMastery mastery,
         return 0;
     const SSpellTraits& traits = g_spellTraits[spellId];
     if (traits.m_flags & 0x20070) {
-        army* target = findSpellTarget(static_cast<ESpellId>(spellId), castingSide, targetIndex,
+        army* target = findSpellTarget(spellId, castingSide, targetIndex,
                                          firstTarget, creatureSpell);
         return target && validSpellTargetArmy(spellId, castingSide, target,
                                               firstTarget, creatureSpell);
@@ -2682,7 +2685,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
 VA(0x005a40d0, 0x9B)
 DC_ADDRESS(0x153580, 0xb8)
 MAC_ADDRESS(0x194a34, 0x114)
-bool combatManager::hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
+bool combatManager::hasValidSpellTarget(ESpellId spellId, TSkillMastery mastery,
                                         long castingSide,
                                         bool firstTarget,
                                         long creatureSpell)
