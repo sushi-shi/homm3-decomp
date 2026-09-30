@@ -608,6 +608,11 @@ void advManager::eraseAndFizzle(NewmapCell* eventCell, type_point point,
 }
 
 // E:\gamedcs\events.cpp:317.
+// DC 320 reads the signed shipyard owner byte directly, and 330 reads
+// the unsigned boat-coordinate bytes for type_point's constructor.
+// Mac 0xa95b8..0xa95c0 and 0xa961c..0xa9648 retain those field accesses.
+// The only DC local is boat_point; direct ShipyardInfo member expressions
+// replace whole-word shift temporaries and recover 85.4808 -> 90.89%.
 // [2026-08-27] Residual (91.93%): retail packs boat_point's three
 // bitfields with an interleaved XOR-into-word idiom reading z through the
 // point parameter's own packed dword (4*p / sar 2); our field-by-field
@@ -621,16 +626,15 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
 {
     mobilizeCurrHero(0, 0, 1);
 
-    int owner = static_cast<int>(cell->m_extraInfo << 24) >> 24;
-    if (!g_game->onSameTeam(owner, g_netLocalGamePos))
+    if (!g_game->onSameTeam(cell->m_shipyardInfo.m_owner, g_netLocalGamePos))
         g_game->claimShipyard(point, g_netLocalGamePos);
 
     if (!humanPlayer)
         return;
 
     type_point boatPoint(
-        static_cast<short>((cell->m_extraInfo >> 8) & 0xff),
-        static_cast<short>((cell->m_extraInfo >> 16) & 0xff),
+        cell->m_shipyardInfo.m_boatX,
+        cell->m_shipyardInfo.m_boatY,
         static_cast<short>(point.m_z));
 
     const int noBoatPosition = 0xff;
@@ -666,8 +670,8 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
     doShipyard(0);
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_OK
         && g_game->createBoat(
-               static_cast<unsigned char>(cell->m_extraInfo >> 8),
-               static_cast<unsigned char>(cell->m_extraInfo >> 16),
+               cell->m_shipyardInfo.m_boatX,
+               cell->m_shipyardInfo.m_boatY,
                boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
         g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
         g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
