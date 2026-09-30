@@ -2532,7 +2532,7 @@ mapcell	?calculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000
 mapcell	?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0x10ad90	-
 mapcell	?cellIsTrigger@NewmapCell@@QBEEXZ	100.0000	100.0000	100.0000	0xfcc80	tokens1:1e042f848e8e
 mapcell	?clear@?$vector@PAVCMapObjectData@@V?$allocator@PAVCMapObjectData@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x8b4a0	-
-mapcell	?copy@std@@YIPAUSecondarySkillData@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x10adb0	-
+mapcell	?copy@std@@YIPAUSecondarySkillData@@PAU2@00@Z	100.0000	100.0000	100.0000	0x10adb0	-
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620	-
 mapcell	?copy@std@@YIPAUtype_university@@PAU2@00@Z	100.0000	100.0000	100.0000	0x1095e0	-
 mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	100.0000	100.0000	100.0000	0x1093f0	-
@@ -2573,8 +2573,8 @@ mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPA
 mapcell	?isDiggable@NewmapCell@@QBEEXZ	100.0000	100.0000	100.0000	0xfccf0	tokens1:ffefac6728a4
 mapcell	?load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	96.4373	96.4373	96.4526	0xfdbc0	tokens1:d2f17f0246cb
 mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0	tokens1:e790bd274b26
-mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	96.1130	96.1130	96.1450	0x100430	tokens1:26875f72c1ff
-mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:aa34239b5044
+mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	91.4115	91.4115	96.1450	0x100430	tokens1:d0ec55a63813
+mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:7b9c824c4184
 mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920	tokens1:052c29434fa5
 mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:bf6cb7802d57
 mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790	tokens1:9f8cb46fc947
@@ -2593,7 +2593,7 @@ mapcell	?read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000
 mapcell	?read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc1a0	tokens1:7cd1fc9c223b
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130	tokens1:441bf71369f1
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120	tokens1:89fad79c59ee
-mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.5977	95.5977	95.6262	0xff6b0	tokens1:2944115c178c
+mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.5787	95.5977	95.6262	0xff6b0	tokens1:2944115c178c
 mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0xffbf0	tokens1:31e1f150134b
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0	tokens1:7fef95fe53b9
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00	tokens1:df23e101b48c

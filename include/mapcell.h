@@ -1342,7 +1342,7 @@ private:
 
 public:
     int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
-    int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+    int loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
     int loadSeerList(TAbstractFile* infile, int saveVersion);

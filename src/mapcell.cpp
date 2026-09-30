@@ -1434,15 +1434,19 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
+// DC stores both loadString and read results in count; the first result is
+// intentionally overwritten before the scalar read guard.
 MAC_ADDRESS(0x1212ac, 0xa0)
 int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasure)
 {
-    game::loadString(infile, thisTreasure.m_message);
+    int count;
+    char charBuffer;
 
-    signed char value;
-    if (readValue(infile, value) < sizeof(value))
+    count = game::loadString(infile, thisTreasure.m_message);
+    count = readValue(infile, charBuffer);
+    if (count < sizeof(charBuffer))
         return -1;
-    thisTreasure.m_hasCustomGuardians = value != 0;
+    thisTreasure.m_hasCustomGuardians = charBuffer != 0;
     if (thisTreasure.m_hasCustomGuardians)
         thisTreasure.m_guardians.load(infile);
     return 0;
@@ -1903,7 +1907,7 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 
     m_blackBoxes.resize(count);
     for (unsigned int i = 0; i < m_blackBoxes.size(); ++i) {
-        if (loadBlackBox(infile, &m_blackBoxes[i], saveVersion) < 0)
+        if (loadBlackBox(infile, m_blackBoxes[i], saveVersion) < 0)
             return -1;
     }
     return 0;
@@ -1924,103 +1928,122 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // local that is then masked - the same asymmetric artifact crossing
 // loadMonsterList has.
 
-// Native Mac reuses scalar homes +0x60/+0x5d across the resource and skill
-// reads; DC records one int_buffer and char_buffer. Sharing those readers
-// and the existing index raises Windows MAX 91.44 -> 96.15.
-// Routing all checked reads through the reference reader instead drops
-// this caller to 83.64% by changing nested vector expansion; retain its
-// shared scalar homes while investigating that remaining library boundary.
+// DC 0xef158 records the BlackBoxData reference and function-scope
+// int_buffer, short_buffer, char_buffer, count (read status), number (list
+// length), and x. Its stores distinguish status from the list length;
+// preserve those owners even where VC6 optimizes their assignments away.
+// Native Mac reuses scalar homes +0x60/+0x5d across resources and skills.
+// The Complete-only creature reader owns the versioned unchecked read;
+// keep that canonical helper rather than the older DC checked-byte tail.
+// Finite ownership/enum probes retained the same 91.41% residual; the DC
+// declaration-order variant is byte-flat. Secondary-skill resize expands
+// erase into copy/_Destroy where retail retains erase. Routing every read
+// through readValue lowers the caller to 83.58% through vector inlining.
 VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
-int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                              int saveVersion)
 {
-    signed char value;
-    int count;
-    int i;
-
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
-        return -1;
-    thisBox->m_hasCustomTreasure = value != 0;
-    if (thisBox->m_hasCustomTreasure) {
-        if (loadTreasureData(infile, *thisBox) != 0)
-            return -1;
-    }
-
+    char charBuffer;
+    short shortBuffer;
     int intBuffer;
-    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
-        return -1;
-    thisBox->m_experienceBonus = intBuffer;
-    if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
-        return -1;
-    thisBox->m_manaBonus = intBuffer;
+    int count;
+    long number;
+    int x;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    thisBox->m_moraleBonus = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
-        return -1;
-    thisBox->m_luckBonus = value;
-
-    for (i = 0; i < 7; ++i) {
-        if (infile->read(&intBuffer, sizeof(intBuffer)) < sizeof(intBuffer))
+    thisBox.m_hasCustomTreasure = charBuffer != 0;
+    if (thisBox.m_hasCustomTreasure) {
+        if (loadTreasureData(infile, thisBox) != 0)
             return -1;
-        thisBox->m_resQty[i] = intBuffer;
-    }
-    for (i = 0; i < 4; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
-            return -1;
-        thisBox->m_primarySkillBonus[i] = value;
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer))
         return -1;
-    count = value;
-    thisBox->m_secondarySkills.resize(count);
-    for (i = 0; i < count; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+    thisBox.m_experienceBonus = intBuffer;
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (count < sizeof(intBuffer))
+        return -1;
+    thisBox.m_manaBonus = intBuffer;
+
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    thisBox.m_moraleBonus = charBuffer;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    thisBox.m_luckBonus = charBuffer;
+
+    for (x = 0; x < 7; ++x) {
+        count = infile->read(&intBuffer, sizeof(intBuffer));
+        if (count < sizeof(intBuffer))
+            return -1;
+        thisBox.m_resQty[x] = intBuffer;
+    }
+    for (x = 0; x < 4; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
+            return -1;
+        thisBox.m_primarySkillBonus[x] = charBuffer;
+    }
+
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
+        return -1;
+    number = charBuffer;
+    thisBox.m_secondarySkills.resize(number);
+    for (x = 0; x < number; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
         // Mac 0x12298c..0x1229d8 stores enum words directly after each read.
-        int skillType = value;
-        thisBox->m_secondarySkills[i].m_type =
-            H3_ENUM_DECODE(TSecondarySkill, skillType);
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+        thisBox.m_secondarySkills[x].m_type =
+            H3_ENUM_DECODE(TSecondarySkill, charBuffer);
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
-        int skillLevel = value;
-        thisBox->m_secondarySkills[i].m_level =
-            H3_ENUM_DECODE(TSkillMastery, skillLevel);
+        thisBox.m_secondarySkills[x].m_level =
+            H3_ENUM_DECODE(TSkillMastery, charBuffer);
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_artifacts.resize(count);
-    for (i = 0; i < count; ++i) {
+    number = charBuffer;
+    thisBox.m_artifacts.resize(number);
+    for (x = 0; x < number; ++x) {
         int artifact;
         infile->read(&artifact, sizeof(unsigned char));
-        thisBox->m_artifacts[i] = TArtifact(artifact & 0xff);
+        thisBox.m_artifacts[x] = TArtifact(artifact & 0xff);
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_spells.resize(count);
-    for (i = 0; i < count; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+    number = charBuffer;
+    thisBox.m_spells.resize(number);
+    for (x = 0; x < number; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (count < sizeof(charBuffer))
             return -1;
-        thisBox->m_spells[i] = value;
+        thisBox.m_spells[x] = charBuffer;
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (count < sizeof(charBuffer))
         return -1;
-    count = value;
-    thisBox->m_creatures.initialize();
-    for (i = 0; i < count; ++i) {
-        thisBox->m_creatures.m_armies[i] =
+    number = charBuffer;
+    thisBox.m_creatures.initialize();
+    for (x = 0; x < number; ++x) {
+        thisBox.m_creatures.m_armies[x] =
             readSavedCreatureId(infile, saveVersion);
-        short troops;
-        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
+        count = infile->read(&shortBuffer, sizeof(shortBuffer));
+        if (count < sizeof(shortBuffer))
             return -1;
-        thisBox->m_creatures.m_numTroops[i] = troops;
+        thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
     return 0;
 }
