@@ -2694,8 +2694,8 @@ MAC_COMPGEN_ADDRESS(0x215568, 0x84, SCALAR_DELETING_DTOR, CNetMsgHandler)
 VA(0x00557860, 0x70)
 DC_ADDRESS(0x11ef60, 0x6c)
 MAC_ADDRESS(0x21549c, 0xcc)
-CNetMsg* CNetMsgHandler::checkHandleNet(unsigned char inPopup,
-                                        unsigned char* msgReceived)
+CNetMsg* CNetMsgHandler::checkHandleNet(bool inPopup,
+                                        bool* msgReceived)
 {
     if (msgReceived)
         *msgReceived = 0;

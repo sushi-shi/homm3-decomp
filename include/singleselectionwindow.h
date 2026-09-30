@@ -412,8 +412,8 @@ SIZE(CNetPlayerHandler, 0x7d0);
 class CSingleSelectionNetMsgHandler : public CNetMsgHandler {
 public:
     CSingleSelectionNetMsgHandler();
-    virtual CNetMsg* checkHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* checkHandleNet(bool inPopup,
+                                    bool* msgReceived);  // slot 1
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg);  // slot 3
 
     unsigned char m_wasCompressed;  // +0x0c

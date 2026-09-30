@@ -8649,7 +8649,7 @@ VA_COMPGEN(0x0058e2e0, 0x21, SCALAR_DELETING_DTOR,
 VA(0x0058e310, 0x21)
 DC_ADDRESS(0x1451a0, 0x48)
 MAC_ADDRESS(0x186068, 0x58)
-CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+CNetMsg* CSingleSelectionNetMsgHandler::checkHandleNet(bool inPopup, bool* msgReceived)
 {
     CNetMsg* msg = getRemoteData(0, &m_wasCompressed);
     if (!msg)
