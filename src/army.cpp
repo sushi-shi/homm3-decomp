@@ -2291,8 +2291,10 @@ inline void army::checkLuck()
 VA(0x00442410, 0x13B)
 DC_ADDRESS(0x047690, 0x128)
 MAC_ADDRESS(0x04e174, 0x160)
+// Original DC ?get_adjusted_attack@army@@QBAJPBV1@_N@Z proves bool
+// rangedAttack, matching the predicate parameter used by the modifier leaf.
 long army::getAdjustedAttack(const army* enemy,
-                               unsigned char rangedAttack) const
+                               bool rangedAttack) const
 {
     long attack = m_monInfo.m_attackSkill;
     if (rangedAttack) {
@@ -2325,8 +2327,10 @@ long army::getAdjustedAttack(const army* enemy,
 VA(0x00442550, 0x35)
 DC_ADDRESS(0x0477b8, 0x30)
 MAC_ADDRESS(0x04e2d4, 0x48)
+// Original DC ?get_attack_modifier@army@@QBAJPBV1@_N@Z proves the same
+// bool contract as getAdjustedAttack; preserve the call and named result.
 long army::getAttackModifier(const army* enemy,
-                               unsigned char rangedAttack) const
+                               bool rangedAttack) const
 {
     long adjusted = getAdjustedAttack(enemy, rangedAttack);
     return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;

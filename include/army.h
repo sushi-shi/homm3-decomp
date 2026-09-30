@@ -807,7 +807,7 @@ public:
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
     long getAdjustedAttack(const army* enemy,
-                             unsigned char rangedAttack) const;
+                             bool rangedAttack) const;
     long getAdjustedDefense(const army* enemy,
                               unsigned char frenzyIncluded) const;
     long getAIExpectedDamage() const;
@@ -817,7 +817,7 @@ public:
     long getAITargetTime() const;
     long getAIPossibleTargets() const;
     long getAttackModifier(const army* enemy,
-                             unsigned char rangedAttack) const;
+                             bool rangedAttack) const;
     long getAverageDamage(const army& enemy, bool rangedAttack,
                             long amount, bool limitDamage,
                             long distance) const;
@@ -1343,9 +1343,9 @@ public:
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
     void setAIExpectedDamage(long arg);
     long getAdjustedAttack(const army* enemy,
-                             unsigned char ranged_attack) const;
+                             bool ranged_attack) const;
     long getAttackModifier(const army* enemy,
-                             unsigned char ranged_attack) const;
+                             bool ranged_attack) const;
     // 0x442660 (41 B). The 2026-08-08 note on ai_tactical's
     // type_AI_combat_parameters ctor called this leaf "unidentified";
     // it is get_defense_modifier, and three things say so together: the

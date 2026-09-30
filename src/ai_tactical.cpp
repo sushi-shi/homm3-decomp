@@ -313,7 +313,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
                 continue;
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
-            unsigned char ranged = ourArmy->canShoot(0);
+            bool ranged = ourArmy->canShoot(0);
             long attack = ourArmy->getAttackModifier(0, ranged);
             long defense = ourArmy->getDefenseModifier();
             if (first || m_lowestAttack > attack)
