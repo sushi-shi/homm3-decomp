@@ -136,7 +136,7 @@ int CHotspotWidget::main(message& msg)
 VA(0x00575410, 0x20)
 DC_ADDRESS(0x12dfa8, 0x48)
 MAC_ADDRESS(0x16bc5c, 0x54)
-CBonusDlg::CBonusDlg(unsigned char newGameMode)
+CBonusDlg::CBonusDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -146,7 +146,7 @@ VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // dc 0x12f304
 VA(0x005754f0, 0x254)
 DC_ADDRESS(0x12dff0, 0x1dc)
 MAC_ADDRESS(0x16bcb0, 0x2a4)
-unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
+bool CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
         return 0;
@@ -201,7 +201,7 @@ VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // dc 0x12f11
 VA(0x005757e0, 0x226)
 DC_ADDRESS(0x12e1cc, 0x1d4)
 MAC_ADDRESS(0x16bf54, 0x25c)
-unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
+bool CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
         return 0;
@@ -272,7 +272,7 @@ VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
 VA(0x00575a70, 0x20)
 DC_ADDRESS(0x12e3a0, 0x50)
 MAC_ADDRESS(0x16c1b0, 0x54)
-CHeroDlg::CHeroDlg(unsigned char newGameMode)
+CHeroDlg::CHeroDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -280,7 +280,7 @@ CHeroDlg::CHeroDlg(unsigned char newGameMode)
 VA(0x00575a90, 0x380)
 DC_ADDRESS(0x12e3f0, 0x29e)
 MAC_ADDRESS(0x16c204, 0x3e4)
-unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
+bool CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
 {
     char tempText[256];
 
@@ -313,7 +313,7 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
 VA(0x00575e10, 0x20)
 DC_ADDRESS(0x12e690, 0x78)
 MAC_ADDRESS(0x16c5e8, 0x54)
-CTownDlg::CTownDlg(unsigned char newGameMode)
+CTownDlg::CTownDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
@@ -335,7 +335,7 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 VA(0x00575e60, 0x670)
 DC_ADDRESS(0x12e708, 0x3be)
 MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args)
-unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
+bool CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
     if (!setup(272, 140, 256, 320))
         return 0;
@@ -389,7 +389,7 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 VA(0x005764d0, 0x53)
 DC_ADDRESS(0x12eac8, 0x5c)
 MAC_ADDRESS(0x16cb68, 0x64)
-CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+CTeamAlignmentDlg::CTeamAlignmentDlg(bool newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
     getTeams();
@@ -412,7 +412,7 @@ VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 VA(0x00576540, 0x3e8)
 DC_ADDRESS(0x12eb24, 0x256)
 MAC_ADDRESS(0x16cbcc, 0x2b0)  // anchor-vtable
-unsigned char CTeamAlignmentDlg::createWin()
+bool CTeamAlignmentDlg::createWin()
 {
     int xStart;
     char tempText[256];

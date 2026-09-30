@@ -62,7 +62,7 @@ public:
     unsigned char m_gameMode;
 
     DC_ADDRESS(0x12eeac, 0x48)
-    CSingleSelPopup(int type, unsigned char newGameMode)
+    CSingleSelPopup(int type, bool newGameMode)
         : TDialogBox(type)
     {
         m_gameMode = newGameMode;
@@ -131,6 +131,10 @@ public:
     virtual void draw() const {}
 };
 
+// Original DC publics use _N for the base and derived constructor flags and
+// every CreateWin result (for example ??0CSingleSelPopup@@QAA@H_N@Z and
+// ?CreateWin@CTownDlg@@QAA_NPAVCSprite@@HW4TTownType@@@Z). The stored
+// game-mode byte has no independent bool declaration evidence.
 // The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own
 // vtable and the gameMode byte (the inlined CSingleSelPopup ctor). None adds
 // storage except CTeamAlignmentDlg (its team table below).
@@ -142,21 +146,21 @@ public:
 // instead - the same rule the CTeamAlignmentDlg claim already records.
 class CBonusDlg : public CSingleSelPopup {
 public:
-    CBonusDlg(unsigned char newGameMode);
-    unsigned char createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
-    unsigned char createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description);
+    CBonusDlg(bool newGameMode);
+    bool createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
+    bool createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description);
 };
 
 class CHeroDlg : public CSingleSelPopup {
 public:
-    CHeroDlg(unsigned char newGameMode);
-    unsigned char createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
+    CHeroDlg(bool newGameMode);
+    bool createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
 };
 
 class CTownDlg : public CSingleSelPopup {
 public:
-    CTownDlg(unsigned char newGameMode);        // retail 0x575e10
-    unsigned char createWin(CSprite* town, int frame, TTownType townType);
+    CTownDlg(bool newGameMode);        // retail 0x575e10
+    bool createWin(CSprite* town, int frame, TTownType townType);
 };
 
 // The team-alignment picker adds a team-mask table at +0x58 and a count at
@@ -167,8 +171,8 @@ public:
     int m_teamMasks[8];
     int m_numTeams;
 
-    CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
-    unsigned char createWin();
+    CTeamAlignmentDlg(bool newGameMode);  // retail 0x5764d0
+    bool createWin();
 
 protected:
     void getTeams();
