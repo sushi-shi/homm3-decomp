@@ -52,12 +52,14 @@
 #include "u2dvers.h"
 #include "winmgr.h"
 
-// Mutable path buffer; retail stores consecutive 260-byte arrays and
-// passes these addresses to strcpy, strcat and strtok.
+// Mutable path buffer passed to strcpy, strcat and strtok. The next
+// buffer starts 260 bytes later; alignment leaves a 257..260-byte bound.
+// The 260-byte declaration is the path-buffer hypothesis, not extent proof.
 DATA(0x00683238) static char g_mapFileName[260] = "Arrogance.h3m";
 
-// Mutable path buffer; retail stores consecutive 260-byte arrays and
-// passes these addresses to strcpy, strcat and strtok.
+// Mutable path buffer passed to strcpy, strcat and strtok. Its 260-byte
+// slot leaves a 253..260-byte bound if the next object opens an 8-aligned
+// contribution. The zero tail does not distinguish storage from padding.
 DATA(0x0068333c) static char g_newGameFileName[260] = "NEWGAME.gm1";
 
 // Initial contents recovered from the pinned Complete image.

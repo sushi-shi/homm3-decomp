@@ -58,7 +58,8 @@
 // DC name: suffix (char[20] in the Dreamcast build). Retail saveGame passes
 // 0x691268 to sprintf/strcat, and this TU's verified terrain-mask initializers
 // write independent objects at 0x691270, 0x691274 and 0x691278, so the retail
-// buffer ends eight bytes in. The observed suffixes need five bytes.
+// slot ends eight bytes in. The observed suffixes need five bytes; the
+// remaining three could be buffer storage or alignment padding.
 DATA(0x00691268) char g_saveGameSuffix[8];
 
 // Retail static constructor 0x405db0.
@@ -127,6 +128,8 @@ DATA(0x0069127c) const char* g_globalInfoFlagNames[28];
 DATA(0x006914fc) const char* g_creatureGenerator1RolloverNames[80];
 DATA(0x00691354) const char* g_creatureGenerator4RolloverNames[2];
 DATA(0x0069136c) int g_completeDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
+// completeDraw formats "FPS:%10.2f" here. The next verified datum bounds
+// its zero-filled slot to 100 bytes, with a 97..100-byte array extent.
 DATA(0x006912ec) char g_completeDrawFpsText[100];
 
 // Retail scalar state; startup initial values come from the pinned image.
