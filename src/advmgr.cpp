@@ -3703,7 +3703,9 @@ int advManager::processWaitingHover(int mouseX, int mouseY)
 }
 
 // DC advmgr.cpp:4514..4524 proves the private member get_garrison_cursor.
-// ProcessHover's retail GARRISON arm expands it and retains getNormalCursor.
+// ProcessHover's retail GARRISON arm expands it and its nested getNormalCursor.
+// The retained getNormalCursor call is in ANCHOR_POINT. The current candidate
+// also retains the TOWN/default join call (+0x7e3); retail expands that site.
 DC_ADDRESS(0x00f23c, 0x84)
 MAC_ADDRESS(0x00e404, 0xd4)
 type_adventure_cursor advManager::getGarrisonCursor(NewmapCell* currCell)
