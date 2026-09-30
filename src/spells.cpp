@@ -1482,7 +1482,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // find_resurrection_target selector, into the retail switch arm.
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
-        resurrect(spellId, target->m_gridIndex, monsterPower, mastery,
+        resurrect(static_cast<ESpellId>(spellId), target->m_gridIndex, monsterPower, mastery,
                   castingHero);
         break;
 
@@ -4501,11 +4501,11 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 // Complete VC6 expands this whole helper into CastSpell; the retail arm
 // independently corroborates the selector, formula, hero bonus and
 // temporary-resurrection predicate.
-// The original DC public encodes mastery as W4TSkillMastery. Keep that
-// domain and the bool temporary through the canonical selector/helper path.
+// The original DC public encodes W4SpellID and W4TSkillMastery. Keep
+// both enum domains and bool temporary through the canonical selector path.
 DC_ADDRESS(0x156a68, 0x84)
 MAC_ADDRESS(0x198aa0, 0xd8)
-inline void combatManager::resurrect(SpellID spell, int targetHex,
+inline void combatManager::resurrect(ESpellId spell, int targetHex,
                                      int power, TSkillMastery mastery,
                                      const hero* castingHero)
 {
