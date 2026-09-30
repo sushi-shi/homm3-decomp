@@ -287,7 +287,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
-// Mac0x49330/0x49388 expand getOwningSide before both cell side stores.
+// Mac 0x49330/0x49388 expand getOwningSide before both cell side stores.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -1049,7 +1049,7 @@ void army::removeBinding()
 // byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
-MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac0x4ac24 own-side load).
+MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac 0x4ac24 own-side load).
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
@@ -1683,7 +1683,7 @@ bool army::checkSpecialAttack(army* target)
 // cleared again.
 VA(0x004409c0, 0x1F9)
 DC_ADDRESS(0x0464e0, 0x178)
-MAC_ADDRESS(0x04c5ac, 0x258)  // MAC_ABSTRACTION_FROM(tokens1:dd679f8769cb,83.7662): restore canonical getOwningSide before markCreatureEffect (Mac0x4c5d4 own-side load).
+MAC_ADDRESS(0x04c5ac, 0x258)  // MAC_ABSTRACTION_FROM(tokens1:dd679f8769cb,83.7662): restore canonical getOwningSide before markCreatureEffect (Mac 0x4c5d4 own-side load).
 void army::doFireShield(long damageAmount)
 {
     long side;
@@ -2533,7 +2533,7 @@ VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
-// Mac0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
+// Mac 0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
@@ -3214,8 +3214,8 @@ unsigned long army::strength()
 VA(0x00444120, 0x3A6)
 DC_ADDRESS(0x0493a0, 0x2f4)
 MAC_ADDRESS(0x0500f8, 0x338)
-// Mac0x50224/0x503a4/0x503e4 expand getOwningSide for vanished/mirror rows;
-// its earlier0x50160/0x50184 loads already occur through the existing calls.
+// Mac 0x50224/0x503a4/0x503e4 expand getOwningSide for vanished/mirror rows;
+// its earlier 0x50160/0x50184 loads already occur through the existing calls.
 void army::processDeath(int fadeElementals)
 {
     if (is(creatureImmobilized))
@@ -4548,7 +4548,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // iNewDestIndex.
 VA(0x00446c40, 0x1E1)
 DC_ADDRESS(0x04b8c4, 0x1c4)
-MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac0x5310c/0x5322c).
+MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac 0x5310c/0x5322c).
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
@@ -4610,8 +4610,8 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 VA(0x00446e30, 0x2E1)
 DC_ADDRESS(0x04ba88, 0x1fc)
 MAC_ADDRESS(0x05339c, 0x300)
-// Mac0x53458..0x53464 expands getOwner: own-side+0xf4 followed by heroes
-// +0x53cc, matching the retained canonical body at0x4e51c. Keep that upper
+// Mac 0x53458..0x53464 expands getOwner: own-side+0xf4 followed by heroes
+// +0x53cc, matching the retained canonical body at 0x4e51c. Keep that upper
 // helper and its nested getOwningSide operation at both source uses.
 void army::newTurn()
 {
@@ -4631,8 +4631,8 @@ void army::newTurn()
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
                 && getOwner() != 0
-                && getOwner()
-                       ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
+                && getOwner()->isWieldingArtifact(
+                       ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
             m_topCreatureDamage = heal - amount;
@@ -5140,7 +5140,7 @@ unsigned char army::unnamed447fe0()
 VA(0x00448260, 0x582)
 DC_ADDRESS(0x04c468, 0x30e)
 MAC_ADDRESS(0x0548f4, 0x4f0)
-// Mac0x549a8 expands getOwningSide before the animation effect mark.
+// Mac 0x549a8 expands getOwningSide before the animation effect mark.
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
