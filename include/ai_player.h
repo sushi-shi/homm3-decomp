@@ -211,7 +211,7 @@ public:
     void set(TCreatureType newType, short* newAmount);
 
 protected:
-    long doBestPurchase(unsigned char tradeAllowed);
+    long doBestPurchase(bool tradeAllowed);
     long m_playerId;
     long* m_funds;
     unsigned char m_subtractCostMode;
@@ -220,7 +220,7 @@ protected:
 public:
     void doPurchase(armyGroup* newArmy, short newMorale,
                      armyGroup* newAdjacentArmy, long* newFunds,
-                     unsigned char allowTrade,
+                     bool allowTrade,
                      unsigned char newHasAngelicAlliance);
     long getPurchaseValue(const armyGroup* newArmy, short newMorale,
                             const armyGroup* newAdjacentArmy,

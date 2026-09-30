@@ -2521,8 +2521,10 @@ void type_AI_creature_purchaser::set(TCreatureType newType,
 // edges. Retail proves the Complete purchaser tail: two independent cost
 // arrays, optional resource trading, a seven-resource affordability cap, and
 // the three-quarter cap on the cost penalty that selects the best source.
-// DC's parameter is an unsigned char, not C++ bool. Its callback `slot` and
-// `best_slot` are function-scope shorts; restoring slot's scope raises
+// Original DC ?do_best_purchase@type_AI_creature_purchaser@@IAAJ_N@Z
+// proves bool tradeAllowed; its byte debug primitive is lowered bool.
+// Its callback `slot` and `best_slot` are function-scope shorts;
+// restoring slot's scope raises
 // Windows 97.27% to 97.29% while leaving Mac 81.10% byte-flat. The remaining
 // Windows delta is VC6 stack-slot coloring around the best-source state.
 // Census 2026-09-04: base 217 vs retail 219; the two surplus retail rows are
@@ -2542,7 +2544,7 @@ VA(0x0042d420, 0x264)
 DC_ADDRESS(0x032038, 0x250)
 MAC_ADDRESS(0x030a08, 0x2a0)  // DC method/callgraph + exact retail caller;
 long type_AI_creature_purchaser::doBestPurchase(
-    unsigned char tradeAllowed)
+    bool tradeAllowed)
 {
     short slot;
     int resourceCost[7];
@@ -2608,12 +2610,15 @@ long type_AI_creature_purchaser::doBestPurchase(
     return bestValue;
 }
 
+// Original DC ?do_purchase@type_AI_creature_purchaser@@QAAXPAVarmyGroup@@F0QAJ_N@Z
+// proves bool allowTrade, forwarded to doBestPurchase. All seven Complete
+// callers pass 0/1; its added Angelic-Alliance argument remains separate.
 VA(0x0042d690, 0xE1)
 DC_ADDRESS(0x032288, 0x70)
 MAC_ADDRESS(0x030ca8, 0xa4)
 void type_AI_creature_purchaser::doPurchase(
     armyGroup* newArmy, short newMorale, armyGroup* newAdjacentArmy,
-    long* newFunds, unsigned char allowTrade,
+    long* newFunds, bool allowTrade,
     unsigned char newHasAngelicAlliance)
 {
     HOMM3_RELEASE_VERIFY(newArmy != 0);
