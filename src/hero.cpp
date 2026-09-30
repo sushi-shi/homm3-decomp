@@ -6419,7 +6419,7 @@ long hero::getHitPointBonus(int creatureType) const
 VA(0x004e5ce0, 0xE7)
 DC_ADDRESS(0x0d5548, 0x70)
 MAC_ADDRESS(0x106b98, 0x140)
-unsigned char hero::canLand() const
+bool hero::canLand() const
 {
     NewmapCell* cell = g_game->getCell(getLocation());
     if ((cell->m_groundSet == eTerrainWater)

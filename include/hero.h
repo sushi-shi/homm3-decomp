@@ -832,7 +832,8 @@ public:
 
 private:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
-    unsigned char canLand() const;
+    // Original Dreamcast public ?can_land@hero@@ABA_NXZ proves private bool.
+    bool canLand() const;
 
 public:
     int heroFn004E5DE0() const;
