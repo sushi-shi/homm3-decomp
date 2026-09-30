@@ -285,6 +285,11 @@ typedef int SpellID;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
 enum ESpellId {
+    // Original DC LF_ENUM SpellID 0x1b61 uses signed int (0x74) and
+    // eSpellNone = -1. The default type_spell_choice constructor passes
+    // this sentinel to type_enchant_data; retain the signed domain through
+    // canonical enum spell interfaces as well as the Complete positive IDs.
+    SPELL_NONE = -1,
     SPELL_SUMMON_BOAT = 0x0,
     // advManager::SkuttleBoat (0x41cdf0) is the witness and it proves the
     // id twice in one body: it takes its traits row at `akSpellTraits +
