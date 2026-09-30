@@ -252,11 +252,6 @@ public:
     // (compgenx). The type_point member supplies its implicit construction.
 };
 
-long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
-                           std::vector<HeroDestination>& destinations,
-                           long maxDistance, unsigned char hiringHero,
-                           unsigned char allowSpells,
-                           unsigned char exploreMode);
 int netValueOfLocation(hero* currentHero, HeroDestination& destination,
                           long* strategicMap, struct pathCell* currentPathCell,
                           searchArray* currentSearchArray);

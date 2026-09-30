@@ -200,6 +200,14 @@ int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 bool considerHiring(long playerId, hero* candidate);
+// Original local procedures: find_all_destinations and mark_destinations
+// (DC ai_player.obj:0x33038/0x32a84). Both are used only in this TU.
+static long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
+                           std::vector<HeroDestination>& destinations,
+                           long maxDistance, unsigned char hiringHero,
+                           unsigned char allowSpells,
+                           unsigned char exploreMode);
+
 const std::bitset<9>& armyGrpFn0044A460();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
@@ -3356,7 +3364,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 // caller mass. Recovered locals, helper boundaries, condition groups and the
 // unnamed get_location temporary are retained through the expected dips.
 // Forward prototypes: all three bodies sit later in RVA order.
-long markDestinations(hero* currentHero, long maxDistance,
+static long markDestinations(hero* currentHero, long maxDistance,
                        searchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType);
@@ -3376,7 +3384,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
 VA(0x0042edd0, 0x79b)
 DC_ADDRESS(0x033038, 0x3ca)
 MAC_ADDRESS(0x031f7c, 0x558)  // anchor-callee + arity
-long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
+static long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
                            std::vector<HeroDestination>& destinations,
                            long maxDistance, unsigned char hiringHero,
                            unsigned char allowSpells,
@@ -3527,7 +3535,7 @@ long findAllDestinations(hero* currentHero, searchArray* currentSearchArray,
 VA(0x0042f570, 0x40e)
 DC_ADDRESS(0x032a84, 0x3ac)
 MAC_ADDRESS(0x03180c, 0x4b4)  // anchor-callee + arity
-long markDestinations(hero* currentHero, long maxDistance,
+static long markDestinations(hero* currentHero, long maxDistance,
                        searchArray* currentSearchArray,
                        unsigned short* friendlyDistances,
                        type_search_type searchType)
