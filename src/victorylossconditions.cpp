@@ -6,6 +6,9 @@
 
 #include "game.h"
 
+// The canonical team helper replaces the pasted scan. VC6 currently retains
+// it (Windows 100 -> 58.54%); Mac improves 39.9038 -> 75.9804%. Keep the
+// evidenced boundary while its caller expansion remains a compiler-state lead.
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)
@@ -13,16 +16,9 @@ int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
         int team = g_game->getTeam(playerId);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team
-                    && g_game->isHuman(player))
-                    return 1;
-            }
-        }
-        return 0;
+        // Mac 0x1fd35c..0x1fd3a8 expands isHumanTeam's negative-team
+        // guard and eight-player scan, retaining its nested isHuman call.
+        return g_game->isHumanTeam(team);
     }
     return 1;
 }
