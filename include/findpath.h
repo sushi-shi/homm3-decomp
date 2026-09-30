@@ -199,8 +199,11 @@ public:
     // add; movsx ecx, cx`) - which only a short parameter forces. The
     // one call whose argument is already a sign-extended 16-bit value
     // loses the movsx, exactly as it should.
+    // Original ?is_moat@searchArray@@QBA_NF@Z proves bool. The moat
+    // array stores only false/true and retail forwards its byte directly,
+    // supporting the same domain for the canonical storage.
     DC_ADDRESS(0x028018, 0xa)
-    unsigned char isMoat(short hex) const { return m_isMoatSlowed[hex]; }
+    bool isMoat(short hex) const { return m_isMoatSlowed[hex]; }
 
     // E:\\gamedcs\\findpath.h:247 (). Retail folds this
     // const tiny helper into move_hero and AI_choose_destination as the
@@ -311,7 +314,7 @@ private:
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward
     // 0x41f580) - a map, as the dtor's `delete` already implied.
-    unsigned char* m_isMoatSlowed;
+    bool* m_isMoatSlowed;
     // +0x6c. `long*` (not void*) from get_danger_value's `[ecx + edx*4]`
     // load - the danger map is one signed word per cell.
     long* m_dangerZones;

@@ -82,7 +82,7 @@ void searchArray::init()
     m_validRectangle.bottom = g_mapHeight;
     m_cellData = new pathCell[g_game->getNumMapLevels() * g_mapHeight
             * g_mapWidth * 2];
-    m_isMoatSlowed = new unsigned char[187];
+    m_isMoatSlowed = new bool[187];
 }
 
 VA(0x004b1500, 0x2F)
@@ -1265,7 +1265,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                 continue;
 
             int flightCost = 0;
-            unsigned char moat = 0;
+            bool moat = false;
             if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
