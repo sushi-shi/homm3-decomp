@@ -791,7 +791,9 @@ DC_ADDRESS(0x11a30c, 0x970)
 MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket
 int recruitUnit::main(message& msg)
 {
-    unsigned char abortDialog = g_turnDuration.isExpired();
+    // Infer a bool predicate from the native bool IsExpired contract;
+    // keep the shared Windows timeout/network abort tail unchanged.
+    bool abortDialog = g_turnDuration.isExpired();
 
     if (!abortDialog && g_remoteOn) {
         unsigned char msgReceived = 0;

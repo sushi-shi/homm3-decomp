@@ -399,9 +399,11 @@ class CTurnDuration {
 public:
     CTurnDuration();
     void addTime(unsigned long howMuch);
-    unsigned char isOn();
-    unsigned char isExpired();
-    unsigned char isClose(unsigned long howClose);
+    // Original IsOn/IsExpired/IsClose publics encode _N bool returns;
+    // byte primitive records describe the lowered representation.
+    bool isOn();
+    bool isExpired();
+    bool isClose(unsigned long howClose);
     void start();
     void clear();
     void setDuration(unsigned long ms);
