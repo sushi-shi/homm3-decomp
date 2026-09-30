@@ -3519,6 +3519,7 @@ void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
     }
 }
 
+// Mac b6b0..b6c0 expands the signed shrine-spell getter.
 VA(0x0040d8d0, 0x229)
 DC_ADDRESS(0x00b788, 0x1a8)
 MAC_ADDRESS(0x00b5c8, 0x1c0)
@@ -3532,7 +3533,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     unsigned char knowsShrineType =
         g_game->getInfoFlag(type, g_netLocalGamePos);
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        SpellID spell = static_cast<int>(cell->m_extraInfo << 9) >> 22;
+        SpellID spell = cell->getShrineSpell();
         strcat(buffer, separator1);
         char temp[500];
         sprintf(temp, g_generalText->getText(GENERAL_TEXT_SHRINE_SPELL_FORMAT),
@@ -3549,6 +3550,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     }
 }
 
+// Mac b86c..b874 expands the signed three-bit tree-price getter.
 VA(0x0040db00, 0x1BD)
 DC_ADDRESS(0x00b930, 0x17c)
 MAC_ADDRESS(0x00b788, 0x1c0)
@@ -3563,7 +3565,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     int infolevel = visited;
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator1);
-        int price = static_cast<int>(cell->m_extraInfo << 16) >> 29;
+        int price = cell->getTreePrice();
         strcat(buffer, g_constWiseTreePriceText[price]);
     } else if (infolevel) {
         strcat(buffer, separator1);
@@ -3585,6 +3587,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     }
 }
 
+// Mac bdac..bdb8 expands the signed seven-bit witch-skill getter.
 VA(0x0040dcc0, 0x1E4)
 DC_ADDRESS(0x00bd84, 0x128)
 MAC_ADDRESS(0x00bd70, 0x1a4)
@@ -3598,7 +3601,7 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         return;
 
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        int skill = static_cast<int>(cell->m_extraInfo << 12) >> 25;
+        int skill = cell->getWitchSkill();
         strcat(buffer, separator1);
         char tempText[50];
         sprintf(tempText,
