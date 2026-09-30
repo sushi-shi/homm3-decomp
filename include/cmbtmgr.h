@@ -1461,7 +1461,7 @@ public:
     // command.cpp:3038. The retail call at 0x477f3d occupies the exact
     // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
     // helper's other retail caller sits in ai.obj.
-    unsigned char aiCheckRetreat();  // 0x41e570
+    bool aiCheckRetreat();  // 0x41e570
     void clearEffects();  // 0x5a66b0
     void checkGetAIMove();
     unsigned char ableToSummonElemental(SpellID spell, long side);

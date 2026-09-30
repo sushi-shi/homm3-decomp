@@ -3008,10 +3008,13 @@ unsigned char type_AI_spellcaster::spellsNotRequired() const
 // above level 2 - Recanter's Cloak. The other two are the spell's own
 // traits bits: bit 0 gates it at all, and bit 9 marks the spells that
 // still make sense while RETREATING.
+// Original ?cast_spell@type_AI_spellcaster@@QAA_N_N@Z proves bool return
+// and bool retreating. Preserve AICheckRetreat's logical result directly
+// through this interface rather than inventing a byte-domain boundary.
 VA(0x0043c800, 0x308)
 DC_ADDRESS(0x0426b0, 0x2e4)
 MAC_ADDRESS(0x046664, 0x350)
-unsigned char type_AI_spellcaster::castSpell(unsigned char retreating)
+bool type_AI_spellcaster::castSpell(bool retreating)
 {
     type_spell_choice best;
     long power = g_combatManager->m_spellPower[m_side];

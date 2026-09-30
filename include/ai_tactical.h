@@ -366,7 +366,7 @@ protected:
                                                        type_enchant_data) const;
 
 public:
-    unsigned char castSpell(unsigned char retreating);
+    bool castSpell(bool retreating);
 
 protected:
     void considerAreaEffect(type_spell_choice& choice) const;

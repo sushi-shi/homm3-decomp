@@ -221,10 +221,16 @@ unsigned char combatManager::failedSiege()
 // CFG blocks in flow, 54 branches and four returns. It still hoists the
 // initial zero carrier and lowers the Done test to shr/test rather than
 // retail's test of the attribute mask. Do not bypass Is to force that test.
+// Original ?AICheckRetreat@combatManager@@QAA_NXZ proves bool. Its sole
+// value forwarding into AI spellcaster::castSpell also has an original bool
+// parameter; byte return instructions and lowered debug primitives do not
+// establish an unsigned-char source interface.
+// Focused ai/ai_tactical builds accept the coherent interface; refreshed
+// target bindings are required for the renamed bodies before a new verdict.
 VA(0x0041e570, 0x546)
 DC_ADDRESS(0x02389c, 0x690)
 MAC_ADDRESS(0x01f874, 0x7e4)  // order-map(DC ai.obj head) + anchor-callee failed_siege
-unsigned char combatManager::aiCheckRetreat()
+bool combatManager::aiCheckRetreat()
 {
     if (!m_heroes[m_currentSide])
         return 0;
