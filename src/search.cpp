@@ -96,7 +96,8 @@ int aiResourceCost(const playerData* player, const int* resources);
 VA(0x0056a360, 0x9E)
 DC_ADDRESS(0x12b3f0, 0xb6)
 MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map
-unsigned char checkAdjacentMonster(const hero* currentHero,
+// Original DC public check_adjacent_monster@@YA_N proves bool result.
+bool checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType)
 {
@@ -351,7 +352,8 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 VA(0x0056ab40, 0x50C)
 DC_ADDRESS(0x12bc3c, 0x29e)
 MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map
-unsigned char searchArray::enterTrigger(const hero* currentHero,
+// Original DC public enter_trigger@@AAA_N proves bool result.
+bool searchArray::enterTrigger(const hero* currentHero,
                                          pathCell& cell, long limit,
                                          type_search_type searchType)
 {
@@ -576,12 +578,14 @@ void searchArray::enterStartTrigger(const hero* currentHero,
 VA(0x0056b440, 0x8EC)
 DC_ADDRESS(0x12c36c, 0x728)
 MAC_ADDRESS(0x1631a0, 0xbac)  // exhaustive search.obj order-map
+// Original SeedPosition H_N...H2 ends with bool backreference2; both
+// flags are bool, while maxMobility and curTempMobility remain int.
 void searchArray::seedPosition(hero* currentHero, type_point start,
                                type_point target, int maxMobility,
-                               unsigned char isBoat,
+                               bool isBoat,
                                type_search_type searchType,
                                int curTempMobility,
-                               unsigned char seedContinuation)
+                               bool seedContinuation)
 {
     TSkillMastery pathfinding =
         currentHero->getSecondarySkill(eSecSkillPathfinding);

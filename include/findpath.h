@@ -143,10 +143,10 @@ public:
     long getDangerValue(type_point point) const;  // 0x42ed30 (ai_player.obj)
     void seedPosition(hero* currentHero, type_point start,
                       type_point target, int maxMobility,
-                      unsigned char isBoat,
+                      bool isBoat,
                       type_search_type searchType,
                       int curTempMobility,
-                      unsigned char seedContinuation);
+                      bool seedContinuation);
     int buildPath(const hero* currentHero, long limit);
 
     // E:\gamedcs\FindPath.h:211-213: vector::clear.
@@ -265,7 +265,7 @@ private:
     void enterTown(const hero* currentHero, long startTown,
                     const pathCell& currentPathCell, long limit,
                     type_search_type searchType);
-    unsigned char enterTrigger(const hero* currentHero, pathCell& cell,
+    bool enterTrigger(const hero* currentHero, pathCell& cell,
                                 long limit, type_search_type searchType);
     // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
     // and then re-allocates both maps; SeedCombatPosition calls it
@@ -386,7 +386,7 @@ extern tilePoint g_normalDirTable[8];
 // roster's search.cpp:113 row - the free three-argument predicate that
 // immediately follows BuildPath in both link orders, 182 DC bytes against
 // retail's 158.
-unsigned char checkAdjacentMonster(const hero* currentHero,
+bool checkAdjacentMonster(const hero* currentHero,
                                      pathCell& entryPoint,
                                      type_search_type searchType);
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
