@@ -1577,89 +1577,14 @@ void town::giveEventReward(const TTownEvent& thisEvent)
         showCreatureRewards(this, rewards);
 }
 
-// Forward declarations for the two bodies that follow their callers in
-// link order (check_shipyard_square's definition sits after
-// initialize_buildings at 0x5c0c90).
-void initializeBuildings(town* currentTown, const TownExtra* townSetup);
+// The shipyard helper is defined later in this source file.
 unsigned char checkShipyardSquare(town* currentTown, long x, long y);
-
-// Original: initialize_army; town.cpp:2017
-// Complete expands the ordinary initializer into town::initialize. Its custom
-// army path additionally resolves the map format's negative random-tier IDs;
-// DC's older body copied those creature IDs directly. Both use getArmy's
-// canonical garrison/hero selection at every read and write. Complete's
-// DC initialize_army at 0x168330 names the mutable get_army body 0x168bd0
-// at every site, including the troop-count read at town.cpp:2025. Mac's
-// count read at 0x1b64d4 also calls mutable getArmy at 0x1b6fdc; its const
-// twin is 0x1b7020. Windows folds both retained bodies at 0x5c1460, so
-// that target label alone does not establish a const receiver.
-// The VC6 candidate expands the negative-count arm and default army-id store
-// through getHero where retail retains getArmy. Sharing the two loops' slot
-// local is byte-flat. Mac retains per-operation getters, which rules out a
-// cached army receiver or a combined clear operation as the missing helper.
-// Original: initialize_army; town.cpp:2017
-DC_ADDRESS(0x168330, 0xfc)
-MAC_ADDRESS(0x1b648c, 0x1ac)
-static void initializeArmy(town* currentTown, const TownExtra* townSetup)
-{
-    if (townSetup->m_customArmies) {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            currentTown->getArmy().m_numTroops[slot] =
-                townSetup->m_townArmy.m_numTroops[slot];
-            if (currentTown->getArmy().m_numTroops[slot] > 0) {
-                int troop = townSetup->m_townArmy.m_armies[slot];
-                if (troop <= -2) {
-                    int tier = (-2 - troop) / 2;
-                    if (troop & 1)
-                        tier += TOWN_DWELLING_COUNT;
-                    troop = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                }
-                currentTown->getArmy().m_armies[slot] = troop;
-            } else {
-                currentTown->getArmy().m_armies[slot] = -1;
-            }
-        }
-    } else {
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
-            currentTown->getArmy().m_armies[slot] = -1;
-            currentTown->getArmy().m_numTroops[slot] = 0;
-        }
-        if (currentTown->m_owner < 0) {
-            for (int tier = 0; tier < 4; tier++) {
-                if (random(1, 100) <= g_townInitArmyChance[tier]) {
-                    int creature = g_townDwellingCreatures[
-                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
-                    currentTown->getArmy().add(creature,
-                        random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
-                        -1);
-                }
-            }
-        }
-    }
-}
-
-VA(0x005c0670, 0x24E)
-DC_ADDRESS(0x16842c, 0x66)
-MAC_ADDRESS(0x1b6638, 0xbc)
-void town::initialize(const TownExtra* townSetup)
-{
-    m_type = townSetup->m_townType;
-    m_owner = -1;
-    memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
-    g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
-    initializeArmy(this, townSetup);
-    initializeBuildings(this, townSetup);
-    updateFullBuildingMask();
-    m_spells = townSetup->m_spells;
-    initializeSpells(townSetup);
-}
 
 VA(0x005c08c0, 0x3CE)
 DC_ADDRESS(0x167ff4, 0x33c)
 MAC_ADDRESS(0x1b604c, 0x440)
 // DC locals: disabled_buildings and built_mask.
-void initializeBuildings(town* currentTown, const TownExtra* townSetup)
+static void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 {
     int i;
     memset(currentTown->m_population, 0, sizeof(currentTown->m_population));
@@ -1727,6 +1652,77 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
         currentTown->createBuilding(DWELLING_0_ID);
         currentTown->createBuilding(DWELLING_1_ID);
     }
+}
+
+// Original: initialize_army; town.cpp:2017
+// Complete expands the ordinary initializer into town::initialize. Its custom
+// army path additionally resolves the map format's negative random-tier IDs;
+// DC's older body copied those creature IDs directly. Both use getArmy's
+// canonical garrison/hero selection at every read and write. Complete's
+// DC initialize_army at 0x168330 names the mutable get_army body 0x168bd0
+// at every site, including the troop-count read at town.cpp:2025. Mac's
+// count read at 0x1b64d4 also calls mutable getArmy at 0x1b6fdc; its const
+// twin is 0x1b7020. Windows folds both retained bodies at 0x5c1460, so
+// that target label alone does not establish a const receiver.
+// DC proves both initializers are file-static, and DC/Mac source order is
+// initializeBuildings, initializeArmy, town::initialize. Restoring that
+// private building-helper boundary gives VC6 the native getArmy frontier
+// inside initialize and reproduces its complete retail body.
+DC_ADDRESS(0x168330, 0xfc)
+MAC_ADDRESS(0x1b648c, 0x1ac)
+static void initializeArmy(town* currentTown, const TownExtra* townSetup)
+{
+    if (townSetup->m_customArmies) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_numTroops[slot] =
+                townSetup->m_townArmy.m_numTroops[slot];
+            if (currentTown->getArmy().m_numTroops[slot] > 0) {
+                int troop = townSetup->m_townArmy.m_armies[slot];
+                if (troop <= -2) {
+                    int tier = (-2 - troop) / 2;
+                    if (troop & 1)
+                        tier += TOWN_DWELLING_COUNT;
+                    troop = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                }
+                currentTown->getArmy().m_armies[slot] = troop;
+            } else {
+                currentTown->getArmy().m_armies[slot] = -1;
+            }
+        }
+    } else {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            currentTown->getArmy().m_armies[slot] = -1;
+            currentTown->getArmy().m_numTroops[slot] = 0;
+        }
+        if (currentTown->m_owner < 0) {
+            for (int tier = 0; tier < 4; tier++) {
+                if (random(1, 100) <= g_townInitArmyChance[tier]) {
+                    int creature = g_townDwellingCreatures[
+                        currentTown->m_type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    currentTown->getArmy().add(creature,
+                        random(g_townInitArmyLow[tier], g_townInitArmyHigh[tier]),
+                        -1);
+                }
+            }
+        }
+    }
+}
+
+VA(0x005c0670, 0x24E)
+DC_ADDRESS(0x16842c, 0x66)
+MAC_ADDRESS(0x1b6638, 0xbc)
+void town::initialize(const TownExtra* townSetup)
+{
+    m_type = townSetup->m_townType;
+    m_owner = -1;
+    memset(m_generatorBonus, 0, sizeof(m_generatorBonus));
+    g_game->claimTown(m_id, townSetup->m_playerOwner, 0, 0);
+    initializeArmy(this, townSetup);
+    initializeBuildings(this, townSetup);
+    updateFullBuildingMask();
+    m_spells = townSetup->m_spells;
+    initializeSpells(townSetup);
 }
 
 // Retail 0x5c0ce7 reads the whole +0xc flags word before testing bits 8
