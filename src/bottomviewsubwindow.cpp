@@ -472,11 +472,19 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
-// getNumArmies placement: DC armygrp.cpp:804 and Mac order
-// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) support its ordinary
-// owning source body. The cross-TU count expansion leaves header visibility
-// open; no explicit inline qualifier is proven. Current ordinary call gives
-// 95.87521% versus 97.7573% for the pasted count; keep the supported boundary.
+// getNumArmies placement: older DC armygrp.cpp:804 and Mac order
+// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) locate the older
+// source body. Complete expands its count in this separate authored TU;
+// a class-visible body is the leading visibility model. Complete's exact
+// original TU grouping and an explicit inline qualifier are not proven.
+// Focused current report: 95.8581 -> 96.9607; the count call expands.
+// The same TU's town ctor moves 94.7651 -> 86.2819 and kingdom ctor
+// 100 -> 98.8553. Other shared consumers are not measured in this pass.
+// The header body fully expands in armygrp, leaving no retained copy in
+// that object's current output; retail's retained count still needs an
+// emitted consumer carrier. Keep the canonical body and actual calls.
+// The quantity string's default constructor retains _Tidy(false) where
+// retail expands it; template _Destroy/size labels are folded aliases.
 VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
 MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
