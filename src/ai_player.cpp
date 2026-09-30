@@ -3042,6 +3042,13 @@ static void unblockLith(hero* currentHero,
 // town-owner condition, a scope ending the initial cell before the direction
 // loop, and both together are byte-flat. No corresponding source rewrite
 // has yet recovered retail's fourth obscureCell call.
+// DC line 3746 also queries GetMapExtra(point) and divides a positive value
+// by ten when the current player's visibility bit is absent. Complete omits
+// that older penalty: retail's positive-value normalization arm and
+// Mac 0x33854..0x3387c go directly from movement-cost division to the minimum
+// value test. The audit's missing GetMapExtra here is a platform difference.
+// The zero-count destination vector is the native fill constructor, not a
+// default constructor (Mac 0x33328..0x3335c, DC constructor 0x38c3c).
 VA(0x0042e0b0, 0xb6e) MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket, dc 0x33cf8
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,

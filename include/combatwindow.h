@@ -63,7 +63,7 @@ public:
     virtual void drawWindow(unsigned char update, int low, int high);
     void clearCombatMessages();
     static int convertID2HelpID(int id);
-    unsigned char processRightSelect(const message* msg);
+    unsigned char processRightSelect(const message& msg);
     void setRollover(const char* newText);
     void showMessages(long start);
     void scrollRollover(long delta);

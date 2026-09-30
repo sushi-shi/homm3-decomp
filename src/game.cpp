@@ -3987,13 +3987,11 @@ void game::setupFirstPlayer()
 MAC_ADDRESS(0x0d64cc, 0xb4)
 static void randomizeScholar(NewmapCell* cell)
 {
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-    if (info->getScholarAward() != const_scholar_primary_skill) {
+    if (cell->getScholarAward() != const_scholar_primary_skill) {
         // DC game.cpp:4515 keeps Random inside the SetScholar expression.
-        info->setScholar(info->getScholarAward(),
+        cell->setScholar(cell->getScholarAward(),
             TPrimarySkill(random(0, 3)),
-            info->getScholarSecondarySkill(), info->getScholarSpell());
+            cell->getScholarSecondarySkill(), cell->getScholarSpell());
     }
 }
 
@@ -4043,14 +4041,12 @@ static void randomizeSeaChest(NewmapCell* cell)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-    SpellID spell = info->getShrineSpell();
+    SpellID spell = cell->getShrineSpell();
     if (spell == -1) {
         spell = g_game->getRandomSpell(level);
-        info->m_shrineInfo.m_spell = spell;
+        cell->m_shrineInfo.m_spell = spell;
     }
-    info->clearVisitedBits();
+    cell->clearVisitedBits();
 }
 
 // E:\gamedcs\game.cpp:4654, dc 0xabda8
@@ -4120,9 +4116,7 @@ static void randomizeTomb(NewmapCell* cell)
         level = 8;
     else
         level = 16;
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
-    info->setTomb(g_game->getRandomArtifactId(level));
+    cell->setTomb(g_game->getRandomArtifactId(level));
 }
 
 // E:\gamedcs\game.cpp:4753. The vector local and its teardown belong to the
@@ -4239,10 +4233,8 @@ static void randomizeWitchHut(NewmapCell* cell)
 
     TSecondarySkill skill;
     int count = possibleSkills.count();
-    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-        static_cast<void*>(&cell->m_extraInfo));
     if (count < 1) {
-        info->setWitchSkill(eSecSkillNone);
+        cell->setWitchSkill(eSecSkillNone);
     }
     else {
         int choice = random(1, count);
@@ -4251,7 +4243,7 @@ static void randomizeWitchHut(NewmapCell* cell)
             if (possibleSkills[skill] && --choice < 1)
                 break;
         }
-        info->setWitchSkill(skill);
+        cell->setWitchSkill(skill);
     }
 }
 
@@ -4479,33 +4471,41 @@ void game::matchUndergroundGates()
 // type before its two quantity guards (DC 5439..5455, Mac 0xd7e04..0xd7e78).
 // Restoring those typed operations together reaches 89.2299%; the five
 // distinct bank lifetimes and all canonical helper calls remain intact.
+// DC 5008..5027 proves counter initialization order through the named
+// stack homes (Mac d730c..d739c retains the live counters). The CodeView
+// local listing does not establish declaration order. ExtraInfoUnion is
+// NewmapCell's canonical base: use its inherited setters directly, as in
+// DC ad278..ad280, including within scholar/shrine/tomb/witch helpers.
+// DC 5127 passes the bank type field directly without a conversion scope.
+// These combined recoveries reach 89.6121% from 89.2441% in reproduced
+// source families, preserving every canonical body/call and sibling MAX.
 VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
 void game::randomizeEvents()
 {
-    unsigned long numLithTwoWay = 0;
-    unsigned long numMagicSpring = 0;
-    unsigned long numLibrary = 0;
-    unsigned long numWarriorTomb = 0;
-    unsigned long numDefenseTower = 0;
-    unsigned long numDeadGuy = 0;
     unsigned long numTrainingGround = 0;
+    unsigned long numDefenseTower = 0;
+    unsigned long numGardenOfRevelation = 0;
+    unsigned long numMercCamp = 0;
     unsigned long numPowerSchool = 0;
+    unsigned long numTreeOfKnowledge = 0;
+    unsigned long numLibrary = 0;
+    unsigned long numArena = 0;
+    unsigned long numMagicSchool = 0;
+    unsigned long numWarSchool = 0;
+    unsigned long numMysticalGarden = 0;
+    unsigned long numMagicSpring = 0;
+    unsigned long numDeadGuy = 0;
+    unsigned long numLeanTo = 0;
+    unsigned long numWarriorTomb = 0;
+    unsigned long numLithOneWay = 0;
+    unsigned long numLithTwoWay = 0;
     unsigned long numWhirlpool = 0;
     int x;
-    unsigned long numLeanTo = 0;
     int i;
     int y;
     NewmapCell* tempCell;
     int z;
-    unsigned long numWarSchool = 0;
-    unsigned long numArena = 0;
-    unsigned long numTreeOfKnowledge = 0;
-    unsigned long numGardenOfRevelation = 0;
-    unsigned long numMagicSchool = 0;
-    unsigned long numMercCamp = 0;
     int id;
-    unsigned long numLithOneWay = 0;
-    unsigned long numMysticalGarden = 0;
     TBlackMarket thisMarket;
     int luckBonus;
     unsigned char resQty;
@@ -4575,11 +4575,8 @@ void game::randomizeEvents()
                             m_creatureBanks.size();
                         tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        {
-                            int converted;
-                            converted = tempCell->m_objectIndex;
-                            initializeCreatureBank(bank, type_creature_bank_type(converted));
-                        }
+                        initializeCreatureBank(bank,
+                            type_creature_bank_type(tempCell->m_objectIndex));
                         m_creatureBanks.push_back(bank);
                     }
                     break;
@@ -4616,13 +4613,11 @@ void game::randomizeEvents()
 
                 case DEAD_GUY:
                     {
-                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo));
                         if (random(0, 99) < 20)
-                            info->setSkeleton(numDeadGuy++, true,
-                                              getRandomArtifactId(6));
+                            tempCell->setSkeleton(numDeadGuy++, true,
+                                                  getRandomArtifactId(6));
                         else
-                            info->setSkeleton(numDeadGuy++, false, -1);
+                            tempCell->setSkeleton(numDeadGuy++, false, -1);
                     }
                     break;
 
@@ -4688,14 +4683,12 @@ void game::randomizeEvents()
 
                 case FOUNTAIN_OF_FORTUNE:
                     {
-                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo));
                         luckBonus = random(0, 3);
                         if (luckBonus == 0)
-                            info->m_fountainInfo.m_luck = -1;
+                            tempCell->m_fountainInfo.m_luck = -1;
                         else
-                            info->m_fountainInfo.m_luck = luckBonus;
-                        info->clearVisitedBits();
+                            tempCell->m_fountainInfo.m_luck = luckBonus;
+                        tempCell->clearVisitedBits();
                     }
                     break;
 
@@ -4716,13 +4709,11 @@ void game::randomizeEvents()
 
                 case LEAN_TO:
                     {
-                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo));
                         {
                             resType = EGameResource(random(0, 5));
                         }
                         resQty = static_cast<unsigned char>(random(1, 5));
-                        info->setLeanTo(numLeanTo++, resQty, resType);
+                        tempCell->setLeanTo(numLeanTo++, resQty, resType);
                     }
                     break;
 
@@ -4773,9 +4764,7 @@ void game::randomizeEvents()
                             m_worldMap.cell(x - 1, y, z)->m_extraInfo;
                     }
                     else {
-                        static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo))
-                            ->setMagicSpring(numMagicSpring, 1);
+                        tempCell->setMagicSpring(numMagicSpring, 1);
                         ++numMagicSpring;
                     }
                     break;
@@ -4804,9 +4793,7 @@ void game::randomizeEvents()
                 case MYSTICAL_GARDEN:
                     // DC 5400 keeps Random and SetGarden in one statement;
                     // 5401 increments the pool counter after the setter.
-                    static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&tempCell->m_extraInfo))
-                        ->setGarden(numMysticalGarden,
+                    tempCell->setGarden(numMysticalGarden,
                                     random(0, 1) ? GOLD : GEMS);
                     ++numMysticalGarden;
                     break;
@@ -4920,12 +4907,10 @@ void game::randomizeEvents()
 
                 case WATER_WHEEL:
                     {
-                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo));
                         // DC 5558..5559; retail combines both operations
                         // into (extraInfo & 0xffffe001) | 1.
-                        info->setWheelGold(500);
-                        info->clearVisitedBits();
+                        tempCell->setWheelGold(500);
+                        tempCell->clearVisitedBits();
                     }
                     break;
 
@@ -4955,16 +4940,14 @@ void game::randomizeEvents()
 
                 case WINDMILL:
                     {
-                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                            static_cast<void*>(&tempCell->m_extraInfo));
                         resQty = static_cast<unsigned char>(random(3, 6));
                         {
                             resType = EGameResource(random(1, 5));
                         }
                         // DC 5582..5583; retail's 0xfffe001f mask also
                         // clears the visited-player lane, not just amount.
-                        info->setWindmill(resType, resQty);
-                        info->clearVisitedBits();
+                        tempCell->setWindmill(resType, resQty);
+                        tempCell->clearVisitedBits();
                     }
                     break;
 

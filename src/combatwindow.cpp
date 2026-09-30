@@ -271,10 +271,15 @@ inline int TCombatWindow::convertID2HelpID(int id)
     }
 }
 
+// DC combatwindow.cpp:356 (0x69cdc) proves const message&. Native Mac
+// 0x80984 and Windows read the message unconditionally at the passed
+// address; the former pointer spelling was a synthetic ABI facade.
+// The reference interface preserves all 304 emitted VC6 bytes from the
+// exact pointer baseline; the old target name needs delink refresh.
 VA(0x00472a50, 0x124) MAC_ADDRESS(0x080974, 0xb4)
-unsigned char TCombatWindow::processRightSelect(const message* msg)
+unsigned char TCombatWindow::processRightSelect(const message& msg)
 {
-    int helpID = convertID2HelpID(msg->m_codeY);
+    int helpID = convertID2HelpID(msg.m_codeY);
     if (helpID < 0)
         return 0;
 

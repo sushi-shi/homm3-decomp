@@ -1083,12 +1083,11 @@ private:
     // with the advManager in ECX, 1744 B against the DC's 1330 is 1.31 in
     // the SH4->x86 band, and the row sits in the events.obj bracket
     // [0x4ab410..0x4acbb0] that already carries EventSound before it and
-    // adjust_army after it, in DC roster order. The DC decorates cText
-    // `char*`; retail's one reconstructed call site passes window.h's
-    // `const char emptyRolloverText[]`, so the declarator is const-correct
-    // rather than casting at the call.
+    // adjust_army after it, in DC roster order. DC decorates the original
+    // cText parameter as char*. The retail pointer ABI is unchanged; the
+    // unused parameter and string-literal callers do not prove constness.
     int creatureBankEvent(class hero* who, NewmapCell* cell,
-                          const char* text, type_point point,
+                          char* text, type_point point,
                           unsigned char humanPlayer);
     void doEventCreatureBank(class hero* currentHero, NewmapCell* cell,
                              type_point point, bool humanPlayer);

@@ -5192,8 +5192,16 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
 // E:\gamedcs\events.cpp:5661
+// DC proves the original cText parameter is char*, even though this version
+// never reads it. All three active source callers supply an empty literal.
+// Native reward-list review: Mac 0xb906c..0xb90b0 retains two separate
+// character append sites, supporting the existing if/else operators below.
+// Windows 89.5621% residual: the comma arm calls append where retail expands
+// its _Xlen/_Grow/_Eos chain. A four-state family of resource declaration
+// order and independent artifact/list counters passed both controls and
+// reproduced two distinct objects without score movement; keep this form.
 VA(0x004abdc0, 0x6D0) MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
-int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text, type_point point, unsigned char humanPlayer)
+int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, unsigned char humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
     TCreatureType leaderMonster = CREATURE_NONE;
@@ -5301,8 +5309,8 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
 
     unsigned int k;
     for (k = 0; k < bank.m_artifacts.size(); k++) {
-        type_artifact art(bank.m_artifacts[k]);
-        who->giveArtifact(art, 1, 1);
+        type_artifact artifact(bank.m_artifacts[k]);
+        who->giveArtifact(artifact, 1, 1);
     }
 
     for (int m = 0; m <= 6; m++)

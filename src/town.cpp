@@ -902,6 +902,12 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
+// Native review at 85.95%: DC types and helper calls agree. Reusing the
+// named short dwelling for both population paths is byte-flat under VC6
+// (two source states, reproduced). Retail's four recursive calls all target
+// this body (+0x2da/+0x2ec/+0x2fe/+0x310); shifted relocation pairing can
+// misreport them as unclaimed indirect calls. The remaining loop difference
+// holds building in the parameter slot and walks the horde table by address.
 VA(0x005be930, 0x330) MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::createBuilding(type_building_id building)
 {
@@ -1753,17 +1759,18 @@ unsigned char town::canEverBuild(int buildingId) const
 
 // Dreamcast town.cpp:2188 calls CanBuildDock; the source helper also
 // survives as a direct Mac call at 0:0x1b6b8c.
+// Mac 0:0x1b6ae4/0x1b6ae8 reads town type and the tutorial flag in the
+// loop. Ordinary field access also reproduces Complete exactly; caching
+// the tutorial flag through a caller-local reference changes VC6 scheduling.
 VA(0x005c0f20, 0x156) MAC_ADDRESS(0x1b6a8c, 0x180)  // dc 0x168714
 __int64 town::getBuildableMask() const
 {
     __int64 activeMask = getBuildingMask();
     __int64 mask = 0;
-    char townType = m_type;
-    const char& castleGriffinException = g_game->m_isTutorial;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
-        __int64 requirements = g_hierarchyMask[townType][building];
-        if (castleGriffinException && building == DWELLING_2_ID
-            && townType == TOWN_CASTLE)
+        __int64 requirements = g_hierarchyMask[m_type][building];
+        if (g_game->m_isTutorial && building == DWELLING_2_ID
+            && m_type == TOWN_CASTLE)
             requirements &= ~g_bitNumber[BLACKSMITH_ID];
         if (!(activeMask & g_bitNumber[building])
             && (activeMask & requirements) == requirements)

@@ -110,9 +110,10 @@ void updateBackpack(int slot);
 // also used by other callers. Preserve that canonical helper while
 // recovering the caller structure that controls VC6's branch layout.
 // E:\gamedcs\overview.cpp:220
-// DC records `iOffsetToSS` at sp+0x54 in the hero-row scope, but its
-// operation is not yet identified. DC 0x1061f2 computes the skill position
-// from item * 36; Mac 0x13546c..0x135470 advances both item and its
+// DC records `iOffsetToSS` at sp+0x54 in the hero-row scope. Its
+// pixel offset is recovered below as item * 36 + 433 (DC 0x1061f2).
+// Restoring this native local is VC6 score-flat at 91.9700%.
+// Mac 0x13546c..0x135470 advances both item and its
 // strength-reduced pixel offset even when no skill was found. Neither
 // supports the formerly proposed dense counter incremented only in the
 // skill-found arm (91.5957 / 91.5844 versus the then-baseline 91.7373).
@@ -484,6 +485,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             }
         } else {
             int offsetToMon;
+            int offsetToSS;
             hero* currHero = getHero(g_overviewHeroIds[
                 g_overviewTop[g_overviewType] + row]);
 
@@ -638,8 +640,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
             for (item = 0; item < 8; item++) {
                 int lookup = currHero->getNthSS(item);
                 if (lookup != -1) {
+                    offsetToSS = item * 36 + 433;
                     g_iconWidgetDynamic[slot + curBitmap] = new iconWidget(
-                        item * 36 + 433, row * 116 + 29,
+                        offsetToSS, row * 116 + 29,
                         32, 32, rowWidgetId + item + 158,
                         "secsk32.def",
                         lookup * 3

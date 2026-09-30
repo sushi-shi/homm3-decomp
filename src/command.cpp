@@ -811,6 +811,13 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // Native Mac 0x83920 dispatches the complete 0/1/2 information-mode switch.
 // Keeping the explicit no-info arm gives CodeWarrior the native 1/3 pivot;
 // VC6 improves 94.0588 -> 94.6868% without removing any window helpers.
+// Restore the unchanged -1 sentinel refresh and independently guarded
+// information-window updates (DC 0x6c652..0x6c676, Mac 0x837c8..0x837e4).
+// With the native getCommand member argument and const-message reference
+// boundary, lane Windows rises 94.6749 -> 94.97%; all 38 available command
+// and combatwindow Mac comparisons hold. The remaining 188/180 blocks and
+// 128/120 branches still begin with cached 0/1 and switch-tail merging;
+// this supported semantic correction does not resolve that compiler state.
 VA(0x00474d80, 0x114D) MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph, dc 0x6c070
 int combatManager::processCombatMsg(message& msg)
 {
@@ -829,7 +836,7 @@ int combatManager::processCombatMsg(message& msg)
                 if (msg.m_codeY == 0 || msg.m_codeY == 1)
                     rightClick(m_lastCellIndex);
                 else
-                    m_combatWindow->processRightSelect(&msg);
+                    m_combatWindow->processRightSelect(msg);
             }
             break;
         }
@@ -958,76 +965,82 @@ int combatManager::processCombatMsg(message& msg)
             return MESSAGE_DISPATCH_CONSUME;
         }
 
-            if (gridIndex == m_lastCellIndex) {
-            if (gridIndex != -1 && m_combatCommand == COMBAT_COMMAND_ATTACK)
+        // DC 0x6c652..0x6c676 and Mac 0x837c8..0x837e4 distinguish
+        // an unchanged real cell from the unchanged -1 sentinel. The
+        // sentinel still refreshes command state; only information-window
+        // updates require a changed cell.
+        if (gridIndex == m_lastCellIndex && gridIndex != -1) {
+            if (m_combatCommand == COMBAT_COMMAND_ATTACK)
                 pointerChanged = checkSetMouseDirection(mouseX, mouseY,
                                                         gridIndex);
-            } else {
-            m_combatWindow->m_heroSubWindows[0]->unShow();
-            m_combatWindow->m_heroSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[0]->unShow();
-            m_combatWindow->m_creatureSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[2]->unShow();
-            m_combatWindow->m_creatureSubWindows[3]->unShow();
+        } else {
+            if (gridIndex != m_lastCellIndex) {
+                m_combatWindow->m_heroSubWindows[0]->unShow();
+                m_combatWindow->m_heroSubWindows[1]->unShow();
+                m_combatWindow->m_creatureSubWindows[0]->unShow();
+                m_combatWindow->m_creatureSubWindows[1]->unShow();
+                m_combatWindow->m_creatureSubWindows[2]->unShow();
+                m_combatWindow->m_creatureSubWindows[3]->unShow();
 
-            if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
-                if (m_heroes[1] && g_config.m_combatArmyInfoLevel) {
-                    m_combatWindow->m_heroSubWindows[1]->update(
-                        *m_heroes[1], m_heroes[0],
-                        m_magicTerrain
-                            == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-                    m_combatWindow->m_heroSubWindows[1]->show();
-                }
-            } else if (gridIndex == COMBAT_HEX_ATTACKER_HERO) {
-                if (m_heroes[0] && g_config.m_combatArmyInfoLevel) {
-                    m_combatWindow->m_heroSubWindows[0]->update(
-                        *m_heroes[0], m_heroes[1],
-                        m_magicTerrain
-                            == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-                    m_combatWindow->m_heroSubWindows[0]->show();
-                }
-            } else if (validHex(gridIndex)) {
-                if (m_cells[gridIndex].hasArmy()) {
-                    army* stack = m_cells[gridIndex].getArmy();
-                    hero* owner = stack->getOwner();
-                    switch (g_config.m_combatArmyInfoLevel) {
-                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_NONE:
-                        break;
-                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
-                        if (stack->getOwningSide() == 0) {
-                            m_combatWindow->m_creatureSubWindows[0]->update(*stack,
-                                                                        owner);
-                            m_combatWindow->m_creatureSubWindows[0]->show();
-                        } else if (stack->getOwningSide() == 1) {
-                            m_combatWindow->m_creatureSubWindows[1]->update(*stack,
-                                                                        owner);
-                            m_combatWindow->m_creatureSubWindows[1]->show();
-                        }
-                        break;
-                    case TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT:
-                        if (stack->getOwningSide() == 0) {
-                            m_combatWindow->m_creatureSubWindows[2]->update(*stack,
-                                                                        owner);
-                            m_combatWindow->m_creatureSubWindows[2]->show();
-                        } else if (stack->getOwningSide() == 1) {
-                            m_combatWindow->m_creatureSubWindows[3]->update(*stack,
-                                                                        owner);
-                            m_combatWindow->m_creatureSubWindows[3]->show();
-                        }
-                        break;
+                if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
+                    if (m_heroes[1] && g_config.m_combatArmyInfoLevel) {
+                        m_combatWindow->m_heroSubWindows[1]->update(
+                            *m_heroes[1], m_heroes[0],
+                            m_magicTerrain
+                                == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+                        m_combatWindow->m_heroSubWindows[1]->show();
                     }
-                } else if (m_debugShowBlockedHexes
-                           && (m_cells[gridIndex].m_attributes & hexcell::blocked)
-                           && m_cells[gridIndex].m_obstacleIndex != -1) {
-                    TObstacle& obstacle =
-                        getObstacle(m_cells[gridIndex].m_obstacleIndex);
-                    sprintf(g_text,
-                            "Obstacle name: %s, owner: %d, visible:%s",
-                            obstacle.m_shape->m_spriteName, obstacle.m_owner,
-                            obstacle.m_isVisible ? "true" : "false");
-                    m_combatWindow->combatMessage(g_text, 0, 0);
-                    m_lastCellIndex = gridIndex;
-                    return MESSAGE_DISPATCH_CONSUME;
+                } else if (gridIndex == COMBAT_HEX_ATTACKER_HERO) {
+                    if (m_heroes[0] && g_config.m_combatArmyInfoLevel) {
+                        m_combatWindow->m_heroSubWindows[0]->update(
+                            *m_heroes[0], m_heroes[1],
+                            m_magicTerrain
+                                == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+                        m_combatWindow->m_heroSubWindows[0]->show();
+                    }
+                } else if (validHex(gridIndex)) {
+                    if (m_cells[gridIndex].hasArmy()) {
+                        army* stack = m_cells[gridIndex].getArmy();
+                        hero* owner = stack->getOwner();
+                        switch (g_config.m_combatArmyInfoLevel) {
+                        case TCombatOptionsWindow::CREATURE_INFO_LEVEL_NONE:
+                            break;
+                        case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
+                            if (stack->getOwningSide() == 0) {
+                                m_combatWindow->m_creatureSubWindows[0]->update(*stack,
+                                                                            owner);
+                                m_combatWindow->m_creatureSubWindows[0]->show();
+                            } else if (stack->getOwningSide() == 1) {
+                                m_combatWindow->m_creatureSubWindows[1]->update(*stack,
+                                                                            owner);
+                                m_combatWindow->m_creatureSubWindows[1]->show();
+                            }
+                            break;
+                        case TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT:
+                            if (stack->getOwningSide() == 0) {
+                                m_combatWindow->m_creatureSubWindows[2]->update(*stack,
+                                                                            owner);
+                                m_combatWindow->m_creatureSubWindows[2]->show();
+                            } else if (stack->getOwningSide() == 1) {
+                                m_combatWindow->m_creatureSubWindows[3]->update(*stack,
+                                                                            owner);
+                                m_combatWindow->m_creatureSubWindows[3]->show();
+                            }
+                            break;
+                        }
+                    } else if (m_debugShowBlockedHexes
+                               && (m_cells[gridIndex].m_attributes & hexcell::blocked)
+                               && m_cells[gridIndex].m_obstacleIndex != -1) {
+                        TObstacle& obstacle =
+                            getObstacle(m_cells[gridIndex].m_obstacleIndex);
+                        sprintf(g_text,
+                                "Obstacle name: %s, owner: %d, visible:%s",
+                                obstacle.m_shape->m_spriteName, obstacle.m_owner,
+                                obstacle.m_isVisible ? "true" : "false");
+                        m_combatWindow->combatMessage(g_text, 0, 0);
+                        m_lastCellIndex = gridIndex;
+                        return MESSAGE_DISPATCH_CONSUME;
+                    }
                 }
             }
 
@@ -1036,7 +1049,8 @@ int combatManager::processCombatMsg(message& msg)
 
             m_lastCellIndex = gridIndex;
             m_lastCommand = -99;
-            m_combatCommand = getCommand(gridIndex);
+            // DC 0x6c878 and Mac 0x83ac0 pass the just-stored member.
+            m_combatCommand = getCommand(m_lastCellIndex);
             m_lastAttackCursor = 6;
             if (m_combatCommand == COMBAT_COMMAND_ATTACK) {
                 setCombatDirections(gridIndex);
@@ -1049,13 +1063,13 @@ int combatManager::processCombatMsg(message& msg)
                     getPointer(m_combatCommand, gridIndex),
                     mouseManager::COMBAT_SET);
             }
-            }
+        }
 
-            if (m_combatCommand != m_lastCommand
-                    || (m_combatCommand == COMBAT_COMMAND_ATTACK && pointerChanged)) {
-                m_lastCommand = m_combatCommand;
-                combatMessage(m_combatCommand);
-            }
+        if (m_combatCommand != m_lastCommand
+                || (m_combatCommand == COMBAT_COMMAND_ATTACK && pointerChanged)) {
+            m_lastCommand = m_combatCommand;
+            combatMessage(m_combatCommand);
+        }
         break;
     }
 
