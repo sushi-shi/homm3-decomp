@@ -850,6 +850,24 @@ their sound helper before clearing it. The new private methods introduce no
 storage, virtual slots, native address claims or explicit-inline qualifiers;
 their names and ordinary source placement are project inferences.
 
+## Resource-quest requirement lists
+
+`type_resource_quest::getRequirementText()` and `setDefaultText()` now share
+the positive-resource formatting loop through private `appendRequirements()`.
+It visits resource indices zero through six in order, skips nonpositive costs,
+formats the full amount and resource name, then appends the string. Both callers
+keep their existing vector and scratch string, including their construction and
+destruction order. Default text still selects its quest-text row before building
+the list, joins into its existing scratch string and fills only empty proposal
+and completion text. No new virtual dispatch through `getRequirementText()` is
+introduced. The helper name and ordinary source placement are project inferences.
+
+The proposal dialog remains a different operation: it lists requirements the
+player cannot cover, and appends corresponding picture records alongside text.
+The progress dialog uses positive requirements but builds only pictures. Neither
+is substituted with the text-only list helper. Serialization and payment remain
+unchanged.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

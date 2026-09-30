@@ -1397,12 +1397,11 @@ int type_resource_quest::getAIValue(int player)
     return aiResourceCost(player, m_resources);
 }
 
-VA(0x00571580, 0x15A)
-MAC_ADDRESS(0x167e5c, 0xe0)
-std::string type_resource_quest::getRequirementText()
+// Project-inferred shared positive-resource list. Keep both caller-owned
+// objects alive through joining and, for default text, dialog-text assignment.
+void type_resource_quest::appendRequirements(
+    std::vector<std::string>& requirements, std::string& requirement)
 {
-    std::vector<std::string> requirements;
-    std::string requirement;
     for (int i = 0; i <= 6; i++) {
         if (m_resources[i] > 0) {
             requirement = formatString(
@@ -1411,6 +1410,15 @@ std::string type_resource_quest::getRequirementText()
             requirements.push_back(requirement);
         }
     }
+}
+
+VA(0x00571580, 0x15A)
+MAC_ADDRESS(0x167e5c, 0xe0)
+std::string type_resource_quest::getRequirementText()
+{
+    std::vector<std::string> requirements;
+    std::string requirement;
+    appendRequirements(requirements, requirement);
     return joinTextList(requirements);
 }
 
@@ -1540,14 +1548,7 @@ void type_resource_quest::setDefaultText()
     std::vector<std::string> requirements;
     std::string requirement;
     const TSeerHutQuestText& texts = questTexts();
-    for (int i = 0; i <= 6; i++) {
-        if (m_resources[i] > 0) {
-            requirement = formatString(
-                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
-                m_resources[i], g_resourceNames[i]);
-            requirements.push_back(requirement);
-        }
-    }
+    appendRequirements(requirements, requirement);
     requirement = joinTextList(requirements);
     if (m_proposalText.length() == 0)
         m_proposalText = formatString(texts.m_text0.c_str(),
