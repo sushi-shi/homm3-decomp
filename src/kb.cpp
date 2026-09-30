@@ -2925,6 +2925,14 @@ int getEnemyCount()
 // proves bool return and remoteCheck, while gameWon/gameLost remain int&.
 // Both Complete callers pass a logical flag; Mac 0x114ca4..0x114cc4
 // returns the truth of the two integer outputs, preserving this interface.
+// Accessor-budget probe: replacing onSameTeam's two lookups with getTeam
+// lowers that helper's cost 66 -> 60, but getTeam costs 46 (not free).
+// Its second nested call receives only 26/36 units and remains a call,
+// unlike retail; all three loss constructors then remain calls (76.9046%).
+// DC GetTeam lines 866/868/872 retain the guard and separate return arms;
+// a one-expression getter has no source support here. Keep that boundary.
+// Using false for the proven bool loss-flag initializer is byte-flat and
+// leaves the constructor cost at 41, with budgets 26/54/26 (79.0916%).
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
