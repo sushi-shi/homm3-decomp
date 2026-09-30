@@ -2263,11 +2263,15 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // reaches it. Same verdict and same root as get_simple_attack_effect.
 // The former direct alignment gate was byte-flat; Mac expands the same
 // game::getAlignment body here before normalizeAlignment.
+// Original DC ?choose_weakest_army@type_AI_creature_swapper@@IAAJ_N0@Z
+// proves both parameters are bool; its byte primitive is their lowered type.
+// Complete's sole caller supplies the shooter comparison and badMorale bool,
+// and uses the returned signed slot (including -1) without a bool conversion.
 VA(0x0042c690, 0x192)
 DC_ADDRESS(0x031a00, 0xf2)
 MAC_ADDRESS(0x030118, 0x198)  // DC method + retail body/caller;
 long type_AI_creature_swapper::chooseWeakestArmy(
-    unsigned char isShooter, unsigned char checkAlignments)
+    bool isShooter, bool checkAlignments)
 {
     long shooterCount = 0;
     int shooterSlot;

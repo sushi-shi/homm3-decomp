@@ -177,7 +177,7 @@ public:
 
 protected:
     void addCreatures(TCreatureType type, short amount, short slot);
-    long chooseWeakestArmy(unsigned char isShooter, unsigned char checkAlignments);
+    long chooseWeakestArmy(bool isShooter, bool checkAlignments);
     long doBestSwap(bool canTakeAll);
     void dumpExtraCreature();
     long valueOfAddingArmy(TCreatureType type, short count,
