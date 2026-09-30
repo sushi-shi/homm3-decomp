@@ -872,7 +872,8 @@ void town::initializeSpells(const TownExtra* townSetup)
                     totalWeight +=
                         g_spellTraits[spell].m_townProbability[m_type];
                     if (townSetup->m_fixedSpells[spell]) {
-                        m_mageGuildSpells[level - 1][slot] = spell;
+                        m_mageGuildSpells[level - 1][slot] =
+                            static_cast<ESpellId>(spell);
                         prohibited[spell] = true;
                         break;
                     }
@@ -882,7 +883,7 @@ void town::initializeSpells(const TownExtra* townSetup)
             if (spell < hero::NUM_SPELLS)
                 continue;
             if (totalWeight == 0) {
-                m_mageGuildSpells[level - 1][slot] = -1;
+                m_mageGuildSpells[level - 1][slot] = SPELL_NONE;
                 continue;
             }
             int roll = random(1, totalWeight);
@@ -894,7 +895,8 @@ void town::initializeSpells(const TownExtra* townSetup)
                         break;
                 }
             }
-            m_mageGuildSpells[level - 1][slot] = spell;
+            m_mageGuildSpells[level - 1][slot] =
+                static_cast<ESpellId>(spell);
             prohibited[spell] = true;
         }
     }

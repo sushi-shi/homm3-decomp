@@ -296,7 +296,9 @@ public:
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
-    int m_mageGuildSpells[5][6];
+    // DC town records 0x1aa3/0x61b5/0x631f: townSpells is SpellID[5][6]
+    // (arrays 0x3f11/0x1efc, canonical signed enum 0x1b61).
+    ESpellId m_mageGuildSpells[5][6];
     signed char m_mageGuildSpellCounts[5];
     // +0xc1..+0xc3 alignment padding (retail's ??4town copies the five
     // count bytes and goes straight to the string assign).
@@ -316,7 +318,9 @@ public:
     armyGroup m_garrison;
 
 protected:
-    int m_generatorBonus[14];
+    // The same native records declare generator_bonus as long[14]
+    // (array 0x3f19, element 0x12); Complete retains its four-byte slots.
+    long m_generatorBonus[14];
 
     // DC town class 0x1aa3 (also 0x61b5/0x631f) records these __int64
     // fields as protected (attributes 2): populationMask at +0x148,
