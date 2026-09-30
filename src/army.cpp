@@ -287,6 +287,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
 
 VA(0x0043d8b0, 0x135)
 DC_ADDRESS(0x043d9c, 0xe4)
+// Mac0x49330/0x49388 expand getOwningSide before both cell side stores.
 MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
@@ -295,13 +296,13 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                gridIndex);
     if (g_combatManager->validHex(m_gridIndex)) {
         hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-        cell->m_armySide = static_cast<signed char>(m_combatSide);
+        cell->m_armySide = static_cast<signed char>(getOwningSide());
         cell->m_armySlot = static_cast<signed char>(m_bitIndex);
         cell->m_partOfDouble = -1;
         if (is(creatureDoubleWide)) {
             hexcell* second =
                 &g_combatManager->m_cells[m_gridIndex + offsetToFront(-1)];
-            second->m_armySide = static_cast<signed char>(m_combatSide);
+            second->m_armySide = static_cast<signed char>(getOwningSide());
             second->m_armySlot = static_cast<signed char>(m_bitIndex);
             second->m_partOfDouble = m_facing != 0;
             cell->m_partOfDouble = m_facing == 0;
@@ -1048,13 +1049,13 @@ void army::removeBinding()
 // byte row.
 VA(0x0043efe0, 0xCF)
 DC_ADDRESS(0x045164, 0xa0)
-MAC_ADDRESS(0x04abf0, 0x118)
+MAC_ADDRESS(0x04abf0, 0x118)  // MAC_ABSTRACTION_FROM(tokens1:134f00e84cc5,100.0000): restore canonical getOwningSide inside the retained markCreatureEffect path (Mac0x4ac24 own-side load).
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
     if (m_isAreaEffectTarget == arg)
         return 0;
     m_isAreaEffectTarget = arg;
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     if (m_isAreaEffectTarget) {
         if (m_stdIcon->isValidSeq(cs_fidget)
             && m_currFrameType != cs_fidget) {
@@ -1682,14 +1683,14 @@ bool army::checkSpecialAttack(army* target)
 // cleared again.
 VA(0x004409c0, 0x1F9)
 DC_ADDRESS(0x0464e0, 0x178)
-MAC_ADDRESS(0x04c5ac, 0x258)
+MAC_ADDRESS(0x04c5ac, 0x258)  // MAC_ABSTRACTION_FROM(tokens1:dd679f8769cb,83.7662): restore canonical getOwningSide before markCreatureEffect (Mac0x4c5d4 own-side load).
 void army::doFireShield(long damageAmount)
 {
     long side;
     int i;
     army* a;
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     for (side = 0; side < 2; side++) {
         a = &g_combatManager->m_armies[side][0];
         for (i = g_combatManager->m_numArmies[side]; i-- > 0; a++) {
@@ -2532,6 +2533,7 @@ VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
+// Mac0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
@@ -2573,8 +2575,8 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
     if (is(creatureSiegeWeapon | creatureSummoned)) {
         long total = getTotalHitPoints(0);
         long sum = 0;
-        army* group = g_combatManager->m_armies[m_combatSide];
-        for (long i = 0; i < g_combatManager->m_numArmies[m_combatSide];
+        army* group = g_combatManager->m_armies[getOwningSide()];
+        for (long i = 0; i < g_combatManager->m_numArmies[getOwningSide()];
              i++, group++) {
             if (!group->is(creatureSiegeWeapon | creatureImmobilized | creatureSummoned)) {
                 sum += group->getTotalHitPoints(0);
@@ -3212,6 +3214,8 @@ unsigned long army::strength()
 VA(0x00444120, 0x3A6)
 DC_ADDRESS(0x0493a0, 0x2f4)
 MAC_ADDRESS(0x0500f8, 0x338)
+// Mac0x50224/0x503a4/0x503e4 expand getOwningSide for vanished/mirror rows;
+// its earlier0x50160/0x50184 loads already occur through the existing calls.
 void army::processDeath(int fadeElementals)
 {
     if (is(creatureImmobilized))
@@ -3244,7 +3248,7 @@ void army::processDeath(int fadeElementals)
             cell2 = &g_combatManager->m_cells[gi2];
         }
         if (leavesNoBody()) {
-            g_combatManager->m_creatureIsDead[m_combatSide][m_bitIndex] = 1;
+            g_combatManager->m_creatureIsDead[getOwningSide()][m_bitIndex] = 1;
             g_combatManager->m_someCreaturesVanish = 1;
         } else {
             if (cell->m_bodiesInHex < 14
@@ -3280,13 +3284,13 @@ void army::processDeath(int fadeElementals)
         }
         if (m_mirrorSourceIndex != -1) {
             army* mirror =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorSourceIndex];
+                &g_combatManager->m_armies[getOwningSide()][m_mirrorSourceIndex];
             if (mirror->m_mirrorDestIndex == m_bitIndex)
                 mirror->m_mirrorDestIndex = -1;
         }
         if (m_mirrorDestIndex != -1) {
             army* clone =
-                &g_combatManager->m_armies[m_combatSide][m_mirrorDestIndex];
+                &g_combatManager->m_armies[getOwningSide()][m_mirrorDestIndex];
             clone->m_numTroops = 0;
             clone->processDeath(fadeElementals);
         }
@@ -4544,7 +4548,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // iNewDestIndex.
 VA(0x00446c40, 0x1E1)
 DC_ADDRESS(0x04b8c4, 0x1c4)
-MAC_ADDRESS(0x053028, 0x374)
+MAC_ADDRESS(0x053028, 0x374)  // MAC_ABSTRACTION_FROM(tokens1:0f367c3b8d54,23.0851): restore canonical getOwningSide in both occupied-cell ownership comparisons (Mac0x5310c/0x5322c).
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
@@ -4559,7 +4563,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     if (g_combatManager->hexIsBlocked(destIndex))
         return 0;
     if (cell->hasArmy()) {
-        if (cell->m_armySide != m_combatSide)
+        if (cell->m_armySide != getOwningSide())
             return 0;
         if (cell->m_armySlot != m_bitIndex)
             return 0;
@@ -4576,7 +4580,7 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     hexcell* otherCell = &g_combatManager->m_cells[otherIndex];
     if (!g_combatManager->hexIsBlocked(otherIndex)) {
         if (!otherCell->hasArmy()
-                || (otherCell->m_armySide == m_combatSide
+                || (otherCell->m_armySide == getOwningSide()
                     && otherCell->m_armySlot == m_bitIndex))
             return 1;
     }
@@ -4606,6 +4610,9 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 VA(0x00446e30, 0x2E1)
 DC_ADDRESS(0x04ba88, 0x1fc)
 MAC_ADDRESS(0x05339c, 0x300)
+// Mac0x53458..0x53464 expands getOwner: own-side+0xf4 followed by heroes
+// +0x53cc, matching the retained canonical body at0x4e51c. Keep that upper
+// helper and its nested getOwningSide operation at both source uses.
 void army::newTurn()
 {
     if (m_resetThisRound != 0)
@@ -4623,8 +4630,8 @@ void army::newTurn()
             || m_creatureType == CREATURE_TROLL
             || ((g_creatureTypeTraits[m_creatureType].m_attributes
                  & g_ctaAlive)
-                && g_combatManager->m_heroes[m_combatSide] != 0
-                && g_combatManager->m_heroes[m_combatSide]
+                && getOwner() != 0
+                && getOwner()
                        ->isWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
             long heal = m_topCreatureDamage;
             long amount = heal > 50 ? 50 : heal;
@@ -5133,6 +5140,7 @@ unsigned char army::unnamed447fe0()
 VA(0x00448260, 0x582)
 DC_ADDRESS(0x04c468, 0x30e)
 MAC_ADDRESS(0x0548f4, 0x4f0)
+// Mac0x549a8 expands getOwningSide before the animation effect mark.
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
@@ -5149,7 +5157,7 @@ void army::castSpell(long hex)
         if ((targetX < myX && m_facing == 1) || shouldTurn)
             turn(1);
         g_combatManager->resetLimitCreature();
-        g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+        g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
         g_combatManager->computeMaxExtent();
         long dx = targetX - myX;
         long dy = targetY - myY;
