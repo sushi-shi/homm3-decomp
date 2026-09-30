@@ -178,8 +178,9 @@ void soundManager::initializeSamples()
 // is byte-flat at 95.21%; VC6 folds it back to the same retry layout.
 // Retail's failure arm branches into quality downgrade only when the
 // preference is set; its zero result falls into the common wave fallback.
-// The explicit guarded fallback recovers that complete phase at 99.44%:
-// all 17 calls and 47 references agree, leaving the rate backedge polarity.
+// The explicit guarded fallback recovers that complete phase at 99.44%.
+// A single rate-guarded while with the uninitialized driver-result join
+// closes Open at 100%: all 31 blocks, 17 calls and 47 references agree.
 VA(0x005997d0, 0x2BF)
 DC_ADDRESS(0x14b240, 0x30)
 MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string
@@ -198,57 +199,55 @@ int soundManager::open(int newPriority)
 
             HDIGDRIVER driver;
             HDIGDRIVER result;
-            if (g_soundSampleRate >= 11025) {
-                do {
-                    g_soundWaveFormat.wf.wFormatTag = 1;
-                    g_soundWaveFormat.wf.nChannels =
-                        static_cast<unsigned short>(g_soundOutputChannels);
-                    g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
-                    g_soundWaveFormat.wf.nAvgBytesPerSec =
-                        (g_soundBitsPerSample / 8) * g_soundOutputChannels
-                        * g_soundSampleRate;
-                    g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
-                        (g_soundBitsPerSample / 8) * g_soundOutputChannels);
-                    g_soundWaveFormat.wBitsPerSample =
-                        static_cast<unsigned short>(g_soundBitsPerSample);
+            while (g_soundSampleRate >= 11025) {
+                g_soundWaveFormat.wf.wFormatTag = 1;
+                g_soundWaveFormat.wf.nChannels =
+                    static_cast<unsigned short>(g_soundOutputChannels);
+                g_soundWaveFormat.wf.nSamplesPerSec = g_soundSampleRate;
+                g_soundWaveFormat.wf.nAvgBytesPerSec =
+                    (g_soundBitsPerSample / 8) * g_soundOutputChannels
+                    * g_soundSampleRate;
+                g_soundWaveFormat.wf.nBlockAlign = static_cast<unsigned short>(
+                    (g_soundBitsPerSample / 8) * g_soundOutputChannels);
+                g_soundWaveFormat.wBitsPerSample =
+                    static_cast<unsigned short>(g_soundBitsPerSample);
 
-                    AIL_HWND();
-                    int openResult = AIL_waveOutOpen(
-                        &driver, 0, -1, &g_soundWaveFormat.wf);
-                    if (!openResult) {
-                        char description[128];
-                        strcpy(description, DATA_COMPGEN(
-                            0x00684b28, soundDevicePrefix, "Device: "));
-                        AIL_digital_configuration(
-                            driver, 0, 0, description + strlen(description));
-                        if (AIL_get_preference(15)) {
-                            result = driver;
-                            goto driverReady;
-                        }
-                        if (!strstr(description, DATA_COMPGEN(
-                                0x00684b1c, emulatedDeviceMarker,
-                                "Emulated"))) {
-                            result = driver;
-                            goto driverReady;
-                        }
-                        AIL_waveOutClose(driver);
-                        AIL_set_preference(15, 1);
-                    } else {
-                        if (!AIL_get_preference(15))
-                            goto waveFallback;
-                        g_soundSampleRate /= 2;
-                        if (g_soundSampleRate >= 11025)
-                            continue;
-                        if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
-                            g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
-                            g_soundSampleRate = 22050;
-                            continue;
-                        }
+                AIL_HWND();
+                int openResult = AIL_waveOutOpen(
+                    &driver, 0, -1, &g_soundWaveFormat.wf);
+                if (!openResult) {
+                    char description[128];
+                    strcpy(description, DATA_COMPGEN(
+                        0x00684b28, soundDevicePrefix, "Device: "));
+                    AIL_digital_configuration(
+                        driver, 0, 0, description + strlen(description));
+                    if (AIL_get_preference(15)) {
+                        result = driver;
+                        goto driverReady;
+                    }
+                    if (!strstr(description, DATA_COMPGEN(
+                            0x00684b1c, emulatedDeviceMarker,
+                            "Emulated"))) {
+                        result = driver;
+                        goto driverReady;
+                    }
+                    AIL_waveOutClose(driver);
+                    AIL_set_preference(15, 1);
+                } else {
+                    if (!AIL_get_preference(15))
+                        goto waveFallback;
+                    g_soundSampleRate /= 2;
+                    if (g_soundSampleRate >= 11025)
+                        continue;
+                    if (g_soundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
+                        g_soundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
+                        g_soundSampleRate = 22050;
                         continue;
                     }
-                waveFallback:
-                    AIL_set_preference(15, 1);
-                } while (g_soundSampleRate >= 11025);
+                    continue;
+                }
+            waveFallback:
+                AIL_set_preference(15, 1);
             }
             result = 0;
         driverReady:
