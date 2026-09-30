@@ -981,6 +981,8 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // calls are platform paths, not missing helpers in the Windows fade.
 // DC names const unsigned pixel masks, a read-only pixel source and the
 // fade period; the ordinary Windows body retains those types and helpers.
+// The source row owner also stays const across pitch advances (DC FadeFrom
+// 19c450/19c468/19c502). Restoring this qualifier is Windows byte-flat.
 // DC locals: bmpFadeSource, red_mask_2, green_mask_2, blue_mask_2,
 // next_fade_time and time1. The spelling below normalizes the underscores.
 // Mac uses separate gamma/bitmap paths; these native comparisons remain
@@ -1008,11 +1010,11 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
         unsigned long time1 = GameTime::get();
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(bmpFadeSource.getMap(0, 0)));
+        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
+            static_cast<const void*>(bmpFadeSource.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<void*>(sourceBytes));
+                static_cast<const void*>(sourceBytes));
             unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
@@ -1079,11 +1081,11 @@ void heroWindowManager::fadeFromBlack(int speed)
         unsigned long started = GameTime::get();
         unsigned char* destinationBytes = static_cast<unsigned char*>(
             static_cast<void*>(m_screenBitmap->getMap(0, 0)));
-        unsigned char* sourceBytes = static_cast<unsigned char*>(
-            static_cast<void*>(fadeFrom.getMap(0, 0)));
+        const unsigned char* sourceBytes = static_cast<const unsigned char*>(
+            static_cast<const void*>(fadeFrom.getMap(0, 0)));
         for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
             const unsigned int* src = static_cast<const unsigned int*>(
-                static_cast<void*>(sourceBytes));
+                static_cast<const void*>(sourceBytes));
             unsigned int* dst = static_cast<unsigned int*>(
                 static_cast<void*>(destinationBytes));
             for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
