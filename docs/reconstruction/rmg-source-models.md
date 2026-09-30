@@ -4126,3 +4126,27 @@ moves `writeMapHeader` from 77.9030% to 77.8952%. The canonical signed field
 is independently required by other callers. No game-code change is adopted;
 the local extraction mismatch remains open, not a claimed semantic failure
 or a resolved compiler limitation.
+
+
+## Native terrain queries and movement seed setters
+
+The Mac bodies of floodConnectionCosts, decorateUnderground,
+prepareJunctionZone, buildRoadCostMap, createRiverToObject and createRiver
+expand the existing signed land-kind query. Restore their seventeen reads
+through getLandType. Native extraction anchors are 0x22dd2c, 0x246ac8,
+0x247e80, 0x24c25c, 0x24ca34 and 0x24d680.
+
+The flood seed (0x22daec..0x22db28), junction seed
+(0x247fb0..0x248008), and three river seeds (0x24d638, 0x24d76c,
+0x24d868) copy the invalid predecessor through separate parameter storage
+before cost/coordinate stores. Restore five setMovementCost calls, keeping
+the river's existing shared emptyPosition and its lifetime. Existing exact
+decorateMap and createRoads already reach these operations through canonical
+nested helpers. RMG has no Dreamcast source-line records.
+
+One targeted rmg build measures floodConnectionCosts 84.88187%,
+prepareJunctionZone 75.60000%, createRiverToObject 56.88706% and
+createRiver 74.74646%. The supported calls remain despite the river score
+resets; prior peaks and unresolved getter/cleanup expansion evidence remain
+in the owning source and score history. No new inline qualifier or caller
+scope is introduced.
