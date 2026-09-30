@@ -9,7 +9,7 @@
 VA(0x005f15a0, 0x63)
 DC_ADDRESS(0x18fdc4, 0x34)
 MAC_ADDRESS(0x1fd30c, 0xc0)
-int VictoryConditionStruct::appliesToPlayer(long playerId) const
+bool VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
         int team = g_game->getTeam(playerId);

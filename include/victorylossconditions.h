@@ -77,7 +77,8 @@ public:
     DC_ADDRESS(0x0bccdc, 0x1e)
     VictoryConditionStruct()
       : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
-    int appliesToPlayer(long playerId) const;
+    // Original applies_to_player@@QBA_NJ@Z proves public const bool(long).
+    bool appliesToPlayer(long playerId) const;
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
@@ -146,9 +147,5 @@ public:
     unsigned char checkForTimeLimitExpired();
 };
 SIZE(LossConditionStruct, 0x24);
-
-// --- VictoryConditionStruct ---
-// Retail returns the full EAX value (`int`); the Dreamcast byte return above
-// documents a platform/build divergence, not the PC signature.
 
 #endif  /* HOMM3_VICTORYLOSSCONDITIONS_H */
