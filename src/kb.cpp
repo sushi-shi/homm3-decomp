@@ -3645,6 +3645,9 @@ std::string getCampaignName();
 // Windows remains 97.51938%, Mac 19.2647% with all 23 calls aligned.
 // Moving temp[30] to the DC line gap before GetMonType is likewise byte-flat
 // in both compilers; it does not change CodeWarrior's buffer stack slot.
+// DC 4123/4124 records campaign score assignment then the separate base-score
+// copy (Mac 0x115d28/0x115d2c). Restoring that statement boundary is Windows
+// byte-flat at 97.5194%; the scenario calendar/float register residual remains.
 VA(0x004f3f60, 0x357)
 DC_ADDRESS(0x0e4330, 0x1be)
 MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario"
@@ -3667,7 +3670,8 @@ void showCongrats(int hsType)
             g_mapScoreDifficultyFactor[g_game->m_setup.m_difficulty] * 100.0f);
         landName = g_game->m_mapHeader.m_mapName.c_str();
     } else {
-        baseScore = score = g_game->m_campaign.getScore();
+        score = g_game->m_campaign.getScore();
+        baseScore = score;
         dayz = g_game->m_campaign.getTotalTime();
         rating = 100;
         landName = getCampaignName();
