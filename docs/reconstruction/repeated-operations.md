@@ -562,10 +562,11 @@ indices. Those operations are not changed by the recruitment helper extraction.
 
 ## Complete resource-cost payments
 
-Eight building, upgrade and war-machine purchase paths now share
+Nine quest, building, upgrade and war-machine purchase paths now share
 `playerData::payResourceCost()`: town building purchase, AI dwelling purchase,
 army-view upgrading, hill-fort slot upgrading, AI town creature upgrading,
-AI hill-fort upgrading, war-factory visits and siege-engine buying. The operation
+AI hill-fort upgrading, war-factory visits, siege-engine buying and the resource
+quest's native payment wrapper. The operation
 subtracts one complete seven-resource row in ascending order. It does not test
 affordability, skip zero entries, clamp negative costs or update any UI.
 
@@ -622,6 +623,28 @@ fixed position, and game/combat army views keep their heap-owned windows and
 post-dialog upgrade/dismiss/spell work. No new data members or virtual slots
 are introduced. All new helper names and ordinary source placement are project
 inferences, without invented native addresses or inline declarations.
+
+## Quest payment and completion
+
+The resource quest's pointer-walk payment is another complete seven-resource
+debit. Its native `takePayment()` wrapper now calls `payResourceCost()` with
+the existing int cost row. The owner lookup and unconditional ascending debits
+stay at payment time; satisfaction and owner-validity checks remain in their
+existing caller/predicate, without a new affordability check inside payment.
+
+`TSeerHut::completeQuest()` shares the payment, reward delivery and quest-pointer
+clear used by `doSeerEvent()` and the retained Dreamcast `doCompletionDialog()`
+boundary. It is a private, project-inferred operation with provisional ordinary
+source placement and no native identity claim. The active event keeps its human
+dialog lifetime and AI value gate. Completion neither deletes the quest nor
+resets reward data, visit bits or the serialized legacy completion byte.
+
+Quest guards retain their different completion operation: payment, map-object
+erasure/fizzle, then pointer clearing. Expired guard visits and empty/expired
+seer visits also retain their different visit-mask behavior. Map initialization
+and versioned save loading preserve their distinct field updates. Resource
+description loops remain separate pending review of local string/vector
+lifetimes and the choice between virtual and qualified calls.
 
 ## Validation provenance
 

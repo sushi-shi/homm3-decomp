@@ -167,6 +167,9 @@ private:
     // application. Complete revises both models and shares the accepted human
     // reward tail with the AI arm, superseding this older event boundary.
     void doCompletionDialog(hero* currentHero, bool humanPlayer);
+    // Project-inferred payment/reward/clear operation shared by both
+    // completion paths; ordinary source placement is provisional.
+    void completeQuest(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
     // made by DoCompletionDialog. Complete owns the operation on TSeerReward;
     // this older boundary forwards to that canonical helper.

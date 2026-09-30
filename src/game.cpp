@@ -1191,9 +1191,9 @@ void addBoatCost(int* cost)
     cost[GOLD] += BOAT_GOLD_COST;
 }
 
-// Project-inferred full-row payment shared by building and creature/engine
-// purchases. Costs are int rows in traits/buildings and long rows from
-// GetUpgradeCost. Keep their types and one subtraction loop without copying
+// Project-inferred full-row payment shared by quests, building and
+// creature/engine purchases. Costs are int rows in quests/traits/buildings
+// and long rows from GetUpgradeCost. Keep their types and one subtraction loop without copying
 // or reinterpreting either row. Each read remains immediately before its
 // matching debit, including zero and negative entries.
 template <class Cost>

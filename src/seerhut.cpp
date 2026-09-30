@@ -1446,12 +1446,7 @@ VA(0x00571800, 0x3D)
 MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
 void type_resource_quest::takePayment(hero* currentHero)
 {
-    int* questResource = m_resources;
-    long* playerResource = g_game->m_players[currentHero->m_owner].m_resources;
-    int count = 7;
-    do {
-        *playerResource++ -= *questResource++;
-    } while (--count);
+    g_game->m_players[currentHero->m_owner].payResourceCost(m_resources);
 }
 
 VA(0x00571840, 0x29D)
@@ -2082,9 +2077,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
         } else if (getValue(currentHero) <= 0)
             return;
 
-        m_quest->takePayment(currentHero);
-        m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        completeQuest(currentHero, humanPlayer);
         return;
     }
 }
@@ -2124,10 +2117,18 @@ void TSeerHut::doCompletionDialog(
 
     if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT
         || g_windowManager->m_dialogReturn == DIALOG_RETURN_CHOICE_1) {
-        m_quest->takePayment(currentHero);
-        m_reward.giveReward(currentHero, humanPlayer);
-        m_quest = 0;
+        completeQuest(currentHero, humanPlayer);
     }
+}
+
+// Project-inferred common completion tail. Keep payment before reward delivery
+// and clear the quest only afterward, without deleting it or resetting the
+// serialized visit/completion bytes. No native helper identity is claimed.
+void TSeerHut::completeQuest(hero* currentHero, bool humanPlayer)
+{
+    m_quest->takePayment(currentHero);
+    m_reward.giveReward(currentHero, humanPlayer);
+    m_quest = 0;
 }
 
 // Dreamcast owns this older private boundary on the hut. Complete moves the
