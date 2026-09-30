@@ -811,9 +811,8 @@ void advManager::doEventFreeArtifact(hero* currentHero,
 // DC events.cpp:518 reads the artifact guard-count bitfield into int amount.
 // Its older artifact record has a 15-bit lane; Complete uses the canonical
 // MapArtifactInfo 14-bit lane at 17..30. Mac 0xa9e00..0xa9e0c likewise
-// extracts the count as a field. Direct m_guardQty is byte-flat in Windows;
-// the lane's 99.9794% report differs only at the renamed combatMonsterEvent
-// call binding (+0x15e), with all 21 instruction blocks matching retail.
+// extracts the count as a field. Use the canonical member while preserving
+// the artifact defender/index helpers below.
 VA(0x0049ea40, 0x304)
 DC_ADDRESS(0x0908dc, 0x1fc)
 MAC_ADDRESS(0x0a9dcc, 0x290)
@@ -1816,9 +1815,7 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
 
 // DC events.cpp:1677 isolates the creature-bank empty bit; Mac
 // 0xad618..0xad61c reads the same one-bit member. Use the canonical bank
-// record rather than a raw extra-info mask. The preceding retail source
-// comparison has all nine instruction blocks exact; cached label residuals
-// remain separate from this native field recovery.
+// record rather than a raw extra-info mask.
 VA(0x004a2140, 0xE8)
 DC_ADDRESS(0x092dec, 0x11a)
 MAC_ADDRESS(0x0ad5d8, 0x18c)
