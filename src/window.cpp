@@ -308,7 +308,7 @@ widget* heroWindow::getWidget(int id)
 VA(0x005ff020, 0xDE)
 DC_ADDRESS(0x1975d8, 0xb8)
 MAC_ADDRESS(0x20b58c, 0x144)
-void heroWindow::drawWindow(unsigned char update, int lowID, int highID)
+void heroWindow::drawWindow(bool update, int lowID, int highID)
 {
     message msg;
     msg.m_codeY = 0;

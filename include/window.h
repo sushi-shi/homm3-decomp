@@ -124,7 +124,8 @@ public:
     virtual void close(unsigned char update);         // slot 2, retail 0x5fec60
     virtual int handleMessage(message& msg);         // slot 3, folded onto 0x4ec560
     virtual void handleWidgetHover(widget* w);      // slot 4, folded onto 0x485d80
-    virtual void drawWindow(unsigned char update, int lowID, int highID);
+    // Original DC DrawWindow@@UAAX_NHH@Z proves bool despite lowered 0x20.
+    virtual void drawWindow(bool update, int lowID, int highID);
     // DC DoModal's UAAX_N public and all three overrides prove void(bool).
     // Retail callers discard EAX; the dispatcher's residual value is not
     // a returned dialog result. The virtual slot remains unchanged.

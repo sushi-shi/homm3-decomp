@@ -60,7 +60,8 @@ public:
     virtual ~TCombatWindow();
     virtual void close(unsigned char update);
     virtual void handleWidgetHover(widget* currentWidget);
-    virtual void drawWindow(unsigned char update, int low, int high);
+    // Original DC DrawWindow@TCombatWindow@@UAAX_NHH@Z proves bool.
+    virtual void drawWindow(bool update, int low, int high);
     void clearCombatMessages();
     static int convertID2HelpID(int id);
     unsigned char processRightSelect(const message& msg);

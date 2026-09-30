@@ -518,7 +518,7 @@ void TCombatWindow::drawChatEdit(unsigned char update)
 VA(0x004732f0, 0x59)
 DC_ADDRESS(0x06a3c0, 0x28)
 MAC_ADDRESS(0x0813b0, 0x44)
-void TCombatWindow::drawWindow(unsigned char update, int low, int high)
+void TCombatWindow::drawWindow(bool update, int low, int high)
 {
     heroWindow::drawWindow(update, low, high);
     drawChatEdit(update);
