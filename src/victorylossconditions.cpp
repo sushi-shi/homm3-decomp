@@ -740,7 +740,9 @@ bool LossConditionStruct::checkForDefeatedTownLoss(
 VA(0x005f2f20, 0x50)
 DC_ADDRESS(0x1907bc, 0xa0)
 MAC_ADDRESS(0x1ff444, 0x78)
-unsigned char LossConditionStruct::checkForTimeLimitExpired()
+// Original DC public ?CheckForTimeLimitExpired@LossConditionStruct@@QAA_NXZ
+// proves bool despite the lowered byte debug primitive.
+bool LossConditionStruct::checkForTimeLimitExpired()
 {
     if (m_type == LOSS_CONDITION_TIME_LIMIT) {
         // The time-limit check keeps the full unsigned calendar expression;

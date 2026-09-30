@@ -138,7 +138,7 @@ public:
     unsigned char heroKilled(const hero* loser);
     bool checkForDefeatedTownLoss(int oldOwner,
                                            const town* lostTown);
-    unsigned char checkForTimeLimitExpired();
+    bool checkForTimeLimitExpired();
 };
 SIZE(LossConditionStruct, 0x24);
 
