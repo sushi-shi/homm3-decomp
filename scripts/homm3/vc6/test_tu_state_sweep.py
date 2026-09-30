@@ -18,6 +18,25 @@ from homm3.vc6.tu_state_sweep import (
 
 
 class TuStateSweepTests(unittest.TestCase):
+    def test_candidate_first_pass_includes_compiler_data_claims(self):
+        from homm3.vc6 import tu_state_sweep as sweep
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "data.tsv"
+            manifest.write_text(
+                "object\tname\tsection_ordinal\tsection_offset\tsize\tstorage\tscope\tprovenance\n"
+                "example.c\tsemantic-data\t2\t0x10\t4\tdata\tlocal\tsource-DATA_COMPGEN:test\n")
+            expected = sweep.canon.load_compgen_data_claims(manifest, "example")
+            with patch.object(sweep.normalize, "DATA_MANIFEST", manifest), \
+                 patch.object(sweep, "_claims", return_value=((), frozenset())), \
+                 patch.object(sweep.normalize, "data_names_for_unit", return_value={}), \
+                 patch.object(sweep.canon, "canonicalize_coff",
+                              return_value=SimpleNamespace(data=b"normalized")) as canonicalize:
+                self.assertEqual(sweep._first_pass("example", b"raw"), b"normalized")
+                canonicalize.assert_called_once_with(
+                    b"raw", (), expected, compgen_accounted=frozenset(),
+                    unit="example", data_names={})
+
     def test_candidate_uses_complete_shared_pair_pipeline(self):
         from homm3.vc6 import tu_state_sweep as sweep
 

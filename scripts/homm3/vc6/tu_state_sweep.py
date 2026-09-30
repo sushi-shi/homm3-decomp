@@ -356,8 +356,10 @@ def _claims(unit: str):
 
 def _first_pass(unit: str, payload: bytes) -> bytes:
     claims, accounted = _claims(unit)
+    data_claims = (canon.load_compgen_data_claims(normalize.DATA_MANIFEST, unit)
+                   if normalize.DATA_MANIFEST.is_file() else ())
     result = canon.canonicalize_coff(
-        payload, claims, compgen_accounted=accounted, unit=unit,
+        payload, claims, data_claims, compgen_accounted=accounted, unit=unit,
         data_names=normalize.data_names_for_unit(unit))
     return result.data
 
