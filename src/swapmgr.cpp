@@ -2019,9 +2019,8 @@ int swapManager::main(message& msg)
 
         case MESSAGE_MOUSE_MOVE:
             g_windowManager->convertToHover(msg);
-            if (msg.m_codeY == g_windowManager->m_lastHover)
+            if (!g_windowManager->updateHover(msg.m_codeY))
                 return MESSAGE_DISPATCH_CONSUME;
-            g_windowManager->m_lastHover = msg.m_codeY;
             setRolloverText(msg.m_codeY);
             break;
         }

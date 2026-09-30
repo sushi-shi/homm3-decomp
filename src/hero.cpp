@@ -3593,9 +3593,8 @@ int THeroScreenWindow::windowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         g_windowManager->convertToHover(msg);
-        if (g_windowManager->m_lastHover == msg.m_codeY)
+        if (!g_windowManager->updateHover(msg.m_codeY))
             return MESSAGE_DISPATCH_CONSUME;
-        g_windowManager->m_lastHover = msg.m_codeY;
         updateHeroScreenStatusBar(&msg);
         return MESSAGE_DISPATCH_CONSUME;
     }
@@ -3603,19 +3602,17 @@ int THeroScreenWindow::windowHandler(message& msg)
     if (msg.m_id == MESSAGE_KEY_UP
         && (msg.m_codeX == g_keyCodeLeftShift
             || msg.m_codeX == g_keyCodeRightShift)) {
-        g_windowManager->m_lastHover = -1;
-        g_inputManager->forceMouseMove();
+        g_windowManager->refreshHover();
     }
     if (msg.m_id == MESSAGE_KEY_DOWN
         && (msg.m_codeX == g_keyCodeLeftShift
             || msg.m_codeX == g_keyCodeRightShift)) {
-        g_windowManager->m_lastHover = -1;
-        g_inputManager->forceMouseMove();
+        g_windowManager->refreshHover();
     }
     if (msg.m_id != MESSAGE_WIDGET)
         return MESSAGE_DISPATCH_CONSUME;
 
-    g_windowManager->m_lastHover = -1;
+    g_windowManager->invalidateHover();
 
     switch (msg.m_codeX) {
     case widget::WIDGET_DESELECT:
@@ -3805,7 +3802,7 @@ int THeroScreenWindow::windowHandler(message& msg)
                     g_currentHero->heroScreenUpdate();
                 }
                 if (!rightMouse) {
-                    g_windowManager->m_lastHover = -1;
+                    g_windowManager->invalidateHover();
                     updateHeroScreenStatusBar(&msg);
                 }
             }

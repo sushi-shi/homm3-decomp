@@ -1102,6 +1102,24 @@ void townObject::draw(int incFrame, unsigned char drawHotspots)
     }
 }
 
+// Project-inferred shared cache transition. The town screen supplies its
+// z-buffer-resolved ID; the fort page supplies the dispatched widget ID.
+// Save both values whenever either changes, before calling rollover code.
+// Ordinary owner-TU placement is provisional, without a native helper claim.
+bool townManager::updateHover(int widgetId, int qualifier)
+{
+    if (m_lastHover == widgetId && m_lastQualifier == qualifier)
+        return false;
+    m_lastHover = widgetId;
+    m_lastQualifier = qualifier;
+    return true;
+}
+
+void townManager::invalidateHover()
+{
+    m_lastHover = -1;
+}
+
 // The manager constructor, and with it the whole class layout. It is
 // the only body in the compiland that calls baseManager's constructor
 // and the only one that stores vtable 0x643720, whose three slots -
@@ -1140,7 +1158,7 @@ townManager::townManager()
     m_srcIndex = -1;
     m_destStrip = 0;
     m_destIndex = -1;
-    m_lastHover = -1;
+    invalidateHover();
     m_lastQualifier = -1;
     m_command = -1;
     m_canBuyMask = 0;
@@ -1732,7 +1750,7 @@ int townManager::open(int newPriority)
     m_command = -1;
     m_loadedTownType = -1;
     g_castleOpen = 0;
-    m_lastHover = -1;
+    invalidateHover();
     m_lastQualifier = 0;
     m_townObjectCount = 0;
     m_saveWin = 0;
@@ -2994,8 +3012,7 @@ int TThievesGuildWindow::windowHandler(message& msg)
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
+        if (g_windowManager->updateHover(msg.m_codeY)) {
             setRolloverText(msg.m_codeY);
         }
         break;
@@ -3456,8 +3473,7 @@ int TMageGuildWindow::windowHandler(message& msg)
     switch (msg.m_id) {
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
+        if (g_windowManager->updateHover(msg.m_codeY)) {
             setRolloverText(msg.m_codeY);
         }
         break;
@@ -4507,8 +4523,7 @@ int TShipWindow::windowHandler(message& msg)
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
+        if (g_windowManager->updateHover(msg.m_codeY)) {
             setRolloverText(msg.m_codeY);
         }
         return 1;
@@ -5451,9 +5466,7 @@ int townManager::main(message& msg)
         if (hover >= 0 && hover <= DWELLING_6_UPG_ID)
             hover = static_cast<TTownScreenWindow*>(m_townWindow)
                         ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1;
-        if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
-            m_lastHover = hover;
-            m_lastQualifier = msg.m_qualifier;
+        if (updateHover(hover, msg.m_qualifier)) {
             setCommandAndText(&msg);
         }
         break;
@@ -5630,7 +5643,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         }
         break;
     }
-    m_lastHover = -1;
+    invalidateHover();
 }
 
 // Moving the town's visiting hero into the garrison. Only the local
@@ -6158,9 +6171,8 @@ int TBuyBuildWindow::windowHandler(message& msg)
         break;
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY == g_windowManager->m_lastHover)
+        if (!g_windowManager->updateHover(msg.m_codeY))
             return 1;
-        g_windowManager->m_lastHover = msg.m_codeY;
         setRolloverText(msg.m_codeY);
         break;
     }
@@ -7807,10 +7819,7 @@ int TCastleWindow::windowHandler(message& msg)
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_townManager->m_lastHover
-            || msg.m_qualifier != g_townManager->m_lastQualifier) {
-            g_townManager->m_lastHover = msg.m_codeY;
-            g_townManager->m_lastQualifier = msg.m_qualifier;
+        if (g_townManager->updateHover(msg.m_codeY, msg.m_qualifier)) {
             setRolloverText(msg);
         }
         return 1;

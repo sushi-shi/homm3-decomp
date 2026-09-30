@@ -646,6 +646,36 @@ and versioned save loading preserve their distinct field updates. Resource
 description loops remain separate pending review of local string/vector
 lifetimes and the choice between virtual and qualified calls.
 
+## Hover cache transitions
+
+Nine rollover handlers share `heroWindowManager::updateHover()`: hero screen,
+hero swap, kingdom overview, army split, recruitment, thieves' guild, mage
+guild, ship purchase and building purchase. It compares the dispatched widget
+ID and stores a changed ID before the caller updates its text. Each caller
+retains its original early return or fallthrough, including swap chat updates
+and ship animation. `convertToHover()` remains outside the helper because it
+dispatches through windows; the manager is resolved again after that dispatch.
+
+`invalidateHover()` shares the -1 reset across construction, both dialog pumps
+and hero-screen widget handling. The two Shift-key paths use `refreshHover()`
+to invalidate and then queue a mouse move. Plain invalidation does not enqueue
+input; forced moves elsewhere retain their existing cache behavior.
+
+The town screen and fort page share a separate `townManager::updateHover()`
+over their ID/qualifier pair. Either change stores both values before rollover
+work. The town screen retains its z-buffer ID resolution. The hall still uses
+its ID-only cache operation without writing the qualifier. Town construction,
+opening and commands share ID invalidation, while retaining respectively -1,
+0 and the existing modifier value. Garrison and tavern windows own their own
+pair; the blacksmith owns another ID-only cache. They are not redirected to a
+manager cache.
+
+Native heroWindowManager `0x1010` / field list `0x1893` explicitly records
+public `lastHover`; townManager `0x1ba0` / `0x719f` likewise records public
+`lastHover` and `lastQualifier`. Their visibility and layout remain intact.
+These helper names and ordinary source placement are project inferences,
+without native address or explicit-inline claims.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

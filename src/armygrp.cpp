@@ -328,8 +328,7 @@ int TSplitWindow::windowHandler(message& msg)
 
     case MESSAGE_MOUSE_MOVE:
         g_windowManager->convertToHover(msg);
-        if (msg.m_codeY != g_windowManager->m_lastHover) {
-            g_windowManager->m_lastHover = msg.m_codeY;
+        if (g_windowManager->updateHover(msg.m_codeY)) {
             setRolloverText(msg.m_codeY);
         }
         return MESSAGE_DISPATCH_CONSUME;

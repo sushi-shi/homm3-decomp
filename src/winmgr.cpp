@@ -48,6 +48,31 @@ void heroWindowManager::finishDialog(message& msg, int result)
     msg.setDialogEndCodes(widget::WIDGET_END_DIALOG);
 }
 
+// Project-inferred cache transition shared by dialog rollover handlers.
+// convertToHover dispatches through windows first; keep that outside this
+// operation so each caller resolves the manager again after dispatch.
+// Ordinary source placement is provisional; no native identity is claimed.
+bool heroWindowManager::updateHover(int widgetId)
+{
+    if (m_lastHover == widgetId)
+        return false;
+    m_lastHover = widgetId;
+    return true;
+}
+
+void heroWindowManager::invalidateHover()
+{
+    m_lastHover = -1;
+}
+
+// Modifier-key changes need both cache invalidation and a queued mouse move.
+// Plain dialog/widget invalidation must not enqueue another event.
+void heroWindowManager::refreshHover()
+{
+    invalidateHover();
+    g_inputManager->forceMouseMove();
+}
+
 // DC gbInDialog and gbSendMouseMoveMessages; the nest counter is retail-only.
 DATA(0x006989cc) int g_inDialog;
 DATA(0x00698a1c) int g_sendMouseMoveMessages;
@@ -71,7 +96,7 @@ heroWindowManager::heroWindowManager()
     m_screenBitmap = 0;
     m_colorCyclingOn = 0;
     m_bmpFizzleSource = 0;
-    m_lastHover = -1;
+    invalidateHover();
     m_dialogReturn = -1;
     m_isWaitingForFadeIn = 0;
 }
@@ -276,7 +301,7 @@ int heroWindowManager::doDialog(heroWindow* dialogWindow,
         try {
             sleepAllWindows(1);
             try {
-                m_lastHover = -1;
+                invalidateHover();
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {
@@ -373,7 +398,7 @@ int heroWindowManager::doDialogDraw(heroWindow* dialogWindow,
         try {
             sleepAllWindows(1);
             try {
-                m_lastHover = -1;
+                invalidateHover();
                 if (dialogWindow)
                     addWindow(dialogWindow, -1, 1);
                 try {

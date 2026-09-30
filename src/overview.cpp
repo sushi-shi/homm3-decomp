@@ -2676,9 +2676,8 @@ int TOverviewWindow::windowHandler(message& msg)
 
     if (msg.m_id == MESSAGE_MOUSE_MOVE) {
         g_windowManager->convertToHover(msg);
-        if (g_windowManager->m_lastHover == msg.m_codeY)
+        if (!g_windowManager->updateHover(msg.m_codeY))
             return MESSAGE_DISPATCH_CONSUME;
-        g_windowManager->m_lastHover = msg.m_codeY;
         doRollover(msg.m_codeY);
         return MESSAGE_DISPATCH_CONSUME;
     }
