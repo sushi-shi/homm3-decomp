@@ -4662,6 +4662,10 @@ void game::matchUndergroundGates()
 // DC 5127 passes the bank type field directly without a conversion scope.
 // These combined recoveries reach 89.6121% from 89.2441% in reproduced
 // source families, preserving every canonical body/call and sibling MAX.
+// Lean-to/windmill resource conversions are ordinary scalar assignments:
+// DC 5291..5294 and 5582..5583 stay in their case scope. The nested blocks
+// left by conversion-helper removal (8c6106f8e0) own no object lifetime;
+// removing those two blocks leaves Windows 89.5017% unchanged.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -4894,9 +4898,7 @@ void game::randomizeEvents()
 
                 case LEAN_TO:
                     {
-                        {
-                            resType = EGameResource(random(0, 5));
-                        }
+                        resType = EGameResource(random(0, 5));
                         resQty = static_cast<unsigned char>(random(1, 5));
                         tempCell->setLeanTo(numLeanTo++, resQty, resType);
                     }
@@ -5123,9 +5125,7 @@ void game::randomizeEvents()
                 case WINDMILL:
                     {
                         resQty = static_cast<unsigned char>(random(3, 6));
-                        {
-                            resType = EGameResource(random(1, 5));
-                        }
+                        resType = EGameResource(random(1, 5));
                         // DC 5582..5583; retail's 0xfffe001f mask also
                         // clears the visited-player lane, not just amount.
                         tempCell->setWindmill(resType, resQty);
