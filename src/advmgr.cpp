@@ -2612,6 +2612,11 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // same way (57 arms, 17 differing) and shares five of those rows exactly -
 // PYRAMID, WAGON, WARRIOR_TOMB, WATER_WHEEL and WINDMILL are the same
 // inlined helpers, so a fix there is worth double.
+// Mac 0xd1f8..0xd218 and 0xd5c8..0xd5ec preserve the named low-five-bit
+// ids and normalized fullness predicates in the spring/garden arms. Keep
+// their existing magicSpringIsFull/gardenIsFull helpers: restoring those
+// calls with the named ids raises Windows 95.5832 -> 95.69% (185 branches,
+// retail 188), without extending any rollover string temporary lifetime.
 VA(0x0040b150, 0x229C)
 DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
@@ -3040,7 +3045,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             }
             if (currHero) {
                 visited = ((player->m_magicSpringFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 6) & 1));
+                    & (1UL << cell->m_magicSpringInfo.m_id))
+                    && !cell->magicSpringIsFull());
                 if (visited)
                     sprintf(tempText, visitedFormat,
                             g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -3132,7 +3138,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
             visited = ((player->m_mysticalGardenFlags
-                & (1UL << (cell->m_extraInfo & 0x1f))) && !((cell->m_extraInfo >> 10) & 1));
+                & (1UL << cell->m_gardenInfo.m_id))
+                && !cell->gardenIsFull());
             if (visited)
                 sprintf(tempText, visitedFormat,
                         g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
