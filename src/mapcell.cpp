@@ -2974,6 +2974,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // 93.9180%). DC char_buffer (sp+0x12, T_RCHAR) is plain char,
 // matching both targets' signed byte extension under their default char
 // mode. The plain-char reader family emits the same Windows object.
+// Native Mac 0x125004/0x125030 and 0x1250b8/0x1250e4 store the equipped
+// and backpack artifact enums within each format arm, without an intBuffer
+// join. Recovering those stores raises Windows 93.9180% -> 96.86389%; both
+// artifact loops now match. The remaining 94-block/49-call body differs in
+// starting-hero argument scheduling and the later sex/spell byte promotion.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3141,13 +3146,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 charBuffer = readValue<char>(infile);
-                intBuffer = charBuffer;
+                heroData->m_artifacts[x].m_artifactId =
+                    H3_ENUM_DECODE(TArtifact, charBuffer);
             } else {
                 shortBuffer = readLittleEndianValue<short>(infile);
-                intBuffer = shortBuffer;
+                heroData->m_artifacts[x].m_artifactId =
+                    H3_ENUM_DECODE(TArtifact, shortBuffer);
             }
-            heroData->m_artifacts[x].m_artifactId =
-                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         shortBuffer = readLittleEndianValue<short>(infile);
@@ -3156,13 +3161,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 charBuffer = readValue<char>(infile);
-                intBuffer = charBuffer;
+                heroData->m_backpack[x].m_artifactId =
+                    H3_ENUM_DECODE(TArtifact, charBuffer);
             } else {
                 shortBuffer = readLittleEndianValue<short>(infile);
-                intBuffer = shortBuffer;
+                heroData->m_backpack[x].m_artifactId =
+                    H3_ENUM_DECODE(TArtifact, shortBuffer);
             }
-            heroData->m_backpack[x].m_artifactId =
-                H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
         // The fourth war-machine position is never serialized: every hero
