@@ -4165,3 +4165,14 @@ and returned tile lifetimes remain in their original caller positions.
 One targeted rmg build preserves all fifteen Windows bodies at 100%.
 No header, inline qualifier, runtime dispatch or additional helper body is
 introduced. The canonical ordinary helpers remain visible in the same TU.
+
+
+The next native pass covers twenty further paired callers and restores
+forty-one remaining pointer-based cell land queries through getLandType.
+This includes exact decorator, placement and coast-marking bodies. Native
+anchors span outline checks 0x22d690/0x22d6ec, placement scoring
+0x2352ec/0x235340/0x235600, zone-border repair 0x241f28/0x2420a4/0x242288,
+shipyard scans 0x244334/0x244484/0x244568 and river-coast scans
+0x24cfa0/0x24d0c4/0x24d204. Each body expands the same signed land-kind
+extraction; native optimizations can share a decoded query across source
+conditions. One targeted rmg build leaves the preceding score vector unchanged.
