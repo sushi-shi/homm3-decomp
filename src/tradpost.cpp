@@ -43,6 +43,8 @@ DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
 
 static ArtifactInventoryPanel* g_tradeInventory;
 static int inventoryTradeQuote(int slot, int resource);
+static bool isDuplicateBackpackArtifact(int slot);
+enum { sellDuplicatesId = 1801, duplicateQuoteId = 1802 };
 
 // --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
 // Retail emits each dialog as (constructor, ??_G, destructor) in image order;
@@ -983,6 +985,15 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
         0, 1, 1, 28, 2);
     okButton->setHotkey(1);
     m_widgets.push_back(okButton);
+
+    textButton* duplicates = new textButton(340, 425, 200, 20,
+        sellDuplicatesId, "gspbutt.def", "Sell duplicates", "smalfont.fnt",
+        0, 1, false, 0, 2, font::WHITE);
+    duplicates->setHelpText("Sell spare backpack copies for the selected resource.",
+        "Keeps one copy of each artifact, counting equipped copies. Equipped items are never sold. Scrolls with different spells are kept separately.", true);
+    m_widgets.push_back(duplicates);
+    m_widgets.push_back(new textWidget(315, 449, 265, 18, "", "smalfont.fnt",
+        font::PRIMARY, duplicateQuoteId, font::CENTER_JUSTIFIED, 0, 8));
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -2573,6 +2584,29 @@ void TSellArtifactWindow::update(unsigned char update)
             "Choose a resource. Select an artifact and click Trade, or Shift-click to sell immediately.");
     }
 
+    int duplicateCount = 0;
+    int duplicateValue = 0;
+    for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
+        if (!isDuplicateBackpackArtifact(backpackSlot)) continue;
+        int price = inventoryTradeQuote(backpackSlot + 18, g_leftResource);
+        if (price > 0) {
+            ++duplicateCount;
+            duplicateValue += price;
+        }
+    }
+    textButton* duplicates = static_cast<textButton*>(getWidget(sellDuplicatesId));
+    char duplicateText[256];
+    sprintf(duplicateText, "Sell duplicates (%d)", duplicateCount);
+    duplicates->setText(duplicateText);
+    duplicates->enable(duplicateCount > 0 && g_currentPlayer->isLocalHuman());
+    if (g_leftResource < 0)
+        strcpy(duplicateText, "Choose a resource first");
+    else if (duplicateCount == 0)
+        strcpy(duplicateText, "No spare backpack copies");
+    else
+        sprintf(duplicateText, "%d %s - keeps one copy", duplicateValue, g_resourceNames[g_leftResource]);
+    static_cast<textWidget*>(getWidget(duplicateQuoteId))->setText(duplicateText);
+
     if (update)
         drawWindow(1, 0xffff0001, 0xffff);
 }
@@ -3575,6 +3609,37 @@ static int inventoryTradeQuote(int slot, int resource)
     return price;
 }
 
+static bool isDuplicateBackpackArtifact(int slot)
+{
+    const type_artifact& item = g_marketHero->getBackpack(slot);
+    if (item.m_artifactId < 0) return false;
+    // Keep every worn artifact, including Complete's nineteenth equipment slot.
+    for (int equipped = 0; equipped < 19; ++equipped) {
+        const type_artifact& kept = g_marketHero->getArtifact(TArtifactSlot(equipped));
+        if (kept.m_artifactId == item.m_artifactId && kept.m_extra == item.m_extra)
+            return true;
+    }
+    // With no equipped copy, preserve the first matching backpack entry.
+    for (int earlier = 0; earlier < slot; ++earlier) {
+        const type_artifact& kept = g_marketHero->getBackpack(earlier);
+        if (kept.m_artifactId == item.m_artifactId && kept.m_extra == item.m_extra)
+            return true;
+    }
+    return false;
+}
+
+void TSellArtifactWindow::sellDuplicateArtifacts()
+{
+    if (!g_currentPlayer->isLocalHuman() || g_leftResource < 0) return;
+    // Descending removal keeps the indices of remaining candidates valid.
+    for (int slot = 63; slot >= 0; --slot) {
+        if (!isDuplicateBackpackArtifact(slot)) continue;
+        if (inventoryTradeQuote(slot + 18, g_leftResource) <= 0) continue;
+        g_selectedArtifact = slot + 18;
+        sellSelectedArtifact();
+    }
+}
+
 bool TSellArtifactWindow::sellSelectedArtifact()
 {
     if (!g_currentPlayer->isLocalHuman()) return false;
@@ -3589,6 +3654,7 @@ bool TSellArtifactWindow::sellSelectedArtifact()
     g_selectedArtifact = -1;
     g_rightAmount = 0;
     g_backpackStart = 0;
+    if (g_tradeInventory) g_tradeInventory->clearSelection();
     return true;
 }
 
@@ -3608,6 +3674,10 @@ int TSellArtifactWindow::windowHandler(message& msg)
                     g_backpackStart = 0;
                     if (g_leftResource >= 0) setupNewTrade();
                     if (event == ArtifactInventoryPanel::quickSell) sellSelectedArtifact();
+                } else {
+                    g_selectedArtifact = -1;
+                    g_rightAmount = 0;
+                    g_tradeInventory->clearSelection();
                 }
             }
             update(true);
@@ -3706,6 +3776,11 @@ int TSellArtifactWindow::windowHandler(message& msg)
 
         case MARKET_WIDGET_ACTIVATE:
             switch (msg.m_codeY) {
+            case sellDuplicatesId:
+                sellDuplicateArtifacts();
+                updateFlag = 1;
+                break;
+
             case MARKET_LEFT_PANEL_ID:
                 if (sellSelectedArtifact()) updateFlag = 1;
                 break;

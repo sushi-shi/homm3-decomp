@@ -24,6 +24,7 @@ public:
     Event handle(message& msg);
     void refresh(int resource = -1);
     int selectedSlot() const { return m_selectedSlot; }
+    void clearSelection() { m_selectedSlot = -1; }
 private:
     struct Entry { type_artifact artifact; int slot; };
     heroWindow& m_window;
