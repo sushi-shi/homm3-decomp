@@ -1700,7 +1700,8 @@ void army::doFireShield(long damageAmount)
     g_combatManager->resetLimitCreature();
     // Retail captures the slot before expanding the side getter. This
     // temporary recovers 99.9324%; the remaining two LEA/store operands
-    // commute the manager/slot bases inside markCreatureEffect.
+    // commute the manager/slot bases inside markCreatureEffect. A named
+    // first-mark combatManager reference is byte-flat at the same score.
     const int bitIndex = m_bitIndex;
     g_combatManager->markCreatureEffect(getOwningSide(), bitIndex);
     for (side = 0; side < 2; side++) {
