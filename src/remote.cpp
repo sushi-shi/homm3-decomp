@@ -2773,7 +2773,7 @@ CTurnDuration::CTurnDuration()
 VA(0x00557a80, 0x15)
 DC_ADDRESS(0x11f070, 0x1e)
 MAC_ADDRESS(0x2156e4, 0x28)
-unsigned char CTurnDuration::isOn()
+bool CTurnDuration::isOn()
 {
     // DC remote.cpp:2921/2922 and 2925 retain two separate early-outs.
     // This canonical body matches both the retained function and its
@@ -2788,7 +2788,7 @@ unsigned char CTurnDuration::isOn()
 VA(0x00557aa0, 0x4D)
 DC_ADDRESS(0x11f090, 0x78)
 MAC_ADDRESS(0x21570c, 0xac)
-unsigned char CTurnDuration::isExpired()
+bool CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
             && isOn()
@@ -2894,7 +2894,7 @@ void CTurnDuration::checkForWarning()
 VA(0x00557d00, 0x55)
 DC_ADDRESS(0x11f2fc, 0xa0)
 MAC_ADDRESS(0x215a3c, 0x9c)
-unsigned char CTurnDuration::isClose(unsigned long howClose)
+bool CTurnDuration::isClose(unsigned long howClose)
 {
     if (!isOn())
         return 0;
