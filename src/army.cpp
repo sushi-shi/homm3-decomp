@@ -3319,9 +3319,10 @@ void army::cancelSpellType(int spellType)
 // The by-value min wrapper preserves its two argument copies in retail.
 DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
+// Mac 0x504ac reads AGE at +0x2c4: the constant-index getSpellTime body.
 void army::adjustHitpoints()
 {
-    if (m_spellInfluence[SPELL_AGE])
+    if (getSpellTime(SPELL_AGE))
         m_monInfo.m_hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
     else
@@ -3359,9 +3360,10 @@ void army::adjustHitpoints()
 VA(0x00444510, 0x3DB)
 DC_ADDRESS(0x049748, 0x262)
 MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
+// Mac 0x505a0..0x505ac expands getSpellTime(spell) before clearing its row.
 void army::cancelIndividualSpell(int spell)
 {
-    if (m_spellInfluence[spell] <= 0)
+    if (getSpellTime(spell) <= 0)
         return;
     if (spell == SPELL_DISRUPTING_RAY)
         return;
@@ -3420,10 +3422,11 @@ void army::cancelIndividualSpell(int spell)
 // E:\gamedcs\army.cpp:3802
 DC_ADDRESS(0x0499ac, 0x3a)
 MAC_ADDRESS(0x050c24, 0x68)
+// Mac 0x50c48 expands getSpellTime(i); the following call cancels that spell.
 void army::cancelAllSpells()
 {
     for (int i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] > 0)
+        if (getSpellTime(i) > 0)
             cancelIndividualSpell(i);
     }
 }
@@ -3502,6 +3505,8 @@ static void drop_aura_links(army* self)
 VA(0x004448f0, 0xB99)
 DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
+// Mac 0x50d18 and 0x50d34 expand getSpellTime/getSpellLevel before
+// comparing the existing duration/mastery. Their writes remain field stores.
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
 {
@@ -3522,10 +3527,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         rounds = power;
         break;
     }
-    if (m_spellInfluence[spell] > 0) {
-        if (rounds > m_spellInfluence[spell])
+    if (getSpellTime(spell) > 0) {
+        if (rounds > getSpellTime(spell))
             m_spellInfluence[spell] = rounds;
-        if (mastery > m_spellLevel[spell])
+        if (mastery > getSpellLevel(spell))
             m_spellLevel[spell] = mastery;
         return;
     }
@@ -3698,11 +3703,13 @@ void army::setSpellInfluence(int spell, int power, int mastery,
 // entries; the older DC loop at line 4133 ends at 80.
 DC_ADDRESS(0x04a2e8, 0x5e)
 MAC_ADDRESS(0x051434, 0x98)
+// Mac 0x51458 expands getSpellTime(spell), reused by both tests; the
+// decrement at 0x51488 remains a mutation of the duration row.
 void army::decrementSpellRounds()
 {
     for (int spell = 0; spell < 81; spell++) {
-        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
-            if (m_spellInfluence[spell] == 1)
+        if (getSpellTime(spell) > 0 && spell != SPELL_FRENZY) {
+            if (getSpellTime(spell) == 1)
                 cancelIndividualSpell(spell);
             else
                 m_spellInfluence[spell]--;
