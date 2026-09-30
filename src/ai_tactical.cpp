@@ -789,7 +789,7 @@ unsigned char type_AI_spellcaster::isLastAction() const
 
 VA(0x00436c60, 0x1C4)
 DC_ADDRESS(0x03d838, 0x132)
-MAC_ADDRESS(0x03e600, 0x1d4)
+MAC_ADDRESS(0x03e600, 0x1d4) // MAC_ABSTRACTION_FROM(tokens1:aa0e7a89ae41,95.7265): isIncapacitated now reads durations through getSpellTime; native Mac 0x3e738 expands spell slots 62/70/74.
 unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 {
     if (m_estimate.m_killsOnly)
@@ -821,7 +821,7 @@ unsigned char type_AI_spellcaster::shouldAttackNow(const army& enemy) const
 
 VA(0x00436e30, 0x125)
 DC_ADDRESS(0x03d96c, 0x110)
-MAC_ADDRESS(0x03e7d4, 0x234)
+MAC_ADDRESS(0x03e7d4, 0x234) // MAC_ABSTRACTION_FROM(tokens1:8acf25749253,18.4397): isIncapacitated now reads durations through getSpellTime; native Mac 0x3e930 expands spell slots 62/70/74.
 long type_AI_spellcaster::getDamageValue(SpellID spell, long baseDamage, const hero* targetHero, const army* target) const
 {
     if (target->is(creatureImmobilized) || target->m_creatureType == CREATURE_ARROW_TOWER)
@@ -2193,7 +2193,7 @@ void type_AI_spellcaster::considerEnchantment(type_spell_choice& choice, long gr
 // direct loop bound in isLastAction closes the remaining stack-slot difference.
 VA(0x0043aa60, 0x235)
 DC_ADDRESS(0x040ec0, 0x15c)
-MAC_ADDRESS(0x044410, 0x218)  // anchor-callee
+MAC_ADDRESS(0x044410, 0x218)  // anchor-callee // MAC_ABSTRACTION_FROM(tokens1:d3c7e499796f,32.4627): isIncapacitated now reads durations through getSpellTime; native Mac 0x44568 expands spell slots 62/70/74.
 void type_AI_spellcaster::considerTeleport(type_spell_choice& choice) const
 {
     unsigned char moved = 0;
@@ -2596,7 +2596,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::getEnchantmentFunction(S
 // minimum is for.
 VA(0x0043b8f0, 0x224)
 DC_ADDRESS(0x041c30, 0x22c)
-MAC_ADDRESS(0x045674, 0x330)
+MAC_ADDRESS(0x045674, 0x330) // MAC_ABSTRACTION_FROM(tokens1:ef626e7189f7,20.2206): isIncapacitated now reads durations through getSpellTime; native Mac 0x45858 expands spell slots 62/70/74.
 void type_AI_spellcaster::considerEarthquake(type_spell_choice& choice) const
 {
     if (m_side == 1)
@@ -2746,7 +2746,7 @@ void type_AI_spellcaster::considerSpell(type_spell_choice& choice) const
 // Mac's zeroing entry is bzero; the Windows/DC spelling remains memset.
 VA(0x0043bf20, 0x119)
 DC_ADDRESS(0x0420ac, 0xc4)
-MAC_ADDRESS(0x045c80, 0x190)  // anchor-global
+MAC_ADDRESS(0x045c80, 0x190)  // anchor-global // MAC_ABSTRACTION_FROM(tokens1:153aae567bb6,36.0000): isIncapacitated now reads durations through getSpellTime; native Mac 0x45cc4 expands spell slots 62/70/74.
 void type_AI_spellcaster::setMeleeEnemies()
 {
     const army* ourArmy = &g_combatManager->m_armies[m_side][0];

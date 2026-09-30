@@ -64,7 +64,7 @@
 // lowered Mac to 95.3390% and was removed.
 VA(0x0041e190, 0x2A8)
 DC_ADDRESS(0x023450, 0x2fe)
-MAC_ADDRESS(0x01f2b4, 0x3b0)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets
+MAC_ADDRESS(0x01f2b4, 0x3b0)  // order-map(DC ai.obj head) + anchor-callee find_AI_targets // MAC_ABSTRACTION_FROM(tokens1:faad412b5038,97.9873): isIncapacitated now reads durations through getSpellTime; native Mac 0x1f38c expands spell slots 62/70/74.
 int combatManager::chooseBallistaTarget(int targetGroup, int attackSkill, int averageDamage)
 {
     long bestValue = 0;
@@ -358,7 +358,7 @@ unsigned char combatManager::aiCheckRetreat()
 
 VA(0x0041eac0, 0xB8)
 DC_ADDRESS(0x023f2c, 0xe0)
-MAC_ADDRESS(0x020058, 0x128)
+MAC_ADDRESS(0x020058, 0x128) // MAC_ABSTRACTION_FROM(tokens1:8e1b487b443b,94.2568): isIncapacitated now reads durations through getSpellTime; native Mac 0x200b4 expands spell slots 62/70/74.
 long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
 {
     long total = 0;
@@ -1775,7 +1775,7 @@ void combatManager::markMoat(const army* currentArmy, long* enemyAttacks,
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)
 DC_ADDRESS(0x0266d4, 0x80c)
-MAC_ADDRESS(0x023724, 0xbb0)  // linkorder
+MAC_ADDRESS(0x023724, 0xbb0)  // linkorder // MAC_ABSTRACTION_FROM(tokens1:40d15cd557cc,47.4000): isIncapacitated now reads durations through getSpellTime; native Mac 0x23854 expands spell slots 62/70/74.
 unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned char teleport, long* actionValue, type_AI_combat_parameters* estimate)
 {
     long enemyAttacks[COMBAT_GRID_CELLS];
@@ -2297,7 +2297,7 @@ void combatManager::simulateMeleeAttack(army* currentArmy, army* target,
 
 VA(0x00422880, 0x1B5)
 DC_ADDRESS(0x027698, 0x15c)
-MAC_ADDRESS(0x024df8, 0x22c)
+MAC_ADDRESS(0x024df8, 0x22c) // MAC_ABSTRACTION_FROM(tokens1:bd8843fe9317,99.6403): isIncapacitated now reads durations through getSpellTime; native Mac 0x24e4c expands spell slots 62/70/74.
 long combatManager::simulateActions(std::vector<army*>& list, long i,
                                      long ourGroup)
 {

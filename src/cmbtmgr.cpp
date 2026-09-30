@@ -1715,7 +1715,7 @@ unsigned char combatManager::unnamed464f50(
 // likewise finds no movement. Keep the proven bool interface and accessor.
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
-MAC_ADDRESS(0x070b74, 0x328)
+MAC_ADDRESS(0x070b74, 0x328) // MAC_ABSTRACTION_FROM(tokens1:b584dbf4caf9,23.6386): isIncapacitated now reads durations through getSpellTime; native Mac 0x70c44 expands spell slots 62/70/74.
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0

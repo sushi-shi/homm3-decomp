@@ -570,6 +570,11 @@ TObjectType& TObjectType::setUnderlay(bool underlay)
     return *this;
 }
 
+// Mac 0x2240d4/0x2240f0/0x22410c/0x224128/0x224144 calls
+// istream::ignore(1, EOF) between the string/bitset extractions. MSL's
+// bitset extractor reads istreambuf_iterator directly without a sentry;
+// VC6's BITSET constructs a sentry and skips that whitespace itself.
+// The Windows body is byte-exact with the chained extractions below.
 VA(0x00514b80, 0x1F7)
 MAC_ADDRESS(0x224078, 0x1ac)
 std::istream& operator>>(std::istream& is, TObjectType& objectType)

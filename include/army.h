@@ -1708,7 +1708,7 @@ VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
-        if (m_spellInfluence[60])
+        if (getSpellTime(60))
             return 1 - getOwningSide();
         return getOwningSide();
     }
@@ -1729,6 +1729,13 @@ inline const char* army::getName(int count) const
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
+    // Mac expands this indexed read (army + 0x198 + 4*spell) throughout
+    // army.cpp: getAverageDamage 0x4e61c/0x4e658, isEnemy 0x4e7f0,
+    // canShoot 0x4e914, and the duration loops 0x4a720/0x50c48/0x51458.
+    // Keep those reads as helper calls, including within duration updates;
+    // writes still belong to the spell lifecycle methods. Nested reads also
+    // survive in controlling-side (Mac 0x4e810), incapacitation (0x4db14),
+    // and retaliation (0x4da48) expansions.
 DC_ADDRESS(0x027d74, 0x12)
 inline long army::getSpellTime(int spell) const
     {
@@ -1760,15 +1767,15 @@ VA(0x0041f380, 0x27)  // anchor-callee
 DC_ADDRESS(0x027d9c, 0x3a)
 inline bool army::isIncapacitated() const
     {
-        return m_spellInfluence[62] || m_spellInfluence[70]
-               || m_spellInfluence[74];
+        return getSpellTime(62) || getSpellTime(70)
+               || getSpellTime(74);
     }
 
     // E:\gamedcs\Army.h:847
 DC_ADDRESS(0x027dd8, 0x44)
 inline bool army::canRetaliate(const army& attacker) const
     {
-        return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
+        return !attacker.is(creatureFreeAttack) && !getSpellTime(70)
                && m_retaliationCount > 0;
     }
 

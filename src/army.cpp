@@ -120,7 +120,7 @@ void army::setRetaliationCount()
         m_retaliationCount++;
     if (m_creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
         m_retaliationCount = 5000;
-    if (m_spellInfluence[SPELL_COUNTERSTRIKE])
+    if (getSpellTime(SPELL_COUNTERSTRIKE))
         m_retaliationCount += m_counterstrokeBonus;
     if (is(creatureSiegeWeapon))
         m_retaliationCount = 0;
@@ -525,9 +525,9 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
             value = ownerGroup->getLuck(
                 ownerHero, ownerTown, otherHero, otherGroup, 0, 0);
         }
-        if (m_spellInfluence[51])
+        if (getSpellTime(51))
             value += m_luckBonus;
-        if (m_spellInfluence[52])
+        if (getSpellTime(52))
             value -= m_luckPenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
@@ -571,9 +571,9 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                 ownerHero, ownerTown, otherHero, otherGroup, 0,
                 groupAlignments, 0);
         }
-        if (m_spellInfluence[49])
+        if (getSpellTime(49))
             value += m_moraleBonus;
-        if (m_spellInfluence[50])
+        if (getSpellTime(50))
             value -= m_moralePenalty;
 
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
@@ -748,7 +748,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             tinted.adjustSaturation(m_paletteEffect);
             memcpy(m_stdIcon->getPalette(), tinted.m_data, 0x200);
             restore = 1;
-        } else if (m_spellInfluence[SPELL_STONE] > 0) {
+        } else if (getSpellTime(SPELL_STONE) > 0) {
             memcpy(saved.m_data, m_stdIcon->getPalette(), 0x200);
             TPalette16 tinted(m_stdIcon->getPalette());
             tinted.gray();
@@ -894,7 +894,7 @@ double army::computeKarma() const
     long sum = 0;
     long absSum = 0;
     for (long i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] != 0) {
+        if (getSpellTime(i) != 0) {
             sum += g_spellTraits[i].m_karma;
             absSum += abs(g_spellTraits[i].m_karma);
         }
@@ -1947,7 +1947,7 @@ bool army::doAttack(army* armyToAttack, int direction)
     army* behind = 0;
     g_combatManager->resetHitByCreature();
     if (is(creatureMultiHeaded)) {
-        if (m_spellInfluence[59])
+        if (getSpellTime(59))
             attackMask = getAttackMask(m_gridIndex, 2, -1);
         else
             attackMask = getAttackMask(m_gridIndex, 1, -1);
@@ -2269,13 +2269,13 @@ long army::getAdjustedAttack(const army* enemy,
 {
     long attack = m_monInfo.m_attackSkill;
     if (rangedAttack) {
-        if (m_spellInfluence[44])
+        if (getSpellTime(44))
             attack += m_precisionAmount;
     } else {
-        if (m_spellInfluence[43])
+        if (getSpellTime(43))
             attack += m_bloodlustAmount;
     }
-    if (m_spellInfluence[55] && enemy) {
+    if (getSpellTime(55) && enemy) {
         if ((enemy->is(creatureKing1) && m_slayerLevel >= 0)
             || (enemy->is(creatureKing2) && m_slayerLevel >= 2)
             || (enemy->is(creatureKing3) && m_slayerLevel >= 3)) {
@@ -2286,7 +2286,7 @@ long army::getAdjustedAttack(const army* enemy,
             }
         }
     }
-    if (m_spellInfluence[56])
+    if (getSpellTime(56))
         return static_cast<long>(
             getAdjustedDefense(enemy, 0) * m_frenzyFactor + attack);
     return attack;
@@ -2311,7 +2311,7 @@ MAC_ADDRESS(0x04e31c, 0x17c)
 long army::getAdjustedDefense(const army* enemy,
                                 unsigned char frenzyIncluded) const
 {
-    if (frenzyIncluded && m_spellInfluence[56])
+    if (frenzyIncluded && getSpellTime(56))
         return 0;
     long defense = m_monInfo.m_defenseSkill;
     if (enemy) {
@@ -2410,9 +2410,9 @@ DC_ADDRESS(0x047a14, 0xe4)
 MAC_ADDRESS(0x04e61c, 0xd8)
 double army::getAverageDamage() const
 {
-    if (m_spellInfluence[41])
+    if (getSpellTime(41))
         return m_blessAmount + m_monInfo.m_damageHighBound;
-    if (m_spellInfluence[42])
+    if (getSpellTime(42))
         return cppMax(m_monInfo.m_damageLowBound - m_curseAmount, 1);
     return (m_monInfo.m_damageHighBound + m_monInfo.m_damageLowBound) / 2.0;
 }
@@ -2445,7 +2445,7 @@ unsigned char army::isEnemy(const army* arg) const
         return 0;
     if (this == arg)
         return 0;
-    if (!m_spellInfluence[59] && !arg->getSpellTime(59))
+    if (!getSpellTime(59) && !arg->getSpellTime(59))
         return getControllingSide() != arg->getOwningSide();
     return 1;
 }
@@ -2473,7 +2473,7 @@ bool army::canShoot(const army* excluded) const
     return ((controller
              && controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
             || !enemyIsAdjacent(excluded))
-           && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
+           && (getSpellTime(61) == 0 || m_forgetfulnessLevel < 2);
 }
 
 VA(0x004429f0, 0x5C)
@@ -2547,7 +2547,7 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                     eSecSkillBattlefieldBallistics)];
         }
     }
-    if (m_spellInfluence[41] || m_spellInfluence[42]) {
+    if (getSpellTime(41) || getSpellTime(42)) {
         long damageRange = m_monInfo.m_damageLowBound + m_monInfo.m_damageHighBound;
         double baseAverage = damageRange / 2.0;
         double averageDamage = getAverageDamage();
@@ -2646,7 +2646,7 @@ DC_ADDRESS(0x0484d0, 0x54)
 MAC_ADDRESS(0x04effc, 0x30)
 float army::getFireShieldStrength() const
 {
-    if (m_spellInfluence[29])
+    if (getSpellTime(29))
         return m_fireShieldStrength;
     if (m_creatureType == CREATURE_EFREET_SULTAN)
         return DATA_COMPGEN(0x0063b8b4, innateFireShieldStrength, 0.2f);
@@ -2659,7 +2659,7 @@ MAC_ADDRESS(0x04f02c, 0x204)
 int army::computeBaseDamage(unsigned char simulateOnly) const
 {
     int num;
-    if (m_spellInfluence[61] > 0 && is(creatureShootingArmy))
+    if (getSpellTime(61) > 0 && is(creatureShootingArmy))
         num = cppMax(m_numTroops / 2, 1);
     else
         num = m_numTroops;
@@ -2676,9 +2676,9 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
     }
 
     int damage;
-    if (m_spellInfluence[41]) {
+    if (getSpellTime(41)) {
         damage = (high + m_blessAmount) * num;
-    } else if (m_spellInfluence[42]) {
+    } else if (getSpellTime(42)) {
         damage = cppMax(low - m_curseAmount, 1) * num;
     } else if (simulateOnly) {
         damage = (low + high) * num / 2;
@@ -2790,7 +2790,7 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
                 controller->getOffenseFactor()
                     * static_cast<float>(baseDamage)
                 + static_cast<float>(bonus));
-        if (m_spellInfluence[SPELL_BLESS])
+        if (getSpellTime(SPELL_BLESS))
             total += controller->getHeroSpellBonus(SPELL_BLESS,
                                                    m_monInfo.m_level,
                                                    baseDamage);
@@ -2928,13 +2928,13 @@ double army::computeDefenderDamageReduction(unsigned char isShooting) const
 {
     double reduction = getDefenseDamageModifier(isShooting);
     if (isShooting) {
-        if (m_spellInfluence[28])
+        if (getSpellTime(28))
             reduction *= m_airShieldFactor;
     } else {
-        if (m_spellInfluence[27])
+        if (getSpellTime(27))
             reduction *= m_shieldFactor;
     }
-    if (m_spellInfluence[70])
+    if (getSpellTime(70))
         reduction *= 0.5;
     hero* castingHero = getController();
     if (castingHero)
@@ -3186,7 +3186,7 @@ void army::processDeath(int fadeElementals)
     removeAura();
     removeBinding();
 
-    if (!m_spellInfluence[60]) {
+    if (!getSpellTime(60)) {
         if (random(1, 100) < 60)
             g_combatManager->m_playDoh[getOwningSide()] = 1;
         else if (random(1, 100) < 80)
@@ -3283,7 +3283,7 @@ DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
 void army::adjustHitpoints()
 {
-    if (m_spellInfluence[SPELL_AGE])
+    if (getSpellTime(SPELL_AGE))
         m_monInfo.m_hitPoints = static_cast<int>(
             m_origHitPoints * m_poisonPenalty * 0.5f + 0.95f);
     else
@@ -3323,7 +3323,7 @@ DC_ADDRESS(0x049748, 0x262)
 MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
 void army::cancelIndividualSpell(int spell)
 {
-    if (m_spellInfluence[spell] <= 0)
+    if (getSpellTime(spell) <= 0)
         return;
     if (spell == SPELL_DISRUPTING_RAY)
         return;
@@ -3385,7 +3385,7 @@ MAC_ADDRESS(0x050c24, 0x68)
 void army::cancelAllSpells()
 {
     for (int i = 0; i < 81; i++) {
-        if (m_spellInfluence[i] > 0)
+        if (getSpellTime(i) > 0)
             cancelIndividualSpell(i);
     }
 }
@@ -3484,10 +3484,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         rounds = power;
         break;
     }
-    if (m_spellInfluence[spell] > 0) {
-        if (rounds > m_spellInfluence[spell])
+    if (getSpellTime(spell) > 0) {
+        if (rounds > getSpellTime(spell))
             m_spellInfluence[spell] = rounds;
-        if (mastery > m_spellLevel[spell])
+        if (mastery > getSpellLevel(spell))
             m_spellLevel[spell] = mastery;
         return;
     }
@@ -3663,8 +3663,8 @@ MAC_ADDRESS(0x051434, 0x98)
 void army::decrementSpellRounds()
 {
     for (int spell = 0; spell < 81; spell++) {
-        if (m_spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
-            if (m_spellInfluence[spell] == 1)
+        if (getSpellTime(spell) > 0 && spell != SPELL_FRENZY) {
+            if (getSpellTime(spell) == 1)
                 cancelIndividualSpell(spell);
             else
                 m_spellInfluence[spell]--;
@@ -4607,8 +4607,8 @@ void army::newTurn()
             }
         }
     }
-    if (m_spellInfluence[SPELL_FRENZY] != 0) {
-        if (m_spellInfluence[SPELL_FRENZY] > 1)
+    if (getSpellTime(SPELL_FRENZY) != 0) {
+        if (getSpellTime(SPELL_FRENZY) > 1)
             m_spellInfluence[SPELL_FRENZY]--;
         else
             cancelIndividualSpell(SPELL_FRENZY);
@@ -4638,7 +4638,7 @@ void army::resetRound()
 
     decrementSpellRounds();
 
-    if (m_spellInfluence[SPELL_POISON] > 0) {
+    if (getSpellTime(SPELL_POISON) > 0) {
         int oldHitPoints = m_monInfo.m_hitPoints;
         double factor = cppMax<double>(m_poisonPenalty - 0.1f, 0.5);
         m_poisonPenalty = static_cast<float>(factor);
@@ -5276,7 +5276,7 @@ MAC_ADDRESS(0x055028, 0x6c)
 int army::getSpeed() const
 {
     int speed = m_monInfo.m_speed;
-    if (m_spellInfluence[54]) {
+    if (getSpellTime(54)) {
         if (is(creatureSiegeWeapon))
             return 0;
         speed = static_cast<long>(speed * m_slowFactor);

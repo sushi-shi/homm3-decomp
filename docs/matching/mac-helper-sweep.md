@@ -104,6 +104,18 @@ call elsewhere in the caller does not discharge the native operation.
   `army::getMirrorEffect` calls `getSpellTime` and `cppMax` instead of spelling
   out their field access and reference selection. Complete moved the older
   spell-duration check into that helper. All four calls preserve Windows MAX.
+* Army spell-state reads now use `getSpellTime` in 25 ordinary methods and
+  three shared predicates, including damage, luck/morale, animation and spell
+  expiration. This restores 44 duration reads and one `getSpellLevel` read;
+  mutation stays in the owning lifecycle methods. Mac retains the indexed
+  reads at army+0x198+4*spell and expands the same accessors inside controlling
+  side, incapacitation and retaliation. The header records representative
+  native sites. Recognizable expansions need review even when no native call
+  survives.
+* Eight network-message constructors default-construct their `type_point`
+  member before assigning payload fields, as the DC calls show. Explicit
+  point copy initialization had removed that lifetime. Restore the original
+  construction followed by the observed assignment order.
 * Mac's river/road painter destructors identify the existing line-painter base
   destructors. Their source definitions now carry the corresponding Mac claims;
   the C++ base destruction paths already represented those calls.
@@ -121,8 +133,11 @@ claims to unresolved indirect calls; no named game-procedure target changed.
 Most were import-slot addresses, which are also data rather than direct code
 targets. Keep these unresolved instead of counting them as reviewed callees.
 Pointer-slot provenance is reported separately from a direct target, including
-in rendered assembly. The Dreamcast/structure/source-facts tests pass (60 tests,
-eight skipped).
+in rendered assembly. The working Mac join also preserves the runtime map's
+`indirect_tvector` classification: 2,750 calls through `__ptr_glue` have unknown
+dynamic destinations. The stub's runtime identity does not discharge the game
+operation it invokes. These are explicit review gaps. The
+Dreamcast/structure/source-facts tests pass (60 tests, eight skipped).
 
 ### Identity corrections
 
@@ -160,10 +175,30 @@ the callers.
 
 The full checkpoint passes source ownership (5,549 definitions, no violations),
 source inventory, layout/order and cleanliness gates, and links with zero
-unresolved externals. Windows records 4,450/4,814 exact functions and 98.22%
+unresolved externals. Windows records 4,448/4,814 exact functions and 98.21%
 weighted MAX. The Mac gate scores 1,527 pairs with no unreviewed regression;
 1,741 emitted pairs remain unavailable because of unresolved references, and
 83 Windows-VA claims have no full-TU Mac body. These comparison gaps are not
 call-review completion. This checkpoint includes the bitmap wrappers,
-DirectPlay base constructor, mouse hooks, seer-name and combat accessors;
+DirectPlay base constructor, mouse hooks, seer-name and combat accessors,
+spell-duration accessors and the eight network point lifetimes;
 597 scored Mac pairs are exact.
+
+The spell-accessor batch keeps the supported calls through Windows score dips:
+`getUnitCombatValue` moves from 100% to 93.42% and `resetRound` from 100% to
+97.40%. Their previous peaks remain in HIST. Ten Mac callers carry the narrowly
+scoped abstraction checkpoint for nested `isIncapacitated -> getSpellTime`
+reads, with each native expansion site recorded on its `MAC_ADDRESS` line.
+
+The constructor review verifies default member/base initialization separately
+from explicit initializer lists. In particular, a member assignment inside a
+constructor does not replace its earlier construction, while explicit point
+copy initialization must not be counted as a default-constructor call. The
+working review records 183 existing native constructor sites under that rule,
+separately from the eight restored point-construction sites.
+
+Manual inspection also verifies 64 terrain-cache calls through `getTerrain`
+or `getFrame`, `getPackedCell`, and `initializePackedCell`. The operation at
+each site is already represented; the working notes distinguish terrain
+queries, frame queries and the two whole-tile reads. Those reviewed paths do
+not discharge unrelated calls in the same caller.
