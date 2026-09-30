@@ -898,37 +898,13 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 // by coincidence of the DC bit roster, not by assignment - the byte is
 // tested with `& 0x40` and never stored whole.
 
-// Residual (95.4717%): every read, every derived flag and every block of
-// the CFG is retail's; what differs is where the flag byte is materialized.
-// Retail promotes it straight out of memory (`movsx eax, byte`) for the
-// five shifted bits, then RELOADS the byte for bit 0 and the `& 0x40`
-// test, and folds bit 0 into the preserved high bits with the xor-form
-// insert; this compile loads the byte into cl first, promotes out of the
-// register, keeps cl live to the end, and uses the or-form.  Everything
-// after that is the same permutation carried downstream, which is why the
-// three flag blocks below diff as register renames on identical shapes.
-// Measured and rejected: ascending bit order with a plain char (86.9764),
-// descending with a plain char (82.5519), and a per-use
-// static_cast<unsigned int> in place of the named hoist (95.4717, byte-
-// identical to this).  The unsigned hoist is what buys the 32-bit shift
-// domain at all - without it VC6 narrows every extraction to 8 bits.
-// why-reg v2 reports the bindings agreeing at every first definition, so
-// the divergence is past the B1 minimum slice: a caller-independent
-// scheduling/homing cap, not a spelling.
-// 2026-09-06, the xor-insert re-examined against the bytes. Retail's tail is
-// `mov cx,[esi+0xc] / and ecx,0xffc0` scheduled EARLY (between the bit-4 and
-// bit-3 extractions), then `mov al,[ebp+0x10] / mov bl,al / and bl,1 /
-// movsx bx,bl / xor ebx,ecx / or edx,ebx` - i.e. `acc5 | (bit0 ^ preserved)`,
-// exactly the association C precedence gives `a | b ^ c`. This compile emits
-// `(acc5 | bit0) | preserved` with the word load LAST, and no source
-// grouping reaches the other association: four more spellings measured this
-// lane, all worse - the last field read through `flags` rather than `value`
-// (93.62), ascending bit order WITH the unsigned hoist (95.40, so the note's
-// earlier ascending measurement was not just the char), the `& 0x40` test
-// read through `flags` (92.00), a separate `signed char flagByte` local for
-// the seventh read (95.03), and the bit-0 store hoisted above the other five
-// (95.40). The six stores are one merged read-modify-write either way; what
-// moves is only which pair VC6 combines first.
+// DC names plain char char_buffer. Its 861..866 flag groups mask each
+// bit and test truth before the bitfield assignment. Native Mac
+// 0x11fed0..0x11ff8c independently masks and normalizes the six bits to bool,
+// storing ground H/V, river H/V, then road H/V in that source order.
+// Retain those boolean assignments and canonical scalar reads. This model
+// closes Windows 95.4717 -> 100%; the former unsigned flags/shift hoist
+// kept a byte live across the merged insertion and changed its association.
 VA(0x004fe220, 0x26B)
 DC_ADDRESS(0x0ecf98, 0x3ea)
 MAC_ADDRESS(0x11fd20, 0x394)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot
@@ -938,37 +914,36 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 
     for (int y = 0; y < size; ++y) {
         for (int x = 0; x < size; ++x) {
-            signed char value;
-            if (readValue(infile, value) < sizeof(value))
+            char charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_groundSet = value;
-            if (readValue(infile, value) < sizeof(value))
+            thisCell->m_groundSet = charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_groundIndex = value;
-            if (readValue(infile, value) < sizeof(value))
+            thisCell->m_groundIndex = charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_riverSet = value;
-            if (readValue(infile, value) < sizeof(value))
+            thisCell->m_riverSet = charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_riverIndex = value;
-            if (readValue(infile, value) < sizeof(value))
+            thisCell->m_riverIndex = charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_roadSet = value;
-            if (readValue(infile, value) < sizeof(value))
+            thisCell->m_roadSet = charBuffer;
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            thisCell->m_roadIndex = value;
+            thisCell->m_roadIndex = charBuffer;
 
-            if (readValue(infile, value) < sizeof(value))
+            if (readValue(infile, charBuffer) < sizeof(charBuffer))
                 return -1;
-            unsigned int flags = value;
-            thisCell->m_roadFlippedVertical = (flags >> 5) & 1;
-            thisCell->m_roadFlippedHorizontal = (flags >> 4) & 1;
-            thisCell->m_riverFlippedVertical = (flags >> 3) & 1;
-            thisCell->m_riverFlippedHorizontal = (flags >> 2) & 1;
-            thisCell->m_groundFlippedVertical = (flags >> 1) & 1;
-            thisCell->m_groundFlippedHorizontal = value & 1;
+            thisCell->m_groundFlippedHorizontal = (charBuffer & 0x01) != 0;
+            thisCell->m_groundFlippedVertical = (charBuffer & 0x02) != 0;
+            thisCell->m_riverFlippedHorizontal = (charBuffer & 0x04) != 0;
+            thisCell->m_riverFlippedVertical = (charBuffer & 0x08) != 0;
+            thisCell->m_roadFlippedHorizontal = (charBuffer & 0x10) != 0;
+            thisCell->m_roadFlippedVertical = (charBuffer & 0x20) != 0;
 
-            if ((value & 0x40) && thisCell->m_groundSet != eTerrainWater) {
+            if ((charBuffer & 0x40) && thisCell->m_groundSet != eTerrainWater) {
                 thisCell->m_type = ANCHOR_POINT;
                 thisCell->m_isTrigger = 0;
                 thisCell->m_isBeachBorder = 1;
