@@ -54,10 +54,11 @@ void advManager::startCursor(int direction)
     }
 }
 
+// Original DC StopCursor@advManager public encodes _N: standEnd is bool.
 VA(0x0047f7d0, 0x82)
 DC_ADDRESS(0x079a84, 0x86)
 MAC_ADDRESS(0x08e574, 0xc4)
-void advManager::stopCursor(unsigned char standEnd)
+void advManager::stopCursor(bool standEnd)
 {
     if (standEnd) {
         hero* curr = g_game->getCurrHero();
@@ -261,10 +262,11 @@ int advManager::getMoveShowIt(hero* currHero, int direction)
         return 0;
 }
 
+// Original DC end_move_hero public encodes _NJJ2: both flags are bool.
 VA(0x00480090, 0x1A4)
 DC_ADDRESS(0x07a4d0, 0x1f4)
 MAC_ADDRESS(0x08f048, 0x268)
-NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned char isRemoteMove, long origX, long origY, unsigned char standEnd, int* foughtBattle)
+NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, bool isRemoteMove, long origX, long origY, bool standEnd, int* foughtBattle)
 {
     updateRadar(1, 1, 0, 0, 0);
 
@@ -288,10 +290,11 @@ NewmapCell* advManager::endMoveHero(hero* curr, NewmapCell* returnCell, unsigned
     return returnCell;
 }
 
+// Original DC handle_stop_on_trigger public encodes _N2: both flags are bool.
 VA(0x00480240, 0x131)
 DC_ADDRESS(0x07a6c4, 0x130)
 MAC_ADDRESS(0x08f2b0, 0x108)
-NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, unsigned char isRemoteMove, unsigned char standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
+NewmapCell* advManager::handleStopOnTrigger(hero* curr, NewmapCell* destCell, bool isRemoteMove, bool standEnd, int* foughtBattle, long curMoveCost, long nextMoveMinCost)
 {
     stopCursor(1);
 
@@ -407,10 +410,14 @@ void advManager::animateMove(hero* curr, int direction, int xInc, int yInc)
 // Access recovery: DC cursor.cpp:731/750/905 switches to hero.h:641/645
 // for IsFlying, including its can_land call. Complete expands that same
 // checkTerrain=1 wrapper; canLand is private, not a direct cursor API.
+// Original DC MoveHero public encodes H_NAAUtype_point@@PAH020:
+// standEnd, computerMove and isRemoteMove are bool, not byte integers.
+// Mac 90374..903d0 and 904fc..9055c construct the fixed viewport center
+// before GetCell and SetEnvironmentOrigin; preserve getMapCenter there.
 VA(0x004805e0, 0x131C)
 DC_ADDRESS(0x07aa54, 0x1166)
 MAC_ADDRESS(0x08f5a0, 0x1578)  // ret 0x1c + caller arg order/call set
-NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_point& triggerPoint, int* noMove, unsigned char computerMove, int* foughtBattle, unsigned char isRemoteMove)
+NewmapCell* advManager::moveHero(int direction, bool standEnd, type_point& triggerPoint, int* noMove, bool computerMove, int* foughtBattle, bool isRemoteMove)
 {
     unsigned char becameBoat = 0;
     hero* curr;
@@ -634,7 +641,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         updateScreen(0, 0);
     }
 
-    type_point point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8, m_radarOrigin.m_z);
+    type_point point = getMapCenter();
     int ground = getCell(point)->m_groundSet;
     if (ground != m_lastTerrain) {
         m_lastTerrain = ground;
@@ -654,8 +661,7 @@ NewmapCell* advManager::moveHero(int direction, unsigned char standEnd, type_poi
         }
     }
 
-    point = type_point(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                       m_radarOrigin.m_z);
+    point = getMapCenter();
     setEnvironmentOrigin(point, 0);
     m_scrollX = m_scrollY = 0;
 

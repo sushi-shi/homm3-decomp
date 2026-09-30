@@ -1324,7 +1324,7 @@ public:
     // animate_move contains this ordinary helper's complete expansion.
     // Keep the source call and let VC6 make that per-build inline decision.
     void startCursor(int direction);
-    void stopCursor(unsigned char standEnd);
+    void stopCursor(bool standEnd);
     void drawCursor(int cellX, int cellY);
     void drawCursorShadow(int cellX, int cellY);
     void drawCursorAlpha();
@@ -1451,10 +1451,10 @@ public:
     // that order: the direction is the cell's own high nibble, standEnd
     // is `i == 0`, and both `int*` slots are read back immediately
     // after the call as the no-move / fought-battle verdicts.
-    NewmapCell* moveHero(int direction, unsigned char standEnd,
+    NewmapCell* moveHero(int direction, bool standEnd,
                          type_point& triggerPoint, int* noMove,
-                         unsigned char computerMove, int* foughtBattle,
-                         unsigned char isRemoteMove);
+                         bool computerMove, int* foughtBattle,
+                         bool isRemoteMove);
     int getMoveShowIt(class hero* currHero, int direction);
     void onMoveHero(class CMapChange* change);
     void onTeleportHero(class CMapChange* change);
@@ -1480,13 +1480,13 @@ private:
     void doEventPrison(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
     NewmapCell* endMoveHero(class hero* curr, NewmapCell* returnCell,
-                              unsigned char isRemoteMove, long origX,
-                              long origY, unsigned char standEnd,
+                              bool isRemoteMove, long origX,
+                              long origY, bool standEnd,
                               int* foughtBattle);
     NewmapCell* handleStopOnTrigger(class hero* curr,
                                        NewmapCell* destCell,
-                                       unsigned char isRemoteMove,
-                                       unsigned char standEnd,
+                                       bool isRemoteMove,
+                                       bool standEnd,
                                        int* foughtBattle,
                                        long curMoveCost,
                                        long nextMoveMinCost);
