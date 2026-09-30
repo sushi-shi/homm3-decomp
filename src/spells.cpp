@@ -257,7 +257,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     m_nextActionGridIndex = -1;
     m_nextActionGridIndex2 = -1;
 
-    int mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
+    TSkillMastery mastery = m_heroes[m_currentSide]->getSpellLevel(spellToCast,
                                                         m_magicTerrain);
     switch (spellToCast) {
     case SPELL_QUICKSAND:
@@ -503,9 +503,9 @@ static int updateSpellTarget(long hex)
     hero* castingHero = manager->m_heroes[manager->m_currentSide];
     int creatureSpell = manager->m_nextAction == AI_ORDER_CREATURE_SPELL;
     unsigned int spellFlags = g_spellTraits[spell].m_flags;
-    int mastery;
+    TSkillMastery mastery;
     if (!castingHero)
-        mastery = 0;
+        mastery = eMasteryNone;
     else
         mastery = castingHero->getSpellLevel(spell, manager->m_magicTerrain);
 
@@ -682,7 +682,12 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 // merged-return / surviving-copy class docs/vc6 records for the retail CL
 // generation, and it is exactly what hero.cpp's THeroScreenWindow::
 // WindowHandler note calls "which member of the epilogue merge-set C2
-// emits in place".  No source bracketing reaches it.
+// emits in place". Tested scope-only probes did not change that pairing.
+// Named-call review: all 19 source ShowSpellMessage calls survive on Mac.
+// Windows keeps 16 sites versus retail's 17 after merging switch tails; this
+// is not expansion of the 0x999-byte helper. The Mac Bloodlust arm likewise
+// jumps to the mass arm's final DrawFrame at 0x192048. Keep those canonical
+// calls; only the finder calls are confirmed extra expansions in this family.
 // The frame is 0x80 against retail's 0x94.  The 0x14 is a SECOND TObstacle
 // stack slot: retail gives {QUICKSAND, LAND_MINE} [-0x90] and
 // {FORCE_FIELD, FIRE_WALL} [-0x5c], we coalesce all four onto [-0x8c].
@@ -2384,7 +2389,7 @@ army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
 // the earlier 96.5992% MAX. Explicit target-presence and bool parity-local
 // probes (four source states, one reproduced object) are byte-identical.
 VA(0x005a39c0, 0x2B4) MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity, dc 0x152edc
-bool combatManager::validSpellTarget(SpellID spellId, long mastery,
+bool combatManager::validSpellTarget(SpellID spellId, TSkillMastery mastery,
                                      long targetIndex,
                                      long castingSide,
                                      bool firstTarget,
@@ -2603,7 +2608,7 @@ army* combatManager::findAnimateDeadTarget(int side, int hex)
 // CASTER'S OWN stacks: the spell is the one that walks from target to
 // target, so a friendly occupant is not an aim point.
 VA(0x005a40d0, 0x9B) MAC_ADDRESS(0x194a34, 0x114)  // dc 0x153580
-bool combatManager::hasValidSpellTarget(SpellID spellId, long mastery,
+bool combatManager::hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
                                         long castingSide,
                                         bool firstTarget,
                                         long creatureSpell)

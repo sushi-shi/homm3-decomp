@@ -1510,7 +1510,7 @@ public:
     // DC public symbols encode firstTarget, redirected and validation results
     // as native bool (_N); the lowered debug records spell them T_UCHAR.
     // Keep creatureSpell integral for Complete's artifact caster value 2.
-    bool hasValidSpellTarget(SpellID spellId, long mastery,
+    bool hasValidSpellTarget(SpellID spellId, TSkillMastery mastery,
                              long castingSide,
                              bool firstTarget,
                              long creatureSpell);  // 0x5a40d0
@@ -1520,9 +1520,9 @@ public:
     // fixes the parameter ORDER of the callee from the caller's push
     // sequence. Both parameter lists are the DC roster's
     // (spells.cpp:2645 / 3078); DC spells mastery as TSkillMastery.
-    // The surviving long spelling needs a separate typed-caller audit;
-    // the enum is now available in this header.
-    bool validSpellTarget(SpellID spellId, long mastery,
+    // Hero getSpellLevel already returns this enum; callers forward it
+    // directly, including eMasteryExpert for the artifact casts.
+    bool validSpellTarget(SpellID spellId, TSkillMastery mastery,
                           long targetIndex, long castingSide,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a39c0

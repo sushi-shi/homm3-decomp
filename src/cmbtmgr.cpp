@@ -1794,18 +1794,18 @@ void combatManager::setNextArmy(int group, int index)
             if (castingHero) {
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ANGELIC_ALLIANCE)) {
-                    if (hasValidSpellTarget(SPELL_PRAYER, 3, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_PRAYER, eMasteryExpert, m_currentSide, 1, 2))
                         castSpell(SPELL_PRAYER, -1, 2, -1, 3, 10);
                 }
                 if (castingHero->isWieldingArtifact(
                         ARTIFACT_ARMOR_OF_THE_DAMNED)) {
-                    if (hasValidSpellTarget(SPELL_SLOW, 3, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_SLOW, eMasteryExpert, m_currentSide, 1, 2))
                         castSpell(SPELL_SLOW, -1, 2, -1, 3, 50);
-                    if (hasValidSpellTarget(SPELL_CURSE, 3, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_CURSE, eMasteryExpert, m_currentSide, 1, 2))
                         castSpell(SPELL_CURSE, -1, 2, -1, 3, 50);
-                    if (hasValidSpellTarget(SPELL_WEAKNESS, 3, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_WEAKNESS, eMasteryExpert, m_currentSide, 1, 2))
                         castSpell(SPELL_WEAKNESS, -1, 2, -1, 3, 50);
-                    if (hasValidSpellTarget(SPELL_MISFORTUNE, 3, m_currentSide, 1, 2))
+                    if (hasValidSpellTarget(SPELL_MISFORTUNE, eMasteryExpert, m_currentSide, 1, 2))
                         castSpell(SPELL_MISFORTUNE, -1, 2, -1, 3, 50);
                 }
             }
