@@ -1318,9 +1318,6 @@ static const int g_aiSleepHotkeys[2] = { 44, 17 };
 DATA(0x0065f238)
 static const char* g_aszSleepIcons[2] = { "iam005.def", "iam011.def" };
 
-DATA(0x0065f240)
-static int g_sleepImage = -1;
-
 VA(0x00403c40, 0x78)
 DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
@@ -1350,16 +1347,20 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // 240-trial, 12-family target-local state campaign remained at 86.6667%; the
 // residual is a nested vector<int> inliner decision, not evidence to erase the
 // helper boundary again.
+// Mac 0x3abc..0x3ad4 lazily initializes the previous-image cache to -1,
+// proving function-local static ownership. VC6 constant-initializes the same
+// retail data cell at 0x65f240 without a runtime guard.
 VA(0x00403cc0, 0x215)
 DC_ADDRESS(0x00118c, 0x4)
 MAC_ADDRESS(0x003aa4, 0xf4)  // anchor-global
 void TAdventureMapWindow::setSleepImage(int image)
 {
-    if (image != g_sleepImage) {
+    DATA(0x0065f240) static int previousImage = -1;
+    if (image != previousImage) {
         message iconMessage;
         iconMessage.m_extraText = g_aszSleepIcons[image];
 
-        g_sleepImage = image;
+        previousImage = image;
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
             SLEEP_ID, iconMessage.m_extra);
         broadcastMessage(MESSAGE_WIDGET,
