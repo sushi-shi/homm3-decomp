@@ -2339,8 +2339,11 @@ long army::getAttackModifier(const army* enemy,
 VA(0x00442590, 0xC2)
 DC_ADDRESS(0x0477e8, 0xde)
 MAC_ADDRESS(0x04e31c, 0x17c)
+// Original public ?get_adjusted_defense@army@@QBAJPBV1@_N@Z proves the
+// Frenzy flag bool. Every Complete caller supplies 0 or 1; keep the native
+// domain alongside the adjusted-attack interface and modifier wrappers.
 long army::getAdjustedDefense(const army* enemy,
-                                unsigned char frenzyIncluded) const
+                                bool frenzyIncluded) const
 {
     if (frenzyIncluded && m_spellInfluence[56])
         return 0;
