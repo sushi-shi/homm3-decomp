@@ -1980,17 +1980,20 @@ int TQuestGuard::save(TAbstractFile* outfile)
 // DC uses one static TPickANumber(0,47). Complete read0x574610 expands
 // the same static reference interface with the revised dynamic name table:
 // construct availability, remove names used by this map, then select one.
+// Mac 0x16aee0..0x16afec uses packed vector<bool> fill and bit proxies
+// (0x131708, 0xe73b8, 0x99fb8). VC6 selects its generic byte container
+// for the same declaration, as in TPickANumber; keep the native bool type.
 DC_ADDRESS(0x12d084, 0x4c)
 inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
-    std::vector<unsigned char> nameAvailable(g_seerHutNameList.size());
+    std::vector<bool> nameAvailable(g_seerHutNameList.size());
     unsigned int name;
     for (name = 0; name < nameAvailable.size(); ++name)
-        nameAvailable[name] = 1;
+        nameAvailable[name] = true;
 
     unsigned int hut;
     for (hut = 0; hut < g_game->m_worldMap.m_seerHutList.size(); ++hut)
-        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = 0;
+        nameAvailable[g_game->m_worldMap.m_seerHutList[hut].m_nameIndex] = false;
 
     int pick = rand()
         % (nameAvailable.size() - g_game->m_worldMap.m_seerHutList.size());
@@ -2491,8 +2494,8 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // name, all set, then cleared for each name the map's existing huts already
 // hold, then a random one of what is left. The count subtracted from the
 // name total is the hut list's own size, recomputed from a fresh gpGame -
-// retail loads it twice and this transcribes both. The byte array is a real
-// std::vector<unsigned char>: `_Allocate`'s own `if (_N < 0) _N = 0` clamp
+// retail loads it twice and this transcribes both. VC6's vector<bool> is a
+// byte container: `_Allocate`'s own `if (_N < 0) _N = 0` clamp
 // and `_Construct`'s per-element null check are both in the bytes, and it
 // carries NO unwind action because nothing between its construction and its
 // destruction can throw - rand() is extern "C" and nothrow under /GX.
