@@ -895,7 +895,8 @@ void type_AI_combat_data::castSpell(
         if (manaCost > m_mana)
             continue;
 
-        type_spell_choice choice(spell, mastery, spellPower, spellDuration);
+        type_spell_choice choice(static_cast<ESpellId>(spell),
+                                  mastery, spellPower, spellDuration);
         switch (g_spellTraits[spell].m_flags & g_aiSpellClassMask) {
         case g_aiSpellDirectDamage:
             getDamageSpellValue(choice, defender);
@@ -921,7 +922,7 @@ void type_AI_combat_data::castSpell(
         }
     }
 
-    if (bestChoice.m_spell == -1)
+    if (bestChoice.m_spell == SPELL_NONE)
         return;
 
     m_mana -= bestManaCost;
