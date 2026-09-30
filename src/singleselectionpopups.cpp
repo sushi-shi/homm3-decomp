@@ -24,9 +24,12 @@
 // All four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox),
 // similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 
-// The CreateWin family is reconstructed below. CTownDlg retains the Complete
-// sprite widget and the canonical dwelling lookup; the older Dreamcast
-// popup additionally constructs a button.
+// The five DC CreateWin bodies additionally construct a 16x16 iGPCrDiv.def
+// button at (10,10): 0x12e0f0/0x12e28e/0x12e668/0x12e890/0x12ec0a.
+// Complete's Mac bodies 0x16bcb0/0x16bf54/0x16c204/0x16c63c/0x16cbcc
+// contain only the authored text/image/icon widgets; that extra button and
+// its Add are absent. Their initial virtual calls are the existing setup
+// calls (DC vtable+0x24, Mac vtable+0x2c), with the same dialog dimensions.
 #include "va.h"
 #include "includes.h"
 
@@ -523,7 +526,8 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
         m_window->addWidget(m_widgets[i], -1);
     g_windowManager->addWindow(m_window, -1, 1);
     updateProgressBar();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    // Mac 0x16d840..0x16d854 expands the shared full-screen facade.
+    g_windowManager->updateScreen();
 }
 
 // Slot 0 of vtable 0x641b14.
@@ -536,7 +540,9 @@ TRandomMapProgress::~TRandomMapProgress()
     g_windowManager->removeWindow(m_window);
     delete m_window;
     if (m_barSprite)
-        m_barSprite->dispose();
+        // Mac 0x16d8cc..0x16d8e0 expands the sprite-disposal facade;
+        // the surrounding null guard belongs to this caller.
+        ResourceManager::dispose(m_barSprite);
     for (unsigned int i = 0; i < m_widgets.size(); i++)
         delete m_widgets[i];
 }

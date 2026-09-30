@@ -6082,6 +6082,9 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // a call. CCombatInitMsg's destructor now correctly stays out of line.
 // DC uses DestroyMsg for its pointer payload; Complete's independently proven
 // CWaitForRemoteBattleDlg owns the payload by value, so no DestroyMsg is added.
+// Mac 0xbb1a0 passes the embedded payload at dialog+0x78. After setting the
+// winner, 0xbbcb8..0xbbd08 destroys the pause handler, payload members and
+// dialog base on both received/not-received exits, matching its implicit dtor.
 // Logical bool/byte replay spellings are byte-flat. A direct stats argument
 // does not compile: the DC member records independently prove stats private.
 // Pause-guard source tests (header declaration versus CPP-owned in-class or

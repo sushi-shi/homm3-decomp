@@ -857,7 +857,9 @@ VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 // controls produced two objects without a MAX gain.
 // DC lines 1109..1192 use ResourceManager::Dispose for the sprite and
 // resource pointers. Keep the canonical inline wrapper at those source
-// calls; the two sample loops retain their retail virtual-call spelling.
+// calls. DC sample releases 0x7706/0x786c become Complete resource disposal:
+// Mac 0x7f0c retains the caller's null guard, while 0x8050 is unguarded.
+// The resource* overload preserves those guards without adding sample's.
 // The wrappers restore the retained destroy-range call and retail's loop
 // register allocation (86.37% -> 97.31%). Retail then proves an explicit
 // null guard on route-array deletion; together these recover exact VC6 bytes.
@@ -1467,6 +1469,9 @@ int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, typ
     int moveDir = -1;
     hero* walker;
 
+    // DC 0x9146..0x91b6 also opens DoAdvMenu and conditionally calls
+    // DoSystemOptions from its menu-state flags. Complete Mac 0x9144+0x8ec
+    // has the key arms below and then movement; that menu arm is absent.
     switch (msg.m_codeX) {
     case KEYCODE_SPACE: {
         if (!currHero)
@@ -9295,6 +9300,9 @@ unsigned char advManager::doSystemOptions()
     if (g_config.m_walkSpeed[1] != walkSpeed) {
         int i;
         for (i = 0; i < 10; i++)
+            // DC 0x1e7e6 uses its sample-specific backend. Complete Mac
+            // 0x1ba38..0x1ba58 directly dispatches resource disposal for
+            // each entry, with no additional per-sample null guard.
             ResourceManager::dispose(static_cast<resource*>(m_heroSamples[i]));
         getCursorSampleSet(g_config.m_walkSpeed[1]);
     }

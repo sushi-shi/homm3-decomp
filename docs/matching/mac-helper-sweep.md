@@ -325,3 +325,47 @@ Windows `0x58e700` receives `CNetPlayerInfo*`, registers the player and
 reconciles version compatibility; its project name is now
 `addPlayerAndUpdateVersion`, with a Complete-only inventory entry.
 The seat helper's `getPlayer` call was already present under the wrong identity.
+
+### Popup and adventure cleanup review
+
+The random-map progress window now calls the canonical full-screen update
+and sprite-disposal facades. Mac expands both operations; the original
+caller null guard remains around sprite disposal. The focused Windows
+comparison preserves all scores in `singleselectionpopups`.
+
+The five older popup builders each add a separate `iGPCrDiv.def` button.
+Their complete Mac bodies retain the authored text/image/icon widgets but
+omit that extra button. The initial virtual calls are the existing dialog
+`setup` calls, and all six flagged caption/format lookups already have their
+corresponding `getText` calls. The native sites are recorded with the family.
+
+Adventure teardown's twenty resource dispatches and two deleting destructors
+are represented by its source disposal and delete expressions. The two
+sample loops and the options-window sample reload use Complete resource
+disposal with their native guards; DC's sample-specific backend is older.
+The extra DC adventure-menu key arm and hero skill-page key controls are
+absent from the corresponding Complete dispatchers. In `doCombat`, the
+dialog's embedded combat-init payload and implicit destructor replace DC's
+separate message pointer and `DestroyMsg`; the native stack address and
+destruction sequence are recorded beside the caller.
+
+### Sprite-cache and selection lifetime review
+
+Eighteen retained sprite methods were inspected as complete Mac bodies
+(`0x8a604..0x8b03c`). Their palette/frame operations are represented; none
+has DC's conditional `SpriteDataReload`. The expanded `setPalette(TPalette16&)`
+in `resetPalette` (`0x8a6b8..0x8a6f8`) likewise deletes/copies the palette
+without reloading. Other unpaired sprite methods still need caller evidence.
+
+DC's complete `delSprFromCache` (`0x1226d4+0x1d6`) disables file mapping,
+walks cached DEF resources, deletes palettes and frames, and clears `Sp_loaded`.
+The complete selection destructors on Windows (`0x583b40+0x37d`) and Mac
+(`0x17b504+0x3a8`) contain no eviction phase: after owned-resource and widget
+cleanup, their save-header branch joins member/base destruction directly.
+Complete's existing empty helper and guarded call therefore remain. The
+twelve Mac virtual resource-disposal sites and two deleting-destructor sites
+in that caller correspond to its existing source disposal/delete expressions.
+
+The full checkpoint after the two progress-dialog changes passed: both
+Windows functions remain exact, no source edit lowered Windows MAX, and
+the Mac preservation and source ownership/inventory gates passed.

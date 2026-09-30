@@ -3594,6 +3594,10 @@ int THeroScreenWindow::windowHandler(message& msg)
         g_windowManager->m_lastHover = -1;
         g_inputManager->forceMouseMove();
     }
+    // DC 0xcf64c..0xcf6fa also handles key codes 1/65/66 for its
+    // widget/skill pages, then calls full-screen UpdateScreen. Complete
+    // Mac 0xf977c..0xf97dc has only these shift handlers before widget
+    // dispatch; the extra page controls and their redraws are absent.
     if (msg.m_id != MESSAGE_WIDGET)
         return MESSAGE_DISPATCH_CONSUME;
 

@@ -3867,10 +3867,10 @@ singleselectionpopups	??0CHeroDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175a70	t
 singleselectionpopups	??0CHotspotWidget@@QAE@HHHHH@Z	100.0000	100.0000	100.0000	0x175220	tokens1:8b058aec3953
 singleselectionpopups	??0CTeamAlignmentDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x1764d0	tokens1:e16a8d46b857
 singleselectionpopups	??0CTownDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x175e10	tokens1:5a7fa3f8ffab
-singleselectionpopups	??0TRandomMapProgress@@QAE@H@Z	100.0000	100.0000	100.0000	0x176f00	tokens1:88c120c42110
+singleselectionpopups	??0TRandomMapProgress@@QAE@H@Z	100.0000	100.0000	100.0000	0x176f00	tokens1:2fda2ff33cc6
 singleselectionpopups	??1CBitmapWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x175a60	-
 singleselectionpopups	??1CTeamAlignmentDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x176530	-
-singleselectionpopups	??1TRandomMapProgress@@UAE@XZ	100.0000	100.0000	100.0000	0x1770c0	tokens1:e0e79e6778f8
+singleselectionpopups	??1TRandomMapProgress@@UAE@XZ	100.0000	100.0000	100.0000	0x1770c0	tokens1:d0e20fce8290
 singleselectionpopups	??_GCBonusDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1754c0	-
 singleselectionpopups	??_GCHeroDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175e30	-
 singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175260	-
