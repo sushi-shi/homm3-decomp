@@ -111,9 +111,9 @@ public:
 protected:
     bool buildMarkets(int* supply);
     void calculateReserve();  // 0x429ad0
-    bool canTradeResources(const int* cost, int* supply,
+    bool canTradeResources(const int* const cost, int* const supply,
                              std::vector<long>& tradeQty);
-    bool checkTradeSupply(const int* cost, long number, int* supply,
+    bool checkTradeSupply(const int* const cost, long number, int* const supply,
                             std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
     long getTotalValue(long basicValue, int* const cost);  // 0x42a150

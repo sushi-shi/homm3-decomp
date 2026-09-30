@@ -1065,8 +1065,10 @@ long type_AI_player::getTotalValue(long basicValue, int* const cost)
 VA(0x0042a2b0, 0x1BF)
 DC_ADDRESS(0x030334, 0x196)
 MAC_ADDRESS(0x02e1b4, 0x284)  // retail link order + arity
-bool type_AI_player::checkTradeSupply(const int* cost, long number,
-                                        int* supply,
+// Original DC public IAA_NQBHJQAH... proves const pointer parameters:
+// cost's elements are const, while supply's elements remain writable.
+bool type_AI_player::checkTradeSupply(const int* const cost, long number,
+                                        int* const supply,
                                         std::vector<long>& tradeQty)
 {
     unsigned char tradeNeeded = 0;
@@ -1135,7 +1137,9 @@ void type_AI_player::tradeResources(const int* cost, long number)
 VA(0x0042a580, 0x5BE)
 DC_ADDRESS(0x0305b4, 0x41e)
 MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
-bool type_AI_player::canTradeResources(const int* cost, int* supply,
+// Original DC public IAA_NQBH QAH... proves the same const pointer
+// contract as checkTradeSupply; do not infer it from authored labels.
+bool type_AI_player::canTradeResources(const int* const cost, int* const supply,
                                          std::vector<long>& tradeQty)
 {
     // DC records long markets/market_value/on_hand, double efficiency and
