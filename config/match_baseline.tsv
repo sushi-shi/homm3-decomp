@@ -2085,7 +2085,7 @@ game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	10
 game	?save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	95.4451	95.4451	95.4451	0xc4f10	tokens1:cf89ee258fc7
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140	tokens1:270814b07abd
 game	?save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0	tokens1:ccc683ca5891
-game	?save@game@@AAEHPAVTAbstractFile@@@Z	89.6541	89.6541	98.6650	0xbe3f0	tokens1:38f91c47d8bb
+game	?save@game@@AAEHPAVTAbstractFile@@@Z	92.8015	92.8015	98.6650	0xbe3f0	tokens1:c06e5db19089
 game	?save@generator@@QAE_NPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0	tokens1:3de7c2f6368f
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670	tokens1:3e527ced92ec
 game	?saveBoatPool@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40	tokens1:c43bccd59268
@@ -2576,7 +2576,7 @@ mapcell	?load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	96.1130	96.1130	96.1450	0x100430	tokens1:26875f72c1ff
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200	tokens1:aa34239b5044
 mapcell	?loadMapLayer@NewfullMap@@AAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920	tokens1:052c29434fa5
-mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	98.0424	98.0424	100.0000	0x104b70	tokens1:5215e5657875
+mapcell	?loadMapObjects@NewfullMap@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104b70	tokens1:bf6cb7802d57
 mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790	tokens1:9f8cb46fc947
 mapcell	?loadObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1036d0	tokens1:6fe8bb305dcf
 mapcell	?loadObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103f00	tokens1:f815b5938899

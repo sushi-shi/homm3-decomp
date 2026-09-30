@@ -4144,21 +4144,25 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 
 // Neither list read has the `count == 0 -> clear()` arm readTimedEventList
 // needs: both go straight into resize, which is loadBlackBox's shape.
-// DC mapcell.cpp:3974 names the shared loop counter `int x`; restoring that
-// signed local closes Complete's final error-cleanup block (61/61 CFG blocks).
+// DC mapcell.cpp:3974 names distinct int_buffer, count and x locals at
+// sp+0x20, sp+0x10 and sp+0x14. The status stores at 0xf31a8 and 0xf3202
+// precede their guards; Complete uses readValue over TAbstractFile here.
+// Keeping the read buffer separate from the status restores all 61 CFG blocks.
 
 VA(0x00504b70, 0x4E9) MAC_ADDRESS(0x1277f0, 0x2a8)  // dc 0xf318c
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
+    int intBuffer;
     int count;
-    if (readValue(infile, count) < sizeof(count))
+    int x;
+    count = readValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    m_objectTypes.resize(count);
-
-    int x;
+    m_objectTypes.resize(intBuffer);
     for (x = 0; x < m_objectTypes.size(); ++x) {
-        if (loadObjectType(infile, &m_objectTypes[x]) < 0)
+        count = loadObjectType(infile, &m_objectTypes[x]);
+        if (count < 0)
             return -1;
     }
 
@@ -4186,12 +4190,14 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
     incProgressBar(1);
 
-    if (readValue(infile, count) < sizeof(count))
+    count = readValue(infile, intBuffer);
+    if (count < sizeof(intBuffer))
         return -1;
 
-    m_objects.resize(count);
+    m_objects.resize(intBuffer);
     for (x = 0; x < m_objects.size(); ++x) {
-        if (loadObject(infile, &m_objects[x]) < 0)
+        count = loadObject(infile, &m_objects[x]);
+        if (count < 0)
             return -1;
         m_objects[x].m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
