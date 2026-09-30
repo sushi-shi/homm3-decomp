@@ -1476,7 +1476,7 @@ private:
     // hands it the trigger cell, a second copy of the map point and
     // playerData::IsLocalHuman's bool result unwidened.
     void doEventShipyard(NewmapCell* cell, type_point point,
-                         unsigned char humanPlayer);
+                         bool humanPlayer);
     void doEventPrison(class hero* currentHero, NewmapCell* cell,
                        type_point point, bool humanPlayer);
     NewmapCell* endMoveHero(class hero* curr, NewmapCell* returnCell,
