@@ -2546,6 +2546,9 @@ DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 // Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
 // Mac 0x4ec18/0x4ec68 expand getOwningSide for the side-mass pointer/count.
+// With those calls retained, getControllingSide stays out of line inside the
+// first damage-reduction expansion (97.66%). Combining the defense product
+// into its initializer is byte-flat; retain the canonical helper path.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    bool ranged,
                                    const army* excluded) const
