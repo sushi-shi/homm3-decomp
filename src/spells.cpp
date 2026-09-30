@@ -4036,6 +4036,8 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // lowered encoding. All callers pass m_effected, preserving its bool domain.
 // DC records iMaxFrames in procedure scope, outside the animation block.
 // Its assignment follows LoadSpellEffect; it is not initialized on entry.
+// A bool anyDied latch inferred from its 0/1 writers and predicate-only use
+// is VC6 byte-flat at 96.3708%; native debug records do not prove its type.
 VA(0x005a67c0, 0x4AC)
 DC_ADDRESS(0x155b28, 0x3e2)
 MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity
