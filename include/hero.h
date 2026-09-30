@@ -921,7 +921,7 @@ public:
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
-    unsigned char removeArtifact(TArtifact artifact);
+    bool removeArtifact(TArtifact artifact);
     // 0x004e23d0 - drains another hero's equipped slots and backpack
     // into this hero's backpack.
     void transferArtifacts(hero* src);

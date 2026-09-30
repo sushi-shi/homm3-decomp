@@ -5304,10 +5304,12 @@ void hero::removeBackpackArtifact(short slot)
     m_backpackCount--;
 }
 
+// Original public ?remove_artifact@hero@@QAA_NW4TArtifact@@@Z
+// proves the by-id bool result; the slot overload remains void.
 VA(0x004e2dd0, 0xFC)
 DC_ADDRESS(0x0d3bec, 0x78)
 MAC_ADDRESS(0x103b04, 0xd4)
-unsigned char hero::removeArtifact(TArtifact artifact)
+bool hero::removeArtifact(TArtifact artifact)
 {
     if (artifact == ARTIFACT_SPELL_SCROLL)
         return 0;
