@@ -6119,7 +6119,10 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // as retail does. CCombatInitMsg's destructor correctly stays out of line.
 // DC uses DestroyMsg for its pointer payload; Complete's independently proven
 // CWaitForRemoteBattleDlg owns the payload by value, so no DestroyMsg is added.
-// Logical bool/byte replay spellings are byte-flat. The raw stats accessor
+// Logical bool/byte replay spellings are byte-flat. DC 6314 initializes
+// replay to zero, then 6317/6318 guards its assignment to one. Recovering
+// that phase matches retail's zero-before-guard instruction order.
+// The raw stats accessor
 // preserves the independently proven private member and direct-address payload.
 // Pause-guard source tests (header declaration versus CPP-owned in-class or
 // ordinary out-of-class bodies) are flat at 95.6234 and keep its dtor exact.
@@ -6137,7 +6140,7 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // contract); preserve the existing model and the independently proven locals.
 // Recover the direct raw-stats pointer payload through the stats accessor;
 // the provisional four-byte caller copy had no native counterpart. This
-// owning source edit currently measures 96.68795%, with the AI bool target
+// replay-phase recovery measures 96.91178%, with the AI bool target
 // relocation rename still pending the collective refresh.
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
@@ -6157,7 +6160,9 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
     demobilizeCurrHero(0, 1);
     reseed(0, 0);
 
-    unsigned char replay = (g_goSolo && g_goSoloTest) ? 1 : 0;
+    unsigned char replay = 0;
+    if (g_goSolo && g_goSoloTest)
+        replay = 1;
     if (!rightHuman && !leftHuman && !replay) {
         hero* loser;
         int winningPlayer;
