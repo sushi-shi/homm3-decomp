@@ -1591,7 +1591,10 @@ CSprite* ResourceManager::getSprite(const char* name)
          sequenceIndex < sdef.m_numSequences;
          ++sequenceIndex) {
         TSpriteDataHeader& sequence = sequences[sequenceIndex];
-        sprite->allocateSeq(sequence.m_sequenceNumber, sequence.m_numFrames);
+        // Retail saves this value before allocateSeq and retains it through
+        // frame acquisition; Mac 15421c/154410 likewise owns it in r22.
+        int sequenceNumber = sequence.m_sequenceNumber;
+        sprite->allocateSeq(sequenceNumber, sequence.m_numFrames);
 
         int frameIndex;
         int frameNameOffset = 0;
@@ -1668,7 +1671,7 @@ CSprite* ResourceManager::getSprite(const char* name)
                 addToCache(frame);
             }
 
-            sprite->addFrame(sequence.m_sequenceNumber, frame);
+            sprite->addFrame(sequenceNumber, frame);
             delete[] frameData;
         }
     }
