@@ -2168,7 +2168,7 @@ bool army::checkObstacleAttacks(bool isWalking)
 // Champion's joustBonus with the step count - and re-wire auras and
 // facing at the end.
 
-// DC names/types: save_facing (int), initial_walk (unsigned char),
+// DC names/types: save_facing (int), initial_walk (lowered bool byte),
 // direction and both next_cell locals (const int). Its named calls recover
 // remove_aura, EndWalk, GetObstacle, Is, OffsetToFront and
 // check_obstacle_attacks instead of pasted helper bodies.
@@ -2176,6 +2176,9 @@ bool army::checkObstacleAttacks(bool isWalking)
 // restoring the remaining helpers/types reaches 99.32%. Stopping before
 // revealing the obstacle (DC 2459 before GetObstacle:2461, likewise
 // 2481/2483) closes the two store-order differences: 100% without pins.
+// Refreshed bool model is 99.906%: its only difference is getSpeed
+// loading SLOW before the side/slot stores in retail and after in VC6.
+// The boolean forwarding and final succeeded return agree.
 // Merely swapping stop/succeeded after the visibility store cross-jumps
 // the trap arms and gives 95.78%; the full statement order matters.
 // Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0,
@@ -4452,7 +4455,9 @@ int army::otherArmyAdjacent(int group, int index)
 VA(0x00446720, 0x107)
 DC_ADDRESS(0x04b454, 0x104)
 MAC_ADDRESS(0x052938, 0x174)  // anchor-global
-void army::turn(unsigned char animateTurn)
+// Original ?Turn@army@@QAAX_N@Z proves the animation predicate;
+// Walk forwards its native bool initialWalk and all other callers use 0/1.
+void army::turn(bool animateTurn)
 {
     if (m_facing == FACING_ATTACKER) {
         if (animateTurn)

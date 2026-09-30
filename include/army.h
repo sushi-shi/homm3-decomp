@@ -780,7 +780,7 @@ private:
 public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
-    void turn(unsigned char animateTurn);
+    void turn(bool animateTurn);
     bool needToTurn(int direction) const;
     bool canCastResurrect(long hex) const;
     bool canCastResurrect() const;
@@ -1080,7 +1080,7 @@ private:
     // do_attack's kill-accounting tail.
     void doPostAttack(army* target, int iDamage, int iKilled,
                         int total_life);
-    void turn(unsigned char play_animation); // 0x446720
+    void turn(bool play_animation); // 0x446720
     void setupAnimation();                   // 0x446830
     void playAnimation(int sequence, int nframes, int start_frame);
     // 0x43e140, carcass in army.cpp; declared here because army::Fly
