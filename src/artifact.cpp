@@ -535,6 +535,11 @@ bool initializeArtifactTraitsTable()
 // the retail dataflow and raises 89.3248% to 89.3644%.
 // Naming the consumed slot proxy in the earlier owner-query model gave
 // 80.5782% and kept all three unwanted calls, failing its expansion prediction.
+// Moving the local mask construction after the cost store gives 89.08911%
+// versus 89.36237%. Native's cost/constructor instruction order and DC's
+// older field-mask assignments do not distinguish these declarations:
+// construction only clears a local mask, so its stores can move. Keep the
+// current placement; this bounded lifetime probe is inconclusive.
 // Explicit successful-match breaks in either mask search leave all 1504
 // initializer bytes unchanged, including both retained equality calls.
 // Moving the four Complete-only defaults to the caller and chaining their two
