@@ -4722,39 +4722,14 @@ void advManager::drawBoatPartShadow(int part, TDrawParts& boatParts,
 }
 
 // E:\gamedcs\advmgr.cpp:5941
-// Residual (87.5901%): BOUNDED, and the model proves it (2026-08-21). The
-// whole delta is one callee-saved role swap - retail holds `this` in ESI and
-// the object-list pointer in EDI, we hold them the other way round - plus the
-// four-byte frame shift that follows it. Flow-distance 2, 125 blocks against
-// retail's 125, identical call multiset. `why-reg --model` reads the SAME
-// three definition slots in the SAME order on both sides (#0@8, #1@17, #2@21)
-// and reports the only lever as "make `this` the first-created call-crossing
-// pseudo"; `this` is minted between the parameters and the body locals, so no
-// declaration, include or spelling change can create a local's handle before
-// it. That is C2-side handle STATE (catalog C1 class), not handle order, and
-// it is not source-reachable. The one candidate the model still compiled
-// (swapping the baseX/baseY declarations) measured +8 distance, no
-// improvement. DrawAdvObjShadow below carries the identical wall.
-// 2026-09-06, polish lane 36 (87.5901 -> 87.9441), the DC LOCAL-SCOPE SWEEP,
-// and it PARTLY REFUTES the paragraph above: a source knob does move this
-// row.  The Dreamcast block names `Obj` (CodeView 0x30b6 = `CObject*`,
-// sp+0x9c) beside ObjCell/ObjType/SprPtr, i.e. the map's object row is
-// addressed ONCE through a named pointer and both `typeIndex` reads go
-// through it, where this body subscripted `mapObjects->objects[...]` twice.
-// The other three names in that group are renames this body already has
-// (ObjCell = objCell, ObjType = objType, SprPtr = sprite).  The `this`
-// ESI/EDI permutation the note above describes is unchanged; this was the
-// last missing named local, not a fix for it.
-// 2026-09-06, polish lane 38, the DC TYPE-RECORD sweep: the block types both
-// of this loop nest's counters T_INT4 where they were written `unsigned`.
-// `numObj` is byte-flat as `int` and is taken (the sibling nests in this file
-// and in viewwrld already spell it that way); `row` as `int` COSTS 0.06
-// (87.9441 -> 87.8809, alone or together with numObj) because the layer
-// compare against the byte member goes signed, so it stays `unsigned`.
-// Canonical map types: current 87.9441 -> 87.7661. Disposable Gruntz
-// forests (seed 20260906, baseline + 16 variants before includes and
-// before this function) retain 87.7661 in all 34 trials. No probe noise
-// is retained; these two search placements do not recover the loss.
+// DC 6010 and Mac 0x11770..0x117bc use the signed TObjectCell nibble
+// members in getBitPos; each draw arm reads them again. DC 5957/5958
+// and 5965/5966 preserve the clipping updates. DC retains Obj but no
+// cell/map receiver aliases; Mac reloads m_fullMap at 0x118a0/0x11928.
+// Restoring these native expressions and byte-sized foundHero/foundBoat
+// improves 87.7661 -> 97.52%. Keep the canonical helper calls.
+// Earlier baseX/baseY swaps and both disposable declaration-forest
+// placements did not improve the former cached-receiver implementation.
 VA(0x00410c00, 0x98E)
 DC_ADDRESS(0x012334, 0xc98)
 MAC_ADDRESS(0x011598, 0xa08)  // anchor-callee
@@ -4773,13 +4748,13 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     int tileh = 32;
 
     if (baseX < 8) {
-        tilex = 8 - baseX;
-        tilew = baseX + 24;
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
         baseX = 8;
     }
     if (baseY < 0) {
-        tiley = -baseY;
-        tileh = baseY + 32;
+        tiley -= baseY;
+        tileh -= -baseY;
         baseY = 0;
     }
     if (baseX + tilew > 600)
@@ -4791,58 +4766,25 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     TDrawParts heroParts[6];
     TDrawParts boatParts[6];
-    bool foundHero = scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
-    bool foundBoat = scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+    unsigned char foundHero = scanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    unsigned char foundBoat = scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
-    NewmapCell* cellObjects = thisCell;
-    if (cellObjects->m_objects.size() > 0) {
+    if (thisCell->m_objects.size() > 0) {
         // DC records int row, but retail tests the back edge unsigned (jbe).
         for (unsigned int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
-            for (int numObj = 0; numObj < cellObjects->m_objects.size();
+            for (int numObj = 0; numObj < thisCell->m_objects.size();
                  ++numObj) {
-                NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];
+                NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
                 if (objCell->m_layer != row)
                     continue;
 
-                NewfullMap* mapObjects = m_fullMap;
-                CObject* obj = &mapObjects->m_objects[objCell->m_objectIndex];
+                CObject* obj = &m_fullMap->m_objects[objCell->m_objectIndex];
                 CObjectType* objType =
-                    &mapObjects->m_objectTypes[obj->m_typeIndex];
-                CSprite* sprite = mapObjects->m_sprites[obj->m_typeIndex];
-                // THE OFFSETS ARE RE-DERIVED PER DRAW ARM, not hoisted
-                // (86.3772 -> 87.5901, 2026-08-19). Retail recomputes
-                // `movsx ecx,dl / sar ecx,4` and then `shl dl,4 / movsx /
-                // sar` at EVERY call site, which is why its body carried
-                // eight more sar and eight more movsx than a single hoisted
-                // pair can produce; with the four arms spelling their own,
-                // both counts match exactly. This copy survives only for the
-                // drawCells bit and is named for that.
-
-                // NOT a family rule - measured, not assumed. Shadow's old
-                // isolated re-derivation loss was superseded once its cases
-                // were grouped into retail's selector-table source shape;
-                // that function now keeps per-arm copies too. DrawUnderlay's
-                // arms already spell their own.
-
-                // Residual (87.5901%): a whole-function callee-saved
-                // permutation - retail holds `this` in ESI and this compile
-                // holds it in EDI, and every downstream binding follows.
-                // Schedule-aligned, flow-distance 2 of 125 blocks, and both
-                // sides emit the same two jump tables (checked directly: the
-                // diff's apparent table-only-on-our-side is an alignment
-                // artifact). No source knob reaches a `this` register
-                // choice; it is the B-family wall the campaign prices at
-                // ~0 closures. The DC roster's two scoped triples named
-                // `part`, `partHigh`, and `partLow` are now restored in both
-                // hero/boat loops below; they compile byte-flat at 87.5901,
-                // closing the last missing-local hypothesis without changing
-                // the allocator wall.
-                signed char bitOffsets = objCell->m_offsets;
-                signed char bitY = bitOffsets >> 4;
-                bitOffsets <<= 4;
-                signed char bitX = bitOffsets >> 4;
-                int bit = CObjectType::getBitPos(bitX, bitY);
-                if (!objType->m_drawCells[bit] || objType->m_suppressDraw)
+                    &m_fullMap->m_objectTypes[obj->m_typeIndex];
+                CSprite* sprite = m_fullMap->m_sprites[obj->m_typeIndex];
+                if (!objType->m_drawCells[CObjectType::getBitPos(
+                        objCell->m_cellX, objCell->m_cellY)]
+                    || objType->m_suppressDraw)
                     continue;
 
                 if (g_drawingPuzzle) {
@@ -4898,18 +4840,14 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     default:                        continue;
                     }
 
-                    signed char offsets = objCell->m_offsets;
-                    signed char yOffset = offsets >> 4;
-                    offsets <<= 4;
-                    signed char xOffset = offsets >> 4;
                     int frame = (m_animCtr
-                                 + mapObjects->m_objects[objCell->m_objectIndex]
+                                 + m_fullMap->m_objects[objCell->m_objectIndex]
                                        .m_animationOffset)
                                 % sprite->getNumFrames(0);
                     sprite->drawAdvObj(
                         frame,
-                        tilex + (objType->m_width - xOffset - 1) * 32,
-                        tiley + (objType->m_height - yOffset - 1) * 32,
+                        tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                        tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                         tilew, tileh, g_windowManager->m_screenBitmap,
                         baseX, baseY + 8, false);
                 } else {
@@ -4918,52 +4856,43 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     if (hasFlag(objType->m_objectType)) {
                         int triggerX;
                         int triggerY;
-                        mapObjects->m_objects[objCell->m_objectIndex].findTrigger(
+                        m_fullMap->m_objects[objCell->m_objectIndex].findTrigger(
                             triggerX, triggerY);
                         NewmapCell* triggerCell =
                             getCell(type_point(triggerX, triggerY, z));
                         int owner = getFlaggedObjectOwner(triggerCell);
-                        signed char offsets = objCell->m_offsets;
-                        signed char yOffset = offsets >> 4;
-                        offsets <<= 4;
-                        signed char xOffset = offsets >> 4;
+
                         int frame = (m_animCtr
-                                     + mapObjects->m_objects[objCell->m_objectIndex]
+                                     + m_fullMap->m_objects[objCell->m_objectIndex]
                                            .m_animationOffset)
                                     % sprite->getNumFrames(0);
                         sprite->drawAdvObjWithFlag(
                             frame,
-                            tilex + (objType->m_width - xOffset - 1) * 32,
-                            tiley + (objType->m_height - yOffset - 1) * 32,
+                            tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                            tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                             tilew, tileh, g_windowManager->m_screenBitmap,
                             baseX, baseY + 8,
                             g_systemPalette->m_data[64 + owner], false);
                     } else {
                         if (objCell->m_objectIndex == m_movingObjectIndex) {
-                            signed char offsets = objCell->m_offsets;
-                            signed char yOffset = offsets >> 4;
-                            offsets <<= 4;
-                            signed char xOffset = offsets >> 4;
+
                             m_movingObjectSprite->drawAdvObj(
                                 m_movingObjectSequence * 2 + m_movingObjectFrame,
-                                tilex + (objType->m_width - xOffset - 1) * 32,
-                                tiley + (objType->m_height - yOffset - 1) * 32,
+                                tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                                tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                                 tilew, tileh, g_windowManager->m_screenBitmap,
                                 baseX, baseY + 8, false);
                         } else {
-                            signed char offsets = objCell->m_offsets;
-                            signed char yOffset = offsets >> 4;
-                            offsets <<= 4;
-                            signed char xOffset = offsets >> 4;
+
                             int frame = (m_animCtr
-                                         + mapObjects
+                                         + m_fullMap
                                                ->m_objects[objCell->m_objectIndex]
                                                .m_animationOffset)
                                         % sprite->getNumFrames(0);
                             sprite->drawAdvObj(
                                 frame,
-                                tilex + (objType->m_width - xOffset - 1) * 32,
-                                tiley + (objType->m_height - yOffset - 1) * 32,
+                                tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                                tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                                 tilew, tileh, g_windowManager->m_screenBitmap,
                                 baseX, baseY + 8, false);
                         }
