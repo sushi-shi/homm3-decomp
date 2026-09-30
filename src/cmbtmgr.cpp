@@ -660,6 +660,9 @@ unsigned char combatManager::loadWallTraitsTable()
 // EH states run 0..4, one per `new`, with -1 between them - the frame
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
+// DC 0x5d636..0x5d664 draws GameText[727] and flushes it before loading.
+// Complete Mac 0x6e220..0x6e2d4 starts with pointer/configuration state,
+// stopAllSamples and the battle sample/fade path, without this busy-text draw.
 VA(0x00462a20, 0x83F)
 DC_ADDRESS(0x05d60c, 0x662)
 MAC_ADDRESS(0x06e220, 0x5c4)

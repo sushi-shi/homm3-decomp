@@ -2058,6 +2058,11 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
         return -1;
 
     boat& thisBoat = m_boats[id];
+    // DC game.cpp:2125 names boatCell as NewmapCell* const and calls cell
+    // before the remote-move branch. Its unused result is eliminated in
+    // Complete (Mac 0xce0b4..0xce0c8, Windows 0x4bb317..0x4bb32b).
+    // Preserve that source initializer separately from obscureCell below.
+    NewmapCell* const boatCell = m_worldMap.cell(x, y, z);
     if (!isRemoteMove) {
         type_point location(x, y, z);
         CMCBuildBoat change(location, g_netLocalGamePos);

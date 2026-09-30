@@ -5332,8 +5332,12 @@ long getFullValue(const hero* ourHero)
         SPELL_VALUE_CLASS_MASK ^ SPELL_VALUE_SPECIAL);
     value += caster.getBestSpellValue(SPELL_VALUE_SPECIAL);
 
+    // DC 0x37758 constructs this artifact with -1 before the slot loop.
+    // Mac 0x38f78..0x38f8c overwrites the same two-word temporary each turn;
+    // its initial value is dead, but the source lifetime still spans the loop.
+    type_artifact artifact(ARTIFACT_NONE);
     for (int slot = 0; slot < 19; ++slot) {
-        type_artifact artifact = ourHero->getArtifact(TArtifactSlot(slot));
+        artifact = ourHero->getArtifact(TArtifactSlot(slot));
         if (artifact.m_artifactId != -1)
             value += aiGetValueOfArtifact(artifact, ourHero, 1, 1);
     }

@@ -106,10 +106,13 @@ void Bitmap816::import(int w, int h, unsigned char* data,
         m_map = new unsigned char[m_dataSize];
     if (m_map)
         memcpy(m_map, data, m_dataSize);
-    // DC copies through its reference-taking palette temporary. Complete
-    // embeds the palette and uses the pointer-taking payload assignment
-    // (0x522910), which preserves this bitmap palette's resource identity.
-    m_p16 = &p16;
+    // DC 0x53d34..0x53d48 copies through a separate palette temporary and
+    // destroys it after assignment. Preserve that lifetime using Complete's
+    // pointer-taking payload-copy interfaces (0x5228e0 / 0x522910); assigning
+    // directly from p16 had lost the evidenced constructor/destructor pair.
+    // This import overload has no proven retained Complete counterpart.
+    TPalette16 palette(&p16);
+    m_p16 = &palette;
 }
 
 // Original: Bitmap816::clear; bitmap816.cpp:221

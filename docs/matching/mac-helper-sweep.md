@@ -266,3 +266,20 @@ Complete collects and prunes crossover pools before saving, through
 and bounded pool selection replace DC's local-player scan, temporary map-cell
 restoration and fixed-pool limit. Those calls must not be cleared by unrelated
 reachability through `SavedGameHeader::reset` or normal hero serialization.
+
+The following lifetime pass restores the artifact temporary before
+`getFullValue`'s slot loop, the symbol-named `boatCell` initializer before
+`createBoat`'s remote branch, and the palette copy temporary in
+`Bitmap816::import`. The first two initial values disappear in Complete's
+optimized code; their DC constructors/declaration and source-call positions
+remain positive evidence. The import overload has no proven retained Complete
+counterpart, so its restored lifetime is explicitly attributed to DC while
+using the existing Complete palette interfaces. Focused checks preserve
+Windows MAX in all three affected units.
+
+DC's extra `GameText[727]` draws during town open/setup/close and combat open
+are absent from the corresponding Complete transitions. Their specific native
+sites are recorded separately from retained text calls elsewhere in those
+functions. The town-close Mac indirect calls at `0x1bf454`, `0x1bf488` and
+`0x1bf4f0` dispatch the deleting destructors for the town window, resource
+display and network handler; the three source `delete` expressions own them.

@@ -1716,6 +1716,9 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     }
 }
 
+// DC 0x16b734..0x16b768 draws GameText[727] and stops samples before
+// opening. Complete Mac 0x1be258..0x1be26c starts directly with input flush,
+// mouse-thread setup, hero consistency and polling; no busy-text draw remains.
 VA(0x005c63c0, 0x2E1)
 DC_ADDRESS(0x16b718, 0x2ca)
 MAC_ADDRESS(0x1be22c, 0x2f4)
@@ -1961,6 +1964,9 @@ void townManager::changeTown(unsigned char fade)
 // Complete reverses DC's StartMP3/UpdateTownLocators order. Retail becomes
 // exact when loadedTownType is recorded before the three strip pointers;
 // that source order lets VC6 schedule the shared -2 and dwelling cursor early.
+// DC 0x16bca8..0x16bcd2 draws GameText[727] before testing loadedTownType.
+// Complete Mac 0x1bea60..0x1bea88 goes directly from the conditional window
+// redraw to that test and unloadTown; the extra busy-text operation is absent.
 VA(0x005c6870, 0x59F)
 DC_ADDRESS(0x16bba4, 0x540)
 MAC_ADDRESS(0x1be888, 0x738)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx
@@ -2195,6 +2201,11 @@ void townManager::unloadTown()
 // left here is the two windows the manager owns, the fade back to the
 // adventure map, and the network arm that hands the dialog pump's
 // helper back before dropping the popup it was driving.
+// DC additionally stops all samples and draws GameText[727] before unload,
+// then calls SwitchAmbientMusic with the adventure terrain track. Complete
+// Mac 0x1bf404..0x1bf51c starts with unloadTown and uses fadeScreen between
+// window disposal and network restoration; none of those three DC operations
+// remains in the retained Complete close body.
 VA(0x005c71b0, 0x9C)
 DC_ADDRESS(0x16c3e8, 0x130)
 MAC_ADDRESS(0x1bf404, 0x11c)
