@@ -355,6 +355,41 @@ enum CombatHeroFrameType {
     COMBAT_HERO_FRAME_EVENT_3 = 3
 };
 
+// Original TSpellEffectID: Dreamcast NB11 enum record 0x1f15.
+// Values used by the recovered combat callers are independently fixed
+// by the retail effect-table index or literal supplied to PowEffect.
+enum TSpellEffectID {
+    eSpellEffectNone = -1,
+    eSpellEffectFireShield = 11,
+    // Original eSpellEffectLightning_Dust: Thunderbird's damage flash.
+    eSpellEffectLightningDust = 49,
+    eSpellEffectLandMineExplosion = 57,
+    eSpellEffectPoison = 67,
+    // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
+    // both fix the mass-animation row to 35.
+    eSpellEffectBerserk = 35,
+    // Dreamcast enum table and CastSpell's retail Sacrifice arm agree:
+    // effect 51 is the slaying flash over the sacrificed stack.
+    eSpellEffectSacrifice_Slay = 51,
+    // Dreamcast spells.cpp:1788..1792 names these three effect rows;
+    // Complete's CastSpell tail independently pushes 76, 75, and 78
+    // for the channel-spew, channel-suck, and resisted-spell flashes.
+    eSpellEffectMagicChannel_Suck = 75,
+    eSpellEffectMagicChannel_Spew = 76,
+    eSpellEffectMagicResistance = 78,
+    // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
+    // proves the number at army::do_attack (0x441610), which hands
+    // it to SpellEffect as the good-luck sparkle over the striking
+    // stack.
+    eSpellEffectFortune = 18,
+    // Retail proves the number at army::new_turn (0x446e30), which
+    // hands it to SpellEffect over a regenerating stack.
+    eSpellEffectRegeneration = 79,
+    // Proven at army::ComputeAttackerDamageBonuses (0x443840):
+    // the Dread Knight's death-blow flash over the defender.
+    eSpellEffectDeathBlow = 73
+};
+
 class combatManager : public baseManager {
 public:
     // Original DC statics: LeftHeroLimits, RightHeroLimits,
@@ -1506,7 +1541,7 @@ public:
     void markTowerArmy(const army* tower);
     void demonicResurrection(const army* caster, army* target);
     void removeCorpse(army* corpse);
-    void removeCorpse(hexcell* hex, long side, long slot);  // 0x5a7320
+    void removeCorpse(hexcell& hex, long side, long slot);  // 0x5a7320
     // DC public symbols encode firstTarget, redirected and validation results
     // as native bool (_N); the lowered debug records spell them T_UCHAR.
     // Keep creatureSpell integral for Complete's artifact caster value 2.
@@ -1711,51 +1746,15 @@ public:
         SPELL_CASTER_CREATURE = 1,
         SPELL_CASTER_ARTIFACT = 2
     };
-    // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
-    // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
-    // the first parameter is int-wide either way and the enum lives in
-    // a header this one does not include.
-    void powEffect(int spellEffect, int resetLimitCreature);  // 0x468990
     void showSpellMessage(int isMonsterSpell, SpellID spellId,
                           army* targetArmy);  // 0x5a8950
     // Dreamcast spells.cpp:5041 emits this inline helper separately;
     // Complete VC6 expands its only surviving call into CastSpell's
     // failure path at +0x2159.
     inline void showSpellCastFailure(army* targetArmy, int spellId);
-    // The ONE TSpellEffectID this header needs so far. Value from the
-    // Dreamcast enum table (NB11 enum records:
-    // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
-    // number at the only site that uses it: army::do_fire_shield
-    // (0x4409c0) pushes the literal 11 into PowEffect. Named rather than
-    // spelled 11 because this tree keeps its magic-constant floor at
-    // zero; the rest of the enum waits for the lane that reconstructs
-    // PowEffect's own body.
-    enum TSpellEffectID {
-        eSpellEffectFireShield = 11,
-        // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
-        // both fix the mass-animation row to 35.
-        eSpellEffectBerserk = 35,
-        // Dreamcast enum table and CastSpell's retail Sacrifice arm agree:
-        // effect 51 is the slaying flash over the sacrificed stack.
-        eSpellEffectSacrifice_Slay = 51,
-        // Dreamcast spells.cpp:1788..1792 names these three effect rows;
-        // Complete's CastSpell tail independently pushes 76, 75, and 78
-        // for the channel-spew, channel-suck, and resisted-spell flashes.
-        eSpellEffectMagicChannel_Suck = 75,
-        eSpellEffectMagicChannel_Spew = 76,
-        eSpellEffectMagicResistance = 78,
-        // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
-        // proves the number at army::do_attack (0x441610), which hands
-        // it to SpellEffect as the good-luck sparkle over the striking
-        // stack.
-        eSpellEffectFortune = 18,
-        // Retail proves the number at army::new_turn (0x446e30), which
-        // hands it to SpellEffect over a regenerating stack.
-        eSpellEffectRegeneration = 79,
-        // Proven at army::ComputeAttackerDamageBonuses (0x443840):
-        // the Dread Knight's death-blow flash over the defender.
-        eSpellEffectDeathBlow = 73
-    };
+    // DC cmbtmgr.cpp:4158: PowEffect(TSpellEffectID, int).
+    // The enum uses the same int-wide retail argument slot.
+    void powEffect(TSpellEffectID spellEffect, int resetLimitCreature);  // 0x468990
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
     army* findResurrectionTarget(SpellID spell, long group, long hex,

@@ -1087,7 +1087,14 @@ VA(0x0042a580, 0x5BE) MAC_ADDRESS(0x02e580, 0x424)  // retail link order + arity
 bool type_AI_player::canTradeResources(const int* cost, int* supply,
                                          std::vector<long>& tradeQty)
 {
-    // DC's on_hand is a procedure-scope quantity; VC6 is byte-flat.
+    // DC records long markets/market_value/on_hand, double efficiency and
+    // vector<long> base_cost/unit_cost; preserve their types and the separate
+    // constructor/insert sites (lines 1505/1506, 1509/1510). Readonly player
+    // bindings, efficiency scope/order and long insert zero are byte-flat.
+    // Flag initialization and deficit-resource lifetime families bring no gain.
+    // Current residual: 89/89 CFG blocks, same 35 calls (folded native vector
+    // aliases differ), but VC6 uses eight extra frame bytes and different loop
+    // register homes. Keep true vector size(), not synthetic cardinality helpers.
     long onHand;
     long markets = 0;
     unsigned char canBuildMarket = 0;
@@ -1100,10 +1107,15 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
          ++townIndex) {
         town* currentTown = g_game->getTown(
             player->m_townIds[townIndex]);
-        if (currentTown->hasBuilding(MARKETPLACE_ID, true)
-            || (canBuildMarket
-                && currentTown->canBuild(MARKETPLACE_ID)))
+        // Mac 0x2e64c/0x2e66c retains distinct market increments;
+        // DC lines 1489/1491/1492 support the separate acquisitions.
+        // Nested/short-circuit/continue variants all score 86.5669% in VC6.
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true))
             ++markets;
+        else if (canBuildMarket) {
+            if (currentTown->canBuild(MARKETPLACE_ID))
+                ++markets;
+        }
     }
 
     markets = min(markets, 10);

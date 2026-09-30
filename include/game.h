@@ -1043,7 +1043,9 @@ public:
     // SavedGameHeader::fileName into this exact offset, so the writer
     // and the reader agree on what the field is.
     char m_saveFileName[0x15f];
-    unsigned char m_numPlayers;
+    // DC game::numPlayers is signed char in all four complete type records;
+    // Windows thieves-guild bounds use movsx, and Mac uses extsb.
+    signed char m_numPlayers;
     signed char m_numDeadPlayers;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.

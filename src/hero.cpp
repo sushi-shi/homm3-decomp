@@ -1358,7 +1358,7 @@ std::bitset<70> markSpells(TSpellSchool school)
 {
     std::bitset<70> granted;
     for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
-        if (g_spellTraits[spell].m_schoolBits & school)
+        if ((g_spellTraits[spell].m_schoolBits & school) != 0)
             granted[spell] = true;
     }
     return granted;
@@ -1380,13 +1380,11 @@ std::bitset<70> markSpells(TSpellSchool school)
 // line: that is purely the /Ob2 budget running out mid-switch, so all
 // four arms are written identically here.
 
-// 92.71 -> 93.96 (2026-08-20): the diagnosis below was right about WHICH
-// sites diverged, and `#pragma inline_depth(0)` on the Sea Captain's
-// set(SPELL_SUMMON_BOAT) site alone is the lever - it is STATEMENT-
-// granular in VC6, so it converts exactly that one expansion into the
-// call retail has, taking the census from set x2 to retail's x3. The
-// Armageddon's Blade site is deliberately LEFT expanded: retail calls set
-// three times out of four, not four, so pinning both would overshoot.
+// The canonical markSpells helper explicitly compares its school-mask result
+// with zero. Its operations and all four Tome calls are unchanged; VC6 now
+// retains the final bitset<70>::operator[] call that retail has: 97.56 ->
+// 100%. The implicit nonzero guard and a continue-filter guard emit the
+// same previous object; the explicit comparison reproduces exactly.
 
 // Mac f5034/f50e8 initializes each result through the no-argument
 // three-word zeroing body e7378, with no unsigned-long value argument.
@@ -2795,6 +2793,9 @@ VA(0x004dbe80, 0xA4) MAC_ADDRESS(0x0f83ec, 0xc8)
 // Complete's shared combination predicate: proxy assignment keeps this retained
 // body exact while recovering set/any boundaries in its expanded callers.
 // Mac 0:0xf83ec calls bitset<144> set and none through a two-word proxy.
+// Explicit success/failure returns make giveArtifact exact but lower this
+// retained body from 100% to 87.19%; keep the direct none() conversion.
+// An explicit nonzero result and an empty-slot continue guard are byte-flat.
 unsigned char hero::heroFn004DBE80(int combination)
 {
     std::bitset<144> missingComponents =

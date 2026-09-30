@@ -986,8 +986,8 @@ public:
                       NewmapCell** peventCell);
     int processDeSelect(const message* msg, unsigned char* exitFlag,
                         type_point* triggerPoint, NewmapCell** peventCell);
-    int processKeyPress(const message* msg, unsigned char* exitFlag,
-                        type_point* triggerPoint, NewmapCell** peventCell);
+    int processKeyPress(const message& msg, unsigned char& exitFlag,
+                        type_point& triggerPoint, NewmapCell*& peventCell);
     void processRadarSelect(const message* msg);
     void processMapSelect(const message* msg, type_point* triggerPoint,
                           NewmapCell** peventCell);

@@ -644,6 +644,11 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
     // Restoring the latter four local types is Windows byte-flat at 99.18%.
     // Delaying the step initializer until after facing selection is worse.
+    // Current 99.1724% controls: moving offset declarations ahead of step,
+    // naming a facing snapshot, and narrowing powX/powY to the effect scope
+    // are byte-flat. The residual starts with the count-box step/facing
+    // scratch-register assignment, then the karma denominator's spill slot
+    // and effect-coordinate register selection; branch flows remain exact.
     int powX;
     int powY;
     if (g_combatManager->m_battleOver != 0)
@@ -788,10 +793,11 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
                 g_windowManager->m_screenBitmap->colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9, 0.75f, 0.8f);
             } else {
-                double affinity = computeKarma();
+                // DC army.cpp:830 places ComputeKarma and Colorize on one
+                // statement row. The direct call is Windows byte-flat.
                 g_windowManager->m_screenBitmap->colorize(
                     numboxX + 1, numboxY + 1, 0x1c, 9,
-                    static_cast<float>((affinity + 1.0) * 0.1667f),
+                    static_cast<float>((computeKarma() + 1.0) * 0.1667f),
                     0.8f);
             }
             char countText[12];
@@ -1334,7 +1340,7 @@ void army::rangeAttack(army* armyToAttack)
             g_combatManager->damageMessage(getName(),
                                             m_numTroops, damage, first,
                                             killed);
-            g_combatManager->powEffect(effect, 1);
+            g_combatManager->powEffect(TSpellEffectID(effect), 1);
         }
     } else if (m_creatureType == CREATURE_LICH
                || m_creatureType == CREATURE_POWER_LICH) {
@@ -1395,13 +1401,13 @@ void army::rangeAttack(army* armyToAttack)
             g_combatManager->damageMessage(getName(),
                                             m_numTroops, damage, first,
                                             killed);
-            g_combatManager->powEffect(-1, 1);
+            g_combatManager->powEffect(eSpellEffectNone, 1);
         }
     } else {
         int killed;
         int damage;
         damageEnemy(armyToAttack, &damage, &killed, 1);
-        g_combatManager->powEffect(-1, 0);
+        g_combatManager->powEffect(eSpellEffectNone, 0);
         g_combatManager->damageMessage(getName(), m_numTroops, damage,
                                         armyToAttack, killed);
         if (static_cast<const combatManager*>(g_combatManager)
@@ -1654,7 +1660,7 @@ void army::doFireShield(long damageAmount)
     SAMPLE2 sample;
     if (!g_combatManager->isQuickCombat())
         sample = loadPlaySample(g_spellTraits[SPELL_FIRE_SHIELD].m_sample);
-    g_combatManager->powEffect(combatManager::eSpellEffectFireShield, 0);
+    g_combatManager->powEffect(eSpellEffectFireShield, 0);
     g_combatManager->damageMessage(g_spellTraits[SPELL_FIRE_SHIELD].m_name, 1,
                                     damageAmount, this, killed);
     if (!g_combatManager->isQuickCombat())
@@ -1771,7 +1777,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     g_combatManager->spellEffect(80, target, 100, 0);
                 }
                 target->damage(damage);
-                g_combatManager->powEffect(-1, 1);
+                g_combatManager->powEffect(eSpellEffectNone, 1);
                 if (!static_cast<const combatManager*>(g_combatManager)
                          ->isQuickCombat())
                     waitEndSample(sample, -1);
@@ -1810,7 +1816,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                         g_spellTraits[SPELL_LIGHTNING_BOLT].m_name, 1,
                         damage, target, killed);
                     target->m_showPowEffect = 1;
-                    g_combatManager->powEffect(49, 1);
+                    g_combatManager->powEffect(eSpellEffectLightningDust, 1);
                     if (!static_cast<const combatManager*>(
                              g_combatManager)
                              ->isQuickCombat())
@@ -1861,7 +1867,7 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
                     g_combatManager->spellEffect(81, target, 100, 0);
                     waitEndSample(sample, -1);
                 }
-                g_combatManager->powEffect(-1, 1);
+                g_combatManager->powEffect(eSpellEffectNone, 1);
             }
         }
         break;
@@ -1986,7 +1992,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         m_showAttackFrameType = cs_attack_r;
     }
     bool special = checkSpecialAttack(armyToAttack);
-    g_combatManager->powEffect(-1, 0);
+    g_combatManager->powEffect(eSpellEffectNone, 0);
     if (!is(creatureMultiHeaded)) {
         if (behind && behind->m_creatureType != armyToAttack->m_creatureType)
             g_combatManager->damageMessage(
@@ -2202,7 +2208,7 @@ inline void army::checkLuck()
                 sprintf(g_text, g_generalText->getText(GENERAL_TEXT_GOOD_LUCK_FORMAT), getName());
                 g_combatManager->m_combatWindow->combatMessage(g_text, 1, 0);
                 g_combatManager->spellEffect(
-                    combatManager::eSpellEffectFortune, this, 100, 0);
+                    eSpellEffectFortune, this, 100, 0);
             }
         }
     }
@@ -2765,7 +2771,7 @@ int army::computeAttackerDamageBonuses(int baseDamage,
                     DATA_COMPGEN(0x00660a50, deathBlowSampleName,
                                  "Deathblo.wav"));
                 g_combatManager->spellEffect(
-                    combatManager::eSpellEffectDeathBlow, defender, 100,
+                    eSpellEffectDeathBlow, defender, 100,
                     0);
                 waitEndSample(sample, -1);
             }
@@ -3954,6 +3960,11 @@ void army::attackWall(TWallTargetId wall,
 // swap and one extra instruction in the sprite draw/update block.
 // DC army.cpp:4715 retains the bitmap-forwarding CSprite::Draw overload;
 // preserve its nested bitmap accessors, as in animateMissile.
+// Mac 0x521f0 expands getOwningSide before MarkCreatureEffect's array strides;
+// retain that canonical accessor as in doAttack (Windows byte-flat at 96.0460%).
+// why-reg --model finds the EBX/EDI permutation in the initial saved-register
+// definitions, involving this and an expression value: a front-end handle-state
+// residual rather than a movable named-local declaration. Keep the proven ABI.
 VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -4018,7 +4029,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
                              : DATA_COMPGEN(0x00660a78, wallHitSampleName,
                                             "WallHit.82m"));
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     g_combatManager->computeMaxExtent();
     ds_memsample* shootMemSample =
         g_soundManager->memorySample(m_armySample[SHOOT_SAMPLE]);
@@ -4450,7 +4461,7 @@ void army::newTurn()
                 g_combatManager->m_combatWindow->combatMessage(
                     text.c_str(), 1, 0);
                 g_combatManager->spellEffect(
-                    combatManager::eSpellEffectRegeneration, this, 100,
+                    eSpellEffectRegeneration, this, 100,
                     0);
                 waitEndSample(sample, -1);
             }
@@ -4500,7 +4511,7 @@ void army::resetRound()
                     DATA_COMPGEN(0x00660aa0, poisonWaveName, "Poison.wav"));
                 g_combatManager->showSpellMessage(1, SPELL_POISON, this);
             }
-            g_combatManager->powEffect(SPELL_SUMMON_EARTH_ELEMENTAL, 1);
+            g_combatManager->powEffect(eSpellEffectPoison, 1);
             if (!g_combatManager->isQuickCombat())
                 waitEndSample(sample, -1);
         }
@@ -4909,7 +4920,7 @@ unsigned char army::unnamed447fe0()
             }
         }
         playSample(SHOOT_SAMPLE);
-        g_combatManager->powEffect(-1, 1);
+        g_combatManager->powEffect(eSpellEffectNone, 1);
     }
     g_combatManager->castSpell(spell, -1, 1, -1, eMasteryExpert, 3);
     return 1;

@@ -139,21 +139,19 @@ public:
     std::vector<HeroId> m_assignedCarryover;
     SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
-    // These legacy entry points retain an opaque campaign-header boundary.
-    void playScenarioPrologue(void* campaignHeader);
+    // Both native callers and playback operations use the decoded header.
+    void playScenarioPrologue(TCampaignBrief::CampaignHeaderStruct* header);
     // Retail 0x48a2a0, the prologue player's twin on the scenario's
     // epilogue record; oldmain's end-of-campaign arm calls the two
     // Complete-only members below on gpGame->campaign, 0x489820 before
     // SaveGame(1) and this one after it. 0x489e20 is 0x489820's own tail
-    // call. The campaign-header boundary remains opaque for these callers,
-    // and all three names are role-based and provisional: the Dreamcast
+    // call. All three names are role-based and provisional: the Dreamcast
     // customcampaign.obj roster stops before them.
-    void completeCurrentMap(void* campaignHeader);
-    // Pruning consumes the decoded header type directly; the other legacy
-    // campaign entry points below still expose their opaque boundary.
+    void completeCurrentMap(const TCampaignBrief::CampaignHeaderStruct* header);
+    // Completion and pruning only query the supplied campaign header.
     void pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct* header);
     int findLatestCrossoverScenario(int slot) const;
-    void playScenarioEpilogue(void* campaignHeader);
+    void playScenarioEpilogue(TCampaignBrief::CampaignHeaderStruct* header);
     void applyBriefingChoice(int option);
     void doPreLoadCustomization();
     // E:\gamedcs\CustomCampaign.h:212, dc 0xe6ef8

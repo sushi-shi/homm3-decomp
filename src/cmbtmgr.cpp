@@ -2118,7 +2118,7 @@ void combatManager::keepAttack(int towerPos)
         g_generalText->getText(GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER),
         1, damage, target, killed);
     target->cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
-    powEffect(-1, 1);
+    powEffect(eSpellEffectNone, 1);
 
     if (!isQuickCombat()) {
         while (archer->m_frame
@@ -3356,8 +3356,18 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // GetNumFrames while raising Windows 95.5183 -> 96.1622. Mac retains the
 // same separate stores; its range comparison compression remains different.
 // A switch and named frame snapshot do not reproduce that compression.
+// DC cmbtmgr.cpp:4158 proves the global TSpellEffectID parameter, and
+// row 4389 retains UpdateCombatArea(bounds). Restore both source facts;
+// the formerly direct updateScreen call was an inlined helper substitute.
+// The enum's NB11 record 0x1f15 supplies the effect-domain caller values;
+// negative sentinel, lightning dust, landmine and poison now use that enum.
+// Focused VC6 comparison after refreshing the renamed target: 95.81%
+// versus the direct-call 96.16%; doAttack collateral is 99.92% versus
+// 99.96%. All 116 available Mac pairs in the three affected units hold.
+// The remaining animation-walk slot/register differences remain open;
+// a lower Windows score does not refute these retained source operations.
 VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global, dc 0x62560
-void combatManager::powEffect(int spellEffect, int resetLimitCreature)
+void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature)
 {
     int side;
     int slot;
@@ -3521,12 +3531,8 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
                 m_powFrameIndex = frameCount;
 
             drawFrame(0, 1, 0, 100, 1, 1);
-            // DC cmbtmgr.cpp:4389 calls UpdateCombatArea(bounds); the by-value
-            // form lowers this row 96.16 -> 95.81, so it stays direct.
-            g_windowManager->updateScreen(
-                m_drawbridgeBounds.m_minX, m_drawbridgeBounds.m_minY,
-                m_drawbridgeBounds.width(),
-                m_drawbridgeBounds.height());
+            // DC cmbtmgr.cpp:4389 retains this by-value rectangle helper.
+            updateCombatArea(m_drawbridgeBounds);
         }
     }
 
@@ -3884,7 +3890,7 @@ unsigned char combatManager::unnamed469e50(
             int killed = stack->damage(damage);
             damageMessage(g_moatDamageMessages[m_defendingTown->m_type], 1,
                            damage, stack, killed);
-            powEffect(-1, 1);
+            powEffect(eSpellEffectNone, 1);
             if (stack->m_numTroops > 0 && playSound)
                 stack->playSample(army::WALK_SAMPLE);
             checkRebirth();

@@ -1273,7 +1273,10 @@ long town::getLegionBonus(long dwelling) const
 // helper is non-const, so this const caller uses it through const_cast.
 // The restored call shifts VC6's hasBuilding inlining: one additional call
 // remains in this candidate. Keep the source helper boundary while that
-// compiler decision is investigated.
+// compiler decision is investigated. Accumulating the castle contribution
+// in the helper's growth local is byte-flat for both this caller and its
+// exact retained helper. An early-return sum lowers them to 80.97/85.18%;
+// explicit short conversion of getGeneratorBonus is also byte-flat.
 VA(0x005bfb60, 0x266) MAC_ADDRESS(0x1b5414, 0x1fc)  // dc 0x167748
 short town::getGrowthRate(short dwelling) const
 {
@@ -1520,18 +1523,24 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 // army path additionally resolves the map format's negative random-tier IDs;
 // DC's older body copied those creature IDs directly. Both use getArmy's
 // canonical garrison/hero selection at every read and write. Complete's
-// read uses the retained const getArmy twin (0x5c1460); selecting
-// that overload for the troop-count test raises initialize from 89.77% to
-// 91.10% while preserving the mutable calls for writes.
+// DC initialize_army at 0x168330 names the mutable get_army body 0x168bd0
+// at every site, including the troop-count read at town.cpp:2025. Mac's
+// count read at 0x1b64d4 also calls mutable getArmy at 0x1b6fdc; its const
+// twin is 0x1b7020. Windows folds both retained bodies at 0x5c1460, so
+// that target label alone does not establish a const receiver.
+// The VC6 candidate expands the negative-count arm and default army-id store
+// through getHero where retail retains getArmy. Sharing the two loops' slot
+// local is byte-flat. Mac retains per-operation getters, which rules out a
+// cached army receiver or a combined clear operation as the missing helper.
+// Original: initialize_army; town.cpp:2017, dc 0x168330.
 MAC_ADDRESS(0x1b648c, 0x1ac)
 static void initializeArmy(town* currentTown, const TownExtra* townSetup)
 {
-    const town* townView = currentTown;
     if (townSetup->m_customArmies) {
         for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
             currentTown->getArmy().m_numTroops[slot] =
                 townSetup->m_townArmy.m_numTroops[slot];
-            if (townView->getArmy().m_numTroops[slot] > 0) {
+            if (currentTown->getArmy().m_numTroops[slot] > 0) {
                 int troop = townSetup->m_townArmy.m_armies[slot];
                 if (troop <= -2) {
                     int tier = (-2 - troop) / 2;

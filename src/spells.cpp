@@ -587,7 +587,7 @@ unsigned char combatManager::checkLandmine(long hex, army* currentArmy,
             DATA_COMPGEN(0x00688410, landMineSoundName, "landkill.wav"));
         currentArmy->m_showPowEffect = 1;
     }
-    powEffect(0x39, 1);
+    powEffect(eSpellEffectLandMineExplosion, 1);
     if (!static_cast<const combatManager*>(this)->isQuickCombat())
         waitEndSample(sample, -1);
 
@@ -624,7 +624,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
 
     damageMessage(g_spellTraits[SPELL_FIRE_WALL].m_name, 1, damage,
                    currentArmy, deaths);
-    powEffect(-1, 1);
+    powEffect(eSpellEffectNone, 1);
 
     if (currentArmy->m_numTroops > 0 && isWalking)
         currentArmy->playSample(army::TSampleID(0));
@@ -1020,7 +1020,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(traits->m_effect, 1);
+        powEffect(TSpellEffectID(traits->m_effect), 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -1042,7 +1042,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                              "IceRayEx.wav"));
             target->m_showPowEffect = 1;
         }
-        powEffect(traits->m_effect, 1);
+        powEffect(TSpellEffectID(traits->m_effect), 1);
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
             damageMessage(traits->m_name, 1, damage, target, deaths);
             waitEndSample(iceraySample, -1);
@@ -1068,7 +1068,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(traits->m_effect, 1);
+        powEffect(TSpellEffectID(traits->m_effect), 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -1080,7 +1080,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(traits->m_effect, 1);
+        powEffect(TSpellEffectID(traits->m_effect), 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -2052,6 +2052,13 @@ static long g_castWallIndexToCastOn = -1;
 // VC6 predict-inline's apparent self-call mismatch is a local jump pairing:
 // the 17 Mac calls retain the same game targets and order. Their two differing
 // vector destructor labels are MSL template ownership, not this helper body.
+// DC line 2328 attributes the refusal vector's construction, UpdateMouseGrid
+// and destruction to one row; the Mac object uses a distinct short lifetime
+// at frame+0x74 (valid-arm vector: +0x80). Passing vector<long>() directly
+// closes Windows to 100%, but relies on VC6's nonconst-reference extension
+// and fails CodeWarrior. Explicit reference casts also fail CodeWarrior and
+// are not supported original source. Named copy initialization stays flat
+// at 99.9703%; retain the valid named vector while recovering its lifetime.
 VA(0x005a3250, 0x31C) MAC_ADDRESS(0x193928, 0x2a8)  // retail order+handler call, dc 0x1527bc
 int handleCastWallSpell(message& msg)
 {
@@ -2896,7 +2903,7 @@ void combatManager::areaEffect(long targetCell, SpellID spellType,
             damageMessage(g_spellTraits[spellType].m_name, 1, damage, victim,
                            deaths);
         }
-        powEffect(-1, 1);
+        powEffect(eSpellEffectNone, 1);
         checkRebirth();
     }
 }
@@ -3096,8 +3103,14 @@ void combatManager::armageddon(int level, int power)
 // Mac retains the same five direct calls as this source (abs twice, sqrt,
 // atan2, random). Windows differs first in the FPU spill order for the
 // progress fraction; naming its numerator and denominator, or naming only
-// the numerator, is byte-flat at 97.3158%. The register catalog has no
-// source mutation that improves the remaining 22 instruction rows.
+// the numerator, was byte-flat at 97.3158%.
+// Mac 0x195fec/0x19601c divides distortion by 100 in each selector arm.
+// Restoring those expressions raises Windows to 98.5146%; all 20 blocks,
+// 10 branches and five calls then agree. The remaining 20 instruction rows
+// are float spill/reload scheduling and slot selection. A reproduced
+// 12-state cast/declaration-lifetime family emits three objects but leaves
+// this target flat; compound progress update and direct angle-field reuse
+// also fail to improve it. The register model finds no binding divergence.
 VA(0x005a5260, 0x1DC) MAC_ADDRESS(0x195d20, 0x348)  // order-map+arity, dc 0x1542b4
 void combatManager::resetBoltAngle(SBolt* bolt)
 {
@@ -3151,14 +3164,13 @@ void combatManager::resetBoltAngle(SBolt* bolt)
     if (static_cast<double>(remaining)
             > static_cast<double>(bolt->m_segmentLength) * 1.5
         || bolt->m_distortAlways) {
-        float distortion;
+        float scaled;
         if (bolt->m_angleDistortMin == bolt->m_angleDistortMax)
-            distortion = static_cast<float>(bolt->m_angleDistortMin);
+            scaled = static_cast<float>(bolt->m_angleDistortMin) / 100.0f;
         else
-            distortion = static_cast<float>(
+            scaled = static_cast<float>(
                 random(bolt->m_angleDistortMin,
-                       bolt->m_angleDistortMax));
-        float scaled = distortion / 100.0f;
+                       bolt->m_angleDistortMax)) / 100.0f;
         float step = (2.0f - bolt->m_progress) / 1.5 * scaled;
         bolt->m_angle = step + bolt->m_angle;
     }
@@ -3807,7 +3819,7 @@ void combatManager::chainLightning(int index, int level, int power)
     long shownDamage = modifySpellDamage(
         baseDamage, SPELL_CHAIN_LIGHTNING, m_heroes[m_currentSide],
         m_heroes[1 - m_currentSide], 0, 0);
-    powEffect(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_effect, 1);
+    powEffect(TSpellEffectID(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_effect), 1);
     damageMessage(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_name, 1,
                    shownDamage, 0, totalKilled);
     drawFrame(1, 0, 0, 0, 1, 0);
@@ -4189,22 +4201,25 @@ void combatManager::summonElemental(SpellID spell, TCreatureType monType,
     addArmy(m_currentSide, monType, count, hex, 0x400000, 1);
 }
 
+// DC spells.cpp:4815 proves hexcell& with long group/index (side/slot here).
+// The nested corpse helper passes cell lvalues; retail uses the same address
+// ABI and never tests this argument for null. Keep the reference boundary.
 VA(0x005a7320, 0x68) MAC_ADDRESS(0x1983dc, 0x90)  // dc 0x1565e4
-void combatManager::removeCorpse(hexcell* hex, long side, long slot)
+void combatManager::removeCorpse(hexcell& hex, long side, long slot)
 {
     int i;
-    for (i = 0; i < hex->m_bodiesInHex; i++) {
-        if (hex->m_deadArmySide[i] == side && hex->m_deadArmySlot[i] == slot)
+    for (i = 0; i < hex.m_bodiesInHex; i++) {
+        if (hex.m_deadArmySide[i] == side && hex.m_deadArmySlot[i] == slot)
             break;
     }
-    for (; i < hex->m_bodiesInHex; i++) {
-        hex->m_deadArmySide[i] = hex->m_deadArmySide[i + 1];
-        hex->m_deadArmySlot[i] = hex->m_deadArmySlot[i + 1];
-        hex->m_deadPartOfDouble[i] = hex->m_deadPartOfDouble[i + 1];
+    for (; i < hex.m_bodiesInHex; i++) {
+        hex.m_deadArmySide[i] = hex.m_deadArmySide[i + 1];
+        hex.m_deadArmySlot[i] = hex.m_deadArmySlot[i + 1];
+        hex.m_deadPartOfDouble[i] = hex.m_deadPartOfDouble[i + 1];
     }
-    hex->m_deadArmySide[i] = -1;
-    hex->m_deadArmySlot[i] = -1;
-    hex->m_bodiesInHex--;
+    hex.m_deadArmySide[i] = -1;
+    hex.m_deadArmySlot[i] = -1;
+    hex.m_bodiesInHex--;
 }
 
 // Original: combatManager::remove_corpse; spells.cpp:4838, dc 0x15668c.
@@ -4212,10 +4227,10 @@ void combatManager::removeCorpse(hexcell* hex, long side, long slot)
 MAC_ADDRESS(0x19846c, 0x80)
 void combatManager::removeCorpse(army* corpse)
 {
-    removeCorpse(&m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
+    removeCorpse(m_cells[corpse->m_gridIndex], corpse->getOwningSide(),
                 corpse->m_bitIndex);
     if (corpse->is(creatureDoubleWide))
-        removeCorpse(&m_cells[corpse->getSecondGridIndex()],
+        removeCorpse(m_cells[corpse->getSecondGridIndex()],
                     corpse->getOwningSide(), corpse->m_bitIndex);
 }
 

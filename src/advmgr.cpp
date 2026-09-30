@@ -1282,8 +1282,8 @@ int advManager::main(message& msg)
     if (msg.m_id != MESSAGE_NONE) {
         switch (msg.m_id) {
         case MESSAGE_KEY_DOWN:
-            result = processKeyPress(&msg, &exitFlag, &triggerPoint,
-                                     &eventCell);
+            result = processKeyPress(msg, exitFlag, triggerPoint,
+                                     eventCell);
             break;
 
         case MESSAGE_MOUSE_MOVE:
@@ -1413,8 +1413,11 @@ unsigned char saveGame(unsigned char campaignWinMode);
 // the current score from 87.6584%; the historical 97.61% predates these
 // helper facts. Mac shape aligns 326/571 instructions and 52/52 direct
 // call counts; this is source-shape evidence, not a Mac byte verdict.
+// DC 0x8b70 proves const message&, unsigned char&, type_point& and
+// NewmapCell*& parameters. Retail's call supplies the same four addresses;
+// keep the source references and their const layer instead of pointer facades.
 VA(0x00408c40, 0xB9D) MAC_ADDRESS(0x009144, 0x8ec)  // anchor-callee, dc 0x8b70
-int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     if (m_advWindow->m_chatEdit->m_hasFocus)
         return 0;
@@ -1430,7 +1433,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     int moveDir = -1;
     hero* walker;
 
-    switch (msg->m_codeX) {
+    switch (msg.m_codeX) {
     case KEYCODE_SPACE: {
         if (!currHero)
             break;
@@ -1456,7 +1459,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     }
 
     case KEYCODE_KP_8:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(0, 0);
             return 1;
         }
@@ -1464,7 +1467,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_9:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(1, 0);
             return 1;
         }
@@ -1472,7 +1475,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_6:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(2, 0);
             return 1;
         }
@@ -1480,7 +1483,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_3:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(3, 0);
             return 1;
         }
@@ -1488,7 +1491,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_2:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(4, 0);
             return 1;
         }
@@ -1496,7 +1499,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_1:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(5, 0);
             return 1;
         }
@@ -1504,7 +1507,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_4:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(6, 0);
             return 1;
         }
@@ -1512,7 +1515,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         break;
 
     case KEYCODE_KP_7:
-        if (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+        if (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
             screenScroll(7, 0);
             return 1;
         }
@@ -1544,7 +1547,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
-        *exitFlag = 1;
+        exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_101;
         return 1;
 
@@ -1555,7 +1558,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
                      -1, 0, -1, 0);
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
-        *exitFlag = 1;
+        exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_102;
         return 1;
 
@@ -1566,7 +1569,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         videoResume();
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
-        *exitFlag = 1;
+        exitFlag = 1;
         g_gameCommand = SYSOPT_COMMAND_108;
         return 1;
 
@@ -1584,7 +1587,7 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (g_windowManager->m_dialogReturn != DIALOG_RETURN_ACCEPT)
             break;
         g_gameCommand = SYSOPT_QUIT;
-        *exitFlag = 1;
+        exitFlag = 1;
         return 1;
 
     case KEYCODE_T: {
@@ -1600,14 +1603,14 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
     case KEYCODE_ENTER:
         if (localPlayer->m_currTownId != -1) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            doAdvCommand(triggerPoint);
+            doAdvCommand(&triggerPoint);
             return 1;
         }
         if (localPlayer->m_currHeroId == -1)
             break;
         if (m_curHeroMobile) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
-            doAdvCommand(triggerPoint);
+            doAdvCommand(&triggerPoint);
             return 1;
         }
         if (!waitingPlayer)
@@ -1633,16 +1636,16 @@ int advManager::processKeyPress(const message* msg, unsigned char* exitFlag, typ
             type_point walkTrigger;
             int noMove;
             int foughtBattle;
-            *peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
+            peventCell = moveHero(moveDir, 1, walkTrigger, &noMove, 0,
                                    &foughtBattle, 0);
             m_advWindow->updateHeroLocator(-1, 1, 1);
             g_mouseManager->showPointer(1);
             g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
 
-            if (*peventCell) {
+            if (peventCell) {
                 stopCursor(1);
-                doEvent(*peventCell, walkTrigger);
-                *peventCell = 0;
+                doEvent(peventCell, walkTrigger);
+                peventCell = 0;
             }
             reseed(0, 0);
 
@@ -4413,6 +4416,12 @@ int getFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
+// Current 96.1357% residual is the final draw's nested Bitmap16Bit::getMap
+// call: all 34 CFG blocks and 16 branches agree, but retail expands it.
+// A reproduced three-state getMap cast family (void-chain, direct typed
+// reinterpret, ordinary cast) emitted two objects and left this caller flat.
+// DC Game.h:973/974/979 proves getHero's early null-return scope, so keep
+// that source boundary rather than flattening it to steer the inline budget.
 VA(0x0040fe30, 0x484) MAC_ADDRESS(0x01056c, 0x560)  // dc 0x11424
 void advManager::drawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,

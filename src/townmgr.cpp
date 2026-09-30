@@ -6523,6 +6523,10 @@ void TTavernWindow::setRolloverText(int codeY)
 // const hero receiver for the artifact counts (DC current_hero at line 7962).
 // Selection-scope count locals and successive count accumulation are byte-flat;
 // the remaining getHero expansion differs in its result-register choice.
+// Chained initialization with g_tavernHero and predeclaring the DC const
+// receiver are byte-flat. The punctuation references g_text-2/-1 at
+// 0x6973d6/0x6973d7; retail labels those same addresses as the adjacent
+// g_botViewText+0x96/+0x97. Preserve the formatted-buffer indexing.
 VA(0x005d7b30, 0x2E1) MAC_ADDRESS(0x1d5870, 0x3a4)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
 int TTavernWindow::windowHandler(message& msg)
 {
@@ -7980,7 +7984,14 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // procedure scope; retain those lifetimes across the category/player passes.
 // DC also records i/index2 at procedure scope. Reuse the signed indices across
 // town and hero scans: Mac 0x1e2a9c/0x1e2ac0 and Windows both use signed bounds.
-// E:\gamedcs\townmgr.cpp:9296
+// Rank grouping uses native signed game::numPlayers: retail movsx and Mac
+// 0x1e1e4c/0x1e1e7c extsb agree with DC primitive 0x10. Correcting the
+// canonical field gives 94.807236%; local signed casts instead gave 93.30%.
+// The player-column index is signed: DC int locals, Mac 0x1e2d34 cmpwi/blt,
+// and retail cmp/jl. Restoring int replaces the candidate jb (94.84%).
+// Residual: category ladder scratch register, vector overload/ICF identities,
+// and later control-flow/lifetime choices; keep retained text getters.
+// E:\gamedcs\townmgr.cpp:9206
 VA(0x005dda10, 0x145F) MAC_ADDRESS(0x1e1c44, 0x1140)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 {
@@ -8085,7 +8096,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
     int bestCreature;
     int bestValue;
     int playerIndex = 0;
-    for (unsigned int column = 0; column < 8; column++) {
+    for (int column = 0; column < 8; column++) {
         int who = playerIndex;
         while (who < 8 && g_game->m_playerDisabled[who])
             who++;
@@ -8234,7 +8245,7 @@ int getNumObelisks(int whichPlayer);
 VA(0x005dee70, 0x2F0) MAC_ADDRESS(0x1e2d84, 0x3e0)  // dc 0x1810b0
 void getCategoryStats(int whichCat, long* value, signed char* index)
 {
-    for (int i = 0; i < static_cast<signed char>(g_game->m_numPlayers); i++) {
+    for (int i = 0; i < g_game->m_numPlayers; i++) {
         long total = 0;
         index[i] = static_cast<signed char>(i);
         if (g_game->m_playerDisabled[i]) {
@@ -8305,16 +8316,13 @@ void getCategoryStats(int whichCat, long* value, signed char* index)
 // element count is re-read from gpGame on EVERY comparison rather than
 // cached - four separate loads in one 159-byte body.
 
-// The count is read SIGNED (movsx), and game.h types the byte unsigned;
-// that header belongs to another lane, so the signed view is taken here
-// rather than by re-typing the member. static_cast, not a C-style cast:
-// the cleanliness board bans those outright.
+// The canonical signed game::numPlayers member matches these movsx bounds.
 
 VA(0x005df160, 0x9F) MAC_ADDRESS(0x1e3164, 0xa4)  // dc 0x181350
 void sortStats(long* value, signed char* index)
 {
-    for (int i = 0; i < static_cast<signed char>(g_game->m_numPlayers) - 1; ++i) {
-        for (int j = i + 1; j < static_cast<signed char>(g_game->m_numPlayers); ++j) {
+    for (int i = 0; i < g_game->m_numPlayers - 1; ++i) {
+        for (int j = i + 1; j < g_game->m_numPlayers; ++j) {
             if (value[j] > value[i]) {
                 long swapValue = value[i];
                 value[i] = value[j];

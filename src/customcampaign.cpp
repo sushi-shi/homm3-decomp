@@ -2708,36 +2708,27 @@ bool SCampaign::campaignComplete()
     return 1;
 }
 
-// PRICED 2026-09-06 - do not spend a lane on the /Ob2 side of this row. An
-// `if (0)` mass titration over N = 1,2,4,8,16,32,64 inert statements is flat
-// at 78.6801 to the digit through N=16, peaks at 79.2549 (N=32) and falls to
-// 76.5288 (N=64); in the other direction, lifting the exclusion loop out of
-// `caller_cb` costs 11.4 (67.32) and lifting the complete_order loop costs
-// 2.5 (76.20, at 95-vs-95 blocks and 22 exact). So the whole reachable
-// budget spread here is under 0.6 points and the residual below is the
-// entire remaining story.
-
-// 2026-09-06, polish lane 38 (78.6801 -> 85.5843): the excluded-hero scan is
-// a post-decrement `while (pool--)` / `while (which--)` pair over a named
-// `pooled` reference, the same shape DoPreLoadCustomization proves; retail's
-// tell sits at fn+0xaad (`mov eax,edx / dec edx / test eax,eax`).
-// Retail computes days before publishing completion and delays the zero
-// complete-order store until after getMapScore (85.5843 -> 86.2644). A
-// function-scope map-score counter then reproduces the zero held in EDI from
-// the prologue and raises MAX to 87.6437. The remaining call mismatch is the
-// vector temporary/insert inline family: retail retains both `_Destroy`
-// helpers and the two-argument hero insert wrapper.
-// LADDER, measured 2026-09-06 and NOT shipped: all nine appends spelled
-// `insert(end(), x)` instead of `push_back(x)` is worth 78.6801 -> 78.8448,
-// 0.16 of a point (about 2.5 B of a 1536 B body) for nine rewritten call
-// sites - noise, and the same size lane 29 declined on its own
-// CompleteCurrentMap twin.  The reverse rung on PruneCrossoverHeroes below
-// LOSES 1.98.
+// Mac 0x986e8..0x98798 expands getHero for the player and garrison lists;
+// 0x987c8..0x988a4 performs the same hero lookup with five constant IDs.
+// Keep those canonical accessor calls too. VC6 folds their constant guards
+// and restores the surrounding vector temporary/insert decisions, raising
+// 85.8314 -> 99.4789% in a reproduced two-state family without MAX losses.
+// Starting the score counter at its loop, as native 0x98584 does, restores
+// the remaining store order and reaches 99.9847%; an entry initializer is
+// premature. Both late-declaration forms reproduce the same object.
+// Both empty pool vectors have separate full-expression lifetimes at native
+// 0x98520..0x9857c; retain their push_back calls and temporary destruction.
+// The entry's current-map score lookup at 0x984a0..0x984b0 is the canonical
+// getCurrentScenario operation; keep that accessor as well.
+// The remaining difference swaps the score loop's index/byte-offset stack
+// homes. Signed index and late bare declaration are flat; naming the score
+// row loses ground. The register model's heroId/pool declaration swap also
+// worsens the residual, so retain the native acquisition order.
 VA(0x00489820, 0x600) MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
-void SCampaign::completeCurrentMap(void* campaignHeader)
+void SCampaign::completeCurrentMap(
+    const TCampaignBrief::CampaignHeaderStruct* header)
 {
-    CampaignScenarioInfo& scenario = m_mapScores[m_currentMap];
-    unsigned int i = 0;
+    CampaignScenarioInfo& scenario = *getCurrentScenario();
 
     if (scenario.m_completed)
         return;
@@ -2749,22 +2740,13 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     if (scenario.m_index < 0) {
         scenario.m_index = m_carryOverHeroes.size();
-        // LADDER, measured 2026-09-06 and REVERTED: this append spelled
-        // `insert(carryOverHeroes.end(), ...)` is worth 78.6801 -> 80.2280
-        // (+24 B), but the direct spelling lets VC6 expand
-        // `vector<vector<hero>>::insert` in full and FIVE named COMDATs stop
-        // being emitted - insert (528 B), _Ucopy, _Ufill, std::fill and
-        // std::copy_backward, all four banked EXACT - for a net loss of four
-        // exact rows and 0.08 tree fuzzy.  When a rung would delete the last
-        // out-of-line instantiation of a template in the TU, price the
-        // COMDATs it takes with it, not just the row.
         m_carryOverHeroes.push_back(std::vector<hero>());
         m_carryoverArtifact.push_back(std::vector<type_artifact>());
     }
 
     m_crossoverArrayIndex = scenario.m_index;
 
-    for (; i < m_mapScores.size(); ++i) {
+    for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
         if (m_mapScores[i].m_completed
             && m_mapScores[i].m_completeOrder > scenario.m_completeOrder)
             scenario.m_completeOrder = m_mapScores[i].m_completeOrder;
@@ -2808,19 +2790,19 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
 
     if (m_currentCampaign == g_campaignOrdinal07
         && m_currentMap == g_campaignMapOrdinal06) {
-        if (g_game->m_heroes[155].m_owner != gamePos)
-            crossover.push_back(g_game->m_heroes[155]);
+        if (g_game->getHero(155)->m_owner != gamePos)
+            crossover.push_back(*g_game->getHero(155));
     }
     if (m_currentCampaign == g_campaignOrdinal18
         && m_currentMap == g_campaignMapOrdinal07) {
-        if (g_game->m_heroes[27].m_owner != gamePos)
-            crossover.push_back(g_game->m_heroes[27]);
-        if (g_game->m_heroes[102].m_owner != gamePos)
-            crossover.push_back(g_game->m_heroes[102]);
-        if (g_game->m_heroes[148].m_owner != gamePos)
-            crossover.push_back(g_game->m_heroes[148]);
-        if (g_game->m_heroes[96].m_owner != gamePos)
-            crossover.push_back(g_game->m_heroes[96]);
+        if (g_game->getHero(27)->m_owner != gamePos)
+            crossover.push_back(*g_game->getHero(27));
+        if (g_game->getHero(102)->m_owner != gamePos)
+            crossover.push_back(*g_game->getHero(102));
+        if (g_game->getHero(148)->m_owner != gamePos)
+            crossover.push_back(*g_game->getHero(148));
+        if (g_game->getHero(96)->m_owner != gamePos)
+            crossover.push_back(*g_game->getHero(96));
     }
 
     getCrossoverArtifacts(m_crossoverArrayIndex).clear();
@@ -2836,8 +2818,7 @@ void SCampaign::completeCurrentMap(void* campaignHeader)
         }
     }
 
-    pruneCrossoverHeroes(
-        static_cast<const TCampaignBrief::CampaignHeaderStruct*>(campaignHeader));
+    pruneCrossoverHeroes(header);
 }
 
 // CompleteCurrentMap's tail call flags heroes requested by unfinished
@@ -2940,20 +2921,16 @@ int SCampaign::findLatestCrossoverScenario(int slot) const
 }
 
 VA(0x0048a270, 0x2F) MAC_ADDRESS(0x098bf0, 0x34)
-void SCampaign::playScenarioPrologue(void* campaignHeader)
+void SCampaign::playScenarioPrologue(TCampaignBrief::CampaignHeaderStruct* header)
 {
     int map = m_currentMap;
-    TCampaignBrief::CampaignHeaderStruct* header =
-        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
     header->playScenarioText(map, false);
 }
 
 VA(0x0048a2a0, 0x70) MAC_ADDRESS(0x098c24, 0x8c)
-void SCampaign::playScenarioEpilogue(void* campaignHeader)
+void SCampaign::playScenarioEpilogue(TCampaignBrief::CampaignHeaderStruct* header)
 {
     int map = m_currentMap;
-    TCampaignBrief::CampaignHeaderStruct* header =
-        static_cast<TCampaignBrief::CampaignHeaderStruct*>(campaignHeader);
     header->playScenarioText(map, true);
     if (m_currentCampaign == g_campaignOrdinal02 && m_mapScores[0].m_completed
         && m_mapScores[1].m_completed && !m_mapScores[2].m_completed) {

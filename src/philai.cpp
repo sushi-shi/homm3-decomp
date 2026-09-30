@@ -2994,9 +2994,12 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
     if (player->m_resources[GOLD] < 1000)
         return 0;
 
-    return static_cast<int>(
-        max(currentHero->getValueOfPower(),
-                      currentHero->getValueOfKnowledge())
+    // DC 2602 acquires power, 2605 knowledge, then 2608 calls max.
+    // No local types survive here; long preserves both proven getter returns
+    // (hero.h:1001/1006, dc 0x37dd4/0x37dcc).
+    long powerValue = currentHero->getValueOfPower();
+    long knowledgeValue = currentHero->getValueOfKnowledge();
+    return static_cast<int>(max(powerValue, knowledgeValue)
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
@@ -3617,9 +3620,11 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     if (!info->magicSpringIsFull())
         return 0;
 
-    // DC dc0x11348c records one target local, and Mac0x145ec4 expands
-    // getTarget directly. The extra path-to-target copy was reconstruction.
-    type_point target = currentHero->getTarget();
+    // DC records one value-type target local, not a path-to-target copy.
+    // Separate declaration/assignment keeps this exact retained body and
+    // restores its retained call in aiValueOfEvent without an inline pin.
+    type_point target;
+    target = currentHero->getTarget();
     if (target.isValid() && moveCost > 300) {
         NewmapCell* destination = g_game->getCell(target);
         if (destination->m_type != MAGIC_WELL
@@ -3669,6 +3674,15 @@ int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 // not the missing source model.
 // DC's free MoraleIncreaseValue/LuckIncreaseValue calls became hero members
 // in Complete: retail passes their receiver in ECX at the retained sites.
+// A tomb guard falling through to the survivor appraisal recovers retail's
+// shared backpack check (94.8578 -> 95.23%). Together with long school
+// acquisition locals and the single assigned spring target, six source states
+// produce five objects and five reproduced elites; the best gives 96.6915%
+// with no sibling MAX loss. School and spring retained bodies stay exact.
+// Five school-result/debit lifetimes yield three reproduced objects, no gain.
+// Remaining call decisions: the first bank size(), magic school and power
+// school still expand where retail retains calls; BlackBox's merged secondary
+// skill tail also remains unresolved. Preserve all canonical helper paths.
 long aiValueOfEvent(const hero* currentHero, type_point point,
                        long& moveCost)
 {
@@ -3905,14 +3919,9 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
                 static_cast<const void*>(cell));
         if (info->playerKnowsCell(g_netLocalGamePos))
             return 0;
-        // Mac 0x1469f8 retains this tomb-specific backpack check.
-        if (const_cast<hero*>(currentHero)
-                ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
-            return 0;
-        return static_cast<int>(g_currentPlayer->m_ai.m_turnValueOfAvgArtifact);
+        // An unvisited tomb shares the survivor appraisal below.
     }
     case SHIPWRECK_SURVIVOR:
-        // Mac 0x1467b4 retains a separate survivor backpack check.
         if (const_cast<hero*>(currentHero)
                 ->getNumberInBackpack(1) >= HERO_BACKPACK_CAPACITY)
             return 0;
