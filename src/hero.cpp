@@ -3162,7 +3162,7 @@ std::string hero::getMoraleDescription() const
     }
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:2989 names town::HasBuilding here. Retail
@@ -3299,7 +3299,7 @@ std::string hero::getLuckDescription() const
     }
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             // Dreamcast hero.cpp:3149 names town::HasBuilding here.
@@ -5404,7 +5404,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                 g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (heroFn004DBE80(targetCombo)) {
-                    playerData& player = g_game->m_players[m_owner];
+                    playerData& player = *getPlayer();
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
                             !player.m_assembledCombinations[targetCombo]) {
@@ -5559,7 +5559,7 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
         luck++;
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
@@ -5608,7 +5608,7 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
         morale++;
 
     if (m_owner >= 0) {
-        playerData& player = g_game->m_players[m_owner];
+        playerData& player = *getPlayer();
         for (int i = 0; i < player.m_numTowns; i++) {
             town* ownedTown = g_game->getTown(player.m_townIds[i]);
             if (ownedTown->hasBuilding(HOLY_GRAIL_ID, true) &&
@@ -5665,7 +5665,7 @@ float hero::getNecromancyFactor(unsigned char applyLimit) const
             factor += 0.15f;
 
         if (m_owner >= 0) {
-            playerData& player = g_game->m_players[m_owner];
+            playerData& player = *getPlayer();
             for (int i = 0; i < player.m_numTowns; i++) {
                 town* ownedTown = g_game->getTown(player.m_townIds[i]);
                 if (ownedTown->m_type == TOWN_NECROPOLIS) {
@@ -6011,7 +6011,7 @@ int hero::getMobility(unsigned char seaMovement) const
     if (m_owner >= 0 && m_owner < 6 && !g_game->isHuman(m_owner) &&
         g_game->m_setup.m_difficulty > 2) {
         mobility += 75;
-        if (g_game->m_players[m_owner].m_personality == AI_PERSONALITY_AGGRESSIVE)
+        if (getPlayer()->m_personality == AI_PERSONALITY_AGGRESSIVE)
             mobility += 50;
     }
     return mobility;
@@ -6296,6 +6296,8 @@ unsigned char hero::canSummonBoat() const
 VA(0x004e56b0, 0x21)
 DC_ADDRESS(0x0d52b0, 0x20)
 MAC_ADDRESS(0x1066e4, 0x38)
+// Mac 0x1066e4..0x106718 owns the negative-owner guard and player-row
+// lookup; guarded callers expand this same operation (e.g. 0x104a98).
 playerData* hero::getPlayer() const
 {
     if (m_owner < 0)
