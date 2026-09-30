@@ -1,9 +1,12 @@
 #ifndef HOMM3_ADVENTUREMAPWINDOW_H
 #define HOMM3_ADVENTUREMAPWINDOW_H
 
+#include "va.h"
+
 #include "advmgr.h"
 
-// E:\gamedcs\AdventureMapWindow.h:238, dc 0xbd0a0.
+// E:\gamedcs\AdventureMapWindow.h:238
+DC_ADDRESS(0x0bd0a0, 0x14)
 inline void TAdventureMapWindow::setBackgroundAnimation(unsigned char enable)
 {
     m_animateInBackground = enable;

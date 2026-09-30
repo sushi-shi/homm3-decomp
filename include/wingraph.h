@@ -21,6 +21,7 @@ DATA(0x0068c850) extern DDPIXELFORMAT g_pixelFormat;
 class Bitmap16Bit;
 extern Bitmap16Bit g_initWin;
 
+DC_ADDRESS(0x0ff780, 0x60)
 inline unsigned rgBto16(int r, int g, int b)
 {
     unsigned color;

@@ -1,6 +1,8 @@
 #ifndef HOMM3_WINMGR_H
 #define HOMM3_WINMGR_H
 
+#include "va.h"
+
 #include "basemgr.h"
 #include "message.h"
 #include "struct.h"
@@ -102,26 +104,34 @@ public:
     void saveFizzleSourceX(int startX, int startY, int width, int height);
     void fizzleForwardX(int startX, int startY, int width, int height,
                         int fadeTime);
-    // Original: heroWindowManager::SaveFizzleSource; WinMgr.h:181, dc 0x230bc.
+
+    // Original: heroWindowManager::SaveFizzleSource; WinMgr.h:181
+    DC_ADDRESS(0x0230bc, 0x48)
     void saveFizzleSource(const SLimitData& limits)
     {
         saveFizzleSource(limits.m_minX, limits.m_minY,
                          limits.width(), limits.height());
     }
-    // Original: heroWindowManager::FizzleForward; WinMgr.h:187, dc 0x23104.
+
+    // Original: heroWindowManager::FizzleForward; WinMgr.h:187
+    DC_ADDRESS(0x023104, 0x50)
     void fizzleForward(const SLimitData& limits, int fadeTime)
     {
         fizzleForward(limits.m_minX, limits.m_minY,
                       limits.width(), limits.height(), fadeTime);
     }
-    // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
+
+    // DC WinMgr.h:193..200 proves the const-reference
     // rectangle overloads and their Width/Height calls. Complete uses the X
     // pixel path at the adventure-spell sites as well as in combat drawing.
+    DC_ADDRESS(0x070af0, 0x50)
     void fizzleForwardX(const SLimitData& limits, int fadeTime)
     {
         fizzleForwardX(limits.m_minX, limits.m_minY,
                        limits.width(), limits.height(), fadeTime);
     }
+
+    DC_ADDRESS(0x070b40, 0x48)
     void saveFizzleSourceX(const SLimitData& limits)
     {
         saveFizzleSourceX(limits.m_minX, limits.m_minY,

@@ -1599,6 +1599,7 @@ SIZE(army, 0x548);
 // source-line run.
 
     // E:\gamedcs\Army.h:718
+DC_ADDRESS(0x027c78, 0x24)
 inline bool army::canCastResurrect() const
     {
         return (m_creatureType == ARMY_CREATURE_ARCHANGEL
@@ -1607,19 +1608,22 @@ inline bool army::canCastResurrect() const
     }
 
     // E:\gamedcs\Army.h:724
+DC_ADDRESS(0x0429c0, 0x34)
 inline int army::getMorale(unsigned char applyLimits) const
     {
         return applyLimits ? limit(-3, m_morale, 3) : m_morale;
     }
 
     // E:\gamedcs\Army.h:730
+DC_ADDRESS(0x0429f4, 0x34)
 inline int army::getLuck(unsigned char applyLimits) const
     {
         return applyLimits ? limit(-3, m_luck, 3) : m_luck;
     }
 
     // E:\gamedcs\Army.h:736
-VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body
+DC_ADDRESS(0x027c9c, 0x30)
 inline int army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
@@ -1629,10 +1633,11 @@ inline int army::offsetToFront(int direction) const
         return m_facing ? 1 : -1;
     }
 
-    // E:\gamedcs\Army.h:752, dc 0x27ccc. The older DC helper clears
+    // E:\gamedcs\Army.h:752 The older DC helper clears
     // expectedDamage, target, time and value. Complete's x86 findAITargets
     // at 0x422b20 and Mac at 0:0x25100 instead clear target, value,
     // possibleTargets and time in this order, leaving expectedDamage intact.
+DC_ADDRESS(0x027ccc, 0x16)
 inline void army::clearAIValues()
     {
         m_aiTarget = 0;
@@ -1642,49 +1647,57 @@ inline void army::clearAIValues()
     }
 
     // E:\gamedcs\Army.h:760
+DC_ADDRESS(0x04c9ec, 0x20)
 inline bool army::needToTurn(int direction) const
     {
         return direction < 6 && (m_facing == 0) != (direction >= 3);
     }
 
-    // Original: army::Is; E:\gamedcs\Army.h:765, dc 0x27ce4.
+    // Original: army::Is; E:\gamedcs\Army.h:765
     // Any requested attribute suffices, including a combined trait mask.
+DC_ADDRESS(0x027ce4, 0xe)
 inline bool army::is(unsigned attribute) const
     {
         return (m_monInfo.m_attributes & attribute) != 0;
     }
 
     // E:\gamedcs\Army.h:770
+DC_ADDRESS(0x027cf4, 0x8)
 inline long army::getAIExpectedDamage() const
     {
         return m_aiExpectedDamage;
     }
 
     // E:\gamedcs\Army.h:775
+DC_ADDRESS(0x027cfc, 0x8)
 inline const army* army::getAITarget() const
     {
         return m_aiTarget;
     }
 
     // E:\gamedcs\Army.h:780
+DC_ADDRESS(0x027d04, 0x8)
 inline long army::getAITargetValue() const
     {
         return m_aiTargetValue;
     }
 
     // E:\gamedcs\Army.h:785
+DC_ADDRESS(0x027d0c, 0x28)
 inline long army::getAITargetTime() const
     {
         return getAITargetTime(getSpeed());
     }
 
     // E:\gamedcs\Army.h:790
+DC_ADDRESS(0x027d34, 0x8)
 inline long army::getAIPossibleTargets() const
     {
         return m_aiPossibleTargets;
     }
 
     // E:\gamedcs\Army.h:795
+DC_ADDRESS(0x027d3c, 0x8)
 inline int army::getOwningSide() const
     {
         return m_combatSide;
@@ -1692,6 +1705,7 @@ inline int army::getOwningSide() const
 
     // E:\gamedcs\Army.h:800
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
+DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
         if (m_spellInfluence[60])
@@ -1700,12 +1714,14 @@ inline int army::getControllingSide() const
     }
 
     // E:\gamedcs\Army.h:810
+DC_ADDRESS(0x04ca0c, 0x20)
 inline const char* army::getName() const
     {
         return getArmyName(m_creatureType, m_numTroops);
     }
 
     // E:\gamedcs\Army.h:815
+DC_ADDRESS(0x04ca2c, 0x18)
 inline const char* army::getName(int count) const
     {
         return getArmyName(m_creatureType, count);
@@ -1713,30 +1729,35 @@ inline const char* army::getName(int count) const
 
     // SpellID is still represented by its retail-width int domain here.
     // E:\gamedcs\Army.h:820
+DC_ADDRESS(0x027d74, 0x12)
 inline long army::getSpellTime(int spell) const
     {
         return m_spellInfluence[spell];
     }
 
     // E:\gamedcs\Army.h:825
+DC_ADDRESS(0x042a28, 0x12)
 inline TSkillMastery army::getSpellLevel(int spell) const
     {
         return TSkillMastery(m_spellLevel[spell]);
     }
 
     // E:\gamedcs\Army.h:830
+DC_ADDRESS(0x027d88, 0x14)
 inline bool army::isActive() const
     {
         return m_creatureType >= 0 && m_numTroops > 0;
     }
 
     // E:\gamedcs\Army.h:835
+DC_ADDRESS(0x158180, 0x20)
 inline bool army::isInAura() const
     {
         return m_auraSources.size() > 0;
     }
 
-VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
+VA(0x0041f380, 0x27)  // anchor-callee
+DC_ADDRESS(0x027d9c, 0x3a)
 inline bool army::isIncapacitated() const
     {
         return m_spellInfluence[62] || m_spellInfluence[70]
@@ -1744,6 +1765,7 @@ inline bool army::isIncapacitated() const
     }
 
     // E:\gamedcs\Army.h:847
+DC_ADDRESS(0x027dd8, 0x44)
 inline bool army::canRetaliate(const army& attacker) const
     {
         return !attacker.is(creatureFreeAttack) && !m_spellInfluence[70]
@@ -1754,6 +1776,7 @@ inline bool army::canRetaliate(const army& attacker) const
 // Complete's inlined copy in consider_single_enchantment keeps the recovered
 // incapacity/attribute prefix but directly contradicts Dreamcast's final
 // Psychic/Magic Elemental pair: retail compares First Aid Tent and Ammo Cart.
+DC_ADDRESS(0x027e1c, 0x54)
 inline bool army::cannotAttack() const
     {
         return isIncapacitated() || is(creatureImmobilized)
@@ -1762,23 +1785,28 @@ inline bool army::cannotAttack() const
     }
 
     // E:\gamedcs\Army.h:864
+DC_ADDRESS(0x027e70, 0x1c)
 inline long army::getAdjacentHex(long direction) const
     {
         return getAdjacentHex(m_gridIndex, direction);
     }
 
     // E:\gamedcs\Army.h:869
+DC_ADDRESS(0x04ca44, 0x1c)
 inline long army::getAttackDirection(const army* enemy) const
     {
         return getAttackDirection(m_gridIndex, enemy);
     }
 
     // E:\gamedcs\Army.h:875
+DC_ADDRESS(0x04ca60, 0x1c)
 inline bool army::leavesNoBody() const
     {
         return is(creatureSummoned | creatureSacrificed);
     }
+
     // E:\gamedcs\Army.h:881
+DC_ADDRESS(0x0872f4, 0xa)
 inline bool army::isInAreaHighlight() const
     {
         return m_isAreaEffectTarget;
@@ -1824,13 +1852,13 @@ bool isValidCaliphSpell(SpellID spell, const army* target);
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
 bool spellIsValidOnTarget(int spell, const army* target);
 
-// E:\gamedcs\army.cpp:917, dc 0x44e14
-// E:\gamedcs\army.cpp:2708, dc 0x47944
-// E:\gamedcs\army.cpp:4436, dc 0x4a8c8
-// E:\gamedcs\army.cpp:5433, dc 0x4c0f0
-// E:\gamedcs\army.cpp:5451, dc 0x4c154
-// E:\gamedcs\army.cpp:5469, dc 0x4c1b8
-// E:\gamedcs\includes.h:117, dc 0x4c9c0
-// E:\gamedcs\DC_precompiledheaders.h:41, dc 0x4d044
+// E:\gamedcs\army.cpp:917
+// E:\gamedcs\army.cpp:2708
+// E:\gamedcs\army.cpp:4436
+// E:\gamedcs\army.cpp:5433
+// E:\gamedcs\army.cpp:5451
+// E:\gamedcs\army.cpp:5469
+// E:\gamedcs\includes.h:117
+// E:\gamedcs\DC_precompiledheaders.h:41
 
 #endif  /* HOMM3_ARMY_H */

@@ -15,26 +15,32 @@
 // constructors (0x450130, 0x4502d0, 0x450690), leaving a widget default-
 // constructor call and a single derived vtable store. No explicit inline
 // declaration is needed to expose this body to those same-TU callers.
-// E:\gamedcs\border.cpp:34, dc 0x5433c
+// E:\gamedcs\border.cpp:34
+DC_ADDRESS(0x05433c, 0x3c)
 MAC_ADDRESS(0x05e244, 0x38)
 border::border() {}
 
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
 
-VA(0x0044ff10, 0x32) MAC_ADDRESS(0x05e27c, 0x50)  // dc 0x54378
+VA(0x0044ff10, 0x32)
+DC_ADDRESS(0x054378, 0x60)
+MAC_ADDRESS(0x05e27c, 0x50)
 border::border(int x, int y, int w, int h, int id, int style)
     : widget(x, y, w, h, id, style)
 {
 }
 
-VA(0x0044ff50, 0xB) MAC_ADDRESS(0x05e2cc, 0x60)  // dc 0x543d8
+VA(0x0044ff50, 0xB)
+DC_ADDRESS(0x0543d8, 0x2e)
+MAC_ADDRESS(0x05e2cc, 0x60)
 border::~border()
 {
 }
 
-// Original: border::initialize; border.cpp:67, dc 0x54408.
+// Original: border::initialize; border.cpp:67
 // Complete removes widget's focusable storage (see widget.h). The retained
 // derived constructors expand this forwarding call to widget::initialize.
+DC_ADDRESS(0x054408, 0x36)
 MAC_ADDRESS(0x05e32c, 0x20)
 void border::initialize(int x, int y, int w, int h, int id, int style,
                         unsigned char focusable)
@@ -42,7 +48,9 @@ void border::initialize(int x, int y, int w, int h, int id, int style,
     widget::initialize(x, y, w, h, id, style);
 }
 
-VA(0x0044ff60, 0x1CD) MAC_ADDRESS(0x05e34c, 0x230)  // dc 0x54440
+VA(0x0044ff60, 0x1CD)
+DC_ADDRESS(0x054440, 0x150)
+MAC_ADDRESS(0x05e34c, 0x230)
 int border::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -113,21 +121,24 @@ int border::main(message& msg)
 // UAA_N_N0 signature proves native bool for the return and both parameters.
 // Retail border vslot 13 folds onto iconWidget's 0x4eab10 representative.
 // Keep border's canonical source body without a duplicate retail claim.
-
+DC_ADDRESS(0x054590, 0x4)
 bool border::handleClick(bool downClick, bool rightClick)
 {
     return false;
 }
 
-// Original: border::zBufferDraw; border.cpp:158, dc 0x54594.
+// Original: border::zBufferDraw; border.cpp:158
 // Retail vtable 0x63ba24 slot 3 shares the empty ret-8 representative 0x5bc7e0.
+DC_ADDRESS(0x054594, 0x4)
 void border::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-// Original: border::Draw; border.cpp:161, dc 0x54598.
+// Original: border::Draw; border.cpp:161
 // Its slot 4 shares the empty no-argument body at 0x5bc690.
+DC_ADDRESS(0x054598, 0x4)
 void border::draw() const {}
 
-// Original: coloredBorder::coloredBorder; border.cpp:174, dc 0x5459c.
+// Original: coloredBorder::coloredBorder; border.cpp:174
+DC_ADDRESS(0x05459c, 0x78)
 coloredBorder::coloredBorder(int x, int y, int w, int h, int id,
                              int color, int style)
 {
@@ -135,10 +146,12 @@ coloredBorder::coloredBorder(int x, int y, int w, int h, int id,
     m_color = color;
 }
 
-// Original: coloredBorder::zBufferDraw; border.cpp:182, dc 0x54614.
+// Original: coloredBorder::zBufferDraw; border.cpp:182
+DC_ADDRESS(0x054614, 0x4)
 void coloredBorder::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-// Original: coloredBorder::Draw; border.cpp:185, dc 0x54618.
+// Original: coloredBorder::Draw; border.cpp:185
+DC_ADDRESS(0x054618, 0x38)
 void coloredBorder::draw() const
 {
     g_windowManager->m_screenBitmap->fillRect(m_x + m_parentWindow->m_x,
@@ -159,7 +172,9 @@ void coloredBorder::draw() const
 // in the ctor BODY (not a base initializer), which is why VC6 wraps the
 // whole thing in an fs:[0] frame - the base subobject has to be
 // unwindable across that call.
-VA(0x00450130, 0x6D) MAC_ADDRESS(0x05e58c, 0x88)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
+VA(0x00450130, 0x6D)
+DC_ADDRESS(0x054650, 0x80)
+MAC_ADDRESS(0x05e58c, 0x88)  // anchor-bracket + arity (`ret 0x1c`)
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color, int style)
 {
@@ -175,11 +190,14 @@ VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x004501d0, 0xB, IMPLICIT_DTOR, coloredBorderFrame)
 
-// Original: coloredBorderFrame::zBufferDraw; border.cpp:210, dc 0x546d0.
+// Original: coloredBorderFrame::zBufferDraw; border.cpp:210
 // Retail slot 3 at 0x63ba68 shares 0x5bc7e0 with border and textWidget.
+DC_ADDRESS(0x0546d0, 0x4)
 void coloredBorderFrame::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-VA(0x004501e0, 0x5B) MAC_ADDRESS(0x05e618, 0xa4)  // dc 0x546d4
+VA(0x004501e0, 0x5B)
+DC_ADDRESS(0x0546d4, 0x6e)
+MAC_ADDRESS(0x05e618, 0xa4)
 void coloredBorderFrame::draw() const
 {
     if (m_colorize)
@@ -190,7 +208,9 @@ void coloredBorderFrame::draw() const
             m_y + m_parentWindow->m_y, m_width, m_height, m_color);
 }
 
-VA(0x00450240, 0x82) MAC_ADDRESS(0x05e6bc, 0xe4)  // dc 0x54744
+VA(0x00450240, 0x82)
+DC_ADDRESS(0x054744, 0x7c)
+MAC_ADDRESS(0x05e6bc, 0xe4)
 int coloredBorderFrame::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -219,7 +239,9 @@ int coloredBorderFrame::main(message& msg)
     return border::main(msg);
 }
 
-VA(0x004502d0, 0x8C) MAC_ADDRESS(0x05e7a0, 0x9c)  // dc 0x547c0
+VA(0x004502d0, 0x8C)
+DC_ADDRESS(0x0547c0, 0xa0)
+MAC_ADDRESS(0x05e7a0, 0x9c)
 bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
                            const char* image, int style)
 {
@@ -232,14 +254,18 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
 
-VA(0x00450390, 0x5B) MAC_ADDRESS(0x05e83c, 0x7c)  // dc 0x54860
+VA(0x00450390, 0x5B)
+DC_ADDRESS(0x054860, 0x3c)
+MAC_ADDRESS(0x05e83c, 0x7c)
 bitmapBorder::~bitmapBorder()
 {
     if (m_image)
         m_image->dispose();
 }
 
-VA(0x004503f0, 0x55) MAC_ADDRESS(0x05e8b8, 0x7c)  // dc 0x5489c
+VA(0x004503f0, 0x55)
+DC_ADDRESS(0x05489c, 0x60)
+MAC_ADDRESS(0x05e8b8, 0x7c)
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     if (m_image)
@@ -247,7 +273,9 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id) const
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 800, 600, 1600, id);
 }
 
-VA(0x00450450, 0x44) MAC_ADDRESS(0x05e934, 0x70)  // dc 0x548fc
+VA(0x00450450, 0x44)
+DC_ADDRESS(0x0548fc, 0x4a)
+MAC_ADDRESS(0x05e934, 0x70)
 void bitmapBorder::draw() const
 {
     if (m_image)
@@ -255,8 +283,9 @@ void bitmapBorder::draw() const
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, 1);
 }
 
-// Original: bitmapBorder::SetPalette; border.cpp:323, dc 0x54988.
+// Original: bitmapBorder::SetPalette; border.cpp:323
 // Retail Main's SET_PALETTE arm expands the same load/copy/dispose sequence.
+DC_ADDRESS(0x054988, 0x38)
 MAC_ADDRESS(0x05e9dc, 0x6c)
 void bitmapBorder::setPalette(const char* paletteName)
 {
@@ -269,7 +298,9 @@ void bitmapBorder::setPalette(const char* paletteName)
     }
 }
 
-VA(0x004504a0, 0xE) MAC_ADDRESS(0x05e9a4, 0x1c)  // dc 0x54948
+VA(0x004504a0, 0xE)
+DC_ADDRESS(0x054948, 0x20)
+MAC_ADDRESS(0x05e9a4, 0x1c)
 int bitmapBorder::getRealWidth() const
 {
     if (m_image)
@@ -277,7 +308,9 @@ int bitmapBorder::getRealWidth() const
     return 0;
 }
 
-VA(0x004504b0, 0xE) MAC_ADDRESS(0x05e9c0, 0x1c)  // dc 0x54968
+VA(0x004504b0, 0xE)
+DC_ADDRESS(0x054968, 0x20)
+MAC_ADDRESS(0x05e9c0, 0x1c)
 int bitmapBorder::getRealHeight() const
 {
     if (m_image)
@@ -285,7 +318,9 @@ int bitmapBorder::getRealHeight() const
     return 0;
 }
 
-VA(0x004504c0, 0x5B) MAC_ADDRESS(0x05ea48, 0x74)  // dc 0x549c0
+VA(0x004504c0, 0x5B)
+DC_ADDRESS(0x0549c0, 0x2a)
+MAC_ADDRESS(0x05ea48, 0x74)
 void bitmapBorder::setImage(const char* bitmapName)
 {
     if (m_image != 0) {
@@ -296,14 +331,18 @@ void bitmapBorder::setImage(const char* bitmapName)
     m_image = ResourceManager::getBitmap816(bitmapName);
 }
 
-VA(0x00450520, 0x2D) MAC_ADDRESS(0x05eabc, 0x50)  // dc 0x549ec
+VA(0x00450520, 0x2D)
+DC_ADDRESS(0x0549ec, 0x34)
+MAC_ADDRESS(0x05eabc, 0x50)
 void bitmapBorder::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_image->getPalette().m_colors.m_data, whichPlayer);
     ::setPlayerPaletteColors(m_image->getPalette24(), whichPlayer);
 }
 
-VA(0x00450550, 0x132) MAC_ADDRESS(0x05eb0c, 0xd8)  // dc 0x54a20
+VA(0x00450550, 0x132)
+DC_ADDRESS(0x054a20, 0x76)
+MAC_ADDRESS(0x05eb0c, 0xd8)
 int bitmapBorder::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -329,7 +368,9 @@ int bitmapBorder::main(message& msg)
     return border::main(msg);
 }
 
-VA(0x00450690, 0x8C) MAC_ADDRESS(0x05ebe4, 0x9c)  // dc 0x54a98
+VA(0x00450690, 0x8C)
+DC_ADDRESS(0x054a98, 0xd0)
+MAC_ADDRESS(0x05ebe4, 0x9c)
 bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
                                const char* image, int style)
 {
@@ -342,18 +383,23 @@ bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
 
 VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
 
-VA(0x00450750, 0x5B) MAC_ADDRESS(0x05ec80, 0x7c)  // dc 0x54b68
+VA(0x00450750, 0x5B)
+DC_ADDRESS(0x054b68, 0x3c)
+MAC_ADDRESS(0x05ec80, 0x7c)
 bitmapBorder16::~bitmapBorder16()
 {
     if (m_image)
         m_image->dispose();
 }
 
-// Original: bitmapBorder16::zBufferDraw; border.cpp:415, dc 0x54ba4.
+// Original: bitmapBorder16::zBufferDraw; border.cpp:415
 // The 0x63bacc vtable's slot 3 folds to the shared empty ret-8 body.
+DC_ADDRESS(0x054ba4, 0x4)
 void bitmapBorder16::zBufferDraw(unsigned short* zBuffer, int id) const {}
 
-VA(0x004507b0, 0x55) MAC_ADDRESS(0x05ed00, 0x8c)  // dc 0x54ba8
+VA(0x004507b0, 0x55)
+DC_ADDRESS(0x054ba8, 0x48)
+MAC_ADDRESS(0x05ed00, 0x8c)
 void bitmapBorder16::draw() const
 {
     if (m_image) {
@@ -364,7 +410,9 @@ void bitmapBorder16::draw() const
     }
 }
 
-VA(0x00450810, 0x44) MAC_ADDRESS(0x05ed8c, 0x78)  // dc 0x54bf0
+VA(0x00450810, 0x44)
+DC_ADDRESS(0x054bf0, 0x3a)
+MAC_ADDRESS(0x05ed8c, 0x78)
 void bitmapBorder16::draw2() const
 {
     if (m_image) {
@@ -374,16 +422,18 @@ void bitmapBorder16::draw2() const
     }
 }
 
-// Original: bitmapBorder16::GetRealWidth; border.cpp:431, dc 0x54c2c.
+// Original: bitmapBorder16::GetRealWidth; border.cpp:431
 // Complete vslot 6 at 0x63bae4 shares bitmapBorder::getRealWidth, 0x4504a0:
 // both bitmap types put Width at +0x24 after their resource base.
+DC_ADDRESS(0x054c2c, 0x20)
 int bitmapBorder16::getRealWidth() const
 {
     return m_image ? m_image->getWidth() : 0;
 }
 
-// Original: bitmapBorder16::GetRealHeight; border.cpp:436, dc 0x54c4c.
+// Original: bitmapBorder16::GetRealHeight; border.cpp:436
 // Vslot 5 at 0x63bae0 similarly shares bitmapBorder::getRealHeight, 0x4504b0.
+DC_ADDRESS(0x054c4c, 0x20)
 int bitmapBorder16::getRealHeight() const
 {
     return m_image ? m_image->getHeight() : 0;
@@ -399,7 +449,7 @@ int bitmapBorder16::getRealHeight() const
 // Only two commands survive on the 16-bit variant. SET_PALETTE is an
 // EMPTY accepting arm - retail's `je` lands straight on `mov eax,1` -
 // which is what a hi-colour image with no palette to retint leaves. The
-// SET_IMAGE arm is the whole of bitmapBorder16::SetImage (dc 0x54c6c),
+// SET_IMAGE arm is the whole of bitmapBorder16::SetImage,
 // expanded: retail has NO row for that method anywhere in border.obj's
 // span because Main is its only caller, so /OPT:REF dropped the orphaned
 // COMDAT after /Ob2 expanded it here. Writing it as the CALL is what gives
@@ -408,6 +458,7 @@ int bitmapBorder16::getRealHeight() const
 // epilogue and inverts the strcmp branch.
 // E:\gamedcs\border.cpp:441 - bitmapBorder::SetImage one class up with the
 // hi-colour loader. No VA: retail keeps no row for it (see the note below).
+DC_ADDRESS(0x054c6c, 0x2c)
 MAC_ADDRESS(0x05ee3c, 0x74)
 void bitmapBorder16::setImage(const char* bitmapName)
 {
@@ -419,7 +470,9 @@ void bitmapBorder16::setImage(const char* bitmapName)
     m_image = ResourceManager::getBitmap16(bitmapName);
 }
 
-VA(0x00450860, 0xC6) MAC_ADDRESS(0x05eeb0, 0xb0)  // dc 0x54c98
+VA(0x00450860, 0xC6)
+DC_ADDRESS(0x054c98, 0x84)
+MAC_ADDRESS(0x05eeb0, 0xb0)
 int bitmapBorder16::main(message& msg)
 {
     if (m_sleepCount > 0)

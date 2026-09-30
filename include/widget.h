@@ -142,9 +142,15 @@ public:
     // Original Draw, zBufferDraw and Dim have const receivers in CodeView.
     // These hooks write to the destination bitmap through its pointer.
     virtual void draw() const = 0;  // slot 4
-    VA(0x004021d0, 0x5) MAC_ADDRESS(0x0041b4, 0x8)  // vtable slot 5 + exact height read, retail-only
+
+    VA(0x004021d0, 0x5)
+    DC_ADDRESS(0x002de4, 0x4)
+    MAC_ADDRESS(0x0041b4, 0x8)  // vtable slot 5 + exact height read, retail-only
     virtual int getRealHeight() const { return m_height; }  // slot 5
-    VA(0x004021e0, 0x5) MAC_ADDRESS(0x0041bc, 0x8)  // vtable slot 6 + exact width read, retail-only
+
+    VA(0x004021e0, 0x5)
+    DC_ADDRESS(0x002de8, 0x4)
+    MAC_ADDRESS(0x0041bc, 0x8)  // vtable slot 6 + exact width read, retail-only
     virtual int getRealWidth() const { return m_width; }  // slot 6
     virtual void processHover();  // slot 7
     virtual void dim() const;  // slot 8
@@ -152,29 +158,39 @@ public:
     void setHelpText(const char* text, const char* rclick, unsigned char copyText);
     int sendMessage(widget::ECommands command, int extra);
 
-    VA(0x00404df0, 0x1) MAC_ADDRESS(0x05ef60, 0x4)  // shared empty focus hook, vtable slots 10/11; dc 0x54d1c
+    VA(0x00404df0, 0x1)
+    DC_ADDRESS(0x054d1c, 0x4)
+    MAC_ADDRESS(0x05ef60, 0x4)  // shared empty focus hook, vtable slots 10/11;
     virtual void onSetFocus() {}  // slot 10
+
+    DC_ADDRESS(0x054d20, 0x4)
     virtual void onKillFocus() {}  // slot 11
 
     // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
     // emitted; it is not an inlined-away static.
-    // DC Widget.h:225-226, dc 0x12859c: static hover reset.
+    // DC Widget.h:225-226: static hover reset.
+    DC_ADDRESS(0x12859c, 0xc)
     static void clearHoverWidget() { s_lastHoverWidget = 0; }
 
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
+    DC_ADDRESS(0x06a3e8, 0x4)
     const char* getHelpText() const { return m_rollOver; }
+
     // Dreamcast Widget.h:236 header inline. CampaignBriefHandler folds this
     // exact RightClick-or-RollOver choice into its retail body.
+    DC_ADDRESS(0x05abe4, 0x10)
     const char* getRclickText() const
     {
         return m_rightClick ? m_rightClick : m_rollOver;
     }
+
     // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
     // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
     // send_message, retail's is the nest counter below. Header-inline
     // in both builds - retail's only call site is heroWindow's slot-8
     // body 0x5ff5f0, where /Ob2 expands it in full.
+    DC_ADDRESS(0x002dec, 0x24)
     void sleep(unsigned char on)
     {
         if (on) {
@@ -185,16 +201,22 @@ public:
                 onSleepChange(0);
         }
     }
+
     // Dreamcast header inlines used by mode-switch paths.
+    DC_ADDRESS(0x05abf4, 0x24)
     void hide()
     {
         sendMessage(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
+
+    DC_ADDRESS(0x05ac18, 0x24)
     void show()
     {
         sendMessage(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
     }
-    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
+
+    VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263
+    DC_ADDRESS(0x056df8, 0x28)
     void setVisible(unsigned char arg)
     {
         if (arg)
@@ -203,8 +225,9 @@ public:
             sendMessage(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
     }
 
-    // Original: widget::force_update; Widget.h:271, dc 0x56e20.
+    // Original: widget::force_update; Widget.h:271
     // Bottom-view updates expand this same status message in Complete.
+    DC_ADDRESS(0x056e20, 0x1c)
     void forceUpdate() { sendMessage(WIDGET_SET_STATUS, WIDGET_UPDATE); }
 
     // DC field-list order puts the data after the methods; CodeWarrior then

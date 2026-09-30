@@ -14,14 +14,9 @@ import sys
 from collections import OrderedDict, defaultdict
 
 from homm3.core import common, inputs
+from homm3.analysis.dc_claims import claims as source_claims
 
 SRC_DIR = common.HOMM3_DIR / "src"
-
-# `VA(0x005dda10, 0x145F)  // <evidence>, dc 0x17f54c`. Evidence may also
-# mention a Dreamcast byte size earlier on the same line; greedily consume the
-# comment so the final explicit `dc 0x...` identity wins.
-CLAIM_RE = re.compile(r"\b(?:VA|VA_COMPGEN)\s*\(\s*(0x[0-9a-fA-F]+)"
-                      r"[^)]*\)[^\n]*\bdc\s+(0x[0-9a-fA-F]+)")
 
 _srclines: dict[str, list[tuple[str, int, int]]] = {}
 
@@ -47,11 +42,10 @@ def _load_locals(proc: str, module: str) -> list[dict]:
 
 def _va_index() -> dict[int, tuple[str, int]]:
     """retail VA -> (module.obj, dc offset), harvested from the claims."""
+    from homm3.analysis.dreamcast import _source_claims
     index = {}
-    for path in sorted(SRC_DIR.glob("*.cpp")):
-        module = path.stem + ".obj"
-        for va, dc in CLAIM_RE.findall(path.read_text(errors="replace")):
-            index[int(va, 16)] = (module, int(dc, 16))
+    for claim in _source_claims(SRC_DIR):
+        index[claim.va] = (claim.module, claim.dc_offset)
     return index
 
 

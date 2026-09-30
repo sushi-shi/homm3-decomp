@@ -51,6 +51,7 @@ extern const char g_allocationFailureText[];
 
 class TAllocationFailure : public TRuntimeError {
 public:
+
     VA(0x004d6b80, 0x17)  // anchor-callee 0x49a0c0 + anchor-vtable 0x63aba8, retail-only
     TAllocationFailure() : TRuntimeError(g_allocationFailureText) {}
 };

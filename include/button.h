@@ -68,29 +68,37 @@ public:
     void setPalette(const char* paletteName);
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style);
     int select(message& msg);
-    // E:\gamedcs\button.cpp:401, dc 0x57854
+    // E:\gamedcs\button.cpp:401
     int deselect(message& msg);
+
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
+    DC_ADDRESS(0x057da4, 0x18)
     void setText(const char* newText) { m_text = newText; }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+
+    // Dreamcast button.h:99 (6 B SH4: one store). A free
     // /Ob2 candidate site wherever a caller uses it - see
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
     // sequence is reproduced only with this setter in its six loops.
+    DC_ADDRESS(0x0669f4, 0x6)
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The later private highlight frame has no Dreamcast field; its outside
     // writer (TSingleSelectionWindow::createFilterWidgets) takes the same
     // setter form beside setDisabledFrame. Project name.
     void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
+
     VA(0x004e1370, 0x1AF)
+    DC_ADDRESS(0x002e10, 0x20)
     void setHotkey(int code)
     {
         m_hotKeyCodes.push_back(code);
     }
+
     // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
     // TAdvMenu::SetSleepImage retains this call in its source line table.
+    DC_ADDRESS(0x002e30, 0x18)
     void clearHotkeys() { m_hotKeyCodes.clear(); }
     virtual int main(message& msg);  // slot 2, retail 0x456190
 
@@ -115,9 +123,10 @@ public:
     textButton();
     textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor);
 
-    // Original: textButton::SetText; button.h:136, dc 0x14762c.
+    // Original: textButton::SetText; button.h:136
     // DC assigns the inherited Text string directly, distinct from
     // button::SetText; TurnChatOn/Off expand it at retail 0x58ca80/0x58cbf0.
+    DC_ADDRESS(0x14762c, 0x24)
     void setText(const char* newText) { m_text = newText; }
 
     virtual void draw() const;    // slot 4, retail 0x456ca0

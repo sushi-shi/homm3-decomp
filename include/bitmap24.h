@@ -1,6 +1,8 @@
 #ifndef HOMM3_BITMAP24_H
 #define HOMM3_BITMAP24_H
 
+#include "va.h"
+
 #include "resource.h"
 
 class Bitmap16Bit;
@@ -30,10 +32,15 @@ public:
     void import(int w, int h, const unsigned char* data, int size);
     void clear();
 
+    DC_ADDRESS(0x122b24, 0x4)
     int getWidth() const { return m_width; }
+
+    DC_ADDRESS(0x122b28, 0x4)
     int getHeight() const { return m_height; }
-    // Dreamcast bitmap24.h:72 (dc 0x533b0); both row advances in the raw
+
+    // Dreamcast bitmap24.h:72; both row advances in the raw
     // Draw body inline this exact 24-bit pitch calculation in retail.
+    DC_ADDRESS(0x0533b0, 0xa)
     int getPitch() const { return m_width * 3; }
     void draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
@@ -42,6 +49,8 @@ public:
     void adjustHSV(int x, int y, int w, int h, float hue,
                    float hueAdjust, float saturationAdjust,
                    float valueAdjust);
+
+    DC_ADDRESS(0x122b2c, 0x60)
     void adjustHSV(float hue, float hueAdjust, float saturationAdjust,
                    float valueAdjust)
     {

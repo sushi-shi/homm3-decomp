@@ -358,21 +358,26 @@ const char* g_humanCpu[3];
 
 DATA(0x006a8098)
 const char* g_newLoadSaveText[3];
+
 // These checks have empty release bodies in the DC image. The named calls
 // in initializeArrayText still preserve its source boundaries and labels;
 // the checker body itself has no recovered debug behavior.
-// Original: CheckTextResource; text.cpp:49, dc 0x160ff4.
+// Original: CheckTextResource; text.cpp:49
+DC_ADDRESS(0x160ff4, 0x4)
 static void checkTextResource(const TTextResource&, int, const char*)
 {
 }
 
-// Original: CheckSpreadsheetResource; text.cpp:86, dc 0x160ff8.
+// Original: CheckSpreadsheetResource; text.cpp:86
+DC_ADDRESS(0x160ff8, 0x4)
 static void checkSpreadsheetResource(const TSpreadsheetResource&, int, int,
                                      const char*)
 {
 }
 
-VA(0x005b90f0, 0x19) MAC_ADDRESS(0x1ad3c0, 0x44)  // dc 0x160ffc
+VA(0x005b90f0, 0x19)
+DC_ADDRESS(0x160ffc, 0x20)
+MAC_ADDRESS(0x1ad3c0, 0x44)
 unsigned char initializeGeneralText()
 {
     g_generalText = ResourceManager::getText(
@@ -380,7 +385,9 @@ unsigned char initializeGeneralText()
     return g_generalText != 0;
 }
 
-VA(0x005b9110, 0x3d) MAC_ADDRESS(0x1ad404, 0xa4)  // dc 0x16101c
+VA(0x005b9110, 0x3d)
+DC_ADDRESS(0x16101c, 0x4c)
+MAC_ADDRESS(0x1ad404, 0xa4)
 unsigned char initializeCustomCampaignText()
 {
     g_customCampText = ResourceManager::getText(
@@ -392,7 +399,9 @@ unsigned char initializeCustomCampaignText()
     return 1;
 }
 
-VA(0x005b9150, 0x30) MAC_ADDRESS(0x1ad4a8, 0xa0)  // dc 0x161068
+VA(0x005b9150, 0x30)
+DC_ADDRESS(0x161068, 0xa4)
+MAC_ADDRESS(0x1ad4a8, 0xa0)
 unsigned char initializeMineEventText()
 {
     g_mineEventTextResource = ResourceManager::getText(
@@ -404,7 +413,9 @@ unsigned char initializeMineEventText()
     return 1;
 }
 
-VA(0x005b9180, 0x43) MAC_ADDRESS(0x1ad548, 0xa4)  // dc 0x16110c
+VA(0x005b9180, 0x43)
+DC_ADDRESS(0x16110c, 0x4e)
+MAC_ADDRESS(0x1ad548, 0xa4)
 unsigned char initializeCampaignRegionNames()
 {
     g_campaignRegionNamesResource = ResourceManager::getSpreadsheet(
@@ -416,7 +427,9 @@ unsigned char initializeCampaignRegionNames()
     return 1;
 }
 
-VA(0x005b91d0, 0xd0) MAC_ADDRESS(0x1ad5ec, 0x1f0)  // dc 0x16115c
+VA(0x005b91d0, 0xd0)
+DC_ADDRESS(0x16115c, 0xd4)
+MAC_ADDRESS(0x1ad5ec, 0x1f0)
 unsigned char initializeHighScoreDefaults()
 {
     g_highScoreDefaults = ResourceManager::getSpreadsheet(
@@ -440,7 +453,9 @@ unsigned char initializeHighScoreDefaults()
     return 1;
 }
 
-VA(0x005b92a0, 0x30) MAC_ADDRESS(0x1ad7dc, 0xa0)  // dc 0x161230
+VA(0x005b92a0, 0x30)
+DC_ADDRESS(0x161230, 0x4a)
+MAC_ADDRESS(0x1ad7dc, 0xa0)
 unsigned char initializeTerrainNames()
 {
     g_terrainNamesResource = ResourceManager::getText(
@@ -452,7 +467,9 @@ unsigned char initializeTerrainNames()
     return 1;
 }
 
-VA(0x005b92d0, 0x33) MAC_ADDRESS(0x1ad87c, 0xa0)  // dc 0x16127c
+VA(0x005b92d0, 0x33)
+DC_ADDRESS(0x16127c, 0x4a)
+MAC_ADDRESS(0x1ad87c, 0xa0)
 unsigned char initializeAdvObjNames()
 {
     g_advObjNames = ResourceManager::getText(
@@ -464,7 +481,9 @@ unsigned char initializeAdvObjNames()
     return 1;
 }
 
-VA(0x005b9310, 0x30) MAC_ADDRESS(0x1ad91c, 0xa0)  // dc 0x1612c8
+VA(0x005b9310, 0x30)
+DC_ADDRESS(0x1612c8, 0x4a)
+MAC_ADDRESS(0x1ad91c, 0xa0)
 unsigned char initializeResourceNames()
 {
     g_resourceNamesResource = ResourceManager::getText(
@@ -476,7 +495,9 @@ unsigned char initializeResourceNames()
     return 1;
 }
 
-VA(0x005b9340, 0x30) MAC_ADDRESS(0x1ad9bc, 0xa0)  // dc 0x161314
+VA(0x005b9340, 0x30)
+DC_ADDRESS(0x161314, 0x4a)
+MAC_ADDRESS(0x1ad9bc, 0xa0)
 unsigned char initializeMineNames()
 {
     g_mineNames = ResourceManager::getText(
@@ -488,7 +509,9 @@ unsigned char initializeMineNames()
     return 1;
 }
 
-VA(0x005b9370, 0x48) MAC_ADDRESS(0x1ada5c, 0xb4)  // dc 0x161360
+VA(0x005b9370, 0x48)
+DC_ADDRESS(0x161360, 0xc6)
+MAC_ADDRESS(0x1ada5c, 0xb4)
 unsigned char initializePlayerColors()
 {
     g_playerColors = ResourceManager::getText(
@@ -503,7 +526,9 @@ unsigned char initializePlayerColors()
     return 1;
 }
 
-VA(0x005b93c0, 0x30) MAC_ADDRESS(0x1adb10, 0xa0)  // dc 0x161428
+VA(0x005b93c0, 0x30)
+DC_ADDRESS(0x161428, 0x4a)
+MAC_ADDRESS(0x1adb10, 0xa0)
 unsigned char initializePrimaryStatNames()
 {
     g_primaryStatNames = ResourceManager::getText(
@@ -515,7 +540,9 @@ unsigned char initializePrimaryStatNames()
     return 1;
 }
 
-VA(0x005b93f0, 0x55) MAC_ADDRESS(0x1adbb0, 0xdc)  // dc 0x161474
+VA(0x005b93f0, 0x55)
+DC_ADDRESS(0x161474, 0x6e)
+MAC_ADDRESS(0x1adbb0, 0xdc)
 unsigned char initializeSecondarySkillLevelNames()
 {
     g_secondarySkillLevelNames = ResourceManager::getText(
@@ -529,7 +556,9 @@ unsigned char initializeSecondarySkillLevelNames()
     return 1;
 }
 
-VA(0x005b9450, 0x8f) MAC_ADDRESS(0x1adc8c, 0x13c)  // dc 0x1614e4
+VA(0x005b9450, 0x8f)
+DC_ADDRESS(0x1614e4, 0xa8)
+MAC_ADDRESS(0x1adc8c, 0x13c)
 unsigned char initializeNeutralBuildingText()
 {
     g_neutralBuildingText = ResourceManager::getSpreadsheet(
@@ -551,7 +580,9 @@ unsigned char initializeNeutralBuildingText()
     return 1;
 }
 
-VA(0x005b94e0, 0x8d) MAC_ADDRESS(0x1addc8, 0x118)  // dc 0x16158c
+VA(0x005b94e0, 0x8d)
+DC_ADDRESS(0x16158c, 0x10c)
+MAC_ADDRESS(0x1addc8, 0x118)
 unsigned char initializeSpecialBuildingText()
 {
     g_specialBuildingText = ResourceManager::getSpreadsheet(
@@ -578,7 +609,9 @@ unsigned char initializeSpecialBuildingText()
     return 1;
 }
 
-VA(0x005b9570, 0x90) MAC_ADDRESS(0x1adee0, 0x118)  // dc 0x161698
+VA(0x005b9570, 0x90)
+DC_ADDRESS(0x161698, 0xae)
+MAC_ADDRESS(0x1adee0, 0x118)
 unsigned char initializeDwellingText()
 {
     g_dwellingText = ResourceManager::getSpreadsheet(
@@ -603,7 +636,9 @@ unsigned char initializeDwellingText()
     return 1;
 }
 
-VA(0x005b9600, 0x73) MAC_ADDRESS(0x1adff8, 0xdc)  // dc 0x161748
+VA(0x005b9600, 0x73)
+DC_ADDRESS(0x161748, 0x8e)
+MAC_ADDRESS(0x1adff8, 0xdc)
 unsigned char initializeTownNameText()
 {
     g_townNameText = ResourceManager::getSpreadsheet(
@@ -624,7 +659,9 @@ unsigned char initializeTownNameText()
     return 1;
 }
 
-VA(0x005b9680, 0x33) MAC_ADDRESS(0x1ae0d4, 0xa0)  // dc 0x1617d8
+VA(0x005b9680, 0x33)
+DC_ADDRESS(0x1617d8, 0x4a)
+MAC_ADDRESS(0x1ae0d4, 0xa0)
 unsigned char initializeHeroBioText()
 {
     g_heroBioText = ResourceManager::getText(
@@ -636,7 +673,9 @@ unsigned char initializeHeroBioText()
     return 1;
 }
 
-VA(0x005b96c0, 0x30) MAC_ADDRESS(0x1ae174, 0xa0)  // dc 0x161824
+VA(0x005b96c0, 0x30)
+DC_ADDRESS(0x161824, 0x4a)
+MAC_ADDRESS(0x1ae174, 0xa0)
 unsigned char initializeCastleText()
 {
     g_castleText = ResourceManager::getText(
@@ -648,7 +687,9 @@ unsigned char initializeCastleText()
     return 1;
 }
 
-VA(0x005b96f0, 0x30) MAC_ADDRESS(0x1ae214, 0xa0)  // dc 0x161870
+VA(0x005b96f0, 0x30)
+DC_ADDRESS(0x161870, 0x4a)
+MAC_ADDRESS(0x1ae214, 0xa0)
 unsigned char initializeTavernText()
 {
     g_tavernText = ResourceManager::getText(
@@ -660,7 +701,9 @@ unsigned char initializeTavernText()
     return 1;
 }
 
-VA(0x005b9720, 0x30) MAC_ADDRESS(0x1ae2b4, 0xa0)  // dc 0x1618bc
+VA(0x005b9720, 0x30)
+DC_ADDRESS(0x1618bc, 0xae)
+MAC_ADDRESS(0x1ae2b4, 0xa0)
 unsigned char initializeHallText()
 {
     g_hallText = ResourceManager::getText(
@@ -672,7 +715,9 @@ unsigned char initializeHallText()
     return 1;
 }
 
-VA(0x005b9750, 0x33) MAC_ADDRESS(0x1ae354, 0xa0)  // dc 0x16196c
+VA(0x005b9750, 0x33)
+DC_ADDRESS(0x16196c, 0x4a)
+MAC_ADDRESS(0x1ae354, 0xa0)
 unsigned char initializeTownText()
 {
     g_townText = ResourceManager::getText(
@@ -684,7 +729,9 @@ unsigned char initializeTownText()
     return 1;
 }
 
-VA(0x005b9790, 0x30) MAC_ADDRESS(0x1ae3f4, 0xa0)  // dc 0x1619b8
+VA(0x005b9790, 0x30)
+DC_ADDRESS(0x1619b8, 0x4a)
+MAC_ADDRESS(0x1ae3f4, 0xa0)
 unsigned char initializeOverviewText()
 {
     g_ovText = ResourceManager::getText(
@@ -696,7 +743,9 @@ unsigned char initializeOverviewText()
     return 1;
 }
 
-VA(0x005b97c0, 0x33) MAC_ADDRESS(0x1ae494, 0xa0)  // dc 0x161a04
+VA(0x005b97c0, 0x33)
+DC_ADDRESS(0x161a04, 0x4a)
+MAC_ADDRESS(0x1ae494, 0xa0)
 unsigned char initializeHeroText()
 {
     g_heroText = ResourceManager::getText(
@@ -708,7 +757,9 @@ unsigned char initializeHeroText()
     return 1;
 }
 
-VA(0x005b9800, 0x36) MAC_ADDRESS(0x1ae534, 0xa8)  // dc 0x161a50
+VA(0x005b9800, 0x36)
+DC_ADDRESS(0x161a50, 0x54)
+MAC_ADDRESS(0x1ae534, 0xa8)
 unsigned char initializeCampaignDialogText()
 {
     g_campaignDialogResource = ResourceManager::getSpreadsheet(
@@ -720,7 +771,9 @@ unsigned char initializeCampaignDialogText()
     return 1;
 }
 
-VA(0x005b9840, 0x31) MAC_ADDRESS(0x1ae5dc, 0x84)  // dc 0x161aa4
+VA(0x005b9840, 0x31)
+DC_ADDRESS(0x161aa4, 0x40)
+MAC_ADDRESS(0x1ae5dc, 0x84)
 unsigned char initializeCreditsText()
 {
     g_creditsText = ResourceManager::getText(
@@ -732,7 +785,8 @@ unsigned char initializeCreditsText()
     return 1;
 }
 
-VA(0x005b9880, 0x30) MAC_ADDRESS(0x1ae660, 0xa0)
+VA(0x005b9880, 0x30)
+MAC_ADDRESS(0x1ae660, 0xa0)
 unsigned char initializeTentColorText()
 {
     g_tentColorText = ResourceManager::getText(
@@ -746,8 +800,9 @@ unsigned char initializeTentColorText()
 
 // Read each window's run of rollover/right-click text pairs in file order,
 // skipping two rows between runs.
-
-VA(0x005b98b0, 0x405) MAC_ADDRESS(0x1ae700, 0x830)  // dc 0x161ae4
+VA(0x005b98b0, 0x405)
+DC_ADDRESS(0x161ae4, 0x822)
+MAC_ADDRESS(0x1ae700, 0x830)
 unsigned char initializeHelpText()
 {
     int i;
@@ -945,7 +1000,9 @@ unsigned char initializeHelpText()
     return 1;
 }
 
-VA(0x005b9cc0, 0x2BC) MAC_ADDRESS(0x1aef30, 0x6c0)  // dc 0x162308
+VA(0x005b9cc0, 0x2BC)
+DC_ADDRESS(0x162308, 0x608)
+MAC_ADDRESS(0x1aef30, 0x6c0)
 unsigned char initializeArrayText()
 {
     int i;

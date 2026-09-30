@@ -13,5 +13,4 @@
 // standard-header surfaces all retain the same exact resize body; <string>
 // alone is sufficient and avoids asserting unrelated template ownership.
 template class std::basic_string<char>;
-
 VA_COMPGEN(0x00515010, 0x198, BASIC_STRING_RESIZE, char)

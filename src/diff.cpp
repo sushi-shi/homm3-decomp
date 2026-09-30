@@ -7,7 +7,7 @@
 
 #include "terrain.h"
 
-// E:\gamedcs\diff.cpp:43, dc 0x825b8. CodeView type 0x54d4
+// E:\gamedcs\diff.cpp:43 CodeView type 0x54d4
 // owns this record's single in-class constructor; only this TU uses it.
 class CDiffHeader
 {
@@ -16,18 +16,21 @@ public:
     int m_oldNumBytes;
     unsigned char m_copy;
 
+    DC_ADDRESS(0x0825b8, 0xe)
     CDiffHeader(int numBytes, bool copy, int oldNumBytes)
         : m_numBytes(numBytes), m_oldNumBytes(oldNumBytes), m_copy(copy)
     {
     }
 };
 
-// E:\gamedcs\diff.cpp:52, dc 0x822e0
+// E:\gamedcs\diff.cpp:52
+DC_ADDRESS(0x0822e0, 0x4)
 CDiffFile::CDiffFile()
 {
 }
 
-// E:\gamedcs\diff.cpp:57, dc 0x822e4
+// E:\gamedcs\diff.cpp:57
+DC_ADDRESS(0x0822e4, 0x6)
 MAC_ADDRESS(0x0a25c8, 0x8)
 unsigned char* CDiffFile::getData()
 {
@@ -35,7 +38,9 @@ unsigned char* CDiffFile::getData()
     return static_cast<unsigned char*>(static_cast<void*>(this + 1));
 }
 
-VA(0x00490f60, 0xc5) MAC_ADDRESS(0x0a25d0, 0xcc)  // dc 0x822ec
+VA(0x00490f60, 0xc5)
+DC_ADDRESS(0x0822ec, 0x8a)
+MAC_ADDRESS(0x0a25d0, 0xcc)
 void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
     unsigned char* newSaveGame = new unsigned char[m_numBytes];
@@ -68,7 +73,9 @@ void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     return newSaveGame;
 }
 
-VA(0x00491030, 0x20) MAC_ADDRESS(0x0a269c, 0x14)  // dc 0x82378
+VA(0x00491030, 0x20)
+DC_ADDRESS(0x082378, 0x14)
+MAC_ADDRESS(0x0a269c, 0x14)
 CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
                        unsigned char* newData, int newSize)
     : m_oldData(oldData), m_newData(newData),
@@ -76,8 +83,9 @@ CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
 {
 }
 
-// E:\gamedcs\diff.cpp:115, dc 0x8238c. Ordinary helper defined
+// E:\gamedcs\diff.cpp:115 Ordinary helper defined
 // before MakeDiff; Complete's /Ob2 chooses its caller expansion.
+DC_ADDRESS(0x08238c, 0x4c)
 MAC_ADDRESS(0x0a26b0, 0x5c)
 int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
 {
@@ -93,7 +101,9 @@ int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
     return count;
 }
 
-VA(0x00491050, 0xed) MAC_ADDRESS(0x0a270c, 0x108)  // dc 0x823d8
+VA(0x00491050, 0xed)
+DC_ADDRESS(0x0823d8, 0xae)
+MAC_ADDRESS(0x0a270c, 0x108)
 bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
                               int& oldCount, int& newCount)
 {
@@ -136,7 +146,9 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // diffSize/m_numBytes stores outside the loop's lexical scopes. The changed
 // arm advances newOffset before oldOffset (DC 214/215); the same-data arm uses
 // the opposite order (DC 242/243).
-VA(0x00491140, 0x1bf) MAC_ADDRESS(0x0a2814, 0x1c0)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
+VA(0x00491140, 0x1bf)
+DC_ADDRESS(0x082488, 0x130)
+MAC_ADDRESS(0x0a2814, 0x1c0)  // linkorder + calls FindNextSame and emits 12-byte records
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 {
     diffSize = 0;

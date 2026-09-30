@@ -140,9 +140,9 @@ def _fingerprint(root: Path, definition) -> str:
     """The definition's own tokens, as the Windows ledger fingerprints them."""
     import re
     from homm3.core.cpp_tokens import fingerprint
-    text = (root / definition.file).read_bytes()[definition.offset:definition.end].decode("utf-8", "replace")
+    text = (root / definition.file).read_text()[definition.offset:definition.end]
     # Address annotations name the target, not the implementation.
-    text = re.sub(r"\A(?:[ \t]*(?:VA|VA_COMPGEN|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\([^\n]*\n)+", "", text)
+    text = re.sub(r"\A(?:\s*(?:VA|VA_COMPGEN|DC_ADDRESS|MAC_ADDRESS|MAC_COMPGEN_ADDRESS)\s*\([^)]*\)[^\n]*\n)+", "", text)
     return fingerprint(text)
 
 

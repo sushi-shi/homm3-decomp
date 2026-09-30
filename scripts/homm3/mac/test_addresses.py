@@ -96,12 +96,45 @@ class TestMacAddressScan(unittest.TestCase):
     def test_orphan_and_misplaced_claims_fail(self):
         _, _, problems = scan("void f()\n{\n}\nMAC_ADDRESS(0x100, 0x10)\n")
         self.assertTrue(any("orphan" in item for item in problems))
-        _, _, problems = scan("VA(0x00401000, 0x10)\nMAC_ADDRESS(0x100, 0x10)\nvoid f()\n{\n}\n")
-        self.assertTrue(any("VA(0x00401000)" in item for item in problems))
+        _, _, problems = scan("MAC_ADDRESS(0x100, 0x10)\nVA(0x00401000, 0x10)\nvoid f()\n{\n}\n")
+        self.assertTrue(any("after the VA" in item for item in problems))
         _, _, problems = scan("class C {\nMAC_ADDRESS(0x100, 0x10)\npublic:\n    C(int x) : m(x) {}\n};\n")
         self.assertTrue(any("access label" in item for item in problems))
         _, _, problems = scan("int x = 1; MAC_ADDRESS(0x100, 0x10)\nvoid f()\n{\n}\n")
-        self.assertTrue(any("same line" in item for item in problems))
+        self.assertTrue(any("annotation block" in item for item in problems))
+
+    def test_separate_lines_pair_across_dc_and_comments(self):
+        claims, windows, problems = scan(
+            "VA(0x00401000, 0x10)\n// symbol evidence\n"
+            "DC_ADDRESS(0x80, 8)\nMAC_ADDRESS(0x100, 0x10)\nvoid f() {}\n"
+            "VA_COMPGEN(0x00402000, 0x10, STATIC_CTOR, g_object)\n"
+            "MAC_COMPGEN_ADDRESS(0x200, 0x10, STATIC_CTOR, g_object)\n")
+        self.assertEqual(problems, [])
+        self.assertEqual([c.windows_va for c in claims], [0x401000, 0x402000])
+        self.assertEqual(windows[0].label, 'f')
+
+    def test_separate_lines_preserve_generated_kind_and_owner_checks(self):
+        for mac in ('MAC_ADDRESS(0x100, 0x10)',
+                    'MAC_COMPGEN_ADDRESS(0x100, 0x10, STATIC_CTOR, wrong)'):
+            _, _, problems = scan(
+                'VA_COMPGEN(0x00401000, 0x10, STATIC_CTOR, g_object)\n' + mac + '\n')
+            self.assertTrue(problems)
+
+    def test_separate_lines_do_not_pair_across_a_definition_or_directive(self):
+        for boundary in ('void first() {}', '#endif'):
+            claims, _, problems = scan(
+                'VA(0x00401000, 0x10)\n' + boundary + '\n'
+                'MAC_ADDRESS(0x100, 0x10)\nvoid second() {}\n')
+            self.assertEqual(problems, [])
+            self.assertIsNone(claims[0].windows_va)
+
+    def test_generated_blocks_do_not_capture_a_later_standalone_helper(self):
+        claims, _, problems = scan(
+            'VA_COMPGEN(0x00401000, 0x10, STATIC_CTOR, g_object)\n\n'
+            '// An authored helper, expanded on Windows.\n'
+            'DC_ADDRESS(0x80, 8)\nMAC_ADDRESS(0x100, 0x10)\nvoid helper() {}\n')
+        self.assertEqual(problems, [])
+        self.assertIsNone(claims[0].windows_va)
 
     def test_misaligned_or_malformed_spans_fail(self):
         for text in ("MAC_ADDRESS(0x102, 0x10)\nvoid f()\n{\n}\n",

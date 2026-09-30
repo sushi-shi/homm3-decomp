@@ -32,7 +32,8 @@ unsigned char initRemote(eNetGameType netGameType, const char* userName);
 unsigned char initConnection(char* address, _DPCOMPORTADDRESS* comportInfo);
 void remoteCleanup();
 
-// Original: AddHelp; multiplayerwindow.cpp:94, dc 0xffaac.
+// Original: AddHelp; multiplayerwindow.cpp:94
+DC_ADDRESS(0x0ffaac, 0x12)
 void addHelp(THelpText* helpText, const char* rollover, const char* rightClick)
 {
     helpText->m_text = rollover;
@@ -46,7 +47,9 @@ void addHelp(THelpText* helpText, const char* rollover, const char* rightClick)
 // constructor).
 class CMultiPlayerWindowEdit : public textEntryWidget {
 public:
-    // E:\gamedcs\multiplayerwindow.cpp:141, dc 0x101e00
+
+    // E:\gamedcs\multiplayerwindow.cpp:141
+    DC_ADDRESS(0x101e00, 0x98)
     CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
                            const char* text, const char* fontName,
                            font::TColor color, unsigned justification,
@@ -61,7 +64,8 @@ public:
     virtual int onKeyPress(message* msg);  // slot 15, retail 0x50ed60
 };
 
-// E:\gamedcs\multiplayerwindow.cpp:174, dc 0x101f34
+// E:\gamedcs\multiplayerwindow.cpp:174
+DC_ADDRESS(0x101f34, 0xe0)
 inline bool CHeroSessions::getSessionInfo(unsigned long index, char* sessName,
                                           char* userName, int& numPlayers,
                                           eSessionStatus& status)
@@ -140,11 +144,15 @@ public:
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
+
     // DC 0x1020b8 stores the argument at this+0x70.
-    // E:\gamedcs\multiplayerwindow.cpp:269, dc 0x1020b4
+    // E:\gamedcs\multiplayerwindow.cpp:269
+    DC_ADDRESS(0x1020b4, 0x6)
     void setNextEdit(CMPEdit* nextEdit) { m_nextEdit = nextEdit; }
+
     // DC 0x1020c0 stores the argument at this+0x74.
-    // E:\gamedcs\multiplayerwindow.cpp:274, dc 0x1020bc
+    // E:\gamedcs\multiplayerwindow.cpp:274
+    DC_ADDRESS(0x1020bc, 0x6)
     void setPrevEdit(CMPEdit* prevEdit) { m_prevEdit = prevEdit; }
     virtual void setFocus(bool state);
     virtual int onKeyPress(message* msg);
@@ -154,8 +162,10 @@ public:
 
 class CMPInputEdit : public CMPEdit {
 public:
-    // E:\gamedcs\multiplayerwindow.cpp:383, dc 0x102210
-    VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership, dc 0x102210
+
+    // E:\gamedcs\multiplayerwindow.cpp:383
+    VA(0x00511cd0, 0x62)  // exact body + selected-COMDAT ownership
+    DC_ADDRESS(0x102210, 0x98)
     CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
                  const char* fontName, font::TColor color,
                  unsigned justification, const char* backgroundIcon,
@@ -241,7 +251,8 @@ public:
 };
 SIZE(CMPInputDlg, 0x64);
 
-VA(0x00510060, 0x6F7)  // dc 0x1022f4
+VA(0x00510060, 0x6F7)
+DC_ADDRESS(0x1022f4, 0x424)
 inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     : CHeroWindowEx(284, 194, 232, 212, 18)
 {
@@ -289,6 +300,7 @@ inline CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
 // DC keeps this source helper out of line and OnWidgetDeselect calls it.
 // Complete emits no standalone body, but the retail caller contains exactly
 // its active-field/empty-text guard, proving that VC6 inlined the boundary.
+DC_ADDRESS(0x1027b4, 0x38)
 inline unsigned char CMPInputDlg::onOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
@@ -298,25 +310,28 @@ inline unsigned char CMPInputDlg::onOK()
     return 1;
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:521, dc 0x10286c
+// E:\gamedcs\multiplayerwindow.cpp:521
+DC_ADDRESS(0x10286c, 0x24)
 inline void CMPInputDlg::disableOK()
 {
     getWidget(OKAY_ID)->enable(0);
 }
 
-// The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount dc 0x102cf8,
-// UpdateOK dc 0x102d4c, OnKillFocus dc 0x102cc8). Retail emits none: VC6
+// The CHotSeatDlg helpers DC keeps out of line (GetPlayerCount,
+// UpdateOK, OnKillFocus). Retail emits none: VC6
 // expands them into CHotSeatEdit's two overrides below. DC proves that UpdateOK
 // only updates widget 519; OnKillFocus performs the full-window redraw.
 // Mac retains GetPlayerCount at 0x219cb8 but expands the other two helpers.
 // Ordinary same-TU definitions reproduce the exact Windows callers.
-// E:\gamedcs\multiplayerwindow.cpp:729, dc 0x102cc8
+// E:\gamedcs\multiplayerwindow.cpp:729
+DC_ADDRESS(0x102cc8, 0x30)
 void CHotSeatDlg::onKillFocus(int id)
 {
     updateOK();
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
+DC_ADDRESS(0x102cf8, 0x54)
 MAC_ADDRESS(0x219cb8, 0x70)
 int CHotSeatDlg::getPlayerCount()
 {
@@ -328,15 +343,17 @@ int CHotSeatDlg::getPlayerCount()
     return players;
 }
 
+DC_ADDRESS(0x102d4c, 0x3c)
 void CHotSeatDlg::updateOK()
 {
     getWidget(OKAY_ID)->enable(getPlayerCount() > 1);
 }
 
-// Original: DeleteTempSaveGame; multiplayerwindow.cpp:872, dc 0xffb40.
+// Original: DeleteTempSaveGame; multiplayerwindow.cpp:872
 // DC builds the same RMT path but elides deletion; Complete calls DeleteFileA.
 // DC spells the comparison strnicmp; Windows calls LIBCMT's _strnicmp at
 // 0x6260c0. Preserve that external ABI spelling in the expanded constructor.
+DC_ADDRESS(0x0ffb40, 0x30)
 MAC_ADDRESS(0x219e54, 0x94)
 void deleteTempSaveGame(const char* filename)
 {
@@ -348,8 +365,9 @@ void deleteTempSaveGame(const char* filename)
 }
 
 // Original: CHeroSessions::CHeroSessions; multiplayerwindow.cpp:1000,
-// dc 0x102fcc. Construction initializes its CAutoArray base; there are no
+// Construction initializes its CAutoArray base; there are no
 // additional members. Complete expands that initialization at new CHeroSessions.
+DC_ADDRESS(0x102fcc, 0x3c)
 CHeroSessions::CHeroSessions()
 {
 }
@@ -358,7 +376,9 @@ void sliderGames(int state, heroWindow* parentWindow);
 
 // Mac 0x219a30..0x219ab0 expands the same focus/navigation/base-key
 // helper as CHotSeatEdit at 0x219d40..0x219dc4, before updating the dialog.
-VA(0x0050de50, 0x8F) MAC_ADDRESS(0x219a1c, 0xc4)  // dc 0xffac0
+VA(0x0050de50, 0x8F)
+DC_ADDRESS(0x0ffac0, 0x2c)
+MAC_ADDRESS(0x219a1c, 0xc4)
 int CMPInputEdit::onKeyPress(message* msg)
 {
     int handled = CMPEdit::onKeyPress(msg);
@@ -367,7 +387,9 @@ int CMPInputEdit::onKeyPress(message* msg)
     return handled;
 }
 
-VA(0x0050dee0, 0x7F) MAC_ADDRESS(0x219c18, 0xa0)  // dc 0xffaec
+VA(0x0050dee0, 0x7F)
+DC_ADDRESS(0x0ffaec, 0x20)
+MAC_ADDRESS(0x219c18, 0xa0)
 void CHotSeatEdit::onKillFocus()
 {
     textEntryWidget::onKillFocus();
@@ -376,7 +398,9 @@ void CHotSeatEdit::onKillFocus()
 
 // share CMPEdit's ring layout and inherited navigation slots. Preserve the
 // qualified base call instead of casting between unrelated class copies.
-VA(0x0050df60, 0xEE) MAC_ADDRESS(0x219d28, 0x12c)  // dc 0xffb0c
+VA(0x0050df60, 0xEE)
+DC_ADDRESS(0x0ffb0c, 0x32)
+MAC_ADDRESS(0x219d28, 0x12c)
 int CHotSeatEdit::onKeyPress(message* msg)
 {
     int handled = CMPEdit::onKeyPress(msg);
@@ -397,7 +421,9 @@ int CHotSeatEdit::onKeyPress(message* msg)
 // Keep that retail widget order instead of the older DC header-first run.
 // DC multiplayerwindow.cpp:926/927 looks up the session and user headers.
 // Complete's existing getText helper is byte-flat under VC6 here.
-VA(0x0050e050, 0xCFC) MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
+VA(0x0050e050, 0xCFC)
+DC_ADDRESS(0x0ffb70, 0x898)
+MAC_ADDRESS(0x219ee8, 0xc3c)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims
 TMultiPlayerWindow::TMultiPlayerWindow()
     : CHeroWindowEx(0, 0, 800, 600, 0)
 {
@@ -499,7 +525,9 @@ TMultiPlayerWindow::TMultiPlayerWindow()
     goMainMenu();
 }
 
-VA(0x0050ed60, 0x43) MAC_ADDRESS(0x21d044, 0x74)  // dc 0x101e98
+VA(0x0050ed60, 0x43)
+DC_ADDRESS(0x101e98, 0x50)
+MAC_ADDRESS(0x21d044, 0x74)
 int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 {
     if (getCharPressed(msg) == KEYCODE_ENTER)
@@ -513,6 +541,7 @@ int CMultiPlayerWindowEdit::onKeyPress(message* msg)
 }
 
 VA_COMPGEN(0x0050ede0, 0x21, SCALAR_DELETING_DTOR, CHeroSessions)
+
 VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
 
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
@@ -520,7 +549,9 @@ VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // The retail slider constructor passes 0x50ee10. Both builds use the global
 // window, store its index, redraw, then call update; the parent is unused.
-VA(0x0050ee10, 0x2a) MAC_ADDRESS(0x21ab24, 0x54)
+VA(0x0050ee10, 0x2a)
+DC_ADDRESS(0x100408, 0x28)
+MAC_ADDRESS(0x21ab24, 0x54)
 void sliderGames(int state, heroWindow* parentWindow)
 {
     g_multiPlayerWindow->m_currentIndex = state;
@@ -528,7 +559,9 @@ void sliderGames(int state, heroWindow* parentWindow)
     g_multiPlayerWindow->update();
 }
 
-VA(0x0050ee40, 0xAB) MAC_ADDRESS(0x21ab78, 0x94)  // dc 0x100430
+VA(0x0050ee40, 0xAB)
+DC_ADDRESS(0x100430, 0x68)
+MAC_ADDRESS(0x21ab78, 0x94)
 TMultiPlayerWindow::~TMultiPlayerWindow()
 {
     g_multiPlayerWindow = 0;
@@ -538,7 +571,8 @@ TMultiPlayerWindow::~TMultiPlayerWindow()
     delete m_sessions;
 }
 
-VA(0x0050eef0, 0xC9)  // dc 0x100498
+VA(0x0050eef0, 0xC9)
+DC_ADDRESS(0x100498, 0x84)
 void TMultiPlayerWindow::goSessionList()
 {
     m_inSessionList = 1;
@@ -559,7 +593,9 @@ void TMultiPlayerWindow::goSessionList()
     m_sessNameHeader->show();
 }
 
-VA(0x0050efc0, 0x12B) MAC_ADDRESS(0x21ac0c, 0xd8)  // dc 0x10051c
+VA(0x0050efc0, 0x12B)
+DC_ADDRESS(0x10051c, 0xe0)
+MAC_ADDRESS(0x21ac0c, 0xd8)
 void TMultiPlayerWindow::goMainMenu()
 {
     m_inSessionList = 0;
@@ -586,7 +622,9 @@ void TMultiPlayerWindow::goMainMenu()
     m_sessions->destroy();
 }
 
-VA(0x0050f0f0, 0x3E6) MAC_ADDRESS(0x21ace4, 0x184)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
+VA(0x0050f0f0, 0x3E6)
+DC_ADDRESS(0x1005fc, 0x3a6)
+MAC_ADDRESS(0x21ace4, 0x184)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC
 void TMultiPlayerWindow::update()
 {
     char userBuf[256];
@@ -683,7 +721,8 @@ void TMultiPlayerWindow::update()
 }
 
 // Original: TMultiPlayerWindow::RefreshSessions; multiplayerwindow.cpp:1344,
-// dc 0x100c44. Expanded in onTCP and the timed window handler.
+// Expanded in onTCP and the timed window handler.
+DC_ADDRESS(0x100c44, 0x5a)
 void TMultiPlayerWindow::refreshSessions()
 {
     m_sessions->destroy();
@@ -695,7 +734,8 @@ void TMultiPlayerWindow::refreshSessions()
 }
 
 // Original: TMultiPlayerWindow::CheckSessions; multiplayerwindow.cpp:1449,
-// dc 0x100e94. The second timer read follows the complete refresh operation.
+// The second timer read follows the complete refresh operation.
+DC_ADDRESS(0x100e94, 0x3a)
 void TMultiPlayerWindow::checkSessions()
 {
     if (m_sessTimer
@@ -709,6 +749,7 @@ void TMultiPlayerWindow::checkSessions()
 // Complete inlines this body into OnHost. Keeping the source boundary is
 // material: VC6 leaves the nested member InitRemote call out of line, exactly
 // as retail does.
+DC_ADDRESS(0x100ed0, 0xc2)
 unsigned char TMultiPlayerWindow::onModemHost()
 {
     if (!initRemote(g_mpNetProtocol, 0, 0)) {
@@ -734,6 +775,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 // Complete emits no standalone bodies; the corresponding retail case arms
 // contain the complete inlined bodies, including Complete's expanded IPX
 // session setup and the later widget-status API.
+DC_ADDRESS(0x1018ec, 0x7e)
 inline unsigned char TMultiPlayerWindow::onIPX()
 {
     g_mpNetProtocol = MP_IPX;
@@ -758,6 +800,7 @@ inline unsigned char TMultiPlayerWindow::onIPX()
     return 0;
 }
 
+DC_ADDRESS(0x101c4c, 0x56)
 MAC_ADDRESS(0x21c67c, 0x94)
 inline unsigned char TMultiPlayerWindow::onModem()
 {
@@ -779,7 +822,9 @@ inline unsigned char TMultiPlayerWindow::onModem()
 // inlining still differ; all protocol and menu helpers remain canonical.
 // Coupling CANCEL/IPX branch exits with HOST/SEARCH/HOTSEAT returns in
 // 36 natural variants produced three reproduced objects and no gain.
-VA(0x0050f4e0, 0x458) MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
+VA(0x0050f4e0, 0x458)
+DC_ADDRESS(0x1009a4, 0x276)
+MAC_ADDRESS(0x21ae68, 0x2e0)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect)
 int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
@@ -915,7 +960,9 @@ int TMultiPlayerWindow::onWidgetDeselect(int id, bool& exitFlag)
     return 1;
 }
 
-VA(0x0050f940, 0xC5) MAC_ADDRESS(0x21b148, 0x44)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
+VA(0x0050f940, 0xC5)
+DC_ADDRESS(0x100c1c, 0x28)
+MAC_ADDRESS(0x21b148, 0x44)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
 int TMultiPlayerWindow::windowHandler(message& msg)
@@ -926,7 +973,8 @@ int TMultiPlayerWindow::windowHandler(message& msg)
     return CHeroWindowEx::windowHandler(msg);
 }
 
-VA(0x0050fa10, 0x9F)  // dc 0x100ca0
+VA(0x0050fa10, 0x9F)
+DC_ADDRESS(0x100ca0, 0x6a)
 unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char* password)
 {
     if (!g_dPlay->joinSession(&session->m_guidInstance,
@@ -950,7 +998,9 @@ unsigned char TMultiPlayerWindow::joinSession(CDPlaySession* session, const char
 // (0x2137ec). Windows retail hosts through DirectPlay in this method. The
 // missing Mac call in the source audit reflects this different implementation;
 // the shared-call reconciliation for this pair remains open.
-VA(0x0050fab0, 0x106) MAC_ADDRESS(0x21b18c, 0x7c)  // dc 0x100d0c
+VA(0x0050fab0, 0x106)
+DC_ADDRESS(0x100d0c, 0x10a)
+MAC_ADDRESS(0x21b18c, 0x7c)
 unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* password)
 {
     char fullName[256];
@@ -983,7 +1033,8 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
     return 1;
 }
 
-VA(0x0050fbc0, 0x86)  // dc 0x100e18
+VA(0x0050fbc0, 0x86)
+DC_ADDRESS(0x100e18, 0x7a)
 unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
 {
     DPCAPS dpCaps;
@@ -1001,7 +1052,8 @@ unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const cha
     return 1;
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:2043, dc 0x101ca4
+// E:\gamedcs\multiplayerwindow.cpp:2043
+DC_ADDRESS(0x101ca4, 0x56)
 inline unsigned char TMultiPlayerWindow::onDirect()
 {
     g_mpNetProtocol = MP_SERIAL;
@@ -1015,7 +1067,8 @@ inline unsigned char TMultiPlayerWindow::onDirect()
     return 1;
 }
 
-VA(0x0050fc50, 0x14F)  // dc 0x100f94
+VA(0x0050fc50, 0x14F)
+DC_ADDRESS(0x100f94, 0xc4)
 unsigned char TMultiPlayerWindow::onDirectHost()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
@@ -1042,7 +1095,9 @@ unsigned char TMultiPlayerWindow::onDirectHost()
     return 1;
 }
 
-VA(0x0050fda0, 0x2B7) MAC_ADDRESS(0x21b208, 0x4fc)  // dc 0x101058
+VA(0x0050fda0, 0x2B7)
+DC_ADDRESS(0x101058, 0x15e)
+MAC_ADDRESS(0x21b208, 0x4fc)
 unsigned char TMultiPlayerWindow::onHost()
 {
     if (g_mpNetProtocol == MP_MODEM)
@@ -1074,7 +1129,8 @@ unsigned char TMultiPlayerWindow::onHost()
     return 1;
 }
 
-VA(0x00510760, 0x62)  // dc 0x102014
+VA(0x00510760, 0x62)
+DC_ADDRESS(0x102014, 0xa0)
 CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
                  const char* fontName, font::TColor color,
                  unsigned justification, const char* backgroundIcon,
@@ -1088,7 +1144,8 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
     m_prevEdit = 0;
 }
 
-VA(0x005107d0, 0x73)  // dc 0x1020c4
+VA(0x005107d0, 0x73)
+DC_ADDRESS(0x1020c4, 0x98)
 int CMPEdit::onKeyPress(message* msg)
 {
     if (!m_hasFocus)
@@ -1109,33 +1166,43 @@ int CMPEdit::onKeyPress(message* msg)
     return textEntryWidget::onKeyPress(msg);
 }
 
-VA(0x00510850, 0x1B) MAC_ADDRESS(0x219b98, 0x40)  // dc 0x10215c; m_nextEdit/status/id + parent SetFocus
+VA(0x00510850, 0x1B)
+DC_ADDRESS(0x10215c, 0x28)
+MAC_ADDRESS(0x219b98, 0x40)  // ; m_nextEdit/status/id + parent SetFocus
 void CMPEdit::onNextEdit()
 {
     if (m_nextEdit && (m_nextEdit->m_status & widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_nextEdit->m_id);
 }
 
-VA(0x00510870, 0x1B) MAC_ADDRESS(0x219bd8, 0x40)  // dc 0x102184; m_prevEdit/status/id + parent SetFocus
+VA(0x00510870, 0x1B)
+DC_ADDRESS(0x102184, 0x28)
+MAC_ADDRESS(0x219bd8, 0x40)  // ; m_prevEdit/status/id + parent SetFocus
 void CMPEdit::onPrevEdit()
 {
     if (m_prevEdit && (m_prevEdit->m_status & widget::WIDGET_ACTIVE))
         m_parentWindow->setFocus(m_prevEdit->m_id);
 }
 
-VA(0x00510890, 0x10) MAC_ADDRESS(0x21cf54, 0x20)  // dc 0x1021ac
+VA(0x00510890, 0x10)
+DC_ADDRESS(0x1021ac, 0x18)
+MAC_ADDRESS(0x21cf54, 0x20)
 void CMPEdit::setFocus(bool state)
 {
     textEntryWidget::setFocus(state);
 }
 
-VA(0x005108a0, 0x4E) MAC_ADDRESS(0x21c320, 0x78)  // dc 0x102718
+VA(0x005108a0, 0x4E)
+DC_ADDRESS(0x102718, 0x44)
+MAC_ADDRESS(0x21c320, 0x78)
 CMPInputDlg::~CMPInputDlg()
 {
     deleteWidgets();
 }
 
-VA(0x005108f0, 0x72) MAC_ADDRESS(0x21ce04, 0xc0)  // dc 0x10275c
+VA(0x005108f0, 0x72)
+DC_ADDRESS(0x10275c, 0x58)
+MAC_ADDRESS(0x21ce04, 0xc0)
 int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
@@ -1156,13 +1223,17 @@ int CMPInputDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-VA(0x00510970, 0x4) MAC_ADDRESS(0x21cec4, 0x8)  // dc 0x1027ec
+VA(0x00510970, 0x4)
+DC_ADDRESS(0x1027ec, 0x6)
+MAC_ADDRESS(0x21cec4, 0x8)
 textWidget* CMPInputDlg::getRolloverWidget()
 {
     return m_rollover;
 }
 
-VA(0x00510980, 0x5D) MAC_ADDRESS(0x219ae0, 0xb8)  // dc 0x1027f4
+VA(0x00510980, 0x5D)
+DC_ADDRESS(0x1027f4, 0x78)
+MAC_ADDRESS(0x219ae0, 0xb8)
 void CMPInputDlg::updateOK()
 {
     if (m_field1->m_status & widget::WIDGET_ACTIVE) {
@@ -1176,7 +1247,8 @@ void CMPInputDlg::updateOK()
 
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
-VA(0x00510a10, 0x298)  // dc 0x1011b8
+VA(0x00510a10, 0x298)
+DC_ADDRESS(0x1011b8, 0x1bc)
 unsigned char TMultiPlayerWindow::onModemJoin()
 {
     if (!initRemote(MP_MODEM, 0, 0)) {
@@ -1218,7 +1290,8 @@ unsigned char TMultiPlayerWindow::onModemJoin()
     return 1;
 }
 
-VA(0x00510cb0, 0x282)  // dc 0x101374
+VA(0x00510cb0, 0x282)
+DC_ADDRESS(0x101374, 0x19c)
 unsigned char TMultiPlayerWindow::onDirectJoin()
 {
     if (!initRemote(MP_SERIAL, 0, 0)) {
@@ -1263,7 +1336,9 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
     return 1;
 }
 
-VA(0x00510f40, 0x380) MAC_ADDRESS(0x21c398, 0x50)  // dc 0x101510
+VA(0x00510f40, 0x380)
+DC_ADDRESS(0x101510, 0x26e)
+MAC_ADDRESS(0x21c398, 0x50)
 unsigned char TMultiPlayerWindow::onJoin()
 {
     if (g_mpNetProtocol == MP_MODEM)
@@ -1318,7 +1393,9 @@ unsigned char TMultiPlayerWindow::onJoin()
     return 0;
 }
 
-VA(0x005112e0, 0x101) MAC_ADDRESS(0x21c3e8, 0xc0)  // dc 0x101780
+VA(0x005112e0, 0x101)
+DC_ADDRESS(0x101780, 0x4)
+MAC_ADDRESS(0x21c3e8, 0xc0)
 unsigned char getIPAddress(char* ipAddress)
 {
     WSADATA wsaData;
@@ -1352,7 +1429,9 @@ unsigned char getIPAddress(char* ipAddress)
     return 1;
 }
 
-VA(0x005113f0, 0x263) MAC_ADDRESS(0x21c4a8, 0x1d4)  // dc 0x101784
+VA(0x005113f0, 0x263)
+DC_ADDRESS(0x101784, 0x166)
+MAC_ADDRESS(0x21c4a8, 0x1d4)
 unsigned char TMultiPlayerWindow::onTCP()
 {
     char ipAddress[80];
@@ -1400,7 +1479,8 @@ unsigned char TMultiPlayerWindow::onTCP()
 // their folded general-text indices (459, 463, 456, then GetErrorDesc), and
 // the Dreamcast xref graph independently records exactly four NormalDialog
 // calls plus JoinSession, InitRemote, CAutoArray::Destroy and CHourGlass.
-VA(0x00511660, 0x666)  // caller slot + complete TCP search flow, dc 0x10196c
+VA(0x00511660, 0x666)  // caller slot + complete TCP search flow
+DC_ADDRESS(0x10196c, 0x294)
 unsigned char TMultiPlayerWindow::onSearch()
 {
     // Current 89.766%, banked MAX 91.324%: all 13 retail branch tests are
@@ -1462,7 +1542,9 @@ unsigned char TMultiPlayerWindow::onSearch()
     return 1;
 }
 
-VA(0x00511d40, 0xD1) MAC_ADDRESS(0x21c710, 0x55c)  // dc 0x101c00
+VA(0x00511d40, 0xD1)
+DC_ADDRESS(0x101c00, 0x4a)
+MAC_ADDRESS(0x21c710, 0x55c)
 unsigned char TMultiPlayerWindow::onHotSeat()
 {
     CHotSeatDlg dlg;
@@ -1473,8 +1555,9 @@ unsigned char TMultiPlayerWindow::onHotSeat()
     return 1;
 }
 
-// Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061, dc 0x101cfc.
+// Original: TMultiPlayerWindow::IsNT; multiplayerwindow.cpp:2061
 // The ordinary platform query uses the PC ANSI OSVERSIONINFO representation.
+DC_ADDRESS(0x101cfc, 0x5c)
 unsigned char TMultiPlayerWindow::isNT()
 {
     OSVERSIONINFOA versionInfo;
@@ -1494,7 +1577,8 @@ unsigned char TMultiPlayerWindow::isNT()
 // same reserve/push_back and widget calls. Windows' remaining difference is
 // the first vector::size expansion in the last push_back; sharing one loop
 // index across the edit/link/autodraw loops is byte-flat at 97.43%.
-VA(0x00511e20, 0x5A1)  // dc 0x1028c4
+VA(0x00511e20, 0x5A1)
+DC_ADDRESS(0x1028c4, 0x364)
 CHotSeatDlg::CHotSeatDlg()
     : CHeroWindowEx(218, 96, 363, 407, 18)
 {
@@ -1546,13 +1630,17 @@ CHotSeatDlg::CHotSeatDlg()
     w->setHelpText(g_mpHelp[3].m_text, 0, 0);
 }
 
-VA(0x005123d0, 0x4E) MAC_ADDRESS(0x21cc6c, 0x78)  // dc 0x102c28
+VA(0x005123d0, 0x4E)
+DC_ADDRESS(0x102c28, 0x44)
+MAC_ADDRESS(0x21cc6c, 0x78)
 CHotSeatDlg::~CHotSeatDlg()
 {
     deleteWidgets();
 }
 
-VA(0x00512420, 0x4D) MAC_ADDRESS(0x21cce4, 0x10c)  // dc 0x102c6c
+VA(0x00512420, 0x4D)
+DC_ADDRESS(0x102c6c, 0x5c)
+MAC_ADDRESS(0x21cce4, 0x10c)
 int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     switch (id) {
@@ -1572,7 +1660,8 @@ int CHotSeatDlg::onWidgetDeselect(int id, bool& exitFlag)
     return 0;
 }
 
-VA(0x00512470, 0xB2)  // dc 0x102d88
+VA(0x00512470, 0xB2)
+DC_ADDRESS(0x102d88, 0x94)
 unsigned char CHotSeatDlg::onOK()
 {
     g_hotSeatMan = new CHotSeatMan;
@@ -1585,7 +1674,9 @@ unsigned char CHotSeatDlg::onOK()
     return 1;
 }
 
-VA(0x00512530, 0x4) MAC_ADDRESS(0x21cdfc, 0x8)  // dc 0x102e1c
+VA(0x00512530, 0x4)
+DC_ADDRESS(0x102e1c, 0x6)
+MAC_ADDRESS(0x21cdfc, 0x8)
 textWidget* CHotSeatDlg::getRolloverWidget()
 {
     return m_rollover;
@@ -1598,7 +1689,8 @@ VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 // multiplayerwindow.obj band and is called by OnSearch. The active template
 // definition remains in multiplayerwindow.h.
 #if 0  // @carcass: claim-only - definition lives in multiplayerwindow.h
-VA(0x00512570, 0x53)  // exact selected COMDAT, dc 0x8c0c0
+
+VA(0x00512570, 0x53)  // exact selected COMDAT
 void CAutoArray<CDPlaySession>::destroy(unsigned char deleteData)
 {
     // @stub
@@ -1611,13 +1703,14 @@ void CAutoArray<CDPlaySession>::destroy(unsigned char deleteData)
 // multiplayerwindow.h so the surrounding template instantiation keeps its
 // source shape; these disabled declarators only assign the retail homes.
 #if 0  // @carcass: claim-only - definitions live in multiplayerwindow.h
-VA(0x005125d0, 0x3A)  // exact selected COMDAT, dc 0x103150
+
+VA(0x005125d0, 0x3A)  // exact selected COMDAT
 unsigned char CAutoArray<CDPlaySession>::deleteElement(unsigned long elementNbr)
 {
     // @stub
 }
 
-VA(0x00512610, 0x5B)  // exact selected COMDAT, dc 0x10318c
+VA(0x00512610, 0x5B)  // exact selected COMDAT
 unsigned char CAutoArray<CDPlaySession>::insert(
     unsigned long nextElementNbr, CDPlaySession* element)
 {

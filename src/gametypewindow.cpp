@@ -42,7 +42,9 @@ static const char* g_gameTypeBackgrounds[2] = {
     "newgame.pcx", "loadgame.pcx"
 };
 
-VA(0x004d54c0, 0x39B) MAC_ADDRESS(0x0f0fa4, 0x590)  // dc 0xc9164
+VA(0x004d54c0, 0x39B)
+DC_ADDRESS(0x0c9164, 0x32c)
+MAC_ADDRESS(0x0f0fa4, 0x590)
 TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -95,7 +97,9 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
 
 VA_COMPGEN(0x004d5860, 0x21, SCALAR_DELETING_DTOR, TGameTypeWindow)
 
-VA(0x004d5890, 0x75) MAC_ADDRESS(0x0f1534, 0xb4)  // dc 0xc9490
+VA(0x004d5890, 0x75)
+DC_ADDRESS(0x0c9490, 0x68)
+MAC_ADDRESS(0x0f1534, 0xb4)
 TGameTypeWindow::~TGameTypeWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -105,7 +109,9 @@ TGameTypeWindow::~TGameTypeWindow()
     g_gameTypeWindow = 0;
 }
 
-VA(0x004d5910, 0x2C) MAC_ADDRESS(0x0f15e8, 0x58)  // dc 0xc94f8
+VA(0x004d5910, 0x2C)
+DC_ADDRESS(0x0c94f8, 0x2c)
+MAC_ADDRESS(0x0f15e8, 0x58)
 void TGameTypeWindow::doModal()
 {
     g_soundManager->startMP3(
@@ -113,7 +119,9 @@ void TGameTypeWindow::doModal()
     g_windowManager->doDialog(this, gameTypeWindowHandler, 0);
 }
 
-VA(0x004d5940, 0x220) MAC_ADDRESS(0x0f1640, 0x2c0)  // dc 0xc9524
+VA(0x004d5940, 0x220)
+DC_ADDRESS(0x0c9524, 0x230)
+MAC_ADDRESS(0x0f1640, 0x2c0)
 int gameTypeWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;

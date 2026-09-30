@@ -46,8 +46,9 @@ static TSplitWindow* g_splitWindow;
 
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
-
-VA(0x004496a0, 0x16) MAC_ADDRESS(0x056454, 0x94)  // dc 0x4dae4
+VA(0x004496a0, 0x16)
+DC_ADDRESS(0x04dae4, 0x22)
+MAC_ADDRESS(0x056454, 0x94)
 unsigned char armyGroup::hasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -60,6 +61,7 @@ unsigned char armyGroup::hasCreatures() const
 // Dreamcast armygrp.cpp:62 and Mac code0+0x564e8 place this standalone
 // helper between hasCreatures and splitSliderCallback. The Mac callback,
 // splitArmy and windowHandler retain calls; VC6 expands the same-TU calls.
+DC_ADDRESS(0x04db08, 0x80)
 MAC_ADDRESS(0x0564e8, 0xf4)
 void TSplitWindow::updateSplitArmy(unsigned char update)
 {
@@ -81,7 +83,9 @@ void TSplitWindow::updateSplitArmy(unsigned char update)
         drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
-VA(0x004496c0, 0xC3) MAC_ADDRESS(0x0565dc, 0x50)  // dc 0x4db88
+VA(0x004496c0, 0xC3)
+DC_ADDRESS(0x04db88, 0x2e)
+MAC_ADDRESS(0x0565dc, 0x50)
 void splitSliderCallback(int state, heroWindow*)
 {
     g_splitWindow->m_destinationTroops =
@@ -91,7 +95,9 @@ void splitSliderCallback(int state, heroWindow*)
     g_splitWindow->updateSplitArmy(1);
 }
 
-VA(0x00449790, 0x65B) MAC_ADDRESS(0x05662c, 0xb2c)  // dc 0x4dbb8
+VA(0x00449790, 0x65B)
+DC_ADDRESS(0x04dbb8, 0x564)
+MAC_ADDRESS(0x05662c, 0xb2c)
 TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
 {
@@ -161,7 +167,9 @@ VA_COMPGEN(0x00449df0, 0x21, SCALAR_DELETING_DTOR, TSplitWindow)
 
 VA_COMPGEN(0x0044c680, 0x60, BITSET_SET, Bitset9)
 
-VA(0x00449e20, 0x6B) MAC_ADDRESS(0x057158, 0xac)  // dc 0x4e11c
+VA(0x00449e20, 0x6B)
+DC_ADDRESS(0x04e11c, 0x62)
+MAC_ADDRESS(0x057158, 0xac)
 TSplitWindow::~TSplitWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -170,7 +178,9 @@ TSplitWindow::~TSplitWindow()
     }
 }
 
-VA(0x00449e90, 0x2EF) MAC_ADDRESS(0x057204, 0x318)  // dc 0x4e180
+VA(0x00449e90, 0x2EF)
+DC_ADDRESS(0x04e180, 0x206)
+MAC_ADDRESS(0x057204, 0x318)
 void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
 {
     g_splitWindow = new TSplitWindow(0xb1, 0x14, m_armyTypes[srcIndex]);
@@ -239,6 +249,7 @@ void armyGroup::splitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 
 // E:\gamedcs\armygrp.cpp:208. Retail /Ob2 expands the sole call below and
 // /OPT:REF removes the out-of-line copy. Mac retains it at code0+0x5751c.
+DC_ADDRESS(0x04e388, 0xa0)
 MAC_ADDRESS(0x05751c, 0x118)
 void TSplitWindow::setRolloverText(int codeY)
 {
@@ -262,8 +273,10 @@ void TSplitWindow::setRolloverText(int codeY)
     g_windowManager->updateScreen(m_x + 8, m_y + 0x138, 0x11a, 0x11);
 }
 
-// E:\gamedcs\armygrp.cpp:229, dc 0x4e428
-VA(0x0044a180, 0x2DF) MAC_ADDRESS(0x057634, 0x280)  // dc 0x4e428 (+ 0x4e388 inlined)
+// E:\gamedcs\armygrp.cpp:229
+VA(0x0044a180, 0x2DF)
+DC_ADDRESS(0x04e428, 0x21a)
+MAC_ADDRESS(0x057634, 0x280)  //  (+ 0x4e388 inlined)
 int TSplitWindow::windowHandler(message& msg)
 {
     unsigned char closeDialog = false, updateArmy = false;
@@ -336,7 +349,8 @@ int TSplitWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x0044a460, 0x55) MAC_ADDRESS(0x0578b4, 0x108)
+VA(0x0044a460, 0x55)
+MAC_ADDRESS(0x0578b4, 0x108)
 const std::bitset<9>& armyGrpFn0044A460()
 {
     // Retail: construction guard 0x69385c, the bitset at 0x693884 and the
@@ -375,8 +389,9 @@ const std::bitset<9>& armyGrpFn0044A460()
 // default arm; it is not confined to Dwarves. The arrow-tower rejection at
 // retail +0xa7 is independent of the siege-weapon trait. These are behavior
 // corrections, verified separately from the byte similarity score.
-
-VA(0x0044a4d0, 0x52E) MAC_ADDRESS(0x0579bc, 0x574)  // linkorder, dc 0x4e644
+VA(0x0044a4d0, 0x52E)
+DC_ADDRESS(0x04e644, 0x3f2)
+MAC_ADDRESS(0x0579bc, 0x574)  // linkorder
 float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero* const castingHero, const hero* const targetHero)
 {
     float chance;
@@ -550,7 +565,9 @@ float getSpellWorkChance(SpellID spell, TCreatureType targetArmyType, const hero
     }
 }
 
-VA(0x0044aa00, 0x3A) MAC_ADDRESS(0x057f30, 0x90)  // dc 0x4ea38
+VA(0x0044aa00, 0x3A)
+DC_ADDRESS(0x04ea38, 0x40)
+MAC_ADDRESS(0x057f30, 0x90)
 int armyGroup::save(TAbstractFile* outfile)
 {
     if (outfile->write(m_armies, sizeof(m_armies)) < sizeof(m_armies))
@@ -560,7 +577,9 @@ int armyGroup::save(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x0044aa40, 0x3A) MAC_ADDRESS(0x057fc0, 0x90)  // dc 0x4ea78
+VA(0x0044aa40, 0x3A)
+DC_ADDRESS(0x04ea78, 0x40)
+MAC_ADDRESS(0x057fc0, 0x90)
 int armyGroup::load(TAbstractFile* infile)
 {
     if (infile->read(m_armies, sizeof(m_armies)) < sizeof(m_armies))
@@ -570,13 +589,17 @@ int armyGroup::load(TAbstractFile* infile)
     return 0;
 }
 
-VA(0x0044aa80, 0x1F) MAC_ADDRESS(0x058050, 0x30)  // dc 0x4eab8
+VA(0x0044aa80, 0x1F)
+DC_ADDRESS(0x04eab8, 0x16)
+MAC_ADDRESS(0x058050, 0x30)
 armyGroup::armyGroup()
 {
     initialize();
 }
 
-VA(0x0044aaa0, 0x5A) MAC_ADDRESS(0x058080, 0x8c)  // dc 0x4ead0
+VA(0x0044aaa0, 0x5A)
+DC_ADDRESS(0x04ead0, 0x5a)
+MAC_ADDRESS(0x058080, 0x8c)
 armyGroup::armyGroup(TCreatureType type, int amount)
 {
     initialize();
@@ -589,14 +612,18 @@ armyGroup::armyGroup(TCreatureType type, int amount)
     }
 }
 
-VA(0x0044ab00, 0x1D) MAC_ADDRESS(0x05810c, 0x40)  // dc 0x4eb2c
+VA(0x0044ab00, 0x1D)
+DC_ADDRESS(0x04eb2c, 0x24)
+MAC_ADDRESS(0x05810c, 0x40)
 void armyGroup::initialize()
 {
     memset(m_armies, 0xFF, sizeof(m_armies));
     memset(m_numTroops, 0, sizeof(m_numTroops));
 }
 
-VA(0x0044ab20, 0x3A) MAC_ADDRESS(0x05814c, 0x48)  // dc 0x4eb50
+VA(0x0044ab20, 0x3A)
+DC_ADDRESS(0x04eb50, 0x36)
+MAC_ADDRESS(0x05814c, 0x48)
 unsigned char armyGroup::hasAllUndead() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -612,6 +639,7 @@ unsigned char armyGroup::hasAllUndead() const
 // LINKER-ELIMINATED in retail: /Ob2 expands this member at its morale
 // consumers and /OPT:REF drops the remaining copy, so the 0x4ab20..0x4ab80
 // image gap contains Dismiss rather than this body.
+DC_ADDRESS(0x04eb88, 0x36)
 MAC_ADDRESS(0x058194, 0x48)
 unsigned char armyGroup::hasSomeUndead() const
 {
@@ -624,14 +652,18 @@ unsigned char armyGroup::hasSomeUndead() const
     return 0;
 }
 
-VA(0x0044ab60, 0x19) MAC_ADDRESS(0x0581dc, 0x1c)  // dc 0x4ebc0
+VA(0x0044ab60, 0x19)
+DC_ADDRESS(0x04ebc0, 0x10)
+MAC_ADDRESS(0x0581dc, 0x1c)
 void armyGroup::dismiss(int whichIndex)
 {
     m_armies[whichIndex] = CREATURE_NONE;
     m_numTroops[whichIndex] = 0;
 }
 
-VA(0x0044ab80, 0x21) MAC_ADDRESS(0x0581f8, 0x94)  // dc 0x4ebd0
+VA(0x0044ab80, 0x21)
+DC_ADDRESS(0x04ebd0, 0x20)
+MAC_ADDRESS(0x0581f8, 0x94)
 unsigned char armyGroup::isMember(TCreatureType monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -649,7 +681,9 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
 // keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
 // The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
 // do not pad the array or remove getAlignment to chase that displacement.
-VA(0x0044abb0, 0x97) MAC_ADDRESS(0x05828c, 0x17c)  // dc 0x4ebf0
+VA(0x0044abb0, 0x97)
+DC_ADDRESS(0x04ebf0, 0xa6)
+MAC_ADDRESS(0x05828c, 0x17c)
 int armyGroup::getAlignments(unsigned char* alignments) const
 {
     unsigned char local[10];
@@ -674,15 +708,18 @@ int armyGroup::getAlignments(unsigned char* alignments) const
     return count;
 }
 
-// Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748, dc 0x4ec98
+// Original: armyGroup::GetHomogeneityMoraleAdjust; armygrp.cpp:748
 // Complete getMorale additionally groups allied alignments before applying
 // this adjustment, so that path keeps its explicit alignment census.
+DC_ADDRESS(0x04ec98, 0x16)
 int armyGroup::getHomogeneityMoraleAdjust() const
 {
     return 2 - getAlignments(0);
 }
 
-VA(0x0044ac50, 0x2E) MAC_ADDRESS(0x058408, 0xcc)  // dc 0x4ecb0
+VA(0x0044ac50, 0x2E)
+DC_ADDRESS(0x04ecb0, 0x2a)
+MAC_ADDRESS(0x058408, 0xcc)
 int armyGroup::canJoin(int monType) const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -692,7 +729,9 @@ int armyGroup::canJoin(int monType) const
     return 0;
 }
 
-VA(0x0044ac80, 0x39) MAC_ADDRESS(0x0584d4, 0x54)  // dc 0x4ecdc
+VA(0x0044ac80, 0x39)
+DC_ADDRESS(0x04ecdc, 0x4a)
+MAC_ADDRESS(0x0584d4, 0x54)
 long armyGroup::getAIValue() const
 {
     long value = 0;
@@ -703,7 +742,9 @@ long armyGroup::getAIValue() const
     return value;
 }
 
-VA(0x0044acc0, 0x14) MAC_ADDRESS(0x058528, 0x7c)  // dc 0x4ed28
+VA(0x0044acc0, 0x14)
+DC_ADDRESS(0x04ed28, 0x24)
+MAC_ADDRESS(0x058528, 0x7c)
 int armyGroup::getNumArmies() const
 {
     int numArmies = 0;
@@ -714,7 +755,9 @@ int armyGroup::getNumArmies() const
     return numArmies;
 }
 
-VA(0x0044ace0, 0x76) MAC_ADDRESS(0x0585a4, 0x16c)  // dc 0x4ed4c
+VA(0x0044ace0, 0x76)
+DC_ADDRESS(0x04ed4c, 0x80)
+MAC_ADDRESS(0x0585a4, 0x16c)
 int armyGroup::add(int armyType, int newNumTroops, int newIndex)
 {
     if (newIndex == -1) {
@@ -742,7 +785,9 @@ int armyGroup::add(int armyType, int newNumTroops, int newIndex)
     return 1;
 }
 
-VA(0x0044ad60, 0x36) MAC_ADDRESS(0x058710, 0x3c)  // dc 0x4edcc
+VA(0x0044ad60, 0x36)
+DC_ADDRESS(0x04edcc, 0x3a)
+MAC_ADDRESS(0x058710, 0x3c)
 void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
 {
     int army = m_armies[srcIndex];
@@ -753,7 +798,8 @@ void armyGroup::swap(int srcIndex, armyGroup* destGroup, int destIndex)
     destGroup->m_numTroops[destIndex] = troops;
 }
 
-// Original: armyGroup::DamageGroup; armygrp.cpp:885, dc 0x4ee08
+// Original: armyGroup::DamageGroup; armygrp.cpp:885
+DC_ADDRESS(0x04ee08, 0x180)
 void armyGroup::damageGroup(float casualtyRate)
 {
     int limit = static_cast<int>(casualtyRate * 100.0);
@@ -780,7 +826,9 @@ void armyGroup::damageGroup(float casualtyRate)
     }
 }
 
-VA(0x0044ada0, 0x16) MAC_ADDRESS(0x05874c, 0x94)  // dc 0x4ef88
+VA(0x0044ada0, 0x16)
+DC_ADDRESS(0x04ef88, 0x2e)
+MAC_ADDRESS(0x05874c, 0x94)
 int armyGroup::getCreatureTotal() const
 {
     int total = 0;
@@ -791,7 +839,9 @@ int armyGroup::getCreatureTotal() const
     return total;
 }
 
-VA(0x0044adc0, 0x20) MAC_ADDRESS(0x0587e0, 0x94)  // dc 0x4efb8
+VA(0x0044adc0, 0x20)
+DC_ADDRESS(0x04efb8, 0x32)
+MAC_ADDRESS(0x0587e0, 0x94)
 int armyGroup::getCreatureTotal(TCreatureType monType) const
 {
     int total = 0;
@@ -802,7 +852,9 @@ int armyGroup::getCreatureTotal(TCreatureType monType) const
     return total;
 }
 
-VA(0x0044ade0, 0x79) MAC_ADDRESS(0x058874, 0xd0)  // dc 0x4efec
+VA(0x0044ade0, 0x79)
+DC_ADDRESS(0x04efec, 0x8a)
+MAC_ADDRESS(0x058874, 0xd0)
 const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 {
     if (howMany < 5)
@@ -824,7 +876,9 @@ const char* armyGroup::getArmySizeName(int howMany, int nameSet)
     return g_armySizeNames[8][nameSet];
 }
 
-VA(0x0044ae60, 0x29A) MAC_ADDRESS(0x058944, 0x21c)  // dc 0x4f078
+VA(0x0044ae60, 0x29A)
+DC_ADDRESS(0x04f078, 0xe8)
+MAC_ADDRESS(0x058944, 0x21c)
 int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
                          unsigned char onCursedGround,
@@ -872,7 +926,9 @@ int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
 // extending the older DC five-argument API: (index, ownerHero, ownerTown, MODE
 // 0, arg5, 0) - SEVEN pushes; Complete also adds the grouping argument
 // to DC's six-argument GetMorale. mode==3 -> (elementals/f_1f698 gate) townType
-VA(0x0044b100, 0x1C9) MAC_ADDRESS(0x058b60, 0x270)  // dc 0x4f160
+VA(0x0044b100, 0x1C9)
+DC_ADDRESS(0x04f160, 0xac)
+MAC_ADDRESS(0x058b60, 0x270)
 int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
@@ -934,7 +990,9 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
-VA(0x0044b2d0, 0xEB) MAC_ADDRESS(0x058dd0, 0x178)  // dc 0x4f20c
+VA(0x0044b2d0, 0xEB)
+DC_ADDRESS(0x04f20c, 0xdc)
+MAC_ADDRESS(0x058dd0, 0x178)
 int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char onCursedGround, unsigned char applyLimits) const
 {
     if (onCursedGround)
@@ -959,7 +1017,9 @@ int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero*
     return luck;
 }
 
-VA(0x0044b3c0, 0xED) MAC_ADDRESS(0x058f48, 0x178)  // dc 0x4f2e8
+VA(0x0044b3c0, 0xED)
+DC_ADDRESS(0x04f2e8, 0x3e)
+MAC_ADDRESS(0x058f48, 0x178)
 int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char applyLimits) const
 {
     if (mode == MAGIC_TERRAIN_CURSED_GROUND)
@@ -993,7 +1053,9 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     return luck;
 }
 
-VA(0x0044b4b0, 0x162) MAC_ADDRESS(0x0590c0, 0x140)  // dc 0x4f328
+VA(0x0044b4b0, 0x162)
+DC_ADDRESS(0x04f328, 0xa4)
+MAC_ADDRESS(0x0590c0, 0x140)
 long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
 {
     switch (creature) {
@@ -1044,7 +1106,9 @@ long modifySpellDamage(long damage, SpellID spell, TCreatureType creature)
     return damage;
 }
 
-VA(0x0044b620, 0x1FE) MAC_ADDRESS(0x059200, 0x3c4)  // dc 0x4f3cc
+VA(0x0044b620, 0x1FE)
+DC_ADDRESS(0x04f3cc, 0x21e)
+MAC_ADDRESS(0x059200, 0x3c4)
 unsigned char armyGroup::merge(armyGroup* ag)
 {
     armyGroup ag1;
@@ -1111,7 +1175,9 @@ unsigned char armyGroup::merge(armyGroup* ag)
     return 1;
 }
 
-VA(0x0044b820, 0x140) MAC_ADDRESS(0x0595c4, 0x170)  // dc 0x4f5ec
+VA(0x0044b820, 0x140)
+DC_ADDRESS(0x04f5ec, 0x11a)
+MAC_ADDRESS(0x0595c4, 0x170)
 void armyGroup::mergeArmies(armyGroup& source)
 {
     for (;;) {
@@ -1153,15 +1219,16 @@ void armyGroup::mergeArmies(armyGroup& source)
     }
 }
 
-// E:\gamedcs\armygrp.cpp:1347, dc 0x4f708. Complete adds the full-width
+// E:\gamedcs\armygrp.cpp:1347 Complete adds the full-width
 // magic-terrain mode and alignment-grouping byte; ret 24h proves the hidden
 // result and eight explicit parameters. DC lines 1347..1451 retain result,
 // alignments[9], angel_type, the GetArmyName calls and nested modifier scopes.
 // Complete's neutral alignment requires the ten-byte array below.
 // Replacing the terrain labels with ordinary switch-arm breaks gives 93.8743%
 // versus 97.3066%, with either explicit neutral arms or an else-if chain.
-
-VA(0x0044b960, 0x859) MAC_ADDRESS(0x059734, 0x714)  // retail-body signature, dc 0x4f708
+VA(0x0044b960, 0x859)
+DC_ADDRESS(0x04f708, 0x3aa)
+MAC_ADDRESS(0x059734, 0x714)  // retail-body signature
 std::string armyGroup::getMoraleDescription(
     TCreatureType creature, int morale, const hero* ownerHero,
     const town* ownerTown, const hero* otherHero,
@@ -1349,7 +1416,7 @@ std::string armyGroup::getMoraleDescription(
 // level too deep repeats at the other string sites.
 
 // THE HERO ARM ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-08-14). The
-// Dreamcast line table says so directly - dc 0x4fab4 line 1482 reaches
+// Dreamcast line table says so directly - dc line 1482 reaches
 // `basic_string::operator=` and no operator+= - and retail's own call at
 // that slot is `assign(const basic_string&, uint, uint)` (0x404860) where
 // ours was `append(...)` (0x41b250); every other call in the body already
@@ -1379,9 +1446,11 @@ std::string armyGroup::getMoraleDescription(
 // conditional branches and symbolic branch targets. A generated one-line
 // town-type accessor reaches the same bytes, but no such accessor is attested
 // in the Dreamcast class record; the ordinary local is retained instead.
-// Dreamcast 0x4fab4:1499 calls town::HasBuilding for the Rampart
+// Dreamcast line 1499 calls town::HasBuilding for the Rampart
 // Fountain of Fortune check (building 21, built-only flag 1).
-VA(0x0044c1c0, 0x3C5) MAC_ADDRESS(0x059e48, 0x3a8)  // retail-body signature, dc 0x4fab4
+VA(0x0044c1c0, 0x3C5)
+DC_ADDRESS(0x04fab4, 0x1e2)
+MAC_ADDRESS(0x059e48, 0x3a8)  // retail-body signature
 std::string armyGroup::getLuckDescription(
     TCreatureType creature, int luck, const hero* ourHero,
     const town* ourTown, const hero* enemyHero,
@@ -1473,7 +1542,9 @@ std::string armyGroup::getLuckDescription(
     return result;
 }
 
-VA(0x0044c590, 0x76) MAC_ADDRESS(0x05a1f0, 0x90)  // dc 0x4fc98
+VA(0x0044c590, 0x76)
+DC_ADDRESS(0x04fc98, 0x9c)
+MAC_ADDRESS(0x05a1f0, 0x90)
 TTerrainType armyGroup::getNativeTerrain() const
 {
     TTerrainType native = TERRAIN_NONE;

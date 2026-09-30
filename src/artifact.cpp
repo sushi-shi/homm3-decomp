@@ -204,7 +204,8 @@ static TArtifactSlotTraits g_artifactSlotTraitsStorage[19];
 
 } // namespace
 
-VA(0x0044c720, 0x10B) MAC_ADDRESS(0x05a534, 0xdc)
+VA(0x0044c720, 0x10B)
+MAC_ADDRESS(0x05a534, 0xdc)
 static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
 {
     std::bitset<19> mask;
@@ -223,7 +224,8 @@ static std::bitset<19> makeArtifactSlotMask(unsigned count, ...)
     return mask;
 }
 
-VA(0x0044c830, 0x122) MAC_ADDRESS(0x05a610, 0xfc)
+VA(0x0044c830, 0x122)
+MAC_ADDRESS(0x05a610, 0xfc)
 static std::bitset<144> makeArtifactComponentMask(unsigned count, ...)
 {
     std::bitset<144> mask;
@@ -323,7 +325,7 @@ const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource);
 
-// E:\gamedcs\artifact.cpp:56, dc 0x4fec0. Complete requires 146 rows,
+// E:\gamedcs\artifact.cpp:56 Complete requires 146 rows,
 // packs names/descriptions into one owned buffer, derives the slot classes,
 // applies disabled/spell/combination metadata, and loads 19 slot names.
 // Keep the DC-proven static InitializeArtifactTraits boundary and its two
@@ -383,7 +385,9 @@ static void initializeArtifactTraits(int id,
 // DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
 // dossier renders its byte-sized procedure result as unsigned char. Complete
 // returns only AL 0/1, and the sole kb caller tests that Boolean result.
-VA(0x0044cd50, 0x5E8) MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller, dc 0x4fec0
+VA(0x0044cd50, 0x5E8)
+DC_ADDRESS(0x04fec0, 0x126)
+MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller
 bool initializeArtifactTraitsTable()
 {
     {
@@ -410,6 +414,7 @@ bool initializeArtifactTraitsTable()
         // before deleting the pointer at 0x694c94; the second buffer uses
         // the same eight-byte layout and conditional destructor 0x44d340.
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
+
         VA_COMPGEN(0x0044d360, 0x16, STATIC_DTOR, artifactStrings)
         DATA(0x00694c90)
         static TAutoArrayPtr<char> artifactStrings(new char[stringBytes]);
@@ -525,6 +530,7 @@ bool initializeArtifactTraitsTable()
 // assignment then reaches 89.9743%. The old explicit bitset<19> instantiation
 // was byte-flat here and unnecessary: real uses retain the exact set/_Tidy
 // COMDATs, so no unsupported template-enrollment declaration remains.
+DC_ADDRESS(0x050058, 0x7ba)
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {

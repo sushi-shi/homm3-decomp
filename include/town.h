@@ -339,6 +339,7 @@ public:
     __int64 m_available;
     void applySpecialBuildingEffect(hero* townHero);
     unsigned char canBuildDock() const;
+
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
     // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
@@ -350,10 +351,13 @@ public:
     // quirk in a textWidget arm; count restored, the row returns).
     // DC Town.h:299/300 returns full_building_mask (+0x150 in DC).
     // Retail's +0x158 band is m_active; getBuildableMask expands this read.
+    DC_ADDRESS(0x037f50, 0x12)
     __int64 getBuildingMask() const { return m_active; }
     long getCastleGrowthBonus(TCreatureType creature) const;
-    // DC Town.h:305-306, dc 0x181404, returns generatorBonus[dwelling].
+
+    // DC Town.h:305-306 returns generatorBonus[dwelling].
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
+    DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
     short getGoldIncome(unsigned char includeSilo) const;
     int getHorde(long dwelling) const;
@@ -362,13 +366,15 @@ public:
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
     long getLegionBonus(long dwelling) const;
-    // DC Town.h:311 (dc 0x1fdac), selected in advmgr.obj. Line 312
+
+    // DC Town.h:311, selected in advmgr.obj. Line 312
     // calls the canonical three-short type_point constructor with mapX/Y/Z
     // and returns the value through the hidden UDT-result buffer.
     // Earlier canTakeTown probes scored 86.87 with a separately named
     // point-return local and 79.06 with this constructor expression, versus
     // the local clone's 98.75/100 peaks. Those measurements do not refute
     // the CodeView constructor call or justify a second helper definition.
+    DC_ADDRESS(0x01fdac, 0x68)
     type_point getLocation() const
     {
         return type_point(m_mapX, m_mapY, m_mapZ);
@@ -378,29 +384,36 @@ public:
     // Town.h:325-327 records the active-mask guard then the built-mask return.
     // This early-return form preserves the retained body and recovers the
     // nested isCastle expansion in Windows getVictoryConditionText.
-    VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18, dc 0x1fe14
+    VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
+    DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
         if (checkIncluded)
             return (m_active & g_bitNumber[buildingId]) != 0;
         return (m_built & g_bitNumber[buildingId]) != 0;
     }
-    // Original: town::set_mask; Town.h:331, dc 0x168dfc.
+
+    // Original: town::set_mask; Town.h:331
+    DC_ADDRESS(0x168dfc, 0x28)
     void setMask(__int64 newMask)
     {
         m_built = newMask;
         updateFullBuildingMask();
     }
+
     // E:\gamedcs\Town.h:337. Public ?IsCastle@town@@QBA_NXZ proves bool;
     // the DC T_UCHAR return record is lowered, as for hasBuilding.
+    DC_ADDRESS(0x0bcc40, 0x74)
     bool isCastle() const
     {
         return hasBuilding(CASTLE_FORT_ID, 0)
             || hasBuilding(CASTLE_CITADEL_ID, 0)
             || hasBuilding(CASTLE_CASTLE_ID, 0);
     }
+
     // E:\gamedcs\Town.h:342. Public ?IsCapitol@town@@QBA_NXZ likewise
     // proves native bool. Both declarations are byte-flat in all consumers.
+    DC_ADDRESS(0x0bccb4, 0x28)
     bool isCapitol() const
     {
         return hasBuilding(HALL_CAPITOL_ID, 0);

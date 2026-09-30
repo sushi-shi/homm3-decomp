@@ -198,7 +198,7 @@ def _definition_text(raw: str, masked: str, after: int) -> str | None:
     return raw[start:i] if depth == 0 else None
 
 
-_MAC_ADDRESS_TAIL = re.compile(r"[ \t]*MAC_(?:COMPGEN_)?ADDRESS\s*\([^()\n]*\)")
+_MAC_ADDRESS_TAIL = re.compile(r"\s*(?:DC_ADDRESS|MAC_(?:COMPGEN_)?ADDRESS)\s*\([^()]*\)")
 
 
 def _after_windows_claim(masked: str, end: int) -> int:
@@ -207,8 +207,10 @@ def _after_windows_claim(masked: str, end: int) -> int:
     The Mac address is a second target's location, not part of the function's
     implementation, so adding or correcting it must not reset MAX.
     """
-    match = _MAC_ADDRESS_TAIL.match(masked, end + 1)
-    return match.end() if match else end + 1
+    after = end + 1
+    while match := _MAC_ADDRESS_TAIL.match(masked, after):
+        after = match.end()
+    return after
 
 
 def _parameter_arity(parameters: str) -> int | None:
