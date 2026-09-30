@@ -849,6 +849,8 @@ long sacrificeValue(TCreatureType creature)
 // Retail proves the record layout through its six widget loads and terminal
 // group/amount pair. The two general-text indices are the folded +0x1ec and
 // +0x788 rows of gpGeneralText's pointer table.
+// DC's parameter record names type_creature_offering& creature. Every native
+// caller supplies an owned offering; keep the reference and its source calls.
 // Residual (99.9744%): all 42 blocks, 20 symbolic branch targets, three
 // returns and instruction counts agree. VC6
 // colors four early string-return temporaries at ebp-0x30 instead of
@@ -875,60 +877,60 @@ VA(0x00562da0, 0x3a2)
 DC_ADDRESS(0x125e08, 0x25a)
 MAC_ADDRESS(0x159614, 0x3a8)  // dc order/name/signature + retail field graph
 void type_sacrifice_window::updateCreatureOffering(
-    type_creature_offering* creature)
+    type_creature_offering& creature)
 {
     TCreatureType creatureType;
     long available;
-    if (creature->m_group < 0) {
+    if (creature.m_group < 0) {
         creatureType = CREATURE_NONE;
-        creature->m_amount = 0;
+        creature.m_amount = 0;
     } else {
-        creatureType = m_currentHero->m_army.m_armyTypes[creature->m_group];
-        available = m_currentHero->m_army.m_numTroops[creature->m_group];
+        creatureType = m_currentHero->m_army.m_armyTypes[creature.m_group];
+        available = m_currentHero->m_army.m_numTroops[creature.m_group];
     }
 
     if (creatureType == CREATURE_NONE) {
-        creature->m_iconWidget->setVisible(0);
-        creature->m_creatureCountText->setVisible(0);
-        creature->m_selectionWidget->setVisible(0);
-        creature->m_experienceText->setVisible(0);
+        creature.m_iconWidget->setVisible(0);
+        creature.m_creatureCountText->setVisible(0);
+        creature.m_selectionWidget->setVisible(0);
+        creature.m_experienceText->setVisible(0);
     } else {
         long totalHits = static_cast<long>(
-            (sacrificeValue(creatureType) * creature->m_amount)
+            (sacrificeValue(creatureType) * creature.m_amount)
             * m_currentHero->getExperienceBonusFactor());
         std::string result;
 
-        creature->m_iconWidget->setIconFrame(creatureType + 2);
-        creature->m_iconWidget->setVisible(1);
-        if (!creature->m_sourceSelectionFrame) {
-            result = convertWithCommas(creature->m_amount);
+        creature.m_iconWidget->setIconFrame(creatureType + 2);
+        creature.m_iconWidget->setVisible(1);
+        if (!creature.m_sourceSelectionFrame) {
+            result = convertWithCommas(creature.m_amount);
         } else {
             result = convertWithCommas(available);
         }
-        creature->m_creatureCountText->setText(result.c_str());
-        creature->m_creatureCountText->setVisible(1);
+        creature.m_creatureCountText->setText(result.c_str());
+        creature.m_creatureCountText->setVisible(1);
 
-        creature->m_selectionWidget->setIconFrame(creatureType + 2);
-        creature->m_selectionWidget->setVisible(creature->m_amount > 0);
+        creature.m_selectionWidget->setIconFrame(creatureType + 2);
+        creature.m_selectionWidget->setVisible(creature.m_amount > 0);
         result = convertWithCommas(totalHits);
         result = formatString(
             (*g_generalText)[SACRIFICE_GENERAL_TEXT_EXPERIENCE],
             result.c_str());
-        creature->m_experienceText->setText(result.c_str());
-        creature->m_experienceText->setVisible(creature->m_amount > 0);
+        creature.m_experienceText->setText(result.c_str());
+        creature.m_experienceText->setVisible(creature.m_amount > 0);
     }
 
-    if (creature->m_sourceSelectionFrame) {
+    if (creature.m_sourceSelectionFrame) {
         if (creatureType == CREATURE_NONE) {
-            creature->m_sourceSelectionFrame->setHelpText(0, 0, 1);
-            creature->m_offeringSelectionFrame->setHelpText(0, 0, 1);
+            creature.m_sourceSelectionFrame->setHelpText(0, 0, 1);
+            creature.m_offeringSelectionFrame->setHelpText(0, 0, 1);
         } else {
             std::string helpText;
             helpText = formatString(
                 (*g_generalText)[SACRIFICE_GENERAL_TEXT_CREATURE],
                 getArmyName(creatureType, 0));
-            creature->m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
-            creature->m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
+            creature.m_sourceSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
+            creature.m_offeringSelectionFrame->setHelpText(helpText.c_str(), 0, 1);
         }
     }
 }
@@ -947,13 +949,13 @@ void type_sacrifice_window::setCreatureMode()
     for (long group = 0; group < 7; ++group) {
         m_creatureOfferings[group].m_amount = 0;
         m_creatureOfferings[group].m_group = group;
-        updateCreatureOffering(&m_creatureOfferings[group]);
+        updateCreatureOffering(m_creatureOfferings[group]);
         m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
         m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
     }
 
     m_currentCreature.m_group = -1;
-    updateCreatureOffering(&m_currentCreature);
+    updateCreatureOffering(m_currentCreature);
     m_sacrificingArtifacts = 0;
     m_maxCreaturesButton->enable(0);
     m_creatureSlider->enable(0);
@@ -1377,12 +1379,12 @@ int type_sacrifice_window::sacrifice(message& msg)
                     army->dismiss(group);
                 window->m_creatureOfferings[group].m_amount = 0;
                 window->updateCreatureOffering(
-                    &window->m_creatureOfferings[group]);
+                    window->m_creatureOfferings[group]);
                 window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
                 window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
             window->m_currentCreature.m_group = -1;
-            window->updateCreatureOffering(&window->m_currentCreature);
+            window->updateCreatureOffering(window->m_currentCreature);
             window->m_creatureNameWidget->setVisible(0);
             window->m_allCreaturesButton->enable(
                 army->getCreatureTotal() > 1);
@@ -1516,10 +1518,10 @@ void type_sacrifice_window::setCreatureSacrifice(long slot, long newAmount)
         - oldExperience;
 
     m_creatureOfferings[slot].m_amount = newAmount;
-    updateCreatureOffering(&m_creatureOfferings[slot]);
+    updateCreatureOffering(m_creatureOfferings[slot]);
     if (m_currentCreature.m_group == slot) {
         m_currentCreature.m_amount = newAmount;
-        updateCreatureOffering(&m_currentCreature);
+        updateCreatureOffering(m_currentCreature);
     }
 }
 
@@ -1669,8 +1671,8 @@ void type_sacrifice_window::creatureClick(
 
         m_currentCreature.m_group = slot;
         m_currentCreature.m_amount = m_creatureOfferings[slot].m_amount;
-        updateCreatureOffering(&m_currentCreature);
-        updateCreatureOffering(&m_creatureOfferings[slot]);
+        updateCreatureOffering(m_currentCreature);
+        updateCreatureOffering(m_creatureOfferings[slot]);
 
         if (m_currentHero->m_army.m_armyTypes[slot] == CREATURE_NONE) {
             m_creatureNameWidget->setVisible(0);

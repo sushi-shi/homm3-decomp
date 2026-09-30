@@ -227,7 +227,7 @@ private:
     void updateExperience();
     void updateAllSlots();
     void updateArtifactOffering(long slot);
-    void updateCreatureOffering(type_creature_offering* creature);
+    void updateCreatureOffering(type_creature_offering& creature);
     void updateSlot(long slot);
     static int allArtifacts(message& msg);
     static int allCreatures(message& msg);
