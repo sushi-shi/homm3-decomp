@@ -232,6 +232,11 @@ DC_ADDRESS(0x02389c, 0x690)
 MAC_ADDRESS(0x01f874, 0x7e4)  // order-map(DC ai.obj head) + anchor-callee failed_siege
 bool combatManager::aiCheckRetreat()
 {
+    // Native NB11 records these scalar/array declarations outside S_BLOCK32.
+    // Keep their acquisitions in the original guarded arms below.
+    long surrenderCost;
+    long combatValue;
+    int fightValues[2];
     if (!m_heroes[m_currentSide])
         return 0;
     if ((m_sideIsAi[m_currentSide]
@@ -266,7 +271,7 @@ bool combatManager::aiCheckRetreat()
                 if (failedSiege())
                     return 1;
 
-                long combatValue = 0;
+                combatValue = 0;
                 type_artifact artifact;
                 { for (long i = 0; i < 19; i++) {
                         artifact = m_heroes[m_currentSide]->getArtifact(TArtifactSlot(i));
@@ -294,7 +299,7 @@ bool combatManager::aiCheckRetreat()
                 }
                 if (combatValue >= 1000
                     || m_heroes[m_currentSide]->m_experience >= 2000) {
-                    long surrenderCost = getSurrenderCost();
+                    surrenderCost = getSurrenderCost();
                     simulateCombat(m_currentSide, 1);
 
                     long remaining = m_numArmies[m_currentSide];
@@ -309,7 +314,6 @@ bool combatManager::aiCheckRetreat()
                     if (remaining < 0)
                         return 1;
                     if (player->m_resources[GOLD] >= surrenderCost + 2500) {
-                        int fightValues[2];
                         { for (long side = 0; side < 2; side++) {
                                 long fightValue = 0;
                                 { for (long i = 0; i < 20; i++) {
