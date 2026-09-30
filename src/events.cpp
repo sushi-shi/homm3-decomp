@@ -6135,7 +6135,7 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // below once the draw arm is removed. Both staged variants retain the
 // pause destructor where retail expands it (94.98/95.34% with the bool AI
 // contract); preserve the existing model and the independently proven locals.
-// Recover the direct raw-stats pointer payload through its private accessor;
+// Recover the direct raw-stats pointer payload through the stats accessor;
 // the provisional four-byte caller copy had no native counterpart. This
 // owning source edit currently measures 96.68795%, with the AI bool target
 // relocation rename still pending the collective refresh.
