@@ -50,9 +50,13 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 TCreatureType siegeArtifactToCreature(TArtifact engine);
 TCreatureType upgradedCreatureType(TCreatureType type);
 
-long getSkillValue(const hero* ourHero, TSecondarySkill skill,
-                     unsigned char complexChoice);
-long getSchoolValue(const hero* ourHero, TSecondarySkill skill);
+// DC local-procedure records prove this appraisal chain belongs to philai.cpp.
+// All callers are in this TU; keep ordinary static helpers in native order.
+static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
+                          unsigned char complexChoice);
+static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
+                                unsigned char complexChoice);
+static long getSchoolValue(const hero* ourHero, TSecondarySkill skill);
 
 int aiResourceCost(const playerData* player, const int* resources);
 int aiResourceCost(long playerId, const int* resources);
@@ -1616,6 +1620,32 @@ static double g_aiPathfindingMapFactor[3] = {1.0, 1.0, 1.0};
 DATA(0x00681878)
 static double g_aiWaterMapFraction = 1.0;
 
+// DC philai.cpp:3444 precedes get_skill_value at 3469; Mac retains the same
+// getSchoolValue/getSkillValue order. Keep the ordinary helper body visible
+// to its caller in that source order.
+// This visibility recovery is Windows byte-flat at 86.5040%; VC6 retains
+// all four getSkillValue calls to this canonical helper.
+VA(0x00524d20, 0xa3)
+DC_ADDRESS(0x11350c, 0xa0)
+MAC_ADDRESS(0x13e09c, 0xbc)
+static long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
+{
+    type_spellvalue value(ourHero);
+    long baseValue = value.getBestSpellValue(SPELL_VALUE_CLASS_MASK);
+
+    signed char level = ourHero->getSecondarySkill(skill);
+    int oldLevel = level;
+    if (oldLevel == 0)
+        const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
+    else
+        const_cast<hero*>(ourHero)->m_skillLevel[skill] = level + 1;
+
+    long schoolValue =
+        value.getBestSpellValue(SPELL_VALUE_CLASS_MASK) - baseValue;
+    const_cast<hero*>(ourHero)->m_skillLevel[skill] = oldLevel;
+    return schoolValue;
+}
+
 // Prior residual (78.1958%, ANATOMISED 2026-09-05 - the whole gap was TWO
 // cross-jumps we make and retail does not, plus their register fallout).
 // The two sides agree on everything structural: 48 conditional branches
@@ -1706,7 +1736,7 @@ static double g_aiWaterMapFraction = 1.0;
 VA(0x00524690, 0x684)
 DC_ADDRESS(0x1135ac, 0x536)
 MAC_ADDRESS(0x13e158, 0x7ac)  // anchor-callee
-long getSkillValue(const hero* ourHero, TSecondarySkill skill,
+static long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice)
 {
     signed char level = ourHero->getSecondarySkill(skill);
@@ -1852,31 +1882,10 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     }
 }
 
-VA(0x00524d20, 0xa3)
-DC_ADDRESS(0x11350c, 0xa0)
-MAC_ADDRESS(0x13e09c, 0xbc)
-long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
-{
-    type_spellvalue value(ourHero);
-    long baseValue = value.getBestSpellValue(SPELL_VALUE_CLASS_MASK);
-
-    signed char level = ourHero->getSecondarySkill(skill);
-    int oldLevel = level;
-    if (oldLevel == 0)
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = 3;
-    else
-        const_cast<hero*>(ourHero)->m_skillLevel[skill] = level + 1;
-
-    long schoolValue =
-        value.getBestSpellValue(SPELL_VALUE_CLASS_MASK) - baseValue;
-    const_cast<hero*>(ourHero)->m_skillLevel[skill] = oldLevel;
-    return schoolValue;
-}
-
 VA(0x00524dd0, 0xF3)
 DC_ADDRESS(0x113ae4, 0x138)
 MAC_ADDRESS(0x13e904, 0x178)
-unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
+static unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
     long skillValue[28];

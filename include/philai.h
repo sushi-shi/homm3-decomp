@@ -129,17 +129,4 @@ void aiVisitWarFactory(hero* currentHero);
 // division has a typed name rather than a raw address.
 extern float g_artifactPurchaseEfficency[];
 
-// The two secondary-skill appraisals AI_choose_secondary_skill calls.
-// The Dreamcast roster types the skill as TSecondarySkill; Complete's
-// AI_visit_university passes the university's int-width skill slots directly,
-// so the common retail-facing declaration keeps the byte-proven int width.
-// Both retail bodies are located (0x524690 / 0x524dd0) but not reconstructed - so
-// they cannot be declared static here: VC6 rejects a static function that
-// is declared and called but never defined (C2129). Move them back into
-// philai.cpp as statics when the bodies land.
-long getSkillValue(const hero* ourHero, TSecondarySkill skill,
-                     unsigned char complexChoice);
-unsigned char wantsSkill(const hero* ourHero, TSecondarySkill skill,
-                          unsigned char complexChoice);
-
 #endif  /* HOMM3_PHILAI_H */
