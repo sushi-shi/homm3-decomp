@@ -797,8 +797,8 @@ unsigned int CSpriteFrame::getSize() const
 DC_ADDRESS(0x079294, 0x184)
 inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
                                int& dx, int& dy, int dw, int dh,
-                               unsigned char hflip,
-                               unsigned char vflip) const
+                               bool hflip,
+                               bool vflip) const
 {
     int deltaX;
 
@@ -1686,6 +1686,8 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // dropping it took this row 98.5765 -> 99.9400 on one line.
 // The native row cursor restores 99.9404%; an extra base/offset pair changes
 // the surrounding lifetimes and leaves 94.3325%.
+// Original DC public ends TPalette16@@_N@Z: hflip is bool; Clip also
+// encodes both flips as _N. Preserve that domain through shadow wrappers.
 VA(0x0047d930, 0x40F)
 DC_ADDRESS(0x076688, 0x2fe)
 MAC_ADDRESS(0x08cae4, 0x440)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
@@ -1693,7 +1695,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
                                         int dw, int dh, int dpitch,
                                         TPalette16& pal,
-                                        unsigned char hflip) const
+                                        bool hflip) const
 {
     unsigned int cellsPerLine;
     const unsigned short* cellOffset;
@@ -2323,8 +2325,8 @@ MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShro
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
-                                  unsigned char hflip,
-                                  unsigned char vflip) const
+                                  bool hflip,
+                                  bool vflip) const
 {
     static const unsigned char opaqueRunCode = 7;
 
