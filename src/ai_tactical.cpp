@@ -1738,6 +1738,10 @@ long type_AI_spellcaster::getHasteValue(const army* ourArmy, type_enchant_data c
 // The work chance stays FLOAT to __ftol here exactly as in
 // get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
 // closing odds ladder is the TU's usual double one.
+// DC's ranged byte record is compatible with lowered bool. Keep the
+// canShoot bool result in its native domain through getLossCombatValue's
+// bool parameter: retail forwards the saved byte without test/setne.
+// This restores all 31 blocks, 11 calls and 25 relocations at 100%.
 VA(0x004396e0, 0x2BC)
 DC_ADDRESS(0x03fde4, 0x27c)
 MAC_ADDRESS(0x041bd8, 0x2d8)
@@ -1752,7 +1756,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
         return 0;
     long power = g_combatManager->m_spellPower[m_enemySide];
     long value = 0;
-    unsigned char ranged = ourArmy->canShoot(0);
+    bool ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
     TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
