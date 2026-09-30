@@ -16,11 +16,11 @@
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva<TAB>src_hash
 # score_policy=gruntz-data-v1-relocs-all-addends
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0	-
-adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	98.4793	98.4793	100.0000	0x1510	tokens1:30a93aeb2f1c
+adventuremapwindow	??0TAdventureMapWindow@@QAE@XZ	98.4448	98.4793	100.0000	0x1510	tokens1:30a93aeb2f1c
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10	tokens1:500c3e80b02f
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0	-
 adventuremapwindow	?_Construct@std@@YIXPAPAVwidget@@ABQAV2@@Z	100.0000	100.0000	100.0000	0x4dc0	tokens1:84c39274980f
-adventuremapwindow	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4bd0	-
+adventuremapwindow	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	99.9495	100.0000	100.0000	0x4bd0	-
 adventuremapwindow	?_Eos@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z	100.0000	100.0000	100.0000	0x4a70	tokens1:a6310959d520
 adventuremapwindow	?_Grow@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAE_NI_N@Z	100.0000	100.0000	100.0000	0x4a90	-
 adventuremapwindow	?activate@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x22b0	tokens1:757841166f10
@@ -46,7 +46,7 @@ adventuremapwindow	?sendChat@CAdventurMapChatEdit@@UAEXPBDH@Z	77.1709	77.1709	77
 adventuremapwindow	?sendChatCleanup@CGameChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x2280	tokens1:3bf8133dd3f2
 adventuremapwindow	?setBottomView@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10	tokens1:436b6606bdc6
 adventuremapwindow	?setElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40	tokens1:3fbd14ad33ec
-adventuremapwindow	?setSleepImage@TAdventureMapWindow@@QAEXH@Z	86.5196	86.5196	100.0000	0x3cc0	tokens1:170a3cf8d249
+adventuremapwindow	?setSleepImage@TAdventureMapWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x3cc0	tokens1:2efa07eaa296
 adventuremapwindow	?updateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60	tokens1:91cdd2220c34
 adventuremapwindow	?updateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3560	tokens1:527f4e2366c0
 adventuremapwindow	?updateHeroLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x32e0	tokens1:d2834b259220
@@ -161,7 +161,7 @@ advmgr	?scanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100
 advmgr	?screenScroll@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x195c0	tokens1:0a6496ee937e
 advmgr	?seedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0	tokens1:3f7c4740d528
 advmgr	?setEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x183d0	tokens1:71ec8212bfb8
-advmgr	?setHeroContext@advManager@@QAEXHH_N0@Z	97.0315	97.0315	99.2746	0x17b20	tokens1:ada2bce54fed
+advmgr	?setHeroContext@advManager@@QAEXHH_N0@Z	100.0000	100.0000	100.0000	0x17b20	tokens1:8827e85085d9
 advmgr	?setInitialMapOrigin@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19990	tokens1:90a20d4437f6
 advmgr	?setRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	95.5832	95.5832	96.9535	0xb150	tokens1:ff82ee31a241
 advmgr	?setShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0	tokens1:8ed9ffbc97e7

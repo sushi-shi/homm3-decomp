@@ -1345,7 +1345,7 @@ unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 // VC6 constant-initializes the same retail data cell without a runtime guard.
 // Mac 0x3aec..0x3b04 passes the icon pointer directly to the four-int broadcast
 // overload, whose body owns message construction. A redundant caller message
-// that consumed VC6 inline budget and prevented the third vector::size expansion.
+// consumed VC6 inline budget and prevented the third vector::size expansion.
 VA(0x00403cc0, 0x215)
 DC_ADDRESS(0x00118c, 0x4)
 MAC_ADDRESS(0x003aa4, 0xf4)  // anchor-global

@@ -7730,7 +7730,8 @@ void advManager::setTownContext(int townId, bool waitingPlayer, bool update)
 // named hero::get_target boundary before SeedTo; restoring that inline
 // helper is byte-flat and is source-shape truth rather than a score lever.
 // DC lines 9648/9671 also retain Reseed(0, 0) and get_map_center;
-// restoring them is Windows byte-flat at the current 97.0315%.
+// restoring them was byte-flat before the selected-player argument recovery
+// below, which reaches Windows 100% in the combined native interface model.
 // Original DC SetHeroContext@@QAAXHH_N0@Z proves two integer parameters
 // followed by two bool flags; keep the same boolean domain through its helpers.
 VA(0x00417b20, 0x63E)
