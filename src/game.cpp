@@ -7329,7 +7329,7 @@ void game::setWeeklyRecruits(int playerPos)
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
-                && newHero->equipArtifact(&artifact, -1))
+                && newHero->equipArtifact(artifact, -1))
                 newHero->removeBackpackArtifact(backpackSlot);
         } while (backpackSlot--);
 

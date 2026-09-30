@@ -1364,7 +1364,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
     }
 
     if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
-        ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
+        ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
         if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
@@ -1373,7 +1373,7 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
         reset();
     } else if (canModHero(side)) {
         ourHero->removeArtifact(slot);
-        ourHero->equipArtifact(&g_heroScreenDraggedArtifact, slot);
+        ourHero->equipArtifact(g_heroScreenDraggedArtifact, slot);
         if (g_game->m_gameVersion >= 2)
             ourHero->heroFn004DC100(slot);
         g_heroScreenDraggedArtifact = oldArtifact;
@@ -1407,7 +1407,7 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
                 mouseManager::ARTIFACT_SET);
         }
     } else if (!rightClick) {
-        if (!ourHero->addToBackpack(&g_heroScreenDraggedArtifact, id)) {
+        if (!ourHero->addToBackpack(g_heroScreenDraggedArtifact, id)) {
             normalDialog(
                 ourHero
                     ->getBackpackError(

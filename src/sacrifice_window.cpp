@@ -1009,7 +1009,7 @@ void type_sacrifice_window::artifactClick(
 
     if (oldArtifact.m_artifactId != ARTIFACT_NONE)
         m_currentHero->removeArtifact(slot);
-    m_currentHero->equipArtifact(&m_holdingArtifact, slot);
+    m_currentHero->equipArtifact(m_holdingArtifact, slot);
     updateSlot(slot);
     putDownArtifact(1);
     if (oldArtifact.m_artifactId != ARTIFACT_NONE)
@@ -1055,7 +1055,7 @@ void type_sacrifice_window::backpackClick(
             }
         }
     } else if (!rightClick) {
-        if (!m_currentHero->addToBackpack(&m_holdingArtifact, slot)) {
+        if (!m_currentHero->addToBackpack(m_holdingArtifact, slot)) {
             normalDialog(
                 m_currentHero
                     ->getBackpackError(
@@ -1367,14 +1367,14 @@ void type_sacrifice_window::returnArtifact(
     const type_artifact_offering& artifact)
 {
     if (artifact.m_source < 19) {
-        if (m_currentHero->equipArtifact(&artifact, artifact.m_source))
+        if (m_currentHero->equipArtifact(artifact, artifact.m_source))
             return;
-        if (m_currentHero->equipArtifact(&artifact, -1))
+        if (m_currentHero->equipArtifact(artifact, -1))
             return;
     }
-    if (m_currentHero->addToBackpack(&artifact, -1))
+    if (m_currentHero->addToBackpack(artifact, -1))
         return;
-    m_currentHero->equipArtifact(&artifact, -1);
+    m_currentHero->equipArtifact(artifact, -1);
 }
 
 // The Dreamcast line map places clear at source line 1521. Complete expands

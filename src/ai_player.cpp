@@ -5050,9 +5050,9 @@ long removeNegativeArtifacts(hero* ourHero)
             ourHero->removeArtifact(slot);
             long value = getFullValue(ourHero);
             if (value <= bestValue) {
-                ourHero->equipArtifact(&artifact, slot);
+                ourHero->equipArtifact(artifact, slot);
             } else {
-                ourHero->addToBackpack(&artifact, -1);
+                ourHero->addToBackpack(artifact, -1);
                 bestValue = value;
                 if (ourHero->getNumberInBackpack(1)
                     >= HERO_BACKPACK_CAPACITY) {
@@ -5139,7 +5139,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
             if (sourceHero &&
                 sourceHero->heroFn004E2840(oldArtifact.m_artifactId,
                                              sourceSlot)) {
-                sourceHero->equipArtifact(&oldArtifact, sourceSlot);
+                sourceHero->equipArtifact(oldArtifact, sourceSlot);
                 newSourceValue = getFullValue(sourceHero);
                 if (newSourceValue > *sourceValue) {
                     value = newSourceValue - *sourceValue;
@@ -5149,12 +5149,12 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
             }
         }
 
-        ourHero->equipArtifact(&artifact, slot);
+        ourHero->equipArtifact(artifact, slot);
         long newValue = getFullValue(ourHero);
         value += newValue - *baseValue;
         ourHero->removeArtifact(slot);
         if (oldArtifact.m_artifactId != ARTIFACT_NONE)
-            ourHero->equipArtifact(&oldArtifact, slot);
+            ourHero->equipArtifact(oldArtifact, slot);
 
         if (value > bestChange) {
             bestValue = newValue;
@@ -5174,13 +5174,13 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
     if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
         ourHero->removeArtifact(bestSlot);
         if (bestIsSwap) {
-            sourceHero->equipArtifact(&oldArtifact, sourceSlot);
+            sourceHero->equipArtifact(oldArtifact, sourceSlot);
             *sourceValue = bestSourceValue;
         } else {
-            ourHero->addToBackpack(&oldArtifact, -1);
+            ourHero->addToBackpack(oldArtifact, -1);
         }
     }
-    ourHero->equipArtifact(&artifact, bestSlot);
+    ourHero->equipArtifact(artifact, bestSlot);
     *baseValue = bestValue;
     return 1;
 }
@@ -5202,7 +5202,7 @@ void aiSwapArtifacts(hero* source, hero* dest)
                              sourceValue - newSourceValue)) {
                 sourceValue = newSourceValue;
             } else {
-                source->equipArtifact(&artifact, -1);
+                source->equipArtifact(artifact, -1);
             }
         }
     }

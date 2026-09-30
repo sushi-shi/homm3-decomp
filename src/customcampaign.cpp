@@ -1392,7 +1392,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
             type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
-                currentHero->equipArtifact(&artifact, slot);
+                currentHero->equipArtifact(artifact, slot);
         }
 
         for (int skill = 0; skill < g_crossoverPrimarySkills; ++skill) {
@@ -1408,7 +1408,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
         for (slot = 0; slot < g_crossoverPrimaryArtifactSlots; ++slot) {
             if (savedArtifacts[slot].m_artifactId != ARTIFACT_NONE)
-                currentHero->equipArtifact(&savedArtifacts[slot], slot);
+                currentHero->equipArtifact(savedArtifacts[slot], slot);
         }
     }
 
@@ -1480,7 +1480,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
             && currentHero->getArtifact(TArtifactSlot(hero::EQUIPPED_SLOT_SPELLBOOK)).m_artifactId
                 == ARTIFACT_NONE) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK);
-            currentHero->equipArtifact(&spellbook, -1);
+            currentHero->equipArtifact(spellbook, -1);
         }
     }
 
@@ -1493,7 +1493,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
             type_artifact artifact = sourceHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE)
-                currentHero->equipArtifact(&artifact, slot);
+                currentHero->equipArtifact(artifact, slot);
         }
         while (currentHero->getNumberInBackpack(1) > 0) {
             currentHero->removeBackpackArtifact(
@@ -1501,7 +1501,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
             if (sourceHero->getBackpack(slot).m_artifactId != ARTIFACT_NONE)
-                currentHero->addToBackpack(&sourceHero->getBackpack(slot), -1);
+                currentHero->addToBackpack(sourceHero->getBackpack(slot), -1);
         }
     } else {
         for (slot = 0; slot < g_crossoverEquippedArtifactSlots; ++slot) {
@@ -1511,14 +1511,14 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
                 type_artifact displaced = currentHero->getArtifact(TArtifactSlot(slot));
                 if (displaced.m_artifactId != ARTIFACT_NONE)
                     currentHero->removeArtifact(slot);
-                currentHero->equipArtifact(&artifact, slot);
+                currentHero->equipArtifact(artifact, slot);
             }
         }
         for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
             type_artifact artifact = sourceHero->getBackpack(slot);
             if (artifact.m_artifactId != ARTIFACT_NONE
                 && m_crossoverArtifacts[artifact.m_artifactId]) {
-                currentHero->addToBackpack(&artifact, -1);
+                currentHero->addToBackpack(artifact, -1);
             }
         }
     }
@@ -2973,12 +2973,12 @@ static void convertLegacyCampaignHero(hero& newHero,
     for (int equippedSlot = 0; equippedSlot < 19; ++equippedSlot) {
         type_artifact artifact = oldHero.m_equipped[equippedSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
-            newHero.equipArtifact(&artifact, equippedSlot);
+            newHero.equipArtifact(artifact, equippedSlot);
     }
     for (int backpackSlot = 0; backpackSlot < 64; ++backpackSlot) {
         type_artifact artifact = oldHero.m_backpack[backpackSlot];
         if (artifact.m_artifactId != ARTIFACT_NONE)
-            newHero.addToBackpack(&artifact, backpackSlot);
+            newHero.addToBackpack(artifact, backpackSlot);
     }
     for (int spell = 0; spell < 70; ++spell) {
         if (oldHero.m_inSpellbook[spell])
