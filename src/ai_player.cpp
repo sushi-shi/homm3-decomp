@@ -584,31 +584,33 @@ void type_AI_player::endTurn()
     hireHeroes();
     calculateDemand();
 
-    short townIndex = 0;
-    if (townIndex < player->m_numTowns) {
-        while (true) {
-            town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
-            if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
-                for (short playerId = 0; playerId < 8; playerId++) {
-                    if (!g_game->m_playerDisabled[playerId]
-                        && playerId != m_team
-                        && g_game->onSameTeam(playerId, m_team)
-                        && !g_game->m_players[playerId].isHuman())
-                        makeGift(playerId);
-                }
-                for (short humanPlayerId = 0; humanPlayerId < 8;
-                     humanPlayerId++) {
-                    if (!g_game->m_playerDisabled[humanPlayerId]
-                        && humanPlayerId != m_team
-                        && g_game->onSameTeam(humanPlayerId, m_team)
-                        && g_game->m_players[humanPlayerId].isHuman())
-                        makeGift(humanPlayerId);
-                }
-                break;
-            }
-            townIndex++;
-            if (townIndex >= player->m_numTowns)
-                break;
+    // DC450..455 initializes a separate zero/one result, sets it on the
+    // successful short-index town search, then routes gifts after that scope.
+    // Retail also compares the search index in AX; a dword spill is not an
+    // int declaration. The separate canonical search is byte-flat at 87.03%.
+    bool marketplaceAvailable = false;
+    for (short townIndex = 0; townIndex < player->m_numTowns; townIndex++) {
+        town* currentTown = g_game->getTown(player->m_townIds[townIndex]);
+        if (currentTown->hasBuilding(MARKETPLACE_ID, true)) {
+            marketplaceAvailable = true;
+            break;
+        }
+    }
+    if (marketplaceAvailable) {
+        for (short playerId = 0; playerId < 8; playerId++) {
+            if (!g_game->m_playerDisabled[playerId]
+                && playerId != m_team
+                && g_game->onSameTeam(playerId, m_team)
+                && !g_game->m_players[playerId].isHuman())
+                makeGift(playerId);
+        }
+        for (short humanPlayerId = 0; humanPlayerId < 8;
+             humanPlayerId++) {
+            if (!g_game->m_playerDisabled[humanPlayerId]
+                && humanPlayerId != m_team
+                && g_game->onSameTeam(humanPlayerId, m_team)
+                && g_game->m_players[humanPlayerId].isHuman())
+                makeGift(humanPlayerId);
         }
     }
 
