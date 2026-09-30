@@ -3714,8 +3714,13 @@ void game::giveTroopsToNeutralTowns()
 // d5a18..d5a84 likewise has three short-circuit tests and one failure store.
 // Keep that compound predicate and the DC int team loop (signed cmp/gt;
 // Mac d5a10 uses cmpwi), without provisional owner/team staging locals.
-// The complete native model measures 95.4407% with refreshed bool labels;
-// the first remaining mismatch is at the checkMapLocations guard.
+// That predicate model measures 95.4407% with refreshed bool labels.
+// DC 4116 passes the hero's owner directly to IsHumanTeam; Mac d5540..d558c
+// and retail 4bf978..4bf9bb compare that owner against teamInfo entries.
+// An extra GetTeam lookup changes the operation and adds two CFG blocks.
+// Keep it only in the town predicates, where native actually maps the owner.
+// The direct-owner hero predicate gives 96.1648%, with all 167 blocks aligned
+// and 103 branches agreeing; packed-point homes are the first residual.
 // Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
 // checkMapLocations is bool; CodeView's byte primitive is its lowered form.
 VA(0x004bf780, 0x6E2)
@@ -3779,8 +3784,7 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         for (int i = 0; i < HERO_COUNT; ++i) {
             type_point poolheroLoc = m_heroes[i].getLocation();
             if (vcheroLoc == poolheroLoc) {
-                int team = getTeam(m_heroes[i].m_owner);
-                if (team >= 0 && isHumanTeam(team)) {
+                if (isHumanTeam(m_heroes[i].m_owner)) {
                     victory.m_type = -1;
                     break;
                 }
