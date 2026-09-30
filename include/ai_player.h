@@ -119,7 +119,7 @@ protected:
     long getTotalValue(long basicValue, int* const cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
-    unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
+    bool purchaseBuilding(bool* prohibitedCreatures);
     // DC ?purchase_buildings@type_AI_player@@IAAXXZ: ordinary protected
     // helper; the prohibited-creature array belongs to its body.
     void purchaseBuildings();
@@ -268,7 +268,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
 
 unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);
-void fillProhibitedArray(playerData* player, unsigned char* prohibited);
+void fillProhibitedArray(playerData* player, bool* prohibited);
 
 extern const char* g_resourceNames[8];
 extern char g_aiResourceWarningFormat[];

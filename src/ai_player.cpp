@@ -946,7 +946,7 @@ static long sumPlayerDwellings(long playerId)
 VA(0x00429d50, 0x3F9)
 DC_ADDRESS(0x02f694, 0x20c)
 MAC_ADDRESS(0x02d03c, 0x3a8)
-void fillProhibitedArray(playerData* player, unsigned char* prohibited)
+void fillProhibitedArray(playerData* player, bool* prohibited)
 {
     long humanStrength;
     int income[7];
@@ -1301,14 +1301,14 @@ void type_AI_player::doResourceTrade(int* supply)
 }
 
 long valueOfDwelling(town* currentTown, short dwelling,
-                       unsigned char* prohibited, int* extraCost);
+                       bool* prohibited, int* extraCost);
 long valueOfDwellingUpgrade(town* currentTown, short dwelling,
                                int* extraCost);
 int valueOfCastleUpgrade(town* currentTown, int* extraCost);
 long valueOfHorde(town* currentTown, type_building_id building,
-                    unsigned char* prohibited, int* extraCost);
+                    bool* prohibited, int* extraCost);
 long valueOfHordeUpgrade(town* currentTown, type_building_id building,
-                            unsigned char* prohibited, int* extraCost);
+                            bool* prohibited, int* extraCost);
 long valueOfHall(town* currentTown, type_building_id building);
 int aiResourceCost(const playerData* player, const int* resources);
 int canBuy(const town* currTown, int buildingId);
@@ -1332,7 +1332,7 @@ static long valueOfSilo(town* currentTown, playerData* player)
 DC_ADDRESS(0x02fdac, 0x29c)
 MAC_ADDRESS(0x02dacc, 0x290)
 static long valueOfBuilding(town* currentTown, type_building_id building,
-                              unsigned char* prohibitedCreatures,
+                              bool* prohibitedCreatures,
                               int* extraCost)
 {
     playerData* player = &g_game->m_players[currentTown->m_owner];
@@ -1541,8 +1541,11 @@ static void markValues(long* fullValue, long totalValue,
 VA(0x0042ae00, 0x718)
 DC_ADDRESS(0x030d6c, 0x2c2)
 MAC_ADDRESS(0x02ed58, 0x420)  // retail callee set + arity
-unsigned char type_AI_player::purchaseBuilding(
-    unsigned char* prohibitedCreatures)
+// Original DC public ?purchase_building@type_AI_player@@IAA_NPA_N@Z
+// proves bool result/table. Its pointer type 0x420 is shared by the native
+// fill, dwelling, horde and value-of-building interfaces; retain that chain.
+bool type_AI_player::purchaseBuilding(
+    bool* prohibitedCreatures)
 {
     int extraCosts[MAX_BUILDING_TYPE][7];
     long fullValue[MAX_BUILDING_TYPE];
@@ -1631,7 +1634,7 @@ unsigned char type_AI_player::purchaseBuilding(
 VA(0x0042b520, 0x8b)
 DC_ADDRESS(0x02f4b0, 0x96)
 MAC_ADDRESS(0x02cc84, 0x138)
-long valueOfDwelling(town* currentTown, short dwelling, unsigned char* prohibited, int* extraCost)
+long valueOfDwelling(town* currentTown, short dwelling, bool* prohibited, int* extraCost)
 {
     TCreatureType creature = g_townDwellingCreatures[
         currentTown->m_type * 14 + dwelling];
@@ -1701,7 +1704,7 @@ int valueOfCastleUpgrade(town* currentTown, int* extraCost)
 VA(0x0042b790, 0x62)
 DC_ADDRESS(0x02f9bc, 0xcc)
 MAC_ADDRESS(0x02d674, 0x124)
-long valueOfHorde(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHorde(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     TCreatureType creature = horde->m_creature;
@@ -1716,7 +1719,7 @@ long valueOfHorde(town* currentTown, type_building_id building, unsigned char* p
 VA(0x0042b800, 0xa2)
 DC_ADDRESS(0x02fa88, 0xa2)
 MAC_ADDRESS(0x02d798, 0x17c)
-long valueOfHordeUpgrade(town* currentTown, type_building_id building, unsigned char* prohibited, int* extraCost)
+long valueOfHordeUpgrade(town* currentTown, type_building_id building, bool* prohibited, int* extraCost)
 {
     type_horde_effect* horde = currentTown->getHordeEffect(building);
     if (!horde)
@@ -1800,7 +1803,7 @@ DC_ADDRESS(0x031094, 0x60)
 MAC_ADDRESS(0x02f20c, 0x60)
 void type_AI_player::purchaseBuildings()
 {
-    unsigned char prohibitedCreatures[145];
+    bool prohibitedCreatures[145];
     fillProhibitedArray(&g_game->m_players[m_team], prohibitedCreatures);
     while (purchaseBuilding(prohibitedCreatures)) {
     }
