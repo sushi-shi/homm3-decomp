@@ -689,9 +689,9 @@ void istrstream::`vbase destructor'();
 
 #endif  // @carcass
 
-// Explicit zero mask initializers emit the exact unsigned-long constructor.
-// load still expands the passable-mask construction and retains this body
-// for the trigger mask; that caller's nested expansion remains unresolved.
+// load retains this unsigned-long constructor for its flipped passable
+// temporary. Default construction of trigger and both terrain masks instead
+// expands to their retained _Tidy bodies, closing load at 100%.
 VA_COMPGEN(0x005154a0, 0x61, BITSET_CTOR, bitset48)
 
 // COMDAT pairing: bitset<48>::flip(), agreement 1.000 - the trigger-mask

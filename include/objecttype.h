@@ -167,12 +167,15 @@ extern const TObjectType::TPoint g_noTriggerCell;
 // Shared header definition for the resize default value. Retail expands
 // this constructor, which does not establish an explicit inline keyword:
 // an ordinary definition in objecttype.cpp was byte-flat (2026-09-06).
+// Retail load calls _Tidy for the trigger and both terrain masks. Default
+// construction reproduces that frontier; the flipped passable temporary
+// keeps its explicit unsigned-long zero constructor.
 inline TObjectType::TObjectType()
     : m_imageNumber(0),
       m_passableMask(~std::bitset<48>(0)),
-      m_triggerMask(0),
-      m_terrainMask(0),
-      m_recommendedTerrainMask(0),
+      m_triggerMask(),
+      m_terrainMask(),
+      m_recommendedTerrainMask(),
       m_objectType(NOTHING),
       m_subtype(0),
       m_slotCategory(0),
