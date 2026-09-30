@@ -1731,13 +1731,15 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     if (count == 0) {
         // Dreamcast mapcell.cpp:1655 calls vector<SpellID>::clear here,
         // just as the two preceding empty-list arms do.
+        // Mac clear 0xbed64 is also called by the scholar spell-vector
+        // destructor 0xbe748; resize 0x128e9c is the same enum family.
         thisBox->m_spells.clear();
     } else {
         thisBox->m_spells.resize(count);
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->m_spells[i] = value;
+            thisBox->m_spells[i] = H3_ENUM_DECODE(ESpellId, value);
         }
     }
 
@@ -2030,7 +2032,7 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         count = infile->read(&charBuffer, sizeof(charBuffer));
         if (count < sizeof(charBuffer))
             return -1;
-        thisBox.m_spells[x] = charBuffer;
+        thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
@@ -4763,7 +4765,7 @@ VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TTimedEvent)
 VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TTownEvent)
 VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TownExtra)
 // vector<TArtifact>::operator= is the first emitted owner of the body also
-// called through the byte-identical vector<int> specialization.
+// called through the byte-identical spell-vector specialization.
 VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
 VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
 VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)

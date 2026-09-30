@@ -805,6 +805,11 @@ SIZE(SecondarySkillData, 8);
 
 class BlackBoxData : public TreasureData {
 public:
+    // DC types 0x2f4a/0x63be name TSpellList and public Spells as a vector
+    // of enum SpellID. ESpellId owns that domain; the legacy SpellID alias
+    // is int and would select a different vector specialization.
+    typedef std::vector<ESpellId> TSpellList;
+
     unsigned char m_hasCustomTreasure;  // +0x4c
     int m_experienceBonus;  // +0x50
     int m_manaBonus;  // +0x54
@@ -816,7 +821,7 @@ public:
     // CodeView preserves vector<TArtifact> and vector<SpellID>.
     // loadBlackBox widens the serialized identifiers at the read boundary.
     std::vector<TArtifact> m_artifacts;  // +0x8c
-    std::vector<SpellID> m_spells;  // +0x9c
+    TSpellList m_spells;  // +0x9c
     armyGroup m_creatures;  // +0xac
 
     // loadBlackBoxList's resize temp proves the constructor: after the
