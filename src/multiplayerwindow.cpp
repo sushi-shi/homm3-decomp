@@ -1090,6 +1090,10 @@ unsigned char TMultiPlayerWindow::onDirectHost()
 
 VA(0x0050fda0, 0x2B7)
 DC_ADDRESS(0x101058, 0x15e)
+// Mac 0x21b5c4 tears down its transport before hostSession, then reports
+// protocol-specific failures at 0x21b644/0x21b694. Windows' TCP/IPX arm
+// uses the existing DirectPlay connection and returns hostSession's failure;
+// its modem/serial setup and error dialogs belong to the helpers above.
 MAC_ADDRESS(0x21b208, 0x4fc)
 unsigned char TMultiPlayerWindow::onHost()
 {

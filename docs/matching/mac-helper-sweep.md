@@ -220,3 +220,24 @@ before assigning them, and the water-walking artifact query belongs to
 `canWalkOnWater`, not an arbitrary reachable `isFlying` call. These are
 call-site dispositions, not claims that the enclosing functions have completed
 the whole-source review.
+
+### Identified Mac call leads
+
+The current index has no remaining undisposed Mac `missing_source_call_review`
+or `nested_path_review` sites with an identified authored target. This closes
+that lead list only: direct source-call presence is not a complete body review,
+and indirect calls, unpaired functions and Dreamcast leads remain open.
+
+The per-site review rejects unrelated graph paths. The lobby's retained
+315-by-128 bitmap constructor belongs to `CChatWidget::CChatSave`, not the
+flag-back `CSaveScreen`; its 61-character editor belongs to `CSaveGameEdit`,
+not the player-name editor. The scenario-row widget constructs its own base,
+not an icon widget. Coordinate copies at the RMG proxy entries are already
+owned by proxy construction, rather than by the later neighbour query.
+The stripped shared copy body does not distinguish copy from conversion by
+itself. Mac-only ping diagnostics already have explicit source branches.
+
+Mac's pre-host transport cleanup/error dialogs differ from the Windows
+DirectPlay flow. Its synchronous music stop corresponds to Windows' queued
+`processStopAndPlayMP3 -> threadStopMP3` operation, not the optional
+`stopAllSamples` path. The owning source comments record both cases.

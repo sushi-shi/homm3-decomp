@@ -835,6 +835,9 @@ void soundManager::resumeStream()
 
 VA(0x0059acb0, 0x355)
 DC_ADDRESS(0x14b924, 0x50)
+// Mac 0x21948c stops the old stream synchronously, before the optional
+// stopAllSamples call. Windows queues replacement in processStopAndPlayMP3,
+// whose threadStopMP3 call owns that stop before closing/opening the stream.
 MAC_ADDRESS(0x21938c, 0x344)
 void soundManager::startMP3(const char* filename, int loopCount, unsigned char stopSamples)
 {
