@@ -1430,94 +1430,6 @@ void showCreatureRewards(const town* thisTown,
 // dialog's row capacity); named per the kStartLevelCampaign precedent.
 static const int g_rewardDialogBatch = 8;
 
-// E:\gamedcs\town.cpp:1793
-// Mac 0x1b5e68..0x1b5f2c updates population before writing each reward
-// and checks the eight-row dialog flush after every dwelling iteration,
-// including a zero-bonus iteration. Preserve both hasBuilding calls and
-// the canonical reward-display helpers.
-// Residual: dwelling-loop register homes differ; all 38 CFG blocks and
-// branch topology align. Commuting dwelling indices and packed creature
-// operands produced eight source states with identical VC6 objects.
-// Translates the event's 41-bit editor building mask through this
-// faction's gEventBuildingIds row, masks away what is already active,
-// illegal for the faction, or dock-impossible, builds the survivors
-// (flushing a dialog every eight), then applies the seven generator
-// bonuses to whichever dwelling tier is active, upgraded first.
-// 2026-09-06, polish lane 38, the DC LOCAL-SCOPE SWEEP, also a NEGATIVE: the
-// Dreamcast block names TWO T_QUAD masks (`exclude_mask` = this body's `mask`,
-// `reward_mask` = `grantable`) and no third, so `eventBuildings` reads as a
-// cache of `thisEvent->BuildBuildings` that retail reloads. Re-reading the
-// member in the translation loop instead costs 90.8986 -> 89.1573; the cached
-// __int64 stands.
-VA(0x005bfeb0, 0x369)
-DC_ADDRESS(0x167c3c, 0x32c)
-MAC_ADDRESS(0x1b5b90, 0x3f4)  // anchor-callgraph + arity (ret 4)
-void town::giveEventReward(const TTownEvent* thisEvent)
-{
-    __int64 mask = getBuildingMask();
-    __int64 grantable = 0;
-    __int64 eventBuildings = thisEvent->m_buildBuildings;
-    int i;
-    for (i = 0; i < TOWN_EVENT_BUILDING_SLOTS; i++) {
-        if (eventBuildings & g_bitNumber[i])
-            grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
-    }
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (g_townEligibleBuildMask[m_type] & g_bitNumber[i]) {
-            if (grantable & g_bitNumber[i])
-                mask |= s_includedBuildings[m_type][i];
-        } else {
-            mask |= g_bitNumber[i];
-        }
-    }
-    if (m_dockSite == TOWN_DOCK_SITE_NONE)
-        mask |= g_bitNumber[DOCK_ID];
-    grantable &= ~mask;
-
-    std::vector<type_dialog_resource> rewards;
-    type_dialog_resource reward;
-    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-        if (grantable & g_bitNumber[i]) {
-            buildBuilding(i, 0, 1);
-            reward.m_resource = m_type + 0x16;
-            reward.m_qualifier = i;
-            rewards.push_back(reward);
-            if (rewards.size() == g_rewardDialogBatch)
-                showBuildingRewards(this, rewards);
-        }
-    }
-    if (rewards.size() > 0)
-        showBuildingRewards(this, rewards);
-
-    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        if (thisEvent->m_generatorBonuses[i] != 0) {
-            if (hasBuilding(DWELLING_0_UPG_ID + i, true)) {
-                m_population[i + TOWN_DWELLING_COUNT] +=
-                    thisEvent->m_generatorBonuses[i];
-                reward.m_resource = 0x15;
-                reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
-                    | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT)
-                              + i + TOWN_DWELLING_COUNT]);
-                rewards.push_back(reward);
-            } else if (hasBuilding(DWELLING_0_ID + i, true)) {
-                m_population[i] += thisEvent->m_generatorBonuses[i];
-                reward.m_resource = 0x15;
-                reward.m_qualifier = (thisEvent->m_generatorBonuses[i] << 16)
-                    | static_cast<unsigned short>(
-                          g_townDwellingCreatures[
-                              m_type * (2 * TOWN_DWELLING_COUNT) + i]);
-                rewards.push_back(reward);
-            }
-        }
-        if (rewards.size() == g_rewardDialogBatch)
-            showCreatureRewards(this, rewards);
-    }
-    if (rewards.size() > 0)
-        showCreatureRewards(this, rewards);
-}
-
 VA(0x005c0220, 0x1DA)
 DC_ADDRESS(0x167958, 0x132)
 MAC_ADDRESS(0x1b57d8, 0x198)
@@ -1581,6 +1493,88 @@ void showCreatureRewards(const town* thisTown,
         && g_netLocalGamePos == thisTown->m_owner)
         extendedDialog(msg.c_str(), rewards, -1, -1, 0);
     rewards.clear();
+}
+
+// E:\gamedcs\town.cpp:1793
+// Mac 0x1b5e68..0x1b5f2c updates population before writing each reward
+// and checks the eight-row dialog flush after every dwelling iteration,
+// including a zero-bonus iteration. Preserve both hasBuilding calls and
+// the canonical reward-display helpers.
+// Complete and Mac translate all 44 building IDs despite the legacy
+// event-ID table's 41-entry row stride (Mac mulli 0xa4). Retail compares
+// the bit-number walk against +0x160; Mac uses 22 two-entry iterations.
+// Both native builds place the two ordinary display helpers before this
+// caller. DC names exclude_mask and reward_mask and proves a const event
+// reference; Mac reloads the event's two mask words during each iteration.
+// Direct member access, the Complete bound and this natural declaration
+// order reproduce the full Windows body. The reference interface emits
+// identical bytes to its pointer-ABI diagnostic fixture (880-byte COFF extent).
+VA(0x005bfeb0, 0x369)
+DC_ADDRESS(0x167c3c, 0x32c)
+MAC_ADDRESS(0x1b5b90, 0x3f4)  // anchor-callgraph + arity (ret 4)
+void town::giveEventReward(const TTownEvent& thisEvent)
+{
+    __int64 grantable = 0;
+    __int64 mask = getBuildingMask();
+    int i;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (thisEvent.m_buildBuildings & g_bitNumber[i])
+            grantable |= g_bitNumber[g_eventBuildingIds[m_type][i]];
+    }
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (g_townEligibleBuildMask[m_type] & g_bitNumber[i]) {
+            if (grantable & g_bitNumber[i])
+                mask |= s_includedBuildings[m_type][i];
+        } else {
+            mask |= g_bitNumber[i];
+        }
+    }
+    if (m_dockSite == TOWN_DOCK_SITE_NONE)
+        mask |= g_bitNumber[DOCK_ID];
+    grantable &= ~mask;
+
+    std::vector<type_dialog_resource> rewards;
+    type_dialog_resource reward;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (grantable & g_bitNumber[i]) {
+            buildBuilding(i, 0, 1);
+            reward.m_resource = m_type + 0x16;
+            reward.m_qualifier = i;
+            rewards.push_back(reward);
+            if (rewards.size() == g_rewardDialogBatch)
+                showBuildingRewards(this, rewards);
+        }
+    }
+    if (rewards.size() > 0)
+        showBuildingRewards(this, rewards);
+
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        if (thisEvent.m_generatorBonuses[i] != 0) {
+            if (hasBuilding(DWELLING_0_UPG_ID + i, true)) {
+                m_population[i + TOWN_DWELLING_COUNT] +=
+                    thisEvent.m_generatorBonuses[i];
+                reward.m_resource = 0x15;
+                reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          g_townDwellingCreatures[
+                              m_type * (2 * TOWN_DWELLING_COUNT)
+                              + i + TOWN_DWELLING_COUNT]);
+                rewards.push_back(reward);
+            } else if (hasBuilding(DWELLING_0_ID + i, true)) {
+                m_population[i] += thisEvent.m_generatorBonuses[i];
+                reward.m_resource = 0x15;
+                reward.m_qualifier = (thisEvent.m_generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          g_townDwellingCreatures[
+                              m_type * (2 * TOWN_DWELLING_COUNT) + i]);
+                rewards.push_back(reward);
+            }
+        }
+        if (rewards.size() == g_rewardDialogBatch)
+            showCreatureRewards(this, rewards);
+    }
+    if (rewards.size() > 0)
+        showCreatureRewards(this, rewards);
 }
 
 // Forward declarations for the two bodies that follow their callers in

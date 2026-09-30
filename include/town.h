@@ -443,7 +443,7 @@ public:
     // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
     // in the owning TU; gated so no other view of this class gains the
     // declarators.
-    void giveEventReward(const TTownEvent* thisEvent);
+    void giveEventReward(const TTownEvent& thisEvent);
     // 0x5bfdd0.
     void increasePopulation(TCreatureType bonusCreature,
                              TCreatureType alternateBonus, long bonusAmount);
