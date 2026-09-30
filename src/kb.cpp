@@ -1199,7 +1199,7 @@ int oldmain()
                 g_game->m_campaign.applyBriefingChoice(briefingChoice);
                 int playerPos =
                     campaignBrief.m_scenarios[currentMap]
-                        ->m_options->getPlayer(briefingChoice);
+                        ->getStartOptions()->getPlayer(briefingChoice);
                 g_game->m_players[playerPos].m_isHuman = 1;
                 g_game->m_players[playerPos].m_isLocal = 1;
                 g_localGamePos = playerPos;

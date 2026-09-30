@@ -87,10 +87,14 @@ public:
     struct ScenarioStruct {
         std::string m_name;
         int m_offset;
-        // Retail tests this field with a signed `jle` before loading a
-        // scenario.  The width agrees with the cross-build record, but the
-        // Complete codegen proves the signed PC spelling.
-        int m_inflatedSize;
+    private:
+        // Stored map-data span, not inflated output size: Mac 0x97310 adds
+        // this field to the underlying stream offset before loadMapHeader
+        // opens the next inflater. Retail tests it with signed jle.
+        // ScenarioStruct::read owns its only write; callers query the span
+        // or hasMap. The original name is unknown (formerly m_inflatedSize).
+        int m_mapDataSize;
+    public:
         // Byte elements: GetAvailableScenarios (0x488f00) walks _First at
         // +0x1c with `cmp byte ptr [ebx+edx],0` on a unit stride, and the
         // prologue pointer follows at +0x3c (a Dinkumware vector<bool>
@@ -112,13 +116,28 @@ public:
         // The loader expands five retention bits into booleans at +0x44..48;
         // heroesStatus starts at +0x4c. These three bytes align the integer array.
         char m_paddingBeforeHeroesStatus[3];
+    private:
+        // Per-player crossover quotas copied from the map header. External
+        // initialization uses the setter; scenario queries own the reads.
         int m_heroesStatus[8];
+    public:
         // Copied from CMapHeaderData; native 0x941e4 uses the same enum-vector
         // cleanup. The installed MSL HeroId clear matches all 56 native bytes.
         std::vector<HeroId> m_heroPlaceholders;
         std::bitset<145> m_crossoverCreatures;
         std::bitset<144> m_crossoverArtifacts;
+    private:
+        // Owned by this scenario: read constructs it and the destructor
+        // deletes it. External setup mutates the option through its API;
+        // callers never replace the owned pointer. Name/visibility inferred.
         TCampaignStartOption* m_options;
+    public:
+        // Native callers repeatedly expand this pointer lookup before the
+        // option's virtual operation. Header placement serves both TUs;
+        // the accessor name and const overload boundary remain inferred.
+        TCampaignStartOption* getStartOptions() { return m_options; }
+        const TCampaignStartOption* getStartOptions() const { return m_options; }
+        int getStartOptionCount() const;
 
         ScenarioStruct();
         // Retail 0x487e40 (`ret 0xc`): reads one scenario record out of
@@ -162,7 +181,29 @@ public:
         ~ScenarioStruct();
         void loadMapHeader(std::streambuf* stream, NewSMapHeader* mapHeader,
                            int which);
-        void markCrossoverHeroes(unsigned char* wanted);
+        // This output plane is only cleared, set and tested for membership.
+        // Bool is inferred from those uses; native bytes prove width only.
+        void markCrossoverHeroes(bool* wanted);
+        // Expanded scenario query at Mac 0x95f10/0x95f54 and 0x931d0.
+        // The original accessor name is unknown; its result is the signed
+        // count copied from the player's default placeholder quota.
+        int getCrossoverHeroCount(int player) const
+        {
+            return m_heroesStatus[player];
+        }
+        // Mac applyCampaignMapHeader (0x95fb0) copies the eight default
+        // placeholder counts into this plane. Setter name/boundary inferred.
+        void setCrossoverHeroCount(int player, int count)
+        {
+            m_heroesStatus[player] = count;
+        }
+        // The loader needs the scalar span to advance its stream offset.
+        int getMapDataSize() const { return m_mapDataSize; }
+        // Mac repeats this positive-size scenario predicate in the map
+        // count, pool query and pruning path. Name/boundary are inferred.
+        bool hasMap() const { return getMapDataSize() > 0; }
+        int getMaxCrossoverHeroes() const;
+        bool usesCrossoverPool(int pool) const;
     };
 
     struct CampaignHeaderStruct {
@@ -207,6 +248,7 @@ public:
         void playScenarioText(int which, bool epilogue);
         void freeData();
         int getNumMaps() const;
+        void markRequiredCampaignHeroes(bool* wanted) const;
         // Signed count boundary shared by briefing selection and pool pruning.
         // Windows retains the nested vector query in both expansions; the
         // original helper name and class ownership remain inferred.
@@ -221,6 +263,9 @@ public:
             m_scenarios.clear();
             freeData();
         }
+
+    private:
+        void readScenario(TAbstractFile* file, int numScenarios);
     };
 
     // Dreamcast's LF_FIELDLIST preserves this complete nested enum.  The

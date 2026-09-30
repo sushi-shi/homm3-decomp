@@ -9,6 +9,7 @@
 
 #include "campaignmusic.h"
 #include "hero.h"
+#include "campaignbrief.h"
 
 class CMapHeaderData;
 class TAbstractFile;
@@ -108,10 +109,25 @@ public:
     std::string m_campaignFilename;
     std::string getCampaignFileName() const;
     unsigned char m_campaignCompleted[21];
+private:
     // +0x3c / +0x4c: the carry-over hero pools and the artifact pools
     // (proved by the two out-of-line operator=/destructor pairs above).
     std::vector<std::vector<hero> > m_carryOverHeroes;
     std::vector<std::vector<type_artifact> > m_carryoverArtifact;
+public:
+    // Native 0x93878/0x98ae4 expands these indexed pool lookups. Campaign
+    // methods own the outer vectors; scenario handoff accesses one pool.
+    // Names and header boundaries are inferred. Ordinary source definitions
+    // leave a game-helper call in Mac completeCurrentMap where native
+    // expands the lookup; in-class definitions preserve that expansion.
+    std::vector<hero>& getCrossoverHeroes(int pool)
+    {
+        return m_carryOverHeroes[pool];
+    }
+    std::vector<type_artifact>& getCrossoverArtifacts(int pool)
+    {
+        return m_carryoverArtifact[pool];
+    }
     std::vector<MapScore> m_mapScores;
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
@@ -123,17 +139,19 @@ public:
     std::vector<HeroId> m_assignedCarryover;
     SCampaign();
     void selectCampaign(int campaignIndex, const char* filename);
-    // nameable before the campaign-brief declarations; the receiver,
+    // These legacy entry points retain an opaque campaign-header boundary.
     void playScenarioPrologue(void* campaignHeader);
     // Retail 0x48a2a0, the prologue player's twin on the scenario's
     // epilogue record; oldmain's end-of-campaign arm calls the two
     // Complete-only members below on gpGame->campaign, 0x489820 before
     // SaveGame(1) and this one after it. 0x489e20 is 0x489820's own tail
-    // call. Same opaque campaign-header parameter and the same reason,
+    // call. The campaign-header boundary remains opaque for these callers,
     // and all three names are role-based and provisional: the Dreamcast
     // customcampaign.obj roster stops before them.
     void completeCurrentMap(void* campaignHeader);
-    void pruneCrossoverHeroes(void* campaignHeader);
+    // Pruning consumes the decoded header type directly; the other legacy
+    // campaign entry points below still expose their opaque boundary.
+    void pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct* header);
     int findLatestCrossoverScenario(int slot) const;
     void playScenarioEpilogue(void* campaignHeader);
     void applyBriefingChoice(int option);
@@ -157,6 +175,10 @@ public:
     {
         return &m_mapScores[m_currentMap];
     }
+private:
+    // Final serialized field of load; operates solely on this campaign's
+    // assigned-hero list. Member ownership and name are inferred.
+    void readAssignedHeroes(TAbstractFile* infile);
 };
 SIZE(SCampaign, 0x7c);
 
@@ -350,7 +372,9 @@ public:
     // 0x484f80, inherited by the bonus and the third option: sums the
     // 5-dword bit block through the nibble table at 0x67729c and answers
     // the campaign's crossover index.
-    virtual int slot5(void* scenario, int which) const;
+    // These queries only read the scenario in every concrete override.
+    // Scenario ownership and constness are inferred from those bodies.
+    virtual int slot5(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
     virtual std::string getText(void* scenario, int which) const = 0;
     virtual int slot7(int which) const;
     virtual int getPlayer(int which) const = 0;
@@ -362,8 +386,16 @@ public:
     virtual void setTown(CMapHeaderData* header) = 0;
     // 0x485000: every prerequisite scenario the record marks must already
     // be completed in gpGame->campaign.mapScores.
-    virtual bool slot12(void* scenario, int value) const;
+    virtual bool slot12(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
 };
+
+// Scenario count query expanded at Mac 0x650dc/0x65318 and 0x95ee4.
+// Keep the owned-pointer accessor inside this query. Its header body serves
+// briefing and campaign callers; name and inline placement are inferred.
+inline int TCampaignBrief::ScenarioStruct::getStartOptionCount() const
+{
+    return getStartOptions()->getCount();
+}
 
 // Vftable 0x63d98c, 0x18 bytes: the player at +4 and the bonus list at +8.
 class TCampaignStartBonusOption : public TCampaignStartOption {
@@ -415,13 +447,13 @@ public:
     virtual int getCount() const;
     virtual const char* getIconDefName(void* campaign, int which) const;
     virtual int getIconIndex(int which) const { return 0; }
-    virtual int slot5(void* scenario, int which) const;
+    virtual int slot5(const TCampaignBrief::ScenarioStruct* scenario, int which) const;
     virtual std::string getText(void* campaign, int which) const;
     virtual int getPlayer(int which) const;
     virtual void read(TAbstractFile* file);
     virtual void apply(void* scenario) {}
     virtual void setTown(CMapHeaderData* header) {}
-    virtual bool slot12(void* scenario, int value) const;
+    virtual bool slot12(const TCampaignBrief::ScenarioStruct* scenario, int value) const;
 
     std::vector<TCampaignCrossoverChoice> m_choices;
 };

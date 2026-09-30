@@ -69,7 +69,7 @@ static int increaseCampaignDifficulty(message& msg);
 // WHICHMAP target before its SET_ICON_FRAME action. DC keeps the whole
 // available-scenario path inside its 0x587e8..0x5892a lexical scope; the
 // positive guard is byte-flat to the former early return in VC6.
-VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4
+VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4; MAC_ABSTRACTION_FROM(tokens1:a3b0da7ff4ad,16.5939): scenario count query now preserves nested getStartOptions and private option ownership; native count dispatch remains expanded.
 void TCampaignBrief::select(int which)
 {
     if (m_scenarios[which].m_available) {
@@ -106,7 +106,7 @@ void TCampaignBrief::select(int which)
         }
         broadcastMessage(msg);
 
-        if (!m_campaign->m_scenarios[which]->m_options->getCount()) {
+        if (!m_campaign->m_scenarios[which]->getStartOptionCount()) {
             widget* ok = getWidget(DIALOG_RETURN_OK);
             if (ok)
                 ok->enable(1);
@@ -237,7 +237,7 @@ void TCampaignBrief::updateAllyEnemyFlags()
     ScenarioStruct* scenario =
         m_campaign->m_scenarios[m_selectedScenario];
     g_campaignBriefPlayerSlot =
-        scenario->m_options->getPlayer(briefingChoice);
+        scenario->getStartOptions()->getPlayer(briefingChoice);
     int enemyFlag = 0;
     int allyFlag = 0;
     int i = 0;
@@ -392,6 +392,9 @@ void TCampaignBrief::addBonusIcons()
 // branch-local border receivers for the status update, and snapshots the live
 // campaign pointer at the following virtual call. Those lifetimes reproduce
 // all 34 CFG blocks, 16 branches, 24 calls, and every instruction row.
+// The scenario count query retains the owned-pointer accessor as a nested
+// call. Two separate calls in the loop condition suppress VC6 rotation
+// (88.022%); the canonical query restores all 663 retail bytes.
 VA(0x00458d40, 0x297) MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
 void TCampaignBrief::updateBonusIcons()
 {
@@ -399,7 +402,7 @@ void TCampaignBrief::updateBonusIcons()
     ScenarioStruct* scenario = m_campaign->m_scenarios[selectedScenario];
     int i;
 
-    if (scenario->m_options->getCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
+    if (scenario->getStartOptionCount() == TCampaignStartOption::CHOICE_COUNT_PAIR) {
         m_startBonusBorders[0]->m_x = 509;
         m_startBonusBorders[1]->m_x = 577;
     } else {
@@ -411,7 +414,7 @@ void TCampaignBrief::updateBonusIcons()
         m_spriteBonusImages[i]->m_x = m_startBonusBorders[i]->m_x + 1;
     }
 
-    for (i = 0; i < scenario->m_options->getCount(); i++) {
+    for (i = 0; i < scenario->getStartOptionCount(); i++) {
         m_startBonusBorders[i]->show();
         if (i == g_game->m_campaign.m_briefingChoice) {
             coloredBorderFrame* border = m_startBonusBorders[i];
@@ -421,15 +424,15 @@ void TCampaignBrief::updateBonusIcons()
             border->setVisible(0);
         }
         SCampaign* activeCampaign = &g_game->m_campaign;
-        const char* name = scenario->m_options->getIconDefName(activeCampaign, i);
-        if (scenario->m_options->isBuildingBonus(i)) {
+        const char* name = scenario->getStartOptions()->getIconDefName(activeCampaign, i);
+        if (scenario->getStartOptions()->isBuildingBonus(i)) {
             m_bitmapBonusImages[i]->show();
             m_bitmapBonusImages[i]->setImage(name);
             m_spriteBonusImages[i]->hide();
         } else {
             m_spriteBonusImages[i]->show();
             m_spriteBonusImages[i]->setSprite(name);
-            m_spriteBonusImages[i]->setIconFrame(scenario->m_options->getIconIndex(i));
+            m_spriteBonusImages[i]->setIconFrame(scenario->getStartOptions()->getIconIndex(i));
             m_bitmapBonusImages[i]->hide();
         }
         std::string text;
@@ -444,11 +447,11 @@ void TCampaignBrief::updateBonusIcons()
     }
 }
 
-VA(0x00458fe0, 0x2C) MAC_ADDRESS(0x065394, 0x3c)
+VA(0x00458fe0, 0x2C) MAC_ADDRESS(0x065394, 0x3c)  // MAC_ABSTRACTION_FROM(tokens1:23c1176bf9ea,100.0000): replace owned-pointer access with canonical getStartOptions; the native virtual text call and 60-byte body remain, with register differences.
 std::string TCampaignBrief::ScenarioStruct::getBonusText(
     CampaignHeaderStruct* campaign, int option)
 {
-    return m_options->getText(campaign, option);
+    return getStartOptions()->getText(campaign, option);
 }
 
 // Complete-only; see campaignbrief.h.
@@ -553,17 +556,17 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         static_cast<NewSMapHeader&>(preview) = g_game->m_mapHeader;
         preview.m_gameSetup = g_game->m_setup;
         for (int i = 0;
-             i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
+             i < m_campaign->getScenarioCount(); ++i) {
             m_scenarios.push_back(preview);
         }
     } else {
         NewSMapHeader mapHeader;
         for (int i = 0;
-             i < static_cast<int>(m_campaign->m_scenarios.size()); ++i) {
+             i < m_campaign->getScenarioCount(); ++i) {
             CampaignScenarioPreview preview;
             ScenarioStruct* scenario = m_campaign->m_scenarios[i];
             g_game->m_setup.m_fileInitialized = 0;
-            if (scenario->m_inflatedSize > 0) {
+            if (scenario->hasMap()) {
                 m_campaign->loadScenario(i, &mapHeader);
                 g_game->setupOrigData();
                 g_game->initNewGame(
@@ -591,7 +594,7 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
         const TCampaignMapTraits::TRegionTraits& region =
             mapTraits.m_regionTraits[regionIndex];
         ScenarioStruct* scenario = m_campaign->m_scenarios[regionIndex];
-        if (scenario->m_inflatedSize > 0) {
+        if (scenario->hasMap()) {
             // BOUND BY `const int&`: retail re-reads the scenario's colour
             // at each of the three image-name subscripts.  88.3754 -> 89.0593.
             const int& color = scenario->m_regionColor;
@@ -752,9 +755,9 @@ TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     }
 
     for (int drawIndex = 0;
-         drawIndex < static_cast<int>(m_campaign->m_scenarios.size());
+         drawIndex < m_campaign->getScenarioCount();
          ++drawIndex) {
-        if (m_campaign->m_scenarios[drawIndex]->m_inflatedSize > 0) {
+        if (m_campaign->m_scenarios[drawIndex]->hasMap()) {
             if (g_game->m_campaign.m_mapScores[drawIndex].m_completed) {
                 w = getWidget(MAP_CONQUERED_1_ID + drawIndex);
                 mx = w->getRealWidth();
@@ -956,7 +959,7 @@ static int campaignBriefHandler(message& msg)
             --g_campaignBriefFlashLeft;
 
             for (int i = 0;
-                 i < static_cast<int>(brief->m_campaign->m_scenarios.size());
+                 i < brief->m_campaign->getScenarioCount();
                 ++i) {
                 if (brief->m_scenarios[i].m_available) {
                     if (g_campaignBriefFlashLeft & 1) {
@@ -1168,7 +1171,7 @@ static int campaignBriefHandler(message& msg)
         incProgressBar(1);
 
         int gamePos = brief->m_campaign->m_scenarios[selected]
-                          ->m_options->getPlayer(choice);
+                          ->getStartOptions()->getPlayer(choice);
         strcpy(g_game->m_players[gamePos].m_name, g_config.m_networkDefaultName);
         g_localGamePos = gamePos;
         brief->m_campaign->startScenario(selected, choice);
@@ -1262,4 +1265,3 @@ VA_COMPGEN(0x0045dea0, 0x1D, TREE_BUYNODE, type_map_hero_info)
 // COMDAT pairing: vector<type_map_hero_identity>::_Ucopy (thiscall, three
 // pointer arguments, `ret 0xc`).
 VA_COMPGEN(0x0045d230, 0x38, VECTOR_UCOPY, type_map_hero_identity)
-
