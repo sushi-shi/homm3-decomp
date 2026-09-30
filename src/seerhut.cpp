@@ -80,7 +80,7 @@ void doMonsterJoinDialog(hero* currentHero, TCreatureType creature,
 // from a header - seerhut.cpp is its only consumer in this tree.
 int aiResourceCost(long player, const int* costs);
 
-type_quest* createQuest(int questType, unsigned char flags);
+type_quest* createQuest(int questType, bool flags);
 
 std::string formatString(const char* format, ...);
 
@@ -139,7 +139,7 @@ VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
 
 VA(0x0056cb80, 0x5F)
 MAC_ADDRESS(0x163ff4, 0x98)  // sole callee of all nine factory arms
-type_quest::type_quest(unsigned char flags)
+type_quest::type_quest(bool flags)
 {
     m_seerHut = flags;
     m_textVariant = rand() % 3;
@@ -195,7 +195,7 @@ VA(0x0056cd00, 0x14F)
 MAC_ADDRESS(0x164178, 0x134)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::load(TAbstractFile* file, int version)
 {
-    m_seerHut = readValue<unsigned char>(file) != 0;
+    m_seerHut = readValue<unsigned char>(file);
     m_textVariant = readValue<unsigned char>(file);
     m_limit = readLittleEndianValue<int>(file);
     m_proposalText = readLengthPrefixedString(file);
@@ -305,7 +305,7 @@ std::string type_quest::getProgressDialogText()
 }
 
 MAC_ADDRESS(0x16476c, 0x40)
-type_experience_quest::type_experience_quest(unsigned char flags)
+type_experience_quest::type_experience_quest(bool flags)
     : type_quest(flags)
 {
     m_requiredLevel = 0;
@@ -391,7 +391,7 @@ void type_experience_quest::setDefaultText()
 }
 
 MAC_ADDRESS(0x164c38, 0x4c)
-type_skill_quest::type_skill_quest(unsigned char flags)
+type_skill_quest::type_skill_quest(bool flags)
     : type_quest(flags)
 {
     memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
@@ -586,7 +586,7 @@ void type_skill_quest::setDefaultText()
 }
 
 MAC_ADDRESS(0x1654d4, 0x4c)
-type_defeat_hero_quest::type_defeat_hero_quest(unsigned char flags)
+type_defeat_hero_quest::type_defeat_hero_quest(bool flags)
     : type_quest(flags)
 {
     m_mapHero = 0;
@@ -721,7 +721,7 @@ void type_defeat_hero_quest::setDefaultText()
 }
 
 MAC_ADDRESS(0x165b2c, 0x50)
-type_monster_quest::type_monster_quest(unsigned char flags)
+type_monster_quest::type_monster_quest(bool flags)
     : type_quest(flags)
 {
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
@@ -1140,7 +1140,7 @@ VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
 MAC_COMPGEN_ADDRESS(0x16b3b8, 0x98, IMPLICIT_DTOR, type_creature_quest)
 
 MAC_ADDRESS(0x166f54, 0x84)
-type_creature_quest::type_creature_quest(unsigned char flags)
+type_creature_quest::type_creature_quest(bool flags)
     : type_quest(flags)
 {
 }
@@ -1384,7 +1384,7 @@ void type_creature_quest::setDefaultText()
 VA_COMPGEN(0x00571530, 0x21, SCALAR_DELETING_DTOR, type_experience_quest)
 
 MAC_ADDRESS(0x167de4, 0x4c)
-type_resource_quest::type_resource_quest(unsigned char flags)
+type_resource_quest::type_resource_quest(bool flags)
     : type_quest(flags)
 {
     memset(m_resources, 0, sizeof(m_resources));
@@ -1563,7 +1563,7 @@ void type_resource_quest::setDefaultText()
 }
 
 MAC_ADDRESS(0x1687c0, 0x40)
-type_be_hero_quest::type_be_hero_quest(unsigned char flags)
+type_be_hero_quest::type_be_hero_quest(bool flags)
     : type_quest(flags), m_requiredHero(-1)
 {
 }
@@ -1664,7 +1664,7 @@ void type_be_hero_quest::setDefaultText()
 }
 
 MAC_ADDRESS(0x168cf0, 0x40)
-type_belong_to_player_quest::type_belong_to_player_quest(unsigned char flags)
+type_belong_to_player_quest::type_belong_to_player_quest(bool flags)
     : type_quest(flags), m_requiredOwner(0)
 {
 }
@@ -1873,7 +1873,7 @@ std::string TQuestGuard::questGuardFn00573040(int player)
 }
 
 MAC_ADDRESS(0x1664dc, 0x5c)
-type_artifact_quest::type_artifact_quest(unsigned char flags)
+type_artifact_quest::type_artifact_quest(bool flags)
     : type_quest(flags)
 {
 }
@@ -1896,7 +1896,7 @@ type_artifact_quest::type_artifact_quest(TArtifact artifact, int textRow)
 
 VA(0x00573240, 0x23C)
 MAC_ADDRESS(0x169724, 0x194)  // hd-crossbuild + nine vtables + four callers
-type_quest* createQuest(int questType, unsigned char flags)
+type_quest* createQuest(int questType, bool flags)
 {
     switch (questType) {
     case QUEST_EXPERIENCE:
@@ -2509,7 +2509,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
 // immediately before TSeerHut::read. Complete expands its sole source call.
 MAC_ADDRESS(0x16aa6c, 0x7c)
 static type_quest* readQuestFromMap(TAbstractFile* infile,
-                                    unsigned char flags)
+                                    bool flags)
 {
     unsigned char questType = readValue<unsigned char>(infile);
     type_quest* quest = createQuest(questType, flags);

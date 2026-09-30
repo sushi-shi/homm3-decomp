@@ -84,7 +84,12 @@ public:
     // else. +0x38 is the ROW of whichever table that picks, scaled by
     // 832. TSeerHut::getValue proves +0x3c is the quest deadline;
     // NH3API supplies its reference name, limit.
-    unsigned char m_seerHut;
+    // Inferred bool interface: native load normalizes an unsigned file byte
+    // before storing +4 (Mac 0x1641b0..0x1641cc; Windows load 0x56cd00).
+    // The constructor stores its argument unchanged, and every construction
+    // path supplies either the guard's false or the seer hut's true selector.
+    // Complete has no Dreamcast declaration to distinguish bool from byte.
+    bool m_seerHut;
     // Three alignment bytes between the seer-hut byte and strings at +0x08;
     // NH3API explicitly leaves +0x05..+0x07 unnamed. Retail serialization skips them.
     char m_paddingBeforeTexts[3];
@@ -102,7 +107,7 @@ public:
     // returns false for a negative limit, otherwise compares it with the current turn.
     int m_limit;
 
-    type_quest(unsigned char flags);
+    type_quest(bool flags);
 
     //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
     //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00
@@ -274,7 +279,7 @@ public:
     virtual int questType() { return 1; }
     int m_requiredLevel;  // +0x40
 
-    type_experience_quest(unsigned char flags);
+    type_experience_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual std::string getRequirementText();
@@ -297,7 +302,7 @@ public:
     virtual int questType() { return 2; }
     signed char m_requiredSkills[4];  // +0x40
 
-    type_skill_quest(unsigned char flags);
+    type_skill_quest(bool flags);
 
     std::string skillRequirementText(
         const signed char (&skills)[4]);
@@ -320,7 +325,7 @@ public:
     int m_defeatedHero;    // +0x44
     int m_satisfiedMask;   // +0x48, one bit per player
 
-    type_defeat_hero_quest(unsigned char flags);
+    type_defeat_hero_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
@@ -342,7 +347,7 @@ public:
     int m_monsterId;       // +0x48
     int m_defeatedBy;      // +0x4c, -1 until some player kills it
 
-    type_monster_quest(unsigned char flags);
+    type_monster_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
@@ -368,7 +373,7 @@ public:
     virtual int questType() { return 5; }
     std::vector<TArtifact> m_artifacts;  // +0x40
 
-    type_artifact_quest(unsigned char flags);
+    type_artifact_quest(bool flags);
     type_artifact_quest(TArtifact artifact, int textRow);
 
     virtual int getAIValue(int player);
@@ -400,7 +405,7 @@ public:
     std::vector<int> m_counts;             // +0x40
     std::vector<TCreatureType> m_types;    // +0x50
 
-    type_creature_quest(unsigned char flags);
+    type_creature_quest(bool flags);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -428,7 +433,7 @@ public:
     virtual int questType() { return 7; }
     int m_resources[7];  // +0x40
 
-    type_resource_quest(unsigned char flags);
+    type_resource_quest(bool flags);
 
     virtual int getAIValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
@@ -453,7 +458,7 @@ class type_be_hero_quest : public type_quest {
 public:
     int m_requiredHero;  // +0x40
 
-    type_be_hero_quest(unsigned char flags);
+    type_be_hero_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
@@ -471,7 +476,7 @@ class type_belong_to_player_quest : public type_quest {
 public:
     int m_requiredOwner;  // +0x40
 
-    type_belong_to_player_quest(unsigned char flags);
+    type_belong_to_player_quest(bool flags);
 
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual int questType();
