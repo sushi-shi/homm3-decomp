@@ -960,6 +960,20 @@ public:
     // Their native visit masks remain public; site IDs belong to each mask.
     bool visitedPrimarySkillSite(TPrimarySkill skill, int siteId) const;
     void markPrimarySkillSiteVisited(TPrimarySkill skill, int siteId);
+    // Project-inferred mask-taking interfaces. Callers own site-ID decoding
+    // and whether a mask is cached across dialogs or recomputed afterward.
+    // Native public storage retains its original layout and serialization.
+    bool hasTrainingGroundVisit(unsigned long visitMask) const;
+    void markTrainingGroundVisited(unsigned long visitMask);
+    bool hasLibraryVisit(unsigned long visitMask) const;
+    void markLibraryVisited(unsigned long visitMask);
+    bool hasTreeOfKnowledgeVisit(unsigned long visitMask) const;
+    void markTreeOfKnowledgeVisited(unsigned long visitMask);
+    bool hasMagicSchoolVisit(unsigned long visitMask) const;
+    void markMagicSchoolVisited(unsigned long visitMask);
+    bool hasWarSchoolVisit(unsigned long visitMask) const;
+    void markWarSchoolVisited(unsigned long visitMask);
+    bool hasArenaVisit(unsigned long visitMask) const;
     // Project-inferred event/AI predicates for effects cleared after battle.
     // These do not query permanent site visits or movement affordability.
     bool hasFountainEffect() const;

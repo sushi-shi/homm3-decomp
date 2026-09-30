@@ -744,6 +744,36 @@ info `0x2d41` / `0x2d40` proves its packed members public. Storage visibility
 and layout remain unchanged. New helper names and ordinary owner-TU placement
 are project inferences without native address or explicit-inline claims.
 
+## Permanent hero visit masks
+
+Training grounds, Library, Tree of Knowledge, Magic School and War School now
+use hero-owned visit queries across events, AI valuation and map help, with
+paired marking methods in their event handlers. The methods accept an existing
+`unsigned long` mask. They do not decode cell data, introduce bounds checks,
+cache a cell pointer or choose a new time to read an object ID.
+
+Library and Tree of Knowledge keep their original local masks across dialogs
+and rewards. Training grounds and both schools still compute their marking
+mask from a fresh cell read after the experience/skill award. Gold charging,
+information flags, cancellation, level checks and the Library's skill-award
+order stay with each caller. Rollover retains its low-five-bit ID extraction;
+quick info retains `getItemId()`. The AI paths likewise retain their own ID
+reads and prior affordability/value calculations.
+
+Arena's native `visitedArena(cell)` boundary now calls the same mask query used
+by its two map-help paths. Its native setter and event/AI callers remain in
+place. Map-help consumers use only zero/nonzero status, so the shared predicates
+normalize that result to bool before selecting the existing visited text.
+Across these six site families, 22 query sites share the owner predicates;
+five event writes use the new marking operations. Save/load and initialization
+continue to transfer/reset the complete masks in their original order.
+
+Native hero `0x1a6e` / field list `0x3f74` records all six masks public. No
+visibility, data layout or virtual slots change. New names and ordinary source
+placement are project inferences without invented native addresses or inline
+qualifiers; the existing native Arena annotations remain attached to their
+original interfaces.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

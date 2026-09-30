@@ -6259,12 +6259,72 @@ void hero::markPrimarySkillSiteVisited(TPrimarySkill skill, int siteId)
     }
 }
 
+// Project-inferred visit operations shared by events, AI and map help. Masks
+// stay at callers: Library/Tree cache them before rewards, while the training
+// ground and schools reread the cell at marking time. Native hero field list
+// 0x3f74 proves these fields public. Ordinary placement is provisional; no
+// native identities or explicit inline qualifiers are claimed for these bodies.
+bool hero::hasTrainingGroundVisit(unsigned long visitMask) const
+{
+    return (m_trainingGroundsFlags & visitMask) != 0;
+}
+
+void hero::markTrainingGroundVisited(unsigned long visitMask)
+{
+    m_trainingGroundsFlags |= visitMask;
+}
+
+bool hero::hasLibraryVisit(unsigned long visitMask) const
+{
+    return (m_libraryFlags & visitMask) != 0;
+}
+
+void hero::markLibraryVisited(unsigned long visitMask)
+{
+    m_libraryFlags |= visitMask;
+}
+
+bool hero::hasTreeOfKnowledgeVisit(unsigned long visitMask) const
+{
+    return (m_treeOfKnowledgeFlags & visitMask) != 0;
+}
+
+void hero::markTreeOfKnowledgeVisited(unsigned long visitMask)
+{
+    m_treeOfKnowledgeFlags |= visitMask;
+}
+
+bool hero::hasMagicSchoolVisit(unsigned long visitMask) const
+{
+    return (m_magicSchoolFlags & visitMask) != 0;
+}
+
+void hero::markMagicSchoolVisited(unsigned long visitMask)
+{
+    m_magicSchoolFlags |= visitMask;
+}
+
+bool hero::hasWarSchoolVisit(unsigned long visitMask) const
+{
+    return (m_warSchoolFlags & visitMask) != 0;
+}
+
+void hero::markWarSchoolVisited(unsigned long visitMask)
+{
+    m_warSchoolFlags |= visitMask;
+}
+
+bool hero::hasArenaVisit(unsigned long visitMask) const
+{
+    return (m_arenaFlags & visitMask) != 0;
+}
+
 VA(0x004e53c0, 0x1E)
 DC_ADDRESS(0x0d5060, 0x12)
 MAC_ADDRESS(0x1063d8, 0x28)
 bool hero::visitedArena(const NewmapCell* cell) const
 {
-    return (m_arenaFlags & (1 << cell->m_extraInfo)) != 0;
+    return hasArenaVisit(1 << cell->m_extraInfo);
 }
 
 VA(0x004e53e0, 0x18)

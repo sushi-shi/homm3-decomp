@@ -2328,7 +2328,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
 {
     unsigned long visit = 1 << cell->m_extraInfo;
 
-    if (currentHero->m_libraryFlags & visit) {
+    if (currentHero->hasLibraryVisit(visit)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_LIBRARY_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2344,7 +2344,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
         currentHero->adjustPrimarySkill(2, 2);
         game* g = g_game;
         g->setInfoFlag(LibraryInfo, g_netLocalGamePos);
-        currentHero->m_libraryFlags |= visit;
+        currentHero->markLibraryVisited(visit);
         return;
     }
     if (humanPlayer)
@@ -2363,7 +2363,7 @@ MAC_ADDRESS(0x0af1a8, 0x330)
 void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
                                     type_point point, bool humanPlayer)
 {
-    if (currentHero->m_magicSchoolFlags & (1 << cell->m_extraInfo)) {
+    if (currentHero->hasMagicSchoolVisit(1 << cell->m_extraInfo)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_MAGIC_SCHOOL_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2402,7 +2402,7 @@ void advManager::doEventMagicSchool(hero* currentHero, NewmapCell* cell,
     }
 
     currentHero->adjustPrimarySkill(skill, 1);
-    currentHero->m_magicSchoolFlags |= 1 << cell->m_extraInfo;
+    currentHero->markMagicSchoolVisited(1 << cell->m_extraInfo);
     g_currentPlayer->m_resources[GOLD] -= 1000;
 }
 
@@ -3328,7 +3328,7 @@ MAC_ADDRESS(0x0b2e70, 0x274)
 void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
                                         bool humanPlayer)
 {
-    if (currentHero->m_trainingGroundsFlags & (1 << cell->m_extraInfo)) {
+    if (currentHero->hasTrainingGroundVisit(1 << cell->m_extraInfo)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3341,7 +3341,7 @@ void advManager::doEventTrainingGrounds(hero* currentHero, NewmapCell* cell,
         normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TRAINING_GROUNDS],
                      1, -1, -1, 0x11, amount, -1, 0, -1, 0, -1, 0);
     currentHero->giveExperience(amount, 0, 1);
-    currentHero->m_trainingGroundsFlags |= 1 << cell->m_extraInfo;
+    currentHero->markTrainingGroundVisited(1 << cell->m_extraInfo);
     // The `game* g` spelling, do_event_watering_hole's lever: it is what
     // puts the player position first in the SIB of the inlined
     // teamInfo[playerNum] load (`[pos + gpGame]`). The four
@@ -3435,7 +3435,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
                                         bool humanPlayer)
 {
     unsigned long visited = 1 << cell->getItemId();
-    if (currentHero->m_treeOfKnowledgeFlags & visited) {
+    if (currentHero->hasTreeOfKnowledgeVisit(visited)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_TREE_OF_KNOWLEDGE_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3492,7 +3492,7 @@ void advManager::doEventTreeOfKnowledge(hero* currentHero,
     }
 
     currentHero->giveExperience(experience, 0, 1);
-    currentHero->m_treeOfKnowledgeFlags |= visited;
+    currentHero->markTreeOfKnowledgeVisited(visited);
     currentHero->checkLevel();
 }
 
@@ -3925,7 +3925,7 @@ MAC_ADDRESS(0x0b4954, 0x39c)
 void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
                                   bool humanPlayer)
 {
-    if (currentHero->m_warSchoolFlags & (1 << cell->m_value)) {
+    if (currentHero->hasWarSchoolVisit(1 << cell->m_value)) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_WAR_SCHOOL_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3966,7 +3966,7 @@ void advManager::doEventWarSchool(hero* currentHero, ExtraInfoUnion* cell,
     }
 
     currentHero->adjustPrimarySkill(whichStat, 1);
-    currentHero->m_warSchoolFlags |= 1 << cell->m_value;
+    currentHero->markWarSchoolVisited(1 << cell->m_value);
     g_currentPlayer->m_resources[GOLD] -= 1000;
 }
 

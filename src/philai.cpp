@@ -1441,7 +1441,7 @@ DC_ADDRESS(0x11173c, 0x94)
 MAC_ADDRESS(0x143aa4, 0xb0)
 inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
-    if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
+    if (currentHero->hasLibraryVisit(1UL << cell->m_extraInfo))
         return 0;
     if (!currentHero->meetsLibraryLevelRequirement())
         return 0;
@@ -3127,7 +3127,7 @@ DC_ADDRESS(0x111834, 0xc4)
 MAC_ADDRESS(0x143bf4, 0xc4)
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
+    if (currentHero->hasMagicSchoolVisit(1 << cell->m_extraInfo))
         return 0;
     playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
@@ -3729,8 +3729,8 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
-    if (currentHero->m_treeOfKnowledgeFlags
-            & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
+    if (currentHero->hasTreeOfKnowledgeVisit(
+            1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
         return 0;
 
     int increment = currentHero->getExperienceIncrement();
@@ -3783,7 +3783,7 @@ DC_ADDRESS(0x113380, 0x10a)
 MAC_ADDRESS(0x145e0c, 0xb8)
 int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
-    if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
+    if (currentHero->hasWarSchoolVisit(1 << cell->m_extraInfo))
         return 0;
     playerData* player = currentHero->getPlayer();
     if (player->m_resources[GOLD] < 1000)
@@ -4076,8 +4076,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case TRAINING_GROUNDS: {
         const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
             static_cast<const void*>(cell));
-        if (currentHero->m_trainingGroundsFlags
-            & (1UL << info->getItemId()))
+        if (currentHero->hasTrainingGroundVisit(1UL << info->getItemId()))
             return 0;
         return static_cast<int>(
             currentHero->m_turnExperienceToRvRatio * 1000.0f);

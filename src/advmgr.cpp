@@ -2672,7 +2672,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case ARENA:
         strcpy(g_text, g_quickViewText[ARENA]);
         if (cell->m_isTrigger && currHero) {
-            visited = (currHero->m_arenaFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = currHero->hasArenaVisit(
+                1UL << (cell->m_extraInfo & 0x1f));
             appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
         }
         break;
@@ -2918,7 +2919,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[LibraryInfo]);
             }
             if (currHero) {
-                visited = (currHero->m_libraryFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = currHero->hasLibraryVisit(
+                    1UL << (cell->m_extraInfo & 0x1f));
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -2943,8 +2945,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[MagicSchoolInfo]);
             }
             if (currHero) {
-                visited = (currHero->m_magicSchoolFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = currHero->hasMagicSchoolVisit(
+                    1UL << (cell->m_extraInfo & 0x1f));
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -3147,8 +3149,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[TrainingGroundsInfo]);
             }
             if (currHero) {
-                visited = (currHero->m_trainingGroundsFlags
-                    & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = currHero->hasTrainingGroundVisit(
+                    1UL << (cell->m_extraInfo & 0x1f));
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -3178,7 +3180,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[WarSchoolInfo]);
             }
             if (currHero) {
-                visited = (currHero->m_warSchoolFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+                visited = currHero->hasWarSchoolVisit(
+                    1UL << (cell->m_extraInfo & 0x1f));
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -3380,9 +3383,8 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
 
     if (currentHero) {
         unsigned char heroVisited =
-            (currentHero->m_treeOfKnowledgeFlags
-             & (1UL << (static_cast<unsigned char>(cell->m_extraInfo)
-                        & 0x1f))) != 0;
+            currentHero->hasTreeOfKnowledgeVisit(
+                1UL << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f));
         strcat(buffer, separator2);
         strcat(buffer, getMapVisitText(heroVisited));
     }
@@ -5891,7 +5893,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         testFlag = 1UL << testCell->getItemId();
-                        visited = testFlag & currHero->m_arenaFlags;
+                        visited = currHero->hasArenaVisit(testFlag);
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6139,8 +6141,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[LibraryInfo]);
                     }
                     if (currHero) {
-                        visited = (currHero->m_libraryFlags
-                            & (1UL << testCell->getItemId()));
+                        visited = currHero->hasLibraryVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6165,8 +6167,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[MagicSchoolInfo]);
                     }
                     if (currHero) {
-                        visited = (currHero->m_magicSchoolFlags
-                            & (1UL << testCell->getItemId()));
+                        visited = currHero->hasMagicSchoolVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6358,8 +6360,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[TrainingGroundsInfo]);
                     }
                     if (currHero) {
-                        visited = (currHero->m_trainingGroundsFlags
-                            & (1UL << testCell->getItemId()));
+                        visited = currHero->hasTrainingGroundVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6390,8 +6392,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[WarSchoolInfo]);
                     }
                     if (currHero) {
-                        visited = (currHero->m_warSchoolFlags
-                            & (1UL << testCell->getItemId()));
+                        visited = currHero->hasWarSchoolVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
