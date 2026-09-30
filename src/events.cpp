@@ -1152,8 +1152,12 @@ static void addReward(std::string& text, const std::string& alternate,
 }
 
 // E:\gamedcs\events.cpp:852
-// DC locals: experience_gained, reward_given, msg, amount,
-// join_dialog_needed and new_creatures; their native types are retained.
+// DC locals include experience_gained, reward_given, msg, amount,
+// join_dialog_needed and new_creatures. Both flag locals have ambiguous
+// primitive 0x20 records and exclusively boolean use. A bool rewardGiven
+// removes uchar-to-bool test/setne normalization absent from retail and
+// restores its two raw-byte return tails after string cleanup. This supports
+// the local type hypothesis independently of the interface's mangling.
 // Original DC public GiveBlackBoxReward@advManager@@AAA_N...@@_N...
 // proves a bool result and bool human_player; primitive 0x20's displayed
 // unsigned-char spelling cannot establish either declaration.
@@ -1168,7 +1172,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     BlackBoxData* blackBox)
 {
     long experienceGained = 0;
-    unsigned char rewardGiven = 0;
+    bool rewardGiven = false;
     std::string msg(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
@@ -1341,7 +1345,7 @@ bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     }
     showRewards(msg, rewards, 1);
 
-    unsigned char joinDialogNeeded = 0;
+    bool joinDialogNeeded = false;
     armyGroup newCreatures = blackBox->m_creatures;
     // The retail loop-back uses signed jl; an unsigned index emits jb.
     for (int p = 0; p < 7; p++) {
