@@ -1425,8 +1425,14 @@ private:
 
 public:
     void setRecruits();
+
+private:
+    // Original DC clear_recruits and set_weekly_recruits carry private
+    // AAAX mangling. The Complete helpers are called only by game methods.
     void setWeeklyRecruits(int playerPos);
     void clearRecruits(int* recruits);
+
+public:
     void randomizeHeroPool();
     void replaceRecruit(int playerPos, long recruitSlot);
     bool growCoverOfDarkness();

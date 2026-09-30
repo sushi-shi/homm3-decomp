@@ -15,6 +15,14 @@ Recover C++ that reproduces Heroes III Complete's retail MSVC 6.0 object code.
   lightly optimized instructions to recover the Windows source structure.
   Mac is not a game target or an independent exact-matching objective.
 
+Generated Windows symbol names describe the authored declarations; they cannot
+independently prove retail parameter types, return types or access control.
+Original Dreamcast decorated names are independent evidence. In particular,
+Dreamcast CodeView primitive `0x20` can represent lowered `bool`, so a displayed
+unsigned-byte type does not by itself prove `unsigned char` source. Check native
+`_N` versus `E` mangling for interfaces. Where local variables have no such
+evidence, treat bool/byte alternatives as hypotheses and compare retail codegen.
+
 Windows is the game being rebuilt. Use Mac solely as evidence for recovering
 the Windows source, particularly helper boundaries, source calls and function
 structure hidden by VC6 optimization. Restore evidenced helpers in ordinary
