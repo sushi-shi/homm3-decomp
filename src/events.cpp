@@ -504,7 +504,7 @@ int advManager::doNetCombat(CCombatInitMsg* pCombatInitMsg)
 
 // E:\gamedcs\events.cpp:6283
 // RETAIL_LOCATED(0x004ad470, 0x1531)  // located @stub (promoted to active VA), dc 0x9b970
-int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
+int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, bool bFinishHeroes, bool alternate_layout)
 {
     // @stub
 }
@@ -6079,6 +6079,10 @@ inline CTurnDurationPause::~CTurnDurationPause()
     }
 }
 
+// Original DC public ?DoCombat@advManager@@QAAHUtype_point@@PAVhero@@
+// PAVarmyGroup@@JPAVtown@@12H_N4@Z proves both trailing flags bool; the
+// primitive0x20 dossier display cannot distinguish them from unsigned char.
+// SetupCombat independently ends HHH_N, preserving that typed layout chain.
 // cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
 // level-pick wait.  All callees are already declared (cmbtmgr.h,
 // remotedlg.h, exec.h, game.h).
@@ -6122,7 +6126,7 @@ inline CTurnDurationPause::~CTurnDurationPause()
 VA(0x004ad470, 0x1531)
 DC_ADDRESS(0x09b970, 0x9ec)
 MAC_ADDRESS(0x0bad6c, 0x1770)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique)
-int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, unsigned char finishHeroes, unsigned char alternateLayout)
+int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int seed, bool finishHeroes, bool alternateLayout)
 {
     int leftPlayer = leftHero ? leftHero->m_owner : -1;
     int winningPlayer;  // DC winning_player

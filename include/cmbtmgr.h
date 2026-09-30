@@ -1871,12 +1871,12 @@ public:
     void markBerserkAreaEffect(long hex, long mastery,
                                   std::vector<army*>& targets);
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
-    // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
+    // JPAVtown@@12HHH_N@Z - the S_PUB32 run proves the final flag bool.
     void setupCombat(type_point point, hero* leftHero,
                      armyGroup* leftArmyGroup, long rightPlayer,
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int seed,
-                     unsigned char isSurrounded);
+                     bool isSurrounded);
     // Original public ?NextArmy@combatManager@@QAA_N_N@Z: bool result/flag.
     bool nextArmy(bool checkingForBadMorale);
     void setNextArmy(int group, int index);

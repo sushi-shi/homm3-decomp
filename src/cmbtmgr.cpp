@@ -1077,7 +1077,7 @@ void combatManager::checkNativeTerrain()
 VA(0x004639f0, 0x270)
 DC_ADDRESS(0x05e464, 0x22a)
 MAC_ADDRESS(0x06f0b8, 0x330)
-void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
+void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, bool isSurrounded)
 {
     g_combatSeed = seed;
     sRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
