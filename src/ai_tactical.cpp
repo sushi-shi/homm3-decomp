@@ -1746,6 +1746,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
     unsigned char ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
     armyGroup* group = g_combatManager->m_armyGroups[m_enemySide];
+    TSkillMastery mastery;  // DC records enemy_mastery at procedure scope.
     for (long i = 0; i < hero::NUM_SPELLS; i++) {
         if ((school & g_spellTraits[i].m_schoolBits) == 0)
             continue;
@@ -1759,7 +1760,7 @@ long type_AI_spellcaster::getProtectionValue(const army* ourArmy,
             continue;
         if (!g_combatManager->validSpellTargetArmy(i, m_enemySide, ourArmy, 1, 0))
             continue;
-        TSkillMastery mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
+        mastery = m_enemyHero->getSpellLevel(i, g_combatManager->m_magicTerrain);
         long manaCost = m_enemyHero->getManaCost(
             i, group, g_combatManager->m_magicTerrain);
         if (manaCost > m_enemyHero->m_mana)
