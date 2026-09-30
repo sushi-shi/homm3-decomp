@@ -382,6 +382,15 @@ static void initializeArtifactTraits(int id,
 // are byte-neutral. These source boundaries replace the fabricated carrier.
 // Earlier named-row/declaration/volatile-accumulator probes did not resolve
 // the first-loop hoist; the canonical cell accessor above does.
+// DC 0x4fef8 initializes a distinct artifact ID at zero; 0x4ff12 passes it
+// to InitializeArtifactTraits and 0x4ff16 increments it independently of the
+// spreadsheet row (0x4ff18). Keep that owner rather than deriving row - 2.
+// Native Mac 0x5aa60 advances the ID after the helper region, before the
+// Complete defaults; 0x5aa64/0x5aa74 and retail store combo then target.
+// These source owners/stores remain byte-flat at Windows 89.36237%.
+// A description-before-name accessor probe gave 89.12% and reverses the
+// retail pointer-load sequence; Mac's optimized capture order alone does not
+// determine the source declaration order. Keep the supported cell accessors.
 // DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
 // dossier renders its byte-sized procedure result as unsigned char. Complete
 // returns only AL 0/1, and the sole kb caller tests that Boolean result.
@@ -422,10 +431,11 @@ bool initializeArtifactTraitsTable()
             return 0;
 
         char* destination = artifactStrings.get();
+        int id = 0;
         for (row = 2; row < 146; ++row) {
             const TSpreadsheetResource::TStringVector& values =
                 traitsSheet->getRow(row);
-            TArtifactTraits& traits = g_artifactTraitsStorage[row - 2];
+            TArtifactTraits& traits = g_artifactTraitsStorage[id];
             const char* source = values[0];
             unsigned length = strlen(source) + 1;
             memcpy(destination, source, length);
@@ -438,9 +448,11 @@ bool initializeArtifactTraitsTable()
             traits.m_description = destination;
             destination += length;
 
-            initializeArtifactTraits(row - 2, values);
+            initializeArtifactTraits(id, values);
+            ++id;
             traits.m_disabled = 0;
-            traits.m_comboType = traits.m_targetCombo = -1;
+            traits.m_comboType = -1;
+            traits.m_targetCombo = -1;
             traits.m_givesSpells = 0;
         }
     }
