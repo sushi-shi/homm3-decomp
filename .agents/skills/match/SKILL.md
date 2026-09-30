@@ -48,6 +48,9 @@ global label self-test/completeness gate is skipped for this focused refresh.
    missing calls or line gaps do not prove missing source. Do not force SH4/x86
    counts or candidate line layout to agree. For retail-only code, state that
    limitation and use retail and sibling evidence.
+   Consult original decorated publics for byte-valued interfaces: Dreamcast's
+   `T_UCHAR` / `0x20` record can be a lowered `bool` (`_N` in the public), so
+   the primitive record or an x86 AL return alone does not prove unsigned char.
 3. **Explain the mismatch.** Start with `homm3 sema diff <selector> --summary`,
    then inspect `--structure`, `--calls` and `--source` as relevant. Candidate
    `/Z7` labels identify the statement producing a difference, not retail source.
