@@ -6090,6 +6090,11 @@ void TBuyBuildWindow::setPrerequisiteText(const town* currentTown, int building)
 // DC locals iThisWidth, resourceIcon and resources name the icon width,
 // cached sprite and resource-type array. Its line 7429 calls the canonical
 // ResourceManager::Dispose wrapper after adding the last icon.
+// Derived widget locals reproduce retail's widget* conversion temporaries
+// for vector insertion, its extra frame slot and nested construction call.
+// Residual at 99.9819%: the loop back edge reloads width/window in the
+// opposite order. Combining GetSprite/GetWidth in one full expression
+// (DC row 7403) is byte-flat; preserve the ordinary helper calls.
 VA(0x005d5f30, 0x8DA)
 DC_ADDRESS(0x1793b4, 0x54a)
 MAC_ADDRESS(0x1d35a4, 0x53c)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor
@@ -6135,7 +6140,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
     int thisWidth = resourceIcon->getWidth();
     for (i = 0; i < numResources; i++) {
         sprintf(g_text, "%d", amounts[i]);
-        widget* amountText = new textWidget(
+        textWidget* amountText = new textWidget(
             resourceX[numResources - 1][i],
             resourceY[numResources - 1][i] + 40, 68, 20, g_text,
             "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8);
@@ -6144,7 +6149,7 @@ int townManager::buyBuild(int buildingId, int infoOnly, int quickView)
         window->m_widgets.push_back(amountText);
         window->addWidget(amountText, -1);
 
-        widget* icon = new iconWidget(
+        iconWidget* icon = new iconWidget(
             resourceX[numResources - 1][i] + 18,
             resourceY[numResources - 1][i], thisWidth, 32, -1,
             "Resource.def", resources[i], 0, 0, 0, 0x10);
