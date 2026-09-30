@@ -2858,10 +2858,12 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
 VA(0x004dbd90, 0x1E)
 DC_ADDRESS(0x0ce140, 0x28)
 MAC_ADDRESS(0x0f8290, 0x38)
+// Mac 0xf8298 and the following rotations/combination readers expand
+// the same record-reference accessors; writes remain owned by this hero.
 long hero::getLastBackpackIndex() const
 {
     for (long slot = 64; slot--; ) {
-        if (m_backpack[slot].m_artifactId != -1)
+        if (getBackpack(slot).m_artifactId != -1)
             return slot;
     }
     return -1;
@@ -2875,9 +2877,9 @@ void hero::rotateBackpackLeft()
     long last = getLastBackpackIndex();
     if (last < 0)
         return;
-    type_artifact saved = m_backpack[last];
+    type_artifact saved = getBackpack(last);
     for (long slot = last; slot > 0; slot--)
-        m_backpack[slot] = m_backpack[slot - 1];
+        m_backpack[slot] = getBackpack(slot - 1);
     m_backpack[0] = saved;
 }
 
@@ -2889,9 +2891,9 @@ void hero::rotateBackpackRight()
     long last = getLastBackpackIndex();
     if (last <= 0)
         return;
-    type_artifact saved = m_backpack[0];
+    type_artifact saved = getBackpack(0);
     for (long slot = 0; slot < last; slot++)
-        m_backpack[slot] = m_backpack[slot + 1];
+        m_backpack[slot] = getBackpack(slot + 1);
     m_backpack[last] = saved;
 }
 
@@ -2908,7 +2910,7 @@ unsigned char hero::heroFn004DBE80(int combination)
     std::bitset<144> missingComponents =
         g_combinationArtifacts[combination].m_components;
     for (int slot = 0; slot < 19; slot++) {
-        int artifactId = m_equipped[slot].m_artifactId;
+        int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (artifactId != ARTIFACT_NONE)
             missingComponents[artifactId] = false;
     }
@@ -2923,19 +2925,19 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
     std::bitset<144> components =
         g_combinationArtifacts[combination].m_components;
     if (slot != -1) {
-        components[m_equipped[slot].m_artifactId] = false;
+        components[getArtifact(TArtifactSlot(slot)).m_artifactId] = false;
         removeArtifact(slot);
     }
 
     int i = 19;
     while (components.any()) {
         i--;
-        int artifactId = m_equipped[i].m_artifactId;
+        int artifactId = getArtifact(TArtifactSlot(i)).m_artifactId;
         if (artifactId == ARTIFACT_NONE)
             continue;
         if (!components[artifactId])
             continue;
-        components[m_equipped[i].m_artifactId] = false;
+        components[getArtifact(TArtifactSlot(i)).m_artifactId] = false;
         removeArtifact(i);
     }
 
@@ -2950,7 +2952,7 @@ MAC_ADDRESS(0x0f8638, 0xb4)
 void hero::heroFn004DC070(long slot)
 {
     int combination =
-        g_artifactTraits[m_equipped[slot].m_artifactId].m_comboType;
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
     removeArtifact(slot);
 
     const std::bitset<144>& components =
@@ -2991,7 +2993,7 @@ MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    int artifactId = m_equipped[slot].m_artifactId;
+    int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
 
     if (g_artifactTraits[artifactId].m_comboType != -1) {
         player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
