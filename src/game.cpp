@@ -7301,7 +7301,7 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 // both source bool and unsigned char to T_UCHAR, so that record cannot decide.
 VA(0x004c7ba0, 0xAC)
 DC_ADDRESS(0x0b3030, 0x14c)
-MAC_ADDRESS(0x0de380, 0xb8)
+MAC_ADDRESS(0x0de380, 0xb8)  // MAC_ABSTRACTION_FROM(tokens1:dfc52e9173c5,100.0000): hasBuilding now delegates its active-mask read to canonical getBuildingMask; CW changes expansion context of this false-arm call.
 bool game::growCoverOfDarkness()
 {
     bool changed = false;

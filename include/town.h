@@ -384,12 +384,16 @@ public:
     // Town.h:325-327 records the active-mask guard then the built-mask return.
     // This early-return form preserves the retained body and recovers the
     // nested isCastle expansion in Windows getVictoryConditionText.
+    // Mac calculateProduction 0xcac58/0xcac64 and 0xcaca4/0xcacb0 expand
+    // the same two-word active-mask read as getBuildingMask. Keep that
+    // canonical accessor here; the nested source call is inferred from
+    // its operation, while DC proves the accessor's type and body.
     VA(0x004305a0, 0x66)  // hd-crossbuild + exact body/callers x18
     DC_ADDRESS(0x01fe14, 0x98)
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
         if (checkIncluded)
-            return (m_active & g_bitNumber[buildingId]) != 0;
+            return (getBuildingMask() & g_bitNumber[buildingId]) != 0;
         return (m_built & g_bitNumber[buildingId]) != 0;
     }
 
