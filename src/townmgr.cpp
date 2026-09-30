@@ -3791,8 +3791,11 @@ type_garrison_base_window::~type_garrison_base_window()
 // different, beginning with the register used for the manager load.
 // Earlier flattened-arm control: moving thisStrip/mgr before qualifier
 // worsened 95.6856% to 95.4367%; that did not recover ArmyCommand.
-// DC's GetArmyName is restored in the divide status arm; VC6 still emits
-// the same 34 blocks and 10 retained calls at 98.838425%.
+// DC 0x172bfa passes count 2 to GetArmyName in the divide status arm.
+// Mac 0x1cc788 and retail use the plural traits field (+0x18), not the
+// singular field (+0x14). With that argument restored, all 34 block sizes,
+// ten calls and 29 relocations agree; only four prefix instruction rows
+// differ (manager register and command-store ordering), at 98.838425%.
 // DC declares message&; Complete passes the same one-word address.
 VA(0x005d05f0, 0x31B)
 DC_ADDRESS(0x172af0, 0x178)
@@ -3840,12 +3843,8 @@ void type_garrison_base_window::setCommandAndText(message& msg)
             strcpy(mgr->m_statusText, g_townCommand[3]);
         } else {
             int creature = mgr->m_srcStrip->m_group->m_armies[mgr->m_srcIndex];
-            // The traits row's own bound, spelled as the literal
-            // retail compares against: armygrp.h's ARMY_CREATURE_LAST
-            // is a member of `army`, which this compiland's include
-            // closure does not define and must not grow to.
             sprintf(mgr->m_statusText, g_townCommand[0],
-                    getArmyName(creature, 1));
+                    getArmyName(creature, 2));
         }
         break;
     }
