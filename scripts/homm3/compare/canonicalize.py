@@ -95,6 +95,22 @@ def _read_anon_ns_canonical(contents: str) -> dict[tuple[str, str], str]:
     return result
 
 
+def reviewed_anon_ns_name(name: str, unit: str | None = None) -> str:
+    """Apply only the owning compiland's reviewed retail namespace spelling."""
+    if "?%" not in name or unit is None:
+        return name
+    canonical = _load_anon_ns_canonical()
+
+    def replace(match):
+        scope = match.group(1)
+        basename = re.split(r"[\\/]", scope)[-1]
+        basename = re.sub(r"[0-9]+$", "", basename).lower()
+        replacement = canonical.get((unit.lower(), basename))
+        return match.group(0) if replacement is None else "?%" + replacement + "@"
+
+    return ANON_NS_SCOPE_RE.sub(replace, name)
+
+
 def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
     """Normalize anonymous-namespace scopes to machine-independent spellings.
 
@@ -108,18 +124,7 @@ def normalize_anon_ns_name(name: str, unit: str | None = None) -> str:
     if "?%" not in name:
         return name
     from homm3.core.msvc_names import anonymous_namespaces
-    if unit is None:
-        return anonymous_namespaces(name)
-    canonical = _load_anon_ns_canonical()
-
-    def replace(match):
-        scope = match.group(1)
-        basename = re.split(r"[\\/]", scope)[-1]
-        basename = re.sub(r"[0-9]+$", "", basename).lower()
-        replacement = canonical.get((unit.lower(), basename))
-        return match.group(0) if replacement is None else "?%" + replacement + "@"
-
-    return anonymous_namespaces(ANON_NS_SCOPE_RE.sub(replace, name))
+    return anonymous_namespaces(reviewed_anon_ns_name(name, unit))
 
 
 def _anon_ns_renames(

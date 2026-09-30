@@ -1816,7 +1816,7 @@ forcefeedback	??0const_iterator@?$_Tree@PAVCImmEnclosure@@U?$pair@QAVCImmEnclosu
 forcefeedback	??0t_create_failure@t_enclosure@force_feedback@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6c60	-
 forcefeedback	??0t_enclosure@force_feedback@@QAE@PBUtagRECT@@JKKEE@Z	100.0000	100.0000	100.0000	0xb6a50	tokens1:5bc9a9ff65ed
 forcefeedback	??0t_initialize_failure@t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@ABV012@@Z	100.0000	100.0000	100.0000	0xb6730	-
-forcefeedback	??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z	99.9403	99.9403	100.0000	0xb6260	tokens1:f220ee4a24cb
+forcefeedback	??0t_initializer@?%C:\Dev\Heroes 3 Exp 2\Game\ForceFeedback.cpp210603558@@QAE@PAX0@Z	100.0000	100.0000	100.0000	0xb6260	tokens1:f220ee4a24cb
 forcefeedback	??1?$auto_ptr@D@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7040	-
 forcefeedback	??1?$auto_ptr@VCImmEnclosure@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7020	-
 forcefeedback	??1?$auto_ptr@VCImmProject@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xb7050	-

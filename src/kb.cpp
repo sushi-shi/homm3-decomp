@@ -1811,6 +1811,9 @@ static int g_useWaveout;
 // scan instead of entry introduces a second zeroing move (98.29%); making
 // that local bool changes register assignments (99.47%). Neither reproduces
 // the native register use, so the entry declaration remains.
+// The DC/Mac reset order, copying the default name before the resets, and
+// their combination also fail to close it (four source states, three objects).
+// The register diagnostic's 42 catalog probes find no closer encoding.
 VA(0x004f0690, 0x238) MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
 int interpretCommandLine()
 {

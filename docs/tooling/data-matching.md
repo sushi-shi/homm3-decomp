@@ -114,6 +114,16 @@ exception record points to it. Source/object receipts are checked again before
 publishing the alias. Ambiguous addresses remain unresolved. These aliases
 share the existing function entry and do not increase the function denominator.
 
+Reviewed anonymous-namespace paths also support exception **identity** proofs.
+Only the owning unit's entry in `config/retail/anon-ns-paths.tsv` may project a
+raw descriptor's encoded path to its retail spelling. The complete projected
+type/exception graph and folded function bodies must still match their bytes,
+named pointers and relocation sites unambiguously. Generated
+`address_identities.tsv` rows allow code references to compare by that proven
+address. They claim no storage: the raw descriptor can have different bytes
+and a different length, and raw exception-data accounting remains unchanged.
+Source, object and namespace-policy content is checked again after the proof.
+
 The CLI and GUI use the same patched objdiff core. `functionRelocDiffs = all`
 checks callee/data identity as well as values; absolute relocation addends also
 participate. Changing to this scoring policy resets implementation MAX from the
