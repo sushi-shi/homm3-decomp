@@ -200,7 +200,7 @@ int aiResourceCost(long playerId, const int* resources);
 int aiResourceCost(const playerData* player, const int* resources);
 long aiGetSpellValue(const hero* ourHero, SpellID spell);
 bool considerHiring(long playerId, hero* candidate);
-const std::bitset<9>& armyGrpFn0044A460();
+const std::bitset<9>& getAngelicAllianceAlignments();
 int canBuy(const town* currTown, int buildingId);
 double getTradeRatio(EGameResource source, EGameResource dest,
                        double efficiency);
@@ -355,7 +355,7 @@ void type_garrison_purchaser::markTown(town* ourTown) const
 {
     type_AI_creature_purchaser purchaser(m_currentPlayerId, ourTown);
     playerData* player = &g_game->m_players[m_currentPlayerId];
-    unsigned char hasAngelicAlliance = player->hasGivenArtifact(0x81);
+    unsigned char hasAngelicAlliance = player->hasHeroWieldingArtifact(0x81);
     purchaser.setSubtractMode(0);
     purchaser.doPurchase(&ourTown->getArmy(), 3, 0, player->m_resources,
                           1, hasAngelicAlliance);
@@ -1736,7 +1736,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
     unsigned char alliance = g_game->m_players[currentHero->m_owner]
-        .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+        .hasHeroWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doSwap(currentHero, &currentTown->getArmy(),
                      garrisonHero, alliance);
 
@@ -1923,7 +1923,7 @@ MAC_ADDRESS(0x02f990, 0x78)
 int type_AI_creature_swapper::normalizeAlignment(int alignment) const
 {
     if (m_hasAngelicAlliance) {
-        const std::bitset<9>& alliedAlignments = armyGrpFn0044A460();
+        const std::bitset<9>& alliedAlignments = getAngelicAllianceAlignments();
         if (alliedAlignments.test(alignment)) {
             alignment = 0;
             while (!alliedAlignments.test(alignment))
@@ -3725,7 +3725,7 @@ static unsigned char attemptTeleport(hero* currentHero,
         return 0;
     if (!currentHero->spellIsAvailable(SPELL_DIMENSION_DOOR))
         return 0;
-    if (currentHero->heroFn004E4EC0() == CURSED_GROUND)
+    if (currentHero->getSpecialTerrainObjectType() == CURSED_GROUND)
         return 0;
 
     manaCost = currentHero->getManaCost(SPELL_DIMENSION_DOOR);
@@ -4274,7 +4274,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
 
     unsigned char hasAlliance =
         candidate->isWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE)
-        || player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+        || player->hasHeroWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doSwap(candidate, &townArmy, 0, hasAlliance);
     purchaser.doPurchase(&candidate->m_army, candidate->getMorale(0, 0, 1),
                           &townArmy, player->m_resources, 0, hasAlliance);
@@ -4729,7 +4729,7 @@ VA(0x00433130, 0x26f) MAC_ADDRESS(0x038238, 0x26c)
 long type_angelic_alliance_artifact::getValue(
     const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    std::bitset<9> alliedAlignments = armyGrpFn0044A460();
+    std::bitset<9> alliedAlignments = getAngelicAllianceAlignments();
     playerData* player = &g_game->m_players[owner->m_owner];
     long total = 0;
     int heroIndex = 0;
@@ -4974,7 +4974,7 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
 {
     int slot;
     for (slot = 0; slot < 19; ++slot) {
-        if (const_cast<hero*>(ourHero)->heroFn004E2550(
+        if (const_cast<hero*>(ourHero)->canEquipArtifactInEmptySlot(
                 artifact.m_artifactId, slot)) {
             break;
         }
@@ -4986,7 +4986,7 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
         long replacedValue = 0;
         for (int equippedSlot = 0; equippedSlot < 19;
              ++equippedSlot) {
-            if (const_cast<hero*>(ourHero)->heroFn004E2840(
+            if (const_cast<hero*>(ourHero)->canReplaceArtifactInSlot(
                     artifact.m_artifactId, equippedSlot)) {
                 replacedValue = aiGetValueOfArtifact(
                     ourHero->getArtifact(TArtifactSlot(equippedSlot)), ourHero, 1, exact);
@@ -5076,7 +5076,7 @@ long getFullValue(const hero* ourHero)
             unsigned char hasAlliance;
             if (ourHero->m_owner >= 0)
                 hasAlliance = g_game->m_players[ourHero->m_owner]
-                                  .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+                                  .hasHeroWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE);
             else
                 hasAlliance = ourHero->isWieldingArtifact(
                     ARTIFACT_ANGELIC_ALLIANCE);
@@ -5125,7 +5125,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
     long newSourceValue = 0;
 
     for (int slot = 0; slot < 17; ++slot) {
-        if (!ourHero->heroFn004E2840(artifact.m_artifactId, slot))
+        if (!ourHero->canReplaceArtifactInSlot(artifact.m_artifactId, slot))
             continue;
 
         oldArtifact = ourHero->getArtifact(TArtifactSlot(slot));
@@ -5137,7 +5137,7 @@ unsigned char addArtifact(hero* ourHero, type_artifact artifact,
         if (oldArtifact.m_artifactId != ARTIFACT_NONE) {
             ourHero->removeArtifact(slot);
             if (sourceHero &&
-                sourceHero->heroFn004E2840(oldArtifact.m_artifactId,
+                sourceHero->canReplaceArtifactInSlot(oldArtifact.m_artifactId,
                                              sourceSlot)) {
                 sourceHero->equipArtifact(oldArtifact, sourceSlot);
                 newSourceValue = getFullValue(sourceHero);

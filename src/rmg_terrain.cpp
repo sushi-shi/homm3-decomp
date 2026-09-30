@@ -28,9 +28,9 @@ TRmgLinePainterTile::TRmgLinePainterTile(
 // The 168-case query family tested receiver/coordinate reference bindings,
 // their order, named results and real proxy construction (80 code results).
 // No gain over the direct query: clear 94.5070%, point 79.9380%, refresh 63.9923%.
-int TRmgLinePainterTile::getLand()
+int TRmgLinePainterTile::getTileType()
 {
-    return m_painter->getLand(m_point);
+    return m_painter->getTileType(m_point);
 }
 
 void TRmgLinePainterTile::getTile(rmgTerrainTile& tile)
@@ -45,15 +45,15 @@ void TRmgLinePainterTile::setTile(const rmgTerrainTile& tile)
 
 // The point walker tests AL after slot 3 (0x4fa400..0x4fa405). Keep that
 // low-byte gate while preserving the retained virtual's integer-return ABI.
-// Its provisional canPaint name is inverted here: nonzero prevents painting.
+// Nonzero prevents painting: the adapter reports water or rock terrain.
 unsigned char TRmgLinePainterTile::isBlocked()
 {
-    return m_painter->canPaint(m_point);
+    return m_painter->isBlocked(m_point);
 }
 
-void TRmgLinePainterTile::setOverlay(int value)
+void TRmgLinePainterTile::setLineType(int value)
 {
-    m_painter->setOverlay(m_point, value);
+    m_painter->setLineType(m_point, value);
 }
 
 // The size is a grid point: the walker's one-cell rectangle then constructs
@@ -88,18 +88,18 @@ VA(0x004F9F00, 0x146) MAC_ADDRESS(0x22273c, 0x168) // anchor-caller 0x4fa080/0x4
 void refreshRmgLinePoint(TRmgLinePainterInterface* painter, const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile = painter->at(point);
-    int oldType = tile.getLand();
+    int oldType = tile.getTileType();
     unsigned char available[TILE_DIR_COUNT];
     buildTileNeighbourMask(painter->m_size.m_x, painter->m_size.m_y,
                            point.m_x, point.m_y, available);
     unsigned char matches[TILE_DIR_COUNT];
     for (unsigned int direction = 0; direction < TILE_DIR_COUNT; ++direction) {
         if (available[direction])
-            matches[direction] = painter->getNeighbourLand(point, direction) == oldType;
+            matches[direction] = painter->getNeighbourTileType(point, direction) == oldType;
         else
             matches[direction] = 0;
     }
-    TRmgLinePatternTable* table = painter->getPattern(oldType);
+    TRmgLinePatternTable* table = painter->getPatternTable(oldType);
     unsigned char flipX, flipY;
     int selected = selectRmgLinePattern(matches, table, flipX, flipY);
     rmgTerrainTile current;
@@ -133,10 +133,10 @@ TRmgLinePainterTile TRmgLinePainterInterface::at(const TRmgGridPoint& point)
 // object; the proxy constructor copying the point through its fields,
 // accessors, setters or a by-value parameter never helps and the first
 // three cost the rectangle clear, 94.51%).
-int TRmgLinePainterInterface::getNeighbourLand(const TRmgGridPoint& point, unsigned int direction)
+int TRmgLinePainterInterface::getNeighbourTileType(const TRmgGridPoint& point, unsigned int direction)
 {
     TRmgGridPoint nearby = point + g_tileDirections[direction];
-    return at(nearby).getLand();
+    return at(nearby).getTileType();
 }
 
 VA(0x004FA080, 0x1FB) MAC_ADDRESS(0x2228b8, 0x388) // anchor-callee 0x4fa42c; fastcall, no stack args
@@ -148,7 +148,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
             TRmgLinePainterTile tile(painter, point);
-            if (tile.getLand())
+            if (tile.getTileType())
                 tile.setTile(rmgTerrainTile(0, 0));
         }
     }
@@ -159,7 +159,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getTileType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -170,7 +170,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
             ? rectangle.m_origin.m_y + rectangle.m_size.m_y + 1
             : rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_y = first; point.m_y < end; ++point.m_y) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getTileType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -178,7 +178,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         point.m_y = rectangle.m_origin.m_y - 1;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getTileType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -186,7 +186,7 @@ void clearRmgLineRectangle(TRmgLinePainterInterface* painter, const TRmgGridRect
         point.m_y = rectangle.m_origin.m_y + rectangle.m_size.m_y;
         for (point.m_x = rectangle.m_origin.m_x;
              point.m_x < rectangle.m_origin.m_x + rectangle.m_size.m_x; ++point.m_x) {
-            if (painter->at(point).getLand())
+            if (painter->at(point).getTileType())
                 refreshRmgLinePoint(painter, point);
         }
     }
@@ -237,12 +237,12 @@ VA(0x004FA3C0, 0x156) MAC_ADDRESS(0x222e1c, 0x18c) // anchor-caller 0x4fa280/0x4
 void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
 {
     TRmgLinePainterTile tile(m_painter, point);
-    int oldType = tile.getLand();
+    int oldType = tile.getTileType();
     if (oldType == m_riverType || tile.isBlocked())
         return;
     if (oldType)
         clearRmgLineRectangle(m_painter, TRmgGridRectangle(point, TRmgGridPoint(1, 1)));
-    tile.setOverlay(m_riverType);
+    tile.setLineType(m_riverType);
     refreshRmgLinePoint(m_painter, point);
 
     int riverType = m_riverType;
@@ -255,7 +255,7 @@ void TRmgLineWalker::paintPoint(const TRmgGridPoint& point)
                                point.m_x, point.m_y, available);
         for (direction = 0; direction < TILE_DIR_COUNT; ++direction) {
             if (available[direction])
-                matches[direction] = painter->getNeighbourLand(point, direction) == riverType;
+                matches[direction] = painter->getNeighbourTileType(point, direction) == riverType;
             else
                 matches[direction] = 0;
         }
@@ -308,7 +308,7 @@ TRmgPatternTerrainRule::TRmgPatternTerrainRule(
 // Vtable 0x642c98 slot 1 tests the count for pattern value 1. The constructor
 // at 0x5b3780 builds that range at +0x1c/+0x20 from its supplied entry array.
 VA(0x005B3840, 0x0C) MAC_ADDRESS(0x259dac, 0x14)  // Complete-only pattern terrain rule
-unsigned char TRmgPatternTerrainRule::hasEntries()
+unsigned char TRmgPatternTerrainRule::hasSpecialBaseFrames()
 {
     return 0 < m_ranges[1].m_count;
 }
@@ -329,7 +329,7 @@ unsigned char TRmgPatternTerrainRule::isSpecialFrame(int frame)
 // Each source entry is two dwords. Vtable 0x642c98 slot 3 returns
 // the first dword of the requested entry through the pointer at +0x10.
 VA(0x005B3880, 0x10) MAC_ADDRESS(0x254cf8, 0x10)  // Complete-only pattern terrain rule
-int TRmgPatternTerrainRule::getEntry(int index)
+int TRmgPatternTerrainRule::getTransitionKind(int index)
 {
     return m_entries[index].m_frame;
 }
@@ -406,7 +406,7 @@ TRmgTableTerrainRule::TRmgTableTerrainRule()
 }
 
 VA(0x005B3A40, 0x03) MAC_ADDRESS(0x254f6c, 0x8)
-unsigned char TRmgTableTerrainRule::hasEntries()
+unsigned char TRmgTableTerrainRule::hasSpecialBaseFrames()
 {
     return 0;
 }
@@ -419,7 +419,7 @@ unsigned char TRmgTableTerrainRule::hasEntries()
 VA_COMPGEN(0x005B3A50, 0x21, SCALAR_DELETING_DTOR, TRmgTableTerrainRule)
 
 VA(0x005B3A80, 0x11) MAC_ADDRESS(0x254f74, 0x10)
-int TRmgTableTerrainRule::getEntry(int index)
+int TRmgTableTerrainRule::getTransitionKind(int index)
 {
     return g_rmgTerrainPatterns[index].m_frame;
 }
@@ -760,7 +760,7 @@ MAC_ADDRESS(0x259998, 0x60)
 int rmgTerrainPainter::selectBaseFrame(
     const TRmgGridPoint& point, int terrain, int oldFrame)
 {
-    int strength = getTransitionStrength(point, terrain);
+    int strength = getSpecialFrameWeight(point, terrain);
     return g_rmgTerrainRules[terrain]->selectBaseFrame(strength, oldFrame);
 }
 
@@ -1207,16 +1207,16 @@ void rmgTerrainPainter::paintTransitions()
                 TRmgTerrainFlip flip;
                 transition = selectTerrainTransition(neighbours, &flip);
                 if (transition == RMG_TERRAIN_FIRST_DIAGONAL_LOW) {
-                    if (checkFirstDiagonal(point, flip))
+                    if (hasMatchingDiagonalNeighbour(point, flip))
                         transition = 6;
                 } else if (transition == RMG_TERRAIN_FIRST_DIAGONAL_HIGH) {
-                    if (checkFirstDiagonal(point, flip))
+                    if (hasMatchingDiagonalNeighbour(point, flip))
                         transition = 12;
                 } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_LOW) {
-                    if (checkSecondDiagonal(point, flip))
+                    if (hasDifferentOuterAxisNeighbour(point, flip))
                         transition = 7;
                 } else if (transition == RMG_TERRAIN_SECOND_DIAGONAL_HIGH) {
-                    if (checkSecondDiagonal(point, flip))
+                    if (hasDifferentOuterAxisNeighbour(point, flip))
                         transition = 13;
                 }
 
@@ -1431,7 +1431,7 @@ void rmgTerrainPainter::buildNeighbourKinds(
 // canonical and recover the caller-specific compiler state separately.
 // Min/max compositions do not recover these bodies.
 VA(0x005B6BA0, 0x24C) MAC_ADDRESS(0x258f18, 0x360)
-unsigned char rmgTerrainPainter::checkFirstDiagonal(
+unsigned char rmgTerrainPainter::hasMatchingDiagonalNeighbour(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a52a0 (tested and set in this body).
@@ -1463,7 +1463,7 @@ unsigned char rmgTerrainPainter::checkFirstDiagonal(
 }
 
 VA(0x005B6E00, 0x1B3) MAC_ADDRESS(0x259278, 0x288)
-unsigned char rmgTerrainPainter::checkSecondDiagonal(
+unsigned char rmgTerrainPainter::hasDifferentOuterAxisNeighbour(
     const TRmgGridPoint& point, const TRmgTerrainFlip& flip)
 {
     // Retail construction guard byte 0x6a3d64 (tested and set in this body).
@@ -1488,7 +1488,7 @@ unsigned char rmgTerrainPainter::checkSecondDiagonal(
 }
 
 VA(0x005B6FD0, 0x271) MAC_ADDRESS(0x259500, 0x444)
-int rmgTerrainPainter::getTransitionStrength(
+int rmgTerrainPainter::getSpecialFrameWeight(
     const TRmgGridPoint& point, int terrain)
 {
     unsigned int strength = m_transitionStrength;

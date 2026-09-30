@@ -21,7 +21,7 @@ def variants(original):
     # reads in their original order; nesting only changes source ownership.
     guards = [
         '!primary && g_adventureObjectLandBlocked[objectType][0]\n            && !g_adventureObjectLandBlocked[objectType][2]',
-        '!allowTerrainDependent && definition->isTerrainDependent()',
+        '!allowTerrainDependent && definition->requiresPairedObject()',
         'm_objectCountByType[objectType] >= g_rmgMapObjectLimits[objectType]',
         'zone->m_objectCountByType[objectType] >= g_rmgZoneObjectLimits[objectType]',
         'objectValue < 0 || objectValue < minimum || objectValue > maximum',

@@ -79,7 +79,7 @@ The sampled request below crashes reproducibly in both implementations. Retail
 `createRiver` follows that predecessor and calls the line walker at `0x5496ef` with
 destination `(0xffffffff, 0xffffffff)`, the unsigned representation of `(-1,-1)`.
 There is no coordinate-validity check in this predecessor loop. The eventual
-fault is the unchecked tile-array read at `TRmgMapAdapter::getLand`, `0x53284f`.
+fault is the unchecked tile-array read at `TRmgMapAdapter::getTileType`, `0x53284f`.
 The captured query is `(0xffffffff, 0xffffff35)` (signed `(-1,-203)`) on a 108×108
 map. A snapshot at the accepted-target branch (`0x549315`) captured target
 `(55,0,0)` with cost `32000` and the invalid predecessor. Two further sampled
@@ -88,8 +88,8 @@ unreached targets `(79,0,0)` and `(38,0,0)` respectively. Their source-to-target
 searches had no valid predecessor chain, but drawing proceeded anyway.
 
 The captured retail call chain is `createRiver` → `TRmgLineWalker::drawTo` →
-`paintPoint` → `refreshRmgLinePoint` → `TRmgLinePainter::getLand` →
-`TRmgMapAdapter::getLand`. Candidate faults at the corresponding instruction
+`paintPoint` → `refreshRmgLinePoint` → `TRmgLinePainter::getTileType` →
+`TRmgMapAdapter::getTileType`. Candidate faults at the corresponding instruction
 with the same coordinates. This is not a candidate-only reconstruction error.
 
 ```json
@@ -143,7 +143,7 @@ These ignored artifacts are session evidence; the requests and retail addresses
 above are the durable reproduction notes.
 
 The later 100,000-case campaign reproduced only these two crash classes: 137
-paired retail/candidate faults in `TRmgMapAdapter::getLand` during river drawing
+paired retail/candidate faults in `TRmgMapAdapter::getTileType` during river drawing
 and 23 paired faults in `createGuard` after the negative zone lookup. Every fault
 repeated at the same corresponding instruction, and the campaign found no
 candidate-only crash or additional crash signature.

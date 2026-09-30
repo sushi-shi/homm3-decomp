@@ -1441,7 +1441,7 @@ unsigned char combatManager::chooseCreatureSpell(const army* currentArmy, long& 
 // lifetimes: 94.6353% -> 100%, all thirteen CFG blocks and four calls.
 // A separate power local alone reaches 95.16%; naming both reaches 94.93%.
 VA(0x00420f00, 0xFB) MAC_ADDRESS(0x022e64, 0x130)
-bool combatManager::sodChooseFaerieDragonSpell(
+bool combatManager::chooseFaerieDragonSpellTarget(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate)
 {
@@ -1580,7 +1580,7 @@ unsigned char combatManager::chooseSpellAction(const army* currentArmy, long* be
             return 1;
         break;
     case CREATURE_FAERIE_DRAGON:
-        if (sodChooseFaerieDragonSpell(currentArmy, *bestValue, *estimate))
+        if (chooseFaerieDragonSpellTarget(currentArmy, *bestValue, *estimate))
             return 1;
         break;
     }

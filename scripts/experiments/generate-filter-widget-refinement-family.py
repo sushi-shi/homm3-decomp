@@ -14,7 +14,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = "src/singleselectionwindow.cpp"
-SIGNATURE = "void TSingleSelectionWindow::createFilterWidgets()"
+SIGNATURE = "void TSingleSelectionWindow::createRandomMapOptionWidgets()"
 
 
 def body_from(source):

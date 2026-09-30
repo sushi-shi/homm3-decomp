@@ -107,7 +107,7 @@ elif args.function == 'play':
     axes.append({'name': 'play-geometry-and-bitmap-interfaces', 'find': body, 'options': options})
     evidence = [
         'Complete 0x5972d0 supplies the video geometry and event-loop semantics; the DC video body is a platform stub.',
-        'The exact sibling showVideo already calls Bitmap16Bit getPitch/getHeight/getMap at SmackToBuffer; preserve those canonical accessor bodies.',
+        'The exact sibling openSmackerVideo already calls Bitmap16Bit getPitch/getHeight/getMap at SmackToBuffer; preserve those canonical accessor bodies.',
         'Restoring getMap closed videoRealignBuffers through receiver/argument capture. Test that actual interface at this caller too.',
         '40 finite combinations preserve call order and the original unrotated wait loop; vary only real geometry lifetimes and bitmap access.',
     ]

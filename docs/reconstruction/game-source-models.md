@@ -1320,11 +1320,11 @@ All 30 tracked rows are compared:
 | Function | Before CUR | Recovered CUR |
 | --- | ---: | ---: |
 | `videoClose` | 7.6923% | 38.1538% |
-| `showVideo` | 39.1274% | 67.8147% |
+| `openSmackerVideo` | 39.1274% | 67.8147% |
 
 Every other tracked score holds, including the two edited helpers. Neither
 caller body changes. The sound-guard-only control recovers `videoClose` but
-leaves `showVideo` unchanged. The resume-guard-only control gives `showVideo`
+leaves `openSmackerVideo` unchanged. The resume-guard-only control gives `openSmackerVideo`
 73.5019% but leaves `videoClose` at 7.6923%; the combined candidate recovers
 more fuzzy-weighted retail bytes across the two functions. No new exact
 function is claimed. The historical 100% peaks remain recovery leads.
@@ -1332,7 +1332,7 @@ function is claimed. The historical 100% peaks remain recovery leads.
 The named sequence still shows two expanded `serviceSounds` operations in
 `videoClose` where retail calls them; the final `closeBinkVideo` tail call
 and the four indirect video-library calls agree. The current source-labelled
-`showVideo` comparison first diverges at its first `videoClose` site. These
+`openSmackerVideo` comparison first diverges at its first `videoClose` site. These
 are remaining inlining/context differences, not grounds to move the sound
 helper back into a `.cpp`, flatten the ordinary video helpers, or add a pin.
 The finite guard/loop family bounds this PR's recovery; it does not close
@@ -1437,7 +1437,7 @@ from compiler dependency records. Context `bf4bbe51a427f361ce69`, reproduced
 candidate `7173bdb9b7e2604dc1808b27`, captures the stream after `AIL_serve` and
 nests the three real state guards. `serviceSounds` stays inline in SoundMgr.h
 and its retained body stays exact. DC 0xe6ef4 is a WinCE stub proving source
-ownership; the nonempty PC behavior comes from retail 0x59a7d0. `showVideo`
+ownership; the nonempty PC behavior comes from retail 0x59a7d0. `openSmackerVideo`
 rises from 67.8147% to 94.1120%, with every other tracked score holding across
 the 51 units. The unchanged combined guard is the negative byte control.
 The native test imports the current body and all 30 variants. It checks lock
@@ -1462,7 +1462,7 @@ Post-adoption source/call inspection confirms the four obstacle count-insert
 calls. `castSpell` still has a 0x80 frame against retail's 0x94 and different
 shared spell-effect tails. The filter's first remaining difference is the
 vector-base load before its first allocation and the append argument's stack
-slot (-0x24 versus -0x20). `showVideo` now retains both early sound-service
+slot (-0x24 versus -0x20). `openSmackerVideo` now retains both early sound-service
 calls, as retail does; its later expanded `videoSoundOnOff` still leaves a
 `serviceSounds` call where retail calls that ordinary helper. Source-labelled
 comparison first differs at the Smacker-handle guard. These specific residuals
@@ -1480,7 +1480,7 @@ ordinary declarations using the PC `TAbstractFile` stream. DC 0xed984,
 returns; DC readObject calls them at source lines 3350/3379/3388/3406.
 Retail's corresponding arms prove their inline expansions, field layout and
 character conversions. Complete defers the old shipyard terrain scan to
-`loadShipyards`. Grail/shrine retain their final short-read checks in the
+`initializeShipyardBoatPositions`. Grail/shrine retain their final short-read checks in the
 helper; the caller discards status, so those final comparisons disappear
 naturally in the retail expansion.
 

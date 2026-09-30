@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Construction and cell-binding families for retail prepareWaterZoneConnections.
+"""Construction and cell-binding families for retail populateWaterZoneIslands.
 
 Retail 0x53f470 copies all four bounds and three position members at entry,
 then keeps the zone index in EBX across each perimeter row. The initial
@@ -17,7 +17,7 @@ from homm3.core.common import HOMM3_DIR
 from homm3.vc6 import source_families
 from experiments._support import generator
 
-NAME = "type_random_map_generator::prepareWaterZoneConnections"
+NAME = "type_random_map_generator::populateWaterZoneIslands"
 
 
 def selection_origin(original):

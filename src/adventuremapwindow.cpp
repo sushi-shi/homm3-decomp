@@ -61,7 +61,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 // diverge from heroWindow's own vtable (0x643cc4):
 //   slot 1  0x401400 (167 B) (heroWindow::Open    0x5feae0) -> Open
 //   slot 2  0x4014d0 ( 60 B) (heroWindow::Close   0x5fec60) -> Close
-//   slot 8  0x4040b0 ( 56 B) (heroWindow::_vslot8 0x5ff5f0) -> unnamed
+//   slot 8  0x4040b0 ( 56 B) (heroWindow::onSleepChange 0x5ff5f0) -> onSleepChange
 // They sit in the pre-band /Gy COMDAT region, not the linear TU body.
 // Reconstruction is BLOCKED on advmgr.h: TAdventureMapWindow needs the three
 // virtual declarations added to its class before a body can compile, and the
@@ -80,7 +80,7 @@ const char* TCheatCode::s_b = "nopqrstuvwxyzabcdefghijklm";
 //   header currently models.
 //   RETAIL_LOCATED(0x004014d0, 0x3C)  // anchor-vtable slot 2, retail-only
 // slot 8: void f(unsigned char) - ret 4. Overrides heroWindow's retail-era
-//   slot-8 virtual (0x5ff5f0, the model's placeholder _vslot8, beyond the six
+//   slot-8 virtual (0x5ff5f0, the sleep/wake notification, beyond the six
 //   named heroWindow virtuals the DC dump carries), calls that base first,
 //   then toggles the +0x9c member via sub_b6f50/sub_b6f30 on the bool arg.
 //   Location, class and signature are proven; the METHOD NAME is not (no DC or
@@ -900,7 +900,7 @@ hero_rollover: {
                 // Dreamcast adventuremapwindow.cpp:733 names operator[].
                 sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
-                    mapHero->m_name, mapHero->heroFn004D8F70());
+                    mapHero->m_name, mapHero->getClassName());
                 rolloverText = g_text;
                 break;
             }
@@ -1414,10 +1414,10 @@ void button::setHotkey(int code)
 #endif  // @carcass
 
 VA(0x004040b0, 0x38) MAC_ADDRESS(0x003ddc, 0x20)
-void TAdventureMapWindow::vslot8(unsigned char on)
+void TAdventureMapWindow::onSleepChange(unsigned char on)
 {
     // Mac 0:0x3ddc forwards only; the mouse-effect edge is Windows-specific.
-    heroWindow::vslot8(on);
+    heroWindow::onSleepChange(on);
 
     if (on) {
         if (m_immersion)

@@ -81,7 +81,7 @@ public:
     // sequence is reproduced only with this setter in its six loops.
     void setDisabledFrame(long frame) { m_disabledFrame = frame; }
     // The later private highlight frame has no Dreamcast field; its outside
-    // writer (TSingleSelectionWindow::createFilterWidgets) takes the same
+    // writer (TSingleSelectionWindow::createRandomMapOptionWidgets) takes the same
     // setter form beside setDisabledFrame. Project name.
     void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
     VA(0x004e1370, 0x1AF)

@@ -38,7 +38,7 @@ def baseline():
     point = position + g_rmgDirections[(direction + 1) & 7];
     for (count = 0; count < 3; ++count) {
 """ + bounds + """        TRmgMapItem* item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->m_tile.m_landType == eTerrainWater || item->isRoadEntrance())
+        if (item->m_tile.m_landType == eTerrainWater || item->isObjectEntrance())
             return;
         point += step;
     }
@@ -47,7 +47,7 @@ def baseline():
     TRmgMapItem* item;
     for (count = 0; count < 4; ++count) {
 """ + bounds + """        item = m_map.getMapItem(point.m_x, point.m_y, point.m_z);
-        if (item->m_tile.m_landType == eTerrainWater || item->isRoadEntrance())
+        if (item->m_tile.m_landType == eTerrainWater || item->isObjectEntrance())
             return;
         point += g_rmgDirections[direction];
     }

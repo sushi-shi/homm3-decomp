@@ -565,7 +565,7 @@ void THillFortWindow::handleClick(message& msg)
     case HERO_PORTRAIT_ID:
         sprintf(g_text,
                 g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
+                g_game->getCurrHero()->m_name, g_game->getCurrHero()->getClassName());
         if (rightClick)
             normalDialog(g_text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         else
@@ -661,7 +661,7 @@ int hillFortWindowHandler(message& msg)
         case THillFortWindow::HERO_PORTRAIT_ID:
             sprintf(g_text,
                     (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
-                    g_game->getCurrHero()->m_name, g_game->getCurrHero()->heroFn004D8F70());
+                    g_game->getCurrHero()->m_name, g_game->getCurrHero()->getClassName());
             msg.m_extraText = g_text;
             break;
 

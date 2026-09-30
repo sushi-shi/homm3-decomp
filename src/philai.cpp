@@ -72,7 +72,7 @@ long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
     NewmapCell* cell);
 long valueOfReinforcing(hero* currentHero, town* currentTown,
                           short moveCost);
-long valueOfTownBuildings(const hero* currentHero, town* currentTown);
+long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown);
 int calcTerrainCost(const NewmapCell* cell, int dir, int pointsLeft,
     long pathfinding, long endRoad, long flying, long waterWalking,
     long nativeTerrain, unsigned char param9);
@@ -175,7 +175,7 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
         return;
 
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
     swapper.doSwap(currentHero, &ourGarrison->m_garrisonArmy, 0,
@@ -1193,7 +1193,7 @@ inline long valueOfGarrison(const hero* currentHero, NewmapCell* cell)
             return 0;
 
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         type_AI_creature_swapper swapper;
         return swapper.getSwapValue(
@@ -1320,7 +1320,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
     short secondSkill = secondHero->getPrimarySkillTotal();
     if (secondSkill < currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         long value = swapper.getSwapValue(
             currentHero, &secondHero->m_army, secondHero,
@@ -1333,7 +1333,7 @@ inline long valueOfHeroEvent(const hero* currentHero,
     }
     if (secondSkill > currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[secondHero->m_owner].hasGivenArtifact(
+            g_game->m_players[secondHero->m_owner].hasHeroWieldingArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         return swapper.getSwapValue(
             secondHero, &currentHero->m_army, currentHero,
@@ -1531,7 +1531,7 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
 }
 
 VA(0x00524630, 0x60) MAC_ADDRESS(0x13ea7c, 0x9c)
-int hero::soDGetSeerSkillValue(int skill, int level)
+int hero::getSeerSkillRewardValue(int skill, int level)
 {
     int typedSkill;
     typedSkill = skill;
@@ -1953,7 +1953,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 
     currentHero->m_movePoints = 0;
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     type_AI_creature_swapper swapper;
     swapper.doSwap(currentHero, &currentTown->getArmy(),
@@ -2201,13 +2201,13 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 
     if (secondSkill < currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+            g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         swapper.doSwap(currentHero, &secondHero->m_army, secondHero,
                         hasAngelicAlliance);
     } else if (secondSkill > currentSkill) {
         unsigned char hasAngelicAlliance =
-            g_game->m_players[secondHero->m_owner].hasGivenArtifact(
+            g_game->m_players[secondHero->m_owner].hasHeroWieldingArtifact(
                 ARTIFACT_ANGELIC_ALLIANCE);
         swapper.doSwap(secondHero, &currentHero->m_army, currentHero,
                         hasAngelicAlliance);
@@ -2340,7 +2340,7 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 // Retail 0x526d2e selects g_aiPlayers[playerId] with a 152-byte stride,
 // calls trade_resources at 0x526d35, and returns with ret 4.
 VA(0x00526d20, 0x1e) MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
-void unnamed526d20(int playerId, int* costs, int flag)
+void tradePlayerResources(int playerId, int* costs, int flag)
 {
     g_aiPlayers[playerId].tradeResources(costs, flag);
 }
@@ -2653,7 +2653,7 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
     type_AI_creature_purchaser purchaser(currentHero->m_owner,
                                          currentGenerator);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1), 0,
@@ -2741,7 +2741,7 @@ void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
     type_AI_creature_purchaser purchaser(currentHero->m_owner, type, number,
                                          0);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 1), 0,
@@ -2887,7 +2887,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     type_AI_creature_purchaser purchaser(currentHero->m_owner,
                                           &currentGenerator);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     long purchaseValue = purchaser.getPurchaseValue(
         &currentHero->m_army,
@@ -3173,7 +3173,7 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
     type_AI_creature_purchaser purchaser(
         currentHero->m_owner, creature, &amount, 0);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     return purchaser.getPurchaseValue(
         &currentHero->m_army,
@@ -3297,7 +3297,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     town* currentTown = g_game->getTown(townId);
     if (currentTown->m_owner != currentHero->m_owner) {
         if (onMySide(currentTown->m_owner))
-            return valueOfTownBuildings(currentHero, currentTown);
+            return valueOfTownVisitBonuses(currentHero, currentTown);
 
         if (currentTown->m_visitingHeroId >= 0) {
             hero* visitingHero =
@@ -3311,7 +3311,7 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 
     long value = valueOfReinforcing(
         const_cast<hero*>(currentHero), currentTown, moveCost);
-    value += valueOfTownBuildings(currentHero, currentTown);
+    value += valueOfTownVisitBonuses(currentHero, currentTown);
 
     VictoryConditionStruct& victory = g_game->m_mapHeader.m_victoryCondition;
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
@@ -3402,7 +3402,7 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
         garrisonHero = g_game->getHero(currentTown->m_garrisonHeroId);
 
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     long swapValue = purchaser.getSwapValue(
         currentHero,
@@ -3429,7 +3429,7 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 // spells, then checks the per-hero town bonus mask before the stat arms.
 // Its role name is provisional; keep the retained body in this module.
 VA(0x0052b1e0, 0x2f4) MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
-long valueOfTownBuildings(const hero* currentHero, town* currentTown)
+long valueOfTownVisitBonuses(const hero* currentHero, town* currentTown)
 {
     long value = 0;
     if (currentTown->m_type == TOWN_CONFLUX
@@ -4015,7 +4015,7 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
     type_AI_creature_purchaser purchaser(currentHero->m_owner, creature,
                                          &amount, 1);
     unsigned char hasAngelicAlliance =
-        g_game->m_players[currentHero->m_owner].hasGivenArtifact(
+        g_game->m_players[currentHero->m_owner].hasHeroWieldingArtifact(
             ARTIFACT_ANGELIC_ALLIANCE);
     purchaser.doPurchase(&currentHero->m_army,
                           currentHero->getMorale(0, 0, 0), 0,

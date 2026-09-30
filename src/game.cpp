@@ -360,7 +360,7 @@ unsigned char initializeRandomTavernText()
 }
 
 VA(0x004b8450, 0xF7) MAC_ADDRESS(0x0ca048, 0xd4)
-void HeroExtra::heroExtraFn004B8450(int heroId)
+void HeroExtra::reset(int heroId)
 {
     m_owner = -1;
     m_id = heroId;
@@ -1759,7 +1759,7 @@ int playerData::numOfGivenArtifact(int whichArtifact) const
 }
 
 VA(0x004bacb0, 0xCA) MAC_ADDRESS(0x0cda7c, 0x128)  // hd-crossbuild + anchor-callee
-bool playerData::hasGivenArtifact(int artifact)
+bool playerData::hasHeroWieldingArtifact(int artifact)
 {
     for (int heroIndex = 0; heroIndex < m_numHeroes; heroIndex++) {
         hero* currentHero = g_game->getHero(m_heroes[heroIndex]);
@@ -3399,7 +3399,7 @@ void game::setupOrigData()
         m_heroPoolMap[i] = allPlayers;
 
     for (i = 0; i < HERO_COUNT; ++i) {
-        m_heroSetup[i].heroExtraFn004B8450(i);
+        m_heroSetup[i].reset(i);
         m_heroes[i].initialize(i);
     }
 
@@ -3767,7 +3767,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     for (unsigned int mapDataIndex = 0;
          mapDataIndex < m_worldMap.m_mapObjectData.size(); ++mapDataIndex) {
-        m_worldMap.m_mapObjectData[mapDataIndex]->newMapVFn38();
+        m_worldMap.m_mapObjectData[mapDataIndex]->setDefaultText();
     }
 
     // Mac expands the constant-reference fill; VC6 folds its eight stores.
@@ -6713,11 +6713,11 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     if (thisTown) {
         if (thisTown->m_owner >= 0)
             hasAngelicAlliance = m_players[thisTown->m_owner]
-                                     .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+                                     .hasHeroWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE);
     } else if (thisHero) {
         if (thisHero->m_owner >= 0)
             hasAngelicAlliance = m_players[thisHero->m_owner]
-                                     .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+                                     .hasHeroWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE);
         else
             hasAngelicAlliance =
                 thisHero->isWieldingArtifact(
@@ -10096,7 +10096,7 @@ void game::recordMonsterIdentifier(int identifier, type_point point)
 // Quest-monster setup resolves the most recently recorded object with this
 // identifier; absent objects use the packed all-minus-one point sentinel.
 VA(0x004cef10, 0x68) MAC_ADDRESS(0x0e7154, 0x78)  // sole semantic caller 0x56ef20 + reverse 8-byte walk
-type_point game::gameFn004CEF10(int identifier)
+type_point game::getMonsterLocationByIdentifier(int identifier)
 {
     for (unsigned int i = m_monsterIdentifiers.size(); i-- != 0;) {
         if (m_monsterIdentifiers[i].m_identifier == identifier)

@@ -28,7 +28,9 @@ const unsigned int g_aiSpellDirectDamage = 0x8000;
 const unsigned int g_aiSpellOpeningDamage = 0x10000;
 const unsigned int g_aiSpellMassDamage = 0x20000;
 const unsigned int g_aiSpellEnchantment = 0x40000;
-const unsigned int g_aiSpellResurrection = 0x80000;
+// This class also includes Hypnotize and the four Summon Elemental spells
+// in g_spellTraitsImp; quick combat implements only Resurrection/Animate Dead.
+const unsigned int g_aiSpellSummoning = 0x80000;
 const unsigned int g_aiSpellClassMask = 0x1f8000;
 
 // Retail uniquely proves artifact 0x53 suppresses level-3+ magic on either
@@ -743,12 +745,13 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_com
     }
 }
 
-// The const receiver and reference choice are positive CodeView facts.
+// Dreamcast: type_AI_combat_data::get_summoning_value, ai_combat.cpp:907.
+// The name, const receiver and reference choice are positive CodeView facts.
 // DC912 dispatches 38/39 to resurrection and 60/66..69 to no-op exits;
 // 924 scans downward, 926 gets the value, 927 compares strictly, and
 // 929/930 store value before target. Retail expands this ordinary helper
 // in castSpell; VC6 reduces its switch to the signed 38..39 range there.
-MAC_ADDRESS(0x027a6c, 0xb8)
+MAC_ADDRESS(0x027a6c, 0xb8)  // dc 0x2afb8
 void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
 {
     switch (choice.m_spell) {
@@ -772,10 +775,11 @@ void type_AI_combat_data::getSummoningValue(type_spell_choice& choice) const
     }
 }
 
+// Dreamcast: type_AI_combat_data::cast_summoning, ai_combat.cpp:941.
 // DC943 has the same no-op/resurrection dispatch and 955 calls the
 // selected monster's cast_resurrection. Preserve this ordinary boundary
 // even though retail expands it and retains no separate body.
-MAC_ADDRESS(0x027b24, 0x64)
+MAC_ADDRESS(0x027b24, 0x64)  // dc 0x2b038
 void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 {
     switch (choice.m_spell) {
@@ -850,7 +854,7 @@ void type_AI_combat_data::castSpell(
         case g_aiSpellEnchantment:
             getEnchantmentValue(choice, defender);
             break;
-        case g_aiSpellResurrection:
+        case g_aiSpellSummoning:
             getSummoningValue(choice);
             break;
         }
@@ -882,7 +886,7 @@ void type_AI_combat_data::castSpell(
     case g_aiSpellEnchantment:
         castEnchantment(bestChoice, defender);
         return;
-    case g_aiSpellResurrection:
+    case g_aiSpellSummoning:
         castSummoning(bestChoice);
         return;
     }

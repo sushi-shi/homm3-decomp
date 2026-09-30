@@ -2208,7 +2208,7 @@ static void setHeroHelp(char* buffer, const NewmapCell* cell)
     hero* mapHero = g_game->getHero(cell->m_extraInfo);
     sprintf(buffer,
             g_generalText->getText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-            mapHero->m_name, mapHero->heroFn004D8F70());
+            mapHero->m_name, mapHero->getClassName());
 }
 
 MAC_ADDRESS(0x00af28, 0xf0)
@@ -2748,7 +2748,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case QUEST_GUARD: {
         strcpy(g_text,
             m_fullMap->m_questGuardList[cell->m_extraInfo]
-                .questGuardFn00573040(g_curWatchPlayer).c_str());
+                .getRolloverText(g_curWatchPlayer).c_str());
         break;
     }
     case FAERIE_RING:
@@ -3040,7 +3040,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     case MINE:
-        advmgrFn0040D670(g_text, cell, thisPlayer, separator, 0);
+        getMineHelpText(g_text, cell, thisPlayer, separator, 0);
         break;
     case MONSTER:
         if (cell->m_isTrigger) {
@@ -3152,7 +3152,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     case SEER: {
         const TSeerHut& thisHut = m_fullMap->m_seerHutList[cell->m_extraInfo];
-        strcpy(g_text, thisHut.seerHutFn005741B0(thisPlayer).c_str());
+        strcpy(g_text, thisHut.getRolloverText(thisPlayer).c_str());
         break;
     }
     case SHRINE1:
@@ -3390,7 +3390,7 @@ void getCreatureBankHelpText(char* buffer, NewmapCell* cell, type_creature_bank_
 // Mac expands onSameTeam(owner, playerId), including its two validity checks;
 // keeping that canonical call also reproduces the Windows comparison loads.
 VA(0x0040d670, 0x253) MAC_ADDRESS(0x00b444, 0x184)
-void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
+void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList)
 {
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
@@ -6306,7 +6306,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
             case QUEST_GUARD:
                 strcpy(g_text,
                     m_fullMap->m_questGuardList[testCell->m_extraInfo]
-                        .questGuardFn00572E40(g_curWatchPlayer).c_str());
+                        .getQuickInfoText(g_curWatchPlayer).c_str());
                 break;
             case FAERIE_RING:
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
@@ -6593,7 +6593,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case MINE:
-                advmgrFn0040D670(g_text, testCell, playerId, newLine, 1);
+                getMineHelpText(g_text, testCell, playerId, newLine, 1);
                 break;
             case MYSTICAL_GARDEN:
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
@@ -6697,7 +6697,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
             case SEER: {
                 const TSeerHut& thisHut = m_fullMap->m_seerHutList[testCell->m_extraInfo];
                 strcpy(g_text,
-                       thisHut.seerHutFn005743E0(playerId).c_str());
+                       thisHut.getQuickInfoText(playerId).c_str());
                 break;
             }
             case SHRINE1:
@@ -7126,9 +7126,9 @@ static TSkillMastery getIdentifyLevel(type_point point)
 
     for (int i = 0; i < player->m_numHeroes; i++) {
         hero* currentHero = g_game->getHero(player->m_heroes[i]);
-        if (currentHero->heroFn004E5DE0() > identifyLevel
+        if (currentHero->getEffectiveVisionsMastery() > identifyLevel
             && currentHero->isInIdentifyRange(&point))
-            identifyLevel = currentHero->heroFn004E5DE0();
+            identifyLevel = currentHero->getEffectiveVisionsMastery();
     }
     return (TSkillMastery)identifyLevel;
 }
@@ -7354,7 +7354,7 @@ void advManager::monsterQuickView(const NewmapCell* cell, int cellx, int celly)
             inIdentifyRange = currHero->isInIdentifyRange(&point);
         }
         if ((inIdentifyRange
-             && currHero->heroFn004E5DE0() != eMasteryInvalid)
+             && currHero->getEffectiveVisionsMastery() != eMasteryInvalid)
             || m_debugViewAll) {
             int like = getLikeModifier(currHero, type);
             const int diplomacy = currHero->getSecondarySkill(eSecSkillDiplomacy);

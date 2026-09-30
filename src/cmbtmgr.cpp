@@ -1077,7 +1077,7 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
             m_sideIsAi[side] = g_game->isHuman(m_playerIds[side]);
             m_sideIsLocalHuman[side] = g_game->isLocalHuman(m_playerIds[side]);
             m_hasAngelicAlliance[side] =
-                g_game->m_players[m_playerIds[side]].hasGivenArtifact(0x81);
+                g_game->m_players[m_playerIds[side]].hasHeroWieldingArtifact(0x81);
         } else {
             m_sideIsAi[side] = 0;
             m_sideIsLocalHuman[side] = 0;
@@ -1597,7 +1597,7 @@ int combatManager::checkApplyBadMorale(int group, int index)
 }
 
 VA(0x00464d40, 0x20D) MAC_ADDRESS(0x0707b0, 0x208)
-unsigned char combatManager::unnamed464d40(army* selected)
+unsigned char combatManager::applyAzureDragonFear(army* selected)
 {
     if (selected->is(creatureNoMorale))
         return 0;
@@ -1634,7 +1634,7 @@ unsigned char combatManager::unnamed464d40(army* selected)
 }
 
 VA(0x00464f50, 0x123) MAC_ADDRESS(0x0709b8, 0x1bc)
-unsigned char combatManager::unnamed464f50(
+unsigned char combatManager::actsBefore(
     const army* incumbent, const army* candidate)
 {
     if (incumbent->is(creatureMorale) != (candidate->is(creatureMorale)))
@@ -1663,7 +1663,7 @@ unsigned char combatManager::unnamed464f50(
 // DC cmbtmgr.cpp:2349 calls CheckCastleAttack after this selection loop.
 // Neither retail target retains that call: Mac has only the five ordered
 // game calls below, and Windows ends after returning the selection result.
-// The two DC GetSpeed calls belong to unnamed464f50, not this body.
+// The two DC GetSpeed calls belong to actsBefore, not this body.
 // Original public ?NextArmy@combatManager@@QAA_N_N@Z proves a bool
 // result and checking-for-bad-morale flag. Retail and Mac return only
 // true/false; all callers supply that same boolean domain.
@@ -1706,7 +1706,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                         continue;
                     if (m_creaturePlacement && stack->is(creatureSiegeWeapon))
                         continue;
-                    if (best && unnamed464f50(best, stack))
+                    if (best && actsBefore(best, stack))
                         continue;
                     best = stack;
                 }
@@ -1721,7 +1721,7 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
                     && !m_inSecondPhase) {
                     if (checkApplyBadMorale(best->getOwningSide(), best->m_bitIndex))
                         continue;
-                    if (unnamed464d40(best))
+                    if (applyAzureDragonFear(best))
                         continue;
                 }
                 setNextArmy(best->getOwningSide(), best->m_bitIndex);
@@ -1855,10 +1855,10 @@ void combatManager::setNextArmy(int group, int index)
             }
             break;
         case army::ARMY_CREATURE_FAERIE_DRAGON:
-            stack->faerieDragonSpell();
+            stack->chooseFaerieDragonSpell();
             break;
         case army::ARMY_CREATURE_ENCHANTER:
-            if (m_turnSinceLastEnchanter[m_currentSide] > 2 && stack->unnamed447fe0())
+            if (m_turnSinceLastEnchanter[m_currentSide] > 2 && stack->castEnchanterSpell())
                 m_turnSinceLastEnchanter[m_currentSide] = 0;
             break;
         }
@@ -2137,7 +2137,7 @@ void combatManager::keepAttack(int towerPos)
 }
 
 VA(0x00465f20, 0xB2) MAC_ADDRESS(0x071d90, 0xc0)
-void combatManager::unnamed465f20()
+void combatManager::chooseArrowTowerAction()
 {
     int numArchers;
     int archerLevel;
@@ -3601,7 +3601,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 }
 
 VA(0x004693a0, 0x9F) MAC_ADDRESS(0x075a1c, 0xc0)
-void combatManager::unnamed4693a0(int side)
+void combatManager::cheatKillSide(int side)
 {
     markGameAsCheated();
     turnOffHighlighter(1);
@@ -3872,7 +3872,7 @@ unsigned char combatManager::isInMoat(int hex, int* index)
 }
 
 VA(0x00469e50, 0xC1) MAC_ADDRESS(0x076598, 0x144)
-unsigned char combatManager::unnamed469e50(
+unsigned char combatManager::applyMoatDamage(
     int hex, army* stack, unsigned char playSound)
 {
     if (g_game->m_gameVersion >= 2 && stack->m_numTroops && isInMoat(hex, 0)) {
@@ -4001,7 +4001,7 @@ void combatManager::calculateGainedExperience(int side, int* experienceGained)
 }
 
 VA(0x0046a460, 0x39) MAC_ADDRESS(0x076b70, 0x58)
-void combatManager::markTowerArmy(const army* tower)
+void combatManager::markTowerForEffect(const army* tower)
 {
     switch (tower->m_gridIndex) {
     case COMBAT_HEX_LOWER_TOWER:
@@ -4036,7 +4036,7 @@ bool combatManager::isQuickCombat() const
 }
 
 VA(0x0046a520, 0x44) MAC_ADDRESS(0x076c74, 0x7c)
-void combatManager::markMovingArmy(army* stack)
+void combatManager::beginObstacleTraversal(army* stack)
 {
     memset(m_obstacleAttackVisited, 0, COMBAT_GRID_CELLS);
     m_obstacleAttackVisited[stack->m_gridIndex] = 1;
@@ -4058,7 +4058,7 @@ unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
             attacked = 1;
         if (checkLandmine(hex, thisArmy, isWalking))
             attacked = 1;
-        if (unnamed469e50(hex, thisArmy, isWalking)) {
+        if (applyMoatDamage(hex, thisArmy, isWalking)) {
             attacked = 1;
             moatAttacked = 1;
         }
@@ -4073,7 +4073,7 @@ unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
             if (checkLandmine(hex, thisArmy, isWalking))
                 attacked = 1;
             if (!moatAttacked
-                    && unnamed469e50(hex, thisArmy, isWalking))
+                    && applyMoatDamage(hex, thisArmy, isWalking))
                 attacked = 1;
         }
     }

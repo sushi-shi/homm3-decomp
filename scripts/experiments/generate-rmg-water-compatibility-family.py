@@ -39,7 +39,7 @@ def predicate(body,kind):
                     seed.m_x = x;
                     seed.m_y = pathPosition.m_y;
                     seed.m_z = position.m_z;
-                    if (current->hasSubterraneanGate() && current->m_tileData.m_roadPassable
+                    if (current->isReservedOpen() && current->m_tileData.m_roadPassable
                         && terrain != eTerrainRock) {
                         found = 1;
                         break;

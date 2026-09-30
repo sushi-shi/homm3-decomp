@@ -38,9 +38,9 @@ public:
     void doEvent(hero* currentHero, bool humanPlayer,
                  NewmapCell* eventCell, type_point point);
     void read(TAbstractFile* infile);
-    std::string questGuardFn00572E40(int player);
-    std::string questGuardFn00573040(int player);
-    std::string questGuardFn00572D60();
+    std::string getQuickInfoText(int player);
+    std::string getRolloverText(int player);
+    std::string getQuestLogText();
     int save(TAbstractFile* outfile);
     // Complete retains the Dreamcast TSeerHut predicate on its quest-guard
     // record. DoQuestLog proves that its final two tests are the
@@ -188,8 +188,8 @@ private:
     void load(TAbstractFile* infile, int saveVersion);
 
 public:
-    std::string seerHutFn005741B0(int player) const;
-    std::string seerHutFn005743E0(int player) const;
+    std::string getRolloverText(int player) const;
+    std::string getQuickInfoText(int player) const;
     std::string getSeerLogText();
     // Dreamcast names QuestActiveforPlayer as a const byte-returning header
     // predicate (SeerHut.h:112, dc 0x3250). Complete adds the live quest and

@@ -195,9 +195,9 @@ DATA(0x00644350) extern const unsigned char g_victorModulo51[256] = {
 // admitted relocations plus one). The zero dword after it (0x68d29c) may
 // be a terminator or alignment before the next object and stays unclaimed.
 DATA(0x0068d278) void (__cdecl* g_victorModuleCleanups[9])() = {
-    victorReleaseNothing, victorReleaseLock7, victorReleaseLock6,
-    victorReleaseLock5, victorReleaseLock4, victorReleaseLock3,
-    victorReleaseLock2, victorReleaseLock1, victorReleaseLock0
+    victorReleaseNothing, victorDestroyLock7, victorDestroyLock6,
+    victorDestroyLock5, victorDestroyLock4, victorDestroyLock3,
+    victorDestroyLock2, victorDestroyLock1, victorDestroyLock0
 };
 // JPEG: the JFIF APP0 identifier pointer and the EOI marker bytes.
 DATA(0x0068d350) const char* g_victorJfifIdentifier =
@@ -351,7 +351,7 @@ int __cdecl victorAllocateImage(imgdes* image, int width, int height,
     image->m_bmh->biClrImportant = image->m_colors;
     image->m_bmh->biClrUsed = image->m_bmh->biClrImportant;
     image->m_palette = static_cast<RGBQUAD*>(static_cast<void*>(header + 1));
-    victorInitializePalette(image);
+    victorInitializeGrayscalePalette(image);
     if (!useDibSection) {
         image->m_ibuff = static_cast<unsigned char*>(static_cast<void*>(header + 1))
             + paletteBytes;
@@ -502,7 +502,7 @@ int __stdcall victorValidateBitmap(imgdes* image)
 // member-binding combinations do not exceed it. The for-clause increment is
 // worse (69.72%).
 VA(0x006039c0, 0xfc)  // anchor-callers alloc/loadpcx + RGBQUAD stores / GDI cleanup
-void __stdcall victorInitializePalette(imgdes* image)
+void __stdcall victorInitializeGrayscalePalette(imgdes* image)
 {
     int step = 255;
     if (image->m_palette && image->m_bmh->biBitCount != victorTrueColor) {
@@ -686,7 +686,7 @@ int __stdcall victorReadPcxPalette(const char* filename, RGBQUAD* palette)
 // bytes: test the initialized flag at +0x18, DeleteCriticalSection through
 // the IAT, clear the flag.
 VA(0x00604620, 0x1f)  // g_victorModuleCleanups[8]; external Victor library
-void __cdecl victorReleaseLock0()
+void __cdecl victorDestroyLock0()
 {
     if (g_victorLock0.m_initialized) {
         DeleteCriticalSection(&g_victorLock0.m_section);
@@ -695,7 +695,7 @@ void __cdecl victorReleaseLock0()
 }
 
 VA(0x00604640, 0x1f)  // g_victorModuleCleanups[7]; external Victor library
-void __cdecl victorReleaseLock1()
+void __cdecl victorDestroyLock1()
 {
     if (g_victorLock1.m_initialized) {
         DeleteCriticalSection(&g_victorLock1.m_section);
@@ -704,7 +704,7 @@ void __cdecl victorReleaseLock1()
 }
 
 VA(0x00604660, 0x1f)  // g_victorModuleCleanups[6]; external Victor library
-void __cdecl victorReleaseLock2()
+void __cdecl victorDestroyLock2()
 {
     if (g_victorLock2.m_initialized) {
         DeleteCriticalSection(&g_victorLock2.m_section);
@@ -713,7 +713,7 @@ void __cdecl victorReleaseLock2()
 }
 
 VA(0x00604680, 0x1f)  // g_victorModuleCleanups[5]; external Victor library
-void __cdecl victorReleaseLock3()
+void __cdecl victorDestroyLock3()
 {
     if (g_victorLock3.m_initialized) {
         DeleteCriticalSection(&g_victorLock3.m_section);
@@ -722,7 +722,7 @@ void __cdecl victorReleaseLock3()
 }
 
 VA(0x006046a0, 0x1f)  // g_victorModuleCleanups[4]; external Victor library
-void __cdecl victorReleaseLock4()
+void __cdecl victorDestroyLock4()
 {
     if (g_victorLock4.m_initialized) {
         DeleteCriticalSection(&g_victorLock4.m_section);
@@ -731,7 +731,7 @@ void __cdecl victorReleaseLock4()
 }
 
 VA(0x006046c0, 0x1f)  // g_victorModuleCleanups[3]; external Victor library
-void __cdecl victorReleaseLock5()
+void __cdecl victorDestroyLock5()
 {
     if (g_victorLock5.m_initialized) {
         DeleteCriticalSection(&g_victorLock5.m_section);
@@ -740,7 +740,7 @@ void __cdecl victorReleaseLock5()
 }
 
 VA(0x006046e0, 0x1f)  // g_victorModuleCleanups[2]; external Victor library
-void __cdecl victorReleaseLock6()
+void __cdecl victorDestroyLock6()
 {
     if (g_victorLock6.m_initialized) {
         DeleteCriticalSection(&g_victorLock6.m_section);
@@ -749,7 +749,7 @@ void __cdecl victorReleaseLock6()
 }
 
 VA(0x00604700, 0x1f)  // g_victorModuleCleanups[1]; external Victor library
-void __cdecl victorReleaseLock7()
+void __cdecl victorDestroyLock7()
 {
     if (g_victorLock7.m_initialized) {
         DeleteCriticalSection(&g_victorLock7.m_section);

@@ -14,7 +14,7 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[2]
-SIGNATURE = "void TSingleSelectionWindow::createFilterWidgets()"
+SIGNATURE = "void TSingleSelectionWindow::createRandomMapOptionWidgets()"
 GROUPS = (("CountA", 9), ("CountB", 9), ("CountC", 9), ("CountD", 8),
           ("Water", 4), ("Strength", 4))
 

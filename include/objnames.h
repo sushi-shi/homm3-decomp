@@ -40,6 +40,6 @@ extern TAdvObjectTraits g_adventureObjectTraitRows[ADVENTURE_OBJECT_TRAIT_COUNT]
 
 extern const TAdvObjectTraits* g_adventureObjectTraits;
 
-void initializeAdventureObjectNames();
+void initializeAdventureObjectTraits();
 
 #endif  /* HOMM3_OBJNAMES_H */

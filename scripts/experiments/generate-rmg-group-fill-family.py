@@ -87,7 +87,7 @@ BASELINE = """int type_random_map_generator::fillTreasureGroup(TRmgZone* zone,
                 break;
             if (group->tryAddObject(nextObject))
                 break;
-            nextObject->unknownOperation();
+            nextObject->cancelPlacement();
             delete nextObject;
             if (++attempts >= RMG_TREASURE_ATTEMPTS)
                 goto groupFilled;

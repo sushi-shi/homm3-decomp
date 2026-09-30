@@ -260,7 +260,7 @@ void type_quest::save(TAbstractFile* file)
 
 // The base dialog getters append this deadline suffix. Retail reads the
 // row-wide time-limit column (51), without questType's per-kind offset.
-// questTextRow and getCurrentTurn preserve that lookup and the signed-short
+// getTextColumn and getCurrentTurn preserve that lookup and the signed-short
 // date result. This Complete-only caller has no Dreamcast source record;
 // the shared helper bodies and retail expansion support these source calls.
 // Constructing text from the separator directly removes two extra Mac calls
@@ -272,13 +272,13 @@ std::string type_quest::getTimeLimitText()
     int days = g_game->getCurrentTurn();
     std::string text(DATA_COMPGEN(0x00660330, questTimeLimitSeparator, " "));
     int remainingDays = m_limit - days;
-    const TSeerHutTextColumn* row = questTextRow();
+    const TSeerHutTextColumn* row = getTextColumn();
     text += formatString(row->m_completion.c_str(), remainingDays);
     return text;
 }
 
 VA(0x0056d240, 0xCA) MAC_ADDRESS(0x164614, 0x78)
-std::string type_quest::getProposalDialogText()
+std::string type_quest::getIncompleteVisitText()
 {
     if (m_limit < 0)
         return m_progressText;
@@ -286,7 +286,7 @@ std::string type_quest::getProposalDialogText()
 }
 
 VA(0x0056d310, 0xCA) MAC_ADDRESS(0x1646f4, 0x78)
-std::string type_quest::getProgressDialogText()
+std::string type_quest::getInitialVisitText()
 {
     if (m_limit < 0)
         return m_proposalText;
@@ -322,16 +322,16 @@ unsigned char type_experience_quest::isSatisfied(hero* currentHero)
     return currentHero->m_level >= m_requiredLevel;
 }
 VA(0x0056d4b0, 0x9F) MAC_ADDRESS(0x1648a0, 0x80)
-void type_experience_quest::doProposalDialog(hero* currentHero)
+void type_experience_quest::showIncompleteVisitDialog(hero* currentHero)
 {
-    normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x11,
+    normalDialog(getIncompleteVisitText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056d550, 0x9B) MAC_ADDRESS(0x164920, 0x80)
-void type_experience_quest::doProgressDialog()
+void type_experience_quest::showInitialVisitDialog()
 {
-    normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x11,
+    normalDialog(getInitialVisitText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
@@ -448,7 +448,7 @@ void type_skill_quest::showSkillRequirementsDialog(
 // Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
 // bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
 VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
-void type_skill_quest::doProposalDialog(hero* currentHero)
+void type_skill_quest::showIncompleteVisitDialog(hero* currentHero)
 {
     signed char missing[4];
     for (int i = 0; i < 4; ++i) {
@@ -462,7 +462,7 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
     if (m_progressText.length() > 0) {
         // Windows consumes the returned string directly; Mac 0x165014..0x165028
         // keeps that same temporary alive through the dialog, without a copy.
-        showSkillRequirementsDialog(getProposalDialogText().c_str(), missing);
+        showSkillRequirementsDialog(getIncompleteVisitText().c_str(), missing);
     } else {
         std::string requirement = skillRequirementText(missing);
         std::string text = formatString(
@@ -482,10 +482,10 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056dd60, 0xF5) MAC_ADDRESS(0x165154, 0x54)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
-void type_skill_quest::doProgressDialog()
+void type_skill_quest::showInitialVisitDialog()
 {
     showSkillRequirementsDialog(
-        getProgressDialogText().c_str(), m_requiredSkills);
+        getInitialVisitText().c_str(), m_requiredSkills);
 }
 
 VA(0x0056de60, 0x29) MAC_ADDRESS(0x1651a8, 0x6c)
@@ -529,7 +529,7 @@ std::string type_skill_quest::skillRequirementText(
 // Lifetime-extended requirement/result references do not recover it: six
 // unpinned ordinary-assignment forms reproduce 49.3657/50.4925%. The retained
 // assign boundary, not a missing temporary lifetime, remains the first issue.
-// Lane A r4 budget arithmetic: the floor budget 1000 less questTextRow's 51
+// Lane A r4 budget arithmetic: the floor budget 1000 less getTextColumn's 51
 // leaves 949 / 3 remaining candidates = 316 >= 307 at the second assignment,
 // so its assign(str, pos, n) expands. Retail needs <= 920 there: giving
 // questTexts a row local (cost > 40, subtracted) makes this body exact and
@@ -586,16 +586,16 @@ unsigned char type_defeat_hero_quest::isSatisfied(hero* currentHero)
     return (m_satisfiedMask & (1 << currentHero->m_owner)) != 0;
 }
 VA(0x0056e410, 0x99) MAC_ADDRESS(0x16567c, 0x74)
-void type_defeat_hero_quest::doProposalDialog(hero* currentHero)
+void type_defeat_hero_quest::showIncompleteVisitDialog(hero* currentHero)
 {
-    normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getIncompleteVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056e4b0, 0x95) MAC_ADDRESS(0x1656f0, 0x74)
-void type_defeat_hero_quest::doProgressDialog()
+void type_defeat_hero_quest::showInitialVisitDialog()
 {
-    normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getInitialVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -719,16 +719,16 @@ unsigned char type_monster_quest::isSatisfied(hero* currentHero)
     return owner == m_defeatedBy;
 }
 VA(0x0056ec00, 0x9F) MAC_ADDRESS(0x165cc8, 0x80)
-void type_monster_quest::doProposalDialog(hero* currentHero)
+void type_monster_quest::showIncompleteVisitDialog(hero* currentHero)
 {
-    normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x15,
+    normalDialog(getIncompleteVisitText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x0056eca0, 0x9B) MAC_ADDRESS(0x165d48, 0x80)
-void type_monster_quest::doProgressDialog()
+void type_monster_quest::showInitialVisitDialog()
 {
-    normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x15,
+    normalDialog(getInitialVisitText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
@@ -821,7 +821,7 @@ void type_monster_quest::save(TAbstractFile* file)
 VA(0x0056ef20, 0x57C) MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
-    m_position = g_game->gameFn004CEF10(m_mapMonster);
+    m_position = g_game->getMonsterLocationByIdentifier(m_mapMonster);
     if (m_position.m_x < 0)
         return;
 
@@ -875,7 +875,7 @@ VA_COMPGEN(0x0056f4a0, 0x21, SCALAR_DELETING_DTOR, type_artifact_quest)
 VA_COMPGEN(0x0056f4d0, 0xC2, IMPLICIT_DTOR, type_artifact_quest) MAC_COMPGEN_ADDRESS(0x16b450, 0x7c, IMPLICIT_DTOR, type_artifact_quest)
 
 VA(0x0056f5a0, 0x4C) MAC_ADDRESS(0x166540, 0x78)
-int type_artifact_quest::getAIValue(int player)
+int type_artifact_quest::getAIPaymentValue(int player)
 {
     int total = 0;
 
@@ -929,7 +929,7 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // a source-backed match, so the ordinary helper and push_back remain.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f8a0, 0x313) MAC_ADDRESS(0x1668fc, 0x1e8)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
-void type_artifact_quest::doProposalDialog(hero* currentHero)
+void type_artifact_quest::showIncompleteVisitDialog(hero* currentHero)
 {
     std::vector<TArtifact> missingArtifacts;
     std::vector<std::string> requirements;
@@ -949,10 +949,10 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
             textFormat.c_str(),
             joinTextList(requirements).c_str());
         textPointer = text.c_str();
-        showArtifactProgress(textPointer, missingArtifacts);
+        showArtifactRequirementsDialog(textPointer, missingArtifacts);
     } else {
         textPointer = m_progressText.c_str();
-        showArtifactProgress(textPointer, missingArtifacts);
+        showArtifactRequirementsDialog(textPointer, missingArtifacts);
     }
 }
 
@@ -964,13 +964,13 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 // only 89.8471%; preserve the retained helper and both proposal call sites.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fbc0, 0xE6) MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
-void type_artifact_quest::doProgressDialog()
+void type_artifact_quest::showInitialVisitDialog()
 {
-    showArtifactProgress(getProgressDialogText().c_str(), m_artifacts);
+    showArtifactRequirementsDialog(getInitialVisitText().c_str(), m_artifacts);
 }
 
 MAC_ADDRESS(0x166b38, 0xa4)
-void type_artifact_quest::showArtifactProgress(
+void type_artifact_quest::showArtifactRequirementsDialog(
     const char* text, const std::vector<TArtifact>& artifacts)
 {
     std::vector<type_dialog_resource> dialogResources;
@@ -1067,7 +1067,7 @@ type_creature_quest::type_creature_quest(unsigned char flags)
 }
 
 VA(0x00570480, 0x55) MAC_ADDRESS(0x166fe0, 0x100)
-int type_creature_quest::getAIValue(int player)
+int type_creature_quest::getAIPaymentValue(int player)
 {
     int total = 0;
 
@@ -1128,7 +1128,7 @@ void type_creature_quest::takePayment(hero* currentHero)
 // both in the localized text fragment and in the packed creature picture.
 
 VA(0x00570880, 0x2F8) MAC_ADDRESS(0x167438, 0x28c)
-void type_creature_quest::doProposalDialog(hero* currentHero)
+void type_creature_quest::showIncompleteVisitDialog(hero* currentHero)
 {
     std::string text;
     std::vector<std::string> requirements;
@@ -1174,7 +1174,7 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // helper/lifetime model must be measured in the merged compiler context.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570b80, 0x2D5) MAC_ADDRESS(0x1676c4, 0x2b8)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
-void type_creature_quest::doProgressDialog()
+void type_creature_quest::showInitialVisitDialog()
 {
     std::string text;
     std::vector<std::string> requirements;
@@ -1204,7 +1204,7 @@ void type_creature_quest::doProgressDialog()
             textFormat.c_str(),
             joinTextList(requirements).c_str());
     } else {
-        text = getProgressDialogText();
+        text = getInitialVisitText();
     }
     extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
 }
@@ -1299,7 +1299,7 @@ type_resource_quest::type_resource_quest(unsigned char flags)
 }
 
 VA(0x00571560, 0x12) MAC_ADDRESS(0x167e30, 0x2c)
-int type_resource_quest::getAIValue(int player)
+int type_resource_quest::getAIPaymentValue(int player)
 {
     return aiResourceCost(player, m_resources);
 }
@@ -1356,7 +1356,7 @@ void type_resource_quest::takePayment(hero* currentHero)
 }
 
 VA(0x00571840, 0x29D) MAC_ADDRESS(0x168188, 0x234)
-void type_resource_quest::doProposalDialog(hero* currentHero)
+void type_resource_quest::showIncompleteVisitDialog(hero* currentHero)
 {
     std::vector<std::string> requirements;
     std::string text;
@@ -1391,7 +1391,7 @@ void type_resource_quest::doProposalDialog(hero* currentHero)
 }
 
 VA(0x00571ae0, 0x9A) MAC_ADDRESS(0x1683bc, 0xb4)  // anchor-vtable
-void type_resource_quest::doProgressDialog()
+void type_resource_quest::showInitialVisitDialog()
 {
     std::vector<type_dialog_resource> dialogResources;
     for (int i = 0; i <= 6; ++i) {
@@ -1430,7 +1430,7 @@ void type_resource_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// The canonical questTexts -> getTextColumn chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
 // conditional-expression body over-expanded that child (91.2333%).
 VA(0x00571cc0, 0x23E) MAC_ADDRESS(0x1685e0, 0x1e0)
@@ -1468,16 +1468,16 @@ unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
     return currentHero->m_id == m_requiredHero;
 }
 VA(0x00571f20, 0x99) MAC_ADDRESS(0x168818, 0x74)
-void type_be_hero_quest::doProposalDialog(hero* currentHero)
+void type_be_hero_quest::showIncompleteVisitDialog(hero* currentHero)
 {
-    normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getIncompleteVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x00571fc0, 0x95) MAC_ADDRESS(0x16888c, 0x74)
-void type_be_hero_quest::doProgressDialog()
+void type_be_hero_quest::showInitialVisitDialog()
 {
-    normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getInitialVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 VA(0x00572060, 0xF2) MAC_ADDRESS(0x168900, 0x54)
@@ -1558,16 +1558,16 @@ unsigned char type_belong_to_player_quest::isSatisfied(hero* currentHero)
     return currentHero->m_owner == m_requiredOwner;
 }
 VA(0x00572510, 0x99) MAC_ADDRESS(0x168d4c, 0x74)
-void type_belong_to_player_quest::doProposalDialog(hero* currentHero)
+void type_belong_to_player_quest::showIncompleteVisitDialog(hero* currentHero)
 {
-    normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getIncompleteVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
 VA(0x005725b0, 0x95) MAC_ADDRESS(0x168dc0, 0x74)
-void type_belong_to_player_quest::doProgressDialog()
+void type_belong_to_player_quest::showInitialVisitDialog()
 {
-    normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
+    normalDialog(getInitialVisitText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
@@ -1626,7 +1626,7 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-// The canonical questTexts -> questTextRow chain is exact. Branch returns
+// The canonical questTexts -> getTextColumn chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
 // conditional-expression body over-expanded that child (87.4421%).
 VA(0x00572940, 0x204) MAC_ADDRESS(0x169050, 0x168)
@@ -1667,7 +1667,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 
     if (m_quest->hasExpired()) {
         if (humanPlayer) {
-            const TSeerHutTextColumn* row = m_quest->questTextRow();
+            const TSeerHutTextColumn* row = m_quest->getTextColumn();
             normalDialog(row->m_name.c_str(),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
@@ -1676,9 +1676,9 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 
     if (humanPlayer) {
         if (!playerHasInfo(currentHero->m_owner))
-            m_quest->doProgressDialog();
+            m_quest->showInitialVisitDialog();
         else if (!m_quest->isSatisfied(currentHero))
-            m_quest->doProposalDialog(currentHero);
+            m_quest->showIncompleteVisitDialog(currentHero);
     }
 
     m_visitedPlayers |= 1 << g_netLocalGamePos;
@@ -1705,7 +1705,7 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 // pushes.
 
 VA(0x00572d60, 0xE0) MAC_ADDRESS(0x16943c, 0xc8)
-std::string TQuestGuard::questGuardFn00572D60()
+std::string TQuestGuard::getQuestLogText()
 {
     return formatString(
         m_quest->questTexts().m_text4.c_str(),
@@ -1713,7 +1713,7 @@ std::string TQuestGuard::questGuardFn00572D60()
 }
 
 VA(0x00572e40, 0x1FF) MAC_ADDRESS(0x169504, 0x110)
-std::string TQuestGuard::questGuardFn00572E40(int player)
+std::string TQuestGuard::getQuickInfoText(int player)
 {
     std::string text;
     text = g_quickViewText[215];
@@ -1727,7 +1727,7 @@ std::string TQuestGuard::questGuardFn00572E40(int player)
 }
 
 VA(0x00573040, 0x1FF) MAC_ADDRESS(0x169614, 0x110)
-std::string TQuestGuard::questGuardFn00573040(int player)
+std::string TQuestGuard::getRolloverText(int player)
 {
     std::string text;
     text = g_quickViewText[215];
@@ -1880,7 +1880,7 @@ int TSeerHut::getValue(hero* currentHero)
 
     if (m_quest && !m_quest->hasExpired()
         && m_quest->isSatisfied(currentHero))
-        return value - m_quest->getAIValue(currentHero->m_owner);
+        return value - m_quest->getAIPaymentValue(currentHero->m_owner);
 
     return 0;
 }
@@ -1919,9 +1919,9 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
     } else {
         if (humanPlayer) {
             if (!playerHasInfo(g_netLocalGamePos))
-                m_quest->doProgressDialog();
+                m_quest->showInitialVisitDialog();
             else if (!m_quest->isSatisfied(currentHero))
-                m_quest->doProposalDialog(currentHero);
+                m_quest->showIncompleteVisitDialog(currentHero);
         }
 
         m_visitedPlayers |= 1 << g_netLocalGamePos;
@@ -2077,7 +2077,7 @@ int TSeerReward::getValue(const hero* currentHero)
         }
 
     case eRewardSecondarySkill:
-        return const_cast<hero*>(currentHero)->soDGetSeerSkillValue(
+        return const_cast<hero*>(currentHero)->getSeerSkillRewardValue(
             m_value.m_secondarySkill.m_skillType, m_value.m_secondarySkill.m_bonus);
 
     case eRewardArtifact: {
@@ -2283,7 +2283,7 @@ std::string TSeerHut::getSeerLogText()
 // separator relocation.
 
 VA(0x005741b0, 0x22C) MAC_ADDRESS(0x16a7cc, 0x150)
-std::string TSeerHut::seerHutFn005741B0(int player) const
+std::string TSeerHut::getRolloverText(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
         return g_quickViewText[83];
@@ -2302,7 +2302,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
 }
 
 VA(0x005743e0, 0x22C) MAC_ADDRESS(0x16a91c, 0x150)
-std::string TSeerHut::seerHutFn005743E0(int player) const
+std::string TSeerHut::getQuickInfoText(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
         return g_quickViewText[83];

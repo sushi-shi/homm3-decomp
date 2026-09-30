@@ -250,7 +250,7 @@ unclaimed. So do the unnamed statics between the locks and the
 unstructured `.data` words.
 
 The cleanup table points at nine bodies that `src/victor.cpp` claims:
-`victorReleaseNothing`, a bare `ret` at 0x603b10, and `victorReleaseLock0`..
+`victorReleaseNothing`, a bare `ret` at 0x603b10, and `victorDestroyLock0`..
 `7`, eight 31-byte `if (m_initialized) { DeleteCriticalSection(&m_section);
 m_initialized = 0; }` cleanups at 0x604620-0x604700, one per `VictorLock` in
 address order. With the bodies claimed the table's raw initializer

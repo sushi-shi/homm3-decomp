@@ -60,13 +60,13 @@ HEAD = """void type_random_map_generator::commitTreasureGroup(TRmgTreasureGroup*
     bounds.m_maximumY = std::_cpp_min<long>(group->m_map.m_mapHeight, m_map.m_mapHeight - position.m_y);
 """
 POLICY = """            if (destination->m_tile.m_landType != eTerrainWater
-                && !source->hasSubterraneanGate() && source->m_tileData.m_roadPassable
-                && source->m_tile.m_landType != eTerrainRock && !source->isRoadEntrance()
+                && !source->isReservedOpen() && source->m_tileData.m_roadPassable
+                && source->m_tile.m_landType != eTerrainRock && !source->isObjectEntrance()
                 && destination->m_tileData.m_roadPassable
-                && destination->m_tile.m_landType != eTerrainRock && !destination->isRoadEntrance()) {
+                && destination->m_tile.m_landType != eTerrainRock && !destination->isObjectEntrance()) {
                 if (!destination->m_connection.m_present)
                     destination->m_tileData.m_subterraneanGate = 0;
-                if (source->hasBorderObject() && !destination->m_connection.m_present) {
+                if (source->needsBlockingDecoration() && !destination->m_connection.m_present) {
                     destination->m_tileData.m_subterraneanGate = 0;
                     destination->m_tileData.m_borderObject = 1;
                 }
@@ -84,7 +84,7 @@ POLICY = """            if (destination->m_tile.m_landType != eTerrainWater
         }
     }
     for (unsigned int objectIndex = 0; objectIndex < group->m_objects.size(); ++objectIndex)
-        group->m_objects[objectIndex]->isWritable();
+        group->m_objects[objectIndex]->finishPlacement();
 }"""
 
 
@@ -112,8 +112,8 @@ def body(scan, construction, snapshots):
     destination = forms[construction]
     if construction:
         destination += "            TRmgMapItem* destination = m_map.getMapItem(destinationPosition);\n"
-    gate = "            unsigned char gate = destination->hasSubterraneanGate();\n"
-    border = "            unsigned char border = destination->hasBorderObject();\n"
+    gate = "            unsigned char gate = destination->isReservedOpen();\n"
+    border = "            unsigned char border = destination->needsBlockingDecoration();\n"
     source = "            TRmgMapItem* source = group->m_map.getMapItem(" + x + ", " + y + ", 0);\n"
     orders = (gate + border + source, gate + source + border, source + gate + border, border + gate + source)
     return HEAD + scans[scan] + destination + orders[snapshots] + POLICY

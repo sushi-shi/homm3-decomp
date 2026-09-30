@@ -184,7 +184,7 @@ DATA(0x006839b8) char g_archiveDriveLetter = 'd';
 // The Smack/Bink handle views and import declarations come from the SDK
 // headers included by smackmgr.h / binkmanager.h.
 
-void showVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
+void openSmackerVideo(int id, int x, int y, int w, int h, int a6, bool a7, bool a8);
 namespace SmackManager {
 void nextSmackerFrame();
 void closeSmacker();
@@ -307,7 +307,7 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
             || (id == VIDEO_ID_STATE_GATED
                 && g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && g_videoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
-        showVideo(id, x, y, w, h, a6, a7, a8);
+        openSmackerVideo(id, x, y, w, h, a6, a7, a8);
     else
         BinkManager::openBink(id, x, y, w, h, a6, a7);
 }
@@ -385,7 +385,7 @@ void videoPause()
 
 VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)  // dc 0x14ac50
 // The implicit zero tests are byte-identical to `== 0`/`!= 0` here but cost
-// 4 fewer /Ob2 IL units; showVideo's third videoClose expansion only admits
+// 4 fewer /Ob2 IL units; openSmackerVideo's third videoClose expansion only admits
 // this body at that cost. Splitting the guard into two returns costs more.
 void videoResume()
 {
@@ -884,7 +884,7 @@ VA(0x00598af0, 0x385) MAC_ADDRESS(0x25f6e4, 0x264)
 // nested budget of 114). With them the two plain descriptor subscripts give
 // retail's id*20 index; the former const-reference row (76.24%) put a
 // pointer on the frame instead.
-void showVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
+void openSmackerVideo(int id, int x, int y, int w, int h, int loop, bool autoDraw,
                bool advance)
 {
     if (g_noSound == 0 && g_soundManager->m_ds != 0
@@ -1055,7 +1055,7 @@ static unsigned char playSmackerCore(int id, int x, int y, int w, int h)
     unsigned char aborted;
     vh = h;
     vw = w;
-    showVideo(id, x, y, vw, vh, 0, 0, 1);
+    openSmackerVideo(id, x, y, vw, vh, 0, 0, 1);
     if (!SmackManager::g_playingSmack.m_smack) {
         result = 0;
     } else {

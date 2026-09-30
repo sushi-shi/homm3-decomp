@@ -1969,7 +1969,7 @@ void TOverviewWindow::doRollover(int codeY)
             case OVERVIEW_HERO_VIEW_NAME_ID:
                 sprintf(g_text,
                         (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
-                        currHero->m_name, currHero->heroFn004D8F70());
+                        currHero->m_name, currHero->getClassName());
                 break;
 
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID:
@@ -2116,7 +2116,7 @@ void TOverviewWindow::doRollover(int codeY)
                     sprintf(g_text,
                             (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                             currHero->m_name,
-                            currHero->heroFn004D8F70());
+                            currHero->getClassName());
                 }
                 break;
 
@@ -2129,7 +2129,7 @@ void TOverviewWindow::doRollover(int codeY)
                     sprintf(g_text,
                             (*g_generalText)[GENERAL_TEXT_HERO_ROLLOVER_FORMAT],
                             currHero->m_name,
-                            currHero->heroFn004D8F70());
+                            currHero->getClassName());
                 }
                 break;
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent rectangle lifetimes for expandObstacleClearance (0x53f880).
+"""Independent rectangle lifetimes for markZoneBoundaryObstacles (0x53f880).
 
 Retail carries outer x+2 at entry, against the candidate's x-1 induction.
 The already-exact neighboring repairWaterZoneBorders uses scoped TPoint lower
@@ -19,7 +19,7 @@ from homm3.core.common import HOMM3_DIR
 from homm3.vc6 import source_families
 from experiments._support import generator
 
-NAME = "type_random_map_generator::expandObstacleClearance"
+NAME = "type_random_map_generator::markZoneBoundaryObstacles"
 
 
 def baseline_definition(source):

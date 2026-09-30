@@ -683,9 +683,9 @@ public:
     const char* getFileName(int which);
     void drawBasicMapInfo();
     unsigned char onGameTransmitInitMsg(CNetMsg* netMsg);
-    void updateFilterWidgets();
-    void refreshFilterWidgets();
-    void openRandomMapOptions();
+    void updateRandomMapOptionWidgets();
+    void refreshRandomMapOptionWidgets();
+    void toggleGeneratedMapList();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
     // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
@@ -791,25 +791,25 @@ public:
     char* getHeaderDirectory();
     std::vector<GameSelectionHeadersStruct>* getSourceHeaders();
     void getHeaders(std::vector<GameSelectionHeadersStruct>* headers);
-    void windowFn00582e90(
+    void setMapHeaders(
         std::vector<GameSelectionHeadersStruct>* headers);
     int getHeader(char* dir, char* filename,
                   GameSelectionHeadersStruct* header);
     void setupScenarioOptions(unsigned char randomMaps);
     void setupAdvancedOptions();
-    void setupFilterOptions();
-    void createFilterWidgets();
+    void toggleRandomMapOptions();
+    void createRandomMapOptionWidgets();
     // Complete-only member at 0x580430. Its body rebuilds the map header and
     // player slots from field_18A0, redraws, and broadcasts the resulting
     // setup. The role name remains provisional until its body is claimed.
-    void rebuildFilteredPlayerSetup();
+    void rebuildRandomMapPlayerSetup();
     unsigned char sendPlayerPositions(unsigned long dpidTo);
     unsigned char sendSetupInfo(unsigned long dpid);
     bool isHost();
     void sendPlayerFaces();
     bool isMultiPlayer();
     void showWidget(int id);
-    void turnOffFilterOptions();
+    void hideRandomMapOptions();
     int calcPosition(int playerPos);
 
 private:

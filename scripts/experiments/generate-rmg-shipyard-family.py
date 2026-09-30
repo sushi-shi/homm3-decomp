@@ -80,7 +80,7 @@ def shipyard_axes(original):
     ]
     types = ("unsigned char", "char", "signed char", "TTerrainType", "int")
     query_template = ("        {type} terrain = item->m_tile.m_landType;\n"
-                      "        if (terrain == eTerrainWater && item->hasSubterraneanGate())")
+                      "        if (terrain == eTerrainWater && item->isReservedOpen())")
     final_template = ("    {type} terrain = m_map.getMapItem(nearby)->m_tile.m_landType;\n"
                       "    return terrain != eTerrainWater;")
     current = [name for name in types if query_template.format(type=name) in original

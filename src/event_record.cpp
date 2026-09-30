@@ -80,7 +80,7 @@ void type_event_record::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:88
-// Retail base vtable slot5 folds to the empty ret body at0x5bc690.
+// Retail base vtable getCrossoverPoolIndex folds to the empty ret body at0x5bc690.
 MAC_ADDRESS(0x0bf0fc, 0x4)
 void type_event_record::undo()
 {

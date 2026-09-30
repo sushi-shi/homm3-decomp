@@ -38,7 +38,7 @@ def make_manifest(parent):
     record = next(row for row in records if row["id"] == control_id)
     if not record.get("scores") or not (parent / "candidates" / control_id / "repeat/seerhut/candidate.obj").is_file():
         raise ValueError("Missing scored, reproduced parent control")
-    start = current.index("void type_skill_quest::doProposalDialog(hero* currentHero)\n{")
+    start = current.index("void type_skill_quest::showIncompleteVisitDialog(hero* currentHero)\n{")
     end = current.index("\n}\n", start) + 2
     original = current[start:end]
     lines = original.splitlines(keepends=True)
@@ -62,8 +62,8 @@ def make_manifest(parent):
         removed = {line for bit, pair in enumerate(regions) if mask & (1 << bit) for line in pair}
         candidate = "".join(line for index, line in enumerate(lines) if index not in removed)
         if custom_ref:
-            candidate = candidate.replace("std::string text = getProposalDialogText();",
-                                          "const std::string& text = getProposalDialogText();")
+            candidate = candidate.replace("std::string text = getIncompleteVisitText();",
+                                          "const std::string& text = getIncompleteVisitText();")
         if requirement_ref:
             candidate = candidate.replace("std::string requirement = skillRequirementText(missing);",
                                           "const std::string& requirement = skillRequirementText(missing);")

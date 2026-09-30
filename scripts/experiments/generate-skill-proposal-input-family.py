@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def make_manifest():
     source = (ROOT / "src/seerhut.cpp").read_text()
-    signature = "void type_skill_quest::doProposalDialog(hero* currentHero)\n{\n"
+    signature = "void type_skill_quest::showIncompleteVisitDialog(hero* currentHero)\n{\n"
     start = source.index(signature) + len(signature)
     end = source.index("\n\n    if (m_progressText.length() > 0)", start)
     original = source[start:end]

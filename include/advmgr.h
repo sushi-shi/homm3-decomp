@@ -651,7 +651,7 @@ public:
     ~TAdventureMapWindow();
     virtual int open(int zOrder, unsigned char update);
     virtual void close(unsigned char update);
-    virtual void vslot8(unsigned char on);
+    virtual void onSleepChange(unsigned char on);
     unsigned char processRightSelect(const message* msg);
     unsigned char processHover(int hx, int hy);
     void doHeroKnob(unsigned char up);
@@ -1522,7 +1522,7 @@ bool hasFlag(int objType);
 int getFlaggedObjectOwner(NewmapCell* thisCell);
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
-void advmgrFn0040D670(char* buffer, NewmapCell* cell, long playerId,
+void getMineHelpText(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList);
 
 // --- globals ---

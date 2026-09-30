@@ -1441,7 +1441,7 @@ inline void CNewPlayerUpdateProc::handleRequests()
             row = &g_singleSelectionWindow->m_headersA[m_requests[i].m_number];
         CGameHeaderInfoMsg msg(m_requests[i].m_flag,
                                m_requests[i].m_number, row);
-        msg.remoteFn00512C80(m_dpid, 1, 1);
+        msg.sendToDPID(m_dpid, 1, 1);
     }
     m_requests.clear();
 }
@@ -1510,7 +1510,7 @@ void CNewPlayerUpdateProc::tick()
                 CGameHeaderInfoMsg msg(
                     0, m_nextHeader,
                     &g_singleSelectionWindow->m_headersA[m_nextHeader]);
-                msg.remoteFn00512C80(m_dpid, 1, 1);
+                msg.sendToDPID(m_dpid, 1, 1);
             } else {
                 CMapFileNameMsg msg(
                     0, m_nextHeader,
@@ -2259,7 +2259,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     }
 
     if ((!m_loadMode && !m_saveMode) || (m_loadMode && isMultiPlayer())) {
-        createFilterWidgets();
+        createRandomMapOptionWidgets();
         if (m_loadMode)
             m_widgets.push_back(new textButton(
                 414, 81, 200, 20, 128, "gspbutt.def",
@@ -2376,7 +2376,7 @@ TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     if ((m_loadMode && !g_remoteOn) || m_saveMode) {
         setupScenarioOptions(0);
     } else {
-        turnOffFilterOptions();
+        hideRandomMapOptions();
         turnOffScenarioOptions();
         turnOffAdvancedOptions();
     }
@@ -2603,7 +2603,7 @@ VA_COMPGEN(0x0057d100, 0x21, SCALAR_DELETING_DTOR, CEnterNameEdit)
 // 84.85%; the setter with scoped `created` locals 99.81%.
 
 VA(0x0057D170, 0x1DF7) MAC_ADDRESS(0x1756bc, 0x1c50)
-void TSingleSelectionWindow::createFilterWidgets()
+void TSingleSelectionWindow::createRandomMapOptionWidgets()
 {
     m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
     m_randomMapOptions[1] = 2;
@@ -2778,7 +2778,7 @@ void TSingleSelectionWindow::createFilterWidgets()
 // player/human bounds use value wrappers. Binding the selected player id
 // before widgetSetStatus preserves the retail argument homes (100%).
 VA(0x0057ef70, 0x3B9) MAC_ADDRESS(0x17730c, 0x480)
-void TSingleSelectionWindow::updateFilterWidgets()
+void TSingleSelectionWindow::updateRandomMapOptionWidgets()
 {
     if (!m_inFilterOptions)
         return;
@@ -3012,13 +3012,13 @@ void TSingleSelectionWindow::updateMainWindow()
 }
 
 VA(0x0057FEB0, 0x57A) MAC_ADDRESS(0x1780e4, 0x5ec)  // Complete-only filter-option control builder
-void TSingleSelectionWindow::setupFilterOptions()
+void TSingleSelectionWindow::toggleRandomMapOptions()
 {
     if (m_loadMode || m_saveMode)
         return;
 
     if (m_inFilterOptions) {
-        turnOffFilterOptions();
+        hideRandomMapOptions();
         return;
     }
 
@@ -3087,7 +3087,7 @@ void TSingleSelectionWindow::setupFilterOptions()
     m_inFilterOptions = 1;
     if (!m_randomMapSelected) {
         m_randomMapSelected = 1;
-        rebuildFilteredPlayerSetup();
+        rebuildRandomMapPlayerSetup();
     }
 }
 
@@ -3103,7 +3103,7 @@ void TSingleSelectionWindow::setupFilterOptions()
 // This restores Windows's local-header frame and destructor frontier (97.69%).
 
 VA(0x00580430, 0x63B) MAC_ADDRESS(0x1786d0, 0x4c4)  // Complete-only filtered player/setup rebuild
-void TSingleSelectionWindow::rebuildFilteredPlayerSetup()
+void TSingleSelectionWindow::rebuildRandomMapPlayerSetup()
 {
     g_game->setupOrigData();
 
@@ -3194,7 +3194,7 @@ void TSingleSelectionWindow::setupScenarioOptions(unsigned char randomMaps)
         return;
     }
 
-    turnOffFilterOptions();
+    hideRandomMapOptions();
     turnOffAdvancedOptions();
     m_randomMapSelected = 0;
 
@@ -3346,7 +3346,7 @@ void TSingleSelectionWindow::setupAdvancedOptions()
     }
 
     turnOffScenarioOptions();
-    turnOffFilterOptions();
+    hideRandomMapOptions();
 
     m_durationSlider->show();
     if (!m_loadMode)
@@ -3540,7 +3540,7 @@ void TSingleSelectionWindow::turnOffAdvancedOptions()
 // and scenario pane flags, without Complete's random-map panel state.
 // The desktop widget-103/280..335 teardown and final +0x37e clear belong here.
 VA(0x00581D80, 0x550) MAC_ADDRESS(0x179aa8, 0x5b4)  // anchor-callee SetupAdvancedOptions + ctor; Complete-only random-map pane
-void TSingleSelectionWindow::turnOffFilterOptions()
+void TSingleSelectionWindow::hideRandomMapOptions()
 {
     if (m_saveMode || (m_loadMode && !isMultiPlayer()))
         return;
@@ -3635,7 +3635,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                 dlg.createWin(m_heroPix[displayFace], faceName,
                               m_heroSpecificAbility, heroId,
                               theHero->getSpecificAbilityTextShort(),
-                              theHero->heroFn004D8F70());
+                              theHero->getClassName());
                 dlg.doModal(0);
             }
         } else {
@@ -3669,7 +3669,7 @@ unsigned char TSingleSelectionWindow::processRightSelect(int id)
                                   getHeroName(gamePos),
                                   m_heroSpecificAbility, heroId,
                                   theHero->getSpecificAbilityTextShort(),
-                                  theHero->heroFn004D8F70());
+                                  theHero->getClassName());
                     dlg.doModal(0);
                 }
             }
@@ -3877,11 +3877,11 @@ void TSingleSelectionWindow::getHeaders(
         }
     }
     delete[] mapNames;
-    windowFn00582e90(headers);
+    setMapHeaders(headers);
 }
 
 VA(0x00582E90, 0x2DB) MAC_ADDRESS(0x17ab18, 0x170)
-void TSingleSelectionWindow::windowFn00582e90(
+void TSingleSelectionWindow::setMapHeaders(
     std::vector<GameSelectionHeadersStruct>* list)
 {
     unsigned char b;
@@ -4028,7 +4028,7 @@ int TSingleSelectionWindow::getHeader(char* dir, char* filename, GameSelectionHe
 
 // E:\gamedcs\singleselectionwindow.cpp:3871
 // Mac retains this shared transfer at code 0:0x17b0b0. VC6 expands it in
-// rebuildFilteredPlayerSetup, both updateGameVars arms and onBeginGame.
+// rebuildRandomMapPlayerSetup, both updateGameVars arms and onBeginGame.
 MAC_ADDRESS(0x17b0b0, 0x114)
 void TSingleSelectionWindow::applyHeaderToGame(
     GameSelectionHeadersStruct* header)
@@ -4496,7 +4496,7 @@ int TSingleSelectionWindow::update()
             g_smallFont->drawBoundedString(
                 g_generalText->getText(GENERAL_TEXT_RANDOM_MAP_SETUP_HELP), g_windowManager->m_screenBitmap,
                 58, 48, 334, 34, font::WHITE, 1, -1);
-            updateFilterWidgets();
+            updateRandomMapOptionWidgets();
         }
     }
     g_windowManager->updateScreen(0, 0, 800, 600);
@@ -5196,9 +5196,9 @@ bool TSingleSelectionWindow::onClickMsg(CNetMsg* netMsg)
 // OnWidgetDeselect and calls it in the filter arms. Windows expands the
 // same sequence at those sites.
 MAC_ADDRESS(0x17e308, 0x5c)
-void TSingleSelectionWindow::refreshFilterWidgets()
+void TSingleSelectionWindow::refreshRandomMapOptionWidgets()
 {
-    updateFilterWidgets();
+    updateRandomMapOptionWidgets();
     drawWindow(0, 0xffff0001, 0xffff);
     this->update();
 }
@@ -5236,7 +5236,7 @@ TTownType pickNextAlignment(int legalAlignments, TTownType type)
 // Mac +0x17e3c4 retains this helper immediately before OnWidgetDeselect.
 // Its random-maps arm calls it; VC6 expands the three calls in that arm.
 MAC_ADDRESS(0x17e3c4, 0x60)
-void TSingleSelectionWindow::openRandomMapOptions()
+void TSingleSelectionWindow::toggleGeneratedMapList()
 {
     setupScenarioOptions(1);
     drawWindow(0, 0xffff0001, 0xffff);
@@ -5490,8 +5490,8 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
         this->update();
         break;
     case SSW_FILTER_OPTIONS:
-        setupFilterOptions();
-        updateFilterWidgets();
+        toggleRandomMapOptions();
+        updateRandomMapOptionWidgets();
         drawWindow(0, 0xffff0001, 0xffff);
         this->update();
         break;
@@ -5515,23 +5515,23 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
 
     case SSW_FILTER_MAP_SMALL:
         m_randomMapOptions[0] = MAP_DIMENSION_SMALL;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_MEDIUM:
         m_randomMapOptions[0] = MAP_DIMENSION_MEDIUM;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_LARGE:
         m_randomMapOptions[0] = MAP_DIMENSION_LARGE;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_XLARGE:
         m_randomMapOptions[0] = MAP_DIMENSION_EXTRA_LARGE;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_MAP_ALL:
         m_randomMapOptions[1] = SCENARIO_FILTER_CATEGORY_ANY - m_randomMapOptions[1];
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
 
     case SSW_FILTER_PLAYERS_FIRST:
@@ -5543,13 +5543,13 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_PLAYERS_FIRST + 6:
     case SSW_FILTER_PLAYERS_LAST:
         m_randomMapOptions[2] = msg->m_codeY - SSW_FILTER_PLAYERS_FIRST + 1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        refreshRandomMapOptionWidgets();
+        rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_PLAYERS_ANY:
         m_randomMapOptions[2] = -1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        refreshRandomMapOptionWidgets();
+        rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_FIRST:
     case SSW_FILTER_HUMANS_FIRST + 1:
@@ -5560,12 +5560,12 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_HUMANS_FIRST + 6:
     case SSW_FILTER_HUMANS_LAST:
         m_randomMapOptions[3] = msg->m_codeY - SSW_FILTER_HUMANS_FIRST;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        refreshRandomMapOptionWidgets();
+        rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_HUMANS_ANY:
         m_randomMapOptions[3] = -1;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_TEAMS_FIRST:
     case SSW_FILTER_TEAMS_FIRST + 1:
@@ -5576,13 +5576,13 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_TEAMS_FIRST + 6:
     case SSW_FILTER_TEAMS_LAST:
         m_randomMapOptions[4] = msg->m_codeY - SSW_FILTER_TEAMS_FIRST;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        refreshRandomMapOptionWidgets();
+        rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_TEAMS_ANY:
         m_randomMapOptions[4] = -1;
-        refreshFilterWidgets();
-        rebuildFilteredPlayerSetup();
+        refreshRandomMapOptionWidgets();
+        rebuildRandomMapPlayerSetup();
         break;
     case SSW_FILTER_VERSION_FIRST:
     case SSW_FILTER_VERSION_FIRST + 1:
@@ -5592,31 +5592,31 @@ int TSingleSelectionWindow::onWidgetDeselect(message* msg,
     case SSW_FILTER_VERSION_FIRST + 5:
     case SSW_FILTER_VERSION_LAST:
         m_randomMapOptions[5] = msg->m_codeY - SSW_FILTER_VERSION_FIRST;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_VERSION_ANY:
         m_randomMapOptions[5] = -1;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_CATEGORY_FIRST:
     case SSW_FILTER_CATEGORY_FIRST + 1:
     case SSW_FILTER_CATEGORY_FIRST + 2:
     case SSW_FILTER_CATEGORY_LAST:
         m_randomMapOptions[6] = msg->m_codeY - SSW_FILTER_CATEGORY_FIRST;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_DURATION_FIRST:
     case SSW_FILTER_DURATION_FIRST + 1:
     case SSW_FILTER_DURATION_LAST:
         m_randomMapOptions[7] = msg->m_codeY - SSW_FILTER_DURATION_FIRST;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_FILTER_DURATION_ANY:
         m_randomMapOptions[7] = -1;
-        refreshFilterWidgets();
+        refreshRandomMapOptionWidgets();
         break;
     case SSW_RANDOM_MAPS:
-        openRandomMapOptions();
+        toggleGeneratedMapList();
         break;
 
     case SSW_CHAT_TOGGLE:
@@ -6611,7 +6611,7 @@ MAC_ADDRESS(0x181a3c, 0xac)
 bool TSingleSelectionWindow::onNewMapHeaderInfo(CNetMsg* netMsg)
 {
     CNewMapHeaderInfoMsg msg;
-    msg.remoteFn00512E00(netMsg);
+    msg.readMessage(netMsg);
     g_game->setupOrigData();
     return true;
 }
@@ -6951,7 +6951,7 @@ VA(0x0058AA40, 0x3AE) MAC_ADDRESS(0x181f64, 0x590)  // dc 0x14111c
 unsigned char TSingleSelectionWindow::onGameHeaderInfoMsg(CNetMsg* netMsg)
 {
     CGameHeaderInfoMsg msg;
-    msg.remoteFn00512E00(netMsg);
+    msg.readMessage(netMsg);
     g_logFile.log(DATA_COMPGEN(0x00683940, recvGameHeaderLog,
                              "Rec'd game header [%d]"),
                 msg.m_number);
@@ -7606,7 +7606,7 @@ bool TSingleSelectionWindow::beginNewGame()
         CNewMapHeaderInfoMsg mapHeaderMsg(&g_game->m_mapHeader);
         // Retail 0x58c77d calls the player-recipient overload with toWho=0.
         // Mac 0x183f80 calls the separate DPID overload with dpid=-1.
-        int returnValue = mapHeaderMsg.remoteFn00512D40(0, 0, 1);
+        int returnValue = mapHeaderMsg.send(0, 0, 1);
         if (!sendPlayerPositions(0))
             return 0;
         g_playerTurn = g_netLocalGamePos;
@@ -8467,7 +8467,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
 
     m_commonGameVersion = level;
     if (m_randomMapSelected)
-        rebuildFilteredPlayerSetup();
+        rebuildRandomMapPlayerSetup();
     if (!m_inAdvancedOptions)
         return;
 

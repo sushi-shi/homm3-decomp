@@ -535,15 +535,15 @@ void heroWindow::sleepAllWidgets(unsigned char sleep)
 {
     if (sleep) {
         if (m_sleepCount++ == 0)
-            vslot8(1);
+            onSleepChange(1);
     } else {
         if (--m_sleepCount == 0)
-            vslot8(0);
+            onSleepChange(0);
     }
 }
 
 VA(0x005ff5f0, 0x4F) MAC_ADDRESS(0x20bdb4, 0xbc)
-void heroWindow::vslot8(unsigned char on)
+void heroWindow::onSleepChange(unsigned char on)
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it)
         (*it)->sleep(on);

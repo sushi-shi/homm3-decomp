@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def make_manifest():
     source = (ROOT / "src/seerhut.cpp").read_text()
-    start = source.index("void type_skill_quest::doProposalDialog(hero* currentHero)\n{")
+    start = source.index("void type_skill_quest::showIncompleteVisitDialog(hero* currentHero)\n{")
     end = source.index("\n}\n", start) + 2
     original = source[start:end]
     lines = original.splitlines(keepends=True)

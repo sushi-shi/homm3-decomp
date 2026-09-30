@@ -48,7 +48,7 @@ def main():
             new=(indent+declaration+'direction = 0;\n'+indent+'for (const TPoint* offset = g_tileDirections;\n'+indent+'     offset < g_tileDirections + TILE_DIR_COUNT; ++offset, ++direction) {')
             changed=changed.replace(loop,new,1)
             if reference:
-                changed=changed.replace('getNeighbourLand(point, g_tileDirections[direction])','getNeighbourLand(point, *offset)')
+                changed=changed.replace('getNeighbourTileType(point, g_tileDirections[direction])','getNeighbourTileType(point, *offset)')
             body=body.replace(original,changed)
         option=dict(name=('offset_reference' if reference else 'direction_index')+'+synchronized_cursors',replace=body)
         if decl!=header:option['extra_edits']=[dict(source='include/rmg.h',find=header,replace=decl)]

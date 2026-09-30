@@ -38,9 +38,9 @@ def variants(source,header):
             assert source.count(anchor)==1
             edits.append(dict(source='src/rmg_terrain.cpp',find=anchor,replace=definition+anchor))
         if receiver:
-            spelling=('const TRmgLinePatternTable* table = painter->getPattern(oldType);' if receiver==1 else
-                      ('TRmgLinePatternTable&' if receiver==2 else 'const TRmgLinePatternTable&')+' table = *painter->getPattern(oldType);')
-            body=body.replace('TRmgLinePatternTable* table = painter->getPattern(oldType);',spelling)
+            spelling=('const TRmgLinePatternTable* table = painter->getPatternTable(oldType);' if receiver==1 else
+                      ('TRmgLinePatternTable&' if receiver==2 else 'const TRmgLinePatternTable&')+' table = *painter->getPatternTable(oldType);')
+            body=body.replace('TRmgLinePatternTable* table = painter->getPatternTable(oldType);',spelling)
             if receiver>1:
                 body=body.replace('table->','table.').replace('selectRmgLinePattern(matches, table,','selectRmgLinePattern(matches, &table,')
         replacement=('int pattern = selected;','const int pattern = selected;',

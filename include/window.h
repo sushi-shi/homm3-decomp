@@ -138,7 +138,7 @@ public:
     // 13th slot was modelled). It runs widget::sleep over the whole
     // Widgets vector, i.e. it is the window-wide half of the same
     // nest-counter/edge-hook pair SleepAllWidgets runs on field_48.
-    virtual void vslot8(unsigned char on);           // slot 8, retail 0x5ff5f0, unidentified
+    virtual void onSleepChange(unsigned char on);           // slot 8, retail 0x5ff5f0; sleep/wake notification
 
     // DC field-list order: the data follows the methods, as in widget.
 public:

@@ -84,7 +84,7 @@ int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
     'shipyard': '''// Original: NewfullMap::readShipyardData, mapcell.cpp:2383, dc 0xefe28.
 // Before normalization (locals): char_buffer. DC proves the ordinary member,
 // count/padding locals and two guarded reads. Complete defers the later DC
-// trigger/terrain scan to loadShipyards; its readObject arm only initializes
+// trigger/terrain scan to initializeShipyardBoatPositions; its readObject arm only initializes
 // the two boat coordinates after the reads, then discards the status.
 int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)
 {

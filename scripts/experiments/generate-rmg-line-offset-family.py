@@ -17,11 +17,11 @@ from experiments._support import generator
 
 def model(source, header, reference, traversal):
     extract=generator('generate-rmg-position-family.py').definition
-    declaration='int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);'
+    declaration='int getNeighbourTileType(const TRmgGridPoint& point, unsigned int direction);'
     if reference:
         assert header.count(declaration)==1
         header=header.replace(declaration,declaration.replace('unsigned int direction','const TPoint& offset'))
-        original=extract(source,'TRmgLinePainterInterface::getNeighbourLand')
+        original=extract(source,'TRmgLinePainterInterface::getNeighbourTileType')
         body=original.replace('unsigned int direction','const TPoint& offset').replace('g_tileDirections[direction]','offset')
         source=source.replace(original,body)
     for name in ('refreshRmgLinePoint','TRmgLineWalker::paintPoint'):
@@ -35,9 +35,9 @@ def model(source, header, reference, traversal):
             replacement=(indent+'for (const TPoint* offset = g_tileDirections;\n'+indent+'     offset != g_tileDirections + TILE_DIR_COUNT; ++offset) {\n'+indent+'    '+('unsigned int ' if name=='refreshRmgLinePoint' else '')+'direction = offset - g_tileDirections;')
             body=body.replace(loop,replacement,1)
             if reference:arg='*offset'
-        old='painter->getNeighbourLand(point, direction)'
+        old='painter->getNeighbourTileType(point, direction)'
         assert body.count(old)==1
-        body=body.replace(old,'painter->getNeighbourLand(point, '+arg+')')
+        body=body.replace(old,'painter->getNeighbourTileType(point, '+arg+')')
         source=source.replace(original,body)
     return source,header
 

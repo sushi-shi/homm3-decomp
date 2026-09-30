@@ -124,9 +124,9 @@ public:
     // Retail's base vtable at 0x642c80 has six _purecall slots. The pure
     // destructor still has its ordinary out-of-line body at 0x5b3850.
     virtual ~TRmgTerrainRule() = 0;
-    virtual unsigned char hasEntries() = 0;
+    virtual unsigned char hasSpecialBaseFrames() = 0;
     virtual unsigned char isSpecialFrame(int frame) = 0;
-    virtual int getEntry(int index) = 0;
+    virtual int getTransitionKind(int index) = 0;
     virtual int selectBaseFrame(int value, int oldFrame) = 0;
     virtual int selectTransitionFrame(
         int transition,
@@ -187,9 +187,9 @@ public:
 
     // Implicit destruction shares the base's retained cleanup at 0x5b3850;
     // both concrete rule vtables use the deleting wrapper at 0x5b3a50.
-    virtual unsigned char hasEntries();
+    virtual unsigned char hasSpecialBaseFrames();
     virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
+    virtual int getTransitionKind(int index);
     virtual int selectBaseFrame(int value, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
@@ -205,9 +205,9 @@ public:
 class TRmgTableTerrainRule : public TRmgTerrainRule {
 public:
     TRmgTableTerrainRule();
-    virtual unsigned char hasEntries();
+    virtual unsigned char hasSpecialBaseFrames();
     virtual unsigned char isSpecialFrame(int frame);
-    virtual int getEntry(int index);
+    virtual int getTransitionKind(int index);
     virtual int selectBaseFrame(int value, int oldFrame);
     virtual int selectTransitionFrame(
         int transition,
@@ -288,11 +288,11 @@ public:
         const TRmgGridPoint& point, unsigned char* matches);
 
     void buildNeighbourKinds(const TRmgGridPoint& point, int* neighbours);
-    unsigned char checkFirstDiagonal(
+    unsigned char hasMatchingDiagonalNeighbour(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    unsigned char checkSecondDiagonal(
+    unsigned char hasDifferentOuterAxisNeighbour(
         const TRmgGridPoint& point, const TRmgTerrainFlip& flip);
-    int getTransitionStrength(const TRmgGridPoint& point, int terrain);
+    int getSpecialFrameWeight(const TRmgGridPoint& point, int terrain);
 };
 
 // Provisional facade name. The ctor at 0x5b7250 initializes the exact VC6

@@ -5656,7 +5656,7 @@ int advManager::doNetCombat(CNetMsg* netMsg)
     int rightPlayer = -1;
 
     CCombatInitMsg combatInitMsg;
-    combatInitMsg.remoteFn00512E00(netMsg);
+    combatInitMsg.readMessage(netMsg);
 
     if (IsIconic(g_hwndApp))
         ShowWindow(g_hwndApp, SW_RESTORE);
@@ -6181,7 +6181,7 @@ void advManager::sendHeroTownData(type_point point, hero* leftHero, armyGroup* l
     if (rightHero)
         combatInitMsg.m_rightHeroData = *rightHero;
 
-    int result = combatInitMsg.remoteFn00512D40(toWhoNetPos, 0, 1);
+    int result = combatInitMsg.send(toWhoNetPos, 0, 1);
     if (!result)
         shutDown(0);
 }

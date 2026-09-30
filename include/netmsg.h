@@ -210,8 +210,8 @@ class TAbstractFile;
 // Retail's complex wire-message base is a vptr followed by an ordinary
 // 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
 // that layout, and 0x512e00 copies a received header into netmsg before
-// dispatching the remaining payload through virtual read(). The ordinal name
-// is retained because neither retail nor DC names that PC-only bridge.
+// dispatching the remaining payload through virtual read(). The bridge name
+// readMessage describes that operation; its original PC spelling is unknown.
 class t_complex_net_message {
 public:
     // The no-subtype form at 0x512c20 (stores the base vtable and
@@ -223,15 +223,15 @@ public:
     t_complex_net_message(eRS_Messages subType);
     virtual unsigned char read(TAbstractFile* infile) = 0;
     virtual unsigned char write(TAbstractFile* outfile) const = 0;
-    unsigned char remoteFn00512E00(CNetMsg* netMsg);
-    unsigned char remoteFn00512D40(int toWho, bool compressMsg,
+    unsigned char readMessage(CNetMsg* netMsg);
+    unsigned char send(int toWho, bool compressMsg,
                                     bool guaranteed);
     // 0x512c80, the DPID-addressed send twin (its args mirror
     // TransmitRemoteDataDPID's tail); CNewPlayerUpdateProc's
     // HandleRequests hands each re-requested header row through it.
     // ADDITIVE 2026-08-27 (round 3) - one declarator; re-measure the
     // include-set-sensitive rows of the five includers on merge.
-    unsigned char remoteFn00512C80(unsigned long dpid, bool compressMsg,
+    unsigned char sendToDPID(unsigned long dpid, bool compressMsg,
                                     bool guaranteed);
     CNetMsg m_netmsg;  // +0x04
 };

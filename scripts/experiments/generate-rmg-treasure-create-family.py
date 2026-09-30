@@ -42,7 +42,7 @@ BASELINE = """type_object* type_random_map_generator::createTreasureObject(TRmgZ
         if (!primary && g_adventureObjectLandBlocked[objectType][0]
             && !g_adventureObjectLandBlocked[objectType][2])
             continue;
-        if (!allowTerrainDependent && definition->isTerrainDependent())
+        if (!allowTerrainDependent && definition->requiresPairedObject())
             continue;
         if (m_objectCountByType[objectType] >= g_rmgMapObjectLimits[objectType])
             continue;

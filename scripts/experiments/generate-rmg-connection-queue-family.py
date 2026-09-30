@@ -45,7 +45,7 @@ BASELINE = """void type_random_map::floodConnectionCosts(TRmgMapPosition positio
         int currentCost = currentZone == zone
             ? current->m_movement.m_cost : current->m_movement.m_zonePathCost;
         int direction = 8;
-        if (current->isRoadEntrance()) {
+        if (current->isObjectEntrance()) {
             int objectType = current->m_objects[0]->m_properties->m_prototype->m_objectType;
             if (!g_adventureObjectLandBlocked[objectType][1])
                 direction = 5;
@@ -63,7 +63,7 @@ BASELINE = """void type_random_map::floodConnectionCosts(TRmgMapPosition positio
             if (next->m_zoneState.m_zone < 0 || !next->m_tileData.m_roadPassable
                 || next->m_tile.m_landType == eTerrainRock)
                 continue;
-            if (next->isRoadEntrance()) {
+            if (next->isObjectEntrance()) {
                 int objectType = next->m_objects[0]->m_properties->m_prototype->m_objectType;
                 const unsigned char* traits = g_adventureObjectLandBlocked[objectType];
                 if (traits[0] && !traits[2])
@@ -87,7 +87,7 @@ BASELINE = """void type_random_map::floodConnectionCosts(TRmgMapPosition positio
                     nextCost = currentCost + 10;
                 if (next->m_movement.m_cost <= nextCost)
                     continue;
-                if (!currentCost && next->hasSubterraneanGate()
+                if (!currentCost && next->isReservedOpen()
                     && (next->m_tile.m_landType != eTerrainWater || waterZone))
                     nextCost = 0;
                 next->setMovementCost(nextCost, currentPosition);

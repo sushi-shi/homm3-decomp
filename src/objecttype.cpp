@@ -75,7 +75,7 @@ public:
     // ordinary registry accessor, returning the mapped value by value also
     // restores the caller's scratch allocation; see setImageName's controls.
     MAC_ADDRESS(0x2268d0, 0xc4)
-    int getIndex(const std::string& name)
+    int getOrAddIndex(const std::string& name)
     {
         TNameIndex::iterator found = m_nameIndex.find(name);
         TNameIndex::iterator result = found;
@@ -420,7 +420,7 @@ TObjectType& TObjectType::setImageName(
     TObjectImageNameTable& imageNames = getObjectImageNames();
 
     unsigned int oldCount = imageNames.m_rows.size();
-    m_imageNumber = imageNames.getIndex(name);
+    m_imageNumber = imageNames.getOrAddIndex(name);
 
     std::vector<TImageInfo>& imageCache = getObjectImageCache();
 

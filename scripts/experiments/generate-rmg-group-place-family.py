@@ -91,7 +91,7 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         for (int x = guardPosition.m_x - 1; x <= guardPosition.m_x + 1; ++x) {
             for (int y = guardPosition.m_y - 1; y <= guardPosition.m_y + 1; ++y) {
                 TRmgMapItem* item = m_map.getMapItem(x, y, guardPosition.m_z);
-                if (item->isRoadEntrance()
+                if (item->isObjectEntrance()
                     && item->m_objects[0]->m_properties->m_prototype->m_objectType == MONSTER)
                     return 0;
             }
@@ -115,8 +115,8 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         point.m_x = entrance.m_x + g_rmgDirections[direction].m_x;
         point.m_y = entrance.m_y + g_rmgDirections[direction].m_y;
         TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
-        if (!source->hasSubterraneanGate() || !source->m_tileData.m_roadPassable
-            || source->m_tile.m_landType == eTerrainRock || source->isRoadEntrance()
+        if (!source->isReservedOpen() || !source->m_tileData.m_roadPassable
+            || source->m_tile.m_landType == eTerrainRock || source->isObjectEntrance()
             || !source->isPlacementOutline())
             continue;
         point.m_x += position.m_x;
@@ -128,7 +128,7 @@ BASELINE = """unsigned char type_random_map_generator::canPlaceTreasureGroup(TRm
         if ((destination->m_tile.m_landType == eTerrainWater) == waterZone
             && destination->m_tileData.m_roadPassable
             && destination->m_tile.m_landType != eTerrainRock
-            && !destination->isRoadEntrance() && destination->hasSubterraneanGate())
+            && !destination->isObjectEntrance() && destination->isReservedOpen())
             break;
     }
     if (direction == lastDirection)
@@ -152,11 +152,11 @@ checkOutline:
     for (point.m_y = bounds.m_minimumY; point.m_y < bounds.m_maximumY; ++point.m_y) {
         for (point.m_x = bounds.m_minimumX; point.m_x < bounds.m_maximumX; ++point.m_x) {
             TRmgMapItem* source = group->m_map.getMapItem(point.m_x, point.m_y, 0);
-            if (!source->hasSubterraneanGate()) {
+            if (!source->isReservedOpen()) {
                 int x = point.m_x + position.m_x;
                 int y = point.m_y + position.m_y;
                 if (x < m_map.m_mapWidth && y < m_map.m_mapHeight
-                    && m_map.getMapItem(x, y, position.m_z)->isRoadEntrance())
+                    && m_map.getMapItem(x, y, position.m_z)->isObjectEntrance())
                     return 0;
             }
         }

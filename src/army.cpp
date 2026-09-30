@@ -235,7 +235,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     *traits = g_creatureTypeTraits[type];
     traits->m_townType = g_game->getAlignment(type);
     if (owner != 0)
-        owner->heroFn004E6120(type, traits);
+        owner->applyCreatureStatBonuses(type, traits);
     if (g_combatManager->m_magicTerrain
             != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
         && townManager::getNativeTerrain(m_monInfo.m_townType)
@@ -1155,7 +1155,7 @@ void army::animateMissile(army* armyToAttack)
         static_cast<double>(deltaY * deltaY + deltaX * deltaX)));
 
     if (m_creatureType == ARMY_CREATURE_ENCHANTER) {
-        g_combatManager->unnamed59FDE0(startX, startY, armyToAttack);
+        g_combatManager->animateMagicArrow(startX, startY, armyToAttack);
         return;
     }
     if (is(creatureShootsRay)) {
@@ -2385,7 +2385,7 @@ unsigned char army::isEnemy(const army* arg) const
 // artifact exemption before adjacency. Mac 0x4e8d0..0x4e940 retains the
 // intermediate boolean tests before the final forgetfulness condition.
 // A named result with guarded assignments leaves getControllingSide called
-// inside spellIsValidOnTarget's Bloodlust arm. The combined predicate lets
+// inside isCreatureSpellUsefulOnTarget's Bloodlust arm. The combined predicate lets
 // that nested helper expand as in retail; canShoot itself remains exact.
 VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
 bool army::canShoot(const army* excluded) const
@@ -3696,7 +3696,7 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
         return 0;
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
-    g_combatManager->markMovingArmy(this);
+    g_combatManager->beginObstacleTraversal(this);
     unsigned char moved;
     if (is(creatureFlyingArmy)) {
         m_pathTarget = hex;
@@ -4563,7 +4563,7 @@ static const int g_faerieDragonSpells[] = {
 };
 
 VA(0x00447510, 0x1A8) MAC_ADDRESS(0x053a3c, 0x18c)
-void army::faerieDragonSpell()
+void army::chooseFaerieDragonSpell()
 {
     long total = 0;
     const int* p = g_faerieDragonSpells;
@@ -4729,7 +4729,7 @@ static bool groupHasDragons(long group)
 // former statement-scoped inline-depth pins on pasted loop bodies.
 VA(0x00447a80, 0x429) MAC_ADDRESS(0x0542f0, 0x17c)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
-bool spellIsValidOnTarget(int spell, const army* target)
+bool isCreatureSpellUsefulOnTarget(int spell, const army* target)
 {
     if (target->getSpellTime(spell))
         return 0;
@@ -4768,7 +4768,7 @@ bool spellIsValidOnTarget(int spell, const army* target)
     return 1;
 }
 
-// Mac retains this helper at 0x5446c, between spellIsValidOnTarget and
+// Mac retains this helper at 0x5446c, between isCreatureSpellUsefulOnTarget and
 // isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
 MAC_ADDRESS(0x05446c, 0xac)
 static bool enchanterSpellHasTarget(int spell)
@@ -4779,7 +4779,7 @@ static bool enchanterSpellHasTarget(int spell)
     army* targets = g_combatManager->m_armies[side];
     long n = g_combatManager->m_numArmies[side];
     while (n-- != 0) {
-        if (spellIsValidOnTarget(spell, targets))
+        if (isCreatureSpellUsefulOnTarget(spell, targets))
             return 1;
     }
     return 0;
@@ -4793,7 +4793,7 @@ bool isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(g_spellTraits[spell].m_flags & 0x800))
         return 0;
-    return spellIsValidOnTarget(spell, target);
+    return isCreatureSpellUsefulOnTarget(spell, target);
 }
 
 // E:\gamedcs\army.cpp:5546
@@ -4869,7 +4869,7 @@ static int g_enchanterSpells[] = {
 // CastSpell it as a monster cast at expert mastery.
 
 VA(0x00447fe0, 0x27E) MAC_ADDRESS(0x054700, 0x1f4)
-unsigned char army::unnamed447fe0()
+unsigned char army::castEnchanterSpell()
 {
     if (!g_combatManager->canCastSpells(g_combatManager->m_currentSide,
                                           0))
@@ -5014,7 +5014,7 @@ void army::castSpell(long hex)
 }
 
 VA(0x004487f0, 0x43) MAC_ADDRESS(0x054de4, 0x5c)
-int army::getMirrorEffect() const
+int army::getMagicMirrorChance() const
 {
     int effect = 0;
     if (m_spellInfluence[36] > 0)

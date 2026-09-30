@@ -1095,7 +1095,7 @@ unsigned char town::buyBuilding(type_building_id building)
     int* costs = getBuildCostArray(building);
     playerData* player = &g_game->m_players[m_owner];
     if (!player->isHuman()) {
-        unnamed526d20(m_owner, costs, 1);
+        tradePlayerResources(m_owner, costs, 1);
         if (m_builtThisTurn)
             return 0;
     }
@@ -1198,7 +1198,7 @@ VA(0x005bf810, 0xE2) MAC_ADDRESS(0x1b5060, 0xc0)
 long town::getAssembledLegionBonus(long dwelling)
 {
     long bonus = 0;
-    if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
+    if (m_owner >= 0 && g_game->m_players[m_owner].hasHeroWieldingArtifact(0x85)) {
         TCreatureType creature = g_townDwellingCreatures[
             m_type * (2 * TOWN_DWELLING_COUNT) + dwelling];
         long growth = g_creatureTypeTraits[creature].m_growthRate;

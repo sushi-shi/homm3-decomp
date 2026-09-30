@@ -6469,7 +6469,7 @@ void TTavernWindow::setRolloverText(int codeY)
             } else {
                 hero* recruit = g_game->getHero(player->m_recruits[m_selectedRecruit]);
                 sprintf(g_text, g_tavernInfo[3], recruit->m_name,
-                        recruit->heroFn004D8F70());
+                        recruit->getClassName());
             }
         }
         break;
@@ -6576,7 +6576,7 @@ int TTavernWindow::windowHandler(message& msg)
                                   + currentHero->getEquippedArtifacts(0);
                     sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT],
                             g_tavernHero->m_name, g_tavernHero->m_level,
-                            g_tavernHero->heroFn004D8F70(), artifacts);
+                            g_tavernHero->getClassName(), artifacts);
                     if (artifacts == 1) {
                         int end = strlen(g_text);
                         g_text[end - 2] = '.';
@@ -6736,7 +6736,7 @@ unsigned char doTavern()
         int total = g_tavernHero->getNumberInBackpack(0)
                   + g_tavernHero->getEquippedArtifacts(0);
         sprintf(g_text, (*g_generalText)[GENERAL_TEXT_TAVERN_HERO_SUMMARY_FORMAT], g_tavernHero->m_name,
-                g_tavernHero->m_level, g_tavernHero->heroFn004D8F70(), total);
+                g_tavernHero->m_level, g_tavernHero->getClassName(), total);
         if (total == 1) {
             int len = strlen(g_text);
             g_text[len - 2] = '.';

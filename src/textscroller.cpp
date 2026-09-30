@@ -39,7 +39,7 @@ public:
                      int id, int num, EGraphics graphics, int page,
                      unsigned char hotKey);
 
-    virtual void close();  // slot 16, retail 0x5b9fa0
+    virtual void onValueChanged();  // slot 16, retail 0x5b9fa0
 };
 SIZE(type_text_slider, 0x6c);
 
@@ -61,7 +61,7 @@ type_text_slider::type_text_slider(type_text_scroller* scroller,
 // currentState and the owner at +0x68 and calls the scroller's
 // repaint.
 VA(0x005B9FA0, 0xD) MAC_ADDRESS(0x25b144, 0x2c)
-void type_text_slider::close()
+void type_text_slider::onValueChanged()
 {
     m_owner->refresh(m_currentState);
 }

@@ -1536,7 +1536,7 @@ the split `lea hero; add 0x23` and retail's gold/rumour/default copy join.
 A named pointer to the flattened array entry had not reproduced that boundary.
 Restoring the hire arm's getter leaves the exact bytes unchanged.
 
-Complete retains one named recruit pointer across `heroFn004D8F70`. Repeating
+Complete retains one named recruit pointer across `getClassName`. Repeating
 the getter inside both sprintf arguments, as in the older DC direct class-table
 expression, retains two pointer calculations and null branches before the call
 and scores 91.6049%.
@@ -1893,11 +1893,11 @@ decisions instead of the callee's bytes.
 `hero::isWieldingArtifact` (0x4d91f0) was exact at cost 133. `hero::getLuck`
 (0x4e36c0) retail-calls its seventh site after six expansions (`1000 - 6*cb <
 cb`, so cb >= 143) and then calls `town::hasBuilding` (`1000 - 6*cb - 45 <
-68`, so cb >= 149); `hero::heroFn004E6120` (0x4e6120) still expands the copy
+68`, so cb >= 149); `hero::applyCreatureStatBonuses` (0x4e6120) still expands the copy
 nested inside `getHitPointBonus` (`449 - 2*cb >= cb`, so cb <= 149). An
 if/else block (+8), a named combination index (+5) and a repeated traits
 lookup (+3) land exactly on 149 with the standalone body unchanged; getLuck
-closes from 88.0650% to 100% and heroFn004E6120 stays exact, while 150
+closes from 88.0650% to 100% and applyCreatureStatBonuses stays exact, while 150
 drops it to 86.88%. `town::hasBuilding`'s if/else block form raises its cost
 60 -> 68 (retail 62..84 from the same two callers; `town::buildBuilding`'s
 site budgets, retail calling at 72 and expanding at 82, narrow that to
@@ -2073,7 +2073,7 @@ the trace lists UNDER/OVER callees:
   `TRmgGridPoint::operator+=` (cost 43) inside the first neighbour pass at a
   site whose budget is 187 here; only a helper around that pass (nested
   budget below 43) would reproduce it.
-- `checkFirstDiagonal` (0x5b6ba0): retail refuses the second `getPackedCell`
+- `hasMatchingDiagonalNeighbour` (0x5b6ba0): retail refuses the second `getPackedCell`
   (nested 148 here) while expanding the third; four more candidate sites
   after the second terrain query would do it.
 
@@ -2090,7 +2090,7 @@ point became trivially copyable. What they settle and what they leave:
   unindexed forms break the retained 0x5b48d0 body, and the three fill
   spellings are one object. The six callers where retail calls
   `getPackedCell` but expands `initializePackedCell` elsewhere
-  (`paintTransitions`, both diagonal checks, `getTransitionStrength`,
+  (`paintTransitions`, both diagonal checks, `getSpecialFrameWeight`,
   `paintRectangle`, `buildMatchingNeighbourMask`) therefore need their own
   site structure, not a cheaper cache pair.
 - `queueOtherTerrainNeighbours` (63.63%): retail refuses three cardinal
@@ -2122,9 +2122,9 @@ point became trivially copyable. What they settle and what they leave:
 - Both diagonal checks and `paintRectangle` closed through sites, not
   costs: grid-point and TPoint coordinate accessors, the width and height
   accessors and an else-chain clamp give the first neighbour query ten to
-  twelve remaining sites so its cache read stays a call (checkFirstDiagonal
+  twelve remaining sites so its cache read stays a call (hasMatchingDiagonalNeighbour
   89.7 -> 100 once the first point is constructed from both clamps, since
-  constructor arguments evaluate right to left; checkSecondDiagonal 70.3 ->
+  constructor arguments evaluate right to left; hasDifferentOuterAxisNeighbour 70.3 ->
   100 with one point reused through the setters and the last read spelled
   `getPackedCell(p)->getTerrain()`, whose two depth-one sites replace the
   candidate site the dropped second point took with it). A helper's cost
@@ -2133,7 +2133,7 @@ point became trivially copyable. What they settle and what they leave:
 - Store order of reference-bound arguments follows the order the argument
   temporaries are created: `clamp(value, 0, maximum)` stores the literal
   before the value, while evaluating `maximum` and then `value` into locals
-  ahead of the call stores the literal last. checkSecondDiagonal's second
+  ahead of the call stores the literal last. hasDifferentOuterAxisNeighbour's second
   query needs the latter and its first query the former.
   `paintRectangle` needs two candidate sites from its terrain test on (a
   direct field compare and the base-tile block as a helper), and that
@@ -2194,7 +2194,7 @@ the structures the replay admits. What it found:
   and changes the flow; conversion-built temporaries give the same sites
   with a larger frame. 99.27%: the south-east fill's SIB order and cell
   base register are C2 state that no declaration order moves.
-- `getTransitionStrength` keeps two reads per arm: the frame read sits in
+- `getSpecialFrameWeight` keeps two reads per arm: the frame read sits in
   a `getFrame` sibling of `getTerrain` so its cost divides like the terrain
   read's, and each neighbour is constructed at the cell and stepped by one
   setter from the parameter's coordinate (the point's own coordinate shifts
@@ -2209,7 +2209,7 @@ the structures the replay admits. What it found:
   entry pointer anchors it at the Y-flip byte. 100%.
 - The line painter (`refreshRmgLinePoint`, `TRmgLineWalker::paintPoint`):
   the sum, conversion and factory sites of a neighbour query can only be
-  refused from a nested context, so an ordinary `getNeighbourLand` helper
+  refused from a nested context, so an ordinary `getNeighbourTileType` helper
   on the painter interface holds them; the current tile's frame and flip
   accessors give the refresh's tail the sites the helper's budget divides
   by, the proxy's initializer-list copy keeps the walker's compound add
@@ -2220,7 +2220,7 @@ the structures the replay admits. What it found:
   materializes the one-cell rectangle's two unit extents from one register
   copied into another, the painter alias and availability mask scoped to
   the first pass give retail's frame, and naming the converted sum inside
-  `getNeighbourLand` orders the neighbour proxy's stores (painter before
+  `getNeighbourTileType` orders the neighbour proxy's stores (painter before
   the coordinates). Refresh keeps its entry swap.
 - Callee IL cost as the lever (terrain `paintPoint`, 98.68 -> 100): the
   loop erase's `_Distance` wrapper had to be refused while the final

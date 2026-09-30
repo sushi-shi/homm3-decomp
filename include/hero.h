@@ -322,7 +322,7 @@ public:
     };
     // The nineteenth equipped position - the one Shadow of Death added on
     // top of the Dreamcast TArtifactSlot roster's eighteen.
-    // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
+    // hero::canEquipArtifactInEmptySlot (0x4e2550) refuses it outright while the
     // engine gate reports a pre-SoD game. GATED to hero.obj's own view:
     // an ungated enumerator is a measured include-set cost in this tree
     // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
@@ -404,7 +404,7 @@ public:
     // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
     // directly with this dword; the surviving roster names the domain.
     int m_heroClass;
-    // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
+    // +0x34. The current-hero gate in getBiography compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
     unsigned char m_portrait;
@@ -597,7 +597,7 @@ public:
     // writes the two backing dwords at +0x121/+0x125.
     std::bitset<48> m_townSpecialGrantedMask;  // +0x121 (DC name)
     // +0x129, a dword compared against 3 - the secondary-skill
-    // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
+    // mastery domain. hero::getEffectiveVisionsMastery (0x4e5de0) returns it
     // unless it is below 3 and the hero's army holds creature 0x8f,
     // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
     // block inlined. Name unattested - ORDINAL PLACEHOLDER.
@@ -754,14 +754,14 @@ public:
     // Map/scenario setup application. Complete moved DC initialize_hero
     // (game.cpp:9912, dc 0xb6c84) to this member, retail 0x4d8b30, ret 4.
     void initialize(const class HeroExtra* setup);
-    int heroFn004D9B30(int artifact);
+    int showDisassembleArtifactDialog(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
     // component's targetCombo, describes the ASSEMBLED artifact and asks
     // general text 733 with the component's name formatted in. The old DC
     // bracket assignment to ViewArtifact is disproved by that name's exact
-    // retail identity at 0x4d9a00; this remains an ordinal retail-only name.
-    int heroFn004D9CC0(int artifact);
+    // retail identity at 0x4d9a00; the name here describes the retail-only dialog.
+    int showAssembleArtifactDialog(int artifact);
     void viewArtifact(const type_artifact* artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
@@ -772,16 +772,16 @@ public:
     // include-set sensitivity class with no semantic change anywhere.
 
     // 0x4e2550, RETAIL-ONLY (no DC row), `ret 8`: the actual equip
-    // attempt HeroFn_004E2840 wraps. ORDINAL PLACEHOLDER.
-    unsigned char heroFn004E2550(long artifact, long slot);
+    // empty-slot compatibility check canReplaceArtifactInSlot wraps.
+    unsigned char canEquipArtifactInEmptySlot(long artifact, long slot);
     // 0x4e2840, RETAIL-ONLY (no DC row), `ret 8`: decides whether the
     // artifact being dragged may drop into an equipment slot.
     // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
     // with both ids on the stack. It is NOT DC's artifactAllowedInSlot
     // (dc 0x37d88, the artifact.h free inline): this member uses that
     // primitive and adds occupancy/combination checks and displaced-slot
-    // restoration. ORDINAL PLACEHOLDER name.
-    unsigned char heroFn004E2840(long artifact, long slot);
+    // restoration. The contextual name describes this occupied-slot check.
+    unsigned char canReplaceArtifactInSlot(long artifact, long slot);
     void upgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
     // the boat bit out of `flags` and forwards to the other.
@@ -809,8 +809,8 @@ private:
     unsigned char canLand() const;
 
 public:
-    int heroFn004E5DE0() const;
-    void heroFn004E6120(int creatureType,
+    int getEffectiveVisionsMastery() const;
+    void applyCreatureStatBonuses(int creatureType,
                          TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
@@ -855,7 +855,7 @@ public:
     bool equipArtifact(const type_artifact& artifact, long slot);
     // 0x004dc070 - disassembles the combination artifact in one equipped
     // slot, then equips each component into its first legal position.
-    void heroFn004DC070(long slot);
+    void disassembleCombinationArtifact(long slot);
     // 0x004d9260 - drops the artifact backing a war machine when the
     // machine dies.
     void destroySiegeWeaponArtifact(int creatureType);
@@ -882,7 +882,7 @@ public:
     unsigned char giveArtifact(const type_artifact& artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
-    const char* heroFn004D8F70();
+    const char* getClassName();
     // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
     bool visitedArena(const NewmapCell* cell) const;
     void setVisitedArena(const NewmapCell* cell);
@@ -911,7 +911,7 @@ public:
                   unsigned char applyLimits) const;
     int moraleIncreaseValue(int value);
     int luckIncreaseValue(int value);
-    int soDGetSeerSkillValue(int skill, int level);
+    int getSeerSkillRewardValue(int skill, int level);
     int getSpellDurationBonus() const;
     int giveExperience(int howMuch, int checkForLevelUp,
                        unsigned char showCapWindow);
@@ -930,7 +930,7 @@ public:
     // with a single-precision fmul.
     float getExperienceBonusFactor() const;
     int getMysticismBonus() const;
-    TAdventureObjectType heroFn004E4EC0();
+    TAdventureObjectType getSpecialTerrainObjectType();
     long getCombatSpeedBonus() const;
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions and the combat
@@ -1165,19 +1165,18 @@ public:
         return m_availableSpells[spell];
     }
     TCreatureType getNecromancyCreature();
-    const char* heroFn004D8FB0();
-    unsigned char heroFn004DBE80(int combination);
+    const char* getBiography();
+    unsigned char hasCombinationArtifactComponents(int combination);
     // Same gate and same reason as the equip pair above.
     // 0x4dbf30, the two-argument member of the combination family:
     // strips every worn component of `combination` (plus whatever sits
-    // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
-    unsigned char heroFn004DBF30(int combination, long slot);
+    // in `slot`) and equips the assembled artifact.
+    unsigned char assembleCombinationArtifact(int combination, long slot);
     // 0x4dc100, the family's NOTIFIER: called after a slot changes, it
     // records the assembled combination the artifact belongs to, or -
     // when every component of a combination is now worn - offers the
-    // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
-    // ORDINAL PLACEHOLDER.
-    void heroFn004DC100(long slot);
+    // assembly through a NormalDialog and calls assembleCombinationArtifact on yes.
+    void offerCombinationArtifactAssembly(long slot);
     boat* findSummonableBoat() const;
     void placeInMap(int playerId, type_point point, unsigned char resetFlags);
     int load(TAbstractFile* infile, int saveVersion);
@@ -1242,7 +1241,7 @@ public:
         } m_availability;
     };                                              // +0x38
     char m_pad3c[4];  // +0x3c retail-only field
-    // HeroFn_004D8FB0 strcmp's the live hero name against this pointer.
+    // getBiography strcmp's the live hero name against this pointer.
     // InitializeHeroTraitsTable independently fills it from hotraits.txt.
     const char* m_defaultName;  // +0x40
     // Retail parses columns 1/2, 4/5, and 7/8 into these six dwords;

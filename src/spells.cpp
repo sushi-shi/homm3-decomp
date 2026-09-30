@@ -347,7 +347,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             if (target && spellToCast != SPELL_DISPEL
                     && target->getOwningSide() != m_currentSide
                     && !target->is(creatureImmobilized)
-                    && target->getMirrorEffect() >= random(1, 100)) {
+                    && target->getMagicMirrorChance() >= random(1, 100)) {
                 TPickANumber picker(0, m_numArmies[m_currentSide] - 1);
                 int picked;
                 // Both retail builds test creature type (+0x34), not hex (+0x38).
@@ -633,7 +633,7 @@ unsigned char combatManager::checkFireWall(long hex, army* currentArmy,
 }
 
 VA(0x0059fde0, 0x44) MAC_ADDRESS(0x1904c8, 0x78)
-void combatManager::unnamed59FDE0(int x, int y, army* target)
+void combatManager::animateMagicArrow(int x, int y, army* target)
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         shootAnimatedMissile(x, y, target->midX(), target->midY(), 5,
@@ -1014,7 +1014,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // Mac retains the helper at 0:0x1904c8 and calls it from castSpell
         // at 0:0x1912a0. VC6 expands this ordinary same-TU call; the older
         // Dreamcast source spells out its quick-combat/missile body here.
-        unnamed59FDE0(castX, castY, target);
+        animateMagicArrow(castX, castY, target);
         int damage = computeSpellDamage(SPELL_MAGIC_ARROW, monsterPower,
                                         mastery, castingHero, otherHero,
                                         target, 1);

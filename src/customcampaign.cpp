@@ -303,13 +303,13 @@ void TCampaignSpellBonus::read(TAbstractFile* file)
 // Mac keeps one predicate per concrete bonus; Windows folds the false bodies
 // to 0x484d50. The abstract base's retail vtable slot is __purecall.
 MAC_ADDRESS(0x09201c, 0x8)
-bool TCampaignSpellBonus::isBuildingBonus() const
+bool TCampaignSpellBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x00484090, 0x6) MAC_ADDRESS(0x092024, 0x8)
-const char* TCampaignSpellBonus::getIconDefName() const
+const char* TCampaignSpellBonus::getIconResourceName() const
 {
     return DATA_COMPGEN(0x00677248, spellBonusDefName, "SpellBon.def");
 }
@@ -440,13 +440,13 @@ void TCampaignCreatureBonus::read(TAbstractFile* file)
 }
 
 MAC_ADDRESS(0x09247c, 0x8)
-bool TCampaignCreatureBonus::isBuildingBonus() const
+bool TCampaignCreatureBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x00484550, 0x6) MAC_ADDRESS(0x092484, 0x8)
-const char* TCampaignCreatureBonus::getIconDefName() const
+const char* TCampaignCreatureBonus::getIconResourceName() const
 {
     return "twcrport.def";
 }
@@ -483,13 +483,13 @@ void TCampaignBuildingBonus::read(TAbstractFile* file)
 }
 
 VA(0x00484620, 0x3) MAC_ADDRESS(0x092590, 0x8)
-bool TCampaignBuildingBonus::isBuildingBonus() const
+bool TCampaignBuildingBonus::usesBitmapIcon() const
 {
     return true;
 }
 
 VA(0x00484630, 0x17) MAC_ADDRESS(0x092598, 0x20)
-const char* TCampaignBuildingBonus::getIconDefName() const
+const char* TCampaignBuildingBonus::getIconResourceName() const
 {
     return g_campaignBuildingIconNames[m_town][m_building];
 }
@@ -540,13 +540,13 @@ void TCampaignBuildingBonus::setTown(int town)
 }
 
 MAC_ADDRESS(0x092828, 0x8)
-bool TCampaignArtifactBonus::isBuildingBonus() const
+bool TCampaignArtifactBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x00484810, 0x6) MAC_ADDRESS(0x092830, 0x8)
-const char* TCampaignArtifactBonus::getIconDefName() const
+const char* TCampaignArtifactBonus::getIconResourceName() const
 {
     return DATA_COMPGEN(0x00677258, artifactBonusDefName, "ArtifBon.def");
 }
@@ -580,13 +580,13 @@ void TCampaignArtifactBonus::read(TAbstractFile* file)
 }
 
 MAC_ADDRESS(0x092990, 0x8)
-bool TCampaignPrimarySkillBonus::isBuildingBonus() const
+bool TCampaignPrimarySkillBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x004848e0, 0x6) MAC_ADDRESS(0x092998, 0x8)
-const char* TCampaignPrimarySkillBonus::getIconDefName() const
+const char* TCampaignPrimarySkillBonus::getIconResourceName() const
 {
     return DATA_COMPGEN(0x00677268, primarySkillBonusDefName, "PSkilBon.def");
 }
@@ -659,13 +659,13 @@ void TCampaignPrimarySkillBonus::read(TAbstractFile* file)
 }
 
 MAC_ADDRESS(0x092d14, 0x8)
-bool TCampaignSecondarySkillBonus::isBuildingBonus() const
+bool TCampaignSecondarySkillBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x00484c30, 0x6) MAC_ADDRESS(0x092d1c, 0x8)
-const char* TCampaignSecondarySkillBonus::getIconDefName() const
+const char* TCampaignSecondarySkillBonus::getIconResourceName() const
 {
     return DATA_COMPGEN(0x00677280, secondarySkillBonusDefName, "SSkilBon.def");
 }
@@ -718,13 +718,13 @@ void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
 }
 
 VA(0x00484d50, 0x3) MAC_ADDRESS(0x092ed0, 0x8)
-bool TCampaignResourceBonus::isBuildingBonus() const
+bool TCampaignResourceBonus::usesBitmapIcon() const
 {
     return false;
 }
 
 VA(0x00484d60, 0x6) MAC_ADDRESS(0x092ed8, 0x8)
-const char* TCampaignResourceBonus::getIconDefName() const
+const char* TCampaignResourceBonus::getIconResourceName() const
 {
     return DATA_COMPGEN(0x00677290, resourceBonusDefName, "BoRes.def");
 }
@@ -830,7 +830,7 @@ VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
 // over - a crossover artifact, a hero placeholder, or a positive status for
 // this option's own player - and -1 otherwise.
 VA(0x00484f80, 0x7F) MAC_ADDRESS(0x093168, 0xc4)
-int TCampaignStartOption::slot5(
+int TCampaignStartOption::getCrossoverPoolIndex(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
     int player = getPlayer(which);
@@ -848,7 +848,7 @@ int TCampaignStartOption::slot5(
 // own choices must answer slot 5 with the value asked about. An option with
 // no choices at all is asked with -1.
 VA(0x00485000, 0x8B) MAC_ADDRESS(0x09322c, 0xd4)
-bool TCampaignStartOption::slot12(
+bool TCampaignStartOption::canUseCrossoverPool(
     const TCampaignBrief::ScenarioStruct* scenario, int value) const
 {
     if (!scenario->prerequisitesMet())
@@ -856,11 +856,11 @@ bool TCampaignStartOption::slot12(
 
     int count = getCount();
     if (count == 0) {
-        if (slot5(scenario, -1) == value)
+        if (getCrossoverPoolIndex(scenario, -1) == value)
             return true;
     } else {
         for (int choice = 0; choice < count; ++choice)
-            if (slot5(scenario, choice) == value)
+            if (getCrossoverPoolIndex(scenario, choice) == value)
                 return true;
     }
     return false;
@@ -868,7 +868,7 @@ bool TCampaignStartOption::slot12(
 
 // Slot 7, inherited unchanged by all three concrete options.
 VA(0x00485090, 0x6) MAC_ADDRESS(0x093300, 0x8)
-int TCampaignStartOption::slot7(int which) const
+int TCampaignStartOption::getStartingHeroId(int which) const
 {
     return -1;
 }
@@ -977,16 +977,16 @@ int TCampaignStartBonusOption::getIconIndex(int which) const
 }
 
 VA(0x00485430, 0x15) MAC_ADDRESS(0x0937c4, 0x38)
-bool TCampaignStartBonusOption::isBuildingBonus(int which) const
+bool TCampaignStartBonusOption::usesBitmapIcon(int which) const
 {
-    return m_bonuses[which]->isBuildingBonus();
+    return m_bonuses[which]->usesBitmapIcon();
 }
 
 VA(0x00485450, 0x15) MAC_ADDRESS(0x0937fc, 0x38)
-const char* TCampaignStartBonusOption::getIconDefName(void* scenario,
+const char* TCampaignStartBonusOption::getIconResourceName(void* scenario,
                                                      int which) const
 {
-    return m_bonuses[which]->getIconDefName();
+    return m_bonuses[which]->getIconResourceName();
 }
 
 VA(0x00485470, 0x27) MAC_ADDRESS(0x093834, 0x44)
@@ -1005,7 +1005,7 @@ int TCampaignStartCrossoverOption::getCount() const
 }
 
 // Mac code+0x93878 precedes the crossover option's virtual methods and
-// is called by getIconDefName at +0x938e0. Windows expands this pool lookup.
+// is called by getIconResourceName at +0x938e0. Windows expands this pool lookup.
 MAC_ADDRESS(0x093878, 0x4c)
 hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     SCampaign* campaign, int which) const
@@ -1016,7 +1016,7 @@ hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
 }
 
 VA(0x004854c0, 0x6E) MAC_ADDRESS(0x0938d4, 0x48)
-const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
+const char* TCampaignStartCrossoverOption::getIconResourceName(void* campaignRecord,
                                                           int which) const
 {
     hero* first = getFirstCrossoverHero(static_cast<SCampaign*>(campaignRecord), which);
@@ -1094,18 +1094,18 @@ void TCampaignStartCrossoverOption::read(TAbstractFile* file)
 }
 
 VA(0x004859b0, 0x24) MAC_ADDRESS(0x093bd8, 0x34)
-int TCampaignStartCrossoverOption::slot5(
+int TCampaignStartCrossoverOption::getCrossoverPoolIndex(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
     return g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
 }
 
 VA(0x004859e0, 0x44) MAC_ADDRESS(0x093c0c, 0x90)
-bool TCampaignStartCrossoverOption::slot12(
+bool TCampaignStartCrossoverOption::canUseCrossoverPool(
     const TCampaignBrief::ScenarioStruct* scenario, int value) const
 {
     for (unsigned int choice = 0; choice < m_choices.size(); ++choice)
-        if (slot5(scenario, choice) == value)
+        if (getCrossoverPoolIndex(scenario, choice) == value)
             return true;
     return false;
 }
@@ -1114,14 +1114,14 @@ bool TCampaignStartCrossoverOption::slot12(
 // the two identical bodies onto this one address, so only this copy carries
 // the claim (the starting-hero twin below is defined and left unclaimed).
 VA(0x00485a30, 0x5) MAC_ADDRESS(0x0938c4, 0x8)
-bool TCampaignStartCrossoverOption::isBuildingBonus(int which) const
+bool TCampaignStartCrossoverOption::usesBitmapIcon(int which) const
 {
     return true;
 }
 
 // --- the starting-hero option (vftable 0x63db0c) ---
 
-bool TCampaignStartHeroOption::isBuildingBonus(int which) const
+bool TCampaignStartHeroOption::usesBitmapIcon(int which) const
 {
     return true;
 }
@@ -1133,7 +1133,7 @@ int TCampaignStartHeroOption::getCount() const
 }
 
 VA(0x00485a60, 0x30) MAC_ADDRESS(0x093cac, 0x3c)
-const char* TCampaignStartHeroOption::getIconDefName(void* campaign,
+const char* TCampaignStartHeroOption::getIconResourceName(void* campaign,
                                                      int which) const
 {
     if (m_choices[which].m_hero == -1)
@@ -1192,7 +1192,7 @@ void TCampaignStartHeroOption::read(TAbstractFile* file)
 }
 
 VA(0x00485d60, 0x11) MAC_ADDRESS(0x093e84, 0x14)
-int TCampaignStartHeroOption::slot7(int which) const
+int TCampaignStartHeroOption::getStartingHeroId(int which) const
 {
     return m_choices[which].m_hero;
 }
@@ -1525,7 +1525,7 @@ void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
 
     currentHero->m_sex = sourceHero->m_sex;
     if (sourceHero->m_hasCustomName) {
-        const char* customName = sourceHero->heroFn004D8FB0();
+        const char* customName = sourceHero->getBiography();
         currentHero->m_hasCustomName = 1;
         currentHero->m_customName = customName;
     }
@@ -1689,7 +1689,7 @@ void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
     SCampaign* campaign = &g_game->m_campaign;
     int choice = campaign->m_briefingChoice;
     int player = getStartOptions()->getPlayer(choice);
-    int slot = getStartOptions()->slot5(this, choice);
+    int slot = getStartOptions()->getCrossoverPoolIndex(this, choice);
     campaign->m_mapScores[campaign->m_currentMap].m_index = slot;
 
     std::vector<hero> heroes;
@@ -1812,7 +1812,7 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
     SCampaign* campaign = &g_game->m_campaign;
     int choice = campaign->m_briefingChoice;
     int player = getStartOptions()->getPlayer(choice);
-    int slot = getStartOptions()->slot5(this, choice);
+    int slot = getStartOptions()->getCrossoverPoolIndex(this, choice);
     if (slot >= 0) {
         std::vector<hero>& heroes = campaign->getCrossoverHeroes(slot);
         type_artifact artifact(ARTIFACT_NONE);
@@ -1896,7 +1896,7 @@ MAC_ADDRESS(0x096060, 0x50)
 bool TCampaignBrief::ScenarioStruct::usesCrossoverPool(int pool) const
 {
     if (hasMap())
-        return getStartOptions()->slot12(this, pool);
+        return getStartOptions()->canUseCrossoverPool(this, pool);
     return false;
 }
 
@@ -2087,7 +2087,7 @@ void TCampaignBrief::ScenarioStruct::startScenario(
     int playerHeroFaces[8];
     int i;
     MEMSET(playerHeroFaces, -1, sizeof(playerHeroFaces), i);
-    playerHeroFaces[position] = getStartOptions()->slot7(option);
+    playerHeroFaces[position] = getStartOptions()->getStartingHeroId(option);
     g_game->setupFirstPlayer();
 
     stream->pubseekoff(m_offset, std::ios::beg, std::ios::in);

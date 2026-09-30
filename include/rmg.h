@@ -59,7 +59,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual unsigned char requiresPairedObject();
 };
 
 SIZE(type_treasure_def, 0x14);
@@ -173,7 +173,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual unsigned char requiresPairedObject();
 };
 
 // Retail writes both 0x640bac and 0x640bb8 after the retained base call.
@@ -250,7 +250,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual unsigned char requiresPairedObject();
 };
 
 class type_quest_experience_def : public type_treasure_def {
@@ -267,7 +267,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual unsigned char requiresPairedObject();
 };
 
 class type_quest_gold_def : public type_treasure_def {
@@ -283,7 +283,7 @@ public:
     virtual type_object* generate(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, TRmgZone* zone);
     virtual int getValue(TRmgZone* zone, type_random_map_generator* generator);
-    virtual unsigned char isTerrainDependent();
+    virtual unsigned char requiresPairedObject();
 };
 
 SIZE(type_shrine_def, 0x14);
@@ -799,11 +799,11 @@ public:
     }
 
     virtual ~type_object();
-    virtual void unknownOperation();
+    virtual void cancelPlacement();
     // The quest-artifact override at 0x533a50 clears owned state, and its
     // generator callee replaces this object's property reference. These
     // mutable operations reject the earlier const receiver placeholder.
-    virtual unsigned char isWritable();
+    virtual unsigned char finishPlacement();
     virtual void write(TAbstractFile* outfile, int parameter);
 };
 
@@ -928,7 +928,7 @@ public:
         type_random_map_generator* generator, rmgSeerHutObject* seerHut,
         type_treasure_def* definition);
     virtual ~rmgQuestArtifactObject();
-    virtual unsigned char isWritable();
+    virtual unsigned char finishPlacement();
 };
 SIZE(rmgQuestArtifactObject, 0x28);
 
@@ -944,7 +944,7 @@ public:
 
     rmgKeyTentObject(TRmgObjectPropertiesRef* properties,
         type_random_map_generator* generator, int value);
-    virtual unsigned char isWritable();
+    virtual unsigned char finishPlacement();
 };
 SIZE(rmgKeyTentObject, 0x24);
 
@@ -999,7 +999,7 @@ public:
         type_random_map_generator* generator, const int& objectId, int heroIndex,
         int experience);
 
-    virtual void unknownOperation();
+    virtual void cancelPlacement();
     virtual void write(TAbstractFile* outfile, int parameter);
 };
 SIZE(rmgHeroObject, 0x2c);
@@ -1023,14 +1023,14 @@ struct TRmgMapItem {
     // CreateRiver's predicate reads shift the high tile bits and test a
     // byte result. These queries recover that boundary; direct field tests
     // instead use dword masks. Names remain provisional without RMG symbols.
-    bool hasRiver() const { return m_tileData.m_hasRiver != 0; }
+    bool isRiverConnectionTarget() const { return m_tileData.m_hasRiver != 0; }
     bool isRiverTarget() const { return m_tileData.m_riverTarget != 0; }
-    bool isImpassable() const { return m_tileData.m_impassable != 0; }
+    bool isRiverSpacingBlocked() const { return m_tileData.m_impassable != 0; }
 
     // PaintZoneTerrain extracts bit 28 then tests its byte result. The
     // direct field condition instead folds to a dword mask. Retail-only
     // accessor hypothesis, consistent with the adjacent flag queries.
-    unsigned char isZoneBoundary() const
+    unsigned char isZoneAreaMarked() const
     {
         return m_tileData.m_zoneBoundary;
     }
@@ -1038,7 +1038,7 @@ struct TRmgMapItem {
     // Placement helpers 0x531170/0x5318b0/0x531cf0 all shift bit 22 and
     // test the truncated byte. Direct bitfield conditions fold to a dword
     // mask; keep this same ordinary query at each recovered boundary.
-    unsigned char isRoadEntrance() const
+    unsigned char isObjectEntrance() const
     {
         return m_tileData.m_roadEntrance;
     }
@@ -1047,7 +1047,7 @@ struct TRmgMapItem {
     // direct roadPassable condition tests the containing dword. The
     // provisional byte accessor reproduces that truncation; a direct
     // bitfield condition instead folds to test dword ptr [item+0x28],imm.
-    unsigned char hasSubterraneanGate() const
+    unsigned char isReservedOpen() const
     {
         return m_tileData.m_subterraneanGate;
     }
@@ -1056,14 +1056,14 @@ struct TRmgMapItem {
     // ordinary source-defined control retains calls; direct field tests
     // omit its Boolean result. This class body reproduces that predicate
     // shape; its seven-unit Windows control loses no exact functions.
-    unsigned char isPassableLand() const
+    unsigned char isPassableTile() const
     {
         return m_tileData.m_roadPassable && getLandType() != eTerrainRock;
     }
 
     // RepairWaterZoneBorders tests this flag after truncating it to a byte
     // at 0x53fe30, then tests roadPassable directly as a dword bit.
-    unsigned char hasBorderObject() const
+    unsigned char needsBlockingDecoration() const
     {
         return m_tileData.m_borderObject;
     }
@@ -1121,7 +1121,7 @@ public:
     virtual ~TRmgMapInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setTerrainFrame(const TRmgGridPoint& point, int value) = 0;
     // Slot 3 returns its explicit output reference. The adapters consume
     // that returned reference, which distinguishes this from a hidden value
     // result: together the map and both adapter bodies reproduce retail.
@@ -1132,8 +1132,8 @@ public:
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output) = 0;
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getTileType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrainFrame(const TRmgGridPoint& point) = 0;
 };
 
 class TRmgMapAdapterInterface {
@@ -1141,11 +1141,11 @@ public:
     virtual ~TRmgMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getTileType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrainType(const TRmgGridPoint& point) = 0;
 };
 
 // The road-decoration adapter has the same seven-slot shape but a distinct
@@ -1156,11 +1156,11 @@ public:
     virtual ~TRmgRoadMapAdapterInterface();
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
     virtual TRmgGridPoint getSize() = 0;
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
-    virtual int getOverlay(const TRmgGridPoint& point) = 0;
+    virtual int getTileType(const TRmgGridPoint& point) = 0;
+    virtual int getTerrainType(const TRmgGridPoint& point) = 0;
 };
 
 class type_random_map : public TRmgMapInterface {
@@ -1209,15 +1209,15 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setTerrainFrame(const TRmgGridPoint& point, int value);
 #if defined(HOMM3_TARGET_MAC)
     virtual TRmgGridPoint getSize();  // Mac 0x22eb84: hidden value result
 #else
     virtual TRmgGridPoint& getSize(TRmgGridPoint& output);
 #endif
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getTileType(const TRmgGridPoint& point);
+    virtual int getTerrainFrame(const TRmgGridPoint& point);
 
     void clear();
     // Retail insertion supplies pointer prvalues to both STL reference
@@ -1303,11 +1303,11 @@ public:
 
     TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getTileType(const TRmgGridPoint& point);
+    virtual int getTerrainType(const TRmgGridPoint& point);
 };
 
 // Retail retains these support bodies outside CreateRiver while the adapter
@@ -1322,11 +1322,11 @@ public:
 
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
     virtual TRmgGridPoint getSize();
     virtual rmgTerrainTile getTile(const TRmgGridPoint& point);
-    virtual int getLand(const TRmgGridPoint& point);
-    virtual int getOverlay(const TRmgGridPoint& point);
+    virtual int getTileType(const TRmgGridPoint& point);
+    virtual int getTerrainType(const TRmgGridPoint& point);
 };
 
 // Cinit 0x55ed70/0x55f2f0 passes a pattern count and a source int array to
@@ -1373,15 +1373,15 @@ public:
     TRmgGridPoint m_size;
 
     TRmgLinePainterInterface(const TRmgGridPoint& size);
-    virtual TRmgLinePatternTable* getPattern(int value) = 0;
+    virtual TRmgLinePatternTable* getPatternTable(int value) = 0;
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile) = 0;
-    virtual void setOverlay(const TRmgGridPoint& point, int value) = 0;
-    virtual int canPaint(const TRmgGridPoint& point) = 0;
+    virtual void setLineType(const TRmgGridPoint& point, int value) = 0;
+    virtual int isBlocked(const TRmgGridPoint& point) = 0;
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile) = 0;
-    virtual int getLand(const TRmgGridPoint& point) = 0;
+    virtual int getTileType(const TRmgGridPoint& point) = 0;
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
-    int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);
+    int getNeighbourTileType(const TRmgGridPoint& point, unsigned int direction);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
@@ -1393,11 +1393,11 @@ struct TRmgLinePainterTile {
     TRmgGridPoint m_point;
 
     TRmgLinePainterTile(TRmgLinePainterInterface* painter, const TRmgGridPoint& point);
-    int getLand();
+    int getTileType();
     void getTile(rmgTerrainTile& tile);
     void setTile(const rmgTerrainTile& tile);
     unsigned char isBlocked();
-    void setOverlay(int value);
+    void setLineType(int value);
 };
 SIZE(TRmgLinePainterTile, 0x0c);
 
@@ -1430,16 +1430,16 @@ public:
     // still expanded in ~TRmgRiverPainter (vptr store at 0x55eda0).
     virtual ~TRmgLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual int isBlocked(const TRmgGridPoint& point);
     // Slot 4's caller at 0x4f9fdd pushes output first, then point. The
     // retained wrapper 0x55f350 writes through its second explicit argument;
     // unlike the adapter, this interface does not return a tile by value.
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getTileType(const TRmgGridPoint& point);
 };
 
 inline TRmgLinePainter::~TRmgLinePainter() {}
@@ -1508,13 +1508,13 @@ public:
     // ??_GTRmgRoadPainter there).
     virtual ~TRmgRoadLinePainter() = 0;
 
-    virtual TRmgLinePatternTable* getPattern(int value);
+    virtual TRmgLinePatternTable* getPatternTable(int value);
     virtual void setTile(
         const TRmgGridPoint& point, const rmgTerrainTile& tile);
-    virtual void setOverlay(const TRmgGridPoint& point, int value);
-    virtual int canPaint(const TRmgGridPoint& point);
+    virtual void setLineType(const TRmgGridPoint& point, int value);
+    virtual int isBlocked(const TRmgGridPoint& point);
     virtual void getTile(const TRmgGridPoint& point, rmgTerrainTile& tile);
-    virtual int getLand(const TRmgGridPoint& point);
+    virtual int getTileType(const TRmgGridPoint& point);
 };
 
 inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
@@ -1856,8 +1856,8 @@ public:
     void placeMines();
     // Provisional roles from the Complete-only connection coordinator.
     void prepareZoneConnections();
-    void expandObstacleClearance();
-    void prepareWaterZoneConnections(TRmgZone* zone);
+    void markZoneBoundaryObstacles();
+    void populateWaterZoneIslands(TRmgZone* zone);
     void createWaterZoneIsland(const TRmgZoneBounds& bounds, int level);
     void floodWaterZoneDistances(TRmgMapPosition position, int zoneIndex);
     void buildZoneConnectionPaths();
@@ -1983,7 +1983,7 @@ public:
     // It changes the artifact prototype and attempts to place its seer hut;
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument.
-    unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    unsigned char placeSeerHutForArtifact(rmgQuestArtifactObject* object);
     // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
     // artifact caller supplies its origin zone and the prepared hut group.
     // Original names are unavailable; the graph and placement roles are proven.

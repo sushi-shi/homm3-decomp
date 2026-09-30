@@ -88,12 +88,9 @@ public:
     // Three alignment bytes between the seer-hut byte and strings at +0x08;
     // NH3API explicitly leaves +0x05..+0x07 unnamed. Retail serialization skips them.
     char m_paddingBeforeTexts[3];
-    // PROVISIONAL names, on two pieces of evidence: the order slot 13
-    // writes them is the h3m quest record's own
-    // firstVisitText / nextVisitText / completedText order, and slot 14
-    // back-fills each one from its own column of the text table when it
-    // is empty. Nothing in this file proves WHICH dialog reads which,
-    // so the roles are read off that order and not off a body.
+    // Serialized in first-visit, incomplete-visit, completed order.
+    // TQuestGuard::doEvent and TSeerHut::doEvent confirm the visit roles:
+    // slot 5 reads +0x08 on first visit; slot 4 reads +0x18 thereafter.
     std::string m_proposalText;    // +0x08
     std::string m_progressText;    // +0x18
     std::string m_completionText;  // +0x28
@@ -108,16 +105,11 @@ public:
     //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00
     //            0056ce50 0056cf70 00617d9a
 
-    // 0x617d9a is `__purecall` (`push 0x19 / call __amsg_exit`), so every
-    // slot holding it is PURE in the base; the four slots that are not
-    // (1, 3, 9, 10) are the four whose base bodies the file header already
-    // priced. Slots 4, 5, 13 and 14 are overridden by all ten leaves and
-    // nothing in this tree reaches them yet, so they are placeholders whose
-    // only job is to hold the offsets - do NOT invent semantics for them.
-
-    // Slot 1: the AI's valuation of the quest for one player. The base body
-    // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
-    virtual int getAIValue(int player) { return 0; }
+    // 0x617d9a is __purecall. Slots 4 and 5 are the incomplete/initial
+    // visit dialogs; slots 13 and 14 serialize and initialize quest text.
+    // Slot 1 values resources, creatures or artifacts surrendered as payment;
+    // TSeerHut::getValue subtracts it from the reward. The base returns zero.
+    virtual int getAIPaymentValue(int player) { return 0; }
     // Slot 2 of every quest vtable: does this hero satisfy the quest? It
     // returns a BYTE - the defeat-hero body ends `xor al,al` on its guard
     // path and the monster body `mov al,dl`. The hero is NOT const: the
@@ -128,29 +120,14 @@ public:
     // and the resource leaf debits the player's treasury. Provisional name.
     virtual void takePayment(hero* currentHero) {}
     unsigned char hasExpired() const;
-    // Slots 4 and 5, IDENTIFIED 2026-08-21: the family's two dialog
-    // entry points. Every leaf body is the same shape - take a string
-    // off one of the two base getters below, hand it to NormalDialog
-    // with iMBType 1 and whatever picture that quest type shows - and
-    // the only difference between the two slots is which getter and
-    // whether the caller passes a hero. Slot 4 takes one; the skill
-    // leaf 0x56dad0 is what types it, reading `[arg + 0x476]`, which is
-    // hero::stats. NAMES provisional: no roster row has this arity.
-    // ONE OF THESE TWO NAME PAIRS IS INVERTED (found 2026-09-05, bytes,
-    // recorded rather than acted on). The two base text getters the leaves
-    // take their string off are 0x56d240 and 0x56d310, and the xref graph
-    // pairs them one-for-one with slot 4 and slot 5: every DoProposalDialog
-    // calls 0x56d240, which reads +0x18, and every DoProgressDialog calls
-    // 0x56d310, which reads +0x08. So the slot-4 dialog shows the SECOND
-    // string of the h3m triple and slot 5 the FIRST - which contradicts
-    // either the proposalText/progressText roles above (assigned off slot
-    // 13's write order) or these two slot names. Both name sets are
-    // provisional and nothing in the image settles which one to flip;
-    // renaming either would touch forty reconstructed leaf bodies for no
-    // byte, so the observation is banked here for the lane that closes the
-    // two getters.
-    virtual void doProposalDialog(hero* currentHero) = 0;
-    virtual void doProgressDialog() = 0;
+    // Inferred visit roles from TQuestGuard::doEvent (0x572b60) and
+    // TSeerHut::doEvent: first visits call slot 5 without a hero; known,
+    // unsatisfied quests call slot 4 with the visiting hero. Slot 4 uses
+    // getIncompleteVisitText (0x56d240, +0x18), while slot 5 uses
+    // getInitialVisitText (0x56d310, +0x08). These are contextual names,
+    // not spellings recovered from debug symbols.
+    virtual void showIncompleteVisitDialog(hero* currentHero) = 0;
+    virtual void showInitialVisitDialog() = 0;
     // Slot 6. Pure in the base and overridden everywhere.
     virtual std::string getRequirementText() = 0;
     // Slot 7: the second string-returning virtual, and the one the four
@@ -227,7 +204,7 @@ public:
     // Header ownership is inferred from that cross-TU use; Complete added
     // this interface after the Dreamcast quest representation.
     VA(0x0052e6b0, 0x2E)
-    const TSeerHutTextColumn* questTextRow()
+    const TSeerHutTextColumn* getTextColumn()
     {
         if (m_seerHut)
             return &g_questTextA[m_textVariant];
@@ -240,7 +217,7 @@ public:
     // VC6 nested expansion in the creature and artifact dialogs.
     const TSeerHutQuestText& questTexts()
     {
-        return questTextRow()->m_quest[questType()];
+        return getTextColumn()->m_quest[questType()];
     }
     const std::string& questText(int column)
     {
@@ -254,8 +231,8 @@ public:
         }
     }
 
-    std::string getProposalDialogText();
-    std::string getProgressDialogText();
+    std::string getIncompleteVisitText();
+    std::string getInitialVisitText();
     // The exact HD structural twin maps this accessor to retail 0x45bad0;
     // its body copies the base's +0x28 completionText member.
     MAC_ADDRESS(0x169418, 0x24)
@@ -278,8 +255,8 @@ public:
     virtual std::string getRequirementText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual void save(TAbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
@@ -302,8 +279,8 @@ public:
     void showSkillRequirementsDialog(const char* text, const signed char* skills);
 
     virtual unsigned char isSatisfied(hero* currentHero);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual std::string getRequirementText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
@@ -325,8 +302,8 @@ public:
     virtual void notifyHeroDefeated(int heroId, int player);
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual void save(TAbstractFile* file);
     virtual std::string getQuestDescription();
     virtual std::string getRequirementText();
@@ -346,8 +323,8 @@ public:
     virtual int questType();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual void notifyMonsterDefeated(TQuestPosition where, int player);
     virtual void save(TAbstractFile* file);
     virtual std::string getQuestDescription();
@@ -369,7 +346,7 @@ public:
     type_artifact_quest(unsigned char flags);
     type_artifact_quest(TArtifact artifact, int textRow);
 
-    virtual int getAIValue(int player);
+    virtual int getAIPaymentValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
@@ -378,15 +355,15 @@ public:
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual std::string getRequirementText();
     virtual void save(TAbstractFile* file);
     virtual std::string getQuestDescription();
     virtual void setDefaultText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
-    void showArtifactProgress(const char* text,
+    void showArtifactRequirementsDialog(const char* text,
                               const std::vector<TArtifact>& artifacts);
 };
 
@@ -400,7 +377,7 @@ public:
 
     type_creature_quest(unsigned char flags);
 
-    virtual int getAIValue(int player);
+    virtual int getAIPaymentValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
@@ -409,8 +386,8 @@ public:
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual std::string getRequirementText();
     virtual void save(TAbstractFile* file);
     virtual std::string getQuestDescription();
@@ -428,7 +405,7 @@ public:
 
     type_resource_quest(unsigned char flags);
 
-    virtual int getAIValue(int player);
+    virtual int getAIPaymentValue(int player);
     virtual unsigned char isSatisfied(hero* currentHero);
     virtual void takePayment(hero* currentHero);
     // Retail-only 0x56ccb0 (seerhut.obj, 68 B, the row after ~type_quest):
@@ -437,8 +414,8 @@ public:
     // before pricing a quest guard. Provisional name - no DC row carries
     // it; the deadline comparison seerhut.cpp spells inline is its body.
     unsigned char hasExpired() const;
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual std::string getRequirementText();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
@@ -458,8 +435,8 @@ public:
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
     virtual void save(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual std::string getQuestDescription();
     virtual std::string getRequirementText();
     virtual void setDefaultText();
@@ -477,8 +454,8 @@ public:
     virtual std::string getQuestDescription();
     virtual void load(TAbstractFile* file, int version);
     virtual void loadFromMap(TAbstractFile* file);
-    virtual void doProposalDialog(hero* currentHero);
-    virtual void doProgressDialog();
+    virtual void showIncompleteVisitDialog(hero* currentHero);
+    virtual void showInitialVisitDialog();
     virtual void save(TAbstractFile* file);
     virtual void setDefaultText();
 };
