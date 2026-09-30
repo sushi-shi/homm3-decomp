@@ -2071,7 +2071,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 
         if (humanPlayer) {
             normalDialog(m_quest->getCompletionText().c_str(),
-                         2, -1, -1, getRewardType(),
+                         2, -1, -1, m_reward.getRewardType(),
                          m_reward.getRewardExtra(currentHero),
                          -1, 0, -1, 0, -1, 0);
 
@@ -2130,15 +2130,22 @@ void TSeerHut::doCompletionDialog(
     }
 }
 
-// Dreamcast seerhut.cpp:414 records this as a separate,
-// no-local switch helper called first by DoCompletionDialog. Retail's inlined
-// copy preserves the ten reward arms and Complete's shifted skill pictures.
+// Dreamcast owns this older private boundary on the hut. Complete moves the
+// operation to its separate reward object, as it does for GetRewardExtra.
 // Original: TSeerHut::GetRewardType; seerhut.cpp:414
 DC_ADDRESS(0x12d758, 0x90)
-MAC_ADDRESS(0x16a4c4, 0xc4)
 int TSeerHut::getRewardType()
 {
-    switch (m_reward.m_rewardType) {
+    return m_reward.getRewardType();
+}
+
+// Mac DoSeerEvent 0x169e08 passes hut+5, the same reward receiver used by
+// GetRewardExtra. This body reads type+0 and payload+4; its position directly
+// after GetRewardExtra supports an ordinary reward-owned source definition.
+MAC_ADDRESS(0x16a4c4, 0xc4)
+int TSeerReward::getRewardType()
+{
+    switch (m_rewardType) {
     case eRewardExperience:
         return 0x11;
     case eRewardMana:
@@ -2148,9 +2155,9 @@ int TSeerHut::getRewardType()
     case eRewardLuck:
         return 0x0b;
     case eRewardResource:
-        return m_reward.m_value.m_resource.m_resourceType;
+        return m_value.m_resource.m_resourceType;
     case eRewardPrimarySkill:
-        switch (m_reward.m_value.m_primarySkill.m_skillType) {
+        switch (m_value.m_primarySkill.m_skillType) {
         case TSeerReward::ePriSkillAttack:
             return 0x1f;
         case TSeerReward::ePriSkillDefense:

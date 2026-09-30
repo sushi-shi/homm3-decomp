@@ -127,6 +127,7 @@ public:
     int getValue(const hero* currentHero);
     void giveReward(hero* currentHero, bool humanPlayer);
     int getRewardExtra(const hero* thisHero);
+    int getRewardType();
 };
 SIZE(TSeerReward, 0xc);
 
@@ -155,8 +156,8 @@ private:
     // reward tail with the AI arm, superseding this older event boundary.
     void doCompletionDialog(hero* currentHero, bool humanPlayer);
     // Dreamcast proves this nested no-local switch helper as the first call
-    // made by DoCompletionDialog. Complete retains the boundary while
-    // shifting the primary-skill icon domain by one.
+    // made by DoCompletionDialog. Complete owns the operation on TSeerReward;
+    // this older boundary forwards to that canonical helper.
     int getRewardType();
     signed char m_nameIndex;
 
