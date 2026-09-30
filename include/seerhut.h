@@ -9,8 +9,8 @@
 
 #include "quest.h"
 
-// E:\gamedcs\seerhut.cpp:50
-unsigned char initializeSeerHutText();
+// E:\gamedcs\seerhut.cpp:50; native ?InitializeSeerHutText@@YA_NXZ.
+bool initializeSeerHutText();
 
 class hero;
 class NewmapCell;

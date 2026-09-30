@@ -109,7 +109,7 @@ std::string formatString(const char* format, ...);
 VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
 MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
-unsigned char initializeSeerHutText()
+bool initializeSeerHutText()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
         DATA_COMPGEN(0x00683214, seerHutSpreadsheetName, "seerhut.txt"));
