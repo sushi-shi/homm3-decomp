@@ -868,6 +868,39 @@ The progress dialog uses positive requirements but builds only pictures. Neither
 is substituted with the text-only list helper. Serialization and payment remain
 unchanged.
 
+## AI spell initialization and restoration priority
+
+Both `type_spell_choice` constructors now use private `initializeSelection()`
+for the same four stores: zero value, invalid primary and secondary targets,
+then a cleared cast-now byte. Each constructor still initializes its enchantment
+base with its original spell/mastery/power/duration first. The shared operation
+does not conflate later tactical hex targets with simulated-combat vector indices
+or Dispel fallback handling. Existing public data and field layout remain intact.
+
+`type_AI_combat_parameters::getRestorationPriorityValue()` shares the conditional
+value doubling across hero Resurrection, Sacrifice and creature resurrection.
+The condition remains awake friendly value greater than awake enemy value,
+followed by an estimated remaining-round count at most one. Each caller retains
+its original base valuation, target eligibility and comparison with the best
+candidate. Sacrifice still rejects a nonpositive net value before the adjustment;
+creature resurrection still distinguishes the Pit Lord's demon valuation from
+the Archangel's restored-stack valuation.
+
+Resurrection and Sacrifice also share private `shouldRestoreNow()`. It checks
+whether the restored stack is current, then the existing win-likely flag, then
+calls the existing `isLastAction()` helper only if needed. Timing is still
+evaluated after saving the candidate's value and target(s). Teleport's
+incapacitation condition and ordinary enchantments' flag-based timing remain
+distinct. No target or current-army read is cached across the existing helper
+calls. The three new methods use project-inferred names and ordinary source
+definitions; no native addresses, explicit-inline qualifiers, fields or virtual
+slots are added.
+
+The attack-hex chooser has a different reset boundary: its constructor clears
+attack time, but `findAttackHex()` retains it while invalidating only value and
+hex. The constructor interleaves those stores with other setup. That review does
+not justify replacing either path with a full reset of the result triple.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

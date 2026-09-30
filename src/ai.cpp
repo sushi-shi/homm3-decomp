@@ -1601,9 +1601,7 @@ unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long
                                            estimate.m_lowestDefense,
                                            target->canShoot(0), 0)
                                        * size);
-        if (estimate.m_awakeFriendlyValue > estimate.m_awakeEnemyValue
-                && estimate.m_roundsLeft <= 1)
-            value += value;
+        value = estimate.getRestorationPriorityValue(value);
         if (value > bestValue) {
             bestValue = value;
             bestTargetHex = hex;
