@@ -2270,6 +2270,13 @@ void townManager::setHeroCommand()
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
+// Mac 0x1bf860..0x1bf884 and six sibling arms expand GetArmyName:
+// 0..0x96 guard, empty fallback, and the singular/plural trait columns.
+// Keep those operations on the canonical header helper. VC6 now expands
+// the ordinary getNumArmies call that retail retains at +0x21: all seven
+// name helpers expand, and all other calls agree. This caller's C2 cost is
+// 710 (budget 1420); the recovered helper path measures 88.3501% versus
+// the old flattened caller's 100%. Preserve both canonical boundaries.
 void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
     char flag = 0;
@@ -2287,11 +2294,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-        const char* name;
-        if (id >= 0 && id <= 150)
-            name = g_creatureTypeTraits[id].m_pluralName;
-        else
-            name = "";
+        const char* name = getArmyName(id, 2);
         sprintf(m_statusText, g_townCommand[4], name);
         m_command = 1;
         return;
@@ -2307,11 +2310,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 1);
             sprintf(m_statusText, g_townCommand[0], name);
             m_command = 5;
             return;
@@ -2320,11 +2319,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             strcpy(m_statusText, g_townCommand[1]);
             return;
         }
-        const char* name;
-        if (selId >= 0 && selId <= 150)
-            name = g_creatureTypeTraits[selId].m_name;
-        else
-            name = "";
+        const char* name = getArmyName(selId, 1);
         sprintf(m_statusText, g_townCommand[2], name);
         m_command = 2;
         return;
@@ -2332,11 +2327,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 
     if (splitEnabled) {
         if (anchorId == -1) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 1);
             sprintf(m_statusText, g_townCommand[3], name);
             m_command = 5;
             return;
@@ -2347,11 +2338,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_pluralName;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 2);
             sprintf(m_statusText, g_townCommand[6], name);
             m_command = 3;
             return;
@@ -2362,16 +2349,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
-    const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
-    else
-        nameAnchor = "";
-    const char* nameSel;
-    if (selId >= 0 && selId <= 150)
-        nameSel = g_creatureTypeTraits[selId].m_pluralName;
-    else
-        nameSel = "";
+    const char* nameAnchor = getArmyName(anchorId, 2);
+    const char* nameSel = getArmyName(selId, 2);
     sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
     m_command = 3;
 }
@@ -2929,10 +2908,10 @@ void TThievesGuildWindow::setRolloverText(int codeY)
         break;
     }
 
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1c2ce0..0x1c2cf0 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x29,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 0x28, 0x29);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x22c, 0x2e0, 0x12);
 }
@@ -3433,10 +3412,10 @@ void TMageGuildWindow::setRolloverText(int codeY)
         strcpy(g_text, "");
     }
 
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1c9080..0x1c9090 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 3,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 2, 3);
     g_windowManager->updateScreen(8, 0x22c, 0x2e0, 0x12);
 }
@@ -4273,10 +4252,10 @@ void TBlacksmithWindow::setRolloverText(int id)
         strcpy(g_text, "");
         break;
     }
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1ce108..0x1ce118 passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
 }
@@ -4506,10 +4485,10 @@ void TShipWindow::setRolloverText(int codeY)
         strcpy(g_text, "");
         break;
     }
-    message textMessage;
-    textMessage.m_extraText = g_text;
+    // Mac 0x1cf36c..0x1cf37c passes g_text directly to the four-int
+    // broadcast overload; message construction belongs to the callee.
     broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
-                     textMessage.m_extra);
+                     reinterpret_cast<int>(g_text));
     drawWindow(0, 7, 8);
     g_windowManager->updateScreen(m_x + 8, m_y + 0x16b, 0x138, 0x11);
 }
@@ -7963,10 +7942,13 @@ int TCastleWindow::windowHandler(message& msg)
 VA(0x005dd390, 0x67E)
 DC_ADDRESS(0x17fd08, 0x4fa)
 MAC_ADDRESS(0x1e1580, 0x6c4)  // anchor-bracket + arity + townManager thiscall
+// Mac 0x1e1804..0x1e1828 and 0x1e18b8..0x1e18dc expand the plural
+// GetArmyName path. The eleven stat broadcasts at 0x1e1970..0x1e1c2c
+// pass g_text directly in r7 to the four-int overload (0x20b4ac); only
+// the palette/name messages above use the caller-owned message reference.
 void townManager::setupWell(TCastleWindow* wellWin)
 {
     message msg;
-    message textMessage;
 
     g_castleOpen = 1;
     msg.m_id = MESSAGE_WIDGET;
@@ -8007,11 +7989,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureType rowCreature =
             g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
                                    + m_currentDwellingIdOff[i]];
-        const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
-        else
-            creatureName = "";
+        const char* creatureName = getArmyName(rowCreature, 2);
         strcpy(g_text, creatureName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
@@ -8025,13 +8003,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         wellWin->broadcastMessage(msg);
 
         msg.m_codeY = 0x20;
-        const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
-            summonName =
-                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
-        else
-            summonName = "";
+        const char* summonName = getArmyName(
+            g_townManager->m_townToView->m_summoningType, 2);
         strcpy(g_text, summonName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
@@ -8043,37 +8016,31 @@ void townManager::setupWell(TCastleWindow* wellWin)
                 m_townToView->m_type * TOWN_DWELLING_SLOTS
                 + m_currentDwellingIdOff[i]]];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x29, textMessage.m_extra);
+                                  i + 0x29, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_defenseSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x31, textMessage.m_extra);
+                                  i + 0x31, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_damageLowBound);
         if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
             sprintf(damageText, "-%d", monInfo.m_damageHighBound);
             strcat(g_text, damageText);
         }
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x69, textMessage.m_extra);
+                                  i + 0x69, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_hitPoints);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x71, textMessage.m_extra);
+                                  i + 0x71, reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_speed);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                  i + 0x79, textMessage.m_extra);
+                                  i + 0x79, reinterpret_cast<int>(g_text));
         if (m_townToView->getBuildingMask()
             & g_bitNumber[DWELLING_0_ID + m_currentDwellingIdOff[i]]) {
             int growth = m_townToView->getGrowthRate(m_currentDwellingIdOff[i]);
             sprintf(g_text, "%d", growth);
-            textMessage.m_extraText = g_text;
             wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                      i + 0x81, textMessage.m_extra);
+                                      i + 0x81, reinterpret_cast<int>(g_text));
         }
     }
 
@@ -8081,30 +8048,25 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureTypeTraits monInfo =
             g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType];
         sprintf(g_text, "%d", monInfo.m_attackSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_defenseSkill);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x38,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_damageLowBound);
         if (monInfo.m_damageLowBound != monInfo.m_damageHighBound) {
             char damageText[40];
             sprintf(damageText, "-%d", monInfo.m_damageHighBound);
             strcat(g_text, damageText);
         }
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x70,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_hitPoints);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x78,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
         sprintf(g_text, "%d", monInfo.m_speed);
-        textMessage.m_extraText = g_text;
         wellWin->broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x80,
-                                  textMessage.m_extra);
+                                  reinterpret_cast<int>(g_text));
     }
 }
 
