@@ -5615,16 +5615,19 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     return applyLimits ? limit(-3, morale, 3) : morale;
 }
 
+// Mac 0x104904..0x105898 expands packed mastery reads as lbz/extsb
+// before the skill tests and table indices. Preserve the canonical typed
+// Hero.h:981 getSecondarySkill boundary throughout these specialty readers.
 VA(0x004e3c60, 0x70)
 MAC_ADDRESS(0x104904, 0x84)
 TCreatureType hero::getNecromancyCreature()
 {
     if (isWieldingArtifact(ARTIFACT_CLOAK_OF_THE_UNDEAD_KING)) {
-        if (m_skillLevel[eSecSkillNecromancy] >= 3)
+        if (getSecondarySkill(eSecSkillNecromancy) >= 3)
             return CREATURE_LICH;
-        if (m_skillLevel[eSecSkillNecromancy] >= 2)
+        if (getSecondarySkill(eSecSkillNecromancy) >= 2)
             return CREATURE_WIGHT;
-        if (m_skillLevel[eSecSkillNecromancy] >= 1)
+        if (getSecondarySkill(eSecSkillNecromancy) >= 1)
             return CREATURE_WALKING_DEAD;
     }
     return CREATURE_SKELETON;
@@ -5637,8 +5640,8 @@ DC_ADDRESS(0x0d4390, 0x112)
 MAC_ADDRESS(0x104988, 0x280)
 float hero::getNecromancyFactor(unsigned char applyLimit) const
 {
-    float factor = g_necromancyFactors[m_skillLevel[eSecSkillNecromancy]];
-    if (m_skillLevel[eSecSkillNecromancy] > 0) {
+    float factor = g_necromancyFactors[getSecondarySkill(eSecSkillNecromancy)];
+    if (getSecondarySkill(eSecSkillNecromancy) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillNecromancy)
@@ -5677,8 +5680,8 @@ DC_ADDRESS(0x0d44a4, 0xbc)
 MAC_ADDRESS(0x104c08, 0x138)
 int hero::getMysticismBonus() const
 {
-    int bonus = g_mysticismBonuses[m_skillLevel[eSecSkillMysticism]];
-    if (m_skillLevel[eSecSkillMysticism] > 0) {
+    int bonus = g_mysticismBonuses[getSecondarySkill(eSecSkillMysticism)];
+    if (getSecondarySkill(eSecSkillMysticism) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillMysticism) {
             bonus = (m_level * 0.05f + 1.0f) * bonus;
@@ -5699,8 +5702,8 @@ DC_ADDRESS(0x0d4560, 0x78)
 MAC_ADDRESS(0x104d40, 0x11c)
 int hero::getVisibility() const
 {
-    int visibility = g_scoutingVisibility[m_skillLevel[eSecSkillScouting]];
-    if (m_skillLevel[eSecSkillScouting] > 0) {
+    int visibility = g_scoutingVisibility[getSecondarySkill(eSecSkillScouting)];
+    if (getSecondarySkill(eSecSkillScouting) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillScouting)
             visibility = (m_level * 0.05f + 1.0f) * visibility;
@@ -5717,8 +5720,8 @@ DC_ADDRESS(0x0d45d8, 0x8c)
 MAC_ADDRESS(0x104e5c, 0x114)
 float hero::getArcheryFactor() const
 {
-    float factor = g_archeryFactors[m_skillLevel[eSecSkillArchery]];
-    if (m_skillLevel[eSecSkillArchery] > 0) {
+    float factor = g_archeryFactors[getSecondarySkill(eSecSkillArchery)];
+    if (getSecondarySkill(eSecSkillArchery) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillArchery)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5737,8 +5740,8 @@ DC_ADDRESS(0x0d4664, 0x44)
 MAC_ADDRESS(0x104f70, 0x90)
 float hero::getOffenseFactor() const
 {
-    float factor = g_offenseFactors[m_skillLevel[eSecSkillOffense]];
-    if (m_skillLevel[eSecSkillOffense] > 0) {
+    float factor = g_offenseFactors[getSecondarySkill(eSecSkillOffense)];
+    if (getSecondarySkill(eSecSkillOffense) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillOffense)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5751,8 +5754,8 @@ DC_ADDRESS(0x0d46a8, 0x4e)
 MAC_ADDRESS(0x105000, 0xa8)
 float hero::getDefenseFactor() const
 {
-    float factor = g_defenseFactors[m_skillLevel[eSecSkillDefense]];
-    if (m_skillLevel[eSecSkillDefense] > 0) {
+    float factor = g_defenseFactors[getSecondarySkill(eSecSkillDefense)];
+    if (getSecondarySkill(eSecSkillDefense) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillDefense)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5767,8 +5770,8 @@ DC_ADDRESS(0x0d46f8, 0x6e)
 MAC_ADDRESS(0x1050a8, 0xf8)
 int hero::getEstatesBonus() const
 {
-    int bonus = g_estatesGold[m_skillLevel[eSecSkillEstates]];
-    if (m_skillLevel[eSecSkillEstates] > 0) {
+    int bonus = g_estatesGold[getSecondarySkill(eSecSkillEstates)];
+    if (getSecondarySkill(eSecSkillEstates) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill
             && ability.m_skill == eSecSkillEstates)
@@ -5786,8 +5789,8 @@ DC_ADDRESS(0x0d4768, 0xc4)
 MAC_ADDRESS(0x1051a0, 0x124)
 float hero::getEagleEyeChance() const
 {
-    float factor = g_eagleEyeFactors[m_skillLevel[eSecSkillEagleEye]];
-    if (m_skillLevel[eSecSkillEagleEye] > 0) {
+    float factor = g_eagleEyeFactors[getSecondarySkill(eSecSkillEagleEye)];
+    if (getSecondarySkill(eSecSkillEagleEye) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillEagleEye)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5808,8 +5811,8 @@ DC_ADDRESS(0x0d482c, 0x9a)
 MAC_ADDRESS(0x1052c4, 0x128)
 float hero::getSurrenderCostFactor() const
 {
-    float factor = g_diplomacyFactors[m_skillLevel[eSecSkillDiplomacy]];
-    if (m_skillLevel[eSecSkillDiplomacy] > 0) {
+    float factor = g_diplomacyFactors[getSecondarySkill(eSecSkillDiplomacy)];
+    if (getSecondarySkill(eSecSkillDiplomacy) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillDiplomacy)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5830,8 +5833,8 @@ DC_ADDRESS(0x0d48c8, 0x96)
 MAC_ADDRESS(0x1053ec, 0x128)
 float hero::getMagicResistanceFactor() const
 {
-    float factor = g_magicResistanceFactors[m_skillLevel[eSecSkillMagicResistance]];
-    if (m_skillLevel[eSecSkillMagicResistance] > 0) {
+    float factor = g_magicResistanceFactors[getSecondarySkill(eSecSkillMagicResistance)];
+    if (getSecondarySkill(eSecSkillMagicResistance) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillMagicResistance)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5852,8 +5855,8 @@ DC_ADDRESS(0x0d4960, 0x48)
 MAC_ADDRESS(0x105514, 0x98)
 float hero::getExperienceBonusFactor() const
 {
-    float factor = g_learningFactors[m_skillLevel[eSecSkillLearning]];
-    if (m_skillLevel[eSecSkillLearning] > 0) {
+    float factor = g_learningFactors[getSecondarySkill(eSecSkillLearning)];
+    if (getSecondarySkill(eSecSkillLearning) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillLearning)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5871,8 +5874,8 @@ DC_ADDRESS(0x0d49a8, 0x48)
 MAC_ADDRESS(0x1055ac, 0x98)
 float hero::getLogisticsFactor() const
 {
-    float factor = g_logisticsFactors[m_skillLevel[eSecSkillLogistics]];
-    if (m_skillLevel[eSecSkillLogistics] > 0) {
+    float factor = g_logisticsFactors[getSecondarySkill(eSecSkillLogistics)];
+    if (getSecondarySkill(eSecSkillLogistics) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillLogistics)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5885,8 +5888,8 @@ DC_ADDRESS(0x0d49f0, 0x4e)
 MAC_ADDRESS(0x105644, 0x8c)
 long hero::getNavigationFactor() const
 {
-    long movement = g_moveConstants.m_sea[m_skillLevel[eSecSkillNavigation]];
-    if (m_skillLevel[eSecSkillNavigation] > 0) {
+    long movement = g_moveConstants.m_sea[getSecondarySkill(eSecSkillNavigation)];
+    if (getSecondarySkill(eSecSkillNavigation) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
             movement += m_level * g_moveConstants.m_sea[0] / 20;
@@ -5899,8 +5902,8 @@ DC_ADDRESS(0x0d4a40, 0x48)
 MAC_ADDRESS(0x1056d0, 0x98)
 float hero::getSorceryFactor() const
 {
-    float factor = g_sorceryFactors[m_skillLevel[eSecSkillSorcery]];
-    if (m_skillLevel[eSecSkillSorcery] > 0) {
+    float factor = g_sorceryFactors[getSecondarySkill(eSecSkillSorcery)];
+    if (getSecondarySkill(eSecSkillSorcery) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill
             && ability.m_skill == eSecSkillSorcery)
@@ -5914,8 +5917,8 @@ DC_ADDRESS(0x0d4a88, 0x80)
 MAC_ADDRESS(0x105768, 0x98)
 float hero::getIntelligenceFactor() const
 {
-    float factor = g_intelligenceFactors[m_skillLevel[eSecSkillIntelligence]];
-    if (m_skillLevel[eSecSkillIntelligence] > 0) {
+    float factor = g_intelligenceFactors[getSecondarySkill(eSecSkillIntelligence)];
+    if (getSecondarySkill(eSecSkillIntelligence) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillIntelligence)
             factor = (m_level * 0.05f + 1.0f) * factor;
@@ -5928,8 +5931,8 @@ DC_ADDRESS(0x0d4b08, 0x48)
 MAC_ADDRESS(0x105800, 0x98)
 float hero::getFirstAidFactor() const
 {
-    float factor = g_firstAidFactors[m_skillLevel[eSecSkillFirstAid]];
-    if (m_skillLevel[eSecSkillFirstAid] > 0) {
+    float factor = g_firstAidFactors[getSecondarySkill(eSecSkillFirstAid)];
+    if (getSecondarySkill(eSecSkillFirstAid) > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillFirstAid)
             factor = (m_level * 0.05f + 1.0f) * factor;
