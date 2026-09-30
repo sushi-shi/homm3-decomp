@@ -1725,10 +1725,13 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
     return wide;
 }
 
+// DC mapcell.cpp:1524 proves BlackBoxData&. Both Complete callers
+// supply their constructed stack records; retain that interface through
+// the versioned creature reader rather than introducing a nullable pointer.
 VA(0x004ff6b0, 0x535)
 DC_ADDRESS(0x0ee56c, 0x4f2)
 MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic)
-int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                              int mapVersion)
 {
     signed char value;
@@ -1738,55 +1741,55 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->m_hasCustomTreasure = value != 0;
-    if (thisBox->m_hasCustomTreasure) {
-        if (readTreasureData(infile, thisBox) != 0)
+    thisBox.m_hasCustomTreasure = value != 0;
+    if (thisBox.m_hasCustomTreasure) {
+        if (readTreasureData(infile, &thisBox) != 0)
             return -1;
     }
 
     if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
         return -1;
-    thisBox->m_experienceBonus = dwordValue;
+    thisBox.m_experienceBonus = dwordValue;
     if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
         return -1;
-    thisBox->m_manaBonus = dwordValue;
+    thisBox.m_manaBonus = dwordValue;
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->m_moraleBonus = value;
+    thisBox.m_moraleBonus = value;
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    thisBox->m_luckBonus = value;
+    thisBox.m_luckBonus = value;
 
     for (i = 0; i < 7; ++i) {
         if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
             return -1;
-        thisBox->m_resQty[i] = dwordValue;
+        thisBox.m_resQty[i] = dwordValue;
     }
     for (i = 0; i < 4; ++i) {
         if (infile->read(&value, sizeof(value)) < sizeof(value))
             return -1;
-        thisBox->m_primarySkillBonus[i] = value;
+        thisBox.m_primarySkillBonus[i] = value;
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->m_secondarySkills.clear();
+        thisBox.m_secondarySkills.clear();
     } else {
-        thisBox->m_secondarySkills.resize(count);
+        thisBox.m_secondarySkills.resize(count);
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
             // Mac 0x121b14..0x121b68 directly stores each decoded enum word.
             int skillType = value;
-            thisBox->m_secondarySkills[i].m_type =
+            thisBox.m_secondarySkills[i].m_type =
                 H3_ENUM_DECODE(TSecondarySkill, skillType);
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
             int skillLevel = value;
-            thisBox->m_secondarySkills[i].m_level =
+            thisBox.m_secondarySkills[i].m_level =
                 H3_ENUM_DECODE(TSkillMastery, skillLevel);
         }
     }
@@ -1795,19 +1798,19 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     count = value;
     if (count == 0) {
-        thisBox->m_artifacts.clear();
+        thisBox.m_artifacts.clear();
     } else {
-        thisBox->m_artifacts.resize(count);
+        thisBox.m_artifacts.resize(count);
         for (i = 0; i < count; ++i) {
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                thisBox->m_artifacts[i] = TArtifact(narrow);
+                thisBox.m_artifacts[i] = TArtifact(narrow);
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                thisBox->m_artifacts[i] = TArtifact(wide);
+                thisBox.m_artifacts[i] = TArtifact(wide);
             }
         }
     }
@@ -1820,28 +1823,28 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         // just as the two preceding empty-list arms do.
         // Mac clear 0xbed64 is also called by the scholar spell-vector
         // destructor 0xbe748; resize 0x128e9c is the same enum family.
-        thisBox->m_spells.clear();
+        thisBox.m_spells.clear();
     } else {
-        thisBox->m_spells.resize(count);
+        thisBox.m_spells.resize(count);
         for (i = 0; i < count; ++i) {
             if (infile->read(&value, sizeof(value)) < sizeof(value))
                 return -1;
-            thisBox->m_spells[i] = H3_ENUM_DECODE(ESpellId, value);
+            thisBox.m_spells[i] = H3_ENUM_DECODE(ESpellId, value);
         }
     }
 
     if (infile->read(&value, sizeof(value)) < sizeof(value))
         return -1;
     count = value;
-    thisBox->m_creatures.initialize();
+    thisBox.m_creatures.initialize();
     for (i = 0; i < count; ++i) {
-        thisBox->m_creatures.m_armies[i] =
+        thisBox.m_creatures.m_armies[i] =
             readMapCreatureId(infile, mapVersion);
 
         short troops;
         if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
             return -1;
-        thisBox->m_creatures.m_numTroops[i] = troops;
+        thisBox.m_creatures.m_numTroops[i] = troops;
     }
 
     char padding[8];
@@ -1867,7 +1870,7 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
     blackboxObject->m_extraInfo = 0;
 
     BlackBoxData tempBox;
-    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+    if (readBlackBox(infile, tempBox, mapVersion) != 0)
         return -1;
 
     if (boxIndex < 400) {
@@ -2157,7 +2160,7 @@ int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
     eventObject->m_extraInfo = 0;
 
     BlackBoxData tempBox;
-    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+    if (readBlackBox(infile, tempBox, mapVersion) != 0)
         return -1;
 
     unsigned char value;

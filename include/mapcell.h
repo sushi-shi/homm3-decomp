@@ -1417,7 +1417,7 @@ public:
     // Three arguments, readGarrisonData's divergence again: retail's `ret 0xc`
     // against the Dreamcast's two, and mapVersion again picks the creature
     // field's width. readBlackBoxData carries it only to pass it through.
-    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+    int readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                      int mapVersion);
     int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
                          int mapVersion);
