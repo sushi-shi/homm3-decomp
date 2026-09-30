@@ -5699,6 +5699,9 @@ NewmapCell* advManager::getCell(type_point point)
 // Original DC publics end Utype_point@@_N1111 and _N0000 for the two
 // UpdateRadar overloads: all five flags are bool despite the lowered
 // primitive 0x20 display. Preserve this forwarding contract together.
+// The bitmap-origin recovery reaches 91.15%: all 25 ordinary calls agree.
+// The three computed jump-table addends and their companion relocations
+// shift by 0x34; these are layout differences, not missing helpers.
 VA(0x00412c40, 0xB41)
 DC_ADDRESS(0x014bec, 0x1390)
 MAC_ADDRESS(0x01382c, 0xd74)  // linkorder
@@ -5832,7 +5835,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                 if (x == heroX && y == heroY) {
                     colour = g_systemPalette->m_data[64 + currentHero->m_owner];
                 } else if (cell->m_type == HERO
-                           && (cell->m_cellFlags & 0x1000)) {
+                           && cell->m_isTrigger) {
                     colour = g_systemPalette->m_data[64 +
                         g_game->m_heroAvailability[cell->m_extraInfo]];
                 } else {
@@ -5858,13 +5861,12 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                     case TERRAIN_VOLCANO:
                     case TERRAIN_WILLOW_TREE:
                     case TERRAIN_YUCCA_TREE:
-                        if (!(cell->m_cellFlags & 0x40))
+                        if (!cell->m_passable)
                             colour = m_groundTileset[cell->m_groundSet]
                                          ->getPaletteColor(9);
                         break;
                     case TOWN:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
@@ -5874,8 +5876,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                         break;
                     case LIGHTHOUSE:
                     case MINE:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
@@ -5885,8 +5886,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                         break;
                     case CREATURE_GENERATOR_1:
                     case CREATURE_GENERATOR_4:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
@@ -5895,8 +5895,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                         }
                         break;
                     case GARRISON:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
@@ -5905,8 +5904,7 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
                         }
                         break;
                     case SHIPYARD:
-                        if (!(cell->m_cellFlags & 0x40)
-                            || (cell->m_cellFlags & 0x1000)) {
+                        if (!cell->m_passable || cell->m_isTrigger) {
                             NewmapCell* trigger = cell->getTriggerCell();
                             if (trigger)
                                 colour = g_systemPalette->m_data[64 +
