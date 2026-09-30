@@ -1398,7 +1398,7 @@ private:
                            bool teleport,
                            long& actionValue,
                            type_AI_combat_parameters& estimate);  // 0x421680
-    unsigned char chooseResurrectAction(
+    bool chooseResurrectAction(
         const army* currentArmy, long& bestValue,
         type_AI_combat_parameters& estimate);  // 0x421000
     long chooseShooterTarget(const army* currentArmy,

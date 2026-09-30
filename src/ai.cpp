@@ -1551,7 +1551,9 @@ bool combatManager::sodChooseFaerieDragonSpell(
 VA(0x00421000, 0x275)
 DC_ADDRESS(0x026140, 0x324)
 MAC_ADDRESS(0x022f94, 0x2e4)  // anchor-callee
-unsigned char combatManager::chooseResurrectAction(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
+// Original DC public ?choose_resurrect_action@combatManager@@AAA_NPBVarmy@@AAJAAVtype_AI_combat_parameters@@@Z
+// proves a private bool result; the existing output references are native.
+bool combatManager::chooseResurrectAction(const army* currentArmy, long& bestValue, type_AI_combat_parameters& estimate)
 {
     long bestTargetHex = -1;  // Original: best_target_hex.
     if (!currentArmy->canCastResurrect())
