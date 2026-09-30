@@ -5841,6 +5841,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     return 0;
 }
 
+// Windows 0x4c3cac checks the time-limit read count; Mac 0xda3ac ignores it.
 VA(0x004c3c80, 0x10B)
 DC_ADDRESS(0x0af118, 0x19c)
 MAC_ADDRESS(0x0da274, 0x16c)

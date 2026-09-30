@@ -754,3 +754,28 @@ a successful tree lookup. The source preserves the Windows guard and virtual
 `delete this` call (`0x55d18a`; Mac's deleting slot is called at `0x154820`).
 The Mac array and its hash/equality helpers must not be inserted into this
 different Windows cache implementation.
+
+### Map and saved-game victory/loss condition streams
+
+The six complete Mac condition serializers (`0xd9320` through `0xda6b4`)
+account for another 103 queued virtual stream calls. Their receivers, transfer
+widths, field destinations and short-transfer guards agree with the existing
+source operations, apart from the Windows-specific check below. Two- and
+four-byte values use little-endian conversion on Mac; Windows reads or writes
+its native little-endian representation. Existing scalar helpers remain in
+the saved-game loaders and loss-condition writer.
+
+The map-format defeat-hero condition reads coordinates. Saved games instead
+use an ID, through the already recovered `loadHeroId` call at Mac `0xda0a8`.
+Loss-condition loading reads coordinates only for save version `0x10` and
+otherwise retains `loadHeroIdShort` at `0xda64c`. The source preserves these
+version gates, the distinct byte/short ID formats and both helper calls.
+The map victory reader also retains `validateVictoryLossConditions` at
+`0xd9884`.
+
+Mac's map loss-condition reader ignores the two-byte time-limit read result
+at `0xda3ac`. Windows explicitly checks that result at `0x4c3cac` and returns
+`-1` on a short read; the source correctly preserves that guard. The saved-game
+loss reader and writer check the time-limit transfer in Mac too. This batch
+found no additional missing game helper or source call; resolving the virtual
+stream sites does not establish whole-corpus body-review completion.
