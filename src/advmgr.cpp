@@ -7523,10 +7523,14 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
         g_windowManager->updateScreen(0, 0, 800, 600);
 }
 
+// Original DC public names prove bool context flags: DeactivateCurrTown/Hero
+// use QAAX_N@Z, DemobilizeCurrHero uses QAAX_N0@Z, and MobilizeCurrHero/
+// SetTownContext use QAAXH_N0@Z. Primitive 0x20 alone also renders as uchar;
+// the original decorated names preserve the boolean distinction.
 VA(0x00417570, 0x2A)
 DC_ADDRESS(0x01a3b0, 0x3e)
 MAC_ADDRESS(0x017cc4, 0x54)
-void advManager::deactivateCurrTown(unsigned char waitingPlayer)
+void advManager::deactivateCurrTown(bool waitingPlayer)
 {
     if (waitingPlayer)
         g_game->getLocalPlayer()->m_currTownId = 0xff;
@@ -7537,7 +7541,7 @@ void advManager::deactivateCurrTown(unsigned char waitingPlayer)
 VA(0x004175a0, 0x3A)
 DC_ADDRESS(0x01a3f0, 0x50)
 MAC_ADDRESS(0x017d18, 0x60)
-void advManager::deactivateCurrHero(unsigned char waitingPlayer)
+void advManager::deactivateCurrHero(bool waitingPlayer)
 {
     demobilizeCurrHero(waitingPlayer, 0);
     if (waitingPlayer)
@@ -7549,7 +7553,7 @@ void advManager::deactivateCurrHero(unsigned char waitingPlayer)
 VA(0x004175e0, 0x9D)
 DC_ADDRESS(0x01a440, 0xde)
 MAC_ADDRESS(0x017d78, 0xe0)
-void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
+void advManager::mobilizeCurrHero(int inMove, bool waitingPlayer, bool drawChanges)
 {
     playerData* player = g_currentPlayer;
 
@@ -7586,8 +7590,8 @@ void advManager::mobilizeCurrHero(int inMove, unsigned char waitingPlayer, unsig
 VA(0x00417680, 0x1AF)
 DC_ADDRESS(0x01a520, 0x13c)
 MAC_ADDRESS(0x017e58, 0x14c)
-void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
-                                    unsigned char drawChanges)
+void advManager::demobilizeCurrHero(bool waitingPlayer,
+                                    bool drawChanges)
 {
     if (waitingPlayer)
         return;
@@ -7636,7 +7640,7 @@ void advManager::demobilizeCurrHero(unsigned char waitingPlayer,
 VA(0x00417830, 0x2EB)
 DC_ADDRESS(0x01a65c, 0x21a)
 MAC_ADDRESS(0x017fa4, 0x27c)  // anchor-global
-void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
+void advManager::setTownContext(int townId, bool waitingPlayer, bool update)
 {
     deactivateCurrHero(waitingPlayer);
 
@@ -7724,10 +7728,12 @@ void advManager::setTownContext(int townId, unsigned char waitingPlayer, unsigne
 // helper is byte-flat and is source-shape truth rather than a score lever.
 // DC lines 9648/9671 also retain Reseed(0, 0) and get_map_center;
 // restoring them is Windows byte-flat at the current 97.0315%.
+// Original DC SetHeroContext@@QAAXHH_N0@Z proves two integer parameters
+// followed by two bool flags; keep the same boolean domain through its helpers.
 VA(0x00417b20, 0x63E)
 DC_ADDRESS(0x01a878, 0x5c0)
 MAC_ADDRESS(0x018220, 0x594)  // anchor-global
-void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPlayer, unsigned char drawChanges)
+void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool drawChanges)
 {
     if (heroId == -1)
         return;

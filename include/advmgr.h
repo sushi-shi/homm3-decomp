@@ -955,9 +955,9 @@ public:
     void doEvent(NewmapCell* eventCell, type_point point);
     void doAIEvent(NewmapCell* cell, class hero* currentHero,
                    type_point point);
-    void deactivateCurrTown(unsigned char waitingPlayer);
-    void demobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
-    void deactivateCurrHero(unsigned char waitingPlayer);
+    void deactivateCurrTown(bool waitingPlayer);
+    void demobilizeCurrHero(bool waitingPlayer, bool update);
+    void deactivateCurrHero(bool waitingPlayer);
     void heroSwap(class hero* leftHero, class hero* rightHero);
     void generatorEvent(class hero* who, NewmapCell* eventCell,
                         type_point point);
@@ -1365,13 +1365,13 @@ public:
     void townQuickView(int townId, int x, int y,
                        unsigned char displayDropShadow);
     void monsterQuickView(const NewmapCell* cell, int cellx, int celly);
-    void setTownContext(int townId, unsigned char waitingPlayer,
-                        unsigned char update);
-    void mobilizeCurrHero(int inMove, unsigned char waitingPlayer,
-                          unsigned char drawChanges);
+    void setTownContext(int townId, bool waitingPlayer,
+                        bool update);
+    void mobilizeCurrHero(int inMove, bool waitingPlayer,
+                          bool drawChanges);
     void setHeroContext(int heroId, int inMove,
-                        unsigned char waitingPlayer,
-                        unsigned char drawChanges);
+                        bool waitingPlayer,
+                        bool drawChanges);
     void drawRolloverText(char* text);
     void setRolloverText(NewmapCell* testCell, int rx, int ry);
     void clearBottomView();
