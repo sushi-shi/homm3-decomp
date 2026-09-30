@@ -1918,7 +1918,7 @@ private:
     unsigned char automateFirstAidTent();
     unsigned char automateTower();
     void processFirstAid(army* currentArmy);
-    unsigned char processMoveThenAttack(message* msg);
+    unsigned char processMoveThenAttack(message& msg);
 };
 SIZE(combatManager::TWallTraits, 0x24);
 

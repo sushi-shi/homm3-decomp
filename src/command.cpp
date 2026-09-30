@@ -2387,10 +2387,13 @@ void combatManager::resetMouse()
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
+// Original process_move_then_attack, DC command.cpp:3365: message& msg.
+// Complete forwards that existing message to CheckWin; there is no null
+// message arm. Preserve the reference boundary and the sole caller's lvalue.
 VA(0x00478900, 0x290)
 DC_ADDRESS(0x06f664, 0x1c0)
 MAC_ADDRESS(0x086dac, 0x1f8)
-unsigned char combatManager::processMoveThenAttack(message* msg)
+unsigned char combatManager::processMoveThenAttack(message& msg)
 {
     army* currentArmy = getCurrentArmy();
     int oldGridIndex = currentArmy->m_gridIndex;
@@ -2428,7 +2431,7 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
         currentArmy->turn(1);
     }
 
-    if (checkWin(msg)) {
+    if (checkWin(&msg)) {
         g_processingCombatAction = 0;
         resetMouse();
         return 1;
@@ -2596,7 +2599,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 
     case AI_ORDER_MOVE_AND_ATTACK:
         m_anyActionTaken = 1;
-        if (processMoveThenAttack(&msg))
+        if (processMoveThenAttack(msg))
             return 2;
         returnValue = 1;
         break;
