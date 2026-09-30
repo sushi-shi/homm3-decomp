@@ -4578,6 +4578,17 @@ VA_COMPGEN(0x004324b0, 0x18, DEFAULT_CTOR_CLOSURE, type_artifact_effect)
 
 VA_COMPGEN(0x004324d0, 0x23, SCALAR_DELETING_DTOR, type_artifact_effect)
 
+// Native ai_player.cpp:5043 precedes the combat-derived constructor at
+// 5073; Mac 0x36bfc likewise precedes 0x36cc0. Keep the ordinary base body
+// visible before the derived constructors and their initialization caller.
+// This source-order recovery is byte-flat in the focused ai_player build;
+// initializeArtifactEffects still retains one extra combat constructor.
+DC_ADDRESS(0x0361c8, 0x2c)
+MAC_ADDRESS(0x036bfc, 0xc)
+type_artifact_effect::type_artifact_effect()
+{
+}
+
 VA(0x00432500, 0x7)
 DC_ADDRESS(0x0361f4, 0x20)
 MAC_ADDRESS(0x036c08, 0x48)
@@ -5484,12 +5495,6 @@ void aiSwapArtifacts(hero* source, hero* dest)
 // Mac initializeArtifactEffects retains the ordinary constructors below;
 // VC6 still expands their calls in the Windows body. The two unpaired elixir
 // and statue constructors remain inline: Mac retains their effect-base calls.
-DC_ADDRESS(0x0361c8, 0x2c)
-MAC_ADDRESS(0x036bfc, 0xc)
-type_artifact_effect::type_artifact_effect()
-{
-}
-
 DC_ADDRESS(0x036214, 0x44)
 MAC_ADDRESS(0x036c50, 0x48)
 type_scouting_artifact::type_scouting_artifact(long newBonus)
