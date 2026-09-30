@@ -10,7 +10,8 @@
 class hero;
 class town;
 
-class VictoryConditionStruct {
+// Original DisplayVCWinLoss and CPlayerWonMsg publics use AAU: source struct.
+struct VictoryConditionStruct {
 public:
     signed char m_type;
     signed char m_allowNormalVictory;
@@ -113,7 +114,8 @@ public:
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
-class LossConditionStruct {
+// Original DisplayLCWinLoss and CPlayerLostMsg publics use AAU: source struct.
+struct LossConditionStruct {
 public:
     signed char m_type;
     char m_paddingBeforeTownPosition[3];
