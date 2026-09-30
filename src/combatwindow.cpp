@@ -31,8 +31,10 @@ DATA(0x00695000) static TCombatWindow* g_combatWindow;
 // belongs to string::_Grow's shared-buffer/zero-length branch, not a second
 // string lifetime: Mac directly assigns the text pointer and length, and DC
 // line93 records text-resource indexing followed by string assignment.
-// Earlier direct chatString, assign and int-recognition probes did not
-// restore that retained cleanup call.
+// Restoring the shared markGameAsCheated operation after assignment keeps
+// that cleanup call and reproduces the complete retail instruction stream.
+// Direct/copy/converting code construction, assign, and recognition-local
+// variants alone did not recover this boundary; keep the canonical helper.
 VA(0x00472010, 0x1C0) MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
@@ -44,9 +46,8 @@ void checkCombatCheatCode(std::string& chatString)
     DATA(0x0063d4a8) static const char allSpellsCode[] = "ajpgurervfabfcbba";
     hero* currentHero =
         g_combatManager->m_heroes[g_combatManager->m_currentSide];
-    std::string* chat = &chatString;
     bool recognized = 0;
-    TCheatCode code(chat->c_str());
+    TCheatCode code(chatString.c_str());
 
     if (code.compare(bluePillCode)) {
         recognized = 1;
@@ -69,11 +70,8 @@ void checkCombatCheatCode(std::string& chatString)
     }
 
     if (recognized) {
-        *chat = (*g_generalText)[GENERAL_TEXT_CHEATER];
-        g_game->m_isCheater = 1;
-        if (g_inCampaign) {
-            g_game->m_campaign.m_isCheater = 1;
-        }
+        chatString = g_generalText->getText(GENERAL_TEXT_CHEATER);
+        markGameAsCheated();
     }
 }
 

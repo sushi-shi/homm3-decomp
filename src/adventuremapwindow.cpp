@@ -637,13 +637,11 @@ void checkAdvCheatCode(std::string& chatString)
     }
 
     if (cheatUsed) {
-        // DC line 211 calls TTextResource::operator[] here. This canonical
-        // access is VC6 byte-flat while the string assignment remains the
-        // retail inliner difference.
+        // DC line211 calls TTextResource::operator[] here. Keep its canonical
+        // getText path together with the shared cheat marker: that boundary
+        // restores the retail string-assignment expansion in both handlers.
         chatString = (*g_generalText)[GENERAL_TEXT_CHEATER];
-        g_game->m_isCheater = 1;
-        if (g_inCampaign)
-            g_game->m_campaign.m_isCheater = 1;
+        markGameAsCheated();
     }
 }
 

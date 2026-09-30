@@ -2546,3 +2546,33 @@ How readers name the bitset matters as much: a `std::bitset` member adds
 access cost to every reader, and in `updateMainWindow` that changes its
 expansion into `onSetAsHostMsg` (100% to 25.5976%). Deriving the entry type
 from the bitset leaves the readers' source and costs unchanged.
+
+### Recover the shared operation after a string assignment
+
+`checkCombatCheatCode` (0x472010) and `checkAdvCheatCode` (0x402450)
+recover their complete retail instruction streams when their final game and
+campaign cheat marking uses one canonical `markGameAsCheated` helper. Mac
+expands the same operation at 0x908..0x930, 0x8004c..0x80074, and inside the
+combat kill-side worker at 0x75a40..0x75a60: store the game flag, test the
+campaign global, reload the game global, and store the campaign flag. That
+second global load supports a free operation, rather than a member caching
+`this`. The name, shared boundary, and ODR-safe inline header placement are
+inferred from the three expansions; the older Dreamcast handlers have direct
+owning-source rows and do not prove an inline declaration.
+
+The preceding passive C2 trace reproduces the compiled object and measures
+caller cost 309, at the 1000 budget floor. Its assignment is the last candidate;
+`_Grow` receives 210, `max_size` spends 41, and `_Tidy(false)` costs 152,
+so the remaining 169 admits the expansion that retail does not make. Direct
+reference use and `getText` alone leave the cleanup expanded. Restoring the
+real marking operation after assignment retains that cleanup call naturally;
+no library body, inline control, extra operation, or artificial scope changes.
+
+The final combat body agrees across all 448 bytes outside its 25 matching
+relocation sites. The adventure body agrees across 1,491 bytes and 89 matching
+relocation sites. The fast comparison's sole remaining difference is the
+queued `giveArtifact` pointer-to-const-reference symbol rename: one combat
+call and four adventure calls all target retail 0x4e3070. The kill-side body
+and every other preexisting emitted body in these three TUs are unchanged;
+the adventure TU additionally emits the retained string `_Tidy`. All 1,510
+previously scored Mac pairs remain available with unchanged scores.

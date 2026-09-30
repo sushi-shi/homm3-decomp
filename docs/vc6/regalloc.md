@@ -1694,12 +1694,22 @@ and improves the adventure cheat, crossover-hero and combat-command callers.
 No function score decreases. The spellbook caller bodies need no casts,
 new constructor overloads, or field-by-field workaround.
 
-The combat handler still expands string::_Tidy where retail calls it. An
+The combat handler then still expanded string::_Tidy where retail calls it. An
 18-state family tests direct/copy/converting TCheatCode construction, real
 c_str input bindings and the code object's dispatch/function lifetime.
 Three objects reproduce; direct and converting forms stay at 90.2966%,
 while explicit temporary-copy construction falls to 83.6690/83.7034%.
 All 24 combatwindow siblings remain exact. No family alternative is adopted.
+
+The later shared cheat-marker recovery closes this residual. Mac preserves
+the same complete game/campaign marking operation in both chat handlers and
+the combat kill-side worker. Restoring `markGameAsCheated` after string
+assignment reproduces the combat handler's 448-byte retail instruction stream
+and the adventure handler's 1,491-byte stream. The former pointer alias is
+unnecessary; the combat caller uses its original string reference and canonical
+`getText` directly. See the inliner record for the measured budget and the
+inferred shared boundary. The explicit artifact temporary and const-reference
+grant interface remain intact.
 
 ### Exact functions do not establish the complete derived vtable
 

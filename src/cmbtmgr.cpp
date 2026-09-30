@@ -3597,9 +3597,7 @@ void combatManager::powEffect(int spellEffect, int resetLimitCreature)
 VA(0x004693a0, 0x9F) MAC_ADDRESS(0x075a1c, 0xc0)
 void combatManager::unnamed4693a0(int side)
 {
-    g_game->m_isCheater = 1;
-    if (g_inCampaign)
-        g_game->m_campaign.m_isCheater = 1;
+    markGameAsCheated();
     turnOffHighlighter(1);
 
     army* stack = &m_armies[side][0];
