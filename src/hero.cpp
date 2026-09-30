@@ -1728,9 +1728,10 @@ int hero::heroFn004D9B30(int artifact)
 // into the stack type_artifact - and `assembled` is computed FIRST even
 // though the record is used first (94.17 against 85.75 for the other
 // order, and 93.66 for the semantically wrong `record(assembled, -1)`).
-// Residual (94.2%): prologue instruction SCHEDULING only - the same
-// instructions, permuted around the two pushes - plus the unwind-table
-// addend in the frame push, which is a relocation and not a state count.
+// Mac 0xf5c38..0xf5c40 constructs the component record solely for the
+// description query; no later operation uses it. Keeping that record as the
+// temporary receiver instead of a named local recovers the retail prologue
+// schedule and all 27 blocks, ten calls and relocations: 94.17 -> 100%.
 VA(0x004d9cc0, 0x200)
 MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
 int hero::heroFn004D9CC0(int artifact)
@@ -1738,9 +1739,10 @@ int hero::heroFn004D9CC0(int artifact)
     int assembled =
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
             .m_artifactId;
-    // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
-    type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-    std::string text = record.getDescription();
+    // Complete's prompt ID crosses the canonical DC-typed record boundary.
+    std::string text =
+        type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            .getDescription();
     text += "\n\n";
     // Mac retail retains the text vector's indexer call here.
     text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
