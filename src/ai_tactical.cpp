@@ -1831,7 +1831,9 @@ long type_AI_spellcaster::getWaterProtectionValue(const army* ourArmy, type_ench
 // forgetfulness, with defense boost passing zero for movedThisTurn.
 DC_ADDRESS(0x040130, 0x118)
 MAC_ADDRESS(0x042038, 0x94)
-double type_AI_spellcaster::getDuration(long turns, unsigned char movedThisTurn) const
+// Original DC public ?get_duration@type_AI_spellcaster@@IBANJ_N@Z
+// proves the logical flag passed by the canonical army::is calls.
+double type_AI_spellcaster::getDuration(long turns, bool movedThisTurn) const
 {
     double result;
     if (turns >= m_estimate.m_roundsLeft)

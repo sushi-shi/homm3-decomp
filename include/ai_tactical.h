@@ -319,7 +319,7 @@ protected:
     long getDiseaseValue(const army* enemy, type_enchant_data caster) const;
     long getDispelValue(const army* ourArmy, type_enchant_data caster) const;
     // DC ai_tactical.cpp:2116, get_duration. Retail protection expands it.
-    double getDuration(long turns, unsigned char movedThisTurn) const;
+    double getDuration(long turns, bool movedThisTurn) const;
     long getDisruptiveRayValue(const army* enemy, type_enchant_data caster) const;
     long getEarthProtectionValue(const army* ourArmy,
                                     type_enchant_data caster) const;
