@@ -4377,6 +4377,9 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
 // Grouping numIcons before i while initializing it after the zero loop is
 // byte-flat in both compilers; the existing declaration lifetime stays.
+// The lowered 0x20 width_changed local permits a bool hypothesis; that
+// focused control is Windows-byte-flat at 99.9762% and supplies no stronger
+// source-type evidence. Keep the existing byte declaration.
 VA(0x004f5d80, 0x51C)
 DC_ADDRESS(0x0e5960, 0x574)
 MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map
