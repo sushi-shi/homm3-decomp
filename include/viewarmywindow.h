@@ -31,14 +31,16 @@ public:
         DISMISS_ID = 0x7803
     };
 
-    TViewArmyWindow(int armyType, int x0, int y0, unsigned char showOk);
+    // Original constructor publics end _N (single-army/type) and _N3
+    // (group): showOk and showDismiss are bool, not lowered byte APIs.
+    TViewArmyWindow(int armyType, int x0, int y0, bool showOk);
     TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                    unsigned char showOk);
+                    bool showOk);
     // Complete adds the tenth groupAlignments argument (ret 0x28) and
     // uses the mutable group pointer required by GetArmyMorale/GetArmyLuck.
     TViewArmyWindow(armyGroup* group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x0, int y0, int upgrade,
-                    unsigned char showDismiss, unsigned char showOk,
+                    bool showDismiss, bool showOk,
                     unsigned char groupAlignments);
     virtual ~TViewArmyWindow();
     void doModal();
