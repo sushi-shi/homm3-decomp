@@ -704,9 +704,14 @@ void NewfullMap::loadQuestGuardList(
 // count/read/resize/row-load operation. Complete moves the pool into this map,
 // makes row load void, and registers quests in m_mapObjectData. A map-owned
 // member is the inferred replacement interface; its original placement is
-// unknown. DC uses one vector subscript per row. Keeping that named row
-// reference makes VC6 expand this helper in load while retaining the nested
-// TSeerHut constructor, as retail does.
+// unknown. DC's one subscript predates Complete's quest registration.
+// Native Mac 0x11f6ec loads a row, then 0x11f6f0 reloads the vector storage
+// before reading its quest. The quest value owns stack slot +0x5c across the
+// guard and append (0x11f6fc/0x11f754), rather than holding a row reference
+// across load. Retail passes the corresponding pointer local at ebp-4.
+// Recovering both owners raises Windows NewfullMap::load 96.43730% -> 100%.
+// Indexed reloads without the quest local retain the whole helper and score
+// 73.2997%; preserve the complete lifetime model and canonical operations.
 MAC_ADDRESS(0x11f67c, 0x11c)
 int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
 {
@@ -717,11 +722,11 @@ int NewfullMap::loadSeerList(TAbstractFile* infile, int saveVersion)
     m_seerHutList.resize(seerCount);
     int spriteNum;
     for (spriteNum = 0; spriteNum < m_seerHutList.size(); ++spriteNum) {
-        TSeerHut& seerHut = m_seerHutList[spriteNum];
-        seerHut.load(infile, saveVersion);
-        if (seerHut.m_quest)
-            m_mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(seerHut.m_quest)));
+        m_seerHutList[spriteNum].load(infile, saveVersion);
+        CMapObjectData* quest = static_cast<CMapObjectData*>(
+            static_cast<void*>(m_seerHutList[spriteNum].m_quest));
+        if (quest)
+            m_mapObjectData.push_back(quest);
     }
     return 0;
 }
