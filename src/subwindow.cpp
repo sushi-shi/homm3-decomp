@@ -82,6 +82,9 @@ void TSubWindow::draw(unsigned char update, int lowID, int highID)
         highID = m_highId;
     m_parentWindow->drawWindow(0, lowID, highID);
     if (update) {
+        // DC 0x158f1e selects a full combat refresh for its combat-mode
+        // branch. Complete Mac 0x19ba74..0x19bb18 has only this ordinary
+        // parent-relative rectangle path, with no combat-state test.
         g_windowManager->updateScreen(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
     }
@@ -111,6 +114,9 @@ void TSubWindow::restoreBackground()
         Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
         m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
                            screen, drawX, drawY, false);
+        // DC 0x159002 has a separate combat-mode full refresh. Complete
+        // Mac 0x19bbb4..0x19bcac always posts this rectangle, then deletes
+        // the saved bitmap; it has no combat-mode branch.
         g_windowManager->updateScreen(drawX, drawY, m_width + 1, m_height);
         delete m_background;
         m_background = 0;

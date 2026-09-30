@@ -283,3 +283,45 @@ sites are recorded separately from retained text calls elsewhere in those
 functions. The town-close Mac indirect calls at `0x1bf454`, `0x1bf488` and
 `0x1bf4f0` dispatch the deleting destructors for the town window, resource
 display and network handler; the three source `delete` expressions own them.
+
+### Combat viewport calls
+
+Six further calls restore `scrollTo`/`updateCombatArea` in `doBolt` and
+`playAnimation`, and the coordinate update facade in the creature subwindow
+and the no-argument combat update. Complete folds scrolling to false and
+expands the rectangle forwarding. The existing inclusive bounds and Complete's
+animation extent order stay intact. Focused comparisons preserve Windows MAX
+in all five checked units.
+
+This review reopened an overly broad console-only disposition for `doBolt`:
+the older scrolling implementation differs, but the source call still belongs
+in the caller. Other differences have narrower evidence: Complete's hero
+subwindow refreshes its own rectangle, generic subwindows omit DC's separate
+combat branch, and spell-target/drop-dialog transitions omit the older full
+combat refresh. Native positions are recorded beside those operations.
+
+The wandering-monster diplomacy bonus also calls the canonical `min(int,int)`
+again. DC retains that call; Mac expands its argument copies and selection.
+
+The coordinate facade changes two Mac comparisons: creature-subwindow show
+100% to 98.53% (a larger stack frame) and the no-argument combat update 100%
+to 83.06% (width/height instruction scheduling). Their address annotations
+record the supported abstraction against the preceding hashes and scores.
+Windows scores hold; the canonical calls remain for later byte recovery.
+
+Sprite disposal now retains `ResourceManager::dispose(image)` inside the
+Complete virtual override. DC's older free disposal function calls that
+facade for each frame, and Mac expands the same virtual resource operation.
+The artifact/campaign resource exits already have their specific `TResourcePtr`
+owners, including failure returns and the campaign buffer-transfer temporary;
+those reviewed operations require no duplicate disposal calls.
+
+The player-slot review also fixes a wrong DC pairing. The symbol-proven
+`SetNewPlayerSlot(unsigned long)` at DC `0x13b178` is the existing seat helper
+at Mac `0x17c8f0`, formerly named `assignPlayerToOpenHumanSlot`. It now owns
+that DC annotation, its original semantic name, and its DC/Mac position
+between `doModal` and `setHumanSlot`. The distinct Complete function at
+Windows `0x58e700` receives `CNetPlayerInfo*`, registers the player and
+reconciles version compatibility; its project name is now
+`addPlayerAndUpdateVersion`, with a Complete-only inventory entry.
+The seat helper's `getPlayer` call was already present under the wrong identity.

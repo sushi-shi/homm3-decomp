@@ -486,6 +486,9 @@ void TCombatHeroSubWindow::show()
                                       widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        // DC 0x65ce4 refreshes the whole combat area. Complete Mac
+        // 0x79a5c..0x79a8c instead posts this subwindow rectangle with
+        // width + 1; the older no-argument combat refresh is absent.
         g_windowManager->updateScreen(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width + 1, m_height);
         m_shown = true;
@@ -754,7 +757,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 
 VA(0x0046df00, 0x73)
 DC_ADDRESS(0x0668e8, 0x88)
-MAC_ADDRESS(0x07b07c, 0xcc)
+MAC_ADDRESS(0x07b07c, 0xcc)  // MAC_ABSTRACTION_FROM(tokens1:c25970ff8440,100.0000): restore DC 0x6695c's combat update facade; Mac expands the same rectangle, but the extra source boundary grows the candidate frame by 16 bytes.
 void TCombatCreatureSubWindow::show()
 {
     if (!m_shown) {
@@ -766,7 +769,9 @@ void TCombatCreatureSubWindow::show()
                                       widget::WIDGET_DRAWN;
         }
         draw(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        g_windowManager->updateScreen(
+        // DC 0x6695c retains the four-coordinate combat facade;
+        // Mac 0x7b0fc..0x7b128 expands the same parent-relative rectangle.
+        g_combatManager->updateCombatArea(
             m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
         m_shown = true;
     }

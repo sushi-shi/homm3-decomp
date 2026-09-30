@@ -249,6 +249,10 @@ static int updateSpellTargetFromMouse()
 VA(0x0059ec50, 0xAA8)
 DC_ADDRESS(0x14ecbc, 0x85e)
 MAC_ADDRESS(0x18f7ac, 0x9b8)  // retail+dc-shape
+// DC 0x14ef22/0x14f04a call FullUpdate before the target dialogs.
+// Complete Mac 0x18fa54/0x18fbd8 calls updateSpellTargetFromMouse instead.
+// The wall-spell path also drops DC 0x14f0ae's full refresh: Mac
+// 0x18fc64..0x18fc78 goes straight from setCombatGrid to doDialog.
 void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 {
     if (m_spellsCast[m_currentSide] && !m_debugNoSpellLimit)
@@ -3628,9 +3632,13 @@ void combatManager::doBolt(int handleResets, int sourceX, int sourceY,
 
             GameTime::delayTil(delayTil);
             delayTil = GameTime::nextFrameTime(delayTil, delay);
-            g_windowManager->updateScreen(updTLX, updTLY,
-                                          updBRX - updTLX + 1,
-                                          updBRY - updTLY + 1);
+            // DC 0x154ed8/0x154eec retain these facades. Mac
+            // 0x196ae4..0x196b14 expands the fixed-viewport update.
+            if (!g_combatManager->scrollTo(updTLX, updTLY,
+                    updBRX - updTLX + 1, updBRY - updTLY + 1,
+                    true, true, true))
+                g_combatManager->updateCombatArea(updTLX, updTLY,
+                    updBRX - updTLX + 1, updBRY - updTLY + 1);
 
             for (i = 0; i < maxBolt; i++)
                 if (!bolts[i].m_atDestination)

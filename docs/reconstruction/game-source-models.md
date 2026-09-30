@@ -1775,7 +1775,7 @@ changing their canonical source definitions or adding callers:
 
 | Retained body | Emitting consumer | Proof |
 | --- | --- | --- |
-| bitset<4>::test, 0x4cf960 | singleselectionwindow | Retail readMapPlayerSlot and setNewPlayerSlot share the 52-byte body and its _Xran call. |
+| bitset<4>::test, 0x4cf960 | singleselectionwindow | Retail readMapPlayerSlot and addPlayerAndUpdateVersion share the 52-byte body and its _Xran call. |
 | bitset<4>::_Xran, 0x4d1850 | singleselectionwindow | The feature-test and advanced-options paths call it; all 203 instruction bytes agree outside relocations. |
 | bitset<70>::_Tidy, 0x4cfa10 | hero | Retail markArtifactSpells, loadMap and readTownData use the three-word fill/six-bit trim; all 37 bytes agree without relocations. |
 | ScenarioStruct deleting destructor, 0x488eb0 | campaignbrief | Its scenario delete loop emits the 33-byte wrapper shared by retail CampaignHeaderStruct::load and selectCampaign; both calls agree. |

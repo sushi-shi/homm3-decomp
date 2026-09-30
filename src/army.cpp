@@ -4479,14 +4479,17 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
         g_combatManager->m_limitToExtent = 1;
         g_combatManager->drawFrame(0, 0, 0, 0, 0, 0);
         g_combatManager->m_limitToExtent = 0;
+        // DC 0x4b81c/0x4b856 retain the scroll/update pair. Complete's
+        // fixed viewport folds scrollTo to false; Mac 0x52fc4..0x52fe8
+        // expands the inclusive frame update after the timer calls.
+        bool scrolled = g_combatManager->scrollTo(
+            g_combatManager->m_drawbridgeBounds, true, true, true);
         GameTime::delayTil(g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]
             = GameTime::nextFrameTime(
                 g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
-        g_windowManager->updateScreen(
-            frame.m_minX, frame.m_minY,
-            frame.width(),
-            frame.height());
+        if (!scrolled)
+            g_combatManager->updateCombatArea(frame);
     }
 
     if (nframes > 0)

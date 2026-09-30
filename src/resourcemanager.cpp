@@ -137,6 +137,10 @@ VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 VA(0x005594b0, 0x40)
 DC_ADDRESS(0x122984, 0x72)
 MAC_ADDRESS(0x1521d0, 0x40)
+// The pair's conversion constructs TCacheMapKey from getName(), retaining
+// DC 0x1229a0. Windows 0x5594b9..0x5594df expands the twelve-byte copy,
+// terminator and tree insertion. Mac instead inserts into its 16384-entry
+// hash/pointer array through 0x151ff4; that backend has no Windows tree key.
 void ResourceManager::addToCache(resource* value)
 {
     g_resourceCache.insert(std::make_pair(value->getName(), value));
@@ -1832,7 +1836,11 @@ void CSprite::dispose()
                     for (int frame = 0; frame < frameCount; ++frame) {
                         CSpriteFrame* image = getFrame(sequence, frame);
                         if (image)
-                            image->dispose();
+                            // DC 0x122652 uses the resource facade in the
+                            // older free sprite-disposal function. Complete
+                            // moves this loop into the virtual override;
+                            // Mac 0x154900..0x154910 expands that facade.
+                            ResourceManager::dispose(image);
                     }
                 }
             }

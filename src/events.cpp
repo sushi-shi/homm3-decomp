@@ -3887,7 +3887,9 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
     short forceModifier = getForceModifier(strengthRatio);
 
     if (!g_game->m_setup.m_difficulty && humanPlayer) {
-        int cappedDiplomacy = cppMin(diplomacy + 1, 3);
+        // DC 0x97466 retains min(int,int); Mac 0xb46f4..0xb4720
+        // expands its value-argument copies and reference selection.
+        int cappedDiplomacy = min(diplomacy + 1, 3);
         diplomacy = cappedDiplomacy;
     }
 

@@ -2917,6 +2917,10 @@ void combatManager::viewCastleBallista(int isQuickInfo)
 VA(0x0047a500, 0x164)
 DC_ADDRESS(0x070820, 0xfe)
 MAC_ADDRESS(0x0885a4, 0x16c)
+// DC 0x708c2/0x708fa refresh the combat screen after the drop dialogs.
+// Complete Mac 0x88664..0x88678 and 0x886c8..0x886e8 proceeds directly
+// to the message/retreat state writes and timer/win checks; FullUpdate's
+// drawFrame + screen update is absent from both transitions.
 unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
                                                       message* msg)
 {

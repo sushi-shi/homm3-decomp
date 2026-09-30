@@ -511,12 +511,14 @@ void combatManager::resetLimitCreature()
 
 VA(0x00493780, 0x44)
 DC_ADDRESS(0x083e58, 0x34)
-MAC_ADDRESS(0x0a4ef0, 0x7c)
+MAC_ADDRESS(0x0a4ef0, 0x7c)  // MAC_ABSTRACTION_FROM(tokens1:a5bce575ad68,100.0000): restore DC 0x83e80's coordinate update overload; Mac expands the same bounds, but the wrapper changes width/height instruction scheduling.
 void combatManager::updateCombatArea()
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
             && m_combatShowIt) {
-        g_windowManager->updateScreen(
+        // DC 0x83e80 retains this overload; Mac 0xa4f28..0xa4f50
+        // expands its fixed-viewport rectangle forwarding.
+        updateCombatArea(
             g_combatDrawLimits.m_minX,
             g_combatDrawLimits.m_minY,
             g_combatDrawLimits.width(),

@@ -731,7 +731,7 @@ public:
                                 int position);
     void onDeleteFile();
     unsigned char onNewSetupInfoMsg(CNetMsg* netMsg);
-    bool assignPlayerToOpenHumanSlot(unsigned long dpid);
+    bool setNewPlayerSlot(unsigned long dpid);
     unsigned char onNewPlayerMsg(CNetMsg* netMsg);
     // DC ordinary OnPlayerDroppedMsg, line 6937; QAA_N return.
     bool onPlayerDroppedMsg(CNetMsg* netMsg);
@@ -777,7 +777,7 @@ public:
     void onTownUpdateMsg(CNetMsg* netMsg, bool inPopup);
     void updateNameLists();
     void updateTown(int pos, TTownType town, unsigned char inPopup);
-    void setNewPlayerSlot(CNetPlayerInfo* playerInfo);
+    void addPlayerAndUpdateVersion(CNetPlayerInfo* playerInfo);
     void removePlayer(unsigned long dpid);
     void setupLoadGameMode();
     void setupNewGameMode();

@@ -3022,7 +3022,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
     if (g_remoteOn) {
         getWidget(105)->hide();
         if (isHost()) {
-            setNewPlayerSlot(&g_thisNetPlayerInfo);
+            addPlayerAndUpdateVersion(&g_thisNetPlayerInfo);
         } else {
             g_game->setupOrigData();
             m_scenarioOptionsStarted = 1;
@@ -3041,13 +3041,13 @@ void TSingleSelectionWindow::setupLoadGameMode()
                 if (!version.get())
                     continue;
                 CNetPlayerInfo player(curr->getName(), curr->getId());
-                setNewPlayerSlot(&player);
+                addPlayerAndUpdateVersion(&player);
             }
         }
     } else if (g_mpNetProtocol == MP_HOTSEAT) {
         for (int i = 0; i < g_hotSeatMan->m_playerCount; ++i) {
             CNetPlayerInfo player(g_hotSeatMan->getName(i), i + 1);
-            setNewPlayerSlot(&player);
+            addPlayerAndUpdateVersion(&player);
         }
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
@@ -3058,7 +3058,7 @@ void TSingleSelectionWindow::setupLoadGameMode()
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
         g_thisNetPlayerInfo.m_version = g_videoGameState;
-        setNewPlayerSlot(&g_thisNetPlayerInfo);
+        addPlayerAndUpdateVersion(&g_thisNetPlayerInfo);
     }
 
     if (isHost()) {
@@ -3084,7 +3084,7 @@ void TSingleSelectionWindow::setupNewGameMode()
     if (g_remoteOn) {
         getWidget(105)->hide();
         if (isHost()) {
-            setNewPlayerSlot(&g_thisNetPlayerInfo);
+            addPlayerAndUpdateVersion(&g_thisNetPlayerInfo);
         } else {
             g_game->setupOrigData();
             m_scenarioOptionsStarted = 1;
@@ -3103,13 +3103,13 @@ void TSingleSelectionWindow::setupNewGameMode()
                 if (!version.get())
                     continue;
                 CNetPlayerInfo player(curr->getName(), curr->getId());
-                setNewPlayerSlot(&player);
+                addPlayerAndUpdateVersion(&player);
             }
         }
     } else if (g_mpNetProtocol == MP_HOTSEAT) {
         for (int i = 0; i < g_hotSeatMan->m_playerCount; ++i) {
             CNetPlayerInfo player(g_hotSeatMan->getName(i), i + 1);
-            setNewPlayerSlot(&player);
+            addPlayerAndUpdateVersion(&player);
         }
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_game->m_players[0].m_name);
@@ -3120,7 +3120,7 @@ void TSingleSelectionWindow::setupNewGameMode()
         g_thisNetPlayerInfo.m_dpid = 1;
         strcpy(g_thisNetPlayerInfo.m_name, g_config.m_networkDefaultName);
         g_thisNetPlayerInfo.m_version = g_videoGameState;
-        setNewPlayerSlot(&g_thisNetPlayerInfo);
+        addPlayerAndUpdateVersion(&g_thisNetPlayerInfo);
     }
 
     if (isHost()) {
@@ -4663,6 +4663,10 @@ int TSingleSelectionWindow::update()
             g_smallFont->drawBoundedString(
                 g_turnDurationText[g_game->m_setup.m_turnDuration],
                 g_windowManager->m_screenBitmap, 256, 556, 134, 18, font::WHITE, 5, -1);
+            // DC 0x13ad1a..0x13ae78 first hides eleven controls for
+            // every row. Complete Mac 0x17c734..0x17c790 goes straight
+            // to this active-player draw loop, without the blanket reset.
+            // drawHeroAdvancedOption retains its own selective controls.
             pos = 0;
             for (int i = 0; i < 8; ++i) {
                 if (g_game->m_setup.m_playerPos[i] >= 0
@@ -4699,6 +4703,32 @@ void TSingleSelectionWindow::doModal(bool fade)
         m_durationSlider->setState(11);
     g_windowManager->doDialogDraw(this,
         heroWindow::heroWindowHandler, ::update, 0);
+}
+
+// Original: TSingleSelectionWindow::SetNewPlayerSlot(unsigned long).
+// DC 0x13b178 and its QAA_NK public prove this bool-returning seat helper,
+// not the Complete player-info registration helper at Windows 0x58e700.
+// DC and Mac both place it after doModal and before setHumanSlot; Mac
+// 0x17c90c/0x17c93c retain the DPID and occupied-seat lookups. onNewPlayerMsg
+// calls it with the joining DPID; Windows expands that canonical call.
+DC_ADDRESS(0x13b178, 0xb4)
+MAC_ADDRESS(0x17c8f0, 0xc0)
+bool TSingleSelectionWindow::setNewPlayerSlot(unsigned long dpid)
+{
+    CNetPlayerHandlerPlayer* player = m_players.getPlayer(dpid);
+    if (!player)
+        return false;
+    for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; ++pos) {
+        if (m_players.getPlayerInPos(pos))
+            continue;
+        if (!g_game->m_mapHeader.m_playerSlotAttributes[pos].m_canBeHuman)
+            continue;
+        if (m_loadMode && g_game->m_playerDisabled[pos])
+            continue;
+        player->m_playerPos = pos;
+        return true;
+    }
+    return false;
 }
 
 // DC SetHumanSlot: refresh the game vars, clear every seat and the
@@ -7037,28 +7067,6 @@ unsigned char TSingleSelectionWindow::isVersionCompatible(const char* otherVersi
     return 0;
 }
 
-// Mac retains this seat assignment at 0:0x17c8f0. The newer helper name is
-// unknown; the single onNewPlayerMsg caller passes the joining DPID, while
-// VC6 expands the same search and assignment in the advanced-options arm.
-MAC_ADDRESS(0x17c8f0, 0xc0)
-bool TSingleSelectionWindow::assignPlayerToOpenHumanSlot(unsigned long dpid)
-{
-    CNetPlayerHandlerPlayer* player = m_players.getPlayer(dpid);
-    if (!player)
-        return false;
-    for (int pos = 0; pos < CNetPlayerHandler::MAX_PLAYERS; ++pos) {
-        if (m_players.getPlayerInPos(pos))
-            continue;
-        if (!g_game->m_mapHeader.m_playerSlotAttributes[pos].m_canBeHuman)
-            continue;
-        if (m_loadMode && g_game->m_playerDisabled[pos])
-            continue;
-        player->m_playerPos = pos;
-        return true;
-    }
-    return false;
-}
-
 // A player joins the lobby: log the dpid, version-gate them (host
 // side only - a non-host client under video pause skips straight to
 // the roster merge) with a CBadVersionMsg reply on failure, seat the
@@ -7094,13 +7102,13 @@ unsigned char TSingleSelectionWindow::onNewPlayerMsg(CNetMsg* netMsg)
         }
     }
     if (!m_players.getPlayer(msg->m_playerInfo.m_dpid))
-        setNewPlayerSlot(&msg->m_playerInfo);
+        addPlayerAndUpdateVersion(&msg->m_playerInfo);
     if (m_chatShowing)
         turnChatOn(1);
     if (isHost()) {
         m_newPlayerUpdateMan->newPlayer(netMsg->m_dpidFrom);
         if (m_inAdvancedOptions) {
-            if (assignPlayerToOpenHumanSlot(netMsg->m_dpidFrom)) {
+            if (setNewPlayerSlot(netMsg->m_dpidFrom)) {
                 drawWindow(0, 0xffff0001, 0xffff);
                 this->update();
             }
@@ -7601,7 +7609,7 @@ void TSingleSelectionWindow::onUpdatePlayerPosMsg(CNetMsg* netMsg)
         if (rec->isHuman()) {
             CNetPlayerHandlerPlayer* p = m_players.getPlayer(rec->m_dpid);
             if (!p) {
-                setNewPlayerSlot(rec);
+                addPlayerAndUpdateVersion(rec);
                 updateNameLists();
                 p = m_players.getPlayer(rec->m_dpid);
             }
@@ -8156,7 +8164,7 @@ inline int TSingleSelectionWindow::getHeroInPos(int gamePos)
 // E:\gamedcs\singleselectionwindow.cpp:8166
 // This ordinary TU helper auto-expands under VC6 /Ob2. Removing the
 // unproven inline keyword leaves Windows unchanged and restores the
-// retained Mac call at setNewPlayerSlot 0:0x1863b8.
+// retained Mac call at addPlayerAndUpdateVersion 0:0x1863b8.
 DC_ADDRESS(0x1435f8, 0xbc)
 MAC_ADDRESS(0x184ae4, 0xb0)
 TTownType TSingleSelectionWindow::getDisplayTown(int gamePos)
@@ -8780,10 +8788,12 @@ VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // d
 // level-change scope vs the early return are byte-flat controls. Restoring
 // UpdateTown's GetCompPlayerInPos call is also byte-flat, including its
 // independently exact retained body.
+// Complete-only registration/version reconciliation. This descriptive name
+// is ours: DC SetNewPlayerSlot takes a DPID and assigns a seat, whereas
+// Mac 0x186250/0x186258 calls addNewPlayer(playerInfo)/getCommonGameVersion.
 VA(0x0058e700, 0x2F9)
-DC_ADDRESS(0x13b178, 0xb4)
 MAC_ADDRESS(0x186224, 0x1e8)  // header-declared identity + anchor-callee AddNewPlayer/TurnOffAdvancedOptions, retail-only
-void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
+void TSingleSelectionWindow::addPlayerAndUpdateVersion(CNetPlayerInfo* playerInfo)
 {
     m_players.addNewPlayer(playerInfo);
 
@@ -8833,7 +8843,7 @@ void TSingleSelectionWindow::setNewPlayerSlot(CNetPlayerInfo* playerInfo)
     }
 }
 
-// Mac 0x18640c retains this helper between setNewPlayerSlot and
+// Mac 0x18640c retains this helper between addPlayerAndUpdateVersion and
 // getCommonGameVersion; onPlayerDroppedMsg calls it at 0x181944.
 MAC_ADDRESS(0x18640c, 0x3c)
 void TSingleSelectionWindow::removePlayer(unsigned long dpid)
@@ -9180,7 +9190,7 @@ VA_COMPGEN(0x00594220, 0x6C, VECTOR_COPY_CTOR, type_artifact_vector)
 
 VA_COMPGEN(0x0045c1a0, 0x28, BITSET_TIDY, Bitset156)
 
-// Retail readMapPlayerSlot and setNewPlayerSlot (0x58e700) share the
+// Retail readMapPlayerSlot and addPlayerAndUpdateVersion (0x58e700) share the
 // four-bit feature test at 0x4cf960. The game TU expands it; this consumer
 // retains the native 52-byte body and its call to _Xran at 0x4d1850.
 // The same throw helper is called by setupAdvancedOptions, onBeginGame
