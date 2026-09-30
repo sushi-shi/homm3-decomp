@@ -1359,6 +1359,10 @@ static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
     return heroId;
 }
 
+// Mac 0xccce0..0xccd60 constructs a local mask, reads two packed bytes,
+// expands the decoder and copies the mask through a second temporary into
+// the member. The existing readPackedBits return and nested decodePackedBits
+// preserve those boundaries; its source name is inferred. Windows stays exact.
 VA(0x004ba260, 0x401)
 DC_ADDRESS(0x0a51b0, 0x3f6)
 MAC_ADDRESS(0x0cc8ec, 0x490)
@@ -1441,12 +1445,7 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     m_placementHelpEnabled = flag != 0;
 
     if (saveVersion >= 37) {
-        unsigned char bits[2];
-        std::bitset<12> combos;
-        infile->read(bits, sizeof(bits));
-        for (unsigned int bit = 0; bit < 12; bit++)
-            combos[bit] = (bits[bit >> 3] & (1 << (bit & 7))) != 0;
-        m_assembledCombinations = combos;
+        m_assembledCombinations = readPackedBits<12>(infile);
     }
     return 0;
 }
