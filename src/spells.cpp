@@ -252,7 +252,12 @@ static int updateSpellTargetFromMouse()
 VA(0x0059ec50, 0xAA8)
 DC_ADDRESS(0x14ecbc, 0x85e)
 MAC_ADDRESS(0x18f7ac, 0x9b8)  // retail+dc-shape
-void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
+// Original ?InitiateSpell@combatManager@@QAAXW4SpellID@@@Z proves
+// the canonical spell enum; Complete adds the integer creature selector.
+// Focused VC6 enum restoration preserves all 2784 emitted section bytes.
+// The finder still expands here while retail and Mac retain it; the enum
+// fact fixes the interface without resolving that ordinary-helper boundary.
+void combatManager::initiateSpell(ESpellId spellToCast, int creatureSpell)
 {
     if (m_spellsCast[m_currentSide] && !m_debugNoSpellLimit)
         return;
@@ -334,7 +339,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
     case SPELL_HYPNOTIZE:
     case SPELL_FORGETFULNESS:
     case SPELL_BLIND: {
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             break;
@@ -349,7 +354,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             if (!m_nextAction)
                 break;
 
-            army* target = findSpellTarget(static_cast<ESpellId>(spellToCast), m_currentSide,
+            army* target = findSpellTarget(spellToCast, m_currentSide,
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
                     && target->getOwningSide() != m_currentSide
@@ -405,7 +410,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
 
     case SPELL_TELEPORT:
         g_teleportSourcePicked = 0;
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -420,12 +425,12 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         break;
 
     case SPELL_SACRIFICE:
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 0, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 0, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -439,7 +444,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
         break;
 
     case SPELL_REMOVE_OBSTACLE:
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_WILL_NOT_AFFECT_ANYTHING), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
@@ -456,7 +461,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             normalDialog(g_text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
             return;
         }
-        if (!hasValidSpellTarget(static_cast<ESpellId>(spellToCast), mastery, m_currentSide, 1, 0)) {
+        if (!hasValidSpellTarget(spellToCast, mastery, m_currentSide, 1, 0)) {
             normalDialog(g_generalText->getText(GENERAL_TEXT_SPELL_NO_VALID_TARGET), 1, -1, -1, -1, 0,
                          -1, 0, -1, 0, -1, 0);
             return;

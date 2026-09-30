@@ -921,7 +921,7 @@ int combatManager::processCombatMsg(message& msg)
                                  1, -1, -1, -1, 0,
                                  -1, 0, -1, 0, -1, 0);
                 } else {
-                    initiateSpell(viewSpells(), 0);
+                    initiateSpell(static_cast<ESpellId>(viewSpells()), 0);
                     resetMouse();
                 }
                 break;
@@ -1153,7 +1153,8 @@ int combatManager::processCombatMsg(message& msg)
                 army* currentArmy = getCurrentArmy();
                 if (currentArmy->m_creatureType == CREATURE_FAERIE_DRAGON
                         && currentArmy->m_monInfo.m_hasSpell) {
-                    initiateSpell(currentArmy->m_faerieDragonSpell, 1);
+                    initiateSpell(
+                        static_cast<ESpellId>(currentArmy->m_faerieDragonSpell), 1);
                     if (m_nextAction == 1)
                         m_nextAction = 10;
                 }
@@ -1688,7 +1689,7 @@ void combatManager::doCommand(int command)
             m_combatWindow->m_creatureSubWindows[2]->unShow();
             m_combatWindow->m_creatureSubWindows[3]->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
-            initiateSpell(spell, 0);
+            initiateSpell(static_cast<ESpellId>(spell), 0);
             resetMouse();
         }
         break;

@@ -1130,7 +1130,7 @@ public:
     void placeArmyInGrid(const army& a, int hex);
     // Retail 0x59ec50 extends Dreamcast's one-argument spells.cpp:176
     // routine with the creature-cast selector passed by command.cpp.
-    void initiateSpell(SpellID spellToCast, int creatureSpell);
+    void initiateSpell(ESpellId spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
     void markMovingArmy(army* stack);  // 0x46a520
     bool checkObstacleAttacks(army* thisArmy, bool isWalking);
