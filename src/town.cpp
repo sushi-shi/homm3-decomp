@@ -1041,17 +1041,19 @@ MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
 // Moving the result declaration after the fort/capitol snapshots and
 // grouping the special-effect guards did not recover the retained hasBuilding
 // call (six VC6 combinations, three objects). Keep the canonical helpers.
+// Native bool flag recovery is byte-flat across the full 0x427-byte body.
+// Current 99.5794% residual is twelve instruction rows in the expanded
+// updateFullBuildingMask, with all 72 blocks and 18 calls agreeing.
 type_building_id town::buildBuilding(int buildingId,
-                                     unsigned char setBuiltFlag,
-                                     unsigned char applySpecialEffect)
+                                     bool setBuiltFlag,
+                                     bool applySpecialEffect)
 {
     type_building_id built;
     unsigned char hadFort = isCastle();
     unsigned char hadCapitol = isCapitol();
-    // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
-    // HEE@Z`) and required by the townmgr call sites - while
-    // create_building's domain is the enum; the conversion is the
-    // boundary between retail's own two spellings of the id.
+    // Original ?BuildBuilding@town@@QAA?AW4type_building_id@@H_N0@Z
+    // proves int buildingId and both bool flags; the dossier lowers _N to
+    // unsigned char. create_building retains its separate enum domain.
     built = createBuilding(type_building_id(buildingId));
 
     if (setBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {

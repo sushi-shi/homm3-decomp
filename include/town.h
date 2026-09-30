@@ -463,8 +463,8 @@ public:
     int hasGarrison();
     // 0x5bede0. DC signature; buy_building is the only claimed caller
     // and it pushes exactly these three.
-    type_building_id buildBuilding(int buildingId, unsigned char setBuiltFlag,
-                                   unsigned char applySpecialEffect);
+    type_building_id buildBuilding(int buildingId, bool setBuiltFlag,
+                                   bool applySpecialEffect);
     int load(TAbstractFile* infile, int saveVersion);
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
