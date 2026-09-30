@@ -1,3 +1,4 @@
+#include "cove.h"
 #include "va.h"
 
 #include <ctype.h>
@@ -88,7 +89,7 @@ TSpreadsheetResource* g_specialBuildingText;
 // Retail's writer (0x5b9647) and reader (0x4cad13) share this table,
 // with sixteen pointers per faction. Keep its sole definition here.
 DATA(0x006a6048)
-const char* g_townNames[9][16];
+const char* g_townNames[HOMM3_TOWN_COUNT][16];
 
 DATA(0x006a6288)
 TSpreadsheetResource* g_dwellingText;
@@ -109,7 +110,7 @@ DATA(0x006a6568)
 TSpreadsheetResource* g_neutralBuildingText;
 
 DATA(0x006a66d8)
-const char* g_heroBio[163];
+const char* g_heroBio[HOMM3_HERO_TRAIT_COUNT];
 
 DATA(0x006a69c4)
 const char* g_dwellingInfo[10][14];
@@ -309,7 +310,7 @@ const char* g_rumourTerrainDescriptions[10];
 // invention (cmbtmgr.h declares the same datum under it), but it is the
 // role the retail bytes prove.
 DATA(0x006a5d60)
-const char* g_moatDamageMessages[9];
+const char* g_moatDamageMessages[HOMM3_TOWN_COUNT];
 
 DATA(0x006a5e14)
 const char* g_agrText[3];
@@ -327,7 +328,7 @@ DATA(0x006a64d8)
 const char* g_constWiseTreePriceText[3];
 
 DATA(0x006a74f0)
-const char* g_townTypeNames[10];
+const char* g_townTypeNames[HOMM3_TOWN_COUNT + 1];
 
 DATA(0x006a7540)
 const char* g_statDesc[4];
@@ -656,6 +657,7 @@ unsigned char initializeTownNameText()
             n++;
         }
     }
+    cove::initializeText();
     return 1;
 }
 
@@ -670,6 +672,7 @@ unsigned char initializeHeroBioText()
         return 0;
     for (int i = 0; i < 163; i++)
         g_heroBio[i] = g_heroBioText->getText(i);
+    cove::initializeText();
     return 1;
 }
 
@@ -1097,6 +1100,7 @@ unsigned char initializeArrayText()
     checkTextResource(*g_arrayText, i - 1, "gTownTypeNames");
     for (j = 0; j < 10; j++, i++)
         g_townTypeNames[j] = g_arrayText->getText(i);
+    g_townTypeNames[TOWN_COVE + 1] = "Cove";
     i++;
     checkTextResource(*g_arrayText, i - 1, "NewLoadSave");
     for (j = 0; j < 3; j++, i++)

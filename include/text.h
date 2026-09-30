@@ -17,7 +17,7 @@ extern const char* g_castleInfo[7];
 extern const char* g_townCommand[35];
 extern char* g_highScoreCampaignDefault[11][4];
 extern const char* g_neutralBuildingNames[19];
-extern const char* g_heroBio[163];
+extern const char* g_heroBio[HOMM3_HERO_TRAIT_COUNT];
 extern const char* g_secondarySkillLevels[3];
 extern const char* g_quickViewText[232];
 extern char* g_highScoreStandardDefault[11][4];
@@ -54,7 +54,7 @@ extern const char* g_rumourTerrainDescriptions[10];
 extern const char* g_constWiseTreePriceText[3];
 extern const char* g_personality[4];
 extern const char* g_newTurn[8];
-extern const char* g_townNames[9][16];
+extern const char* g_townNames[HOMM3_TOWN_COUNT][16];
 
 // Other Arraytxt.txt and building-text destinations shared with their readers.
 extern const char* g_agrText[3];
@@ -77,7 +77,7 @@ extern const char* g_specialBuildingNames[10][11];
 
 // DC gTownTypeNames; retail InitializeArrayText fills ten entries at
 // 0x6a74f0. The faction-name subtable starts at element one (0x6a74f4).
-extern const char* g_townTypeNames[10];
+extern const char* g_townTypeNames[HOMM3_TOWN_COUNT + 1];
 
 unsigned char initializeGeneralText();               // 0x5b90f0
 unsigned char initializeCustomCampaignText();        // 0x5b9110

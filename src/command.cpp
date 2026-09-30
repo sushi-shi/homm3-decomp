@@ -746,6 +746,7 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
     hero* owner = currentArmy->getController();
     switch (currentArmy->m_creatureType) {
     case CREATURE_BALLISTA:
+    case CREATURE_CANNON:
     case CREATURE_ARROW_TOWER:
         if (m_creaturePlacement)
             return 0;

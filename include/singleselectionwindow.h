@@ -253,7 +253,7 @@ public:
     int m_wasHuman[8];  // +0x4d0
     // The selected row copies this complete 156-byte band to the game's
     // per-hero availability array before assigning the map header.
-    unsigned char m_heroAvailability[156];  // +0x4f0
+    unsigned char m_heroAvailability[HOMM3_HERO_COUNT];  // +0x4f0
     // The row's display title: the name getters return it for the
     // single-player list and the net-mode selected panel, and the name
     // comparator ranks it against the "autosave" prefix rule. Extent =
@@ -292,7 +292,7 @@ public:
     // copy ctor called from the six _Sort/_Median/_Unguarded_partition
     // families and expanded into std::_Construct at 0x58f480.
 };
-SIZE(GameSelectionHeadersStruct, 0xCA4);
+SIZE(GameSelectionHeadersStruct, 0xCC8);
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -474,7 +474,7 @@ public:
     char m_goldBox[0x88 - 0x84];
     Bitmap816* m_flags[8];  // 0x88, DC name; adopflg%c.pcx
     Bitmap816* m_panels[8];  // 0xa8, DC name; adop_cpnl.pcx
-    Bitmap816* m_heroPix[164];  // 0xc8..0x357, expanded retail roster
+    Bitmap816* m_heroPix[HOMM3_HERO_TRAIT_COUNT + 1];  // 0xc8..0x357, expanded retail roster
     char m_pad358[0x35c - 0x358];
     Bitmap816* m_randomTownBmp;  // 0x35c
     Bitmap816* m_randomHeroBmp;  // 0x360
@@ -825,7 +825,7 @@ public:
 private:
     CNetPlayerHandlerPlayer* getThisPlayer();
 };
-SIZE(TSingleSelectionWindow, 0x1970);
+SIZE(TSingleSelectionWindow, 0x19E4);
 
 // Cross-TU cells used by advmgr's SaveGame and the selection window.
 // game.h owns the inCampaign DATA claim; the other cells retain their

@@ -173,6 +173,7 @@ DATA(0x0069e5a0) int g_lastMaskBits;
 // Only this TU uses the path. File-static linkage makes CodeWarrior address
 // the same-TU object directly through TOC 1+0x5494, as at Mac 0:0x15221c.
 DATA(0x0069e4f0) static std::string g_resourcePath;
+static LODFile g_coveArchive;
 // Complete-only common diagnostic, reconstructed from the identical seven-part
 // messages in 0x559510, 0x5599e0 and both 0x55c3c0 error paths. Retail evaluates
 // typeName.c_str() before constructing the stream; an ordinary shared helper
@@ -463,6 +464,8 @@ static bool openArchiveResource(int archiveIndex)
 MAC_ADDRESS(0x1522ec, 0x88)
 static LODFile* findSpriteResource(const char* name)
 {
+    if (g_coveArchive.pointAt(name))
+        return &g_coveArchive;
     TResourceArchiveContext& context =
         g_resourceArchiveContexts[g_videoGameState];
     int remaining = context.m_sprites.m_count;
@@ -482,6 +485,8 @@ static LODFile* findSpriteResource(const char* name)
 MAC_ADDRESS(0x152374, 0x88)
 static LODFile* findBitmapResource(const char* name)
 {
+    if (g_coveArchive.pointAt(name))
+        return &g_coveArchive;
     TResourceArchiveContext& context =
         g_resourceArchiveContexts[g_videoGameState];
     int remaining = context.m_bitmaps.m_count;
@@ -535,6 +540,8 @@ MAC_ADDRESS(0x152924, 0x210)  // sole retail caller + two flags/error output
 bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 {
     try {
+        if (g_coveArchive.open((g_resourcePath + "cove.lod").c_str(), 0) != 0)
+            throw openErrorRequiredArchive;
         std::vector<int> openedArchives;
         openedArchives.reserve(8);
 
@@ -597,6 +604,7 @@ MAC_ADDRESS(0x152b9c, 0x60)
 void ResourceManager::close()
 {
     expunge();
+    g_coveArchive.clear();
 
     for (int i = 0; i < 8; ++i)
         g_resourceLodSlots[i].m_file.clear();

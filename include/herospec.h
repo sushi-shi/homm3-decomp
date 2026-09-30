@@ -90,7 +90,11 @@ enum THeroAbilityKind {
     // creature-UPGRADE specialty - the hero who upgrades one ladder into
     // another for free.
     eHeroAbilityCreatureUpgrade = 6,
-    eHeroAbilityDragons = 7
+    eHeroAbilityDragons = 7,
+    eHeroAbilitySeaMovement = 8,
+    eHeroAbilityScoutingRadius = 9,
+    eHeroAbilityDoubleDuration = 10,
+    eHeroAbilityDoubleClone = 11
 };
 
 struct THeroSpecificAbility {
@@ -148,6 +152,6 @@ struct THeroSpecificAbility {
 };
 SIZE(THeroSpecificAbility, 40);
 
-extern const THeroSpecificAbility (&g_heroSpecificAbilities)[156];
+extern const THeroSpecificAbility (&g_heroSpecificAbilities)[HOMM3_HERO_COUNT];
 
 #endif  /* HOMM3_HEROSPEC_H */

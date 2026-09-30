@@ -25,6 +25,6 @@ SIZE(SMonFrameInfo, 84);
 // The DC bound is 122 (its RoE-era roster); retail's bss extent
 // 0x6998e0..0x69ca18 (mousemgr's latches) is exactly 150 * 0x54 -
 // Complete's creature capacity - so the retail bound is 150.
-extern const SMonFrameInfo (&g_monFrameInfo)[150];
+extern const SMonFrameInfo (&g_monFrameInfo)[HOMM3_CREATURE_COUNT];
 
 #endif  /* HOMM3_MONFRAMEINFO_H */

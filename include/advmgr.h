@@ -884,7 +884,7 @@ public:
     int m_flagFrame;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
-    CSprite* m_cursorIcons[18];  // +0x10c, indexed by hero class
+    CSprite* m_cursorIcons[HOMM3_HERO_CLASS_COUNT];  // +0x10c, indexed by hero class
     CSprite* m_boatIcons[3];  // +0x154, indexed by boat type
     CSprite* m_boatFrothIcons[3];  // +0x160, indexed by boat type
     CSprite* m_flagIcons[8];  // +0x16c, indexed by player owner

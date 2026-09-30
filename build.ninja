@@ -26,6 +26,13 @@ build build.ninja: configure config/units.toml config/project.toml | $
     scripts/homm3/build/compilation_database.py scripts/homm3/core/clang.py $
     scripts/homm3/core/compiler_profile.py scripts/homm3/core/project.py $
     scripts/homm3/build/ninja_syntax.py
+build build/objdiff/base/cove.obj: cl src/cove.cpp | $
+    scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
+    scripts/homm3/core/compile_receipt.py config/units.toml $
+    config/project.toml
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = cove
+build cove: phony build/objdiff/base/cove.obj
 build build/objdiff/base/adler32.obj: cl vendor/zlib-1.1.3/adler32.c | $
     scripts/homm3/core/cc_wrap.py scripts/homm3/core/project.py $
     scripts/homm3/core/compile_receipt.py config/units.toml $
@@ -1102,6 +1109,14 @@ build build/objdiff/base/log.obj: cl src/log.cpp | $
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = log
 build log: phony build/objdiff/base/log.obj
+build build/mac/obj/cove.o: mwcc src/cove.cpp | $
+    scripts/homm3/mac/cc_wrap.py config/units.toml $
+    config/mac/toolchain.toml config/mac/sdk.toml $
+    include/codewarrior_prefix.h scripts/homm3/mac/profiles.py $
+    scripts/homm3/mac/toolchain.py scripts/homm3/mac/sdk.py $
+    scripts/homm3/mac/object.py config/mac/units.toml
+  unit = cove
+build mac$:cove: phony build/mac/obj/cove.o
 build build/mac/obj/adler32.o: mwcc vendor/zlib-1.1.3/adler32.c | $
     scripts/homm3/mac/cc_wrap.py config/units.toml $
     config/mac/toolchain.toml config/mac/sdk.toml $
@@ -2323,9 +2338,9 @@ build build/mac/obj/log.o: mwcc src/log.cpp | scripts/homm3/mac/cc_wrap.py $
     scripts/homm3/mac/object.py config/mac/units.toml
   unit = log
 build mac$:log: phony build/mac/obj/log.o
-build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
-    build/mac/obj/crc32.o build/mac/obj/deflate.o build/mac/obj/gzio.o $
-    build/mac/obj/infblock.o build/mac/obj/infcodes.o $
+build mac-objects: phony build/mac/obj/cove.o build/mac/obj/adler32.o $
+    build/mac/obj/compress.o build/mac/obj/crc32.o build/mac/obj/deflate.o $
+    build/mac/obj/gzio.o build/mac/obj/infblock.o build/mac/obj/infcodes.o $
     build/mac/obj/inffast.o build/mac/obj/inflate.o $
     build/mac/obj/inftrees.o build/mac/obj/infutil.o build/mac/obj/trees.o $
     build/mac/obj/uncompr.o build/mac/obj/zutil.o build/mac/obj/misc.o $
@@ -2394,28 +2409,29 @@ build mac-objects: phony build/mac/obj/adler32.o build/mac/obj/compress.o $
     build/mac/obj/tiles.o build/mac/obj/victor.o $
     build/mac/obj/victor_flip.o build/mac/obj/victor_loadpcx.o $
     build/mac/obj/victor_pcx_kernels.o build/mac/obj/log.o
-build objects: phony build/objdiff/base/adler32.obj $
-    build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
-    build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
-    build/objdiff/base/infblock.obj build/objdiff/base/infcodes.obj $
-    build/objdiff/base/inffast.obj build/objdiff/base/inflate.obj $
-    build/objdiff/base/inftrees.obj build/objdiff/base/infutil.obj $
-    build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
-    build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
-    build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
-    build/objdiff/base/button.obj build/objdiff/base/widget.obj $
-    build/objdiff/base/window.obj build/objdiff/base/resource.obj $
-    build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
-    build/objdiff/base/textscroller.obj build/objdiff/base/textwdgt.obj $
-    build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
-    build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
-    build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
-    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
-    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
-    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
-    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+build objects: phony build/objdiff/base/cove.obj $
+    build/objdiff/base/adler32.obj build/objdiff/base/compress.obj $
+    build/objdiff/base/crc32.obj build/objdiff/base/deflate.obj $
+    build/objdiff/base/gzio.obj build/objdiff/base/infblock.obj $
+    build/objdiff/base/infcodes.obj build/objdiff/base/inffast.obj $
+    build/objdiff/base/inflate.obj build/objdiff/base/inftrees.obj $
+    build/objdiff/base/infutil.obj build/objdiff/base/trees.obj $
+    build/objdiff/base/uncompr.obj build/objdiff/base/zutil.obj $
+    build/objdiff/base/misc.obj build/objdiff/base/armygrp.obj $
+    build/objdiff/base/basemgr.obj build/objdiff/base/button.obj $
+    build/objdiff/base/widget.obj build/objdiff/base/window.obj $
+    build/objdiff/base/resource.obj build/objdiff/base/border.obj $
+    build/objdiff/base/iconwdgt.obj build/objdiff/base/textscroller.obj $
+    build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
+    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
+    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
+    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
+    build/objdiff/base/gamecontext.obj build/objdiff/base/findpath.obj $
+    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
+    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
+    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
+    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
+    build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
@@ -2483,7 +2499,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/victor_flip.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
-build all: phony build/objdiff/base/adler32.obj $
+build all: phony build/objdiff/base/cove.obj build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
     build/objdiff/base/infblock.obj build/objdiff/base/infcodes.obj $
@@ -2573,28 +2589,29 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/victor_loadpcx.obj $
     build/objdiff/base/victor_pcx_kernels.obj build/objdiff/base/log.obj
 default all
-build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
-    build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
-    build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
-    build/objdiff/base/infblock.obj build/objdiff/base/infcodes.obj $
-    build/objdiff/base/inffast.obj build/objdiff/base/inflate.obj $
-    build/objdiff/base/inftrees.obj build/objdiff/base/infutil.obj $
-    build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
-    build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
-    build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
-    build/objdiff/base/button.obj build/objdiff/base/widget.obj $
-    build/objdiff/base/window.obj build/objdiff/base/resource.obj $
-    build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
-    build/objdiff/base/textscroller.obj build/objdiff/base/textwdgt.obj $
-    build/objdiff/base/textntry.obj build/objdiff/base/textresource.obj $
-    build/objdiff/base/hiscore.obj build/objdiff/base/sample.obj $
-    build/objdiff/base/font.obj build/objdiff/base/exec.obj $
-    build/objdiff/base/inputmgr.obj build/objdiff/base/gamecontext.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
-    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
-    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
-    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
-    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/cove.obj $
+    build/objdiff/base/adler32.obj build/objdiff/base/compress.obj $
+    build/objdiff/base/crc32.obj build/objdiff/base/deflate.obj $
+    build/objdiff/base/gzio.obj build/objdiff/base/infblock.obj $
+    build/objdiff/base/infcodes.obj build/objdiff/base/inffast.obj $
+    build/objdiff/base/inflate.obj build/objdiff/base/inftrees.obj $
+    build/objdiff/base/infutil.obj build/objdiff/base/trees.obj $
+    build/objdiff/base/uncompr.obj build/objdiff/base/zutil.obj $
+    build/objdiff/base/misc.obj build/objdiff/base/armygrp.obj $
+    build/objdiff/base/basemgr.obj build/objdiff/base/button.obj $
+    build/objdiff/base/widget.obj build/objdiff/base/window.obj $
+    build/objdiff/base/resource.obj build/objdiff/base/border.obj $
+    build/objdiff/base/iconwdgt.obj build/objdiff/base/textscroller.obj $
+    build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
+    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
+    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
+    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
+    build/objdiff/base/gamecontext.obj build/objdiff/base/findpath.obj $
+    build/objdiff/base/smackmgr.obj build/objdiff/base/path.obj $
+    build/objdiff/base/monframeinfo.obj build/objdiff/base/initialize.obj $
+    build/objdiff/base/winfile.obj build/objdiff/base/strip.obj $
+    build/objdiff/base/winmgr.obj build/objdiff/base/subwindow.obj $
+    build/objdiff/base/resourcedisplay.obj $
     build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
     build/objdiff/base/creaturetype.obj $
     build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $

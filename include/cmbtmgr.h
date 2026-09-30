@@ -272,7 +272,7 @@ public:
     const char* m_shadowSpriteName;
 };
 
-extern const TSiegeArcherInfo g_siegeArcherInfo[9];
+extern const TSiegeArcherInfo g_siegeArcherInfo[HOMM3_TOWN_COUNT];
 
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
@@ -302,7 +302,7 @@ public:
     int m_castY;
     int m_castFrame;
 };
-extern const TCombatHeroSprite g_combatHeroSprites[18];
+extern const TCombatHeroSprite g_combatHeroSprites[HOMM3_HERO_CLASS_COUNT];
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -481,7 +481,7 @@ public:
     };
 
 private:
-    static TWallTraits s_wallTraits[9][18];
+    static TWallTraits s_wallTraits[HOMM3_TOWN_COUNT][18];
 
 public:
     enum {
@@ -778,6 +778,7 @@ public:
     // genrltxt entry 129 instead, while the acting side's word is set
     // and field_13d74 is clear. Name is an address ordinal - no roster
     // or string reaches the pair.
+    bool m_doubleCloneUsed[2];
     int m_spellsCast[2];  // +0x54b4
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
@@ -2010,7 +2011,7 @@ extern TDrawbridgeBounds g_combatDrawLimits;
 // zero is null), and the last by combatTerrain*3 + MoreTreesNear(mapPoint).
 // Names are source-facing inventions; their addresses, extents and contents
 // are all direct retail data.
-extern const char* const g_townCombatBackgrounds[9];          // 0x63d2a0
+extern const char* const g_townCombatBackgrounds[HOMM3_TOWN_COUNT];          // 0x63d2a0
 extern const char* const g_magicTerrainCombatBackgrounds[10]; // 0x63d2c8
 extern const char* const g_terrainCombatBackgrounds[10][3];    // 0x63d2f0
 
@@ -2065,7 +2066,7 @@ extern const TSpellEffectTraits g_spellEffectTraits[];
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
 extern const int g_moatDamage[];
 
-extern const char* g_moatDamageMessages[9];
+extern const char* g_moatDamageMessages[HOMM3_TOWN_COUNT];
 
 // The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
 // SetupAndLoadObstacles walks it as a POINTER and ends the walk on the

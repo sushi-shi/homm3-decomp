@@ -1,4 +1,5 @@
 #include "va.h"
+#include "cove.h"
 
 #include <algorithm>
 #include <stdlib.h>
@@ -26,7 +27,7 @@
 DATA(0x00688e84) int g_townInitArmyChance[4] = { 33, 33, 20, 13 };
 DATA(0x00688e94) int g_townInitArmyLow[4] = { 8, 5, 3, 1 };
 DATA(0x00688ea4) int g_townInitArmyHigh[4] = { 15, 7, 5, 3 };
-DATA(0x00688eb4) int g_siloIncome[9][7] = {
+DATA(0x00688eb4) int g_siloIncome[HOMM3_TOWN_COUNT][7] = {
     { 1, 0, 1, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 1, 0, 0 },
     { 0, 0, 0, 0, 0, 1, 0 },
@@ -35,9 +36,10 @@ DATA(0x00688eb4) int g_siloIncome[9][7] = {
     { 0, 0, 0, 1, 0, 0, 0 },
     { 1, 0, 1, 0, 0, 0, 0 },
     { 1, 0, 1, 0, 0, 0, 0 },
-    { 0, 1, 0, 0, 0, 0, 0 }
+    { 0, 1, 0, 0, 0, 0, 0 },
+    { 0, 0, 0, 1, 0, 0, 0 }
 };
-DATA(0x006888c0) int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
+DATA(0x006888c0) int g_eventBuildingIds[HOMM3_TOWN_COUNT][TOWN_EVENT_BUILDING_SLOTS] = {
     {
     11, 12, 13, 7, 8, 9, 5, 16,
     14, 15, 44, 0, 1, 2, 3, 4,
@@ -109,7 +111,8 @@ DATA(0x006888c0) int g_eventBuildingIds[9][TOWN_EVENT_BUILDING_SLOTS] = {
     18, 31, 38, 44, 32, 39, 44, 33,
     40, 44, 34, 41, 44, 35, 42, 36,
     43
-}
+},
+    { 11, 12, 13, 7, 8, 9, 5, 16, 14, 15, 44, 0, 1, 2, 3, 45, 6, 26, 22, 23, 45, 45, 30, 37, 18, 31, 38, 18, 32, 39, 45, 33, 40, 24, 34, 41, 45, 35, 42, 36, 43 }
 };
 DATA(0x0066cd98) __int64 g_bitNumber[64] = {
     0x0000000000000001i64, 0x0000000000000002i64, 0x0000000000000004i64, 0x0000000000000008i64, 0x0000000000000010i64, 0x0000000000000020i64, 0x0000000000000040i64, 0x0000000000000080i64,
@@ -121,9 +124,9 @@ DATA(0x0066cd98) __int64 g_bitNumber[64] = {
     0x0001000000000000i64, 0x0002000000000000i64, 0x0004000000000000i64, 0x0008000000000000i64, 0x0010000000000000i64, 0x0020000000000000i64, 0x0040000000000000i64, 0x0080000000000000i64,
     0x0100000000000000i64, 0x0200000000000000i64, 0x0400000000000000i64, 0x0800000000000000i64, 0x1000000000000000i64, 0x2000000000000000i64, 0x4000000000000000i64, 0x8000000000000000i64
 };
-DATA(0x006976f0) __int64 g_townEligibleBuildMask[9];
-DATA(0x00697798) __int64 g_hierarchyMask[9][44];
-DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
+DATA(0x006976f0) __int64 g_townEligibleBuildMask[HOMM3_TOWN_COUNT];
+DATA(0x00697798) __int64 g_hierarchyMask[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT];
+DATA(0x006747b4) TCreatureType g_townDwellingCreatures[TOWN_TYPE_COUNT * TOWN_DWELLING_SLOTS] = {
     TCreatureType(0), TCreatureType(2), TCreatureType(4), TCreatureType(6), TCreatureType(8), TCreatureType(10), TCreatureType(12), TCreatureType(1),
     TCreatureType(3), TCreatureType(5), TCreatureType(7), TCreatureType(9), TCreatureType(11), TCreatureType(13), TCreatureType(14), TCreatureType(16),
     TCreatureType(18), TCreatureType(20), TCreatureType(22), TCreatureType(24), TCreatureType(26), TCreatureType(15), TCreatureType(17), TCreatureType(19),
@@ -139,10 +142,12 @@ DATA(0x006747b4) TCreatureType g_townDwellingCreatures[126] = {
     TCreatureType(95), TCreatureType(97), TCreatureType(98), TCreatureType(100), TCreatureType(104), TCreatureType(106), TCreatureType(102), TCreatureType(108),
     TCreatureType(110), TCreatureType(99), TCreatureType(101), TCreatureType(105), TCreatureType(107), TCreatureType(103), TCreatureType(109), TCreatureType(111),
     TCreatureType(118), TCreatureType(112), TCreatureType(115), TCreatureType(114), TCreatureType(113), TCreatureType(120), TCreatureType(130), TCreatureType(119),
-    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131)
+    TCreatureType(127), TCreatureType(123), TCreatureType(129), TCreatureType(125), TCreatureType(121), TCreatureType(131),
+    CREATURE_NYMPH, CREATURE_CREW_MATE, CREATURE_PIRATE, CREATURE_STORMBIRD, CREATURE_SEA_WITCH, CREATURE_NIX, CREATURE_SEA_SERPENT,
+    CREATURE_OCEANID, CREATURE_SEAMAN, CREATURE_CORSAIR, CREATURE_AYSSID, CREATURE_SORCERESS, CREATURE_NIX_WARRIOR, CREATURE_HASPID
 };
 DATA(0x00642e20) const type_building_id g_hordeBuildings[4] = { type_building_id(18), type_building_id(19), type_building_id(24), type_building_id(25) };
-DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
+DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[HOMM3_TOWN_COUNT][4] = {
     { { TCreatureType(4), 3, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(16), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(22), 2, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(30), 4, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
@@ -151,7 +156,8 @@ DATA(0x006887a0) type_horde_effect town::s_constHordeEffects[9][4] = {
     { { TCreatureType(70), 7, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(84), 8, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
     { { TCreatureType(98), 6, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
-    { { TCreatureType(118), 10, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } }
+    { { TCreatureType(118), 10, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 }, { TCreatureType(-1), 0, 0 } },
+    { { CREATURE_CREW_MATE, 4, 0 }, { CREATURE_NONE, 0, 0 }, { CREATURE_STORMBIRD, 3, 0 }, { CREATURE_NONE, 0, 0 } }
 };
 
 // Retail table initializers, in the layouts used by their named consumers.
@@ -453,6 +459,11 @@ DC_ADDRESS(0x165d5c, 0x46)
 MAC_ADDRESS(0x1b2878, 0x74)
 int town::getPortraitFrame(bool isSmall) const
 {
+    if (m_type == TOWN_COVE)
+        return (isSmall ? 39 : 36)
+            + (hasBuilding(CASTLE_FORT_ID, true) ? 0 : 2)
+            + (m_builtThisTurn ? 1 : 0);
+
     int frame;
     if (hasBuilding(CASTLE_FORT_ID, true))
         frame = m_type * 2;
@@ -870,7 +881,8 @@ void town::initializeSpells(const TownExtra* townSetup)
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
                     totalWeight +=
-                        g_spellTraits[spell].m_townProbability[m_type];
+                        (m_type == TOWN_COVE ? cove::spellProbability(spell)
+                         : g_spellTraits[spell].m_townProbability[m_type]);
                     if (townSetup->m_fixedSpells[spell]) {
                         m_mageGuildSpells[level - 1][slot] = spell;
                         prohibited[spell] = true;
@@ -889,7 +901,8 @@ void town::initializeSpells(const TownExtra* townSetup)
             for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
                 if (!prohibited[spell]
                     && g_spellTraits[spell].m_level == level) {
-                    roll -= g_spellTraits[spell].m_townProbability[m_type];
+                    roll -= (m_type == TOWN_COVE ? cove::spellProbability(spell)
+                         : g_spellTraits[spell].m_townProbability[m_type]);
                     if (roll <= 0)
                         break;
                 }
@@ -1473,7 +1486,7 @@ void town::giveEventReward(const TTownEvent* thisEvent)
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (grantable & g_bitNumber[i]) {
             buildBuilding(i, 0, 1);
-            reward.m_resource = m_type + 0x16;
+            reward.m_resource = townBuildingResource(m_type);
             reward.m_qualifier = i;
             rewards.push_back(reward);
             if (rewards.size() == g_rewardDialogBatch)
@@ -1860,11 +1873,21 @@ DC_ADDRESS(0x1688a0, 0x4e)
 MAC_ADDRESS(0x1b6c0c, 0x68)
 int* town::getBuildCostArray(type_building_id building) const
 {
+    if (m_type == TOWN_COVE)
+        return cove::buildingCost(building);
     if (building < SPECIAL_BUILDING_ID)
         return s_neutralBuildingCosts[building];
     if (building < DWELLING_0_ID)
         return s_specialBuildingCosts[m_type][building - SPECIAL_BUILDING_ID];
     return s_dwellingCosts[m_type][building - DWELLING_0_ID];
+}
+
+TCreatureType town::getDwellingCreature(int dwelling) const
+{
+    if (m_type == TOWN_COVE && dwelling == TOWN_DWELLING_COUNT + 2
+        && hasBuilding(GUNPOWDER_WAREHOUSE_ID, true))
+        return CREATURE_SEA_DOG;
+    return g_townDwellingCreatures[m_type * TOWN_DWELLING_SLOTS + dwelling];
 }
 
 VA(0x005c10f0, 0x8A)
@@ -2054,9 +2077,9 @@ static void initializeBuildingCosts(int* costs,
 DATA(0x006a80f8)
 int town::s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
 DATA(0x006a82dc)
-int town::s_specialBuildingCosts[9][9][NUM_RESOURCES];
+int town::s_specialBuildingCosts[HOMM3_TOWN_COUNT][9][NUM_RESOURCES];
 DATA(0x006a9818)
-int town::s_dwellingCosts[9][14][NUM_RESOURCES];
+int town::s_dwellingCosts[HOMM3_TOWN_COUNT][HOMM3_DWELLING_COST_COUNT][NUM_RESOURCES];
 
 VA(0x005c14c0, 0x1F6)
 DC_ADDRESS(0x168c3c, 0x112)
@@ -2069,7 +2092,9 @@ unsigned char town::initializeBuildingCostsTables()
         return 0;
 
     int row = 2;
-    for (int type = 0; type < TOWN_TYPE_COUNT; ++type) {
+    // building.txt is the Complete resource: exactly nine faction sections.
+    // Cove's costs are owned by cove.cpp and queried above.
+    for (int type = 0; type < TOWN_COVE; ++type) {
         row += 2;
         for (int special = 0; special < 9; ++special) {
             initializeBuildingCosts(s_specialBuildingCosts[type][special],
@@ -2085,7 +2110,7 @@ unsigned char town::initializeBuildingCostsTables()
     }
 
     row += 2;
-    for (int dwellingType = 0; dwellingType < TOWN_TYPE_COUNT; ++dwellingType) {
+    for (int dwellingType = 0; dwellingType < TOWN_COVE; ++dwellingType) {
         row += 2;
         for (int dwelling = 0; dwelling < 14; ++dwelling) {
             initializeBuildingCosts(s_dwellingCosts[dwellingType][dwelling],

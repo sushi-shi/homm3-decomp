@@ -354,7 +354,7 @@ int recruitUnit::open(int newPriority)
     g_recruitWindow->broadcastMessage(msg);
 
     const char* creatureName;
-    if (m_monsterType >= 0 && m_monsterType <= 150)
+    if (m_monsterType >= 0 && m_monsterType < HOMM3_CREATURE_COUNT)
         creatureName = g_creatureTypeTraits[m_monsterType].m_pluralName;
     else
         creatureName = "";
@@ -1133,8 +1133,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
     m_inTownMainScreen = inInTownMainScreen;
     m_type = RECRUIT_SOURCE_TOWN;
     m_thisHero = 0;
-    m_monsterType = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                                         + newDwellingIndex];
+    m_monsterType = newTown->getDwellingCreature(newDwellingIndex);
     m_numAvail = &newTown->m_population[newDwellingIndex];
     m_currArmyGroup = &newTown->getArmy();
     m_currArmyGroupIsTownGarrison = 1;
@@ -1152,6 +1151,12 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
         m_monType2 = g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
                                           + newDwellingIndex - TOWN_DWELLING_COUNT];
         m_available[1] = m_numAvail;
+    }
+    if (m_monsterType == CREATURE_SEA_DOG) {
+        m_monType2 = CREATURE_CORSAIR;
+        m_monType3 = CREATURE_PIRATE;
+        m_available[1] = m_numAvail;
+        m_available[2] = m_numAvail;
     }
     g_timers[0] = GameTime::get() + 100;
     updateCost();
@@ -1187,8 +1192,7 @@ MAC_ADDRESS(0x150b70, 0x48)
 void quickViewRecruit(town* newTown, int newDwellingIndex)
 {
     quickViewRecruit(
-        g_townDwellingCreatures[newTown->m_type * TOWN_DWELLING_SLOTS
-                               + newDwellingIndex],
+        newTown->getDwellingCreature(newDwellingIndex),
         &newTown->m_population[newDwellingIndex]);
 }
 

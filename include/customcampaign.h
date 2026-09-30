@@ -505,7 +505,7 @@ enum ECampaignStartOptionType {
 // town's 44 building slots and 0x6888c0 remaps a bonus's building index
 // when the town is set (41 rows a town). Neither table is claimed yet, so
 // the outer bound is left open rather than invented.
-extern const char* g_campaignBuildingIconNames[][44];
+extern const char* g_campaignBuildingIconNames[][HOMM3_BUILDING_COUNT];
 extern int g_eventBuildingIds[][41];
 
 // The two mixed resource selectors a resource bonus can carry beside the

@@ -212,7 +212,7 @@ DATA(0x00679cbc) static TSecondarySkill g_magicSchools[4] = {
 // 0x678420 and the reference cell immediately after it at 0x679c80, which is
 // what fixes the 156-row extent (0x679c80 - 0x678420 = 156 * 40).
 DATA(0x00678420)
-THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
+THeroSpecificAbility g_heroSpecificAbilitiesImp[HOMM3_HERO_COUNT] = {
     { eHeroAbilitySecondarySkill, { eSecSkillArchery } },
     { eHeroAbilityCreature, { 2 } },
     { eHeroAbilityCreature, { CREATURE_GRIFFIN } },
@@ -372,7 +372,7 @@ THeroSpecificAbility g_heroSpecificAbilitiesImp[156] = {
 };
 
 DATA(0x00679c80)
-const THeroSpecificAbility (&g_heroSpecificAbilities)[156] =
+const THeroSpecificAbility (&g_heroSpecificAbilities)[HOMM3_HERO_COUNT] =
     g_heroSpecificAbilitiesImp;
 
 VA(0x004d71a0, 0x71)
@@ -1248,7 +1248,7 @@ long hero::getEquippedArtifacts(unsigned char countWarMachines) const
     for (int slot = 0; slot < 19; slot++) {
         int id = m_equipped[slot].m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
-            id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
+            id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA && id != ARTIFACT_CANNON &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
             count++;
     }
@@ -1265,7 +1265,7 @@ long hero::getNumberInBackpack(unsigned char countWarMachines) const
         return m_backpackCount;
     for (int slot = 0; slot < 64; slot++) {
         int id = m_backpack[slot].m_artifactId;
-        if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
+        if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA && id != ARTIFACT_CANNON &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
             count++;
     }
@@ -1363,6 +1363,9 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
     switch (creatureType) {
     case CREATURE_CATAPULT:
         return;
+    case CREATURE_CANNON:
+        artifact = ARTIFACT_CANNON;
+        break;
     case CREATURE_BALLISTA:
         artifact = ARTIFACT_BALLISTA;
         break;
@@ -2360,7 +2363,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
                 if (!g_artifactSlotMasks[type].test(i))
                     continue;
                 if (i == slot) {
-                    artifact = TArtifact(0x91);
+                    artifact = TArtifact(ARTIFACT_COUNT + 1);
                     break;
                 }
                 if (g_currentHero->getArtifact(TArtifactSlot(i)).m_artifactId == ARTIFACT_NONE
@@ -2374,7 +2377,7 @@ void THeroScreenWindow::updateSlot(TArtifactSlot slot)
         && g_currentHero->heroFn004E2840(
                g_heroScreenDraggedArtifact.m_artifactId, slot)) {
         updateArtifactSlot(slot + 0x15, artifact);
-        updateArtifactSlot(slot + 2, TArtifact(0x90));
+        updateArtifactSlot(slot + 2, TArtifact(ARTIFACT_COUNT));
     } else {
         updateArtifactSlot(slot + 0x15, ARTIFACT_NONE);
         updateArtifactSlot(slot + 2, artifact);
@@ -2904,7 +2907,7 @@ unsigned char hero::heroFn004DBE80(int combination)
         g_combinationArtifacts[combination].m_components;
     for (int slot = 0; slot < 19; slot++) {
         int artifactId = m_equipped[slot].m_artifactId;
-        if (artifactId != ARTIFACT_NONE)
+        if (artifactId >= 0 && artifactId < 144)
             missingComponents[artifactId] = false;
     }
     return missingComponents.none();
@@ -2926,7 +2929,7 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
     while (components.any()) {
         i--;
         int artifactId = m_equipped[i].m_artifactId;
-        if (artifactId == ARTIFACT_NONE)
+        if (artifactId < 0 || artifactId >= 144)
             continue;
         if (!components[artifactId])
             continue;
@@ -4844,6 +4847,7 @@ void hero::transferArtifacts(hero* src)
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
             artifact.m_artifactId == ARTIFACT_CATAPULT ||
             artifact.m_artifactId == ARTIFACT_BALLISTA ||
+            artifact.m_artifactId == ARTIFACT_CANNON ||
             artifact.m_artifactId == ARTIFACT_AMMO_CART ||
             artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
@@ -4858,6 +4862,7 @@ void hero::transferArtifacts(hero* src)
             artifact.m_artifactId == ARTIFACT_SPELLBOOK ||
             artifact.m_artifactId == ARTIFACT_CATAPULT ||
             artifact.m_artifactId == ARTIFACT_BALLISTA ||
+            artifact.m_artifactId == ARTIFACT_CANNON ||
             artifact.m_artifactId == ARTIFACT_AMMO_CART ||
             artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
@@ -5304,6 +5309,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
         return 0;
     if (artifact.m_artifactId == ARTIFACT_CATAPULT ||
         artifact.m_artifactId == ARTIFACT_BALLISTA ||
+            artifact.m_artifactId == ARTIFACT_CANNON ||
         artifact.m_artifactId == ARTIFACT_AMMO_CART ||
         artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
         return 0;
@@ -5690,6 +5696,8 @@ MAC_ADDRESS(0x104d40, 0x11c)
 int hero::getVisibility() const
 {
     int visibility = g_scoutingVisibility[m_skillLevel[eSecSkillScouting]];
+    if (g_heroSpecificAbilities[m_id].m_type == eHeroAbilityScoutingRadius)
+        visibility += m_level / 6;
     if (m_skillLevel[eSecSkillScouting] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillScouting)
@@ -5878,7 +5886,8 @@ long hero::getNavigationFactor() const
     long movement = g_moveConstants.m_sea[m_skillLevel[eSecSkillNavigation]];
     if (m_skillLevel[eSecSkillNavigation] > 0) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
-        if (ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
+        if ((ability.m_type == eHeroAbilitySecondarySkill && ability.m_skill == eSecSkillNavigation)
+            || ability.m_type == eHeroAbilitySeaMovement)
             movement += m_level * g_moveConstants.m_sea[0] / 20;
     }
     return movement;

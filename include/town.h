@@ -31,7 +31,8 @@ enum TTownType {
     TOWN_DUNGEON = 0x5,
     TOWN_STRONGHOLD = 0x6,
     TOWN_FORTRESS = 0x7,
-    TOWN_CONFLUX = 0x8
+    TOWN_CONFLUX = 0x8,
+    TOWN_COVE = 9
 };
 
 // Building ids. DC LF_ENUM `type_building_id` (T_INT4, 245 enumerators:
@@ -100,7 +101,8 @@ enum type_building_id {
     DWELLING_4_UPG_ID = 41,
     DWELLING_5_UPG_ID = 42,
     DWELLING_6_UPG_ID = 43,
-    MAX_BUILDING_TYPE = 44
+    GUNPOWDER_WAREHOUSE_ID = 44,
+    MAX_BUILDING_TYPE = HOMM3_BUILDING_COUNT
 };
 
 // DC LF_ENUM `EGameResource` (T_INT4, 37 enumerators; the tail past
@@ -152,13 +154,20 @@ enum EGameResource {
     RES_PRIMARY_SKILL_POWER = 33,
     RES_PRIMARY_SKILL_KNOWLEDGE = 34,
     RES_MANA = 35,
-    RES_SMALL_GOLD = 36
+    RES_SMALL_GOLD = 36,
+    RES_BUILDING_COVE = 37
 };
+
+inline EGameResource townBuildingResource(int type)
+{
+    return type == TOWN_COVE ? RES_BUILDING_COVE
+        : EGameResource(RES_BUILDING_TT_0 + type);
+}
 
 // DC names this shared table townBuildingSpriteNames. Retail extends its
 // RoE eight-town run with Conflux and places the definition in townmgr.obj;
 // kb.obj's dialog-icon switch is the first proven cross-TU consumer.
-extern const char* g_townBuildingSpriteNames[9];
+extern const char* g_townBuildingSpriteNames[HOMM3_TOWN_COUNT];
 
 // town.cpp owns the DATA claim; TResourceDisplay consumes the current
 // player-position selector directly, as its retail bodies do.
@@ -499,7 +508,7 @@ public:
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
     // create_included_masks. Definition + DATA claim in src/town.cpp.
-    static __int64 s_includedBuildings[9][44];
+    static __int64 s_includedBuildings[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT];
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     const class armyGroup& getArmy() const;
     // DC town.cpp:2375 proves the ordinary non-const reference twin. Its
@@ -516,14 +525,15 @@ public:
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void removeGarrisonHero();
     static int upgradedDwellingID(int id);
+    TCreatureType getDwellingCreature(int dwelling) const;
 
 protected:
     // Retail .data
     // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
     // initialize_hordes walks it with a 0x10 (two-entry) inner step
     // nine times, which is what pins the row count at 9.
-    static type_horde_effect s_constHordeEffects[9][4];
-    static int s_dwellingCosts[9][14][NUM_RESOURCES];
+    static type_horde_effect s_constHordeEffects[HOMM3_TOWN_COUNT][4];
+    static int s_dwellingCosts[HOMM3_TOWN_COUNT][HOMM3_DWELLING_COST_COUNT][NUM_RESOURCES];
     // The three build-cost tables get_build_cost_array switches
     // between, all DC-attested town statics whose retail .bss extents
     // CHAIN EXACTLY, which is what fixes both their bounds and their
@@ -544,7 +554,7 @@ protected:
     // NeutralBuildingCosts' leading bound is the only soft number: the
     // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
     static int s_neutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
-    static int s_specialBuildingCosts[9][9][NUM_RESOURCES];
+    static int s_specialBuildingCosts[HOMM3_TOWN_COUNT][9][NUM_RESOURCES];
 };
 SIZE(town, 360);
 
@@ -569,18 +579,18 @@ extern int g_townInitArmyHigh[4];
 // give_event_reward translates TTownEvent::BuildBuildings through it.
 // Name INVENTED (no DC symbol); owner TU unlocated - extern only.
 // Gated: town.obj is the only consumer.
-extern int g_eventBuildingIds[9][41];
+extern int g_eventBuildingIds[HOMM3_TOWN_COUNT][41];
 
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
 // 0x6976f0, nine qwords). Owner TU unlocated - extern only.
-extern __int64 g_townEligibleBuildMask[9];
+extern __int64 g_townEligibleBuildMask[HOMM3_TOWN_COUNT];
 
 // Transitive building-requirement masks, one 44-slot row per town type
 // (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
 // 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
 DATA(0x00697798)
-extern __int64 g_hierarchyMask[9][44];
+extern __int64 g_hierarchyMask[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT];
 
 enum ETownConstants {
     // The "no dock site" sentinel CanBuildDock tests for.
@@ -588,8 +598,8 @@ enum ETownConstants {
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
-    TOWN_TYPE_COUNT = 9,
-    TOWN_BUILDING_SLOTS = 44,
+    TOWN_TYPE_COUNT = HOMM3_TOWN_COUNT,
+    TOWN_BUILDING_SLOTS = HOMM3_BUILDING_COUNT,
     // The four horde columns of a const_horde_effects row - also the
     // length of gHordeBuildings, which get_horde_effect scans.
     TOWN_HORDE_SLOTS = 4,
@@ -618,7 +628,7 @@ enum ETownDwellingTier {
 // Original: gTownTypeNames. text.cpp owns the ten-entry table at 0x6a74f0;
 // entry zero is the neutral type -1. Retail's 0x6a74f4 operands are entry
 // one of that same allocation, not a separate nine-entry object.
-extern const char* g_townTypeNames[10];
+extern const char* g_townTypeNames[HOMM3_TOWN_COUNT + 1];
 
 // Retail .data 0x688eb4: nine 7-int rows (one per town type) that
 // get_silo_income hands out whole and get_gold_income reads the GOLD
@@ -627,7 +637,7 @@ extern const char* g_townTypeNames[10];
 // Inferno/Conflux, crystal for Rampart, gems for Tower, sulfur for
 // Dungeon - and the gold column is zero in every row. Name INVENTED
 // (no DC symbol covers this table); owner TU unlocated.
-extern int g_siloIncome[9][NUM_RESOURCES];
+extern int g_siloIncome[HOMM3_TOWN_COUNT][NUM_RESOURCES];
 
 // Retail .data 0x6747b4 - immediately after the akCreatureTypeTraits
 // reference cell - nine 14-long rows giving each town's creature per

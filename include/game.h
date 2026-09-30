@@ -488,7 +488,7 @@ class NewSMapHeader : public CMapHeaderData {
 public:
     std::string m_mapName;
     std::string m_mapDescription;
-    std::bitset<156> m_availableHeroes;
+    std::bitset<HOMM3_HERO_COUNT> m_availableHeroes;
     int get(const char* path, const char* filename, int saveVersion);
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
@@ -545,7 +545,8 @@ public:
         m_mapDescription = description;
     }
 };
-SIZE(NewSMapHeader, 0x304);
+// Cove adds one 32-bit word to the available-hero mask.
+SIZE(NewSMapHeader, 0x308);
 
 // Game.h owns the town-definition record shared by map loading and towns.
 class TownExtra {
@@ -718,7 +719,7 @@ struct CampaignScenarioPreview : public NewSMapHeader {
     SGameSetupOptions m_gameSetup;
     unsigned char m_available;
 };
-SIZE(CampaignScenarioPreview, 0x4d4);
+SIZE(CampaignScenarioPreview, 0x4d8);
 
 // Product generation recorded in SavedGameHeader::gameVersion.  The save
 // loader derives the same three rungs from the on-disk format version when an
@@ -760,7 +761,7 @@ public:
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
 };
-SIZE(SavedGameHeader, 0x5a4);
+SIZE(SavedGameHeader, 0x5a8);
 
 struct TBlackMarket {
 public:
@@ -1042,7 +1043,7 @@ public:
     // lea eax,[ecx+8*edx] / lea eax,[eax+4*eax] / lea esi,[edx+4*eax+0xa4]`
     // = gpGame + 820*id + 0xa4, and 156 * 0x334 is EXACTLY the 0x1f3b0 the
     // pad it replaces measured - 0xa4 + 0x1f3b0 lands on difficultyRating.
-    HeroExtra m_heroSetup[156];
+    HeroExtra m_heroSetup[HOMM3_HERO_COUNT];
     short m_difficultyRating;
     // Dreamcast difficultyRating is a short before aligned sCampaign.
     // Retail retains this two-byte alignment gap at +0x1f456.
@@ -1116,15 +1117,15 @@ public:
     // town::Deallocate writes gpGame->towns[this->id].owner, both with
     // that same 360-byte stride.
     std::vector<town> m_towns;
-    enum { HERO_COUNT = 156 };
+    enum { HERO_COUNT = HOMM3_HERO_COUNT };
     hero m_heroes[HERO_COUNT];
-    char m_heroAvailability[0x9c];  // +0x4df18
+    char m_heroAvailability[HOMM3_HERO_COUNT];  // +0x4df18
     // One eight-player eligibility mask per hero. GetStartingHeroId tests
     // the caller's player position through Dinkumware bitset::test(), and
     // the hero-placement path sets the same bit through bitset::set().
-    std::bitset<8> m_heroPoolMap[0x9c];  // +0x4dfb4
-    unsigned char m_artifactUsed[0x90];
-    unsigned char m_artifactDisabled[0x90];
+    std::bitset<8> m_heroPoolMap[HOMM3_HERO_COUNT];  // +0x4dfb4
+    unsigned char m_artifactUsed[ARTIFACT_COUNT];
+    unsigned char m_artifactDisabled[ARTIFACT_COUNT];
     unsigned char m_globalInfoFlags[32];
     unsigned char m_borderTentVisitFlags[8];
     unsigned short m_cartographerMask[3];
@@ -1810,12 +1811,12 @@ public:
 // roster row covers any of the five.
 extern const char* g_resourceObjectDefs[NUM_RESOURCES];
 extern const char* g_artifactObjectDefFormat;
-extern const char* g_townVillageObjectDefs[9];
-extern const char* g_townFortObjectDefs[9];
+extern const char* g_townVillageObjectDefs[HOMM3_TOWN_COUNT];
+extern const char* g_townFortObjectDefs[HOMM3_TOWN_COUNT];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-extern const char* g_townCapitolObjectDefs[9];
+extern const char* g_townCapitolObjectDefs[HOMM3_TOWN_COUNT];
 extern int g_weekType;
 extern int g_weekTypeExtra;
 extern int g_monthType;
@@ -1966,7 +1967,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
         return -1;
 
     m_version = readValue<int>(infile);
-    if (m_version > 42)
+    if (m_version > HOMM3_SAVE_VERSION)
         return -1;
 
     if (m_version >= 40) {

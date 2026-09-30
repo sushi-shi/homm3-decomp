@@ -22,6 +22,22 @@ template<class E, class Tr, class A> class basic_string;
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
+    CREATURE_NYMPH = 151,
+    CREATURE_OCEANID = 152,
+    CREATURE_CREW_MATE = 153,
+    CREATURE_SEAMAN = 154,
+    CREATURE_PIRATE = 155,
+    CREATURE_CORSAIR = 156,
+    CREATURE_SEA_DOG = 157,
+    CREATURE_STORMBIRD = 158,
+    CREATURE_AYSSID = 159,
+    CREATURE_SEA_WITCH = 160,
+    CREATURE_SORCERESS = 161,
+    CREATURE_NIX = 162,
+    CREATURE_NIX_WARRIOR = 163,
+    CREATURE_SEA_SERPENT = 164,
+    CREATURE_HASPID = 165,
+    CREATURE_CANNON = 150,
     CREATURE_NONE = -1,
     // Original TCreatureType::Pikeman, ordinal zero; Dreamcast GetBaseCreature
     // returns this value on its out-of-range dwelling arm.
@@ -697,11 +713,11 @@ const unsigned int g_ctaAlive = 0x10;
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
 // akCreatureTypeTraits (a const reference to the 150-entry array).
-extern const TCreatureTypeTraits (&g_creatureTypeTraits)[150];
+extern const TCreatureTypeTraits (&g_creatureTypeTraits)[HOMM3_CREATURE_COUNT];
 
 // CreatureBackgroundNames: neutral first, then the nine town alignments.
 // Index with alignment + 1 so neutral alignment -1 selects the first entry.
-extern const char* g_creatureBackgroundNames[10];
+extern const char* g_creatureBackgroundNames[HOMM3_TOWN_COUNT + 1];
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride

@@ -51,7 +51,7 @@ DATA(0x0063d734) const int g_campaignVideoIds[101] = { 38, 39, 40, 45, 46, 47, 4
 DATA(0x00675be8) const char* g_campaignVideoSounds[101] = { "g1a", "g1b", "g1c", "e1a", "e1b", "e1c", "n1a", "n1b", "n1c_d", "g2a", "g2b", "g2c", "g2d", "e2a", "e2Ae", "e2b", "e2c", "e2d", "g3a", "g3b", "g3c", "s1a", "s1b", "s1c", "ABvoAB1", "ABvoAB2", "ABvoAB3", "ABvoAB4", "ABvoAB5", "ABvoAB6", "ABvoAB7", "ABvoAB8", "ABvoAB9", "ABvoDB1", "ABvoDB2", "ABvoDB3", "ABvoDB4", "ABvoDB5", "ABvoDS1", "ABvoDS2", "ABvoDS3", "ABvoDS4", "ABvoDS5", "ABvoFL1", "ABvoFL2", "ABvoFL3", "ABvoFL4", "ABvoFL5", "ABvoFW1", "ABvoFW2", "ABvoFW3", "ABvoFW4", "ABvoFW5", "ABvoPF1", "ABvoPF2", "ABvoPF3", "ABvoPF4", "H3x2BBa", "H3x2BBb", "H3x2BBc", "H3x2BBd", "H3x2BBe", "H3x2BBf", "H3x2ELa", "H3x2ELb", "H3x2ELc", "H3x2ELd", "H3x2ELe", "H3x2HSa", "H3x2HSb", "H3x2HSc", "H3x2HSd", "H3x2HSe", "H3x2NBa", "H3x2NBb", "H3x2NBc", "H3x2NBd", "H3x2NBe", "H3x2RNa", "H3x2RNb", "H3x2RNc", "H3x2RNd", "H3x2RNe", "H3x2SPa", "H3x2SPb", "H3x2SPc", "H3x2SPd", "H3x2SPe", "H3x2UAa", "H3x2UAb", "H3x2UAc", "H3x2UAd", "H3x2UAe", "H3x2UAf", "H3x2UAg", "H3x2UAh", "H3x2UAi", "H3x2UAj", "H3x2UAk", "H3x2UAl", "H3x2UAm" };
 
 // Retail initial data; dimensions follow the typed table consumers.
-DATA(0x006755b8) const char* g_campaignBuildingIconNames[9][44] = {
+DATA(0x006755b8) const char* g_campaignBuildingIconNames[HOMM3_TOWN_COUNT][HOMM3_BUILDING_COUNT] = {
     {
     "BoCsMag1.pcx", "BoCsMag2.pcx", "BoCsMag3.pcx", "BoCsMag4.pcx", "BoCsMag5.pcx", "BoCsTav1.pcx", "BoCsDock.pcx", "BoCsCas1.pcx",
     "BoCsCas2.pcx", "BoCsCas3.pcx", "BoCsHal1.pcx", "BoCsHal2.pcx", "BoCsHal3.pcx", "BoCsHal4.pcx", "BoCsMrk1.pcx", "BoCsMrk2.pcx",
@@ -123,7 +123,8 @@ DATA(0x006755b8) const char* g_campaignBuildingIconNames[9][44] = {
     "", "", "BoEgrail.pcx", "", "", "", "BoEdn_0.pcx", "BoEdn_1.pcx",
     "BoEdn_2.pcx", "BoEdn_3.pcx", "BoEdn_4.pcx", "BoEdn_5.pcx", "BoEdn_6.pcx", "BoEup_0.pcx", "BoEup_1.pcx", "BoEup_2.pcx",
     "BoEup_3.pcx", "BoEup_4.pcx", "BoEup_5.pcx", "BoEup_6.pcx"
-}
+},
+    { "BoCvgmg1.pcx", "BoCvgmg2.pcx", "BoCvgmg3.pcx", "BoCvgmg4.pcx", "", "BoCVTAVE.pcx", "BoCVDOCK.pcx", "BoCvcstl.pcx", "BoCvcas2.pcx", "BoCvcas3.pcx", "BoCvhall.pcx", "BoCvhal2.pcx", "BoCvhal3.pcx", "BoCvhal4.pcx", "BoCvmark.pcx", "BoCvsmrk.pcx", "BoCvsmth.pcx", "", "BoCvsa1p.pcx", "BoCvsa1p.pcx", "", "", "BoCvTHGD.pcx", "BoCvgrot.pcx", "BoCvas1p.pcx", "BoCvas1p.pcx", "BoCvgral.pcx", "", "", "", "BoCvNMP1.pcx", "BoCvsay1.pcx", "BoCvPIR1.pcx", "BoCvASS1.pcx", "BoCvSOR1.pcx", "BoCvnix1.pcx", "BoCvwhr1.pcx", "BoCvNMP2.pcx", "BoCvsay2.pcx", "BoCvPIR2.pcx", "BoCvass2.pcx", "BoCvSOR2.pcx", "BoCvnix2.pcx", "BoCvwhr2.pcx", "BoCvPGR3.pcx" }
 };
 DATA(0x0066c218) const SCampaignMusicCue* g_campaignMusicTraits = g_campaignMusicCues;
 
@@ -479,7 +480,7 @@ MAC_ADDRESS(0x092498, 0xac)
 std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
-    if (m_creature < 0 || m_creature > 150)
+    if (m_creature < 0 || m_creature >= HOMM3_CREATURE_COUNT)
         name = "";
     else if (m_count == 1)
         name = g_creatureTypeTraits[m_creature].m_name;

@@ -22,7 +22,7 @@ MAC_ADDRESS(0x132158, 0xc4)
 long getAlignmentCount(int legalAlignments)
 {
     long count = 0;
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < HOMM3_TOWN_COUNT; ++i) {
         if (legalAlignments & (1 << i))
             ++count;
     }
@@ -40,7 +40,7 @@ TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
     if (!getFirstAvail && count > 0)
         which = random(1, count);
 
-    for (int i = 0; i < 9; ++i) {
+    for (int i = 0; i < HOMM3_TOWN_COUNT; ++i) {
         if (legalAlignments & (1 << i)) {
             if (--which == 0) {
                 TTownType alignment;

@@ -540,7 +540,7 @@ void type_university_window::~type_university_window()
 // the 194 references to that cell is inside events.obj's link bracket.
 DATA(0x00696a18) static TTextResource* g_adventureEventText;
 DATA(0x00696a1c) static TTextResource* g_randomSignTextResource;
-DATA(0x00696a2c) static const char* g_artifactEventText[144];
+DATA(0x00696a2c) static const char* g_artifactEventText[ARTIFACT_COUNT];
 DATA(0x00696c70) static TTextResource* g_artifactEventTextResource;
 DATA(0x00696c74) static const char* g_randomSignText[25];
 
@@ -567,6 +567,7 @@ bool initializeArtifactEventText()
         return false;
     for (int i = 0; i < 144; i++)
         g_artifactEventText[i] = g_artifactEventTextResource->getText(i);
+    g_artifactEventText[ARTIFACT_CANNON] = "You discover an abandoned Cannon, ready for battle.";
     return true;
 }
 
