@@ -335,7 +335,9 @@ protected:
 
 public:
     void applySpecialBuildingEffect(hero* townHero);
-    unsigned char canBuildDock() const;
+    // Original ?CanBuildDock@town@@QBA_NXZ proves bool; the DC
+    // byte primitive is lowered, as for the other building predicates.
+    bool canBuildDock() const;
 
     // DC Town.h:299 / :305 header inlines, declaration-only here
     // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC

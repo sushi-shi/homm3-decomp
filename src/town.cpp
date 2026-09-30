@@ -1160,7 +1160,7 @@ bool town::buyBuilding(type_building_id building)
 VA(0x005bf4e0, 0xC)
 DC_ADDRESS(0x167378, 0xe)
 MAC_ADDRESS(0x1b4b6c, 0x14)
-unsigned char town::canBuildDock() const
+bool town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
 }
