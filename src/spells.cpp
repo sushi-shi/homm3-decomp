@@ -3959,8 +3959,10 @@ void combatManager::clearEffects()
 VA(0x005a66d0, 0xE5)
 DC_ADDRESS(0x155a20, 0x108)
 MAC_ADDRESS(0x1975cc, 0xec)
+// Original SetMassSpellInfluence public proves TSkillMastery for level.
+// Complete retains its integer monster selector (including values 2/3).
 void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell,
-                                          long level, long power,
+                                          TSkillMastery level, long power,
                                           long castingSide,
                                           long creatureSpell)
 {
@@ -3972,7 +3974,7 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
             if (spellCastWorks(spell, castingSide, &m_armies[side][i], 0,
                                creatureSpell)) {
                 m_armies[side][i].setSpellInfluence(
-                    spell, power, static_cast<TSkillMastery>(level), castingHero);
+                    spell, power, level, castingHero);
                 m_effected[side][i] = 1;
             }
         }

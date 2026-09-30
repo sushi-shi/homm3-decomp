@@ -1592,7 +1592,7 @@ public:
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.
     void setMassSpellInfluence(const hero* castingHero, SpellID spell,
-                               long level, long power,
+                               TSkillMastery level, long power,
                                long castingSide,
                                long creatureSpell);  // 0x5a66d0
     // 0x5a4970, the spells.obj body every AREA damage spell runs
