@@ -2993,10 +2993,11 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // roster: all thirteen DC locals appear under S_GPROC32 before the first
 // S_BLOCK32. Restoring one function-scope int_buffer, short_buffer and
 // char_buffer (and reusing them across the reads) moves the current checkpoint
-// to 82.9570%. MAX/history remains 92.7472%. HeroID stays the Complete x86
-// representation `int` until the 130-entry DC THeroID domain can be reconciled
-// with Complete's 156-entry roster; the local name, width and lifetime are
-// already preserved.
+// to 82.9570% in that compiler context. HeroID uses the proven THeroID
+// domain through canonical HeroId; Complete expands the roster to 156
+// without changing the enum's word width. Decode integer-valued helper/table
+// boundaries into that domain. The native enum family is Windows-byte-flat
+// at 93.9180% with the endian scalar readers restored.
 
 // Two facts remain deliberate.  Retail reaches __CxxThrowException@8 twice
 // and never calls bitset<70>::_Xran, so both bit stores use `operator[]` ->
@@ -3012,8 +3013,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // over-expands (75.71 before the Owner correction). These are not recovered
 // boundaries, so the assignment pin remains diagnostic debt.
 
-// Mac 0x124b00..0x125360 retains the scalar reads in separate staging
-// locations. Its artifact, sex and spell-byte loads explicitly sign-extend.
+// Mac 0x124b00..0x125360 retains scalar reads in separate staging slots.
+// Identifier/name length/experience/skill count use lwbrx at 0x124b0c,
+// 0x124ba8, 0x124c04/0x124c9c and 0x124e40; troop/artifact/backpack shorts
+// use lhbrx at 0x124f18, 0x125028, 0x125064 and 0x1250dc. Preserve these
+// operations through the canonical endian readers (Windows-byte-flat at
+// 93.9180%). Artifact, sex and spell-byte loads explicitly sign-extend.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3027,7 +3032,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // not erase that positive shared-source fact.
     char padding[16];
     unsigned char isRandomHero;
-    int heroID;  // Dreamcast type: THeroID; Complete x86 stores a full int.
+    HeroId heroID;  // Dreamcast type: THeroID; Complete extends the domain.
     int intBuffer;
     short shortBuffer;
     char owner;
@@ -3045,14 +3050,14 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         identifier = intBuffer;
     }
 
     charBuffer = readValue<signed char>(infile);
     owner = charBuffer;
 
-    heroID = readHeroId(infile, mapVersion);
+    heroID = H3_ENUM_DECODE(HeroId, readHeroId(infile, mapVersion));
     isRandomHero = 0;
     if (heroID == -1)
         isRandomHero = 1;
@@ -3060,7 +3065,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     charBuffer = readValue<signed char>(infile);
     customName = charBuffer != 0;
     if (customName) {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         infile->read(tempText, intBuffer);
         tempText[intBuffer] = 0;
     }
@@ -3072,7 +3077,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     unsigned char customExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         experience = intBuffer;
         if (experience != 0 && (!g_inCampaign || experience >= 40))
             customExperience = 1;
@@ -3083,7 +3088,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         experienceFlag = readValue<signed char>(infile);
         customExperience = experienceFlag != 0;
         if (customExperience) {
-            experience = readValue<int>(infile);
+            experience = readLittleEndianValue<int>(infile);
             if (g_inCampaign && experience < 40)
                 customExperience = 0;
         } else {
@@ -3097,13 +3102,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     // the custom-name flag and is not a player index.
     if (heroID == -1) {
         if (g_startingHeroOverrides[owner] != -1) {
-            heroID = g_startingHeroOverrides[owner];
+            heroID = H3_ENUM_DECODE(HeroId, g_startingHeroOverrides[owner]);
             g_startingHeroOverrides[owner] = -1;
         } else {
             TTownType alignment = H3_ENUM_DECODE(
                 TTownType, g_game->m_setup.m_alignment[owner]);
-            heroID = g_game->getStartingHeroId(alignment, owner,
-                                               experience);
+            heroID = H3_ENUM_DECODE(HeroId,
+                g_game->getStartingHeroId(alignment, owner, experience));
         }
     }
     if (g_game->m_setup.m_startingHero[owner] == -1)
@@ -3145,7 +3150,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     charBuffer = readValue<signed char>(infile);
     if (charBuffer) {
         heroData->m_customSecondarySkills = 1;
-        intBuffer = readValue<int>(infile);
+        intBuffer = readLittleEndianValue<int>(infile);
         heroData->m_numSecondarySkills = intBuffer;
         for (x = 0; x < heroData->m_numSecondarySkills; ++x) {
             charBuffer = readValue<signed char>(infile);
@@ -3162,7 +3167,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroData->m_armies[x] =
                 readMapCreatureId(infile, mapVersion);
 
-            shortBuffer = readValue<short>(infile);
+            shortBuffer = readLittleEndianValue<short>(infile);
             heroData->m_numTroops[x] = shortBuffer;
         }
     }
@@ -3183,14 +3188,14 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 charBuffer = readValue<signed char>(infile);
                 intBuffer = charBuffer;
             } else {
-                shortBuffer = readValue<short>(infile);
+                shortBuffer = readLittleEndianValue<short>(infile);
                 intBuffer = shortBuffer;
             }
             heroData->m_artifacts[x].m_artifactId =
                 H3_ENUM_DECODE(TArtifact, intBuffer);
         }
 
-        shortBuffer = readValue<short>(infile);
+        shortBuffer = readLittleEndianValue<short>(infile);
         heroData->m_numInBackpack = static_cast<unsigned char>(shortBuffer);
         for (x = 0; x < heroData->m_numInBackpack; ++x) {
             if (g_game->m_mapHeader.m_version
@@ -3198,7 +3203,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 charBuffer = readValue<signed char>(infile);
                 intBuffer = charBuffer;
             } else {
-                shortBuffer = readValue<short>(infile);
+                shortBuffer = readLittleEndianValue<short>(infile);
                 intBuffer = shortBuffer;
             }
             heroData->m_backpack[x].m_artifactId =
