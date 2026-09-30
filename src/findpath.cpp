@@ -1161,6 +1161,17 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // insertion (521 B) match the retail int/type_artifact/widget-labelled
 // bodies byte-for-byte after relocation, including their callee references.
 
+// Native caller ownership: DC best_dist/end_hex/move_cost are int;
+// move_cost is the one-step increment at a0e64/a0ea8, not pc.m_cost.
+// Retail's queue-copy block reloads this and m_queue's end before copying
+// pc; Mac c7140 similarly reloads m_queue storage through this. Remove the
+// score-derived rQueue reference and keep canonical clear/size/back/pop_back
+// on the owning member. This restores the retail copy/cost/distance blocks
+// and improves 92.2606% to 94.5290%; the retained pc lifetime is unchanged.
+// Remaining first structural delta is the double-wide moat/flight-cost
+// register allocation; the three differing call names are the previously
+// reviewed pointer-copy and pointer-vector insertion aliases above.
+
 // Candidate /Z7 labels are candidate-only, and aggregate call counts or
 // unclaimed synthetic labels do not prove a missing source statement.
 VA(0x004b3400, 0x787)
@@ -1210,23 +1221,21 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
         init();
     setMoat(currentArmy);
 
-    long bestDistance = 800;
-    long bestHex = -1;
+    int bestDistance = 800;
+    int bestHex = -1;
     // Dreamcast CodeView names function-scope `pathCell pc` and emits its
     // empty constructor before both vector clears. Restoring that lifetime
     // is byte-flat at 87.9780 but preserves the positive source evidence.
     pathCell pc;
     m_result.clear();
-    // The BFS queue NAMED AS A REFERENCE: 87.6468 -> 87.9780.
-    std::vector<pathCell>& rQueue = m_queue;
-    rQueue.clear();
+    m_queue.clear();
     memset(m_cellData, 0, COMBAT_GRID_CELLS * sizeof(pathCell));
 
     pushCombatPoint(startHex, currentArmy->m_facing ? 1 : 4, 0, 0, limit);
 
-    while (rQueue.size() > 0) {
-        pc = rQueue.back();
-        rQueue.pop_back();
+    while (m_queue.size() > 0) {
+        pc = m_queue.back();
+        m_queue.pop_back();
 
         long cost = pc.m_cost;
         if (cost > limit)
@@ -1264,7 +1273,7 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
                     moat = 1;
             }
 
-            long step = 1;
+            int step = 1;
             if (moat && baseSpeed > 0)
                 step = baseSpeed - cost % baseSpeed;
 
