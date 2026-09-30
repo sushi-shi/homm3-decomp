@@ -7745,32 +7745,14 @@ void TCastleWindow::setRolloverText(message& msg)
 // no destructor, which is what makes the free a bare ??3 call - and then
 // the page's resource bar and this row's growth count are refreshed.
 
-// Residual (96.4%): the instruction SCHEDULE is retail's, one for one,
-// and every delta is a scratch-register rotation of the arm after the
-// mask test - retail parks each of the four re-read globals in edx where
-// our CL takes ecx/eax, and the whole tail rotates with it. why-reg
-// --model reports CAPPED: the transposed value is a call argument, not a
-// nameable local, so no statement-level knob reaches it. Tried and
-// rejected, all 96.43: binding the new'd pointer to a local before the
-// global store; the assignment folded into the null test; caching
-// townToView, and caching gpTownManager, in a local across the body;
-// early-return instead of the if-block; typing the global baseManager*
-// so the DoDialog argument needs no upcast; and a 0..4 type-definition
-// probe ahead of the body (inert - this is not the include-set knob).
+// Mac 0x1e101c..0x1e1030 passes g_text directly through the four-int
+// broadcast overload after sprintf. The callee owns message construction;
+// no caller message temporary is needed. This retained source model stays exact.
 VA(0x005dce50, 0x126)
 DC_ADDRESS(0x17f6e8, 0x130)
 MAC_ADDRESS(0x1e0f00, 0x148)  // anchor-callee(recruitUnit ctor 0x551560) + arity
 void TCastleWindow::recruit(int i)
 {
-    // 96.43%: 8/8 blocks exact, calls agree, and every reloc resolves to
-    // the same global (retail's `data_2994fc` IS g_townManager, 0x006994fc).
-    // The whole residual is register naming plus one scheduling choice in
-    // the `new recruitUnit(...)` argument setup: retail emits
-    // `push ecx; mov ecx, eax; call`, we emit `mov ecx, eax; push edx;
-    // call`. Caching g_townManager->m_townToView in a local is ruled out
-    // by the byte-exact prefix - retail reloads the global at each use
-    // exactly as this body does. DC records no locals for this function,
-    // so it offers no lead on the remaining allocator state.
     int dwelling = g_townManager->m_currentDwellingIdOff[i];
     if (g_townManager->m_townToView->hasBuilding(DWELLING_0_ID + dwelling, true)) {
         g_recruitUnit = new recruitUnit(g_townManager->m_townToView, dwelling, 1);
@@ -7779,12 +7761,10 @@ void TCastleWindow::recruit(int i)
         g_executive->doDialog(g_recruitUnit);
         delete g_recruitUnit;
         m_castleBank->update(1, 1);
-        message textMessage;
-        textMessage.m_extraText = g_text;
         sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
                 g_townManager->m_townToView->m_population[dwelling]);
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
-                         textMessage.m_extra);
+                         reinterpret_cast<int>(g_text));
     }
 }
 
@@ -7893,14 +7873,11 @@ int TCastleWindow::windowHandler(message& msg)
                 g_executive->doDialog(g_recruitUnit);
                 delete g_recruitUnit;
                 m_castleBank->update(1, 1);
-                {
-                    message textMessage;
-                    textMessage.m_extraText = g_text;
-                    sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
-                            g_townManager->m_townToView->m_summoningPopulation);
-                    broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-                                     0x28, textMessage.m_extra);
-                }
+                // Mac 0x1e12b0..0x1e12c4 likewise forwards the buffer pointer.
+                sprintf(g_text, "%s %d", g_generalText->getText(GENERAL_TEXT_CREATURES_AVAILABLE_LABEL),
+                        g_townManager->m_townToView->m_summoningPopulation);
+                broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                 0x28, reinterpret_cast<int>(g_text));
                 break;
 
             case RESOURCE_TEXT_ID:
