@@ -76,7 +76,6 @@ inline long valueOfHillFort(const hero* currentHero,
 inline int valueOfLibrary(const hero* currentHero,
                                  NewmapCell* cell);
 inline int valueOfLighthouse(NewmapCell* cell);
-int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell);
 inline int valueOfMercenaryCamp(const hero* currentHero,
                                        NewmapCell* cell);
 inline long valueOfMagusHut(long playerId);
@@ -86,7 +85,6 @@ long valueOfMonsters(const hero* currentHero, NewmapCell* cell,
 int valueOfMoveSource(const hero* currentHero, long flag, short increase,
                          long& moveCost);
 int valueOfObelisk(NewmapCell* cell, long playerId);
-int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell);
 int valueOfPrison(NewmapCell* cell, playerData* player);
 long valueOfPyramid(const hero* currentHero, NewmapCell* cell);
 long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
