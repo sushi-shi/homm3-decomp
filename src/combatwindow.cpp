@@ -480,8 +480,7 @@ void TCombatWindow::endPlacementPhase()
     }
     m_controlSubWindow = new TCombatControlSubWindow(this);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(
-        0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
 }
 
 VA(0x00473290, 0x52)

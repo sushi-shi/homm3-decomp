@@ -241,3 +241,28 @@ Mac's pre-host transport cleanup/error dialogs differ from the Windows
 DirectPlay flow. Its synchronous music stop corresponds to Windows' queued
 `processStopAndPlayMP3 -> threadStopMP3` operation, not the optional
 `stopAllSamples` path. The owning source comments record both cases.
+
+### Full-screen forwarding and arithmetic helpers
+
+The next batch restores 27 no-argument `updateScreen` calls in 25 functions.
+DC retains the facade; Complete expands its 800-by-600 rectangle forwarding
+across translation units. One shared header body preserves those calls and
+records the newer placement separately from DC's older `.cpp` ownership.
+The native witnesses and reviewed placement are beside that definition.
+Two Mac callers carry one-checkpoint abstraction annotations; Windows
+`setHeroContext` moves from 97.03% to 93.87%, with its prior peak held in HIST.
+Other redraw operations in the same functions still require individual review.
+
+Seven arithmetic operations now call the canonical `min`/`max` wrappers,
+and `getPuzzleOrigin` retains its evidenced default point construction before
+coordinate assignment. In the long-index combat-distance overload, Mac calls
+`labs` for the two displacements; recovering their `long` type raises the Mac
+comparison from 55.70% to 76.92% without changing Windows MAX. DC records no
+local types there, so this type evidence comes from Mac.
+
+The older DC save-time campaign collection is a reviewed version difference:
+Complete collects and prunes crossover pools before saving, through
+`completeCurrentMap` and `pruneCrossoverHeroes`. Its human-player list scan
+and bounded pool selection replace DC's local-player scan, temporary map-cell
+restoration and fixed-pool limit. Those calls must not be cleared by unrelated
+reachability through `SavedGameHeader::reset` or normal hero serialization.

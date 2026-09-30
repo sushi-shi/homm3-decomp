@@ -971,7 +971,9 @@ void TViewArmyWindow::createSpellInfluenceWidgets(const army* thisArmy)
 {
     int x = 127;
     int widgetId = AFFECTING_SPELLS_0_ID;
-    unsigned int spell = cppMax<int>(
+    // DC 0x19292e calls includes.h's by-value max; Mac 0x20265c..0x20267c
+    // keeps both argument copies before the reference selector.
+    unsigned int spell = max(
         0, static_cast<int>(thisArmy->m_spellInfluenceQueue.size()) - NSPELLS);
 
     for (int xp = 0; xp < NSPELLS; ++xp) {

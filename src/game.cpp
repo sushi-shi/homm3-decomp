@@ -3135,6 +3135,16 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // scalar-write results. Helper-return guards use their own temporary, so keep
 // their canonical calls separate from this status local. Complete moves the
 // older campaign/header prefix into SavedGameHeader.
+// DC 0xa8e70..0xa913e additionally gathers campaign carryover heroes here,
+// temporarily restoring their map cells, then limits the pool and checks
+// artifacts. Complete collects/prunes crossover pools before saveGame in
+// oldmain through SCampaign::completeCurrentMap/pruneCrossoverHeroes.
+// Mac 0x9869c..0x9872c selects a human player's hero list directly, without
+// the older local-player/restore/re-obscure scan; 0x98aa0..0x98af4 bounds
+// selection by remaining pool size and collects the discarded artifacts.
+// Neither SavedGameHeader::reset nor normal saveHeroPool owns those old
+// operations: Mac 0xd2970..0xd2984 and Windows 0x4be49c..0x4be4ab proceed
+// directly through the saved-header prefix into serialization.
 // Retail's four narrow scalar staging locals plus zero live at function scope;
 // narrowing their lifetimes changes the frame. The hero-pool membership byte
 // is an indexed one-byte array, local to the hero loop.
@@ -8684,8 +8694,7 @@ void game::showComputerScreen()
         g_advManager->m_advWindow->updateResourceDisplay(1, 1);
         g_advManager->m_advWindow->drawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        g_windowManager->updateScreen(
-            0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+        g_windowManager->updateScreen();
     }
 
     if (!g_currentPlayer->isHuman())
@@ -8753,7 +8762,7 @@ void game::waitForPlayer(char* text, int playerId)
     g_advManager->m_advWindow->updateButtons(1, 0);
     g_advManager->m_advWindow->m_resourceDisplay->clear();
     showHeroesLogo();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     g_completeDrawAllCells = 0;
     normalDialog(text, 1, -1, -1, 10, playerId,
@@ -9669,7 +9678,7 @@ void game::doNewTurn()
     g_advManager->redrawAdvScreen(0, 0);
     g_advManager->overrideBottomView(advManager::BOTTOM_VIEW_1, -1);
     g_advManager->updBottomView(1, 1, 0);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     if (g_currentPlayer->m_deathCountDown >= 0) {
         if (g_currentPlayer->m_deathCountDown == 1) {
@@ -10417,9 +10426,13 @@ DC_ADDRESS(0x0bc0c0, 0x13a)
 MAC_ADDRESS(0x0e6d54, 0xe0)
 type_point game::getPuzzleOrigin() const
 {
-    type_point result(m_ultimateArtifactX - 9,
-                      m_ultimateArtifactY - 8,
-                      m_ultimateArtifactZ);
+    // DC 0xbc0d2 default-constructs the point before assigning its fields.
+    // Mac 0xe6d78..0xe6db8 preserves the same three field assignments,
+    // with Complete's revised (-9, -8) puzzle offsets.
+    type_point result;
+    result.m_x = m_ultimateArtifactX - 9;
+    result.m_y = m_ultimateArtifactY - 8;
+    result.m_z = m_ultimateArtifactZ;
 
     sRand(m_ultimateArtifactY * 81901
           + m_ultimateArtifactX * 67843 + 79451);

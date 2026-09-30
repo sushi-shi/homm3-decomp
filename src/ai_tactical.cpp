@@ -1966,7 +1966,9 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
     if (m_winLikely)
         return 0;
     long bonus = g_spellTraits[SPELL_COUNTERSTRIKE].m_masteryBonus[caster.m_mastery];
-    long extra = cppMin(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
+    // DC 0x40692 retains min; Mac 0x43848..0x43878 selects the two
+    // homed operands before overwriting the bonus/extra stack slot.
+    long extra = min(m_meleeEnemies[ourArmy->m_bitIndex].m_count - mult, bonus);
     if (extra <= 0)
         return 0;
     const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;

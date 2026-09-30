@@ -1262,7 +1262,7 @@ unsigned char TMultiPlayerWindow::onModemJoin()
         if (g_dPlay->getLastError() == g_dplayErrorUserCancel)
             break;
         if (!retry)
-            g_windowManager->updateScreen(0, 0, 800, 600);
+            g_windowManager->updateScreen();
         if (m_sessions->getCount() > 0)
             break;
     }
@@ -1307,7 +1307,7 @@ unsigned char TMultiPlayerWindow::onDirectJoin()
         if (enumFailed)
             break;
         if (!retry)
-            g_windowManager->updateScreen(0, 0, 800, 600);
+            g_windowManager->updateScreen();
         if (m_sessions->getCount() > 0)
             break;
         if (!retry)

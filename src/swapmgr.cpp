@@ -826,7 +826,7 @@ MAC_ADDRESS(0x1a6174, 0x64)
 int swapManager::drawSwapWin()
 {
     m_parent->drawWindow(0, 0xffff0001, 0xffff);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 0;
 }
 
@@ -930,7 +930,7 @@ int swapManager::open(int newPriority)
     m_border = ResourceManager::getBitmap816(
         DATA_COMPGEN(0x00688524, swapTradeSelectorBitmapName,
                      "TradeSel.pcx"));
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
 
     m_id = 0x100;

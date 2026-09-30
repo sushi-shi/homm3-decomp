@@ -421,15 +421,14 @@ TCombatResultsWindow::~TCombatResultsWindow()
 
 VA(0x00471af0, 0x54)
 DC_ADDRESS(0x069200, 0x44)
-MAC_ADDRESS(0x07fb20, 0x98)
+MAC_ADDRESS(0x07fb20, 0x98)  // MAC_ABSTRACTION_FROM(tokens1:331cdd680fdd,100.0000): restore the DC full-screen updateScreen facade; Complete expands its rectangle forwarding, with changed PPC allocation.
 int TCombatResultsWindow::open(int newPriority, unsigned char update)
 {
     int result = heroWindow::open(newPriority, 0);
     drawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     videoDrawCurrentFrame();
     if (update)
-        g_windowManager->updateScreen(
-            0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+        g_windowManager->updateScreen();
     return result;
 }
 

@@ -748,7 +748,7 @@ int combatManager::open(int newPriority)
         CheckMenuItem(g_activeMenu, 0xb798, 0);
         CheckMenuItem(g_activeMenu, 0xb79c, 0);
         CheckMenuItem(g_activeMenu, 0xb79b, 0);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
         g_config.m_showCombatMouseHex = savedShowMouseHex;
         g_mouseManager->m_noChangePointer = 0;
         g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
@@ -3798,10 +3798,11 @@ long combatManager::getDistance(long start, long stop)
     int sy = gridY(start);
     int tx = gridX(stop);
     int ty = gridY(stop);
-    int a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
-    int b = ty / 2 - sy / 2 - sx + tx;
+    // Complete Mac calls labs for both displacements (0x75d8c..0x75e00).
+    long a = (sy + 1) / 2 - (ty + 1) / 2 - sx + tx;
+    long b = ty / 2 - sy / 2 - sx + tx;
     if ((a < 0) == (b < 0))
-        return cppMax<long>(abs(a), abs(b));
+        return max(abs(a), abs(b));  // DC 0x62ed8: includes.h wrapper.
     return abs(a) + abs(b);
 }
 

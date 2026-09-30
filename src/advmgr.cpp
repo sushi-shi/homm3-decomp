@@ -7609,7 +7609,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
     updateRadar(0, 1, 0, 0, 0);
 
     if (update)
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
 }
 
 VA(0x00417570, 0x2A)
@@ -7909,8 +7909,7 @@ void advManager::setHeroContext(int heroId, int inMove, unsigned char waitingPla
     if (drawChanges && g_completeDrawEnabled) {
         updateRadar(0, 1, 0, 0, 0);
         completeDraw(0);
-        g_windowManager->updateScreen(0, 0, HOVER_SCREEN_WIDTH,
-                                      HOVER_SCREEN_HEIGHT);
+        g_windowManager->updateScreen();
     }
 
     type_point viewCentre = getMapCenter();
@@ -9170,7 +9169,7 @@ void advManager::viewPuzzle()
     SAMPLE2 sample2 = loadPlaySample("Obelisk.wav");
     puzzle.updatePuzzle(1);
     drawAdventureMapGems();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     if (g_game->m_numObelisks > 0) {
         g_windowManager->saveFizzleSourceX(8, 8, 592, 544);

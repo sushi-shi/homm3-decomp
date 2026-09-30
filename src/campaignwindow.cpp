@@ -423,8 +423,7 @@ int campaignWindowHandler(message& msg)
                 g_campaignWindow->getWidget(DIALOG_RETURN_CANCEL)->sendMessage(
                     widget::WIDGET_CLEAR_STATUS, widget::WIDGET_HIGHLIGHTED);
             g_campaignWindow->drawWindow(0, 0xffff0001, 0xffff);
-            g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                WINDOW_SCREEN_HEIGHT);
+            g_windowManager->updateScreen();
         }
     }
     if (!exitFlag)

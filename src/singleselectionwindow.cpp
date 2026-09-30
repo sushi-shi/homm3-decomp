@@ -4530,7 +4530,7 @@ int TSingleSelectionWindow::update()
         g_smallFont->drawBoundedString(
             g_generalText->getText(GENERAL_TEXT_RECEIVING_MAP_HEADERS), g_windowManager->m_screenBitmap,
             433, 46, 210, 23, font::WHITE, 4, -1);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
         return 1;
     } else {
         drawBasicMapInfo();
@@ -4683,7 +4683,7 @@ int TSingleSelectionWindow::update()
             updateFilterWidgets();
         }
     }
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 1;
 }
 

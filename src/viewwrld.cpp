@@ -1616,7 +1616,7 @@ void TViewWorldWindow::updateViewWorld(message* msg)
     init(center, 1);
     drawWindow();
     drawWindow(1, 0xffff0001, 0xffff);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 }
 
 VA(0x005fc8f0, 0x213)
@@ -1755,7 +1755,7 @@ int TViewWorldWindow::windowHandler(message& msg)
                                     m_origin.m_y + g_viewHalfHeight, m_origin.m_z);
                 init(center, 0);
                 drawWindow();
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 return MESSAGE_DISPATCH_CONSUME;
             case ACCEPT_ID:
                 g_windowManager->m_dialogReturn = msg.m_codeY;

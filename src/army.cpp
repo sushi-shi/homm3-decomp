@@ -2412,8 +2412,10 @@ double army::getAverageDamage() const
 {
     if (getSpellTime(41))
         return m_blessAmount + m_monInfo.m_damageHighBound;
+    // DC 0x47a68 retains the by-value max wrapper; Mac 0x4e664..0x4e694
+    // expands its argument copies and reference selector.
     if (getSpellTime(42))
-        return cppMax(m_monInfo.m_damageLowBound - m_curseAmount, 1);
+        return max(m_monInfo.m_damageLowBound - m_curseAmount, 1);
     return (m_monInfo.m_damageHighBound + m_monInfo.m_damageLowBound) / 2.0;
 }
 
@@ -2659,8 +2661,10 @@ MAC_ADDRESS(0x04f02c, 0x204)
 int army::computeBaseDamage(unsigned char simulateOnly) const
 {
     int num;
+    // DC 0x48568/0x485e2 call max, not cppMax directly. Mac preserves
+    // both argument homes at 0x4f06c..0x4f09c / 0x4f154..0x4f180.
     if (getSpellTime(61) > 0 && is(creatureShootingArmy))
-        num = cppMax(m_numTroops / 2, 1);
+        num = max(m_numTroops / 2, 1);
     else
         num = m_numTroops;
 
@@ -2679,7 +2683,7 @@ int army::computeBaseDamage(unsigned char simulateOnly) const
     if (getSpellTime(41)) {
         damage = (high + m_blessAmount) * num;
     } else if (getSpellTime(42)) {
-        damage = cppMax(low - m_curseAmount, 1) * num;
+        damage = max(low - m_curseAmount, 1) * num;
     } else if (simulateOnly) {
         damage = (low + high) * num / 2;
     } else {

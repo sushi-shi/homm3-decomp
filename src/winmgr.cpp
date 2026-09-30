@@ -471,15 +471,6 @@ void heroWindowManager::doQuickView(heroWindow* window)
     g_mouseManager->showPointer(false);
 }
 
-// Original: heroWindowManager::UpdateScreen; winmgr.cpp:844
-// Complete draws combat and adventure into the same 800x600 client surface.
-// DC's combat-only (8,32) destination branch belongs to its translated viewport.
-DC_ADDRESS(0x19b1f0, 0x3e)
-void heroWindowManager::updateScreen()
-{
-    updateScreen(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-}
-
 VA(0x00602bd0, 0x7C)
 DC_ADDRESS(0x19b230, 0xf8)
 MAC_ADDRESS(0x20df2c, 0x9c)

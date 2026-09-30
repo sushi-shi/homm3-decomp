@@ -3589,8 +3589,7 @@ void townManager::handleMageGuildClick()
     createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
     m_hallWindow->doModal(0);
 
     if (m_netMsgHandler)
@@ -5663,8 +5662,7 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
             g_advManager->redrawAdvScreen(0, 0);
             garrisonWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                                        WINDOW_ALL_WIDGETS_HIGH);
-            g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                          WINDOW_SCREEN_HEIGHT);
+            g_windowManager->updateScreen();
         } else if (!m_srcStrip->m_pos) {
             heroView(m_townToView->m_garrisonHeroId, 1, 0, 0);
         } else {
@@ -5787,7 +5785,7 @@ void townManager::moveHeroFromGarrison()
 // it), the town's info row, and one full-screen flush.
 VA(0x005d5410, 0x11C)
 DC_ADDRESS(0x176eb0, 0x72)
-MAC_ADDRESS(0x1d23cc, 0x14c)
+MAC_ADDRESS(0x1d23cc, 0x14c)  // MAC_ABSTRACTION_FROM(tokens1:09500412f306,25.3012): restore the full-screen updateScreen facade expanded at Mac 0x1d24e4..0x1d24fc; the canonical call changes the PPC frame.
 void townManager::redrawTownScreen()
 {
     drawTown(0, 1, 1);
@@ -5817,8 +5815,7 @@ void townManager::redrawTownScreen()
     updateTownInfo();
     m_townWindow->drawWindow(0, WINDOW_ALL_WIDGETS_LOW,
                            WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
 }
 
 // Clear both hovered troop selections; -2 means no slot is selected.

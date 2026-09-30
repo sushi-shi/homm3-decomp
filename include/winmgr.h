@@ -91,7 +91,18 @@ public:
                      TDialogHandler dialogDrawFunction, int fadeIn);
     void doQuickView(heroWindow* window);
     void sleepAllWindows(unsigned char sleep);
-    void updateScreen();
+    // Original: heroWindowManager::UpdateScreen; DC winmgr.cpp:844.
+    // Complete uses one 800x600 client surface instead of DC's translated
+    // combat viewport. Mac 0x209c08..0x209c20 (viewwrld) and
+    // 0x1d24e4..0x1d24fc (townmgr), and Windows 0x5fc8c6..0x5fc8da /
+    // 0x5d550d..0x5d5521 expand this forwarding operation across TUs.
+    // The in-class Complete definition is inferred from that visibility;
+    // the older DC source defined the helper out of line.
+    DC_ADDRESS(0x19b1f0, 0x3e)
+    void updateScreen()
+    {
+        updateScreen(0, 0, 800, 600);
+    }
     void updateScreen(int x, int y, int w, int h);
     void screenShot();
     void saveFizzleSource(int startX, int startY, int width, int height);

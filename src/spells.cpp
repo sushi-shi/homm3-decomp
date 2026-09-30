@@ -2735,7 +2735,7 @@ long combatManager::getDistance(tagPOINT start, tagPOINT stop)
     long dx = stop.x - start.x;
     long dy = stop.y - start.y;
     if ((dx < 0) == (dy < 0))
-        return cppMax(abs(dx), abs(dy));
+        return max(abs(dx), abs(dy));  // DC 0x153712: includes.h wrapper.
     return abs(dx) + abs(dy);
 }
 

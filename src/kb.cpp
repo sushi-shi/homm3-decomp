@@ -242,7 +242,7 @@ void showProgressBar()
                         g_loadBar->getHeight(),
                         g_windowManager->m_screenBitmap, 0, 0, 0);
         drawProgressCount();
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
     }
 }
 
@@ -1055,7 +1055,7 @@ int oldmain()
     }
 
     g_windowManager->m_screenBitmap->fillRect(0, 0, 800, 600, 0);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     if (!g_lobbyLaunched) {
         g_mouseManager->hidePointer();
@@ -1102,7 +1102,7 @@ int oldmain()
 
         if (g_lobbyLaunched) {
             g_runStartEventsOnEntry = 1;
-            g_windowManager->updateScreen(0, 0, 800, 600);
+            g_windowManager->updateScreen();
             videoPause();
             if (!lobbyLaunchConnect()) {
                 remoteCleanup();
@@ -3519,7 +3519,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         currentFont->drawBoundedString(temp, g_windowManager->m_screenBitmap,
                                  x, 540, 160, 50, font::TColor(281), 5, -1);
     }
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     while (!smk && videoPlaying()) {
         pollSound();
         process1WindowsMessage();

@@ -1910,7 +1910,7 @@ void combatManager::doVictory(int winningGroup)
     g_mouseManager->enable();
     if (!isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
     }
 
     int dialogtimeout = 15000;
