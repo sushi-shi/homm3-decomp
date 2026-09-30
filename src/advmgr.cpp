@@ -5694,10 +5694,13 @@ NewmapCell* advManager::getCell(type_point point)
 // Retail's own inconsistency, transcribed rather than tidied: the row
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
+// Original DC publics end Utype_point@@_N1111 and _N0000 for the two
+// UpdateRadar overloads: all five flags are bool despite the lowered
+// primitive 0x20 display. Preserve this forwarding contract together.
 VA(0x00412c40, 0xB41)
 DC_ADDRESS(0x014bec, 0x1390)
 MAC_ADDRESS(0x01382c, 0xd74)  // linkorder
-void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeros, unsigned char viewTowns)
+void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpdate, bool viewMines, bool viewHeros, bool viewTowns)
 {
     widget* radar = m_advWindow->m_radarWidget;
     int rectX = radar->m_x;
@@ -5741,10 +5744,11 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
     // `revealed` from the whole && chain instead of `= 0` plus a guarded
     // `= 1` - gives retail's `mov al,1 / jmp / xor al,al` and takes the
     // branch view CLEAN. 90.6495 -> 91.2477.
-    // Still rejected, re-measured here: widening `visibilityBit` to the
-    // `int` retail plainly holds at [ebp-0x44] (`and eax,0xffff / test
-    // ecx,eax` against our byte `test cl,al`) costs 0.12 with the bool
-    // initialiser in place and 0.71 without it. The rest is the
+    // The earlier standalone int-mask probe cost 0.12 with the logical
+    // initializer and 0.71 without it. DC playerBit (sp+0xe8) is int,
+    // and retail holds this mask at [ebp-0x44] (`and eax,0xffff / test
+    // ecx,eax`); keep the native type despite that observed score dip.
+    // The rest is the
     // callee-saved role of `this`: retail keeps it in ECX and spills to
     // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
     int heroX = -1;
@@ -5777,7 +5781,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
                   + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
     }
 
-    unsigned char visibilityBit = g_mapVisibilityBit;
+    int visibilityBit = g_mapVisibilityBit;
     for (int y = 0; y <= lastRow; y++) {
         unsigned short* dest = destRow;
         // Retail row advances use byte pitch; DC's radarRowStart remains
@@ -6082,7 +6086,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 VA(0x00413790, 0x27)
 DC_ADDRESS(0x015f7c, 0x5e)
 MAC_ADDRESS(0x0145a0, 0x48)
-void advManager::updateRadar(unsigned char updateFlag, unsigned char partialUpdate, unsigned char viewMines, unsigned char viewHeroes, unsigned char viewTowns)
+void advManager::updateRadar(bool updateFlag, bool partialUpdate, bool viewMines, bool viewHeroes, bool viewTowns)
 {
     updateRadar(m_radarOrigin, updateFlag, partialUpdate, viewMines,
                 viewHeroes, viewTowns);
