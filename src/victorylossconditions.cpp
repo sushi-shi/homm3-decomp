@@ -51,6 +51,9 @@ static const int g_angelicAllianceSecondMap = 9;
 // (cost 58) only 30, so it stays a call where retail expands it and stores
 // out_of_range's vptr after logic_error's ctor; about 28 more depth-1
 // budget is missing and no evidenced statement supplies it.
+// The current bool-interface trace has caller cost 895 and budget 1790.
+// Prefix/postfix spellings of the five real loop increments are byte-flat
+// and preserve that exact budget; they do not explain the constructor gap.
 // Original DC public CheckForArtifactWin@@QAA_NXZ proves a bool result;
 // the dossier's primitive 0x20 display is lowered-byte metadata.
 VA(0x005f1610, 0x4FE)
