@@ -1831,12 +1831,9 @@ TOverviewWindow::TOverviewWindow()
     m_widgets.push_back(new button(
         748, 563, 48, 32, 0x7800, "OvButn1.def", 3, 4, 1, 28, 2));
 
-    for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
-        if (*it)
-            addWidget(*it, -1);
-        else
-            memError();
-    }
+    // Mac 0x139ab0..0x139b00 expands the base helper's null guard and
+    // addWidget(-1)/memError arms. Keep the shared registration boundary.
+    addWidgetsToMessageStream();
 
     int localPlayer = g_game->getLocalPlayerGamePos();
 
@@ -1888,6 +1885,8 @@ TOverviewWindow::TOverviewWindow()
 
 VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
 
+// Mac 0x139e2c..0x139e6c deletes the vector's widgets without clearing it.
+// This differs from deleteWidgets(), whose additional clear is not present.
 VA(0x00520d90, 0x9C)
 DC_ADDRESS(0x108f74, 0x68)
 MAC_ADDRESS(0x139e00, 0xe4)

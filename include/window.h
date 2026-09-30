@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#include "kb.h"
+
 class widget;
 class textWidget;
 class message;
@@ -130,7 +132,21 @@ public:
 
 protected:
     void deleteWidgets();
-    virtual void addWidgetsToMessageStream();
+    // DC window.cpp owns the ordinary body. Complete's overview constructor
+    // expands this operation across TUs, requiring header body visibility.
+    // Preserve the protected virtual boundary and its null-widget guard.
+    VA(0x005ff570, 0x32)
+    DC_ADDRESS(0x197cd4, 0x72)
+    MAC_ADDRESS(0x20bccc, 0x74)
+    virtual void addWidgetsToMessageStream()
+    {
+        for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
+            if (*it)
+                addWidget(*it, -1);
+            else
+                memError();
+        }
+    }
 
 public:
     // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in
