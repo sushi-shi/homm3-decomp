@@ -196,7 +196,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
     if (ourHits == 0 || enemyHits <= 0 || ranged)
         return;
     if (enemy.canRetaliate(currentArmy)
-            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[m_ourGroup])) {
+            && (g_game->m_setup.m_difficulty > 0 || g_combatManager->m_sideIsAi[getGroup()])) {
         simulateSingleAttack(enemy, enemyHits, currentArmy, ourHits, 0, 0);
         if (ourHits == 0 || enemyHits == 0)
             return;
@@ -250,7 +250,7 @@ MAC_ADDRESS(0x03d3fc, 0x1dc)
 long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, const army& enemy) const
 {
     long value = getSimpleAttackEffect(currentArmy, enemy, 1, 0);
-    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[m_ourGroup])
+    if (!g_game->m_setup.m_difficulty && !g_combatManager->m_sideIsAi[getGroup()])
         return value;
     if (enemy.isIncapacitated())
         return value / 10;
@@ -323,17 +323,20 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             first = 0;
         }
     }
-    m_friendlyCombatValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    // Mac 0x3d71c's total-value calls expand the existing ai_tactical.h
+    // group getters (+0x20/+0x24); preserve the same canonical access path
+    // in the ranged/retaliation gates above.
+    m_friendlyCombatValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                m_lowestDefense, 1);
-    m_awakeFriendlyValue = combat->getTotalCombatValue(this->m_ourGroup, m_lowestAttack,
+    m_awakeFriendlyValue = combat->getTotalCombatValue(getGroup(), m_lowestAttack,
                                                     m_lowestDefense, 0);
-    m_enemyCombatValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_enemyCombatValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                  m_lowestDefense, 1);
-    m_awakeEnemyValue = combat->getTotalCombatValue(m_enemyGroup, m_lowestAttack,
+    m_awakeEnemyValue = combat->getTotalCombatValue(getEnemyGroup(), m_lowestAttack,
                                                       m_lowestDefense, 0);
     if (m_friendlyCombatValue * 2 < m_enemyCombatValue
             && (g_game->m_setup.m_difficulty > 0
-                || g_combatManager->m_sideIsAi[this->m_ourGroup]))
+                || g_combatManager->m_sideIsAi[getGroup()]))
         m_killsOnly = 1;
     long high = m_awakeFriendlyValue;
     long low = m_awakeEnemyValue;
