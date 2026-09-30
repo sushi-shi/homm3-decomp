@@ -3111,6 +3111,14 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 // GetMissileStartingPosition multiplies by further down this same TU.
 // Two constants, two spellings, both retail's.
 
+// DC cmbtmgr.cpp:3990/4004/4008/4030 retains the bitmap Draw/Grab and
+// const CSprite bitmap Draw overloads (Bitmap16.h:162/168, CSprite.h:324).
+// Keep their nested map/dimension accessors. Restoring those calls moves
+// Windows 99.24 -> 97.47% and Mac 42.2507 -> 43.7332%. The first bitmap
+// Draw expands; the final identical wrapper remains out of line where
+// retail expands it. All 62 CFG blocks and 33 branches align; this is an
+// inliner boundary, not a reason to paste the wrapper's fields again.
+
 VA(0x00468220, 0x48F) MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global, dc 0x61e60
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                                  const float* angles, const CSprite* missile)
@@ -3181,29 +3189,18 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         unsigned long nextFrameTime = GameTime::get() + arrowdelay;
         if (step != 0) {
             saved.draw(0, 0, width, height,
-                       g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch(), false);
+                       g_windowManager->m_screenBitmap, x, y, false);
             // Mac 0x749fc/0x74abc derives each rectangle from its current origin.
             // Retaining those expressions also matches the Windows loop schedule.
             updateArea = TDrawbridgeBounds(x, y, x + width - 1, y + height - 1);
             x += addX;
             y += addY;
         }
-        saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                   g_windowManager->m_screenBitmap->getWidth(),
-                   g_windowManager->m_screenBitmap->getHeight(),
-                   g_windowManager->m_screenBitmap->getPitch());
-        // DC's own mangling makes `missile` a `const CSprite*`
-        // (PBVCSprite) while CSprite::Draw is non-const on both builds,
-        // so the cast is retail's, not ours.
-        const_cast<CSprite*>(missile)->draw(
-            0, frame, 0, 0, width, height,
-            g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-            g_windowManager->m_screenBitmap->getWidth(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
+        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        // DC cmbtmgr.cpp:4008 calls the const bitmap-forwarding overload
+        // from CSprite.h:324, retained at dc 0x1f268.
+        missile->draw(0, frame, 0, 0, width, height,
+                      g_windowManager->m_screenBitmap, x, y, flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
         scrollTo(x, y, width, height, true, true, true);  // DC 4016
         updateArea.clip(g_combatDrawLimits);
@@ -3211,10 +3208,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
         GameTime::delayTil(nextFrameTime);
     }
 
-    saved.draw(0, 0, width, height, g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-               g_windowManager->m_screenBitmap->getWidth(),
-               g_windowManager->m_screenBitmap->getHeight(),
-               g_windowManager->m_screenBitmap->getPitch(), false);
+    saved.draw(0, 0, width, height,
+               g_windowManager->m_screenBitmap, x, y, false);
     updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }
 

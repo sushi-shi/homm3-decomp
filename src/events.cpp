@@ -791,7 +791,7 @@ VA(0x0049ea40, 0x304) MAC_ADDRESS(0x0a9dcc, 0x290)  // dc 0x908dc
 void advManager::fightForArtifact(hero* currentHero, NewmapCell* cell,
                                   type_point point, bool humanPlayer)
 {
-    int monsterType = cell->getArtifactDefender();
+    TCreatureType monsterType = cell->getArtifactDefender();
     int amount = (cell->m_extraInfo >> 17) & 0x3fff;
     short artifact = cell->getArtifactIndex();
 
@@ -1078,9 +1078,20 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount);
 void doMonsterJoinDialog(hero* inHero, armyGroup* monsters, int flag);
 
+// DC 0x912bc/0x91308/0x9138c and Mac 0xaab7c/0xaabf8/0xaac80
+// place showRewards before addReward and giveBlackBoxReward. Restoring
+// that ordinary body order is byte-flat; selective nested expansion remains open.
+VA(0x004a0b00, 0x112) MAC_ADDRESS(0x0aab7c, 0x7c)  // dc 0x912bc
 static void showRewards(std::string& text,
-                        std::vector<type_dialog_resource>& rewards,
-                        long threshold);
+                  std::vector<type_dialog_resource>& rewards,
+                  long threshold)
+{
+    if (rewards.size() >= static_cast<unsigned long>(threshold)) {
+        extendedDialog(text.c_str(), rewards, -1, -1, 0);
+        text = DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
+        rewards.clear();
+    }
+}
 
 // DC events.cpp:838-846, dc 0x91308: ordinary static add_reward owns
 // push_back, the empty-text assignment, and show_rewards(..., 8).
@@ -1332,18 +1343,6 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
 VA_COMPGEN(0x0054c120, 0x43, VECTOR_CLEAR, type_dialog_resource)
 
 VA_COMPGEN(0x005b8cc0, 0x0f, STD_CONSTRUCT, type_dialog_resource)
-
-VA(0x004a0b00, 0x112) MAC_ADDRESS(0x0aab7c, 0x7c)  // dc 0x912bc
-static void showRewards(std::string& text,
-                  std::vector<type_dialog_resource>& rewards,
-                  long threshold)
-{
-    if (rewards.size() >= static_cast<unsigned long>(threshold)) {
-        extendedDialog(text.c_str(), rewards, -1, -1, 0);
-        text = DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
-        rewards.clear();
-    }
-}
 
 VA(0x004a0c20, 0x23) MAC_ADDRESS(0x0ab730, 0x1c)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::getBlackBox(const ExtraInfoUnion* cell) const
@@ -2439,7 +2438,7 @@ void advManager::doEventMine(NewmapCell* cell, hero* currentHero,
             && currentMine->m_guards.getNumArmies() == 1) {
             int guardCount = currentMine->m_guards.m_numTroops[0];
             if (combatMonsterEvent(
-                    currentHero, currentMine->m_guards.m_armies[0],
+                    currentHero, currentMine->m_guards.m_armyTypes[0],
                     &guardCount, cell, point,
                     CREATURE_NONE, 0, 0,
                     CREATURE_NONE, 0, 0)) {
@@ -2631,7 +2630,7 @@ void advManager::doEventPyramid(hero* currentHero, NewmapCell* cell,
     }
 
     int goldGolems = 40;
-    if (combatMonsterEvent(currentHero, 116, &goldGolems, cell, point,
+    if (combatMonsterEvent(currentHero, CREATURE_GOLD_GOLEM, &goldGolems, cell, point,
                            CREATURE_DIAMOND_GOLEM, 20, 2,
                            CREATURE_NONE, 0, 0))
         return;
@@ -5345,7 +5344,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
 
 // E:\gamedcs\events.cpp:5851.
 VA(0x004ac580, 0x3A7) MAC_ADDRESS(0x0b9480, 0xb98)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
-int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
+int advManager::combatMonsterEvent(hero* who, TCreatureType monType, int* numMons,
                                    NewmapCell* eventCell, type_point point,
                                    TCreatureType monType2, int numMons2,
                                    int numGroups2, TCreatureType monType3,
@@ -5430,22 +5429,15 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     if (monType3 != CREATURE_NONE)
         combatValue += g_creatureTypeTraits[monType3].m_aiValue * numMons3;
 
-    who->m_army.getAIValue();
-    who->getPrimarySkillTotal();
-    // [2026-08-30] Residual (99.2966%): one fld slot - retail colours the
-    // ratio home, the int->double divisor temp and the quotient into ONE
-    // reused qword ([ebp-0xc]) by reloading ratio BEFORE converting the
-    // divisor; our CL hoists the divisor conversion above the reload, so
-    // the two homes must coexist and the frame gains a slot. Tried and
-    // rejected (all byte-flat): `ratio = ratio / combat_value`, a
-    // block-scoped named double divisor, compound `/=`, an explicit
-    // static_cast<double> divisor, and a named volatile divisor.  Making
-    // ratio volatile restores the 0x88 frame and every later block, but
-    // scores 98.78% because it fences the two independent numGroups/threshold
-    // setup instructions after the division.  NB11 proves ratio is a plain
-    // T_REAL64 local, so the volatile spelling is only a negative control.
-    double ratio = who->m_army.getAIValue();
-    ratio /= combatValue;
+    // DC events.cpp:5883 computes AI value * (primary skills + 40) / 40;
+    // 5884 overwrites ratio with the unweighted double quotient. Mac
+    // 0xb9590/0xb9598/0xb95a0 retains the three calls but drops the dead
+    // integer arithmetic. Keep both meaningful expressions and one ratio.
+    // This source form is byte-flat at 99.2966%; the remaining x87 reload
+    // order gives VC6 an extra qword lifetime versus retail's reused slot.
+    double ratio = who->m_army.getAIValue()
+        * (who->getPrimarySkillTotal() + 40) / 40;
+    ratio = static_cast<double>(who->m_army.getAIValue()) / combatValue;
 
     int numGroups = 7;
     for (int thresholdIndex = 5;
@@ -5468,34 +5460,32 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
     if (numGroups > *numMons)
         numGroups = *numMons;
 
-    armyGroup currentArmyGroup;
+    // Before normalization: army_group.
+    armyGroup armyGroupForCombat;
     for (int i = 0; i < numGroups; ++i) {
-        currentArmyGroup.m_armies[i] = monType;
-        currentArmyGroup.m_numTroops[i] = *numMons / numGroups
+        armyGroupForCombat.m_armyTypes[i] = monType;
+        armyGroupForCombat.m_numTroops[i] = *numMons / numGroups
                                   + (*numMons % numGroups > i);
     }
 
-    {
-        int storage;
-        storage = monType;
-        // Complete calls random here; the older DC and Mac builds call
-        // sRandom at the corresponding decision.
-        if (g_game->isBaseCreature(TCreatureType(storage))
-            && numGroups > 1
-            && monType2 == CREATURE_NONE
-            && monType3 == CREATURE_NONE
-            && random(1, 100) <= 50) {
-            TCreatureType upgraded = g_game->upgradedCreatureType(
-                H3_ENUM_DECODE(TCreatureType, monType));
-            currentArmyGroup.m_armyTypes[numGroups / 2] = upgraded;
-        }
+    // Mac 0xb9990 and DC events.cpp:5923 call SRandom. Windows folds
+    // Random/SRandom at 0x50b230, so its relocation label cannot choose
+    // between them. Both creature helpers retain their version-aware
+    // game wrappers, which contain the DC-named global helper calls.
+    if (g_game->isBaseCreature(monType)
+        && numGroups > 1
+        && monType2 == CREATURE_NONE
+        && monType3 == CREATURE_NONE
+        && sRandom(1, 100) <= 50) {
+        TCreatureType upgraded = g_game->upgradedCreatureType(monType);
+        armyGroupForCombat.m_armyTypes[numGroups / 2] = upgraded;
     }
 
     int totalGroups = numGroups;
     if (monType2 != CREATURE_NONE) {
         for (int i = 0; i < numGroups2; ++i) {
-            currentArmyGroup.m_armyTypes[numGroups + i] = monType2;
-            currentArmyGroup.m_numTroops[numGroups + i] =
+            armyGroupForCombat.m_armyTypes[numGroups + i] = monType2;
+            armyGroupForCombat.m_numTroops[numGroups + i] =
                 numMons2 / numGroups2 + (numMons2 % numGroups2 > i);
         }
         totalGroups += numGroups2;
@@ -5503,8 +5493,8 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
 
     if (monType3 != CREATURE_NONE) {
         for (int i = 0; i < numGroups3; ++i) {
-            currentArmyGroup.m_armyTypes[totalGroups + i] = monType3;
-            currentArmyGroup.m_numTroops[totalGroups + i] =
+            armyGroupForCombat.m_armyTypes[totalGroups + i] = monType3;
+            armyGroupForCombat.m_numTroops[totalGroups + i] =
                 numMons3 / numGroups3 + (numMons3 % numGroups3 > i);
         }
     }
@@ -5514,24 +5504,20 @@ int advManager::combatMonsterEvent(hero* who, int monType, int* numMons,
         TCreatureType tempArmies[7];
         // DC names both arrays; Mac copies their slots without memcpy calls.
         for (int slot = 0; slot < 7; ++slot) {
-            tempNumTroops[slot] = currentArmyGroup.m_numTroops[slot];
-            tempArmies[slot] = currentArmyGroup.m_armyTypes[slot];
+            tempNumTroops[slot] = armyGroupForCombat.m_numTroops[slot];
+            tempArmies[slot] = armyGroupForCombat.m_armyTypes[slot];
         }
         for (int i = 0; i < 7; ++i) {
-            currentArmyGroup.m_armyTypes[i] =
+            armyGroupForCombat.m_armyTypes[i] =
                 tempArmies[reorderMap[numGroups][numGroups3][i]];
-            currentArmyGroup.m_numTroops[i] =
+            armyGroupForCombat.m_numTroops[i] =
                 tempNumTroops[reorderMap[numGroups][numGroups3][i]];
         }
     }
 
     int result = doCombat(point, who, &who->m_army, -1, 0, 0,
-                          &currentArmyGroup, eventSeed, 1, 0);
-    {
-        int storage;
-        storage = monType;
-        *numMons = currentArmyGroup.getCreatureTotal(TCreatureType(storage));
-    }
+                          &armyGroupForCombat, eventSeed, 1, 0);
+    *numMons = armyGroupForCombat.getCreatureTotal(monType);
     mobilizeCurrHero(0, 0, 1);
     return result;
 }

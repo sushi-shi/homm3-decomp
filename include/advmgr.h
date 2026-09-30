@@ -959,18 +959,10 @@ public:
                         type_point point);
     void townEvent(NewmapCell* cell, type_point point,
                    unsigned char humanPlayer);
-    // monType IS `int` HERE and the Dreamcast's `W4TCreatureType@@` is not.
-    // The reason is a call site, not taste: DoEventMine (0x4a39a0) passes
-    // armyGroup::armies[0], which this tree spells `int`, so a TCreatureType
-    // parameter forces the union bridge INTO the argument list - and VC6
-    // HOISTS an inline-expanded call out of the right-to-left argument
-    // chain, creating its pseudo before every other argument and permuting
-    // the whole EAX/ECX/EDX assignment (96.30 against 100.0, measured with
-    // and without). Naming the bridge result in a local first does not
-    // help; the pseudo is created early either way. monsters_fight, which
-    // passes a TCreatureType local, stays exact across the change, and a
-    // call relocation's symbol name is not scored.
-    int combatMonsterEvent(class hero* who, int monType,
+    // DC events.cpp:5851 proves the creature enum. The mine caller uses
+    // the army's typed creature view, preserving the retail argument order
+    // without an int facade or an enum-conversion helper in its call.
+    int combatMonsterEvent(class hero* who, TCreatureType monType,
                            int* numMons, NewmapCell* eventCell,
                            type_point point, enum TCreatureType monType2,
                            int numMons2, int numGroups2,

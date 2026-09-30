@@ -2652,6 +2652,9 @@ void townManager::setCommandAndText(message* msg)
 // Slot ids past 150 fall back to the empty rollover string, which is
 // the same clamp the creature-traits table's own extent gives.
 
+// DC townmgr.cpp:3802 names GetArmyName. Mac 0x1c0618..0x1c0684
+// reloads the latched strip/index and expands its guarded name selection.
+// The canonical call preserves the exact Windows body.
 VA(0x005c8080, 0x108) MAC_ADDRESS(0x1c05b0, 0x154)  // dc 0x16d0dc
 void townManager::selectArmy(strip* fromStrip, long slot,
                               unsigned char isOwnerCell)
@@ -2665,16 +2668,9 @@ void townManager::selectArmy(strip* fromStrip, long slot,
         return;
     }
 
-    const char* name;
-    if (fromStrip->m_group->m_armies[slot] <= 150) {
-        if (fromStrip->m_group->m_numTroops[slot] == 1)
-            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]].m_name;
-        else
-            name = g_creatureTypeTraits[fromStrip->m_group->m_armies[slot]]
-                       .m_pluralName;
-    } else {
-        name = "";
-    }
+    const char* name = getArmyName(
+        m_currStrip->m_group->m_armies[m_currIndex],
+        m_currStrip->m_group->m_numTroops[m_currIndex]);
 
     if (isOwnerCell) {
         if (!fromStrip->m_pos)

@@ -1800,12 +1800,17 @@ bool playerData::isHuman() const
 
 // DC game.cpp:1959 tests IsHuman() twice and Mac 0xcdc1c/0xcdc58 retains
 // both isHuman calls.
+// The human-name logical zero test keeps this retained body exact and
+// restores its first nested expansion in setSpecialRumour. Four natural
+// ==0/!strcmp states yield two reproduced objects: with both ==0 tests the
+// caller is 85.6147%; with the human !strcmp test it is 100%, with no game
+// sibling score changes. Keep this ordinary helper and both isHuman calls.
 VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
 char* playerData::getName()
 {
     if ((!isHuman() && _strcmpi(m_name, g_generalText->getText(
             GENERAL_TEXT_DEFAULT_PLAYER_NAME)) == 0) ||
-        (isHuman() && _strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
+        (isHuman() && !_strcmpi(m_name, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")))) {
         strcpy(m_name, g_colors[m_color]);
     }
     m_name[0] = toupper(m_name[0]);
@@ -6804,6 +6809,19 @@ void game::turnOffAIMusic()
 // DC game.cpp:7638 and Mac 0xdd92c retain game::isHuman in the human census.
 // Remaining differences include byte-flag stack homes and later expansions.
 // Grouping the byte declarations and moving makeOrig initialization are flat.
+// DC 7741 and Mac ddca0..ddcc0 acquire the owned hero directly; retail also
+// has no getHero -1 guard here. The later recruit/garrison refreshes retain
+// getHero. All three rosters come from this->m_players, not g_currentPlayer;
+// Mac ddd90 and retail load town+0xc (garrison), not +0x10 (visiting).
+// DC temp locals and single-line movement assignments (7742/7750/7762)
+// agree with native move-before-max stores. DC 7747/7749 retains continue
+// and a fresh recruit field expression; naming an intermediate ID wrongly
+// lets VC6 discard the getter guard. DC 7798/7805 and Mac ddea8/dded4 use
+// g_game for the last-human query and save transfer. DC 7783/7785/7787
+// initializes makeOrig/control before toWho; Mac ddf98 updates visibility
+// before the watch player. Together these recover Windows 89.3660 -> 99.9789
+// with all 114 CFG blocks and 167 relocations agreeing; byte scratch homes
+// remain different. All game sibling CUR and available Mac scores are flat.
 VA(0x004c6fe0, 0x947) MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
 void game::nextPlayer()
 {
@@ -6913,28 +6931,21 @@ void game::nextPlayer()
     }
     clearEventRecords(static_cast<char>(g_netLocalGamePos));
 
-    for (i = 0; i < g_currentPlayer->m_numHeroes; ++i) {
-        hero* currentHero = getHero(g_currentPlayer->m_heroes[i]);
-        int mobility = currentHero->getMobility();
-        currentHero->m_maxMovePoints = mobility;
-        currentHero->m_movePoints = mobility;
+    for (i = 0; i < m_players[g_netLocalGamePos].m_numHeroes; ++i) {
+        hero* temp = &m_heroes[m_players[g_netLocalGamePos].m_heroes[i]];
+        temp->m_maxMovePoints = temp->m_movePoints = temp->getMobility();
     }
     for (i = 0; i < 2; ++i) {
-        int recruitId = g_currentPlayer->m_recruits[i];
-        if (recruitId != -1) {
-            hero* currentHero = getHero(recruitId);
-            int mobility = currentHero->getMobility();
-            currentHero->m_maxMovePoints = mobility;
-            currentHero->m_movePoints = mobility;
-        }
+        if (m_players[g_netLocalGamePos].m_recruits[i] == -1)
+            continue;
+        hero* temp = getHero(m_players[g_netLocalGamePos].m_recruits[i]);
+        temp->m_maxMovePoints = temp->m_movePoints = temp->getMobility();
     }
-    for (i = 0; i < g_currentPlayer->m_numTowns; ++i) {
-        town* currentTown = getTown(g_currentPlayer->m_townIds[i]);
-        if (currentTown->m_visitingHeroId >= 0) {
-            hero* currentHero = getHero(currentTown->m_visitingHeroId);
-            int mobility = currentHero->getMobility();
-            currentHero->m_maxMovePoints = mobility;
-            currentHero->m_movePoints = mobility;
+    for (i = 0; i < m_players[g_netLocalGamePos].m_numTowns; ++i) {
+        town* currentTown = getTown(m_players[g_netLocalGamePos].m_townIds[i]);
+        if (currentTown->m_garrisonHeroId >= 0) {
+            hero* currentHero = getHero(currentTown->m_garrisonHeroId);
+            currentHero->m_maxMovePoints = currentHero->m_movePoints = currentHero->getMobility();
             currentHero->m_isSleeping = 0;
         }
     }
@@ -6951,19 +6962,19 @@ void game::nextPlayer()
         g_completeDrawEnabled = 0;
 
         if (g_remoteOn && isHuman(g_netLocalGamePos)) {
-            toWho = g_netLocalGamePos;
             makeOrig = 0;
             g_thisNetGotAdventureControl = 0;
+            toWho = g_netLocalGamePos;
             if (g_playerDrop) {
                 toWho = 0x7f;
                 g_playerDrop = 0;
             }
-            if (isLastHuman(getLocalPlayerGamePos())) {
+            if (g_game->isLastHuman(g_game->getLocalPlayerGamePos())) {
                 toWho = 0x7f;
                 g_playerDrop = 0;
                 makeOrig = 1;
             }
-            save = transmitSaveGame(toWho, 0, 1, makeOrig);
+            save = g_game->transmitSaveGame(toWho, 0, 1, makeOrig);
             if (!save && g_playerDrop) {
                 g_netLocalGamePos = giCurPlayerSave;
                 g_playerDrop = 0;
@@ -6979,8 +6990,8 @@ void game::nextPlayer()
     } else {
         setNoDialogMenus(1);
         g_inputManager->flush();
-        g_curWatchPlayer = g_netLocalGamePos;
         g_mapVisibilityBit = g_curPlayerBit;
+        g_curWatchPlayer = g_netLocalGamePos;
 
         if (g_blackoutPlayer && g_numHumanPlayers > 1) {
             char textBuffer[256];
@@ -9598,6 +9609,9 @@ void game::setMapRumour()
 // sibling score changes. Eight roll-lifetime states give three reproduced
 // objects; three exit states give three. Canonical getPlayerName/getName
 // and getText paths stay intact (DC uses the older text operator[]).
+// The human-name logical zero test in getName above completes the first
+// nested name expansion and brings this body to 100%; other game scores
+// and all available Mac comparisons are unchanged.
 VA(0x004cd170, 0x59B) MAC_ADDRESS(0x0e483c, 0x4fc)  // dc 0xba040
 void game::setSpecialRumour()
 {

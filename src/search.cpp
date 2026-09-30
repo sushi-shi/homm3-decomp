@@ -89,26 +89,28 @@ int aiResourceCost(const playerData* player, const int* resources);
 // are byte-flat in VC6 (93.2615%); retain the direct source order.
 // DC calls the three-coordinate GetMapExtra here; using that overload
 // restores the full nine-block retail shape without a point-wrapper copy.
+// DC search.cpp:113 proves the pathCell reference; retail uses the
+// same cell address and the body requires its referent.
 VA(0x0056a360, 0x9E) MAC_ADDRESS(0x1618b4, 0xe4)  // exhaustive search.obj order-map, dc 0x12b3f0
 unsigned char checkAdjacentMonster(const hero* currentHero,
-                                     pathCell* entryPoint,
+                                     pathCell& entryPoint,
                                      type_search_type searchType)
 {
     type_point monster;
-    if (getMapExtra(entryPoint->m_point.m_x,
-                    entryPoint->m_point.m_y,
-                    entryPoint->m_point.m_z)
+    if (getMapExtra(entryPoint.m_point.m_x,
+                    entryPoint.m_point.m_y,
+                    entryPoint.m_point.m_z)
         & MAP_EXTRA_MONSTER) {
-        if (g_advManager->findAdjacentMonster(entryPoint->m_point, &monster,
-                                              entryPoint->m_monster)) {
+        if (g_advManager->findAdjacentMonster(entryPoint.m_point, &monster,
+                                              entryPoint.m_monster)) {
             if (searchType == const_AI_enemy_search)
                 return 1;
             long value = aiValueOfEvent(currentHero, monster);
             if (value <= -500000000)
                 return 1;
             if (value < 0) {
-                entryPoint->m_monster = monster;
-                entryPoint->m_barrierValue += value;
+                entryPoint.m_monster = monster;
+                entryPoint.m_barrierValue += value;
             }
         }
     }
@@ -135,7 +137,7 @@ void searchArray::enterLith(const hero* currentHero,
                              type_search_type searchType)
 {
     if (entryPoint.m_cost > 0
-        && checkAdjacentMonster(currentHero, &entryPoint, searchType))
+        && checkAdjacentMonster(currentHero, entryPoint, searchType))
         return;
     int count = list.size();
     type_point monster;
@@ -190,21 +192,23 @@ void searchArray::enterLith(const hero* currentHero,
     }
 }
 
+// DC search.cpp:244 proves the pathCell reference; retail uses the
+// same cell address and the body requires its referent.
 VA(0x0056a730, 0x111) MAC_ADDRESS(0x161d7c, 0x1b8)  // dc 0x12b7f4
-void searchArray::enterGate(const pathCell* cell, const NewmapCell* mapCell,
+void searchArray::enterGate(const pathCell& cell, const NewmapCell* mapCell,
                              long limit)
 {
     type_point exitPoint = g_game->getUndergroundGateExit(mapCell);
     const int noGateExit = 0xff;
     if (exitPoint.m_x != noGateExit) {
-        pathCell exitCell = *cell;
+        pathCell exitCell = cell;
         // DC search.cpp:251 names game::get_cell; Mac and VC6 expand it.
         NewmapCell* exitMapCell = g_game->getCell(exitPoint);
         exitCell.m_point.m_x = exitPoint.m_x;
         exitCell.m_point.m_y = exitPoint.m_y;
         exitCell.m_point.m_z = exitPoint.m_z;
-        pushPoint(*cell, exitCell, cell->m_direction, 0, limit,
-                  cell->m_barrierValue, cell->m_monster,
+        pushPoint(cell, exitCell, cell.m_direction, 0, limit,
+                  cell.m_barrierValue, cell.m_monster,
                   exitMapCell->m_type == HERO);
     }
 }
@@ -321,12 +325,14 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 // the full AI search), the garrison falls into the monster's
 // `search_type >= const_AI_search` answer, and the hero arm's identical
 // answer is cross-jumped onto it.
+// DC search.cpp:393 proves the pathCell reference; retail uses the
+// same cell address and the body requires its referent.
 VA(0x0056ab40, 0x50C) MAC_ADDRESS(0x16248c, 0x560)  // exhaustive search.obj order-map, dc 0x12bc3c
 unsigned char searchArray::enterTrigger(const hero* currentHero,
-                                         pathCell* cell, long limit,
+                                         pathCell& cell, long limit,
                                          type_search_type searchType)
 {
-    NewmapCell* mapCell = g_advManager->getCell(cell->m_point);
+    NewmapCell* mapCell = g_advManager->getCell(cell.m_point);
     int type = mapCell->m_type;
     if (searchType == const_normal_search && type != GARRISON
         && type != BORDER_GATE)
@@ -355,7 +361,7 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 0;
         type_quest* quest = guard->m_quest;
         int player = currentHero->m_owner;
-        cell->m_barrierValue -= quest->getAIValue(player);
+        cell.m_barrierValue -= quest->getAIValue(player);
         return 1;
     }
     case HERO:
@@ -379,16 +385,16 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
             return 1;
         return 0;
     case BOAT:
-        if (cell->m_inBoat)
+        if (cell.m_inBoat)
             return 0;
         if (searchType < const_AI_search)
             return 0;
-        boardBoat(currentHero, *cell);
+        boardBoat(currentHero, cell);
         return 1;
     case UNDERGROUND_GATE:
         if (searchType < const_AI_enemy_search)
             return 0;
-        if (cell->m_cost > 0
+        if (cell.m_cost > 0
             && checkAdjacentMonster(currentHero, cell, searchType))
             return 0;
         enterGate(cell, mapCell, limit);
@@ -397,27 +403,27 @@ unsigned char searchArray::enterTrigger(const hero* currentHero,
         if (searchType < const_AI_enemy_search)
             return 0;
         enterLith(currentHero, g_game->getLithExits(mapCell->m_objectIndex),
-                   LITH_ONEWAY_EXIT, -1, *cell, limit, searchType);
+                   LITH_ONEWAY_EXIT, -1, cell, limit, searchType);
         return 0;
     case LITH_TWOWAY:
         if (searchType < const_AI_enemy_search)
             return 0;
         enterLith(currentHero, g_game->getLiths(mapCell->m_objectIndex),
-                   LITH_TWOWAY, mapCell->m_extraInfo, *cell, limit,
+                   LITH_TWOWAY, mapCell->m_extraInfo, cell, limit,
                    searchType);
         return 0;
     case WHIRLPOOL:
         if (searchType < const_AI_enemy_search)
             return 0;
         enterLith(currentHero, g_game->getWhirlpools(), WHIRLPOOL,
-                   mapCell->m_extraInfo, *cell, limit, searchType);
+                   mapCell->m_extraInfo, cell, limit, searchType);
         return 0;
     case TOWN:
         if (searchType < const_AI_enemy_search)
             return 0;
         if (checkAdjacentMonster(currentHero, cell, searchType))
             return 0;
-        enterTown(currentHero, mapCell->m_extraInfo, *cell, limit,
+        enterTown(currentHero, mapCell->m_extraInfo, cell, limit,
                    searchType);
         return 1;
     }
@@ -453,22 +459,25 @@ static unsigned char checkSummonBoat(const hero* currentHero)
     return 1;
 }
 
+// DC search.cpp:535 proves the pathCell reference; retail uses the
+// same cell address and the body requires its referent.
+// getManaCost/getPlayer/getSpellLevel have recovered const contracts;
+// preserve those calls directly through currentHero without a mutable facade.
 VA(0x0056b050, 0x3E7) MAC_ADDRESS(0x162c18, 0x45c)  // dc 0x12bfe0
 void searchArray::checkTownPortal(const hero* currentHero,
-                                    const pathCell* startCell,
+                                    const pathCell& startCell,
                                     long maxMobility)
 {
-    hero* caster = const_cast<hero*>(currentHero);
     if (!currentHero->spellIsAvailable(SPELL_TOWN_PORTAL))
         return;
-    if (currentHero->m_mana < caster->getManaCost(SPELL_TOWN_PORTAL) + 20)
+    if (currentHero->m_mana < currentHero->getManaCost(SPELL_TOWN_PORTAL) + 20)
         return;
-    if (startCell->m_inBoat)
+    if (startCell.m_inBoat)
         return;
     std::vector<type_point> destinations;
-    playerData* player = caster->getPlayer();
+    playerData* player = currentHero->getPlayer();
     int i;
-    if (caster->getSpellLevel(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
+    if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL) >= eMasteryAdvanced) {
         for (i = 0; i < player->m_numTowns; i++) {
             town* currentTown = g_game->getTown(player->m_townIds[i]);
             if (currentTown->m_visitingHeroId < 0)
@@ -479,10 +488,10 @@ void searchArray::checkTownPortal(const hero* currentHero,
         long closest = 0;
         for (i = 0; i < player->m_numTowns; i++) {
             town* currentTown = g_game->getTown(player->m_townIds[i]);
-            if (currentTown->m_mapZ != startCell->m_point.m_z)
+            if (currentTown->m_mapZ != startCell.m_point.m_z)
                 continue;
-            int deltaY = currentTown->m_mapY - startCell->m_point.m_y;
-            int deltaX = currentTown->m_mapX - startCell->m_point.m_x;
+            int deltaY = currentTown->m_mapY - startCell.m_point.m_y;
+            int deltaX = currentTown->m_mapX - startCell.m_point.m_x;
             int distance = deltaX * deltaX + deltaY * deltaY;
             if (!closestTown || distance < closest) {
                 closestTown = currentTown;
@@ -496,22 +505,22 @@ void searchArray::checkTownPortal(const hero* currentHero,
         destinations.push_back(closestTown->getLocation());
     }
     pathCell newCell;
-    int cost = caster->getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert
+    int cost = currentHero->getSpellLevel(SPELL_TOWN_PORTAL) == eMasteryExpert
         ? 200 : 300;
     for (unsigned int destinationIndex = 0;
          destinationIndex < destinations.size(); destinationIndex++) {
-        newCell = *startCell;
+        newCell = startCell;
         newCell.m_point.m_x = destinations[destinationIndex].m_x;
         newCell.m_point.m_y = destinations[destinationIndex].m_y;
         newCell.m_point.m_z = destinations[destinationIndex].m_z;
         newCell.m_townPortal = 1;
-        int distance = abs(newCell.m_point.m_z - startCell->m_point.m_z)
+        int distance = abs(newCell.m_point.m_z - startCell.m_point.m_z)
                 * (g_mapWidth + g_mapHeight) / 2
-            + abs(newCell.m_point.m_x - startCell->m_point.m_x)
-            + abs(newCell.m_point.m_y - startCell->m_point.m_y);
+            + abs(newCell.m_point.m_x - startCell.m_point.m_x)
+            + abs(newCell.m_point.m_y - startCell.m_point.m_y);
         newCell.m_adjustedCost += (distance + 4) * 50;
-        pushPoint(*startCell, newCell, 0, cost, maxMobility, 0,
-                  startCell->m_monster, 0);
+        pushPoint(startCell, newCell, 0, cost, maxMobility, 0,
+                  startCell.m_monster, 0);
     }
 }
 
@@ -533,7 +542,7 @@ void searchArray::enterStartTrigger(const hero* currentHero,
         pathCell triggerCell = *startCell;
         triggerCell.m_startAtTrigger = 1;
         triggerCell.m_adjustedCost += 50;
-        enterTrigger(currentHero, &triggerCell, maxMobility, searchType);
+        enterTrigger(currentHero, triggerCell, maxMobility, searchType);
     }
 }
 
@@ -683,7 +692,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
             }
         }
         if (searchType == const_AI_search)
-            checkTownPortal(currentHero, &cell, maxMobility);
+            checkTownPortal(currentHero, cell, maxMobility);
     }
 
     pathCell nextCell;
@@ -706,7 +715,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
         long turnMobility = curTempMobility - cell.m_cost;
 
         if (cell.m_isTrigger) {
-            if (!enterTrigger(currentHero, &cell, maxMobility,
+            if (!enterTrigger(currentHero, cell, maxMobility,
                                searchType))
                 continue;
         }

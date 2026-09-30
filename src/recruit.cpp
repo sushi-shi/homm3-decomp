@@ -1158,6 +1158,8 @@ void quickViewRecruit(town* newTown, int newDwellingIndex)
         &newTown->m_population[newDwellingIndex]);
 }
 
+// DC recruit.cpp:1295 names GetArmyName; Mac 0x150d5c..0x150d80 expands
+// its guarded plural lookup. Keep the canonical call; Windows remains 100%.
 VA(0x00551780, 0x641) MAC_ADDRESS(0x150bb8, 0x688)  // dc 0x11b028
 void quickViewRecruit(TCreatureType monType, short* numMon)
 {
@@ -1201,9 +1203,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
     recruitWindow->broadcastMessage(msg);
 
     recruitWindow->addWidget(new textWidget(0, 20, 161, 20,
-        monType >= 0 && monType <= 150
-            ? g_creatureTypeTraits[monType].m_pluralName
-            : DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
+        getArmyName(monType, 2),
         DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
         font::PRIMARY, 0x222,
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);

@@ -4628,6 +4628,9 @@ void combatManager::earthquake(int level)
         }
         if (candidates == 0)
             break;
+        // DC calls Random, and Mac 0x199434 calls its body at 0x130cf4.
+        // Windows Random/SRandom fold onto the same retail 0x50b230;
+        // a target relocation labeled SRandom does not refute this call.
         int roll = random(1, candidates);
         int chosen;
         for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {

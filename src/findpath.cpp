@@ -673,7 +673,7 @@ void searchArray::testPossibleDirections(const hero* currentHero, pathCell& sour
             candidate.m_canStop = 0;
         } else if (!blocked && !impassable
                    && searchType >= const_AI_search
-                   && checkAdjacentMonster(currentHero, &candidate,
+                   && checkAdjacentMonster(currentHero, candidate,
                                              searchType)) {
             blocked = 1;
             candidate.m_canStop = 0;

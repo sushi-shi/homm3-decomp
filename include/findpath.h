@@ -219,14 +219,14 @@ private:
     bool checkEnemyArmies(long hex, long cost, long currentGroup,
                           long destination);
     void checkTownPortal(const hero* currentHero,
-                           const pathCell* startCell, long maxMobility);
+                           const pathCell& startCell, long maxMobility);
     void enterStartTrigger(const hero* currentHero,
                            const pathCell* startCell, long maxMobility,
                            type_search_type searchType);
     // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
     // inside the valid rectangle for every (z, fly-plane) combination.
     void clear(long flyLevel, long startZ, long stopZ);
-    void enterGate(const pathCell* cell, const NewmapCell* mapCell,
+    void enterGate(const pathCell& cell, const NewmapCell* mapCell,
                     long limit);
     unsigned char enterHostileTrigger(const hero* currentHero,
                                      pathCell& cell);
@@ -240,7 +240,7 @@ private:
     void enterTown(const hero* currentHero, long startTown,
                     const pathCell& currentPathCell, long limit,
                     type_search_type searchType);
-    unsigned char enterTrigger(const hero* currentHero, pathCell* cell,
+    unsigned char enterTrigger(const hero* currentHero, pathCell& cell,
                                 long limit, type_search_type searchType);
     // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
     // and then re-allocates both maps; SeedCombatPosition calls it
@@ -352,14 +352,15 @@ enum EMapDirection {
 
 extern tilePoint g_normalDirTable[8];
 
-// 0x56a360, search.obj's, still @stub there. Declared here because
-// TestPossibleDirections calls it as a free fastcall (hero* in ECX,
-// pathCell* in EDX, the search type on the stack); the pairing is the DC
+// 0x56a360, search.obj's canonical predicate. Declared here because
+// TestPossibleDirections calls it as a free fastcall (const hero* in ECX,
+// the pathCell referent's address in EDX, the search type on the stack).
+// The pairing is the DC
 // roster's search.cpp:113 row - the free three-argument predicate that
 // immediately follows BuildPath in both link orders, 182 DC bytes against
 // retail's 158.
 unsigned char checkAdjacentMonster(const hero* currentHero,
-                                     pathCell* entryPoint,
+                                     pathCell& entryPoint,
                                      type_search_type searchType);
 int minimumTerrainCost(const NewmapCell* cell, int pointsLeft,
                        long pathfinding, long flying, long waterWalking,
