@@ -82,21 +82,26 @@ public:
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
     // CheckEndGame(0).
-    unsigned char checkForTotalCreatures();
-    unsigned char checkForTotalResources();
-    unsigned char checkForUpgradedTown();
+    // Original DC CheckForTotalCreatures/TotalResources/UpgradedTown,
+    // CheckForTownCaptureWin/FlaggedGeneratorWin/FlaggedMineWin,
+    // CheckForArtifactTransportWin/GrailBuildingWin and IsGrailTarget
+    // publics all encode QAA_N: public, ordinary bool member functions.
+    // CodeView's displayed unsigned-byte primitive is their lowered form.
+    bool checkForTotalCreatures();
+    bool checkForTotalResources();
+    bool checkForUpgradedTown();
     bool checkForHeroDefeatWin(int winningPlayer, const hero* loser);
     bool isTownCaptureTarget(town* thisTown);
-    unsigned char checkForTownCaptureWin();
+    bool checkForTownCaptureWin();
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
     // Utype_point@@@Z` fixes the whole signature - public, bool, a const
     bool checkForDefeatedMonsterWin(const hero* thisHero,
                                     const type_point monsterLoc);
-    unsigned char checkForFlaggedGeneratorWin();
-    unsigned char checkForFlaggedMineWin();
-    unsigned char checkForArtifactTransportWin(const hero* thisHero,
+    bool checkForFlaggedGeneratorWin();
+    bool checkForFlaggedMineWin();
+    bool checkForArtifactTransportWin(const hero* thisHero,
                                                const type_point townLoc);
-    unsigned char isGrailTarget(town* thisTown);
+    bool isGrailTarget(town* thisTown);
     // Shared comparison expanded in Mac 0x1fdf0c and retained 0x1fe124.
     // Callers own the point lifetimes; no instance state is needed here.
     static unsigned char isGrailTarget(const type_point& thisTownLoc,
@@ -109,7 +114,7 @@ public:
     }
     unsigned char checkForTimeSurvival();
     bool checkForArtifactWin();
-    unsigned char checkForGrailBuildingWin();
+    bool checkForGrailBuildingWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
