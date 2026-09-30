@@ -1511,7 +1511,8 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         break;
 
     // Dreamcast spells.cpp:1571..1597 proves the projectile, named
-    // previous_skill local, hero-bonus call, influence update and quick-
+    // const int previous_skill local (sp+0x60 at dc 0x151432), hero-bonus
+    // call, influence update and quick-
     // combat message guard. Retail fixes the defense arithmetic and the
     // one-entry projectile tables.
     case SPELL_DISRUPTING_RAY: {
@@ -1521,7 +1522,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                  g_disruptingRayAngles,
                                  g_disruptingRaySprites);
         }
-        int previousSkill = target->m_monInfo.m_defenseSkill;
+        const int previousSkill = target->m_monInfo.m_defenseSkill;
         target->m_monInfo.m_defenseSkill -= traits->m_masteryBonus[mastery];
         if (castingHero) {
             target->m_monInfo.m_defenseSkill -= castingHero->getHeroSpellBonus(
