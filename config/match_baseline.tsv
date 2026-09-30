@@ -4218,7 +4218,7 @@ spells	?ableToSummonElemental@combatManager@@QAEEHJ@Z	100.0000	100.0000	100.0000
 spells	?addBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90	tokens1:540828a1b0f6
 spells	?areaEffect@combatManager@@QAEXJHJJ@Z	100.0000	100.0000	100.0000	0x1a4970	tokens1:0267916e4c6b
 spells	?armageddon@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1a4bc0	tokens1:36a0231e3a8d
-spells	?castSpell@combatManager@@QAEXHHHHHJ@Z	92.4343	93.9670	94.1057	0x19fe30	tokens1:b571f38b0fe2
+spells	?castSpell@combatManager@@QAEXHHHHHJ@Z	92.4343	92.4343	94.1057	0x19fe30	tokens1:df664bbbdb4d
 spells	?chainLightning@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x1a6360	tokens1:b964bc7e2b10
 spells	?checkFireWall@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fcd0	tokens1:11eb6e14095f
 spells	?checkLandmine@combatManager@@QAEEJPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x19fb40	tokens1:9b02ebb4aa83
@@ -4232,7 +4232,7 @@ spells	?earthquake@combatManager@@QAEXH@Z	86.8455	86.8455	86.9157	0x1a7c80	token
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:c538d970d8f0
 spells	?findDemonicResurrectionTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3e40	tokens1:ea8043ced0e6
 spells	?findResurrectionTarget@combatManager@@QAEPAVarmy@@HHJ@Z	100.0000	100.0000	100.0000	0x1a3cc0	tokens1:4a8899993fac
-spells	?findSpellTarget@combatManager@@AAEPAVarmy@@HJJEJ@Z	100.0000	100.0000	100.0000	0x1a3950	tokens1:17a2f4ac4590
+spells	?findSpellTarget@combatManager@@AAEPAVarmy@@HJJ_NJ@Z	100.0000	100.0000	100.0000	0x1a3950	tokens1:d0a64b81bcc2
 spells	?getElementalType@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360	tokens1:d40ccf16d95c
 spells	?getFailureReason@combatManager@@AAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@HPBDJ@Z	100.0000	100.0000	100.0000	0x1a2880	tokens1:151e9ae0642c
 spells	?getNextChainLightningTarget@combatManager@@QAEHPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x1a61f0	tokens1:6f1b88711a80
@@ -4242,7 +4242,7 @@ spells	?handleCastTeleport@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a357
 spells	?handleCastWallSpell@@YIHAAVmessage@@@Z	99.9703	99.9703	99.9703	0x1a3250	tokens1:63a05a6d5a8c
 spells	?handleGetTeleportDestination@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0	tokens1:4b8741bcf77a
 spells	?handleSacrificeBeneficiary@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a2d00	tokens1:97abc108cec8
-spells	?hasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	100.0000	100.0000	100.0000	0x1a40d0	tokens1:7ff1e8660c80
+spells	?hasValidSpellTarget@combatManager@@QAE_NHJJ_NJ@Z	100.0000	100.0000	100.0000	0x1a40d0	tokens1:81e6920be9cd
 spells	?initiateSpell@combatManager@@QAEXHH@Z	90.7923	94.4857	94.4857	0x19ec50	tokens1:bd4b57ffe026
 spells	?insert@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAE?AU?$pair@Viterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@_N@2@ABH@Z	100.0000	100.0000	100.0000	0x1a9450	-
 spells	?isValidTeleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700	tokens1:a7bb22537fbe
@@ -4262,14 +4262,14 @@ spells	?resurrect@combatManager@@QAEXPAVarmy@@JE@Z	96.7846	96.7846	96.7846	0x1a7
 spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0	tokens1:5732a289a1ad
 spells	?showMassSpell@combatManager@@QAEXAAY11BE@EHE@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:252934eac320
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7576	98.7576	100.0000	0x1a8950	tokens1:478c6031c182
-spells	?spellCastWorkChance@combatManager@@QBEMHJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x1a8090	tokens1:63e2b9561e77
-spells	?spellCastWorks@combatManager@@QBEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640	tokens1:73e2e9f56c12
-spells	?spellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:8e4954dcc4c1
+spells	?spellCastWorkChance@combatManager@@QBEMHJPBVarmy@@_N1J@Z	100.0000	100.0000	100.0000	0x1a8090	tokens1:27b5d528dd5f
+spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a8640	tokens1:94d4dda39bb2
+spells	?spellTargetMessage@combatManager@@QAEXHH_N@Z	100.0000	100.0000	100.0000	0x1a8690	tokens1:6c89f3597767
 spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0000	100.0000	0x1a7080	tokens1:b89946784f33
 spells	?unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:18fb1aaf718f
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:ad53288d568c
-spells	?validSpellTarget@combatManager@@QAEEHJJJEJ@Z	73.6540	96.5992	96.5992	0x1a39c0	tokens1:753c15cb2a9b
-spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:95a5d22bb673
+spells	?validSpellTarget@combatManager@@QAE_NHJJJ_NJ@Z	73.6540	73.6540	96.5992	0x1a39c0	tokens1:beefe5b2a82a
+spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:c11331729942
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:9dc52e9d1b3b
 string_support	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x115010	-
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	tokens1:7c486d98d02f
