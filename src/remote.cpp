@@ -1088,10 +1088,11 @@ VA(0x005541a0, 0x5A)
 DC_ADDRESS(0x11cb48, 0xac)
 MAC_ADDRESS(0x21215c, 0x84)
 CChatEdit::CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-    char* fontName, font::TColor color, font::EJustify justification,
+    char* fontName, int colorIndex, font::EJustify justification,
     char* backgroundIcon, int backgroundFrame, int id, int style,
     int readType, int insetX, int insetY)
-    : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+    : textEntryWidget(x, y, w, h, textSize, text, fontName,
+          static_cast<font::TColor>(colorIndex),
           justification, backgroundIcon, backgroundFrame, id, style,
           readType, insetX, insetY)
 {

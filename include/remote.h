@@ -289,10 +289,12 @@ static const unsigned long NET_BROADCAST_DPID = 0;
 // textEntryWidget extent). The retail bodies independently confirm the base
 // tail offsets: IsOpen reads cursorIndex at +0x58 and the edit actions use
 // Text at +0x30.
+// Original DC constructor publics use H (int) for colorIndex, while the
+// following justification is W4EJustify. Preserve that connected interface.
 class CChatEdit : public textEntryWidget {
 public:
     CChatEdit(int x, int y, int w, int h, int textSize, char* text,
-              char* fontName, font::TColor color,
+              char* fontName, int colorIndex,
               font::EJustify justification,
               char* backgroundIcon, int backgroundFrame, int id, int style,
               int readType, int insetX, int insetY);
@@ -312,7 +314,7 @@ public:
 class CGameChatEdit : public CChatEdit {
 public:
     CGameChatEdit(int x, int y, int w, int h, int textSize, char* text,
-                  char* fontName, font::TColor color,
+                  char* fontName, int colorIndex,
                   font::EJustify justification, char* backgroundIcon,
                   int backgroundFrame, int id, int style, int readType,
                   int insetX, int insetY);
@@ -328,10 +330,10 @@ public:
 DC_ADDRESS(0x003028, 0xa0)
 inline CGameChatEdit::CGameChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
-    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int colorIndex, font::EJustify justification, char* backgroundIcon,
     int backgroundFrame, int id, int style, int readType, int insetX,
     int insetY)
-    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
+    : CChatEdit(x, y, w, h, textSize, text, fontName, colorIndex, justification,
                 backgroundIcon, backgroundFrame, id, style, readType,
                 insetX, insetY)
 {

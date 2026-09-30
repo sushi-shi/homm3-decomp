@@ -186,7 +186,7 @@ public:
     CAdventurMapChatEdit(
         int textWidgetX, int textWidgetY, int textWidgetWidth,
         int textWidgetHeight, int textStringSize, char* textString,
-        char* textFontName, font::TColor colorIndex,
+        char* textFontName, int colorIndex,
         font::EJustify justification,
         char* backgroundIconName, int backgroundFrame, int textWidgetId,
         int textWidgetStyle, int readType, int textInsetX, int textInsetY);
@@ -197,7 +197,7 @@ DC_ADDRESS(0x003274, 0x98)
 CAdventurMapChatEdit::CAdventurMapChatEdit(
     int textWidgetX, int textWidgetY, int textWidgetWidth,
     int textWidgetHeight, int textStringSize, char* textString,
-    char* textFontName, font::TColor colorIndex, font::EJustify justification,
+    char* textFontName, int colorIndex, font::EJustify justification,
     char* backgroundIconName, int backgroundFrame, int textWidgetId,
     int textWidgetStyle, int readType, int textInsetX, int textInsetY)
     : CGameChatEdit(textWidgetX, textWidgetY, textWidgetWidth,
