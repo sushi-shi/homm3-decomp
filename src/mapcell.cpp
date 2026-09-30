@@ -2980,12 +2980,15 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // Native Mac 0x125004/0x125030 and 0x1250b8/0x1250e4 store the equipped
 // and backpack artifact enums within each format arm, without an intBuffer
 // join. Recovering those stores raises Windows 93.9180% -> 96.86389%; both
-// artifact loops now match. The remaining 94-block/49-call body differs in
-// starting-hero argument scheduling. Native Mac 0x1251cc..0x1251dc
+// artifact loops now match. Native Mac 0x1251cc..0x1251dc
 // widens the sex byte before its sentinel test/store, and 0x125210..0x125268
 // retains the widened spell value across the bitset temporary. Reusing the
 // existing intBuffer for those consumers reproduces both Windows regions:
-// 96.86389% -> 98.68750%, with 93/94 blocks exact and 49/49 calls.
+// 96.86389% -> 98.68750%. Mac 0x124cf4..0x124d08 loads alignment
+// directly as the getStartingHeroId argument; keeping that expression at the
+// call restores retail's right-to-left argument evaluation (99.808334%).
+// Mac 0x124d4c/0x124d50/0x124d54 and retail store the quest identifier
+// before owner and hero ID. Restoring that order closes Windows at 100%.
 VA(0x005021c0, 0x835)
 DC_ADDRESS(0x0f0df4, 0x726)
 MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
@@ -3072,19 +3075,19 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             heroID = H3_ENUM_DECODE(HeroId, g_startingHeroOverrides[owner]);
             g_startingHeroOverrides[owner] = -1;
         } else {
-            TTownType alignment = H3_ENUM_DECODE(
-                TTownType, g_game->m_setup.m_alignment[owner]);
             heroID = H3_ENUM_DECODE(HeroId,
-                g_game->getStartingHeroId(alignment, owner, experience));
+                g_game->getStartingHeroId(H3_ENUM_DECODE(
+                    TTownType, g_game->m_setup.m_alignment[owner]),
+                    owner, experience));
         }
     }
     if (g_game->m_setup.m_startingHero[owner] == -1)
         g_game->m_setup.m_startingHero[owner] = heroID;
 
     heroData = &g_game->m_heroSetup[heroID];
+    heroData->m_objRef = identifier;
     heroData->m_owner = owner;
     heroData->m_id = heroID;
-    heroData->m_objRef = identifier;
     heroObject->m_extraInfo = heroID;
 
     // Dreamcast first stores `customName` into bCustomName, then copies only
