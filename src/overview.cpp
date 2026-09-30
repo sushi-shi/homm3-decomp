@@ -802,7 +802,8 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 VA(0x0051e330, 0x33A)
 DC_ADDRESS(0x1069fc, 0x31a)
 MAC_ADDRESS(0x135d54, 0x3d4)
-void game::setupNewOverviewType(int whichType, unsigned char update)
+// Original DC public SetupNewOverviewType@@QAAXH_N@Z proves bool update.
+void game::setupNewOverviewType(int whichType, bool update)
 {
     g_overviewType = whichType;
     g_overviewItemCount = g_overviewType == 0
@@ -1270,7 +1271,8 @@ static void showArtifact(hero* currHero,
 VA(0x0051ee50, 0xBD0)
 DC_ADDRESS(0x107a90, 0xa10)
 MAC_ADDRESS(0x1370fc, 0xd90)  // exhaustive body/caller identity
-int game::processIconSelect(int codeY, unsigned char rightMouse)
+// Original DC public ProcessIconSelect@@QAAHH_N@Z proves bool rightMouse.
+int game::processIconSelect(int codeY, bool rightMouse)
 {
     int slot;
     int selectedIndex;
@@ -2473,9 +2475,11 @@ void TOverviewWindow::setHeroArtifactPage(int row, int, int pageId)
 // from 80.10% to 83.20%; interleaving arrows by row gives 81.04%, and placing
 // the third page after the arrows gives 74.86%.
 //
-// Residual: VC6 still expands more of doFlaggableButtons and its nested
-// updateFlaggableIcon calls than retail, while later backpack expansions retain
-// a different getHero frontier. Keep the canonical helpers and source calls.
+// Fresh ordered calls identify a retained doFlaggableButtons call at +0xe6
+// where retail expands the arm (three calls versus two), and a later nested
+// getHero expansion where retail retains its call (+0x5d4). Jump-table labels
+// paired with windowHandler itself are aliases, not helper frontiers. Keep
+// the canonical helpers and source calls; raw totals cannot locate inlining.
 // Retail's flaggable jump-table order is HOME/PREVIOUS/NEXT/END/control, its
 // keyboard order is PRIOR/NEXT/HOME/END, and all page arms read overviewTop[0].
 // The mouse cache-hit return precedes the store, rollover, and second return.
@@ -2490,16 +2494,16 @@ int TOverviewWindow::windowHandler(message& msg)
         return result;
 
     int res = 0;
-    unsigned char rightMouse = 0;
+    bool rightMouse = false;
 
     if (msg.m_id == MESSAGE_WIDGET) {
         switch (msg.m_codeX) {
         case widget::WIDGET_RIGHT_SELECT:
-            rightMouse = 1;
+            rightMouse = true;
             // The source intentionally shares the ordinary-select tail.
         case widget::WIDGET_SELECT:
             if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
-                rightMouse = 1;
+                rightMouse = true;
             res = g_game->processIconSelect(msg.m_codeY, rightMouse);
             break;
 
