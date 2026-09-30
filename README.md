@@ -36,13 +36,13 @@ _Excluded from the % above — generated/library code, not independent reconstru
 | `init/cleanup thunks` |     1,173 |   95,322 | compiler-generated CRT initializer/cleanup bodies                  |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
-**Byte accountability:** 2,016 file bytes unclaimed; 0 bytes with conflicting claims; 703 unverified and 0 mismatching game data bytes; 1,120 bytes of exception records pending their functions' matches; 26,560 bytes of reviewed padding. 11,453 / 11,477 enrolled initializer comparisons exact. 973 source-emitted CRT bodies exact (89,376 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
+**Byte accountability:** 1,144 file bytes unclaimed; 0 bytes with conflicting claims; 703 unverified and 0 mismatching game data bytes; 1,120 bytes of exception records pending their functions' matches; 26,560 bytes of reviewed padding. 11,453 / 11,477 enrolled initializer comparisons exact. 973 source-emitted CRT bodies exact (89,376 bytes). [Data reports](docs/tooling/data-matching.md) separate ownership, raw byte comparisons and verified library ranges.
 
 <!-- match-score:end -->
 
 <!-- mac-match-score:start -->
 
-**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** 597 / 1527 scored functions exact; 58.66% of 445,716 compared bytes match. Scored functions are source claims whose full-TU body links; this is coverage, not the whole Mac game.
+**Lightly optimized Classic Mac PowerPC reference (last full checkpoint):** 598 / 1527 scored functions exact; 58.68% of 445,676 compared bytes match. Scored functions are source claims whose full-TU body links; this is coverage, not the whole Mac game.
 
 <!-- mac-match-score:end -->
 

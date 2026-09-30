@@ -472,19 +472,13 @@ int TCampaignCreatureBonus::getIconIndex() const
     return m_creature + 2;
 }
 
-// Singular against plural on a count of exactly one, and an empty name
-// for any creature outside the 0..150 table.
+// Mac 0x924d4..0x9251c expands GetArmyName: the 0..150 guard and
+// singular/plural selection use this bonus's creature and count.
 VA(0x00484570, 0x7A)
 MAC_ADDRESS(0x092498, 0xac)
 std::string TCampaignCreatureBonus::getText() const
 {
-    const char* name;
-    if (m_creature < 0 || m_creature > 150)
-        name = "";
-    else if (m_count == 1)
-        name = g_creatureTypeTraits[m_creature].m_name;
-    else
-        name = g_creatureTypeTraits[m_creature].m_pluralName;
+    const char* name = getArmyName(m_creature, m_count);
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 

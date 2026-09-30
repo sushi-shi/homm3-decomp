@@ -2281,6 +2281,9 @@ void townManager::setHeroCommand()
     strcpy(m_statusText, g_townCommand[9]);
 }
 
+// DC 0x16c752/0x16c7f0/0x16c826/0x16c868/0x16c8b8/0x16c908/0x16c910
+// retain the seven GetArmyName calls. Mac 0x1bf860..0x1bfba4 expands
+// their range guards and singular/plural selections in these same arms.
 VA(0x005c7400, 0x391)
 DC_ADDRESS(0x16c6a8, 0x296)
 MAC_ADDRESS(0x1bf77c, 0x454)
@@ -2301,11 +2304,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-        const char* name;
-        if (id >= 0 && id <= 150)
-            name = g_creatureTypeTraits[id].m_pluralName;
-        else
-            name = "";
+        const char* name = getArmyName(id, 2);
         sprintf(m_statusText, g_townCommand[4], name);
         m_command = 1;
         return;
@@ -2321,11 +2320,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 1);
             sprintf(m_statusText, g_townCommand[0], name);
             m_command = 5;
             return;
@@ -2334,11 +2329,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
             strcpy(m_statusText, g_townCommand[1]);
             return;
         }
-        const char* name;
-        if (selId >= 0 && selId <= 150)
-            name = g_creatureTypeTraits[selId].m_name;
-        else
-            name = "";
+        const char* name = getArmyName(selId, 1);
         sprintf(m_statusText, g_townCommand[2], name);
         m_command = 2;
         return;
@@ -2346,11 +2337,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 
     if (splitEnabled) {
         if (anchorId == -1) {
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_name;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 1);
             sprintf(m_statusText, g_townCommand[3], name);
             m_command = 5;
             return;
@@ -2361,11 +2348,7 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
-            const char* name;
-            if (selId >= 0 && selId <= 150)
-                name = g_creatureTypeTraits[selId].m_pluralName;
-            else
-                name = "";
+            const char* name = getArmyName(selId, 2);
             sprintf(m_statusText, g_townCommand[6], name);
             m_command = 3;
             return;
@@ -2376,16 +2359,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
-    const char* nameAnchor;
-    if (anchorId >= 0 && anchorId <= 150)
-        nameAnchor = g_creatureTypeTraits[anchorId].m_pluralName;
-    else
-        nameAnchor = "";
-    const char* nameSel;
-    if (selId >= 0 && selId <= 150)
-        nameSel = g_creatureTypeTraits[selId].m_pluralName;
-    else
-        nameSel = "";
+    const char* nameAnchor = getArmyName(anchorId, 2);
+    const char* nameSel = getArmyName(selId, 2);
     sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
     m_command = 3;
 }

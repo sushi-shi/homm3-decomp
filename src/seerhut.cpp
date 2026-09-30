@@ -727,18 +727,14 @@ type_monster_quest::type_monster_quest(unsigned char flags)
     m_position.m_x = (m_monsterId = m_defeatedBy = -1);
 }
 
-// Explicit invalid-range branches reproduce all 84 Mac bytes; the ternary
-// materializes an extra boolean or reverses the two arms. Windows stays exact.
+// Mac 0x165b8c..0x165bb4 and 0x165c48..0x165c74 expand GetArmyName
+// with a plural count: the same 0..150 guard and creature-name lookup.
+// Keep the canonical helper in both quest text operations.
 VA(0x0056ea30, 0xF9)
 MAC_ADDRESS(0x165b7c, 0x54)
 std::string type_monster_quest::getRequirementText()
 {
-    const char* name;
-    if (m_monsterId < 0 || m_monsterId > 0x96)
-        name = "";
-    else
-        name = g_creatureTypeTraits[m_monsterId].m_pluralName;
-    return name;
+    return getArmyName(m_monsterId, 2);
 }
 
 VA(0x0056eb30, 0x90)
@@ -747,9 +743,7 @@ std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
         questTexts().m_text3.c_str(),
-        m_monsterId >= 0 && m_monsterId <= 0x96
-            ? g_creatureTypeTraits[m_monsterId].m_pluralName
-            : "");
+        getArmyName(m_monsterId, 2));
 }
 
 VA(0x0056ebc0, 0x06)

@@ -182,7 +182,7 @@ weighted MAX. The Mac gate scores 1,527 pairs with no unreviewed regression;
 call-review completion. This checkpoint includes the bitmap wrappers,
 DirectPlay base constructor, mouse hooks, seer-name and combat accessors,
 spell-duration accessors and the eight network point lifetimes;
-597 scored Mac pairs are exact.
+598 scored Mac pairs are exact.
 
 The spell-accessor batch keeps the supported calls through Windows score dips:
 `getUnitCombatValue` moves from 100% to 93.42% and `resetRound` from 100% to
@@ -202,3 +202,21 @@ or `getFrame`, `getPackedCell`, and `initializePackedCell`. The operation at
 each site is already represented; the working notes distinguish terrain
 queries, frame queries and the two whole-tile reads. Those reviewed paths do
 not discharge unrelated calls in the same caller.
+
+The creature-name pass restores eleven `getArmyName` calls: seven army-command
+messages, the recruitment title, both monster-quest text methods and the
+campaign creature bonus. Dreamcast retains the seven town calls and the
+recruitment call; Mac expands the same range guard and singular/plural lookup
+in all eleven operations. The full checkpoint preserves Windows scores and
+improves one Mac pair to exact. An unrelated path from `selectArmy` to
+`getArmyName` did not represent the town messages; nested reachability alone
+must not close a call-site review.
+
+A further 57 inspected lifetime/copy sites and 33 movement/terrain-predicate
+sites are already represented. The notes identify the particular member,
+base, local or predicate at each address. For example, campaign previews
+construct their own setup member, selection messages construct header members
+before assigning them, and the water-walking artifact query belongs to
+`canWalkOnWater`, not an arbitrary reachable `isFlying` call. These are
+call-site dispositions, not claims that the enclosing functions have completed
+the whole-source review.

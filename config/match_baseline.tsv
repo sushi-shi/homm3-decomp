@@ -1304,7 +1304,7 @@ customcampaign	?getPlayer@TCampaignStartHeroOption@@UBEHH@Z	100.0000	100.0000	10
 customcampaign	?getScore@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200	tokens1:31eb2e930d0d
 customcampaign	?getText@TCampaignArtifactBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84820	tokens1:947fb0182afe
 customcampaign	?getText@TCampaignBuildingBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x847a0	tokens1:e0460dab157e
-customcampaign	?getText@TCampaignCreatureBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84570	tokens1:b4f4ada6d081
+customcampaign	?getText@TCampaignCreatureBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84570	tokens1:23cb947a28f0
 customcampaign	?getText@TCampaignPrimarySkillBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84910	tokens1:ac2abbb44646
 customcampaign	?getText@TCampaignResourceBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84d90	tokens1:03dd6a96629a
 customcampaign	?getText@TCampaignSecondarySkillBonus@@UBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x84c50	tokens1:9e7e2f508abb
@@ -3025,7 +3025,7 @@ recruit	?getMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0	tokens1:3
 recruit	?getUpgradeCost@@YIXW4TCreatureType@@0JPAJ@Z	100.0000	100.0000	100.0000	0x14e750	tokens1:6867f5c485a8
 recruit	?insert@?$vector@PAVwidget@@V?$allocator@PAVwidget@@@std@@@std@@QAEXPAPAVwidget@@IABQAV3@@Z	100.0000	100.0000	100.0000	0x14d120	-
 recruit	?main@recruitUnit@@UAEHAAVmessage@@@Z	99.9545	99.9545	99.9545	0x150940	tokens1:f9e9656d03f7
-recruit	?open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0	tokens1:0d2c50686def
+recruit	?open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0	tokens1:735a80ec19be
 recruit	?quickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750	tokens1:7a79c89716d1
 recruit	?quickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780	tokens1:353597b759eb
 recruit	?recruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800	tokens1:0a78aaf337d9
@@ -3770,7 +3770,7 @@ seerhut	?getQuestDescription@type_belong_to_player_quest@@UAE?AV?$basic_string@D
 seerhut	?getQuestDescription@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x170690	tokens1:dbe443d20484
 seerhut	?getQuestDescription@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e340	tokens1:3d1541beaf02
 seerhut	?getQuestDescription@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d410	tokens1:17f89ec6799d
-seerhut	?getQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16eb30	tokens1:ec060e2b7b39
+seerhut	?getQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16eb30	tokens1:86c7ac37b5d3
 seerhut	?getQuestDescription@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1716e0	tokens1:795651272991
 seerhut	?getQuestDescription@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d990	tokens1:7758c94bef92
 seerhut	?getRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0	tokens1:0f25e76ac42c
@@ -3779,7 +3779,7 @@ seerhut	?getRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU
 seerhut	?getRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1704e0	tokens1:51c3daeab945
 seerhut	?getRequirementText@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e240	tokens1:0ebc301a9ca6
 seerhut	?getRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0	tokens1:9dd1ba331c79
-seerhut	?getRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16ea30	tokens1:4dea0a5fb74d
+seerhut	?getRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16ea30	tokens1:9609fd3b970c
 seerhut	?getRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580	tokens1:704171db0086
 seerhut	?getRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960	tokens1:6dc21f9ae2b3
 seerhut	?getRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10	tokens1:27b398e60214
@@ -4525,7 +4525,7 @@ townmgr	?recruit@TCastleWindow@@AAEXH@Z	93.5595	100.0000	100.0000	0x1dce50	token
 townmgr	?redrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410	tokens1:09500412f306
 townmgr	?resetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530	tokens1:11e6f45b33ca
 townmgr	?selectArmy@townManager@@AAEXPAVstrip@@JE@Z	100.0000	100.0000	100.0000	0x1c8080	tokens1:7d7d61b6f8f9
-townmgr	?setArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400	tokens1:44aa642f0fa3
+townmgr	?setArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400	tokens1:0a95aa2a107d
 townmgr	?setBonusDisplay@TTownScreenWindow@@QAEXPAVtown@@@Z	86.9369	87.6975	88.5007	0x1c5b40	tokens1:1700ccd839d9
 townmgr	?setCommandAndText@townManager@@QAEXPAVmessage@@@Z	99.9775	99.9775	99.9775	0x1c77a0	tokens1:061a0ea48299
 townmgr	?setCommandAndText@type_garrison_base_window@@IAEXAAVmessage@@@Z	98.8384	98.8384	98.8384	0x1d05f0	tokens1:3d271a0b13ca

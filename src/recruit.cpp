@@ -330,6 +330,8 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
+// DC 0x119a34 retains GetArmyName for the title; Mac 0x14efa8..0x14efd4
+// expands its 0..150 guard and plural lookup before the format call.
 VA(0x0054fea0, 0x42E)
 DC_ADDRESS(0x11994c, 0x398)
 MAC_ADDRESS(0x14eec8, 0x438)
@@ -353,11 +355,7 @@ int recruitUnit::open(int newPriority)
     msg.m_extra = g_game->getLocalPlayerGamePos();
     g_recruitWindow->broadcastMessage(msg);
 
-    const char* creatureName;
-    if (m_monsterType >= 0 && m_monsterType <= 150)
-        creatureName = g_creatureTypeTraits[m_monsterType].m_pluralName;
-    else
-        creatureName = "";
+    const char* creatureName = getArmyName(m_monsterType, 2);
     sprintf(g_text, "%s %s",
         (*g_generalText)[GENERAL_TEXT_RECRUIT_TITLE], creatureName);
     msg.m_id = MESSAGE_WIDGET;
