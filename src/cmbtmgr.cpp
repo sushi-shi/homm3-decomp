@@ -3063,6 +3063,14 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     }
 }
 
+// DC cmbtmgr.cpp:3846 adds the current x/y to width/height and subtracts
+// one before constructing the old bounds. Mac 0x744a4..0x744b4 forms
+// the current inclusive endpoints for Include. Keep those expressions
+// and the ordinary indexed loop; right/bottom induction counters were
+// compiler substitutions. VC6 is byte-flat at 94.71%; all 54 blocks,
+// 29 branches and 17 named calls align. The first residual is Include's
+// lowering at +0x333, with rectangle scratch/stack differences following.
+// The canonical bitmap, sprite, rectangle and resource calls stay intact.
 VA(0x00467db0, 0x46A)
 DC_ADDRESS(0x0619a8, 0x4b8)
 MAC_ADDRESS(0x0740cc, 0x588)
@@ -3131,34 +3139,29 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
     int frame = 0;
-    int step = 0;
-    if (step < nframes) {
-        int bottom = y + height - 1;
-        int right = x + width - 1;
-        for (; step < nframes; step++) {
-            unsigned long nextFrameTime = GameTime::get() + arrowDelay;
-            if (step != 0) {
-                saved.draw(0, 0, width, height,
-                           g_windowManager->m_screenBitmap, x, y, false);
-                // Mac 0x743e0 constructs and copies the four-word bounds.
-                updateArea = TDrawbridgeBounds(x, y, right, bottom);
-                x += addX;
-                right += addX;
-                y += addY;
-                bottom += addY;
-            }
-            saved.grab(g_windowManager->m_screenBitmap, x, y);
-            missile->draw(0, frame, 0, 0, width, height,
-                          g_windowManager->m_screenBitmap, x, y, flipped, 1);
-            scrollTo(x, y, width, height, true, true, true);  // DC 3865
-            updateArea.include(SLimitData(x, y, right, bottom));
-            updateArea.clip(g_combatDrawLimits);
-            updateCombatArea(updateArea);  // DC 3874, by-value extent
-            ++frame;
-            if (frame >= missile->getNumFrames(0))
-                frame = 0;
-            GameTime::delayTil(nextFrameTime);
+    for (int step = 0; step < nframes; step++) {
+        unsigned long nextFrameTime = GameTime::get() + arrowDelay;
+        if (step != 0) {
+            saved.draw(0, 0, width, height,
+                       g_windowManager->m_screenBitmap, x, y, false);
+            // Mac 0x743e0 constructs and copies the four-word bounds.
+            updateArea = TDrawbridgeBounds(
+                x, y, x + width - 1, y + height - 1);
+            x += addX;
+            y += addY;
         }
+        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        missile->draw(0, frame, 0, 0, width, height,
+                      g_windowManager->m_screenBitmap, x, y, flipped, 1);
+        scrollTo(x, y, width, height, true, true, true);  // DC 3865
+        updateArea.include(SLimitData(
+            x, y, x + width - 1, y + height - 1));
+        updateArea.clip(g_combatDrawLimits);
+        updateCombatArea(updateArea);  // DC 3874, by-value extent
+        ++frame;
+        if (frame >= missile->getNumFrames(0))
+            frame = 0;
+        GameTime::delayTil(nextFrameTime);
     }
 
     saved.draw(0, 0, width, height,
