@@ -1725,6 +1725,12 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
     return wide;
 }
 
+// DC names int count (sp+0x14) and long number (sp+0x20). Lines
+// 1532/1533 store read status before the guard; 1597/1599 store and test
+// the list length before resize at 1603, repeated at 1628/1630. Keep those
+// distinct owners and the char/short/int buffers with int x. This recovers
+// retail's 93-block CFG and entry through +0x57, at 93.2220% overall; the
+// merged int list counter gave 95.5787%. STL expansion and stack homes remain.
 // DC mapcell.cpp:1524 proves BlackBoxData&. Both Complete callers
 // supply their constructed stack records; retain that interface through
 // the versioned creature reader rather than introducing a nullable pointer.
@@ -1734,121 +1740,138 @@ MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTr
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                              int mapVersion)
 {
-    signed char value;
-    int dwordValue;
+    char charBuffer;
+    short shortBuffer;
+    int intBuffer;
     int count;
-    int i;
+    long number;
+    int x;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    thisBox.m_hasCustomTreasure = value != 0;
+    thisBox.m_hasCustomTreasure = charBuffer != 0;
     if (thisBox.m_hasCustomTreasure) {
         if (readTreasureData(infile, &thisBox) != 0)
             return -1;
     }
 
-    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (static_cast<unsigned>(count) < sizeof(intBuffer))
         return -1;
-    thisBox.m_experienceBonus = dwordValue;
-    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    thisBox.m_experienceBonus = intBuffer;
+    count = infile->read(&intBuffer, sizeof(intBuffer));
+    if (static_cast<unsigned>(count) < sizeof(intBuffer))
         return -1;
-    thisBox.m_manaBonus = dwordValue;
+    thisBox.m_manaBonus = intBuffer;
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    thisBox.m_moraleBonus = value;
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    thisBox.m_moraleBonus = charBuffer;
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    thisBox.m_luckBonus = value;
+    thisBox.m_luckBonus = charBuffer;
 
-    for (i = 0; i < 7; ++i) {
-        if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    for (x = 0; x < 7; ++x) {
+        count = infile->read(&intBuffer, sizeof(intBuffer));
+        if (static_cast<unsigned>(count) < sizeof(intBuffer))
             return -1;
-        thisBox.m_resQty[i] = dwordValue;
+        thisBox.m_resQty[x] = intBuffer;
     }
-    for (i = 0; i < 4; ++i) {
-        if (infile->read(&value, sizeof(value)) < sizeof(value))
+    for (x = 0; x < 4; ++x) {
+        count = infile->read(&charBuffer, sizeof(charBuffer));
+        if (static_cast<unsigned>(count) < sizeof(charBuffer))
             return -1;
-        thisBox.m_primarySkillBonus[i] = value;
+        thisBox.m_primarySkillBonus[x] = charBuffer;
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    count = value;
-    if (count == 0) {
+    number = charBuffer;
+    if (number == 0) {
         thisBox.m_secondarySkills.clear();
     } else {
-        thisBox.m_secondarySkills.resize(count);
-        for (i = 0; i < count; ++i) {
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+        thisBox.m_secondarySkills.resize(number);
+        for (x = 0; x < number; ++x) {
+            count = infile->read(&charBuffer, sizeof(charBuffer));
+            if (static_cast<unsigned>(count) < sizeof(charBuffer))
                 return -1;
             // Mac 0x121b14..0x121b68 directly stores each decoded enum word.
-            int skillType = value;
-            thisBox.m_secondarySkills[i].m_type =
+            int skillType = charBuffer;
+            thisBox.m_secondarySkills[x].m_type =
                 H3_ENUM_DECODE(TSecondarySkill, skillType);
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+            count = infile->read(&charBuffer, sizeof(charBuffer));
+            if (static_cast<unsigned>(count) < sizeof(charBuffer))
                 return -1;
-            int skillLevel = value;
-            thisBox.m_secondarySkills[i].m_level =
+            int skillLevel = charBuffer;
+            thisBox.m_secondarySkills[x].m_level =
                 H3_ENUM_DECODE(TSkillMastery, skillLevel);
         }
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    count = value;
-    if (count == 0) {
+    number = charBuffer;
+    if (number == 0) {
         thisBox.m_artifacts.clear();
     } else {
-        thisBox.m_artifacts.resize(count);
-        for (i = 0; i < count; ++i) {
+        thisBox.m_artifacts.resize(number);
+        for (x = 0; x < number; ++x) {
             if (g_game->m_mapHeader.m_version
                 == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
                 signed char narrow;
                 infile->read(&narrow, sizeof(narrow));
-                thisBox.m_artifacts[i] = TArtifact(narrow);
+                thisBox.m_artifacts[x] = TArtifact(narrow);
             } else {
                 short wide;
                 infile->read(&wide, sizeof(wide));
-                thisBox.m_artifacts[i] = TArtifact(wide);
+                thisBox.m_artifacts[x] = TArtifact(wide);
             }
         }
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    count = value;
-    if (count == 0) {
+    number = charBuffer;
+    if (number == 0) {
         // Dreamcast mapcell.cpp:1655 calls vector<SpellID>::clear here,
         // just as the two preceding empty-list arms do.
         // Mac clear 0xbed64 is also called by the scholar spell-vector
         // destructor 0xbe748; resize 0x128e9c is the same enum family.
         thisBox.m_spells.clear();
     } else {
-        thisBox.m_spells.resize(count);
-        for (i = 0; i < count; ++i) {
-            if (infile->read(&value, sizeof(value)) < sizeof(value))
+        thisBox.m_spells.resize(number);
+        for (x = 0; x < number; ++x) {
+            count = infile->read(&charBuffer, sizeof(charBuffer));
+            if (static_cast<unsigned>(count) < sizeof(charBuffer))
                 return -1;
-            thisBox.m_spells[i] = H3_ENUM_DECODE(ESpellId, value);
+            thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
         }
     }
 
-    if (infile->read(&value, sizeof(value)) < sizeof(value))
+    count = infile->read(&charBuffer, sizeof(charBuffer));
+    if (static_cast<unsigned>(count) < sizeof(charBuffer))
         return -1;
-    count = value;
+    number = charBuffer;
     thisBox.m_creatures.initialize();
-    for (i = 0; i < count; ++i) {
-        thisBox.m_creatures.m_armies[i] =
+    for (x = 0; x < number; ++x) {
+        thisBox.m_creatures.m_armies[x] =
             readMapCreatureId(infile, mapVersion);
 
-        short troops;
-        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
+        count = infile->read(&shortBuffer, sizeof(shortBuffer));
+        if (static_cast<unsigned>(count) < sizeof(shortBuffer))
             return -1;
-        thisBox.m_creatures.m_numTroops[i] = troops;
+        thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
 
     char padding[8];
-    if (infile->read(padding, sizeof(padding)) < sizeof(padding))
+    count = infile->read(padding, sizeof(padding));
+    if (static_cast<unsigned>(count) < sizeof(padding))
         return -1;
     return 0;
 }
