@@ -389,7 +389,9 @@ MAC_COMPGEN_ADDRESS(0x02b304, 0x68, IMPLICIT_DTOR, type_AI_creature_purchaser)
 // getter, also used by the income artifact. Preserve that nested access path.
 DC_ADDRESS(0x02e094, 0xc8)
 MAC_ADDRESS(0x02b36c, 0x78)
-long type_AI_player::getResourceValue(int* resources) const
+// Original DC ?get_resource_value@type_AI_player@@QBAJQAH@Z proves a
+// const pointer parameter; its elements retain the mutable integer type.
+long type_AI_player::getResourceValue(int* const resources) const
 {
     long value = 0;
     for (int resource = 0; resource < 7; ++resource)
