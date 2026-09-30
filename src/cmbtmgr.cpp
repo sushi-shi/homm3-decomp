@@ -1716,10 +1716,13 @@ unsigned char combatManager::unnamed464f50(
 VA(0x00465080, 0x2A2)
 DC_ADDRESS(0x05f518, 0x41c)
 MAC_ADDRESS(0x070b74, 0x328)
+// Mac 0x70b9c..0x70bb8 still indexes both acting side and slot after
+// testing side == 0: the canonical getCurrentArmy expansion, rather
+// than a source-level constant-side army lookup.
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
-        && m_armies[0][m_actingSlot].m_creatureType == CREATURE_CATAPULT) {
+        && getCurrentArmy()->m_creatureType == CREATURE_CATAPULT) {
         m_actingSide = 1;
         m_actingSlot = 0;
     }
