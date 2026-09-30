@@ -3133,9 +3133,11 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
             // DC 3918 calls GetArmyName(type, 2); retail expands the same
             // bounds check and plural-name selection. Preserve that helper.
             const char* creatureName = getArmyName(cell->m_objectIndex, 2);
+            // Mac d588..d594 reads the low twelve-bit monster quantity;
+            // DC 3918 and retail retain its dword mask. Use the named view.
             sprintf(g_text, DATA_COMPGEN(
                 0x00660344, rolloverMonsterFormat, "%s %s"),
-                armyGroup::getArmySizeName(cell->m_extraInfo & 0xfff, 1),
+                armyGroup::getArmySizeName(cell->m_monsterInfo.m_qty, 1),
                 creatureName);
         }
         break;
