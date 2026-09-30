@@ -3736,17 +3736,19 @@ static void considerHidingMouse(hero* currentHero, int direction)
 VA(0x0042fc50, 0x285)
 DC_ADDRESS(0x0341f4, 0x1ce)
 MAC_ADDRESS(0x033af8, 0x300)
-unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
-                           unsigned char standEnd, unsigned char firstStep)
+// Original DC public ?attempt_step@@YA_NPAVhero@@AAUpathCell@@_N2@Z
+// proves bool result/flags and a non-null path-cell reference.
+bool attemptStep(hero* currentHero, pathCell& currentPathCell,
+                 bool standEnd, bool firstStep)
 {
     type_point triggerPoint;
-    int direction = currentPathCell->m_direction;
+    int direction = currentPathCell.m_direction;
     considerHidingMouse(currentHero, direction);
 
-    triggerPoint = currentPathCell->m_point;
+    triggerPoint = currentPathCell.m_point;
     NewmapCell* cell = g_game->getCell(triggerPoint);
 
-    if (currentPathCell->m_inBoat && !(currentHero->m_flags & 0x40000)) {
+    if (currentPathCell.m_inBoat && !(currentHero->m_flags & 0x40000)) {
         if (!(cell->m_type == BOAT && cell->m_isTrigger)) {
             g_advManager->stopCursor(1);
             if (currentHero->canSummonBoat()) {
@@ -3767,7 +3769,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     int savedZ = currentHero->m_pathTargetZ;
 
     unsigned char retargeted =
-        currentPathCell->m_flying && currentPathCell->m_canStop && cell->m_isTrigger;
+        currentPathCell.m_flying && currentPathCell.m_canStop && cell->m_isTrigger;
     if (retargeted) {
         currentHero->m_pathTargetX = triggerPoint.m_x;
         currentHero->m_pathTargetY = triggerPoint.m_y;
@@ -3777,7 +3779,7 @@ unsigned char attemptStep(hero* currentHero, pathCell* currentPathCell,
     int noMove;
     int foughtBattle;
     NewmapCell* eventCell = g_advManager->moveHero(
-        currentPathCell->m_direction, standEnd, triggerPoint, &noMove, 1,
+        currentPathCell.m_direction, standEnd, triggerPoint, &noMove, 1,
         &foughtBattle, 0);
     if (retargeted) {
         currentHero->m_pathTargetX = savedX;
@@ -4140,7 +4142,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                    > currentHero->m_movePoints)
             standEnd = 1;
 
-        if (!attemptStep(currentHero, &path[step], standEnd, firstStep))
+        if (!attemptStep(currentHero, path[step], standEnd, firstStep))
             return;
         if (standEnd)
             return;
