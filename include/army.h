@@ -576,12 +576,11 @@ public:
     // is bigger than STLport's - the same "retail's preceding STL
     // expansion shifts it" the armySample note records.
 
-    // Spelled `int` rather than SpellID for the reason
-    // iPostPowSpellToCast above already carries: that enum lives in a
-    // header this one does not include. Same 4-byte element, same
-    // codegen; only the mangled COMDAT name differs, and those are
-    // unclaimed rows whose reloc names are cosmetic anyway.
-    typedef std::deque<int> TSpellQueue;
+    // Preserve the native SpellID element domain. armygrp.h provides the
+    // canonical enum; Windows retains its own two-argument Dinkumware
+    // deque spelling and 48-byte record. Integer spell APIs convert only
+    // when inserting an element, not by changing the container's type.
+    typedef std::deque<ESpellId> TSpellQueue;
     int m_spellLevel[81];          // +0x2dc .. +0x41f
     TSpellQueue m_spellInfluenceQueue;  // +0x420 .. +0x44f
     float m_paletteEffect;          // +0x450 (DC army@1068)

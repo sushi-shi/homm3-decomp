@@ -3735,7 +3735,7 @@ void army::setSpellInfluence(int spell, int power, int mastery,
         m_forgetfulnessLevel = mastery;
         break;
     }
-    m_spellInfluenceQueue.push_back(spell);
+    m_spellInfluenceQueue.push_back(static_cast<ESpellId>(spell));
 }
 
 // Original: army::DecrementSpellRounds; army.cpp:4129
