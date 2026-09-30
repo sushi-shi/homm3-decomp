@@ -1706,13 +1706,19 @@ inline int army::getOwningSide() const
     }
 
     // E:\gamedcs\Army.h:800
+// DC line 803 records the condition; line 804 attributes both owning-side
+// calls to the return, with no recorded local. A conditional return keeps
+// those two canonical paths and lets Complete expand this getter inside
+// getUnitCombatValue's first damage reduction (97.6613 -> 100%). The former
+// guarded-return body costs 49 against that nested budget of 48. This is a
+// source-shape inference, not proof of the original expression's spelling.
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
 DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
-        if (m_spellInfluence[60])
-            return 1 - getOwningSide();
-        return getOwningSide();
+        return m_spellInfluence[60]
+                   ? 1 - getOwningSide()
+                   : getOwningSide();
     }
 
     // E:\gamedcs\Army.h:810
