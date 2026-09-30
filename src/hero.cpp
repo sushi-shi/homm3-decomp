@@ -5408,7 +5408,7 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // retain the desktop result and flag behavior while restoring the reference.
 VA(0x004e3070, 0x339)
 DC_ADDRESS(0x0d3de4, 0x5c)
-MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global
+MAC_ADDRESS(0x103da8, 0x2f0)  // MAC_ABSTRACTION_FROM(tokens1:3d82fe0d0468,25.0000): Restore the canonical playerData::isHuman call for Mac's expanded human-query byte body at 0x103f74.
 unsigned char hero::giveArtifact(const type_artifact& artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
@@ -5435,9 +5435,10 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
-                            // Retail reads the byte; playerData::isHuman is
-                            // an out-of-line game.cpp body (called: 94.67%).
+                        } else if (!player.isHuman()) {
+                            // Mac 0x103f74 expands the canonical human query's
+                            // byte-normalizing body. Preserve its ordinary
+                            // game.cpp boundary instead of bypassing it here.
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
