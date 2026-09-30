@@ -2507,9 +2507,14 @@ implementation visible through cmbtmgr.h. The CE renderer scrolls, clips and
 translates a viewport; Complete presents the accumulated screen rectangle
 without those operations. Preserve the by-value extent-to-four-int
 `updateCombatArea` call and give the Windows leaf its four-int Window call.
-Keep the coordinate `scrollTo` facade ordinary in drawing.cpp: it needs no
-cross-TU visibility. Header placement is an explicit platform inference,
-recorded with exact CE/Windows catalog entries, not recovered lexical text.
+The coordinate `scrollTo` facades are visible in cmbtmgr.h: Complete
+combat missile callers also preserve the seven-coordinate source call
+across translation units, with its fixed-viewport operation folded away.
+The older drawing.cpp:679/680 body constructs the extent and delegates;
+Mac's contiguous drawing bodies leave no standalone facade in that source
+order slot. One class-visible body preserves the canonical path without
+adding an explicit inline keyword. Header placement is a platform inference,
+recorded in the source catalogs, not recovered lexical text.
 
 Both const-reference and by-value extent controls reproduce Fly, so its
 inlined copy cannot establish a changed parameter type. The by-value chain

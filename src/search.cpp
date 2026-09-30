@@ -730,7 +730,7 @@ void searchArray::seedPosition(hero* currentHero, type_point start,
                 cell.m_point, &monster, cell.m_monster))
             adjacentMonster = 1;
 
-        testPossibleDirections(currentHero, &cell, turnMobility,
+        testPossibleDirections(currentHero, cell, turnMobility,
                                maxMobility, adjacentMonster, monster,
                                pathfinding, searchType, nativeTerrain);
 

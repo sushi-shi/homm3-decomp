@@ -355,41 +355,6 @@ enum CombatHeroFrameType {
     COMBAT_HERO_FRAME_EVENT_3 = 3
 };
 
-// Original TSpellEffectID: Dreamcast NB11 enum record 0x1f15.
-// Values used by the recovered combat callers are independently fixed
-// by the retail effect-table index or literal supplied to PowEffect.
-enum TSpellEffectID {
-    eSpellEffectNone = -1,
-    eSpellEffectFireShield = 11,
-    // Original eSpellEffectLightning_Dust: Thunderbird's damage flash.
-    eSpellEffectLightningDust = 49,
-    eSpellEffectLandMineExplosion = 57,
-    eSpellEffectPoison = 67,
-    // Dreamcast's TSpellEffectID table and CastSpell's Berserk arm
-    // both fix the mass-animation row to 35.
-    eSpellEffectBerserk = 35,
-    // Dreamcast enum table and CastSpell's retail Sacrifice arm agree:
-    // effect 51 is the slaying flash over the sacrificed stack.
-    eSpellEffectSacrifice_Slay = 51,
-    // Dreamcast spells.cpp:1788..1792 names these three effect rows;
-    // Complete's CastSpell tail independently pushes 76, 75, and 78
-    // for the channel-spew, channel-suck, and resisted-spell flashes.
-    eSpellEffectMagicChannel_Suck = 75,
-    eSpellEffectMagicChannel_Spew = 76,
-    eSpellEffectMagicResistance = 78,
-    // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
-    // proves the number at army::do_attack (0x441610), which hands
-    // it to SpellEffect as the good-luck sparkle over the striking
-    // stack.
-    eSpellEffectFortune = 18,
-    // Retail proves the number at army::new_turn (0x446e30), which
-    // hands it to SpellEffect over a regenerating stack.
-    eSpellEffectRegeneration = 79,
-    // Proven at army::ComputeAttackerDamageBonuses (0x443840):
-    // the Dread Knight's death-blow flash over the defender.
-    eSpellEffectDeathBlow = 73
-};
-
 class combatManager : public baseManager {
 public:
     // Original DC statics: LeftHeroLimits, RightHeroLimits,
@@ -411,6 +376,16 @@ public:
     {
         return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
                         doscrollX, doscrollY);
+    }
+    // DC drawing.cpp:679/680 constructs the extent and delegates. The
+    // Complete combat missile callers expand this across translation units;
+    // Mac's contiguous drawing bodies leave no retained coordinate facade.
+    // Visibility here is a platform inference, not a recovered inline word.
+    bool scrollTo(int x, int y, int width, int height, bool draw,
+                  bool doscrollX, bool doscrollY)
+    {
+        return scrollTo(SLimitData(x, y, x + width, y + height),
+                        draw, doscrollX, doscrollY);
     }
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
@@ -1230,11 +1205,9 @@ public:
     void updateMouseGrid(int gridIndex, int allowDuringAction);
     // Preserve DC UpdateCombatArea's by-value extent and coordinate facade.
     // The Windows fixed-viewport definitions and their platform evidence are
-    // below. The coordinate ScrollTo facade remains ordinary in drawing.cpp.
+    // below. The coordinate ScrollTo facades are visible above.
     void updateCombatArea(SLimitData area);
     void updateCombatArea(int x, int y, int width, int height);
-    bool scrollTo(int x, int y, int width, int height, bool draw,
-                  bool doscrollX, bool doscrollY);
     bool scrollTo(SLimitData extent, bool draw,
                   bool doscrollX, bool doscrollY);
     // Dreamcast's LF_FIELDLIST fixes this complete renderer band (entries

@@ -487,29 +487,33 @@ void searchArray::pushPoint(const pathCell& oldCell, pathCell& point,
 // scope/order is byte-flat. DC source_terrain is TTerrainType and terrain
 // is const int; the shared enum decoder retains the typed source local.
 // Reversing the two diagonal corner
-// declarations regresses to 99.19779%; and DC's const srcCell cannot be
-// expressed without changing the still-non-const NewmapCell accessors.
+// declarations regresses to 99.19779%. DC's const srcCell was deferred
+// until the canonical NewmapCell accessors regained const.
 // Dreamcast findpath.cpp:482/635/697 calls point inequality, game::get_cell
 // twice, and type_obscuring_object::get_obscured_type. Retail expands these
 // header helpers inside the path direction loop.
+// DC findpath.cpp:461 proves the const hero pointer, pathCell reference,
+// skill/terrain enum parameters and const cell pointer below. The retail
+// stack homes remain addresses or 32-bit signed values; SeedPosition already
+// carries those same enum domains. Canonical accessors preserve constness.
 VA(0x004b2300, 0xA94) MAC_ADDRESS(0x0c552c, 0xf80)  // anchor-callee, dc 0x9f718
-void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
+void searchArray::testPossibleDirections(const hero* currentHero, pathCell& source,
                                          long turnMobility, long maxMobility,
                                          unsigned char adjacentMonster,
                                          type_point monsterLocation,
-                                         long pathfinding,
+                                         TSkillMastery pathfinding,
                                          type_search_type searchType,
-                                         long nativeTerrain)
+                                         TTerrainType nativeTerrain)
 {
-    NewmapCell* srcCell = g_advManager->getCell(source->m_point);
+    const NewmapCell* const srcCell = g_advManager->getCell(source.m_point);
     TTerrainType sourceTerrain = H3_ENUM_DECODE(TTerrainType, srcCell->m_groundSet);
     unsigned char hasNomad =
         currentHero->m_army.getCreatureTotal(CREATURE_NOMAD) > 0;
 
     for (long direction = 0; direction < 8; direction++) {
-        pathCell candidate = *source;
-        candidate.m_point.m_x = source->m_point.m_x + g_normalDirTable[direction].m_x;
-        candidate.m_point.m_y = source->m_point.m_y + g_normalDirTable[direction].m_y;
+        pathCell candidate = source;
+        candidate.m_point.m_x = source.m_point.m_x + g_normalDirTable[direction].m_x;
+        candidate.m_point.m_y = source.m_point.m_y + g_normalDirTable[direction].m_y;
         if (!candidate.m_point.isValid())
             continue;
         if (adjacentMonster) {
@@ -523,7 +527,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         unsigned char impassable = 0;
         unsigned char needsBoat = 0;
         candidate.m_canStop = 1;
-        if (source->m_dimensionDoor && source->m_canStop)
+        if (source.m_dimensionDoor && source.m_canStop)
             candidate.m_dimensionDoor = 0;
 
         long cost;
@@ -535,7 +539,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         } else if (candidate.m_dimensionDoor) {
             cost = 0;
             candidate.m_adjustedCost += 100;
-        } else if (source->m_inBoat) {
+        } else if (source.m_inBoat) {
             cost = calcTerrainCost(srcCell, direction, turnMobility,
                                    pathfinding, 0, -1, -1, -1, hasNomad);
         } else {
@@ -547,12 +551,12 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                    nativeTerrain, hasNomad);
         }
 
-        if (cost <= source->m_moveLeft) {
-            candidate.m_moveLeft = source->m_moveLeft - cost;
+        if (cost <= source.m_moveLeft) {
+            candidate.m_moveLeft = source.m_moveLeft - cost;
         } else {
-            if (!source->m_canStop)
+            if (!source.m_canStop)
                 continue;
-            candidate.m_moveLeft = source->m_inBoat ? m_seaMovement
+            candidate.m_moveLeft = source.m_inBoat ? m_seaMovement
                                                   : m_landMovement;
             if (candidate.m_flying || candidate.m_waterWalking)
                 cost = calcTerrainCost(srcCell, direction, turnMobility,
@@ -570,7 +574,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (!(getMapExtra(candidate.m_point) & g_curPlayerBit)
                 && searchType != const_AI_enemy_search
                 && (g_currentPlayer->isHuman()
-                    || (!(getMapExtra(source->m_point) & g_curPlayerBit)
+                    || (!(getMapExtra(source.m_point) & g_curPlayerBit)
                         && g_currentPlayer->m_numTowns > 0))) {
             blocked = 1;
             candidate.m_canStop = 0;
@@ -590,7 +594,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             continue;
 
         if (terrain == eTerrainWater) {
-            if (source->m_inBoat) {
+            if (source.m_inBoat) {
                 if (destCell->m_type == BOAT && destCell->m_isTrigger) {
                     impassable = 1;
                     candidate.m_canStop = 0;
@@ -602,10 +606,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                     // both coordinates from the dword it has just stored into
                     // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
                     // eax,[ebp-0x2e]` on across_y), where reading
-                    // `source->point.x` again gives a 16-bit `mov bx,ax /
+                    // `source.point.x` again gives a 16-bit `mov bx,ax /
                     // shl bx,6` off the member's own word container.
-                    type_point acrossX = source->m_point;
-                    type_point acrossY = source->m_point;
+                    type_point acrossX = source.m_point;
+                    type_point acrossY = source.m_point;
                     acrossX.m_x = acrossX.m_x + g_normalDirTable[direction].m_x;
                     acrossY.m_y = acrossY.m_y + g_normalDirTable[direction].m_y;
                     if (g_game->getCell(acrossX)->m_groundSet
@@ -624,23 +628,23 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                         needsBoat = 1;
                     candidate.m_canStop = 0;
                 }
-                if (source->m_dimensionDoor) {
+                if (source.m_dimensionDoor) {
                     impassable = 1;
                     candidate.m_canStop = 0;
                 }
             }
-        } else if (source->m_inBoat) {
-            if (source->m_dimensionDoor) {
+        } else if (source.m_inBoat) {
+            if (source.m_dimensionDoor) {
                 impassable = 1;
                 candidate.m_canStop = 0;
             }
             if (destCell->m_type == ANCHOR_POINT) {
                 if (candidate.m_canStop
                         && searchType >= const_AI_search) {
-                    if (source->m_moveLeft < cost)
-                        cost = source->m_moveLeft + m_seaMovement;
+                    if (source.m_moveLeft < cost)
+                        cost = source.m_moveLeft + m_seaMovement;
                     else
-                        cost = source->m_moveLeft;
+                        cost = source.m_moveLeft;
                     candidate.m_moveLeft = m_landMovement;
                     candidate.m_inBoat = 0;
                     candidate.m_flying = 0;
@@ -678,9 +682,9 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         if (impassable && !candidate.m_dimensionDoor) {
             if (!m_canCastTeleport)
                 continue;
-            if (!source->m_canStop)
+            if (!source.m_canStop)
                 continue;
-            if (source->m_magicForbidden)
+            if (source.m_magicForbidden)
                 continue;
             candidate.m_dimensionDoor = 1;
             candidate.m_adjustedCost += 500;
@@ -693,9 +697,9 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
         }
 
         if (blocked && !candidate.m_flying && !candidate.m_dimensionDoor) {
-            if (!source->m_canStop)
+            if (!source.m_canStop)
                 continue;
-            if (source->m_magicForbidden)
+            if (source.m_magicForbidden)
                 continue;
             if (!m_canCastFlight && !m_canCastTeleport)
                 continue;
@@ -705,7 +709,7 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                 cost = currentHero->getSpellLevel(8) == eMasteryExpert
                     ? 200 : 300;
             } else {
-                if (source->m_inBoat)
+                if (source.m_inBoat)
                     continue;
                 candidate.m_flying = 1;
                 cost = calcTerrainCost(srcCell, direction, turnMobility,
@@ -720,10 +724,10 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
 
         if (needsBoat && !candidate.m_flying && !candidate.m_waterWalking
                 && !candidate.m_dimensionDoor) {
-            if (!source->m_canStop)
+            if (!source.m_canStop)
                 continue;
             if (!destCell->m_isTrigger
-                    && ((m_canSummonBoat && !source->m_magicForbidden)
+                    && ((m_canSummonBoat && !source.m_magicForbidden)
                         || (destCell->m_flags0011 & 0x800))) {
                 pathCell boatCell = candidate;
                 boatCell.m_inBoat = 1;
@@ -732,27 +736,27 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
                                                  turnMobility, pathfinding,
                                                  0, -1, -1, -1, hasNomad);
                 boatCell.m_adjustedCost += 500;
-                if (!(m_canSummonBoat && !source->m_magicForbidden))
+                if (!(m_canSummonBoat && !source.m_magicForbidden))
                     boatCell.m_barrierValue +=
                         aiGetShipCost(currentHero, boatCell.m_point);
                 if (m_payTransitionCosts) {
-                    if (source->m_moveLeft < boatCost)
-                        boatCost = source->m_moveLeft + m_landMovement;
+                    if (source.m_moveLeft < boatCost)
+                        boatCost = source.m_moveLeft + m_landMovement;
                     else
-                        boatCost = source->m_moveLeft;
+                        boatCost = source.m_moveLeft;
                     boatCell.m_moveLeft = m_seaMovement;
                     boatCell.m_flying = 0;
                     boatCell.m_waterWalking = 0;
                 }
-                pushPoint(*source, boatCell, direction, boatCost,
+                pushPoint(source, boatCell, direction, boatCost,
                           maxMobility, boatCell.m_barrierValue,
                           boatCell.m_monster, 0);
             }
-            if (source->m_magicForbidden)
+            if (source.m_magicForbidden)
                 continue;
             if (!m_canCastTeleport
-                    && !(m_canCastFlight && !source->m_inBoat)
-                    && !(m_canCastWaterWalk && !source->m_inBoat))
+                    && !(m_canCastFlight && !source.m_inBoat)
+                    && !(m_canCastWaterWalk && !source.m_inBoat))
                 continue;
             if (m_canCastTeleport) {
                 candidate.m_adjustedCost += 500;
@@ -783,16 +787,16 @@ void searchArray::testPossibleDirections(hero* currentHero, pathCell* source,
             }
         }
 
-        if (source->m_canStop || !destCell->m_isTrigger
+        if (source.m_canStop || !destCell->m_isTrigger
                 || (g_adventureObjectTraits[destCell->m_type].m_blocksLanding == 0
                     && destCell->m_type != TOWN))
-            pushPoint(*source, candidate, direction, cost, maxMobility,
+            pushPoint(source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster,
                       destCell->m_isTrigger);
         if ((candidate.m_flying || candidate.m_dimensionDoor)
                 && destCell->m_isTrigger && candidate.m_canStop) {
             candidate.m_canStop = 0;
-            pushPoint(*source, candidate, direction, cost, maxMobility,
+            pushPoint(source, candidate, direction, cost, maxMobility,
                       candidate.m_barrierValue, candidate.m_monster, 0);
         }
     }

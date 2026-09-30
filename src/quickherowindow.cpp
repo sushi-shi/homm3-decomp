@@ -45,6 +45,10 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // contributing four extra CFG blocks and three branches. Keep its meaningful
 // temporary lifetime rather than adding an inliner gate. The init helper and
 // both window destructors are independently exact.
+// Explicit 0/1 arms in getPrimarySkill reach 99.01% here, but lose the
+// exact campaign crossover initializer (100% -> 96.15%); keep its shared
+// spelling. Named primary values and split morale/luck limit assignments
+// are score-flat (three states/two objects and four states/one object).
 
 VA(0x0052ead0, 0x8C8) MAC_ADDRESS(0x14a820, 0xc04)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)

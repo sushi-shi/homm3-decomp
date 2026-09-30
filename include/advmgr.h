@@ -982,15 +982,15 @@ public:
     void insertSound(int x, int y, int z, int soundPriority, int soundsType);
     void eraseAndFizzle(NewmapCell* eventCell, type_point point,
                         int fizzleSound);
-    int processSelect(const message* msg, type_point* triggerPoint,
-                      NewmapCell** peventCell);
-    int processDeSelect(const message* msg, unsigned char* exitFlag,
-                        type_point* triggerPoint, NewmapCell** peventCell);
+    int processSelect(const message& msg, type_point& triggerPoint,
+                      NewmapCell*& peventCell);
+    int processDeSelect(const message& msg, unsigned char& exitFlag,
+                        type_point& triggerPoint, NewmapCell*& peventCell);
     int processKeyPress(const message& msg, unsigned char& exitFlag,
                         type_point& triggerPoint, NewmapCell*& peventCell);
     void processRadarSelect(const message* msg);
-    void processMapSelect(const message* msg, type_point* triggerPoint,
-                          NewmapCell** peventCell);
+    void processMapSelect(const message& msg, type_point& triggerPoint,
+                          NewmapCell*& peventCell);
     void eraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
     void overrideBottomView(EBottomViewType view, int time);

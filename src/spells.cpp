@@ -1020,7 +1020,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(TSpellEffectID(traits->m_effect), 1);
+        powEffect(traits->m_effect, 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -1042,7 +1042,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                              "IceRayEx.wav"));
             target->m_showPowEffect = 1;
         }
-        powEffect(TSpellEffectID(traits->m_effect), 1);
+        powEffect(traits->m_effect, 1);
         if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
             damageMessage(traits->m_name, 1, damage, target, deaths);
             waitEndSample(iceraySample, -1);
@@ -1068,7 +1068,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(TSpellEffectID(traits->m_effect), 1);
+        powEffect(traits->m_effect, 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -1080,7 +1080,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                                         target, 1);
         int deaths = target->damage(damage);
         target->m_showPowEffect = 1;
-        powEffect(TSpellEffectID(traits->m_effect), 1);
+        powEffect(traits->m_effect, 1);
         damageMessage(traits->m_name, 1, damage, target, deaths);
         checkRebirth();
         break;
@@ -3819,7 +3819,7 @@ void combatManager::chainLightning(int index, int level, int power)
     long shownDamage = modifySpellDamage(
         baseDamage, SPELL_CHAIN_LIGHTNING, m_heroes[m_currentSide],
         m_heroes[1 - m_currentSide], 0, 0);
-    powEffect(TSpellEffectID(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_effect), 1);
+    powEffect(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_effect, 1);
     damageMessage(g_spellTraits[SPELL_CHAIN_LIGHTNING].m_name, 1,
                    shownDamage, 0, totalKilled);
     drawFrame(1, 0, 0, 0, 1, 0);
@@ -4673,11 +4673,10 @@ void combatManager::earthquake(int level)
                             g_windowManager->m_screenBitmap,
                             x - blast->getWidth() / 2, y - blast->getHeight() / 2,
                             0, 1);
-                // DC spells.cpp:5292/5293 scroll, then UpdateCombatArea(*bounds)
-                // by value; that form lowers this row 86.85 -> 83.74.
-                g_windowManager->updateScreen(
-                    bounds->m_minX, bounds->m_minY,
-                    bounds->width(), bounds->height());
+                // DC spells.cpp:5292/5293 passes *bounds by value through
+                // the global combat manager, matching the Mac update body.
+                if (!g_combatManager->scrollTo(*bounds, true, true, true))
+                    g_combatManager->updateCombatArea(*bounds);
             }
             GameTime::delayTil(frameTil);
         }

@@ -409,10 +409,10 @@ static int g_heroArmyCoords[7][2] = {
 //   * mana is a SHORT (`movsx eax, word [hero+0x18]`), morale and luck
 //     are icon frames at GetMorale/GetLuck + 3, and both accessors take
 //     the DC-attested three arguments;
-//   * the army block is gated on a separate counting sweep over the
-//     seven type slots. That sweep has no call in it, so VC6 turns it
-//     into the `mov ecx,7` / `dec ecx` countdown retail shows, while the
-//     display loop below it stays a pointer walk.
+//   * the army block is gated on a seven-slot count. Mac 0x60448..0x604c8
+//     expands the same operation as armyGroup::getNumArmies at 0x58528.
+//     Keep that canonical helper call rather than a second count body;
+//     Windows retail expands it into a mov ecx,7 / dec ecx countdown.
 
 // THE WIDGET IDS ARE LITERALS HERE, NOT AN INCREMENTING LOCAL - the
 // opposite of TBottomViewNewTurn. 0x7d8/0x7d9/0x7da are pushed as
@@ -454,6 +454,11 @@ static int g_heroArmyCoords[7][2] = {
 // index is dead), a spilled difference in `[ebp-0x10]`, and the
 // one-instruction loop header the preheader `jmp`s past. Two lockstep IVs,
 // and VC6 picks the survivor itself; not a guard or return shape.
+// getNumArmies placement: DC armygrp.cpp:804 and Mac order
+// canJoin(0x58408), getNumArmies(0x58528), add(0x585a4) support its ordinary
+// owning source body. The cross-TU count expansion leaves header visibility
+// open; no explicit inline qualifier is proven. Current ordinary call gives
+// 95.87521% versus 97.7573% for the pasted count; keep the supported boundary.
 VA(0x00451ab0, 0x68A) MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -487,13 +492,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     m_widgets.push_back(new iconWidget(5, 91, 22, 12, 0x7d9, "ilck22.def",
         who->getLuck(0, 0, 1) + 3, 0, 0, 0, 0x10));
 
-    int numStacks = 0;
-    for (int n = 0; n < 7; n++) {
-        if (who->m_army.m_armies[n] != -1)
-            numStacks++;
-    }
-
-    if (numStacks > 0) {
+    if (who->m_army.getNumArmies() > 0) {
         int id = 0x7db;
         for (int j = 0; j < 7; j++) {
             int type = who->m_army.m_armies[j];
@@ -653,8 +652,12 @@ static int g_townArmyCoords[7][2] = {
 // operator=. The DC xref graph corroborates - this compiland reaches
 // basic_string's CONSTRUCTOR (plus an allocator<char> temporary) and no
 // assignment operator.
-// Retail retains the const getArmy overload at every town-army read.
-// A read-only town pointer restores those identities without changing bytes.
+// DC get_army reads select mutable dc 0x168bd0; Mac 0x61174/0x611a0/
+// 0x6127c/0x61294/0x612b4 all call mutable 0x1b6fdc, not const 0x1b7020.
+// The retail twins fold at 0x5c1460, so its const label cannot establish a
+// const receiver. Keep the native mutable GetCurrTown/getArmy path.
+// VC6 mutable path: 94.7651% versus 94.7987% for the artificial const view;
+// the five folded overload labels change, while CFG and instructions hold.
 // The DC three-resource array restores four bytes of the frame and raises
 // 94.8000 to 94.8201%; changing only its enum element type is byte-flat.
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
@@ -668,7 +671,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     m_widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
-    const town* which = g_game->getCurrTown();
+    town* which = g_game->getCurrTown();
 
     m_widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
         which->getPortraitFrame(false), 0, 0, 0, 0x10));

@@ -6629,31 +6629,40 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // reach 99.97%). Retail spills `this` into a 0x2c frame; while/for loops,
 // either operand order, this->getHero and the getCell wrapper reach at
 // most 73.04%.
+// Four bounded source families (28 states, eight reproduced objects) preserve
+// the recorded acquisition order/names at 72.1173%. Moving player/index scope,
+// using a CMC argument temporary, and naming the point comparison do not improve
+// it; int/long owner snapshots lower it. why-branch loop rotations also leave
+// the structural residual unchanged (25/29 blocks, same five call sites; the
+// vector insert target is the native folded point/pointer alias). Preserve
+// operator== rather than the historical flattened comparison.
 VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
-    hero* obscuringHero = 0;
-    NewmapCell* mapCell = m_worldMap.cell(location.m_x, location.m_y, location.m_z);
-    if (mapCell->m_type == HERO) {
-        obscuringHero = g_game->getHero(mapCell->m_extraInfo);
-        obscuringHero->restoreCell();
+    // Original DC locals: cell, this_hero, current_player, i.
+    // DC 7462 acquires cell before 7464 initializes the hero pointer.
+    NewmapCell* cell = m_worldMap.cell(location.m_x, location.m_y, location.m_z);
+    hero* thisHero = 0;
+    if (cell->m_type == HERO) {
+        thisHero = g_game->getHero(cell->m_extraInfo);
+        thisHero->restoreCell();
     }
 
     ShipyardInfo* shipyardInfo =
         static_cast<ShipyardInfo*>(
-            static_cast<void*>(&mapCell->m_extraInfo));
+            static_cast<void*>(&cell->m_extraInfo));
     if (shipyardInfo->m_owner != newPlayerOwner) {
         if (shipyardInfo->m_owner >= 0) {
-            playerData* oldPlayer = &m_players[shipyardInfo->m_owner];
-            long index = 0;
-            while (index < oldPlayer->m_shipyards.size()) {
-                if (oldPlayer->m_shipyards[index] == location)
+            playerData* currentPlayer = &m_players[shipyardInfo->m_owner];
+            long i = 0;
+            while (i < currentPlayer->m_shipyards.size()) {
+                if (currentPlayer->m_shipyards[i] == location)
                     break;
-                ++index;
+                ++i;
             }
-            if (index < oldPlayer->m_shipyards.size())
-                oldPlayer->m_shipyards.erase(
-                    oldPlayer->m_shipyards.begin() + index);
+            if (i < currentPlayer->m_shipyards.size())
+                currentPlayer->m_shipyards.erase(
+                    currentPlayer->m_shipyards.begin() + i);
         }
 
         if (newPlayerOwner >= 0) {
@@ -6667,8 +6676,8 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
         sendMapChange(&change);
     }
 
-    if (obscuringHero) {
-        obscuringHero->obscureCell();
+    if (thisHero) {
+        thisHero->obscureCell();
     }
 }
 
@@ -9583,45 +9592,54 @@ void game::setMapRumour()
     }
 }
 
+// DC 11388 returns after the category chain; Mac 0xe4920/0xe4964/
+// 0xe49a8/0xe49e4 routes all four arms to one exit. Removing the prior
+// second-arm-only return recovers Windows 81.5183% -> 85.6147%, with no
+// sibling score changes. Eight roll-lifetime states give three reproduced
+// objects; three exit states give three. Canonical getPlayerName/getName
+// and getText paths stay intact (DC uses the older text operator[]).
 VA(0x004cd170, 0x59B) MAC_ADDRESS(0x0e483c, 0x4fc)  // dc 0xba040
 void game::setSpecialRumour()
 {
-    if (random(1, 100) < g_specialRumourChance && getCurrentTurn() > 1) {
-        long values[8];
-        int attempt;
-        signed char rankedPlayers[8];
+    // Original DC locals: iRoll, value, iRetries, index, two iRoll2,
+    // iLoc, point and cell. The rolls are separate integer acquisitions
+    // (11360/11362, 11401/11403), not floating-point threshold temporaries.
+    int roll = random(1, 100);
+    if (roll < g_specialRumourChance && getCurrentTurn() > 1) {
+        long value[8];
+        int retries;
+        signed char index[8];
 
-        attempt = 0;
-        while (attempt++ < g_specialRumourAttempts) {
-            int category = random(g_specialRumourFirstCategory,
+        retries = 0;
+        while (retries++ < g_specialRumourAttempts) {
+            int roll2 = random(g_specialRumourFirstCategory,
                                   g_specialRumourLastCategory);
-            getCategoryStats(category, values, rankedPlayers);
-            sortStats(values, rankedPlayers);
+            getCategoryStats(roll2, value, index);
+            sortStats(value, index);
 
-            if (values[0] != values[1]) {
-                if (category == g_specialRumourFirstCategory) {
+            if (value[0] != value[1]) {
+                if (roll2 == g_specialRumourFirstCategory) {
                     sprintf(m_currentRumour,
                             g_generalText->getText(
                                 g_specialRumourCategoryText),
-                            getPlayerName(rankedPlayers[0]));
-                } else if (category
+                            getPlayerName(index[0]));
+                } else if (roll2
                            == g_specialRumourFirstCategory + 1) {
                     sprintf(m_currentRumour,
                             g_generalText->getText(
                                 g_specialRumourCategoryText + 1),
-                            getPlayerName(rankedPlayers[0]));
-                    return;
-                } else if (category
+                            getPlayerName(index[0]));
+                } else if (roll2
                            == g_specialRumourFirstCategory + 2) {
                     sprintf(m_currentRumour,
                             g_generalText->getText(
                                 g_specialRumourCategoryText + 2),
-                            getPlayerName(rankedPlayers[0]));
+                            getPlayerName(index[0]));
                 } else {
                     sprintf(m_currentRumour,
                             g_generalText->getText(
                                 g_specialRumourCategoryText + 3),
-                            getPlayerName(rankedPlayers[0]));
+                            getPlayerName(index[0]));
                 }
                 return;
             }
@@ -9633,59 +9651,60 @@ void game::setSpecialRumour()
         return;
     }
 
-    if (random(1, 100) <= g_specialRumourLocationChance) {
-        int direction;
+    int roll2 = random(1, 100);
+    if (roll2 <= g_specialRumourLocationChance) {
+        int loc;
 
         if (static_cast<double>(m_ultimateArtifactX)
                     < static_cast<double>(m_mapHeader.m_size) * 0.33
             && static_cast<double>(m_ultimateArtifactX)
                    < static_cast<double>(m_mapHeader.m_size) * 0.33)
-            direction = 7;
+            loc = 7;
         else if (static_cast<double>(m_ultimateArtifactX)
                          < static_cast<double>(m_mapHeader.m_size) * 0.33
                      && static_cast<double>(m_ultimateArtifactX)
                             > static_cast<double>(m_mapHeader.m_size) * 0.66)
-            direction = 5;
+            loc = 5;
         else if (static_cast<double>(m_ultimateArtifactX)
                  < static_cast<double>(m_mapHeader.m_size) * 0.33)
-            direction = 6;
+            loc = 6;
         else if (static_cast<double>(m_ultimateArtifactX)
                          > static_cast<double>(m_mapHeader.m_size) * 0.66
                      && static_cast<double>(m_ultimateArtifactX)
                             < static_cast<double>(m_mapHeader.m_size) * 0.33)
-            direction = 1;
+            loc = 1;
         else if (static_cast<double>(m_ultimateArtifactX)
                          > static_cast<double>(m_mapHeader.m_size) * 0.66
                      && static_cast<double>(m_ultimateArtifactX)
                             > static_cast<double>(m_mapHeader.m_size) * 0.66)
-            direction = 3;
+            loc = 3;
         else if (static_cast<double>(m_ultimateArtifactX)
                  > static_cast<double>(m_mapHeader.m_size) * 0.66)
-            direction = 2;
+            loc = 2;
         else if (static_cast<double>(m_ultimateArtifactX)
                  < static_cast<double>(m_mapHeader.m_size) * 0.33)
-            direction = 0;
+            loc = 0;
         else if (static_cast<double>(m_ultimateArtifactX)
                  > static_cast<double>(m_mapHeader.m_size) * 0.66)
-            direction = 4;
+            loc = 4;
         else
-            direction = 8;
+            loc = 8;
 
         if (!m_ultimateArtifactZ) {
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailAboveText),
-                    g_directions[direction]);
+                    g_directions[loc]);
         } else {
             sprintf(m_currentRumour,
                     g_generalText->getText(
                         g_specialRumourGrailBelowText),
-                    g_directions[direction]);
+                    g_directions[loc]);
         }
     } else {
-        type_point artifactLocation(m_ultimateArtifactX, m_ultimateArtifactY,
+        type_point point(m_ultimateArtifactX, m_ultimateArtifactY,
                                     m_ultimateArtifactZ);
-        const NewmapCell* cell = g_advManager->getCell(artifactLocation);
+        const NewmapCell* cell = g_advManager->getCell(point);
         sprintf(m_currentRumour,
                 g_generalText->getText(g_specialRumourGrailObjectText),
                 g_rumourTerrainDescriptions[cell->m_groundSet]);

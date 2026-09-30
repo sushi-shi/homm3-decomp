@@ -7,6 +7,7 @@
 #include "artifact_type.h"
 #include "creature_flags.h"
 #include "spellschool.h"
+#include "spelleffect_type.h"
 #include "struct.h"
 #include "terrain_type.h"
 
@@ -554,7 +555,8 @@ struct SSpellTraits {
     // LoadPlaySample.  UNGATED 2026-08-20 by the view audit; both names
     // are byte-proven, so both are declared for everyone.
     const char* m_sample;     // +0x04
-    int m_effect;             // +0x08
+    // DC TSpellTraits record 0x1f65: member type 0x1f15, TSpellEffectID.
+    TSpellEffectID m_effect;  // +0x08, int-wide enum
     unsigned int m_flags;     // bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons

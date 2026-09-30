@@ -1231,13 +1231,9 @@ void army::animateMissile(army* armyToAttack)
             // SLimitData::Include and Clip; VC6 expands both methods.
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             updateArea.clip(g_combatDrawLimits);
-            // DC army.cpp:1335/1336 scrolls and calls UpdateCombatArea with
-            // this local by value; that form moves retail's register
-            // allocation (99.98 -> 95.14), so the Windows update stays direct.
-            g_windowManager->updateScreen(
-                updateArea.m_minX, updateArea.m_minY,
-                updateArea.width(),
-                updateArea.height());
+            // DC army.cpp:1335/1336 retains the by-value extent calls.
+            if (!g_combatManager->scrollTo(updateArea, true, true, true))
+                g_combatManager->updateCombatArea(updateArea);
             GameTime::delayTil(nextFrameTime);
         }
     }

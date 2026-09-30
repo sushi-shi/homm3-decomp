@@ -7989,6 +7989,11 @@ void townManager::setupWell(TCastleWindow* wellWin)
 // canonical field gives 94.807236%; local signed casts instead gave 93.30%.
 // The player-column index is signed: DC int locals, Mac 0x1e2d34 cmpwi/blt,
 // and retail cmp/jl. Restoring int replaces the candidate jb (94.84%).
+// DC line 9335 and Mac 0x1e1e38/0x1e2018 retain an eight-column rank loop;
+// DC line 9345 and Mac 0x1e1e6c..0x1e1ec8 advance the shared tie endpoint.
+// The x coordinate is derived before drawing the group (Mac 0x1e1ecc),
+// rather than maintained as the source loop bound. This complete model gives
+// 95.02932%; reassociating x into flagX + 66*rank + 0x103 gives 94.27137%.
 // Residual: category ladder scratch register, vector overload/ICF identities,
 // and later control-flow/lifetime choices; keep retained text getters.
 // E:\gamedcs\townmgr.cpp:9206
@@ -8060,20 +8065,18 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
 
         int start = 0;
         int last = 0;
-        int x = 0x103;
-        while (1) {
+        for (int rankColumn = 0; rankColumn < 8; rankColumn++) {
             if (start
                 == g_game->m_numPlayers - numDisabled)
                 break;
             int group = 1;
-            for (k = last + 1; k < g_game->m_numPlayers; k++) {
-                if (value[last + 1] != value[last])
-                    break;
-                if (g_game->m_playerDisabled[index[k]])
-                    break;
+            while (last + 1 < g_game->m_numPlayers
+                   && value[last + 1] == value[last]
+                   && !g_game->m_playerDisabled[index[last + 1]]) {
                 group++;
                 last++;
             }
+            int x = 0x103 + 66 * rankColumn;
             for (int m = start; m <= last; m++) {
                 m_widgets.push_back(new iconWidget(
                     flagX[group - 1][m - start] + x,
@@ -8084,10 +8087,7 @@ void TThievesGuildWindow::setupThievesGuild(int thievesGuilds)
                 addWidget(m_widgets.back(), -1);
             }
             last++;
-            x += 0x42;
             start = last;
-            if (x >= 0x313)
-                break;
         }
     }
 

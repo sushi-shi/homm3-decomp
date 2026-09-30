@@ -2904,6 +2904,15 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // halfway - the arc is half the horizontal span, which is what makes
 // `flatness` the right name for the coefficient rather than a height.
 
+// DC cmbtmgr.cpp:3721 retains UpdateCombatArea(SLimitData). Mac
+// 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
+// call after clipping the same four-word rectangle.
+// Canonical by-value call measures Windows 100 -> 94.19%; the frame
+// shrinks from retail 0x9c to 0x8c, travelX/remaining exchange slots,
+// and rectangle-update scratch registers differ. All 37 blocks, 21
+// branches and 12 semantic calls still align; predict-inline has the
+// same nine out-of-line calls. Mac improves 16.8103 -> 17.3658% and
+// the other 38 available cmbtmgr pairs hold. Keep the source call.
 VA(0x00467a00, 0x3AF) MAC_ADDRESS(0x073c44, 0x488)  // anchor-global, dc 0x614f0
 void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
@@ -2963,11 +2972,9 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                 g_windowManager->m_screenBitmap->getHeight(),
                 g_windowManager->m_screenBitmap->getPitch(), 0, 1);
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+            scrollTo(x, y, width, height, true, true, true);  // DC 3717
             updateArea.clip(g_combatDrawLimits);
-            g_windowManager->updateScreen(
-                updateArea.m_minX, updateArea.m_minY,
-                updateArea.width(),
-                updateArea.height());
+            updateCombatArea(updateArea);
             saved.draw(0, 0, width, height,
                        g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
                        g_windowManager->m_screenBitmap->getWidth(),
@@ -3067,14 +3074,10 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
             saved.grab(g_windowManager->m_screenBitmap, x, y);
             missile->draw(0, frame, 0, 0, width, height,
                           g_windowManager->m_screenBitmap, x, y, flipped, 1);
+            scrollTo(x, y, width, height, true, true, true);  // DC 3865
             updateArea.include(SLimitData(x, y, right, bottom));
             updateArea.clip(g_combatDrawLimits);
-            // DC cmbtmgr.cpp:3874 passes this local to UpdateCombatArea by
-            // value; that form moves retail's register allocation.
-            g_windowManager->updateScreen(
-                updateArea.m_minX, updateArea.m_minY,
-                updateArea.width(),
-                updateArea.height());
+            updateCombatArea(updateArea);  // DC 3874, by-value extent
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;
@@ -3202,11 +3205,9 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), flipped, 1);
         updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+        scrollTo(x, y, width, height, true, true, true);  // DC 4016
         updateArea.clip(g_combatDrawLimits);
-        // DC cmbtmgr.cpp:4022 passes this local by value (see above).
-        g_windowManager->updateScreen(updateArea.m_minX, updateArea.m_minY,
-                                      updateArea.width(),
-                                      updateArea.height());
+        updateCombatArea(updateArea);  // DC 4022, by-value extent
         GameTime::delayTil(nextFrameTime);
     }
 
@@ -3267,6 +3268,10 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
     }
 }
 
+// DC's older tail draws and updates the combat area after DoModal.
+// Complete's Mac 0x74e7c..0x74eb0 and exact Windows body instead test
+// the dialog result, cast the Faerie Dragon spell and adjust nextAction;
+// neither retains that redraw tail.
 VA(0x00468860, 0x124) MAC_ADDRESS(0x074dcc, 0x120)  // dc 0x62478
 void combatManager::viewArmy(army* thisArmy, int isQuickView)
 {

@@ -8,6 +8,8 @@
 #include "platform.h"
 
 #include "struct.h"
+#include "herospec.h"
+#include "terrain_type.h"
 
 class army;
 class hero;
@@ -253,14 +255,13 @@ private:
                    type_point monster, int isTrigger);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     void setMoat(const army* currentArmy);
-    // DC's first parameter here is const hero*. The current hero member
-    // declarations require a mutable pointer; retail cannot distinguish it.
-    void testPossibleDirections(hero* currentHero, pathCell* source,
+    // DC findpath.cpp:461 proves these cv/ref and enum parameter layers.
+    void testPossibleDirections(const hero* currentHero, pathCell& source,
                                 long turnMobility, long maxMobility,
                                 unsigned char adjacentMonster,
-                                type_point monsterLocation, long pathfinding,
+                                type_point monsterLocation, TSkillMastery pathfinding,
                                 type_search_type searchType,
-                                long nativeTerrain);
+                                TTerrainType nativeTerrain);
     // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
     // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
     // - a 30-byte stride on _Last, which only a by-value pathCell gives.

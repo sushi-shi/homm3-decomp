@@ -1101,38 +1101,41 @@ static void addReward(std::string& text, const std::string& alternate,
 }
 
 // E:\gamedcs\events.cpp:852
+// DC locals: experience_gained, reward_given, msg, amount,
+// join_dialog_needed and new_creatures; their native types are retained.
+// Removing throwaway enum-conversion aliases is byte-flat. Four expression
+// states reproduce four objects; the direct string assignment below restores
+// the native lifetime. Remaining vector/string inline decisions are unresolved.
 VA(0x0049fa90, 0x106B) MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
 unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
     NewmapCell* cell, type_point point, unsigned char humanPlayer,
     BlackBoxData* blackBox)
 {
-    long exp = 0;
-    unsigned char gave = 0;
-    std::string message(text);
+    long experienceGained = 0;
+    unsigned char rewardGiven = 0;
+    std::string msg(text);
     std::string alternate;
     std::vector<type_dialog_resource> rewards;
     alternate = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_BLACK_BOX_REWARD_FORMAT],
                               currentHero->m_name);
 
     if (blackBox->m_experienceBonus > 0) {
-        exp = currentHero->getExperienceBonusFactor()
+        experienceGained = currentHero->getExperienceBonusFactor()
               * blackBox->m_experienceBonus;
         if (humanPlayer) {
-            addReward(message, alternate, rewards, RES_EXPERIENCE, exp);
+            addReward(msg, alternate, rewards, RES_EXPERIENCE, experienceGained);
         }
-        gave = 1;
+        rewardGiven = 1;
     }
 
     for (int i = 0; i < 4; i++) {
         if (blackBox->m_primarySkillBonus[i] > 0) {
             if (humanPlayer) {
-                int rewardType;
-                rewardType = RES_PRIMARY_SKILL_ATTACK + i;
-                addReward(message, alternate, rewards,
-                          EGameResource(rewardType),
+                addReward(msg, alternate, rewards,
+                          EGameResource(RES_PRIMARY_SKILL_ATTACK + i),
                            blackBox->m_primarySkillBonus[i]);
             }
-            gave = 1;
+            rewardGiven = 1;
             currentHero->adjustPrimarySkill(i, blackBox->m_primarySkillBonus[i]);
         }
     }
@@ -1154,96 +1157,94 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
         if (!skillGiven)
             continue;
         if (humanPlayer) {
-            addReward(message, alternate, rewards, RES_SECONDARY_SKILL,
+            addReward(msg, alternate, rewards, RES_SECONDARY_SKILL,
                        skill * 3 + level + 2);
         }
-        gave = 1;
+        rewardGiven = 1;
     }
 
-    long mana = blackBox->m_manaBonus;
-    if (mana != 0) {
-        if (currentHero->m_mana + mana > 999) {
-            mana = 999 - currentHero->m_mana;
-        } else if (currentHero->m_mana + mana < 0) {
-            mana = -currentHero->m_mana;
+    long amount = blackBox->m_manaBonus;
+    if (amount != 0) {
+        if (currentHero->m_mana + amount > 999) {
+            amount = 999 - currentHero->m_mana;
+        } else if (currentHero->m_mana + amount < 0) {
+            amount = -currentHero->m_mana;
             alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MANA_FORMAT),
                                       currentHero->m_name);
         } else {
             alternate = formatString(g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MANA_FORMAT),
                                       currentHero->m_name);
         }
-        if (humanPlayer && mana != 0) {
-            addReward(message, alternate, rewards, RES_MANA, mana);
+        if (humanPlayer && amount != 0) {
+            addReward(msg, alternate, rewards, RES_MANA, amount);
         }
-        currentHero->m_mana += mana;
-        gave = 1;
+        currentHero->m_mana += amount;
+        rewardGiven = 1;
     }
 
     if (blackBox->m_moraleBonus != 0) {
         if (humanPlayer) {
             if (blackBox->m_moraleBonus < 0) {
-                addReward(message, formatString(
+                addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_MORALE,
                            blackBox->m_moraleBonus);
             } else {
-                addReward(message, formatString(
+                addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_MORALE_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_MORALE,
                            blackBox->m_moraleBonus);
             }
         }
-        gave = 1;
+        rewardGiven = 1;
         currentHero->m_moraleBonus += blackBox->m_moraleBonus;
     }
 
     if (blackBox->m_luckBonus != 0) {
         if (humanPlayer) {
             if (blackBox->m_luckBonus < 0) {
-                addReward(message, formatString(
+                addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_BAD_LUCK,
                            blackBox->m_luckBonus);
             } else {
-                addReward(message, formatString(
+                addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_LUCK_FORMAT),
                     currentHero->m_name), rewards, RES_GOOD_LUCK,
                            blackBox->m_luckBonus);
             }
         }
-        gave = 1;
+        rewardGiven = 1;
         currentHero->m_luckBonus += blackBox->m_luckBonus;
     }
-    showRewards(message, rewards, 1);
+    showRewards(msg, rewards, 1);
 
     for (int k = 0; k < 7; k++) {
         if (blackBox->m_resQty[k] != 0) {
             if (humanPlayer) {
-                int rewardType;
-                rewardType = k;
                 if (blackBox->m_resQty[k] > 0) {
-                    addReward(message, formatString(
+                    addReward(msg, formatString(
                         g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(rewardType),
+                        currentHero->m_name), rewards, EGameResource(k),
                                blackBox->m_resQty[k]);
                 } else {
-                    addReward(message, formatString(
+                    addReward(msg, formatString(
                         g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LOSE_TREASURE_FORMAT),
-                        currentHero->m_name), rewards, EGameResource(rewardType),
+                        currentHero->m_name), rewards, EGameResource(k),
                                blackBox->m_resQty[k] - 100000);
                 }
             }
             currentHero->giveResource(k, blackBox->m_resQty[k]);
-            gave = 1;
+            rewardGiven = 1;
         }
     }
-    showRewards(message, rewards, 1);
+    showRewards(msg, rewards, 1);
 
     type_artifact artifact(ARTIFACT_NONE);
     for (unsigned int m = 0; m < blackBox->m_artifacts.size(); m++) {
         if (currentHero->getNumberInBackpack(1) < 64) {
             if (humanPlayer) {
-                addReward(message, formatString(
+                addReward(msg, formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_GAIN_TREASURE_FORMAT),
                     currentHero->m_name), rewards, RES_ARTIFACT,
                            blackBox->m_artifacts[m]);
@@ -1252,10 +1253,10 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
             currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
-            gave = 1;
+            rewardGiven = 1;
         }
     }
-    showRewards(message, rewards, 1);
+    showRewards(msg, rewards, 1);
 
     if (currentHero->isWieldingArtifact(0)) {
         for (unsigned int n = 0; n < blackBox->m_spells.size(); n++) {
@@ -1263,33 +1264,33 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                     <= currentHero->getSecondarySkill(eSecSkillWisdom) + 2
                 && !currentHero->isInSpellbook(blackBox->m_spells[n])) {
                 if (humanPlayer) {
-                    // Mac 0xab3c8..0xab3e8 assigns formatString's result
-                    // straight into message (no copy constructor); that
-                    // direct form scores 95.28% here against 96.35% (r5).
+                    // Mac 0xab3c8..0xab3e8 assigns the returned string
+                    // directly. A named copy adds a CodeWarrior copy ctor
+                    // and destructor absent from native; preserve this
+                    // lifetime despite Windows 96.35 -> 95.28%.
                     if (rewards.size() != 0) {
-                        std::string pendingText = formatString(
+                        msg = formatString(
                             g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELLS_FORMAT),
                             currentHero->m_name);
-                        message = pendingText;
                     }
-                    addReward(message, formatString(
+                    addReward(msg, formatString(
                         g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_LEARN_SPELL_FORMAT),
                         currentHero->m_name), rewards, RES_SPELL,
                                blackBox->m_spells[n]);
                 }
                 currentHero->addSpell(blackBox->m_spells[n]);
-                gave = 1;
+                rewardGiven = 1;
             }
         }
     }
-    showRewards(message, rewards, 1);
+    showRewards(msg, rewards, 1);
 
-    unsigned char joinFailed = 0;
-    armyGroup creatures = blackBox->m_creatures;
+    unsigned char joinDialogNeeded = 0;
+    armyGroup newCreatures = blackBox->m_creatures;
     // The retail loop-back uses signed jl; an unsigned index emits jb.
     for (int p = 0; p < 7; p++) {
-        int type = creatures.m_armies[p];
-        int count = creatures.m_numTroops[p];
+        int type = newCreatures.m_armies[p];
+        int count = newCreatures.m_numTroops[p];
         if (type == CREATURE_NONE)
             continue;
         if (humanPlayer) {
@@ -1301,33 +1302,31 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                 alternate = formatString(
                     g_adventureEventText->getText(ADV_EVENT_TEXT_BLACK_BOX_CREATURES_JOIN_FORMAT),
                     getArmyName(type, 2), currentHero->m_name);
-            addReward(message, alternate, rewards, RES_MONSTER,
+            addReward(msg, alternate, rewards, RES_MONSTER,
                        ((count & 0xffff) << 16) | (type & 0xffff));
         }
         if (currentHero->m_army.add(type, count, -1)) {
-            creatures.dismiss(p);
+            newCreatures.dismiss(p);
         } else if (humanPlayer) {
-            joinFailed = 1;
+            joinDialogNeeded = 1;
         } else {
-            int storage;
-            storage = type;
-            aiJoinDecision(currentHero, TCreatureType(storage), count);
+            aiJoinDecision(currentHero, TCreatureType(type), count);
         }
-        gave = 1;
+        rewardGiven = 1;
     }
 
     if (humanPlayer) {
-        if (message.length() > 0)
-            extendedDialog(message.c_str(), rewards, -1, -1, 0);
+        if (msg.length() > 0)
+            extendedDialog(msg.c_str(), rewards, -1, -1, 0);
     }
-    if (joinFailed)
-        doMonsterJoinDialog(currentHero, &creatures, 0);
-    if (exp > 0)
-        currentHero->giveExperience(exp, 1, 1);
+    if (joinDialogNeeded)
+        doMonsterJoinDialog(currentHero, &newCreatures, 0);
+    if (experienceGained > 0)
+        currentHero->giveExperience(experienceGained, 1, 1);
     if (humanPlayer)
         m_advWindow->updateHeroLocators(-1, 1, 1);
     updBottomView(1, 1, 1);
-    return gave;
+    return rewardGiven;
 }
 
 VA_COMPGEN(0x0054c120, 0x43, VECTOR_CLEAR, type_dialog_resource)

@@ -1293,20 +1293,20 @@ int advManager::main(message& msg)
         case MESSAGE_WIDGET:
             switch (msg.m_codeX) {
             case widget::WIDGET_SELECT:
-                result = processSelect(&msg, &triggerPoint, &eventCell);
+                result = processSelect(msg, triggerPoint, eventCell);
                 break;
 
             case widget::WIDGET_DESELECT:
                 if (!(msg.m_qualifier & MESSAGE_MODIFIER_RIGHT))
-                    result = processDeSelect(&msg, &exitFlag, &triggerPoint,
-                                             &eventCell);
+                    result = processDeSelect(msg, exitFlag, triggerPoint,
+                                             eventCell);
                 break;
 
             case widget::WIDGET_RIGHT_SELECT:
                 if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
                     if (!m_advWindow->processRightSelect(&msg))
-                        result = processSelect(&msg, &triggerPoint,
-                                               &eventCell);
+                        result = processSelect(msg, triggerPoint,
+                                               eventCell);
                 }
                 break;
 
@@ -1671,13 +1671,15 @@ int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, typ
 // DC line 1981 retains HideRoute(1, 0, 1) in the town arm. The canonical
 // source call keeps this Windows function exact.
 
+// DC advmgr.cpp:1939 proves the three reference parameters below; main
+// supplies their stack locals and retail passes the same address ABI.
 VA(0x004097e0, 0x290) MAC_ADDRESS(0x009a30, 0x23c)  // dc 0x9330
-int advManager::processSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+int advManager::processSelect(const message& msg, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
 
-    switch (msg->m_codeY) {
+    switch (msg.m_codeY) {
     case TAdventureMapWindow::HERO_0_ID:
     case TAdventureMapWindow::HERO_1_ID:
     case TAdventureMapWindow::HERO_2_ID:
@@ -1688,14 +1690,14 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     case TAdventureMapWindow::HERO_LOCATOR_2_ID:
     case TAdventureMapWindow::HERO_LOCATOR_3_ID:
     case TAdventureMapWindow::HERO_LOCATOR_4_ID: {
-        int heroSlot = msg->m_codeY - TAdventureMapWindow::HERO_0_ID;
+        int heroSlot = msg.m_codeY - TAdventureMapWindow::HERO_0_ID;
         if (heroSlot > TAdventureMapWindow::NUM_HERO_BUTTONS - 1)
-            heroSlot = msg->m_codeY - TAdventureMapWindow::HERO_LOCATOR_0_ID;
+            heroSlot = msg.m_codeY - TAdventureMapWindow::HERO_LOCATOR_0_ID;
         int heroId = localPlayer->m_heroes[m_advWindow->m_topHero + heroSlot];
         if (heroSlot < localPlayer->m_numHeroes) {
             if (heroId == localPlayer->m_currHeroId) {
                 m_advCommand = ADV_COMMAND_VIEW_HERO;
-                doAdvCommand(triggerPoint);
+                doAdvCommand(&triggerPoint);
             } else {
                 setHeroContext(heroId, 0, waitingPlayer, 1);
             }
@@ -1708,13 +1710,13 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
     case TAdventureMapWindow::TOWN_2_ID:
     case TAdventureMapWindow::TOWN_3_ID:
     case TAdventureMapWindow::TOWN_4_ID: {
-        int townSlot = msg->m_codeY - TAdventureMapWindow::TOWN_0_ID;
+        int townSlot = msg.m_codeY - TAdventureMapWindow::TOWN_0_ID;
         int townId = localPlayer->m_townIds[m_advWindow->m_topTown + townSlot];
         if (!waitingPlayer)
             hideRoute(1, 0, 1);
         if (townId == localPlayer->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            *peventCell = doAdvCommand(triggerPoint);
+            peventCell = doAdvCommand(&triggerPoint);
         } else {
             setTownContext(townId, waitingPlayer, 1);
         }
@@ -1727,15 +1729,15 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
         break;
 
     case TAdventureMapWindow::RADAR_ID:
-        processRadarSelect(msg);
+        processRadarSelect(&msg);
         break;
 
     default:
         break;
     }
 
-    if ((msg->m_qualifier & MESSAGE_MODIFIER_RIGHT)
-        && msg->m_codeY >= ADV_HELP_ID_FIRST && msg->m_codeY <= ADV_HELP_ID_LAST) {
+    if ((msg.m_qualifier & MESSAGE_MODIFIER_RIGHT)
+        && msg.m_codeY >= ADV_HELP_ID_FIRST && msg.m_codeY <= ADV_HELP_ID_LAST) {
         // Row 110 is the only help string the whole adventure-button band
         // answers with; its enum name describes that role.
         normalDialog(g_generalText->getText(GENERAL_TEXT_STATUS_WINDOW_HELP), 4, -1, -1, -1, 0, -1, 0,
@@ -1749,13 +1751,15 @@ int advManager::processSelect(const message* msg, type_point* triggerPoint, Newm
 // and get_map_center; Mac calls CheckDimNextHeroBut at 0:0x9e08. Complete
 // expands their bodies here. The reviewed Mac address has instruction-shape
 // evidence, but no admitted exact byte verdict.
+// DC advmgr.cpp:2152 proves all four reference parameters; the retail
+// caller likewise passes the message, exit byte, point and cell-pointer homes.
 VA(0x00409a70, 0x641) MAC_ADDRESS(0x009c6c, 0x5d4)  // dc 0x9a94
-int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, type_point* triggerPoint, NewmapCell** peventCell)
+int advManager::processDeSelect(const message& msg, unsigned char& exitFlag, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
     unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
 
-    switch (msg->m_codeY) {
+    switch (msg.m_codeY) {
     case TAdventureMapWindow::QUEST_LOG_ID:
         doQuestLog(g_game->getLocalPlayerGamePos());
         break;
@@ -1794,7 +1798,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
 
     case TAdventureMapWindow::MOVE_ID:
         m_advCommand = ADV_COMMAND_WALK_ROUTE;
-        *peventCell = doAdvCommand(triggerPoint);
+        peventCell = doAdvCommand(&triggerPoint);
         break;
 
     case TAdventureMapWindow::ADVENTURE_OPTIONS_ID:
@@ -1804,13 +1808,13 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
                          -1, 0, -1, 0);
             if (g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT) {
                 g_gameCommand = SYSOPT_QUIT;
-                *exitFlag = 1;
+                exitFlag = 1;
             }
         }
         break;
 
     case TAdventureMapWindow::SYSTEM_OPTIONS_ID:
-        *exitFlag = doSystemOptions();
+        exitFlag = doSystemOptions();
         break;
 
     case TAdventureMapWindow::END_TURN_ID:
@@ -1875,7 +1879,7 @@ int advManager::processDeSelect(const message* msg, unsigned char* exitFlag, typ
         break;
     }
 
-    if (msg->m_codeY >= ADV_HELP_ID_FIRST && msg->m_codeY <= ADV_HELP_ID_LAST) {
+    if (msg.m_codeY >= ADV_HELP_ID_FIRST && msg.m_codeY <= ADV_HELP_ID_LAST) {
         if (m_bottomViewOverride == BOTTOM_VIEW_2) {
             overrideBottomView(BOTTOM_VIEW_1, -1);
         } else if (m_bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
@@ -2020,8 +2024,10 @@ void advManager::processRadarSelect(const message* msg)
 // GetHero re-tests the id off the same flags and leaves a dead
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
 // but does not pay (see the four measurements above).
+// DC advmgr.cpp:2434 proves const message&, type_point&, NewmapCell*&.
+// Retail passes the same three addresses; its body requires each referent.
 VA(0x0040a5d0, 0x606) MAC_ADDRESS(0x00a7dc, 0x648)  // anchor-callee, dc 0xa88c
-void advManager::processMapSelect(const message* msg, type_point* triggerPoint, NewmapCell** peventCell)
+void advManager::processMapSelect(const message& msg, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     int visibilityBit = 1 << g_game->getLocalPlayerGamePos();
     playerData* player = g_game->getLocalPlayer();
@@ -2039,7 +2045,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
 
     NewmapCell* cell = getCell(point);
 
-    if (msg->m_qualifier & MESSAGE_MODIFIER_RIGHT) {
+    if (msg.m_qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (!visible) {
             quickInfo(m_lastHoverX, m_lastHoverY, m_lastMapHover.m_z);
             return;
@@ -2087,14 +2093,14 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
         if (currHero && currHero->m_z == m_lastMapHover.m_z) {
             if (currHero->m_x == m_lastMapHover.m_x && currHero->m_y == m_lastMapHover.m_y) {
                 m_advCommand = ADV_COMMAND_VIEW_HERO;
-                doAdvCommand(triggerPoint);
+                doAdvCommand(&triggerPoint);
                 return;
             }
 
             pathCell* pathAt = g_searchArray->getCell(m_lastMapHover, 0);
             if (g_currentPlayer->isLocalHuman() && pathAt && pathAt->m_visited) {
                 if (!heroMobile
-                    || (msg->m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
+                    || (msg.m_qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
                     || (g_config.m_showRoute
                         && (currHero->m_pathTargetX != m_lastMapHover.m_x
                             || currHero->m_pathTargetY != m_lastMapHover.m_y))) {
@@ -2105,7 +2111,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
                     return;
                 }
             }
-            *peventCell = doAdvCommand(triggerPoint);
+            peventCell = doAdvCommand(&triggerPoint);
             return;
         }
     }
@@ -2117,7 +2123,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     if (clickedType == HERO) {
         if (clickedIndex == g_game->getLocalPlayer()->m_currHeroId) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
-            doAdvCommand(triggerPoint);
+            doAdvCommand(&triggerPoint);
             return;
         }
         if (myPos != g_game->getHero(clickedIndex)->m_owner)
@@ -2133,7 +2139,7 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     if (clickedType == TOWN) {
         if (clickedIndex == g_game->getLocalPlayer()->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            *peventCell = doAdvCommand(triggerPoint);
+            peventCell = doAdvCommand(&triggerPoint);
             return;
         }
         if (clickedIndex == -1)
@@ -2147,13 +2153,17 @@ void advManager::processMapSelect(const message* msg, type_point* triggerPoint, 
     }
 
     if (clickedType == SHIPYARD)
-        *peventCell = doAdvCommand(triggerPoint);
+        peventCell = doAdvCommand(&triggerPoint);
 }
 
 // Original: advManager::ProcessMapSelect2; advmgr.cpp:2624, dc 0xaf3c
 // The separate fallback selection interface is retained without a retail VA
-// or invented caller. DC records its own point validation and cell lookup;
-// the current-hero movement path belongs to ProcessMapSelect, not this helper.
+// claim. DC line 2558 calls it after the current-hero DoAdvCommand assignment
+// (0xad7e), rather than at the general hero/town/shipyard fallback. That call
+// is an older-build difference: Mac 0xac50..0xac58 stores the command result
+// then branches to its epilogue; Complete shares the command/return block at
+// target .text+0x4e0b..0x4e21. Neither repeats this helper's point validation,
+// visibility query or cell lookup, so that specific source call is not restored.
 void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
                                    NewmapCell*& eventCell)
 {

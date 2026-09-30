@@ -515,16 +515,12 @@ void combatManager::updateCombatArea()
 // see their platform evidence comment.
 // The fixed-viewport coordinate facade is also visible there to army.cpp.
 
-// E:\gamedcs\drawing.cpp:679, dc 0x84248. ScrollTo's rectangle overload
-// constructs SLimitData(x, y, x + width, y + height) at line 680 and delegates
-// to the extent overload. SpellEffect calls it at line 2653; the
-// fixed PC viewport folds the false result into UpdateCombatArea's path.
-bool combatManager::scrollTo(int x, int y, int width, int height, bool draw,
-                             bool doscrollX, bool doscrollY)
-{
-    return scrollTo(SLimitData(x, y, x + width, y + height),
-                    draw, doscrollX, doscrollY);
-}
+// DC drawing.cpp:679/680 (dc 0x84248) owns the older seven-coordinate
+// ScrollTo facade. Its single body is now visible in cmbtmgr.h: Complete's
+// combat missile callers also fold its fixed-viewport delegation across TUs.
+// Mac 0xa4ef0+0x7c ends exactly at setupGridForArmy 0xa4f6c, leaving no
+// separate facade at this older source-order slot. No explicit inline
+// qualifier is recovered from that placement inference.
 
 #if 0  // @carcass
 
