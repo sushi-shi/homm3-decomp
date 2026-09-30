@@ -1092,7 +1092,7 @@ private:
     // unused parameter and string-literal callers do not prove constness.
     int creatureBankEvent(class hero* who, NewmapCell* cell,
                           char* text, type_point point,
-                          unsigned char humanPlayer);
+                          bool humanPlayer);
     void doEventCreatureBank(class hero* currentHero, NewmapCell* cell,
                              type_point point, bool humanPlayer);
     // The creature dwelling (jump-table arms 0x11 and 0x14 share the one
