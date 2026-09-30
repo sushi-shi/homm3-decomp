@@ -261,7 +261,11 @@ int heroPower(hero* candidate)
     int skills = 0;
     for (int skill = 0; skill < g_crossoverSecondarySkills; ++skill)
         skills += candidate->getSecondarySkill(TSecondarySkill(skill));
-    return skills + primary;
+    // DC line 3284 adds sec_skill to pri_skill; Mac 0x91d28 likewise
+    // returns primary (r9) plus the accumulated secondary total (r10).
+    // This operand-order recovery is byte-flat: helper 100%, hero picker
+    // 98.3704%; its expanded additions still differ in register scheduling.
+    return primary + skills;
 }
 
 struct CrossoverHeroStronger {
