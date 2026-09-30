@@ -4705,6 +4705,10 @@ VA(0x00447120, 0x20A)
 DC_ADDRESS(0x04bc84, 0xfa)
 MAC_ADDRESS(0x05369c, 0x15c)
 // Mac 0x53700 expands the POISON duration getter at +0x2b4.
+// Windows 97.4026 residual: the AGE getter load/test in adjustHitpoints
+// schedules after the poison-factor float copy/store rather than across it.
+// Capturing its duration result in the canonical helper is byte-flat; all
+// 36 blocks, 19 branches, nine calls and 19 references already agree.
 void army::resetRound()
 {
     if (m_numTroops <= 0)
