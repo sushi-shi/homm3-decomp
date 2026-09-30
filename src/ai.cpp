@@ -214,6 +214,12 @@ unsigned char combatManager::failedSiege()
 // named done Boolean do not change the residual with the helpers restored.
 // Keep the artifact-value result ahead of the by-value max so its argument
 // copy dies in that arm; the final quotient likewise owns its float slot.
+// DC records iSideFV as int[2], not long[2]. Restoring that array and the
+// unsigned-char results of army::Is/IsActive is byte-flat at 94.4511%.
+// Their canonical expansions remain present; the residual has 78 matching
+// CFG blocks in flow, 54 branches and four returns. It still hoists the
+// initial zero carrier and lowers the Done test to shr/test rather than
+// retail's test of the attribute mask. Do not bypass Is to force that test.
 VA(0x0041e570, 0x546)
 DC_ADDRESS(0x02389c, 0x690)
 MAC_ADDRESS(0x01f874, 0x7e4)  // order-map(DC ai.obj head) + anchor-callee failed_siege
@@ -296,7 +302,7 @@ unsigned char combatManager::aiCheckRetreat()
                     if (remaining < 0)
                         return 1;
                     if (player->m_resources[GOLD] >= surrenderCost + 2500) {
-                        long fightValues[2];
+                        int fightValues[2];
                         { for (long side = 0; side < 2; side++) {
                                 long fightValue = 0;
                                 { for (long i = 0; i < 20; i++) {

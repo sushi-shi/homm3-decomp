@@ -893,7 +893,7 @@ public:
     void playAnimation(int sequence, int nframes, int startFrame);
     void setupAnimation();
     unsigned long strength();
-    bool isActive() const;
+    unsigned char isActive() const;
     inline void checkLuck();
     void setSpellInfluence(int spell, int power, int mastery,
                            const hero* castingHero);
@@ -906,7 +906,7 @@ public:
     int rightX() const;
     int frontX() const;
     int midX() const;
-    bool is(unsigned attribute) const;
+    unsigned char is(unsigned attribute) const;
     bool isInAreaHighlight() const;
     int offsetToFront(int direction) const;
     void processDeath(int fadeElementals);
@@ -1655,8 +1655,10 @@ inline bool army::needToTurn(int direction) const
 
     // Original: army::Is; E:\gamedcs\Army.h:765
     // Any requested attribute suffices, including a combined trait mask.
+    // DC records an unsigned-char result and an unsigned-int attribute.
+    // Keep that byte result through caller expansion rather than bool.
 DC_ADDRESS(0x027ce4, 0xe)
-inline bool army::is(unsigned attribute) const
+inline unsigned char army::is(unsigned attribute) const
     {
         return (m_monInfo.m_attributes & attribute) != 0;
     }
@@ -1743,8 +1745,9 @@ inline TSkillMastery army::getSpellLevel(int spell) const
     }
 
     // E:\gamedcs\Army.h:830
+    // DC's IsActive result is unsigned char, as in the adjacent Is helper.
 DC_ADDRESS(0x027d88, 0x14)
-inline bool army::isActive() const
+inline unsigned char army::isActive() const
     {
         return m_creatureType >= 0 && m_numTroops > 0;
     }
