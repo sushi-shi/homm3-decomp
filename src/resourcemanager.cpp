@@ -1500,6 +1500,11 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // bytes versus the guarded do-loop; its retained helper sequence is unchanged.
 // In the integrated Windows context this probe is 88.2161% versus 88.2323%;
 // both still have 73/72 CFG blocks. Prior peaks remain historical controls.
+// Mac's DEF header/sequence/frame scalars and frame-offset array are decoded
+// after each copy (154068..98, 154118..12c, 154198..1b8, 154278..2bc,
+// 1542f8..320). The canonical endian conversions preserve Windows 88.2129%.
+// Its offset traversal is PowerPC-only: retaining an identity-conversion loop
+// on Windows adds unsupported CFG branches and scores 85.56%.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
 VA(0x0055c7b0, 0x743)
@@ -1540,6 +1545,11 @@ CSprite* ResourceManager::getSprite(const char* name)
     SpriteDefHeader sdef;
     unsigned char* definitionPosition = fileData + sizeof(sdef);
     memcpy(&sdef, fileData, sizeof(sdef));
+    // Mac 154068..154098 decodes the copied DEF scalar header in place.
+    sdef.m_type = EResourceType(LITTLE_ENDIAN_LONG(sdef.m_type));
+    sdef.m_width = LITTLE_ENDIAN_LONG(sdef.m_width);
+    sdef.m_height = LITTLE_ENDIAN_LONG(sdef.m_height);
+    sdef.m_numSequences = LITTLE_ENDIAN_LONG(sdef.m_numSequences);
 
     CSprite* sprite = new CSprite(
         name, sdef.m_type, sdef.m_width, sdef.m_height);
@@ -1555,6 +1565,8 @@ CSprite* ResourceManager::getSprite(const char* name)
          sequenceIndex < sdef.m_numSequences;
          ++sequenceIndex, ++sequence) {
         memcpy(sequence, definitionPosition, sizeof(*sequence));
+        sequence->m_sequenceNumber = LITTLE_ENDIAN_LONG(sequence->m_sequenceNumber);
+        sequence->m_numFrames = LITTLE_ENDIAN_LONG(sequence->m_numFrames);
         definitionPosition += sizeof(*sequence);
 
         sequence->m_frameNames = new char[sequence->m_numFrames * 13];
@@ -1566,6 +1578,13 @@ CSprite* ResourceManager::getSprite(const char* name)
         memcpy(sequence->m_frameOffsets, definitionPosition,
                sequence->m_numFrames * sizeof(int));
         definitionPosition += sequence->m_numFrames * sizeof(int);
+#if defined(__POWERPC__)
+        // Mac 154198..1541b8 decodes each acquired frame offset; retail
+        // Windows has no corresponding offset traversal after its copy.
+        for (int offsetIndex = 0; offsetIndex < sequence->m_numFrames; ++offsetIndex)
+            sequence->m_frameOffsets[offsetIndex] =
+                LITTLE_ENDIAN_LONG(sequence->m_frameOffsets[offsetIndex]);
+#endif
     }
 
     for (sequenceIndex = 0;
@@ -1593,12 +1612,24 @@ CSprite* ResourceManager::getSprite(const char* name)
                 unsigned char* source =
                     fileData + sequence.m_frameOffsets[frameIndex];
                 memcpy(&croppedHeader, source, sizeof(croppedHeader));
+                croppedHeader.m_dataSize = LITTLE_ENDIAN_LONG(croppedHeader.m_dataSize);
+                croppedHeader.m_encoding = TEncodingMethod(LITTLE_ENDIAN_LONG(croppedHeader.m_encoding));
+                croppedHeader.m_width = LITTLE_ENDIAN_LONG(croppedHeader.m_width);
+                croppedHeader.m_height = LITTLE_ENDIAN_LONG(croppedHeader.m_height);
+                croppedHeader.m_croppedWidth = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedWidth);
+                croppedHeader.m_croppedHeight = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedHeight);
+                croppedHeader.m_croppedX = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedX);
+                croppedHeader.m_croppedY = LITTLE_ENDIAN_LONG(croppedHeader.m_croppedY);
                 frameData = new unsigned char[croppedHeader.m_dataSize];
                 memcpy(frameData, source + sizeof(croppedHeader),
                        croppedHeader.m_dataSize);
             } else {
                 memcpy(&compactHeader, definitionPosition,
                        sizeof(compactHeader));
+                compactHeader.m_dataSize = LITTLE_ENDIAN_LONG(compactHeader.m_dataSize);
+                compactHeader.m_encoding = LITTLE_ENDIAN_LONG(compactHeader.m_encoding);
+                compactHeader.m_width = LITTLE_ENDIAN_LONG(compactHeader.m_width);
+                compactHeader.m_height = LITTLE_ENDIAN_LONG(compactHeader.m_height);
                 definitionPosition += sizeof(compactHeader);
                 frameData = new unsigned char[compactHeader.m_dataSize];
                 memcpy(frameData,
