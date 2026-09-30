@@ -350,6 +350,59 @@ class CfgTest(unittest.TestCase):
         events = dc_asm.control_events(view, bytes(data))
         self.assertEqual(events, {2: {"call_target_va": None}})
 
+    @staticmethod
+    def _pool_call_events(words):
+        target = 0x31100
+        data = sh4_image(68)
+        for i, word in enumerate(words):
+            struct.pack_into("<H", data, 0x200 + 2 * i, word)
+        struct.pack_into("<I", data, 0x200 + 64, target)
+        decode = dc_asm._decode_capstone(bytes(data))
+        instructions = []
+        for address in range(0, 2 * len(words), 2):
+            ins = decode(address)
+            instructions.append(dict(address=address, bytes=ins.data.hex(),
+                                     mnemonic=ins.mnemonic, operands=ins.operands))
+        return dc_asm.control_events(
+            {"blocks": [{"instructions": instructions}]}, bytes(data))
+
+    def test_overwritten_pool_register_does_not_name_a_call(self):
+        # A global pointer dereference, immediate assignment and addition all
+        # destroy the literal value that was loaded into r3.
+        for overwrite in (0x6332, 0xE300, 0x7304):
+            with self.subTest(overwrite=hex(overwrite)):
+                events = self._pool_call_events([0xD30F, overwrite, 0x430B, 0x0009])
+                self.assertIsNone(events[4]["call_target_va"])
+                if overwrite == 0x6332:
+                    self.assertEqual(events[4]["call_pointer_va"], 0x31100)
+                else:
+                    self.assertNotIn("call_pointer_va", events[4])
+
+    def test_pointer_provenance_survives_copy_but_not_a_second_dereference(self):
+        events = self._pool_call_events([0xD30F, 0x6332, 0x6433, 0x440B, 0x0009])
+        self.assertEqual(events[6], {"call_target_va": None, "call_pointer_va": 0x31100})
+        events = self._pool_call_events([0xD30F, 0x6332, 0x6332, 0x430B, 0x0009])
+        self.assertEqual(events[6], {"call_target_va": None})
+
+    def test_register_copy_preserves_a_known_call_target(self):
+        events = self._pool_call_events([0xD30F, 0x6433, 0x440B, 0x0009])
+        self.assertEqual(events[4], {"call_target_va": 0x31100})
+
+    def test_call_clobbers_volatile_registers_after_its_delay_slot(self):
+        # The first jsr consumes the literal. Its delay slot copies that
+        # literal to r4, which the callee is then allowed to overwrite.
+        events = self._pool_call_events(
+            [0xD30F, 0x430B, 0x6433, 0x440B, 0x0009])
+        self.assertEqual(events[2], {"call_target_va": 0x31100})
+        self.assertEqual(events[6], {"call_target_va": None})
+
+    def test_call_preserves_saved_registers_and_read_only_uses(self):
+        # cmp/eq r8,r0 reads r8; a call must preserve this saved register.
+        events = self._pool_call_events(
+            [0xD80F, 0x3080, 0x480B, 0x0009, 0x480B, 0x0009])
+        self.assertEqual(events[4], {"call_target_va": 0x31100})
+        self.assertEqual(events[8], {"call_target_va": 0x31100})
+
 
 
 class WrongNamespaceTest(unittest.TestCase):

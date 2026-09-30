@@ -321,7 +321,13 @@ def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any
     can look like ``bsr``/``bt``.  A linear halfword scan would report those
     constants as source-level control flow.
     """
+    import capstone
+
     sh4 = dc_lines.Sh4(data)
+    decoder = capstone.Cs(capstone.CS_ARCH_SH,
+                          capstone.CS_MODE_SH4 | capstone.CS_MODE_SHFPU
+                          | capstone.CS_MODE_LITTLE_ENDIAN)
+    decoder.detail = True
     events: dict[int, dict[str, Any]] = {}
     for block in view["blocks"]:
         # A switch arm recovered from a CodeView breakpoint can have no CFG
@@ -331,21 +337,23 @@ def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any
         # leak into such an arm and turn an unresolved jsr into a false named
         # source call.
         register_targets: dict[int, int] = {}
+        register_pointers: dict[int, int] = {}
+        after_call = False
         for ins in block["instructions"]:
             address = ins["address"]
             raw = bytes.fromhex(ins["bytes"])
             word = int.from_bytes(raw, "little")
-            if (word >> 12) == 0xD:
-                target = sh4.pool(address)
-                if target is not None:
-                    register_targets[(word >> 8) & 0xF] = target
-
             event: dict[str, Any] = {}
             if ins["mnemonic"] in {"bt", "bf", "bt/s", "bf/s"}:
                 event["conditional_branch"] = True
             if (word & 0xF0FF) == 0x400B:  # jsr @Rn
-                event["call_target_va"] = register_targets.get(
-                    (word >> 8) & 0xF)
+                register = (word >> 8) & 0xF
+                event["call_target_va"] = register_targets.get(register)
+                if register in register_pointers:
+                    # This names the storage containing the function pointer,
+                    # not executable code. Consumers may identify an import
+                    # slot, but must not treat an arbitrary global as a call.
+                    event["call_pointer_va"] = register_pointers[register]
             elif (word & 0xF000) == 0xB000:  # bsr disp12
                 disp = word & 0xFFF
                 if disp & 0x800:
@@ -356,6 +364,53 @@ def control_events(view: dict[str, Any], data: bytes) -> dict[int, dict[str, Any
                 event["call_target_va"] = None
             if event:
                 events[address] = event
+
+            # A pool address stops being a known value after a load through
+            # that register, arithmetic, or any other write. In particular,
+            # mov.l @Rn,Rn must not turn a data symbol into a named call.
+            if (word >> 12) == 0xD:
+                register = (word >> 8) & 0xF
+                register_targets.pop(register, None)
+                register_pointers.pop(register, None)
+                target = sh4.pool(address)
+                if target is not None:
+                    register_targets[register] = target
+            elif (word & 0xF00F) == 0x6003:  # mov Rm,Rn
+                target = register_targets.get((word >> 4) & 0xF)
+                pointer = register_pointers.get((word >> 4) & 0xF)
+                register = (word >> 8) & 0xF
+                register_targets.pop(register, None)
+                register_pointers.pop(register, None)
+                if target is not None:
+                    register_targets[register] = target
+                if pointer is not None:
+                    register_pointers[register] = pointer
+            else:
+                pointer = (register_targets.get((word >> 4) & 0xF)
+                           if (word & 0xF00F) == 0x6002 else None)  # mov.l @Rm,Rn
+                decoded = next(decoder.disasm(raw, address, count=1), None)
+                if decoded is None:
+                    # Unknown system/FPU words may write a GPR. Keep their
+                    # calls unresolved rather than retaining stale constants.
+                    register_targets.clear()
+                    register_pointers.clear()
+                else:
+                    for register in decoded.regs_access()[1]:
+                        name = decoder.reg_name(register)
+                        if name.startswith("r") and name[1:].isdigit():
+                            register_targets.pop(int(name[1:]), None)
+                            register_pointers.pop(int(name[1:]), None)
+                if pointer is not None:
+                    register_pointers[(word >> 8) & 0xF] = pointer
+
+            if after_call:
+                # SH4's delay slot executes before the callee. Invalidate
+                # volatile registers after that slot, including any literal
+                # it loaded; r8..r14 survive the call by the target ABI.
+                for register in range(8):
+                    register_targets.pop(register, None)
+                    register_pointers.pop(register, None)
+            after_call = "call_target_va" in event
     return events
 
 
@@ -394,6 +449,7 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
           file=out)
 
     sh4 = dc_lines.Sh4(data)
+    events = control_events(view, data)
     for block in block_rows:
         label = label_of[block["start"]]
         if blocks:
@@ -404,7 +460,6 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
         else:
             print(f"\n{label}:", file=out)
 
-        register_targets: dict[str, int] = {}
         for raw in block["instructions"]:
             address = raw["address"]
             for _scope in scope_ends.get(address, ()):
@@ -425,14 +480,15 @@ def render(view: dict[str, Any], data: bytes, symbols: dict[int, str],
             word = int.from_bytes(raw_bytes, "little")
             if (word >> 12) == 0xD:
                 target = sh4.pool(address)
-                register = operands.rsplit(",", 1)[-1].strip()
-                register_targets[register] = target
                 notes.append(symbols.get(target, f"= {target:#x}"))
             elif mnemonic == "jsr":
-                register = operands.lstrip("@").strip()
-                target = raw.get("call_target_va", register_targets.get(register))
+                event = events.get(address, {})
+                target = event.get("call_target_va")
                 if target is not None:
                     notes.append("call " + symbols.get(target, f"{target:#x}"))
+                elif "call_pointer_va" in event:
+                    pointer = event["call_pointer_va"]
+                    notes.append("indirect via [" + symbols.get(pointer, f"{pointer:#x}") + "]")
             elif mnemonic == "bsr":
                 target = int(operands, 0)
                 name = symbols.get(sh4.pool_base + target)
