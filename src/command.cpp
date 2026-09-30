@@ -878,12 +878,12 @@ int combatManager::processCombatMsg(message& msg)
         switch (msg.m_codeX) {
         case widget::WIDGET_SELECT:
             if (m_thisNetHasControl && msg.m_codeY >= 0 && msg.m_codeY <= 1) {
-                m_combatWindow->m_heroSubWindows[0]->unShow();
-                m_combatWindow->m_heroSubWindows[1]->unShow();
-                m_combatWindow->m_creatureSubWindows[0]->unShow();
-                m_combatWindow->m_creatureSubWindows[1]->unShow();
-                m_combatWindow->m_creatureSubWindows[2]->unShow();
-                m_combatWindow->m_creatureSubWindows[3]->unShow();
+                m_combatWindow->getHeroSubWindow(0)->unShow();
+                m_combatWindow->getHeroSubWindow(1)->unShow();
+                m_combatWindow->getCreatureSubWindow(0)->unShow();
+                m_combatWindow->getCreatureSubWindow(1)->unShow();
+                m_combatWindow->getCreatureSubWindow(2)->unShow();
+                m_combatWindow->getCreatureSubWindow(3)->unShow();
                 drawFrame(1, 0, 0, 0, 1, 0);
                 doCommand(m_combatCommand);
             }
@@ -986,12 +986,12 @@ int combatManager::processCombatMsg(message& msg)
         if (!inCombatArea(mouseX, mouseY)) {
             turnOffHighlighter(1);
 
-            m_combatWindow->m_heroSubWindows[0]->unShow();
-            m_combatWindow->m_heroSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[0]->unShow();
-            m_combatWindow->m_creatureSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[2]->unShow();
-            m_combatWindow->m_creatureSubWindows[3]->unShow();
+            m_combatWindow->getHeroSubWindow(0)->unShow();
+            m_combatWindow->getHeroSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(0)->unShow();
+            m_combatWindow->getCreatureSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(2)->unShow();
+            m_combatWindow->getCreatureSubWindow(3)->unShow();
             g_windowManager->convertToHover(msg);
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             m_lastCellIndex = -1;
@@ -1009,28 +1009,28 @@ int combatManager::processCombatMsg(message& msg)
                                                         gridIndex);
         } else {
             if (gridIndex != m_lastCellIndex) {
-                m_combatWindow->m_heroSubWindows[0]->unShow();
-                m_combatWindow->m_heroSubWindows[1]->unShow();
-                m_combatWindow->m_creatureSubWindows[0]->unShow();
-                m_combatWindow->m_creatureSubWindows[1]->unShow();
-                m_combatWindow->m_creatureSubWindows[2]->unShow();
-                m_combatWindow->m_creatureSubWindows[3]->unShow();
+                m_combatWindow->getHeroSubWindow(0)->unShow();
+                m_combatWindow->getHeroSubWindow(1)->unShow();
+                m_combatWindow->getCreatureSubWindow(0)->unShow();
+                m_combatWindow->getCreatureSubWindow(1)->unShow();
+                m_combatWindow->getCreatureSubWindow(2)->unShow();
+                m_combatWindow->getCreatureSubWindow(3)->unShow();
 
                 if (gridIndex == COMBAT_HEX_DEFENDER_HERO) {
                     if (m_heroes[1] && g_config.m_combatArmyInfoLevel) {
-                        m_combatWindow->m_heroSubWindows[1]->update(
+                        m_combatWindow->getHeroSubWindow(1)->update(
                             *m_heroes[1], m_heroes[0],
                             m_magicTerrain
                                 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-                        m_combatWindow->m_heroSubWindows[1]->show();
+                        m_combatWindow->getHeroSubWindow(1)->show();
                     }
                 } else if (gridIndex == COMBAT_HEX_ATTACKER_HERO) {
                     if (m_heroes[0] && g_config.m_combatArmyInfoLevel) {
-                        m_combatWindow->m_heroSubWindows[0]->update(
+                        m_combatWindow->getHeroSubWindow(0)->update(
                             *m_heroes[0], m_heroes[1],
                             m_magicTerrain
                                 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-                        m_combatWindow->m_heroSubWindows[0]->show();
+                        m_combatWindow->getHeroSubWindow(0)->show();
                     }
                 } else if (validHex(gridIndex)) {
                     if (m_cells[gridIndex].hasArmy()) {
@@ -1041,24 +1041,24 @@ int combatManager::processCombatMsg(message& msg)
                             break;
                         case TCombatOptionsWindow::CREATURE_INFO_LEVEL_VERBOSE:
                             if (stack->getOwningSide() == 0) {
-                                m_combatWindow->m_creatureSubWindows[0]->update(*stack,
+                                m_combatWindow->getCreatureSubWindow(0)->update(*stack,
                                                                             owner);
-                                m_combatWindow->m_creatureSubWindows[0]->show();
+                                m_combatWindow->getCreatureSubWindow(0)->show();
                             } else if (stack->getOwningSide() == 1) {
-                                m_combatWindow->m_creatureSubWindows[1]->update(*stack,
+                                m_combatWindow->getCreatureSubWindow(1)->update(*stack,
                                                                             owner);
-                                m_combatWindow->m_creatureSubWindows[1]->show();
+                                m_combatWindow->getCreatureSubWindow(1)->show();
                             }
                             break;
                         case TCombatOptionsWindow::CREATURE_INFO_LEVEL_COMPACT:
                             if (stack->getOwningSide() == 0) {
-                                m_combatWindow->m_creatureSubWindows[2]->update(*stack,
+                                m_combatWindow->getCreatureSubWindow(2)->update(*stack,
                                                                             owner);
-                                m_combatWindow->m_creatureSubWindows[2]->show();
+                                m_combatWindow->getCreatureSubWindow(2)->show();
                             } else if (stack->getOwningSide() == 1) {
-                                m_combatWindow->m_creatureSubWindows[3]->update(*stack,
+                                m_combatWindow->getCreatureSubWindow(3)->update(*stack,
                                                                             owner);
-                                m_combatWindow->m_creatureSubWindows[3]->show();
+                                m_combatWindow->getCreatureSubWindow(3)->show();
                             }
                             break;
                         }
@@ -1160,12 +1160,12 @@ int combatManager::processCombatMsg(message& msg)
         case KEYCODE_T:
             if (m_creaturePlacement)
                 break;
-            m_combatWindow->m_heroSubWindows[0]->unShow();
-            m_combatWindow->m_heroSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[0]->unShow();
-            m_combatWindow->m_creatureSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[2]->unShow();
-            m_combatWindow->m_creatureSubWindows[3]->unShow();
+            m_combatWindow->getHeroSubWindow(0)->unShow();
+            m_combatWindow->getHeroSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(0)->unShow();
+            m_combatWindow->getCreatureSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(2)->unShow();
+            m_combatWindow->getCreatureSubWindow(3)->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             viewArmy(getCurrentArmy(), 0);
             resetMouse();
@@ -1580,26 +1580,26 @@ int combatManager::rightClick(int newIndex)
 {
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
         if (m_heroes[1]) {
-            m_combatWindow->m_heroSubWindows[1]->update(*m_heroes[1], m_heroes[0],
+            m_combatWindow->getHeroSubWindow(1)->update(*m_heroes[1], m_heroes[0],
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-            m_combatWindow->m_heroSubWindows[1]->show();
+            m_combatWindow->getHeroSubWindow(1)->show();
             g_windowManager->doQuickView(0);
             if (g_config.m_combatArmyInfoLevel)
                 return 0;
-            m_combatWindow->m_heroSubWindows[1]->unShow();
+            m_combatWindow->getHeroSubWindow(1)->unShow();
         }
         return 0;
     }
 
     if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
         if (m_heroes[0]) {
-            m_combatWindow->m_heroSubWindows[0]->update(*m_heroes[0], m_heroes[1],
+            m_combatWindow->getHeroSubWindow(0)->update(*m_heroes[0], m_heroes[1],
                                                     m_magicTerrain == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
-            m_combatWindow->m_heroSubWindows[0]->show();
+            m_combatWindow->getHeroSubWindow(0)->show();
             g_windowManager->doQuickView(0);
             if (g_config.m_combatArmyInfoLevel)
                 return 0;
-            m_combatWindow->m_heroSubWindows[0]->unShow();
+            m_combatWindow->getHeroSubWindow(0)->unShow();
         }
         return 0;
     }
@@ -1678,12 +1678,12 @@ void combatManager::doCommand(int command)
                              1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
             }
-            m_combatWindow->m_heroSubWindows[0]->unShow();
-            m_combatWindow->m_heroSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[0]->unShow();
-            m_combatWindow->m_creatureSubWindows[1]->unShow();
-            m_combatWindow->m_creatureSubWindows[2]->unShow();
-            m_combatWindow->m_creatureSubWindows[3]->unShow();
+            m_combatWindow->getHeroSubWindow(0)->unShow();
+            m_combatWindow->getHeroSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(0)->unShow();
+            m_combatWindow->getCreatureSubWindow(1)->unShow();
+            m_combatWindow->getCreatureSubWindow(2)->unShow();
+            m_combatWindow->getCreatureSubWindow(3)->unShow();
             g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
             initiateSpell(spell, 0);
             resetMouse();
@@ -2511,12 +2511,12 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
-        m_combatWindow->m_heroSubWindows[0]->unShow();
-        m_combatWindow->m_heroSubWindows[1]->unShow();
-        m_combatWindow->m_creatureSubWindows[0]->unShow();
-        m_combatWindow->m_creatureSubWindows[1]->unShow();
-        m_combatWindow->m_creatureSubWindows[2]->unShow();
-        m_combatWindow->m_creatureSubWindows[3]->unShow();
+        m_combatWindow->getHeroSubWindow(0)->unShow();
+        m_combatWindow->getHeroSubWindow(1)->unShow();
+        m_combatWindow->getCreatureSubWindow(0)->unShow();
+        m_combatWindow->getCreatureSubWindow(1)->unShow();
+        m_combatWindow->getCreatureSubWindow(2)->unShow();
+        m_combatWindow->getCreatureSubWindow(3)->unShow();
     }
 
     g_processingCombatAction = 1;

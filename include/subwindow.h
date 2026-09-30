@@ -39,11 +39,14 @@ protected:
     std::vector<widget*> m_widgets;
     heroWindow* m_parentWindow;
 
-public:
+private:
+    // DC TSubWindow 0x1ec6 / field list 0x6efa explicitly records private
+    // FirstWidgetID, LastWidgetID and Background, in this order.
+    // Original: FirstWidgetID.
     int m_lowId;
+    // Original: LastWidgetID.
     int m_highId;
 
-private:
     Bitmap16Bit* m_background;
 };
 SIZE(TSubWindow, 0x34);

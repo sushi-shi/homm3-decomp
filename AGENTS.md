@@ -250,6 +250,12 @@ accessor-backed state is non-public by default when its original access is
 unknown, private unless a derived implementation needs protected access.
 Preserve positive native public declarations as explicit exceptions. Review
 the actual backing state rather than every object traversed by a getter.
+Review the surrounding class data as a whole when changing visibility. Repeated
+public/private hops can expose an incomplete owner boundary: fields left public
+by the reconstruction are not proven public. Read their complete uses and native
+declarations, then group coherent private/protected state without moving fields.
+Do not add accessors for internal-only state or erase proven access distinctions
+merely to reduce the number of access labels.
 Use the canonical operation at unrelated call sites and introduce missing
 accessors as those operations are recovered. Keep original types, data order,
 constness and mutation semantics; do not expose mutable scalar references or

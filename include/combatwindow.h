@@ -12,6 +12,7 @@ class textWidget;
 class textEntryWidget;
 class type_combat_sub_window;
 class message;
+class Bitmap16Bit;
 
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
@@ -39,14 +40,17 @@ public:
         COMBAT_PLACEMENT_COMMAND_1_ID = 0x7802
     };
 
+private:
+    // Project-inferred owner boundary for the complete data block. DC type
+    // 0x43dc is only a forward declaration, so it supplies no access levels.
+    // Keep the retail field order; callers borrow panels through the public
+    // interface while the window owns chat, message history and panel lifetime.
     // combat_message and handle_widget_hover both follow this pointer to
     // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
     // it; the concrete object is the combat chat editor.
 
-private:
     textEntryWidget* m_chatEdit;
 
-public:
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
     textWidget* m_chatWidget;
@@ -58,13 +62,11 @@ public:
     int m_combatMessageStart;
     unsigned long m_combatMessageTime;
 
-private:
     type_combat_sub_window* m_controlSubWindow;
-
-public:
     TCombatHeroSubWindow* m_heroSubWindows[2];
     TCombatCreatureSubWindow* m_creatureSubWindows[4];
 
+public:
     virtual ~TCombatWindow();
     virtual void close(unsigned char update);
     virtual void handleWidgetHover(widget* currentWidget);
@@ -84,10 +86,14 @@ public:
     void drawChatText(unsigned char update);
     void drawChatEdit(unsigned char update);
     void onChatActivate(unsigned char active);
+    // Project operation: restore just the owned chat widget's rectangle.
+    void restoreChatBackground(Bitmap16Bit* background);
 
-    // Accessor boundary inferred from the existing property interface and
-    // external field operations; these additional names are project names.
+    // Borrowed panels: callers use their existing update/show/draw interfaces.
+    // Ownership and replacement remain with this window. Names are inferred.
     type_combat_sub_window* getControlSubWindow() const { return m_controlSubWindow; }
+    TCombatHeroSubWindow* getHeroSubWindow(int index) const;
+    TCombatCreatureSubWindow* getCreatureSubWindow(int index) const;
 };
 SIZE(TCombatWindow, 0x8c);
 

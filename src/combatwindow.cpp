@@ -3,6 +3,7 @@
 
 #include "combatwindow.h"
 
+#include "bitmap16.h"
 #include "border.h"
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
@@ -25,6 +26,29 @@
 // edit callbacks and the destructor clears the slot. The Dreamcast image has
 // the corresponding compiland-local pointer at 0x1bf12c.
 DATA(0x00695000) static TCombatWindow* g_combatWindow;
+
+// Project-inferred borrowed-panel interface. Callers keep their existing
+// side/detail selection, null assumptions and per-stage window lookup.
+TCombatHeroSubWindow* TCombatWindow::getHeroSubWindow(int index) const
+{
+    return m_heroSubWindows[index];
+}
+
+TCombatCreatureSubWindow* TCombatWindow::getCreatureSubWindow(int index) const
+{
+    return m_creatureSubWindows[index];
+}
+
+// The combat renderer restores this rectangle when chat changes. Keep the
+// original unguarded widget use and bitmap draw; drawChatText owns a different
+// operation (updating chat content and drawing the widget).
+void TCombatWindow::restoreChatBackground(Bitmap16Bit* background)
+{
+    background->draw(m_chatWidget->m_x, m_chatWidget->m_y,
+                     m_chatWidget->m_width, m_chatWidget->m_height,
+                     g_windowManager->m_screenBitmap,
+                     m_chatWidget->m_x, m_chatWidget->m_y, false);
+}
 
 // E:\gamedcs\combatwindow.cpp:42
 // DC records only the TCheatCode local. The extra retail _Tidy(false) call
@@ -426,7 +450,7 @@ void TCombatWindow::combatMessage(const char* newText,
 {
     if (g_combatManager->isQuickCombat())
         return;
-    if (!m_controlSubWindow->m_rolloverWidget)
+    if (!m_controlSubWindow->hasRollover())
         return;
     if (!g_combatManager->m_combatShowIt)
         return;
@@ -452,7 +476,7 @@ void TCombatWindow::combatMessage(const char* newText,
     } else {
         temp[split] = ' ';
         if (g_smallFont->lineLength(
-                temp.c_str(), m_controlSubWindow->m_rolloverWidget->m_width) < 2) {
+                temp.c_str(), m_controlSubWindow->getRolloverWidth()) < 2) {
             m_combatMessages.push_back(new std::string(temp));
         } else {
             m_combatMessageCount++;
@@ -534,15 +558,12 @@ void TCombatWindow::onChatActivate(unsigned char active)
 {
     if (!active) {
         if (m_controlSubWindow) {
-            if (m_controlSubWindow->m_rolloverWidget) {
-                m_controlSubWindow->m_rolloverWidget->show();
-            }
+            m_controlSubWindow->setRolloverVisible(true);
             m_controlSubWindow->draw(1, -0xffff, 0xffff);
         }
     } else {
-        if (m_controlSubWindow && m_controlSubWindow->m_rolloverWidget) {
-            m_controlSubWindow->m_rolloverWidget->hide();
-        }
+        if (m_controlSubWindow)
+            m_controlSubWindow->setRolloverVisible(false);
     }
 }
 

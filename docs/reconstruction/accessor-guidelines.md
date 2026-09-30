@@ -19,6 +19,7 @@ not from generated Windows names or the presence of a load instruction.
 | `widget`, `0x170f` | Public virtual `GetRealWidth` / `GetRealHeight` | `width` / `height` are explicitly public | An accessor does not prove private storage. These virtual queries can differ from the stored widget rectangle. Preserve the proven public exception and distinguish stored dimensions from rendered dimensions. |
 | `CSprite`, `0x17d3` | Public dimension, frame and palette accessors | Width, height, sequence array/count/mask are private; palette pointers `p` / `p24` are public | One class can combine encapsulated state with public borrowed resources. Do not infer one access level for the entire class. |
 | `TPalette16`, `0x1083` | Public static `SetPixelFormat` | RGB masks are private; palette arrays are public | A setter can own several related fields. Static data has an access boundary too. |
+| `TSubWindow`, `0x1ec6`, field list `0x6efa` | Public registration and drawing methods maintain the widget range | Geometry is public; `Widgets` / `ParentWindow` protected; `FirstWidgetID` / `LastWidgetID` / `Background` private | Preserve the proven mixed data boundary. The range endpoints are internal bookkeeping, not public configuration. |
 
 The existing source annotations give the Windows and Mac corroboration for
 these helpers. The current report does not turn a Dreamcast offset into a
@@ -28,9 +29,12 @@ an independently retained Windows body.
 
 ## General code guidelines
 
-1. Keep one canonical accessor and use it for its operation throughout the
-   project, including callers that are already byte-exact. An outer helper may
-   provide the operation through the canonical accessor; preserve that path.
+1. Read the owner and complete caller flows before replacing a field access.
+   Search for repeated groups of operations across setup, gameplay, loading,
+   teardown and temporary simulation. A list of matching member names is a
+   navigation aid, not a semantic review. Keep one canonical operation and use
+   it throughout the project, including callers that are already byte-exact.
+   An outer helper may provide it through a nested canonical call.
 2. Treat an established accessor as evidence for a non-public backing field
    when original visibility is unknown. Prefer private storage. Use protected
    storage where a derived implementation needs direct access. This default is
@@ -47,10 +51,14 @@ an independently retained Windows body.
    lowerCamelCase project name when the original name is unknown and label the
    inference in the owning source. Do not present a new convenience method as
    independently recovered original source.
-6. Keep mutation with the owner. Reuse a setter only when its semantics match:
-   `setText`, palette replacement, reference counting and status messages can
-   do more than assignment. Do not bypass their invariants or introduce their
-   side effects into a previously different operation.
+6. Keep mutation with the owner. First look for an existing reset, transfer,
+   copy or assignment operation. Introduce a missing operation for a repeated
+   state transition, rather than exposing each of its fields through a setter.
+   Reuse it only when its semantics match: `setText`, palette replacement,
+   reference counting and status messages do more than assignment. Partial
+   updates, full resets and temporary overrides need distinct contracts.
+   Preserve stream-read order and narrow/packed storage conversions; never
+   combine sequential reads into arguments with unspecified evaluation order.
 7. Preserve constness, value/reference/pointer returns, indexed interfaces,
    output parameters and lifetime boundaries. Add a mutable reference API only
    where the operation needs a borrowed mutable object, not to disguise public
@@ -58,6 +66,12 @@ an independently retained Windows body.
 8. Preserve data order, representation, packing, inheritance and virtual slots.
    Insert access labels in place. Do not move fields to group private storage,
    add padding, or use friendship/casts/macros to bypass the interface.
+   Review the surrounding class, not just one accessor's field. Repeated
+   public/private hops are a lead that neighboring state was never reviewed.
+   Existing public spelling is not proof of original public access. Group a
+   coherent owner boundary after reading its callers and native declarations;
+   internal-only state needs no new getter. Preserve genuinely evidenced mixed
+   access rather than minimizing labels for appearance alone.
 9. Same-class implementation code may access its own storage. Derived code may
    access protected storage. Unrelated callers use the established operation.
    An accessor is not a reason to rewrite its own implementation recursively.
@@ -148,6 +162,53 @@ Per the task instruction, this implementation continuation ran no builds,
 tests or validation checks. The observations below belong to commit
 `069a8b3b8` and do not validate the subsequent caller/owner-operation changes.
 
+## Complete combat-window boundaries
+
+`TCombatWindow` exposed the limitation of changing only accessor-backed fields:
+its private chat editor and control panel were separated by public chat/log
+state, followed by public information-panel arrays. Direct inspection of the
+native type stream finds only forward declaration `0x43dc`, with no field list
+or access levels. The message vector, counters and timestamp have no external
+users. The window owns both chat widgets and all panels through construction,
+placement replacement and destruction. Its entire data block is now private,
+in the same order; this is a project inference, not recovered private keywords.
+Typed panel accessors let callers use the existing `update`, `show`, `unShow`,
+`isShown` and `draw` interfaces without replacing owned pointers. Callers still
+reread the current combat window at each stage, including after quick view.
+Chat background restoration owns the widget rectangle and existing bitmap
+draw, preserving the unguarded widget use. It remains separate from chat-content
+updates and widget drawing. The public panel methods and virtual slots are
+unchanged. This is a class-wide ownership review, not a reason to blanket-hide
+native-public fields elsewhere.
+
+The same review extends through the combat subwindow family. Their native type
+records (`0x5708`, `0x570f`, `0x5715`, `0x54c2`, `0x571f`) are also forward-only.
+Hero and creature popup widget pointers, shown state and creature display mode
+form private data blocks; the control bar's two scroll-button pointers are
+private too. Their existing update/display methods already serve all callers.
+The rollover pointer is protected because the derived control bar allocates
+and updates it. The parent combat window now queries its presence and stored
+width and requests visibility through the base interface. The visibility
+operation keeps its null-widget guard and actual `widget::show()` / `hide()`
+calls. Chat deactivation still redraws the control bar even when it has no
+rollover widget; activation only hides the rollover. Message timing, wrapping,
+constructor null policies and the separate unlink/delete versus delete-only
+teardown paths remain intact. The empty native virtual overrides remain empty.
+
+The shared `TSubWindow` base supplies a useful contrast: its complete native
+field list explicitly makes the widget-range endpoints and background private,
+while geometry is public and the widget vector/parent pointer are protected.
+The range endpoints now follow that evidence. Registration grows their range,
+draw substitutes them for the all-widgets sentinels, and `initialize()` retains
+them. No external code needs an accessor for either endpoint. This mixed layout
+is supported by native declarations; it should not be flattened merely because
+some other classes had unjustified public/private hops.
+
+These class reviews add seven private TCombatWindow members beyond the
+initial accessor inventory, together with the combat-popup widget/configuration
+blocks, control-button pointers and native-private TSubWindow range endpoints.
+The original inventory counts below are historical, not a recount of this head.
+
 ### Earlier compiler observations
 
 The declaration/body inventory visits all 139 project TUs. The implementation
@@ -192,7 +253,8 @@ that inherited inlining boundary.
 Temporary extraction and review artifacts live in ignored
 `build/accessor-audit/`. The owning C++ declarations remain the authority for
 names and access; this report is a dated investigation, not a second symbol
-ledger. The final declaration review confirms 144 private and 17 protected
-changes, with no unresolved public backing members left in this reviewed set.
+ledger. The initial declaration review recorded 144 private and 17 protected
+changes. Those counts precede the complete combat-window reviews above and
+do not establish whole-codebase completion.
 The added definitions exclude the reward-icon helper introduced by the
 parent branch during integration.

@@ -17,6 +17,29 @@
 #include "window.h"
 #include "winmgr.h"
 
+// Project-inferred rollover interface. Width is the stored widget width;
+// its caller has already required a rollover widget. Visibility retains
+// native widget show/hide messages and does nothing when no widget exists.
+bool type_combat_sub_window::hasRollover() const
+{
+    return m_rolloverWidget != 0;
+}
+
+int type_combat_sub_window::getRolloverWidth() const
+{
+    return m_rolloverWidget->m_width;
+}
+
+void type_combat_sub_window::setRolloverVisible(bool visible)
+{
+    if (m_rolloverWidget) {
+        if (visible)
+            m_rolloverWidget->show();
+        else
+            m_rolloverWidget->hide();
+    }
+}
+
 // The combat sub-window family's help-text table. Eleven rows, and every
 // one of them is referenced from exactly one of this compiland's three
 // reconstructed-or-not constructors: the base 0x46b610 takes rows 0..3 and

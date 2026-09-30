@@ -1041,14 +1041,7 @@ void combatManager::drawFrame(bool update,
     if (g_chatMan.chatChanged()) {
         limitCreatureEffect = limitDraw = m_limitToExtent = 0;
         if (m_backgroundDrawn) {
-            m_saveScreenPostGrid->draw(
-                m_combatWindow->m_chatWidget->m_x,
-                m_combatWindow->m_chatWidget->m_y,
-                m_combatWindow->m_chatWidget->m_width,
-                m_combatWindow->m_chatWidget->m_height,
-                g_windowManager->m_screenBitmap,
-                m_combatWindow->m_chatWidget->m_x,
-                m_combatWindow->m_chatWidget->m_y, false);
+            m_combatWindow->restoreChatBackground(m_saveScreenPostGrid);
         } else {
             drawBackground();
         }
@@ -1587,26 +1580,26 @@ DC_ADDRESS(0x085f1c, 0x54)
 MAC_ADDRESS(0x0a75d8, 0x14c)
 int combatManager::drawCreatureAndHeroSubwindows()
 {
-    if (m_combatWindow->m_heroSubWindows[0]->isShown())
-        m_combatWindow->m_heroSubWindows[0]->draw(
+    if (m_combatWindow->getHeroSubWindow(0)->isShown())
+        m_combatWindow->getHeroSubWindow(0)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_heroSubWindows[1]->isShown())
-        m_combatWindow->m_heroSubWindows[1]->draw(
+    if (m_combatWindow->getHeroSubWindow(1)->isShown())
+        m_combatWindow->getHeroSubWindow(1)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     // Complete adds four creature-panel tests at 0x49569b..0x495710.
     // Mac checks the shown byte for all six panels in the same shape;
     // the creature accessor is our name for the additional boundary.
-    if (m_combatWindow->m_creatureSubWindows[0]->isShown())
-        m_combatWindow->m_creatureSubWindows[0]->draw(
+    if (m_combatWindow->getCreatureSubWindow(0)->isShown())
+        m_combatWindow->getCreatureSubWindow(0)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[1]->isShown())
-        m_combatWindow->m_creatureSubWindows[1]->draw(
+    if (m_combatWindow->getCreatureSubWindow(1)->isShown())
+        m_combatWindow->getCreatureSubWindow(1)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[2]->isShown())
-        m_combatWindow->m_creatureSubWindows[2]->draw(
+    if (m_combatWindow->getCreatureSubWindow(2)->isShown())
+        m_combatWindow->getCreatureSubWindow(2)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    if (m_combatWindow->m_creatureSubWindows[3]->isShown())
-        m_combatWindow->m_creatureSubWindows[3]->draw(
+    if (m_combatWindow->getCreatureSubWindow(3)->isShown())
+        m_combatWindow->getCreatureSubWindow(3)->draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     return 1;
 }
