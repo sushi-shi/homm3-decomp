@@ -6083,6 +6083,11 @@ inline CTurnDurationPause::~CTurnDurationPause()
 // PAVarmyGroup@@JPAVtown@@12H_N4@Z proves both trailing flags bool; the
 // primitive0x20 dossier display cannot distinguish them from unsigned char.
 // SetupCombat independently ends HHH_N, preserving that typed layout chain.
+// NB11 owns one loser/winning_player pair at procedure scope and a second
+// pair at quick-combat scope 0x9ba32..0x9bb16 (sp+0x5c/sp+0x58). Keep those
+// shadowed locals instead of extending the aftermath pair into quick combat.
+// Recovery is byte-flat against the compiled bool-contract baseline: the
+// 5376-byte section and all 221 relocation sites/types remain identical.
 // cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
 // level-pick wait.  All callees are already declared (cmbtmgr.h,
 // remotedlg.h, exec.h, game.h).
@@ -6143,6 +6148,8 @@ int advManager::doCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 
     unsigned char replay = (g_goSolo && g_goSoloTest) ? 1 : 0;
     if (!rightHuman && !leftHuman && !replay) {
+        hero* loser;
+        int winningPlayer;
         int winner;
         NewmapCell* target = g_game->getCell(point);
         if (aiQuickCombat(leftHero, rightHero, *rightArmyGroup, rightTown,
