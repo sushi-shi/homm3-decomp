@@ -881,9 +881,9 @@ DC_ADDRESS(0x04f078, 0xe8)
 MAC_ADDRESS(0x058944, 0x21c)
 int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
-                         unsigned char onCursedGround,
+                         bool onCursedGround,
                          unsigned char groupAlignments,
-                         unsigned char applyLimits) const
+                         bool applyLimits) const
 {
     if (onCursedGround)
         return 0;
@@ -993,7 +993,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
 VA(0x0044b2d0, 0xEB)
 DC_ADDRESS(0x04f20c, 0xdc)
 MAC_ADDRESS(0x058dd0, 0x178)
-int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char onCursedGround, unsigned char applyLimits) const
+int armyGroup::getLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, bool onCursedGround, bool applyLimits) const
 {
     if (onCursedGround)
         return 0;

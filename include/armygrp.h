@@ -773,15 +773,19 @@ public:
                    unsigned char inDestRestricted);
     unsigned char hasCreatures() const;
     TTerrainType getNativeTerrain() const;
+    // Original DC GetLuck/GetMorale publics end in _N3@Z: both the
+    // cursed-ground and apply-limits flags are bool, despite CodeView's
+    // lowered unsigned-char display. Complete's added grouping byte is
+    // independent of those two native flags.
     int getLuck(const class hero* ownerHero, const class town* ownerTown,
                 const class hero* otherHero, const armyGroup* otherGroup,
-                unsigned char onCursedGround,
-                unsigned char applyLimits) const;
+                bool onCursedGround,
+                bool applyLimits) const;
     int getMorale(const class hero* ownerHero, const class town* ownerTown,
                   const class hero* otherHero, const armyGroup* otherGroup,
-                  unsigned char onCursedGround,
+                  bool onCursedGround,
                   unsigned char groupAlignments,
-                  unsigned char applyLimits) const;
+                  bool applyLimits) const;
     int getArmyMorale(int index, const class hero* ownerHero,
                       const class town* ownerTown, int mode,
                       unsigned char arg5,
@@ -789,6 +793,8 @@ public:
     int getArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
                     unsigned char applyLimits) const;
+    // The older DC description publics also use _N for cursed ground.
+    // Complete replaces it with the multi-valued magicTerrain argument.
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         getMoraleDescription(TCreatureType creature, int morale,
                                const class hero* ownerHero,
