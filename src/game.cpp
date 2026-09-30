@@ -3789,7 +3789,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
             type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
-            campaignHero->giveArtifact(&alliance, 0, 0);
+            campaignHero->giveArtifact(alliance, 0, 0);
         }
     }
 
@@ -3838,7 +3838,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
                     type_artifact artifact(getRandomArtifactId(2));
-                    bonusHero->giveArtifact(&artifact, 1, 1);
+                    bonusHero->giveArtifact(artifact, 1, 1);
                 }
                 break;
             }
@@ -7938,10 +7938,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;
             currentArmy->m_numTroops[i] = random(traits->m_secondStackLow,

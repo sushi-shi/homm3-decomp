@@ -3959,7 +3959,7 @@ void combatManager::lootDeadHero(int side,
             || artifact.m_artifactId == ARTIFACT_AMMO_CART
             || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
-        if (!winner->giveArtifact(&artifact, 1, 0))
+        if (!winner->giveArtifact(artifact, 1, 0))
             return;
         dead->removeArtifact(slot);
         lootedArtifacts.push_back(artifact);
@@ -3974,7 +3974,7 @@ void combatManager::lootDeadHero(int side,
             || artifact.m_artifactId == ARTIFACT_AMMO_CART
             || artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
-        if (!winner->giveArtifact(&artifact, 1, 0))
+        if (!winner->giveArtifact(artifact, 1, 0))
             return;
         dead->removeBackpackArtifact(index);
         lootedArtifacts.push_back(artifact);

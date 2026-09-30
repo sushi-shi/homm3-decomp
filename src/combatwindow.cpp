@@ -27,11 +27,12 @@
 DATA(0x00695000) static TCombatWindow* g_combatWindow;
 
 // E:\gamedcs\combatwindow.cpp:42, dc 0x69638
-// DC records only the TCheatCode local. Retail's extra four-byte frame slot
-// and string-cleanup call survive direct chatString use, string::assign, and
-// an int recognition flag: direct use slips to 90.26%, the others remain
-// 90.30%. Retain the current alias and assignment pending a source-backed
-// explanation of the cleanup lifetime.
+// DC records only the TCheatCode local. The extra retail _Tidy(false) call
+// belongs to string::_Grow's shared-buffer/zero-length branch, not a second
+// string lifetime: Mac directly assigns the text pointer and length, and DC
+// line93 records text-resource indexing followed by string assignment.
+// Earlier direct chatString, assign and int-recognition probes did not
+// restore that retained cleanup call.
 VA(0x00472010, 0x1C0) MAC_ADDRESS(0x07fef4, 0x198)  // anchor-caller SendChat + three cheat arms, dc 0x69638
 void checkCombatCheatCode(std::string& chatString)
 {
@@ -58,8 +59,9 @@ void checkCombatCheatCode(std::string& chatString)
         recognized = 1;
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            type_artifact spellbook(ARTIFACT_SPELLBOOK);
-            currentHero->giveArtifact(&spellbook, 1, 1);
+            // DC line82 constructs the artifact in the GiveArtifact call;
+            // Mac 0x7ffd4..0x7fff4 passes that two-word temporary by address.
+            currentHero->giveArtifact(type_artifact(ARTIFACT_SPELLBOOK), 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             currentHero->addSpell(spell);

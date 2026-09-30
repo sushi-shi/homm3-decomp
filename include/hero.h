@@ -879,7 +879,7 @@ public:
     // "first free".
     bool addToBackpack(const type_artifact& artifact, long slot);
     std::string getBackpackError(TArtifact artifact) const;
-    unsigned char giveArtifact(const type_artifact* artifact,
+    unsigned char giveArtifact(const type_artifact& artifact,
                                unsigned char announce,
                                unsigned char checkEnd);
     const char* heroFn004D8F70();

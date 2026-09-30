@@ -761,7 +761,7 @@ void advManager::giveArtifact(hero* currentHero, type_point point,
 
     type_artifact artifact;
     artifact.m_artifactId = cell->getArtifactIndex();
-    currentHero->giveArtifact(&artifact, 1, 1);
+    currentHero->giveArtifact(artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
 
@@ -1249,7 +1249,7 @@ unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero
                            blackBox->m_artifacts[m]);
             }
             artifact.m_artifactId = blackBox->m_artifacts[m];
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
             gave = 1;
@@ -2896,7 +2896,7 @@ void advManager::doEventSeaChest(hero* currentHero, NewmapCell* cell,
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                          0x24, 1000, -1, 0, -1, 0);
         }
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         currentHero->giveResource(GOLD, 1000);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
@@ -2920,7 +2920,7 @@ void advManager::doEventSurvivor(hero* currentHero, NewmapCell* cell,
         }
         type_artifact artifact;
         artifact.m_artifactId = TArtifact(cell->m_extraInfo);
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
     } else {
@@ -2951,7 +2951,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
             }
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
         } else {
@@ -3097,7 +3097,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
                     g_spellTraits[spell].m_name);
             normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
         eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
@@ -3116,7 +3116,7 @@ void advManager::doCustomSpellScroll(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
         }
     }
-    currentHero->giveArtifact(&artifact, 1, 1);
+    currentHero->giveArtifact(artifact, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
     eraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
@@ -3147,7 +3147,7 @@ void advManager::doEventSpellScroll(hero* currentHero, NewmapCell* cell,
                 g_spellTraits[spell].m_name);
         normalDialog(g_text, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
     }
-    currentHero->giveArtifact(&scroll, 1, 1);
+    currentHero->giveArtifact(scroll, 1, 1);
     if (!humanPlayer)
         aiEquipArtifacts(currentHero);
 
@@ -3307,7 +3307,7 @@ void advManager::doEventTreasure(hero* currentHero, NewmapCell* cell,
                 normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                              -1, 0, -1, 0, -1, 0);
             }
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
         } else {
@@ -3416,7 +3416,7 @@ void advManager::doEventWagon(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                          -1, 0, -1, 0, -1, 0);
         }
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
     } else {
@@ -3452,7 +3452,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
                 normalDialog("", 1, -1, -1, 8,
                              reward->m_artifact, -1, 0, -1, 0, -1, 0);
             type_artifact artifact(reward->m_artifact);
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             if (!humanPlayer)
                 aiEquipArtifacts(currentHero);
         }
@@ -3880,7 +3880,7 @@ void advManager::doEventWarriorTomb(hero* currentHero, ExtraInfoUnion* cell,
             normalDialog(g_text, 1, -1, -1, 8, artifact.m_artifactId,
                          -1, 0, -1, 0, -1, 0);
         }
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         if (!humanPlayer)
             aiEquipArtifacts(currentHero);
         cell->emptyTomb();
@@ -5304,7 +5304,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, const char* text,
     unsigned int k;
     for (k = 0; k < bank.m_artifacts.size(); k++) {
         type_artifact art(bank.m_artifacts[k]);
-        who->giveArtifact(&art, 1, 1);
+        who->giveArtifact(art, 1, 1);
     }
 
     for (int m = 0; m <= 6; m++)

@@ -3302,7 +3302,7 @@ int TBuyArtifactWindow::windowHandler(message& msg)
                         g_giveQuantity * g_rightAmount;
                     type_artifact artifact(
                         g_marketArtifacts[g_leftResource]);
-                    g_marketHero->giveArtifact(&artifact, 1, 1);
+                    g_marketHero->giveArtifact(artifact, 1, 1);
                     g_marketArtifacts[g_leftResource] =
                         ARTIFACT_NONE;
                 }

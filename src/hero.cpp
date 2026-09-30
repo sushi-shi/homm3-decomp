@@ -4262,7 +4262,7 @@ VA(0x004e1550, 0xA2) MAC_ADDRESS(0x101ea4, 0xfc)  // dc 0xd2be8
 THeroScreenWindow::~THeroScreenWindow()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
-        g_currentHero->giveArtifact(&g_heroScreenDraggedArtifact, 0, 0);
+        g_currentHero->giveArtifact(g_heroScreenDraggedArtifact, 0, 0);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     }
@@ -5214,17 +5214,24 @@ bool hero::addToBackpack(const type_artifact& artifact, long slot)
 // string/EH callees still take a different inlining path. Mac is 93.8830%,
 // with entry register assignment the first difference. Prompt copy and
 // destructor call order already agree on Mac; retain their source lifetime.
+// Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
+// the artifact reference independently of the older return/flag contracts.
+// Complete and Mac unconditionally forward that record to EquipArtifact
+// before reading its id; no caller supplies a null artifact. Complete adds
+// a placement result and uses its two byte flags for assembly announcements
+// and victory checking. DC instead names int bCheckEnd and bool equip_it;
+// retain the desktop result and flag behavior while restoring the reference.
 VA(0x004e3070, 0x339) MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global, dc 0xd3de4
-unsigned char hero::giveArtifact(const type_artifact* artifact,
+unsigned char hero::giveArtifact(const type_artifact& artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
 {
     unsigned char placed;
-    if (equipArtifact(*artifact, -1)) {
+    if (equipArtifact(artifact, -1)) {
         placed = 1;
         if (g_game->m_gameVersion >= 2) {
             int targetCombo =
-                g_artifactTraits[artifact->m_artifactId].m_targetCombo;
+                g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (heroFn004DBE80(targetCombo)) {
                     playerData& player = g_game->m_players[m_owner];
@@ -5252,15 +5259,15 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
             }
         }
     } else {
-        placed = addToBackpack(*artifact, -1);
+        placed = addToBackpack(artifact, -1);
     }
     if (!placed)
         return 0;
 
-    if (g_artifactTraits[artifact->m_artifactId].m_comboType != -1
+    if (g_artifactTraits[artifact.m_artifactId].m_comboType != -1
         && m_owner >= 0 && m_owner < 8)
         g_game->m_players[m_owner].m_assembledCombinations[
-            g_artifactTraits[artifact->m_artifactId].m_comboType] = true;
+            g_artifactTraits[artifact.m_artifactId].m_comboType] = true;
 
     if (checkEnd &&
         g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin())
@@ -5275,7 +5282,7 @@ int hero::giveRandomArtifact()
     if (artifact.m_artifactId == ARTIFACT_NONE)
         giveResource(GOLD, 1000);
     else
-        giveArtifact(&artifact, 1, 1);
+        giveArtifact(artifact, 1, 1);
     return artifact.m_artifactId;
 }
 

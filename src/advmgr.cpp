@@ -4068,7 +4068,7 @@ int advManager::processSearch(int x, int y, int z)
                 g_soundManager->switchAmbientMusic(g_terrainMusicIds[m_lastTerrain]);
             }
 
-            currHero->giveArtifact(&grail, 1, 1);
+            currHero->giveArtifact(grail, 1, 1);
             g_game->m_ultimateArtifactPresent = 0;
         }
     } else if (g_currentPlayer->isHuman()) {

@@ -981,7 +981,7 @@ void swapManager::close()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != -1)
     {
-        m_heroes[0]->giveArtifact(&g_heroScreenDraggedArtifact, 0, 0);
+        m_heroes[0]->giveArtifact(g_heroScreenDraggedArtifact, 0, 0);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
     }
     m_border->dispose();

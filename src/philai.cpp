@@ -375,7 +375,7 @@ void buyArtifacts(hero* currentHero, TArtifact* artifactList,
             g_currentPlayer->m_resources[resource] -= price;
 
             type_artifact artifact(artifactList[bestArtifact]);
-            currentHero->giveArtifact(&artifact, 1, 1);
+            currentHero->giveArtifact(artifact, 1, 1);
             artifactList[bestArtifact] = ARTIFACT_NONE;
         }
     } while (bestArtifact >= 0);
@@ -493,7 +493,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
             g_currentPlayer->m_resources[resource] -= costs[resource];
 
         type_artifact artifact(engine);
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
     }
 }
 
@@ -2025,7 +2025,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
         && currentTown->hasBuilding(MAGE_GUILD_ID, 1)
         && !currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
         type_artifact artifact(ARTIFACT_SPELLBOOK);
-        currentHero->giveArtifact(&artifact, 1, 1);
+        currentHero->giveArtifact(artifact, 1, 1);
         player->m_resources[GOLD] -= 500;
     }
     currentTown->giveSpells(currentHero);
@@ -2184,7 +2184,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     for (int costResource = 0; costResource < 7; ++costResource)
         g_currentPlayer->m_resources[costResource] -= costs[costResource];
 
-    currentHero->giveArtifact(&type_artifact(engine), 1, 1);
+    currentHero->giveArtifact(type_artifact(engine), 1, 1);
 }
 
 VA(0x00525dc0, 0xB1) MAC_ADDRESS(0x13fc44, 0x110)  // dc 0x10e678

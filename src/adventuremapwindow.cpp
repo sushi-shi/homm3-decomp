@@ -550,15 +550,15 @@ void checkAdvCheatCode(std::string& chatString)
         cheatUsed = true;
         if (!currentHero->hasArtifact(ARTIFACT_AMMO_CART)) {
             type_artifact artifact(ARTIFACT_AMMO_CART);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_BALLISTA)) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
         if (!currentHero->hasArtifact(ARTIFACT_FIRST_AID_TENT)) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            currentHero->giveArtifact(&artifact, 0, 0);
+            currentHero->giveArtifact(artifact, 0, 0);
         }
     } else if (code.compare(neoCode)
                && currentHero) {
@@ -619,7 +619,7 @@ void checkAdvCheatCode(std::string& chatString)
         currentHero->m_mana = 999;
         if (!currentHero->isWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             type_artifact spellbook(ARTIFACT_SPELLBOOK);
-            currentHero->giveArtifact(&spellbook, 1, 1);
+            currentHero->giveArtifact(spellbook, 1, 1);
         }
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
             currentHero->addSpell(spell);

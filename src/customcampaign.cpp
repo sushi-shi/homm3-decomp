@@ -382,7 +382,7 @@ void TCampaignSpellScrollBonus::apply(int whichPlayer) const
     if (target != 0) {
         // Complete reads this spell from an unsigned byte at 0x484050; the canonical scroll constructor takes DC SpellID.
         type_artifact scroll(static_cast<SpellID>(m_spell) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-        target->giveArtifact(&scroll, 0, 0);
+        target->giveArtifact(scroll, 0, 0);
     }
 }
 
@@ -565,7 +565,7 @@ void TCampaignArtifactBonus::apply(int whichPlayer) const
     if (target != 0) {
         // Complete reads this bonus as a signed word at 0x4848a0; the canonical artifact constructor takes DC TArtifact.
         type_artifact granted(static_cast<TArtifact>(m_artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-        target->giveArtifact(&granted, 0, 0);
+        target->giveArtifact(granted, 0, 0);
     }
 }
 
@@ -1564,7 +1564,7 @@ static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
     playerData& recipient = g_game->m_players[player];
     for (int playerHero = 0; playerHero < recipient.m_numHeroes; ++playerHero) {
         hero* target = g_game->getHero(recipient.m_heroes[playerHero]);
-        if (target->giveArtifact(&artifact, 0, 0))
+        if (target->giveArtifact(artifact, 0, 0))
             break;
     }
 }
