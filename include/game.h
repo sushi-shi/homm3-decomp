@@ -1221,8 +1221,8 @@ public:
     int getNewBoatId();  // 0x4bb170
     int createBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type);  // 0x4bb250
-    int getNewHeroId(int playerPos, THeroClass excluded,
-                     unsigned char preferAlignment,
+    HeroId getNewHeroId(int playerPos, THeroClass excluded,
+                     bool preferAlignment,
                      THeroClass preferredClass);  // 0x4bb5e0
     // Retail 0x486110, customcampaign.obj's own game member and
     // DoPreLoadCustomization's per-hero callee: the map's setup record for

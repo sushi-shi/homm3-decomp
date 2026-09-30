@@ -2198,8 +2198,11 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 VA(0x004bb5e0, 0x282)
 DC_ADDRESS(0x0a6cd4, 0x2fe)
 MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
-int game::getNewHeroId(int playerPos, THeroClass excluded,
-                       unsigned char preferAlignment,
+// Original public GetNewHeroId@@QAA?AW4THeroID@@W4TTownType@@W4THeroClass@@_N@Z
+// proves the HeroId result and bool alignment preference. Complete separately
+// changes alignment to a player position and adds the preferred class argument.
+HeroId game::getNewHeroId(int playerPos, THeroClass excluded,
+                       bool preferAlignment,
                        THeroClass preferredClass)
 {
     THeroClass heroClass;
@@ -2235,7 +2238,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     }
 
     if (totalCount == 0)
-        return -1;
+        return heroIdNone;
 
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
          heroClass = THeroClass(heroClass + 1)) {
@@ -2301,7 +2304,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
             return heroId;
         }
     }
-    return -1;
+    return heroIdNone;
 }
 
 VA(0x004bb870, 0x89)
