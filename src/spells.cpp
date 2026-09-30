@@ -4438,6 +4438,8 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // sum removes Windows' redundant zero/jump path: 94.26 -> 96.78%.
 // A named creature-name temporary or shared sprintf format selection
 // changes the retained message branches; neither improves this source.
+// DC 4952..4968 records the animation loop without another object owner.
+// Keep its natural for scope; removing the old extra wrapper is byte-flat.
 // Original DC ?Resurrect@combatManager@@QAAXPAVarmy@@J_N@Z proves bool
 // temporary; the unsigned-char debug primitive is its lowered encoding.
 VA(0x005a7560, 0x32F)
@@ -4495,7 +4497,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
         long frames = max(powFrames, deathFrames);
         targetArmy->m_showPowEffect = 1;
         playImmEffect(g_spellEffectTraits[effect].m_immName, 1);
-        { for (long i = 0; i < frames; i++) {
+        for (long i = 0; i < frames; i++) {
             m_powFrameIndex = i;
             if (targetArmy->m_currFrameType == cs_death) {
                 if (i < deathFrames) {
@@ -4506,7 +4508,7 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
                 }
             }
             drawFrame(1, 0, 0, 100, 1, 1);
-        } }
+        }
     }
 
     targetArmy->m_monInfo.m_attributes &= ~creatureImmobilized;
