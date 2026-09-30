@@ -1014,7 +1014,9 @@ void fillProhibitedArray(playerData* player, unsigned char* prohibited)
 VA(0x0042a150, 0x157)
 DC_ADDRESS(0x0301c4, 0x11c)
 MAC_ADDRESS(0x02df5c, 0x13c)
-long type_AI_player::getTotalValue(long basicValue, int* cost)
+// Original DC public ?get_total_value@type_AI_player@@IAAJJQAH@Z
+// records a const pointer parameter (the pointed-to costs remain mutable).
+long type_AI_player::getTotalValue(long basicValue, int* const cost)
 {
     playerData* player = &g_game->m_players[m_team];
     unsigned char tradeNeeded = 0;

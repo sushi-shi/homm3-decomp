@@ -116,7 +116,7 @@ protected:
     bool checkTradeSupply(const int* cost, long number, int* supply,
                             std::vector<long>& tradeQty);
     void doResourceTrade(int* supply);
-    long getTotalValue(long basicValue, int* cost);  // 0x42a150
+    long getTotalValue(long basicValue, int* const cost);  // 0x42a150
     // DC LF_ONEMETHOD protected; retail 0x42ae00 (the per-town pricing
     // pass purchase_buildings drives).
     unsigned char purchaseBuilding(unsigned char* prohibitedCreatures);
