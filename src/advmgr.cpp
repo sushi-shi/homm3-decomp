@@ -5059,6 +5059,10 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 // members; the three native draw sites use those members again. Preserve
 // them through getBitPos and sprite draws instead of packed-byte locals.
 // Native member reads recover 85.2050 -> 99.1390% in the 64-state family.
+// DC locals retain ThisCell/ObjCell/ObjType/SprPtr, not cached receiver
+// aliases or a bit-index local. Mac and retail reload the map receiver at
+// the draw sites; direct receivers and the nested getBitPos call reach 100%
+// in the reproduced 12-state receiver/argument family.
 // DC 6255..6264 also preserves the clipping deltas, and 6412/6413 names
 // the partLow/partHigh bounds of the final hero/boat part loop.
 VA(0x00411590, 0x5E4)
@@ -5102,17 +5106,15 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     unsigned char foundBoat =
         scanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
-    NewmapCell* cellObjects = thisCell;
-    for (int numObj = 0; numObj < cellObjects->m_objects.size(); ++numObj) {
-        NewmapCell::TObjectCell* objCell = &cellObjects->m_objects[numObj];
-        NewfullMap* mapObjects = m_fullMap;
-        CObjectType* objType = &mapObjects->m_objectTypes[
-            mapObjects->m_objects[objCell->m_objectIndex].m_typeIndex];
-        CSprite* sprite = mapObjects->m_sprites[
-            mapObjects->m_objects[objCell->m_objectIndex].m_typeIndex];
+    for (int numObj = 0; numObj < thisCell->m_objects.size(); ++numObj) {
+        NewmapCell::TObjectCell* objCell = &thisCell->m_objects[numObj];
+        CObjectType* objType = &m_fullMap->m_objectTypes[
+            m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
+        CSprite* sprite = m_fullMap->m_sprites[
+            m_fullMap->m_objects[objCell->m_objectIndex].m_typeIndex];
 
-        int bit = CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY);
-        if (!objType->m_shadowCells[bit] || objType->m_suppressDraw)
+        if (!objType->m_shadowCells[CObjectType::getBitPos(
+                objCell->m_cellX, objCell->m_cellY)] || objType->m_suppressDraw)
             continue;
 
         if (g_drawingPuzzle) {
@@ -5161,7 +5163,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
                 continue;
             }
             int frame = (m_animCtr
-                         + mapObjects->m_objects[objCell->m_objectIndex]
+                         + m_fullMap->m_objects[objCell->m_objectIndex]
                                .m_animationOffset)
                         % sprite->getNumFrames(0);
             sprite->drawAdvObjShadow(
@@ -5180,7 +5182,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
                     baseX, baseY + 8, false);
             } else {
                 int frame = (m_animCtr
-                             + mapObjects->m_objects[objCell->m_objectIndex]
+                             + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
                             % sprite->getNumFrames(0);
                 sprite->drawAdvObjShadow(
