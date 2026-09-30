@@ -3317,15 +3317,16 @@ std::string hero::getLuckDescription() const
         }
     }
 
-    // Repeating the difference in the two abs arms matches all 1492 Mac
-    // bytes, but lowers this Windows-exact function to 91.88% and adds two
-    // calls. Keep the single difference local while recovering a shared
-    // compiler context for the Mac tail.
-    int otherModifier = this->getLuck(0, 0, 0) - luck;
-    if (otherModifier < 0)
-        result += formatString(g_luckInfo[19], abs(otherModifier));
-    else if (otherModifier > 0)
-        result += formatString(g_luckInfo[20], abs(otherModifier));
+    // Mac 0xf93c8 calls getLuck once, then repeats the difference for the
+    // sign tests and abs at 0xf93cc/0xf93d4/0xf9410/0xf9418. Preserve that
+    // arithmetic ownership, as in the morale twin. With the recovered
+    // helper chain, this native tail holds Windows at 91.26385%; the first
+    // remaining divergence is the Advanced Luck append, before this tail.
+    int effectiveLuck = this->getLuck(0, 0, 0);
+    if (effectiveLuck - luck < 0)
+        result += formatString(g_luckInfo[19], abs(effectiveLuck - luck));
+    else if (effectiveLuck - luck > 0)
+        result += formatString(g_luckInfo[20], abs(effectiveLuck - luck));
 
     return result;
 }
