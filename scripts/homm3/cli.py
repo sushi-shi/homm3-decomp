@@ -175,7 +175,10 @@ def cmd_model(args) -> int:
 
 
 def cmd_delink(args) -> int:
-    return run_module("homm3.build.delink")
+    forwarded = []
+    for unit in args.unit or []:
+        forwarded += ["--unit", unit]
+    return run_module("homm3.build.delink", *forwarded)
 
 
 def cmd_status(args) -> int:
@@ -318,6 +321,9 @@ def _dispatch(argv: list[str]) -> int:
     p = sub.add_parser("delink", help="the delink loop: labels -> model -> "
                        "synth PDB -> vostok -> normalized targets "
                        "(homm3.build.delink)")
+    p.add_argument("--unit", action="append",
+                   help="refresh selected source labels without the global "
+                        "label self-test/completeness gate (repeatable)")
     p.set_defaults(fn=cmd_delink)
 
     p = sub.add_parser("source-ownership", add_help=False,

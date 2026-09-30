@@ -25,6 +25,10 @@ changes, refresh the affected TU before reusing its score. Inspect a failing
 command's actual cause and repair only the inputs needed for that build.
 Routine matching needs no full build, tests or standalone validation checks.
 Workers follow this same focused workflow in their separate worktrees.
+If a recovered interface renames a compared symbol, compile the owning TU,
+then run `homm3 delink --unit <TU>` before the next fast comparison. Repeat
+`--unit` for multiple owners; shared-header claims remain resolved, and the
+global label self-test/completeness gate is skipped for this focused refresh.
 
 ## Evidence and reconstruction
 

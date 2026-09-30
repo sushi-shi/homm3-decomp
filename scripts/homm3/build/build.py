@@ -91,7 +91,7 @@ def main(argv=None) -> int:
     if fast:
         status.fast_max_movements(report, selected or None, fingerprint_pair)
         print("[build] fast: delink + checkpoint ledger + gates + README skipped - "
-              "run `homm3 build` before committing")
+              "bank measured scores and regenerate README before committing")
         return 1 if mac_failed else 0
 
     # A byte score is a checkpoint, not an admissibility invariant. Coherent

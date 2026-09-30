@@ -16,6 +16,7 @@ code against our compiled base objs, name-paired per symbol.
 """
 from __future__ import annotations
 
+import argparse
 import shutil
 import subprocess
 import sys
@@ -59,8 +60,8 @@ class DelinkResult:
     missing: tuple[str, ...]
 
 
-def run() -> DelinkResult:
-    rc = labels_source.extract()   # src macros -> claim fragments
+def run(only_units: list[str] | None = None) -> DelinkResult:
+    rc = labels_source.extract(only_units)   # src macros -> claim fragments
     if rc:
         raise RuntimeError("source label extraction failed; delinking stopped")
     inventory = model.generate()
@@ -116,7 +117,12 @@ def run() -> DelinkResult:
 
 
 def main(argv=None) -> int:
-    run()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--unit', action='append',
+                        help='refresh selected source labels (repeatable); '
+                             'shared-header claims remain resolved tree-wide')
+    args = parser.parse_args(argv)
+    run(args.unit)
     return 0
 
 

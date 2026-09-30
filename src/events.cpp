@@ -2189,7 +2189,8 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // Complete mastery domain through the canonical cppMax selector instead of
 // adding wrapper-owned copies. This recovers 91.2712 -> 97.19% Windows.
 // DC 1979-2019 builds the message with operator+=.
-// Residual 91.3003%: the final taught-message += retains string::append
+// Remaining differences include temporary stack homes and the final
+// taught-message +=, which retains string::append
 // where retail expands it. Both builds destroy formatString's temporary at
 // the end of that expression; extending its lifetime lacks source evidence.
 VA(0x004a2940, 0x85C)

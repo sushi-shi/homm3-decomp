@@ -74,6 +74,12 @@ coordinator regenerates the combined README and pushes to the default branch.
 A full `homm3 build` is available when explicitly requested for a broader
 checkpoint; it is not a prerequisite for publishing a matching improvement.
 
+When an interface recovery changes a compared symbol name, compile its owning
+TU and refresh targets with `homm3 delink --unit <TU>`; repeat `--unit` for
+multiple owners. This retains shared-header claim resolution while skipping
+the global label self-test and completeness gate during ordinary matching.
+Then compare the affected TUs with the usual fast build.
+
 ## Byte-matching evidence: DC source layout as well as statements
 
 When byte matching a non-exact function, **inspect its source-line layout before

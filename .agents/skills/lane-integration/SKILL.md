@@ -33,7 +33,10 @@ command refuses conflicting retail RVA bindings. Do not take either whole
 ledger side.
 
 After resolving source conflicts, use `homm3 build --fast <TU>` for the affected
-function's TU when its compiled result needs refreshing. Regenerate README with
+function's TU when its compiled result needs refreshing. For renamed compared
+symbols, compile their owning TUs and use `homm3 delink --unit <TU>` (repeatable)
+to refresh target labels without the global label self-test/completeness gate.
+Then run the affected fast comparison. Regenerate README with
 `homm3 status update --write-readme` to bank the measured scores, then commit and push under the user's existing
 authorization. Do not run routine full builds, tests or standalone validation
 checks. README's table is MAX and its footer reports CUR/MAX/HIST. Workers return
