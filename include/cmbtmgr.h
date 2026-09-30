@@ -1653,10 +1653,14 @@ public:
     static long getDistance(tagPOINT start, tagPOINT stop);
     // The integer-hex overload belongs to cmbtmgr.cpp (retail 0x469670).
     static long getDistance(long start, long stop);
-    unsigned char validSpellTargetArmy(SpellID spellId, int castingSide,
-                                       const army* targetArmy,
-                                       unsigned char firstTarget,
-                                       long creatureSpell) const;  // 0x5a3c80
+    // DC ?ValidSpellTargetArmy@combatManager@@QBA_NHHPBVarmy@@_N1@Z
+    // returns native bool; T_UCHAR is its lowered debug representation.
+    // Complete's creatureSpell is an integer: castSpell also forwards the
+    // artifact caster value 2, and spellCastWorkChance distinguishes == 1.
+    bool validSpellTargetArmy(SpellID spellId, int castingSide,
+                              const army* targetArmy,
+                              unsigned char firstTarget,
+                              long creatureSpell) const;  // 0x5a3c80
     void castSpell(SpellID spellId, int targetIndex,
                    int isMonsterSpell, int secondaryIndex,
                    int monsterSkill, long monsterPower);

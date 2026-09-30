@@ -2446,11 +2446,11 @@ unsigned char combatManager::validSpellTarget(SpellID spellId, long mastery,
 }
 
 VA(0x005a3c80, 0x3A) MAC_ADDRESS(0x19459c, 0x3c)  // dc 0x153104
-unsigned char combatManager::validSpellTargetArmy(SpellID spellId,
-                                                  int castingSide,
-                                                  const army* targetArmy,
-                                                  unsigned char firstTarget,
-                                                  long creatureSpell) const
+bool combatManager::validSpellTargetArmy(SpellID spellId,
+                                          int castingSide,
+                                          const army* targetArmy,
+                                          unsigned char firstTarget,
+                                          long creatureSpell) const
 {
     return spellCastWorkChance(spellId, castingSide, targetArmy, 0,
                                firstTarget, creatureSpell) > 0.0;

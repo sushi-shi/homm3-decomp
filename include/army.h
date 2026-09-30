@@ -777,7 +777,7 @@ public:
     bool needToTurn(int direction) const;
     bool canCastResurrect(long hex) const;
     bool canCastResurrect() const;
-    unsigned char canCastSpell(long hex) const;
+    bool canCastSpell(long hex) const;
     bool canRetaliate(const army& attacker) const;
     unsigned char canShoot(const army* excluded) const;
     void castCaliphSpell(long hex);

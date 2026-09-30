@@ -4635,13 +4635,15 @@ void army::faerieDragonSpell()
     }
 }
 
-// Mac retains a byte result for each target-dependent spell case: initialize
-// it from target presence, then assign the retained helper result directly.
-// The shared result reproduces the complete 824-byte Mac body. Windows still
-// retains six validSpellTargetArmy calls where retail merges them to one;
-// recover that shared tail while preserving the helpers and byte result.
+// DC public ?can_cast_spell@army@@QBA_NJ@Z proves native bool despite
+// the lowered T_UCHAR debug record. Keep ValidSpellTargetArmy's bool result.
+// Mac forwards that result after materializing target presence: spelling
+// `target != 0` avoids the extra byte narrowing from implicit pointer-to-bool.
+// This gives the exact 824-byte Mac body and VC6's shared validation tail.
+// VC6 result-form probes: named bool 76.10%, named byte 70.55%, conditional
+// return 79.67%; the explicit comparison with short-circuit AND is 100%.
 VA(0x004476c0, 0x3BA) MAC_ADDRESS(0x053bc8, 0x338)  // dc 0x4beec
-unsigned char army::canCastSpell(long hex) const
+bool army::canCastSpell(long hex) const
 {
     if (m_monInfo.m_hasSpell == 0)
         return 0;
@@ -4650,7 +4652,6 @@ unsigned char army::canCastSpell(long hex) const
     if (!combatManager::validHex(hex))
         return 0;
     army* target = g_combatManager->m_cells[hex].getArmy();
-    unsigned char canCast;
     switch (m_creatureType) {
     case CREATURE_ARCHANGEL:
     case ARMY_CREATURE_PIT_LORD:
@@ -4658,43 +4659,29 @@ unsigned char army::canCastSpell(long hex) const
     case CREATURE_MASTER_GENIE:
         return target && getValidCaliphSpells(target) > 0;
     case CREATURE_FAERIE_DRAGON:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 m_faerieDragonSpell, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_STORM_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_AIR, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_ICE_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target,
-                1, 1);
-        return canCast;
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_WATER, getControllingSide(), target, 1, 1);
     case CREATURE_ENERGY_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_PROTECTION_FROM_FIRE, getControllingSide(), target, 1, 1);
-        return canCast;
     case CREATURE_MAGMA_ELEMENTAL:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
-                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target,
-                1, 1);
-        return canCast;
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
+                SPELL_PROTECTION_FROM_EARTH, getControllingSide(), target, 1, 1);
     case CREATURE_OGRE_MAGE:
-        canCast = target != 0;
-        if (canCast)
-            canCast = g_combatManager->validSpellTargetArmy(
+        return target != 0
+            && g_combatManager->validSpellTargetArmy(
                 SPELL_BLOODLUST, getControllingSide(), target, 1, 1);
-        return canCast;
     }
     return 0;
 }

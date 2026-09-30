@@ -525,7 +525,7 @@ army	?attackWall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.00
 army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	90.9249	90.9249	91.4600	0x45fd0	tokens1:c47484d5f87d
 army	?attackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30	tokens1:5ce27f36c494
 army	?canCastResurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	tokens1:b5e4534f2782
-army	?canCastSpell@army@@QBEEJ@Z	76.0998	76.0998	100.0000	0x476c0	tokens1:2fdffa995908
+army	?canCastSpell@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x476c0	tokens1:010b931d3d10
 army	?canFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40	tokens1:0f367c3b8d54
 army	?canShoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0	tokens1:43c8978b7ed8
 army	?cancelIndividualSpell@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44510	tokens1:7e51002cbaa3
@@ -4269,7 +4269,7 @@ spells	?summonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	100.0000	100.0
 spells	?unnamed59FDE0@combatManager@@QAEXHHPAVarmy@@@Z	100.0000	100.0000	100.0000	0x19fde0	tokens1:18fb1aaf718f
 spells	?updateSpellTarget@@YIHJ@Z	100.0000	100.0000	100.0000	0x19f700	tokens1:ad53288d568c
 spells	?validSpellTarget@combatManager@@QAEEHJJJEJ@Z	73.6540	96.5992	96.5992	0x1a39c0	tokens1:753c15cb2a9b
-spells	?validSpellTargetArmy@combatManager@@QBEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:450b849814a7
+spells	?validSpellTargetArmy@combatManager@@QBE_NHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80	tokens1:95a5d22bb673
 spells	?viewSpells@combatManager@@QBEHXZ	100.0000	100.0000	100.0000	0x19e900	tokens1:9dc52e9d1b3b
 string_support	?resize@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXI@Z	100.0000	100.0000	100.0000	0x115010	-
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20	tokens1:7c486d98d02f
