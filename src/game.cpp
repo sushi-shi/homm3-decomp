@@ -4261,6 +4261,20 @@ static void randomizeRefugeeCamp(NewmapCell* cell)
     cell->m_extraInfo = g_creatureTypeTraits[creature].m_growthRate;
 }
 
+// Project-inferred operation shared by the five bank cases in randomizeEvents.
+// Keep the packed cell writes before bank construction, then append a copy and
+// destroy the local bank before returning. Ordinary source placement is
+// provisional; the nested initializeCreatureBank keeps its native boundary.
+void game::addCreatureBank(NewmapCell* cell, type_creature_bank_type type)
+{
+    cell->clearVisitedBits();
+    cell->m_creatureBankInfo.m_index = m_creatureBanks.size();
+    cell->m_creatureBankInfo.m_empty = 0;
+    type_creature_bank bank;
+    initializeCreatureBank(bank, type);
+    m_creatureBanks.push_back(bank);
+}
+
 // E:\gamedcs\game.cpp:4613.
 DC_ADDRESS(0x0abc9c, 0xb0)
 MAC_ADDRESS(0x0d662c, 0x9c)
@@ -4768,7 +4782,6 @@ void game::randomizeEvents()
     int z;
     int id;
     TBlackMarket thisMarket;
-    int luckBonus;
     unsigned char resQty;
     EGameResource resType;
     int newOwner;
@@ -4830,16 +4843,8 @@ void game::randomizeEvents()
                     break;
 
                 case CREATURE_BANK:
-                    {
-                        tempCell->clearVisitedBits();
-                        tempCell->m_creatureBankInfo.m_index =
-                            m_creatureBanks.size();
-                        tempCell->m_creatureBankInfo.m_empty = 0;
-                        type_creature_bank bank;
-                        initializeCreatureBank(bank,
-                            type_creature_bank_type(tempCell->m_objectIndex));
-                        m_creatureBanks.push_back(bank);
-                    }
+                    addCreatureBank(tempCell,
+                                    type_creature_bank_type(tempCell->m_objectIndex));
                     break;
 
                 case CREATURE_GENERATOR_1:
@@ -4887,55 +4892,23 @@ void game::randomizeEvents()
                     break;
 
                 case DERELICT_SHIP:
-                    {
-                        tempCell->clearVisitedBits();
-                        tempCell->m_creatureBankInfo.m_index =
-                            m_creatureBanks.size();
-                        tempCell->m_creatureBankInfo.m_empty = 0;
-                        type_creature_bank bank;
-                        initializeCreatureBank(bank,
-                                                 CREATURE_BANK_DERELICT);
-                        m_creatureBanks.push_back(bank);
-                    }
+                    addCreatureBank(tempCell,
+                                    CREATURE_BANK_DERELICT);
                     break;
 
                 case SEPULCHER:
-                    {
-                        tempCell->clearVisitedBits();
-                        tempCell->m_creatureBankInfo.m_index =
-                            m_creatureBanks.size();
-                        tempCell->m_creatureBankInfo.m_empty = 0;
-                        type_creature_bank bank;
-                        initializeCreatureBank(bank,
-                                                 CREATURE_BANK_SEPULCHER);
-                        m_creatureBanks.push_back(bank);
-                    }
+                    addCreatureBank(tempCell,
+                                    CREATURE_BANK_SEPULCHER);
                     break;
 
                 case SHIPWRECK:
-                    {
-                        tempCell->clearVisitedBits();
-                        tempCell->m_creatureBankInfo.m_index =
-                            m_creatureBanks.size();
-                        tempCell->m_creatureBankInfo.m_empty = 0;
-                        type_creature_bank bank;
-                        initializeCreatureBank(bank,
-                                                 CREATURE_BANK_SHIPWRECK);
-                        m_creatureBanks.push_back(bank);
-                    }
+                    addCreatureBank(tempCell,
+                                    CREATURE_BANK_SHIPWRECK);
                     break;
 
                 case DRAGON_CITY:
-                    {
-                        tempCell->clearVisitedBits();
-                        tempCell->m_creatureBankInfo.m_index =
-                            m_creatureBanks.size();
-                        tempCell->m_creatureBankInfo.m_empty = 0;
-                        type_creature_bank bank;
-                        initializeCreatureBank(bank,
-                                                 CREATURE_BANK_DRAGON);
-                        m_creatureBanks.push_back(bank);
-                    }
+                    addCreatureBank(tempCell,
+                                    CREATURE_BANK_DRAGON);
                     break;
 
                 case FLOTSAM:
@@ -4944,11 +4917,7 @@ void game::randomizeEvents()
 
                 case FOUNTAIN_OF_FORTUNE:
                     {
-                        luckBonus = random(0, 3);
-                        if (luckBonus == 0)
-                            tempCell->m_fountainInfo.m_luck = -1;
-                        else
-                            tempCell->m_fountainInfo.m_luck = luckBonus;
+                        tempCell->randomizeFountainLuck();
                         tempCell->clearVisitedBits();
                     }
                     break;
@@ -7759,7 +7728,6 @@ void game::perWeek()
     NewmapCell* mapCell;
     int count;
     int increase;
-    int luckBonus;
     hero* currHero;
 
     bonusCreature = CREATURE_NONE;
@@ -7894,11 +7862,7 @@ void game::perWeek()
                 }
 
                 case FOUNTAIN_OF_FORTUNE: {
-                    luckBonus = random(0, 3);
-                    if (luckBonus == 0)
-                        mapCell->m_fountainInfo.m_luck = -1;
-                    else
-                        mapCell->m_fountainInfo.m_luck = luckBonus;
+                    mapCell->randomizeFountainLuck();
                     break;
                 }
                 }

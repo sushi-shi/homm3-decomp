@@ -16,7 +16,7 @@
 
 #include "advmgr.h"
 #include "advmgr_objects.h"
-#include "creature_bank_types.h"
+#include "creature_bank.h"
 #include "creaturetype.h"
 #include "creaturetype_fwd.h"
 #include "customcampaign.h"
@@ -1492,6 +1492,8 @@ private:
     // private access flag is DC-only: retail decorates both as public QAEX.
     void matchUndergroundGates();
     void randomizeUniversity(NewmapCell* cell);
+    // Project-inferred map-cell/pool operation shared by five bank kinds.
+    void addCreatureBank(NewmapCell* cell, type_creature_bank_type type);
 
 public:
     void setRecruits();

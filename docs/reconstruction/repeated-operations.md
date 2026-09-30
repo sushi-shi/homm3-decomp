@@ -676,6 +676,45 @@ public `lastHover`; townManager `0x1ba0` / `0x719f` likewise records public
 These helper names and ordinary source placement are project inferences,
 without native address or explicit-inline claims.
 
+## Sacrifice display resets and map-object initialization
+
+Creature-mode initialization and completed creature sacrifice share two private
+display operations. `updateUnselectedCreatureOffering()` calls the existing
+offering updater, then hides the source and offering selection borders in that
+order. `clearCurrentCreature()` writes the -1 group sentinel and calls the
+existing updater, which zeroes the amount and hides the four current-creature
+widgets. Both retain the canonical nested update operation.
+
+Initialization still zeroes each offered amount and assigns its group before
+refreshing it. Sacrifice still deducts troops, dismisses depleted stacks and
+then clears each offered amount. The helpers leave name visibility, experience,
+button ordering and slider changes in their callers. In particular, only
+completed sacrifice resets slider resolution/state. Selecting a different
+creature hides the old borders in the opposite order and retains that sequence.
+The current-creature record has no selection borders, so it does not use the
+array-offering border helper. Both new methods are project-inferred ordinary
+source definitions; private storage and object layout remain unchanged.
+
+`ExtraInfoUnion::randomizeFountainLuck()` shares the initial-map and weekly
+fountain operation: one `random(0, 3)` call, with zero mapped to -1 and other
+results kept as drawn. Assignment stays through the signed four-bit luck field,
+preserving adjacent packed bits. Initial randomization still clears visited
+bits afterward; weekly refresh preserves them and retains the surrounding
+hero restore/obscure sequence. It does not apply a hero bonus or mark a visit.
+The helper name and ordinary owner-TU placement are project inferences without
+a native address or explicit-inline claim.
+
+Five map-initialization cases share private `game::addCreatureBank()`: ordinary
+creature banks, derelict ships, sepulchers, shipwrecks and dragon cities. The
+operation clears visits, records the current bank-pool size, clears the empty
+flag, constructs a local bank, calls the native `initializeCreatureBank()` and
+appends a copy. Its local bank is destroyed before returning to the map scan,
+including normal exception cleanup. No rollback or new bounds check is added.
+The ordinary bank still selects its enum kind from the cell subtype; the four
+special objects keep their fixed kinds. This project-inferred operation adds
+no fields or virtual slots and retains the existing enum parameter type. The
+game header includes its defining creature-bank header directly.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

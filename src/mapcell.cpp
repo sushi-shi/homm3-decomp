@@ -21,6 +21,18 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
+// Project-inferred fountain operation shared by initial map randomization and
+// weekly refresh. One roll chooses -1, 1, 2 or 3; preserve all adjacent packed
+// bits. Ordinary owner-TU placement is provisional, without a native claim.
+void ExtraInfoUnion::randomizeFountainLuck()
+{
+    int luckBonus = random(0, 3);
+    if (luckBonus == 0)
+        m_fountainInfo.m_luck = -1;
+    else
+        m_fountainInfo.m_luck = luckBonus;
+}
+
 VA(0x004fbf90, 0x61)
 DC_ADDRESS(0x0eb6a4, 0x98)
 MAC_ADDRESS(0x11d404, 0x130)

@@ -228,6 +228,10 @@ private:
     void updateAllSlots();
     void updateArtifactOffering(long slot);
     void updateCreatureOffering(type_creature_offering& creature);
+    // Project-inferred shared display resets; ordinary source placement
+    // is provisional. Amount changes and slider controls stay with callers.
+    void updateUnselectedCreatureOffering(type_creature_offering& creature);
+    void clearCurrentCreature();
     void updateSlot(long slot);
     static int allArtifacts(message& msg);
     static int allCreatures(message& msg);

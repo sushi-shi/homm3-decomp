@@ -935,6 +935,23 @@ void type_sacrifice_window::updateCreatureOffering(
     }
 }
 
+// Project-inferred display operations shared by creature-mode initialization
+// and completed sacrifice. Preserve the native update helper and the
+// source-frame-before-offering-frame hide order; no native identity claimed.
+void type_sacrifice_window::updateUnselectedCreatureOffering(
+    type_creature_offering& creature)
+{
+    updateCreatureOffering(creature);
+    creature.m_sourceSelectionFrame->setVisible(0);
+    creature.m_offeringSelectionFrame->setVisible(0);
+}
+
+void type_sacrifice_window::clearCurrentCreature()
+{
+    m_currentCreature.m_group = -1;
+    updateCreatureOffering(m_currentCreature);
+}
+
 VA(0x00563150, 0x141)
 DC_ADDRESS(0x126064, 0x180)
 MAC_ADDRESS(0x1599bc, 0x1f4)
@@ -949,13 +966,10 @@ void type_sacrifice_window::setCreatureMode()
     for (long group = 0; group < 7; ++group) {
         m_creatureOfferings[group].m_amount = 0;
         m_creatureOfferings[group].m_group = group;
-        updateCreatureOffering(m_creatureOfferings[group]);
-        m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
-        m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
+        updateUnselectedCreatureOffering(m_creatureOfferings[group]);
     }
 
-    m_currentCreature.m_group = -1;
-    updateCreatureOffering(m_currentCreature);
+    clearCurrentCreature();
     m_sacrificingArtifacts = 0;
     m_maxCreaturesButton->enable(0);
     m_creatureSlider->enable(0);
@@ -1378,13 +1392,10 @@ int type_sacrifice_window::sacrifice(message& msg)
                 if (army->m_numTroops[group] <= 0)
                     army->dismiss(group);
                 window->m_creatureOfferings[group].m_amount = 0;
-                window->updateCreatureOffering(
+                window->updateUnselectedCreatureOffering(
                     window->m_creatureOfferings[group]);
-                window->m_creatureOfferings[group].m_sourceSelectionFrame->setVisible(0);
-                window->m_creatureOfferings[group].m_offeringSelectionFrame->setVisible(0);
             }
-            window->m_currentCreature.m_group = -1;
-            window->updateCreatureOffering(window->m_currentCreature);
+            window->clearCurrentCreature();
             window->m_creatureNameWidget->setVisible(0);
             window->m_allCreaturesButton->enable(
                 army->getCreatureTotal() > 1);

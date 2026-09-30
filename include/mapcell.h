@@ -745,6 +745,9 @@ public:
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
+    // Project-inferred common initial/weekly roll. Changes only the signed
+    // luck lane; callers retain their own visit-bit handling.
+    void randomizeFountainLuck();
     unsigned char gardenIsFull() const;
     enum EGameResource getGardenResource() const;
     void fillGarden(EGameResource resource);
