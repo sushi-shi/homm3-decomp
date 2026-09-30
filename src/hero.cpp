@@ -2767,12 +2767,13 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
             if (rightMouse) {
                 if (g_game->m_gameVersion >= 2) {
                     // Retail +0x95d..+0x963 loads both indices before the test.
-                    const TArtifactTraits& traits =
-                        g_artifactTraits[oldArtifact.m_artifactId];
+                    // Mac f7ee4..f7f0c independently indexes both trait fields;
+                    // retaining those reads instead of a cached traits reference
+                    // raises WindowHandler 85.54032 -> 85.96526% under VC6.
                     int comboType =
-                        traits.m_comboType;
+                        g_artifactTraits[oldArtifact.m_artifactId].m_comboType;
                     int targetCombo =
-                        traits.m_targetCombo;
+                        g_artifactTraits[oldArtifact.m_artifactId].m_targetCombo;
                     if (comboType != -1) {
                         if (g_currentHero->heroFn004D9B30(
                                 oldArtifact.m_artifactId)
