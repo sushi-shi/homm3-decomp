@@ -2374,8 +2374,15 @@ unsigned char army::isEnemy(const army* arg) const
 
 // Mac retains this ordinary body at 0x4e840 between isEnemy and
 // enemyIsAdjacent; its cross-TU callers retain the same helper boundary.
+// DC public ?can_shoot@army@@QBA_NPBV1@@Z proves a native bool result.
+// DC line 2797 is a combined predicate; Complete adds the controller
+// artifact exemption before adjacency. Mac 0x4e8d0..0x4e940 retains the
+// intermediate boolean tests before the final forgetfulness condition.
+// A named result with guarded assignments leaves getControllingSide called
+// inside spellIsValidOnTarget's Bloodlust arm. The combined predicate lets
+// that nested helper expand as in retail; canShoot itself remains exact.
 VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
-unsigned char army::canShoot(const army* excluded) const
+bool army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
         || m_creatureType == ARMY_CREATURE_ARROW_TOWER)
@@ -2383,13 +2390,9 @@ unsigned char army::canShoot(const army* excluded) const
     if (!is(creatureShootingArmy) || m_monInfo.m_numShots <= 0)
         return 0;
     hero* controller = getController();
-    int canShoot = 1;
-    if (!controller
-        || !controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-        if (enemyIsAdjacent(excluded))
-            canShoot = 0;
-    }
-    return canShoot
+    return ((controller
+             && controller->isWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
+            || !enemyIsAdjacent(excluded))
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
@@ -4720,7 +4723,7 @@ void army::castDemonicResurrect(long hex)
 // static helpers in its broader spell-validity worker, preserving the
 // CannotAttack and CanShoot boundaries inside the two capability scans.
 MAC_ADDRESS(0x054034, 0x134)
-static unsigned char groupHasMelee(long group)
+static bool groupHasMelee(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4733,7 +4736,7 @@ static unsigned char groupHasMelee(long group)
 
 // Original: group_has_shooters; army.cpp:5451, dc 0x4c154.
 MAC_ADDRESS(0x054168, 0x134)
-static unsigned char groupHasShooters(long group)
+static bool groupHasShooters(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4746,7 +4749,7 @@ static unsigned char groupHasShooters(long group)
 
 // Original: group_has_dragons; army.cpp:5469, dc 0x4c1b8.
 MAC_ADDRESS(0x05429c, 0x54)
-static unsigned char groupHasDragons(long group)
+static bool groupHasDragons(long group)
 {
     long i = g_combatManager->m_numArmies[group];
     while (i-- > 0) {
@@ -4764,7 +4767,7 @@ static unsigned char groupHasDragons(long group)
 // former statement-scoped inline-depth pins on pasted loop bodies.
 VA(0x00447a80, 0x429) MAC_ADDRESS(0x0542f0, 0x17c)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
-unsigned char spellIsValidOnTarget(int spell, const army* target)
+bool spellIsValidOnTarget(int spell, const army* target)
 {
     if (target->getSpellTime(spell))
         return 0;
@@ -4806,7 +4809,7 @@ unsigned char spellIsValidOnTarget(int spell, const army* target)
 // Mac retains this helper at 0x5446c, between spellIsValidOnTarget and
 // isValidCaliphSpell, and the Enchanter calls it twice. Its name is inferred.
 MAC_ADDRESS(0x05446c, 0xac)
-static unsigned char enchanterSpellHasTarget(int spell)
+static bool enchanterSpellHasTarget(int spell)
 {
     long side = g_combatManager->m_currentSide;
     if (g_spellTraits[spell].m_karma < 0)
@@ -4820,8 +4823,11 @@ static unsigned char enchanterSpellHasTarget(int spell)
     return 0;
 }
 
+// DC public ?is_valid_caliph_spell@@YA_NW4SpellID@@PBVarmy@@@Z proves bool.
+// Mac 0x54548 forwards the worker result unchanged; the worker likewise
+// forwards the group predicates and canShoot without a truth conversion.
 VA(0x00447eb0, 0x21) MAC_ADDRESS(0x054518, 0x44)  // dc 0x4c210
-unsigned char isValidCaliphSpell(SpellID spell, const army* target)
+bool isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(g_spellTraits[spell].m_flags & 0x800))
         return 0;

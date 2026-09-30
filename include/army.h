@@ -779,7 +779,7 @@ public:
     bool canCastResurrect() const;
     bool canCastSpell(long hex) const;
     bool canRetaliate(const army& attacker) const;
-    unsigned char canShoot(const army* excluded) const;
+    bool canShoot(const army* excluded) const;
     void castCaliphSpell(long hex);
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
@@ -1354,7 +1354,7 @@ public:
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
-    unsigned char canShoot(const army* excluded) const;        // 0x4428f0
+    bool canShoot(const army* excluded) const;        // 0x4428f0
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
@@ -1806,7 +1806,7 @@ extern int g_walkingTo;
 extern int g_walkingTo2;
 extern int g_walkingYMod;
 
-unsigned char isValidCaliphSpell(SpellID spell, const army* target);
+bool isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
 // and army::can_cast_spell (0x4476c0) also calls. It opens by
 // rejecting a target that already carries the spell
@@ -1815,7 +1815,7 @@ unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // is_valid_caliph_spell and can_cast_spell - so it is a retail-only
 // factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
-unsigned char spellIsValidOnTarget(int spell, const army* target);
+bool spellIsValidOnTarget(int spell, const army* target);
 
 // E:\gamedcs\army.cpp:917, dc 0x44e14
 // E:\gamedcs\army.cpp:2708, dc 0x47944
