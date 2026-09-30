@@ -2568,7 +2568,7 @@ int combatManager::processNextAction(message& msg, bool automaticTurn)
         resetCyclingCreatures();
         // The pending-action payload is an int slot (DC CCombatMainMsg
         // m_nextActionExtra) crossing into CastSpell's DC-proven SpellID.
-        castSpell(static_cast<SpellID>(m_nextActionExtra) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */,
+        castSpell(static_cast<ESpellId>(m_nextActionExtra),
                   m_nextActionGridIndex, 0, m_nextActionGridIndex2, eMasteryNone, 3);
         if (currentArmy->m_numTroops <= 0)
             returnValue = 1;

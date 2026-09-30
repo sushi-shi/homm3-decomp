@@ -738,7 +738,10 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 VA(0x0059fe30, 0x2A4F)
 DC_ADDRESS(0x14f7dc, 0x2366)
 MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row
-void combatManager::castSpell(SpellID spellId, int targetIndex,
+// Original ?CastSpell@combatManager@@QAAXW4SpellID@@H_NHW4TSkillMastery@@J@Z
+// proves the canonical spell/mastery enums. Complete extends the caster
+// selector to 0/1/2/3, so its older bool domain becomes the existing int.
+void combatManager::castSpell(ESpellId spellId, int targetIndex,
                               int isMonsterSpell,
                               int secondaryIndex, TSkillMastery monsterSkill,
                               long monsterPower)
@@ -799,7 +802,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // both calls, as does Mac retail; its empty depth reset was illegal.
         // Recover the Windows inlining state without suppressing inlining.
         target = findSpellTarget(
-            static_cast<ESpellId>(spellId), m_currentSide, targetIndex, 1, isMonsterSpell);
+            spellId, m_currentSide, targetIndex, 1, isMonsterSpell);
     } else {
         target = 0;
     }
@@ -854,7 +857,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // records this redirected-target call and retail +0x478 retains it.
         // Windows inlining state remains the same unfinished lead as above.
         target = findSpellTarget(
-            static_cast<ESpellId>(spellId), otherSide, secondaryIndex, 0, isMonsterSpell);
+            spellId, otherSide, secondaryIndex, 0, isMonsterSpell);
         redirected = 1;
     } else {
         redirected = 0;
@@ -1494,7 +1497,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     // find_resurrection_target selector, into the retail switch arm.
     case SPELL_RESURRECTION:
     case SPELL_ANIMATE_DEAD:
-        resurrect(static_cast<ESpellId>(spellId), target->m_gridIndex, monsterPower, mastery,
+        resurrect(spellId, target->m_gridIndex, monsterPower, mastery,
                   castingHero);
         break;
 

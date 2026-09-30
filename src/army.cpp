@@ -5114,7 +5114,8 @@ void army::castCaliphSpell(long hex)
         if (isValidCaliphSpell(spell, target)) {
             if (--pick == 0) {
                 // This creature cast uses advanced mastery (2).
-                g_combatManager->castSpell(spell, hex, 1, -1, eMasteryAdvanced, 6);
+                g_combatManager->castSpell(static_cast<ESpellId>(spell), hex, 1,
+                                           -1, eMasteryAdvanced, 6);
                 return;
             }
         }
@@ -5127,7 +5128,8 @@ MAC_ADDRESS(0x05469c, 0x64)
 void army::castFaerieDragonSpell(long hex)
 {
     if (combatManager::validHex(hex))
-        g_combatManager->castSpell(m_faerieDragonSpell, hex, 1, -1, eMasteryAdvanced,
+        g_combatManager->castSpell(static_cast<ESpellId>(m_faerieDragonSpell),
+                                   hex, 1, -1, eMasteryAdvanced,
                                    m_numTroops * 5);
 }
 
@@ -5197,7 +5199,8 @@ unsigned char army::unnamed447fe0()
         playSample(SHOOT_SAMPLE);
         g_combatManager->powEffect(eSpellEffectNone, 1);
     }
-    g_combatManager->castSpell(spell, -1, 1, -1, eMasteryExpert, 3);
+    g_combatManager->castSpell(static_cast<ESpellId>(spell), -1, 1,
+                               -1, eMasteryExpert, 3);
     return 1;
 }
 
