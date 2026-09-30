@@ -1153,9 +1153,18 @@ void army::walk(int direction, unsigned char endWalk,
 // reach Windows 100% while retaining all bitmap and rectangle helpers.
 // The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
 // also retain Windows 100%; keep their accessors nested in those helpers.
+// Mac 0x4b008 expands the owning-side load before MarkCreatureEffect's
+// army/byte-row strides, as in doAttack and attackWall. Restore the same
+// canonical GetOwningSide call. With the native bool predicates, Windows
+// measures 95.1424 -> 95.1277%; the accessor alone moves Mac 31.8986 ->
+// 31.5448%. Removing the outer flight guard is Windows-flat but lowers
+// Mac to 30.4038%; that separate loop probe is not retained. All other
+// available army pairs hold. Both rectangle updates already expand to
+// UpdateScreen; the remaining instructions and internal switch reference
+// differ despite all 52 block flows and 25 branches agreeing.
 VA(0x0043f2c0, 0x63B)
 DC_ADDRESS(0x0453c8, 0x4d8)
-MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket
+MAC_ADDRESS(0x04afa0, 0x68c)  // MAC_ABSTRACTION_FROM(tokens1:1b8626a2ce74,31.8986): restore canonical getOwningSide before markCreatureEffect instead of a direct owning-side field load.
 void army::animateMissile(army* armyToAttack)
 {
     if (static_cast<const combatManager*>(g_combatManager)
@@ -1165,7 +1174,7 @@ void army::animateMissile(army* armyToAttack)
     int targetX = armyToAttack->midX();
     int targetY = armyToAttack->midY();
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     g_combatManager->computeMaxExtent();
 
     int startX;
