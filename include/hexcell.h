@@ -126,7 +126,8 @@ public:
     // candidate site in C2's sites-remaining divisor - measured there).
     // The DC const-this record also permits DoorCanBeLowered to call it.
     DC_ADDRESS(0x04cc68, 0xa)
-    unsigned char hasArmy() const
+    // Original ?HasArmy@hexcell@@QBA_NXZ proves the bool result.
+    bool hasArmy() const
     {
         return m_armySide >= 0;
     }
