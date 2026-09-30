@@ -715,6 +715,35 @@ special objects keep their fixed kinds. This project-inferred operation adds
 no fields or virtual slots and retains the existing enum parameter type. The
 game header includes its defining creature-bank header directly.
 
+## Event eligibility and creature-bank state
+
+Hero event handling and AI valuation share `hasFountainEffect()`,
+`hasIdolEffect()` and `hasTempleEffect()`. These query the same combined flag
+sets: fountain curse or any positive tier, either idol benefit, and either
+temple morale tier. They do not represent permanent site visits. Individual
+effect application, descriptions and post-battle clearing retain their
+separate bits. AI movement-cost guards remain after these predicates; event
+dialogs, day-dependent rewards and information/visit marking keep their order.
+
+Library events and AI also share `meetsLibraryLevelRequirement()`: hero level
+plus twice the Diplomacy rank must reach ten. Each caller still checks its
+per-library visit mask first. The event's cached visit mask, four skill awards
+and final marking remain unchanged, as does the AI's reward valuation.
+
+`ExtraInfoUnion::creatureBankIsEmpty()` replaces four repeated checks in
+ordinary-bank events, dragon-city events, undead-lair events and AI valuation.
+`setCreatureBankEmpty()` shares the occupied/empty writes in bank creation and
+successful reward completion. It changes only the existing packed empty bit;
+it does not erase guards, rewards, pool indices or visit bits. Reward completion
+marks empty after every award and before checking hero level. AI still resolves
+the bank record before checking empty, and the distinct event prompt/return
+rules remain intact.
+
+Native hero `0x1a6e` / field list `0x3f74` proves `flags` public; creature-bank
+info `0x2d41` / `0x2d40` proves its packed members public. Storage visibility
+and layout remain unchanged. New helper names and ordinary owner-TU placement
+are project inferences without native address or explicit-inline claims.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

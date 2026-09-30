@@ -4269,7 +4269,7 @@ void game::addCreatureBank(NewmapCell* cell, type_creature_bank_type type)
 {
     cell->clearVisitedBits();
     cell->m_creatureBankInfo.m_index = m_creatureBanks.size();
-    cell->m_creatureBankInfo.m_empty = 0;
+    cell->setCreatureBankEmpty(false);
     type_creature_bank bank;
     initializeCreatureBank(bank, type);
     m_creatureBanks.push_back(bank);

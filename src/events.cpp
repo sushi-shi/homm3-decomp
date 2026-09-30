@@ -1536,7 +1536,7 @@ MAC_ADDRESS(0x0ac500, 0x324)
 void advManager::doEventIdol(hero* currentHero, NewmapCell* cell,
                              bool humanPlayer)
 {
-    if (!(currentHero->m_flags & 0x10) && !(currentHero->m_flags & 0x2000000)) {
+    if (!currentHero->hasIdolEffect()) {
         unsigned short day = g_game->m_day;
         if (day == DAY_OF_WEEK_SUNDAY) {
             if (humanPlayer)
@@ -1596,7 +1596,7 @@ void advManager::doEventCreatureBank(hero* currentHero, NewmapCell* cell,
     std::string dialogText;
 
     cell->setCellVisited(currentHero->m_owner);
-    if (cell->m_extraInfo & 0x2000000) {
+    if (cell->creatureBankIsEmpty()) {
         if (humanPlayer) {
             dialogText = formatString((*g_adventureEventText)[ADV_EVENT_TEXT_CREATURE_BANK_EMPTY_FORMAT],
                                         name.c_str());
@@ -1823,7 +1823,7 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                                       type_point point, bool humanPlayer)
 {
     cell->setCellVisited(currentHero->m_owner);
-    if (cell->m_creatureBankInfo.m_empty) {
+    if (cell->creatureBankIsEmpty()) {
         if (humanPlayer) {
             normalDialog((*g_generalText)[GENERAL_TEXT_DRAGON_CITY_EMPTIED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -1893,7 +1893,7 @@ void advManager::doEventFountain(hero* currentHero, ExtraInfoUnion* cell,
                                  bool humanPlayer)
 {
     cell->setCellVisited(currentHero->m_owner);
-    if ((currentHero->m_flags & 0x20) || (currentHero->m_flags & 0x38000000)) {
+    if (currentHero->hasFountainEffect()) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE_VISITED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -2334,8 +2334,7 @@ void advManager::doEventLibrary(hero* currentHero, NewmapCell* cell,
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
     }
-    if (currentHero->m_level
-        + currentHero->getSecondarySkill(eSecSkillDiplomacy) * 2 >= 10) {
+    if (currentHero->meetsLibraryLevelRequirement()) {
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_LIBRARY],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -3299,7 +3298,7 @@ MAC_ADDRESS(0x0b2bf0, 0x280)
 void advManager::doEventTemple(hero* currentHero, NewmapCell* cell,
                                bool humanPlayer)
 {
-    if (!(currentHero->m_flags & 0x4000100)) {
+    if (!currentHero->hasTempleEffect()) {
         game* g = g_game;
         g->setInfoFlag(TempleInfo, g_netLocalGamePos);
         if (g_game->m_day == DAY_OF_WEEK_SUNDAY) {
@@ -5474,7 +5473,7 @@ int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_
     for (int m = 0; m <= 6; m++)
         who->giveResource(m, bank.m_resources[m]);
 
-    cell->m_extraInfo |= 0x2000000;
+    cell->setCreatureBankEmpty(true);
     who->checkLevel();
     return 1;
 }
@@ -5495,7 +5494,7 @@ void advManager::doEventUndeadLair(hero* currentHero, NewmapCell* cell, const ch
     }
 
     cell->setCellVisited(currentHero->m_owner);
-    if (cell->m_extraInfo & 0x2000000) {
+    if (cell->creatureBankIsEmpty()) {
         if (humanPlayer)
             normalDialog(emptyText, 1, -1, -1,
                          0x10, 0, -1, 0, -1, 0, -1, 0);

@@ -1166,7 +1166,7 @@ static long valueOfBank(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
         static_cast<void*>(cell));
     type_creature_bank& bank = info->getCreatureBank();
-    if (cell->m_extraInfo & 0x2000000)
+    if (cell->creatureBankIsEmpty())
         return 0;
 
     value = aiValueOfCombat(currentHero, 0, bank.m_guards, 0, cell);
@@ -1251,9 +1251,7 @@ DC_ADDRESS(0x110db4, 0x1d4)
 MAC_ADDRESS(0x142dd8, 0x184)
 inline long valueOfIdol(const hero* currentHero, long moveCost)
 {
-    if (currentHero->m_flags & 0x10)
-        return 0;
-    if (currentHero->m_flags & 0x2000000)
+    if (currentHero->hasIdolEffect())
         return 0;
     if (moveCost > currentHero->m_movePoints)
         return 0;
@@ -1445,9 +1443,7 @@ inline int valueOfLibrary(const hero* currentHero, NewmapCell* cell)
 {
     if (currentHero->m_libraryFlags & (1UL << cell->m_extraInfo))
         return 0;
-    if (currentHero->m_level
-            + 2 * currentHero->getSecondarySkill(eSecSkillDiplomacy)
-        < 10)
+    if (!currentHero->meetsLibraryLevelRequirement())
         return 0;
     return 2 * currentHero->getValueOfPower()
         + 2 * currentHero->getValueOfKnowledge()
@@ -3939,13 +3935,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
         return valueOfFlotsam(player);
 
     case FOUNTAIN_OF_FORTUNE:
-        if (currentHero->m_flags & 0x20)
-            return 0;
-        if (currentHero->m_flags & 0x8000000)
-            return 0;
-        if (currentHero->m_flags & 0x10000000)
-            return 0;
-        if (currentHero->m_flags & 0x20000000)
+        if (currentHero->hasFountainEffect())
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;
@@ -4073,9 +4063,7 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     case STABLES:
         return valueOfStables(currentHero, moveCost);
     case TEMPLE:
-        if (currentHero->m_flags & 0x100)
-            return 0;
-        if (currentHero->m_flags & 0x4000000)
+        if (currentHero->hasTempleEffect())
             return 0;
         if (moveCost > currentHero->m_movePoints)
             return 0;

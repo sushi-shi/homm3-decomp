@@ -960,6 +960,13 @@ public:
     // Their native visit masks remain public; site IDs belong to each mask.
     bool visitedPrimarySkillSite(TPrimarySkill skill, int siteId) const;
     void markPrimarySkillSiteVisited(TPrimarySkill skill, int siteId);
+    // Project-inferred event/AI predicates for effects cleared after battle.
+    // These do not query permanent site visits or movement affordability.
+    bool hasFountainEffect() const;
+    bool hasIdolEffect() const;
+    bool hasTempleEffect() const;
+    // Library admission counts two effective levels per Diplomacy rank.
+    bool meetsLibraryLevelRequirement() const;
     unsigned char isWieldingArtifact(int whichArtifact) const;
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.

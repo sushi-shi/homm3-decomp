@@ -740,6 +740,10 @@ public:
     enum EGameResource getArtifactResourceCost() const;
     BlackBoxData* getBlackBox() const;
     type_creature_bank& getCreatureBank() const;
+    // Project-inferred bank-state interface shared by initialization,
+    // event handling and AI. Other packed lanes retain their values.
+    bool creatureBankIsEmpty() const;
+    void setCreatureBankEmpty(bool empty);
     void clearVisitedBits();
     short getCustomIndex() const;
     short getItemId() const;

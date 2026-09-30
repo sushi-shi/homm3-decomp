@@ -6206,6 +6206,32 @@ int hero::getManaFrame() const
     return frame;
 }
 
+// Project-inferred event/AI predicates. Any tier blocks another benefit;
+// fountain includes the curse, idol either luck or morale, temple either
+// morale tier. Ordinary owner-TU placement is provisional. Native field list
+// 0x3f74 proves flags public; individual effect application/reset stays intact.
+bool hero::hasFountainEffect() const
+{
+    return (m_flags & 0x38000020) != 0;
+}
+
+bool hero::hasIdolEffect() const
+{
+    return (m_flags & 0x2000010) != 0;
+}
+
+bool hero::hasTempleEffect() const
+{
+    return (m_flags & 0x4000100) != 0;
+}
+
+// Project-inferred shared Library admission predicate. Visit status remains
+// a separate earlier check in both event handling and AI valuation.
+bool hero::meetsLibraryLevelRequirement() const
+{
+    return m_level + getSecondarySkill(eSecSkillDiplomacy) * 2 >= 10;
+}
+
 // Project-inferred visit interface shared by the event, AI and help paths.
 // Read/write only the selected site's native public mask; serialization and
 // initialization retain their separate field order.

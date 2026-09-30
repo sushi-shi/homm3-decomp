@@ -21,6 +21,18 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
+// Project-inferred bank-state operations; native field list 0x2d40 proves
+// the packed fields public. Ordinary owner-TU placement is provisional.
+bool ExtraInfoUnion::creatureBankIsEmpty() const
+{
+    return m_creatureBankInfo.m_empty != 0;
+}
+
+void ExtraInfoUnion::setCreatureBankEmpty(bool empty)
+{
+    m_creatureBankInfo.m_empty = empty;
+}
+
 // Project-inferred fountain operation shared by initial map randomization and
 // weekly refresh. One roll chooses -1, 1, 2 or 3; preserve all adjacent packed
 // bits. Ordinary owner-TU placement is provisional, without a native claim.
