@@ -2065,6 +2065,9 @@ void advManager::processRadarSelect(const message* msg)
 // VIEW_HERO dispatch remain different. Historical explicit-goto models changed
 // the wrong CFG (88.463%);
 // hoisting the DC locals alone was byte-flat in that older context.
+// DC 2450/2452/2456 and Mac 0xa8ec..0xa900 preserve the visibility
+// test and separate 1/0 assignments before GetCell. Restoring that phase
+// raises Windows 89.6679 -> 90.2941 with no other advmgr score movement.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
@@ -2086,9 +2089,11 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     m_lastHoverX = m_lastMapHover.m_x - m_radarOrigin.m_x;
     m_lastHoverY = m_lastMapHover.m_y - m_radarOrigin.m_y;
 
-    unsigned char visible =
-        (getMapExtra(point)
-         & visibilityBit) != 0;
+    unsigned char visible;
+    if (getMapExtra(point) & visibilityBit)
+        visible = 1;
+    else
+        visible = 0;
 
     NewmapCell* cell = getCell(point);
 
