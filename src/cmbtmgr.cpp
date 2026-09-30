@@ -2633,6 +2633,28 @@ void combatManager::initializeArchers()
     m_archers[2].m_frame = 0;
 }
 
+// Project-inferred queue operations shared by PowEffect, ResetRound,
+// Armageddon and ShowMassSpell. Keep the retail 2x20 marker extent even
+// though the army storage has 21 entries per side. These ordinary bodies
+// have provisional owner-TU placement and no claimed native helper identity.
+void combatManager::clearVanishingCreatures()
+{
+    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
+    m_someCreaturesVanish = 0;
+}
+
+void combatManager::markCreatureForVanish(int side, int index)
+{
+    m_creatureIsDead[side][index] = 1;
+    m_someCreaturesVanish = 1;
+}
+
+void combatManager::makeCreaturesVanishIfNeeded()
+{
+    if (m_someCreaturesVanish)
+        makeCreaturesVanish();
+}
+
 // E:\gamedcs\cmbtmgr.cpp:3299
 // RECONSTRUCTED 2026-08-20. Two walks over the same +0x13438 latch: the
 // first raises each marked stack's drawing-effect byte (or, for an arrow
@@ -3668,8 +3690,7 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             this->resetLimitCreature();
     }
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     for (side = 0; side < 2; side++) {
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
@@ -3681,17 +3702,13 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
             }
         }
     }
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
 
     for (side = 0; side < 2; side++) {
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
             stack.m_showPowEffect = 0;
-            stack.m_someUnitsDamaged = 0;
-            stack.m_drawPriority = 4;
-            stack.m_showAttackFrames = 0;
-            stack.m_numTroopsToShowOverride = -1;
+            stack.resetDamageDisplay();
         }
     }
     drawFrame(1, 0, 0, 0, 1, 0);

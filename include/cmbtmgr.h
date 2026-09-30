@@ -951,6 +951,8 @@ public:
     // the walk steps the byte arrays by 20 and the army index by 21 in
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
     // +0x14000.
+    // Original: bCreatureVanish. DC combatManager 0x1ed7 / field list
+    // 0x4429 explicitly makes this array and bSomeCreaturesVanish public.
     unsigned char m_creatureIsDead[2][20];  // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
@@ -1158,6 +1160,8 @@ public:
     unsigned char shouldLowerDoor(army* thisArmy, long hex) const;
     int experienceValueOfStack(int whichGroup);
     void makeCreaturesVanish();
+    // Project operation: mark the owner-side slot and publish pending work.
+    void markCreatureForVanish(int side, int index);
     void raiseDoor();
     void testRaiseDoor();
     void lowerDoor();
@@ -1958,6 +1962,11 @@ public:
     void combatMessage(int command);
 
 private:
+    // Project operations shared by round, damage and mass-spell completion.
+    // Consuming the marked stacks does not clear this queue; the next batch
+    // explicitly resets it, as in the original callers.
+    void clearVanishingCreatures();
+    void makeCreaturesVanishIfNeeded();
     std::string getTowerString(TWallSection wall, long archers,
                                  long skill) const;
     void autoResolveCombat();

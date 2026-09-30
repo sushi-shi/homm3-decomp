@@ -1276,8 +1276,7 @@ void combatManager::resetRound()
 
     m_anyActionTaken = 0;
     m_inSecondPhase = 0;
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     m_castleAttackDone = 0;
 
     for (int side = 0; side < 2; side++) {
@@ -1296,8 +1295,7 @@ void combatManager::resetRound()
         }
     }
 
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
 
     for (TObstacle* obstacle = m_obstacles.begin();
             obstacle != m_obstacles.end(); ++obstacle) {

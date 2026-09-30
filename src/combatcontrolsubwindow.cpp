@@ -706,9 +706,7 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         m_moraleIcon->setIconFrame(info.getMorale(1) + 3);
         m_luckIcon->setIconFrame(info.getLuck(1) + 3);
 
-        int count = info.m_numTroopsToShowOverride;
-        if (count == -1)
-            count = info.m_numTroops;
+        int count = info.getDisplayedTroopCount();
         sprintf(buffer, "%d", count);
         m_countText->setText(buffer);
     }

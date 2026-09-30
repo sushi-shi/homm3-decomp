@@ -37,6 +37,26 @@
 #include "townmgr.h"
 #include "winmgr.h"
 
+// Project-inferred operation shared by PowEffect and CastSpell completion.
+// This does not clear the pow overlay or death latch, change animation frames,
+// or initialize a stack. Source placement is provisional; no native helper
+// identity or explicit inline declaration is claimed.
+void army::resetDamageDisplay()
+{
+    m_someUnitsDamaged = 0;
+    m_drawPriority = 4;
+    m_showAttackFrames = 0;
+    m_numTroopsToShowOverride = -1;
+}
+
+// Shared by the battlefield count and the creature popup. Only -1 selects
+// the live count; keep other saved values intact during damage animation.
+int army::getDisplayedTroopCount() const
+{
+    return m_numTroopsToShowOverride == -1 ? m_numTroops
+                                          : m_numTroopsToShowOverride;
+}
+
 // Retail table initializers, in the layouts used by their named consumers.
 DATA(0x00660878) long g_wideDirectionRingIndex[8] = { 0, 1, 2, 4, 5, 6, 7, 3 };
 DATA(0x00660898) long g_wideDirectionRingOrder[8] = { 0, 1, 2, 7, 3, 4, 5, 6 };
@@ -774,8 +794,7 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
             char countText[12];
             // The count recycles the spent x parameter (retail homes
             // the ternary's result in [ebp+8]).
-            x = m_numTroopsToShowOverride == -1 ? m_numTroops
-                                              : m_numTroopsToShowOverride;
+            x = getDisplayedTroopCount();
             sprintf(countText,
                     DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), x);
             g_tinyFont->drawBoundedString(
@@ -3201,8 +3220,7 @@ void army::processDeath(int fadeElementals)
             cell2 = &g_combatManager->m_cells[gi2];
         }
         if (leavesNoBody()) {
-            g_combatManager->m_creatureIsDead[getOwningSide()][m_bitIndex] = 1;
-            g_combatManager->m_someCreaturesVanish = 1;
+            g_combatManager->markCreatureForVanish(getOwningSide(), m_bitIndex);
         } else {
             if (cell->m_bodiesInHex < 14
                 && (!twoHex || cell2->m_bodiesInHex < 14)) {

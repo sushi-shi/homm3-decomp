@@ -1667,10 +1667,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
     for (int side = 0; side < 2; ++side) {
         for (int index = 0; index < m_numArmies[side]; ++index) {
             army* currentArmy = &m_armies[side][index];
-            currentArmy->m_someUnitsDamaged = 0;
-            currentArmy->m_drawPriority = 4;
-            currentArmy->m_showAttackFrames = 0;
-            currentArmy->m_numTroopsToShowOverride = -1;
+            currentArmy->resetDamageDisplay();
         }
     }
 
@@ -3129,8 +3126,7 @@ void combatManager::armageddon(int level, int power)
             m_armies[side][i].m_showPowEffect = 0; }
     } }
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     unsigned char deaths = 0;
     { for (int side = 0; side < 2; side++) {
         { for (i = 0; i < m_numArmies[side]; i++) {
@@ -3154,8 +3150,7 @@ void combatManager::armageddon(int level, int power)
     } }
     if (deaths)
         drawFrame(1, 0, 0, 0, 1, 0);
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
     if (damageDone
         && !static_cast<const combatManager*>(this)->isQuickCombat()) {
         long totalDamage = computeSpellDamage(
@@ -4086,8 +4081,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
         } }
     }
 
-    memset(m_creatureIsDead, 0, sizeof(m_creatureIsDead));
-    m_someCreaturesVanish = 0;
+    clearVanishingCreatures();
     unsigned char anyDied = 0;
     for (int side = 0; side < 2; side++) {
         for (int i = 0; i < m_numArmies[side]; i++) {
@@ -4103,8 +4097,7 @@ void combatManager::showMassSpell(bool (&effected)[2][20],
     }
     if (anyDied)
         drawFrame(1, 0, 0, 0, 1, 0);
-    if (m_someCreaturesVanish)
-        makeCreaturesVanish();
+    makeCreaturesVanishIfNeeded();
     checkRebirth();
 }
 

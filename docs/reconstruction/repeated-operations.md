@@ -483,10 +483,51 @@ review remains in the base accessor PR. Counts describe the reviewed inventory;
 they do not prove that every caller's operation was understood, and adding more
 methods is not a completion criterion.
 
+## Combat damage display and vanishing creatures
+
+`army::resetDamageDisplay()` now owns the same four-field transition in
+`combatManager::powEffect()` and the common completion path of `castSpell()`:
+clear the damage latch, restore draw priority 4, clear attack-frame display and
+restore the troop-count override to -1. PowEffect still clears its pow overlay
+immediately before this operation. CastSpell does not acquire that extra write.
+Neither path changes the death latch or current animation frame through this
+helper. `initClean()` and `initialize()` keep their staged initialization, and
+walk completion retains its draw-priority-only reset.
+
+The same review follows the override from `damage()`, which snapshots the old
+count before casualties, to both displays. Battlefield drawing and the creature
+popup now call `getDisplayedTroopCount()`. Only -1 falls back to the live count;
+other saved values pass through unchanged. Each caller keeps its formatting,
+drawing guards and original local/parameter destination. Native army type
+`0x1a95`, field list `0x205b`, explicitly makes the four display fields public.
+These operations therefore do not change their access declarations.
+
+Four flows—PowEffect, ResetRound, Armageddon and ShowMassSpell—now share
+`clearVanishingCreatures()` and `makeCreaturesVanishIfNeeded()`. The first clears
+all forty marker bytes before clearing the pending flag. The second preserves
+the pending guard around the existing native `makeCreaturesVanish()` operation.
+Processing does not clear the markers or flag afterward. Death processing marks
+the owner-side slot and sets the pending flag through `markCreatureForVanish()`.
+The array remains 2x20 despite the 2x21 army storage.
+
+The caller-specific death walks remain separate: PowEffect tests the all-killed
+latch, while the spell paths test affected stacks with exactly zero troops.
+Round processing retains its creature-type guard and per-stack reset, which can
+itself run a poison pow effect. Death redraws, siege-artifact removal, rebirth and
+quick-combat gates retain their original positions. MakeCreaturesVanish still
+clears occupancy in quick combat while gating its drawing/fizzle work.
+
+Direct native records identify the marker array as `bCreatureVanish` and the
+pending byte as `bSomeCreaturesVanish`, both public in combatManager `0x1ed7`,
+field list `0x4429`. The earlier unresolved semantic alias is now documented in
+the owning header. The new helper names and ordinary source-file placement are
+project inferences; they carry no invented native address or inline claim.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
 tests, validation checks or matching-score investigations. Earlier compiler
 observations recorded with the accessor inventory do not validate these changes.
-The split preserves the previously published C++ implementation at `582687638`;
-it reorganizes review scope and the accompanying reports.
+The extraction checkpoint `aa71fa920` preserved the published C++ implementation
+at `582687638`. The combat damage/vanish continuation above was added afterward
+and has not been compiled or measured.

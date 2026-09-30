@@ -967,6 +967,11 @@ public:
 
     int getMirrorEffect() const;
 
+    // Project-inferred shared damage-display operations. The four fields
+    // are public in DC army 0x1a95 / field list 0x205b and stay public.
+    void resetDamageDisplay();
+    int getDisplayedTroopCount() const;
+
     // Complete's NextArmy directly combines the private reset latch with the
     // shared IsIncapacitated helper. The exact retail lowering proves that
     // combatManager can read this tail without making the Dreamcast-private
