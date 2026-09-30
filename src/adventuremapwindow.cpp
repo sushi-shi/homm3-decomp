@@ -955,10 +955,10 @@ generic_help:
                 rolloverText = g_adventureWindowHelp[helpID].m_text;
         }
 
-        message update;
-        update.m_extraText = rolloverText;
+        // Mac 0x298c..0x29a0 forwards the text pointer as the integer payload;
+        // broadcastMessage owns the actual message object.
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
-            ROLLOVER_TEXT_ID, update.m_extra);
+            ROLLOVER_TEXT_ID, reinterpret_cast<int>(rolloverText));
         drawWindow(0, ROLLOVER_TEXT_ID, ROLLOVER_TEXT_ID);
         g_windowManager->updateScreen(m_x + m_rolloverTextWidget->m_x,
             m_y + m_rolloverTextWidget->m_y, m_rolloverTextWidget->m_width,
@@ -1307,9 +1307,6 @@ void TAdventureMapWindow::updateSpellButton(const hero* thisHero)
 DATA(0x0065f22c)
 static const char* g_aszElevationIcons[2] = { "iam010.def", "iam003.def" };
 
-DATA(0x0065f234)
-static int g_elevationToggleLevel = -1;
-
 // The sleep button swaps both its DEF and its active keyboard command.
 // The two scancodes are the only contents of this retail .rdata row.
 DATA(0x0063a570)
@@ -1323,12 +1320,13 @@ DC_ADDRESS(0x001188, 0x4)
 MAC_ADDRESS(0x0039d8, 0xcc)
 unsigned char TAdventureMapWindow::setElevationToggleImage(int level)
 {
-    if (level != g_elevationToggleLevel) {
-        message iconMessage;
-        g_elevationToggleLevel = level;
-        iconMessage.m_extraText = g_aszElevationIcons[level];
+    // Mac 0x39ec..0x3a04 initializes a function-local cache; 0x3a2c passes
+    // the icon pointer directly to the four-int broadcast overload.
+    DATA(0x0065f234) static int previousLevel = -1;
+    if (level != previousLevel) {
+        previousLevel = level;
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
-            ELEVATION_TOGGLE_ID, iconMessage.m_extra);
+            ELEVATION_TOGGLE_ID, reinterpret_cast<int>(g_aszElevationIcons[level]));
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
             ELEVATION_TOGGLE_ID, g_game->getLocalPlayerGamePos());
         broadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW,
