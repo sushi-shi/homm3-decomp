@@ -2233,6 +2233,9 @@ static int g_shipyardOffsets[12][2] = {
 // gShipyardOffsets order must be water, unblocked, and either non-triggering
 // or a boat. Its coordinates are then copied into the ShipyardInfo overlay of
 // every shipyard cell in the object's three-wide horizontal footprint.
+// Mac 0x123324/0x1233ec/0x1234b8 expands the canonical cell/zCell chain.
+// The middle lookup copies the packed point before unpacking its coordinates,
+// preserving cell(type_point)'s by-value boundary.
 VA(0x00500de0, 0x239) MAC_ADDRESS(0x1232e8, 0x264)
 void NewfullMap::loadShipyards()
 {
@@ -2241,7 +2244,7 @@ void NewfullMap::loadShipyards()
     for (int z = 0; z < getNumLevels(); ++z) {
         for (int y = 0; y < g_mapHeight; ++y) {
             for (int x = 0; x < g_mapWidth; ++x) {
-                NewmapCell* cell = &m_cellData[(z * m_size + y) * m_size + x];
+                NewmapCell* cell = this->cell(x, y, z);
                 if (!cell->m_isTrigger || cell->m_type != SHIPYARD)
                     continue;
 
@@ -2252,8 +2255,7 @@ void NewfullMap::loadShipyards()
                     if (!newPoint.isValid())
                         continue;
 
-                    NewmapCell* boatCell = &m_cellData[
-                        (newPoint.m_z * m_size + newPoint.m_y) * m_size + newPoint.m_x];
+                    NewmapCell* boatCell = this->cell(newPoint);
                     if (boatCell->m_groundSet == eTerrainWater
                         && !boatCell->m_isBlocked
                         && (!boatCell->m_isTrigger
@@ -2261,8 +2263,7 @@ void NewfullMap::loadShipyards()
                         for (int checkX = x - 1; checkX <= x + 1; ++checkX) {
                             if (checkX < 0 || checkX >= g_mapWidth)
                                 continue;
-                            NewmapCell* shipyardCell =
-                                &m_cellData[(z * m_size + y) * m_size + checkX];
+                            NewmapCell* shipyardCell = this->cell(checkX, y, z);
                             if (shipyardCell->m_type != SHIPYARD)
                                 continue;
                             ShipyardInfo* shipyardInfo =
