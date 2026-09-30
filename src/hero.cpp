@@ -5525,8 +5525,10 @@ int hero::getLuck(const hero* otherHero, bool onCursedGround,
             return 0;
     }
 
-    int luck = g_luckBonuses[m_skillLevel[eSecSkillLuck]];
-    if (m_skillLevel[eSecSkillLuck] > 0) {
+    // DC 5187/5189 and Mac 0x1043c8..0x1043dc separately widen the packed
+    // mastery byte, matching the canonical typed skill getter's expansion.
+    int luck = g_luckBonuses[getSecondarySkill(eSecSkillLuck)];
+    if (getSecondarySkill(eSecSkillLuck) > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillLuck)
@@ -5573,8 +5575,9 @@ int hero::getMorale(const hero* otherHero, bool onCursedGround,
     if (onCursedGround)
         return 0;
 
-    morale = g_leadershipBonuses[m_skillLevel[eSecSkillLeadership]];
-    if (m_skillLevel[eSecSkillLeadership] > 0) {
+    // Mac 0x104680..0x104698 repeats the same typed getter expansion.
+    morale = g_leadershipBonuses[getSecondarySkill(eSecSkillLeadership)];
+    if (getSecondarySkill(eSecSkillLeadership) > eMasteryNone) {
         const THeroSpecificAbility& ability = g_heroSpecificAbilities[m_id];
         if (ability.m_type == eHeroAbilitySecondarySkill &&
             ability.m_skill == eSecSkillLeadership)

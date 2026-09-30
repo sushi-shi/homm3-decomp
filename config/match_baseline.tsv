@@ -522,7 +522,7 @@ army	?adjustDamage@army@@QBEJPAV1@J_N1JPAJ@Z	100.0000	100.0000	100.0000	0x43f40	
 army	?animateMissile@army@@AAEXPAV1@@Z	95.1085	95.1085	100.0000	0x3f2c0	tokens1:c77d19298cab
 army	?attackHex@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45a60	tokens1:e9a63bb4426f
 army	?attackWall@army@@AAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0	tokens1:22ffeab0543b
-army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	96.0460	96.0460	96.0460	0x45fd0	tokens1:876fec81f95f
+army	?attackWall@army@@AAEXW4TWallTargetId@@J@Z	96.0460	96.0460	96.0460	0x45fd0	tokens1:f600adaab052
 army	?attackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30	tokens1:5ce27f36c494
 army	?canCastResurrect@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x473d0	tokens1:b5e4534f2782
 army	?canCastSpell@army@@QBE_NJ@Z	100.0000	100.0000	100.0000	0x476c0	tokens1:010b931d3d10
@@ -2220,7 +2220,7 @@ hero	?getHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	100.0000	100.0000	100.0
 hero	?getHitPointBonus@hero@@QBEJH@Z	100.0000	100.0000	100.0000	0xe5b80	tokens1:a83fa1f269f2
 hero	?getIntelligenceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe48b0	tokens1:df43498cec92
 hero	?getLastBackpackIndex@hero@@QBEJXZ	100.0000	100.0000	100.0000	0xdbd90	tokens1:c91788dd5dd1
-hero	?getLuck@hero@@QBEHPBV1@_N1@Z	94.2276	94.2276	100.0000	0xe36c0	tokens1:79506993ec39
+hero	?getLuck@hero@@QBEHPBV1@_N1@Z	94.2276	94.2276	100.0000	0xe36c0	tokens1:d8a31e829df7
 hero	?getLuckDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0xdcac0	tokens1:3c89e2f36272
 hero	?getMagicResistanceFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe46e0	tokens1:5770a5e68925
 hero	?getManaCost@hero@@QBEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240	tokens1:022c28de8cb6
@@ -2228,7 +2228,7 @@ hero	?getManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380	tokens1:462c7
 hero	?getMobility@hero@@QBEHE@Z	100.0000	100.0000	100.0000	0xe4990	tokens1:f19516b828e8
 hero	?getMobility@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe4d90	tokens1:af68624efd12
 hero	?getMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330	tokens1:170e6f789ec6
-hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:df8c8f4293d4
+hero	?getMorale@hero@@QBEHPBV1@_N1@Z	100.0000	100.0000	100.0000	0xe39b0	tokens1:a9380c167e18
 hero	?getMoraleDescription@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0xdc320	tokens1:93decc1751aa
 hero	?getMysticismBonus@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe3f40	tokens1:5c5aa371c439
 hero	?getNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60	tokens1:1e1c32ce6d8d
