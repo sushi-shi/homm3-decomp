@@ -159,6 +159,10 @@ class slider;
 // (0x68/0x8c/0x64/0x64/0x68) and each ctor's `push <size>`. Members past the
 // CAdvPopup base (0x60) are named where a reconstructed body attests the store
 // and left as field_NN placeholders where only the size is proven so far.
+// All five original native Update publics encode _N for bUpdate. The
+// byte primitive in their dossiers is lowered bool, not an unsigned-char
+// source contract. Keep the recovered bool interface across the family.
+// All three corrected VC6 bodies and their complete caller bodies are byte-flat.
 class TTradeResourceWindow : public CAdvPopup {
     void setWidgetOn(short id);
     void setWidgetOff(short id);
@@ -173,7 +177,7 @@ class TTradeResourceWindow : public CAdvPopup {
 
 public:
     TTradeResourceWindow(int x2, int y2);
-    void update(unsigned char update);
+    void update(bool update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
     virtual ~TTradeResourceWindow();
@@ -223,7 +227,7 @@ class TBuyArtifactWindow : public CAdvPopup {
 
 public:
     TBuyArtifactWindow(int x2, int y2);
-    void update(unsigned char update);
+    void update(bool update);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
     virtual ~TBuyArtifactWindow();
@@ -243,7 +247,7 @@ public:
     void setWidgetOn(short id);
     void setWidgetOff(short id);
     void setWidgetDisabled(short id);
-    void update(unsigned char update);
+    void update(bool update);
     void computeTradeRatios(int inLeftResource, int inRightResource,
                             int* inTradeRatio, int* inLeftDenominated,
                             int* inMaxUnitsToTrade);

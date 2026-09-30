@@ -1801,7 +1801,7 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 VA(0x005ea6e0, 0x862)
 DC_ADDRESS(0x188fa4, 0x602)
 MAC_ADDRESS(0x1f5ad8, 0x900)  // ordermap clean run + arity ret 4
-void TTradeResourceWindow::update(unsigned char update)
+void TTradeResourceWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2212,7 +2212,7 @@ void TGiveResourceWindow::update(bool update)
 VA(0x005eb6a0, 0x7d9)
 DC_ADDRESS(0x189aac, 0x580)
 MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4
-void TBuyArtifactWindow::update(unsigned char update)
+void TBuyArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
@@ -2401,7 +2401,7 @@ void TBuyArtifactWindow::update(unsigned char update)
 VA(0x005ebe80, 0x6cb)
 DC_ADDRESS(0x18a02c, 0x522)
 MAC_ADDRESS(0x1f72e0, 0x684)
-void TSellArtifactWindow::update(unsigned char update)
+void TSellArtifactWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
     int tempLeftDenominated;
