@@ -1414,6 +1414,9 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // native bitset bounds check and reproduces the scalar-buffer homes. The
 // remaining 99.9557% residual is the x/uintBuffer stack-home permutation;
 // all 49 blocks and 22 calls agree. Outer local-order controls are object-identical.
+// With fill_n and the loop-local bit counter, direct member.test(bit) still
+// changes the packed-bit update from retail's eight instructions to eleven
+// (98.21%). The const pointer retains that expansion; all 22 calls agree.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
