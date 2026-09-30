@@ -3437,8 +3437,10 @@ void NewfullMap::readRandomDwellingLevelData(TAbstractFile* infile,
 
     dwelling.m_minLevel = static_cast<unsigned char>(
         m_objectTypes[object->m_typeIndex].m_extra);
-    dwelling.m_maxLevel = static_cast<unsigned char>(
-        m_objectTypes[object->m_typeIndex].m_extra);
+    // Native Mac 0x125a3c..0x125a4c stores the subtype into minLevel,
+    // then reads it back into maxLevel. Retail shares that single byte;
+    // repeating the table lookup gives it two independent source owners.
+    dwelling.m_maxLevel = dwelling.m_minLevel;
 
     dwelling.m_object = object;
     m_randomDwellings.push_back(dwelling);
