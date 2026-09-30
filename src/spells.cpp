@@ -4410,11 +4410,13 @@ void combatManager::demonicResurrection(const army* caster, army* target)
 // sum removes Windows' redundant zero/jump path: 94.26 -> 96.78%.
 // A named creature-name temporary or shared sprintf format selection
 // changes the retained message branches; neither improves this source.
+// Original DC ?Resurrect@combatManager@@QAAXPAVarmy@@J_N@Z proves bool
+// temporary; the unsigned-char debug primitive is its lowered encoding.
 VA(0x005a7560, 0x32F)
 DC_ADDRESS(0x156840, 0x228)
 MAC_ADDRESS(0x1986ec, 0x3b4)  // order-map+arity
 void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
-                              unsigned char temporary)
+                              bool temporary)
 {
     long hex = targetArmy->m_gridIndex;
     long oldCount = targetArmy->m_numTroops;
@@ -4489,10 +4491,12 @@ void combatManager::resurrect(army* targetArmy, long hitPointsResurrected,
 // Complete VC6 expands this whole helper into CastSpell; the retail arm
 // independently corroborates the selector, formula, hero bonus and
 // temporary-resurrection predicate.
+// The original DC public encodes mastery as W4TSkillMastery. Keep that
+// domain and the bool temporary through the canonical selector/helper path.
 DC_ADDRESS(0x156a68, 0x84)
 MAC_ADDRESS(0x198aa0, 0xd8)
 inline void combatManager::resurrect(SpellID spell, int targetHex,
-                                     int power, int mastery,
+                                     int power, TSkillMastery mastery,
                                      const hero* castingHero)
 {
     army* targetArmy =
@@ -4503,7 +4507,7 @@ inline void combatManager::resurrect(SpellID spell, int targetHex,
             + g_spellTraits[spell].m_powerFactor * power;
         hitPointsResurrected += castingHero->getHeroSpellBonus(
             spell, targetArmy->m_monInfo.m_level, hitPointsResurrected);
-        unsigned char temporary =
+        bool temporary =
             spell == SPELL_RESURRECTION && mastery < eMasteryAdvanced;
         resurrect(targetArmy, hitPointsResurrected, temporary);
     }

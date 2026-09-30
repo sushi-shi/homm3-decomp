@@ -1544,16 +1544,16 @@ public:
                           long targetIndex, long castingSide,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a39c0
-    // 0x5a7560, carcass in spells.cpp; declared here because
-    // army::cast_spell's Archangel arm calls it (the carcass stub is a
-    // good-enough callee - the reloc pairs).
+    // Retained resurrection body 0x5a7560, also called by Archangels.
+    // Original DC ?Resurrect@combatManager@@QAAXPAVarmy@@J_N@Z proves bool.
     void resurrect(army* targetArmy, long hitPointsResurrected,
-                   unsigned char temporary);
+                   bool temporary);
     // Dreamcast spells.cpp:4984. Complete has no separate retail body:
     // VC6 expands this source helper into CastSpell's shared
     // Resurrection/Animate Dead arm.
+    // Original DC public encodes mastery as W4TSkillMastery, not int.
     inline void resurrect(SpellID spell, int targetHex, int power,
-                          int mastery, const hero* castingHero);
+                          TSkillMastery mastery, const hero* castingHero);
     long computeSpellDamage(SpellID spell, long spellPower, long mastery,
                             hero* castingHero, hero* targetHero,
                             const army* target,
@@ -1741,9 +1741,12 @@ public:
 
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
+    // Original DC ?find_resurrection_target@combatManager@@QAAPAVarmy@@
+    // W4SpellID@@JJ_N@Z proves bool here; Complete's three-argument leaf
+    // retains its wider creature-spell domain.
     DC_ADDRESS(0x042a3c, 0x38)
     army* findResurrectionTarget(SpellID spell, long group, long hex,
-                                   unsigned char creatureSpell)
+                                   bool creatureSpell)
     {
         if (spell == SPELL_ANIMATE_DEAD)
             return findAnimateDeadTarget(group, hex);
