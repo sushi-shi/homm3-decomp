@@ -4114,11 +4114,17 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
                                      0, 1, 0);
             currentHero->useSpell(
                 currentHero->getManaCost(SPELL_TOWN_PORTAL));
-            if (currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
-                == eMasteryExpert)
-                currentHero->m_movePoints -= 200;
-            else
-                currentHero->m_movePoints -= 300;
+            // DC line 4234 selects the charge before one shared subtract
+            // (0x34d92); Complete's neg/sbb/and/add sequence likewise
+            // computes 200/300 then subtracts once. Keep that boundary. The
+            // focused
+            // VC6 comparison is 85.26% vs 86.75% with separate subtraction
+            // arms: point inequality becomes retained, while vector teardown
+            // still has three delete sites against retail's two.
+            currentHero->m_movePoints -=
+                currentHero->getSpellLevel(SPELL_TOWN_PORTAL)
+                        == eMasteryExpert
+                    ? 200 : 300;
             if (currentHero->m_movePoints < 0)
                 currentHero->m_movePoints = 0;
             return;
