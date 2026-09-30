@@ -175,18 +175,6 @@ const TCreatureTypeTraits (&g_creatureTypeTraits)[150] = g_creatureTypeTraitsSto
 void initializeCreatureTypeTraits(int id,
     const std::vector<char*, std::allocator<char*> >& values);
 
-// Original: GetBaseCreature; creaturetype.cpp:202, dc 0x718dc
-TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
-{
-    // DC returns ordinal zero for an invalid dwelling, not CREATURE_NONE.
-    if (baseCreatureNbr < 0 || baseCreatureNbr >= TOWN_DWELLING_COUNT)
-        return CREATURE_PIKEMAN;
-    // Complete stores normal and upgraded rows together; isBaseCreature
-    // at 0x47b120 proves the fourteen-entry town stride.
-    return g_townDwellingCreatures[
-        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
-}
-
 // Provisional name: Mac retains this source helper at 0:0x888d0, immediately
 // before isBaseCreature. All three following queries call it there; VC6
 // expands its two-row lookup in their Windows bodies.

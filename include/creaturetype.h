@@ -35,6 +35,18 @@ inline const char* getArmyName(int type, int count)
         || (type) == CREATURE_FIRE_ELEMENTAL \
         || (type) == CREATURE_WATER_ELEMENTAL)
 
-TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr);
+// Original GetBaseCreature: creaturetype.cpp:202, DC 0x718dc. The two
+// CTownDlg::CreateWin calls are named at DC lines 326/342. Complete Mac
+// expands the same row lookup at 0x16c924/0x16ca40, as does Windows; a
+// shared header body/inline linkage are inferred for Complete's cross-TU
+// expansion, not proven by the older DC declaration.
+// The older DC body returns zero outside 0..6. Complete's popup expansions
+// have no such fallback; their two loops supply valid dwelling indices.
+// Complete's behavior for an invalid dwelling index remains unproven.
+inline TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
+{
+    return g_townDwellingCreatures[
+        townType * 2 * TOWN_DWELLING_COUNT + baseCreatureNbr];
+}
 
 #endif  /* HOMM3_CREATURETYPE_H */
