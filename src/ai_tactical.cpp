@@ -480,8 +480,8 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
         if (cell->m_flightCost > 0)
             continue;
         turns = getAttackTime(cell);
-        if (m_bestHex >= 0) {
-            if (m_bestAttackTime < turns)
+        if (getBestHex() >= 0) {
+            if (getAttackTime() < turns)
                 continue;
         }
         checked = 0;
@@ -520,11 +520,13 @@ void type_AI_attack_hex_chooser::checkAdjacentHexes(long enemyHex, long startDir
             threat = min(m_enemyAttackArray[otherHex], threat);
         }
         value += threat;
-        if (m_bestHex >= 0 && turns == m_bestAttackTime) {
-            if (value < m_bestValue)
+        // Mac expands the ai_tactical.h:471..482 result getters at these
+        // best-hex/time/value reads. Keep their canonical caller boundaries.
+        if (getBestHex() >= 0 && turns == getAttackTime()) {
+            if (value < getHexValue())
                 continue;
-            if (value == m_bestValue) {
-                const pathCell* bestCell = m_searchData->getHex(m_bestHex);
+            if (value == getHexValue()) {
+                const pathCell* bestCell = m_searchData->getHex(getBestHex());
                 long difference = cell->m_cost - bestCell->m_cost;
                 if ((m_attackArmy->m_creatureType == CREATURE_CAVALIER
                             || m_attackArmy->m_creatureType == CREATURE_CHAMPION)
@@ -635,7 +637,7 @@ unsigned char type_AI_attack_hex_chooser::findAttackHex()
                 checkAdjacentHexes(second, 0, 3);
         }
     }
-    return combatManager::validHex(m_bestHex);
+    return combatManager::validHex(getBestHex());
 }
 
 // E:\gamedcs\ai_tactical.cpp:744 -  No retail slot: both
