@@ -30,12 +30,6 @@ enum ECombatGridDimensions {
     COMBAT_GRID_HEX_COUNT = 187
 };
 
-// combatManager::CombatAreaLimits, retail .data 0x6aace8 - the value
-// every accumulating draw pass resets the combat drawing extent to
-// before it starts. Definition and DATA claim are src/drawing.cpp's;
-// declared here because fly.obj resets the extent through it once per
-// flight frame.
-extern TDrawbridgeBounds g_combatAreaLimits;
 // DC names the 58,86..740,557 clip rectangle GridAreaLimits. Retail's
 // initializer at 0x462640 and UpdateGrid's four clamps prove the aggregate;
 // its storage belongs to cmbtmgr.obj and this TU only references it.

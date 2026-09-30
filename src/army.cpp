@@ -1251,7 +1251,7 @@ void army::animateMissile(army* armyToAttack)
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = g_combatAreaLimits;
+    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
     const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
 
@@ -2196,7 +2196,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
                 g_combatManager->drawFrame(1, 0, 0, 0, 1, 0);
             }
             g_combatManager->lowerDoor();
-            g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
+            g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
             initialWalk = 1;
         }
         if (g_searchArray->isMoat(static_cast<short>(nextCell))) {
@@ -4446,7 +4446,7 @@ void army::setupAnimation()
     if (g_combatManager->isQuickCombat())
         return;
     hexcell* cell = &g_combatManager->m_cells[m_gridIndex];
-    g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
+    g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
     g_combatManager->m_saveBiggestExtent = 1;
     g_combatManager->m_computeExtentOnly = 1;
     drawToBuffer(cell->m_refX, cell->m_refY, 0);
@@ -4503,7 +4503,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             g_windowManager->m_screenBitmap->getHeight(),
             g_windowManager->m_screenBitmap->getPitch(), false);
 
-        g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
+        g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
         g_combatManager->m_saveBiggestExtent = 1;
         g_combatManager->m_computeExtentOnly = 1;
         drawToBuffer(g_combatManager->m_cells[m_gridIndex].m_refX,
@@ -5223,7 +5223,7 @@ void army::castSpell(long hex)
         break;
     }
     waitSample(SHOOT_SAMPLE);
-    g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
+    g_combatManager->m_drawbridgeBounds = combatManager::s_combatAreaLimits;
     if (originalFacing != m_facing
         && !static_cast<const combatManager*>(g_combatManager)
                 ->isQuickCombat())

@@ -367,6 +367,8 @@ public:
     static const SLimitData s_upperTowerLimits;
     // Original: CombatAreaLimits_Visible.
     static const SLimitData s_visibleCombatAreaLimits;
+    // Original: CombatAreaLimits; public @@2USLimitData@@B proves const.
+    static const SLimitData s_combatAreaLimits;
 
     // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.

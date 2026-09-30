@@ -3003,6 +3003,9 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // (14 calls vs 12). The frame remains 0x8c vs retail 0x9c. Native
 // operand-order alternatives are Windows-flat. All other available
 // cmbtmgr Mac pairs hold; keep these canonical source operations.
+// Default construction followed by assignment of updateArea is also
+// byte-flat at 89.1219%; the observed four-word initialization alone does
+// not distinguish it from copy initialization, which remains the model.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3031,7 +3034,7 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     int y = startY;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = g_combatAreaLimits;
+    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
     const int missileperiod = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
@@ -3133,7 +3136,7 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
     int y = startY - height / 2;
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = g_combatAreaLimits;
+    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowDelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);
@@ -3271,7 +3274,7 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     }
 
     Bitmap16Bit saved(width, height);
-    TDrawbridgeBounds updateArea = g_combatAreaLimits;
+    TDrawbridgeBounds updateArea = combatManager::s_combatAreaLimits;
     drawFrame(0, 0, 0, 0, 1, 0);
     const int arrowdelay = static_cast<int>(
         g_combatSpeedFactors[g_config.m_combatSpeed] * 33.0f);

@@ -36,7 +36,10 @@ DATA(0x006aad00) const SLimitData combatManager::s_visibleCombatAreaLimits(0, 0,
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
 // CRT 0x602140 initializes an empty accumulation rectangle: (799,599)..(0,0).
-DATA(0x006aace8) TDrawbridgeBounds g_combatAreaLimits(799, 599, 0, 0);
+// Original public ?CombatAreaLimits@combatManager@@2USLimitData@@B proves
+// const class-static ownership. Construction writes its four words during
+// initialization; all reviewed subsequent users only read/copy the rectangle.
+DATA(0x006aace8) const SLimitData combatManager::s_combatAreaLimits(799, 599, 0, 0);
 
 // UpdateGrid's private "the grid bitmap has been posted" latch. It is
 // cleared when the caller says the clean battlefield was reposted and set
@@ -508,7 +511,7 @@ void combatManager::resetLimitCreature()
     m_flagEffect[0] = 0;
     m_flagEffect[1] = 0;
     memset(m_archerEffect, 0, sizeof m_archerEffect);
-    m_drawbridgeBounds = g_combatAreaLimits;
+    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
 }
 
 VA(0x00493780, 0x44)
@@ -744,8 +747,7 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 
             if (oldGrid) {
                 SLimitData updateLimits =
-                    *static_cast<const SLimitData*>(static_cast<const void*>(
-                        &g_combatAreaLimits));
+                    combatManager::s_combatAreaLimits;
                 for (i = 0; i < COMBAT_GRID_CELLS; i++) {
                     if (m_lastDrawGridShade[i] != m_curDrawGridShade[i]
                             || m_curDrawGridShade[i]) {
@@ -917,7 +919,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
     SLimitData saveExtent = m_drawbridgeBounds;
     int saveLimitToExtent = m_limitToExtent;
-    m_drawbridgeBounds = g_combatAreaLimits;
+    m_drawbridgeBounds = combatManager::s_combatAreaLimits;
     m_limitToExtent = 1;
 
     for (i = 0; i < oldHexes.size(); ++i) {
