@@ -752,7 +752,7 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
                 g_windowManager->m_screenBitmap, 0, 0, false);
     videoNextFrame();
     g_inputManager->flush();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     while (1) {
         if (!videoPlaying())

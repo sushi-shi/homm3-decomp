@@ -1047,7 +1047,7 @@ void TAdventureMapWindow::updateHeroLocators(int top, unsigned char drawWin,
     }
 
     if (update)
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
 }
 
 VA(0x00403420, 0x131)
@@ -1098,7 +1098,7 @@ void TAdventureMapWindow::updateTownLocators(int top, unsigned char drawWin,
     }
 
     if (update)
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
 }
 
 VA(0x00403560, 0x23E)

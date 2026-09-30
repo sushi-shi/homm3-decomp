@@ -2538,7 +2538,7 @@ void TCampaignBrief::MapTextStruct::play()
         speech = ResourceManager::getSample(speechName);
 
     g_inputManager->flush();
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
 
     unsigned char textDone;
     long textEnd;

@@ -249,7 +249,7 @@ void BinkManager::nextBinkFrame()
             if (g_videoDescriptors[g_playingBink.m_id].m_fadeOnAbort)
                 g_windowManager->fadeScreen(1, 4, 0);
             else
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
             return;
         }
     } else {

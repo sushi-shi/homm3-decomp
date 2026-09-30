@@ -1364,7 +1364,7 @@ int viewWorldSurfaceHandler(message& msg)
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 1;
 }
 
@@ -1385,7 +1385,7 @@ int viewWorldUndergroundHandler(message& msg)
     window->drawWindow();
     g_advManager->updateRadar(window->m_origin, 1, 1, g_viewMines, g_viewHeroes,
                               g_viewTowns);
-    g_windowManager->updateScreen(0, 0, 800, 600);
+    g_windowManager->updateScreen();
     return 1;
 }
 

@@ -369,3 +369,66 @@ in that caller correspond to its existing source disposal/delete expressions.
 The full checkpoint after the two progress-dialog changes passed: both
 Windows functions remain exact, no source edit lowered Windows MAX, and
 the Mac preservation and source ownership/inventory gates passed.
+
+### Remaining full-screen facades and combat dialog redraws
+
+Fourteen further callers now use the existing no-argument `updateScreen`.
+Each Mac site loads the window manager and forwards `(0,0,800,600)`;
+the source retains the same guard and surrounding operations.
+
+| Source operation | Mac call sites |
+| --- | --- |
+| Adventure hero/town locator refresh | `0x2d30`, `0x2f38` |
+| World-view surface/underground callbacks | `0x208f18`, `0x208ffc` |
+| Campaign map-text playback | `0x9798c` |
+| Video completion and framed-video startup | `0x25dbe0`, `0x10fa44` |
+| Overview dynamic setup | `0x135d3c` |
+| Overview hero/visiting-hero/garrison-hero dialogs | `0x1373cc`, `0x137974`, `0x137a18` |
+| Overview heroes/towns tabs | `0x13aeb0`, `0x13aee8` |
+| Town hall before its modal loop | `0x1cf700` |
+
+Campaign playback's separate strip refresh (`0x97ba4`) passes
+`(96,510,608,82)` and remains a rectangular update.
+
+Twelve DC `FullUpdate` sites have no corresponding redraw in Complete's
+dialog paths. Mac proceeds directly from the dialog or spell operation to
+response handling, cleanup or return: `0x8349c`, `0x834b8`, `0x8350c`,
+`0x835bc`, `0x84e84`, `0x85d38`, `0x864a4`, `0x866dc`, `0x877b4`,
+`0x88578`, `0x80a0c`, and `0x6e774`. These cover the combat dispatcher,
+spell command, surrender/AI decisions, refusal, tower/help dialogs and
+placement help. The four dispatcher `InitMouse(0)` additions are likewise
+absent at those exits; the existing `resetMouse` calls remain. This finding
+does not classify other `FullUpdate` or cursor-control sites.
+
+
+The full checkpoint passed without a Windows MAX loss or an unreviewed Mac
+regression. `TOverviewWindow::windowHandler` improved from 95.9492% to
+97.2042% Windows MAX; source ownership and inventory gates remained clean.
+
+### Resource readers and accessor expansions
+
+`NewfullMap::readObjectType` already preserves all four mask-resource reads.
+DC `ReadFromSpriteResource` (`0x12249c`) forwards to `LODFile::read` using
+the global sprite resource file. Complete's Mac body (`0x126478 + 0x528`)
+uses the file returned by `pointToSpriteResource`, including its default-mask
+fallback, and calls the explicit-file reader at `0x126594`, `0x1265ac`,
+`0x1265c4` and `0x1266c0`. These read width, height, drawing mask and shadow
+mask (1, 1, 6 and 6 bytes). The source already calls the canonical
+`readFromBitmapResource` for each operation. Its eleven virtual input reads
+also correspond to existing direct or nested `readLittleEndianValue` /
+`readValue` calls, with the native buffers, counts and failure checks.
+
+The six older `GetBitmap16` leads likewise have corresponding source paths:
+`remapGraphics` and `saturateGraphics` use the uncached `loadBitmap16`, while
+the bitmap-border constructor and `setImage` use `getBitmap16`. DC's two
+main-menu loading phases become one guarded load in Complete (Mac
+`0x110120`; the preceding `0x10fd68..0x110138` startup path was inspected).
+DC's boolean argument bypasses both cache lookup and insertion; Complete's
+cached wrapper (`0x153204`) explicitly calls lookup, loader and insertion.
+
+Existing sprite accessor calls also account for the expanded operations in
+Mac `computeExtent` (`0xa81c0`), icon-widget real width/height (`0x10c858`,
+`0x10c864`), icon-frame selection (`0x10cf60`) and radar palette colors
+(`0x13d44..0x13d64`, `0x13e0c..0x13e24`). The missing DC edges in these
+specific operations are obsolete `SpriteDataReload` guards. This does not
+classify the remaining sprite drawing and palette-getter leads.

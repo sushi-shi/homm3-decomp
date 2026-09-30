@@ -4590,8 +4590,7 @@ void townManager::doHall()
     createPopupBank(m_hallWindow);
 
     m_hallWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    g_windowManager->updateScreen(0, 0, WINDOW_SCREEN_WIDTH,
-                                  WINDOW_SCREEN_HEIGHT);
+    g_windowManager->updateScreen();
     m_hallWindow->doModal(0);
 
     delete m_hallWindow;

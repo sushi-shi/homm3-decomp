@@ -790,7 +790,7 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 
     if (update) {
         g_overWin->drawWindow(0, 110, 999);
-        g_windowManager->updateScreen(0, 0, 800, 600);
+        g_windowManager->updateScreen();
     }
 
 }
@@ -1311,7 +1311,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                 heroView(g_overviewHeroIds[selectedIndex], 1, 1, 0);
                 setupDynamicStuff(0, 1);
                 g_overWin->drawWindow(1, 0xffff0001, 0xffff);
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 break;
 
             case OVERVIEW_HERO_ARMY_SECOND_ROW_FIRST_ID:
@@ -1485,7 +1485,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                     1, 0);
                 setupDynamicStuff(0, 1);
                 g_overWin->drawWindow(1, 0xffff0001, 0xffff);
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 break;
             }
 
@@ -1500,7 +1500,7 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
                     1, 0);
                 setupDynamicStuff(0, 1);
                 g_overWin->drawWindow(1, 0xffff0001, 0xffff);
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 break;
             }
 
@@ -2509,12 +2509,12 @@ int TOverviewWindow::windowHandler(message& msg)
             case OVERVIEW_SELECT_HEROES_ID:
                 if (g_overviewType != 0)
                     g_game->setupNewOverviewType(0, 1);
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 break;
             case OVERVIEW_SELECT_TOWNS_ID:
                 if (g_overviewType != 1)
                     g_game->setupNewOverviewType(1, 1);
-                g_windowManager->updateScreen(0, 0, 800, 600);
+                g_windowManager->updateScreen();
                 break;
 
             case OVERVIEW_ROW_FIRST_ID + OVERVIEW_HERO_ARTIFACT_PAGE_1_ID:
