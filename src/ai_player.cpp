@@ -4353,8 +4353,8 @@ bool type_AI_player::hireHeroes()
 // Local prototypes, the events.cpp pattern: value_of_hiring's body follows
 // consider_hiring below (retail 0x431bd0); AI_resource_cost is philai.obj's
 // long-id overload (philai.cpp:1040); CanBuy is castle.h's free checker.
-long valueOfHiring(town* currentTown, hero* candidate,
-                     searchArray* currentSearchArray);
+static long valueOfHiring(town* currentTown, hero* candidate,
+                          searchArray& currentSearchArray);
 int aiResourceCost(long playerId, const int* resources);
 int canBuy(const town* currTown, int buildingId);
 
@@ -4400,7 +4400,7 @@ bool considerHiring(long playerId, hero* candidate)
             value -= aiResourceCost(
                 playerId, currentTown->getBuildCostArray(TAVERN_ID));
         }
-        value += valueOfHiring(currentTown, candidate, &currentSearchArray);
+        value += valueOfHiring(currentTown, candidate, currentSearchArray);
         if (value > bestValue) {
             bestValue = value;
             bestTown = currentTown;
@@ -4432,7 +4432,7 @@ bool considerHiring(long playerId, hero* candidate)
 // names the mutable town::get_army overload in the older Dreamcast build.
 // Mac 0:0x35070 calls the retained mutable overload at 0:0x1b6fdc. Complete's
 // normalized Windows target labels the shared ICF-folded body as const.
-// Residual (99.95219%): all 56 blocks and 481 instructions agree; only two
+// Historical residual (99.95219%): all 56 blocks and 481 instructions agree; two
 // stack-color classes differ. Retail uses {player_id,-0x14; i,-0x1c} where
 // our CL swaps them (their later best-value/touched partners follow), and
 // {-0x28 point temp; -0x20 monster_cell} where ours uses {-0x24;-0x28}.
@@ -4441,11 +4441,14 @@ bool considerHiring(long playerId, hero* candidate)
 // separate and for-scoped destination indices (byte-flat), swapping the
 // two hero-counter initializers (99.70), unifying all three indices (98.20),
 // and block-scoping cell/monster_cell per loop (94.40).
+// DC's local-procedure record proves static ownership and searchArray&;
+// the sole Complete caller supplies its live search-array object. Keep the
+// reference boundary; only findAllDestinations still requires its address.
 VA(0x00431bd0, 0x64b)
 DC_ADDRESS(0x034fb8, 0x446)
 MAC_ADDRESS(0x035070, 0x770)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d)
-long valueOfHiring(town* currentTown, hero* candidate,
-                     searchArray* currentSearchArray)
+static long valueOfHiring(town* currentTown, hero* candidate,
+                          searchArray& currentSearchArray)
 {
     short playerId = currentTown->m_owner;
     playerData* player = &g_game->m_players[currentTown->m_owner];
@@ -4472,7 +4475,7 @@ long valueOfHiring(town* currentTown, hero* candidate,
     candidate->m_x = currentTown->m_mapX;
     candidate->m_y = currentTown->m_mapY;
     candidate->m_z = currentTown->m_mapZ;
-    findAllDestinations(candidate, currentSearchArray, destinations, 0x7fff,
+    findAllDestinations(candidate, &currentSearchArray, destinations, 0x7fff,
                           1, 0, 0);
 
     std::vector<pathCell*> monsters;
@@ -4482,14 +4485,14 @@ long valueOfHiring(town* currentTown, hero* candidate,
     unsigned int i;
     for (i = 0; i < destinations.size(); ++i) {
         destination = destinations[i];
-        pathCell* cell = currentSearchArray->getCell(destination.m_point, 0);
+        pathCell* cell = currentSearchArray.getCell(destination.m_point, 0);
         NewmapCell* mapCell = g_advManager->getCell(destination.m_point);
         if (mapCell->m_type == HERO && mapCell->m_isTrigger
             && g_game->getHero(mapCell->m_extraInfo)->m_owner == playerId) {
             cell->m_barrierValue = destination.m_value;
         } else if (cell->m_barrierValue < 0
                    && cell->m_monster.m_x < 255) {
-            monsterCell = currentSearchArray->getCell(cell->m_monster, 0);
+            monsterCell = currentSearchArray.getCell(cell->m_monster, 0);
             if (monsterCell->m_visited) {
                 monsters.push_back(monsterCell);
                 monsterCell->m_visited = 0;
@@ -4510,14 +4513,14 @@ long valueOfHiring(town* currentTown, hero* candidate,
     for (int heroIndex = 0; heroIndex < player->m_numHeroes; ++heroIndex) {
         hero* other = g_game->getHero(player->m_heroes[heroIndex]);
         if (other->m_z == candidate->m_z) {
-            pathCell* cell = currentSearchArray->getCell(
+            pathCell* cell = currentSearchArray.getCell(
                 other->getLocation(), 0);
 
             if (cell->m_visited) {
                 ++heroesTouched;
                 long value = cell->m_barrierValue;
                 if (cell->m_monster.m_x < 255) {
-                    monsterCell = currentSearchArray->getCell(cell->m_monster, 0);
+                    monsterCell = currentSearchArray.getCell(cell->m_monster, 0);
                     if (monsterCell->m_barrierValue < 0)
                         value += monsterCell->m_barrierValue;
                 }
