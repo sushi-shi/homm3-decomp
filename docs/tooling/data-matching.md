@@ -57,6 +57,12 @@ Vostok consumes `config/retail/relocs.tsv` through its native
 `--reloc-manifest` support. The reviewed alias table retains explicit owner and
 addend evidence. No pointer-shaped integer scan replaces those inputs.
 
+When an alias's owner name and base RVA agree with an admitted data definition,
+Vostok references that definition instead of fabricating a second four-byte
+datum with the same name. The alias retains its proven addend, including
+one-past, field-past-end and negative offsets. These references do not enlarge
+the owner's accounted extent. Unadmitted owners retain the existing fallback.
+
 `homm3.delink.reloc_pairing` generates relocation identities from paired code
 on every model run. A voter is a claimed function whose candidate body equals
 retail apart from relocated operands (same length, masked bytes and absolute
@@ -573,9 +579,9 @@ the reviewed rows per proof class.
 
 The model and verification implementation was ported from local Gruntz revision
 `fead802f2`. Vostok remains pinned at `1393e24b4804cb357fdac147c68013f0aa5a9d95`;
-its patch adds Gruntz manifest schemas and COMDAT topology, preserving native
-relocation TSV handling. VC6-specific function/EH adapters and content-freshness
-checks remain in the shared comparison pipeline.
+its patch adds Gruntz manifest schemas, COMDAT topology and admitted alias-owner
+references, preserving native relocation TSV handling. VC6-specific function/EH
+adapters and content-freshness checks remain in the shared comparison pipeline.
 
 ## First integrated checkpoint
 

@@ -3,6 +3,15 @@
 This records where the data-matching campaign stands and how to continue it.
 Read [AGENTS.md](../../AGENTS.md) first; it is the policy for all matching work.
 
+## After integration
+
+The user subsequently authorized landing: #113 was integrated into #112,
+#112 merged into `decomp-complete-4.0` at `22f0d9a4a`, and #78 was closed.
+The review and landing instructions below describe the earlier handoff.
+Game matching now continues on `codex/game-matching-integration-20260930`
+with two workers. The byte-accounting gaps remain open; integration did not
+waive or reclassify them.
+
 ## Continuation instructions (2026-09-30)
 
 The user requested solo continuation in the primary checkout,
