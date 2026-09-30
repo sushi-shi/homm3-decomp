@@ -28,9 +28,9 @@
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetValueOfArtifact(type_artifact artifact, const hero* owner,
-                              unsigned char equipped, unsigned char exact);
+                              bool equipped, bool exact);
 long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
-                        unsigned char exact);
+                        bool exact);
 void aiSetHeroBonuses(hero* ourHero);
 void aiEquipArtifacts(hero* currentHero);
 int aiChooseDestination(hero* currentHero, long maxDistance,
