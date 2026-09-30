@@ -4223,13 +4223,16 @@ void advManager::updateScreen(int allowIntermediateMouse, int forceDraw)
                                   ADVENTURE_SCREEN_WIDTH,
                                   ADVENTURE_SCREEN_HEIGHT);
 
+    // Mac 0xf72c/0xf758 contains the signed predicate and elapsed delta
+    // expanded by GameTime::elapsed. Reuse the cached timestamp for both;
+    // this preserves the exact standalone retail body and all caller bytes.
     unsigned long curTime = GameTime::get();
-    if (static_cast<long>(
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+    if (GameTime::elapsed(
+            curTime, g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
         && !m_animCtrPaused) {
         ++m_animCtr;
-        unsigned long elapsedTime =
-            curTime - g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        unsigned long elapsedTime = GameTime::elapsed(
+            curTime, g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]);
         g_timers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
             max(ADVENTURE_ANIMATION_MAX_ELAPSED, elapsedTime);
     }
