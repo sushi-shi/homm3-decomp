@@ -241,6 +241,9 @@ public:
     // Complete expands it only in OnSearch. Standard inline gives VC6 those
     // three natural decisions; the prior forced-inline reconstruction required
     // artificial caller pins.
+    // Ordinary-body control (Complete 5879d1000) preserves the retained
+    // constructor/OnHost/OnJoin bodies but retains OnSearch's retail-expanded
+    // constructor (28.39%); DC cpp attribution does not disprove inline.
     inline CMPInputDlg(int maxChars1, int maxChars2);
     virtual ~CMPInputDlg();
     virtual int onWidgetDeselect(int id, bool& exitFlag);
