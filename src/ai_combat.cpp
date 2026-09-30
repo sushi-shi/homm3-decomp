@@ -473,7 +473,7 @@ void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, cons
         if (target < 0)
             break;
         choice.m_value += defender.m_creatures[target].getSpellDamage(
-            choice.m_spell, m_currentHero, defender.getHero(), damage);
+            choice.m_spell, getHero(), defender.getHero(), damage);
         excluded |= 1 << target;
     }
 }
@@ -487,7 +487,7 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
     for (unsigned i = 0; i < defender.m_creatures.size(); i++) {
         if (abs(targetIndex - defender.m_creatures[i].m_index) != 1)
             continue;
-        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, getHero(),
                                                            defender.getHero(), damage);
         if (value <= 0)
             continue;
@@ -509,6 +509,17 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // loop gives 84.5863%. Neither restores retail's size() branch or register homes.
 // HIST 100 used getTotal as vector cardinality; that old body conflicts with
 // DC's independently proven total-combat-value accessor and is not recoverable.
+// Complete Mac 0x270e8..0x270f4 compares the count before decrementing,
+// matching retail's postdecrement test at function+0x5b..0x63. Restore that
+// native loop rather than retaining the higher-scoring predecrement probe.
+// Mac 0x270c4/0x270cc expands the casting/target hero loads at owner+0x20;
+// both match the canonical getHero header accessor. Its source-call placement
+// for the casting owner is inferred from that operation; keep the complete
+// accessor path through this caller, chain lightning, and area valuation.
+// Together these restorations score Windows 86.48% (from 86.8514%) and Mac
+// 99.00% (from 40.6667%). All 15 named call/jump targets and 16 relocations
+// agree; the remaining 36/35 CFG frontier still starts at vector::size's null
+// branch and register homes. No unrelated inline-budget controls were added.
 VA(0x00424d20, 0x290)
 DC_ADDRESS(0x02a868, 0xce)
 MAC_ADDRESS(0x027064, 0x12c)
@@ -516,8 +527,8 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
 {
     long damage = choice.getMasteryValue()
                   + g_spellTraits[choice.m_spell].m_powerFactor * choice.m_power;
-    for (long i = defender.m_creatures.size(); --i >= 0; ) {
-        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, m_currentHero,
+    for (long i = defender.m_creatures.size(); i-- > 0; ) {
+        long value = defender.m_creatures[i].getSpellDamage(choice.m_spell, getHero(),
                                                            defender.getHero(), damage);
         if (value > choice.m_value) {
             choice.m_target = i;  // Mac0x270e0 stores target before value.
