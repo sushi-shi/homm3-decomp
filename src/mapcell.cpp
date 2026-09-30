@@ -4507,10 +4507,11 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
     objectList.insert(position, *objectCell);
 }
 
-// The cell coordinate inside the object comes back out of TObjectCell's
-// packed `offsets` byte as two SIGNED nibbles (`sar cl,4` for the row,
-// `shl al,4 / sar al,4` for the column), giving the same 47 - row*8 - col bit
-// index GenerateHeightMap and PlaceObject use.
+// DC record 0x30b7 declares four-bit char CellX at bit 0 and CellY
+// at bit 4. Retail signed extraction supports the canonical fields for
+// the 47 - row*8 - col index.
+// Mac 0x128100..0x128114 retains signed nibble extraction; native field
+// access also preserves its different bitfield direction. Windows stays exact.
 VA(0x00505610, 0x3F8)
 DC_ADDRESS(0x0f3a24, 0x8ca)
 MAC_ADDRESS(0x127f6c, 0x48c)
@@ -4546,9 +4547,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
          ++it) {
         CObject* object = &m_objects[it->m_objectIndex];
         CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
-        signed char packed = it->m_offsets;
-        int row = packed >> 4;
-        int col = static_cast<signed char>(packed << 4) >> 4;
+        int row = it->m_cellY;
+        int col = it->m_cellX;
         if (objectType->m_triggerCells.test(
                 CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
@@ -4566,9 +4566,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
         CObject* object = &m_objects[it->m_objectIndex];
         CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
         if (hasFlag(objectType->m_objectType)) {
-            signed char packed = it->m_offsets;
-            int row = packed >> 4;
-            int col = static_cast<signed char>(packed << 4) >> 4;
+            int row = it->m_cellY;
+            int col = it->m_cellX;
             if (!objectType->m_passableCells.test(
                     CObjectType::getBitPos(col, row))) {
                 thisCell->m_objectTypeIndex = it->m_objectIndex;
@@ -4587,9 +4586,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
          ++it) {
         CObject* object = &m_objects[it->m_objectIndex];
         CObjectType* objectType = &m_objectTypes[object->m_typeIndex];
-        signed char packed = it->m_offsets;
-        int row = packed >> 4;
-        int col = static_cast<signed char>(packed << 4) >> 4;
+        int row = it->m_cellY;
+        int col = it->m_cellX;
         if (!objectType->m_passableCells.test(
                 CObjectType::getBitPos(col, row))) {
             thisCell->m_objectTypeIndex = it->m_objectIndex;
@@ -4659,6 +4657,9 @@ void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtra
 // given the object's extraInfo.  Everything else builds a TObjectCell and
 // hands it to StampObject, then recalculates the cell's derived extra.
 
+// Mac 0x128688..0x1286a0 inserts CellX and CellY separately before
+// stampObject. Keep the typed field writes; Windows still folds them to
+// its exact packed-byte store.
 // The two bounds tests are not the same test twice: the x test guards the
 // whole inner loop (it `continue`s the OUTER one) while the y test guards a
 // single cell.  Both compare against the world extents MAP_WIDTH/MAP_HEIGHT
@@ -4706,8 +4707,8 @@ int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 
             NewmapCell::TObjectCell objectCell;
             objectCell.m_objectIndex = static_cast<unsigned short>(objectIndex);
-            objectCell.m_offsets = static_cast<unsigned char>((col & 0xf)
-                                                            | (row << 4));
+            objectCell.m_cellX = col;
+            objectCell.m_cellY = row;
             objectCell.m_layer = heightMap[col][row];
             stampObject(cell, &objectCell);
             calculateCellExtra(cell, setExtraInfo);
