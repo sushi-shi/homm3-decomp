@@ -3708,10 +3708,14 @@ void game::giveTroopsToNeutralTowns()
 // Full do/for failure scopes lose to 87.4352..87.7111%, and the earlier
 // result flag gives 89.2426%; these used break as the failure-scope exit.
 // These are limits of the tested scopes, not proof of original gotos.
-// The town-loss scope uses continue for either failed team check and a
-// return for valid ownership. This removes both remaining joins at 90.0315%
-// with the full contribution and all relocation names/addends unchanged.
-// The earlier failure scopes used break and do not predict this lowering.
+// The earlier do/continue/return town-loss scope was a lowering control,
+// not recovered source. DC 4225 attributes all three rejection predicates
+// together, followed by the invalid-condition store at 4227. Mac
+// d5a18..d5a84 likewise has three short-circuit tests and one failure store.
+// Keep that compound predicate and the DC int team loop (signed cmp/gt;
+// Mac d5a10 uses cmpwi), without provisional owner/team staging locals.
+// The complete native model measures 95.4407% with refreshed bool labels;
+// the first remaining mismatch is at the checkMapLocations guard.
 // Original DC public ?ValidateVictoryLossConditions@game@@QAAX_N@Z proves
 // checkMapLocations is bool; CodeView's byte primitive is its lowered form.
 VA(0x004bf780, 0x6E2)
@@ -3840,23 +3844,14 @@ void game::validateVictoryLossConditions(bool checkMapLocations)
         town* thisTown = getTown(getTownId(
             loss.m_townX, loss.m_townY, loss.m_townZ));
         int numHumanTeams = 0;
-        int owner;
-        int townTeam;
-        for (unsigned int teamCheck = 0; teamCheck < 8; ++teamCheck) {
-            if (isHumanTeam(teamCheck))
+        for (int team = 0; team < 8; ++team) {
+            if (isHumanTeam(team))
                 ++numHumanTeams;
         }
-        do {
-            if (numHumanTeams > 1)
-                continue;
-            owner = thisTown->m_owner;
-            townTeam = getTeam(owner);
-            if (isComputerTeam(townTeam))
-                continue;
-            if (owner != -1)
-                return;
-        } while (0);
-        loss.m_type = -1;
+        if (numHumanTeams > 1
+            || isComputerTeam(getTeam(thisTown->m_owner))
+            || thisTown->m_owner == -1)
+            loss.m_type = -1;
     }
 }
 
