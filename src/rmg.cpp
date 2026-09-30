@@ -3394,7 +3394,7 @@ void TRmgGeneratorBase::decorateMapCell(TRmgMapPosition position, int progressSt
 VA(0x005378E0, 0x27)
 TRmgMapItem* type_random_map::getMapItem(TRmgMapPosition point)
 {
-    return m_mapItems + ((point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x);
+    return &m_mapItems[(point.m_z * m_mapHeight + point.m_y) * m_mapWidth + point.m_x];
 }
 
 // Retail 0x549c91 calls this base-prefix pass after coastal marking.
@@ -8477,7 +8477,7 @@ void TRmgMapItem::setTerrain(int terrain, int frame,
 VA(0x00546990, 0x1E) // anchor-callee reset expansions; Complete-only helper
 TRmgMapItem* type_random_map::getMapItem(int x, int y)
 {
-    return m_mapItems + y * m_mapWidth + x;
+    return &m_mapItems[y * m_mapWidth + x];
 }
 
 VA_COMPGEN(0x00404200, 0x209, VECTOR_INSERT, Int)
@@ -8931,10 +8931,10 @@ void type_random_map_generator::buildRoadCostMap(TRmgMapPosition position)
     openCosts.push_back(0);
 
     TRmgMapItem* mapItem = m_map.getMapItem(position);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile.m_x = -1;
-    mapItem->m_previousTile.m_y = -1;
-    mapItem->m_previousTile.m_z = -1;
+    // Mac 0x24bcf8..0x24bd50 constructs the invalid predecessor, copies it
+    // to a separate parameter home, then stores cost and coordinates. Keep
+    // the same by-value setter used by the relaxation arms (89.7416 -> 90.91971%).
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
 
     while (openPositions.size()) {
         position = openPositions.back();
@@ -9165,10 +9165,13 @@ void type_random_map_generator::createRoads()
 // then paints the predecessor chain. Role-derived name; no DC RMG counterpart.
 // Unlike the coast-bound river, this search ignores impassable/direction flags
 // and stops on the shared roadTarget bit set by markRiverObjectTargets.
-// Partial 89.61%: direct invalid-predecessor field stores remove the extra
-// constructor in the first 87.80% candidate. A separate default-then-filled
-// invalid-position local scores 83.63%. Retained vector cleanup boundaries
-// and frame/register homes remain unresolved; no inlining pins are used.
+// Mac 0x24c9cc..0x24ca28 copies a constructed invalid predecessor into a
+// distinct setter parameter home before storing cost and coordinates, as in
+// buildRoadCostMap. Restore that canonical by-value operation at the seed.
+// Windows resets 57.5459 -> 56.01882% (HIST 89.6141%). Five position lookups
+// still remain called where retail expands them; the scalar reset lookup
+// instead expands where retail calls it. The seed constructor and final
+// position-vector destructor also remain called. No inlining pins are used.
 VA(0x00548500, 0x533)
 MAC_ADDRESS(0x24c8ac, 0x588)
 void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
@@ -9179,10 +9182,7 @@ void type_random_map_generator::createRiverToObject(TRmgMapPosition source)
     openPositions.push_back(source);
     openCosts.push_back(0);
     TRmgMapItem* mapItem = m_map.getMapItem(source.m_x, source.m_y, source.m_z);
-    mapItem->m_movement.m_cost = 0;
-    mapItem->m_previousTile.m_x = -1;
-    mapItem->m_previousTile.m_y = -1;
-    mapItem->m_previousTile.m_z = -1;
+    mapItem->setMovementCost(0, TRmgMapPosition(-1, -1, -1));
     unsigned char sourceIsSnow;
     int riverType;
     if (mapItem->m_tile.m_landType == eTerrainSnow) {
