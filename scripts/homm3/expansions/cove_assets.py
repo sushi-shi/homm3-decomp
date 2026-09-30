@@ -197,7 +197,7 @@ def package(upstream, base_data, output):
     bitmap('TBCVBack.pcx', data['town']['townBackground'])
     bitmap('TPMageCv.pcx', data['town']['guildWindow'])
     bitmap('TPCasCv.pcx', data['faction']['creatureBackground']['120px'])
-    bitmap('CrBkgCov.pcx', data['faction']['creatureBackground']['120px'])
+    bitmap('CrBkgCov.pcx', data['faction']['creatureBackground']['130px'])
     for key, structure in data['structures'].items():
         if key in BUILDINGS and 'border' in structure:
             bitmap(f'TOCV{BUILDINGS[key]:02d}.pcx', structure['border'])

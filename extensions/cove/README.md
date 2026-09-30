@@ -66,8 +66,11 @@ homm3 build
 ```
 
 The executable was started under Wine with installed Complete assets, Cove
-selected, a scenario loaded and the Cove town entered. The resource tests
-cover old-frame preservation, offsets, global frame names and bitmap encoding.
+selected, the Arrogance scenario loaded, and the town, construction, mage guild,
+fort and recruitment screens opened. A newly generated map also reached the
+adventure screen after fixing the generator's legacy hero-field count and
+packaging native adventure masks. The six resource tests cover old-frame
+preservation, offsets, global frame names, adventure masks and bitmap encoding.
 This is a native town integration, not full HotA engine compatibility: Cannon
 currently uses native Ballista targeting and cannot fire at siege walls.
 Campaign transfer of new creatures/artifacts and multiplayer interoperability

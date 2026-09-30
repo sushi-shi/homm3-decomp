@@ -63,7 +63,6 @@ game_o2_mt_gr_windows = [
 unit = "cove"
 source = "src/cove.cpp"
 flags = "game_o2_mt_gr_windows"
-compare = false
 
 [[unit]]
 unit = "adler32"

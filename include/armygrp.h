@@ -715,7 +715,7 @@ const unsigned int g_ctaAlive = 0x10;
 // akCreatureTypeTraits (a const reference to the 150-entry array).
 extern const TCreatureTypeTraits (&g_creatureTypeTraits)[HOMM3_CREATURE_COUNT];
 
-// CreatureBackgroundNames: neutral first, then the nine town alignments.
+// CreatureBackgroundNames: neutral first, then all town alignments.
 // Index with alignment + 1 so neutral alignment -1 selects the first entry.
 extern const char* g_creatureBackgroundNames[HOMM3_TOWN_COUNT + 1];
 
