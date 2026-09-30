@@ -2980,8 +2980,8 @@ void hero::heroFn004DC070(long slot)
 // proxy-assignment body removes both pins and restores all nine retail calls,
 // including the third bitset<12>::_Xran: 87.2712 -> 96.1808%. The predicate's
 // retained body stays exact. Its reset/none spelling gives 83.5593% here;
-// direct set(false) gives 76.1977%. Remaining differences are in the caller.
-// Naming the equipped artifact ID and indexing traits directly gives 97.4237%,
+// direct set(false) gives 76.1977%. Earlier caller diagnostics:
+// Naming the equipped artifact ID and indexing traits directly gave 97.4237%,
 // preserving all 25 retail blocks and nine calls. An artifact reference or
 // getArtifact() leaves the prior 96.1808%; copying the traits gives 92.7175%,
 // and reading the artifact before the player gives 87.7345%.
@@ -2989,15 +2989,21 @@ void hero::heroFn004DC070(long slot)
 // is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
 // repeating the global player lookup gives 72.5198%. Neither recovers the
 // entry register choices or first bitset-write scheduling.
+// Mac 0xf8734 holds comboType through its first proxy write, then
+// 0xf8770..0xf8780 rereads the equipped record for targetCombo. Owning
+// those two scalar results instead of one artifact-ID snapshot recovers
+// all 25 Windows blocks, nine calls and relocations: 97.41 -> 96.06 -> 100%.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    int artifactId = getArtifact(TArtifactSlot(slot)).m_artifactId;
+    int comboType =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId]
+            .m_comboType;
 
-    if (g_artifactTraits[artifactId].m_comboType != -1) {
-        player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
+    if (comboType != -1) {
+        player.m_assembledCombinations[comboType] = true;
         return;
     }
 
