@@ -6072,7 +6072,6 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     int visited;
     NewmapCell* testCell;
     playerData* player;
-    type_point mapPoint;
     long x;
     hero* currHero;
     long y;
@@ -6085,10 +6084,14 @@ void advManager::quickInfo(int cellX, int cellY, int z)
     player = g_game->getLocalPlayer();
     playerId = g_game->getLocalPlayerGamePos();
     playerBit = 1 << playerId;
-    currHero = g_game->getHero(player->m_currHeroId);
-    mapPoint.m_x = m_radarOrigin.m_x + cellX;
-    mapPoint.m_y = m_radarOrigin.m_y + cellY;
-    mapPoint.m_z = z;
+    // DC7552/7554 and Mac1465c retain this caller guard before GetHero.
+    if (player->m_currHeroId != -1)
+        currHero = g_game->getHero(player->m_currHeroId);
+    else
+        currHero = 0;
+    // DC7564 calls the canonical three-coordinate point constructor.
+    type_point mapPoint(m_radarOrigin.m_x + cellX,
+                        m_radarOrigin.m_y + cellY, z);
 
     if (!mapPoint.isValid()) {
         strcpy(g_text, g_generalText->getText(GENERAL_TEXT_MAP_BORDER));

@@ -107,19 +107,19 @@ void updateBackpack(int slot);
 // <null>` and falls through into the town-pointer arithmetic; the
 // remaining hall-chain flip is the same inline's second reader. game.h
 // spells it `if (townId == -1) return 0; return &towns[townId];`, which is
-// what every OTHER caller wants, so this is the shared-inline-with-two-
-// retail-decisions class and the fix would be a duplicate helper the
-// Dreamcast roster does not name.
+// also used by other callers. Preserve that canonical helper while
+// recovering the caller structure that controls VC6's branch layout.
 // E:\gamedcs\overview.cpp:220
-// 2026-09-06, polish lane 36, the DC LOCAL-SCOPE SWEEP: the block names
-// `iOffsetToSS` (sp+0x54, sharing a slot with one of the two `iOffsetToMon`
-// instances), i.e. the secondary-skill icon row is positioned by its own
-// running counter rather than by `item`.  Both spellings measured and
-// rejected against 91.7373: a dense index (`iOffsetToSS * 36 + 433`,
-// incremented in the skill-found arm) 91.5957, and the pixel-offset form
-// (`iOffsetToSS = 433` / `+= 36`) 91.5844.  The DC's other two absent names
-// are renames of locals this body already has - `iHero` is `heroNumber`, and
-// its `msg` is the block-scoped `message msg` in the artifact page.
+// DC records `iOffsetToSS` at sp+0x54 in the hero-row scope, but its
+// operation is not yet identified. DC 0x1061f2 computes the skill position
+// from item * 36; Mac 0x13546c..0x135470 advances both item and its
+// strength-reduced pixel offset even when no skill was found. Neither
+// supports the formerly proposed dense counter incremented only in the
+// skill-found arm (91.5957 / 91.5844 versus the then-baseline 91.7373).
+// `iHero` is heroNumber; `msg` is the artifact-page message local.
+// The four getArmy calls use the mutable overload (Mac 0x1b6fdc).
+// Windows folds it with the const overload at 0x5c1460; the differing
+// relocation names do not justify changing DC's town* local to const.
 // DC lines 577, 591, 1007, 1101, 1104 and 1120 call the general-text
 // indexer. Restoring those six calls clears the helper audit and raises
 // Windows from 91.74% to 91.85% without changing the 204-call sequence.

@@ -8674,7 +8674,30 @@ void game::processOnMapHeroes()
 // and spills these values. Moving the fileSize declaration alone and swapping
 // isDiff/diffSize declarations were byte-flat in earlier controls. Missing DC
 // queueSize/attempts/pNetMsg have no independent retail semantics proven yet.
-VA(0x004cafd0, 0xD14) MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
+// DC 10473..10491, Mac e2e84..e2ef0 and retail's resend arm store the block
+// number first, reuse current/bytesLeft, form unsigned char* end=data+fileSize,
+// then choose the message's blockSize before update(current, blockSize). The
+// log reads the message fields and current-data. Restoring those lifetimes
+// removes the invented offset/size locals and raises Windows 85.0816 ->
+// 92.7077; the frame is now retail's 0x3a4. All 122 CFG blocks align (113
+// exact, nine size-only). DC 10326/10327 and Mac e2908/e290c reset current
+// before bytesLeft; this source-order correction is Windows-flat. The timeout
+// start is DC-proven int; GameTime's unsigned result/argument conversions
+// preserve its bit pattern, and that declaration correction is byte-flat.
+// The remaining call-report difference is a shifted switch-table target;
+// predict-inline's unmatched pair names that table, not a lost game helper.
+// Available Mac scores and sibling Windows MAX are unchanged.
+// DC 10409/10430 records killDPID before the opaque destroy/drop calls;
+// those calls reread the player field, while the later message uses the saved
+// ID. DC 10413/10418 and 10434/10437, Mac e2b84/e2bc0 and e2ca0/e2cd8,
+// and retail +0x97f/+0xad0 clear network info before constructing the message.
+// The broadcast clear intentionally uses m_players[toWho], not m_players[i]:
+// retail's +0xad0 block loads [ebp+8] (toWho), Mac e2c2c..e2c44 forms that row before
+// reusing r23 as the loop index, and DC 10434 reads the argument slot.
+// Preserve this native indexing despite its unusual broadcast behavior.
+// These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
+// all 122 CFG blocks, 101 call entries and 172 relocations now agree.
+VA(0x004cafd0, 0xD14) MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables, dc 0xb7560
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
 {
@@ -8800,8 +8823,8 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
     transferSmack->start();
     while (!done) {
-        bytesLeft = fileSize;
         current = data;
+        bytesLeft = fileSize;
         curBlock = 0;
         while (bytesLeft > 0) {
             pollSound();
@@ -8830,16 +8853,16 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             "Finished sending data... Now handling requests.."));
         done = 1;
         {
-            CGameTransmitEndMsg end(g_monthType, g_monthTypeExtra,
+            CGameTransmitEndMsg endMsg(g_monthType, g_monthTypeExtra,
                                      g_weekType, g_weekTypeExtra, diffSize);
-            transmitRemoteData(&end, toWho, false, true);
+            transmitRemoteData(&endMsg, toWho, false, true);
         }
     }
     done = 0;
 
     unsigned char playerDone[8];
     memset(playerDone, 0, sizeof(playerDone));
-    unsigned long dataTimeOutStart = GameTime::get();
+    int dataTimeOutStart = GameTime::get();
     int retryCount = 0;
 
     while (!done) {
@@ -8861,12 +8884,12 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
                     if (inGame && toWho != NET_MESSAGE_RECIPIENT_ALL) {
+                        unsigned long killDPID = m_players[toWho].m_dpid;
                         g_dPlay->destroyPlayer(m_players[toWho].m_dpid);
                         handlePlayerDrop(m_players[toWho].m_dpid);
-                        CDestroyPlayerMsg destroyMsg(
-                            m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
                         g_playerDrop = 1;
+                        CDestroyPlayerMsg destroyMsg(killDPID);
                         transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                false, true);
                         return 0;
@@ -8876,10 +8899,10 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                     && i != g_game->getLocalPlayerGamePos()) {
                                 unsigned long killDPID =
                                     m_players[i].m_dpid;
-                                g_dPlay->destroyPlayer(killDPID);
-                                handlePlayerDrop(killDPID);
+                                g_dPlay->destroyPlayer(m_players[i].m_dpid);
+                                handlePlayerDrop(m_players[i].m_dpid);
+                                m_players[toWho].clearNetInfo();
                                 CDestroyPlayerMsg destroyMsg(killDPID);
-                                m_players[i].clearNetInfo();
                                 transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                        false, true);
                             }
@@ -8909,18 +8932,21 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             case RS_GAME_TRANSMIT_REQ: {
                 CGameTransmitReqMsg* receivedMsg =
                     static_cast<CGameTransmitReqMsg*>(confirmMsg);
-                int blockOffset = receivedMsg->m_blockNbr
-                    * GAME_TRANSMIT_PAYLOAD_SIZE;
-                int resendSize = fileSize - blockOffset;
-                if (resendSize >= GAME_TRANSMIT_PAYLOAD_SIZE)
-                    resendSize = GAME_TRANSMIT_PAYLOAD_SIZE;
-
                 gameTransmitMainMsg->m_blockNbr = receivedMsg->m_blockNbr;
-                gameTransmitMainMsg->update(data + blockOffset, resendSize);
+                current = data + receivedMsg->m_blockNbr
+                    * GAME_TRANSMIT_PAYLOAD_SIZE;
+                unsigned char* end = data + fileSize;
+                bytesLeft = end - current;
+                if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
+                    gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
+                else
+                    gameTransmitMainMsg->m_blockSize = bytesLeft;
+                gameTransmitMainMsg->update(current, gameTransmitMainMsg->m_blockSize);
                 g_logFile.log(DATA_COMPGEN(
                                 0x00677f08, xferResendLog,
                                 "Transmitting resend %d size %d (offset=%d)"),
-                            receivedMsg->m_blockNbr, resendSize, blockOffset);
+                            gameTransmitMainMsg->m_blockNbr,
+                            gameTransmitMainMsg->m_blockSize, current - data);
                 transmitRemoteData(gameTransmitMainMsg, toWho,
                                    false, true);
                 break;

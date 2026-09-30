@@ -3113,11 +3113,20 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 
 // DC cmbtmgr.cpp:3990/4004/4008/4030 retains the bitmap Draw/Grab and
 // const CSprite bitmap Draw overloads (Bitmap16.h:162/168, CSprite.h:324).
-// Keep their nested map/dimension accessors. Restoring those calls moves
-// Windows 99.24 -> 97.47% and Mac 42.2507 -> 43.7332%. The first bitmap
-// Draw expands; the final identical wrapper remains out of line where
-// retail expands it. All 62 CFG blocks and 33 branches align; this is an
-// inliner boundary, not a reason to paste the wrapper's fields again.
+// Keep their nested map/dimension accessors. In the isolated lane, restoring
+// those calls moved Windows 99.24 -> 97.47% and Mac 42.2507 -> 43.7332%.
+// DC 3953/3957 separates the frame-count loop from the inner angle break;
+// Mac 0x74864..0x748a4 likewise exits when the average angle is below angle.
+// Retain that comparison rather than the combined >= guard, including its
+// unordered-input behavior. The natural for loop and count-only while with
+// inner break produce identical VC6 bytes: lane Windows 96.57%, Mac 65.8784%.
+// The final bitmap Draw now expands; nested Bitmap16Bit::getMap and the final
+// four-coordinate updateCombatArea remain out of line. All 62 CFG blocks and
+// 33 branches align. The merged header/TU context also expands that Draw
+// before this loop restoration (96.56%); these are lane measurements.
+// Moving ARROW_DELAY before drawFrame regressed to 92.65% and contradicts
+// DC 3974 (NullLimits construction), 3978 (DrawFrame), 3980 (delay math),
+// and Mac 0x74960..0x74994. Preserve the native draw-before-delay order.
 
 VA(0x00468220, 0x48F) MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global, dc 0x61e60
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
@@ -3169,10 +3178,11 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
             degrees = atan(static_cast<double>(deltaY) / -deltaX)
                     * 57.2957763671875;
         angle = static_cast<float>(degrees);
-        int index = 1;
-        while (index < missile->getNumFrames(0)
-                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
-            ++index;
+        int index;
+        for (index = 1; index < missile->getNumFrames(0); ++index) {
+            if ((angles[index - 1] + angles[index]) / 2.0f < angle)
+                break;
+        }
         if (index < missile->getNumFrames(0))
             frame = index - 1;
         else

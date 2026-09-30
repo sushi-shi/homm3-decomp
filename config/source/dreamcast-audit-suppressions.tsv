@@ -3,7 +3,6 @@ armygrp.obj	0x4ea38	9ca13b4f7bc6	10	Dreamcast uses its gz/void* stream boundary;
 armygrp.obj	0x4ea78	e6f4d4f11996	10	Dreamcast uses its gz/void* stream boundary; Complete reads through the retail-proven TAbstractFile virtual interface.
 binkmanager.obj	0x50a7c	d7ac3c678eab	9	Dreamcast records mutable char*, but both Complete callers supply const descriptor fields and the function only reads the name; dropping const fails VC6 at the caller boundary.
 creaturetype.obj	0x718fc	497d6befbe75	10	Complete exact symbol encodes int; unsigned-char negative control changes the ABI identity and unbinds the retail claim.
-cursor.obj	0x7bee4	7e467e74ea56	10	Complete exact public symbol encodes mutable hero*; Dreamcast const hero* is an older interface.
 drawing.obj	0x8354c	c1649254e2e4	10	Complete exact private symbol encodes bool return; Dreamcast unsigned char is an older ABI.
 drawing.obj	0x84e2c	e5af691971b2	10	Complete exact DrawFrame symbol encodes bool for update; Dreamcast byte record is lowered or older.
 drawing.obj	0x84e2c	4f2ee12f8485	10	Complete exact DrawFrame symbol encodes bool for bLimitCreatureEffect; Dreamcast byte record is lowered or older.

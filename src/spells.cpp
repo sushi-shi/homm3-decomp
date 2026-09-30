@@ -702,6 +702,14 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 // body's TWENTY-SEVEN zero-initialised counters are `unsigned int` (the
 // affected-hex walk and the wall-segment walk).  92.7816 -> 93.3658.  Six
 // beat MAX on their own; only these two survive together.
+// Restore DC 860/936 ResourceManager::Dispose(sample*) calls. Complete Mac
+// 0x190d5c..0x190d70 and 0x190ff0..0x191004 confirms null-guarded virtual
+// disposal. Keeping the canonical sample body in its older source owner
+// leaves two extra retained calls (lane 92.43 -> 91.86%). Complete's
+// cross-TU expansion supports shared-header visibility beside its sibling
+// overloads; keep one body and distinguish inferred linkage from DC flags.
+// Header visibility restores the lane's 92.43%, with every other measured
+// Windows score and all 34 available spells/resource-manager Mac pairs held.
 VA(0x0059fe30, 0x2A4F) MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::castSpell(SpellID spellId, int targetIndex,
                               int isMonsterSpell,
@@ -898,8 +906,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 g_soundManager->waitSample(placeSample, -1);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
-            sample2b->dispose();
+        // DC 860/936 names ResourceManager::Dispose. Complete Mac
+        // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
+        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            ResourceManager::dispose(sample2b);
         break;
     }
 
@@ -951,8 +961,10 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
                 g_soundManager->waitSample(placeSample, -1);
         }
         showSpellMessage(isMonsterSpell, spellId, 0);
-        if (!static_cast<const combatManager*>(this)->isQuickCombat() && sample2b)
-            sample2b->dispose();
+        // DC 860/936 names ResourceManager::Dispose. Complete Mac
+        // 0x190d64/0x190ff8 expands its null-guarded virtual disposal.
+        if (!static_cast<const combatManager*>(this)->isQuickCombat())
+            ResourceManager::dispose(sample2b);
         break;
     }
 
