@@ -2415,6 +2415,10 @@ int TSeerHut::save(TAbstractFile* outfile)
     }
 }
 
+// Mac 0x16a768..0x16a790 expands the signed name index, name-list lookup
+// and string-data access owned by getName (DC SeerHut.h:121). The same
+// expansion appears at 0x16a830..0x16a854 and in the quick-info twin.
+// Preserve that canonical boundary in all three text callers.
 VA(0x00574070, 0x138)
 MAC_ADDRESS(0x16a6c4, 0x108)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string TSeerHut::getSeerLogText()
@@ -2424,7 +2428,7 @@ std::string TSeerHut::getSeerLogText()
     return formatString(
         logFormat.c_str(),
         m_quest->getRequirementText().c_str(),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
@@ -2441,7 +2445,7 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
@@ -2461,7 +2465,7 @@ std::string TSeerHut::seerHutFn005743E0(int player) const
     std::string text;
     text = formatString(
         g_generalText->getText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
-        g_seerHutNameList[m_nameIndex].c_str());
+        getName());
 
     if (m_quest) {
         text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");
