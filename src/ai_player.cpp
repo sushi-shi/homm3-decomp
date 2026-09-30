@@ -2624,14 +2624,15 @@ long type_AI_creature_purchaser::doBestPurchase(
 }
 
 // Original DC ?do_purchase@type_AI_creature_purchaser@@QAAXPAVarmyGroup@@F0QAJ_N@Z
-// proves bool allowTrade, forwarded to doBestPurchase. All seven Complete
+// proves bool allowTrade and long* const funds (QAJ), forwarded to
+// doBestPurchase. All seven Complete
 // callers pass 0/1; its added Angelic-Alliance argument remains separate.
 VA(0x0042d690, 0xE1)
 DC_ADDRESS(0x032288, 0x70)
 MAC_ADDRESS(0x030ca8, 0xa4)
 void type_AI_creature_purchaser::doPurchase(
     armyGroup* newArmy, short newMorale, armyGroup* newAdjacentArmy,
-    long* newFunds, bool allowTrade,
+    long* const newFunds, bool allowTrade,
     unsigned char newHasAngelicAlliance)
 {
     HOMM3_RELEASE_VERIFY(newArmy != 0);
@@ -2652,6 +2653,8 @@ void type_AI_creature_purchaser::doPurchase(
         *m_creatures[source].m_ptr = m_creatures[source].m_number;
 }
 
+// Original DC public ?get_purchase_value@type_AI_creature_purchaser@@QAAJPBVarmyGroup@@F0QBJ@Z
+// proves const long* const funds (QBJ); the mutable purchase path uses QAJ.
 // Complete adds the final Angelic-Alliance byte to the DC signature. Retail
 // copies both armies and all seven resources, so the valuation can run the
 // real purchaser loop without mutating any caller-owned state. The adjacent
@@ -2667,7 +2670,7 @@ DC_ADDRESS(0x0322f8, 0xc2)
 MAC_ADDRESS(0x030d4c, 0x194)  // DC method/locals + retail Complete tail;
 long type_AI_creature_purchaser::getPurchaseValue(
     const armyGroup* newArmy, short newMorale,
-    const armyGroup* newAdjacentArmy, const long* newFunds,
+    const armyGroup* newAdjacentArmy, const long* const newFunds,
     unsigned char newHasAngelicAlliance)
 {
     armyGroup localArmy(*newArmy);

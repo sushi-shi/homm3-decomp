@@ -219,12 +219,12 @@ protected:
 
 public:
     void doPurchase(armyGroup* newArmy, short newMorale,
-                     armyGroup* newAdjacentArmy, long* newFunds,
+                     armyGroup* newAdjacentArmy, long* const newFunds,
                      bool allowTrade,
                      unsigned char newHasAngelicAlliance);
     long getPurchaseValue(const armyGroup* newArmy, short newMorale,
                             const armyGroup* newAdjacentArmy,
-                            const long* newFunds,
+                            const long* const newFunds,
                             unsigned char newHasAngelicAlliance);
 
     DC_ADDRESS(0x037e20, 0x6)
