@@ -3429,7 +3429,8 @@ int THeroScreenWindow::exitDialog(message& msg)
 // 77.9125 normalized before the refresh guard; with the guard it remains
 // below the retained ternary's raw-probe score (77.9857 vs 78.6439).
 
-// Residual: retail's frame is 0x14c, ours 0x144; retail homes rightMouse in
+// Historical residual at 78.6458%: retail's frame is 0x14c, ours 0x144;
+// retail homes rightMouse in
 // the dead message parameter slot while ours uses [ebp-0x20]. Artifact-click
 // paths still merge one updateAllSlots/setPointer pair retail keeps separate.
 // These cross-TU setPointer calls cannot be an inliner decision. The apparent
@@ -3437,6 +3438,8 @@ int THeroScreenWindow::exitDialog(message& msg)
 // Full sema CFG views still truncate this row at embedded jump-table data;
 // use complete sema disassembly or an arm range, not the reported block total.
 
+// The following controls describe their recorded older source baselines.
+// Their epilogue/call censuses do not describe the recovered helper model.
 // THE FRONT END IS NOW RULED OUT TOO (2026-09-06). `genab run --gen rtm-fe`
 // swaps C1XX 12.00.8168 in beside the RTM back end and sweeps all 146
 // units: this function's bytes are IDENTICAL on both sides (it is absent
@@ -3476,8 +3479,9 @@ int THeroScreenWindow::exitDialog(message& msg)
 // accessor candidate rather than an elided TRACE/ASSERT arm, but it does not
 // move this whole-function cross-jump phase.
 // The DC local census is exhausted too (2026-08-21): its only named locals
-// are `exitFlag` and `infowin`. `exitFlag` is the base-handler result tested
-// at entry, and type 0x4D89 proves `infowin` is the block-scoped
+// are `exitFlag` and `infowin`. The earlier interpretation of exitFlag as
+// the base-handler result was disproved by the source-order evidence below.
+// Type 0x4D89 proves `infowin` is the block-scoped
 // TQuickHeroWindow already constructed in the hero-locator right-click arm.
 // Retail likewise constructs and destroys that object in this arm, so neither
 // local exposes missing source structure; their identifier spelling cannot
@@ -3513,8 +3517,8 @@ int THeroScreenWindow::exitDialog(message& msg)
 // hero::viewStat's two dialog sites inline (0x4de1da..0x4de320:
 // `add eax,-0x32 / mov cl,[eax+ecx+0x476]`, the 99-clamp, `setge cl`, the
 // `or ecx,0x10000` pack and `mov ecx,[4*eax+0x6a7540]`).
-// Two independent frame facts, both unexplained: retail reserves 0x14c and
-// this compile 0x144 - EIGHT bytes short, i.e. two named locals missing -
+// Two independent frame facts at that baseline: retail reserves 0x14c and
+// this compile 0x144 - eight bytes short, with no proven missing locals -
 // and retail homes `right_mouse` in the DEAD `msg` PARAMETER SLOT [ebp+8]
 // with `this` at [ebp-0x18] and localPlayer at [ebp-0x10], where we use
 // [ebp-0x20] / [ebp-0x24] / [ebp-0x18].  Retail's shared `return 1` epilogue
@@ -3551,7 +3555,7 @@ int THeroScreenWindow::exitDialog(message& msg)
 // after show_hero_skills (75.41 -> 69.34), which is what proves the
 // placement is a separate knob from the merge.
 // Two facts that any candidate explanation has to carry: retail's frame is
-// 0x14c against our 0x144 (two named locals we do not have), and retail
+// 0x14c against our 0x144 (the size alone cannot prove missing locals), and retail
 // homes `right_mouse` in the DEAD `msg` parameter slot [ebp+8] while we
 // spend a numbered local on it - both consistent with the frame being
 // allocated after a different set of blocks survived.
@@ -3567,6 +3571,13 @@ int THeroScreenWindow::exitDialog(message& msg)
 // move: it is still the last block, at fn+0x1291.  So the `else` is not the
 // construct that puts retail's join early, and no source bracketing tried so
 // far reaches C2's choice of surviving copy.
+// Current control (85.96526%): the Complete skill popup is instruction-exact
+// modulo shifted addresses, including both signed getSecondarySkill reads
+// on opposite sides of strcpy. A TSecondarySkill local instead of the two
+// argument casts is byte-flat. Fresh C2 tracing admits handleArtifactClick
+// but rejects its nested combination predicate at budget 17 versus cb 120;
+// updateAllSlots/updateSlot also has a reciprocal nested frontier. These are
+// additional residuals, not evidence of missing locals or a new inline pin.
 VA(0x004dd2d0, 0x143E)
 DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
