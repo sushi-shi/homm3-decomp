@@ -174,6 +174,12 @@ void soundManager::initializeSamples()
 // restores all 31 blocks and reaches 95.21%. A common retry label is flat;
 // branch-local preference tails score 87.94%. The same driver join inside
 // an infinite loop returns to 94.32%; its common rate guard is shared.
+// A separate success phase followed by `if (openResult && getPreference)`
+// is byte-flat at 95.21%; VC6 folds it back to the same retry layout.
+// Retail's failure arm branches into quality downgrade only when the
+// preference is set; its zero result falls into the common wave fallback.
+// The explicit guarded fallback recovers that complete phase at 99.44%:
+// all 17 calls and 47 references agree, leaving the rate backedge polarity.
 VA(0x005997d0, 0x2BF)
 DC_ADDRESS(0x14b240, 0x30)
 MAC_ADDRESS(0x218578, 0x160)  // vtable slot + Device: string
@@ -227,7 +233,9 @@ int soundManager::open(int newPriority)
                         }
                         AIL_waveOutClose(driver);
                         AIL_set_preference(15, 1);
-                    } else if (AIL_get_preference(15)) {
+                    } else {
+                        if (!AIL_get_preference(15))
+                            goto waveFallback;
                         g_soundSampleRate /= 2;
                         if (g_soundSampleRate >= 11025)
                             continue;
@@ -238,6 +246,7 @@ int soundManager::open(int newPriority)
                         }
                         continue;
                     }
+                waveFallback:
                     AIL_set_preference(15, 1);
                 } while (g_soundSampleRate >= 11025);
             }
