@@ -3326,13 +3326,15 @@ int game::save(TAbstractFile* outfile)
 
     // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
     // not through this->worldMap, and the *2 is applied LAST - retail's
-    // `lea edi,[eax+eax]` follows both imuls. The count is computed once
-    // into one local because a virtual call sits between its two uses.
-    unsigned int mapExtraBytes =
-        g_game->getNumMapLevels() * g_mapHeight * g_mapWidth *
-        sizeof(unsigned short);
-    count = outfile->write(g_mapExtra, mapExtraBytes);
-    if (count < mapExtraBytes)
+    // `lea edi,[eax+eax]` follows both imuls. DC 3637 records an int cell
+    // count; 3638/3639 form its byte span. Mac d4130/d4150 also multiplies
+    // the dimensions before the levels, then doubles at d4154.
+    // This recovered model measures Windows 92.76% vs 92.80%; masked
+    // instruction differences fall 116->91 and relocation differences 14->10.
+    int mapExtraSize =
+        (g_mapHeight * g_mapWidth) * g_game->getNumMapLevels();
+    count = outfile->write(g_mapExtra, mapExtraSize * sizeof(unsigned short));
+    if (count < mapExtraSize * sizeof(unsigned short))
         return -1;
 
     // Keep the canonical pool writers; retail retains all seven calls.
