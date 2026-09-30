@@ -385,6 +385,8 @@ MAC_COMPGEN_ADDRESS(0x02b304, 0x68, IMPLICIT_DTOR, type_AI_creature_purchaser)
 // Original: type_AI_player::get_resource_value; ai_player.cpp:230
 // DC235/236 sums seven resources with conversion back to long each turn;
 // GetTotalValue calls it at DC1359. Retail0x42a150 expands this loop.
+// The indexed double reads expand the canonical ai_player.h:278 resource
+// getter, also used by the income artifact. Preserve that nested access path.
 DC_ADDRESS(0x02e094, 0xc8)
 MAC_ADDRESS(0x02b36c, 0x78)
 long type_AI_player::getResourceValue(int* resources) const
@@ -392,7 +394,8 @@ long type_AI_player::getResourceValue(int* resources) const
     long value = 0;
     for (int resource = 0; resource < 7; ++resource)
         value = static_cast<long>(
-            value + resources[resource] * m_resourceValue[resource]);
+            value + resources[resource]
+                * getResourceValue(static_cast<EGameResource>(resource)));
     return value;
 }
 
@@ -557,7 +560,8 @@ void type_AI_player::calculateDemand()
     int averageValue = 0;
     int averageResource;
     for (averageResource = 0; averageResource < 6; averageResource++)
-        averageValue += m_resourceValue[averageResource];
+        averageValue += getResourceValue(
+            static_cast<EGameResource>(averageResource));
     player->m_ai.m_averageResourceValue = averageValue / 5;
 }
 
