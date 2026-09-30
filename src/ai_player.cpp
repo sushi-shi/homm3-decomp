@@ -4057,7 +4057,11 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
 {
     long totalCost;
     std::vector<pathCell> path;
-    unsigned char firstStep;
+    // DC's lowered byte local is ambiguous; retail passes firstStep and
+    // standEnd straight to attempt_step's proven bool parameters. Bool
+    // locals remove both candidate test/setne conversions and recover the
+    // retail frame and first returned-location copy (85.26% -> 86.18%).
+    bool firstStep;
     long maxDistance;
     type_point destination;
 
@@ -4095,7 +4099,7 @@ void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
             currentHero->m_movePoints),
         350);
     firstStep = 1;
-    unsigned char standEnd = 0;
+    bool standEnd = false;
     totalCost = 0;
 
     for (long step = 0; step < path.size(); ++step) {
