@@ -308,9 +308,7 @@ static void upgradeCreatures(hero* currentHero, const town* currentTown)
             if (resource < NUM_RESOURCES)
                 continue;
 
-            for (resource = 0; resource < NUM_RESOURCES; ++resource)
-                g_currentPlayer->m_resources[resource] -=
-                    difference[resource];
+            g_currentPlayer->payResourceCost(difference);
             currentHero->m_army.m_armyTypes[slot] = upgrade;
         }
     }
@@ -513,8 +511,7 @@ static void visitWarFactory(hero* currentHero, TArtifact engine)
     if (valueOfWarFactory(currentHero, engine, 0) > 0) {
         TCreatureType creature = siegeArtifactToCreature(engine);
         const int* costs = g_creatureTypeTraits[creature].m_cost;
-        for (int resource = 0; resource < 7; resource++)
-            g_currentPlayer->m_resources[resource] -= costs[resource];
+        g_currentPlayer->payResourceCost(costs);
 
         type_artifact artifact(engine);
         currentHero->giveArtifact(artifact, 1, 1);
@@ -2269,8 +2266,7 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
         }
     }
 
-    for (int costResource = 0; costResource < 7; ++costResource)
-        g_currentPlayer->m_resources[costResource] -= costs[costResource];
+    g_currentPlayer->payResourceCost(costs);
 
     currentHero->giveArtifact(type_artifact(engine), 1, 1);
 }
@@ -2803,8 +2799,7 @@ void aiVisitHillFort(hero* currentHero)
         }
 
         if (resource > GOLD) {
-            for (resource = 0; resource <= GOLD; resource++)
-                g_currentPlayer->m_resources[resource] -= cost[resource];
+            g_currentPlayer->payResourceCost(cost);
             currentHero->m_army.m_armyTypes[i] = upgrade;
         }
     }

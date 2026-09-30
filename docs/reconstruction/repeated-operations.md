@@ -560,11 +560,41 @@ blacksmith's seven-entry loop subtracts every entry from gold, unlike a normal
 row payment; the sparse town-build dialog also preserves its selected resource
 indices. Those operations are not changed by the recruitment helper extraction.
 
+## Complete resource-cost payments
+
+Eight building, upgrade and war-machine purchase paths now share
+`playerData::payResourceCost()`: town building purchase, AI dwelling purchase,
+army-view upgrading, hill-fort slot upgrading, AI town creature upgrading,
+AI hill-fort upgrading, war-factory visits and siege-engine buying. The operation
+subtracts one complete seven-resource row in ascending order. It does not test
+affordability, skip zero entries, clamp negative costs or update any UI.
+
+The ordinary `int*` and `long*` cost interfaces retain the existing callers'
+types. Both use one source-local implementation template; no array is copied,
+reinterpreted or widened in advance. Each cost entry is read immediately before
+its matching resource debit. This preserves the int difference row used by AI
+creature upgrades as well as long rows produced by `getUpgradeCost()`.
+
+Ordering remains specific to the caller. `town::buyBuilding()` pays before
+building; AI dwelling purchase builds first and then pays through its already
+cached player pointer. The hill-fort UI changes the creature type before paying,
+while army-view and AI upgrade paths pay first. Siege-engine buying retains its
+second affordability check after constructing a missing building. War-factory
+valuation and artifact delivery retain their positions around payment.
+
+Native playerData `0x1c50`, field list `0x35de`, explicitly records public
+`resources`; that storage remains public. The payment interfaces and shared
+implementation template are project inferences, without native helper claims.
+Sparse town-dialog payments, the blacksmith's all-entries-from-gold behavior,
+recruitment's gold/optional-resource pair, gifts, exchanges and scaled purchase
+budgets remain distinct operations. Existing affordability loops and the native
+hill-fort `canAfford()` helper retain their own contracts.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
 tests, validation checks or matching-score investigations. Earlier compiler
 observations recorded with the accessor inventory do not validate these changes.
 The extraction checkpoint `aa71fa920` preserved the published C++ implementation
-at `582687638`. The combat damage/vanish and recruitment continuations above were added
-afterward and have not been compiled or measured.
+at `582687638`. The subsequent combat, recruitment and resource-payment
+continuations above have not been compiled or measured.

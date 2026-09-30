@@ -1021,6 +1021,11 @@ public:
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
     void getNetInfo(CNetPlayerInfo* netPlayerInfo);
     void clearNetInfo();
+    // Project-inferred complete seven-resource payment. Callers retain
+    // affordability checks and purchase/build ordering; negative costs are
+    // not clamped. Native resource storage remains public (DC 0x1c50).
+    void payResourceCost(const int* cost);
+    void payResourceCost(const long* cost);
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.

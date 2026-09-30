@@ -1141,8 +1141,7 @@ bool town::buyBuilding(type_building_id building)
         if (player->m_resources[resource] < costs[resource])
             return 0;
     }
-    for (int paid = 0; paid < NUM_RESOURCES; paid++)
-        player->m_resources[paid] -= costs[paid];
+    player->payResourceCost(costs);
     buildBuilding(building, 1, 1);
     return 1;
 }

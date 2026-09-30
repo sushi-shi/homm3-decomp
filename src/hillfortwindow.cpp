@@ -521,8 +521,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
                 }
 
                 g_game->getCurrHero()->m_army.m_armies[which] = upgraded;
-                for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
-                    g_currentPlayer->m_resources[i] -= m_slot[which].m_cost[i];
+                g_currentPlayer->payResourceCost(m_slot[which].m_cost);
             }
         }
         break;

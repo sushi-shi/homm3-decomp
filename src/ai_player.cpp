@@ -1917,8 +1917,7 @@ void type_AI_player::buyCreatures(hero* currentHero, town* currentTown)
         int* cost =
             currentTown->getBuildCostArray(bestBuilding);
         currentTown->buildBuilding(bestBuilding, 1, 1);
-        for (int resource = 0; resource < 7; ++resource)
-            player->m_resources[resource] -= cost[resource];
+        player->payResourceCost(cost);
         purchaser.set(currentTown);
         purchaser.doPurchase(&currentHero->m_army, morale,
                               &currentTown->getArmy(), player->m_resources,
