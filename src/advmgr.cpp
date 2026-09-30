@@ -5055,9 +5055,12 @@ void advManager::drawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 }
 
 // E:\gamedcs\advmgr.cpp:6239
-// Canonical map types: current 85.2335 -> 85.1872. The same 34
-// disposable forest trials recorded beside drawAdvObj retain 85.1872
-// for this function. No probe noise is retained; recovery remains open.
+// DC 6299 and Mac 0x1215c..0x121ac decode TObjectCell signed nibble
+// members; the three native draw sites use those members again. Preserve
+// them through getBitPos and sprite draws instead of packed-byte locals.
+// Native member reads recover 85.2050 -> 99.1390% in the 64-state family.
+// DC 6255..6264 also preserves the clipping deltas, and 6412/6413 names
+// the partLow/partHigh bounds of the final hero/boat part loop.
 VA(0x00411590, 0x5E4)
 DC_ADDRESS(0x012fcc, 0x8c4)
 MAC_ADDRESS(0x011fa0, 0x680)  // anchor-callee
@@ -5076,13 +5079,13 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     int tileh = 32;
 
     if (baseX < 8) {
-        tilex = 8 - baseX;
-        tilew = baseX + 24;
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
         baseX = 8;
     }
     if (baseY < 0) {
-        tiley = -baseY;
-        tileh = baseY + 32;
+        tiley -= baseY;
+        tileh -= -baseY;
         baseY = 0;
     }
     if (baseX + tilew > 600)
@@ -5108,20 +5111,7 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         CSprite* sprite = mapObjects->m_sprites[
             mapObjects->m_objects[objCell->m_objectIndex].m_typeIndex];
 
-        signed char offsets = objCell->m_offsets;
-        // Retail keeps BOTH shifts 8-BIT and widens at use: `mov dl,al /
-        // sar dl,4 / movsx edx,dl`, then `shl al,4 / sar al,4 / movsx`.
-        // The packed offset is re-derived in each draw arm below, shortening
-        // these locals' live range. Grouping the allowed terrain cases under
-        // one shared break is equally material: it makes VC6 emit retail's
-        // byte selector plus two-entry jump table instead of a 48-entry
-        // pointer table. Together those two source shapes raise the max from
-        // 83.2068% to 85.2335% and restore `this` in EDI.
-
-        signed char yOffset = offsets >> 4;
-        offsets <<= 4;
-        signed char xOffset = offsets >> 4;
-        int bit = CObjectType::getBitPos(xOffset, yOffset);
+        int bit = CObjectType::getBitPos(objCell->m_cellX, objCell->m_cellY);
         if (!objType->m_shadowCells[bit] || objType->m_suppressDraw)
             continue;
 
@@ -5170,45 +5160,33 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
             default:
                 continue;
             }
-            signed char drawOffsets = objCell->m_offsets;
-            signed char drawY = drawOffsets >> 4;
-            drawOffsets <<= 4;
-            signed char drawX = drawOffsets >> 4;
             int frame = (m_animCtr
                          + mapObjects->m_objects[objCell->m_objectIndex]
                                .m_animationOffset)
                         % sprite->getNumFrames(0);
             sprite->drawAdvObjShadow(
                 frame,
-                tilex + (objType->m_width - drawX - 1) * 32,
-                tiley + (objType->m_height - drawY - 1) * 32,
+                tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                 tilew, tileh, g_windowManager->m_screenBitmap,
                 baseX, baseY + 8, false);
         } else {
             if (objCell->m_objectIndex == m_movingObjectIndex) {
-                signed char drawOffsets = objCell->m_offsets;
-                signed char drawY = drawOffsets >> 4;
-                drawOffsets <<= 4;
-                signed char drawX = drawOffsets >> 4;
                 m_movingObjectSprite->drawAdvObjShadow(
                     m_movingObjectSequence * 2 + m_movingObjectFrame,
-                    tilex + (objType->m_width - drawX - 1) * 32,
-                    tiley + (objType->m_height - drawY - 1) * 32,
+                    tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                    tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8, false);
             } else {
-                signed char drawOffsets = objCell->m_offsets;
-                signed char drawY = drawOffsets >> 4;
-                drawOffsets <<= 4;
-                signed char drawX = drawOffsets >> 4;
                 int frame = (m_animCtr
                              + mapObjects->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
                             % sprite->getNumFrames(0);
                 sprite->drawAdvObjShadow(
                     frame,
-                    tilex + (objType->m_width - drawX - 1) * 32,
-                    tiley + (objType->m_height - drawY - 1) * 32,
+                    tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                    tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8, false);
             }
@@ -5236,7 +5214,10 @@ void advManager::drawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 
     if (foundHero || foundBoat) {
-        for (int part = 0; part <= 5; ++part) {
+        int part;
+        int partLow = 0;
+        int partHigh = 5;
+        for (part = partLow; part <= partHigh; ++part) {
             if (heroParts[part].m_isValid)
                 drawHeroPartShadow(part, heroParts[part], baseX, baseY,
                                    tilex, tiley, tilew, tileh);
