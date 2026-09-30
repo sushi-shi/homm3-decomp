@@ -2438,16 +2438,10 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
     HOMM3_RELEASE_VERIFY(outfile != 0);
     short length = s.size();
-    // Platform difference: Mac byte-swaps the length (0xced70..0xced8c).
-    // Windows writes the local directly; routing it through the endian
-    // writer's template chain lowers this body's /Ob2 cost until every
-    // retail caller (saveSignPool 6.50%, saveRumours 27.56%, game::save)
-    // expands it instead of retaining the call.
-#if defined(__POWERPC__)
+    // Mac 0xced70..0xced8c encodes the owned length before writing it.
+    // The canonical writer keeps Windows' direct scalar representation;
+    // bypassing its call solely to affect VC6 cost hid this source boundary.
     int count = writeLittleEndianValue(outfile, length);
-#else
-    int count = outfile->write(&length, sizeof(length));
-#endif
     if (count < sizeof(length))
         return -1;
 
