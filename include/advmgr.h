@@ -228,7 +228,7 @@ DATA(0x0069873c) extern int g_overviewReturnActionExtra;
 DATA(0x00682a38) extern unsigned char g_followPlayerMode;
 extern int g_drawingPuzzle;
 extern int g_blackoutPlayer;
-extern unsigned char g_goSolo;
+extern bool g_goSolo;
 
 extern int g_soloPos;
 

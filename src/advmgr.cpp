@@ -148,7 +148,8 @@ DATA(0x0067833c) int g_deferObjDrawX = -1;
 DATA(0x00678340) int g_deferObjDrawY = -1;
 DATA(0x00691240) unsigned long g_completeDrawFpsLastTime;
 // Original DC name: gbGoSoloTest; the GoSolo combat-display gate.
-DATA(0x00691208) unsigned char g_goSoloTest;
+// Original DC public ?gbGoSoloTest@@3_NA proves this replay flag bool.
+DATA(0x00691208) bool g_goSoloTest;
 DATA(0x00699540) int g_adventureCombatActive;
 // Original DC name: giDebugLevel; InterpretCommandLine and StartLocalPlayerTurn.
 DATA(0x006989c8) int g_debugLevel;
@@ -165,7 +166,8 @@ DATA(0x006989f4) int g_drawingPuzzle;
 // Original DC name: gbBlackoutPlayer; command-line initialization and hotseat handoff.
 DATA(0x006993dc) int g_blackoutPlayer;
 // Original DC name: gbGoSolo; StartLocalPlayerTurn and StartMP3 corroborate the retail uses.
-DATA(0x00691209) unsigned char g_goSolo;
+// Original DC public ?gbGoSolo@@3_NA; Complete writers retain its 0/1 domain.
+DATA(0x00691209) bool g_goSolo;
 // Original DC name: giSoloPos; StartLocalPlayerTurn restores this player after GoSolo.
 DATA(0x0069120c) int g_soloPos;
 // Original DC name: gbLastCheaterState; StartLocalPlayerTurn shows text row 332 once.
