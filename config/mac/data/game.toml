@@ -211,10 +211,10 @@ evidence = "Native setupPuzzlePieces loads the direct TOC float at1+0x4bd8 with 
 [[constants]]
 units = ["game"]
 owner_va = 0x004c92c0
-candidate_offset = 0xa8
+candidate_offset = 0xb8
 target_offset = 0xa0
 mac_section = 1
 mac_offset = 0x4b2d
 mac_size = 1
 sha256 = "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
-evidence = "Native getRandomMonster at0xdff74 loads its fill value through direct TOC data1+0x4b2d. The emitted fill loop at raw candidate+0xa8 loads the same anonymous one-byte false payload. Pin this owner's actual use instead of reusing newMap's separately reviewed false literal at1+0x4b24; all anonymous-symbol use sites are checked by the resolver."
+evidence = "Native getRandomMonster at0xdff74 loads its fill value through direct TOC data1+0x4b2d. The emitted fill loop at raw candidate+0xb8 loads the same anonymous one-byte false payload. Pin this owner's actual use instead of reusing newMap's separately reviewed false literal at1+0x4b24; all anonymous-symbol use sites are checked by the resolver."

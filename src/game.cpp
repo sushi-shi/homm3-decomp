@@ -7958,12 +7958,14 @@ void game::perMonth()
 // The shared in-class dereference exposes that nested constructor to CW.
 // Native 0xdff14..0xdff6c constructs the end first, then adds CREATURE_PIXIE
 // to a zero-offset iterator; its fill loop reads a referenced false value.
-// Keep the canonical iterator and fill helpers. Windows currently retains
-// two extra inequality calls and one extra subscript call (84.75%); the
-// Complete range has no direct statement counterpart in the older DC body.
+// Keep the canonical iterator addition and fill helpers. The by-value
+// addition replaces the provisional fromOffset factory, raising Windows
+// 85.54% to 85.96% with two extra inequality calls remaining. A const
+// member-copy addition reaches 84.72%; no native declaration distinguishes
+// their placement. Complete's range has no counterpart in the older DC body.
 VA(0x004c92c0, 0x202)
 DC_ADDRESS(0x0b4b58, 0x12a)
-MAC_ADDRESS(0x0dfed4, 0x398)  // anchor-global
+MAC_ADDRESS(0x0dfed4, 0x398)  // MAC_ABSTRACTION_FROM(tokens1:38ec85859b6c,28.1385): native iterator addition replaces the provisional fromOffset factory; by-value temporary copies shift CW stack and register allocation.
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
     int i;
@@ -7975,7 +7977,7 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     monsterOk.set();
 
     if (!m_gameVersion) {
-        std::fill(bitset_iterator<CREATURE_CATAPULT>::fromOffset(monsterOk, CREATURE_PIXIE),
+        std::fill(bitset_iterator<CREATURE_CATAPULT>(monsterOk) + CREATURE_PIXIE,
                   bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_CATAPULT),
                   false);
     } else {

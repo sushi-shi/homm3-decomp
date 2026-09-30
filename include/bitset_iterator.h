@@ -22,21 +22,12 @@ public:
     {
     }
 
-    // Mac getRandomMonster 0xdff38..0xdff6c copies the zero-offset
-    // iterator, adds CREATURE_PIXIE and copies that value into the range.
-    bitset_iterator operator+(size_t offset) const
+    // Mac getRandomMonster 0xdff38..0xdff6c advances a zero-offset temporary
+    // before copying its result into the fill range. By-value addition keeps
+    // that lifetime and value semantics; free-function placement is inferred
+    // because no native member declaration survives.
+    friend bitset_iterator operator+(bitset_iterator result, size_t offset)
     {
-        bitset_iterator result(*this);
-        result.m_position += offset;
-        return result;
-    }
-
-    // Native getRandomMonster constructs a zero-position local, advances it
-    // and returns the two-word value before fill copies its range argument.
-    // This value factory models that nested local without mutating a caller.
-    static bitset_iterator fromOffset(std::bitset<N>& bits, size_t offset)
-    {
-        bitset_iterator result(bits);
         result.m_position += offset;
         return result;
     }
