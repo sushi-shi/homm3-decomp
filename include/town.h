@@ -362,7 +362,7 @@ public:
     short getGoldIncome(unsigned char includeSilo) const;
     int getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;
-    long getAssembledLegionBonus(long dwelling);
+    long getAssembledLegionBonus(long dwelling) const;
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
     long getLegionBonus(long dwelling) const;

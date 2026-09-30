@@ -1252,7 +1252,7 @@ long town::getHordeBonus(long dwelling) const
 // body at 0:0x1b4c20; retail VC6 expands that same source call.
 VA(0x005bf810, 0xE2)
 MAC_ADDRESS(0x1b5060, 0xc0)
-long town::getAssembledLegionBonus(long dwelling)
+long town::getAssembledLegionBonus(long dwelling) const
 {
     long bonus = 0;
     if (m_owner >= 0 && g_game->m_players[m_owner].hasGivenArtifact(0x85)) {
@@ -1328,8 +1328,12 @@ long town::getLegionBonus(long dwelling) const
 
 // The Mac PEF calls its assembled-Legion helper at 0:0x1b5060 here;
 // CodeWarrior preserves that boundary. Windows expands the same helper
-// before its retained getLegionBonus call. The retained standalone Windows
-// helper is non-const, so this const caller uses it through const_cast.
+// before its retained getLegionBonus call. The assembled getter only reads
+// town state, so its const qualifier is inferred from this proven const caller
+// (DC get_growth_rate; Mac call at 0:0x1b54f8). No original getter signature
+// survives; the old generated Windows label did not prove a non-const API.
+// The connected const declaration/direct call reproduces the same VC6 bytes
+// for both bodies; getGrowthRate remains 90% with the helper boundary intact.
 // The restored call shifts VC6's hasBuilding inlining: one additional call
 // remains in this candidate. Keep the source helper boundary while that
 // compiler decision is investigated. Accumulating the castle contribution
@@ -1354,7 +1358,7 @@ short town::getGrowthRate(short dwelling) const
     growth += getCastleGrowthBonus(creature);
 
     if (m_owner >= 0) {
-        growth += const_cast<town*>(this)->getAssembledLegionBonus(dwellingIndex);
+        growth += getAssembledLegionBonus(dwellingIndex);
         growth += getLegionBonus(dwellingIndex);
     }
 
