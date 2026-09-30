@@ -2277,25 +2277,28 @@ MAC_ADDRESS(0x1bf77c, 0x454)
 // name helpers expand, and all other calls agree. This caller's C2 cost is
 // 710 (budget 1420); the recovered helper path measures 88.3501% versus
 // the old flattened caller's 100%. Preserve both canonical boundaries.
+// DC 3275/3277 places command initialization before native unsigned-char
+// restricted. Direct GetArmyName arguments follow DC 3297..3375. This source
+// family remains 88.3501%; a temporary depth-zero army-count arm reproduces
+// 100%, proving that getNumArmies admission is the sole remaining boundary.
 void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 {
-    char flag = 0;
     m_command = -1;
+    unsigned char restricted = 0;
     if (m_srcStrip->m_group->getNumArmies() == 1) {
         if (m_townToView) {
             if (m_srcStrip == m_heroStrip || m_townToView->m_garrisonHeroId != -1) {
                 if (m_destStrip != m_srcStrip)
-                    flag = 1;
+                    restricted = 1;
             }
         } else if (m_srcStrip == m_heroStrip && m_destStrip != m_srcStrip) {
-            flag = 1;
+            restricted = 1;
         }
     }
 
     if (m_srcStrip == m_destStrip && m_srcIndex == m_destIndex) {
         int id = m_srcStrip->m_group->m_armies[m_srcIndex];
-        const char* name = getArmyName(id, 2);
-        sprintf(m_statusText, g_townCommand[4], name);
+        sprintf(m_statusText, g_townCommand[4], getArmyName(id, 2));
         m_command = 1;
         return;
     }
@@ -2310,36 +2313,36 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
     int selId = m_srcStrip->m_group->m_armies[m_srcIndex];
     if (anchorId == selId && selOwner == m_destStrip->m_owner) {
         if (splitEnabled) {
-            const char* name = getArmyName(selId, 1);
-            sprintf(m_statusText, g_townCommand[0], name);
+            sprintf(m_statusText, g_townCommand[0],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
-        if (flag) {
+        if (restricted) {
             strcpy(m_statusText, g_townCommand[1]);
             return;
         }
-        const char* name = getArmyName(selId, 1);
-        sprintf(m_statusText, g_townCommand[2], name);
+        sprintf(m_statusText, g_townCommand[2],
+                getArmyName(selId, 1));
         m_command = 2;
         return;
     }
 
     if (splitEnabled) {
         if (anchorId == -1) {
-            const char* name = getArmyName(selId, 1);
-            sprintf(m_statusText, g_townCommand[3], name);
+            sprintf(m_statusText, g_townCommand[3],
+                    getArmyName(selId, 1));
             m_command = 5;
             return;
         }
     } else {
         if (anchorId == -1) {
-            if (flag) {
+            if (restricted) {
                 strcpy(m_statusText, g_townCommand[5]);
                 return;
             }
-            const char* name = getArmyName(selId, 2);
-            sprintf(m_statusText, g_townCommand[6], name);
+            sprintf(m_statusText, g_townCommand[6],
+                    getArmyName(selId, 2));
             m_command = 3;
             return;
         }
@@ -2349,9 +2352,8 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
         selectArmy(m_destStrip, m_destIndex, joinDialog);
         return;
     }
-    const char* nameAnchor = getArmyName(anchorId, 2);
-    const char* nameSel = getArmyName(selId, 2);
-    sprintf(m_statusText, g_townCommand[7], nameSel, nameAnchor);
+    sprintf(m_statusText, g_townCommand[7],
+            getArmyName(selId, 2), getArmyName(anchorId, 2));
     m_command = 3;
 }
 
