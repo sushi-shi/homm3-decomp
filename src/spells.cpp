@@ -346,7 +346,7 @@ void combatManager::initiateSpell(SpellID spellToCast, int creatureSpell)
             if (!m_nextAction)
                 break;
 
-            army* target = findSpellTarget(spellToCast, m_currentSide,
+            army* target = findSpellTarget(static_cast<ESpellId>(spellToCast), m_currentSide,
                                              m_nextActionGridIndex, 1, 0);
             if (target && spellToCast != SPELL_DISPEL
                     && target->getOwningSide() != m_currentSide
@@ -787,7 +787,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // both calls, as does Mac retail; its empty depth reset was illegal.
         // Recover the Windows inlining state without suppressing inlining.
         target = findSpellTarget(
-            spellId, m_currentSide, targetIndex, 1, isMonsterSpell);
+            static_cast<ESpellId>(spellId), m_currentSide, targetIndex, 1, isMonsterSpell);
     } else {
         target = 0;
     }
@@ -842,7 +842,7 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         // records this redirected-target call and retail +0x478 retains it.
         // Windows inlining state remains the same unfinished lead as above.
         target = findSpellTarget(
-            spellId, otherSide, secondaryIndex, 0, isMonsterSpell);
+            static_cast<ESpellId>(spellId), otherSide, secondaryIndex, 0, isMonsterSpell);
         redirected = 1;
     } else {
         redirected = 0;
@@ -2308,6 +2308,10 @@ static int handleGetTeleportDestination(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
+// Original DC public ?find_spell_target@combatManager@@AAAPAVarmy@@W4SpellID@@JJ_N1@Z
+// proves the private enum parameter. ESpellId is that canonical domain;
+// legacy public SpellID=int boundaries explicitly convert until their
+// cross-TU interfaces are restored. Complete creatureSpell remains long.
 // DC 2614..2618 has Sacrifice's explicit two arms, then Resurrection
 // (2621), Animate Dead (2625), and the default GetArmy (2629). Preserve
 // both GetArmy source calls rather than merging them into a shared tail.
@@ -2320,7 +2324,7 @@ static int handleGetTeleportDestination(message& msg)
 VA(0x005a3950, 0x68)
 DC_ADDRESS(0x152dec, 0xee)
 MAC_ADDRESS(0x194120, 0xd8)
-army* combatManager::findSpellTarget(SpellID spell, long side, long hex,
+army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
                                      bool firstTarget,
                                      long creatureSpell)
 {
@@ -2459,7 +2463,7 @@ bool combatManager::validSpellTarget(SpellID spellId, TSkillMastery mastery,
         return 0;
     const SSpellTraits& traits = g_spellTraits[spellId];
     if (traits.m_flags & 0x20070) {
-        army* target = findSpellTarget(spellId, castingSide, targetIndex,
+        army* target = findSpellTarget(static_cast<ESpellId>(spellId), castingSide, targetIndex,
                                          firstTarget, creatureSpell);
         return target && validSpellTargetArmy(spellId, castingSide, target,
                                               firstTarget, creatureSpell);

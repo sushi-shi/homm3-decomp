@@ -1706,7 +1706,7 @@ private:
     // find_animate_dead_target, and otherwise answers cells[hex].get_army().
     // Declared beside the leaves it calls rather than at the end of the
     // class because this run of spells.obj leaves is already unconditional.
-    army* findSpellTarget(SpellID spell, long side, long hex,
+    army* findSpellTarget(ESpellId spell, long side, long hex,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a3950
 
