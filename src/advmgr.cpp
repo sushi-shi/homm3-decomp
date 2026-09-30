@@ -3853,6 +3853,11 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // the full expression rather than a named default-constructed point plus
 // assignment: Windows 84.93229 -> 88.08 with current retail labels. The native
 // cursor-enum and const pathCell pointer locals are independently byte-flat.
+// DC 4804 tests the boat-event cursor;4806 copies iTurns into iMouseOffset
+// (sp+0x38), and4810 passes new_cursor+iMouseOffset to SetPointer. Mac
+// efec..f010 likewise copies the offset atf000 before the final sum. Keep
+// that named-variable operation: Windows 88.078125 -> 85.87891 while the
+// getNormalCursor frontier still differs (ANCHOR_POINT vs TOWN/default).
 // Mac e7ac..e810 expands the current-hero ID before both hover guards;
 // preserve getCurrHeroId while keeping Windows separate GetHero lookup.
 VA(0x0040e360, 0x918)
@@ -4045,9 +4050,10 @@ int advManager::processHover(int mouseX, int mouseY)
             newCursor = ADV_ARROW_POINTER;
         }
 
-        g_mouseManager->setPointer(newCursor +
-            ((m_cursorType == CURSOR_TYPE_8
-              && newCursor == ADV_BOAT_EVENT_POINTER) ? turns : mouseOffset),
+        if (m_cursorType == CURSOR_TYPE_8
+            && newCursor == ADV_BOAT_EVENT_POINTER)
+            mouseOffset = turns;
+        g_mouseManager->setPointer(newCursor + mouseOffset,
                                    mouseManager::ADVENTURE_SET);
         return 1;
         }
