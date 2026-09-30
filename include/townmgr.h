@@ -4,6 +4,7 @@
 #include "va.h"
 
 #include "advmgr_popup.h"
+#include "armygrp.h"
 #include "basemgr.h"
 #include "text.h"
 #include "remote.h"
@@ -338,10 +339,9 @@ public:
     // by set_bonus_display (DC `bonus_creatures`, offset 140). BYTE-PROVEN
     // by townManager::Open's `push 0xb4` operator-new size (the class ends
     // at 0x94 without it) and by set_bonus_display's eight-dword -1 fill
-    // at +0x94. The DC element type is TCreatureType; spelled int because
-    // armygrp.h is outside this header's include closure and the enum's
-    // loads/stores are int-identical under VC6.
-    int m_bonusCreatures[8];
+    // at +0x94. Preserve the native TCreatureType[8] declaration from the
+    // owning armygrp.h, with the same 32-byte extent.
+    TCreatureType m_bonusCreatures[8];
     TTownScreenWindow();
     virtual ~TTownScreenWindow();
     void updateTownLocators();

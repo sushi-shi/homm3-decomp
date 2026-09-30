@@ -1523,24 +1523,12 @@ void TTownScreenWindow::updateTownLocators()
 // DoTownKnob/bonus_right_click that precede it have no distinct retail
 // carve row (inlined here). Locals and their scopes follow the DC
 // symbol records (help_text/right_text/iOffsetToMon/i/creature).
-// Residual (87.93%): a whole-tail register transposition - retail keeps
-// `count` in EBX and the text-widget walk pointer in EDI from the main
-// loop's bottom through the summoning arm and the hide loop; this
-// compile swaps the two roles (`[edi+4*ebx+X]` vs our `[ebx+4*edi+X]`)
-// and everything downstream renames with it. Two join `jmp`s ride on
-// the same choice: retail maintains `slot` in EBX across the owner
-// arm's join into the horde call (duplicating the `[ebp+8]` reload on
-// the owner<0 path) and `count` in EBX at the per-dwelling join. The
-// fork is at the prologue: retail clobbers `this` with `add ebx,0x74`
-// for the walk-pointer base where ours preserves it via
-// `lea edx,[ebx+0x74]`. Measured: count declared before the strings
-// (+0.33, kept - reproduces retail's early [ebp-0x18] zero store);
-// count between the strings (87.63); function-scope creature
-// (byte-flat, kept - DC lists creature at proc scope); the named
-// growth/building_name/horde_building locals, the artifact = -1
-// preassignment without a default arm, and the two split bonus locals
-// were each structural wins (83.53 -> 87.93 combined). No local
-// spelling reached the EBX/EDI tie-break.
+// DC townmgr.cpp:2573 calls _memset; Mac 0x1bd924..0x1bd930 retains
+// memset(this + 0x90, -1, 0x20). Keep the library bulk initialization rather
+// than the counted-loop reconstruction: it improves Windows 87.6975 ->
+// 88.5786 while preserving the canonical growth and text helper calls.
+// The remaining comparison is 88 vs 89 blocks, starting at helpText
+// stack placement (-0x4c vs retail -0x50) before the growth-loop joins.
 // DC names GetArmyName twice and six text lookups. Complete keeps its
 // existing getText calls; the army-name calls lift Windows to 88.50%.
 // DC places get_horde before get_legion_bonus, but Complete calls them
@@ -1557,8 +1545,7 @@ void TTownScreenWindow::setBonusDisplay(town* currTown)
     TCreatureType creature;
     int offsetToMon;
 
-    int j;
-    MEMSET(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures), j);
+    memset(m_bonusCreatures, CREATURE_NONE, sizeof(m_bonusCreatures));
 
     int i;
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
