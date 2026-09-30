@@ -3141,15 +3141,17 @@ std::string hero::getMoraleDescription() const
         morale -= 3;
     }
 
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryBasic) {
+    // Mac expands the same signed packed mastery accessor at each rung.
+    // Keep the typed helper path through the description's string inlining.
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryBasic) {
         result += g_moraleInfo[20];
         morale++;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryAdvanced) {
         result += g_moraleInfo[21];
         morale += 2;
     }
-    if (m_skillLevel[eSecSkillLeadership] == eMasteryExpert) {
+    if (getSecondarySkill(eSecSkillLeadership) == eMasteryExpert) {
         result += g_moraleInfo[22];
         morale += 3;
     }
@@ -3277,15 +3279,16 @@ std::string hero::getLuckDescription() const
         luck++;
     }
 
-    if (m_skillLevel[eSecSkillLuck] == eMasteryBasic) {
+    // Mac likewise expands the canonical mastery read for these luck rungs.
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryBasic) {
         result += g_luckInfo[15];
         luck++;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryAdvanced) {
         result += g_luckInfo[16];
         luck += 2;
     }
-    if (m_skillLevel[eSecSkillLuck] == eMasteryExpert) {
+    if (getSecondarySkill(eSecSkillLuck) == eMasteryExpert) {
         result += g_luckInfo[17];
         luck += 3;
     }
@@ -6102,20 +6105,20 @@ TSkillMastery hero::getSpellSchoolLevel(TSpellSchool schoolMask,
     } else {
         level = eMasteryNone;
         if (schoolMask & eSchoolAir) {
-            if (m_skillLevel[eSecSkillSchoolOfAirMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfAirMagic]);
+            if (getSecondarySkill(eSecSkillSchoolOfAirMagic) > level)
+                level = getSecondarySkill(eSecSkillSchoolOfAirMagic);
         }
         if (schoolMask & eSchoolFire) {
-            if (m_skillLevel[eSecSkillSchoolOfFireMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfFireMagic]);
+            if (getSecondarySkill(eSecSkillSchoolOfFireMagic) > level)
+                level = getSecondarySkill(eSecSkillSchoolOfFireMagic);
         }
         if (schoolMask & eSchoolEarth) {
-            if (m_skillLevel[eSecSkillSchoolOfEarthMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfEarthMagic]);
+            if (getSecondarySkill(eSecSkillSchoolOfEarthMagic) > level)
+                level = getSecondarySkill(eSecSkillSchoolOfEarthMagic);
         }
         if (schoolMask & eSchoolWater) {
-            if (m_skillLevel[eSecSkillSchoolOfWaterMagic] > level)
-                level = TSkillMastery(m_skillLevel[eSecSkillSchoolOfWaterMagic]);
+            if (getSecondarySkill(eSecSkillSchoolOfWaterMagic) > level)
+                level = getSecondarySkill(eSecSkillSchoolOfWaterMagic);
         }
     }
     return level;
@@ -6130,23 +6133,23 @@ TSpellSchool hero::getHighestSchool(TSpellSchool schoolMask) const
     int bestLevel = -1;
     TSpellSchool bestSchool;
     if ((schoolMask & eSchoolAir)
-        && m_skillLevel[eSecSkillSchoolOfAirMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfAirMagic];
+        && getSecondarySkill(eSecSkillSchoolOfAirMagic) > bestLevel) {
+        bestLevel = getSecondarySkill(eSecSkillSchoolOfAirMagic);
         bestSchool = eSchoolAir;
     }
     if ((schoolMask & eSchoolFire)
-        && m_skillLevel[eSecSkillSchoolOfFireMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfFireMagic];
+        && getSecondarySkill(eSecSkillSchoolOfFireMagic) > bestLevel) {
+        bestLevel = getSecondarySkill(eSecSkillSchoolOfFireMagic);
         bestSchool = eSchoolFire;
     }
     if ((schoolMask & eSchoolEarth)
-        && m_skillLevel[eSecSkillSchoolOfEarthMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfEarthMagic];
+        && getSecondarySkill(eSecSkillSchoolOfEarthMagic) > bestLevel) {
+        bestLevel = getSecondarySkill(eSecSkillSchoolOfEarthMagic);
         bestSchool = eSchoolEarth;
     }
     if ((schoolMask & eSchoolWater)
-        && m_skillLevel[eSecSkillSchoolOfWaterMagic] > bestLevel) {
-        bestLevel = m_skillLevel[eSecSkillSchoolOfWaterMagic];
+        && getSecondarySkill(eSecSkillSchoolOfWaterMagic) > bestLevel) {
+        bestLevel = getSecondarySkill(eSecSkillSchoolOfWaterMagic);
         bestSchool = eSchoolWater;
     }
     return bestSchool;
