@@ -1188,7 +1188,8 @@ CNetPlayerHandler::CNetPlayerHandler()
 VA(0x00577ae0, 0xd0)
 DC_ADDRESS(0x1304a8, 0x15c)
 MAC_ADDRESS(0x16ee14, 0x120)
-unsigned char CNetPlayerHandler::setNextPlayer(int pos)
+// Native SetNextPlayer public: QAA_NH@Z (DC file 0x5edf0f).
+bool CNetPlayerHandler::setNextPlayer(int pos)
 {
     CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
 
@@ -1256,7 +1257,8 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getCompPlayerInPos(int pos)
 VA(0x00577be0, 0xaf)
 DC_ADDRESS(0x130670, 0xc8)
 MAC_ADDRESS(0x16ef80, 0xd4)
-unsigned char CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
+// Native AddNewPlayer public: QAA_NPAVCNetPlayerInfo@@@Z (DC file 0x5f1277).
+bool CNetPlayerHandler::addNewPlayer(CNetPlayerInfo* netPlayer)
 {
     if (m_playersCount >= MAX_PLAYERS)
         return 0;
@@ -1308,7 +1310,8 @@ int CNetPlayerHandler::getGamePos(unsigned long dpid)
 // helper at DC1104; retail 0x577be0 expands its GetNetPos comparison.
 DC_ADDRESS(0x1307b4, 0x26)
 MAC_ADDRESS(0x16f0fc, 0x34)
-unsigned char CNetPlayerHandler::playerExists(unsigned long dpid)
+// Native PlayerExists public: QAA_NK@Z (DC file 0x5f186b).
+bool CNetPlayerHandler::playerExists(unsigned long dpid)
 {
     if (getNetPos(dpid) != -1)
         return 1;
@@ -1329,7 +1332,8 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::getPlayer(unsigned long dpid)
 VA(0x00577d10, 0x5a)
 DC_ADDRESS(0x130828, 0x70)
 MAC_ADDRESS(0x16f168, 0xa4)
-unsigned char CNetPlayerHandler::isFaceTaken(int face, int exclude)
+// Native IsFaceTaken public: QAA_NHH@Z (DC file 0x5dc477).
+bool CNetPlayerHandler::isFaceTaken(int face, int exclude)
 {
     for (int i = 0; i < MAX_PLAYERS; ++i) {
         if (i != exclude) {
@@ -1357,7 +1361,8 @@ int CNetPlayerHandler::getNetPos(unsigned long dpid)
 // DC1205 obtains the human in this seat and DC1208 unassigns it.
 // No retained retail body/caller is claimed for this ordinary source API.
 DC_ADDRESS(0x1308d8, 0x2c)
-unsigned char CNetPlayerHandler::setComputer(int pos)
+// Native SetComputer public: QAA_NH@Z (DC file 0x615eaf).
+bool CNetPlayerHandler::setComputer(int pos)
 {
     CNetPlayerHandlerPlayer* player = getPlayerInPos(pos);
     if (player)
@@ -1384,7 +1389,8 @@ int CNetPlayerHandler::getUnassignedPlayerPos()
 // test. Preserve the ordinary API without asserting a retained retail body.
 DC_ADDRESS(0x130968, 0x88)
 MAC_ADDRESS(0x16f298, 0x68)
-int CNetPlayerHandler::getPlayerCount(unsigned char assignedOnly)
+// Native GetPlayerCount public: QAAH_N@Z (DC file 0x5681af).
+int CNetPlayerHandler::getPlayerCount(bool assignedOnly)
 {
     int count = 0;
     for (int i = 0; i < MAX_PLAYERS; ++i) {

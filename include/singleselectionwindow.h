@@ -390,13 +390,14 @@ public:
     CNetPlayerHandlerPlayer* getPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getCompPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* getPlayer(unsigned long dpid);
-    unsigned char isFaceTaken(int face, int exclude);
-    unsigned char addNewPlayer(CNetPlayerInfo* netPlayer);
-    unsigned char playerExists(unsigned long dpid);
-    unsigned char setNextPlayer(int pos);
-    unsigned char setComputer(int pos);
+    // Original native publics prove _N returns for these five predicates.
+    bool isFaceTaken(int face, int exclude);
+    bool addNewPlayer(CNetPlayerInfo* netPlayer);
+    bool playerExists(unsigned long dpid);
+    bool setNextPlayer(int pos);
+    bool setComputer(int pos);
     int getUnassignedPlayerPos();
-    int getPlayerCount(unsigned char assignedOnly);
+    int getPlayerCount(bool assignedOnly);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
