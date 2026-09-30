@@ -1379,7 +1379,9 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 VA(0x004270c0, 0x149)
 DC_ADDRESS(0x02c004, 0x13c)
 MAC_ADDRESS(0x029000, 0x158)  // anchor-global
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
+// Original DC public ?AI_quick_combat@@YA_NPAVhero@@0AAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z
+// proves bool: DoCombat consumes the result as a win/loss predicate.
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
     float defenderModifier = random(75, 125) / 100.0f;

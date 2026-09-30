@@ -67,7 +67,7 @@ public:
     ~CTurnDurationPause();
 };
 
-unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero,
+bool aiQuickCombat(hero* attackingHero, hero* defendingHero,
                               armyGroup& defendingArmy, town* defendingTown,
                               NewmapCell* cell);
 // Original: AI_arrange_army_for_combat; ai_player.cpp:2952, dc 0x3285c.
