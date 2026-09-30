@@ -4024,8 +4024,10 @@ static inline void checkGatePurchase(type_point point)
     }
 }
 
-// E:\gamedcs\ai_player.cpp:4179.  The reference pair is fixed by the DC
-// decorated signature and the retail /Gr call at move_hero+0x219.  The body
+// E:\gamedcs\ai_player.cpp:4179. Original public
+// ?AI_AttemptMove@@YAXPAVhero@@AAUHeroDestination@@AAJ_N@Z proves the
+// reference pair and bool exploreMode. Keep the philai declaration equal;
+// retail's /Gr call at move_hero+0x219 corroborates the references. The body
 // lies after attempt_step and immediately before the Town.h COMDAT band.
 // Residual (84.83%, 2026-09-01): the Dreamcast statement groups now recover
 // the compound puzzle-guess test, both check_gate_purchase -> game::GetTown
@@ -4049,7 +4051,7 @@ VA(0x0042fee0, 0x6b8)
 DC_ADDRESS(0x034b08, 0x4b0)
 MAC_ADDRESS(0x0346d4, 0x938)  // anchor-caller move_hero + order bracket
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
-                    long& bestRawValue, unsigned char exploreMode)
+                    long& bestRawValue, bool exploreMode)
 {
     long totalCost;
     std::vector<pathCell> path;

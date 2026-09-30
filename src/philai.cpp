@@ -39,7 +39,7 @@ int aiChooseDestination(hero* currentHero, long maxDistance,
                           unsigned char allowSpells,
                           unsigned char exploreMode);
 void aiAttemptMove(hero* currentHero, HeroDestination& bestPoint,
-                    long& bestRawValue, unsigned char exploreMode);
+                    long& bestRawValue, bool exploreMode);
 static void moveHero(hero* currentHero, unsigned char isLastHero,
                      unsigned char& exploreMode);
 static void moveHero(hero* currentHero, long* dangerZones,
