@@ -2593,7 +2593,7 @@ mapcell	?read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000
 mapcell	?read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc1a0	tokens1:7cd1fc9c223b
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130	tokens1:441bf71369f1
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120	tokens1:89fad79c59ee
-mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	93.2220	93.2220	95.6262	0xff6b0	tokens1:b77c32c071af
+mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@AAVBlackBoxData@@H@Z	92.7097	92.7097	95.6262	0xff6b0	tokens1:9ab5c910eff8
 mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0xffbf0	tokens1:dc0cbd48d28c
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0	tokens1:fb41bb2f6382
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00	tokens1:df23e101b48c
@@ -4260,7 +4260,7 @@ spells	?removeCorpse@combatManager@@QAEXAAVhexcell@@JJ@Z	100.0000	100.0000	100.0
 spells	?resetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	98.5146	98.5146	98.5146	0x1a5260	tokens1:42833e30fc11
 spells	?resurrect@combatManager@@QAEXPAVarmy@@J_N@Z	96.7846	96.7846	96.7846	0x1a7560	tokens1:382a0de7f89c
 spells	?setMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0	tokens1:5732a289a1ad
-spells	?showMassSpell@combatManager@@QAEXAAY11BE@EH_N@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:1f7eb2b87949
+spells	?showMassSpell@combatManager@@QAEXAAY11BE@_NH_N@Z	96.3708	96.3708	96.3708	0x1a67c0	tokens1:c3e636c4a6a2
 spells	?showSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7576	98.7576	100.0000	0x1a8950	tokens1:478c6031c182
 spells	?spellCastWorkChance@combatManager@@QBEMHJPBVarmy@@_N1J@Z	100.0000	100.0000	100.0000	0x1a8090	tokens1:27b5d528dd5f
 spells	?spellCastWorks@combatManager@@QBE_NHJPBVarmy@@_NJ@Z	100.0000	100.0000	100.0000	0x1a8640	tokens1:94d4dda39bb2
