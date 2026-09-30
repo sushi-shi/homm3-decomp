@@ -1721,9 +1721,10 @@ int hero::heroFn004D9B30(int artifact)
 // into the stack type_artifact - and `assembled` is computed FIRST even
 // though the record is used first (94.17 against 85.75 for the other
 // order, and 93.66 for the semantically wrong `record(assembled, -1)`).
-// Residual (94.2%): prologue instruction SCHEDULING only - the same
-// instructions, permuted around the two pushes - plus the unwind-table
-// addend in the frame push, which is a relocation and not a state count.
+// Mac 0xf5c38..0xf5c40 constructs the component record solely for the
+// description query; no later operation uses it. Keeping that record as the
+// temporary receiver instead of a named local recovers the retail prologue
+// schedule and all 27 blocks, ten calls and relocations: 94.17 -> 100%.
 VA(0x004d9cc0, 0x200)
 MAC_ADDRESS(0x0f5bf0, 0x14c)  // retail body + settled arity; old DC bracket retired
 int hero::heroFn004D9CC0(int artifact)
@@ -1731,9 +1732,10 @@ int hero::heroFn004D9CC0(int artifact)
     int assembled =
         g_combinationArtifacts[g_artifactTraits[artifact].m_targetCombo]
             .m_artifactId;
-    // Complete's combination prompt receives an integer id; its record constructor retains the older DC TArtifact API.
-    type_artifact record(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-    std::string text = record.getDescription();
+    // Complete's prompt ID crosses the canonical DC-typed record boundary.
+    std::string text =
+        type_artifact(static_cast<TArtifact>(artifact) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */)
+            .getDescription();
     text += "\n\n";
     // Mac retail retains the text vector's indexer call here.
     text += formatString((*g_generalText)[GENERAL_TEXT_COMBINATION_ARTIFACT_ASSEMBLY_PROMPT_FORMAT],
@@ -2983,19 +2985,25 @@ void hero::heroFn004DC070(long slot)
 // is flat at 97.4237%. Binding the combination bitset instead gives 83.2994%;
 // repeating the global player lookup gives 72.5198%. Neither recovers the
 // entry register choices or first bitset-write scheduling.
+// Native comboType ownership and the second canonical artifact lookup
+// recover all 25 retail blocks and nine calls: 97.4068 -> 100%.
 VA(0x004dc100, 0x217)
 MAC_ADDRESS(0x0f86ec, 0x1e0)  // retail-only, hero member, ret 4
 void hero::heroFn004DC100(long slot)
 {
     playerData& player = g_game->m_players[m_owner];
-    int artifactId = m_equipped[slot].m_artifactId;
+    // Mac 0xf8734 owns comboType through its proxy write, then
+    // 0xf8770..0xf8780 repeats the canonical equipped-record lookup.
+    int comboType =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_comboType;
 
-    if (g_artifactTraits[artifactId].m_comboType != -1) {
-        player.m_assembledCombinations[g_artifactTraits[artifactId].m_comboType] = true;
+    if (comboType != -1) {
+        player.m_assembledCombinations[comboType] = true;
         return;
     }
 
-    int targetCombo = g_artifactTraits[artifactId].m_targetCombo;
+    int targetCombo =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId].m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
@@ -5394,7 +5402,7 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                 g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (heroFn004DBE80(targetCombo)) {
-                    playerData& player = g_game->m_players[m_owner];
+                    playerData& player = *getPlayer();
                     if (announce) {
                         if (m_owner == g_game->getLocalPlayerGamePos() &&
                             !player.m_assembledCombinations[targetCombo]) {
@@ -5408,9 +5416,9 @@ unsigned char hero::giveArtifact(const type_artifact& artifact,
                             if (g_windowManager->m_dialogReturn ==
                                 DIALOG_RETURN_ACCEPT)
                                 heroFn004DBF30(targetCombo, -1);
-                        } else if (!player.m_isHuman) {
-                            // Retail reads the byte; playerData::isHuman is
-                            // an out-of-line game.cpp body (called: 94.67%).
+                        } else if (!player.isHuman()) {
+                            // Mac 0x103f74 expands the canonical human-query byte body.
+                            // Keep its helper and the guarded owner lookup.
                             heroFn004DBF30(targetCombo, -1);
                         }
                     }
