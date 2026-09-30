@@ -856,13 +856,12 @@ public:
     void newTurn();
     void setAIExpectedDamage(long arg);
     int findPath(int fpTargetCellIndex, int maxMoves,
-                 unsigned char moveUnlimited,
-                 unsigned char literalTarget);
+                 bool moveUnlimited, bool literalTarget);
     void setRetaliationCount();
     int validAttack(int currIndex, int direction, int criteria,
                     int literalIndex, int* testCellIndex) const;
     void resetPath();
-    unsigned char validPath(int destIndex, unsigned char literalTest);
+    bool validPath(int destIndex, bool literalTest);
     bool validFlight(int destIndex,
                      bool literalTest) const;
     int validRange(int destIndex);
@@ -988,8 +987,8 @@ private:
 #if 0  // superseded unordered/view-fragmented declaration reconstruction
 
     int findPath(int fpTargetCellIndex, int maxMoves,
-                 unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
-    unsigned char validPath(int destIndex, unsigned char bLiteralTest);
+                 bool bMoveUnlimited, bool bLiteralTarget);
+    bool validPath(int destIndex, bool bLiteralTest);
     // Both const (?GetAttackMask@army@@QBAIHHH@Z,
     // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
     // `this` and both drive GetAdjacentCellIndex, already const.
