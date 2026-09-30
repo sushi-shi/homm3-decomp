@@ -6212,17 +6212,37 @@ int hero::getManaFrame() const
 // 0x3f74 proves flags public; individual effect application/reset stays intact.
 bool hero::hasFountainEffect() const
 {
-    return (m_flags & 0x38000020) != 0;
+    return getFountainEffectFlags() != 0;
 }
 
 bool hero::hasIdolEffect() const
 {
-    return (m_flags & 0x2000010) != 0;
+    return getIdolEffectFlags() != 0;
 }
 
 bool hero::hasTempleEffect() const
 {
-    return (m_flags & 0x4000100) != 0;
+    return getTempleEffectFlags() != 0;
+}
+
+// Project-inferred shared flag sums from rollover/quick-info. DC advmgr.cpp
+// line 3491 and the retail rollover preserve the fountain's four terms in
+// this order. Retain the sum rather than flattening its source operation.
+// The idol/temple terms are likewise disjoint; neither operation can overflow.
+unsigned int hero::getFountainEffectFlags() const
+{
+    return (m_flags & 0x20) + (m_flags & 0x08000000)
+        + (m_flags & 0x10000000) + (m_flags & 0x20000000);
+}
+
+unsigned int hero::getIdolEffectFlags() const
+{
+    return (m_flags & 0x02000000UL) + (m_flags & 0x10UL);
+}
+
+unsigned int hero::getTempleEffectFlags() const
+{
+    return (m_flags & 0x04000000UL) + (m_flags & 0x100UL);
 }
 
 // Project-inferred shared Library admission predicate. Visit status remains

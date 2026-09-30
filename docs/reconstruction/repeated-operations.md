@@ -774,6 +774,35 @@ placement are project inferences without invented native addresses or inline
 qualifiers; the existing native Arena annotations remain attached to their
 original interfaces.
 
+## Player visits and effect flags in map help
+
+Four player-owned visit masks now use shared queries and marking operations:
+skeletons, lean-tos, magic springs and mystical gardens. Ten query sites span
+AI, rollover and quick info; five event writes retain their original position.
+The methods accept caller-computed masks, preserving packed ID reads, existing
+locals and the selected player. In particular, skeleton AI still checks the
+current player's visits before looking up the hero owner's resource valuation.
+
+Lean-to visits are marked after either the empty dialog or reward/depletion.
+Spring and garden visits are recorded before their fullness checks, including
+visits that grant nothing. Skeleton marking remains after its reward/empty
+branch and rereads the item ID there. The two map-help paths still test spring
+and garden fullness only after a positive player-visit result; weekly refills
+therefore retain their existing display behavior. Save/load and initialization
+continue to handle complete masks in their original order. Native playerData
+`0x1c50` / field list `0x35de` proves all four masks public.
+
+Rollover and quick info also share the fountain, idol and temple effect-flag
+sums. `getFountainEffectFlags()` preserves the four-term sum supported by
+Dreamcast advmgr.cpp line 3491 and the existing retail evidence. The two-term
+idol/temple sums remain explicit; temple uses rollover's term order for both
+pure, nonvolatile reads. Terms occupy disjoint bits and cannot overflow.
+The existing Boolean effect predicates now call these helpers and test for a
+nonzero result, preserving the complete helper path through event/AI callers.
+Individual effect application and post-battle clearing remain unchanged.
+Names and ordinary source placement are project inferences; no native helper
+address, explicit-inline qualifier or new storage is introduced.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,

@@ -2308,7 +2308,7 @@ void advManager::doEventLeanTo(hero* currentHero, ExtraInfoUnion* cell,
         if (humanPlayer)
             normalDialog((*g_adventureEventText)[ADV_EVENT_TEXT_LEAN_TO_EMPTY],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        g_currentPlayer->m_leanToFlags |= 1 << id;
+        g_currentPlayer->markLeanToVisited(1 << id);
     } else {
         int resource = cell->getLeanToResource();
         if (humanPlayer)
@@ -2316,7 +2316,7 @@ void advManager::doEventLeanTo(hero* currentHero, ExtraInfoUnion* cell,
                          1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
         currentHero->giveResource(resource, amount);
         cell->setLeanTo(id, 0, 0);
-        g_currentPlayer->m_leanToFlags |= 1 << id;
+        g_currentPlayer->markLeanToVisited(1 << id);
     }
 }
 
@@ -2416,7 +2416,7 @@ void advManager::doEventMagicSpring(hero* currentHero, ExtraInfoUnion* cell,
     g->setInfoFlag(MagicSpringInfo, g_netLocalGamePos);
     // Mac extracts the five-bit item id before checking whether the spring is empty.
     short id = cell->getItemId();
-    g_currentPlayer->m_magicSpringFlags |= 1 << id;
+    g_currentPlayer->markMagicSpringVisited(1 << id);
 
     if (!cell->magicSpringIsFull()) {
         if (humanPlayer)
@@ -2556,7 +2556,7 @@ void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
     // getItemId call follows GiveResource on the reward path instead.
     short id = cell->m_gardenInfo.m_id;
     EGameResource resource = cell->getGardenResource();
-    g_currentPlayer->m_mysticalGardenFlags |= 1 << id;
+    g_currentPlayer->markMysticalGardenVisited(1 << id);
 
     if (!cell->gardenIsFull()) {
         if (humanPlayer)
@@ -3058,7 +3058,7 @@ void advManager::doEventSkeleton(hero* currentHero, ExtraInfoUnion* cell,
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
-    g_currentPlayer->m_deadGuyFlags |= 1 << cell->getItemId();
+    g_currentPlayer->markSkeletonVisited(1 << cell->getItemId());
 }
 
 // E:\gamedcs\events.cpp:3039.  The shared handler for all three shrine

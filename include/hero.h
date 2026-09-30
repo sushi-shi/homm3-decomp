@@ -979,6 +979,10 @@ public:
     bool hasFountainEffect() const;
     bool hasIdolEffect() const;
     bool hasTempleEffect() const;
+    // Project-inferred sums used by map help and the Boolean predicates.
+    unsigned int getFountainEffectFlags() const;
+    unsigned int getIdolEffectFlags() const;
+    unsigned int getTempleEffectFlags() const;
     // Library admission counts two effective levels per Diplomacy rank.
     bool meetsLibraryLevelRequirement() const;
     unsigned char isWieldingArtifact(int whichArtifact) const;

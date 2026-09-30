@@ -1164,6 +1164,49 @@ int game::saveObeliskPool(TAbstractFile* outfile)
     return 0;
 }
 
+// Project-inferred shared player visit operations. Native field list 0x35de
+// proves these masks public. Preserve caller-selected masks and player
+// identity; ordinary owner-TU placement is provisional.
+bool playerData::hasSkeletonVisit(unsigned long visitMask) const
+{
+    return (m_deadGuyFlags & visitMask) != 0;
+}
+
+void playerData::markSkeletonVisited(unsigned long visitMask)
+{
+    m_deadGuyFlags |= visitMask;
+}
+
+bool playerData::hasLeanToVisit(unsigned long visitMask) const
+{
+    return (m_leanToFlags & visitMask) != 0;
+}
+
+void playerData::markLeanToVisited(unsigned long visitMask)
+{
+    m_leanToFlags |= visitMask;
+}
+
+bool playerData::hasMagicSpringVisit(unsigned long visitMask) const
+{
+    return (m_magicSpringFlags & visitMask) != 0;
+}
+
+void playerData::markMagicSpringVisited(unsigned long visitMask)
+{
+    m_magicSpringFlags |= visitMask;
+}
+
+bool playerData::hasMysticalGardenVisit(unsigned long visitMask) const
+{
+    return (m_mysticalGardenFlags & visitMask) != 0;
+}
+
+void playerData::markMysticalGardenVisited(unsigned long visitMask)
+{
+    m_mysticalGardenFlags |= visitMask;
+}
+
 // Project names for the fixed shipyard price. UI text retains its native
 // literals; affordability, payment and AI budgets share these numeric values.
 // The ordinary helper bodies below have inferred owner-TU placement, without

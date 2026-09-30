@@ -2763,7 +2763,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case DEAD_GUY:
         strcpy(g_text, g_quickViewText[DEAD_GUY]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_deadGuyFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = player->hasSkeletonVisit(
+                1UL << (cell->m_extraInfo & 0x1f));
             appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
         }
         break;
@@ -2820,7 +2821,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     // DC3491 (ce94..cec4) adds four masked flag terms. Retail+0x8b1
     // likewise has four ANDs and three ADDs. Preserve the sum and DC's
-    // operand order; both tested orders emit identical bytes under VC6.
+    // operand order in hero::getFountainEffectFlags. The measurements below
+    // predate that shared operation; both tested orders emitted identical bytes.
     // The six-state query/sum family reproduced four objects. The sum
     // scores 96.1491% versus 96.2649% for the flattened mask because the
     // visited-format tail merges differently. The lower score is not
@@ -2838,10 +2840,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[FountainOfFortuneInfo]);
             }
             if (currHero) {
-                visited = (currHero->m_flags & 0x20)
-                    + (currHero->m_flags & 0x08000000)
-                    + (currHero->m_flags & 0x10000000)
-                    + (currHero->m_flags & 0x20000000);
+                visited = currHero->getFountainEffectFlags();
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -2897,8 +2896,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[IdolOfFortuneInfo]);
             }
             if (currHero) {
-                visited = ((currHero->m_flags
-                    & 0x02000000UL) + (currHero->m_flags & 0x10UL));
+                visited = currHero->getIdolEffectFlags();
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -2906,7 +2904,8 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case LEAN_TO:
         strcpy(g_text, g_quickViewText[LEAN_TO]);
         if (cell->m_isTrigger && currHero) {
-            visited = (player->m_leanToFlags & (1UL << (cell->m_extraInfo & 0x1f)));
+            visited = player->hasLeanToVisit(
+                1UL << (cell->m_extraInfo & 0x1f));
             appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
         }
         break;
@@ -2960,9 +2959,9 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[MagicSpringInfo]);
             }
             if (currHero) {
-                visited = ((player->m_magicSpringFlags
-                    & (1UL << cell->m_magicSpringInfo.m_id))
-                    && !cell->magicSpringIsFull());
+                visited = player->hasMagicSpringVisit(
+                    1UL << cell->m_magicSpringInfo.m_id)
+                    && !cell->magicSpringIsFull();
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -3029,9 +3028,9 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
     case MYSTICAL_GARDEN:
         strcpy(g_text, g_quickViewText[MYSTICAL_GARDEN]);
         if (cell->m_isTrigger) {
-            visited = ((player->m_mysticalGardenFlags
-                & (1UL << cell->m_gardenInfo.m_id))
-                && !cell->gardenIsFull());
+            visited = player->hasMysticalGardenVisit(
+                1UL << cell->m_gardenInfo.m_id)
+                && !cell->gardenIsFull();
             appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
         }
         break;
@@ -3131,8 +3130,7 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
                                   g_globalInfoFlagNames[TempleInfo]);
             }
             if (currHero) {
-                visited = ((currHero->m_flags
-                    & 0x04000000UL) + (currHero->m_flags & 0x100UL));
+                visited = currHero->getTempleEffectFlags();
                 appendMapVisitStatus(g_text, tempText, visitedFormat, visited);
             }
         }
@@ -5986,8 +5984,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        visited = (g_currentPlayer->m_deadGuyFlags
-                            & (1UL << testCell->getItemId()));
+                        visited = g_currentPlayer->hasSkeletonVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6056,11 +6054,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[FountainOfFortuneInfo]);
                     }
                     if (currHero) {
-                        visited =
-                            (currHero->m_flags & 0x20UL)
-                            + (currHero->m_flags & 0x08000000UL)
-                            + (currHero->m_flags & 0x10000000UL)
-                            + (currHero->m_flags & 0x20000000UL);
+                        visited = currHero->getFountainEffectFlags();
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6116,8 +6110,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[IdolOfFortuneInfo]);
                     }
                     if (currHero) {
-                        visited = ((currHero->m_flags
-                            & 0x02000000UL) + (currHero->m_flags & 0x10UL));
+                        visited = currHero->getIdolEffectFlags();
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6126,8 +6119,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        visited = g_currentPlayer->m_leanToFlags
-                            & (1UL << testCell->getItemId());
+                        visited = g_currentPlayer->hasLeanToVisit(
+                            1UL << testCell->getItemId());
                         appendMapVisitStatus(g_text, tempText, leanToFormat, visited);
                     }
                 }
@@ -6182,8 +6175,9 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[MagicSpringInfo]);
                     }
                     if (currHero) {
-                        visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << testCell->getItemId())) && !testCell->magicSpringIsFull());
+                        visited = g_currentPlayer->hasMagicSpringVisit(
+                            1UL << testCell->getItemId())
+                            && !testCell->magicSpringIsFull();
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }
@@ -6237,8 +6231,8 @@ void advManager::quickInfo(int cellX, int cellY, int z)
             case MYSTICAL_GARDEN:
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
-                    visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << testCell->getItemId()))
+                    visited = g_currentPlayer->hasMysticalGardenVisit(
+                        1UL << testCell->getItemId())
                         && !testCell->gardenIsFull();
                     appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                 }
@@ -6345,8 +6339,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                                           g_globalInfoFlagNames[TempleInfo]);
                     }
                     if (currHero) {
-                        visited = ((currHero->m_flags
-                            & 0x100UL) + (currHero->m_flags & 0x04000000UL));
+                        visited = currHero->getTempleEffectFlags();
                         appendMapVisitStatus(g_text, tempText, visitFormat, visited);
                     }
                 }

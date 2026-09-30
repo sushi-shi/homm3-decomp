@@ -1024,6 +1024,16 @@ public:
     void assignNetInfo(CNetPlayerInfo* netPlayerInfo);
     void getNetInfo(CNetPlayerInfo* netPlayerInfo);
     void clearNetInfo();
+    // Project-inferred visit-mask operations. Cell-ID decoding, reward
+    // handling and refill/fullness checks remain with each caller.
+    bool hasSkeletonVisit(unsigned long visitMask) const;
+    void markSkeletonVisited(unsigned long visitMask);
+    bool hasLeanToVisit(unsigned long visitMask) const;
+    void markLeanToVisited(unsigned long visitMask);
+    bool hasMagicSpringVisit(unsigned long visitMask) const;
+    void markMagicSpringVisited(unsigned long visitMask);
+    bool hasMysticalGardenVisit(unsigned long visitMask) const;
+    void markMysticalGardenVisited(unsigned long visitMask);
     // Project-inferred complete seven-resource payment. Callers retain
     // affordability checks and purchase/build ordering; negative costs are
     // not clamped. Native resource storage remains public (DC 0x1c50).

@@ -1306,7 +1306,7 @@ inline int valueOfLeanTo(NewmapCell* cell, playerData* player)
 {
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
-    if (player->m_leanToFlags & (1UL << info->getItemId()))
+    if (player->hasLeanToVisit(1UL << info->getItemId()))
         return 0;
     return 3 * player->m_ai.m_averageResourceValue;
 }
@@ -1519,7 +1519,7 @@ int valueOfSkeleton(const hero* currentHero, NewmapCell* cell)
     const ExtraInfoUnion* info = static_cast<const ExtraInfoUnion*>(
         static_cast<const void*>(cell));
     unsigned long visited = 1UL << info->getItemId();
-    if (g_currentPlayer->m_deadGuyFlags & visited)
+    if (g_currentPlayer->hasSkeletonVisit(visited))
         return 0;
 
     playerData* player = currentHero->getPlayer();
