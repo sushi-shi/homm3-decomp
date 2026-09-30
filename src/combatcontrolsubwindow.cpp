@@ -44,7 +44,8 @@
 // The tail dims 0x7d4 through the PARENT window rather than through this
 // sub-window, and only when both sides are AI.
 
-VA(0x0046b610, 0x570) MAC_ADDRESS(0x07765c, 0x894)  // dc 0x64a84
+DC_ADDRESS(0x064a84, 0x468)
+VA(0x0046b610, 0x570) MAC_ADDRESS(0x07765c, 0x894)
 type_combat_sub_window::type_combat_sub_window(
     heroWindow* parent, const char* backgroundSpriteName)
     : TSubWindow(0, 556, 800, 44, parent)
@@ -118,7 +119,8 @@ type_combat_sub_window::type_combat_sub_window(
 
 VA_COMPGEN(0x0046bb80, 0x21, SCALAR_DELETING_DTOR, type_combat_sub_window)
 
-VA(0x0046bbb0, 0x78) MAC_ADDRESS(0x077ef0, 0xcc)  // dc 0x64eec
+DC_ADDRESS(0x064eec, 0x74)
+VA(0x0046bbb0, 0x78) MAC_ADDRESS(0x077ef0, 0xcc)
 type_combat_sub_window::~type_combat_sub_window()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
@@ -166,15 +168,18 @@ type_combat_sub_window::~type_combat_sub_window()
 // (ret 8). Keep the bodies and original long arguments (JJ), despite
 // the generated carcass prototypes having lost both parameters.
 
+DC_ADDRESS(0x064f60, 0x4)
 void type_combat_sub_window::setRollover(const char*)
 {
 }
 
+DC_ADDRESS(0x064f64, 0x4)
 void type_combat_sub_window::setRolloverButtons(long, long)
 {
 }
 
-VA(0x0046bc30, 0x26D) MAC_ADDRESS(0x0780a0, 0x3f8)  // dc 0x64fcc
+DC_ADDRESS(0x064fcc, 0x278)
+VA(0x0046bc30, 0x26D) MAC_ADDRESS(0x0780a0, 0x3f8)
 TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "cbar.pcx")
 {
@@ -218,7 +223,8 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
 
-VA(0x0046bed0, 0x78) MAC_ADDRESS(0x07851c, 0x60)  // dc 0x65244
+DC_ADDRESS(0x065244, 0x2c)
+VA(0x0046bed0, 0x78) MAC_ADDRESS(0x07851c, 0x60)
 TCombatControlSubWindow::~TCombatControlSubWindow()
 {
 }
@@ -226,12 +232,14 @@ TCombatControlSubWindow::~TCombatControlSubWindow()
 // DC227..246 retains an empty derived override with the same JJ ABI.
 // Retail control-table slot 2 shares the base method's ret-8 fold.
 
+DC_ADDRESS(0x065270, 0x4)
 void TCombatControlSubWindow::setRolloverButtons(long, long)
 {
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:249
-VA(0x0046bf50, 0x32) MAC_ADDRESS(0x078580, 0x5c)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
+DC_ADDRESS(0x065274, 0x24)
+VA(0x0046bf50, 0x32) MAC_ADDRESS(0x078580, 0x5c)  // vtable 0x63d420 slot 1 + rollover widget at +0x34
 void TCombatControlSubWindow::setRollover(const char* newText)
 {
     m_rolloverWidget->setText(newText);
@@ -239,7 +247,8 @@ void TCombatControlSubWindow::setRollover(const char* newText)
     m_rolloverWidget->forceUpdate();
 }
 
-VA(0x0046bf90, 0xB2) MAC_ADDRESS(0x077fc4, 0xdc)  // dc 0x64f68
+DC_ADDRESS(0x064f68, 0x64)
+VA(0x0046bf90, 0xB2) MAC_ADDRESS(0x077fc4, 0xdc)
 void type_combat_sub_window::disableAllButtons()
 {
     m_parentWindow->widgetSetStatus(0x7d1, widget::WIDGET_DIMMED_NODRAW);
@@ -259,6 +268,7 @@ void type_combat_sub_window::disableAllButtons()
 // Retain the override and canonical source call instead of only inheriting
 // the base slot. The base body is visible here, as in the original TU.
 
+DC_ADDRESS(0x065298, 0x10)
 void TCombatControlSubWindow::disableAllButtons()
 {
     type_combat_sub_window::disableAllButtons();
@@ -272,7 +282,8 @@ void TCombatControlSubWindow::disableAllButtons()
 // with (parent, "CoPlacbr.pcx") on the stack - so this constructor needs
 // nothing from the base's 1392 bytes and lands without them.
 
-VA(0x0046c050, 0x18C) MAC_ADDRESS(0x0785fc, 0x2d8)  // dc 0x652a8
+DC_ADDRESS(0x0652a8, 0x1a4)
+VA(0x0046c050, 0x18C) MAC_ADDRESS(0x0785fc, 0x2d8)
 TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
     : type_combat_sub_window(parent, "CoPlacbr.pcx")
 {
@@ -304,12 +315,14 @@ TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
 
 VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
 
-VA(0x0046c210, 0x78) MAC_ADDRESS(0x0788d4, 0x60)  // dc 0x6544c
+DC_ADDRESS(0x06544c, 0x2c)
+VA(0x0046c210, 0x78) MAC_ADDRESS(0x0788d4, 0x60)
 TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
 {
 }
 
-VA(0x0046c290, 0xD6) MAC_ADDRESS(0x078934, 0x50)  // dc 0x65478
+DC_ADDRESS(0x065478, 0x28)
+VA(0x0046c290, 0xD6) MAC_ADDRESS(0x078934, 0x50)
 void TCombatPlacementSubWindow::disableAllButtons()
 {
     m_parentWindow->widgetSetStatus(0x8fc, widget::WIDGET_DIMMED_NODRAW);
@@ -317,7 +330,8 @@ void TCombatPlacementSubWindow::disableAllButtons()
     type_combat_sub_window::disableAllButtons();
 }
 
-VA(0x0046c370, 0x7FC) MAC_ADDRESS(0x078984, 0xd0c)  // dc 0x654a0
+DC_ADDRESS(0x0654a0, 0x638)
+VA(0x0046c370, 0x7FC) MAC_ADDRESS(0x078984, 0xd0c)
 TCombatHeroSubWindow::TCombatHeroSubWindow(
     int x, int y, int w, int h, heroWindow* parent)
     : TSubWindow(x, y, w, h, parent)
@@ -411,7 +425,8 @@ TCombatHeroSubWindow::TCombatHeroSubWindow(
 
 VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
 
-VA(0x0046cba0, 0x6B) MAC_ADDRESS(0x079690, 0xb0)  // dc 0x65ad8
+DC_ADDRESS(0x065ad8, 0x68)
+VA(0x0046cba0, 0x6B) MAC_ADDRESS(0x079690, 0xb0)
 TCombatHeroSubWindow::~TCombatHeroSubWindow()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
@@ -421,7 +436,8 @@ TCombatHeroSubWindow::~TCombatHeroSubWindow()
     }
 }
 
-VA(0x0046cc10, 0x1D7) MAC_ADDRESS(0x079740, 0x29c)  // dc 0x65b40
+DC_ADDRESS(0x065b40, 0x144)
+VA(0x0046cc10, 0x1D7) MAC_ADDRESS(0x079740, 0x29c)
 void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
                                   bool onCursedGround)
 {
@@ -450,7 +466,8 @@ void TCombatHeroSubWindow::update(const hero& info, const hero* otherHero,
     m_manaText->setText(buffer);
 }
 
-VA(0x0046cdf0, 0x74) MAC_ADDRESS(0x0799dc, 0xd0)  // dc 0x65c84
+DC_ADDRESS(0x065c84, 0x74)
+VA(0x0046cdf0, 0x74) MAC_ADDRESS(0x0799dc, 0xd0)
 void TCombatHeroSubWindow::show()
 {
     if (!m_shown) {
@@ -468,7 +485,8 @@ void TCombatHeroSubWindow::show()
     }
 }
 
-VA(0x0046ce70, 0x3A) MAC_ADDRESS(0x079aac, 0x80)  // dc 0x65cf8
+DC_ADDRESS(0x065cf8, 0xc4)
+VA(0x0046ce70, 0x3A) MAC_ADDRESS(0x079aac, 0x80)
 void TCombatHeroSubWindow::unShow()
 {
     if (m_shown) {
@@ -524,7 +542,8 @@ void TCombatHeroSubWindow::unShow()
 // size call unresolved. Folding DC-separated member assignments into
 // push_back loses the exact reserve/full-arm lowering (97.27%); keep the
 // canonical vector interface and both proven loop bodies.
-VA(0x0046ceb0, 0xCD1) MAC_ADDRESS(0x079b2c, 0x10ec)  // roster order + vtable 0x63d444 + CCrPop/SpellInf, dc 0x65dbc
+DC_ADDRESS(0x065dbc, 0x824)
+VA(0x0046ceb0, 0xCD1) MAC_ADDRESS(0x079b2c, 0x10ec)  // roster order + vtable 0x63d444 + CCrPop/SpellInf
 TCombatCreatureSubWindow::TCombatCreatureSubWindow(
     int x, int y, int w, int h, heroWindow* parent, int viewLevel)
     : TSubWindow(x, y, w, h, parent), m_viewLevel(viewLevel)
@@ -647,7 +666,8 @@ TCombatCreatureSubWindow::TCombatCreatureSubWindow(
 
 VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)
 
-VA(0x0046dbc0, 0x6B) MAC_ADDRESS(0x07ac18, 0xb0)  // dc 0x665e0
+DC_ADDRESS(0x0665e0, 0x68)
+VA(0x0046dbc0, 0x6B) MAC_ADDRESS(0x07ac18, 0xb0)
 TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
@@ -658,7 +678,8 @@ TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
 }
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:688
-VA(0x0046dc30, 0x2C2) MAC_ADDRESS(0x07acc8, 0x3b4)  // roster order + "%d(%d)" pair + the three spell icons, dc 0x66648
+DC_ADDRESS(0x066648, 0x2a0)
+VA(0x0046dc30, 0x2C2) MAC_ADDRESS(0x07acc8, 0x3b4)  // roster order + "%d(%d)" pair + the three spell icons
 void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
 {
     char buffer[64];
@@ -720,7 +741,8 @@ void TCombatCreatureSubWindow::update(const army& info, const hero* owner)
         m_spellText->setText("");
 }
 
-VA(0x0046df00, 0x73) MAC_ADDRESS(0x07b07c, 0xcc)  // dc 0x668e8
+DC_ADDRESS(0x0668e8, 0x88)
+VA(0x0046df00, 0x73) MAC_ADDRESS(0x07b07c, 0xcc)
 void TCombatCreatureSubWindow::show()
 {
     if (!m_shown) {
@@ -738,7 +760,8 @@ void TCombatCreatureSubWindow::show()
     }
 }
 
-VA(0x0046df80, 0x3A) MAC_ADDRESS(0x07b148, 0x80)  // dc 0x66970
+DC_ADDRESS(0x066970, 0x84)
+VA(0x0046df80, 0x3A) MAC_ADDRESS(0x07b148, 0x80)
 void TCombatCreatureSubWindow::unShow()
 {
     if (m_shown) {

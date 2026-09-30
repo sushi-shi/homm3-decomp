@@ -24,13 +24,15 @@ DATA(0x0067029c)
 const type_creature_bank_traits* g_constCreatureBankTraits =
     g_creatureBankTraits;
 
-// E:\gamedcs\creature_bank.cpp:25, dc 0x7152c
+// E:\gamedcs\creature_bank.cpp:25
 // Mac array-construction descriptor at TOC-0x75bc names this member ctor.
+DC_ADDRESS(0x07152c, 0x1c)
 MAC_ADDRESS(0x089fe4, 0x30)
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25
-VA(0x0047aad0, 0x5E) MAC_ADDRESS(0x089f90, 0x54)  // dc 0x714e0
+DC_ADDRESS(0x0714e0, 0x34)
+VA(0x0047aad0, 0x5E) MAC_ADDRESS(0x089f90, 0x54)
 type_creature_bank_traits::type_creature_bank_traits()
 {
 }
@@ -39,6 +41,7 @@ type_creature_bank_traits::type_creature_bank_traits()
 // DC proves static linkage and both reference parameters. Retail expands
 // the one source call in initializeCreatureBankTraits; keep the real body.
 
+DC_ADDRESS(0x070fe0, 0x14a)
 MAC_ADDRESS(0x0893bc, 0x19c)
 static void initializeCreatureBankLevel(type_creature_bank_level& traits,
                                        const std::vector<char*>& resource)
@@ -70,7 +73,8 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
     traits.m_relicArtifacts = atoi(resource[column + 1]);
 }
 
-VA(0x0047ab30, 0x254) MAC_ADDRESS(0x089558, 0x1ac)  // dc 0x7112c
+DC_ADDRESS(0x07112c, 0xec)
+VA(0x0047ab30, 0x254) MAC_ADDRESS(0x089558, 0x1ac)
 unsigned char initializeCreatureBankTraits()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -135,12 +139,13 @@ unsigned char initializeCreatureBankTraits()
     return 1;
 }
 
-// E:\gamedcs\creature_bank.cpp:146, dc 0x71218. Retail expands this file
+// E:\gamedcs\creature_bank.cpp:146 Retail expands this file
 // static at all five of initialize_creature_bank's call sites, so no
 // out-of-line row survives. The free-slot cursor starts AT the slot being
 // split and is carried across the whole run - every site's scan begins at
 // its own `slot` argument, which is what fixes the parameter's second role.
 
+DC_ADDRESS(0x071218, 0xb8)
 MAC_ADDRESS(0x089704, 0x9c)
 static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 {
@@ -169,7 +174,8 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // five groups and slot 2 is the candidate, two become 2+3 with slot 3, and
 // three become 2+2 with slot 0.
 
-VA(0x0047ad90, 0x36E) MAC_ADDRESS(0x0897a0, 0x348)  // dc 0x712d0
+DC_ADDRESS(0x0712d0, 0x210)
+VA(0x0047ad90, 0x36E) MAC_ADDRESS(0x0897a0, 0x348)
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)
 {

@@ -28,7 +28,8 @@ DATA(0x006968a6) static const unsigned char g_generalRleOpaqueRunCode =
 DATA(0x006968b0) static const unsigned int g_generalRleMaxRunLength =
     std::numeric_limits<unsigned char>::max() + 1;
 
-// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67, dc 0x74600.
+// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:67
+DC_ADDRESS(0x074600, 0x64)
 CSpriteFrame::CSpriteFrame()
     : resource(0, RESOURCE_TYPE_NONE),
       m_dataSize(0), m_imageSize(0), m_encodingMethod(eEncodeRaw),
@@ -37,6 +38,7 @@ CSpriteFrame::CSpriteFrame()
 {
 }
 
+DC_ADDRESS(0x074664, 0xaa)
 VA(0x0047c2b0, 0xa7) MAC_ADDRESS(0x08b24c, 0xc8)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
@@ -51,6 +53,7 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
         memcpy(m_map, data, m_dataSize);
 }
 
+DC_ADDRESS(0x074710, 0xba)
 VA(0x0047c360, 0xc9) MAC_ADDRESS(0x08b314, 0xd4)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
@@ -67,7 +70,8 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
         memcpy(m_map, data, m_dataSize);
 }
 
-// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188, dc 0x747cc.
+// Original: CSpriteFrame::CSpriteFrame; cspriteframe.cpp:188
+DC_ADDRESS(0x0747cc, 0x6e)
 CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
     : resource(name, RESOURCE_TYPE_SPRITE),
       m_dataSize(0), m_imageSize(0), m_encodingMethod(eEncodeRaw),
@@ -94,6 +98,7 @@ void CSpriteFrame::~CSpriteFrame()
 
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)
 
+DC_ADDRESS(0x07483c, 0x6e)
 VA(0x0047c430, 0x22) MAC_ADDRESS(0x08b3e8, 0x70)  // vtable 0x63d6bc + resource::~resource
 CSpriteFrame::~CSpriteFrame()
 {
@@ -101,9 +106,10 @@ CSpriteFrame::~CSpriteFrame()
         delete[] m_map;
 }
 
-// Original: CSpriteFrame::clear; cspriteframe.cpp:217, dc 0x748ac.
+// Original: CSpriteFrame::clear; cspriteframe.cpp:217
 // Complete removes the DC DirectDraw surface tail. As in its retained
 // destructor, the remaining map is always an owned byte allocation.
+DC_ADDRESS(0x0748ac, 0x6a)
 void CSpriteFrame::clear()
 {
     m_width = 0;
@@ -122,7 +128,8 @@ void CSpriteFrame::clear()
     }
 }
 
-VA(0x0047c460, 0xF7) MAC_ADDRESS(0x08b458, 0x2ac)  // dc 0x74918
+DC_ADDRESS(0x074918, 0xfe)
+VA(0x0047c460, 0xF7) MAC_ADDRESS(0x08b458, 0x2ac)
 void CSpriteFrame::setPixelFormat(unsigned rmask, unsigned gmask,
                                   unsigned bmask)
 {
@@ -148,10 +155,11 @@ void CSpriteFrame::setPixelFormat(unsigned rmask, unsigned gmask,
         | (((1 << bits) - 1) / 4);
 }
 
-// Original: CSpriteFrame::importPCXFile; cspriteframe.cpp:283, dc 0x74a18.
+// Original: CSpriteFrame::importPCXFile; cspriteframe.cpp:283
 // The ordinary file importer shares Complete's retained Victor PCX ABI with
 // Bitmap816::importPCXFile. DC's DirectDraw surface descriptor is absent from
 // the Complete frame layout; its owned byte buffer remains.
+DC_ADDRESS(0x074a18, 0xdc)
 int CSpriteFrame::importPCXFile(const char* filename)
 {
     PcxData pdat;
@@ -183,7 +191,8 @@ int CSpriteFrame::importPCXFile(const char* filename)
     return 0;
 }
 
-// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368, dc 0x74af4.
+// Original: CSpriteFrame::importCroppedPCXFile; cspriteframe.cpp:368
+DC_ADDRESS(0x074af4, 0x26a)
 int CSpriteFrame::importCroppedPCXFile(const char* filename)
 {
     PcxData pdat;
@@ -277,8 +286,9 @@ int CSpriteFrame::importCroppedPCXFile(const char* filename)
     return 0;
 }
 
-// Original: CSpriteFrame::GetPixel; cspriteframe.cpp:542, dc 0x74d60.
+// Original: CSpriteFrame::GetPixel; cspriteframe.cpp:542
 // Row directories use the same dword/word formats as the retained renderers.
+DC_ADDRESS(0x074d60, 0x16a)
 unsigned char CSpriteFrame::getPixel(int x, int y) const
 {
     x -= m_croppedX;
@@ -362,8 +372,9 @@ unsigned char CSpriteFrame::getPixel(int x, int y) const
     return pixel;
 }
 
-// Original: CSpriteFrame::Crop; cspriteframe.cpp:645, dc 0x74ecc.
+// Original: CSpriteFrame::Crop; cspriteframe.cpp:645
 // This editing operation accepts the raw map and retains the full-image stride.
+DC_ADDRESS(0x074ecc, 0x1c6)
 int CSpriteFrame::crop()
 {
     int x;
@@ -441,7 +452,8 @@ int CSpriteFrame::crop()
     return 0;
 }
 
-// Original: CSpriteFrame::Encode; cspriteframe.cpp:768, dc 0x75094.
+// Original: CSpriteFrame::Encode; cspriteframe.cpp:768
+DC_ADDRESS(0x075094, 0x44)
 void CSpriteFrame::encode(TEncodingMethod method)
 {
     switch (method) {
@@ -451,7 +463,8 @@ void CSpriteFrame::encode(TEncodingMethod method)
     }
 }
 
-// Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791, dc 0x750d8.
+// Original: CSpriteFrame::EncodeGeneral; cspriteframe.cpp:791
+DC_ADDRESS(0x0750d8, 0x1b2)
 void CSpriteFrame::encodeGeneral()
 {
     static const unsigned char opaqueRunCode = g_generalRleOpaqueRunCode;
@@ -521,7 +534,8 @@ void CSpriteFrame::encodeGeneral()
     m_encodingMethod = eEncodeGeneralRLE;
 }
 
-// Original: CSpriteFrame::EncodeTileset; cspriteframe.cpp:894, dc 0x7528c.
+// Original: CSpriteFrame::EncodeTileset; cspriteframe.cpp:894
+DC_ADDRESS(0x07528c, 0x1b2)
 void CSpriteFrame::encodeTileset()
 {
     bool hasControlPixels = false;
@@ -601,7 +615,8 @@ void CSpriteFrame::encodeTileset()
     }
 }
 
-// Original: CSpriteFrame::EncodeAdvObj; cspriteframe.cpp:1012, dc 0x75440.
+// Original: CSpriteFrame::EncodeAdvObj; cspriteframe.cpp:1012
+DC_ADDRESS(0x075440, 0x3d0)
 void CSpriteFrame::encodeAdvObj()
 {
     int oldWidth = m_croppedWidth;
@@ -774,6 +789,7 @@ unsigned int CSpriteFrame::getSize() const
     return sizeof(*this) + m_dataSize;
 }
 
+DC_ADDRESS(0x079294, 0x184)
 inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
                                int& dx, int& dy, int dw, int dh,
                                unsigned char hflip,
@@ -851,6 +867,7 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // matching both retail halves exactly; rebuilding it from a base plus an
 // integer row offset deferred that store and measured 98.62%.
 
+DC_ADDRESS(0x075810, 0x310)
 VA(0x0047c570, 0x465) MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
@@ -1018,6 +1035,7 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
 // The native per-row destination lifetime also appears in the exact adjacent
 // adventure renderer. Advancing that cursor directly restores 95.9000%;
 // splitting its address into a base and offset leaves 94.7302%.
+DC_ADDRESS(0x075b20, 0x540)
 VA(0x0047c9e0, 0x6BC) MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
@@ -1291,6 +1309,7 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // that source model and matches both retail direction arms exactly; rebuilding
 // it from rowBase plus an integer rowOffset measured 96.6247%.
 
+DC_ADDRESS(0x076060, 0x324)
 VA(0x0047d0a0, 0x44B) MAC_ADDRESS(0x08c234, 0x460) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -1477,6 +1496,7 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
 // 2462/2463 load the map table and bind pal+0x1c before either row loop.
 // A single native row cursor restores 98.0000%; a fixed base plus row offset
 // leaves 94.5249%. The decoder and palette helpers remain unchanged.
+DC_ADDRESS(0x076384, 0x302)
 VA(0x0047d4f0, 0x43C) MAC_ADDRESS(0x08c694, 0x450)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
 void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            unsigned short* dst, int dx, int dy,
@@ -1659,6 +1679,7 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // dropping it took this row 98.5765 -> 99.9400 on one line.
 // The native row cursor restores 99.9404%; an extra base/offset pair changes
 // the surrounding lifetimes and leaves 94.3325%.
+DC_ADDRESS(0x076688, 0x2fe)
 VA(0x0047d930, 0x40F) MAC_ADDRESS(0x08cae4, 0x440)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
 void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
@@ -1851,6 +1872,7 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // pointer directly. Restoring those lifetimes reaches 81.4249%, preserving
 // every decoder/delegation call and the DC const line-table pointer. The
 // entry this-register home and replicated arm allocation still differ.
+DC_ADDRESS(0x076988, 0x762)
 VA(0x0047dd40, 0xAD8) MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
@@ -2286,6 +2308,7 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // decrement, which is what retail spells: 97.8963 -> 99.9300 here.
 // DC decoder/helper scopes and pixel arithmetic remain intact, including
 // reverse/raw source walks.
+DC_ADDRESS(0x0770ec, 0x576)
 VA(0x0047e820, 0x740) MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
@@ -2626,6 +2649,7 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
 // and its flag color last.
 // The native row cursor restores all Windows bytes. Splitting its address
 // into a fixed base and row offset leaves 98.0214%; retain one row lifetime.
+DC_ADDRESS(0x077664, 0x338)
 VA(0x0047ef60, 0x47C) MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
 void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    unsigned short* dst, int dx, int dy, int dw,
@@ -2765,7 +2789,8 @@ void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::ClipScaled50; cspriteframe.cpp:3949, dc 0x7799c.
+// Original: CSpriteFrame::ClipScaled50; cspriteframe.cpp:3949
+DC_ADDRESS(0x07799c, 0x1d0)
 void CSpriteFrame::clipScaled50(int& sx, int& sy, int& sw, int& sh,
                                     int& dx, int& dy, int dw, int dh,
                                     unsigned char hflip, unsigned char vflip) const
@@ -2836,7 +2861,8 @@ void CSpriteFrame::clipScaled50(int& sx, int& sy, int& sw, int& sh,
     sy -= m_croppedY;
 }
 
-// Original: CSpriteFrame::DrawAdvObjWithFlagScaled50; cspriteframe.cpp:4054, dc 0x77b6c.
+// Original: CSpriteFrame::DrawAdvObjWithFlagScaled50; cspriteframe.cpp:4054
+DC_ADDRESS(0x077b6c, 0x1ea)
 void CSpriteFrame::drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal, unsigned short flagcolor) const
@@ -2917,7 +2943,8 @@ void CSpriteFrame::drawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::DrawAdvObjShadowScaled50; cspriteframe.cpp:4187, dc 0x77d58.
+// Original: CSpriteFrame::DrawAdvObjShadowScaled50; cspriteframe.cpp:4187
+DC_ADDRESS(0x077d58, 0x240)
 void CSpriteFrame::drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal) const
@@ -3015,7 +3042,8 @@ void CSpriteFrame::drawAdvObjShadowScaled50(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::DrawTileScaled50; cspriteframe.cpp:4330, dc 0x77f98.
+// Original: CSpriteFrame::DrawTileScaled50; cspriteframe.cpp:4330
+DC_ADDRESS(0x077f98, 0x606)
 void CSpriteFrame::drawTileScaled50(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal, unsigned char hflip, unsigned char vflip) const
@@ -3332,7 +3360,8 @@ void CSpriteFrame::drawTileScaled50(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::ClipScaled25; cspriteframe.cpp:4802, dc 0x785a0.
+// Original: CSpriteFrame::ClipScaled25; cspriteframe.cpp:4802
+DC_ADDRESS(0x0785a0, 0x1d4)
 void CSpriteFrame::clipScaled25(int& sx, int& sy, int& sw, int& sh,
                                     int& dx, int& dy, int dw, int dh,
                                     unsigned char hflip, unsigned char vflip) const
@@ -3403,7 +3432,8 @@ void CSpriteFrame::clipScaled25(int& sx, int& sy, int& sw, int& sh,
     sy -= m_croppedY;
 }
 
-// Original: CSpriteFrame::DrawAdvObjWithFlagScaled25; cspriteframe.cpp:4907, dc 0x78774.
+// Original: CSpriteFrame::DrawAdvObjWithFlagScaled25; cspriteframe.cpp:4907
+DC_ADDRESS(0x078774, 0x208)
 void CSpriteFrame::drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal, unsigned short flagcolor) const
@@ -3496,7 +3526,8 @@ void CSpriteFrame::drawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::DrawAdvObjShadowScaled25; cspriteframe.cpp:5054, dc 0x7897c.
+// Original: CSpriteFrame::DrawAdvObjShadowScaled25; cspriteframe.cpp:5054
+DC_ADDRESS(0x07897c, 0x262)
 void CSpriteFrame::drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal) const
@@ -3598,7 +3629,8 @@ void CSpriteFrame::drawAdvObjShadowScaled25(int sx, int sy, int sw, int sh,
     }
 }
 
-// Original: CSpriteFrame::DrawTileScaled25; cspriteframe.cpp:5201, dc 0x78be0.
+// Original: CSpriteFrame::DrawTileScaled25; cspriteframe.cpp:5201
+DC_ADDRESS(0x078be0, 0x67e)
 void CSpriteFrame::drawTileScaled25(int sx, int sy, int sw, int sh,
     unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch,
     TPalette16& pal, unsigned char hflip, unsigned char vflip) const

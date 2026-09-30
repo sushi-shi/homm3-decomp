@@ -247,9 +247,10 @@ int TStreamBufFile::write(const void* data, int size)
     return m_buffer->sputn(static_cast<const char*>(data), size);
 }
 
-// Original: hero_power; game.cpp:3275, dc 0xa8ba0
+// Original: hero_power; game.cpp:3275
 // The primary-total plus 28 secondary-skill sum moved with campaign hero
 // sorting into this TU. Retail 0x483f50 retains the same hero-pointer helper.
+DC_ADDRESS(0x0a8ba0, 0xcc)
 VA(0x00483f50, 0x26) MAC_ADDRESS(0x091c5c, 0xdc)
 int heroPower(hero* candidate)
 {
@@ -1317,7 +1318,8 @@ void game::rehomeCampaignHeroSetup(int heroId)
         newSetup.m_portraitNumber = newHeroId;
 }
 
-VA(0x00486440, 0x145) MAC_ADDRESS(0x0944d8, 0x170)  // dc 0x7d22c; MAC_ABSTRACTION_FROM(tokens1:fb3d7c91633f,15.4891): canonical getCrossoverHeroes owns both indexed pool queries; private pool storage, availability writes and rehome helper calls are preserved.
+DC_ADDRESS(0x07d22c, 0x148)
+VA(0x00486440, 0x145) MAC_ADDRESS(0x0944d8, 0x170)  // ; MAC_ABSTRACTION_FROM(tokens1:fb3d7c91633f,15.4891): canonical getCrossoverHeroes owns both indexed pool queries; private pool storage, availability writes and rehome helper calls are preserved.
 void SCampaign::doPreLoadCustomization()
 {
     unsigned int poolIndex;
@@ -2113,6 +2115,7 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // constructor 0x459362 and destructor 0x45b05b) retains the call. With the
 // body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
 // (62.61%); owning it here restores that destructor and selectCampaign.
+DC_ADDRESS(0x05ade8, 0x28)
 VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
@@ -2656,7 +2659,8 @@ void CampaignScenarioInfo::write(TAbstractFile* outfile) const
 // TCampaignWindow, SavedGameHeader and game. Mac places it after
 // CampaignScenarioInfo::write and before the generated member teardown/
 // selectCampaign cluster. The older DC class used a header constructor.
-VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)  // dc 0xbcd90
+DC_ADDRESS(0x0bcd90, 0x70)
+VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)
 SCampaign::SCampaign()
 {
     m_isCheater = 0;
@@ -2698,7 +2702,8 @@ const int g_campaignMapOrdinal07 = 7;
 
 // Complete retains this vector scan and oldmain calls it across translation
 // units. The older Dreamcast inline header body scans fixed arrays instead.
-VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)  // dc 0xe6ef8
+DC_ADDRESS(0x0e6ef8, 0x3a)
+VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)
 bool SCampaign::campaignComplete()
 {
     for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
@@ -3295,7 +3300,8 @@ VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, hero)
 VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, hero)
 VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
 
-VA(0x0048b200, 0x80) MAC_ADDRESS(0x0999c0, 0x74)  // dc 0x7d374
+DC_ADDRESS(0x07d374, 0x4a)
+VA(0x0048b200, 0x80) MAC_ADDRESS(0x0999c0, 0x74)
 int SCampaign::getScore() const
 {
     int totalScore = 0;
@@ -3313,7 +3319,8 @@ int SCampaign::getScore() const
     return ((totalScore + numScores / 2) / numScores) * 5;
 }
 
-VA(0x0048b280, 0x57) MAC_ADDRESS(0x099a34, 0x44)  // dc 0x7d3c0
+DC_ADDRESS(0x07d3c0, 0x60)
+VA(0x0048b280, 0x57) MAC_ADDRESS(0x099a34, 0x44)
 int SCampaign::getTotalTime() const
 {
     int totalTime = 0;

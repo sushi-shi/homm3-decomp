@@ -255,7 +255,8 @@ DATA(0x0069e5ac) int g_soundCountCampaign;
 // Preserve the codec branches and canonical serviceSounds calls: merging
 // all four guards removes one tail here and in videoPause/videoResume.
 // The WinCE counterpart is a four-byte stub and proves no Windows body.
-VA(0x005971b0, 0x3B) MAC_ADDRESS(0x25e3f8, 0x6c)  // dc 0x14ac30
+DC_ADDRESS(0x14ac30, 0x4)
+VA(0x005971b0, 0x3B) MAC_ADDRESS(0x25e3f8, 0x6c)
 void videoSoundOnOff(int on)
 {
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
@@ -264,7 +265,8 @@ void videoSoundOnOff(int on)
         g_soundManager->serviceSounds();
 }
 
-VA(0x005971f0, 0xD9) MAC_ADDRESS(0x25e464, 0x104)  // dc 0x14ac34
+DC_ADDRESS(0x14ac34, 0x4)
+VA(0x005971f0, 0xD9) MAC_ADDRESS(0x25e464, 0x104)
 void videoRealignBuffers()
 {
     SmackManager::g_playingSmack.m_bufferFlags = (g_greenBits == VIDEO_PIXEL_FORMAT_RGB565)
@@ -286,7 +288,8 @@ void videoRealignBuffers()
     BinkManager::g_playingBink.m_height = g_windowManager->m_screenBitmap->getHeight();
 }
 
-VA(0x005972d0, 0x29D) MAC_ADDRESS(0x25e568, 0x7c)  // dc 0x14ac38
+DC_ADDRESS(0x14ac38, 0x4)
+VA(0x005972d0, 0x29D) MAC_ADDRESS(0x25e568, 0x7c)
 int videoPlay(int id, int x, int y, int w, int h)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
@@ -299,7 +302,8 @@ int videoPlay(int id, int x, int y, int w, int h)
     return BinkManager::playBink(id, x, y, w, h);
 }
 
-VA(0x00597570, 0x75) MAC_ADDRESS(0x25e5e4, 0x7c)  // dc 0x14ac3c
+DC_ADDRESS(0x14ac3c, 0x4)
+VA(0x00597570, 0x75) MAC_ADDRESS(0x25e5e4, 0x7c)
 void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 {
     if (id >= VIDEO_ID_FIRST_TABLED
@@ -314,7 +318,8 @@ void videoOpen(int id, int x, int y, int w, int h, int a6, bool a7, bool a8)
 
 // Retail's 225-byte body follows this canonical helper chain:
 
-VA(0x005975f0, 0xE1) MAC_ADDRESS(0x25e660, 0x50)  // dc 0x14ac40
+DC_ADDRESS(0x14ac40, 0x4)
+VA(0x005975f0, 0xE1) MAC_ADDRESS(0x25e660, 0x50)
 void videoClose()
 {
     while (g_videoPauseCount != 0)
@@ -324,7 +329,8 @@ void videoClose()
     BinkManager::closeBink();
 }
 
-VA(0x005976e0, 0x5E) MAC_ADDRESS(0x25e6b0, 0x98)  // dc 0x14ac44
+DC_ADDRESS(0x14ac44, 0x4)
+VA(0x005976e0, 0x5E) MAC_ADDRESS(0x25e6b0, 0x98)
 void videoNextFrame()
 {
     if (g_insideNextFrame)
@@ -352,7 +358,8 @@ void SmackManager::drawSmackerFrame()
         SmackDoFrame(SmackManager::g_playingSmack.m_smack);
 }
 
-VA(0x00597740, 0x53) MAC_ADDRESS(0x25e748, 0x80)  // dc 0x14ac48
+DC_ADDRESS(0x14ac48, 0x4)
+VA(0x00597740, 0x53) MAC_ADDRESS(0x25e748, 0x80)
 void videoDrawCurrentFrame()
 {
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) {
@@ -365,7 +372,8 @@ void videoDrawCurrentFrame()
     }
 }
 
-VA(0x005977a0, 0xA6) MAC_ADDRESS(0x25e7c8, 0xbc)  // dc 0x14ac4c
+DC_ADDRESS(0x14ac4c, 0x4)
+VA(0x005977a0, 0xA6) MAC_ADDRESS(0x25e7c8, 0xbc)
 void videoPause()
 {
     if (++g_videoPauseCount > 1)
@@ -383,7 +391,8 @@ void videoPause()
     videoSoundOnOff(0);
 }
 
-VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)  // dc 0x14ac50
+DC_ADDRESS(0x14ac50, 0x4)
+VA(0x00597850, 0xAB) MAC_ADDRESS(0x25e884, 0xc4)
 // The implicit zero tests are byte-identical to `== 0`/`!= 0` here but cost
 // 4 fewer /Ob2 IL units; showVideo's third videoClose expansion only admits
 // this body at that cost. Splitting the guard into two returns costs more.
@@ -404,14 +413,16 @@ void videoResume()
     videoSoundOnOff(1);
 }
 
-VA(0x00597900, 0x23) MAC_ADDRESS(0x25e948, 0x24)  // dc 0x14ac54
+DC_ADDRESS(0x14ac54, 0x4)
+VA(0x00597900, 0x23) MAC_ADDRESS(0x25e948, 0x24)
 void videoRestart()
 {
     SmackManager::restartSmacker();
     BinkManager::restartBink();
 }
 
-VA(0x00597930, 0x5A) MAC_ADDRESS(0x25e96c, 0x90)  // dc 0x14ac58
+DC_ADDRESS(0x14ac58, 0x4)
+VA(0x00597930, 0x5A) MAC_ADDRESS(0x25e96c, 0x90)
 bool videoNeedsUpdate()
 {
     if (SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2)
@@ -421,7 +432,8 @@ bool videoNeedsUpdate()
     return 0;
 }
 
-VA(0x00597990, 0x3F) MAC_ADDRESS(0x25e9fc, 0x68)  // dc 0x14ac5c
+DC_ADDRESS(0x14ac5c, 0x4)
+VA(0x00597990, 0x3F) MAC_ADDRESS(0x25e9fc, 0x68)
 bool videoPlaying()
 {
     if ((SmackManager::g_playingSmack.m_smack || SmackManager::g_playingSmack.m_smack2) && !SmackManager::g_playingSmack.m_paused)
@@ -469,7 +481,8 @@ bool videoPlaying()
 // the Windows Smack/Bink union-loop locals or DirectDraw frame.
 // Naming Unlock's HRESULT at branch/function scope is likewise byte-flat
 // or worse; it does not recover the missing union-loop register homes.
-VA(0x005979d0, 0x294) MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global, dc 0x14ac60
+DC_ADDRESS(0x14ac60, 0x4)
+VA(0x005979d0, 0x294) MAC_ADDRESS(0x25ea64, 0x26c)  // anchor-global
 void videoDrawRects()
 {
     POINT pt;
@@ -558,7 +571,8 @@ void videoDrawRects()
     SmackManager::g_needsUpdate = 0;
 }
 
-VA(0x00597c70, 0x84) MAC_ADDRESS(0x25ed20, 0x4c)  // dc 0x14ac64
+DC_ADDRESS(0x14ac64, 0x4)
+VA(0x00597c70, 0x84) MAC_ADDRESS(0x25ed20, 0x4c)
 void videoShutDown()
 {
     SmackManager::closeSmacker();
@@ -638,7 +652,8 @@ std::string getDriveArchivePath()
     return path;
 }
 
-VA(0x00598210, 0x223) MAC_ADDRESS(0x25ed6c, 0x2c4)  // dc 0x14ac68
+DC_ADDRESS(0x14ac68, 0x4)
+VA(0x00598210, 0x223) MAC_ADDRESS(0x25ed6c, 0x2c4)
 unsigned char loadAnimHeaders()
 {
     DWORD nread;
@@ -682,7 +697,8 @@ unsigned char loadAnimHeaders()
     return 1;
 }
 
-VA(0x00598440, 0x55) MAC_ADDRESS(0x25f030, 0x88)  // dc 0x14ac6c
+DC_ADDRESS(0x14ac6c, 0x32)
+VA(0x00598440, 0x55) MAC_ADDRESS(0x25f030, 0x88)
 void deleteAnimHeaders()
 {
     if (g_videoHeader3) {
@@ -699,7 +715,8 @@ void deleteAnimHeaders()
     }
 }
 
-VA(0x005984a0, 0x240) MAC_ADDRESS(0x25f0b8, 0x31c)  // dc 0x14aca0
+DC_ADDRESS(0x14aca0, 0x26)
+VA(0x005984a0, 0x240) MAC_ADDRESS(0x25f0b8, 0x31c)
 unsigned char loadSoundHeaders()
 {
     DWORD nread;
@@ -745,6 +762,7 @@ unsigned char loadSoundHeaders()
     return 1;
 }
 
+DC_ADDRESS(0x14acc8, 0x5a)
 VA(0x005986e0, 0xA2) MAC_ADDRESS(0x25f3d4, 0xa0)
 void deleteSoundHeaders()
 {
@@ -835,6 +853,7 @@ Smack* openSmackerTrack(const char* stem, unsigned long flags,
     return 0;
 }
 
+DC_ADDRESS(0x14ad24, 0xd8)
 VA(0x00598a40, 0xA2)
 void SmackManager::setPixelFormat(unsigned long redMask,
                                   unsigned long greenMask,
@@ -971,7 +990,8 @@ void restartSmacker()
     }
 }
 
-VA(0x00598eb0, 0x193) MAC_ADDRESS(0x25fa54, 0x224)  // dc 0x14adfc
+DC_ADDRESS(0x14adfc, 0x4)
+VA(0x00598eb0, 0x193) MAC_ADDRESS(0x25fa54, 0x224)
 void nextSmackerFrame()
 {
     Smack* smk = SmackManager::g_playingSmack.m_smack;
@@ -1011,7 +1031,8 @@ void nextSmackerFrame()
         videoDrawRects();
 }
 
-VA(0x00599050, 0x43) MAC_ADDRESS(0x25fc78, 0x74)  // dc 0x14ae00
+DC_ADDRESS(0x14ae00, 0x4c)
+VA(0x00599050, 0x43) MAC_ADDRESS(0x25fc78, 0x74)
 void closeSmacker()
 {
     if (SmackManager::g_playingSmack.m_smack)

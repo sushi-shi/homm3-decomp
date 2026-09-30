@@ -179,17 +179,28 @@ def _basename(path: str) -> str:
     return path.rsplit("\\", 1)[-1].rsplit("/", 1)[-1]
 
 
-def _source_claims(src_dir: Path = SRC_DIR) -> list[Claim]:
+def _source_claims(src_dir: Path = SRC_DIR, *, functions=None) -> list[Claim]:
     claims: list[Claim] = []
-    for path in sorted(src_dir.glob("*.cpp")):
+    if functions is None:
+        from homm3.analysis.dc_extract import corpus_rows
+        functions = corpus_rows()[0]
+    modules = {_integer(row['offset']): row['module'] for row in functions}
+    paths = [p for base in (src_dir, src_dir.parent / 'include')
+             for p in base.rglob('*')
+             if p.suffix.lower() in {'.cpp', '.c', '.cxx', '.h', '.hpp', '.inl'}]
+    for path in sorted(paths):
         text = path.read_text(errors="replace")
-        module = path.stem + ".obj"
-        for match in dc_srclines.CLAIM_RE.finditer(text):
+        for claim in dc_srclines.source_claims(text):
+            if claim.va is None:
+                continue
+            module = modules.get(claim.offset)
+            if module is None:
+                raise DreamcastError(f'{path}: DC_ADDRESS {claim.offset:#x} has no debug procedure')
             claims.append(Claim(
-                va=int(match.group(1), 16), module=module,
-                dc_offset=int(match.group(2), 16),
-                path=str(path.relative_to(common.HOMM3_DIR)),
-                line=text.count("\n", 0, match.start()) + 1))
+                va=claim.va, module=module,
+                dc_offset=claim.offset,
+                path=str(path.relative_to(src_dir.parent)),
+                line=text.count("\n", 0, claim.start) + 1))
     return claims
 
 
@@ -207,7 +218,7 @@ class Corpus:
         self.functions = embedded_functions if functions is None else functions
         self.variables = embedded_variables if variables is None else variables
         self.bridges = [] if bridges is None else bridges
-        self.claims = _source_claims() if claims is None else claims
+        self.claims = _source_claims(functions=self.functions) if claims is None else claims
         self._retail_names = retail_names  # rva -> mangled name; lazy
 
         self.by_key: dict[tuple[str, int], dict[str, str]] = {}

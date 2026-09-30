@@ -1,6 +1,8 @@
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 
+#include "va.h"
+
 #include "hsv.h"
 #include "resource.h"
 
@@ -107,6 +109,7 @@ public:
     // member initializer. Declaration only - the body stays palette's.
     // DC Palette.h:137-140, dc 0x122b08. No receiver; three mask stores.
     // Retail ResourceManager::setPixelFormat expands this header helper.
+    DC_ADDRESS(0x122b08, 0x1c)
     static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
     {
         s_redMask = red;

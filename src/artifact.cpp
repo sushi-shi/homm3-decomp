@@ -323,7 +323,7 @@ const TCombinationArtifact* g_combinationArtifacts = g_combinationArtifactTable;
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource);
 
-// E:\gamedcs\artifact.cpp:56, dc 0x4fec0. Complete requires 146 rows,
+// E:\gamedcs\artifact.cpp:56 Complete requires 146 rows,
 // packs names/descriptions into one owned buffer, derives the slot classes,
 // applies disabled/spell/combination metadata, and loads 19 slot names.
 // Keep the DC-proven static InitializeArtifactTraits boundary and its two
@@ -383,7 +383,8 @@ static void initializeArtifactTraits(int id,
 // DC public ?InitializeArtifactTraitsTable@@YA_NXZ proves bool; the SH4
 // dossier renders its byte-sized procedure result as unsigned char. Complete
 // returns only AL 0/1, and the sole kb caller tests that Boolean result.
-VA(0x0044cd50, 0x5E8) MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller, dc 0x4fec0
+DC_ADDRESS(0x04fec0, 0x126)
+VA(0x0044cd50, 0x5E8) MAC_ADDRESS(0x05a70c, 0x7ec)  // anchor-strings/caller
 bool initializeArtifactTraitsTable()
 {
     {
@@ -525,6 +526,7 @@ bool initializeArtifactTraitsTable()
 // assignment then reaches 89.9743%. The old explicit bitset<19> instantiation
 // was byte-flat here and unnecessary: real uses retain the exact set/_Tidy
 // COMDATs, so no unsupported template-enrollment declaration remains.
+DC_ADDRESS(0x050058, 0x7ba)
 static void initializeArtifactTraits(int id,
     const TSpreadsheetResource::TStringVector& resource)
 {

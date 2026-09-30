@@ -1,6 +1,8 @@
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 
+#include "va.h"
+
 #include "armygrp.h"
 #include "creaturetype_fwd.h"
 #include "town.h"
@@ -14,7 +16,8 @@ const int g_creatureTypeLast = 0x96;
 // literal count so each singular/plural selection folds at its call site.
 // DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
 // spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
-VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup, dc 0x1ef94
+DC_ADDRESS(0x01ef94, 0x5c)
+VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
@@ -43,6 +46,7 @@ inline const char* getArmyName(int type, int count)
 // The older DC body returns zero outside 0..6. Complete's popup expansions
 // have no such fallback; their two loops supply valid dwelling indices.
 // Complete's behavior for an invalid dwelling index remains unproven.
+DC_ADDRESS(0x0718dc, 0x20)
 inline TCreatureType getBaseCreature(TTownType townType, int baseCreatureNbr)
 {
     return g_townDwellingCreatures[

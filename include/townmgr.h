@@ -1,6 +1,8 @@
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 
+#include "va.h"
+
 #include "advmgr_popup.h"
 #include "basemgr.h"
 #include "text.h"
@@ -754,21 +756,24 @@ extern const char* g_townTypeNames[10];
 
 class townManager : public baseManager {
 public:
-    // Original: townManager::SetTown; TownMgr.h:686, dc 0x168e24.
+    // Original: townManager::SetTown; TownMgr.h:686
     // town::view0x5be210 expands the assignment to Complete's +0x38 field.
+    DC_ADDRESS(0x168e24, 0x6)
     void setTown(town* townToView) { m_townToView = townToView; }
 
     // Original: townManager::TownNativeTerrains; ten entries including
     // the neutral town type -1. Complete retains the table at 0x643694.
     static const TTerrainType s_townNativeTerrains[10];
 
-    // Original: townManager::GetTownTypeName; TownMgr.h:738, dc 0x20280
+    // Original: townManager::GetTownTypeName; TownMgr.h:738
+    DC_ADDRESS(0x020280, 0x18)
     static const char* getTownTypeName(int type)
     {
         return g_townTypeNames[type + 1];
     }
 
-    // Original: townManager::GetNativeTerrain; TownMgr.h:745, dc 0x4cc8c.
+    // Original: townManager::GetNativeTerrain; TownMgr.h:745
+    DC_ADDRESS(0x04cc8c, 0x10)
     static TTerrainType getNativeTerrain(int type)
     {
         return s_townNativeTerrains[type + 1];

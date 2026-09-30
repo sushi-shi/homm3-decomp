@@ -31,8 +31,10 @@ public:
     short m_x : 10;
     short m_y : 10;
     short m_z : 4;
+    DC_ADDRESS(0x01eda8, 0x8)
     type_point() {}
-    VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
+    DC_ADDRESS(0x01edb0, 0x6e)
+    VA(0x004192b0, 0x44)  // anchor-callee
     type_point(short newX, short newY, short newZ)
     {
         m_x = newX;
@@ -43,12 +45,14 @@ public:
     bool isValid() const;
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
-    VA(0x0042ec20, 0x45)  // exact body + sole caller, dc 0x1ee20
+    DC_ADDRESS(0x01ee20, 0x7a)
+    VA(0x0042ec20, 0x45)  // exact body + sole caller
     bool operator==(const type_point& arg) const
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
-    VA(0x00482340, 0x45)  // call edge + byte-identical point comparison, dc 0x37d2c
+    DC_ADDRESS(0x037d2c, 0x5a)
+    VA(0x00482340, 0x45)  // call edge + byte-identical point comparison
     bool operator!=(const type_point& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
@@ -62,6 +66,7 @@ public:
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
     // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
+    DC_ADDRESS(0x022fe4, 0x2e)
     int distanceSquared(const type_point& p2) const
     {
         int dx = m_x - p2.m_x;
@@ -84,11 +89,16 @@ public:
     int m_minY;
     int m_maxX;
     int m_maxY;
+    DC_ADDRESS(0x0639e8, 0x4)
     SLimitData() {}
+    DC_ADDRESS(0x01ee9c, 0x26)
     SLimitData(int minx, int miny, int maxx, int maxy)
         : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
+    DC_ADDRESS(0x023014, 0xa)
     int width() const { return m_maxX - m_minX + 1; }
+    DC_ADDRESS(0x023020, 0xa)
     int height() const { return m_maxY - m_minY + 1; }
+    DC_ADDRESS(0x0872a8, 0x32)
     bool intersects(const SLimitData& limits) const
     {
         return m_minX <= limits.m_maxX
@@ -96,16 +106,19 @@ public:
             && m_minY <= limits.m_maxY
             && m_maxY >= limits.m_minY;
     }
-    // Original: SLimitData::Contains; struct.h:293, dc 0x639ec.
+    // Original: SLimitData::Contains; struct.h:293
+    DC_ADDRESS(0x0639ec, 0x2a)
     unsigned char contains(int x, int y) const
     {
         return m_minX <= x && x <= m_maxX
             && m_minY <= y && y <= m_maxY;
     }
+    DC_ADDRESS(0x0872dc, 0x16)
     bool isEmpty() const
     {
         return m_maxX < m_minX || m_maxY < m_minY;
     }
+    DC_ADDRESS(0x02302c, 0x2c)
     void clip(const SLimitData& limits)
     {
         if (m_minX < limits.m_minX)
@@ -117,6 +130,7 @@ public:
         if (m_maxY > limits.m_maxY)
             m_maxY = limits.m_maxY;
     }
+    DC_ADDRESS(0x04c968, 0x2c)
     void include(const SLimitData& limits)
     {
         if (m_minX > limits.m_minX)
@@ -141,7 +155,8 @@ public:
     unsigned long m_dpid;  // +0x00
     char m_name[24];  // +0x04
     int m_version;
-    VA(0x0057F720, 0x18)  // dc 0x11f5e4
+    DC_ADDRESS(0x11f5e4, 0xe)
+    VA(0x0057F720, 0x18)
     CNetPlayerInfo()
     {
         m_dpid = 0;
@@ -149,6 +164,7 @@ public:
         m_version = g_videoGameState;
     }
     // E:\gamedcs\struct.h:346
+    DC_ADDRESS(0x1473cc, 0x2c)
     CNetPlayerInfo(char* name, unsigned long dpid)
     {
         m_dpid = dpid;
@@ -176,12 +192,14 @@ namespace GameTime {
     // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
     // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
     // The stop/start subtraction is retained by the upstream mouse timing helper.
+    DC_ADDRESS(0x01eec4, 0x10)
     inline long elapsed(unsigned long stop, unsigned long start)
     {
         return static_cast<long>(stop - start);
     }
     // DC struct.h:412 explicitly calls Get then Elapsed(stop, start).
     // Retain the canonical call even where retail expands the subtraction.
+    DC_ADDRESS(0x01eed4, 0x30)
     inline long elapsedSince(unsigned long time)
     {
         return elapsed(get(), time);
@@ -189,6 +207,7 @@ namespace GameTime {
     // DC public ?IsPast@GameTime@@YA_NK@Z proves native bool although
     // NB11 lowers its return record to T_UCHAR. DC struct.h:420 calls
     // ElapsedSince then tests the sign, as retail caller expansions do.
+    DC_ADDRESS(0x01ef04, 0x24)
     inline bool isPast(unsigned long time)
     {
         return elapsedSince(time) >= 0;
@@ -203,6 +222,7 @@ namespace GameTime {
     // jle`, i.e. the INTERVAL is the left operand.
     // DC struct.h:439 calls ElapsedSince before the clamp/add at line442.
     // The old direct subtraction erased that proven helper boundary.
+    DC_ADDRESS(0x04c994, 0x2c)
     inline unsigned long nextFrameTime(unsigned long thisFrame,
                                        long interval)
     {

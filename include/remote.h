@@ -1,6 +1,8 @@
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
+#include "va.h"
+
 #include <deque>
 
 #include "dxplay.h"
@@ -25,8 +27,11 @@ public:
     };
     int m_playerCount;
     char m_names[MAX_PLAYERS][PLAYER_NAME_SIZE];
+    DC_ADDRESS(0x101da8, 0x1c)
     CHotSeatMan() : m_playerCount(0) {}
+    DC_ADDRESS(0x101dc4, 0x6)
     void clear() { m_playerCount = 0; }
+    DC_ADDRESS(0x101dcc, 0x34)
     void addPlayer(const char* name)
     {
         if (m_playerCount < MAX_PLAYERS) {
@@ -36,6 +41,7 @@ public:
     }
     // E:\gamedcs\remote.h:207. The DC build retains this tiny accessor call;
     // VC6 expands its bounds guard and 21-byte name stride in the hot-seat loop.
+    DC_ADDRESS(0x147478, 0x28)
     char* getName(int player)
     {
         if (player >= m_playerCount)
@@ -53,15 +59,18 @@ extern CHotSeatMan* g_hotSeatMan;
 class CLogFile {
 public:
     // E:\gamedcs\remote.h:224
+    DC_ADDRESS(0x11f7b4, 0x1c)
     CLogFile(char* logFileName)
     {
         strcpy(m_logFileName, logFileName);
     }
-    // Original: CLogFile::InitLogFile; remote.h:235, dc 0xe709c.
+    // Original: CLogFile::InitLogFile; remote.h:235
     // Both release builds keep the logging hooks empty. Complete's calls
     // share the no-argument ret representative at 0x5bc690.
+    DC_ADDRESS(0x0e709c, 0x4)
     void initLogFile() {}
-    // Original: CLogFile::Log; remote.h:249, dc 0x70ac4.
+    // Original: CLogFile::Log; remote.h:249
+    DC_ADDRESS(0x070ac4, 0x4)
     MAC_ADDRESS(0x082798, 0x1c)
     void log(char* format, ...) {}
 
@@ -160,6 +169,7 @@ public:
     // The final three bytes align the record; retail uses the same stride.
         char m_paddingAfterIsSystem[3];
 
+        DC_ADDRESS(0x11f7d0, 0xe)
         CChatStr()
         {
             m_text[0] = 0;
@@ -220,10 +230,13 @@ public:
     void clearChat();
     // DC remote.h:320-321, dc 0x1474a0/0x1474ac. The lobby slider
     // expands these count and position reads at +0x08/+0x20 in retail.
+    DC_ADDRESS(0x1474a0, 0xc)
     int getCount() { return m_msgCount; }
+    DC_ADDRESS(0x1474ac, 0xc)
     int getPosition() { return m_position; }
     void setPosition(int newPos);
     void setMaxLines(int maxChatLines);
+    DC_ADDRESS(0x087620, 0x20)
     bool chatChanged() { return m_changed || m_chatKilled; }
     unsigned char hasOldChat();
     unsigned char hasChat();
@@ -302,6 +315,7 @@ public:
 };
 
 // E:\gamedcs\remote.h:441
+DC_ADDRESS(0x003028, 0xa0)
 inline CGameChatEdit::CGameChatEdit(
     int x, int y, int w, int h, int textSize, char* text, char* fontName,
     font::TColor color, font::EJustify justification, char* backgroundIcon,
@@ -315,7 +329,8 @@ inline CGameChatEdit::CGameChatEdit(
 }
 
 // E:\gamedcs\remote.h:446
-VA(0x004021f0, 0x42) MAC_ADDRESS(0x003f8c, 0x74)  // dc 0x30c8
+DC_ADDRESS(0x0030c8, 0x48)
+VA(0x004021f0, 0x42) MAC_ADDRESS(0x003f8c, 0x74)
 inline int CGameChatEdit::onKeyPress(message* msg)
 {
     if (m_activated)
@@ -329,7 +344,8 @@ inline int CGameChatEdit::onKeyPress(message* msg)
 }
 
 // E:\gamedcs\remote.h:460
-VA(0x00402240, 0x3C) MAC_ADDRESS(0x004000, 0xd4)  // dc 0x3110
+DC_ADDRESS(0x003110, 0x68)
+VA(0x00402240, 0x3C) MAC_ADDRESS(0x004000, 0xd4)
 inline int CGameChatEdit::onEscape(message msg)
 {
     m_activated = 0;
@@ -339,7 +355,8 @@ inline int CGameChatEdit::onEscape(message msg)
 }
 
 // E:\gamedcs\remote.h:471
-VA(0x00402280, 0x23) MAC_ADDRESS(0x0040d4, 0x68)  // dc 0x3178
+DC_ADDRESS(0x003178, 0x34)
+VA(0x00402280, 0x23) MAC_ADDRESS(0x0040d4, 0x68)
 inline void CGameChatEdit::sendChatCleanup()
 {
     m_parentWindow->setFocus(-1);
@@ -349,7 +366,8 @@ inline void CGameChatEdit::sendChatCleanup()
 }
 
 // E:\gamedcs\remote.h:479
-VA(0x004022b0, 0x2B) MAC_ADDRESS(0x00413c, 0x78)  // dc 0x31ac
+DC_ADDRESS(0x0031ac, 0x40)
+VA(0x004022b0, 0x2B) MAC_ADDRESS(0x00413c, 0x78)
 inline void CGameChatEdit::activate()
 {
     m_activated = 1;
@@ -417,13 +435,16 @@ void destroyMsg(CNetMsg* netMsg);
 // both into their command/remote callers.
 class CMessageKill {
 public:
+    DC_ADDRESS(0x070ac8, 0x6)
     CMessageKill(CNetMsg* netMsg) : m_netMsg(netMsg) {}
-    VA(0x00474680, 0xC) MAC_ADDRESS(0x0827b4, 0x5c)  // exact selected header COMDAT, dc 0x70ad0
+    DC_ADDRESS(0x070ad0, 0x1c)
+    VA(0x00474680, 0xC) MAC_ADDRESS(0x0827b4, 0x5c)  // exact selected header COMDAT
     ~CMessageKill()
     {
         if (m_netMsg)
             destroyMsg(m_netMsg);
     }
+    DC_ADDRESS(0x070aec, 0x4)
     void setMessage(CNetMsg* netMsg) { m_netMsg = netMsg; }
 
 protected:
@@ -440,21 +461,25 @@ public:
     virtual ~CNetMsgHandler();  // slot 0
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1
+    DC_ADDRESS(0x0201e8, 0x10)
     unsigned char isInPopup() { return m_inPopup; }
     // E:\gamedcs\remote.h:629
-    VA(0x00557900, 0x4) MAC_ADDRESS(0x2155ec, 0x8)  // dc 0x201f8
+    DC_ADDRESS(0x0201f8, 0xc)
+    VA(0x00557900, 0x4) MAC_ADDRESS(0x2155ec, 0x8)
     virtual CNetMsg* getAbortPopupMsg()
     {
         return m_abortPopupMsg;
     }
 
-    VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
+    DC_ADDRESS(0x11f7e0, 0x2c)
+    VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14)
     void copy(CNetMsgHandler* other)
     {
         m_inPopup = other->isInPopup();
         m_abortPopupMsg = other->getAbortPopupMsg();
     }
     void setAbortPopupMsg(CNetMsg* netMsg);
+    DC_ADDRESS(0x020204, 0x16)
     void setInPopup(unsigned char b) { m_inPopup = b; }
 
 protected:
@@ -498,14 +523,16 @@ public:
     // at all. Retail retains their header COMDATs beside Copy, separately
     // from the class's ordinary remote.cpp definitions.
     // E:\gamedcs\remote.h:658
-    VA(0x00555170, 0x5) MAC_ADDRESS(0x215e1c, 0x8)  // dc 0x11f80c
+    DC_ADDRESS(0x11f80c, 0x4)
+    VA(0x00555170, 0x5) MAC_ADDRESS(0x215e1c, 0x8)
     virtual CNetMsg* checkHandleNet(unsigned char inPopup,
                                                  unsigned char* msgReceived)
     {
         return 0;
     }
     // E:\gamedcs\remote.h:659
-    VA(0x00555180, 0x5) MAC_ADDRESS(0x215e24, 0x8)  // dc 0x11f810
+    DC_ADDRESS(0x11f810, 0x4)
+    VA(0x00555180, 0x5) MAC_ADDRESS(0x215e24, 0x8)
     virtual CNetMsg* handleNetMsg(CNetMsg* netMsg)
     {
         return 0;

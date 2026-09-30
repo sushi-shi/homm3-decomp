@@ -1,6 +1,8 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+#include "va.h"
+
 #include <vector>
 
 #include "struct.h"
@@ -53,7 +55,8 @@ public:
     virtual unsigned char save(TAbstractFile* outfile);
     virtual void replay(unsigned char draw);
     virtual void undo();
-    // E:\gamedcs\event_record.h:64, dc 0x8ec5c.
+    // E:\gamedcs\event_record.h:64
+    DC_ADDRESS(0x08ec5c, 0x4)
     char getPlayerId() const { return m_playerId; }
     signed char m_playerId;  // +0x04
 };
@@ -75,6 +78,7 @@ public:
     // facing byte snapshotted into restore_flag, the step direction, the
     // hero's own map point into source and the caller's into destination.
     type_record_move_hero(hero* who, char direction, type_point destination);
+    DC_ADDRESS(0x08ec60, 0x6c)
     type_record_move_hero() {}
 
     hero* m_currentHero;          // +0x08
@@ -93,6 +97,7 @@ public:
     // site for this argument and once inside the base body for
     // restore_flag - which is what proves the facing is forwarded here.
     type_record_teleport(hero* who, type_point destination);
+    DC_ADDRESS(0x08ed18, 0x3c)
     type_record_teleport() {}
 
     static type_event_record* create();
@@ -113,6 +118,7 @@ public:
     virtual void undo() OVERRIDE;
 
     type_record_claim_mine(long id, char newOwner);
+    DC_ADDRESS(0x08eda0, 0x3c)
     type_record_claim_mine() {}
 
     int m_id;                 // +0x08
@@ -125,6 +131,7 @@ public:
 class type_record_claim_town : public type_record_claim_mine {
 public:
     type_record_claim_town(long id, char newOwner);
+    DC_ADDRESS(0x08ee28, 0x3c)
     type_record_claim_town() {}
 
     static type_event_record* create();
@@ -151,6 +158,7 @@ public:
     // here for undo.
     type_record_hide_boat(boat* currentBoat, unsigned char occupied,
                           int occupyingHero);
+    DC_ADDRESS(0x08eeb0, 0x3c)
     type_record_hide_boat() {}
 
     boat* m_currentBoat;      // +0x08
@@ -178,6 +186,7 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
     type_record_show_boat(boat* currentBoat, type_point location);
+    DC_ADDRESS(0x08ef38, 0x6c)
     type_record_show_boat() {}
 
     type_point m_location;           // +0x18 - replay destination
@@ -197,6 +206,7 @@ public:
     virtual void undo() OVERRIDE;
     type_record_erase(type_point location, long objectId,
                       unsigned long extraInfo, long objectIndex);
+    DC_ADDRESS(0x08eff0, 0x54)
     type_record_erase() {}
 
     type_point m_location;         // +0x08
@@ -219,6 +229,7 @@ public:
 
     type_record_hide_hero(hero* who, char newOwner,
                           unsigned char townGarrison);
+    DC_ADDRESS(0x08f090, 0x3c)
     type_record_hide_hero() {}
 
     hero* m_currentHero;          // +0x08
@@ -240,6 +251,7 @@ public:
     virtual void undo() OVERRIDE;
     type_record_show_hero(hero* who, char newOwner, type_point location,
                           unsigned char onBoat);
+    DC_ADDRESS(0x08f118, 0x6c)
     type_record_show_hero() {}
 
     type_point m_location;          // +0x10 - replay destination
@@ -255,6 +267,7 @@ public:
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
+    DC_ADDRESS(0x08f1d0, 0x3c)
     type_record_player_death() {}
     type_record_player_death(char playerId);
     virtual void undo() OVERRIDE;
@@ -280,12 +293,13 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
-    // E:\gamedcs\event_record.cpp:978 (dc 0x8ddec) and event_record.h:319
+    // E:\gamedcs\event_record.cpp:978 () and event_record.h:319
     // (dc 0x8f258). Neither survives as a retail body - the carve leaves no
     // row between save (0x49bdf0) and replay (0x49be60) - so Complete
     // expanded both into game::SetVisibility / game::ResetVisibility.
     void addChange(int x, int y, int z, short oldValue, short newValue);
-    // E:\gamedcs\event_record.h:319, dc 0x8f258.
+    // E:\gamedcs\event_record.h:319
+    DC_ADDRESS(0x08f258, 0x18)
     long getChangeCount() const { return m_changes.size(); }
 
     std::vector<type_shroud_change> m_changes;  // +0x08 (allocator at +0x08)

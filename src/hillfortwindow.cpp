@@ -60,7 +60,8 @@ const float g_afUpgradeCostFactor[7] = {
     0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
 };
 
-VA(0x004e75f0, 0x7E9) MAC_ADDRESS(0x10843c, 0xe20)  // dc 0xd641c
+DC_ADDRESS(0x0d641c, 0x710)
+VA(0x004e75f0, 0x7E9) MAC_ADDRESS(0x10843c, 0xe20)
 THillFortWindow::THillFortWindow()
     : heroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
 {
@@ -183,7 +184,8 @@ THillFortWindow::THillFortWindow()
 
 VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, THillFortWindow)
 
-VA(0x004e7e10, 0x75) MAC_ADDRESS(0x10925c, 0xb4)  // dc 0xd6b2c
+DC_ADDRESS(0x0d6b2c, 0x68)
+VA(0x004e7e10, 0x75) MAC_ADDRESS(0x10925c, 0xb4)
 THillFortWindow::~THillFortWindow()
 {
     g_hillFortWindow = 0;
@@ -193,9 +195,10 @@ THillFortWindow::~THillFortWindow()
     }
 }
 
-// Original: THillFortWindow::convertID2HelpID; hillfortwindow.cpp:178, dc 0xd6b94.
+// Original: THillFortWindow::convertID2HelpID; hillfortwindow.cpp:178
 // Complete's handler uses named widget cases directly; this source query
 // retains the DC help-table range, including every background and cost row.
+DC_ADDRESS(0x0d6b94, 0x1a)
 int THillFortWindow::convertID2HelpID(int id) const
 {
     if (id < BACKGROUND_ID || id > UPGRADE_BUTTON_7_ID)
@@ -203,7 +206,8 @@ int THillFortWindow::convertID2HelpID(int id) const
     return id - BACKGROUND_ID;
 }
 
-VA(0x004e7e90, 0x1F) MAC_ADDRESS(0x109310, 0x48)  // dc 0xd6bb0
+DC_ADDRESS(0x0d6bb0, 0x22)
+VA(0x004e7e90, 0x1F) MAC_ADDRESS(0x109310, 0x48)
 void THillFortWindow::doModal()
 {
     recalculate(0);
@@ -211,6 +215,7 @@ void THillFortWindow::doModal()
 }
 
 // E:\gamedcs\hillfortwindow.cpp:192
+DC_ADDRESS(0x0d6bd4, 0x22)
 MAC_ADDRESS(0x109358, 0xb0)
 inline bool canAfford(const long* cost, const long* playerRes)
 {
@@ -288,7 +293,8 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // `totalID` the same way in the totals loop below - 83.4988, so the lever is
 // specific to the loop whose derived id feeds six different widget bands.
 
-VA(0x004e7eb0, 0x64D) MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
+DC_ADDRESS(0x0d6bf8, 0x52a)
+VA(0x004e7eb0, 0x64D) MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
 void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
     message msg;
@@ -497,7 +503,8 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     broadcastMessage(msg);
 }
 
-VA(0x004e8500, 0x18F) MAC_ADDRESS(0x109b3c, 0x260)  // dc 0xd7124
+DC_ADDRESS(0x0d7124, 0x134)
+VA(0x004e8500, 0x18F) MAC_ADDRESS(0x109b3c, 0x260)
 void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 {
     switch (m_slot[which].m_state) {
@@ -536,6 +543,7 @@ void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 // DC504/508 owns the two dialogs; 514..515 loops over seven UpgradeSlot
 // calls. Retail expands this ordinary helper in the handler at 0x4e8944.
 // No retained retail row is required for the source boundary to exist.
+DC_ADDRESS(0x0d7258, 0x9c)
 MAC_ADDRESS(0x109d9c, 0x11c)
 void THillFortWindow::upgradeAll()
 {
@@ -555,7 +563,8 @@ void THillFortWindow::upgradeAll()
     }
 }
 
-VA(0x004e8690, 0x1B8) MAC_ADDRESS(0x109eb8, 0x210)  // dc 0xd72f4
+DC_ADDRESS(0x0d72f4, 0x162)
+VA(0x004e8690, 0x1B8) MAC_ADDRESS(0x109eb8, 0x210)
 void THillFortWindow::handleClick(message& msg)
 {
     unsigned char rightClick =
@@ -605,7 +614,8 @@ void THillFortWindow::handleClick(message& msg)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:612
-VA(0x004e8850, 0x369) MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take, dc 0xd7458
+DC_ADDRESS(0x0d7458, 0x294)
+VA(0x004e8850, 0x369) MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take
 int hillFortWindowHandler(message& msg)
 {
     pollSound();
@@ -726,6 +736,7 @@ int hillFortWindowHandler(message& msg)
 // and the handler's post-upgrade block in retail. The older note incorrectly
 // described this helper as constructing the window. It has no retail row:
 // 0x4e8fb0 belongs to hiscore, beyond this TU's end at 0x4e8bb9.
+DC_ADDRESS(0x0d76ec, 0x78)
 MAC_ADDRESS(0x10a3f4, 0xb4)
 static void updateHillFort(unsigned char firstUpdate)
 {

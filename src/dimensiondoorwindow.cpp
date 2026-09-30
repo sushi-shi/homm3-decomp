@@ -12,7 +12,8 @@
 #include "widget.h"
 #include "winmgr.h"
 
-VA(0x004916f0, 0x164) MAC_ADDRESS(0x0a2b94, 0x160)  // dc 0x827f8
+DC_ADDRESS(0x0827f8, 0x140)
+VA(0x004916f0, 0x164) MAC_ADDRESS(0x0a2b94, 0x160)
 TDimensionDoorWindow::TDimensionDoorWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
@@ -32,7 +33,8 @@ TDimensionDoorWindow::TDimensionDoorWindow()
 
 VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
 
-VA(0x00491890, 0x6B) MAC_ADDRESS(0x0a2cf4, 0xac)  // dc 0x82938
+DC_ADDRESS(0x082938, 0x68)
+VA(0x00491890, 0x6B) MAC_ADDRESS(0x0a2cf4, 0xac)
 TDimensionDoorWindow::~TDimensionDoorWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -51,7 +53,8 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
 // 73.11:
 
 // E:\gamedcs\dimensiondoorwindow.cpp:100
-VA(0x00491900, 0x1B9) MAC_ADDRESS(0x0a2da0, 0x26c)  // vtable slot 9 + source order, dc 0x829a0
+DC_ADDRESS(0x0829a0, 0x1e2)
+VA(0x00491900, 0x1B9) MAC_ADDRESS(0x0a2da0, 0x26c)  // vtable slot 9 + source order
 int TDimensionDoorWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -141,7 +144,8 @@ int TDimensionDoorWindow::windowHandler(message& msg)
 // the carve.
 
 // E:\gamedcs\dimensiondoorwindow.cpp:208
-VA(0x00491ac0, 0x2C) MAC_ADDRESS(0x0a300c, 0x2c)  // vtable slot 14 + source order, dc 0x82b84
+DC_ADDRESS(0x082b84, 0x16)
+VA(0x00491ac0, 0x2C) MAC_ADDRESS(0x0a300c, 0x2c)  // vtable slot 14 + source order
 int TDimensionDoorWindow::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;
@@ -150,7 +154,8 @@ int TDimensionDoorWindow::exitDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x00491af0, 0x164) MAC_ADDRESS(0x0a3038, 0x160)  // dc 0x82b9c
+DC_ADDRESS(0x082b9c, 0x114)
+VA(0x00491af0, 0x164) MAC_ADDRESS(0x0a3038, 0x160)
 TSkuttleBoatWindow::TSkuttleBoatWindow()
     : CAdvPopup(0, 0, 800, 600, 1)
 {
@@ -170,7 +175,8 @@ TSkuttleBoatWindow::TSkuttleBoatWindow()
 
 VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
 
-VA(0x00491c90, 0x6B) MAC_ADDRESS(0x0a3198, 0xac)  // dc 0x82cb0
+DC_ADDRESS(0x082cb0, 0x62)
+VA(0x00491c90, 0x6B) MAC_ADDRESS(0x0a3198, 0xac)
 TSkuttleBoatWindow::~TSkuttleBoatWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -182,7 +188,8 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
 // E:\gamedcs\dimensiondoorwindow.cpp:280
 // DC 0x82d14 uses the same exit-flag/common message tail. Restoring it removes
 // two gotos at 100%; duplicated direct exits score 81.9421%.
-VA(0x00491d00, 0x1A9) MAC_ADDRESS(0x0a3244, 0x248)  // vtable slot 9 + source order, dc 0x82d14
+DC_ADDRESS(0x082d14, 0x1bc)
+VA(0x00491d00, 0x1A9) MAC_ADDRESS(0x0a3244, 0x248)  // vtable slot 9 + source order
 int TSkuttleBoatWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -262,7 +269,8 @@ int TSkuttleBoatWindow::windowHandler(message& msg)
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
-VA(0x00491eb0, 0x2c) MAC_ADDRESS(0x0a348c, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
+DC_ADDRESS(0x082ed0, 0x1c)
+VA(0x00491eb0, 0x2c) MAC_ADDRESS(0x0a348c, 0x2c)  // vtable slot 14 + source order
 int TSkuttleBoatWindow::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;

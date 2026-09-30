@@ -6,7 +6,8 @@
 #include "cmbtmgr.h"
 #include "terrain.h"
 
-VA(0x004e7150, 0x20) MAC_ADDRESS(0x1081cc, 0x2c)  // dc 0xd60fc
+DC_ADDRESS(0x0d60fc, 0x3a)
+VA(0x004e7150, 0x20) MAC_ADDRESS(0x1081cc, 0x2c)
 hexcell::hexcell()
 {
     int none = -1;
@@ -20,7 +21,8 @@ hexcell::hexcell()
     m_backgroundOffset = none;
 }
 
-VA(0x004e7170, 0x3C) MAC_ADDRESS(0x1081f8, 0x40)  // dc 0xd6138
+DC_ADDRESS(0x0d6138, 0x3e)
+VA(0x004e7170, 0x3C) MAC_ADDRESS(0x1081f8, 0x40)
 army* hexcell::getArmy() const
 {
     // Dreamcast hexcell.cpp:39 calls the canonical HexCell.h helper.
@@ -29,7 +31,8 @@ army* hexcell::getArmy() const
     return 0;
 }
 
-VA(0x004e71b0, 0x4D) MAC_ADDRESS(0x108238, 0x44)  // dc 0xd6178
+DC_ADDRESS(0x0d6178, 0x44)
+VA(0x004e71b0, 0x4D) MAC_ADDRESS(0x108238, 0x44)
 army* hexcell::getDeadArmy(int i) const
 {
     if (m_deadArmySide[i] < 0)

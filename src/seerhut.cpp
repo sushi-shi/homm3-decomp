@@ -105,7 +105,8 @@ std::string formatString(const char* format, ...);
 // retained string::assign during that conversion. Releasing the sheet through
 // ResourceManager's canonical inline helper restores that decision and makes
 // the Windows body exact without changing the seven retained calls.
-// E:\gamedcs\seerhut.cpp:50, dc 0x12cd28
+// E:\gamedcs\seerhut.cpp:50
+DC_ADDRESS(0x12cd28, 0x35c)
 VA(0x0056c3e0, 0x183) MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
 {
@@ -1841,10 +1842,11 @@ int TQuestGuard::save(TAbstractFile* outfile)
     }
 }
 
-// Original: TSeerHut::SetRandomName; seerhut.cpp:139, dc 0x12d084
+// Original: TSeerHut::SetRandomName; seerhut.cpp:139
 // DC uses one static TPickANumber(0,47). Complete read0x574610 expands
 // the same static reference interface with the revised dynamic name table:
 // construct availability, remove names used by this map, then select one.
+DC_ADDRESS(0x12d084, 0x4c)
 inline void TSeerHut::setRandomName(TSeerHut& thisHut)
 {
     std::vector<unsigned char> nameAvailable(g_seerHutNameList.size());
@@ -1909,6 +1911,7 @@ int TSeerHut::getValue(hero* currentHero)
 // ordinary getValue helper; why-reg finds the same pseudos in a different C1
 // processing order, and its source-local creation-order probe regresses.
 
+DC_ADDRESS(0x12d0e4, 0x74)
 VA(0x00573670, 0x400) MAC_ADDRESS(0x169bfc, 0x2d4)  // code plus two retail switch tables in the admitted row
 void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 {
@@ -1954,6 +1957,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 // helper's name lookup followed by NormalDialog. Once the caller owns the
 // revised completion-text lifetime, VC6 naturally expands this source boundary
 // while retaining selected nested Dinkumware calls.
+DC_ADDRESS(0x12d158, 0x4e)
 void TSeerHut::doEmptyDialog()
 {
     std::string text;
@@ -1970,7 +1974,8 @@ void TSeerHut::doEmptyDialog()
 // completion text and its reward object owns application. Complete's shared
 // human/AI reward tail supersedes this older helper boundary in DoSeerEvent;
 // retain the boundary here as Dreamcast source evidence.
-// Original: TSeerHut::DoCompletionDialog; seerhut.cpp:185, dc 0x12d1a8
+// Original: TSeerHut::DoCompletionDialog; seerhut.cpp:185
+DC_ADDRESS(0x12d1a8, 0x8e)
 void TSeerHut::doCompletionDialog(
     hero* currentHero, bool humanPlayer)
 {
@@ -1990,7 +1995,8 @@ void TSeerHut::doCompletionDialog(
 // Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
 // no-local switch helper called first by DoCompletionDialog. Retail's inlined
 // copy preserves the ten reward arms and Complete's shifted skill pictures.
-// Original: TSeerHut::GetRewardType; seerhut.cpp:414, dc 0x12d758
+// Original: TSeerHut::GetRewardType; seerhut.cpp:414
+DC_ADDRESS(0x12d758, 0x90)
 MAC_ADDRESS(0x16a4c4, 0xc4)
 int TSeerHut::getRewardType()
 {
@@ -2237,7 +2243,8 @@ int TSeerReward::getRewardExtra(const hero* thisHero)
     }
 }
 
-VA(0x00573fd0, 0x91) MAC_ADDRESS(0x16a588, 0x13c)  // dc 0x12d8c0
+DC_ADDRESS(0x12d8c0, 0x22)
+VA(0x00573fd0, 0x91) MAC_ADDRESS(0x16a588, 0x13c)
 int TSeerHut::save(TAbstractFile* outfile)
 {
     if (!m_quest) {
@@ -2470,7 +2477,8 @@ void TSeerHut::read(TAbstractFile* infile)
 // decisions; open-coded staging blocks expanded it and measured 35.2488%.
 // Dreamcast's older four-line body has one gzread and no comparable quest
 // representation.
-VA(0x00574A90, 0x24A) MAC_ADDRESS(0x16b01c, 0x27c)  // dc 0x12d8e4
+DC_ADDRESS(0x12d8e4, 0x40)
+VA(0x00574A90, 0x24A) MAC_ADDRESS(0x16b01c, 0x27c)
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {
     if (saveVersion < 28) {

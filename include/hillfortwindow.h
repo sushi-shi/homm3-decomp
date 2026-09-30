@@ -1,6 +1,8 @@
 #ifndef HOMM3_HILLFORTWINDOW_H
 #define HOMM3_HILLFORTWINDOW_H
 
+#include "va.h"
+
 #include "armygrp.h"
 #include "window.h"
 
@@ -168,6 +170,7 @@ private:
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
+    DC_ADDRESS(0x0d7764, 0x10)
     TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }
 };
 SIZE(THillFortWindow, 0x2a0);

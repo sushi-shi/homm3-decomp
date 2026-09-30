@@ -1,6 +1,8 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+#include "va.h"
+
 #include <ctype.h>
 #if defined(HOMM3_TARGET_MAC)
 #include <unistd.h>
@@ -415,6 +417,7 @@ public:
         // Hero IDs and names read from the map player slot.
         std::vector<type_map_hero_identity> m_heroes;
 
+        DC_ADDRESS(0x05ac3c, 0x44)
         VA(0x0045a950, 0x3F) MAC_ADDRESS(0x067194, 0x80)  // retained retail body; formerly enrolled by CLASS_CTOR
         TPlayerSlotAttributes()
         {
@@ -507,6 +510,7 @@ public:
     int saveLossCondition(char type, TAbstractFile* outfile);
     int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
 
+    DC_ADDRESS(0x05ac80, 0x70)
     VA(0x0045a7a0, 0x1A3) MAC_ADDRESS(0x067648, 0x104)  // retained retail body; formerly enrolled by CLASS_CTOR
     NewSMapHeader()
     {
@@ -530,6 +534,7 @@ public:
     // DC lines 314/315 preserve the two string operator= boundaries. Retail
     // expands them to different depths at different callers; retain the source
     // operations without forcing a shared inline-depth setting.
+    DC_ADDRESS(0x14741c, 0x50)
     void assignData(CMapHeaderData* data, char* name, char* description)
     {
         static_cast<CMapHeaderData&>(*this) = *data;
@@ -542,10 +547,11 @@ SIZE(NewSMapHeader, 0x304);
 // Game.h owns the town-definition record shared by map loading and towns.
 class TownExtra {
 public:
-    // Original: TownExtra::TownExtra; Game.h:377, dc 0xf4af0.
+    // Original: TownExtra::TownExtra; Game.h:377
     // DC clears its 13-byte name array at +0x55. Complete's readTownData
     // (0x5019f0) constructs the replacement std::string and both spell
     // bitsets as members of this 0x88-byte record.
+    DC_ADDRESS(0x0f4af0, 0x48)
     TownExtra() {}
     int m_objRef;
     char m_playerOwner;
@@ -606,6 +612,7 @@ public:
     void initialize(long newOwner);
     // Dreamcast's generator-event xref records three calls to get_owner;
     // retail expands the signed owner-byte load and has no out-of-line row.
+    DC_ADDRESS(0x01feac, 0xe)
     inline long getOwner() const { return m_playerOwner; }
     // Raw DC publics for load/save return bool (QAA_N); Complete ports the file argument.
     bool load(TAbstractFile* infile);
@@ -645,6 +652,7 @@ public:
     unsigned char m_mapZ;
     // after mapZ; it rounds the retail mine stride to 0x40.
     char m_paddingAfterCoordinates;
+    DC_ADDRESS(0x0bce00, 0x52)
     mine()
         : m_playerOwner(-1), m_type(-1), m_isAbandoned(0)
     {
@@ -673,6 +681,7 @@ public:
     int m_startingHero[8];
     signed char m_startingBonus[8];
     int save(TAbstractFile* outfile);
+    DC_ADDRESS(0x05ad18, 0xb8)
     VA(0x0045ac20, 0xD2) MAC_ADDRESS(0x067430, 0x168)  // retained retail body; formerly enrolled by CLASS_CTOR
     SGameSetupOptions()
     {
@@ -755,6 +764,7 @@ class Sign {
 public:
     unsigned char m_hasText;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_signText;
+    DC_ADDRESS(0x0bce54, 0x28)
     Sign() : m_hasText(0) {}
 };
 SIZE(Sign, 0x14);
@@ -1464,7 +1474,8 @@ public:
     // remains outside the admitted surface.
     void finishTownHire(long playerId, int recruitSlot);
     // Dreamcast's public symbol is `?OnSameTeam@game@@QBA_NHH@Z`: bool,
-    VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3, dc 0x1febc
+    DC_ADDRESS(0x01febc, 0x40)
+    VA(0x005296d0, 0x37)  // hd-crossbuild + anchor-callee x3
     bool onSameTeam(int player1, int player2) const
     {
         if (player1 < 0 || player2 < 0)
@@ -1509,7 +1520,8 @@ public:
 // callee. The reviewed town comparison uses the same canonical header body.
 // This is distinct from is_human_ally at dc 0x37fd8, which takes a player
 // number and calls IsHumanTeam(GetTeam(player_number)).
-VA(0x0042b9e0, 0x45) MAC_ADDRESS(0x02d3e4, 0x94)  // guarded team scan + named IsHuman callee, dc 0x37f64
+DC_ADDRESS(0x037f64, 0x58)
+VA(0x0042b9e0, 0x45) MAC_ADDRESS(0x02d3e4, 0x94)  // guarded team scan + named IsHuman callee
 bool isHumanTeam(int teamNum) const
 {
     if (teamNum >= 0) {
@@ -1526,13 +1538,15 @@ bool isHumanTeam(int teamNum) const
     // retail lowering calls the retained IsHumanTeam COMDAT above; retaining
     // the wrapper is what preserves the materialized logical negation.
     // The DC public ?IsComputerTeam@game@@QBA_NH@Z likewise proves bool.
+    DC_ADDRESS(0x0bce7c, 0x38)
     inline bool isComputerTeam(int teamNum) const
     {
         if (teamNum < 0)
             return 0;
         return !isHumanTeam(teamNum);
     }
-VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT, dc 0x37fbc
+DC_ADDRESS(0x037fbc, 0x1c)
+VA(0x004a5960, 0x16)  // exact selected events.obj COMDAT
 int getTeam(int playerNum) const
 {
     if (playerNum < 0)
@@ -1543,6 +1557,7 @@ int getTeam(int playerNum) const
     // retail /Ob2 folds both it and GetTeam into the arm. MoveHero's
     // Dreamcast line stream names the same nested pair, and Complete folds
     // both while retaining GetTeam's selected events.obj COMDAT.
+    DC_ADDRESS(0x08f270, 0x58)
     unsigned char getTeamMask(int playerNum) const
     {
         unsigned char mask = 0;
@@ -1559,6 +1574,7 @@ int getTeam(int playerNum) const
     // callback and records one nested GetTeam call. Complete expands the
     // same source boundary into TTownGateWindow's constructor: retail's
     // range guard, signed teamInfo load and eight-entry count are exact.
+    DC_ADDRESS(0x169c0c, 0x54)
     MAC_ADDRESS(0x1b840c, 0x138)
     unsigned char getNumAllies(int playerNum) const
     {
@@ -1583,6 +1599,7 @@ int getTeam(int playerNum) const
     // As with GetInfoFlag above, VC6 accepts the elaborated enum before
     // advmgr.h supplies its definition, retaining the attested parameter
     // domain even in this include order.
+    DC_ADDRESS(0x09ca1c, 0x68)
     void setInfoFlag(enum GlobalInfoFlags flag, const int playerNum)
     {
         if (playerNum < 0 || playerNum >= 8)
@@ -1595,6 +1612,7 @@ int getTeam(int playerNum) const
     }
     // DC-attested inline helper. Retail's shrine consumer proves the signed
     // [0,8) player guard and the byte bitset at +0x4e344.
+    DC_ADDRESS(0x01fefc, 0x44)
     unsigned char getInfoFlag(enum GlobalInfoFlags flag, const int playerNum) const
     {
         if (playerNum < 0 || playerNum >= 8)
@@ -1622,7 +1640,8 @@ public:
                   const town* thisTown, int x, int y,
                   unsigned char showDismiss, unsigned char isQuickView);
     void overview();
-    VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15, dc 0x2eb0
+    DC_ADDRESS(0x002eb0, 0x24)
+    VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15
     hero* getHero(int which)
     {
         if (which == -1)
@@ -1651,6 +1670,7 @@ public:
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
     // lays the arms out the other way round. DC sizes them apart too - 68 B
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
+    DC_ADDRESS(0x002ed4, 0x44)
     hero* getCurrHero()
     {
         if (g_currentPlayer->m_currHeroId != -1)
@@ -1660,28 +1680,33 @@ public:
     // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
     // expands it to the acting player's widened currHero load; no standalone
     // retail row exists in the adventure-map header-method bracket.
+    DC_ADDRESS(0x002f18, 0xc)
     int getCurrHeroId()
     {
         return g_currentPlayer->m_currHeroId;
     }
-    VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5, dc 0x2f24
+    DC_ADDRESS(0x002f24, 0x28)
+    VA(0x0042ba30, 0x24)  // hd-crossbuild + exact body/callers x5
     town* getTown(int townId)
     {
         if (townId == -1)
             return 0;
         return &m_towns[townId];
     }
-    // Original: game::GetTown; Game.h:1022, dc 0x169c60.
+    // Original: game::GetTown; Game.h:1022
     // The const overload indexes directly; the non-const overload above
     // separately handles the -1 sentinel.
+    DC_ADDRESS(0x169c60, 0x1c)
     const town* getTown(int which) const { return &m_towns[which]; }
+    DC_ADDRESS(0x01ff40, 0x58)
     town* getCurrTown()
     {
         if (g_currentPlayer->m_currTownId != -1)
             return &m_towns[g_currentPlayer->m_currTownId];
         return 0;
     }
-    // Original: game::GetCurrTownId; game.h:1024, dc 0x1ff98
+    // Original: game::GetCurrTownId; game.h:1024
+    DC_ADDRESS(0x01ff98, 0x14)
     int getCurrTownId() { return g_currentPlayer->m_currTownId; }
     bool townAlreadyBuiltOn(int townId) const;
     // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
@@ -1695,19 +1720,23 @@ public:
     // header rides in initialize.cpp's closure, which carries the
     // tree's include-set canary. Every consumer opens the macro for
     // itself and re-measures.
+    DC_ADDRESS(0x169c7c, 0x1c)
     const char* getTownName(int townId) const
     {
         return m_towns[townId].m_name.c_str();
     }
-    // Original: game::GetMine; Game.h:1036, dc 0x9ca84.
+    // Original: game::GetMine; Game.h:1036
+    DC_ADDRESS(0x09ca84, 0x1c)
     mine* getMine(int which) { return &m_mines[which]; }
     // Game.h:1056. GetGarrison is expanded into both DispatchEvent and
     // philai's value_of_garrison; its nested vector access remains visible
     // so the recovered source hierarchy is not flattened again.
+    DC_ADDRESS(0x01ffac, 0x30)
     garrison* getGarrison(int which) { return &m_garrisons[which]; }
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.
+    DC_ADDRESS(0x01ffdc, 0x30)
     boat* getBoat(int which)
     {
         return &m_boats[which];
@@ -1721,6 +1750,7 @@ public:
     void nextPlayer();
     // DC Game.h:1197. The Dreamcast keeps this header helper as a row;
     // retail expands the map's byte flag plus one at both cheat loops.
+    DC_ADDRESS(0x002f4c, 0x1c)
     int getNumMapLevels() { return m_worldMap.getNumLevels(); }
     void showScenInfo();
 
@@ -1874,8 +1904,9 @@ void computeUALoc(int whichPlayer);                   // 0x4baed0
 // The six unchecked scalar reads use returned values rather than artificial
 // caller scopes. VC6 then matches all 62 retail blocks and 26 named calls,
 // including the shared failure cleanup; flattening those reads loses it.
-// E:\gamedcs\Game.h:1344, dc 0xbcfe4
-VA(0x004bc750, 0x3D5) MAC_ADDRESS(0x0cfc34, 0x3a4)  // dc 0xbcfe4
+// E:\gamedcs\Game.h:1344
+DC_ADDRESS(0x0bcfe4, 0x78)
+VA(0x004bc750, 0x3D5) MAC_ADDRESS(0x0cfc34, 0x3a4)
 inline int SavedGameHeader::load(TAbstractFile* infile)
 {
     std::string openedName;
@@ -1952,6 +1983,7 @@ inline int SavedGameHeader::load(TAbstractFile* infile)
 // Dreamcast Game.h:1370-1371, is_human_ally (dc 0x37fd8). The two named
 // calls are GetTeam followed by IsHumanTeam; this wrapper takes a player,
 // not a team. No standalone Windows VA is claimed for the wrapper.
+DC_ADDRESS(0x037fd8, 0x28)
 inline bool game::isHumanAlly(int playerNum) const
 {
     return isHumanTeam(getTeam(playerNum));
@@ -1961,6 +1993,7 @@ inline bool game::isHumanAlly(int playerNum) const
 // semantics. The nested zero check leaves the body byte-exact while making its
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
 // a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
+DC_ADDRESS(0x02000c, 0x58)
 VA(0x004c6690, 0x43)
 inline int game::getAlignment(int creature) const
 {
@@ -1975,7 +2008,8 @@ inline int game::getAlignment(int creature) const
 // out-of-line copy is ai_player.obj's, 0x42ed80.
 // E:\gamedcs\game.h:1380. Retail retains this header-inline copy in
 // ai_player.obj; all consumers use the same canonical body.
-VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
+DC_ADDRESS(0x038000, 0x3c)
+VA(0x0042ed80, 0x4D)  // anchor-global
 inline NewmapCell* game::getCell(type_point point)
 {
     return m_worldMap.cell(point.m_x, point.m_y, point.m_z);
@@ -1985,24 +2019,28 @@ inline NewmapCell* game::getCell(type_point point)
 // accessor at every game.obj call site and retains no standalone row.
 // DC and Mac completeCurrentMap preserve day + (week - 1) * 7 +
 // (month - 1) * 28 before the signed-short return.
+DC_ADDRESS(0x0bd05c, 0x44)
 inline short game::getCurrentTurn() const
 {
     return m_day + (m_week - 1) * 7 + (m_month - 1) * 28;
 }
 
-// Original: game::get_liths; Game.h:1395, dc 0x12ca94.
+// Original: game::get_liths; Game.h:1395
+DC_ADDRESS(0x12ca94, 0x14)
 inline const std::vector<type_point>& game::getLiths(long color) const
 {
     return m_lithPools[color];
 }
 
-// Original: game::get_lith_exits; Game.h:1400, dc 0x12caa8.
+// Original: game::get_lith_exits; Game.h:1400
+DC_ADDRESS(0x12caa8, 0x14)
 inline const std::vector<type_point>& game::getLithExits(long color) const
 {
     return m_lithExitPools[color];
 }
 
 // E:\gamedcs\Game.h:1405.
+DC_ADDRESS(0x12cabc, 0xc)
 inline const std::vector<type_point>& game::getWhirlpools() const
 {
     return m_whirlpools;
@@ -2011,6 +2049,7 @@ inline const std::vector<type_point>& game::getWhirlpools() const
 // Dreamcast Game.h:1410 names this ordinary inline query and retains a
 // selected out-of-line copy in ai_player.obj. THallWindow expands the
 // same source operation to the retail town-vector lookup.
+DC_ADDRESS(0x03803c, 0x28)
 inline bool game::townAlreadyBuiltOn(int townId) const
 {
     return m_towns[townId].m_builtThisTurn != 0;
@@ -2041,7 +2080,9 @@ inline void markGameAsCheated()
 class TCheatCode {
 public:
     TCheatCode();
+    DC_ADDRESS(0x002f68, 0x1c)
     TCheatCode(const char* value) { encode(value); }
+    DC_ADDRESS(0x002f84, 0x1c)
     bool compare(const char* value) const
     {
         return _strcmpi(m_code, value) == 0;
@@ -2060,6 +2101,7 @@ SIZE(TCheatCode, 200);
 // of strlen and the buffer bound. Use the shared reference selector rather
 // than spelling its expansion here; the Windows encoder remains exact.
 // E:\gamedcs\Game.h:1439
+DC_ADDRESS(0x002fa0, 0x88)
 VA(0x00402a30, 0xA1) MAC_ADDRESS(0x000958, 0xdc)
 inline void TCheatCode::encode(const char* value)
 {

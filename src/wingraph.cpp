@@ -66,7 +66,8 @@ DATA(0x0068c850) DDPIXELFORMAT g_pixelFormat = {
 // first colour in each layout. DC proves unsigned short* and TPalette24&
 // parameters; the retail offsets and fastcall argument locations agree.
 // E:\gamedcs\wingraph.cpp:72
-VA(0x005ffe20, 0x1E) MAC_ADDRESS(0x20c684, 0x44)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map, dc 0x198af4
+DC_ADDRESS(0x198af4, 0x26)
+VA(0x005ffe20, 0x1E) MAC_ADDRESS(0x20c684, 0x44)  // anchor-caller(bitmapBorder/button::SetPlayerPaletteColors) + dc-order-map
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 {
     memcpy(pal + 224, &g_playerPalette->m_data[whichPlayer * 32],
@@ -74,7 +75,8 @@ void setPlayerPaletteColors(unsigned short* pal, int whichPlayer)
 }
 
 // E:\gamedcs\wingraph.cpp:83
-VA(0x005ffe40, 0x22) MAC_ADDRESS(0x20c6c8, 0x44)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map, dc 0x198b1c
+DC_ADDRESS(0x198b1c, 0x2a)
+VA(0x005ffe40, 0x22) MAC_ADDRESS(0x20c6c8, 0x44)  // anchor-caller(bitmapBorder::SetPlayerPaletteColors) + dc-order-map
 void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 {
     memcpy(pal.m_palette + 224 * 3, g_playerPalette24->m_palette + whichPlayer * 32 * 3,
@@ -88,6 +90,7 @@ void setPlayerPaletteColors(TPalette24& pal, int whichPlayer)
 // WinCE DDSetupClipper body is empty, while the PC clipper calls are live.
 // Original names: DDCreatePrimary, DDSetupClipper.
 // E:\gamedcs\wingraph.cpp:109
+DC_ADDRESS(0x198b48, 0x1e)
 static void ddCreatePrimary()
 {
     HRESULT result;
@@ -105,6 +108,7 @@ static void ddCreatePrimary()
 }
 
 // E:\gamedcs\wingraph.cpp:130
+DC_ADDRESS(0x198b68, 0x64)
 static void ddSetupClipper()
 {
     HRESULT result;
@@ -153,7 +157,8 @@ static void ddBlitOpaque(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // E:\gamedcs\wingraph.cpp:260
 // Mac retains this rectangle/pointer composite at code 0+0x20c80c, using
 // Mac screen surfaces where this Windows body calls DirectDraw.
-VA(0x005ffe70, 0x35C) MAC_ADDRESS(0x20c80c, 0x290)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics, dc 0x198d5c
+DC_ADDRESS(0x198d5c, 0x2d0)
+VA(0x005ffe70, 0x35C) MAC_ADDRESS(0x20c80c, 0x290)  // anchor-caller(AppPaint, winmgr's five UpdateScreen/fade sites) + wingraph statics
 void robAppBlit(tagRECT* combRect)
 {
     if (IsIconic(g_hwndApp))
@@ -276,7 +281,8 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect);
 // E:\gamedcs\wingraph.cpp:931
 // Mac retains the five-argument blit interface at code 0+0x217e10 and
 // uses Mac surfaces for the six pointer-update calls from mousemgr.
-VA(0x006001d0, 0x1E1) MAC_ADDRESS(0x217e10, 0x1d0)  // anchor-caller(mousemgr, six sites) + header identification, dc 0x199170
+DC_ADDRESS(0x199170, 0x140)
+VA(0x006001d0, 0x1E1) MAC_ADDRESS(0x217e10, 0x1d0)  // anchor-caller(mousemgr, six sites) + header identification
 void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
             IDirectDrawSurface* srcSurface, const tagRECT& srcRect,
             unsigned long flags)
@@ -374,7 +380,8 @@ void ddBlit(IDirectDrawSurface* dstSurface, const tagRECT& dstRect,
 // helper. DC's mutable tagRECT& parameter fits the retail OffsetRect use.
 // GetDesktopInfo remains an ordinary same-TU call expanded by VC6.
 // E:\gamedcs\wingraph.cpp:719
-VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission, dc 0x1990e4
+DC_ADDRESS(0x1990e4, 0x86)
+VA(0x006003c0, 0x22D)  // recovery sequence + first-caller static emission
 static void ddRestoreFrontBuffer(tagRECT& dstRect)
 {
     if (g_config.m_mainGameFullScreen) {
@@ -438,7 +445,8 @@ static void ddRestoreFrontBuffer(tagRECT& dstRect)
     }
 }
 
-VA(0x006005f0, 0xE4)  // dc 0x1992b0
+DC_ADDRESS(0x1992b0, 0x1e0)
+VA(0x006005f0, 0xE4)
 IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
                                     int primary)
 {
@@ -494,6 +502,7 @@ IDirectDrawSurface* ddCreateSurface(unsigned long width, unsigned long height,
 // locals ddsd and color_key. DC:1256 calls RGBto16 separately for both key
 // endpoints; VC6 may eliminate the second expansion naturally.
 // E:\gamedcs\wingraph.cpp:1238
+DC_ADDRESS(0x199598, 0x134)
 static void ddCreateMouseSurfaces()
 {
     HRESULT result;
@@ -556,6 +565,7 @@ static void ddCreateMouseSurfaces()
 }
 
 // E:\gamedcs\wingraph.cpp:1289
+DC_ADDRESS(0x1996cc, 0x58)
 static void ddReleaseMouseSurfaces()
 {
     if (g_ddsMouseSurface) {
@@ -580,7 +590,8 @@ static void ddReleaseMouseSurfaces()
 // passed to wsprintfA, and the final guard reset.  The shared HoMM2 DDSD body
 // supplies the source lineage; its smaller error roster is not copied blindly.
 // E:\gamedcs\wingraph.cpp:1313
-VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage, dc 0x199724
+DC_ADDRESS(0x199724, 0x978)
+VA(0x006006E0, 0xCBF)  // DC DDSD identity + retail literals/CFG + HoMM2 lineage
 void ddsd(int ddErr, char* file, int line)
 {
     char temp[200];
@@ -1126,7 +1137,8 @@ void ddsd(int ddErr, char* file, int line)
     g_inDirectDrawError = 0;
 }
 
-VA(0x006013a0, 0xC0)  // dc 0x19a114
+DC_ADDRESS(0x19a114, 0xf6)
+VA(0x006013a0, 0xC0)
 long ddRestoreSurfaces()
 {
     long result;
@@ -1162,7 +1174,8 @@ long ddRestoreSurfaces()
     return 0;
 }
 
-VA(0x00601460, 0x52)  // dc 0x19a418
+DC_ADDRESS(0x19a418, 0x4)
+VA(0x00601460, 0x52)
 unsigned char getDesktopInfo()
 {
     HDC desktopDC = GetDC(0);
@@ -1176,19 +1189,22 @@ unsigned char getDesktopInfo()
     return 0;
 }
 
-VA(0x006014c0, 0x6)  // dc 0x19a41c
+DC_ADDRESS(0x19a41c, 0x6)
+VA(0x006014c0, 0x6)
 int getDesktopWidth()
 {
     return g_desktopWidth;
 }
 
-VA(0x006014d0, 0x6)  // dc 0x19a424
+DC_ADDRESS(0x19a424, 0x6)
+VA(0x006014d0, 0x6)
 int getDesktopHeight()
 {
     return g_desktopHeight;
 }
 
-VA(0x006014e0, 0x5)  // dc 0x19a42c
+DC_ADDRESS(0x19a42c, 0x14)
+VA(0x006014e0, 0x5)
 void initGraphics()
 {
     ddInitGraphics();
@@ -1245,7 +1261,8 @@ void ddInitGraphics()
     ddCreateMouseSurfaces();
 }
 
-VA(0x00601820, 0x70)  // dc 0x19a440
+DC_ADDRESS(0x19a440, 0x4)
+VA(0x00601820, 0x70)
 int appPaint(void* hwnd, void* hdc)
 {
     PAINTSTRUCT ps;
@@ -1264,12 +1281,14 @@ int appPaint(void* hwnd, void* hdc)
     return 1;
 }
 
-VA(0x00601890, 0x5)  // dc 0x19a444
+DC_ADDRESS(0x19a444, 0x10)
+VA(0x00601890, 0x5)
 void cleanUpWinGraphics()
 {
     ddCleanUpWinGraphics();
 }
 
+DC_ADDRESS(0x19a09c, 0x76)
 VA(0x006018a0, 0x100)  // wrapper tail-jump + DirectDraw release chain
 void ddCleanUpWinGraphics()
 {
@@ -1311,7 +1330,8 @@ void ddCleanUpWinGraphics()
     }
 }
 
-VA(0x006019a0, 0x5a)  // dc 0x19a454
+DC_ADDRESS(0x19a454, 0xd8)
+VA(0x006019a0, 0x5a)
 unsigned char setFullScreenStatus(int fullScreenOn)
 {
     if (g_fullScreenChangesDisabled)
@@ -1332,6 +1352,7 @@ unsigned char setFullScreenStatus(int fullScreenOn)
 // line 1791 passes the saved window coordinates. The WinCE body is empty;
 // retail 0x601a00 expands the windowed AdjustWindowRectEx/MoveWindow/WritePrefs
 // sequence. Keep this ordinary helper and its two argument evaluations.
+DC_ADDRESS(0x19a20c, 0x28)
 void resizeWindow(int windowX, int windowY)
 {
     if (!g_config.m_mainGameFullScreen) {
@@ -1372,7 +1393,8 @@ void resizeWindow(int windowX, int windowY)
 // iWindowX/iWindowY into locals ABOVE the `if (!bWindowedMode)`, which is
 // where retail loads them (91.8567 -> 94.5813); and declaring the three
 // saved masks red/green/blue rather than blue/green/red, worth 0.0036.
-VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order, dc 0x19a234
+DC_ADDRESS(0x19a234, 0x1ac)
+VA(0x00601a00, 0x31C)  // anchor-caller (SetFullScreenStatus) + dc order
 unsigned char ddSetFullScreenStatus(int newStatus)
 {
     int status = newStatus;

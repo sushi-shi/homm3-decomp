@@ -23,7 +23,8 @@ union TDoubleLongBits {
 
 // Dreamcast exposes this original helper boundary and its sole named local.
 // Retail has no out-of-line copy because VC6 /Ob2 expands it into HSVToRGB.
-// Original: ftol; palette.cpp:45, dc 0x10a244.
+// Original: ftol; palette.cpp:45
+DC_ADDRESS(0x10a244, 0x62)
 static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
@@ -35,7 +36,8 @@ static long ftol(double d)
     return result.m_words[0];
 }
 
-VA(0x00522650, 0x16) MAC_ADDRESS(0x13b73c, 0x40)  // dc 0x10a2a8
+DC_ADDRESS(0x10a2a8, 0x48)
+VA(0x00522650, 0x16) MAC_ADDRESS(0x13b73c, 0x40)
 TPalette16::TPalette16()
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -45,14 +47,16 @@ VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
 
 // The raw 16-bit table overload: 0x80 dwords straight into the payload at
 // +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
-VA(0x005226a0, 0x2D) MAC_ADDRESS(0x13b77c, 0x68)  // dc 0x10a2f0
+DC_ADDRESS(0x10a2f0, 0x48)
+VA(0x005226a0, 0x2D) MAC_ADDRESS(0x13b77c, 0x68)
 TPalette16::TPalette16(const unsigned short* newData)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, newData, sizeof(m_data));
 }
 
-VA(0x005226d0, 0x9D) MAC_ADDRESS(0x13b7e4, 0x88)  // dc 0x10a338
+DC_ADDRESS(0x10a338, 0x72)
+VA(0x005226d0, 0x9D) MAC_ADDRESS(0x13b7e4, 0x88)
 TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -61,7 +65,8 @@ TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
                   bbits, bshift);
 }
 
-// Original: TPalette16::TPalette16; palette.cpp:73, dc 0x10a3ac.
+// Original: TPalette16::TPalette16; palette.cpp:73
+DC_ADDRESS(0x10a3ac, 0x6e)
 TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -69,7 +74,8 @@ TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift,
     convertRGBAto16(rgba, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
-// Original: TPalette16::TPalette16; palette.cpp:79, dc 0x10a41c.
+// Original: TPalette16::TPalette16; palette.cpp:79
+DC_ADDRESS(0x10a41c, 0x7c)
 TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -77,7 +83,8 @@ TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
     convertRGBQUADto16(quad, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
-VA(0x00522770, 0x9F) MAC_ADDRESS(0x13b86c, 0x84)  // dc 0x10a498
+DC_ADDRESS(0x10a498, 0x70)
+VA(0x00522770, 0x9F) MAC_ADDRESS(0x13b86c, 0x84)
 TPalette16::TPalette16(const char* name, const TPalette24& p24,
                        int rbits, int rshift, int gbits, int gshift,
                        int bbits, int bshift)
@@ -87,7 +94,8 @@ TPalette16::TPalette16(const char* name, const TPalette24& p24,
                   bbits, bshift);
 }
 
-VA(0x00522810, 0xC6) MAC_ADDRESS(0x13b8f0, 0x120)  // dc 0x10a508
+DC_ADDRESS(0x10a508, 0xd8)
+VA(0x00522810, 0xC6) MAC_ADDRESS(0x13b8f0, 0x120)
 TPalette16::TPalette16(const TPalette24& p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -105,7 +113,8 @@ TPalette16::TPalette16(const TPalette24& p24)
     }
 }
 
-// Original: TPalette16::TPalette16; palette.cpp:116, dc 0x10a5e0.
+// Original: TPalette16::TPalette16; palette.cpp:116
+DC_ADDRESS(0x10a5e0, 0xc2)
 TPalette16::TPalette16(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -122,7 +131,8 @@ TPalette16::TPalette16(const TRGBA* rgba)
     }
 }
 
-// Original: TPalette16::TPalette16; palette.cpp:140, dc 0x10a6a4.
+// Original: TPalette16::TPalette16; palette.cpp:140
+DC_ADDRESS(0x10a6a4, 0xd8)
 TPalette16::TPalette16(const tagRGBQUAD* quad)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -139,7 +149,8 @@ TPalette16::TPalette16(const tagRGBQUAD* quad)
     }
 }
 
-// Original: TPalette16::TPalette16; palette.cpp:165, dc 0x10a77c.
+// Original: TPalette16::TPalette16; palette.cpp:165
+DC_ADDRESS(0x10a77c, 0xd6)
 TPalette16::TPalette16(const char* name, const TPalette24& p24)
     : resource(name, RESOURCE_TYPE_PALETTE)
 {
@@ -159,14 +170,16 @@ TPalette16::TPalette16(const char* name, const TPalette24& p24)
 // The pointer-taking copy constructor, and the payload-only assignment behind
 // it - both the TPalette24 shapes with the 0x200-byte table in place of the
 // 0x300-byte one, and the assignment keeps the resource identity.
-VA(0x005228e0, 0x30) MAC_ADDRESS(0x13ba10, 0x68)  // dc 0x10a854
+DC_ADDRESS(0x10a854, 0x4a)
+VA(0x005228e0, 0x30) MAC_ADDRESS(0x13ba10, 0x68)
 TPalette16::TPalette16(const TPalette16* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, copy->m_data, sizeof(m_data));
 }
 
-VA(0x00522910, 0x21) MAC_ADDRESS(0x13ba78, 0x48)  // dc 0x10a8a0
+DC_ADDRESS(0x10a8a0, 0x40)
+VA(0x00522910, 0x21) MAC_ADDRESS(0x13ba78, 0x48)
 TPalette16* TPalette16::operator=(const TPalette16* from)
 {
     if (this != from)
@@ -174,7 +187,8 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
     return this;
 }
 
-VA(0x00522940, 0xB) MAC_ADDRESS(0x13bac0, 0x60)  // dc 0x10a8e0
+DC_ADDRESS(0x10a8e0, 0x2e)
+VA(0x00522940, 0xB) MAC_ADDRESS(0x13bac0, 0x60)
 TPalette16::~TPalette16()
 {
 }
@@ -187,6 +201,7 @@ TPalette16::~TPalette16()
 // The 72-state family distinguishes actual channel-value lifetimes from casts:
 // named ushort channels give both callers 100%; inline casts alone leave
 // 94.8548/94.9365. The destination-pointer form preserves the recorded p16.
+DC_ADDRESS(0x10a910, 0x88)
 MAC_ADDRESS(0x13bb20, 0xa0)
 void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
                                int gbits, int gshift, int bbits, int bshift)
@@ -204,7 +219,8 @@ void TPalette16::convert24to16(const unsigned char* p24, int rbits, int rshift,
     }
 }
 
-// Original: TPalette16::ConvertRGBAto16; palette.cpp:236, dc 0x10a998.
+// Original: TPalette16::ConvertRGBAto16; palette.cpp:236
+DC_ADDRESS(0x10a998, 0x7e)
 void TPalette16::convertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
     int gbits, int gshift, int bbits, int bshift)
 {
@@ -221,7 +237,8 @@ void TPalette16::convertRGBAto16(const TRGBA* rgba, int rbits, int rshift,
     }
 }
 
-// Original: TPalette16::ConvertRGBQUADto16; palette.cpp:262, dc 0x10aa18.
+// Original: TPalette16::ConvertRGBQUADto16; palette.cpp:262
+DC_ADDRESS(0x10aa18, 0x7e)
 void TPalette16::convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift,
     int gbits, int gshift, int bbits, int bshift)
 {
@@ -238,7 +255,8 @@ void TPalette16::convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshif
     }
 }
 
-VA(0x00522950, 0xBE) MAC_ADDRESS(0x13bbc0, 0xe0)  // dc 0x10aa98
+DC_ADDRESS(0x10aa98, 0xac)
+VA(0x00522950, 0xBE) MAC_ADDRESS(0x13bbc0, 0xe0)
 void TPalette16::cycle(int begin, int end, int step)
 {
     if (step > 0) {
@@ -258,7 +276,8 @@ void TPalette16::cycle(int begin, int end, int step)
     }
 }
 
-// Original: TPalette16::Colorize; palette.cpp:315, dc 0x10ab44.
+// Original: TPalette16::Colorize; palette.cpp:315
+DC_ADDRESS(0x10ab44, 0x416)
 void TPalette16::colorize(float hue, float saturation)
 {
     const unsigned int redNorm = std::numeric_limits<int>::max() / s_redMask;
@@ -288,7 +307,8 @@ void TPalette16::colorize(float hue, float saturation)
     }
 }
 
-// Original: TPalette16::AdjustHue; palette.cpp:360, dc 0x10af5c.
+// Original: TPalette16::AdjustHue; palette.cpp:360
+DC_ADDRESS(0x10af5c, 0x28e)
 void TPalette16::adjustHue(float hue, float amount)
 {
     const unsigned int redNorm = std::numeric_limits<int>::max() / s_redMask;
@@ -320,7 +340,8 @@ void TPalette16::adjustHue(float hue, float amount)
     }
 }
 
-VA(0x00522a10, 0x122) MAC_ADDRESS(0x13bca0, 0x160)  // dc 0x10b1ec
+DC_ADDRESS(0x10b1ec, 0x134)
+VA(0x00522a10, 0x122) MAC_ADDRESS(0x13bca0, 0x160)
 void TPalette16::adjustSaturation(float amount)
 {
     const unsigned int redNorm =
@@ -379,7 +400,8 @@ unsigned int TPalette16::getSize() const
     return sizeof(*this);
 }
 
-// Original: TPalette16::AdjustValue; palette.cpp:454, dc 0x10b320.
+// Original: TPalette16::AdjustValue; palette.cpp:454
+DC_ADDRESS(0x10b320, 0x164)
 void TPalette16::adjustValue(float amount)
 {
     const unsigned int redNorm = std::numeric_limits<int>::max() / s_redMask;
@@ -405,7 +427,8 @@ void TPalette16::adjustValue(float amount)
     }
 }
 
-VA(0x00522b50, 0x1F5) MAC_ADDRESS(0x13be08, 0x274)  // dc 0x10b484
+DC_ADDRESS(0x10b484, 0x328)
+VA(0x00522b50, 0x1F5) MAC_ADDRESS(0x13be08, 0x274)
 void TPalette16::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
@@ -466,7 +489,8 @@ void TPalette16::adjustHSV(float hue, float hueAdjust,
     }
 }
 
-VA(0x00522d50, 0xD6) MAC_ADDRESS(0x13c07c, 0x170)  // dc 0x10b7ac
+DC_ADDRESS(0x10b7ac, 0xea)
+VA(0x00522d50, 0xD6) MAC_ADDRESS(0x13c07c, 0x170)
 void TPalette16::gray()
 {
     const unsigned int redNorm =
@@ -492,6 +516,7 @@ void TPalette16::gray()
 }
 #undef max
 
+DC_ADDRESS(0x10b898, 0x6c)
 VA(0x00522e30, 0x16) MAC_ADDRESS(0x13c1ec, 0x40)  // null-name resource ctor + TPalette24 vtable
 TPalette24::TPalette24()
     : resource(0, RESOURCE_TYPE_NONE)
@@ -500,14 +525,16 @@ TPalette24::TPalette24()
 
 VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
 
-VA(0x00522e80, 0x2D) MAC_ADDRESS(0x13c22c, 0x68)  // dc 0x10b904
+DC_ADDRESS(0x10b904, 0x48)
+VA(0x00522e80, 0x2D) MAC_ADDRESS(0x13c22c, 0x68)
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, data, sizeof(m_palette));
 }
 
-VA(0x00522eb0, 0x42) MAC_ADDRESS(0x13c294, 0x124)  // dc 0x10b94c
+DC_ADDRESS(0x10b94c, 0x78)
+VA(0x00522eb0, 0x42) MAC_ADDRESS(0x13c294, 0x124)
 TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -519,7 +546,8 @@ TPalette24::TPalette24(const TRGBA* rgba)
     }
 }
 
-// Original: TPalette24::TPalette24; palette.cpp:622, dc 0x10b9c4.
+// Original: TPalette24::TPalette24; palette.cpp:622
+DC_ADDRESS(0x10b9c4, 0x78)
 TPalette24::TPalette24(const tagRGBQUAD* quad)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -531,13 +559,15 @@ TPalette24::TPalette24(const tagRGBQUAD* quad)
     }
 }
 
-VA(0x00522f00, 0x30) MAC_ADDRESS(0x13c3b8, 0x68)  // dc 0x10ba3c
+DC_ADDRESS(0x10ba3c, 0x4a)
+VA(0x00522f00, 0x30) MAC_ADDRESS(0x13c3b8, 0x68)
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, copy->m_palette, sizeof(m_palette));
 }
 
+DC_ADDRESS(0x10ba88, 0x22)
 VA(0x00522f30, 0x21) MAC_ADDRESS(0x13c420, 0x48)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {
@@ -546,6 +576,7 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
     return *this;
 }
 
+DC_ADDRESS(0x10baac, 0x44)
 VA(0x00522f60, 0x0b) MAC_ADDRESS(0x13c468, 0x60)  // TPalette24 vtable 0x640374 + resource dtor tail
 TPalette24::~TPalette24()
 {
@@ -557,7 +588,8 @@ unsigned int TPalette24::getSize() const
     return sizeof(*this);
 }
 
-// Original: TPalette24::Cycle; palette.cpp:655, dc 0x10baf0.
+// Original: TPalette24::Cycle; palette.cpp:655
+DC_ADDRESS(0x10baf0, 0x102)
 void TPalette24::cycle(int begin, int end, int step)
 {
     begin *= 3;
@@ -585,7 +617,8 @@ void TPalette24::cycle(int begin, int end, int step)
     }
 }
 
-// Original: TPalette24::Colorize; palette.cpp:685, dc 0x10bbf4.
+// Original: TPalette24::Colorize; palette.cpp:685
+DC_ADDRESS(0x10bbf4, 0x364)
 void TPalette24::colorize(float hue, float saturation)
 {
     for (int i = 10; i < 256; ++i) {
@@ -612,7 +645,8 @@ void TPalette24::colorize(float hue, float saturation)
     }
 }
 
-// Original: TPalette24::Gray; palette.cpp:723, dc 0x10bf58.
+// Original: TPalette24::Gray; palette.cpp:723
+DC_ADDRESS(0x10bf58, 0x7a)
 void TPalette24::gray()
 {
     for (int i = 10; i < 256; ++i) {
@@ -626,7 +660,8 @@ void TPalette24::gray()
     }
 }
 
-VA(0x00522f80, 0x20E) MAC_ADDRESS(0x13c4d0, 0x2c4)  // dc 0x10bfd4
+DC_ADDRESS(0x10bfd4, 0x39c)
+VA(0x00522f80, 0x20E) MAC_ADDRESS(0x13c4d0, 0x2c4)
 void TPalette24::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
@@ -688,8 +723,9 @@ void TPalette24::adjustHSV(float hue, float hueAdjust,
     }
 }
 
-// Original: RGBToHSV; palette.cpp:827, dc 0x10c370.
-VA(0x00523190, 0x160) MAC_ADDRESS(0x13c794, 0x1c8)  // dc 0x10c370
+// Original: RGBToHSV; palette.cpp:827
+DC_ADDRESS(0x10c370, 0x1f2)
+VA(0x00523190, 0x160) MAC_ADDRESS(0x13c794, 0x1c8)
 void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v)
 {
@@ -729,8 +765,9 @@ void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
     }
 }
 
-// Original: HSVToRGB; palette.cpp:862, dc 0x10c564.
-VA(0x005232f0, 0x2EC) MAC_ADDRESS(0x13c95c, 0x248)  // dc 0x10c564
+// Original: HSVToRGB; palette.cpp:862
+DC_ADDRESS(0x10c564, 0x34c)
+VA(0x005232f0, 0x2EC) MAC_ADDRESS(0x13c95c, 0x248)
 void hsvToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b)
 {

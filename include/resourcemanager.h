@@ -1,6 +1,8 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
+#include "va.h"
+
 #include "resource.h"
 #include "csprite.h"
 
@@ -61,12 +63,15 @@ resource* getFromCache(const char* name);
 // Existing disposal wrappers expand across TUs in the selection destructor:
 // Windows 0x583bb8..0x583c35 and Mac 0x17b5b0..0x17b6bc retain only the
 // member virtual calls. Their bodies must be visible at those source calls.
+DC_ADDRESS(0x122530, 0x90)
 inline void dispose(resource* value) { value->dispose(); }
 void dispose(sample* value);
+DC_ADDRESS(0x1225dc, 0xf6)
 inline void dispose(CSprite* value) { value->dispose(); }
 // Older DC resourcemanager.cpp:2280, dc 0x1226d4 had the cache sweep.
 // Complete has no cache-sweep work in the Windows and Mac selection teardown.
 // Keep the original call and expose the empty helper across translation units.
+DC_ADDRESS(0x1226d4, 0x1d6)
 inline void delSprFromCache() {}
 
 LODFile* pointToSpriteResource(const char* name);

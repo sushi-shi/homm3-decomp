@@ -7,7 +7,8 @@
 
 #include "bitmap16.h"
 
-// Original: font::font; font.cpp:33, dc 0xa1ba8
+// Original: font::font; font.cpp:33
+DC_ADDRESS(0x0a1ba8, 0x5c)
 font::font() : resource("", RESOURCE_TYPE_FONT), m_data(0)
 {
 }
@@ -16,7 +17,8 @@ VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
 
 // The resource type is 0x50; the neighbouring proven values are
 // text 2, bitmap24 0x11 and sfx 0x20.
-VA(0x004b5070, 0x9B) MAC_ADDRESS(0x0c8cdc, 0xb8)  // anchor-global, dc 0xa1c04
+DC_ADDRESS(0x0a1c04, 0x90)
+VA(0x004b5070, 0x9B) MAC_ADDRESS(0x0c8cdc, 0xb8)  // anchor-global
 font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
            unsigned char* d)
     : resource(name, RESOURCE_TYPE_FONT), m_fs(fontspec)
@@ -28,7 +30,8 @@ font::font(const char* name, const font::TFontSpec& fontspec, int dsize,
 }
 
 // Mac 0:0xc8dc8 uses array delete for the new[] glyph buffer.
-VA(0x004b5110, 0x67) MAC_ADDRESS(0x0c8d94, 0x7c)  // dc 0xa1c94
+DC_ADDRESS(0x0a1c94, 0x4e)
+VA(0x004b5110, 0x67) MAC_ADDRESS(0x0c8d94, 0x7c)
 font::~font()
 {
     if (m_data)
@@ -39,6 +42,7 @@ font::~font()
 // The decorated DC member signature uses TColor and bool (_N). Both
 // string renderers call this ordinary member; retail expands the custom
 // color test and palette bias. Keep the shared return and nested highlight.
+DC_ADDRESS(0x0a1ce4, 0x30)
 MAC_ADDRESS(0x0c8e10, 0x3c)
 int font::getColor(font::TColor colorScheme, bool highlighted)
 {
@@ -56,7 +60,8 @@ int font::getColor(font::TColor colorScheme, bool highlighted)
 }
 
 // E:\gamedcs\font.cpp:81
-VA(0x004b5180, 0x16) MAC_ADDRESS(0x0c8e4c, 0x24)  // anchor-global, dc 0xa1d14
+DC_ADDRESS(0x0a1d14, 0x44)
+VA(0x004b5180, 0x16) MAC_ADDRESS(0x0c8e4c, 0x24)  // anchor-global
 void font::setPalette(const TPalette16& newPalette)
 {
     // DC82 calls the reference copy assignment; Complete 0x4b5180 calls
@@ -65,7 +70,8 @@ void font::setPalette(const TPalette16& newPalette)
     m_palette = &newPalette;
 }
 
-VA(0x004b51a0, 0xA9) MAC_ADDRESS(0x0c8e70, 0xd0)  // dc 0xa1d58
+DC_ADDRESS(0x0a1d58, 0xd6)
+VA(0x004b51a0, 0xA9) MAC_ADDRESS(0x0c8e70, 0xd0)
 void font::drawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color) const
 {
     if (c < 0)
@@ -104,6 +110,7 @@ unsigned int font::getSize() const
 // DC proves the ordinary nine-argument member and the underscore draw;
 // clip arguments are unused. Retail expands it at the string-rendering
 // call sites. The decorated bool (_N) remains the highlight interface.
+DC_ADDRESS(0x0a1e30, 0x2c)
 MAC_ADDRESS(0x0c8f40, 0x44)
 void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
                       int clipX, int clipY, int clipWidth, int clipHeight,
@@ -112,8 +119,9 @@ void font::drawCursor(Bitmap16Bit* bitmap, int x, int y, int color,
     drawCharacter('_', bitmap, x, y, color + highlighted);
 }
 
-// E:\gamedcs\font.cpp:138, dc 0xa1e5c
-VA(0x004b5260, 0x22E) MAC_ADDRESS(0x0c8f90, 0x2a8)  // dc 0xa1e5c
+// E:\gamedcs\font.cpp:138
+DC_ADDRESS(0x0a1e5c, 0x240)
+VA(0x004b5260, 0x22E) MAC_ADDRESS(0x0c8f90, 0x2a8)
 void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                              int x, int y, font::TColor colorScheme, int clipX,
                              int clipY, int clipWidth, int clipHeight,
@@ -188,7 +196,8 @@ void font::drawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                    clipWidth, clipHeight, highlighted);
 }
 
-// Original: font::DrawString; font.cpp:246, dc 0xa209c
+// Original: font::DrawString; font.cpp:246
+DC_ADDRESS(0x0a209c, 0x6a)
 void font::drawString(const char* text, Bitmap16Bit* bitmap,
                       int x, int y, TColor color)
 {
@@ -236,7 +245,8 @@ void font::drawString(const char* text, Bitmap16Bit* bitmap,
 // register/long/initializer/address-taken spellings (96.81), and removing
 // or bypassing the loop guard (95-96% allocation cascades).
 
-VA(0x004b5490, 0x308) MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global, dc 0xa2108
+DC_ADDRESS(0x0a2108, 0x316)
+VA(0x004b5490, 0x308) MAC_ADDRESS(0x0c9238, 0x3c8)  // anchor-global
 void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
                              font::TColor colorScheme, unsigned justification,
@@ -358,14 +368,16 @@ void font::drawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 }
 
 // The ordinary ABC sum order matches both retained retail bodies exactly.
-VA(0x004b57a0, 0x25) MAC_ADDRESS(0x0c9600, 0x28)  // dc 0xa2420
+DC_ADDRESS(0x0a2420, 0x18)
+VA(0x004b57a0, 0x25) MAC_ADDRESS(0x0c9600, 0x28)
 int font::getCharacterWidth(unsigned char currChar) const
 {
     const TFontSpec::myABC* record = &m_fs.m_abc[currChar];
     return record->m_abcA + record->m_abcB + record->m_abcC;
 }
 
-VA(0x004b57d0, 0x44) MAC_ADDRESS(0x0c9628, 0x68)  // dc 0xa2438
+DC_ADDRESS(0x0a2438, 0x34)
+VA(0x004b57d0, 0x44) MAC_ADDRESS(0x0c9628, 0x68)
 long font::getStringWidth(const char* arg) const
 {
     long width = 0;
@@ -374,7 +386,8 @@ long font::getStringWidth(const char* arg) const
     return width;
 }
 
-VA(0x004b5820, 0xF2) MAC_ADDRESS(0x0c9690, 0x14c)  // dc 0xa246c
+DC_ADDRESS(0x0a246c, 0xe6)
+VA(0x004b5820, 0xF2) MAC_ADDRESS(0x0c9690, 0x14c)
 int font::lineLength(const char* str, int boxWidth) const
 {
     int limit = strlen(str);
@@ -413,7 +426,8 @@ int font::lineLength(const char* str, int boxWidth) const
     return count;
 }
 
-VA(0x004b5920, 0x64) MAC_ADDRESS(0x0c97dc, 0xac)  // dc 0xa2554
+DC_ADDRESS(0x0a2554, 0x74)
+VA(0x004b5920, 0x64) MAC_ADDRESS(0x0c97dc, 0xac)
 int font::lineWidth(const char* text) const
 {
     int len = strlen(text);
@@ -431,7 +445,8 @@ int font::lineWidth(const char* text) const
 
 // Ordinary len/pos/best declaration order matches both Windows and Mac;
 // the native difference was seven uses of the swapped best/pos registers.
-VA(0x004b5990, 0x76) MAC_ADDRESS(0x0c9888, 0xc4)  // dc 0xa25c8
+DC_ADDRESS(0x0a25c8, 0x86)
+VA(0x004b5990, 0x76) MAC_ADDRESS(0x0c9888, 0xc4)
 int font::longestLineWidth(const char* str) const
 {
     int len = strlen(str);
@@ -451,7 +466,8 @@ int font::longestLineWidth(const char* str) const
     return best;
 }
 
-VA(0x004b5a10, 0x6F) MAC_ADDRESS(0x0c994c, 0xd4)  // dc 0xa2650
+DC_ADDRESS(0x0a2650, 0x84)
+VA(0x004b5a10, 0x6F) MAC_ADDRESS(0x0c994c, 0xd4)
 int font::longestWordLength(const char* str) const
 {
     int best = 0;
@@ -473,7 +489,8 @@ int font::longestWordLength(const char* str) const
     return best;
 }
 
-VA(0x004b5a80, 0x110) MAC_ADDRESS(0x0c9a20, 0x158)  // dc 0xa26d4
+DC_ADDRESS(0x0a26d4, 0xf0)
+VA(0x004b5a80, 0x110) MAC_ADDRESS(0x0c9a20, 0x158)
 int font::longestWrappedLineWidth(const char* str, int boxWidth) const
 {
     int limit = strlen(str);

@@ -193,7 +193,8 @@ CSprite* g_progDots;
 DATA(0x00699574)
 int g_progressCount;
 
-VA(0x004ed230, 0x6A) MAC_ADDRESS(0x10e850, 0xb8)  // dc 0xdf160
+DC_ADDRESS(0x0df160, 0x7c)
+VA(0x004ed230, 0x6A) MAC_ADDRESS(0x10e850, 0xb8)
 void drawProgressCount()
 {
     if (!g_progDots)
@@ -207,7 +208,8 @@ void drawProgressCount()
     }
 }
 
-VA(0x004ed2a0, 0xA7) MAC_ADDRESS(0x10e908, 0x90)  // dc 0xdf1dc
+DC_ADDRESS(0x0df1dc, 0x4a)
+VA(0x004ed2a0, 0xA7) MAC_ADDRESS(0x10e908, 0x90)
 void incProgressBar(bool update)
 {
     if (!g_progDots)
@@ -220,7 +222,8 @@ void incProgressBar(bool update)
         g_windowManager->updateScreen(395, 548, 358, 16);
 }
 
-VA(0x004ed350, 0xF3) MAC_ADDRESS(0x10e998, 0xd8)  // dc 0xdf228
+DC_ADDRESS(0x0df228, 0x7c)
+VA(0x004ed350, 0xF3) MAC_ADDRESS(0x10e998, 0xd8)
 void showProgressBar()
 {
     if (!g_loadBar) {
@@ -239,7 +242,8 @@ void showProgressBar()
     }
 }
 
-VA(0x004ed450, 0x3D) MAC_ADDRESS(0x10ea70, 0x80)  // dc 0xdf2a4
+DC_ADDRESS(0x0df2a4, 0x8c)
+VA(0x004ed450, 0x3D) MAC_ADDRESS(0x10ea70, 0x80)
 void unloadProgressBar()
 {
     if (g_loadBar)
@@ -251,7 +255,8 @@ void unloadProgressBar()
     g_loadBar = 0;
 }
 
-VA(0x004ed490, 0x1B5) MAC_ADDRESS(0x10eaf0, 0x1e0)  // dc 0xdf330
+DC_ADDRESS(0x0df330, 0x1b4)
+VA(0x004ed490, 0x1B5) MAC_ADDRESS(0x10eaf0, 0x1e0)
 void pollSound()
 {
     if (!g_inPollSound) {
@@ -396,7 +401,8 @@ static int checkMem();
 // older flag probe also changed the loop headers and is not this control.
 // The release logging hook belongs to a separate source unit: keeping its
 // empty body here incorrectly eliminates retail's call (99.0146 -> 99.5994).
-VA(0x004ed650, 0x4E8) MAC_ADDRESS(0x10f24c, 0x208)  // anchor-caller (kbwin WinMain) + dc-order-map, dc 0xdf91c
+DC_ADDRESS(0x0df91c, 0x11e)
+VA(0x004ed650, 0x4E8) MAC_ADDRESS(0x10f24c, 0x208)  // anchor-caller (kbwin WinMain) + dc-order-map
 int earlySetup()
 {
     int openResult;
@@ -479,7 +485,8 @@ int earlySetup()
     return 1;
 }
 
-VA(0x004edb40, 0x256) MAC_ADDRESS(0x10ecd0, 0x1ac)  // dc 0xdf4e4
+DC_ADDRESS(0x0df4e4, 0x1ec)
+VA(0x004edb40, 0x256) MAC_ADDRESS(0x10ecd0, 0x1ac)
 void initMainClasses()
 {
     g_executive = new executive;
@@ -496,7 +503,8 @@ void initMainClasses()
     g_philAI = new philAI;
 }
 
-VA(0x004edda0, 0x407) MAC_ADDRESS(0x10f454, 0x430)  // dc 0xdfa3c
+DC_ADDRESS(0x0dfa3c, 0x520)
+VA(0x004edda0, 0x407) MAC_ADDRESS(0x10f454, 0x430)
 void creditsWait()
 {
     message msg;
@@ -635,6 +643,7 @@ int oldmain()
 // town and executive managers plus the AI turn driver are trivially
 // destructible.
 
+DC_ADDRESS(0x0df6d0, 0x170)
 MAC_ADDRESS(0x10ee7c, 0x248)
 static void deleteMainClasses()
 {
@@ -679,6 +688,7 @@ static void deleteMainClasses()
 // E:\gamedcs\kb.cpp:553. The WinCE body reduces to exit(0), but the two
 // parameter names and SetupCDRom call sites survive in CodeView. Retail's
 // corresponding paths inline the Win32 MessageBoxA body and then exit.
+DC_ADDRESS(0x0df840, 0x12)
 MAC_ADDRESS(0x10f0c4, 0x30)
 static void earlyShutdown(const char* title, const char* body)
 {
@@ -689,6 +699,7 @@ static void earlyShutdown(const char* title, const char* body)
 // E:\gamedcs\kb.cpp:580. This is source-static in CodeView and retail has no
 // standalone body: VC6 /Ob2 folds it into oldmain at +0xd7..+0x245. Keep the
 // helper real so its source boundary participates in the inliner naturally.
+DC_ADDRESS(0x0df854, 0xc6)
 MAC_ADDRESS(0x10f0f4, 0x158)
 static void setupCDRom()
 {
@@ -773,7 +784,8 @@ static void kbFn004EE1B0(int videoId, const char* frameName)
     frame->dispose();
 }
 
-VA(0x004ee2b0, 0x121) MAC_ADDRESS(0x10fafc, 0x1a4)  // dc 0xdffe4
+DC_ADDRESS(0x0dffe4, 0x174)
+VA(0x004ee2b0, 0x121) MAC_ADDRESS(0x10fafc, 0x1a4)
 void lostGame()
 {
     unsigned char done = 0;
@@ -902,6 +914,7 @@ static void openCampaignVideo()
 // first Draw lowers inline while the later identical Draw reaches the
 // compiler-emitted forwarding wrapper, exactly the kind of site-specific
 // /Ob2 decision that must remain expressed as one source-level operation.
+DC_ADDRESS(0x0dff5c, 0x86)
 MAC_ADDRESS(0x10f884, 0xdc)
 void showCredits()
 {
@@ -962,7 +975,8 @@ void showCredits()
 // including all kb bodies and EH/relocation graphs. They do not repair the
 // misplaced DoMultiPlayerWindow expansion in the new-game arm.
 
-VA(0x004ee3e0, 0x1C04) MAC_ADDRESS(0x10fd68, 0x12b8)  // dc 0xe0158
+DC_ADDRESS(0x0e0158, 0x11b4)
+VA(0x004ee3e0, 0x1C04) MAC_ADDRESS(0x10fd68, 0x12b8)
 int oldmain()
 {
     int command = -1;
@@ -1411,6 +1425,7 @@ int oldmain()
 // the one TGameTypeWindow lifetime, all five command arms, and the retry
 // loop. Complete expands this body into oldmain at +0x834; retail adds the
 // tutorial-player setup below and skips VideoPause before the campaign arm.
+DC_ADDRESS(0x0e130c, 0x2a4)
 MAC_ADDRESS(0x11128c, 0x490)
 static int doNewGame()
 {
@@ -1644,6 +1659,7 @@ static unsigned char doCampaignWindow()
 // E:\gamedcs\kb.cpp:1988. Complete retains this static helper out of line
 // at 0x4f0490. Retail independently proves the modal object's 0x1970 size,
 // the cancel/okay pair, the map-header refresh, and the final boolean.
+DC_ADDRESS(0x0e1630, 0x110)
 VA(0x004f0490, 0xFB) MAC_ADDRESS(0x11171c, 0xec)
 static int doSinglePlayerWindow()
 {
@@ -1675,6 +1691,7 @@ static int doSinglePlayerWindow()
     return g_windowManager->m_dialogReturn != DIALOG_RETURN_CANCEL;
 }
 
+DC_ADDRESS(0x0e1740, 0x36)
 VA(0x004f0590, 0x71) MAC_ADDRESS(0x111808, 0x58)
 static int doMultiPlayerWindow()
 {
@@ -1689,6 +1706,7 @@ static int doMultiPlayerWindow()
 // one TGameTypeWindow lifetime, five command arms, retry loop, and final
 // cancel/quit predicate. Complete expands it into oldmain at +0xb64; the
 // x86 jump table independently fixes each command-to-arm mapping.
+DC_ADDRESS(0x0e1778, 0x1d8)
 MAC_ADDRESS(0x111860, 0x25c)
 static int doLoadGame()
 {
@@ -1768,7 +1786,8 @@ static int doLoadGame()
 }
 
 // DC2153/2159/2162 records the success guard and separate final return.
-VA(0x004f0610, 0x77) MAC_ADDRESS(0x111abc, 0x60)  // dc 0xe1950
+DC_ADDRESS(0x0e1950, 0x3e)
+VA(0x004f0610, 0x77) MAC_ADDRESS(0x111abc, 0x60)
 static int pickLoadGame()
 {
     {
@@ -1814,7 +1833,8 @@ static int g_useWaveout;
 // The DC/Mac reset order, copying the default name before the resets, and
 // their combination also fail to close it (four source states, three objects).
 // The register diagnostic's 42 catalog probes find no closer encoding.
-VA(0x004f0690, 0x238) MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk, dc 0xe1990
+DC_ADDRESS(0x0e1990, 0x1fe)
+VA(0x004f0690, 0x238) MAC_ADDRESS(0x111b1c, 0x84)  // anchor-caller (EarlySetup) + gcCommandLine walk
 int interpretCommandLine()
 {
     int showUsage = 0;
@@ -1877,8 +1897,9 @@ int g_normalDialogStart;
 DATA(0x00699590)
 static TDialogBox* g_normalDialogWindow;
 
-// Original: NullHandler; kb.cpp:2270, dc 0xe1b90.
+// Original: NullHandler; kb.cpp:2270
 // The complete SH4 body returns one. No distinct retail address is claimed.
+DC_ADDRESS(0x0e1b90, 0x4)
 int nullHandler(message& msg)
 {
     return 1;
@@ -1891,6 +1912,7 @@ int nullHandler(message& msg)
 // exits in retail, so it has no body of its own.
 // DC records message& and a zero-remainder first arm at kb.cpp:2345/2346;
 // retail expands the same branch order into NormalDialogHandler (+0x164).
+DC_ADDRESS(0x0e1bf8, 0xd4)
 MAC_ADDRESS(0x111c64, 0xd4)
 static int exitNormalDialog(message& msg)
 {
@@ -1919,7 +1941,8 @@ static int exitNormalDialog(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
-VA(0x004f08d0, 0x20C) MAC_ADDRESS(0x111d38, 0x184)  // dc 0xe1ccc
+DC_ADDRESS(0x0e1ccc, 0x118)
+VA(0x004f08d0, 0x20C) MAC_ADDRESS(0x111d38, 0x184)
 int normalDialogHandler(message& msg)
 {
     if (g_advManager && g_advManager->m_advWindow)
@@ -1949,7 +1972,8 @@ int normalDialogHandler(message& msg)
     return eventWindowHandler(msg);
 }
 
-// E:\gamedcs\kb.cpp:2442, dc 0xe1de4.
+// E:\gamedcs\kb.cpp:2442
+DC_ADDRESS(0x0e1de4, 0x74)
 MAC_ADDRESS(0x111ebc, 0x6c)
 type_normal_dialog_frame::type_normal_dialog_frame(
     long x, long y, long w, long h, long id,
@@ -1979,7 +2003,8 @@ VA_COMPGEN(0x004f0b10, 0x5, IMPLICIT_DTOR, type_normal_dialog_frame)
 // agrees arm for arm, down to the __divls/__modls pair the secondary
 // skill arm needs.
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x004f0b20, 0x491) MAC_ADDRESS(0x111f28, 0x4dc)  // anchor-vtable + jump-table domain, dc 0xe1e58
+DC_ADDRESS(0x0e1e58, 0x214)
+VA(0x004f0b20, 0x491) MAC_ADDRESS(0x111f28, 0x4dc)  // anchor-vtable + jump-table domain
 bool type_normal_dialog_frame::handleClick(bool downClick,
                                                      bool rightClick)
 {
@@ -2071,7 +2096,8 @@ bool type_normal_dialog_frame::handleClick(bool downClick,
     return 0;
 }
 
-VA(0x004f0fc0, 0x1C3) MAC_ADDRESS(0x112404, 0x25c)  // dc 0xe206c
+DC_ADDRESS(0x0e206c, 0x1ee)
+VA(0x004f0fc0, 0x1C3) MAC_ADDRESS(0x112404, 0x25c)
 int eventWindowHandler(message& msg)
 {
     if (g_dialogDeadline && GameTime::isPast(g_dialogDeadline)) {
@@ -2141,13 +2167,15 @@ int eventWindowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x004f1190, 0x5) MAC_ADDRESS(0x112660, 0x20)  // dc 0xe225c
+DC_ADDRESS(0x0e225c, 0x10)
+VA(0x004f1190, 0x5) MAC_ADDRESS(0x112660, 0x20)
 int trueFalseDialogHandler(message* msg)
 {
     return eventWindowHandler(*msg);
 }
 
-VA(0x004f11a0, 0x2bc) MAC_ADDRESS(0x112680, 0x36c)  // dc 0xe226c
+DC_ADDRESS(0x0e226c, 0x234)
+VA(0x004f11a0, 0x2bc) MAC_ADDRESS(0x112680, 0x36c)
 void playerDead(int whichPlayer)
 {
     int level;
@@ -2226,6 +2254,7 @@ void playerDead(int whichPlayer)
 // g_game indexing was 88.5571%; pointer/reference forms agree. The joined
 // predicate follows the DC scopes even where its score is byte-flat.
 
+DC_ADDRESS(0x0e24a0, 0x366)
 MAC_ADDRESS(0x1129ec, 0x3e8)
 static void checkPlayerLoss()
 {
@@ -2295,7 +2324,8 @@ static void checkPlayerLoss()
     }
 }
 
-VA(0x004f1460, 0x172) MAC_ADDRESS(0x112dd4, 0x294)  // dc 0xe2808
+DC_ADDRESS(0x0e2808, 0x128)
+VA(0x004f1460, 0x172) MAC_ADDRESS(0x112dd4, 0x294)
 unsigned char getTeamNames(int player, char* names)
 {
     unsigned short teamMask = g_game->getTeamMask(player);
@@ -2341,6 +2371,7 @@ unsigned char getTeamNames(int player, char* names)
 // two calls. Complete expands it at every DisplayVCWinLoss site, including
 // the nested CPlayerWonMsg constructor. Mac retains the call, matching the
 // ordinary sendPlayerLost helper immediately below.
+DC_ADDRESS(0x0e2930, 0x3a)
 MAC_ADDRESS(0x113068, 0xc4)
 void sendPlayerWon()
 {
@@ -2360,6 +2391,7 @@ void sendPlayerWon()
 // the losing seat at +0x14 and the map's own loss condition assigned over a
 // default-constructed member at +0x18 - is what proves CPlayerLostMsg's
 // layout and its constructor's statement order.
+DC_ADDRESS(0x0e296c, 0x3a)
 MAC_ADDRESS(0x11312c, 0xdc)
 void sendPlayerLost()
 {
@@ -2391,7 +2423,8 @@ void sendPlayerLost()
 // self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // DC retains a text lookup in the older victory arms. Keep Complete's getText
 // helper; this spelling is Windows byte-flat here.
-VA(0x004f15e0, 0x1348) MAC_ADDRESS(0x113208, 0x154c)  // linkorder + anchor-string/callee, dc 0xe29a8
+DC_ADDRESS(0x0e29a8, 0xb1a)
+VA(0x004f15e0, 0x1348) MAC_ADDRESS(0x113208, 0x154c)  // linkorder + anchor-string/callee
 bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
                       int& gameWon, int& gameLost, bool remoteCheck)
 {
@@ -2824,6 +2857,7 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
 // it as int here; caching the receiver or keeping a byte local loses those
 // homes. No local type was recorded for this older DC helper.
 
+DC_ADDRESS(0x0e34c4, 0x92)
 MAC_ADDRESS(0x114754, 0x1d0)
 int getEnemyCount()
 {
@@ -2868,7 +2902,8 @@ int getEnemyCount()
 // An MSL-style begin route in a scratch Mac view inlined all four text lookups,
 // so retain the canonical getText source. The earlier -O1 inline profile
 // also expanded the sender.
-VA(0x004f2960, 0x37E) MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame), dc 0xe3558
+DC_ADDRESS(0x0e3558, 0x228)
+VA(0x004f2960, 0x37E) MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)
 unsigned char displayLCWinLoss(LossConditionStruct& lossCondition,
                                int& gameWon, int& gameLost,
                                unsigned char remoteCheck)
@@ -2943,7 +2978,8 @@ static unsigned char g_inCheckEndGame;
 
 void playerDead(int gamePos);
 
-VA(0x004f2ce0, 0x5BA) MAC_ADDRESS(0x114cdc, 0x380)  // dc 0xe3780
+DC_ADDRESS(0x0e3780, 0x282)
+VA(0x004f2ce0, 0x5BA) MAC_ADDRESS(0x114cdc, 0x380)
 void checkEndGame(int forceWin)
 {
     int gameWon;
@@ -3042,7 +3078,8 @@ void checkEndGame(int forceWin)
     g_inCheckEndGame = 0;
 }
 
-VA(0x004f32a0, 0x29c) MAC_ADDRESS(0x11513c, 0x1dc)  // dc 0xe3a64
+DC_ADDRESS(0x0e3a64, 0x11e)
+VA(0x004f32a0, 0x29c) MAC_ADDRESS(0x11513c, 0x1dc)
 void game::showMoraleInfo(hero* thisHero, int mbType)
 {
     int icon;
@@ -3070,6 +3107,7 @@ void game::showMoraleInfo(hero* thisHero, int mbType)
                  -1, 0, -1, 0, -1, 0);
 }
 
+DC_ADDRESS(0x0e3b84, 0x160)
 VA(0x004f3540, 0x14B) MAC_ADDRESS(0x115318, 0x130)
 void game::showLuckInfo(hero* thisHero, int mbType)
 {
@@ -3100,6 +3138,7 @@ void game::showLuckInfo(hero* thisHero, int mbType)
 
 // E:\gamedcs\kb.cpp:3763. Source-static and single-call for the same reason
 // LoadGameData is: retail expands the whole reset into EarlySetup's tail.
+DC_ADDRESS(0x0e3a04, 0x60)
 MAC_ADDRESS(0x11505c, 0xe0)
 static void initVars()
 {
@@ -3124,7 +3163,8 @@ static void initVars()
     initializeCampaignMapTraitsTable();
 }
 
-VA(0x004f3690, 0x2A2) MAC_ADDRESS(0x115448, 0x1c4)  // dc 0xe3ce4
+DC_ADDRESS(0x0e3ce4, 0x116)
+VA(0x004f3690, 0x2A2) MAC_ADDRESS(0x115448, 0x1c4)
 void shutDown(const char* inExitMessage)
 {
     if (!g_inShutDown) {
@@ -3189,6 +3229,7 @@ VA_COMPGEN(0x004f39f0, 0x6D, IMPLICIT_DTOR, advManager)
 
 // E:\gamedcs\kb.cpp:4187; Complete's body is empty (see kb.h). Mac retains
 // a one-instruction body at 0:0x115f68, called from executive::shutDownSystem.
+DC_ADDRESS(0x0e4530, 0x78)
 MAC_ADDRESS(0x115f68, 0x4)
 void earlyShutDownSystem()
 {
@@ -3199,6 +3240,7 @@ void earlyShutDownSystem()
 // every `return 0` lands on the one ShutDown. The order is retail's; the
 // four event/sign/tavern rows genuinely appear TWICE, once before the
 // creature tables and once after.
+DC_ADDRESS(0x0e45dc, 0x3d4)
 MAC_ADDRESS(0x115f6c, 0x484)
 static unsigned char loadGameData()
 {
@@ -3318,6 +3360,7 @@ static unsigned char loadGameData()
 
 // E:\gamedcs\kb.cpp:4855. The helper is source-static and only oldmain calls
 // it; retail therefore contains these two stores solely in the caller.
+DC_ADDRESS(0x0e52a8, 0x10)
 MAC_ADDRESS(0x116780, 0x20)
 static int checkMem()
 {
@@ -3397,7 +3440,8 @@ unsigned short* getMapExtraPtr(int x, int y, int z)
 // E:\gamedcs\kb.cpp:2445 - both promoted to live claims (see below).
 #endif  // @carcass
 
-VA(0x004f3a60, 0x4D) MAC_ADDRESS(0x11560c, 0x88)  // dc 0xe3dfc
+DC_ADDRESS(0x0e3dfc, 0x4c)
+VA(0x004f3a60, 0x4D) MAC_ADDRESS(0x11560c, 0x88)
 void fileError(const char* buf)
 {
     char temp[500];
@@ -3406,7 +3450,8 @@ void fileError(const char* buf)
     normalDialog(temp, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x004f3ab0, 0x374) MAC_ADDRESS(0x115694, 0x458)  // dc 0xe3e48
+DC_ADDRESS(0x0e3e48, 0x450)
+VA(0x004f3ab0, 0x374) MAC_ADDRESS(0x115694, 0x458)
 void congratsWait(int mode, char* rank, int base, int score, int dayz)
 {
     message msg;
@@ -3510,7 +3555,8 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
     currentFont->dispose();
 }
 
-VA(0x004f3e30, 0x7A) MAC_ADDRESS(0x115aec, 0xd0)  // dc 0xe4298
+DC_ADDRESS(0x0e4298, 0x66)
+VA(0x004f3e30, 0x7A) MAC_ADDRESS(0x115aec, 0xd0)
 short game::getBaseMapScore() const
 {
     short turn = getCurrentTurn();
@@ -3523,7 +3569,8 @@ short game::getBaseMapScore() const
                               + 200);
 }
 
-VA(0x004f3eb0, 0xA7) MAC_ADDRESS(0x115bbc, 0x78)  // dc 0xe4300
+DC_ADDRESS(0x0e4300, 0x2e)
+VA(0x004f3eb0, 0xA7) MAC_ADDRESS(0x115bbc, 0x78)
 short game::getMapScore() const
 {
     return static_cast<short>(static_cast<float>(getBaseMapScore())
@@ -3545,7 +3592,8 @@ std::string getCampaignName();
 // Windows remains 97.51938%, Mac 19.2647% with all 23 calls aligned.
 // Moving temp[30] to the DC line gap before GetMonType is likewise byte-flat
 // in both compilers; it does not change CodeWarrior's buffer stack slot.
-VA(0x004f3f60, 0x357) MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario", dc 0xe4330
+DC_ADDRESS(0x0e4330, 0x1be)
+VA(0x004f3f60, 0x357) MAC_ADDRESS(0x115c34, 0x2a8)  // anchor-callee (CongratsWait/AddScoreToHighScore) + "Win Scenario"
 void showCongrats(int hsType)
 {
     std::string landName;
@@ -3594,7 +3642,8 @@ void showCongrats(int hsType)
 DATA(0x0069958e)
 unsigned char g_inMemError;
 
-VA(0x004f42c0, 0x43) MAC_ADDRESS(0x115edc, 0x8c)  // dc 0xe44f0
+DC_ADDRESS(0x0e44f0, 0x40)
+VA(0x004f42c0, 0x43) MAC_ADDRESS(0x115edc, 0x8c)
 void memError()
 {
     if (!g_inMemError) {
@@ -3608,7 +3657,8 @@ void memError()
     }
 }
 
-VA(0x004f4310, 0x35)  // dc 0xe45a8
+DC_ADDRESS(0x0e45a8, 0x34)
+VA(0x004f4310, 0x35)
 int gameUnsaved()
 {
     if (g_advManager && g_advManager->m_status == baseManager::STATUS_ACTIVE)
@@ -3623,7 +3673,8 @@ int gameUnsaved()
 // These menu cheats perform the same game/campaign marking operation as
 // both chat handlers and the combat cheat worker. Keep their canonical
 // free helper, including its second global load for the campaign store.
-VA(0x004f4350, 0x7F2)  // dc 0xe49b0
+DC_ADDRESS(0x0e49b0, 0x79c)
+VA(0x004f4350, 0x7F2)
 int handleAppSpecificMenuCommands(int idItem)
 {
     hero* currentHero = 0;
@@ -3824,7 +3875,8 @@ int handleAppSpecificMenuCommands(int idItem)
     return 0;
 }
 
-VA(0x004f4b50, 0x42)  // dc 0xe514c
+DC_ADDRESS(0x0e514c, 0x50)
+VA(0x004f4b50, 0x42)
 void cleanUpMenus()
 {
     if (g_activeMenu) {
@@ -3840,7 +3892,8 @@ void cleanUpMenus()
 // E:\gamedcs\kb.cpp:4781.  DC supplies the public identity and signature;
 // retail independently proves the modulo-eight walk, IsHuman call, disabled
 // flag at game+0x1f636 and the stop when the scan wraps to its starting seat.
-VA(0x004f4ba0, 0x5F) MAC_ADDRESS(0x1163f0, 0xcc)  // anchor-caller (remote 0x556780), dc 0xe519c
+DC_ADDRESS(0x0e519c, 0x76)
+VA(0x004f4ba0, 0x5F) MAC_ADDRESS(0x1163f0, 0xcc)  // anchor-caller (remote 0x556780)
 int getNextHumanPlayer(int start)
 {
     // DC r8 and Mac r28 mutate the incoming seat while r9/r29 preserve it.
@@ -3866,7 +3919,8 @@ int getNextHumanPlayer(int start)
     return start;
 }
 
-VA(0x004f4c00, 0x2AA) MAC_ADDRESS(0x1164bc, 0x2c4)  // dc 0xe5214
+DC_ADDRESS(0x0e5214, 0x94)
+VA(0x004f4c00, 0x2AA) MAC_ADDRESS(0x1164bc, 0x2c4)
 void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 {
     if (g_remoteOn) {
@@ -3929,7 +3983,8 @@ void handleRemoteDeadPlayerExit(int dpGamePos, unsigned char showMsg)
 // boundaries, statement groups and text-wrapping scopes. Retail corroborates
 // the Complete-only Conflux enum insertion, every field offset, packed
 // qualifier interpretation, table stride, literal, and the final CFG.
-VA(0x004f4eb0, 0xEC9) MAC_ADDRESS(0x1167a0, 0xa80)  // linkorder + anchor-callee, dc 0xe52b8
+DC_ADDRESS(0x0e52b8, 0x6a8)
+VA(0x004f4eb0, 0xEC9) MAC_ADDRESS(0x1167a0, 0xa80)  // linkorder + anchor-callee
 void type_dialog_icon::set(EGameResource resource, long qualifier)
 {
     // Residual (99.5366%): all 133 CFG blocks and all 64 branches agree.
@@ -4260,7 +4315,8 @@ void type_dialog_icon::set(EGameResource resource, long qualifier)
 // at79.6296% and lower VC6 to99.9719%; the existing chain is retained.
 // Grouping numIcons before i while initializing it after the zero loop is
 // byte-flat in both compilers; the existing declaration lifetime stays.
-VA(0x004f5d80, 0x51C) MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map, dc 0xe5960
+DC_ADDRESS(0x0e5960, 0x574)
+VA(0x004f5d80, 0x51C) MAC_ADDRESS(0x117220, 0xa8c)  // anchor-caller (get_quickview_size/NormalDialog) + dc-order-map
 void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
 {
     long widestIcon = 0;
@@ -4435,7 +4491,8 @@ void calculateNormalDialogSize(TNormalDialogInfo& dialogInfo)
     }
 }
 
-VA(0x004f62a0, 0x162) MAC_ADDRESS(0x117cac, 0xec)  // dc 0xe5ed4
+DC_ADDRESS(0x0e5ed4, 0x8c)
+VA(0x004f62a0, 0x162) MAC_ADDRESS(0x117cac, 0xec)
 void getQuickviewSize(const char* text, int* width, int* height)
 {
     TNormalDialogInfo dialogInfo;
@@ -4454,6 +4511,7 @@ void getQuickviewSize(const char* text, int* width, int* height)
 // retail loads at 0x4f0fc0 corroborate the same getter expansion. Keep the
 // ordinary helper in its owning TU and the DC source order after sizing.
 
+DC_ADDRESS(0x0e5f60, 0x6)
 MAC_ADDRESS(0x117eb0, 0x8)
 TDialogBox* getCurrentNormalDialog()
 {
@@ -4470,7 +4528,8 @@ VA_COMPGEN(0x004f6410, 0x74, IMPLICIT_DTOR, TNormalDialogInfo)
 VA_COMPGEN(0x004f6490, 0x2A, CLASS_CTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e68, 0x48, CLASS_CTOR, type_dialog_icon)
 VA_COMPGEN(0x004f64c0, 0x6D, IMPLICIT_DTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x117e04, 0x64, IMPLICIT_DTOR, type_dialog_icon)
 
-VA(0x004f6530, 0x34) MAC_ADDRESS(0x117eb8, 0x58)  // dc 0xe5f68
+DC_ADDRESS(0x0e5f68, 0x52)
+VA(0x004f6530, 0x34) MAC_ADDRESS(0x117eb8, 0x58)
 void normalDialogTimeOut(const char* text, int mbType, int timeOut,
     int x, int y, int resType1, int resExtra1, int resType2,
     int resExtra2, int special, int resType3, int resExtra3)
@@ -4484,7 +4543,8 @@ void normalDialogTimeOut(const char* text, int mbType, int timeOut,
 // The twelve-argument front door: fill a TNormalDialogInfo (the three
 // named icons, five empty slots, the 256x128 default box with its 20/30
 // text inset), size it, and run DoNormalDialog on a by-value copy.
-VA(0x004f6570, 0x29B) MAC_ADDRESS(0x117f10, 0x224)  // anchor-callee, dc 0xe5fbc
+DC_ADDRESS(0x0e5fbc, 0x120)
+VA(0x004f6570, 0x29B) MAC_ADDRESS(0x117f10, 0x224)  // anchor-callee
 void normalDialog(const char* text, int mbType, int x, int y,
     int resType1, int resExtra1, int resType2, int resExtra2,
     int special, int timeout, int resType3, int resExtra3)
@@ -4525,7 +4585,8 @@ static int waitHandler(message& msg);
 // `this` with `ret 4`, which is exactly the generated form.
 VA_COMPGEN(0x004f6810, 0x179, IMPLICIT_COPY_CTOR, type_dialog_icon) MAC_COMPGEN_ADDRESS(0x118134, 0xac, IMPLICIT_COPY_CTOR, type_dialog_icon)
 
-VA(0x004f6990, 0xC8C) MAC_ADDRESS(0x1181e0, 0x12f8)  // dc 0xe60dc
+DC_ADDRESS(0x0e60dc, 0xc14)
+VA(0x004f6990, 0xC8C) MAC_ADDRESS(0x1181e0, 0x12f8)
 void doNormalDialog(TNormalDialogInfo dialogInfo)
 {
     if (!g_remoteOn
@@ -4814,7 +4875,8 @@ void doNormalDialog(TNormalDialogInfo dialogInfo)
     g_normalDialogMbType = saveNormalDialogType;
 }
 
-VA(0x004f7620, 0x66) MAC_ADDRESS(0x111ba0, 0xc4)  // dc 0xe1b94
+DC_ADDRESS(0x0e1b94, 0x62)
+VA(0x004f7620, 0x66) MAC_ADDRESS(0x111ba0, 0xc4)
 static int waitHandler(message& msg)
 {
     g_waitDialogActive = 1;
@@ -4847,7 +4909,8 @@ static int waitHandler(message& msg)
 // The same shared order is exact in both VC6 and CodeWarrior (596 Mac bytes).
 // The implicit icon and string copy identities remain ordinary generated
 // members; no authored constructor or helper call is substituted.
-VA(0x004f7690, 0x312) MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list, dc 0xe6cf0
+DC_ADDRESS(0x0e6cf0, 0x13a)
+VA(0x004f7690, 0x312) MAC_ADDRESS(0x1194d8, 0x254)  // anchor-global + dc parameter list
 void extendedDialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
                      long x, long y, long timeout)
@@ -4888,12 +4951,14 @@ void extendedDialog(const char* text,
     } while (i < resources.size());
 }
 
+DC_ADDRESS(0x0e6e2c, 0x24)
 VA(0x004f79b0, 0x25) MAC_ADDRESS(0x11972c, 0x38)  // decorated identity + map-extents arithmetic
 unsigned short getMapExtra(int x, int y, int z)
 {
     return g_mapExtra[(z * g_mapHeight + y) * g_mapWidth + x];
 }
 
+DC_ADDRESS(0x0e6e50, 0x64)
 VA(0x004f79e0, 0x24) MAC_ADDRESS(0x119764, 0x38)  // decorated identity + map-extents arithmetic
 unsigned short* getMapExtraPtr(int x, int y, int z)
 {

@@ -1,6 +1,8 @@
 #ifndef HOMM3_BITMAP816_H
 #define HOMM3_BITMAP816_H
 
+#include "va.h"
+
 #include "palette.h"
 #include "resource.h"
 
@@ -52,22 +54,30 @@ public:
     void resetPalette();
     // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
     // graph records both inlined uses; the retail body reads +0x24/+0x28.
+    DC_ADDRESS(0x020164, 0xc)
     int getWidth() const { return m_width; }
+    DC_ADDRESS(0x020170, 0xc)
     int getHeight() const { return m_height; }
     // DC Bitmap816.h:71 (0x5256c) returns Width, while GetMap below
     // addresses rows through Pitch. Masked Darken's retail loads independently
     // confirm that distinction; do not replace this helper with m_pitch.
+    DC_ADDRESS(0x05256c, 0x4)
     int getPitch() const { return m_width; }
-    // Original: Bitmap816::GetPalette; Bitmap816.h:72, dc 0x2017c
+    // Original: Bitmap816::GetPalette; Bitmap816.h:72
+    DC_ADDRESS(0x02017c, 0x10)
     TPalette16& getPalette() { return m_p16; }
-    // Original: Bitmap816::GetPalette; Bitmap816.h:73, dc 0x19c5e8.
+    // Original: Bitmap816::GetPalette; Bitmap816.h:73
+    DC_ADDRESS(0x19c5e8, 0x8)
     const TPalette16& getPalette() const { return m_p16; }
-    // Original: Bitmap816::GetPalette24; Bitmap816.h:74, dc 0x54300
+    // Original: Bitmap816::GetPalette24; Bitmap816.h:74
     // Complete embeds both palettes; DC stored pointers to the same types.
+    DC_ADDRESS(0x054300, 0x8)
     TPalette24& getPalette24() { return m_p24; }
     // DC Bitmap816.h:98/99 (0x52570), expanded in masked Darken.
+    DC_ADDRESS(0x052570, 0xe)
     unsigned char* getMap(int x, int y) { return m_map + m_pitch * y + x; }
-    // Original: Bitmap816::GetMap; Bitmap816.h:104, dc 0x19c5f0.
+    // Original: Bitmap816::GetMap; Bitmap816.h:104
+    DC_ADDRESS(0x19c5f0, 0xe)
     const unsigned char* getMap(int x, int y) const
     {
         return m_map + m_pitch * y + x;

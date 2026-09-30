@@ -48,7 +48,8 @@ DATA(0x0069d5f4) HMENU__* g_recruitSavedMenu;
 // reader, the SetRolloverText expansion in recruitUnit::Main; the adjacent
 // TRecruitWindow constructor initializes the dialog family that owns them.
 
-VA(0x0054e750, 0x64) MAC_ADDRESS(0x14d19c, 0x70)  // dc 0x118adc
+DC_ADDRESS(0x118adc, 0x5a)
+VA(0x0054e750, 0x64) MAC_ADDRESS(0x14d19c, 0x70)
 void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, long* cost)
 {
     const int* toCost = g_creatureTypeTraits[upgrade].m_cost;
@@ -62,7 +63,8 @@ void getUpgradeCost(TCreatureType creature, TCreatureType upgrade, long amount, 
     }
 }
 
-VA(0x0054e7c0, 0x31) MAC_ADDRESS(0x14d20c, 0x7c)  // dc 0x118b38
+DC_ADDRESS(0x118b38, 0x30)
+VA(0x0054e7c0, 0x31) MAC_ADDRESS(0x14d20c, 0x7c)
 void getMonsterCost(int monId, int* resCost)
 {
     int resource;
@@ -74,7 +76,8 @@ void getMonsterCost(int monId, int* resCost)
 
 // ---------------------------------------------------------------------
 
-VA(0x0054e800, 0x4F) MAC_ADDRESS(0x14d288, 0x88)  // dc 0x118b68
+DC_ADDRESS(0x118b68, 0x4a)
+VA(0x0054e800, 0x4F) MAC_ADDRESS(0x14d288, 0x88)
 void recruitSliderCallback(int state, heroWindow* parentWindow)
 {
     g_recruitWindow->m_recruitInfo->m_numberToBuy = state;
@@ -101,7 +104,8 @@ void recruitSliderCallback(int state, heroWindow* parentWindow)
 // all stayed at or below 99.01%.
 // DC lines 207/215/218/224 name the four TTextResource::operator[] calls
 // below; restoring that canonical wrapper is VC6 byte-flat at 99.01016%.
-VA(0x0054e850, 0x1295) MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call, dc 0x118bb4
+DC_ADDRESS(0x118bb4, 0xc08)
+VA(0x0054e850, 0x1295) MAC_ADDRESS(0x14d310, 0x186c)  // unique x86/DC structure + constructor call
 TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
                                recruitUnit* recruitInfo)
     : heroWindow(x2, y2, 0x1e5, 0x18b, 0x12)
@@ -276,7 +280,8 @@ TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource,
 
 VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)
 
-VA(0x0054fb20, 0x6B) MAC_ADDRESS(0x14eb7c, 0xac)  // dc 0x1197bc
+DC_ADDRESS(0x1197bc, 0x62)
+VA(0x0054fb20, 0x6B) MAC_ADDRESS(0x14eb7c, 0xac)
 TRecruitWindow::~TRecruitWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -304,7 +309,8 @@ TRecruitWindow::~TRecruitWindow()
 // All preserve the values but perturb more of Dinkumware's insertion lowering,
 // so the natural push_back form below is the banked maximum. Inline-budget /
 // generation residual, not missing game logic.
-VA(0x0054fb90, 0x30D) MAC_ADDRESS(0x14ec28, 0x2a0)  // anchor-callee + anchor-global, dc 0x119820
+DC_ADDRESS(0x119820, 0x12c)
+VA(0x0054fb90, 0x30D) MAC_ADDRESS(0x14ec28, 0x2a0)  // anchor-callee + anchor-global
 void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TCreatureType creature, long slot)
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
@@ -321,7 +327,8 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
         102, 132, slot + 0x21a, g_systemPalette->m_data[31], 0x400));
 }
 
-VA(0x0054fea0, 0x42E) MAC_ADDRESS(0x14eec8, 0x438)  // dc 0x11994c
+DC_ADDRESS(0x11994c, 0x398)
+VA(0x0054fea0, 0x42E) MAC_ADDRESS(0x14eec8, 0x438)
 int recruitUnit::open(int newPriority)
 {
     message msg;
@@ -449,7 +456,8 @@ int recruitUnit::open(int newPriority)
 // This body is what TYPES townManager's +0x13c: it calls
 // TResourceDisplay::update through the member, so townmgr.h's
 // old heroWindow* declaration is retyped here rather than cast around.
-VA(0x005502d0, 0x8C) MAC_ADDRESS(0x14f300, 0xcc)  // dc 0x119ce4
+DC_ADDRESS(0x119ce4, 0x80)
+VA(0x005502d0, 0x8C) MAC_ADDRESS(0x14f300, 0xcc)
 void recruitUnit::close()
 {
     g_windowManager->removeWindow(g_recruitWindow);
@@ -479,6 +487,7 @@ void recruitUnit::close()
 // inlined it there as the jump table at 0x5504d4 and the
 // single-call-site STATIC rule dropped the standalone copy. `static`
 // reproduces that absence.
+DC_ADDRESS(0x119d64, 0x32)
 MAC_ADDRESS(0x14f3cc, 0x50)
 static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
 {
@@ -495,7 +504,8 @@ static TArtifact siegeMonsterToSiegeArtifact(TCreatureType siegeMon)
     return ARTIFACT_NONE;
 }
 
-VA(0x00550360, 0x3C) MAC_ADDRESS(0x14f41c, 0x50)  // dc 0x119d98
+DC_ADDRESS(0x119d98, 0x32)
+VA(0x00550360, 0x3C) MAC_ADDRESS(0x14f41c, 0x50)
 TCreatureType siegeArtifactToCreature(TArtifact engine)
 {
     switch (engine) {
@@ -527,7 +537,8 @@ TCreatureType siegeArtifactToCreature(TArtifact engine)
 // not decide VC6's load order at the Windows multiplication sites.
 // DC line 521 calls TTextResource::operator[] for the recruit title. Restoring
 // that canonical source call is VC6 byte-flat and clears its audit finding.
-VA(0x005503a0, 0x594) MAC_ADDRESS(0x14f46c, 0x5cc)  // anchor-global, dc 0x119dcc
+DC_ADDRESS(0x119dcc, 0x4b4)
+VA(0x005503a0, 0x594) MAC_ADDRESS(0x14f46c, 0x5cc)  // anchor-global
 void recruitUnit::update(unsigned char newMonster, long slot)
 {
     message msg;
@@ -675,6 +686,7 @@ void recruitUnit::update(unsigned char newMonster, long slot)
 // with its body ordinary and visible here, VC6 retains the call and Main drops
 // from 99.95448% to 87.196785%. The small exit helper needs no inline keyword:
 // VC6 auto-inlines it while Mac retains its call.
+DC_ADDRESS(0x11a280, 0x74)
 MAC_ADDRESS(0x14fa38, 0xec)
 inline void recruitUnit::setRolloverText(int codeY)
 {
@@ -704,6 +716,7 @@ inline void recruitUnit::setRolloverText(int codeY)
 
 // Mac 0x14fb24 is retained at both timeout/remote-abort call sites
 // (0x14fb94 and 0x14fc10). Ordinary completion only changes id/codeX.
+DC_ADDRESS(0x11a2f4, 0x18)
 MAC_ADDRESS(0x14fb24, 0x30)
 int exitRecruitUnit(message& msg)
 {
@@ -758,7 +771,8 @@ int finishRecruitUnit(message& msg)
 // anonymous 16-byte zero template for DC's const monType[4] array that Mac
 // retail never loads; Main also expands setRolloverText in the candidate while
 // Mac retail calls its retained helper.
-VA(0x00550940, 0xA08) MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket, dc 0x11a30c
+DC_ADDRESS(0x11a30c, 0x970)
+VA(0x00550940, 0xA08) MAC_ADDRESS(0x14fb54, 0xb8c)  // anchor-callee + switch-table bracket
 int recruitUnit::main(message& msg)
 {
     unsigned char abortDialog = g_turnDuration.isExpired();
@@ -1003,6 +1017,7 @@ int recruitUnit::main(message& msg)
 // both admitted Mac constructors then match exactly with their updateCost
 // calls intact. Raw NB11 names the sole surviving local `resCost`, while the
 // body calls the exact GetMonsterCost helper before deriving the two costs.
+DC_ADDRESS(0x11ac7c, 0x88)
 MAC_ADDRESS(0x1506e0, 0xd8)
 void recruitUnit::updateCost()
 {
@@ -1034,7 +1049,8 @@ void recruitUnit::updateCost()
 // field-store order below. The earlier isolated head-store probes left
 // type/viewOnly and selectedPosition outside that sequence. VC6 now matches
 // the 0x101-byte retail constructor exactly, including both calls.
-VA(0x00551350, 0x101) MAC_ADDRESS(0x1507b8, 0xc4)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
+DC_ADDRESS(0x11ad04, 0xae)
+VA(0x00551350, 0x101) MAC_ADDRESS(0x1507b8, 0xc4)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
 recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
     TCreatureType monType1, short* numMon1,
     TCreatureType monType2, short* numMon2,
@@ -1068,7 +1084,8 @@ recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char groupIsTownGarrison,
 // DC lines 1159..1179 and Mac 0:0x1508c4..0x15090c establish the complete
 // field-store order below. VC6 matches the 0xFE-byte retail body exactly;
 // the earlier thisHero-first-only probe omitted the surrounding store order.
-VA(0x00551460, 0xFE) MAC_ADDRESS(0x15087c, 0xc0)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
+DC_ADDRESS(0x11adb4, 0xa4)
+VA(0x00551460, 0xFE) MAC_ADDRESS(0x15087c, 0xc0)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70
 recruitUnit::recruitUnit(hero* thisHero,
     TCreatureType monType1, short* numMon1,
     TCreatureType monType2, short* numMon2,
@@ -1098,7 +1115,8 @@ recruitUnit::recruitUnit(hero* thisHero,
     updateCost();
 }
 
-VA(0x00551560, 0x14B) MAC_ADDRESS(0x15093c, 0x130)  // dc 0x11ae58
+DC_ADDRESS(0x11ae58, 0xca)
+VA(0x00551560, 0x14B) MAC_ADDRESS(0x15093c, 0x130)
 recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainScreen)
 {
     m_inTownMainScreen = inInTownMainScreen;
@@ -1131,6 +1149,7 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int inInTownMainSc
 // E:\gamedcs\recruit.cpp:1219. Dreamcast and Mac retain this constructor;
 // Mac quickViewRecruit calls it at 0:0x150cc8. VC6 expands this ordinary
 // definition into the sole Windows caller at 0x551780 (45/45 calls agree).
+DC_ADDRESS(0x11af24, 0x74)
 MAC_ADDRESS(0x150a6c, 0x58)
 TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
     : heroWindow(x2, y2, 160, 320, 0x12)
@@ -1140,7 +1159,8 @@ TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
 
 VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, TRecruitQuickWindow)
 
-VA(0x005516e0, 0x6B) MAC_ADDRESS(0x150ac4, 0xac)  // dc 0x11af98
+DC_ADDRESS(0x11af98, 0x62)
+VA(0x005516e0, 0x6B) MAC_ADDRESS(0x150ac4, 0xac)
 TRecruitQuickWindow::~TRecruitQuickWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -1149,7 +1169,8 @@ TRecruitQuickWindow::~TRecruitQuickWindow()
     }
 }
 
-VA(0x00551750, 0x24) MAC_ADDRESS(0x150b70, 0x48)  // dc 0x11affc
+DC_ADDRESS(0x11affc, 0x2c)
+VA(0x00551750, 0x24) MAC_ADDRESS(0x150b70, 0x48)
 void quickViewRecruit(town* newTown, int newDwellingIndex)
 {
     quickViewRecruit(
@@ -1160,7 +1181,8 @@ void quickViewRecruit(town* newTown, int newDwellingIndex)
 
 // DC recruit.cpp:1295 names GetArmyName; Mac 0x150d5c..0x150d80 expands
 // its guarded plural lookup. Keep the canonical call; Windows remains 100%.
-VA(0x00551780, 0x641) MAC_ADDRESS(0x150bb8, 0x688)  // dc 0x11b028
+DC_ADDRESS(0x11b028, 0x514)
+VA(0x00551780, 0x641) MAC_ADDRESS(0x150bb8, 0x688)
 void quickViewRecruit(TCreatureType monType, short* numMon)
 {
     message msg;

@@ -131,7 +131,8 @@ VA_COMPGEN(0x00559220, 0x8, IMPLICIT_DTOR, TResourceLODSlot)
 
 VA_COMPGEN(0x00559440, 0x6E, IMPLICIT_DTOR, map)
 
-VA(0x005594b0, 0x40) MAC_ADDRESS(0x1521d0, 0x40)  // dc 0x122984
+DC_ADDRESS(0x122984, 0x72)
+VA(0x005594b0, 0x40) MAC_ADDRESS(0x1521d0, 0x40)
 void ResourceManager::addToCache(resource* value)
 {
     g_resourceCache.insert(std::make_pair(value->getName(), value));
@@ -324,6 +325,7 @@ void __fastcall reportMissingSpriteResource(const char* caller,
     reportMissingResource(caller, typeName.c_str(), resourceName);
 }
 
+DC_ADDRESS(0x1213a0, 0x182)
 VA(0x00559e30, 0x1E5) MAC_ADDRESS(0x1523fc, 0x1f4)
 void ResourceManager::remapGraphics()
 {
@@ -376,6 +378,7 @@ void ResourceManager::remapGraphics()
     }
 }
 
+DC_ADDRESS(0x121524, 0x216)
 VA(0x0055a020, 0x221) MAC_ADDRESS(0x152700, 0x224)
 void ResourceManager::saturateGraphics()
 {
@@ -519,7 +522,8 @@ static LODFile* findBitmapResource(const char* name)
 // archive-index-one arm matches Mac's literal store and also preserves Windows
 // exactness. The Mac frame gap remains.
 // The flags arrive in ECX/EDX; ret 4 removes the added error-code pointer.
-VA(0x0055a250, 0x2F1) MAC_ADDRESS(0x152924, 0x210)  // sole retail caller + two flags/error output, dc 0x12173c
+DC_ADDRESS(0x12173c, 0x144)
+VA(0x0055a250, 0x2F1) MAC_ADDRESS(0x152924, 0x210)  // sole retail caller + two flags/error output
 bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
 {
     try {
@@ -579,6 +583,7 @@ bool ResourceManager::open(bool openSprites, bool openBitmaps, int* errorCode)
     return true;
 }
 
+DC_ADDRESS(0x121880, 0x1c)
 VA(0x0055a550, 0x67) MAC_ADDRESS(0x152b9c, 0x60)
 void ResourceManager::close()
 {
@@ -588,6 +593,7 @@ void ResourceManager::close()
         g_resourceLodSlots[i].m_file.clear();
 }
 
+DC_ADDRESS(0x12189c, 0x26)
 VA(0x0055a5c0, 0xE2) MAC_ADDRESS(0x152bfc, 0x3c)
 void ResourceManager::setPath(const char* path)
 {
@@ -601,6 +607,7 @@ void ResourceManager::setPath(const char* path)
 #endif
 }
 
+DC_ADDRESS(0x1218c4, 0x168)
 VA(0x0055a6b0, 0xEF) MAC_ADDRESS(0x152c38, 0x16c)
 void ResourceManager::setPixelFormat(unsigned long redMask,
                                      unsigned long greenMask,
@@ -659,7 +666,8 @@ VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
 // function-scope declaration prevents that branch's cache insertion pair from
 // reusing the header slot and matches all 0x41f retail bytes, 34 CFG blocks,
 // and 32 ordered calls. Moving result before the cache lookup was byte-flat.
-VA(0x0055a800, 0x41F) MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader; dc 0x121ac8
+DC_ADDRESS(0x121ac8, 0x194)
+VA(0x0055a800, 0x41F) MAC_ADDRESS(0x152df8, 0x1d0)  // bitmapBorder::SetImage loader;
 Bitmap816* ResourceManager::getBitmap816(const char* name)
 {
     Bitmap816* cached = static_cast<Bitmap816*>(getFromCache(name));
@@ -741,6 +749,7 @@ Bitmap816* ResourceManager::getBitmap816(const char* name)
     return result;
 }
 
+DC_ADDRESS(0x122bd0, 0x28)
 VA(0x0055ac20, 0x20)
 ResourceManager::TCacheMapKey::TCacheMapKey(const char* value)
 {
@@ -748,6 +757,7 @@ ResourceManager::TCacheMapKey::TCacheMapKey(const char* value)
     m_name[12] = 0;
 }
 
+DC_ADDRESS(0x122bf8, 0x1c)
 bool ResourceManager::TCacheMapKey::operator<(const TCacheMapKey& other) const
 {
     return _stricmp(m_name, other.m_name) < 0;
@@ -899,7 +909,8 @@ TPalette16* ResourceManager::loadPalette(const char* name)
 
 // Like GetBitmap16, Complete always consults the cache and removes the
 // Dreamcast ignore_cache argument; the retained body ends with plain ret.
-VA(0x0055b3e0, 0x8A) MAC_ADDRESS(0x1533e0, 0x54)  // dc public GetPalette + retail getter family, dc 0x121d90
+DC_ADDRESS(0x121d90, 0x138)
+VA(0x0055b3e0, 0x8A) MAC_ADDRESS(0x1533e0, 0x54)  // dc public GetPalette + retail getter family
 TPalette16* ResourceManager::getPalette(const char* name)
 {
     TPalette16* cached = static_cast<TPalette16*>(getFromCache(name));
@@ -940,7 +951,8 @@ TPalette24* ResourceManager::loadPalette24Data(const char* name,
 // latter helper owns the header/RGBA locals recorded in Dreamcast's older
 // direct-reader function; its recovered lifetime closes the former 8-byte
 // frame-coloring residual.
-VA(0x0055b470, 0x2D1) MAC_ADDRESS(0x1534dc, 0x84)  // dc/hd public identity + retail palette-file shape, dc 0x121ec8
+DC_ADDRESS(0x121ec8, 0xe4)
+VA(0x0055b470, 0x2D1) MAC_ADDRESS(0x1534dc, 0x84)  // dc/hd public identity + retail palette-file shape
 TPalette24* ResourceManager::getPalette24(const char* name)
 {
     FILE* file = fopen((g_resourcePath + name).c_str(), "rb");
@@ -1079,6 +1091,7 @@ font* ResourceManager::loadFont(const char* name)
     return loadFontData(name, streamInterface, fileSize);
 }
 
+DC_ADDRESS(0x121fac, 0xe0)
 VA(0x0055bb00, 0x8A) MAC_ADDRESS(0x153944, 0x54)
 font* ResourceManager::getFont(const char* name)
 {
@@ -1149,6 +1162,7 @@ TTextResource* ResourceManager::loadText(const char* name)
     return loadTextData(name, streamInterface, fileSize);
 }
 
+DC_ADDRESS(0x12208c, 0xd8)
 VA(0x0055bdd0, 0x8A) MAC_ADDRESS(0x153ad8, 0x54)
 TTextResource* ResourceManager::getText(const char* name)
 {
@@ -1216,7 +1230,8 @@ TSpreadsheetResource* ResourceManager::loadSpreadsheet(const char* name)
     return loadSpreadsheetData(name, streamInterface, fileSize);
 }
 
-VA(0x0055c0a0, 0x8A) MAC_ADDRESS(0x153c6c, 0x54)  // dc 0x122164
+DC_ADDRESS(0x122164, 0x98)
+VA(0x0055c0a0, 0x8A) MAC_ADDRESS(0x153c6c, 0x54)
 TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
 {
     TSpreadsheetResource* cached = static_cast<TSpreadsheetResource*>(getFromCache(name));
@@ -1229,16 +1244,18 @@ TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
     return loaded;
 }
 
-// Original: ResourceManager::Dispose; resourcemanager.cpp:2196, dc 0x1225c0
+// Original: ResourceManager::Dispose; resourcemanager.cpp:2196
 // DC releases a ds_engine sample-cache entry. Complete's sample owns its
 // sound data and inherits reference-counted resource disposal (0x55d0f0).
+DC_ADDRESS(0x1225c0, 0x1c)
 void ResourceManager::dispose(sample* value)
 {
     if (value)
         value->dispose();
 }
 
-// Original: ResourceManager::Expunge; resourcemanager.cpp:2359, dc 0x1228ac
+// Original: ResourceManager::Expunge; resourcemanager.cpp:2359
+DC_ADDRESS(0x1228ac, 0x7c)
 MAC_ADDRESS(0x154748, 0x7c)
 void ResourceManager::expunge()
 {
@@ -1258,6 +1275,7 @@ void ResourceManager::expunge()
 // 16384 eight-byte hash/resource rows, using the name hash at 0x15216c.
 // Windows retains the typed std::map lookup below; its Mac backend cannot
 // be admitted as the same map storage solely through an address binding.
+DC_ADDRESS(0x122928, 0x5c)
 MAC_ADDRESS(0x152194, 0x3c)
 resource* ResourceManager::getFromCache(const char* name)
 {
@@ -1269,8 +1287,9 @@ resource* ResourceManager::getFromCache(const char* name)
     return value;
 }
 
-// Original: ResourceManager::Report; resourcemanager.cpp:2404, dc 0x1229f8
+// Original: ResourceManager::Report; resourcemanager.cpp:2404
 // Optimized release hook: the executable body is only return true.
+DC_ADDRESS(0x1229f8, 0x68)
 unsigned char ResourceManager::report(const char* filename)
 {
     return 1;
@@ -1297,7 +1316,8 @@ TSoundHeaderDescriptor g_soundHeaderDescriptors[3] = {
 
 // ECX/EDX carry name/auto_ptr and ret 4 removes the size output. The direct
 // Win32 file read replaces Dreamcast's separate data/header outputs.
-VA(0x0055c130, 0x28F) MAC_ADDRESS(0x153cc0, 0x144)  // dc GetSoundFile + caller/record layout, dc 0x1221fc
+DC_ADDRESS(0x1221fc, 0xe4)
+VA(0x0055c130, 0x28F) MAC_ADDRESS(0x153cc0, 0x144)  // dc GetSoundFile + caller/record layout
 bool ResourceManager::getSoundFile(const char* localName,
                                    std::auto_ptr<char>& data,
                                    int* size)
@@ -1393,7 +1413,8 @@ sample* ResourceManager::loadSample(const char* name)
     return new sample(name, data.get(), size, 0, 127, 1);
 }
 
-VA(0x0055c720, 0x8A) MAC_ADDRESS(0x153f78, 0x54)  // dc 0x1222e0
+DC_ADDRESS(0x1222e0, 0x40)
+VA(0x0055c720, 0x8A) MAC_ADDRESS(0x153f78, 0x54)
 sample* ResourceManager::getSample(const char* name)
 {
     sample* cached = static_cast<sample*>(getFromCache(name));
@@ -1406,7 +1427,7 @@ sample* ResourceManager::getSample(const char* name)
     return loaded;
 }
 
-// Original: addPal16; csprite.cpp:978, dc 0x73b64.
+// Original: addPal16; csprite.cpp:978
 // Complete moved DEF parsing from CSprite::SpriteDataReload into getSprite.
 // Both retail targets expand this body in getSprite; Mac -O3 calls it unless
 // qualified inline, while VC6 is byte-flat. The keyword is a source-model
@@ -1414,6 +1435,7 @@ sample* ResourceManager::getSample(const char* name)
 // Its expansion retains deletion of the old palette and construction from
 // the new value.
 // Complete's palette copy interface takes a pointer, where DC takes a ref.
+DC_ADDRESS(0x073b64, 0x48)
 inline void addPal16(CSprite* sprite, const TPalette16* pal)
 {
     if (sprite->m_p)
@@ -1421,7 +1443,8 @@ inline void addPal16(CSprite* sprite, const TPalette16* pal)
     sprite->m_p = new TPalette16(pal);
 }
 
-// Original: addPal24; csprite.cpp:986, dc 0x73bac.
+// Original: addPal24; csprite.cpp:986
+DC_ADDRESS(0x073bac, 0x48)
 inline void addPal24(CSprite* sprite, const TPalette24* pal)
 {
     if (sprite->m_p24)
@@ -1461,7 +1484,8 @@ inline void addPal24(CSprite* sprite, const TPalette24* pal)
 // both still have 73/72 CFG blocks. Prior peaks remain historical controls.
 // The earlier flattened-cache model reached 88.8564% in HIST, but lost the
 // proven shared cache-helper structure and remains only a diagnostic lead.
-VA(0x0055c7b0, 0x743) MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records, dc 0x122320; wall
+DC_ADDRESS(0x122320, 0x112)
+VA(0x0055c7b0, 0x743) MAC_ADDRESS(0x153fcc, 0x618)  // anchor-caller/body records; wall
 CSprite* ResourceManager::getSprite(const char* name)
 {
     CSprite* cached = static_cast<CSprite*>(getFromCache(name));
@@ -1677,6 +1701,7 @@ TResourceArchiveContext g_resourceArchiveContexts[4] = {
                            2, g_context3Sounds)
 };
 
+DC_ADDRESS(0x122434, 0x4e)
 VA(0x0055cf00, 0x4B) MAC_ADDRESS(0x1545e4, 0x7c)
 void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
 {
@@ -1692,12 +1717,14 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
     }
 }
 
+DC_ADDRESS(0x122484, 0x16)
 VA(0x0055cf50, 0x83) MAC_ADDRESS(0x154660, 0x20)
 LODFile* ResourceManager::pointToSpriteResource(const char* name)
 {
     return findSpriteResource(name);
 }
 
+DC_ADDRESS(0x1224b4, 0x16)
 VA(0x0055cfe0, 0x83) MAC_ADDRESS(0x154680, 0x20)  // bitmap-field twin of PointToSpriteResource
 LODFile* ResourceManager::pointToBitmapResource(const char* name)
 {
@@ -1721,6 +1748,7 @@ LODFile* ResourceManager::pointToBitmapResource(const char* name)
 // byte-flat in the Mac probe. A break/shared return moves the size load
 // behind the loop.
 // The direct list expression and simple loop are retained.
+DC_ADDRESS(0x1224e4, 0x4c)
 VA(0x0055d070, 0x5C) MAC_ADDRESS(0x1546a0, 0x88)  // retail archive-list walk + dc/hd name corroboration
 int ResourceManager::getBitmapResourceSize(const char* name)
 {
@@ -1734,7 +1762,8 @@ int ResourceManager::getBitmapResourceSize(const char* name)
     }
 }
 
-VA(0x0055d0d0, 0x11) MAC_ADDRESS(0x154728, 0x20)  // caller-family merge + explicit LOD receiver/ret 4, dc 0x1224cc
+DC_ADDRESS(0x1224cc, 0x18)
+VA(0x0055d0d0, 0x11) MAC_ADDRESS(0x154728, 0x20)  // caller-family merge + explicit LOD receiver/ret 4
 int ResourceManager::readFromBitmapResource(LODFile* resource, void* data,
                                              int numBytes)
 {

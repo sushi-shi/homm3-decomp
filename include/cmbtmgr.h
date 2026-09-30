@@ -1,6 +1,8 @@
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 
+#include "va.h"
+
 #include <set>
 #include <vector>
 
@@ -370,6 +372,7 @@ public:
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
     // that cross-TU expansion supports header visibility of this delegation.
     // Older DC owns the scrolling facade in drawing.cpp.
+    DC_ADDRESS(0x0841d4, 0x52)
     unsigned char scrollTo(int x, int y, unsigned char draw,
                            unsigned char doscrollX,
                            unsigned char doscrollY)
@@ -381,6 +384,7 @@ public:
     // Complete combat missile callers expand this across translation units;
     // Mac's contiguous drawing bodies leave no retained coordinate facade.
     // Visibility here is a platform inference, not a recovered inline word.
+    DC_ADDRESS(0x084248, 0x60)
     bool scrollTo(int x, int y, int width, int height, bool draw,
                   bool doscrollX, bool doscrollY)
     {
@@ -525,6 +529,7 @@ public:
         // Dreamcast CodeView names this one-argument const member and fixes
         // its bool result; the retail DrawFrame expansion proves the two
         // participating bytes at +0x9/+0xa.
+        DC_ADDRESS(0x0a1144, 0x16)
         bool isVisible(int side) const
         {
             return side == m_owner || m_isVisible;
@@ -542,6 +547,7 @@ public:
         short m_hitY;                  // +0x6
         TWallSection m_wall;            // +0x8
 
+        DC_ADDRESS(0x027eac, 0x1c)
         int getBlockedHex() const
         {
             if (m_blockedRow != -1)
@@ -1227,6 +1233,7 @@ public:
     // the loop index (which VC6 strength-reduces onto the same 30-byte
     // induction variable the cellData walk uses, so it reads as a
     // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    DC_ADDRESS(0x027ec8, 0x12)
     static bool validHex(int hex)
     {
         return hex >= 0 && hex < COMBAT_GRID_CELLS;
@@ -1730,6 +1737,7 @@ public:
     void powEffect(TSpellEffectID spellEffect, int resetLimitCreature);  // 0x468990
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
+    DC_ADDRESS(0x042a3c, 0x38)
     army* findResurrectionTarget(SpellID spell, long group, long hex,
                                    unsigned char creatureSpell)
     {
@@ -1740,6 +1748,7 @@ public:
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
     // typed target -> wallTargets[target].wall -> wallStrength chain.
     // Retail has no body because /Ob2 folds the same chain into its callers.
+    DC_ADDRESS(0x027edc, 0x20)
     long getWallStrength(TWallTargetId target) const
     {
         return m_wallStrength[s_wallTargets[target].m_wall];
@@ -1747,8 +1756,10 @@ public:
     // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
+    DC_ADDRESS(0x027efc, 0x2c)
     army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
-    // Original: combatManager::get_current_army; CmbtMgr.h:1483, dc 0x1581b8.
+    // Original: combatManager::get_current_army; CmbtMgr.h:1483
+    DC_ADDRESS(0x1581b8, 0x2c)
     const army* getCurrentArmy() const
     {
         return &m_armies[m_actingSide][m_actingSlot];
@@ -1758,27 +1769,33 @@ public:
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
     // DC dc 0x70a2c has x/y only, no receiver: this is static.
+    DC_ADDRESS(0x070a2c, 0x2a)
     static unsigned char inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
-    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494, dc 0x27f28.
+    // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494
+    DC_ADDRESS(0x027f28, 0xc)
     unsigned char isInSecondPhase() const { return m_inSecondPhase; }
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
     // definition order (1500, 1506, 1519, 1525, 1537, 1542).
+    DC_ADDRESS(0x063a44, 0xa)
     static int getHexIndex(int x, int y)
     {
         return y * COMBAT_GRID_ROW_STRIDE + x;
     }
+    DC_ADDRESS(0x063a50, 0xa)
     bool rowIsOdd(int y) const
     {
         return (y & 1) != 0;
     }
     // LF_MFUNCTION has no this type: this is a static header helper.
-    // E:\gamedcs\CmbtMgr.h:1513, dc 0x27f34
+    // E:\gamedcs\CmbtMgr.h:1513
+    DC_ADDRESS(0x027f34, 0x18)
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
+    DC_ADDRESS(0x027f4c, 0x18)
     static int gridX(int index)
     {
         return index % COMBAT_GRID_ROW_STRIDE;
@@ -1786,6 +1803,7 @@ public:
     // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
     // invisible edge columns, 0 and 16 of each 17-cell row.
+    DC_ADDRESS(0x027f64, 0x3c)
     static bool inInvisibleColumn(int index)
     {
         if (!validHex(index))
@@ -1797,6 +1815,7 @@ public:
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
     // declaration read before the S_PUB32 pass.
+    DC_ADDRESS(0x063a5c, 0x2c)
     hexcell& getCell(int x, int y)
     {
         return m_cells[getHexIndex(x, y)];
@@ -1807,7 +1826,9 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
+    DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
+    DC_ADDRESS(0x04cc74, 0x18)
     void markCreatureEffect(int group, int index)
     {
         if (m_armies[group][index].m_creatureType == army::ARMY_CREATURE_ARROW_TOWER)

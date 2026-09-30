@@ -15,7 +15,8 @@
 
 int random(int min, int max);
 
-// Original: iconWidget::iconWidget; iconwdgt.cpp:35, dc 0xd92fc.
+// Original: iconWidget::iconWidget; iconwdgt.cpp:35
+DC_ADDRESS(0x0d92fc, 0x54)
 iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 {
     m_sprite = 0;
@@ -27,7 +28,8 @@ iconWidget::iconWidget() : widget(0, 0, 0, 0, 0, 0)
 
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 
-VA(0x004ea720, 0x8C) MAC_ADDRESS(0x10c3f0, 0xa8)  // dc 0xd9350
+DC_ADDRESS(0x0d9350, 0xa2)
+VA(0x004ea720, 0x8C) MAC_ADDRESS(0x10c3f0, 0xa8)
 iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
                        int frame, int sequence, bool flipped,
                        unsigned backColor, int style)
@@ -41,9 +43,10 @@ iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
     m_sprite = image ? ResourceManager::getSprite(image) : 0;
 }
 
-// Original: iconWidget::initialize; iconwdgt.cpp:75, dc 0xd93f4.
+// Original: iconWidget::initialize; iconwdgt.cpp:75
 // Complete removed widget's focusable field (DC +0x20); preserve the
 // source interface without writing that obsolete controller-state slot.
+DC_ADDRESS(0x0d93f4, 0x6e)
 void iconWidget::initialize(int x, int y, int w, int h, int id,
     const char* image, int frame, int sequence, unsigned char flipped,
     unsigned int backColor, int style, unsigned char focusable)
@@ -57,7 +60,8 @@ void iconWidget::initialize(int x, int y, int w, int h, int id,
     m_postPostWalkSequence = cs_wait;
 }
 
-VA(0x004ea7b0, 0x55) MAC_ADDRESS(0x10c498, 0x7c)  // dc 0xd9464
+DC_ADDRESS(0x0d9464, 0x3e)
+VA(0x004ea7b0, 0x55) MAC_ADDRESS(0x10c498, 0x7c)
 iconWidget::~iconWidget()
 {
     if (m_sprite)
@@ -74,7 +78,8 @@ iconWidget::~iconWidget()
 // Mac retains three widget::main calls: inactive, unhandled disabled widget
 // message, and the shared active tail. Restoring the middle source call also
 // makes the Windows retail comparison exact.
-VA(0x004ea810, 0x2F4) MAC_ADDRESS(0x10c514, 0x33c)  // vtable 0x63ec48 slot 2, dc 0xd94a4
+DC_ADDRESS(0x0d94a4, 0x212)
+VA(0x004ea810, 0x2F4) MAC_ADDRESS(0x10c514, 0x33c)  // vtable 0x63ec48 slot 2
 int iconWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
@@ -175,9 +180,10 @@ int iconWidget::main(message& msg)
     return widget::main(msg);
 }
 
-// Original: iconWidget::zBufferDraw; iconwdgt.cpp:275, dc 0xd96e4.
+// Original: iconWidget::zBufferDraw; iconwdgt.cpp:275
 // CodeView's formal type proves two arguments despite the old nil-argument
 // carcass. Retail folds this empty hook onto the shared ret-8 at 0x5bc7e0.
+DC_ADDRESS(0x0d96e4, 0x4)
 void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
@@ -191,19 +197,22 @@ void iconWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 // matches the DC's three parameters (this + two). Both arguments are
 // dead - retail returns a bare zero.
 // The public UAA_N_N0 signature preserves native Boolean click values.
-VA(0x004eab10, 0x5) MAC_ADDRESS(0x10c850, 0x8)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
+DC_ADDRESS(0x0d96b8, 0x4)
+VA(0x004eab10, 0x5) MAC_ADDRESS(0x10c850, 0x8)  // anchor-vtable (slot 13 of 0x63ec48)
 bool iconWidget::handleClick(bool downClick, bool rightClick)
 {
     return 0;
 }
 
-VA(0x004eab20, 0x7) MAC_ADDRESS(0x10c858, 0xc)  // dc 0xd96bc
+DC_ADDRESS(0x0d96bc, 0x12)
+VA(0x004eab20, 0x7) MAC_ADDRESS(0x10c858, 0xc)
 int iconWidget::getRealWidth() const
 {
     return m_sprite->getWidth();
 }
 
-VA(0x004eab30, 0x7) MAC_ADDRESS(0x10c864, 0xc)  // dc 0xd96d0
+DC_ADDRESS(0x0d96d0, 0x12)
+VA(0x004eab30, 0x7) MAC_ADDRESS(0x10c864, 0xc)
 int iconWidget::getRealHeight() const
 {
     return m_sprite->getHeight();
@@ -215,7 +224,8 @@ int iconWidget::getRealHeight() const
 // and then clips the source rectangle on all four sides - each negative
 // offset moving into sx/sy and shrinking sw/sh, each overrun clamping
 // sw/sh against the widget box.
-VA(0x004eab40, 0x4B0) MAC_ADDRESS(0x10c874, 0x6ec)  // dc 0xd96e8
+DC_ADDRESS(0x0d96e8, 0x592)
+VA(0x004eab40, 0x4B0) MAC_ADDRESS(0x10c874, 0x6ec)
 void iconWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;
@@ -344,7 +354,8 @@ void iconWidget::draw() const
     }
 }
 
-VA(0x004eaff0, 0x3E) MAC_ADDRESS(0x10cf60, 0x50)  // dc 0xd9c7c
+DC_ADDRESS(0x0d9c7c, 0x28)
+VA(0x004eaff0, 0x3E) MAC_ADDRESS(0x10cf60, 0x50)
 void iconWidget::setIconFrame(int newFrame)
 {
     m_frame = newFrame % m_sprite->getNumFrames(m_seqId);
@@ -355,6 +366,7 @@ void iconWidget::setIconFrame(int newFrame)
 // Main's retail-inlined WIDGET_SET_ICON_SEQUENCE arm corroborates the order:
 // its six-instruction block is exact only with this source shape.
 
+DC_ADDRESS(0x0d9ca4, 0x8)
 MAC_ADDRESS(0x10cfb0, 0x10)
 void iconWidget::setIconSequence(int newSequence)
 {
@@ -363,6 +375,7 @@ void iconWidget::setIconSequence(int newSequence)
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
+DC_ADDRESS(0x0d9cac, 0x32)
 MAC_ADDRESS(0x10cfc0, 0x60)
 void iconWidget::setPalette(const char* paletteName)
 {
@@ -374,6 +387,7 @@ void iconWidget::setPalette(const char* paletteName)
 }
 
 // E:\gamedcs\iconwdgt.cpp:462
+DC_ADDRESS(0x0d9ce0, 0x84)
 MAC_ADDRESS(0x10d020, 0x54)
 void iconWidget::setPlayerPaletteColors(int whichPlayer)
 {
@@ -382,7 +396,8 @@ void iconWidget::setPlayerPaletteColors(int whichPlayer)
     ::setPlayerPaletteColors(m_sprite->getPalette24(), whichPlayer);
 }
 
-VA(0x004eb030, 0x22) MAC_ADDRESS(0x10d074, 0x5c)  // dc 0xd9d64
+DC_ADDRESS(0x0d9d64, 0x2a)
+VA(0x004eb030, 0x22) MAC_ADDRESS(0x10d074, 0x5c)
 void iconWidget::setSprite(const char* newSprite)
 {
     if (m_sprite)
@@ -390,7 +405,8 @@ void iconWidget::setSprite(const char* newSprite)
     m_sprite = ResourceManager::getSprite(newSprite);
 }
 
-VA(0x004eb060, 0x1EB) MAC_ADDRESS(0x10d0d0, 0x210)  // dc 0xd9d90
+DC_ADDRESS(0x0d9d90, 0x158)
+VA(0x004eb060, 0x1EB) MAC_ADDRESS(0x10d0d0, 0x210)
 void iconWidget::nextRandomFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {
@@ -442,7 +458,8 @@ void iconWidget::nextRandomFrame()
     setIconSequence(chosen);
 }
 
-VA(0x004eb250, 0xED) MAC_ADDRESS(0x10d2e0, 0x190)  // dc 0xd9ee8
+DC_ADDRESS(0x0d9ee8, 0xac)
+VA(0x004eb250, 0xED) MAC_ADDRESS(0x10d2e0, 0x190)
 void iconWidget::nextRandomSiegeEngineFrame()
 {
     if (m_frame + 1 < m_sprite->getNumFrames(m_seqId)) {

@@ -214,7 +214,8 @@ const int g_townNameFixedLength = 13;
 // 39 < 41 and keeps it out of line (97.32%). Retail's caller is >= 986 cb.
 // DC locals: char_buffer, uchar_buffer, and inBuf[70].
 
-VA(0x005bcd60, 0x586) MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion, dc 0x165628; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
+DC_ADDRESS(0x165628, 0x360)
+VA(0x005bcd60, 0x586) MAC_ADDRESS(0x1b1c9c, 0x5f4)  // carcass promotion; anchor-callee armyGroup::load + LoadHeroId; callers game::Load and CCombatInitMsg::read
 int town::load(TAbstractFile* infile, int saveVersion)
 {
     char charBuffer;
@@ -332,7 +333,8 @@ int town::load(TAbstractFile* infile, int saveVersion)
 // hoisting the spell loop counter to function scope, and block-scoping
 // char_buffer around its whole run. VC6 hands the recycled home to the
 // widest local that fits, and no declaration form observed here changes it.
-VA(0x005bd2f0, 0x402) MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion, dc 0x165988; anchor-callee armyGroup::save; caller game::Save's town pool
+DC_ADDRESS(0x165988, 0x3d4)
+VA(0x005bd2f0, 0x402) MAC_ADDRESS(0x1b2290, 0x5e8)  // carcass promotion; anchor-callee armyGroup::save; caller game::Save's town pool
 int town::save(TAbstractFile* outfile)
 {
     char charBuffer;
@@ -445,7 +447,8 @@ int town::save(TAbstractFile* outfile)
 
 // Dreamcast town.cpp:764 calls the Town.h HasBuilding accessor;
 // retail expands the active-mask test.
-VA(0x005bd700, 0x47) MAC_ADDRESS(0x1b2878, 0x74)  // dc 0x165d5c
+DC_ADDRESS(0x165d5c, 0x46)
+VA(0x005bd700, 0x47) MAC_ADDRESS(0x1b2878, 0x74)
 int town::getPortraitFrame(bool isSmall) const
 {
     int frame;
@@ -461,7 +464,8 @@ int town::getPortraitFrame(bool isSmall) const
     return frame;
 }
 
-VA(0x005bd750, 0x188) MAC_ADDRESS(0x1b28ec, 0x29c)  // dc 0x165da4
+DC_ADDRESS(0x165da4, 0xfc)
+VA(0x005bd750, 0x188) MAC_ADDRESS(0x1b28ec, 0x29c)
 void town::setSummoningGenerator()
 {
     std::vector<int> generators;
@@ -500,7 +504,8 @@ void town::setSummoningGenerator()
     }
 }
 
-VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)  // dc 0x165ea0
+DC_ADDRESS(0x165ea0, 0x568)
+VA(0x005bd8e0, 0x551) MAC_ADDRESS(0x1b2b88, 0x700)
 // Comparing the bitset proxy with zero preserves its conversion helper and
 // reproduces retail's first test expansion; negation keeps an extra call.
 // Both == 0 and == false reproduce Windows 100%. Shared bitset references
@@ -581,7 +586,8 @@ void town::applySpecialBuildingEffect(hero* townHero)
     }
 }
 
-VA(0x005bde80, 0xD4) MAC_ADDRESS(0x1b3288, 0xd0)  // dc 0x166408
+DC_ADDRESS(0x166408, 0xa8)
+VA(0x005bde80, 0xD4) MAC_ADDRESS(0x1b3288, 0xd0)
 town::town()
 {
     m_type = 0;
@@ -604,7 +610,8 @@ town::town()
     m_manaVortexFull = 1;
 }
 
-VA(0x005bdf60, 0x76) MAC_ADDRESS(0x1b3358, 0xbc)  // dc 0x1664b0
+DC_ADDRESS(0x1664b0, 0x9c)
+VA(0x005bdf60, 0x76) MAC_ADDRESS(0x1b3358, 0xbc)
 void town::initializeHordes()
 {
     int creatureBase = 0;
@@ -633,7 +640,8 @@ void town::initializeHordes()
 
 // Dreamcast town.cpp:968 calls get_army before HasCreatures; Mac retains
 // getArmy and retail expands the ordinary town helper here.
-VA(0x005bdfe0, 0x4E) MAC_ADDRESS(0x1b3414, 0x4c)  // dc 0x16654c
+DC_ADDRESS(0x16654c, 0x54)
+VA(0x005bdfe0, 0x4E) MAC_ADDRESS(0x1b3414, 0x4c)
 int town::hasGarrison()
 {
     if (m_visitingHeroId < 0) {
@@ -643,7 +651,8 @@ int town::hasGarrison()
     return 1;
 }
 
-VA(0x005be030, 0x1D3) MAC_ADDRESS(0x1b3460, 0x204)  // dc 0x1665a0
+DC_ADDRESS(0x1665a0, 0xe8)
+VA(0x005be030, 0x1D3) MAC_ADDRESS(0x1b3460, 0x204)
 void town::giveSpells(hero* forceHero) const
 {
     if (!forceHero && m_visitingHeroId == -1 && m_garrisonHeroId == -1)
@@ -695,7 +704,8 @@ void town::giveSpells(hero* forceHero) const
     }
 }
 
-VA(0x005be210, 0xC0) MAC_ADDRESS(0x1b3664, 0x104)  // dc 0x166688
+DC_ADDRESS(0x166688, 0x98)
+VA(0x005be210, 0xC0) MAC_ADDRESS(0x1b3664, 0x104)
 void town::view(int alreadyFaded)
 {
     int threshold = g_highMemBuffer + 0x514;
@@ -723,7 +733,8 @@ void town::view(int alreadyFaded)
     g_townViewActive = 0;
 }
 
-VA(0x005be2d0, 0xB3) MAC_ADDRESS(0x1b3768, 0x134)  // dc 0x166720
+DC_ADDRESS(0x166720, 0x10c)
+VA(0x005be2d0, 0xB3) MAC_ADDRESS(0x1b3768, 0x134)
 void town::deallocate()
 {
     playerData* player = &g_game->m_players[m_owner];
@@ -745,7 +756,8 @@ void town::deallocate()
 
 // Dreamcast town.cpp:1106 calls town::PlaceInMap after moving the
 // garrison hero to the visiting slot. Retail expands the wrapper.
-VA(0x005be390, 0xB7) MAC_ADDRESS(0x1b389c, 0x74)  // dc 0x16682c
+DC_ADDRESS(0x16682c, 0x38)
+VA(0x005be390, 0xB7) MAC_ADDRESS(0x1b389c, 0x74)
 void town::removeGarrisonHero()
 {
     if (m_garrisonHeroId < 0)
@@ -770,7 +782,8 @@ void town::removeGarrisonHero()
 // caller-specific zero/id store schedule unmatched (97.77444%); reversing the
 // shared constructor closes this caller but contradicts netmsg.h:717-718 and
 // breaks exact playerData::add_garrison_hero, so that old 100% remains history.
-VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global, dc 0x166864
+DC_ADDRESS(0x166864, 0xea)
+VA(0x005be450, 0x1AC) MAC_ADDRESS(0x1b3910, 0x1ac)  // anchor-global
 // Naming the hide-message hero id and reusing or predeclaring the roster
 // counter leave the constructor register residual unresolved (nine VC6
 // combinations, four objects). Keep CMCHideHero's attested assignment order.
@@ -818,7 +831,8 @@ void town::swapHeroes()
 // array access and the DC-attested bitset reference assignment. A reference
 // to the fixed guild slot and reversing spell/weight declaration order are
 // also byte-flat; an outer shared guild row index falls to 96.16%.
-VA(0x005be600, 0x32A) MAC_ADDRESS(0x1b3abc, 0x298)  // dc 0x166950
+DC_ADDRESS(0x166950, 0x214)
+VA(0x005be600, 0x32A) MAC_ADDRESS(0x1b3abc, 0x298)
 void town::initializeSpells(const TownExtra* townSetup)
 {
     // CodeWarrior emits this default ctor with the exact 20 bytes of Mac's
@@ -886,6 +900,7 @@ void town::initializeSpells(const TownExtra* townSetup)
 }
 
 // E:\gamedcs\town.cpp:1206
+DC_ADDRESS(0x166b64, 0xa4)
 MAC_ADDRESS(0x1b3d54, 0xe8)
 void town::setSpellsAvailable()
 {
@@ -902,7 +917,8 @@ void town::setSpellsAvailable()
 }
 
 // E:\gamedcs\town.cpp:1226
-VA(0x005be930, 0x330) MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map, dc 0x166c08
+DC_ADDRESS(0x166c08, 0x2ce)
+VA(0x005be930, 0x330) MAC_ADDRESS(0x1b3e3c, 0x3a0)  // body (built-mask OR) + order-map
 type_building_id town::createBuilding(type_building_id building)
 {
     // Dreamcast CodeView names this short local `dwelling`.
@@ -964,7 +980,8 @@ type_building_id town::createBuilding(type_building_id building)
     return building;
 }
 
-VA(0x005bec60, 0x173) MAC_ADDRESS(0x1b41dc, 0x1c8)  // dc 0x166ed8
+DC_ADDRESS(0x166ed8, 0xf0)
+VA(0x005bec60, 0x173) MAC_ADDRESS(0x1b41dc, 0x1c8)
 void town::destroyExtraCapitol()
 {
     if (isCapitol() && m_owner >= 0) {
@@ -997,7 +1014,8 @@ void town::destroyExtraCapitol()
 void checkEndGame(int forceWin);
 
 // E:\gamedcs\town.cpp:1340
-VA(0x005bede0, 0x427) MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global, dc 0x166fc8
+DC_ADDRESS(0x166fc8, 0x202)
+VA(0x005bede0, 0x427) MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
 // Moving the result declaration after the fort/capitol snapshots and
 // grouping the special-effect guards did not recover the retained hasBuilding
 // call (six VC6 combinations, three objects). Keep the canonical helpers.
@@ -1065,7 +1083,8 @@ type_building_id town::buildBuilding(int buildingId,
     return built;
 }
 
-VA(0x005bf210, 0x1A5) MAC_ADDRESS(0x1b47cc, 0x17c)  // dc 0x1671cc
+DC_ADDRESS(0x1671cc, 0xa6)
+VA(0x005bf210, 0x1A5) MAC_ADDRESS(0x1b47cc, 0x17c)
 void town::updateShipyard()
 {
     if (hasBuilding(DOCK_ID, true)) {
@@ -1085,7 +1104,8 @@ void town::updateShipyard()
     }
 }
 
-VA(0x005bf3c0, 0x11E) MAC_ADDRESS(0x1b4948, 0x224)  // dc 0x167274
+DC_ADDRESS(0x167274, 0x102)
+VA(0x005bf3c0, 0x11E) MAC_ADDRESS(0x1b4948, 0x224)
 unsigned char town::buyBuilding(type_building_id building)
 {
     if (m_owner < 0)
@@ -1109,7 +1129,8 @@ unsigned char town::buyBuilding(type_building_id building)
     return 1;
 }
 
-VA(0x005bf4e0, 0xC) MAC_ADDRESS(0x1b4b6c, 0x14)  // dc 0x167378
+DC_ADDRESS(0x167378, 0xe)
+VA(0x005bf4e0, 0xC) MAC_ADDRESS(0x1b4b6c, 0x14)
 unsigned char town::canBuildDock() const
 {
     return m_dockSite != TOWN_DOCK_SITE_NONE;
@@ -1117,7 +1138,8 @@ unsigned char town::canBuildDock() const
 
 // Dreamcast town.cpp:1491 calls is_legal_building and HasBuilding;
 // Complete expands both helper bodies into the two mask tests.
-VA(0x005bf4f0, 0x7A) MAC_ADDRESS(0x1b4b80, 0xa0)  // dc 0x167388
+DC_ADDRESS(0x167388, 0x52)
+VA(0x005bf4f0, 0x7A) MAC_ADDRESS(0x1b4b80, 0xa0)
 void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
 {
     *archerLevel = 10;
@@ -1130,7 +1152,8 @@ void town::calcNumLevelArchers(int* numArchers, int* archerLevel)
     *numArchers = level;
 }
 
-VA(0x005bf570, 0x86) MAC_ADDRESS(0x1b4c20, 0x8c)  // dc 0x1673dc
+DC_ADDRESS(0x1673dc, 0x7c)
+VA(0x005bf570, 0x86) MAC_ADDRESS(0x1b4c20, 0x8c)
 long town::getCastleGrowthBonus(TCreatureType creature) const
 {
     if (hasBuilding(CASTLE_CASTLE_ID, false))
@@ -1142,7 +1165,8 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 
 // Dreamcast town.cpp:1517 names HasBuilding for the first hall check;
 // all five source checks use the same built/active Town.h accessor.
-VA(0x005bf600, 0xC6) MAC_ADDRESS(0x1b4cac, 0x130)  // dc 0x167458
+DC_ADDRESS(0x167458, 0x7c)
+VA(0x005bf600, 0xC6) MAC_ADDRESS(0x1b4cac, 0x130)
 short town::getGoldIncome(unsigned char includeSilo) const
 {
     short income = 500;
@@ -1161,7 +1185,8 @@ short town::getGoldIncome(unsigned char includeSilo) const
 
 // Dreamcast town.cpp:1539 calls HasBuilding; retail expands the
 // active-mask checks for the dwelling and matching horde building.
-VA(0x005bf6d0, 0x97) MAC_ADDRESS(0x1b4ddc, 0x14c)  // dc 0x1674d4
+DC_ADDRESS(0x1674d4, 0x70)
+VA(0x005bf6d0, 0x97) MAC_ADDRESS(0x1b4ddc, 0x14c)
 int town::getHorde(long dwelling) const
 {
     if (!hasBuilding(DWELLING_0_ID + dwelling, true))
@@ -1177,7 +1202,8 @@ int town::getHorde(long dwelling) const
 
 // Dreamcast town.cpp:1560 calls HasBuilding for the horde-bonus gate;
 // both active-mask checks use that same header boundary.
-VA(0x005bf770, 0x9E) MAC_ADDRESS(0x1b4f28, 0x138)  // dc 0x167544
+DC_ADDRESS(0x167544, 0x8e)
+VA(0x005bf770, 0x9E) MAC_ADDRESS(0x1b4f28, 0x138)
 long town::getHordeBonus(long dwelling) const
 {
     if (!hasBuilding(DWELLING_0_ID + dwelling, true))
@@ -1212,7 +1238,8 @@ long town::getAssembledLegionBonus(long dwelling)
 // Dreamcast town.cpp:1593 calls Town.h get_location and game::get_cell;
 // retail expands both. Complete checks wielded Legion artifacts in the
 // tier cases, while the older Dreamcast calls hero::HasArtifact.
-VA(0x005bf900, 0x258) MAC_ADDRESS(0x1b5120, 0x2f4)  // dc 0x1675d4
+DC_ADDRESS(0x1675d4, 0x172)
+VA(0x005bf900, 0x258) MAC_ADDRESS(0x1b5120, 0x2f4)
 long town::getLegionBonus(long dwelling) const
 {
     game* currentGame = g_game;
@@ -1277,7 +1304,8 @@ long town::getLegionBonus(long dwelling) const
 // in the helper's growth local is byte-flat for both this caller and its
 // exact retained helper. An early-return sum lowers them to 80.97/85.18%;
 // explicit short conversion of getGeneratorBonus is also byte-flat.
-VA(0x005bfb60, 0x266) MAC_ADDRESS(0x1b5414, 0x1fc)  // dc 0x167748
+DC_ADDRESS(0x167748, 0xfe)
+VA(0x005bfb60, 0x266) MAC_ADDRESS(0x1b5414, 0x1fc)
 short town::getGrowthRate(short dwelling) const
 {
     long dwellingIndex = dwelling;
@@ -1312,7 +1340,8 @@ short town::getGrowthRate(short dwelling) const
     return growth;
 }
 
-VA(0x005bfdd0, 0x74) MAC_ADDRESS(0x1b5610, 0xc8)  // dc 0x167848
+DC_ADDRESS(0x167848, 0xb6)
+VA(0x005bfdd0, 0x74) MAC_ADDRESS(0x1b5610, 0xc8)
 void town::increasePopulation(TCreatureType bonusCreature,
                                TCreatureType alternateBonus, long bonusAmount)
 {
@@ -1330,7 +1359,8 @@ void town::increasePopulation(TCreatureType bonusCreature,
     }
 }
 
-VA(0x005bfe50, 0x55) MAC_ADDRESS(0x1b56d8, 0x100)  // dc 0x167900
+DC_ADDRESS(0x167900, 0x56)
+VA(0x005bfe50, 0x55) MAC_ADDRESS(0x1b56d8, 0x100)
 void town::changeGeneratorBonus(TCreatureType creature, long change)
 {
     int slot;
@@ -1384,7 +1414,8 @@ static const int g_rewardDialogBatch = 8;
 // cache of `thisEvent->BuildBuildings` that retail reloads. Re-reading the
 // member in the translation loop instead costs 90.8986 -> 89.1573; the cached
 // __int64 stands.
-VA(0x005bfeb0, 0x369) MAC_ADDRESS(0x1b5b90, 0x3f4)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
+DC_ADDRESS(0x167c3c, 0x32c)
+VA(0x005bfeb0, 0x369) MAC_ADDRESS(0x1b5b90, 0x3f4)  // anchor-callgraph + arity (ret 4)
 void town::giveEventReward(const TTownEvent* thisEvent)
 {
     __int64 mask = getBuildingMask();
@@ -1451,7 +1482,8 @@ void town::giveEventReward(const TTownEvent* thisEvent)
         showCreatureRewards(this, rewards);
 }
 
-VA(0x005c0220, 0x1DA) MAC_ADDRESS(0x1b57d8, 0x198)  // dc 0x167958
+DC_ADDRESS(0x167958, 0x132)
+VA(0x005c0220, 0x1DA) MAC_ADDRESS(0x1b57d8, 0x198)
 void showBuildingRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
 {
@@ -1486,7 +1518,8 @@ void showBuildingRewards(const town* thisTown,
 // reward's count.
 // Feeding formatString a second direct reward-count expression scores 91.42%
 // instead of 99.0596%; the shared count local preserves its retail lifetime.
-VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward), dc 0x167a8c
+DC_ADDRESS(0x167a8c, 0x1b0)
+VA(0x005c0400, 0x26F) MAC_ADDRESS(0x1b5970, 0x220)  // anchor-caller (give_event_reward)
 void showCreatureRewards(const town* thisTown,
                            std::vector<type_dialog_resource>& rewards)
 {
@@ -1518,7 +1551,7 @@ void showCreatureRewards(const town* thisTown,
 void initializeBuildings(town* currentTown, const TownExtra* townSetup);
 unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 
-// Original: initialize_army; town.cpp:2017, dc 0x168330.
+// Original: initialize_army; town.cpp:2017
 // Complete expands the ordinary initializer into town::initialize. Its custom
 // army path additionally resolves the map format's negative random-tier IDs;
 // DC's older body copied those creature IDs directly. Both use getArmy's
@@ -1532,7 +1565,8 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y);
 // through getHero where retail retains getArmy. Sharing the two loops' slot
 // local is byte-flat. Mac retains per-operation getters, which rules out a
 // cached army receiver or a combined clear operation as the missing helper.
-// Original: initialize_army; town.cpp:2017, dc 0x168330.
+// Original: initialize_army; town.cpp:2017
+DC_ADDRESS(0x168330, 0xfc)
 MAC_ADDRESS(0x1b648c, 0x1ac)
 static void initializeArmy(town* currentTown, const TownExtra* townSetup)
 {
@@ -1573,7 +1607,8 @@ static void initializeArmy(town* currentTown, const TownExtra* townSetup)
     }
 }
 
-VA(0x005c0670, 0x24E) MAC_ADDRESS(0x1b6638, 0xbc)  // dc 0x16842c
+DC_ADDRESS(0x16842c, 0x66)
+VA(0x005c0670, 0x24E) MAC_ADDRESS(0x1b6638, 0xbc)
 void town::initialize(const TownExtra* townSetup)
 {
     m_type = townSetup->m_townType;
@@ -1587,7 +1622,8 @@ void town::initialize(const TownExtra* townSetup)
     initializeSpells(townSetup);
 }
 
-VA(0x005c08c0, 0x3CE) MAC_ADDRESS(0x1b604c, 0x440)  // dc 0x167ff4
+DC_ADDRESS(0x167ff4, 0x33c)
+VA(0x005c08c0, 0x3CE) MAC_ADDRESS(0x1b604c, 0x440)
 // DC locals: disabled_buildings and built_mask.
 void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 {
@@ -1664,7 +1700,8 @@ void initializeBuildings(town* currentTown, const TownExtra* townSetup)
 // that word as m_cellFlags; the old cell_flags_word cast wrapper predates
 // its restoration and has no independent CodeView helper boundary.
 
-VA(0x005c0c90, 0x89) MAC_ADDRESS(0x1b5f84, 0xc8)  // dc 0x167f68
+DC_ADDRESS(0x167f68, 0x8a)
+VA(0x005c0c90, 0x89) MAC_ADDRESS(0x1b5f84, 0xc8)
 unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 {
     if (x >= 0) {
@@ -1693,6 +1730,7 @@ unsigned char checkShipyardSquare(town* currentTown, long x, long y)
 }
 
 // E:\gamedcs\town.cpp:2084
+DC_ADDRESS(0x168494, 0x6e)
 MAC_ADDRESS(0x1b66f4, 0x104)
 void town::updateFullBuildingMask()
 {
@@ -1708,7 +1746,8 @@ void town::updateFullBuildingMask()
 // building_mask. Its source rows retain TownAlreadyBuiltOn,
 // is_legal_building, CanBuildDock and get_building_mask; Complete expands
 // those same source calls and matches this body exactly.
-VA(0x005c0d20, 0x13D) MAC_ADDRESS(0x1b67f8, 0x19c)  // anchor-global, dc 0x168504
+DC_ADDRESS(0x168504, 0x158)
+VA(0x005c0d20, 0x13D) MAC_ADDRESS(0x1b67f8, 0x19c)  // anchor-global
 unsigned char town::canBuild(short buildingId) const
 {
     if (!g_game->townAlreadyBuiltOn(m_id)) {
@@ -1733,7 +1772,8 @@ unsigned char town::canBuild(short buildingId) const
 
 // Dreamcast town.cpp:2141/2147 calls is_legal_building and CanBuildDock.
 // Mac retains both; retail expands the first and can inline the second.
-VA(0x005c0e60, 0xC0) MAC_ADDRESS(0x1b6994, 0xf8)  // dc 0x16865c
+DC_ADDRESS(0x16865c, 0xb6)
+VA(0x005c0e60, 0xC0) MAC_ADDRESS(0x1b6994, 0xf8)
 // Complete reads the full dword parameter and its exact symbol encodes int;
 // Dreamcast's older interface records short building_id.
 unsigned char town::canEverBuild(int buildingId) const
@@ -1753,7 +1793,8 @@ unsigned char town::canEverBuild(int buildingId) const
 
 // Dreamcast town.cpp:2188 calls CanBuildDock; the source helper also
 // survives as a direct Mac call at 0:0x1b6b8c.
-VA(0x005c0f20, 0x156) MAC_ADDRESS(0x1b6a8c, 0x180)  // dc 0x168714
+DC_ADDRESS(0x168714, 0x18a)
+VA(0x005c0f20, 0x156) MAC_ADDRESS(0x1b6a8c, 0x180)
 __int64 town::getBuildableMask() const
 {
     __int64 activeMask = getBuildingMask();
@@ -1777,7 +1818,8 @@ __int64 town::getBuildableMask() const
     return mask;
 }
 
-VA(0x005c1080, 0x64) MAC_ADDRESS(0x1b6c0c, 0x68)  // dc 0x1688a0
+DC_ADDRESS(0x1688a0, 0x4e)
+VA(0x005c1080, 0x64) MAC_ADDRESS(0x1b6c0c, 0x68)
 int* town::getBuildCostArray(type_building_id building) const
 {
     if (building < SPECIAL_BUILDING_ID)
@@ -1787,14 +1829,16 @@ int* town::getBuildCostArray(type_building_id building) const
     return s_dwellingCosts[m_type][building - DWELLING_0_ID];
 }
 
-VA(0x005c10f0, 0x8A) MAC_ADDRESS(0x1b6c74, 0x40)  // dc 0x1688f0
+DC_ADDRESS(0x1688f0, 0x1e)
+VA(0x005c10f0, 0x8A) MAC_ADDRESS(0x1b6c74, 0x40)
 void town::getBuildCost(type_building_id building, int* resources) const
 {
     memcpy(resources, getBuildCostArray(building),
            NUM_RESOURCES * sizeof(int));
 }
 
-VA(0x005c1180, 0xA9) MAC_ADDRESS(0x1b6cb4, 0xb4)  // dc 0x168910
+DC_ADDRESS(0x168910, 0x5e)
+VA(0x005c1180, 0xA9) MAC_ADDRESS(0x1b6cb4, 0xb4)
 short town::getBuildCost(type_building_id building, EGameResource* types,
                          int* amounts) const
 {
@@ -1810,7 +1854,8 @@ short town::getBuildCost(type_building_id building, EGameResource* types,
     return count;
 }
 
-VA(0x005c1230, 0x46) MAC_ADDRESS(0x1b6d68, 0x60)  // dc 0x168970
+DC_ADDRESS(0x168970, 0x6a)
+VA(0x005c1230, 0x46) MAC_ADDRESS(0x1b6d68, 0x60)
 type_horde_effect* town::getHordeEffect(type_building_id building) const
 {
     short slot;
@@ -1823,26 +1868,30 @@ type_horde_effect* town::getHordeEffect(type_building_id building) const
     return &s_constHordeEffects[m_type][slot];
 }
 
-VA(0x005c1280, 0x15) MAC_ADDRESS(0x1b6dc8, 0x18)  // dc 0x1689dc
+DC_ADDRESS(0x1689dc, 0x10)
+VA(0x005c1280, 0x15) MAC_ADDRESS(0x1b6dc8, 0x18)
 int* town::getSiloIncome() const
 {
     return g_siloIncome[m_type];
 }
 
-VA(0x005c12a0, 0x39) MAC_ADDRESS(0x1b6de0, 0x40)  // dc 0x1689ec
+DC_ADDRESS(0x1689ec, 0x22)
+VA(0x005c12a0, 0x39) MAC_ADDRESS(0x1b6de0, 0x40)
 unsigned char town::isLegalBuilding(type_building_id building) const
 {
     return (g_bitNumber[building] & m_available) != 0;
 }
 
-// Original: town::set_legal_buildings; town.cpp:2291, dc 0x168a10.
+// Original: town::set_legal_buildings; town.cpp:2291
+DC_ADDRESS(0x168a10, 0x3e)
 MAC_ADDRESS(0x1b6e20, 0x38)
 void town::setLegalBuildings(__int64 disabledBuildings)
 {
     m_available = g_townEligibleBuildMask[m_type] & ~disabledBuildings;
 }
 
-// Original: town::is_disabled; town.cpp:2300, dc 0x168a50.
+// Original: town::is_disabled; town.cpp:2300
+DC_ADDRESS(0x168a50, 0x48)
 unsigned char town::isDisabled(type_building_id building) const
 {
     if (isLegalBuilding(building))
@@ -1853,7 +1902,8 @@ unsigned char town::isDisabled(type_building_id building) const
 // Dreamcast town.cpp:2328 calls town::PlaceInMap; retail expands the
 // wrapper before the hero placement call. Complete's recruit alignment
 // differs from the older Dreamcast get_alignment call at line 2338.
-VA(0x005c12e0, 0xC9) MAC_ADDRESS(0x1b6e58, 0xc4)  // dc 0x168a98
+DC_ADDRESS(0x168a98, 0xbc)
+VA(0x005c12e0, 0xC9) MAC_ADDRESS(0x1b6e58, 0xc4)
 void town::hire(hero* newHero, long playerId)
 {
     playerData* player = &g_game->m_players[playerId];
@@ -1872,30 +1922,34 @@ void town::hire(hero* newHero, long playerId)
 
 // Dreamcast town.cpp:2346 calls Town.h get_location while placing the
 // hero; retail expands the point construction.
-VA(0x005c13b0, 0x83) MAC_ADDRESS(0x1b6f1c, 0x88)  // dc 0x168b54
+DC_ADDRESS(0x168b54, 0x4c)
+VA(0x005c13b0, 0x83) MAC_ADDRESS(0x1b6f1c, 0x88)
 void town::placeInMap(int heroId, long playerId, unsigned char resetFlags)
 {
     hero* newHero = g_game->getHero(heroId);
     newHero->placeInMap(playerId, getLocation(), resetFlags);
 }
 
-VA(0x005c1440, 0xC) MAC_ADDRESS(0x1b6fa4, 0x1c)  // dc 0x168ba0
+DC_ADDRESS(0x168ba0, 0x16)
+VA(0x005c1440, 0xC) MAC_ADDRESS(0x1b6fa4, 0x1c)
 TTerrainType town::getNativeTerrain() const
 {
     return townManager::getNativeTerrain(m_type);
 }
 
-VA(0x005c1450, 0xC) MAC_ADDRESS(0x1b6fc0, 0x1c)  // dc 0x168bb8
+DC_ADDRESS(0x168bb8, 0x16)
+VA(0x005c1450, 0xC) MAC_ADDRESS(0x1b6fc0, 0x1c)
 const char* town::getTypeName() const
 {
     return townManager::getTownTypeName(m_type);
 }
 
-// Original: town::get_army; town.cpp:2375, dc 0x168bd0.
+// Original: town::get_army; town.cpp:2375
 // This ordinary non-const twin returns the same selected army address as the
 // const overload. Complete callers of both interfaces share 0x5c1460. Mac
 // callers that mutate the selected army, including initializeArmy, retain the
 // first body at 0x1b6fdc; const town users call the twin at 0x1b7020.
+DC_ADDRESS(0x168bd0, 0x28)
 MAC_ADDRESS(0x1b6fdc, 0x44)
 armyGroup& town::getArmy()
 {
@@ -1904,7 +1958,8 @@ armyGroup& town::getArmy()
     return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
-VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b7020, 0x44)  // dc 0x168bf8
+DC_ADDRESS(0x168bf8, 0x28)
+VA(0x005c1460, 0x38) MAC_ADDRESS(0x1b7020, 0x44)
 const armyGroup& town::getArmy() const
 {
     if (m_garrisonHeroId < 0)
@@ -1912,7 +1967,8 @@ const armyGroup& town::getArmy() const
     return g_game->getHero(m_garrisonHeroId)->m_army;
 }
 
-VA(0x005c14a0, 0x19) MAC_ADDRESS(0x1b7064, 0x28)  // dc 0x168c20
+DC_ADDRESS(0x168c20, 0x1c)
+VA(0x005c14a0, 0x19) MAC_ADDRESS(0x1b7064, 0x28)
 int town::upgradedDwellingID(int id)
 {
     if (id == HORDE_ID)
@@ -1927,6 +1983,7 @@ int town::upgradedDwellingID(int id)
 // parameters. `resource` is bound by REFERENCE, which is why retail
 // re-reads the vector's _First between every one of the seven columns
 // instead of holding it in a register.
+DC_ADDRESS(0x168d50, 0xac)
 MAC_ADDRESS(0x1b71e4, 0xa4)
 static void initializeBuildingCosts(int* costs,
                                     const std::vector<char*>& resource)
@@ -1952,6 +2009,7 @@ int town::s_specialBuildingCosts[9][9][NUM_RESOURCES];
 DATA(0x006a9818)
 int town::s_dwellingCosts[9][14][NUM_RESOURCES];
 
+DC_ADDRESS(0x168c3c, 0x112)
 VA(0x005c14c0, 0x1F6) MAC_ADDRESS(0x1b708c, 0x158)
 unsigned char town::initializeBuildingCostsTables()
 {

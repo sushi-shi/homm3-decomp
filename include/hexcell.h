@@ -110,6 +110,7 @@ public:
     army* getDeadArmy(int i) const;
     // DC HexCell.h:85. The Complete UpdateGrid caller expands the returned
     // four-word rectangle and SLimitData::Include into one union loop.
+    DC_ADDRESS(0x087300, 0x44)
     SLimitData limits() const
     {
         return SLimitData(m_hexUlx, m_hexUly, m_hexBrx, m_fullHexBry);
@@ -122,6 +123,7 @@ public:
     // itself load-bearing for ProcessDeath's inline budget (a free
     // candidate site in C2's sites-remaining divisor - measured there).
     // The DC const-this record also permits DoorCanBeLowered to call it.
+    DC_ADDRESS(0x04cc68, 0xa)
     unsigned char hasArmy() const
     {
         return m_armySide >= 0;

@@ -85,6 +85,7 @@ private:
     // DC winfile.obj contributor segment 0x198864-0x19886f is
     // attributed to winfile.h). No retail body; the retail ctor
     // writes the members directly.
+    DC_ADDRESS(0x198864, 0xc)
     void init()
     {
         m_file = NULL;

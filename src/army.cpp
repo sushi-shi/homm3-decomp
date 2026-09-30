@@ -55,7 +55,7 @@ DATA(0x00693858) int g_walkingYMod;
 #undef max
 #endif
 
-// E:\gamedcs\army.cpp:52 (dc 0x436b8) - retail 0x43d250, the FIRST row of
+// E:\gamedcs\army.cpp:52 () - retail 0x43d250, the FIRST row of
 // army.obj's span: the compiland's cinit/atexit thunk opens at 0x43ce60 and
 // the nine ~95-byte rows between it and this one are the /Gy header COMDATs
 // the link parked ahead of the first real body.  The constructor is fixed by
@@ -77,7 +77,8 @@ DATA(0x00693858) int g_walkingYMod;
 // place of MAX_SAMPLES is byte-flat.
 // The array element destructor at 0x43cb10 releases the resource through
 // TResourceHandle. Instantiating TUs include the complete resource types.
-VA(0x0043d250, 0x1A8) MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run, dc 0x436b8
+DC_ADDRESS(0x0436b8, 0xf4)
+VA(0x0043d250, 0x1A8) MAC_ADDRESS(0x048b38, 0x1ac)  // anchor-global + member-construction run
 army::army()
 {
     m_stdIcon = 0;
@@ -105,9 +106,10 @@ army::~army()
 {
 }
 
-// Original: army::set_retaliation_count; army.cpp:77, dc 0x437ac.
+// Original: army::set_retaliation_count; army.cpp:77
 // Init and ResetRound expand this ordinary helper in Complete. DC line 80
 // increments the Griffin allowance; VC6 folds the known initial value to 2.
+DC_ADDRESS(0x0437ac, 0x84)
 MAC_ADDRESS(0x048e5c, 0x68)
 void army::setRetaliationCount()
 {
@@ -122,7 +124,8 @@ void army::setRetaliationCount()
         m_retaliationCount = 0;
 }
 
-VA(0x0043d540, 0x34) MAC_ADDRESS(0x048ec4, 0x68)  // dc 0x43830
+DC_ADDRESS(0x043830, 0x3a)
+VA(0x0043d540, 0x34) MAC_ADDRESS(0x048ec4, 0x68)
 void army::playSample(army::TSampleID id)
 {
     if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
@@ -131,7 +134,8 @@ void army::playSample(army::TSampleID id)
     }
 }
 
-VA(0x0043d580, 0x37) MAC_ADDRESS(0x048f2c, 0x6c)  // dc 0x4386c
+DC_ADDRESS(0x04386c, 0x3c)
+VA(0x0043d580, 0x37) MAC_ADDRESS(0x048f2c, 0x6c)
 void army::stopSample(army::TSampleID id)
 {
     if (!static_cast<const combatManager*>(g_combatManager)->isQuickCombat()
@@ -182,7 +186,8 @@ void army::stopSample(army::TSampleID id)
 // retail's and the dispose vtable call uses EDX where retail uses EAX
 // - all downstream of the same homing choice, no spelling reaches it.
 // Naming the GameTime result before its store is byte-flat at 99.7217%.
-VA(0x0043d5c0, 0x166) MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity, dc 0x438e8
+DC_ADDRESS(0x0438e8, 0xc8)
+VA(0x0043d5c0, 0x166) MAC_ADDRESS(0x049008, 0x100)  // anchor-bracket + arity
 void army::initClean()
 {
     for (int i = 0; i < 8; i++) {
@@ -213,6 +218,7 @@ void army::initClean()
 // this member boundary in range_attack. VC6 folds the inline definition into
 // that caller. Mac 0x48f98 retains the body; rangeAttack and castSpell call it
 // at 0x4bcf8 and 0x54d78 with SHOOT_SAMPLE.
+DC_ADDRESS(0x0438a8, 0x3e)
 MAC_ADDRESS(0x048f98, 0x70)
 inline void army::waitSample(army::TSampleID which)
 {
@@ -223,7 +229,8 @@ inline void army::waitSample(army::TSampleID which)
     }
 }
 
-VA(0x0043d730, 0x17D) MAC_ADDRESS(0x049108, 0x1d8)  // dc 0x439b0
+DC_ADDRESS(0x0439b0, 0x3ea)
+VA(0x0043d730, 0x17D) MAC_ADDRESS(0x049108, 0x1d8)
 void army::initialize(TCreatureType type, long number, const hero* owner,
                       long newGroup, long newIndex, long newGridIndex)
 {
@@ -272,7 +279,8 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_poisonPenalty = 1.0f;
 }
 
-VA(0x0043d8b0, 0x135) MAC_ADDRESS(0x0492e0, 0x13c)  // dc 0x43d9c
+DC_ADDRESS(0x043d9c, 0xe4)
+VA(0x0043d8b0, 0x135) MAC_ADDRESS(0x0492e0, 0x13c)
 void army::init(int armyId, int newNumTroops, const hero* owner, int side,
                 int inIndex, int gridIndex, int origPos)
 {
@@ -297,6 +305,7 @@ void army::init(int armyId, int newNumTroops, const hero* owner, int side,
     setRetaliationCount();
 }
 
+DC_ADDRESS(0x043e80, 0x3ca)
 VA(0x0043d9f0, 0x525) MAC_ADDRESS(0x04941c, 0x774)
 void army::loadResources()
 {
@@ -491,7 +500,8 @@ void army::loadResources()
     }
 }
 
-VA(0x0043df20, 0xDD) MAC_ADDRESS(0x049b90, 0x150)  // dc 0x44318
+DC_ADDRESS(0x044318, 0x9c)
+VA(0x0043df20, 0xDD) MAC_ADDRESS(0x049b90, 0x150)
 void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain)
@@ -537,7 +547,8 @@ void army::setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
 }
 
 // Complete extends the DC signature with a seventh, byte-wide alignment gate:
-VA(0x0043e000, 0x139) MAC_ADDRESS(0x049ce0, 0x1f4)  // dc 0x443b4
+DC_ADDRESS(0x0443b4, 0xf4)
+VA(0x0043e000, 0x139) MAC_ADDRESS(0x049ce0, 0x1f4)
 void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
                      const armyGroup* otherGroup, int magicTerrain,
@@ -638,7 +649,8 @@ void army::setMorale(const hero* ownerHero, const armyGroup* ownerGroup,
 // count ternary and the effect flags both home in [ebp+8]); count_text
 // is char[12] (the frame is 0x458, and the affinity temp overlays it).
 
-VA(0x0043e140, 0x8C0) MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global, dc 0x444a8
+DC_ADDRESS(0x0444a8, 0x8a6)
+VA(0x0043e140, 0x8C0) MAC_ADDRESS(0x049ed4, 0x810)  // anchor-global
 void army::drawToBuffer(int x, int y, int numBoxOnly)
 {
     // DC records powX/powY, numFrames, iFrameColor, ulx and hex_off as int.
@@ -860,9 +872,10 @@ void army::drawToBuffer(int x, int y, int numBoxOnly)
     }
 }
 
-// Original: army::ComputeKarma; army.cpp:891, dc 0x44d50.
+// Original: army::ComputeKarma; army.cpp:891
 // Complete expands the same weighted spell-karma calculation in DrawToBuffer;
 // its spell table grew from DC's 80 entries to 81.
+DC_ADDRESS(0x044d50, 0xc2)
 MAC_ADDRESS(0x04a6e4, 0xcc)
 double army::computeKarma() const
 {
@@ -899,6 +912,7 @@ double army::computeKarma() const
 // value compare, the increment, then ONE compare of the answer against
 // end().
 // E:\gamedcs\army.cpp:917
+DC_ADDRESS(0x044e14, 0xac)
 MAC_ADDRESS(0x04a7b0, 0xdc)
 static unsigned char addItem(std::vector<army*>& array, army* arg)
 {
@@ -910,7 +924,8 @@ static unsigned char addItem(std::vector<army*>& array, army* arg)
 
 // Drop the first occurrence of `arg` from `array`, searching BACKWARDS.
 
-VA(0x0043ea00, 0x67) MAC_ADDRESS(0x04a88c, 0x78)  // dc 0x44ec0
+DC_ADDRESS(0x044ec0, 0x4a)
+VA(0x0043ea00, 0x67) MAC_ADDRESS(0x04a88c, 0x78)
 void eraseItem(std::vector<army*>& array, const army* arg)
 {
     unsigned i = array.size();
@@ -928,7 +943,8 @@ void eraseItem(std::vector<army*>& array, const army* arg)
 
 // Is(1u << 21) is the death bit ProcessDeath raises (0x200000); a corpse
 // neither gives nor takes an aura.
-VA(0x0043ea70, 0x1DD) MAC_ADDRESS(0x04a904, 0x180)  // dc 0x44f0c
+DC_ADDRESS(0x044f0c, 0xf2)
+VA(0x0043ea70, 0x1DD) MAC_ADDRESS(0x04a904, 0x180)
 void army::addAura()
 {
     long count;
@@ -969,7 +985,8 @@ void army::addAura()
 // gets the copy loop written out inline. That is the /Ob2 divisor
 // doing its job (budget / sites-still-to-come grows as the sites are
 // spent), not a source difference - both sites are the same call.
-VA(0x0043ec50, 0x1B4) MAC_ADDRESS(0x04aa84, 0xa8)  // dc 0x45000
+DC_ADDRESS(0x045000, 0xbc)
+VA(0x0043ec50, 0x1B4) MAC_ADDRESS(0x04aa84, 0xa8)
 void army::removeAura()
 {
     long i = m_auraSources.size();
@@ -990,7 +1007,8 @@ void army::removeAura()
 // binder lets go, so each army this one had bound gets its bind row
 // cancelled once its `binders` list comes up empty.
 
-VA(0x0043ee10, 0x1C2) MAC_ADDRESS(0x04ab2c, 0xc4)  // dc 0x450bc
+DC_ADDRESS(0x0450bc, 0xa6)
+VA(0x0043ee10, 0x1C2) MAC_ADDRESS(0x04ab2c, 0xc4)
 void army::removeBinding()
 {
     long i = m_boundArmies.size();
@@ -1016,6 +1034,7 @@ void army::removeBinding()
 // first is do_multi_head_attack's) and carries the same arrow-tower
 // arm, with `combatSide` on the 21-wide army stride and the 20-wide
 // byte row.
+DC_ADDRESS(0x045164, 0xa0)
 VA(0x0043efe0, 0xCF) MAC_ADDRESS(0x04abf0, 0x118)
 unsigned char army::setInsideAreaEffect(unsigned char arg)
 {
@@ -1039,6 +1058,7 @@ unsigned char army::setInsideAreaEffect(unsigned char arg)
 // E:\gamedcs\army.cpp:1062
 // DC EndWalk (0x45204), called at Walk:1163 and WalkTo:2439.
 // Retail expands this ordinary helper; no standalone body is claimed.
+DC_ADDRESS(0x045204, 0x50)
 MAC_ADDRESS(0x04ad08, 0x8c)
 void army::endWalk()
 {
@@ -1056,7 +1076,8 @@ void army::endWalk()
 // the from/to pair the redraw reads, play the walk animation, and move
 // the stack in the grid.
 
-VA(0x0043f0b0, 0x206) MAC_ADDRESS(0x04ad94, 0x20c)  // dc 0x45254
+DC_ADDRESS(0x045254, 0x172)
+VA(0x0043f0b0, 0x206) MAC_ADDRESS(0x04ad94, 0x20c)
 void army::walk(int direction, unsigned char endWalk,
                 unsigned char initialWalk)
 {
@@ -1119,7 +1140,8 @@ void army::walk(int direction, unsigned char endWalk,
 // reach Windows 100% while retaining all bitmap and rectangle helpers.
 // The saved bitmap's Draw/Grab wrappers (DC1303/1317 and the final restore)
 // also retain Windows 100%; keep their accessors nested in those helpers.
-VA(0x0043f2c0, 0x63B) MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket, dc 0x453c8
+DC_ADDRESS(0x0453c8, 0x4d8)
+VA(0x0043f2c0, 0x63B) MAC_ADDRESS(0x04afa0, 0x68c)  // anchor-bracket
 void army::animateMissile(army* armyToAttack)
 {
     if (static_cast<const combatManager*>(g_combatManager)
@@ -1265,7 +1287,8 @@ void army::animateMissile(army* armyToAttack)
 // first, as in the Lich arm, restores Windows100%; a separate reported alias
 // prevents the native branch/load arrangement. All canonical helpers remain.
 
-VA(0x0043f900, 0x7F9) MAC_ADDRESS(0x04b62c, 0x6e4)  // dc-bracket forced, dc 0x458a0
+DC_ADDRESS(0x0458a0, 0x5d0)
+VA(0x0043f900, 0x7F9) MAC_ADDRESS(0x04b62c, 0x6e4)  // dc-bracket forced
 void army::rangeAttack(army* armyToAttack)
 {
     checkLuck();
@@ -1417,7 +1440,8 @@ void army::rangeAttack(army* armyToAttack)
 // attack, turn to face it, fire between one and three volleys, turn
 // back, and drop the spells an attack cancels.
 
-VA(0x00440160, 0x1A6) MAC_ADDRESS(0x04bd10, 0x1a0)  // dc 0x45e70
+DC_ADDRESS(0x045e70, 0x150)
+VA(0x00440160, 0x1A6) MAC_ADDRESS(0x04bd10, 0x1a0)
 void army::rangeAttack()
 {
     m_yModify = 0;
@@ -1464,6 +1488,7 @@ void army::rangeAttack()
 // two-hex stack has eight and they are not in ring order, so it goes
 // through the index/order table pair. Only get_multi_head_directions
 // expands them so far, and it expands each exactly once.
+DC_ADDRESS(0x045fc0, 0x46)
 MAC_ADDRESS(0x04beb0, 0x60)
 long army::getClockwise(long direction) const
 {
@@ -1473,6 +1498,7 @@ long army::getClockwise(long direction) const
     return (direction + 1) % COMBAT_DIRECTION_COUNT;
 }
 
+DC_ADDRESS(0x046008, 0x46)
 MAC_ADDRESS(0x04bf10, 0x60)
 long army::getCounterClockwise(long direction) const
 {
@@ -1487,7 +1513,8 @@ long army::getCounterClockwise(long direction) const
 // pointers are read-modify-written, never initialised, so the caller
 // owns them across however many sweeps a turn makes.
 
-VA(0x00440310, 0x1EB) MAC_ADDRESS(0x04bf70, 0x1fc)  // dc 0x46050
+DC_ADDRESS(0x046050, 0x150)
+VA(0x00440310, 0x1EB) MAC_ADDRESS(0x04bf70, 0x1fc)
 void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed,
                                 long* fireDamage)
 {
@@ -1542,7 +1569,8 @@ void army::doMultiHeadAttack(unsigned attackMask, int* damageAmount, int* killed
 // first one guarded: an already-bound target returns without
 // re-raising the pending spell or the mirror link.
 
-VA(0x00440500, 0x4B4) MAC_ADDRESS(0x04c16c, 0x440)  // dc 0x461a0
+DC_ADDRESS(0x0461a0, 0x33e)
+VA(0x00440500, 0x4B4) MAC_ADDRESS(0x04c16c, 0x440)
 bool army::checkSpecialAttack(army* target)
 {
     switch (m_creatureType) {
@@ -1630,7 +1658,8 @@ bool army::checkSpecialAttack(army* target)
 // touched is marked, the effect is played once, and the marks are
 // cleared again.
 
-VA(0x004409c0, 0x1F9) MAC_ADDRESS(0x04c5ac, 0x258)  // dc 0x464e0
+DC_ADDRESS(0x0464e0, 0x178)
+VA(0x004409c0, 0x1F9) MAC_ADDRESS(0x04c5ac, 0x258)
 void army::doFireShield(long damageAmount)
 {
     long side;
@@ -1689,7 +1718,8 @@ void army::doFireShield(long damageAmount)
 // count rather than an early missing-life product improves 97.08 -> 98.49%.
 // Separating Thunderbird base damage from ModifySpellDamage (DC2006/2011)
 // restores the remaining source lifetime and reaches Windows100%.
-VA(0x00440bc0, 0xA41) MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global, dc 0x46658
+DC_ADDRESS(0x046658, 0x592)
+VA(0x00440bc0, 0xA41) MAC_ADDRESS(0x04c804, 0xa84)  // anchor-global
 void army::doPostAttack(army* target, int attackDamage, int killedCount,
                           int totalLife)
 {
@@ -1894,7 +1924,8 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // restores the reload order after DoMultiHeadAttack (99.9616%). Remaining
 // differences are address-register choices in two MarkCreatureEffect expansions.
 
-VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates, dc 0x46bec
+DC_ADDRESS(0x046bec, 0x3c2)
+VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates
 bool army::doAttack(army* armyToAttack, int direction)
 {
     unsigned attackMask;
@@ -2011,7 +2042,8 @@ bool army::doAttack(army* armyToAttack, int direction)
 // the blow, land it, let the defender retaliate, take a second swing if
 // this stack has one, and put both facings back.
 
-VA(0x00441cb0, 0x2BE) MAC_ADDRESS(0x04d8c0, 0x36c)  // dc 0x46fb0
+DC_ADDRESS(0x046fb0, 0x2c0)
+VA(0x00441cb0, 0x2BE) MAC_ADDRESS(0x04d8c0, 0x36c)
 void army::doAttack(int direction)
 {
     m_drawPriority = 6;
@@ -2075,7 +2107,8 @@ void army::doAttack(int direction)
 // The arrow-tower guard in front of the combat manager's landmine /
 // fire-wall worker (0x46a570). Two things worth recording.
 
-VA(0x00441f70, 0x26) MAC_ADDRESS(0x04dc2c, 0x44)  // dc 0x47270
+DC_ADDRESS(0x047270, 0x84)
+VA(0x00441f70, 0x26) MAC_ADDRESS(0x04dc2c, 0x44)
 unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 {
     if (m_creatureType == ARMY_CREATURE_ARROW_TOWER)
@@ -2104,7 +2137,8 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 // Mac walkTo calls cancelSpellType(AFTER_MOVE) at 0:0x4dfd0 with r4=0,
 // immediately after clearing m_isMoving. Both retained helper bodies have
 // an empty AFTER_MOVE arm. VC6 can eliminate this source call at the site.
-VA(0x00441fa0, 0x461) MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global, dc 0x472f4
+DC_ADDRESS(0x0472f4, 0x2f8)
+VA(0x00441fa0, 0x461) MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
 unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 {
     m_side = m_slot = -1;
@@ -2188,6 +2222,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
 }
 
 // E:\gamedcs\army.cpp:2528
+DC_ADDRESS(0x0475ec, 0xa4)
 MAC_ADDRESS(0x04e014, 0x160)
 inline void army::checkLuck()
 {
@@ -2210,7 +2245,8 @@ inline void army::checkLuck()
     }
 }
 
-VA(0x00442410, 0x13B) MAC_ADDRESS(0x04e174, 0x160)  // dc 0x47690
+DC_ADDRESS(0x047690, 0x128)
+VA(0x00442410, 0x13B) MAC_ADDRESS(0x04e174, 0x160)
 long army::getAdjustedAttack(const army* enemy,
                                unsigned char rangedAttack) const
 {
@@ -2242,7 +2278,8 @@ long army::getAdjustedAttack(const army* enemy,
 // DC2624/2626 separates the adjusted call from the base-skill subtraction.
 // Its named result preserves both retained compiler bodies and restores
 // getUnitCombatValue's expanded register schedule with the defense counterpart.
-VA(0x00442550, 0x35) MAC_ADDRESS(0x04e2d4, 0x48)  // dc 0x477b8
+DC_ADDRESS(0x0477b8, 0x30)
+VA(0x00442550, 0x35) MAC_ADDRESS(0x04e2d4, 0x48)
 long army::getAttackModifier(const army* enemy,
                                unsigned char rangedAttack) const
 {
@@ -2250,7 +2287,8 @@ long army::getAttackModifier(const army* enemy,
     return adjusted - g_creatureTypeTraits[m_creatureType].m_attackSkill;
 }
 
-VA(0x00442590, 0xC2) MAC_ADDRESS(0x04e31c, 0x17c)  // dc 0x477e8
+DC_ADDRESS(0x0477e8, 0xde)
+VA(0x00442590, 0xC2) MAC_ADDRESS(0x04e31c, 0x17c)
 long army::getAdjustedDefense(const army* enemy,
                                 unsigned char frenzyIncluded) const
 {
@@ -2276,7 +2314,8 @@ long army::getAdjustedDefense(const army* enemy,
     return defense;
 }
 
-VA(0x00442660, 0x29) MAC_ADDRESS(0x04e498, 0x50)  // dc 0x478c8
+DC_ADDRESS(0x0478c8, 0x32)
+VA(0x00442660, 0x29) MAC_ADDRESS(0x04e498, 0x50)
 long army::getDefenseModifier() const
 {
     long adjusted = getAdjustedDefense(0, 1);
@@ -2287,6 +2326,7 @@ long army::getDefenseModifier() const
 // Complete's full damage-reduction operation starts from the same baseline.
 // Its composition with this base helper is a reconstruction hypothesis: both
 // compilers erase the constant-returning call, so bytes alone cannot prove it.
+DC_ADDRESS(0x0478fc, 0x8)
 inline double army::getDefenseDamageModifier(
     unsigned char rangedAttack) const
 {
@@ -2300,19 +2340,22 @@ inline double army::getDefenseDamageModifier(
 //   0x442690 (57 B)  heroes[hypnotizeFlag ? 1 - combatSide : combatSide]
 //   0x4426d0 (20 B)  heroes[combatSide]
 
-VA(0x00442690, 0x39) MAC_ADDRESS(0x04e4e8, 0x34)  // dc 0x47904
+DC_ADDRESS(0x047904, 0x1e)
+VA(0x00442690, 0x39) MAC_ADDRESS(0x04e4e8, 0x34)
 hero* army::getController() const
 {
     return g_combatManager->m_heroes[getControllingSide()];
 }
 
-VA(0x004426d0, 0x14) MAC_ADDRESS(0x04e51c, 0x1c)  // dc 0x47924
+DC_ADDRESS(0x047924, 0x1e)
+VA(0x004426d0, 0x14) MAC_ADDRESS(0x04e51c, 0x1c)
 hero* army::getOwner() const
 {
     return g_combatManager->m_heroes[getOwningSide()];
 }
 
-// E:\gamedcs\army.cpp:2708, dc 0x47944
+// E:\gamedcs\army.cpp:2708
+DC_ADDRESS(0x047944, 0xd0)
 MAC_ADDRESS(0x04e538, 0xe4)
 unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
 {
@@ -2341,7 +2384,8 @@ unsigned char isNaturalEnemy(TCreatureType attacker, TCreatureType defender)
     return 0;
 }
 
-VA(0x004426f0, 0x8B) MAC_ADDRESS(0x04e61c, 0xd8)  // dc 0x47a14
+DC_ADDRESS(0x047a14, 0xe4)
+VA(0x004426f0, 0x8B) MAC_ADDRESS(0x04e61c, 0xd8)
 double army::getAverageDamage() const
 {
     if (m_spellInfluence[41])
@@ -2351,7 +2395,8 @@ double army::getAverageDamage() const
     return (m_monInfo.m_damageHighBound + m_monInfo.m_damageLowBound) / 2.0;
 }
 
-VA(0x00442780, 0x100) MAC_ADDRESS(0x04e6f4, 0xdc)  // dc 0x47af8
+DC_ADDRESS(0x047af8, 0xd2)
+VA(0x00442780, 0x100) MAC_ADDRESS(0x04e6f4, 0xdc)
 long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long amount, unsigned char limitDamage, long distance) const
 {
     double average = getAverageDamage();
@@ -2368,7 +2413,8 @@ long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long 
     return damage;
 }
 
-VA(0x00442880, 0x68) MAC_ADDRESS(0x04e7d0, 0x70)  // dc 0x47bcc
+DC_ADDRESS(0x047bcc, 0x38)
+VA(0x00442880, 0x68) MAC_ADDRESS(0x04e7d0, 0x70)
 unsigned char army::isEnemy(const army* arg) const
 {
     if (!arg)
@@ -2389,7 +2435,8 @@ unsigned char army::isEnemy(const army* arg) const
 // A named result with guarded assignments leaves getControllingSide called
 // inside spellIsValidOnTarget's Bloodlust arm. The combined predicate lets
 // that nested helper expand as in retail; canShoot itself remains exact.
-VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)  // dc 0x47c04
+DC_ADDRESS(0x047c04, 0x6e)
+VA(0x004428f0, 0xF6) MAC_ADDRESS(0x04e840, 0x118)
 bool army::canShoot(const army* excluded) const
 {
     if (m_creatureType == ARMY_CREATURE_BALLISTA
@@ -2404,7 +2451,8 @@ bool army::canShoot(const army* excluded) const
            && (m_spellInfluence[61] == 0 || m_forgetfulnessLevel < 2);
 }
 
-VA(0x004429f0, 0x5C) MAC_ADDRESS(0x04e958, 0x94)  // dc 0x47c74
+DC_ADDRESS(0x047c74, 0x80)
+VA(0x004429f0, 0x5C) MAC_ADDRESS(0x04e958, 0x94)
 unsigned char army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
@@ -2442,7 +2490,8 @@ static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 // siege, immobilized and summoned armies. The old 0x1d0 accidentally
 // matched a delinker addend on robAppBlit, not the pinned instruction.
 // Together these changes reproduce all Windows instructions at 100%.
-VA(0x00442a50, 0x410) MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global, dc 0x47cf4
+DC_ADDRESS(0x047cf4, 0x472)
+VA(0x00442a50, 0x410) MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
                                    unsigned char ranged,
                                    const army* excluded) const
@@ -2506,7 +2555,8 @@ double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
 // fraction. Both quotients divide the per-unit value, so the division
 // is written last in both arms.
 
-VA(0x00442e60, 0x169) MAC_ADDRESS(0x04ecf8, 0x12c)  // dc 0x48168
+DC_ADDRESS(0x048168, 0x186)
+VA(0x00442e60, 0x169) MAC_ADDRESS(0x04ecf8, 0x12c)
 long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
 {
     if (m_numTroops <= 0)
@@ -2520,7 +2570,8 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
                              * value / m_monInfo.m_hitPoints);
 }
 
-VA(0x00442fd0, 0xA9) MAC_ADDRESS(0x04ee24, 0x114)  // dc 0x482f0
+DC_ADDRESS(0x0482f0, 0x164)
+VA(0x00442fd0, 0xA9) MAC_ADDRESS(0x04ee24, 0x114)
 long army::getLossCombatValue(long lowestAttack, long lowestDefense,
                                  unsigned char ranged, long damage,
                                  unsigned char killsOnly) const
@@ -2537,7 +2588,8 @@ long army::getLossCombatValue(long lowestAttack, long lowestDefense,
     return static_cast<long>((lost + damage) * value / m_monInfo.m_hitPoints);
 }
 
-VA(0x00443080, 0x50) MAC_ADDRESS(0x04ef38, 0x68)  // dc 0x48454
+DC_ADDRESS(0x048454, 0x4c)
+VA(0x00443080, 0x50) MAC_ADDRESS(0x04ef38, 0x68)
 long army::getTotalHitPoints(unsigned char simulated) const
 {
     long total;
@@ -2550,7 +2602,8 @@ long army::getTotalHitPoints(unsigned char simulated) const
     return total;
 }
 
-VA(0x004430d0, 0x56) MAC_ADDRESS(0x04efa0, 0x5c)  // dc 0x484a0
+DC_ADDRESS(0x0484a0, 0x2e)
+VA(0x004430d0, 0x56) MAC_ADDRESS(0x04efa0, 0x5c)
 void army::setAIExpectedDamage(long arg)
 {
     // Complete's by-value min helper retains the argument home at [ebp+8];
@@ -2558,6 +2611,7 @@ void army::setAIExpectedDamage(long arg)
     m_aiExpectedDamage = min(arg, getTotalHitPoints(0));
 }
 
+DC_ADDRESS(0x0484d0, 0x54)
 VA(0x00443130, 0x25) MAC_ADDRESS(0x04effc, 0x30)
 float army::getFireShieldStrength() const
 {
@@ -2568,7 +2622,8 @@ float army::getFireShieldStrength() const
     return DATA_COMPGEN(0x0063ac64, zeroFireShieldStrength, 0.0f);
 }
 
-VA(0x00443160, 0x1BF) MAC_ADDRESS(0x04f02c, 0x204)  // dc 0x48524
+DC_ADDRESS(0x048524, 0x168)
+VA(0x00443160, 0x1BF) MAC_ADDRESS(0x04f02c, 0x204)
 int army::computeBaseDamage(unsigned char simulateOnly) const
 {
     int num;
@@ -2718,7 +2773,8 @@ int army::computeAttackerBonus(int baseDamage, unsigned char isShooting,
 DATA(0x0063b810)
 static const int g_artilleryDoubleChances[4] = { 0, 50, 75, 100 };
 
-VA(0x00443840, 0x344) MAC_ADDRESS(0x04f760, 0x358)  // dc 0x4868c
+DC_ADDRESS(0x04868c, 0x582)
+VA(0x00443840, 0x344) MAC_ADDRESS(0x04f760, 0x358)
 int army::computeAttackerDamageBonuses(int baseDamage,
                                        unsigned char isShooting,
                                        army* defender,
@@ -2778,13 +2834,15 @@ int army::computeAttackerDamageBonuses(int baseDamage,
 }
 
 // E:\gamedcs\army.cpp:3230
+DC_ADDRESS(0x048c10, 0x50)
 MAC_ADDRESS(0x04fab8, 0x8)
 inline int army::computeDefenderDamageBonuses(int baseDamage) const
 {
     return 0;
 }
 
-VA(0x00443b90, 0x1FE) MAC_ADDRESS(0x04fac0, 0x244)  // dc 0x48c60
+DC_ADDRESS(0x048c60, 0x364)
+VA(0x00443b90, 0x1FE) MAC_ADDRESS(0x04fac0, 0x244)
 double army::computeAttackerDamageReduction(const army* defender,
                                             unsigned char isShooting) const
 {
@@ -2829,7 +2887,8 @@ double army::computeAttackerDamageReduction(const army* defender,
 
 // Mac 0x4fd30/0x4fd48 multiplies the baseline by each shield factor.
 // VC6 folds the initial 1.0 product; retaining both products is dual exact.
-VA(0x00443d90, 0x9C) MAC_ADDRESS(0x04fd04, 0x88)  // dc 0x48fc4
+DC_ADDRESS(0x048fc4, 0x12e)
+VA(0x00443d90, 0x9C) MAC_ADDRESS(0x04fd04, 0x88)
 double army::computeDefenderDamageReduction(unsigned char isShooting) const
 {
     double reduction = getDefenseDamageModifier(isShooting);
@@ -2915,7 +2974,8 @@ long army::getEstimatedDamage(const army* target, long amount,
     return amount;
 }
 
-VA(0x00443f40, 0x14F) MAC_ADDRESS(0x04fe80, 0x134)  // dc 0x490f4
+DC_ADDRESS(0x0490f4, 0x16c)
+VA(0x00443f40, 0x14F) MAC_ADDRESS(0x04fe80, 0x134)
 long army::adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
                          unsigned char simulated, long distance,
                          long* fireDamage) const
@@ -2942,6 +3002,7 @@ long army::adjustDamage(army* enemy, long baseDamage, unsigned char isShot,
 }
 
 // E:\gamedcs\army.cpp:3406
+DC_ADDRESS(0x049260, 0x68)
 MAC_ADDRESS(0x04ffb4, 0x98)
 inline long army::damageEnemy(army* enemy, int* damageOut, int* killed,
                               unsigned char isShot)
@@ -2957,7 +3018,8 @@ inline long army::damageEnemy(army* enemy, int* damageOut, int* killed,
     return fireDamage;
 }
 
-VA(0x00444090, 0x8F) MAC_ADDRESS(0x05004c, 0xac)  // dc 0x492c8
+DC_ADDRESS(0x0492c8, 0x92)
+VA(0x00444090, 0x8F) MAC_ADDRESS(0x05004c, 0xac)
 int army::damage(int damage)
 {
     int total = damage + m_topCreatureDamage;
@@ -2979,10 +3041,11 @@ int army::damage(int damage)
     return killed;
 }
 
-// Original: army::Strength; army.cpp:3481, dc 0x4935c.
+// Original: army::Strength; army.cpp:3481
 // DC3482 multiplies the current troop count by baseFightValue (traits+46).
 // Complete widens that traits field to int at +64; this source API has no
 // separately claimed retained retail body.
+DC_ADDRESS(0x04935c, 0x44)
 unsigned long army::strength()
 {
     return m_numTroops * g_creatureTypeTraits[m_creatureType].m_baseFightValue;
@@ -3075,7 +3138,8 @@ unsigned long army::strength()
 //   access at all. It is a dead parameter, transcribed faithfully, and
 //   that is also why C2 could turn the recursion into the loop.
 
-VA(0x00444120, 0x3A6) MAC_ADDRESS(0x0500f8, 0x338)  // dc 0x493a0
+DC_ADDRESS(0x0493a0, 0x2f4)
+VA(0x00444120, 0x3A6) MAC_ADDRESS(0x0500f8, 0x338)
 void army::processDeath(int fadeElementals)
 {
     if (is(creatureImmobilized))
@@ -3157,6 +3221,7 @@ void army::processDeath(int fadeElementals)
     }
 }
 
+DC_ADDRESS(0x049694, 0x48)
 VA(0x004444d0, 0x3B) MAC_ADDRESS(0x050430, 0x7c)  // decorated identity + CancelIndividualSpell edges
 void army::cancelSpellType(int spellType)
 {
@@ -3172,9 +3237,10 @@ void army::cancelSpellType(int spellType)
     }
 }
 
-// Original: army::adjust_hitpoints; army.cpp:3660, dc 0x496dc
+// Original: army::adjust_hitpoints; army.cpp:3660
 // ResetRound and the AGE/POISON spell paths expand this ordinary helper.
 // The by-value min wrapper preserves its two argument copies in retail.
+DC_ADDRESS(0x0496dc, 0x6a)
 MAC_ADDRESS(0x0504ac, 0xd4)
 void army::adjustHitpoints()
 {
@@ -3214,7 +3280,8 @@ void army::adjustHitpoints()
 // Restoring that source call removes the iterator-advance pin and reaches
 // 100%; the hand-expanded range erase left BIND's clear under-inlined.
 
-VA(0x00444510, 0x3DB) MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global, dc 0x49748
+DC_ADDRESS(0x049748, 0x262)
+VA(0x00444510, 0x3DB) MAC_ADDRESS(0x050580, 0x3b4)  // anchor-global
 void army::cancelIndividualSpell(int spell)
 {
     if (m_spellInfluence[spell] <= 0)
@@ -3273,7 +3340,8 @@ void army::cancelIndividualSpell(int spell)
 
 // Cancel spells with positive durations. Complete has 81 spell entries;
 // Dreamcast has 80.
-// E:\gamedcs\army.cpp:3802, dc 0x499ac
+// E:\gamedcs\army.cpp:3802
+DC_ADDRESS(0x0499ac, 0x3a)
 MAC_ADDRESS(0x050c24, 0x68)
 void army::cancelAllSpells()
 {
@@ -3354,7 +3422,8 @@ static void drop_aura_links(army* self)
 // Complete retail materializes Poison's double max result before converting
 // it to float. A named double reproduces the stack copy and all 135 retail
 // blocks; naming the float result or either input does not.
-VA(0x004448f0, 0xB99) MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global, dc 0x499e8
+DC_ADDRESS(0x0499e8, 0x900)
+VA(0x004448f0, 0xB99) MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
 void army::setSpellInfluence(int spell, int power, int mastery,
                              const hero* castingHero)
 {
@@ -3546,9 +3615,10 @@ void army::setSpellInfluence(int spell, int power, int mastery,
     m_spellInfluenceQueue.push_back(spell);
 }
 
-// Original: army::DecrementSpellRounds; army.cpp:4129, dc 0x4a2e8.
+// Original: army::DecrementSpellRounds; army.cpp:4129
 // ResetRound expands the spell/vanish countdown. Complete has 81 spell
 // entries; the older DC loop at line 4133 ends at 80.
+DC_ADDRESS(0x04a2e8, 0x5e)
 MAC_ADDRESS(0x051434, 0x98)
 void army::decrementSpellRounds()
 {
@@ -3568,12 +3638,13 @@ void army::decrementSpellRounds()
 // The legal victims of a berserked stack: every living stack on either
 // side except this one and the arrow towers, kept only while it ties or
 // beats the closest distance seen so far.
-// Original: army::get_berserk_targets; army.cpp:4158, dc 0x4a348. Dreamcast
+// Original: army::get_berserk_targets; army.cpp:4158 Dreamcast
 // names the two retained locals `closest` and `target`. Retail initializes
 // closest in the leading declaration region, before the inlined can_shoot;
 // that lifetime keeps `this` in EBX and reproduces the vector update loop.
 
-VA(0x00445490, 0x23B) MAC_ADDRESS(0x0514cc, 0x1d0)  // anchor-global, dc 0x4a348
+DC_ADDRESS(0x04a348, 0x138)
+VA(0x00445490, 0x23B) MAC_ADDRESS(0x0514cc, 0x1d0)  // anchor-global
 void army::getBerserkTargets(std::vector<army*>& armies) const
 {
     long closest = 0;
@@ -3617,7 +3688,8 @@ void army::getBerserkTargets(std::vector<army*>& armies) const
 // whatever it can to it - shoot if it may shoot, swing otherwise - and
 // if the list came back empty it simply defends.
 
-VA(0x004456d0, 0x164) MAC_ADDRESS(0x05169c, 0x118)  // dc 0x4a480
+DC_ADDRESS(0x04a480, 0x118)
+VA(0x004456d0, 0x164) MAC_ADDRESS(0x05169c, 0x118)
 void army::goBerserk()
 {
     std::vector<army*> berserkTargets;
@@ -3638,7 +3710,8 @@ void army::goBerserk()
     g_combatManager->berserkAttack(this, target);
 }
 
-VA(0x00445840, 0x66) MAC_ADDRESS(0x0517b4, 0xac)  // dc 0x4a598
+DC_ADDRESS(0x04a598, 0x78)
+VA(0x00445840, 0x66) MAC_ADDRESS(0x0517b4, 0xac)
 long army::getAttackDirection(long ourHex, const army* enemy,
                                 long enemyHex) const
 {
@@ -3655,7 +3728,8 @@ long army::getAttackDirection(long ourHex, const army* enemy,
     return -1;
 }
 
-VA(0x004458b0, 0x9D) MAC_ADDRESS(0x051860, 0x108)  // dc 0x4a610
+DC_ADDRESS(0x04a610, 0x94)
+VA(0x004458b0, 0x9D) MAC_ADDRESS(0x051860, 0x108)
 inline long army::getAttackDirection(long ourHex, const army* enemy) const
 {
     long best = -1;
@@ -3687,7 +3761,8 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
 // last-moved-stack slot, drop the highlighter and mark the mover's own
 // hexes.
 
-VA(0x00445950, 0x107) MAC_ADDRESS(0x051968, 0x16c)  // dc 0x4a6a4
+DC_ADDRESS(0x04a6a4, 0x108)
+VA(0x00445950, 0x107) MAC_ADDRESS(0x051968, 0x16c)
 unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 {
     m_side = -1;
@@ -3728,7 +3803,8 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
 // then the stack either shoots or walks its facing around to a
 // direction that reaches the target.
 
-VA(0x00445a60, 0x26D) MAC_ADDRESS(0x051ad4, 0x1b4)  // dc 0x4a7ac
+DC_ADDRESS(0x04a7ac, 0x10a)
+VA(0x00445a60, 0x26D) MAC_ADDRESS(0x051ad4, 0x1b4)
 unsigned char army::attackHex(int hex, unsigned char restoreFacing)
 {
     m_side = -1;
@@ -3816,6 +3892,7 @@ static const TWallTargetId g_walls[4] = {
 // which is what turns the `targets + count` limit into the bare
 // 0x63b850 the retail instruction carries.
 
+DC_ADDRESS(0x04a8c8, 0xb2)
 MAC_ADDRESS(0x051ca8, 0xac)
 static TWallTargetId chooseWallTarget(TWallTargetId wall,
                                         const TWallTargetId* targets,
@@ -3839,6 +3916,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
     return chosen;
 }
 
+DC_ADDRESS(0x04a8b8, 0x10)
 VA(0x00445d10, 0x14) MAC_ADDRESS(0x051c88, 0x20)
 unsigned char army::moveTo(int hex, unsigned char restoreFacing)
 {
@@ -3850,7 +3928,8 @@ unsigned char army::moveTo(int hex, unsigned char restoreFacing)
 // re-aiming at the nearest other STANDING segment whenever the one
 // being fired at comes down.
 
-VA(0x00445d30, 0x189) MAC_ADDRESS(0x051d54, 0x13c)  // dc 0x4a97c
+DC_ADDRESS(0x04a97c, 0xc0)
+VA(0x00445d30, 0x189) MAC_ADDRESS(0x051d54, 0x13c)
 void army::attackWall(int targetGridIndex)
 {
     g_combatManager->m_lastMovedArmy = 0;
@@ -3894,7 +3973,8 @@ void army::attackWall(int targetGridIndex)
 // The jump table at 0x445fac maps all eight ids: 0 and 6 (the two
 // tower rows) take the row's +0x1 chance, 7 (the keep) takes +0x0,
 // 3 takes +0x2, and 1/2/4/5 plus everything out of range take +0x3.
-VA(0x00445ec0, 0x10C) MAC_ADDRESS(0x051e90, 0x114)  // dc 0x4aa3c
+DC_ADDRESS(0x04aa3c, 0x90)
+VA(0x00445ec0, 0x10C) MAC_ADDRESS(0x051e90, 0x114)
 void army::attackWall(TWallTargetId wall,
                        const type_ballistics_traits& ballistics)
 {
@@ -3961,7 +4041,8 @@ void army::attackWall(TWallTargetId wall,
 // why-reg --model finds the EBX/EDI permutation in the initial saved-register
 // definitions, involving this and an expression value: a front-end handle-state
 // residual rather than a movable named-local declaration. Keep the proven ABI.
-VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee, dc 0x4aacc
+DC_ADDRESS(0x04aacc, 0x5a4)
+VA(0x00445fd0, 0x526) MAC_ADDRESS(0x051fa4, 0x64c)  // anchor-callee
 void army::attackWall(TWallTargetId wall, long levelsDestroyed)
 {
     if (static_cast<const combatManager*>(g_combatManager)
@@ -4084,6 +4165,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
+DC_ADDRESS(0x04b070, 0xda)
 VA(0x00446500, 0x126) MAC_ADDRESS(0x0525f0, 0x164)
 void army::cure(int level, int spellPower, const hero* castingHero)
 {
@@ -4113,27 +4195,31 @@ void army::cure(int level, int spellPower, const hero* castingHero)
         m_topCreatureDamage = 0;
 }
 
-VA(0x00446630, 0x2E) MAC_ADDRESS(0x052754, 0x2c)  // dc 0x4b14c
+DC_ADDRESS(0x04b14c, 0x24)
+VA(0x00446630, 0x2E) MAC_ADDRESS(0x052754, 0x2c)
 int army::midY() const
 {
     return g_combatManager->m_cells[m_gridIndex].m_refY - m_imageHeight / 2;
 }
 
-// Original: army::TopY; army.cpp:4779, dc 0x4b170.
+// Original: army::TopY; army.cpp:4779
+DC_ADDRESS(0x04b170, 0x20)
 MAC_ADDRESS(0x052780, 0x24)
 int army::topY() const
 {
     return g_combatManager->m_cells[m_gridIndex].m_refY - m_imageHeight;
 }
 
-// Original: army::BottomY; army.cpp:4784, dc 0x4b190.
+// Original: army::BottomY; army.cpp:4784
+DC_ADDRESS(0x04b190, 0x16)
 MAC_ADDRESS(0x0527a4, 0x1c)
 int army::bottomY() const
 {
     return g_combatManager->m_cells[m_gridIndex].m_refY;
 }
 
-VA(0x00446660, 0x35) MAC_ADDRESS(0x0527c0, 0x48)  // dc 0x4b1a8
+DC_ADDRESS(0x04b1a8, 0x64)
+VA(0x00446660, 0x35) MAC_ADDRESS(0x0527c0, 0x48)
 int army::midX() const
 {
     int x = g_combatManager->m_cells[m_gridIndex].m_refX;
@@ -4142,7 +4228,8 @@ int army::midX() const
     return x;
 }
 
-// Original: army::RightX; army.cpp:4800, dc 0x4b20c.
+// Original: army::RightX; army.cpp:4800
+DC_ADDRESS(0x04b20c, 0x6c)
 int army::rightX() const
 {
     int offset;
@@ -4154,7 +4241,8 @@ int army::rightX() const
     return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
-// Original: army::LeftX; army.cpp:4812, dc 0x4b278.
+// Original: army::LeftX; army.cpp:4812
+DC_ADDRESS(0x04b278, 0x6c)
 int army::leftX() const
 {
     int offset;
@@ -4166,8 +4254,9 @@ int army::leftX() const
     return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
-// Original: army::FrontX; army.cpp:4825, dc 0x4b2e4.
+// Original: army::FrontX; army.cpp:4825
 // DrawToBuffer expands the helper and its two CSprite accessors.
+DC_ADDRESS(0x04b2e4, 0x6e)
 MAC_ADDRESS(0x052808, 0x6c)
 int army::frontX() const
 {
@@ -4179,7 +4268,8 @@ int army::frontX() const
         return g_combatManager->m_cells[m_gridIndex].m_refX + offset;
 }
 
-VA(0x004466a0, 0x1E) MAC_ADDRESS(0x052874, 0x38)  // dc 0x4b354
+DC_ADDRESS(0x04b354, 0x44)
+VA(0x004466a0, 0x1E) MAC_ADDRESS(0x052874, 0x38)
 int army::getSecondGridIndex() const
 {
     if (!is(creatureDoubleWide))
@@ -4187,7 +4277,8 @@ int army::getSecondGridIndex() const
     return m_gridIndex + offsetToFront(-1);
 }
 
-VA(0x004466c0, 0x5A) MAC_ADDRESS(0x0528ac, 0x8c)  // dc 0x4b398
+DC_ADDRESS(0x04b398, 0x4e)
+VA(0x004466c0, 0x5A) MAC_ADDRESS(0x0528ac, 0x8c)
 unsigned char army::isAdjacent(int hex) const
 {
     if (g_combatManager->isAdjacent(m_gridIndex, hex))
@@ -4199,7 +4290,8 @@ unsigned char army::isAdjacent(int hex) const
     return 0;
 }
 
-// Original: army::is_adjacent; army.cpp:4864, dc 0x4b3e8.
+// Original: army::is_adjacent; army.cpp:4864
+DC_ADDRESS(0x04b3e8, 0x3e)
 unsigned char army::isAdjacent(const army& otherArmy) const
 {
     if (isAdjacent(otherArmy.m_gridIndex))
@@ -4209,7 +4301,8 @@ unsigned char army::isAdjacent(const army& otherArmy) const
     return 0;
 }
 
-// Original: army::OtherArmyAdjacent; army.cpp:4881, dc 0x4b428.
+// Original: army::OtherArmyAdjacent; army.cpp:4881
+DC_ADDRESS(0x04b428, 0x2a)
 int army::otherArmyAdjacent(int group, int index)
 {
     return isAdjacent(g_combatManager->m_armies[group][index]);
@@ -4220,7 +4313,8 @@ int army::otherArmyAdjacent(int group, int index)
 // stores, and final animation argument with BL. Literal facing values and
 // hexcell::field_1a signedness are byte-flat; the remaining difference is the
 // register-homing family, not a reason to flatten either Is boundary.
-VA(0x00446720, 0x107) MAC_ADDRESS(0x052938, 0x174)  // anchor-global, dc 0x4b454
+DC_ADDRESS(0x04b454, 0x104)
+VA(0x00446720, 0x107) MAC_ADDRESS(0x052938, 0x174)  // anchor-global
 void army::turn(unsigned char animateTurn)
 {
     if (m_facing == FACING_ATTACKER) {
@@ -4256,7 +4350,8 @@ void army::turn(unsigned char animateTurn)
 // draw this stack's cell into the buffer, take one full frame with
 // LetsPretendImNotHere raised, and blit the 800x600 result into the
 // manager's backup bitmap. Quick combat skips the lot.
-VA(0x00446830, 0x103) MAC_ADDRESS(0x052aac, 0x15c)  // dc 0x4b558
+DC_ADDRESS(0x04b558, 0xca)
+VA(0x00446830, 0x103) MAC_ADDRESS(0x052aac, 0x15c)
 void army::setupAnimation()
 {
     if (g_combatManager->isQuickCombat())
@@ -4285,7 +4380,8 @@ void army::setupAnimation()
 // dirtied, then redraws this stack into the buffer with the extent
 // widened by half a hex either side, unions the two rectangles, takes a
 // full frame and blits exactly that union. Quick combat skips the lot.
-VA(0x00446940, 0x2FE) MAC_ADDRESS(0x052c08, 0x420)  // dc 0x4b624
+DC_ADDRESS(0x04b624, 0x2a0)
+VA(0x00446940, 0x2FE) MAC_ADDRESS(0x052c08, 0x420)
 void army::playAnimation(int sequence, int nframes, int startFrame)
 {
     if (g_combatManager->isQuickCombat())
@@ -4357,7 +4453,8 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
 // one hex the OTHER way and reports the shifted anchor through
 // iNewDestIndex.
 
-VA(0x00446c40, 0x1E1) MAC_ADDRESS(0x053028, 0x374)  // dc 0x4b8c4
+DC_ADDRESS(0x04b8c4, 0x1c4)
+VA(0x00446c40, 0x1E1) MAC_ADDRESS(0x053028, 0x374)
 int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
 {
     if (newDestIndex)
@@ -4416,7 +4513,8 @@ int army::canFit(int destIndex, int allowShifting, int* newDestIndex) const
     return 0;
 }
 
-VA(0x00446e30, 0x2E1) MAC_ADDRESS(0x05339c, 0x300)  // dc 0x4ba88
+DC_ADDRESS(0x04ba88, 0x1fc)
+VA(0x00446e30, 0x2E1) MAC_ADDRESS(0x05339c, 0x300)
 void army::newTurn()
 {
     if (m_resetThisRound != 0)
@@ -4478,7 +4576,8 @@ void army::newTurn()
 // that go with it. A summoned stack counts down here too, and the round
 // it reaches zero it is sent to ProcessDeath.
 
-VA(0x00447120, 0x20A) MAC_ADDRESS(0x05369c, 0x15c)  // dc 0x4bc84
+DC_ADDRESS(0x04bc84, 0xfa)
+VA(0x00447120, 0x20A) MAC_ADDRESS(0x05369c, 0x15c)
 void army::resetRound()
 {
     if (m_numTroops <= 0)
@@ -4517,7 +4616,8 @@ void army::resetRound()
         processDeath(1);
 }
 
-VA(0x00447330, 0x9C) MAC_ADDRESS(0x0537f8, 0x100)  // dc 0x4bd80
+DC_ADDRESS(0x04bd80, 0xe4)
+VA(0x00447330, 0x9C) MAC_ADDRESS(0x0537f8, 0x100)
 // Complete expands the by-value min wrappers, each containing cppMin.
 // Direct reference selectors give 78.33%; these wrappers restore 100%.
 // The shared long power/maxHits lifetime suggested by DC and Mac gives
@@ -4535,7 +4635,8 @@ long army::getResurrectionSize(const army* target) const
     return min(raised, target->m_origNumTroops);
 }
 
-VA(0x004473d0, 0x13D) MAC_ADDRESS(0x0538f8, 0x144)  // dc 0x4be64
+DC_ADDRESS(0x04be64, 0x88)
+VA(0x004473d0, 0x13D) MAC_ADDRESS(0x0538f8, 0x144)
 bool army::canCastResurrect(long hex) const
 {
     if (!canCastResurrect())
@@ -4614,7 +4715,8 @@ void army::faerieDragonSpell()
 // This gives the exact 824-byte Mac body and VC6's shared validation tail.
 // VC6 result-form probes: named bool 76.10%, named byte 70.55%, conditional
 // return 79.67%; the explicit comparison with short-circuit AND is 100%.
-VA(0x004476c0, 0x3BA) MAC_ADDRESS(0x053bc8, 0x338)  // dc 0x4beec
+DC_ADDRESS(0x04beec, 0x116)
+VA(0x004476c0, 0x3BA) MAC_ADDRESS(0x053bc8, 0x338)
 bool army::canCastSpell(long hex) const
 {
     if (m_monInfo.m_hasSpell == 0)
@@ -4658,8 +4760,9 @@ bool army::canCastSpell(long hex) const
     return 0;
 }
 
-// Original: army::cast_resurrect; army.cpp:5396, dc 0x4c004.
+// Original: army::cast_resurrect; army.cpp:5396
 // CastSpell expands both resurrection helpers in Complete.
+DC_ADDRESS(0x04c004, 0x80)
 MAC_ADDRESS(0x053f00, 0xc4)
 void army::castResurrect(long hex)
 {
@@ -4676,7 +4779,8 @@ void army::castResurrect(long hex)
         waitEndSample(sound, -1);
 }
 
-// Original: army::cast_demonic_resurrect; army.cpp:5419, dc 0x4c084.
+// Original: army::cast_demonic_resurrect; army.cpp:5419
+DC_ADDRESS(0x04c084, 0x6c)
 MAC_ADDRESS(0x053fc4, 0x70)
 void army::castDemonicResurrect(long hex)
 {
@@ -4687,10 +4791,11 @@ void army::castDemonicResurrect(long hex)
     g_combatManager->demonicResurrection(this, target);
 }
 
-// Original: group_has_melee; army.cpp:5433, dc 0x4c0f0.
+// Original: group_has_melee; army.cpp:5433
 // DC5437/5455/5473 all count down with i-- > 0. Complete expands these
 // static helpers in its broader spell-validity worker, preserving the
 // CannotAttack and CanShoot boundaries inside the two capability scans.
+DC_ADDRESS(0x04c0f0, 0x64)
 MAC_ADDRESS(0x054034, 0x134)
 static bool groupHasMelee(long group)
 {
@@ -4703,7 +4808,8 @@ static bool groupHasMelee(long group)
     return 0;
 }
 
-// Original: group_has_shooters; army.cpp:5451, dc 0x4c154.
+// Original: group_has_shooters; army.cpp:5451
+DC_ADDRESS(0x04c154, 0x64)
 MAC_ADDRESS(0x054168, 0x134)
 static bool groupHasShooters(long group)
 {
@@ -4716,7 +4822,8 @@ static bool groupHasShooters(long group)
     return 0;
 }
 
-// Original: group_has_dragons; army.cpp:5469, dc 0x4c1b8.
+// Original: group_has_dragons; army.cpp:5469
+DC_ADDRESS(0x04c1b8, 0x56)
 MAC_ADDRESS(0x05429c, 0x54)
 static bool groupHasDragons(long group)
 {
@@ -4795,7 +4902,8 @@ static bool enchanterSpellHasTarget(int spell)
 // DC public ?is_valid_caliph_spell@@YA_NW4SpellID@@PBVarmy@@@Z proves bool.
 // Mac 0x54548 forwards the worker result unchanged; the worker likewise
 // forwards the group predicates and canShoot without a truth conversion.
-VA(0x00447eb0, 0x21) MAC_ADDRESS(0x054518, 0x44)  // dc 0x4c210
+DC_ADDRESS(0x04c210, 0x164)
+VA(0x00447eb0, 0x21) MAC_ADDRESS(0x054518, 0x44)
 bool isValidCaliphSpell(SpellID spell, const army* target)
 {
     if (!(g_spellTraits[spell].m_flags & 0x800))
@@ -4807,6 +4915,7 @@ bool isValidCaliphSpell(SpellID spell, const army* target)
 // Complete's x86 optimizer expands this source helper into both callers. The
 // named boundary remains part of the recovered source even though retail has
 // no separate emitted slot for it.
+DC_ADDRESS(0x04c374, 0x38)
 MAC_ADDRESS(0x05455c, 0x68)
 long army::getValidCaliphSpells(const army* target) const
 {
@@ -4818,7 +4927,8 @@ long army::getValidCaliphSpells(const army* target) const
     return count;
 }
 
-VA(0x00447ee0, 0xF8) MAC_ADDRESS(0x0545c4, 0xd8)  // dc 0x4c3ac
+DC_ADDRESS(0x04c3ac, 0xba)
+VA(0x00447ee0, 0xF8) MAC_ADDRESS(0x0545c4, 0xd8)
 void army::castCaliphSpell(long hex)
 {
     if (!combatManager::validHex(hex))
@@ -4922,7 +5032,8 @@ unsigned char army::unnamed447fe0()
     return 1;
 }
 
-VA(0x00448260, 0x582) MAC_ADDRESS(0x0548f4, 0x4f0)  // dc 0x4c468
+DC_ADDRESS(0x04c468, 0x30e)
+VA(0x00448260, 0x582) MAC_ADDRESS(0x0548f4, 0x4f0)
 void army::castSpell(long hex)
 {
     long originalFacing = m_facing;
@@ -5037,6 +5148,7 @@ int army::getMirrorEffect() const
     return effect;
 }
 
+DC_ADDRESS(0x04c778, 0xb4)
 VA(0x00448840, 0x26F) MAC_ADDRESS(0x054e40, 0xd8)
 void army::considerAttack(const army* enemy, long value, long attackDistance)
 {
@@ -5062,7 +5174,8 @@ void army::considerAttack(const army* enemy, long value, long attackDistance)
     m_aiTargetTime = attackDistance;
 }
 
-VA(0x00448ab0, 0x114) MAC_ADDRESS(0x054f18, 0xa0)  // dc 0x4c82c
+DC_ADDRESS(0x04c82c, 0x6a)
+VA(0x00448ab0, 0x114) MAC_ADDRESS(0x054f18, 0xa0)
 long army::getMultiHeadDirections(long ourHex, const army* enemy,
                                      long enemyHex) const
 {
@@ -5079,7 +5192,8 @@ long army::getMultiHeadDirections(long ourHex, const army* enemy,
     return mask;
 }
 
-VA(0x00448bd0, 0xF6) MAC_ADDRESS(0x054fb8, 0x70)  // dc 0x4c898
+DC_ADDRESS(0x04c898, 0x80)
+VA(0x00448bd0, 0xF6) MAC_ADDRESS(0x054fb8, 0x70)
 long army::getAITargetTime(long speed) const
 {
     if (canShoot(0))
@@ -5094,7 +5208,8 @@ long army::getAITargetTime(long speed) const
 
 VA_COMPGEN(0x00448d30, 0x36, VECTOR_ERASE, army)
 
-VA(0x00448cd0, 0x4B) MAC_ADDRESS(0x055028, 0x6c)  // dc 0x4c918
+DC_ADDRESS(0x04c918, 0x50)
+VA(0x00448cd0, 0x4B) MAC_ADDRESS(0x055028, 0x6c)
 int army::getSpeed() const
 {
     int speed = m_monInfo.m_speed;

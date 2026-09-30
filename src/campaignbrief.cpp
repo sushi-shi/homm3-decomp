@@ -69,7 +69,8 @@ static int increaseCampaignDifficulty(message& msg);
 // WHICHMAP target before its SET_ICON_FRAME action. DC keeps the whole
 // available-scenario path inside its 0x587e8..0x5892a lexical scope; the
 // positive guard is byte-flat to the former early return in VC6.
-VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor), dc 0x587c4; MAC_ABSTRACTION_FROM(tokens1:a3b0da7ff4ad,16.5939): scenario count query now preserves nested getStartOptions and private option ownership; native count dispatch remains expanded.
+DC_ADDRESS(0x0587c4, 0x174)
+VA(0x00457990, 0x319) MAC_ADDRESS(0x063db4, 0x290)  // anchor-caller(TCampaignBrief ctor); MAC_ABSTRACTION_FROM(tokens1:a3b0da7ff4ad,16.5939): scenario count query now preserves nested getStartOptions and private option ownership; native count dispatch remains expanded.
 void TCampaignBrief::select(int which)
 {
     if (m_scenarios[which].m_available) {
@@ -159,6 +160,7 @@ VA_COMPGEN(0x0054DEB0, 0x13, VECTOR_CAPACITY, HeroId)
 // description as a second widget message; Complete hands it to the
 // scroller (type_text_scroller::SetText, 0x5ba6e0) instead.
 
+DC_ADDRESS(0x058938, 0x6a)
 MAC_ADDRESS(0x06439c, 0xb0)
 void TCampaignBrief::resetMapAndDescription(int which)
 {
@@ -175,6 +177,7 @@ void TCampaignBrief::resetMapAndDescription(int which)
 // helper and ResetMapAndDescription. Retail retains vector::size at the loop
 // tests (0x423110); expansion does not establish an inline source specifier.
 
+DC_ADDRESS(0x0589a4, 0x84)
 MAC_ADDRESS(0x06444c, 0x88)
 void TCampaignBrief::clearSelected()
 {
@@ -184,10 +187,11 @@ void TCampaignBrief::clearSelected()
     }
 }
 
-// Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462, dc 0x58a28.
+// Original: TCampaignBrief::SetupCurrentTerritory; campaignbrief.cpp:462
 // Complete moves currentTerritory into the window and availability/setup into
 // CampaignScenarioPreview. The constructor still expands this ordinary helper
 // between the campaign description and selected-map controls (DC line 913).
+DC_ADDRESS(0x058a28, 0x74)
 MAC_ADDRESS(0x0644d4, 0xb0)
 void TCampaignBrief::setupCurrentTerritory()
 {
@@ -230,7 +234,8 @@ int g_campaignBriefPlayerSlot;
 // slot or the game receiver is byte-flat, so keep the canonical helper boundary.
 // Mac resolves the same externally linked player slot but retains one
 // std::__vector_pod::data call before getPlayer (14 calls against our 13).
-VA(0x00458010, 0x10F) MAC_ADDRESS(0x064584, 0x19c)  // handler caller + DC source identity, dc 0x58a9c
+DC_ADDRESS(0x058a9c, 0x162)
+VA(0x00458010, 0x10F) MAC_ADDRESS(0x064584, 0x19c)  // handler caller + DC source identity
 void TCampaignBrief::updateAllyEnemyFlags()
 {
     int briefingChoice = g_game->m_campaign.m_briefingChoice;
@@ -277,7 +282,8 @@ void TCampaignBrief::updateAllyEnemyFlags()
 // changes the whole /Ob2 frontier and destroys the otherwise exact CFG.
 // Naming m_widgets as one reference across all eight appends likewise moves
 // the inline frontier and scores 98.26%, so the member accesses stay direct.
-VA(0x00458120, 0xC1C) MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor), dc 0x58dac
+DC_ADDRESS(0x058dac, 0x554)
+VA(0x00458120, 0xC1C) MAC_ADDRESS(0x064720, 0x984)  // anchor-caller(TCampaignBrief ctor)
 void TCampaignBrief::addBonusIcons()
 {
     int i;
@@ -395,7 +401,8 @@ void TCampaignBrief::addBonusIcons()
 // The scenario count query retains the owned-pointer accessor as a nested
 // call. Two separate calls in the loop condition suppress VC6 rotation
 // (88.022%); the canonical query restores all 663 retail bytes.
-VA(0x00458d40, 0x297) MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons, dc 0x58c00
+DC_ADDRESS(0x058c00, 0x1ac)
+VA(0x00458d40, 0x297) MAC_ADDRESS(0x0650a4, 0x2f0)  // Select callee, dc-order-map after AddBonusIcons
 void TCampaignBrief::updateBonusIcons()
 {
     int selectedScenario = m_selectedScenario;
@@ -496,7 +503,8 @@ void TCampaignBrief::updateDifficultyButtons()
 // Current residual (85.29%): setupCurrentTerritory expands, but nested STL
 // construction, string assignment and widget-insert boundaries still differ.
 // Keep the ordinary helper and its source calls while resolving those sites.
-VA(0x004590c0, 0x1319) MAC_ADDRESS(0x065518, 0x1b5c)  // anchor-caller/callee/string/vtable, dc 0x594b8
+DC_ADDRESS(0x0594b8, 0xc64)
+VA(0x004590c0, 0x1319) MAC_ADDRESS(0x065518, 0x1b5c)  // anchor-caller/callee/string/vtable
 TCampaignBrief::TCampaignBrief(bool newCampaign, bool viewFromGame)
     : heroWindow(0, 0, 800, 600, 0)
 {
@@ -876,7 +884,8 @@ VA_COMPGEN(0x0045d8e0, 0x157, IMPLICIT_COPY_ASSIGN, type_map_hero_identity)
 VA_COMPGEN(0x0045DA40, 0x21, SCALAR_DELETING_DTOR,
            type_map_hero_identity)
 
-VA(0x0045afb0, 0x18F) MAC_ADDRESS(0x0677d4, 0x164)  // dc 0x5a11c
+DC_ADDRESS(0x05a11c, 0x198)
+VA(0x0045afb0, 0x18F) MAC_ADDRESS(0x0677d4, 0x164)
 TCampaignBrief::~TCampaignBrief()
 {
     if (g_saveHeader) {
@@ -903,6 +912,7 @@ TCampaignBrief::~TCampaignBrief()
 // id groups. Complete expands it into CampaignBriefHandler, so no standalone
 // x86 row remains; retaining the call here lets VC6 make that natural /Ob2
 // decision from the real body and source order.
+DC_ADDRESS(0x05a2b4, 0x54)
 MAC_ADDRESS(0x067938, 0x68)
 int TCampaignBrief::convertID2HelpID(int id) const
 {
@@ -917,7 +927,8 @@ int TCampaignBrief::convertID2HelpID(int id) const
     return id - BACKGROUND_ID;
 }
 
-VA(0x0045b1b0, 0x28) MAC_ADDRESS(0x0679a0, 0x50)  // dc 0x5a308
+DC_ADDRESS(0x05a308, 0x1a)
+VA(0x0045b1b0, 0x28) MAC_ADDRESS(0x0679a0, 0x50)
 void TCampaignBrief::doModal()
 {
     if (!m_campaign) {
@@ -939,7 +950,8 @@ void TCampaignBrief::doModal()
 // three-argument `text.assign(...)` spelling was a negative control (132
 // blocks, 78.07%). Keep the DC-proven operator= source fact and recover the
 // surrounding natural inline state; do not flatten or pin these boundaries.
-VA(0x0045b1e0, 0x8DB) MAC_ADDRESS(0x0679f0, 0x838)  // DoModal address-take + full retail CFG, dc 0x5a324
+DC_ADDRESS(0x05a324, 0x824)
+VA(0x0045b1e0, 0x8DB) MAC_ADDRESS(0x0679f0, 0x838)  // DoModal address-take + full retail CFG
 static int campaignBriefHandler(message& msg)
 {
     TCampaignBrief* brief = static_cast<TCampaignBrief*>(msg.m_window);
@@ -1199,7 +1211,8 @@ std::string TCampaignBrief::ScenarioStruct::getRegionDescription() const
     return m_regionDesc;
 }
 
-VA(0x0045bc10, 0xC0) MAC_ADDRESS(0x06824c, 0x94)  // dc 0x5ab48
+DC_ADDRESS(0x05ab48, 0x3a)
+VA(0x0045bc10, 0xC0) MAC_ADDRESS(0x06824c, 0x94)
 std::string getCampaignName()
 {
     const char* fileName = g_game->m_campaign.getCampaignFileName().c_str();

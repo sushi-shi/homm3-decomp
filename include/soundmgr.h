@@ -1,6 +1,8 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
+#include "va.h"
+
 #include "platform.h"
 #if !defined(HOMM3_TARGET_MAC)
 #include <bink.h>
@@ -136,6 +138,7 @@ public:
     // DeleteCriticalSection calls on +0x90 / +0xa8 / +0xc0 in that order.
     // Non-virtual: the retail vftable 0x63fe54 has only baseManager's
     // three slots.
+    DC_ADDRESS(0x0e6ebc, 0x38)
     ~soundManager()
     {
         DeleteCriticalSection(&m_sectionSoundCall);

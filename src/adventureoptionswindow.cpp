@@ -22,7 +22,8 @@
 // handler is its only image-wide reader/writer.
 DATA(0x0065f46c) static int g_lastImHoverId = -1;
 
-VA(0x004051d0, 0x4AA) MAC_ADDRESS(0x005054, 0x828)  // dc 0x4cf4
+DC_ADDRESS(0x004cf4, 0x458)
+VA(0x004051d0, 0x4AA) MAC_ADDRESS(0x005054, 0x828)
 TAdventureOptionsWindow::TAdventureOptionsWindow()
     : CAdvPopup(255, 106, 289, 387, 0x12)
 {
@@ -103,7 +104,8 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
 
 VA_COMPGEN(0x00405690, 0x21, SCALAR_DELETING_DTOR, TAdventureOptionsWindow)
 
-VA(0x004056c0, 0x6B) MAC_ADDRESS(0x00587c, 0xac)  // dc 0x514c
+DC_ADDRESS(0x00514c, 0x62)
+VA(0x004056c0, 0x6B) MAC_ADDRESS(0x00587c, 0xac)
 TAdventureOptionsWindow::~TAdventureOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -120,6 +122,7 @@ TAdventureOptionsWindow::~TAdventureOptionsWindow()
 // one result for the final return. Complete adds the upper-bound fast reject;
 // with both bounds owned here, retail corroborates both inlined lowerings.
 
+DC_ADDRESS(0x0051b0, 0x54)
 MAC_ADDRESS(0x005928, 0x84)
 int TAdventureOptionsWindow::convertID2HelpID(int id) const
 {
@@ -141,8 +144,9 @@ int TAdventureOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
-// E:\gamedcs\adventureoptionswindow.cpp:143, dc 0x5204
-VA(0x00405730, 0x1FC) MAC_ADDRESS(0x0059ac, 0x220)  // derived vtable slot 9, dc 0x5204
+// E:\gamedcs\adventureoptionswindow.cpp:143
+DC_ADDRESS(0x005204, 0x1dc)
+VA(0x00405730, 0x1FC) MAC_ADDRESS(0x0059ac, 0x220)  // derived vtable slot 9
 int TAdventureOptionsWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);

@@ -71,10 +71,14 @@ class resource {
 public:
     resource(const char* newName, EResourceType newType);
     virtual ~resource();  // slot 0
+    DC_ADDRESS(0x0d9f94, 0x4)
     EResourceType getResType() const { return m_resType; }
+    DC_ADDRESS(0x074060, 0x6)
     const char* getName() const { return m_name; }
-    // E:\gamedcs\resrce.h:36, dc 0x122af0
+    // E:\gamedcs\resrce.h:36
+    DC_ADDRESS(0x122af0, 0x8)
     int addRef() { return ++m_referenceCount; }
+    DC_ADDRESS(0x122af8, 0x10)
     int release()
     {
         if (m_referenceCount > 0)

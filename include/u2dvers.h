@@ -17,6 +17,7 @@ public:
     // window call site into the ProductVersion GetVersionInfo call.
     // Both DC publics return native bool (QBA_N / ABA_N), despite their
     // lowered unsigned-char debug records.
+    DC_ADDRESS(0x147650, 0x2c)
     bool getProductVersion(std::string* productVersion) const
     {
         return getVersionInfo("ProductVersion", productVersion);

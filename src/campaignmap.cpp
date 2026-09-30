@@ -609,7 +609,8 @@ TCampaignMapTraits::TRegionTraits* const g_campaignRegionTraits[21] = {
     g_spRegionTraits
 };
 
-VA(0x0045dee0, 0x310) MAC_ADDRESS(0x069734, 0x424)  // dc 0x5af64
+DC_ADDRESS(0x05af64, 0x22c)
+VA(0x0045dee0, 0x310) MAC_ADDRESS(0x069734, 0x424)
 unsigned char initializeCampaignMapTraitsTable()
 {
     DATA_COMPGEN_GUARD(0x00694df8, campaignNamesGuard, campaignNames)

@@ -21,7 +21,8 @@
 // its low word. Removing the unsupported forced-inline attribute produces
 // the same code object: AdjustHSV stays 95.7470% and all seven exact siblings
 // hold. The ordinary static helper expands naturally through HSVToRGB.
-// Original: ftol; bitmap24.cpp:39, dc 0x525b4
+// Original: ftol; bitmap24.cpp:39
+DC_ADDRESS(0x0525b4, 0x62)
 static long ftol(double d)
 {
     const unsigned long magic = 0x59c00000;
@@ -36,13 +37,15 @@ static void hsvToRGB(float h, float s, float v,
 
 VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 
-// Original: Bitmap24Bit::Bitmap24Bit; bitmap24.cpp:55, dc 0x52618
+// Original: Bitmap24Bit::Bitmap24Bit; bitmap24.cpp:55
+DC_ADDRESS(0x052618, 0x54)
 Bitmap24Bit::Bitmap24Bit()
     : resource(0, RESOURCE_TYPE_NONE),
       m_dataSize(0), m_imageSize(0), m_width(0), m_height(0), m_data(0)
 {
 }
 
+DC_ADDRESS(0x05266c, 0x7a)
 VA(0x0044ed50, 0xAA) MAC_ADDRESS(0x05ce9c, 0xc4)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
@@ -55,6 +58,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
         memcpy(m_data, source, m_dataSize);
 }
 
+DC_ADDRESS(0x0526e8, 0x6c)
 VA(0x0044ee00, 0xC0)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP24),
@@ -66,6 +70,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     importPCXFile(filename);
 }
 
+DC_ADDRESS(0x052754, 0x3e)
 VA(0x0044eec0, 0x22) MAC_ADDRESS(0x05cf60, 0x70)
 Bitmap24Bit::~Bitmap24Bit()
 {
@@ -73,7 +78,8 @@ Bitmap24Bit::~Bitmap24Bit()
         delete[] m_data;
 }
 
-// Original: Bitmap24Bit::import; bitmap24.cpp:101, dc 0x52794
+// Original: Bitmap24Bit::import; bitmap24.cpp:101
+DC_ADDRESS(0x052794, 0x5a)
 void Bitmap24Bit::import(int w, int h, const unsigned char* data, int size)
 {
     clear();
@@ -86,7 +92,8 @@ void Bitmap24Bit::import(int w, int h, const unsigned char* data, int size)
         memcpy(m_data, data, m_dataSize);
 }
 
-// Original: Bitmap24Bit::clear; bitmap24.cpp:123, dc 0x527f0
+// Original: Bitmap24Bit::clear; bitmap24.cpp:123
+DC_ADDRESS(0x0527f0, 0x2a)
 void Bitmap24Bit::clear()
 {
     m_width = 0;
@@ -99,7 +106,8 @@ void Bitmap24Bit::clear()
     }
 }
 
-VA(0x0044eef0, 0xDB)  // dc 0x5281c
+DC_ADDRESS(0x05281c, 0xdc)
+VA(0x0044eef0, 0xDB)
 int Bitmap24Bit::importPCXFile(const char* filename)
 {
     PcxData pdat;
@@ -131,6 +139,7 @@ int Bitmap24Bit::importPCXFile(const char* filename)
     return 0;
 }
 
+DC_ADDRESS(0x0528f8, 0x70)
 VA(0x0044efd0, 0x37) MAC_ADDRESS(0x05cfd0, 0x3c)
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const
@@ -146,7 +155,8 @@ void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // Bitmap16Bit wrapper above.
 // Dreamcast line 342 advances both row pointers after the inner pixel loop;
 // Complete retains the same post-row induction.
-VA(0x0044f010, 0x161) MAC_ADDRESS(0x05d00c, 0x210)  // source-order bracket + RGB mask/data flow, dc 0x52968
+DC_ADDRESS(0x052968, 0x13e)
+VA(0x0044f010, 0x161) MAC_ADDRESS(0x05d00c, 0x210)  // source-order bracket + RGB mask/data flow
 void Bitmap24Bit::draw(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch) const
 {
@@ -207,7 +217,8 @@ unsigned int Bitmap24Bit::getSize() const
 }
 
 // E:\gamedcs\bitmap24.cpp:349
-VA(0x0044f190, 0x5F8) MAC_ADDRESS(0x05d228, 0x2f8)  // source-order bracket + inlined HSV helpers, dc 0x52aa8
+DC_ADDRESS(0x052aa8, 0x424)
+VA(0x0044f190, 0x5F8) MAC_ADDRESS(0x05d228, 0x2f8)  // source-order bracket + inlined HSV helpers
 void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
                             float hueAdjust, float saturationAdjust,
                             float valueAdjust)
@@ -276,7 +287,8 @@ void Bitmap24Bit::adjustHSV(int x, int y, int w, int h, float hue,
     }
 }
 
-// Original: RGBToHSV; bitmap24.cpp:446, dc 0x52ecc.
+// Original: RGBToHSV; bitmap24.cpp:446
+DC_ADDRESS(0x052ecc, 0x1b6)
 MAC_ADDRESS(0x05d520, 0x1c8)
 static void rgbToHSV(unsigned int r, unsigned int g,
                             unsigned int b, float* h, float* s, float* v)
@@ -315,7 +327,8 @@ static void rgbToHSV(unsigned int r, unsigned int g,
     }
 }
 
-// Original: HSVToRGB; bitmap24.cpp:481, dc 0x53084.
+// Original: HSVToRGB; bitmap24.cpp:481
+DC_ADDRESS(0x053084, 0x32c)
 MAC_ADDRESS(0x05d6e8, 0x248)
 static void hsvToRGB(float h, float s, float v,
                             unsigned int* r, unsigned int* g, unsigned int* b)

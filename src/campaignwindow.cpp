@@ -65,6 +65,7 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // DC line 81 calls widget::hide; keep the ordinary helper and its source
 // calls. Complete adds a null guard: both retail handler expansions test
 // GetWidget's result before sending WIDGET_CLEAR_STATUS (DC has no guard).
+DC_ADDRESS(0x05b53c, 0x34)
 MAC_ADDRESS(0x069d8c, 0x60)
 void TCampaignWindow::hideText()
 {
@@ -135,7 +136,8 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
 
-VA(0x0045ea40, 0x692) MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot; dc 0x5b570
+DC_ADDRESS(0x05b570, 0x790)
+VA(0x0045ea40, 0x692) MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
@@ -281,7 +283,8 @@ VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign) MAC_COMPGEN_ADDRESS(0x06
 
 VA_COMPGEN(0x0045f9e0, 0x265, VECTOR_COPY_ASSIGN, CampaignScenarioInfo)
 
-VA(0x0045f210, 0xAE) MAC_ADDRESS(0x06abbc, 0x18c)  // dc 0x5bd00
+DC_ADDRESS(0x05bd00, 0x68)
+VA(0x0045f210, 0xAE) MAC_ADDRESS(0x06abbc, 0x18c)
 TCampaignWindow::~TCampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
@@ -306,7 +309,8 @@ TCampaignWindow::~TCampaignWindow()
     }
 }
 
-VA(0x0045f2c0, 0x2C) MAC_ADDRESS(0x06ad48, 0x58)  // dc 0x5bd68
+DC_ADDRESS(0x05bd68, 0x2c)
+VA(0x0045f2c0, 0x2C) MAC_ADDRESS(0x06ad48, 0x58)
 void TCampaignWindow::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
@@ -322,7 +326,8 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 // a campaign and cancelling. Keeping the two switch breaks also reproduces
 // the Windows dispatcher (88.2203% to 100%); neither arm falls through.
 // E:\gamedcs\campaignwindow.cpp:291
-VA(0x0045f2f0, 0x26C) MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
+DC_ADDRESS(0x05bd94, 0x1b0)
+VA(0x0045f2f0, 0x26C) MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG
 int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;

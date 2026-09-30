@@ -24,7 +24,8 @@ DATA(0x00694f90) static TCombatOptionsWindow* g_combatOptionsWindow;
 // The shared Help.txt table is owned and filled by text.cpp.
 // Retail reads column 1 (right-click), four bytes after each row base.
 
-VA(0x0046e3b0, 0x1320) MAC_ADDRESS(0x07b3b0, 0x2068)  // dc 0x66c48
+DC_ADDRESS(0x066c48, 0xd64)
+VA(0x0046e3b0, 0x1320) MAC_ADDRESS(0x07b3b0, 0x2068)
 TCombatOptionsWindow::TCombatOptionsWindow()
     : heroWindow(159, 84, 481, 431, 0x12)
 {
@@ -209,7 +210,8 @@ TCombatOptionsWindow::TCombatOptionsWindow()
 
 VA_COMPGEN(0x0046f6d0, 0x21, SCALAR_DELETING_DTOR, TCombatOptionsWindow)
 
-VA(0x0046f700, 0x75) MAC_ADDRESS(0x07d418, 0xb4)  // dc 0x679ac
+DC_ADDRESS(0x0679ac, 0x68)
+VA(0x0046f700, 0x75) MAC_ADDRESS(0x07d418, 0xb4)
 TCombatOptionsWindow::~TCombatOptionsWindow()
 {
     g_combatOptionsWindow = 0;
@@ -222,6 +224,7 @@ TCombatOptionsWindow::~TCombatOptionsWindow()
 // E:\gamedcs\combatoptionswindow.cpp:194
 // Retail inlines this mapping into CombatOptionsWindowHandler; no separate
 // entry exists between the destructor and DoModal.
+DC_ADDRESS(0x067a14, 0x2c)
 MAC_ADDRESS(0x07d4cc, 0x40)
 int TCombatOptionsWindow::convertID2HelpID(int id) const
 {
@@ -234,7 +237,8 @@ int TCombatOptionsWindow::convertID2HelpID(int id) const
 
 static void updateCombatOptions(int firstUpdate);
 
-VA(0x0046f780, 0x28) MAC_ADDRESS(0x07d50c, 0x60)  // dc 0x67a40
+DC_ADDRESS(0x067a40, 0x38)
+VA(0x0046f780, 0x28) MAC_ADDRESS(0x07d50c, 0x60)
 void TCombatOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
@@ -254,6 +258,7 @@ void TCombatOptionsWindow::doModal()
 // Keep ordinary definitions in their recorded source order; retail makes
 // the automatic expansion decision without an authored inline qualifier.
 // E:\gamedcs\combatoptionswindow.cpp:230
+DC_ADDRESS(0x067a78, 0x52)
 MAC_ADDRESS(0x07d56c, 0x78)
 void TCombatOptionsWindow::highlightCombatSpeed()
 {
@@ -265,6 +270,7 @@ void TCombatOptionsWindow::highlightCombatSpeed()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:243
+DC_ADDRESS(0x067acc, 0x22)
 MAC_ADDRESS(0x07d5e4, 0x34)
 void TCombatOptionsWindow::highlightGrid()
 {
@@ -273,6 +279,7 @@ void TCombatOptionsWindow::highlightGrid()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:254
+DC_ADDRESS(0x067af0, 0x22)
 MAC_ADDRESS(0x07d618, 0x34)
 void TCombatOptionsWindow::highlightMovementShadow()
 {
@@ -281,6 +288,7 @@ void TCombatOptionsWindow::highlightMovementShadow()
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:265
+DC_ADDRESS(0x067b14, 0x68)
 MAC_ADDRESS(0x07d64c, 0x34)
 void TCombatOptionsWindow::highlightMouseShadow()
 {
@@ -348,7 +356,8 @@ void TCombatOptionsWindow::highlightMouseShadow()
 // raising 83.3598% to 85.9186%. Keeping the shared audio label within this
 // recovered dispatcher falls to 77.2424%; the per-arm error exits are retained.
 // Older flattened-dispatch measurements above do not describe this source.
-VA(0x0046f7b0, 0x72A) MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG, dc 0x67b7c
+DC_ADDRESS(0x067b7c, 0x51c)
+VA(0x0046f7b0, 0x72A) MAC_ADDRESS(0x07d680, 0x6f4)  // DoModal address-take + complete message CFG
 int combatOptionsWindowHandler(message& msg)
 {
     unsigned char exitFlag = 0;
@@ -654,6 +663,7 @@ int combatOptionsWindowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 // DC combatoptionswindow.cpp:651..654, source-private ordinary helper.
+DC_ADDRESS(0x068098, 0x38)
 MAC_ADDRESS(0x07dd74, 0x4c)
 static void updateCombatOptions(int firstUpdate)
 {

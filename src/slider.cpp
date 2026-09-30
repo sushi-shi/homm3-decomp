@@ -22,7 +22,8 @@ static int g_leftRightSave;
 
 VA_COMPGEN(0x00596020, 0x21, SCALAR_DELETING_DTOR, slider)
 
-// Original: slider::slider; slider.cpp:35, dc 0x1499f0.
+// Original: slider::slider; slider.cpp:35
+DC_ADDRESS(0x1499f0, 0x58)
 slider::slider() : widget(0, 0, 0, 0, 0, 0)
 {
     m_numStates = 0;
@@ -33,7 +34,8 @@ slider::slider() : widget(0, 0, 0, 0, 0, 0)
     m_lastFocus = -1;
 }
 
-VA(0x00596050, 0x7D) MAC_ADDRESS(0x1892ac, 0xb4)  // dc 0x149a48
+DC_ADDRESS(0x149a48, 0xa0)
+VA(0x00596050, 0x7D) MAC_ADDRESS(0x1892ac, 0xb4)
 void slider::initialize(const char* resourceName)
 {
     if (m_width > m_height) {
@@ -58,7 +60,8 @@ void slider::initialize(const char* resourceName)
 
 // DC's constructor public ends H_N@Z: hotKey is native bool. Complete
 // keeps all ten arguments and copies its byte into m_hotKeys unchanged.
-VA(0x005960D0, 0xA8) MAC_ADDRESS(0x189360, 0xc8)  // dc 0x149ae8
+DC_ADDRESS(0x149ae8, 0xbc)
+VA(0x005960D0, 0xA8) MAC_ADDRESS(0x189360, 0xc8)
 slider::slider(int x, int y, int w, int h, int id, int num,
                TSliderFunction func, EGraphics graphics, int page,
                bool hotKey)
@@ -85,14 +88,16 @@ slider::slider(int x, int y, int w, int h, int id, int num,
     m_hotKeys = hotKey;
 }
 
-VA(0x00596180, 0x59) MAC_ADDRESS(0x189428, 0x88)  // dc 0x149ba4
+DC_ADDRESS(0x149ba4, 0x46)
+VA(0x00596180, 0x59) MAC_ADDRESS(0x189428, 0x88)
 slider::~slider()
 {
     m_sliderBitmap->dispose();
     m_sliderSprite->dispose();
 }
 
-VA(0x005961E0, 0x4C) MAC_ADDRESS(0x1894b0, 0x68)  // dc 0x149bec
+DC_ADDRESS(0x149bec, 0xa4)
+VA(0x005961E0, 0x4C) MAC_ADDRESS(0x1894b0, 0x68)
 void slider::setState(int state)
 {
     if (state < 0)
@@ -108,7 +113,8 @@ void slider::setState(int state)
         m_knobPos = m_knobStart + m_knobRange * state / (m_numStates - 1);
 }
 
-VA(0x00596230, 0x2A2) MAC_ADDRESS(0x18951c, 0x3e8)  // dc 0x149c90
+DC_ADDRESS(0x149c90, 0x272)
+VA(0x00596230, 0x2A2) MAC_ADDRESS(0x18951c, 0x3e8)
 void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
 {
     m_status |= WIDGET_SELECTED;
@@ -182,7 +188,8 @@ void slider::keyAccel(int x1, int x2, int x3, int x4, int key)
     }
 }
 
-VA(0x005964E0, 0x4A0) MAC_ADDRESS(0x189904, 0x620)  // dc 0x149f04
+DC_ADDRESS(0x149f04, 0x47a)
+VA(0x005964E0, 0x4A0) MAC_ADDRESS(0x189904, 0x620)
 int slider::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
@@ -334,7 +341,8 @@ int slider::main(message& msg)
     return widget::main(msg);
 }
 
-VA(0x00596980, 0x167) MAC_ADDRESS(0x189f24, 0x264)  // dc 0x14a380
+DC_ADDRESS(0x14a380, 0x188)
+VA(0x00596980, 0x167) MAC_ADDRESS(0x189f24, 0x264)
 int slider::select(message* msg, unsigned char dragging)
 {
     m_status |= WIDGET_SELECTED;
@@ -387,7 +395,8 @@ int slider::select(message* msg, unsigned char dragging)
     return 2;
 }
 
-VA(0x00596AF0, 0x143) MAC_ADDRESS(0x18a188, 0x260)  // dc 0x14a508
+DC_ADDRESS(0x14a508, 0x174)
+VA(0x00596AF0, 0x143) MAC_ADDRESS(0x18a188, 0x260)
 int slider::deselect(message* msg)
 {
     if (!(m_status & WIDGET_SELECTED))
@@ -436,21 +445,25 @@ int slider::deselect(message* msg)
     return 2;
 }
 
-// Original: slider::GetRealWidth; slider.cpp:602, dc 0x14a67c.
+// Original: slider::GetRealWidth; slider.cpp:602
 // These accessors share iconWidget's retail representatives 0x4eab20/30.
+DC_ADDRESS(0x14a67c, 0x16)
 int slider::getRealWidth() const { return m_sliderSprite->getWidth(); }
 
-// Original: slider::GetRealHeight; slider.cpp:606, dc 0x14a694.
+// Original: slider::GetRealHeight; slider.cpp:606
+DC_ADDRESS(0x14a694, 0x16)
 int slider::getRealHeight() const { return m_sliderSprite->getHeight(); }
 
-// Original: slider::zBufferDraw; slider.cpp:610, dc 0x14a6ac.
+// Original: slider::zBufferDraw; slider.cpp:610
 // CodeView's formal type proves this two-argument const hook; retail folds
 // it onto the empty ret-8 representative at 0x5bc7e0.
+DC_ADDRESS(0x14a6ac, 0x4)
 void slider::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
-VA(0x00596C40, 0x3D5) MAC_ADDRESS(0x18a404, 0x5e0)  // dc 0x14a6b0
+DC_ADDRESS(0x14a6b0, 0x3f0)
+VA(0x00596C40, 0x3D5) MAC_ADDRESS(0x18a404, 0x5e0)
 void slider::draw() const
 {
     if (m_width > m_height) {
@@ -528,7 +541,8 @@ void slider::draw() const
     }
 }
 
-VA(0x00597020, 0x84) MAC_ADDRESS(0x18a9e4, 0xc4)  // dc 0x14aaa0
+DC_ADDRESS(0x14aaa0, 0xaa)
+VA(0x00597020, 0x84) MAC_ADDRESS(0x18a9e4, 0xc4)
 void slider::setKnob(int inX)
 {
     if (m_width > m_height)
@@ -548,7 +562,8 @@ void slider::setKnob(int inX)
         m_knobPos = m_knobStart;
 }
 
-VA(0x005970B0, 0x35) MAC_ADDRESS(0x18aaa8, 0x54)  // dc 0x14ab4c
+DC_ADDRESS(0x14ab4c, 0x2e)
+VA(0x005970B0, 0x35) MAC_ADDRESS(0x18aaa8, 0x54)
 void slider::updateResolution(int num)
 {
     if (num != m_numStates) {
@@ -560,7 +575,8 @@ void slider::updateResolution(int num)
     }
 }
 
-VA(0x005970F0, 0x2A) MAC_ADDRESS(0x18aafc, 0x30)  // dc 0x14ab7c
+DC_ADDRESS(0x14ab7c, 0x22)
+VA(0x005970F0, 0x2A) MAC_ADDRESS(0x18aafc, 0x30)
 void slider::setResolution(int num)
 {
     m_knobPos = m_knobStart;
@@ -572,19 +588,22 @@ void slider::setResolution(int num)
         m_numStates = 1;
 }
 
-VA(0x00597120, 0x5) MAC_ADDRESS(0x18ab2c, 0xc)  // dc 0x14aba0
+DC_ADDRESS(0x14aba0, 0x8)
+VA(0x00597120, 0x5) MAC_ADDRESS(0x18ab2c, 0xc)
 void slider::onSetFocus()
 {
     m_scrolling = 1;
 }
 
-VA(0x00597130, 0x5) MAC_ADDRESS(0x18ab38, 0xc)  // dc 0x14aba8
+DC_ADDRESS(0x14aba8, 0x8)
+VA(0x00597130, 0x5) MAC_ADDRESS(0x18ab38, 0xc)
 void slider::onKillFocus()
 {
     m_scrolling = 0;
 }
 
-VA(0x00597140, 0x45) MAC_ADDRESS(0x18ab44, 0x74)  // dc 0x14abb0
+DC_ADDRESS(0x14abb0, 0x4c)
+VA(0x00597140, 0x45) MAC_ADDRESS(0x18ab44, 0x74)
 void slider::enable(unsigned char arg)
 {
     if (arg) {

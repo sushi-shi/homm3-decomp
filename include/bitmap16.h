@@ -1,6 +1,8 @@
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 
+#include "va.h"
+
 #include "resource.h"
 
 // Bitmap16Bit::map is DC-proven as unsigned short*, while Pitch is
@@ -98,10 +100,14 @@ public:
     // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
     // inline because Complete's ResourceManager expands them into its
     // bitmap-remap blit rather than calling the emitted DC copies.
+    DC_ADDRESS(0x01f100, 0xc)
     int getWidth() const { return m_width; }
+    DC_ADDRESS(0x01f10c, 0xc)
     int getHeight() const { return m_height; }
+    DC_ADDRESS(0x01f118, 0xc)
     int getPitch() const { return m_pitch; }
-    // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142, dc 0x122b8c
+    // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142
+    DC_ADDRESS(0x122b8c, 0x1c)
     static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
     {
         s_redMask = red;
@@ -109,6 +115,7 @@ public:
         s_blueMask = blue;
     }
 
+    DC_ADDRESS(0x01f124, 0x22)
     VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     unsigned short* getMap(int x, int y)
     {
@@ -117,12 +124,14 @@ public:
         return reinterpret_cast<unsigned short*>(
             reinterpret_cast<unsigned char*>(m_map) + y * m_pitch) + x;
     }
+    DC_ADDRESS(0x04ca7c, 0x10)
     const unsigned short* getMap(int x, int y) const
     {
         return static_cast<const unsigned short*>(static_cast<const void*>(
             static_cast<const unsigned char*>(static_cast<const void*>(m_map))
             + y * m_pitch)) + x;
     }
+    DC_ADDRESS(0x04ca8c, 0x90)
     VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
     void draw(int srcX, int srcY, int srcWidth, int srcHeight,
               Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
@@ -135,6 +144,7 @@ public:
     // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
     // six-argument Grab. Complete's ShootAnimatedMissile expands it into
     // the retained raw call at 0x0044e3f0.
+    DC_ADDRESS(0x04cb1c, 0x74)
     void grab(const Bitmap16Bit* src, int srcX, int srcY)
     {
         grab(src->getMap(0, 0), srcX, srcY, src->getWidth(), src->getHeight(),

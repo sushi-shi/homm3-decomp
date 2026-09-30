@@ -13,15 +13,18 @@ class CTimer
 public:
     // Dreamcast timer.h:33; oldmain's debug-only startup arm is the retail
     // consumer that proves this trivial header boundary at GlobalTimer+13.
+    DC_ADDRESS(0x0e70a0, 0xc)
     void enable()
     {
         m_enabled = 1;
     }
+    DC_ADDRESS(0x0bd428, 0x34)
     CTimer(unsigned char enabled)
         : m_startTime(0), m_stopTime(0), m_elapsedTime(0),
           m_isRunning(0), m_enabled(enabled)
     {
     }
+    DC_ADDRESS(0x0bd45c, 0x38)
     void start()
     {
         if (m_enabled) {
@@ -29,6 +32,7 @@ public:
             m_isRunning = 1;
         }
     }
+    DC_ADDRESS(0x0bd494, 0x68)
     void stop()
     {
         if (m_isRunning && m_enabled) {

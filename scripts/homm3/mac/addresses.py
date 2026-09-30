@@ -51,7 +51,7 @@ SIZE_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
 IDENT_RE = re.compile(r"[A-Za-z_]\w*$")
 ACCESS_LABEL_RE = re.compile(r"(?:(?:public|protected|private)\s*:(?!:)\s*)+")
 #: Source lines a backward or forward declarator walk steps over.
-ANNOTATION_LINE_PREFIXES = ("MAC_ADDRESS(", "MAC_COMPGEN_ADDRESS(")
+ANNOTATION_LINE_PREFIXES = ("MAC_ADDRESS(", "MAC_COMPGEN_ADDRESS(", "DC_ADDRESS(")
 
 
 class AddressError(TableError):
@@ -126,6 +126,10 @@ def _follower(masked: str, after: int) -> int | None:
     cursor = masked.find("\n", after)
     while cursor >= 0:
         start = cursor + 1
+        dc = re.compile(r'\s*DC_ADDRESS\s*\([^)]*\)').match(masked, start)
+        if dc:
+            cursor = masked.find('\n', dc.end())
+            continue
         end = masked.find("\n", start)
         line = masked[start:end if end >= 0 else len(masked)]
         stripped = line.strip()

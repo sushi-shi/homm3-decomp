@@ -1,6 +1,8 @@
 #ifndef HOMM3_SPELLDEFS_H
 #define HOMM3_SPELLDEFS_H
 
+#include "va.h"
+
 #include <vector>
 
 #include "armygrp.h"
@@ -8,6 +10,7 @@
 // Dreamcast SpellDefs.h:345..346, dc 0x4fd34: original IsMindSpell.
 // Its header definition and get_spell_work_chance line 505 establish the
 // canonical accessor boundary; Complete expands this bit test in the caller.
+DC_ADDRESS(0x04fd34, 0x20)
 inline unsigned char isMindSpell(int spell)
 {
     return (g_spellTraits[spell].m_flags & 0x400) != 0;

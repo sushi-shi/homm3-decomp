@@ -21,7 +21,8 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 
-VA(0x004fbf90, 0x61) MAC_ADDRESS(0x11d404, 0x130)  // dc 0xeb6a4
+DC_ADDRESS(0x0eb6a4, 0x98)
+VA(0x004fbf90, 0x61) MAC_ADDRESS(0x11d404, 0x130)
 void ExtraInfoUnion::setCellVisited(short player)
 {
     if (player < 0 || player >= 8)
@@ -36,7 +37,8 @@ void ExtraInfoUnion::setCellVisited(short player)
     }
 }
 
-VA(0x004fc000, 0x19A) MAC_ADDRESS(0x11d534, 0xbc)  // dc 0xeb73c
+DC_ADDRESS(0x0eb73c, 0x94)
+VA(0x004fc000, 0x19A) MAC_ADDRESS(0x11d534, 0xbc)
 int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -75,7 +77,8 @@ int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 // cleanup pin gives 72.9210% in every corresponding control. That retained
 // site still calls the string destructor where retail calls _Tidy(true);
 // default depth expands the child too, so this boundary remains unresolved.
-VA(0x004fc1a0, 0x1EE) MAC_ADDRESS(0x11d5f0, 0x284)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
+DC_ADDRESS(0x0eb7d0, 0x1ce)
+VA(0x004fc1a0, 0x1EE) MAC_ADDRESS(0x11d5f0, 0x284)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing
 int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -123,7 +126,8 @@ int TTimedEvent::read(TAbstractFile* infile, int saveVersion)
 // DC records separate int_buffer/count/x/err locals. Mac 0x11d89c..0x11d8b0
 // reverses the four-byte event count before writing; keep the shared endian
 // helper and the retained TTimedEvent::save call.
-VA(0x004fc390, 0xA5) MAC_ADDRESS(0x11d874, 0xc4)  // dc 0xeb9a0
+DC_ADDRESS(0x0eb9a0, 0x98)
+VA(0x004fc390, 0xA5) MAC_ADDRESS(0x11d874, 0xc4)
 int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
 {
     int intBuffer;
@@ -144,7 +148,8 @@ int NewfullMap::saveTimedEventList(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x004fc440, 0xB7) MAC_ADDRESS(0x11d938, 0x1e4)  // dc 0xeba38
+DC_ADDRESS(0x0eba38, 0xd4)
+VA(0x004fc440, 0xB7) MAC_ADDRESS(0x11d938, 0x1e4)
 int TTimedEvent::save(TAbstractFile* outfile)
 {
     if (game::saveString(outfile, m_message) < 0)
@@ -164,7 +169,8 @@ int TTimedEvent::save(TAbstractFile* outfile)
     return static_cast<unsigned>(outfile->write(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
-VA(0x004fc500, 0x19A) MAC_ADDRESS(0x11db1c, 0xbc)  // dc 0xebb0c
+DC_ADDRESS(0x0ebb0c, 0xb0)
+VA(0x004fc500, 0x19A) MAC_ADDRESS(0x11db1c, 0xbc)
 int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -179,7 +185,8 @@ int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-VA(0x004fc6a0, 0xC8) MAC_ADDRESS(0x11dbd8, 0x1f0)  // dc 0xebbbc
+DC_ADDRESS(0x0ebbbc, 0xd4)
+VA(0x004fc6a0, 0xC8) MAC_ADDRESS(0x11dbd8, 0x1f0)
 int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
 {
     if (game::loadString(infile, m_message) < 0)
@@ -203,7 +210,8 @@ int TTimedEvent::load(TAbstractFile* infile, int saveVersion)
     return static_cast<unsigned>(infile->read(&m_interval, 2)) < 2 ? -1 : 0;
 }
 
-// E:\gamedcs\mapcell.cpp:232, dc 0xebc90
+// E:\gamedcs\mapcell.cpp:232
+DC_ADDRESS(0x0ebc90, 0x92)
 MAC_ADDRESS(0x11ddc8, 0x148)
 int TTownEvent::read(TAbstractFile* infile, int mapVersion)
 {
@@ -229,7 +237,8 @@ int TTownEvent::read(TAbstractFile* infile, int mapVersion)
 // DC records int_buffer/count/x/err separately. Mac 0x11df38..0x11df50
 // writes the native count without the timed-event writer's byte reversal.
 // Keep caller-owned scalar storage and the retained TTownEvent::save helper.
-VA(0x004fc770, 0xFA) MAC_ADDRESS(0x11df10, 0xbc)  // dc 0xebd24
+DC_ADDRESS(0x0ebd24, 0x98)
+VA(0x004fc770, 0xFA) MAC_ADDRESS(0x11df10, 0xbc)
 int NewfullMap::saveTownEventList(TAbstractFile* outfile)
 {
     int intBuffer;
@@ -250,10 +259,11 @@ int NewfullMap::saveTownEventList(TAbstractFile* outfile)
     return 0;
 }
 
-// E:\gamedcs\mapcell.cpp:283, dc 0xebdbc.
+// E:\gamedcs\mapcell.cpp:283
 // Retail saveTownEventList calls the base at 0x4fc80b and expands the
 // derived writes at 0x4fc81a/0x4fc82c/0x4fc83e. CodeView calls the
 // base at dc 0xebdca and deliberately ignores its result.
+DC_ADDRESS(0x0ebdbc, 0x7e)
 MAC_ADDRESS(0x11dfcc, 0xc0)
 int TTownEvent::save(TAbstractFile* outfile)
 {
@@ -267,7 +277,8 @@ int TTownEvent::save(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x004fc870, 0x1E4) MAC_ADDRESS(0x11e08c, 0xb0)  // dc 0xebe3c
+DC_ADDRESS(0x0ebe3c, 0xb0)
+VA(0x004fc870, 0x1E4) MAC_ADDRESS(0x11e08c, 0xb0)
 int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -282,11 +293,12 @@ int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-// E:\gamedcs\mapcell.cpp:329, dc 0xebeec.
+// E:\gamedcs\mapcell.cpp:329
 // Complete adds saveVersion for the canonical base loader. The list
 // caller pushes it at 0x4fc9d7 before the base call at 0x4fc9e6,
 // then expands the derived reads at 0x4fc9f5/0x4fca0b/0x4fca21.
 // CodeView calls the base at dc 0xebefa and ignores its result.
+DC_ADDRESS(0x0ebeec, 0x7e)
 MAC_ADDRESS(0x11e13c, 0xc0)
 int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 {
@@ -306,6 +318,7 @@ int TTownEvent::load(TAbstractFile* infile, int saveVersion)
 // Retail's corresponding source-order slot is twelve bytes of NOP padding,
 // while isDiggable and getSpecialTerrain expand this ordinary lookup.
 // The unused VC6 COMDAT does not justify an unproven inline keyword.
+DC_ADDRESS(0x0ebf6c, 0x2c)
 MAC_ADDRESS(0x11e1fc, 0x20)
 CObject* NewmapCell::TObjectCell::getObject() const
 {
@@ -314,7 +327,8 @@ CObject* NewmapCell::TObjectCell::getObject() const
 
 VA_COMPGEN(0x004fca60, 0x3E, IMPLICIT_DTOR, TreasureData)
 
-VA(0x004fcaa0, 0x12F) MAC_ADDRESS(0x11e21c, 0x130)  // dc 0xebf98
+DC_ADDRESS(0x0ebf98, 0xfe)
+VA(0x004fcaa0, 0x12F) MAC_ADDRESS(0x11e21c, 0x130)
 NewmapCell* NewmapCell::getTriggerCell()
 {
     if (m_isTrigger)
@@ -336,7 +350,8 @@ NewmapCell* NewmapCell::getTriggerCell()
     return g_game->getCell(location);
 }
 
-VA(0x004fcbd0, 0x5C) MAC_ADDRESS(0x11e34c, 0x98)  // dc 0xec098
+DC_ADDRESS(0x0ec098, 0x7c)
+VA(0x004fcbd0, 0x5C) MAC_ADDRESS(0x11e34c, 0x98)
 TAdventureObjectType NewmapCell::getMapObject() const
 {
     if (m_type == HERO) {
@@ -350,7 +365,8 @@ TAdventureObjectType NewmapCell::getMapObject() const
     return m_type;
 }
 
-VA(0x004fcc30, 0x4D) MAC_ADDRESS(0x11e3e4, 0x70)  // dc 0xec114
+DC_ADDRESS(0x0ec114, 0xb4)
+VA(0x004fcc30, 0x4D) MAC_ADDRESS(0x11e3e4, 0x70)
 unsigned long NewmapCell::getMapExtraInfo() const
 {
     if (m_type == HERO)
@@ -360,7 +376,8 @@ unsigned long NewmapCell::getMapExtraInfo() const
     return m_extraInfo;
 }
 
-VA(0x004fcc80, 0x65) MAC_ADDRESS(0x11e454, 0xc0)  // dc 0xec1c8
+DC_ADDRESS(0x0ec1c8, 0x8c)
+VA(0x004fcc80, 0x65) MAC_ADDRESS(0x11e454, 0xc0)
 unsigned char NewmapCell::cellIsTrigger() const
 {
     if (m_type == HERO) {
@@ -374,7 +391,8 @@ unsigned char NewmapCell::cellIsTrigger() const
     return m_isTrigger;
 }
 
-VA(0x004fccf0, 0xD0) MAC_ADDRESS(0x11e514, 0xe4)  // dc 0xec254
+DC_ADDRESS(0x0ec254, 0xd0)
+VA(0x004fccf0, 0xD0) MAC_ADDRESS(0x11e514, 0xe4)
 unsigned char NewmapCell::isDiggable() const
 {
     if (m_groundSet == eTerrainWater || m_groundSet == eTerrainRock)
@@ -396,7 +414,8 @@ unsigned char NewmapCell::isDiggable() const
 }
 
 // DC 0xec354/0xec396 test giCurPlayerBit; retail reads 0x69ccc4.
-VA(0x004fcdc0, 0x58) MAC_ADDRESS(0x11e5f8, 0xb4)  // dc 0xec324
+DC_ADDRESS(0x0ec324, 0x8e)
+VA(0x004fcdc0, 0x58) MAC_ADDRESS(0x11e5f8, 0xb4)
 const unsigned char NewmapCell::hasTriggerableEvent() const
 {
     if (m_type == EVENT) {
@@ -412,7 +431,8 @@ const unsigned char NewmapCell::hasTriggerableEvent() const
     return 0;
 }
 
-VA(0x004fce20, 0x116) MAC_ADDRESS(0x11e6ac, 0x14c)  // dc 0xec3b4
+DC_ADDRESS(0x0ec3b4, 0x146)
+VA(0x004fce20, 0x116) MAC_ADDRESS(0x11e6ac, 0x14c)
 TAdventureObjectType NewmapCell::getSpecialTerrain() const
 {
     if (m_type == HERO && (m_cellFlags & 0x1000)) {
@@ -466,7 +486,8 @@ int NewmapCell::getMagicTerrainType()
     }
 }
 
-VA(0x004fd060, 0x15C) MAC_ADDRESS(0x11e880, 0x19c)  // dc 0xec4fc
+DC_ADDRESS(0x0ec4fc, 0x1a8)
+VA(0x004fd060, 0x15C) MAC_ADDRESS(0x11e880, 0x19c)
 NewfullMap::NewfullMap()
     : m_cellData(0)
 {
@@ -474,7 +495,7 @@ NewfullMap::NewfullMap()
 
 VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 
-// Original: NewfullMap::~NewfullMap, mapcell.cpp:530, dc 0xec6a4.
+// Original: NewfullMap::~NewfullMap, mapcell.cpp:530
 // DC line 532 calls Close before member destruction. Complete additionally
 // disposes the sprite resources here. Recovering the ordinary member call
 // and Close's shared map-object cleanup makes this body and init both 100%,
@@ -482,7 +503,8 @@ VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 // stays 100%): mapObjectData.clear still expands instead of remaining a call.
 // The old pasted body with its clear pin was 95.8833; a whole-body free
 // closeMap helper was not the original boundary and gave 87.7157.
-VA(0x004fd1e0, 0x271) MAC_ADDRESS(0x11ef58, 0x22c)  // anchor-global, dc 0xec6a4
+DC_ADDRESS(0x0ec6a4, 0x80)
+VA(0x004fd1e0, 0x271) MAC_ADDRESS(0x11ef58, 0x22c)  // anchor-global
 NewfullMap::~NewfullMap()
 {
     close();
@@ -494,11 +516,12 @@ NewfullMap::~NewfullMap()
     m_sprites.clear();
 }
 
-// Original: NewfullMap::Close, mapcell.cpp:537, dc 0xec724.
+// Original: NewfullMap::Close, mapcell.cpp:537
 // DC lines 539/541/542 prove the guard, array deletion and null store.
 // Complete extends this with map-object deletion/clear: both destructor and
 // init have that same sequence, and restoring it here matches both callers.
 // Sprite disposal remains destructor-only; putting it here would change init.
+DC_ADDRESS(0x0ec724, 0xe8)
 MAC_ADDRESS(0x11f184, 0xa0)
 void NewfullMap::close()
 {
@@ -518,7 +541,8 @@ VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 // as implicit. Its retained retail body performs only base/member teardown.
 VA_COMPGEN(0x004fd4c0, 0x26, IMPLICIT_DTOR, NewmapCell)
 
-VA(0x004fd4f0, 0x160) MAC_ADDRESS(0x11f28c, 0xc8)  // dc 0xec80c
+DC_ADDRESS(0x0ec80c, 0xe6)
+VA(0x004fd4f0, 0x160) MAC_ADDRESS(0x11f28c, 0xc8)
 void NewfullMap::init(int size, unsigned char twoLayers)
 {
     m_size = size;
@@ -542,7 +566,8 @@ void NewfullMap::init(int size, unsigned char twoLayers)
 // reloc NAMES only, on the ten STL erase COMDATs the clears reach, which are
 // excluded class and will never carry a claim.
 
-VA(0x004fd690, 0x2B3) MAC_ADDRESS(0x11f3dc, 0x1f0)  // dc 0xec8f4
+DC_ADDRESS(0x0ec8f4, 0x2a0)
+VA(0x004fd690, 0x2B3) MAC_ADDRESS(0x11f3dc, 0x1f0)
 int NewfullMap::read(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int mapVersion)
 {
@@ -706,12 +731,13 @@ void NewfullMap::saveQuestGuardList(TAbstractFile* outfile)
         m_questGuardList[i].save(outfile);
 }
 
-// E:\gamedcs\mapcell.cpp:679, dc 0xecb94
+// E:\gamedcs\mapcell.cpp:679
 // Dreamcast's int count is the reusable result of the layer/list loaders:
 // dc 0xecbbc..0xecbbe and 0xecd3e..0xecd42 store their returns before
 // the negative-result tests. It is distinct from Complete's signed-short
 // seerCount read from the save stream; preserving both does not widen I/O.
-VA(0x004fdbc0, 0x371) MAC_ADDRESS(0x11f948, 0x274)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
+DC_ADDRESS(0x0ecb94, 0x264)
+VA(0x004fdbc0, 0x371) MAC_ADDRESS(0x11f948, 0x274)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects
 int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
                      int saveVersion)
 {
@@ -791,7 +817,8 @@ int NewfullMap::load(TAbstractFile* infile, int size, unsigned char twoLayers,
 // static TSeerHut helper over the global pool. NewfullMap's existing friend
 // relationship permits the later loop to call private TSeerHut::save.
 
-VA(0x004fdf40, 0x2D1) MAC_ADDRESS(0x11fbbc, 0x164)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
+DC_ADDRESS(0x0ecdf8, 0x19e)
+VA(0x004fdf40, 0x2D1) MAC_ADDRESS(0x11fbbc, 0x164)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save
 int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 {
     int count;
@@ -880,7 +907,8 @@ int NewfullMap::save(TAbstractFile* outfile, int size, unsigned char twoLayers)
 // the seventh read (95.03), and the bit-0 store hoisted above the other five
 // (95.40). The six stores are one merged read-modify-write either way; what
 // moves is only which pair VC6 combines first.
-VA(0x004fe220, 0x26B) MAC_ADDRESS(0x11fd20, 0x394)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
+DC_ADDRESS(0x0ecf98, 0x3ea)
+VA(0x004fe220, 0x26B) MAC_ADDRESS(0x11fd20, 0x394)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot
 int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 {
     NewmapCell* thisCell = cell(0, 0, layer);
@@ -948,7 +976,8 @@ int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 // DC records separate byte, unsigned/signed short, int and unsigned-long
 // staging, count and two scoped x counters. Mac reuses the same width slots:
 // char +0x58, ushort +0x52, short +0x50, ulong +0x4c, int +0x54.
-VA(0x004fe490, 0x22A) MAC_ADDRESS(0x1200b4, 0x334)  // dc 0xed384
+DC_ADDRESS(0x0ed384, 0x302)
+VA(0x004fe490, 0x22A) MAC_ADDRESS(0x1200b4, 0x334)
 int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
     NewmapCell* thisCell = cell(0, 0, layer);
@@ -1149,7 +1178,8 @@ void upgradeCellExtraInfo(NewmapCell* cell, int saveVersion)
 // the one crossing this body cannot spell without a cast: the stream
 // carries sixteen bits and TAdventureObjectType is a full int, so the
 // widening is a real domain crossing, not a modelling slip.
-VA(0x004fe920, 0x2E5) MAC_ADDRESS(0x1206c0, 0x354)  // dc 0xed688
+DC_ADDRESS(0x0ed688, 0x2fc)
+VA(0x004fe920, 0x2E5) MAC_ADDRESS(0x1206c0, 0x354)
 int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
                              int saveVersion)
 {
@@ -1221,6 +1251,7 @@ int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
 
 // DC proves the ordinary helper, boatType/x/y locals and call order.
 // Retail readObject's BOAT arm expands this body and discards status.
+DC_ADDRESS(0x0ed984, 0x98)
 MAC_ADDRESS(0x120a14, 0x84)
 int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
 {
@@ -1234,7 +1265,8 @@ int NewfullMap::readBoatData(TAbstractFile* infile, CObject* boatObject)
     return 0;
 }
 
-VA(0x004fec10, 0x1D) MAC_ADDRESS(0x120a98, 0x20)  // dc 0xeda1c
+DC_ADDRESS(0x0eda1c, 0x2e)
+VA(0x004fec10, 0x1D) MAC_ADDRESS(0x120a98, 0x20)
 CObjectType* CObject::getObjectTypePtr() const
 {
     return &g_game->m_worldMap.m_objectTypes[m_typeIndex];
@@ -1245,6 +1277,7 @@ CObjectType* CObject::getObjectTypePtr() const
 // Its two Mac callers are in mapcell. Complete expands the admitted uses.
 // The ordinary body keeps getTriggerCell exact; an unused VC6 COMDAT does
 // not justify an unproven inline keyword.
+DC_ADDRESS(0x0eda4c, 0x6c)
 MAC_ADDRESS(0x120ab8, 0x80)
 type_point CObject::getTrigger() const
 {
@@ -1254,7 +1287,8 @@ type_point CObject::getTrigger() const
     return type_point(resultX, resultY, m_z);
 }
 
-VA(0x004fec30, 0x106) MAC_ADDRESS(0x120b38, 0x114)  // dc 0xedab8
+DC_ADDRESS(0x0edab8, 0x140)
+VA(0x004fec30, 0x106) MAC_ADDRESS(0x120b38, 0x114)
 void CObject::findTrigger(int& resultX, int& resultY) const
 {
     resultX = -1;
@@ -1279,7 +1313,8 @@ void CObject::findTrigger(int& resultX, int& resultY) const
     }
 }
 
-VA(0x004fed40, 0x102) MAC_ADDRESS(0x120c4c, 0x148)  // dc 0xedbf8
+DC_ADDRESS(0x0edbf8, 0x11a)
+VA(0x004fed40, 0x102) MAC_ADDRESS(0x120c4c, 0x148)
 int NewfullMap::readGeneratorData(
     TAbstractFile* infile, CObject* generatorObject)
 {
@@ -1311,6 +1346,7 @@ int NewfullMap::readGeneratorData(
 
 // readObject discards the -1/0 status, so retail
 // eliminates the final padding-read comparison from its inline expansion.
+DC_ADDRESS(0x0edd14, 0xd2)
 MAC_ADDRESS(0x120d94, 0xdc)
 int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 {
@@ -1333,6 +1369,7 @@ int NewfullMap::readHolyGrailData(TAbstractFile* infile, CObject* grailObject)
 
 // The discarded final status leaves only
 // the second virtual read in readObject's retail expansion.
+DC_ADDRESS(0x0edde8, 0x70)
 MAC_ADDRESS(0x120e70, 0xa4)
 int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
 {
@@ -1350,7 +1387,8 @@ int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
     return 0;
 }
 
-VA(0x004fee50, 0xBC) MAC_ADDRESS(0x120f14, 0x180)  // dc 0xede58
+DC_ADDRESS(0x0ede58, 0x128)
+VA(0x004fee50, 0xBC) MAC_ADDRESS(0x120f14, 0x180)
 int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 {
     NewSMapHeader::readString(infile, treasure->m_message);
@@ -1389,6 +1427,7 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 // DC mapcell.cpp:1293 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
+DC_ADDRESS(0x0edf80, 0xa0)
 MAC_ADDRESS(0x121094, 0xc4)
 int NewfullMap::saveTreasureList(TAbstractFile* outfile)
 {
@@ -1401,7 +1440,8 @@ int NewfullMap::saveTreasureList(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x004fef10, 0x4D) MAC_ADDRESS(0x121158, 0x90)  // dc 0xee020
+DC_ADDRESS(0x0ee020, 0x70)
+VA(0x004fef10, 0x4D) MAC_ADDRESS(0x121158, 0x90)
 int NewfullMap::saveTreasureData(TAbstractFile* outfile, TreasureData* thisTreasure)
 {
     game::saveString(outfile, thisTreasure->m_message);
@@ -1414,7 +1454,8 @@ int NewfullMap::saveTreasureData(TAbstractFile* outfile, TreasureData* thisTreas
     return 0;
 }
 
-VA(0x004fef60, 0x1BD) MAC_ADDRESS(0x1211e8, 0xc4)  // dc 0xee090
+DC_ADDRESS(0x0ee090, 0x9c)
+VA(0x004fef60, 0x1BD) MAC_ADDRESS(0x1211e8, 0xc4)
 int NewfullMap::loadTreasureList(TAbstractFile* infile)
 {
     short count;
@@ -1430,12 +1471,13 @@ int NewfullMap::loadTreasureList(TAbstractFile* infile)
     return 0;
 }
 
-// E:\gamedcs\mapcell.cpp:1362, dc 0xee12c.
+// E:\gamedcs\mapcell.cpp:1362
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
 // DC stores both loadString and read results in count; the first result is
 // intentionally overwritten before the scalar read guard.
+DC_ADDRESS(0x0ee12c, 0x76)
 MAC_ADDRESS(0x1212ac, 0xa0)
 int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasure)
 {
@@ -1452,7 +1494,8 @@ int NewfullMap::loadTreasureData(TAbstractFile* infile, TreasureData& thisTreasu
     return 0;
 }
 
-VA(0x004ff120, 0x1C9) MAC_ADDRESS(0x12134c, 0x118)  // dc 0xee1a4
+DC_ADDRESS(0x0ee1a4, 0x13a)
+VA(0x004ff120, 0x1C9) MAC_ADDRESS(0x12134c, 0x118)
 int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 {
     int treasureIndex = m_customTreasure.size();
@@ -1478,7 +1521,8 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
     return 0;
 }
 
-VA(0x004ff2f0, 0x1D8) MAC_ADDRESS(0x1214bc, 0x168)  // dc 0xee2e0
+DC_ADDRESS(0x0ee2e0, 0x130)
+VA(0x004ff2f0, 0x1D8) MAC_ADDRESS(0x1214bc, 0x168)
 int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
     int listSize = m_customTreasure.size();
@@ -1519,7 +1563,8 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     return 0;
 }
 
-VA(0x004ff4d0, 0x1DA) MAC_ADDRESS(0x121624, 0x17c)  // dc 0xee410
+DC_ADDRESS(0x0ee410, 0x15a)
+VA(0x004ff4d0, 0x1DA) MAC_ADDRESS(0x121624, 0x17c)
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
     int listSize = m_customTreasure.size();
@@ -1640,7 +1685,8 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
     return wide;
 }
 
-VA(0x004ff6b0, 0x535) MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
+DC_ADDRESS(0x0ee56c, 0x4f2)
+VA(0x004ff6b0, 0x535) MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic)
 int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int mapVersion)
 {
@@ -1769,7 +1815,8 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
 
 // mapVersion is carried purely to hand to readBlackBox - this body never
 // inspects it, which is why the third parameter looks unused here.
-VA(0x004ffbf0, 0x1F5) MAC_ADDRESS(0x121de8, 0x180)  // dc 0xeea60
+DC_ADDRESS(0x0eea60, 0xdc)
+VA(0x004ffbf0, 0x1F5) MAC_ADDRESS(0x121de8, 0x180)
 int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
                                  int mapVersion)
 {
@@ -1792,6 +1839,7 @@ int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
 // DC mapcell.cpp:1729 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
+DC_ADDRESS(0x0eeb3c, 0xa0)
 MAC_ADDRESS(0x1220f8, 0xc4)
 int NewfullMap::saveBlackBoxList(TAbstractFile* outfile)
 {
@@ -1818,7 +1866,8 @@ VA_COMPGEN(0x004ffdf0, 0xB0, IMPLICIT_DTOR, BlackBoxData)
 // fixed-length loops count with a signed `int` against 7 and 4, while the
 // three list loops compare against size() and so come out unsigned.
 
-VA(0x004ffea0, 0x35A) MAC_ADDRESS(0x1221bc, 0x4b0)  // dc 0xeebdc
+DC_ADDRESS(0x0eebdc, 0x4c2)
+VA(0x004ffea0, 0x35A) MAC_ADDRESS(0x1221bc, 0x4b0)
 int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 {
     unsigned char value = thisBox->m_hasCustomTreasure;
@@ -1900,7 +1949,8 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
     return 0;
 }
 
-VA(0x00500200, 0x222) MAC_ADDRESS(0x12266c, 0xb4)  // dc 0xef0a0
+DC_ADDRESS(0x0ef0a0, 0xb8)
+VA(0x00500200, 0x222) MAC_ADDRESS(0x12266c, 0xb4)
 int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
     short count;
@@ -1942,7 +1992,8 @@ int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 // declaration-order variant is byte-flat. Secondary-skill resize expands
 // erase into copy/_Destroy where retail retains erase. Routing every read
 // through readValue lowers the caller to 83.58% through vector inlining.
-VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
+DC_ADDRESS(0x0ef158, 0x484)
+VA(0x00500430, 0x478) MAC_ADDRESS(0x122720, 0x49c)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic)
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
                              int saveVersion)
 {
@@ -2051,7 +2102,8 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     return 0;
 }
 
-VA(0x005008b0, 0x27A) MAC_ADDRESS(0x122bbc, 0x3b0)  // dc 0xef5dc
+DC_ADDRESS(0x0ef5dc, 0x1ea)
+VA(0x005008b0, 0x27A) MAC_ADDRESS(0x122bbc, 0x3b0)
 int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
                               int mapVersion)
 {
@@ -2090,10 +2142,11 @@ int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
     return 0;
 }
 
-// Original: NewfullMap::readSeerData; mapcell.cpp:2124, dc 0xef7c8.
+// Original: NewfullMap::readSeerData; mapcell.cpp:2124
 // Complete delegates quest/reward deserialization to TSeerHut::read instead of
 // filling the DC fixed quest fields here. This wrapper still owns the temporary,
 // pool insertion and map-object index, and now registers the polymorphic quest.
+DC_ADDRESS(0x0ef7c8, 0x3f0)
 MAC_ADDRESS(0x1255f0, 0xe8)
 int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 {
@@ -2121,7 +2174,8 @@ int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 // new/delete targets; vector<int>::insert instead has its separately
 // admitted identity at 0x404200. The caller's instructions match throughout.
 
-VA(0x00500b30, 0x2AE) MAC_ADDRESS(0x122f6c, 0x318)  // dc 0xefbb8
+DC_ADDRESS(0x0efbb8, 0x26e)
+VA(0x00500b30, 0x2AE) MAC_ADDRESS(0x122f6c, 0x318)
 int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 {
     ScholarInfo* scholarInfo = &scholarObject->m_scholarInfo;
@@ -2199,6 +2253,7 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 // Complete defers the later DC
 // trigger/terrain scan to loadShipyards; its readObject arm only initializes
 // the two boat coordinates after the reads, then discards the status.
+DC_ADDRESS(0x0efe28, 0x1c2)
 MAC_ADDRESS(0x12354c, 0xa4)
 int NewfullMap::readShipyardData(TAbstractFile* infile, CObject* shipyardObject)
 {
@@ -2280,7 +2335,8 @@ void NewfullMap::loadShipyards()
     }
 }
 
-VA(0x00501020, 0x110) MAC_ADDRESS(0x1235f0, 0x154)  // dc 0xeffec
+DC_ADDRESS(0x0effec, 0x150)
+VA(0x00501020, 0x110) MAC_ADDRESS(0x1235f0, 0x154)
 int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
 {
     mine tempMine;
@@ -2311,7 +2367,8 @@ int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
     return 0;
 }
 
-VA(0x00501130, 0x132) MAC_ADDRESS(0x123744, 0x2e0)  // dc 0xf013c
+DC_ADDRESS(0x0f013c, 0x168)
+VA(0x00501130, 0x132) MAC_ADDRESS(0x123744, 0x2e0)
 int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
                                       CObject* mineObject)
 {
@@ -2359,7 +2416,8 @@ int NewfullMap::readAbandonedMineData(TAbstractFile* infile,
     return 0;
 }
 
-VA(0x00501270, 0x138) MAC_ADDRESS(0x123a24, 0xec)  // dc 0xf02a4
+DC_ADDRESS(0x0f02a4, 0xec)
+VA(0x00501270, 0x138) MAC_ADDRESS(0x123a24, 0xec)
 int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 {
     Sign tempSign;
@@ -2426,7 +2484,8 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // after dontGrow. Mac code0+0x123e64..0x123e6c proves the latter store;
 // the Windows mask 0x87fbffff combines it with the dontGrow assignment.
 // Shared typed-field probes preserve Windows 97.3333% and its call structure.
-VA(0x005013b0, 0x3DC) MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
+DC_ADDRESS(0x0f0390, 0x358)
+VA(0x005013b0, 0x3DC) MAC_ADDRESS(0x123b10, 0x3dc)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
     int customIndex = m_customMonsterList.size();
@@ -2552,6 +2611,7 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 // DC mapcell.cpp:2695 records this ordinary public member.
 // Complete expands it in Save; retained-body absence does not make it static.
 // The later file interface replaces DC gzwrite through void*.
+DC_ADDRESS(0x0f06e8, 0xa0)
 MAC_ADDRESS(0x123f44, 0xc4)
 int NewfullMap::saveMonsterList(TAbstractFile* outfile)
 {
@@ -2564,7 +2624,8 @@ int NewfullMap::saveMonsterList(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x00501790, 0x1E3) MAC_ADDRESS(0x124008, 0xc4)  // dc 0xf0788
+DC_ADDRESS(0x0f0788, 0x9c)
+VA(0x00501790, 0x1E3) MAC_ADDRESS(0x124008, 0xc4)
 int NewfullMap::loadMonsterList(TAbstractFile* infile)
 {
     short count;
@@ -2579,7 +2640,8 @@ int NewfullMap::loadMonsterList(TAbstractFile* infile)
     return 0;
 }
 
-VA(0x00501980, 0x6B) MAC_ADDRESS(0x1240cc, 0xd8)  // dc 0xf0824
+DC_ADDRESS(0x0f0824, 0x92)
+VA(0x00501980, 0x6B) MAC_ADDRESS(0x1240cc, 0xd8)
 int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster)
 {
     game::saveString(outfile, thisMonster->m_message);
@@ -2594,10 +2656,11 @@ int NewfullMap::saveMonsterData(TAbstractFile* outfile, MonsterData* thisMonster
     return static_cast<unsigned>(outfile->write(&artifact, 1)) < 1 ? -1 : 0;
 }
 
-// E:\gamedcs\mapcell.cpp:2768, dc 0xf08b8.
+// E:\gamedcs\mapcell.cpp:2768
 // CodeView proves this NewfullMap member. Complete expands the retained
 // callers; emission does not turn the source member into a file-static helper.
 // The record is a reference in the CodeView formal argument list.
+DC_ADDRESS(0x0f08b8, 0x94)
 MAC_ADDRESS(0x1241a4, 0xd4)
 int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 {
@@ -2665,7 +2728,8 @@ int NewfullMap::loadMonsterData(TAbstractFile* infile, MonsterData& thisMonster)
 // 0x124468 the troop count, and 0x124798 the event count. Windows retail
 // reads each scalar through the direct virtual read: the readValue and
 // readLittleEndianValue wrappers cost VC6 90.68% against 97.78%.
-VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
+DC_ADDRESS(0x0f094c, 0x4a8)
+VA(0x005019f0, 0x7CC) MAC_ADDRESS(0x124278, 0x700)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
 {
@@ -2866,7 +2930,8 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 
 // Mac 0x124b00..0x125360 retains the scalar reads in separate staging
 // locations. Its artifact, sex and spell-byte loads explicitly sign-extend.
-VA(0x005021c0, 0x835) MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
+DC_ADDRESS(0x0f0df4, 0x726)
+VA(0x005021c0, 0x835) MAC_ADDRESS(0x124a84, 0x998)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
 {
@@ -3124,7 +3189,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 // The map file's garrison record, appended to the game's garrison pool with
 // the object's extraInfo left holding its index.
 
-VA(0x00502a00, 0x151) MAC_ADDRESS(0x12541c, 0x1d4)  // dc 0xf151c
+DC_ADDRESS(0x0f151c, 0x1ac)
+VA(0x00502a00, 0x151) MAC_ADDRESS(0x12541c, 0x1d4)
 int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
                                  int mapVersion)
 {
@@ -3416,7 +3482,8 @@ void NewfullMap::readHeroPlaceholderData(TAbstractFile* infile, CObject* tempObj
 // Current residual (59.40%): readSeerData expands with its owned temporary,
 // read and pool insertion. VC6 also expands the temporary TSeerHut constructor
 // that retail retains; other map-reader call/expansion differences remain.
-VA(0x00502e00, 0x832) MAC_ADDRESS(0x125ebc, 0x3ac)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
+DC_ADDRESS(0x0f16c8, 0x454)
+VA(0x00502e00, 0x832) MAC_ADDRESS(0x125ebc, 0x3ac)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
 {
@@ -3590,7 +3657,8 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
 // through a separate short slot. Direct write calls matter to the caller:
 // through the free writeScalar wrapper this body's /Ob2 cost fell to 156 and
 // saveMapObjects expanded it (55.45%); retail and Mac both call it.
-VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)  // dc 0xf1b1c
+DC_ADDRESS(0x0f1b1c, 0xda)
+VA(0x00503640, 0x8D) MAC_ADDRESS(0x126268, 0x108)
 int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
 {
     unsigned short ushortBuffer;
@@ -3619,7 +3687,8 @@ int NewfullMap::saveObject(TAbstractFile* outfile, CObject& tempObject)
     return 0;
 }
 
-VA(0x005036d0, 0xA4) MAC_ADDRESS(0x126370, 0x108)  // dc 0xf1bf8
+DC_ADDRESS(0x0f1bf8, 0xde)
+VA(0x005036d0, 0xA4) MAC_ADDRESS(0x126370, 0x108)
 int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 {
     unsigned char value;
@@ -3706,7 +3775,8 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
 // There is no bzero call in this reader; preserve aggregate initialization.
 // Mac 0x1264f4, 0x126838 and 0x1268cc decode the three four-byte file
 // scalars after their complete-read guards; use the shared endian reader.
-VA(0x00503780, 0x4C0) MAC_ADDRESS(0x126478, 0x528)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
+DC_ADDRESS(0x0f1cd8, 0x5f2)
+VA(0x00503780, 0x4C0) MAC_ADDRESS(0x126478, 0x528)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects
 int NewfullMap::readObjectType(TAbstractFile* infile,
                                CObjectType& tempObjectType)
 {
@@ -3827,7 +3897,8 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
 // The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
 // `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
-VA(0x00503c40, 0x2B9) MAC_ADDRESS(0x1269a0, 0x3a0)  // dc 0xf22cc
+DC_ADDRESS(0x0f22cc, 0x4b6)
+VA(0x00503c40, 0x2B9) MAC_ADDRESS(0x1269a0, 0x3a0)
 int NewfullMap::saveObjectType(TAbstractFile* outfile,
                                CObjectType* tempObjectType)
 {
@@ -3890,7 +3961,8 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 // The trailing byte is normalized (`test al,al / setne`), not copied, so it
 // is a bool crossing where width and height are plain assignments.  And
 // like Save, this returns 1 on success rather than 0.
-VA(0x00503f00, 0x35D) MAC_ADDRESS(0x126d40, 0x380)  // dc 0xf2784
+DC_ADDRESS(0x0f2784, 0x3fa)
+VA(0x00503f00, 0x35D) MAC_ADDRESS(0x126d40, 0x380)
 int NewfullMap::loadObjectType(TAbstractFile* infile,
                                CObjectType* tempObjectType)
 {
@@ -4059,7 +4131,8 @@ void NewfullMap::rebuildObjectTypeIndex()
 // a native-forwarding helper body do not change this inline residual.
 // Naming the canonical GetSprite result inside the sprite loop also changes
 // the inline context; its direct vector assignment is the supported form.
-VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
+DC_ADDRESS(0x0f2c20, 0x3f6)
+VA(0x00504470, 0x5C9) MAC_ADDRESS(0x127278, 0x440)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
     int intBuffer;
@@ -4151,7 +4224,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
 // DC separates int_buffer from write/helper status count, records int x and
 // calls gzwrite directly (dc 0xf3030, 0xf310a).
-VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)  // dc 0xf3018
+DC_ADDRESS(0x0f3018, 0x174)
+VA(0x00504a40, 0x127) MAC_ADDRESS(0x1276b8, 0x138)
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 {
     int intBuffer;
@@ -4189,7 +4263,8 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
 // precede their guards; Complete uses readValue over TAbstractFile here.
 // Keeping the read buffer separate from the status restores all 61 CFG blocks.
 
-VA(0x00504b70, 0x4E9) MAC_ADDRESS(0x1277f0, 0x2a8)  // dc 0xf318c
+DC_ADDRESS(0x0f318c, 0x270)
+VA(0x00504b70, 0x4E9) MAC_ADDRESS(0x1277f0, 0x2a8)
 int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
     int intBuffer;
@@ -4254,7 +4329,8 @@ int NewfullMap::loadMapObjects(TAbstractFile* infile)
 
 // DC names four CObjectType::_getBitPos calls; Mac retains the same helper at
 // 0:0x127c38. Complete expands them without changing this exact retail body.
-VA(0x00505060, 0x1CD) MAC_ADDRESS(0x127a98, 0x1a0)  // dc 0xf33fc
+DC_ADDRESS(0x0f33fc, 0x2b4)
+VA(0x00505060, 0x1CD) MAC_ADDRESS(0x127a98, 0x1a0)
 void NewfullMap::generateHeightMap(const CObject* object,
                                    signed char heightMap[8][6])
 {
@@ -4284,7 +4360,8 @@ void NewfullMap::generateHeightMap(const CObject* object,
     }
 }
 
-VA(0x00505230, 0x3D9) MAC_ADDRESS(0x127c4c, 0x320)  // dc 0xf36b0
+DC_ADDRESS(0x0f36b0, 0x372)
+VA(0x00505230, 0x3D9) MAC_ADDRESS(0x127c4c, 0x320)
 void NewfullMap::stampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
 {
@@ -4367,7 +4444,8 @@ void NewfullMap::stampObject(NewmapCell* thisCell,
 // `shl al,4 / sar al,4` for the column), giving the same 47 - row*8 - col bit
 // index GenerateHeightMap and PlaceObject use.
 
-VA(0x00505610, 0x3F8) MAC_ADDRESS(0x127f6c, 0x48c)  // dc 0xf3a24
+DC_ADDRESS(0x0f3a24, 0x8ca)
+VA(0x00505610, 0x3F8) MAC_ADDRESS(0x127f6c, 0x48c)
 void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
     if (setExtraInfo) {
@@ -4472,7 +4550,8 @@ void NewfullMap::calcCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
     }
 }
 
-VA(0x00505a10, 0x108) MAC_ADDRESS(0x128408, 0x104)  // dc 0xf42f0
+DC_ADDRESS(0x0f42f0, 0xf6)
+VA(0x00505a10, 0x108) MAC_ADDRESS(0x128408, 0x104)
 void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtraInfo)
 {
     hero* obscuringHero = 0;
@@ -4516,7 +4595,8 @@ void NewfullMap::calculateCellExtra(NewmapCell* thisCell, unsigned char setExtra
 // single cell.  Both compare against the world extents MAP_WIDTH/MAP_HEIGHT
 // that game::SetMapSize writes.
 
-VA(0x00505b20, 0x1F2) MAC_ADDRESS(0x12850c, 0x1fc)  // dc 0xf43e8
+DC_ADDRESS(0x0f43e8, 0x356)
+VA(0x00505b20, 0x1F2) MAC_ADDRESS(0x12850c, 0x1fc)
 int NewfullMap::placeObject(int objectIndex, unsigned char setExtraInfo)
 {
     CObject* object = &m_objects[objectIndex];
@@ -4777,9 +4857,10 @@ VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
 VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
 VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)
 
-// Original: NewfullMap::placeObjects; mapcell.cpp:4404, dc 0xf4740.
+// Original: NewfullMap::placeObjects; mapcell.cpp:4404
 // Read's placement pass owns this ordinary helper; the int loop variable is
 // compared with vector::size() as recorded in the DC unsigned comparison.
+DC_ADDRESS(0x0f4740, 0x50)
 MAC_ADDRESS(0x128708, 0x5c)
 int NewfullMap::placeObjects()
 {

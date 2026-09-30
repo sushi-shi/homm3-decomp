@@ -13,7 +13,8 @@
 #include "textntry.h"
 #include "winmgr.h"
 
-VA(0x004ec0e0, 0x1AB)  // dc 0xdc894
+DC_ADDRESS(0x0dc894, 0x20c)
+VA(0x004ec0e0, 0x1AB)
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
     message* e;
@@ -57,7 +58,8 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
     return e->m_id == 0;
 }
 
-VA(0x004ec290, 0x1CC)  // dc 0xdcaa0
+DC_ADDRESS(0x0dcaa0, 0x1ac)
+VA(0x004ec290, 0x1CC)
 int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
     message* e;
@@ -129,7 +131,8 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
 // construction rather than this constructor body. The message array uses
 // its canonical default constructor; repeating its stores in an additional
 // derived wrapper would introduce a second clear pass absent from retail.
-VA(0x004ec460, 0x6F) MAC_ADDRESS(0x10e068, 0x7c)  // dc 0xdd97c
+DC_ADDRESS(0x0dd97c, 0x68)
+VA(0x004ec460, 0x6F) MAC_ADDRESS(0x10e068, 0x7c)
 inputManager::inputManager()
 {
     m_keyboardFilter = 1;
@@ -142,7 +145,8 @@ inputManager::inputManager()
     m_prevDialog = 0;
 }
 
-VA(0x004ec4d0, 0x6D) MAC_ADDRESS(0x10e10c, 0x78)  // dc 0xdd9e4
+DC_ADDRESS(0x0dd9e4, 0x4a)
+VA(0x004ec4d0, 0x6D) MAC_ADDRESS(0x10e10c, 0x78)
 int inputManager::open(int keyboardFilter)
 {
     memset(m_buffer, 0, sizeof(m_buffer));
@@ -157,7 +161,8 @@ int inputManager::open(int keyboardFilter)
     return 0;
 }
 
-VA(0x004ec540, 0x1E) MAC_ADDRESS(0x10e184, 0x24)  // dc 0xdda30
+DC_ADDRESS(0x0dda30, 0x1e)
+VA(0x004ec540, 0x1E) MAC_ADDRESS(0x10e184, 0x24)
 void inputManager::close()
 {
     if (m_status != 1)
@@ -168,13 +173,15 @@ void inputManager::close()
     m_status = 0;
 }
 
-VA(0x004ec560, 0x5) MAC_ADDRESS(0x10e1a8, 0x8)  // dc 0xdda50
+DC_ADDRESS(0x0dda50, 0x4)
+VA(0x004ec560, 0x5) MAC_ADDRESS(0x10e1a8, 0x8)
 int inputManager::main(message& msg)
 {
     return 0;
 }
 
-VA(0x004ec570, 0x18) MAC_ADDRESS(0x10e1b0, 0x38)  // dc 0xdda54
+DC_ADDRESS(0x0dda54, 0x20)
+VA(0x004ec570, 0x18) MAC_ADDRESS(0x10e1b0, 0x38)
 void inputManager::flush()
 {
     process1WindowsMessage();
@@ -184,7 +191,8 @@ void inputManager::flush()
 
 // canonical message clear, and both call the already-claimed
 
-VA(0x004ec590, 0xAE) MAC_ADDRESS(0x10e1e8, 0x15c)  // dc 0xdda74
+DC_ADDRESS(0x0dda74, 0x19e)
+VA(0x004ec590, 0xAE) MAC_ADDRESS(0x10e1e8, 0x15c)
 message inputManager::getEvent()
 {
     message msg;
@@ -204,7 +212,8 @@ message inputManager::getEvent()
     return msg;
 }
 
-VA(0x004ec640, 0xAD) MAC_ADDRESS(0x10e344, 0x154)  // dc 0xddc14
+DC_ADDRESS(0x0ddc14, 0xf2)
+VA(0x004ec640, 0xAD) MAC_ADDRESS(0x10e344, 0x154)
 message inputManager::peekEvent()
 {
     message msg;
@@ -224,12 +233,13 @@ message inputManager::peekEvent()
     return msg;
 }
 
-// Original: inputManager::GetCurrQuals; inputmgr.cpp:970, dc 0xddd08.
+// Original: inputManager::GetCurrQuals; inputmgr.cpp:970
 // DC973..978 and the retained keyboard/mouse bridges use the same three
 // GetKeyState queries in control/alt/shift order. Complete expands this
 // ordinary helper in keyboardMessageHandler, mouseMessageHandler and
 // forceMouseMove; the member does not read its receiver.
 // Mac retains it at 0:0x10e498 using GetKeys and the adjacent key-bit helper.
+DC_ADDRESS(0x0ddd08, 0x42)
 MAC_ADDRESS(0x10e498, 0x80)
 int inputManager::getCurrQuals()
 {
@@ -243,10 +253,11 @@ int inputManager::getCurrQuals()
     return quals;
 }
 
-// Original: inputManager::SetKeyCodeType; inputmgr.cpp:984, dc 0xddd4c.
+// Original: inputManager::SetKeyCodeType; inputmgr.cpp:984
 // DC985 stores the mode and calls Flush. Complete retains m_keyCodeType
 // at +0x950 and tests it in GetEvent/PeekEvent. No retained setter VA or
 // new call site is asserted for this ordinary source API.
+DC_ADDRESS(0x0ddd4c, 0x12)
 void inputManager::setKeyCodeType(int newType)
 {
     m_keyCodeType = newType;
@@ -255,7 +266,8 @@ void inputManager::setKeyCodeType(int newType)
 
 // Mac 0:0x10e55c copies the pretranslated message codeY field to codeX.
 // Complete's Windows body decodes scan codes and shift state instead.
-VA(0x004ec6f0, 0x1C6) MAC_ADDRESS(0x10e55c, 0xc)  // dc 0xddd60
+DC_ADDRESS(0x0ddd60, 0x114)
+VA(0x004ec6f0, 0x1C6) MAC_ADDRESS(0x10e55c, 0xc)
 void inputManager::asciiConvert(message* msg)
 {
     if ((msg->m_codeX >= KEYCODE_F1 && msg->m_codeX <= KEYCODE_F10)
@@ -291,7 +303,8 @@ void inputManager::asciiConvert(message* msg)
     }
 }
 
-VA(0x004ec8c0, 0x340)  // dc 0xdde74
+DC_ADDRESS(0x0dde74, 0x1d0)
+VA(0x004ec8c0, 0x340)
 void inputManager::makeScanCodeTable()
 {
     for (unsigned index = 0; index < 128; index++)
@@ -387,7 +400,8 @@ void inputManager::makeScanCodeTable()
     m_scanCodeTable[88] = 0x5800;
 }
 
-VA(0x004ecc00, 0xCA) MAC_ADDRESS(0x10e568, 0xe8)  // dc 0xde044
+DC_ADDRESS(0x0de044, 0xa4)
+VA(0x004ecc00, 0xCA) MAC_ADDRESS(0x10e568, 0xe8)
 void inputManager::forceMouseMove()
 {
     message* e;

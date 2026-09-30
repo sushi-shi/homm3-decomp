@@ -1,7 +1,7 @@
 /* va.h - the annotation contract, v2 (port plan P0.2; homm2-decomp
  * vocabulary adopted per the delink lessons, decision log 2026-08-04).
  *
- * Two arms. Under clang (analysis/clangd only) VA, MAC_ADDRESS and DATA
+ * Two arms. Under clang (analysis/clangd only) VA, DC_ADDRESS, MAC_ADDRESS and DATA
  * become real annotate attributes so libclang can read them off the AST;
  * under VC6 and CodeWarrior (the matching compilers) every macro expands to
  * nothing - EXCEPT DATA_COMPGEN, which expands to its value argument in BOTH
@@ -11,6 +11,7 @@
  * Windows addresses are ABSOLUTE VAs (image base 0x400000) in source; every
  * generated artifact uses rvas (the scanners subtract the base and fail
  * on addresses below it). Mac addresses are code-section offsets in both.
+ * Dreamcast addresses are .text-relative offsets, never loaded addresses.
  *
  *   VA(addr, size)                 function definition matched to the
  *                                  pinned retail image at addr/size
@@ -34,6 +35,11 @@
  *                                  specialization token that causes it;
  *                                  direct-symbol kinds only claim a named
  *                                  COFF symbol VC6 already emitted
+ *   DC_ADDRESS(offset, size)       function in the pinned Dreamcast NB11
+ *                                  symbols: .text offset and procedure size.
+ *                                  Verified against embedded debug symbols;
+ *                                  not a Windows address or byte-match claim.
+ *                                  Repeat for retained template emissions.
  *   MAC_ADDRESS(offset, size)      the same function's body in the pinned
  *                                  Classic Mac PEF: start and extent relative
  *                                  to its single code section (section 0),
@@ -79,6 +85,8 @@
 
 #define VA(addr, size) __attribute__((annotate("va:" #addr " size:" #size)))
 #define VA_COMPGEN(addr, size, kind, owner)
+#define DC_ADDRESS(offset, size) \
+    __attribute__((annotate("dc:" #offset " size:" #size)))
 #define MAC_ADDRESS(offset, size) \
     __attribute__((annotate("mac:" #offset " size:" #size)))
 #define MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
@@ -94,6 +102,7 @@
 
 #define VA(addr, size)
 #define VA_COMPGEN(addr, size, kind, owner)
+#define DC_ADDRESS(offset, size)
 #define MAC_ADDRESS(offset, size)
 #define MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
 #define DATA(addr)

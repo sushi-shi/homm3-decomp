@@ -1,6 +1,8 @@
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
+#include "va.h"
+
 #include "basemgr.h"
 #include "herospec.h"
 #include "kb.h"
@@ -483,6 +485,7 @@ public:
     int m_x;
     int m_y;
     int m_id;
+    DC_ADDRESS(0x01eff0, 0xe)
     TDrawParts() : m_isValid(false) {}
 };
 SIZE(TDrawParts, 0x10);
@@ -1308,6 +1311,7 @@ private:
 public:
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
     // Complete's wider view uses (9,8), as the retail recentering paths prove.
+    DC_ADDRESS(0x01f000, 0x84)
     type_point getMapCenter() const
     {
         return type_point(m_radarOrigin.m_x + HERO_VIEW_TILE_X,
@@ -1488,6 +1492,7 @@ private:
 };
 
 unsigned short getMapExtra(int x, int y, int z);
+DC_ADDRESS(0x01f084, 0x4c)
 inline int getMapExtra(type_point point)
 {
     return ::getMapExtra(point.m_x, point.m_y, point.m_z);

@@ -1,6 +1,8 @@
 #ifndef HOMM3_COMBATCONTROLSUBWINDOW_H
 #define HOMM3_COMBATCONTROLSUBWINDOW_H
 
+#include "va.h"
+
 #include "subwindow.h"
 
 class bitmapBackedTextWidget;
@@ -106,6 +108,7 @@ public:
                 bool onCursedGround);
     void show();
     void unShow();
+    DC_ADDRESS(0x087344, 0x8)
     bool isShown() const { return m_shown; }
 };
 SIZE(TCombatHeroSubWindow, 0x5c);

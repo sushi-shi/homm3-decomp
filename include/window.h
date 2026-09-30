@@ -190,7 +190,8 @@ public:
 
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
 
-    VA(0x00405680, 0x10) MAC_ADDRESS(0x005c18, 0x2c)  // shared slot-3 header forwarder, dc 0x2dcc
+    DC_ADDRESS(0x002dcc, 0x16)
+    VA(0x00405680, 0x10) MAC_ADDRESS(0x005c18, 0x2c)  // shared slot-3 header forwarder
     virtual int handleMessage(message& msg)
     {
         return windowHandler(msg);

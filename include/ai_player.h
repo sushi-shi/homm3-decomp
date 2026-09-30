@@ -1,6 +1,8 @@
 #ifndef HOMM3_AI_PLAYER_H
 #define HOMM3_AI_PLAYER_H
 
+#include "va.h"
+
 #include <vector>
 
 #include "ai_creature_value.h"
@@ -15,7 +17,7 @@ class town;
 class generator;
 struct type_artifact;
 
-// E:\gamedcs\ai_player.cpp:3013, dc 0x329f8
+// E:\gamedcs\ai_player.cpp:3013
 void aiMarkDangerZones(hero* currentHero, long* dangerZones);
 
 // Five-entry AI hero caps indexed by game difficulty. Dreamcast names both
@@ -31,7 +33,7 @@ long aiGetEquipValue(type_artifact artifact, const hero* ourHero,
                         unsigned char exact);
 // This overload values the artifact across a player's heroes. CodeView
 // proves the const reference and long player id; retail retains 0x433aa0.
-// E:\gamedcs\ai_player.cpp:5684, dc 0x37514
+// E:\gamedcs\ai_player.cpp:5684
 long aiGetValueOfArtifact(const type_artifact& artifact, long playerId);
 long getFullValue(const hero* ourHero);
 long removeNegativeArtifacts(hero* ourHero);
@@ -53,6 +55,7 @@ class type_AI_player {
 public:
     // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
+    DC_ADDRESS(0x037dec, 0x4)
     void init(short newTeam) { m_team = newTeam; }
     static float getAttackBonus(short player);  // 0x428710
 
@@ -67,19 +70,23 @@ protected:
 public:
     void calculateDemand();  // 0x428740
     void endTurn();  // 0x428dd0
+    DC_ADDRESS(0x114bc0, 0x4)
     long getMagusHutValue() const { return m_magusHutValue; }
 
     // DC ai_player.h:273-274, dc 0x37df0: clear the cached value.
+    DC_ADDRESS(0x037df0, 0x6)
     void clearMagusHutValue() { m_magusHutValue = 0; }
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
     long getResourceValue(int* resources) const;
+    DC_ADDRESS(0x037df8, 0xe)
     double getResourceValue(enum EGameResource resource) const
     {
         return m_resourceValue[resource];
     }
     void startTurn();  // 0x4297c0
+    DC_ADDRESS(0x114bc4, 0x14)
     static void setAttackBonuses(float computerBonus,
                                    float humanBonus)
     {
@@ -126,7 +133,8 @@ extern type_AI_player g_aiPlayers[8];
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
 struct type_creature_source {
 public:
-    VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
+    DC_ADDRESS(0x037e08, 0x16)
+    VA(0x004286b0, 0x21)  // DC signature/layout + retail stores;
     type_creature_source(TCreatureType newType, short* newAmount,
                          bool isFree)
         : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
@@ -178,6 +186,7 @@ public:
                         const armyGroup* sourceArmy,
                         const hero* secondHero,
                         unsigned char newHasAngelicAlliance);
+    DC_ADDRESS(0x114bd8, 0x4)
     long getArmyIncrease() const { return m_armyValueIncrease; }
 };
 SIZE(type_AI_creature_swapper, 0x20);
@@ -211,6 +220,7 @@ public:
                             const armyGroup* newAdjacentArmy,
                             const long* newFunds,
                             unsigned char newHasAngelicAlliance);
+    DC_ADDRESS(0x037e20, 0x6)
     void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
 };
 SIZE(type_AI_creature_purchaser, 0x3c);

@@ -586,7 +586,8 @@ DATA(0x00695030) long g_surrenderCost;
 DATA(0x006985a3) unsigned char g_combatRetreated;
 DATA(0x00697744) unsigned char g_combatSurrendered;
 
-VA(0x00462760, 0x127) MAC_ADDRESS(0x06de48, 0x150)  // dc 0x5d3e0
+DC_ADDRESS(0x05d3e0, 0x158)
+VA(0x00462760, 0x127) MAC_ADDRESS(0x06de48, 0x150)
 combatManager::combatManager()
     : m_combatWindow(0)
 {
@@ -616,7 +617,8 @@ VA_COMPGEN(0x004628b0, 0x6E, IMPLICIT_DTOR, set)
 VA_COMPGEN(0x00462920, 0x0B, CLASS_CTOR, TArcher) MAC_COMPGEN_ADDRESS(0x06e02c, 0x10, CLASS_CTOR, TArcher)
 VA_COMPGEN(0x00462930, 0x54, IMPLICIT_DTOR, TArcher) MAC_COMPGEN_ADDRESS(0x06df98, 0x94, IMPLICIT_DTOR, TArcher)
 
-VA(0x00462990, 0x8F) MAC_ADDRESS(0x06e140, 0xe0)  // dc 0x5d538
+DC_ADDRESS(0x05d538, 0xd4)
+VA(0x00462990, 0x8F) MAC_ADDRESS(0x06e140, 0xe0)
 unsigned char combatManager::loadWallTraitsTable()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -653,7 +655,8 @@ unsigned char combatManager::loadWallTraitsTable()
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
 
-VA(0x00462a20, 0x83F) MAC_ADDRESS(0x06e220, 0x5c4)  // dc 0x5d60c
+DC_ADDRESS(0x05d60c, 0x662)
+VA(0x00462a20, 0x83F) MAC_ADDRESS(0x06e220, 0x5c4)
 int combatManager::open(int newPriority)
 {
     SAMPLE2 sample;
@@ -783,7 +786,8 @@ int combatManager::open(int newPriority)
     return 0;
 }
 
-VA(0x00463260, 0x105) MAC_ADDRESS(0x06e7e4, 0x154)  // dc 0x5dc70
+DC_ADDRESS(0x05dc70, 0x150)
+VA(0x00463260, 0x105) MAC_ADDRESS(0x06e7e4, 0x154)
 void combatManager::close()
 {
     if (!isQuickCombat())
@@ -810,7 +814,8 @@ void combatManager::close()
 // extern declaration is include-set inert where a whole header is not.
 void setPlayerPaletteColors(unsigned short* pal, int whichPlayer);
 
-VA(0x00463370, 0x18D) MAC_ADDRESS(0x06e938, 0x1d0)  // dc 0x5ddc0
+DC_ADDRESS(0x05ddc0, 0x1f2)
+VA(0x00463370, 0x18D) MAC_ADDRESS(0x06e938, 0x1d0)
 void combatManager::loadIcons()
 {
     m_combatCellGridBitmap = ResourceManager::getBitmap816(
@@ -858,7 +863,8 @@ void combatManager::loadIcons()
     }
 }
 
-VA(0x00463500, 0xFD) MAC_ADDRESS(0x06eb08, 0x164)  // dc 0x5dfb4
+DC_ADDRESS(0x05dfb4, 0xe6)
+VA(0x00463500, 0xFD) MAC_ADDRESS(0x06eb08, 0x164)
 void combatManager::freeIcons()
 {
     for (int group = 0; group < 18; ++group) {
@@ -929,7 +935,8 @@ void combatManager::freeIcons()
 // array receiver were a score-neutral flattening. Fatal rules now preserve
 // these five names, types, declaration scopes/order and receiver boundary.
 
-VA(0x00463600, 0x3D8) MAC_ADDRESS(0x06ec6c, 0x420)  // anchor-callee, dc 0x5e09c
+DC_ADDRESS(0x05e09c, 0x33a)
+VA(0x00463600, 0x3D8) MAC_ADDRESS(0x06ec6c, 0x420)  // anchor-callee
 void combatManager::loadArmies(unsigned char isSurrounded)
 {
     int side;
@@ -1026,21 +1033,23 @@ void combatManager::loadArmies(unsigned char isSurrounded)
     }
 }
 
-// Original: combatManager::FreeArmies; cmbtmgr.cpp:1151, dc 0x5e3d8.
+// Original: combatManager::FreeArmies; cmbtmgr.cpp:1151
 // DC1152 stops samples, then DC1154..1157 frees each army's raw resource
 // pointers. Complete retains only the audio operation here (0x4639e0);
 // its army members are reference-counted handles whose destructor cleanup
 // is byte-proven at 0x43d400. DoVictory retains this call and Close expands
 // it. The earlier provisional name stopCombatSounds split this identity.
-VA(0x004639e0, 0x0E) MAC_ADDRESS(0x06f08c, 0x2c)  // dc 0x5e3d8
+DC_ADDRESS(0x05e3d8, 0x8c)
+VA(0x004639e0, 0x0E) MAC_ADDRESS(0x06f08c, 0x2c)
 void combatManager::freeArmies()
 {
     g_soundManager->stopAllSamples(1);
 }
 
-// Original: combatManager::CheckNativeTerrain; cmbtmgr.cpp:1498, dc 0x5e948.
+// Original: combatManager::CheckNativeTerrain; cmbtmgr.cpp:1498
 // SetupCombat expands this ordinary member after LoadArmies. Each side's
 // summary flag is set by the first native-terrain army in that group.
+DC_ADDRESS(0x05e948, 0x64)
 MAC_ADDRESS(0x06f86c, 0x6c)
 void combatManager::checkNativeTerrain()
 {
@@ -1055,7 +1064,8 @@ void combatManager::checkNativeTerrain()
     }
 }
 
-VA(0x004639f0, 0x270) MAC_ADDRESS(0x06f0b8, 0x330)  // dc 0x5e464
+DC_ADDRESS(0x05e464, 0x22a)
+VA(0x004639f0, 0x270) MAC_ADDRESS(0x06f0b8, 0x330)
 void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long rightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int seed, unsigned char isSurrounded)
 {
     g_combatSeed = seed;
@@ -1154,7 +1164,8 @@ void combatManager::setupCombat(type_point point, hero* leftHero, armyGroup* lef
 // CheckNativeTerrain loop: [eax+edi] here versus [edi+eax] in retail. Keep
 // the Dreamcast-shaped m_numArmies[side] loop instead of reverse indexing.
 
-VA(0x00463c60, 0x43C) MAC_ADDRESS(0x06f3e8, 0x484)  // anchor-callee, dc 0x5e690
+DC_ADDRESS(0x05e690, 0x2b8)
+VA(0x00463c60, 0x43C) MAC_ADDRESS(0x06f3e8, 0x484)  // anchor-callee
 void combatManager::initNonVisualVars()
 {
     m_debugNoSpellLimit = 0;
@@ -1247,7 +1258,8 @@ void combatManager::initNonVisualVars()
     checkNativeTerrain();
 }
 
-VA(0x004640a0, 0x144) MAC_ADDRESS(0x06f8d8, 0x1fc)  // dc 0x5e9ac
+DC_ADDRESS(0x05e9ac, 0x192)
+VA(0x004640a0, 0x144) MAC_ADDRESS(0x06f8d8, 0x1fc)
 void combatManager::setupAdjacencyArray()
 {
     int adjacent;
@@ -1303,7 +1315,8 @@ void combatManager::setupAdjacencyArray()
         }
     }
 }
-VA(0x004641f0, 0xDA) MAC_ADDRESS(0x06fad4, 0x128)  // dc 0x5eb40
+DC_ADDRESS(0x05eb40, 0x166)
+VA(0x004641f0, 0xDA) MAC_ADDRESS(0x06fad4, 0x128)
 void combatManager::updateArmyGroup(int whichSide)
 {
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
@@ -1337,7 +1350,8 @@ void combatManager::updateArmyGroup(int whichSide)
     }
 }
 
-VA(0x004642d0, 0xDC) MAC_ADDRESS(0x06fbfc, 0x108)  // dc 0x5eca8
+DC_ADDRESS(0x05eca8, 0xc0)
+VA(0x004642d0, 0xDC) MAC_ADDRESS(0x06fbfc, 0x108)
 void combatManager::generateMap()
 {
     int y;
@@ -1365,7 +1379,8 @@ void combatManager::generateMap()
     }
 }
 
-VA(0x004643b0, 0x317) MAC_ADDRESS(0x06fd04, 0x2c4)  // dc 0x5ed68
+DC_ADDRESS(0x05ed68, 0x1ea)
+VA(0x004643b0, 0x317) MAC_ADDRESS(0x06fd04, 0x2c4)
 void combatManager::determineCombatTerrain()
 {
     m_magicTerrain = -1;
@@ -1435,7 +1450,8 @@ void combatManager::determineCombatTerrain()
     }
 }
 
-VA(0x004646d0, 0xC5) MAC_ADDRESS(0x06ffc8, 0x110)  // dc 0x5ef54
+DC_ADDRESS(0x05ef54, 0x104)
+VA(0x004646d0, 0xC5) MAC_ADDRESS(0x06ffc8, 0x110)
 const char* combatManager::getBackgroundName()
 {
     const char* background;
@@ -1472,7 +1488,8 @@ const char* combatManager::getBackgroundName()
 }
 // Bound-first SLimitData comparisons reproduce retail's four expanded
 // rectangle checks; all 39 CFG blocks and the six return sites now agree.
-VA(0x004647a0, 0x17A) MAC_ADDRESS(0x0700d8, 0x2fc)  // dc 0x5f058
+DC_ADDRESS(0x05f058, 0x176)
+VA(0x004647a0, 0x17A) MAC_ADDRESS(0x0700d8, 0x2fc)
 int combatManager::getGridIndex(int x, int y) const
 {
     if (combatManager::s_leftHeroLimits.contains(x, y))
@@ -1510,9 +1527,10 @@ int combatManager::getGridIndex(int x, int y) const
     return getHexIndex(col, row);
 }
 
-// Original: combatManager::CombineGroups; cmbtmgr.cpp:1971, dc 0x5f1d0.
+// Original: combatManager::CombineGroups; cmbtmgr.cpp:1971
 // First merge matching creature stacks, then move the remaining stacks into
 // free destination slots. No retained Complete RVA is assigned to this member.
+DC_ADDRESS(0x05f1d0, 0xde)
 void combatManager::combineGroups(armyGroup* src, armyGroup* dest)
 {
     if (!src || !dest)
@@ -1539,7 +1557,8 @@ void combatManager::combineGroups(armyGroup* src, armyGroup* dest)
 }
 
 // and the creature-name lookup uses CreatureType.h's canonical helper.
-VA(0x00464920, 0x211) MAC_ADDRESS(0x0703d4, 0x204)  // dc 0x5f2b0
+DC_ADDRESS(0x05f2b0, 0x112)
+VA(0x00464920, 0x211) MAC_ADDRESS(0x0703d4, 0x204)
 void combatManager::checkApplyGoodMorale(int group, int index)
 {
     if (group < 0)
@@ -1571,7 +1590,8 @@ void combatManager::checkApplyGoodMorale(int group, int index)
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x00464b40, 0x1FB) MAC_ADDRESS(0x0705d8, 0x1d8)  // dc 0x5f3c4
+DC_ADDRESS(0x05f3c4, 0x152)
+VA(0x00464b40, 0x1FB) MAC_ADDRESS(0x0705d8, 0x1d8)
 int combatManager::checkApplyBadMorale(int group, int index)
 {
     if (group >= 0 && index >= 0) {
@@ -1670,7 +1690,8 @@ unsigned char combatManager::unnamed464f50(
 // Residual (99.9020%): only the final SetNextArmy argument scratch registers
 // differ. Naming group/index before that call is byte-flat; why-reg --model
 // likewise finds no movement. Keep the proven bool interface and accessor.
-VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)  // dc 0x5f518
+DC_ADDRESS(0x05f518, 0x41c)
+VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
@@ -1787,7 +1808,8 @@ bool combatManager::nextArmy(bool checkingForBadMorale)
 // byte-exact and removes the diagnostic inline-depth fence. Recovering the
 // two player references in isQuickCombat then restores retail's expansion
 // here as well: all 0x4f6 bytes, 74 blocks, 44 branches and 27 calls match.
-VA(0x00465330, 0x4F6) MAC_ADDRESS(0x070e9c, 0x508)  // anchor-global, dc 0x5f934
+DC_ADDRESS(0x05f934, 0x1de)
+VA(0x00465330, 0x4F6) MAC_ADDRESS(0x070e9c, 0x508)  // anchor-global
 void combatManager::setNextArmy(int group, int index)
 {
     army* stack = &m_armies[group][index];
@@ -1867,7 +1889,8 @@ void combatManager::setNextArmy(int group, int index)
     getControl();
 }
 
-VA(0x00465830, 0x76) MAC_ADDRESS(0x0713a4, 0x170)  // dc 0x5fb14
+DC_ADDRESS(0x05fb14, 0xec)
+VA(0x00465830, 0x76) MAC_ADDRESS(0x0713a4, 0x170)
 unsigned char combatManager::combatIsOver() const
 {
     for (int side = 0; side < 2; side++) {
@@ -1893,7 +1916,8 @@ unsigned char combatManager::combatIsOver() const
     return 0;
 }
 
-VA(0x004658b0, 0xBC) MAC_ADDRESS(0x071514, 0x264)  // dc 0x5fc00
+DC_ADDRESS(0x05fc00, 0xea)
+VA(0x004658b0, 0xBC) MAC_ADDRESS(0x071514, 0x264)
 unsigned char combatManager::isWinner(int thisSide) const
 {
     const int otherSide = 1 - thisSide;
@@ -1928,7 +1952,8 @@ unsigned char combatManager::isWinner(int thisSide) const
     return 1;
 }
 
-VA(0x00465970, 0x20) MAC_ADDRESS(0x071778, 0xac)  // dc 0x5fcec
+DC_ADDRESS(0x05fcec, 0x24)
+VA(0x00465970, 0x20) MAC_ADDRESS(0x071778, 0xac)
 TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
 {
     for (int i = 0; i < 8; i++) {
@@ -1938,7 +1963,8 @@ TWallTargetId combatManager::getTargetWallIndex(int gridIndex)
     return TWallTargetId(-1);
 }
 
-VA(0x00465990, 0x140) MAC_ADDRESS(0x071824, 0x164)  // dc 0x5fd10
+DC_ADDRESS(0x05fd10, 0x19c)
+VA(0x00465990, 0x140) MAC_ADDRESS(0x071824, 0x164)
 void combatManager::damageWall(TWallTargetId targetWall, int damage)
 {
     if (damage <= 0)
@@ -2029,7 +2055,8 @@ void combatManager::damageWall(TWallTargetId targetWall, int damage)
 // `damage * ComputeDefenderDamageReduction(1)` is in THAT operand
 // order - retail materialises and spills the int-to-double conversion
 // BEFORE the call, which is the left-operand-first shape.
-VA(0x00465ad0, 0x443) MAC_ADDRESS(0x071988, 0x408)  // anchor-callee, dc 0x5feac
+DC_ADDRESS(0x05feac, 0x370)
+VA(0x00465ad0, 0x443) MAC_ADDRESS(0x071988, 0x408)  // anchor-callee
 void combatManager::keepAttack(int towerPos)
 {
     army* tower = getCurrentArmy();
@@ -2154,9 +2181,10 @@ void combatManager::unnamed465f20()
     m_nextActionGridIndex = m_armies[0][target].m_gridIndex;
 }
 
-// Original: combatManager::ComputeDamageModifier; cmbtmgr.cpp:2727, dc 0x6021c.
+// Original: combatManager::ComputeDamageModifier; cmbtmgr.cpp:2727
 // This static legacy interface returns 1.0: the entire SH4 body is rts/fldi1.
 // Complete's attack/defense scaling lives in army's damage bonus/reduction helpers.
+DC_ADDRESS(0x06021c, 0x4)
 float combatManager::computeDamageModifier(int attack, int defense)
 {
     return 1.0f;
@@ -2166,6 +2194,7 @@ float combatManager::computeDamageModifier(int attack, int defense)
 // into CalculateGainedExperience. The helper owns the stack loop, both
 // army::Is calls (line 2745), and the defeated-hero bonus (2749/2750).
 
+DC_ADDRESS(0x060220, 0xf8)
 MAC_ADDRESS(0x071e50, 0xd8)
 int combatManager::experienceValueOfStack(int whichGroup)
 {
@@ -2181,7 +2210,8 @@ int combatManager::experienceValueOfStack(int whichGroup)
     return total;
 }
 
-VA(0x00465fe0, 0x29) MAC_ADDRESS(0x071f28, 0x88)  // dc 0x60318
+DC_ADDRESS(0x060318, 0x3c)
+VA(0x00465fe0, 0x29) MAC_ADDRESS(0x071f28, 0x88)
 void combatManager::resetHitByCreature()
 {
     for (int side = 0; side < 2; side++) {
@@ -2196,7 +2226,8 @@ void combatManager::resetHitByCreature()
 // generated source identities proves the vector<bool> destructor's ICF fold
 // onto retail's vector<widget*> destructor, closing the remaining relocation
 // at +0x193 and producing 100% without a manually admitted alias.
-VA(0x00466010, 0x243) MAC_ADDRESS(0x071fb0, 0x294)  // dc 0x60354
+DC_ADDRESS(0x060354, 0x1e2)
+VA(0x00466010, 0x243) MAC_ADDRESS(0x071fb0, 0x294)
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
     const TObstacleInfo* const shape = &s_obstacleInfo[obstacleId];
@@ -2282,7 +2313,8 @@ VA_COMPGEN(0x00466260, 0x26, IMPLICIT_DTOR, TPickANumber)  // dc 0x63a18
 //     The guarded retry preserves that call in CodeWarrior while VC6 rotates
 //     it into the retail initial/retry sites; a do/while misses the rotation.
 
-VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee, dc 0x60538
+DC_ADDRESS(0x060538, 0x3e2)
+VA(0x00466290, 0x607) MAC_ADDRESS(0x0722b8, 0x818)  // anchor-callee
 void combatManager::setupAndLoadObstacles()
 {
     m_obstacleAnimationFrame = 0;
@@ -2418,7 +2450,8 @@ void combatManager::setupAndLoadObstacles()
     }
 }
 
-VA(0x004668a0, 0x108) MAC_ADDRESS(0x072ad0, 0x1d0)  // dc 0x6091c
+DC_ADDRESS(0x06091c, 0xb4)
+VA(0x004668a0, 0x108) MAC_ADDRESS(0x072ad0, 0x1d0)
 int combatManager::placeLargeObstacle(unsigned terrainMask,
                                       unsigned magicTerrainMask)
 {
@@ -2444,7 +2477,8 @@ int combatManager::placeLargeObstacle(unsigned terrainMask,
     }
 }
 
-VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)  // dc 0x609d0
+DC_ADDRESS(0x0609d0, 0xa0)
+VA(0x004669b0, 0xBF) MAC_ADDRESS(0x072ca0, 0xb8)
 void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int id, int hex, unsigned attributes)
 {
     const TObstacleInfo* const info = obstacle.m_shape;
@@ -2462,7 +2496,8 @@ void combatManager::placeObstacle(const combatManager::TObstacle& obstacle, int 
     anchor.m_obstacleIndex = id;
 }
 
-VA(0x00466a70, 0xBD)  // dc 0x60a70
+DC_ADDRESS(0x060a70, 0xb0)
+VA(0x00466a70, 0xBD)
 void combatManager::placeAllObstacles()
 {
     unsigned int terrainMask = 0;
@@ -2488,7 +2523,8 @@ void combatManager::placeAllObstacles()
     }
 }
 
-VA(0x00466b30, 0x11F) MAC_ADDRESS(0x072d58, 0x130)  // dc 0x60b20
+DC_ADDRESS(0x060b20, 0xec)
+VA(0x00466b30, 0x11F) MAC_ADDRESS(0x072d58, 0x130)
 void combatManager::removeObstacle(int index)
 {
     if (index < 0
@@ -2514,7 +2550,8 @@ void combatManager::removeObstacle(int index)
     obstacle->m_sprite = 0;
 }
 
-VA(0x00466c50, 0x1A1) MAC_ADDRESS(0x072e88, 0x234)  // dc 0x60c0c
+DC_ADDRESS(0x060c0c, 0xd4)
+VA(0x00466c50, 0x1A1) MAC_ADDRESS(0x072e88, 0x234)
 void combatManager::initializeArchers()
 {
     TArcher* archer = m_archers;
@@ -2585,7 +2622,8 @@ void combatManager::initializeArchers()
 // Mac 0x73178..0x7319c captures both origins before computing the extents.
 // The same order with the canonical width/height calls restores Windows
 // exact bytes; the earlier raw-member scheduling controls are superseded.
-VA(0x00466e00, 0x323) MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global, dc 0x60ce0
+DC_ADDRESS(0x060ce0, 0x1fe)
+VA(0x00466e00, 0x323) MAC_ADDRESS(0x0730bc, 0x26c)  // anchor-global
 void combatManager::makeCreaturesVanish()
 {
     int x;
@@ -2634,7 +2672,8 @@ void combatManager::makeCreaturesVanish()
     }
 }
 
-VA(0x00467130, 0x82) MAC_ADDRESS(0x073328, 0xa8)  // dc 0x60ee0
+DC_ADDRESS(0x060ee0, 0xc8)
+VA(0x00467130, 0x82) MAC_ADDRESS(0x073328, 0xa8)
 unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
 {
     int side = thisArmy->getControllingSide();
@@ -2652,7 +2691,8 @@ unsigned char combatManager::shouldLowerDoor(army* thisArmy, long hex) const
     return 0;
 }
 
-VA(0x004671c0, 0x113) MAC_ADDRESS(0x0733d0, 0xdc)  // dc 0x60fa8
+DC_ADDRESS(0x060fa8, 0x8a)
+VA(0x004671c0, 0x113) MAC_ADDRESS(0x0733d0, 0xdc)
 void combatManager::lowerDoor()
 {
     if (isQuickCombat()) {
@@ -2671,9 +2711,10 @@ void combatManager::lowerDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3400, dc 0x61034. The drawbridge animation alone,
+// E:\gamedcs\cmbtmgr.cpp:3400 The drawbridge animation alone,
 // as in Dreamcast and Mac (0x734ac, whose only caller is testRaiseDoor).
 // Retail has no standalone body: VC6 expands it into its sole caller below.
+DC_ADDRESS(0x061034, 0xac)
 MAC_ADDRESS(0x0734ac, 0xd0)
 void combatManager::raiseDoor()
 {
@@ -2691,11 +2732,12 @@ void combatManager::raiseDoor()
     waitEndSample(sample, -1);
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3426, dc 0x610e0. The occupancy guards, then the
+// E:\gamedcs\cmbtmgr.cpp:3426 The occupancy guards, then the
 // animation: Mac 0x7357c has exactly retail's guard sequence before its one
 // call to raiseDoor, and walkTo, flyTo, teleportTo and processNextAction all
 // branch to it. Retail's 0x4672e0 is this function with raiseDoor expanded.
-VA(0x004672e0, 0x177) MAC_ADDRESS(0x07357c, 0x94)  // dc 0x610e0
+DC_ADDRESS(0x0610e0, 0x7e)
+VA(0x004672e0, 0x177) MAC_ADDRESS(0x07357c, 0x94)
 void combatManager::testRaiseDoor()
 {
     if (!m_defendingTown || m_drawbridgeState != DRAWBRIDGE_DOWN)
@@ -2714,19 +2756,22 @@ void combatManager::testRaiseDoor()
     raiseDoor();
 }
 
-VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)  // dc 0x61160
+DC_ADDRESS(0x061160, 0x20)
+VA(0x00467460, 0x22) MAC_ADDRESS(0x073610, 0x34)
 unsigned char combatManager::inCastle(int index)
 {
     return index >= g_castleWallColumns[gridY(index)];
 }
 
-VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)  // dc 0x61180
+DC_ADDRESS(0x061180, 0x20)
+VA(0x00467490, 0x22) MAC_ADDRESS(0x073644, 0x38)
 unsigned char combatManager::leftOfMoat(int index)
 {
     return index < g_moatHexes[gridY(index)];
 }
 
-VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)  // dc 0x611a0
+DC_ADDRESS(0x0611a0, 0x84)
+VA(0x004674c0, 0x4C) MAC_ADDRESS(0x07367c, 0xfc)
 unsigned char combatManager::isAdjacent(int first, int second) const
 {
     if (validHex(first) && validHex(second)) {
@@ -2738,7 +2783,8 @@ unsigned char combatManager::isAdjacent(int first, int second) const
     return 0;
 }
 
-VA(0x00467510, 0xEA) MAC_ADDRESS(0x073778, 0x114)  // dc 0x61224
+DC_ADDRESS(0x061224, 0x5e)
+VA(0x00467510, 0xEA) MAC_ADDRESS(0x073778, 0x114)
 unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIndex,
                                                int destIndex) const
 {
@@ -2758,7 +2804,8 @@ unsigned char combatManager::shotIsThroughWall(const army* shooter, int sourceIn
     return inLineOfSight(sourceIndex, destIndex) == 0;
 }
 
-VA(0x00467600, 0x23A) MAC_ADDRESS(0x07388c, 0x134)  // dc 0x61284
+DC_ADDRESS(0x061284, 0x92)
+VA(0x00467600, 0x23A) MAC_ADDRESS(0x07388c, 0x134)
 unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* defender) const
 {
     int side = attacker->getControllingSide();
@@ -2783,7 +2830,8 @@ unsigned char combatManager::shotIsNotOptimal(const army* attacker, const army* 
     return getDistance(source, dest) > 10;
 }
 
-VA(0x00467840, 0x1B6) MAC_ADDRESS(0x0739c0, 0x284)  // dc 0x61318
+DC_ADDRESS(0x061318, 0x1d8)
+VA(0x00467840, 0x1B6) MAC_ADDRESS(0x0739c0, 0x284)
 unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!m_fortificationLevel)
@@ -2913,7 +2961,8 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // branches and 12 semantic calls still align; predict-inline has the
 // same nine out-of-line calls. Mac improves 16.8103 -> 17.3658% and
 // the other 38 available cmbtmgr pairs hold. Keep the source call.
-VA(0x00467a00, 0x3AF) MAC_ADDRESS(0x073c44, 0x488)  // anchor-global, dc 0x614f0
+DC_ADDRESS(0x0614f0, 0x4b8)
+VA(0x00467a00, 0x3AF) MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
 void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                                           int destY, const CSprite* missile)
 {
@@ -2989,7 +3038,8 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
     }
 }
 
-VA(0x00467db0, 0x46A) MAC_ADDRESS(0x0740cc, 0x588)  // dc 0x619a8
+DC_ADDRESS(0x0619a8, 0x4b8)
+VA(0x00467db0, 0x46A) MAC_ADDRESS(0x0740cc, 0x588)
 void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
                                          int destY, int nsprites,
                                          const float* angles,
@@ -3119,7 +3169,8 @@ void combatManager::shootAnimatedMissile(int startX, int startY, int destX,
 // retail expands it. All 62 CFG blocks and 33 branches align; this is an
 // inliner boundary, not a reason to paste the wrapper's fields again.
 
-VA(0x00468220, 0x48F) MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global, dc 0x61e60
+DC_ADDRESS(0x061e60, 0x45c)
+VA(0x00468220, 0x48F) MAC_ADDRESS(0x074654, 0x5c4)  // anchor-global
 void combatManager::shootMissile(int startX, int startY, int destX, int destY,
                                  const float* angles, const CSprite* missile)
 {
@@ -3213,7 +3264,8 @@ void combatManager::shootMissile(int startX, int startY, int destX, int destY,
     updateCombatArea(x, y, width, height);  // DC cmbtmgr.cpp:4033
 }
 
-VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)  // dc 0x622bc
+DC_ADDRESS(0x0622bc, 0x9c)
+VA(0x004686b0, 0x7B) MAC_ADDRESS(0x074c18, 0x7c)
 void combatManager::combatSystemOptions()
 {
     TCombatOptionsWindow options;
@@ -3223,7 +3275,8 @@ void combatManager::combatSystemOptions()
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
-VA(0x00468730, 0x8E) MAC_ADDRESS(0x074c94, 0x7c)  // dc 0x62358
+DC_ADDRESS(0x062358, 0x74)
+VA(0x00468730, 0x8E) MAC_ADDRESS(0x074c94, 0x7c)
 void combatManager::removeArmyFromGrid(const army& a)
 {
     m_cells[a.m_gridIndex].m_armySlot = -1;
@@ -3247,7 +3300,8 @@ void combatManager::removeArmyFromGrid(const army& a)
 // Twelve implicit/explicit narrowing and byte-local controls preserve the
 // helpers but do not improve 99.7727%; changing the helper's int return
 // would contradict its recorded interface.
-VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)  // dc 0x623cc
+DC_ADDRESS(0x0623cc, 0xac)
+VA(0x004687c0, 0x99) MAC_ADDRESS(0x074d10, 0xbc)
 void combatManager::placeArmyInGrid(const army& a, int hex)
 {
     m_cells[hex].m_armySide = static_cast<signed char>(a.getOwningSide());
@@ -3267,7 +3321,8 @@ void combatManager::placeArmyInGrid(const army& a, int hex)
 // Complete's Mac 0x74e7c..0x74eb0 and exact Windows body instead test
 // the dialog result, cast the Faerie Dragon spell and adjust nextAction;
 // neither retains that redraw tail.
-VA(0x00468860, 0x124) MAC_ADDRESS(0x074dcc, 0x120)  // dc 0x62478
+DC_ADDRESS(0x062478, 0xe8)
+VA(0x00468860, 0x124) MAC_ADDRESS(0x074dcc, 0x120)
 void combatManager::viewArmy(army* thisArmy, int isQuickView)
 {
     if (thisArmy) {
@@ -3366,7 +3421,8 @@ void combatManager::viewArmy(army* thisArmy, int isQuickView)
 // 99.96%. All 116 available Mac pairs in the three affected units hold.
 // The remaining animation-walk slot/register differences remain open;
 // a lower Windows score does not refute these retained source operations.
-VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global, dc 0x62560
+DC_ADDRESS(0x062560, 0x856)
+VA(0x00468990, 0xA08) MAC_ADDRESS(0x074eec, 0xb30)  // anchor-global
 void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature)
 {
     int side;
@@ -3655,7 +3711,8 @@ void combatManager::checkRebirth()
     }
 }
 
-VA(0x00469600, 0x6E) MAC_ADDRESS(0x075c3c, 0x9c)  // dc 0x62db8
+DC_ADDRESS(0x062db8, 0x94)
+VA(0x00469600, 0x6E) MAC_ADDRESS(0x075c3c, 0x9c)
 unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                                const army* excluded) const
 {
@@ -3671,7 +3728,8 @@ unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIn
 }
 
 // Mac 0x75cf0..0x75d5c expands gridX/gridY for both endpoints.
-VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)  // dc 0x62e4c
+DC_ADDRESS(0x062e4c, 0xb4)
+VA(0x00469670, 0xD2) MAC_ADDRESS(0x075cd8, 0x138)
 long combatManager::getDistance(long start, long stop)
 {
     int sx = gridX(start);
@@ -3685,7 +3743,8 @@ long combatManager::getDistance(long start, long stop)
     return abs(a) + abs(b);
 }
 
-VA(0x00469750, 0x12B) MAC_ADDRESS(0x075e10, 0x108)  // dc 0x62f00
+DC_ADDRESS(0x062f00, 0xe4)
+VA(0x00469750, 0x12B) MAC_ADDRESS(0x075e10, 0x108)
 void combatManager::updateArmyLuckAndMorale()
 {
     for (int side = 0; side < 2; side++) {
@@ -3710,7 +3769,8 @@ void combatManager::updateArmyLuckAndMorale()
 
 // DC cmbtmgr.cpp:4584 names const SMonFrameInfo& sMonFrameInfo; retail
 // loads the same 0x67ff24 reference cell owned by monframeinfo.cpp.
-VA(0x00469880, 0x190) MAC_ADDRESS(0x075f18, 0x214)  // dc 0x62fe4
+DC_ADDRESS(0x062fe4, 0x282)
+VA(0x00469880, 0x190) MAC_ADDRESS(0x075f18, 0x214)
 void combatManager::getMissileStartingPosition(int armyType, int x, int y, int facing,
                                 int destX, int destY,
                                 const CSprite* missile, int* startX,
@@ -3772,6 +3832,7 @@ void combatManager::getMissileStartingPosition(int armyType, int x, int y, int f
 // both canonical HasArmy calls. Complete expands this ordinary helper in
 // HexIsBlocked; its two cell/body tests are the same retail operands.
 
+DC_ADDRESS(0x063268, 0x5a)
 MAC_ADDRESS(0x07612c, 0x60)
 unsigned char combatManager::doorCanBeLowered() const
 {
@@ -3786,7 +3847,8 @@ unsigned char combatManager::doorCanBeLowered() const
     return 1;
 }
 
-VA(0x00469a10, 0x80) MAC_ADDRESS(0x07618c, 0x78)  // dc 0x632c4
+DC_ADDRESS(0x0632c4, 0x98)
+VA(0x00469a10, 0x80) MAC_ADDRESS(0x07618c, 0x78)
 unsigned char combatManager::hexIsBlocked(int index) const
 {
     if (m_fortificationLevel > 0
@@ -3798,7 +3860,8 @@ unsigned char combatManager::hexIsBlocked(int index) const
     return 0;
 }
 
-VA(0x00469a90, 0x324) MAC_ADDRESS(0x076204, 0x2c0)  // dc 0x6335c
+DC_ADDRESS(0x06335c, 0x1c0)
+VA(0x00469a90, 0x324) MAC_ADDRESS(0x076204, 0x2c0)
 void combatManager::damageMessage(const char* attacker, long attackerQty, long damage, const army* defender, long deaths)
 {
     if (isQuickCombat())
@@ -3847,7 +3910,8 @@ void combatManager::damageMessage(const char* attacker, long attackerQty, long d
     m_combatWindow->combatMessage(message.c_str(), 1, 0);
 }
 
-VA(0x00469dc0, 0x8D) MAC_ADDRESS(0x0764c4, 0xd4)  // dc 0x6351c
+DC_ADDRESS(0x06351c, 0x7e)
+VA(0x00469dc0, 0x8D) MAC_ADDRESS(0x0764c4, 0xd4)
 unsigned char combatManager::isInMoat(int hex, int* index)
 {
     if (m_moatOn) {
@@ -3900,7 +3964,8 @@ unsigned char combatManager::unnamed469e50(
     return 0;
 }
 
-VA(0x00469f20, 0xBA) MAC_ADDRESS(0x0766dc, 0x114)  // dc 0x6359c
+DC_ADDRESS(0x06359c, 0xac)
+VA(0x00469f20, 0xBA) MAC_ADDRESS(0x0766dc, 0x114)
 void combatManager::raiseSkeletons(int side)
 {
     if (m_raisedCreatureCount > 0) {
@@ -3923,7 +3988,8 @@ void combatManager::raiseSkeletons(int side)
     m_raisedCreatureCount = 0;
 }
 
-VA(0x00469fe0, 0x88) MAC_ADDRESS(0x0767f0, 0xf0)  // dc 0x63648
+DC_ADDRESS(0x063648, 0xbc)
+VA(0x00469fe0, 0x88) MAC_ADDRESS(0x0767f0, 0xf0)
 void combatManager::learnSpellFromEagleEye(int side)
 {
     for (std::set<SpellID>::iterator it = m_eagleEyeData[side].begin();
@@ -3946,7 +4012,8 @@ void combatManager::learnSpellFromEagleEye(int side)
 // The looted_artifacts parameter is a reference: DC's public mangling has
 // AAV (not PAV), despite an older roster rendering it as a pointer.
 
-VA(0x0046a070, 0x2D3) MAC_ADDRESS(0x0768f0, 0x1a4)  // dc 0x63704
+DC_ADDRESS(0x063704, 0x188)
+VA(0x0046a070, 0x2D3) MAC_ADDRESS(0x0768f0, 0x1a4)
 void combatManager::lootDeadHero(int side,
                                  std::vector<type_artifact>& lootedArtifacts)
 {
@@ -3991,7 +4058,8 @@ void combatManager::lootDeadHero(int side,
     }
 }
 
-VA(0x0046a350, 0x10C) MAC_ADDRESS(0x076a94, 0xdc)  // dc 0x6388c
+DC_ADDRESS(0x06388c, 0x74)
+VA(0x0046a350, 0x10C) MAC_ADDRESS(0x076a94, 0xdc)
 void combatManager::calculateGainedExperience(int side, int* experienceGained)
 {
     int total = experienceValueOfStack(1 - side);
@@ -4022,7 +4090,8 @@ void combatManager::markTowerArmy(const army* tower)
     }
 }
 
-VA(0x0046a4a0, 0x71) MAC_ADDRESS(0x076bc8, 0xac)  // dc 0x63900
+DC_ADDRESS(0x063900, 0xc4)
+VA(0x0046a4a0, 0x71) MAC_ADDRESS(0x076bc8, 0xac)
 bool combatManager::isQuickCombat() const
 {
     if (g_game->m_isTutorial)

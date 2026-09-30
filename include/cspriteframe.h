@@ -1,6 +1,8 @@
 #ifndef HOMM3_CSPRITEFRAME_H
 #define HOMM3_CSPRITEFRAME_H
 
+#include "va.h"
+
 #include "resource.h"
 
 class TPalette16;
@@ -105,16 +107,21 @@ public:
 
     // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
     // consumers expand these one-field accessors in place.
+    DC_ADDRESS(0x04cb90, 0x4)
     int getCroppedWidth() const { return m_croppedWidth; }
 
+    DC_ADDRESS(0x08734c, 0x4)
     int getCroppedHeight() const { return m_croppedHeight; }
 
+    DC_ADDRESS(0x04cb94, 0x4)
     int getCroppedX() const { return m_croppedX; }
 
+    DC_ADDRESS(0x04cb98, 0x4)
     int getCroppedY() const { return m_croppedY; }
 
     // CSpriteFrame.h:147-148. Dreamcast emits this header wrapper as a
     // standalone function; retail inlines its fixed zero-alpha forwarding.
+    DC_ADDRESS(0x074068, 0x68)
     void drawCreature(int sx, int sy, int sw, int sh,
                       unsigned short* dst, int dx, int dy, int dw, int dh,
                       int dpitch, TPalette16& pal, unsigned char hflip,
@@ -123,7 +130,8 @@ public:
         drawCreatureImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch,
                          pal, hflip, outcolor, 0);
     }
-    // Original: CSpriteFrame::DrawCreatureAlpha; CSpriteFrame.h:152, dc 0x740d0.
+    // Original: CSpriteFrame::DrawCreatureAlpha; CSpriteFrame.h:152
+    DC_ADDRESS(0x0740d0, 0x68)
     void drawCreatureAlpha(int sx, int sy, int sw, int sh,
                            unsigned short* dst, int dx, int dy, int dw, int dh,
                            int dpitch, TPalette16& pal, unsigned char hflip,
@@ -134,11 +142,13 @@ public:
     }
     // DC CSpriteFrame.h:157..179 records each public forwarding boundary.
     // Retail CSprite 0x47bdc0..0x47c0d0 expands them and calls the private impls.
+    DC_ADDRESS(0x074138, 0x60)
     void drawAdvObj(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
     {
         drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
     }
+    DC_ADDRESS(0x074198, 0x64)
     void drawAdvObjWithFlag(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned short flagcolor, unsigned char hflip) const
     {
@@ -149,6 +159,7 @@ public:
                                  int dw, int dh, int dpitch, TPalette16& pal,
                                  unsigned short flagcolor,
                                  unsigned char hflip) const;
+    DC_ADDRESS(0x0741fc, 0x5c)
     void drawAdvObjShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
     {
@@ -162,11 +173,13 @@ public:
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, unsigned char hflip,
                         unsigned char vflip) const;
+    DC_ADDRESS(0x074258, 0x60)
     void drawHero(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
     {
         drawAdvObjImpl(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 0);
     }
+    DC_ADDRESS(0x0742b8, 0x5c)
     void drawHeroShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
                  int dx, int dy, int dw, int dh, int dpitch, TPalette16& pal, unsigned char hflip) const
     {
@@ -176,23 +189,26 @@ public:
                          unsigned short* dst, int dx, int dy, int dw, int dh,
                          int dpitch, TPalette16& pal, unsigned char hflip,
                          unsigned char alpha) const;
-    // Original: CSpriteFrame::DrawPointer; CSpriteFrame.h:182, dc 0x74314.
+    // Original: CSpriteFrame::DrawPointer; CSpriteFrame.h:182
     // Complete expands this whole-frame transparent draw in CSprite::drawPointer.
+    DC_ADDRESS(0x074314, 0x68)
     void drawPointer(unsigned short* dst, int dx, int dy, int dw, int dh,
                      int dpitch, TPalette16& pal, unsigned char hflip) const
     {
         draw(0, 0, m_width, m_height, dst, dx, dy, dw, dh, dpitch,
              pal, hflip, 1);
     }
-    // Original: CSpriteFrame::DrawInterface; CSpriteFrame.h:187, dc 0x7437c.
+    // Original: CSpriteFrame::DrawInterface; CSpriteFrame.h:187
+    DC_ADDRESS(0x07437c, 0x60)
     void drawInterface(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, unsigned char hflip) const
     {
         draw(sx, sy, sw, sh, dst, dx, dy, dw, dh, dpitch, pal, hflip, 1);
     }
-    // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192, dc 0x743dc.
+    // Original: CSpriteFrame::DrawShroudTile; CSpriteFrame.h:192
     // Its palette/frame parameter lifetimes span both retained retail calls.
+    DC_ADDRESS(0x0743dc, 0xa8)
     void drawShroudTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                         int dx, int dy, int dw, int dh, int dpitch,
                         TPalette16& pal, unsigned char hflip,
@@ -218,6 +234,7 @@ public:
     // DC CSpriteFrame.h:198..200 (0x74484): canonical zero-flag wrapper.
     // DrawSpellEffect calls it at DC line 3792; retail expands the wrapper
     // and calls DrawAdvObjWithFlagAlpha with flagcolor=0 at 0x47efca.
+    DC_ADDRESS(0x074484, 0x60)
     void drawHeroAlpha(int sx, int sy, int sw, int sh, unsigned short* dst,
                        int dx, int dy, int dw, int dh, int dpitch,
                        TPalette16& pal, unsigned char hflip) const

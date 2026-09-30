@@ -16,7 +16,8 @@
 #include "window.h"
 #include "winmgr.h"
 
-VA(0x005132b0, 0x1B) MAC_ADDRESS(0x132158, 0xc4)  // dc 0x103494
+DC_ADDRESS(0x103494, 0x20)
+VA(0x005132b0, 0x1B) MAC_ADDRESS(0x132158, 0xc4)
 long getAlignmentCount(int legalAlignments)
 {
     long count = 0;
@@ -27,7 +28,8 @@ long getAlignmentCount(int legalAlignments)
     return count;
 }
 
-VA(0x005132d0, 0x50) MAC_ADDRESS(0x13221c, 0x184)  // dc 0x1034b4
+DC_ADDRESS(0x1034b4, 0x48)
+VA(0x005132d0, 0x50) MAC_ADDRESS(0x13221c, 0x184)
 TTownType pickAlignment(int legalAlignments, unsigned char getFirstAvail)
 {
     long count = getAlignmentCount(legalAlignments);
@@ -58,7 +60,8 @@ const int g_mapFormatAb = 21;
 // sentinel for a slot the computer takes.
 const int g_setupPlayerPosComputer = 10;
 
-VA(0x00513320, 0x41A) MAC_ADDRESS(0x1323a0, 0x3bc)  // dc 0x1034fc
+DC_ADDRESS(0x1034fc, 0x2f8)
+VA(0x00513320, 0x41A) MAC_ADDRESS(0x1323a0, 0x3bc)
 void game::initNewGame(int difficulty, int version,
                        NewSMapHeader* mapHeader, TAbstractFile* infile)
 {
@@ -135,7 +138,8 @@ void game::initNewGame(int difficulty, int version,
     m_setup.m_difficulty = static_cast<signed char>(difficulty);
 }
 
-VA(0x00513740, 0xBC) MAC_ADDRESS(0x13275c, 0x94)  // dc 0x103824
+DC_ADDRESS(0x103824, 0x64)
+VA(0x00513740, 0xBC) MAC_ADDRESS(0x13275c, 0x94)
 void game::showScenInfo()
 {
     if (g_inCampaign) {
@@ -149,7 +153,8 @@ void game::showScenInfo()
     }
 }
 
-VA(0x00513800, 0x1D5) MAC_ADDRESS(0x1327f0, 0x278)  // dc 0x103888
+DC_ADDRESS(0x103888, 0x17e)
+VA(0x00513800, 0x1D5) MAC_ADDRESS(0x1327f0, 0x278)
 void game::getLossConditionText(char* text)
 {
     // Dreamcast lines 646, 655 and 662 retain TTextResource::operator[]
@@ -198,7 +203,8 @@ void game::getLossConditionText(char* text)
 // TTextResource::operator[]. The shared source calls are retained despite
 // VC6 falling from an earlier peak when the larger helper source entered
 // the inline budget. Mac O3 retains 38 direct calls on each side.
-VA(0x005139e0, 0x64C) MAC_ADDRESS(0x132a68, 0x820)  // dc 0x103a08
+DC_ADDRESS(0x103a08, 0x5ac)
+VA(0x005139e0, 0x64C) MAC_ADDRESS(0x132a68, 0x820)
 void game::getVictoryConditionText(char* text)
 {
     VictoryConditionStruct& victory = m_mapHeader.m_victoryCondition;

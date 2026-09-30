@@ -74,12 +74,14 @@ public:
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
+    DC_ADDRESS(0x037e40, 0x8)
     unsigned char canCastSpells() const { return m_power > 0; }
     // DC ai_spellvalue.h:99, dc 0x114bdc (philai.obj). AI_set_hero_bonuses
     // (0x527760) reads this initial pool for the well/spring valuations.
+    DC_ADDRESS(0x114bdc, 0x4)
     long getMana() const { return m_mana; }
     long getBestSpellValue(long bits) const;
-    // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
+    // E:\gamedcs\philai.cpp:1699 () - the what-if probe:
     // bump power/duration/mana, re-ask get_best_spell_value, restore,
     // return the delta against the caller's baseline.  DEFINED in
     // philai.cpp as the DC build does; retail keeps no out-of-line row
@@ -89,14 +91,17 @@ public:
     long getRawSpellValue(SpellID spell) const;
     // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
     // type_school_artifact::get_value call sites in retail.
+    DC_ADDRESS(0x037e48, 0x4)
     void setPower(long arg) { m_power = arg; }
     // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
     // reseeds the valuer from hero::mana through this setter.
+    DC_ADDRESS(0x114be0, 0x4)
     void setMana(long arg) { m_mana = arg; }
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
     // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
     // combatManager::do_combat_ai writes the side's whole combat value
     // here before asking for a spell value.
+    DC_ADDRESS(0x027c74, 0x4)
     void setStackValue(long arg) { m_stackValue = arg; }
 
 protected:

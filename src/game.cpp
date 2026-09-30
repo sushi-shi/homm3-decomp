@@ -347,7 +347,8 @@ const int g_gameDifficultyEasy = 0;
 const int g_gameDifficultyExpert = 3;
 const int g_gameDifficultyImpossible = 4;
 
-VA(0x004b8410, 0x33) MAC_ADDRESS(0x0c9fa8, 0xa0)  // dc 0xa2af8
+DC_ADDRESS(0x0a2af8, 0x62)
+VA(0x004b8410, 0x33) MAC_ADDRESS(0x0c9fa8, 0xa0)
 unsigned char initializeRandomTavernText()
 {
     g_randomTavernText = ResourceManager::getText(
@@ -381,7 +382,8 @@ void HeroExtra::heroExtraFn004B8450(int heroId)
     m_customPrimarySkills = 0;
 }
 
-VA(0x004b8550, 0x48) MAC_ADDRESS(0x0ca11c, 0x88)  // dc 0xa2da0
+DC_ADDRESS(0x0a2da0, 0xa6)
+VA(0x004b8550, 0x48) MAC_ADDRESS(0x0ca11c, 0x88)
 generator::generator()
     : m_genClass(-1), m_genType(-1)
 {
@@ -396,7 +398,8 @@ generator::generator()
     }
 }
 
-VA(0x004b85a0, 0x13B) MAC_ADDRESS(0x0ca1a4, 0x200)  // dc 0xa2e48
+DC_ADDRESS(0x0a2e48, 0x194)
+VA(0x004b85a0, 0x13B) MAC_ADDRESS(0x0ca1a4, 0x200)
 bool generator::load(TAbstractFile* infile)
 {
     if (infile->read(&m_playerOwner, sizeof(m_playerOwner)) !=
@@ -430,7 +433,8 @@ bool generator::load(TAbstractFile* infile)
     return success;
 }
 
-VA(0x004b86e0, 0xB1) MAC_ADDRESS(0x0ca3a4, 0x188)  // dc 0xa2fdc
+DC_ADDRESS(0x0a2fdc, 0xe6)
+VA(0x004b86e0, 0xB1) MAC_ADDRESS(0x0ca3a4, 0x188)
 bool generator::save(TAbstractFile* outfile)
 {
     outfile->write(&m_playerOwner, sizeof(m_playerOwner));
@@ -467,6 +471,7 @@ bool generator::save(TAbstractFile* outfile)
 // Dreamcast game.cpp line order. Its calls do not establish inline spelling or
 // header placement. VC6 also expands removeBonus and setOwner from ordinary
 // game.cpp definitions at their known call sites.
+DC_ADDRESS(0x0a30c4, 0xb2)
 MAC_ADDRESS(0x0ca52c, 0xf8)
 void generator::removeBonus()
 {
@@ -485,7 +490,8 @@ void generator::removeBonus()
     }
 }
 
-VA(0x004b87a0, 0xB8) MAC_ADDRESS(0x0ca624, 0xf8)  // dc 0xa3178
+DC_ADDRESS(0x0a3178, 0xd8)
+VA(0x004b87a0, 0xB8) MAC_ADDRESS(0x0ca624, 0xf8)
 // VC6 control: without inline here, initialize retains an updateBonus call
 // and has 26 blocks instead of the retail 38-block expansion.
 inline void generator::updateBonus()
@@ -507,6 +513,7 @@ inline void generator::updateBonus()
 }
 
 // E:\gamedcs\game.cpp:557
+DC_ADDRESS(0x0a3250, 0x38)
 MAC_ADDRESS(0x0ca71c, 0x5c)
 void generator::setOwner(long owner)
 {
@@ -518,7 +525,8 @@ void generator::setOwner(long owner)
     updateBonus();
 }
 
-VA(0x004b8860, 0x1F7) MAC_ADDRESS(0x0ca778, 0xf4)  // dc 0xa3288
+DC_ADDRESS(0x0a3288, 0x96)
+VA(0x004b8860, 0x1F7) MAC_ADDRESS(0x0ca778, 0xf4)
 void generator::initialize(long newOwner)
 {
     for (int slot = 0; slot < 4; slot++) {
@@ -549,7 +557,8 @@ void generator::initialize(long newOwner)
     setOwner(newOwner);
 }
 
-VA(0x004b8a60, 0x88) MAC_ADDRESS(0x0ca86c, 0xa8)  // dc 0xa3320
+DC_ADDRESS(0x0a3320, 0xfc)
+VA(0x004b8a60, 0x88) MAC_ADDRESS(0x0ca86c, 0xa8)
 void generator::grow(int unusedArg)
 {
     m_guards.initialize();
@@ -568,6 +577,7 @@ void generator::grow(int unusedArg)
 }
 
 // DC game.cpp:627 fixes the resource parameter as EGameResource.
+DC_ADDRESS(0x0a341c, 0x58)
 MAC_ADDRESS(0x0ca914, 0x64)
 static long getDayBonus(EGameResource resource, long weekBonus, long day)
 {
@@ -589,7 +599,8 @@ static long getDayBonus(EGameResource resource, long weekBonus, long day)
 // Mac 0:0xca978..0xcb1f0 is compared from the ordinary shared headers and has
 // the same seven artifact-count calls followed by daily gold. Its remaining
 // zeroing, stack and register differences require source-model recovery.
-VA(0x004b8af0, 0x573) MAC_ADDRESS(0x0ca978, 0x878)  // mine/town/player production consumers, dc 0xa3474
+DC_ADDRESS(0x0a3474, 0x7f2)
+VA(0x004b8af0, 0x573) MAC_ADDRESS(0x0ca978, 0x878)  // mine/town/player production consumers
 void game::calculateProduction()
 {
     long playerId;
@@ -736,7 +747,8 @@ void game::calculateProduction()
 // Complete reads through TAbstractFile in place of the older gzread stream.
 // Retail's reads are the direct virtual calls: the inline readValue
 // template spelling costs VC6 86.44%, the direct reads are exact.
-VA(0x004b9070, 0x1B3) MAC_ADDRESS(0x0cb1f0, 0x118)  // dc 0xa3c68
+DC_ADDRESS(0x0a3c68, 0xe8)
+VA(0x004b9070, 0x1B3) MAC_ADDRESS(0x0cb1f0, 0x118)
 int game::loadSignPool(TAbstractFile* infile)
 {
     int count;
@@ -761,7 +773,8 @@ int game::loadSignPool(TAbstractFile* infile)
     return 0;
 }
 
-VA(0x004b9270, 0xCF) MAC_ADDRESS(0x0cb308, 0xfc)  // dc 0xa3d50
+DC_ADDRESS(0x0a3d50, 0x10c)
+VA(0x004b9270, 0xCF) MAC_ADDRESS(0x0cb308, 0xfc)
 int game::saveSignPool(TAbstractFile* outfile)
 {
     // DC game.cpp:874..888 records int count, int x, char char_buffer,
@@ -798,7 +811,8 @@ int game::saveSignPool(TAbstractFile* outfile)
 // Mac retains the first signed result across the second read. This does not
 // justify platform-specific statement ordering. DC predates this branch.
 // Full native-header Mac comparison awaits the reviewed MSL resize binding.
-VA(0x004b9340, 0x240) MAC_ADDRESS(0x0cb404, 0x2a4)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
+DC_ADDRESS(0x0a3e5c, 0x2b0)
+VA(0x004b9340, 0x240) MAC_ADDRESS(0x0cb404, 0x2a4)  // anchor-global (ClaimMine vector) + read-slot
 int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 {
     unsigned char count;
@@ -848,7 +862,8 @@ int game::loadMinePool(TAbstractFile* infile, int saveVersion)
 
 // DC records count, x and two byte staging locals; Mac separates its signed
 // owner/type/abandoned slot from the unsigned count/coordinate slot.
-VA(0x004b9580, 0x165) MAC_ADDRESS(0x0cb6a8, 0x214)  // dc 0xa410c
+DC_ADDRESS(0x0a410c, 0x280)
+VA(0x004b9580, 0x165) MAC_ADDRESS(0x0cb6a8, 0x214)
 int game::saveMinePool(TAbstractFile* outfile)
 {
     int count;
@@ -899,7 +914,8 @@ int game::saveMinePool(TAbstractFile* outfile)
 // sign-extends its independent by-value read, so that arm keeps readValue.
 // The residual includes the ICF-folded vector<garrison>::insert that retail
 // names as vector<mine>::insert.
-VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)  // dc 0xa438c
+DC_ADDRESS(0x0a438c, 0x1bc)
+VA(0x004b96f0, 0x1CB) MAC_ADDRESS(0x0cb8bc, 0x1f8)
 int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
     int count;
@@ -945,7 +961,8 @@ int game::loadGarrisonPool(TAbstractFile* infile, int saveVersion)
 
 // Preserve DC's two byte staging locals. Mac retains a separate temporary
 // for the later removableTroops field, so that final by-value helper stays.
-VA(0x004b98c0, 0x139) MAC_ADDRESS(0x0cbab4, 0x1c8)  // dc 0xa4548
+DC_ADDRESS(0x0a4548, 0x1a0)
+VA(0x004b98c0, 0x139) MAC_ADDRESS(0x0cbab4, 0x1c8)
 int game::saveGarrisonPool(TAbstractFile* outfile)
 {
     int count;
@@ -989,7 +1006,8 @@ int game::saveGarrisonPool(TAbstractFile* outfile)
 // and the boat loader, but expands one vector::size call that this TU keeps.
 // Direct virtual reads are exact; the readValue template staging costs
 // VC6 86.75% here.
-VA(0x004b9a00, 0x239) MAC_ADDRESS(0x0cbc7c, 0x28c)  // dc 0xa46e8
+DC_ADDRESS(0x0a46e8, 0x296)
+VA(0x004b9a00, 0x239) MAC_ADDRESS(0x0cbc7c, 0x28c)
 int game::loadBoatPool(TAbstractFile* infile)
 {
     unsigned short ushortBuffer;
@@ -1044,7 +1062,8 @@ int game::loadBoatPool(TAbstractFile* infile)
 
 // DC records separate unsigned-byte, signed-byte and short staging locals;
 // Mac reuses slots +0x82/+0x83/+0x80 across the retained scalar writes.
-VA(0x004b9c40, 0x1AD) MAC_ADDRESS(0x0cbf08, 0x260)  // dc 0xa4980
+DC_ADDRESS(0x0a4980, 0x288)
+VA(0x004b9c40, 0x1AD) MAC_ADDRESS(0x0cbf08, 0x260)
 int game::saveBoatPool(TAbstractFile* outfile)
 {
     unsigned short ushortBuffer;
@@ -1100,6 +1119,7 @@ int game::saveBoatPool(TAbstractFile* outfile)
 // two reads through TAbstractFile instead of Dreamcast's gzread handle.
 // Original locals: count, char_buffer.
 
+DC_ADDRESS(0x0a4c08, 0x5e)
 MAC_ADDRESS(0x0cc168, 0x9c)
 int game::loadObeliskPool(TAbstractFile* infile)
 {
@@ -1118,6 +1138,7 @@ int game::loadObeliskPool(TAbstractFile* infile)
 // The ordinary writer mirrors the reader; retail expands it in game::save.
 // Original locals: count, char_buffer.
 
+DC_ADDRESS(0x0a4c68, 0x5e)
 MAC_ADDRESS(0x0cc204, 0x9c)
 int game::saveObeliskPool(TAbstractFile* outfile)
 {
@@ -1131,12 +1152,14 @@ int game::saveObeliskPool(TAbstractFile* outfile)
     return 0;
 }
 
-VA(0x004b9df0, 0x2D) MAC_ADDRESS(0x0cc2a0, 0x5c)  // dc 0xa4cc8
+DC_ADDRESS(0x0a4cc8, 0x90)
+VA(0x004b9df0, 0x2D) MAC_ADDRESS(0x0cc2a0, 0x5c)
 playerData::playerData()
 {
 }
 
-VA(0x004b9e20, 0x115) MAC_ADDRESS(0x0cc360, 0x10c)  // dc 0xa4d58
+DC_ADDRESS(0x0a4d58, 0x128)
+VA(0x004b9e20, 0x115) MAC_ADDRESS(0x0cc360, 0x10c)
 void playerData::init()
 {
     m_numHeroes = 0;
@@ -1172,7 +1195,8 @@ void playerData::init()
     clearNetInfo();
 }
 
-VA(0x004b9f40, 0x71) MAC_ADDRESS(0x0cc46c, 0x90)  // dc 0xa4e80
+DC_ADDRESS(0x0a4e80, 0x66)
+VA(0x004b9f40, 0x71) MAC_ADDRESS(0x0cc46c, 0x90)
 bool playerData::hasCapitol()
 {
     int i = 0;
@@ -1187,7 +1211,8 @@ bool playerData::hasCapitol()
     return false;
 }
 
-VA(0x004b9fc0, 0x167) MAC_ADDRESS(0x0cc4fc, 0x1bc)  // dc 0xa4ee8
+DC_ADDRESS(0x0a4ee8, 0x1c2)
+VA(0x004b9fc0, 0x167) MAC_ADDRESS(0x0cc4fc, 0x1bc)
 unsigned char playerData::addGarrisonHero(town* ourTown)
 {
     int i;
@@ -1231,15 +1256,17 @@ unsigned char playerData::addGarrisonHero(town* ourTown)
     return 1;
 }
 
-// Original: playerData::SetName; game.cpp:1383, dc 0xa50ac.
+// Original: playerData::SetName; game.cpp:1383
 // AssignNetInfo expands this ordinary bounded-copy helper in Complete.
+DC_ADDRESS(0x0a50ac, 0x5c)
 MAC_ADDRESS(0x0cc6b8, 0x28)
 void playerData::setName(char* newName)
 {
     strncpy(m_name, newName, 20);
 }
 
-VA(0x004ba130, 0x34) MAC_ADDRESS(0x0cc6e0, 0x4c)  // dc 0xa5108
+DC_ADDRESS(0x0a5108, 0x2e)
+VA(0x004ba130, 0x34) MAC_ADDRESS(0x0cc6e0, 0x4c)
 void playerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
 {
     setName(netPlayerInfo->m_name);
@@ -1247,14 +1274,16 @@ void playerData::assignNetInfo(CNetPlayerInfo* netPlayerInfo)
     m_isHuman = 1;
 }
 
-// Original: playerData::GetNetInfo; game.cpp:1395, dc 0xa5138.
+// Original: playerData::GetNetInfo; game.cpp:1395
+DC_ADDRESS(0x0a5138, 0x2e)
 void playerData::getNetInfo(CNetPlayerInfo* netPlayerInfo)
 {
     strcpy(netPlayerInfo->m_name, m_name);
     netPlayerInfo->m_dpid = m_dpid;
 }
 
-VA(0x004ba170, 0x4E) MAC_ADDRESS(0x0cc72c, 0x5c)  // dc 0xa5168
+DC_ADDRESS(0x0a5168, 0x48)
+VA(0x004ba170, 0x4E) MAC_ADDRESS(0x0cc72c, 0x5c)
 void playerData::clearNetInfo()
 {
     strcpy(m_name, g_generalText->getText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
@@ -1308,7 +1337,8 @@ static int loadHeroIdShort(TAbstractFile* infile, int saveVersion)
     return heroId;
 }
 
-VA(0x004ba260, 0x401) MAC_ADDRESS(0x0cc8ec, 0x490)  // dc 0xa51b0
+DC_ADDRESS(0x0a51b0, 0x3f6)
+VA(0x004ba260, 0x401) MAC_ADDRESS(0x0cc8ec, 0x490)
 int playerData::load(TAbstractFile* infile, int saveVersion)
 {
     char value;
@@ -1417,7 +1447,8 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // With fill_n and the loop-local bit counter, direct member.test(bit) still
 // changes the packed-bit update from retail's eight instructions to eleven
 // (98.21%). The const pointer retains that expansion; all 22 calls agree.
-VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
+DC_ADDRESS(0x0a55a8, 0x3f0)
+VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global
 int playerData::save(TAbstractFile* outfile)
 {
     unsigned long uintBuffer;
@@ -1536,10 +1567,11 @@ int playerData::save(TAbstractFile* outfile)
     return 0;
 }
 
-// Original: game::LoadPlayerData; game.cpp:1668, dc 0xa5998.
+// Original: game::LoadPlayerData; game.cpp:1668
 // Complete passes the saved version to each playerData::load in the
 // expansion at game::load +0x51f. DC's ordinary helper has x and err locals
 // and returns the element error; the caller maps a negative result to -1.
+DC_ADDRESS(0x0a5998, 0x54)
 MAC_ADDRESS(0x0cd278, 0x80)
 int game::loadPlayerData(TAbstractFile* infile, int saveVersion)
 {
@@ -1551,8 +1583,9 @@ int game::loadPlayerData(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-// Original: game::SavePlayerData; game.cpp:1683, dc 0xa59ec.
+// Original: game::SavePlayerData; game.cpp:1683
 // Ordinary helper expanded at game::save +0x38f; eight player records.
+DC_ADDRESS(0x0a59ec, 0x54)
 MAC_ADDRESS(0x0cd2f8, 0x70)
 int game::savePlayerData(TAbstractFile* outfile)
 {
@@ -1590,6 +1623,7 @@ int game::loadTownPool(TAbstractFile* infile, int saveVersion)
 // loop and element error return; ordinary inlining replaces the copied loop
 // and its pinned condition in game::save.
 
+DC_ADDRESS(0x0a5af8, 0xa4)
 MAC_ADDRESS(0x0cd41c, 0xb8)
 int game::saveTownPool(TAbstractFile* outfile)
 {
@@ -1605,9 +1639,10 @@ int game::saveTownPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Original: game::SaveHeroPool; game.cpp:1745, dc 0xa5b9c.
+// Original: game::SaveHeroPool; game.cpp:1745
 // Ordinary helper expanded at game::save +0x45a. Complete writes all156
 // hero records; the older pressing's pool was128.
+DC_ADDRESS(0x0a5b9c, 0x56)
 MAC_ADDRESS(0x0cd4d4, 0x70)
 int game::saveHeroPool(TAbstractFile* outfile)
 {
@@ -1621,9 +1656,10 @@ int game::saveHeroPool(TAbstractFile* outfile)
     return 0;
 }
 
-// Original: game::LoadHeroPool; game.cpp:1760, dc 0xa5bf4.
+// Original: game::LoadHeroPool; game.cpp:1760
 // Complete's game::load +0x622 tests saveVersion against25, chooses128 or
 //156 records, and passes that version to hero::load at +0x658.
+DC_ADDRESS(0x0a5bf4, 0x56)
 MAC_ADDRESS(0x0cd544, 0x7c)
 int game::loadHeroPool(TAbstractFile* infile, int saveVersion)
 {
@@ -1638,7 +1674,8 @@ int game::loadHeroPool(TAbstractFile* infile, int saveVersion)
     return 0;
 }
 
-VA(0x004ba9e0, 0x2D) MAC_ADDRESS(0x0cd5c0, 0x44)  // dc 0xa5c4c
+DC_ADDRESS(0x0a5c4c, 0x4a)
+VA(0x004ba9e0, 0x2D) MAC_ADDRESS(0x0cd5c0, 0x44)
 int playerData::findHero(int id) const
 {
     if (id != -1) {
@@ -1650,7 +1687,8 @@ int playerData::findHero(int id) const
     return -1;
 }
 
-VA(0x004baa10, 0x2E) MAC_ADDRESS(0x0cd604, 0x48)  // dc 0xa5c98
+DC_ADDRESS(0x0a5c98, 0x76)
+VA(0x004baa10, 0x2E) MAC_ADDRESS(0x0cd604, 0x48)
 int playerData::findTown(int id) const
 {
     if (id != -1) {
@@ -1662,7 +1700,8 @@ int playerData::findTown(int id) const
     return -1;
 }
 
-VA(0x004baa40, 0xFA) MAC_ADDRESS(0x0cd64c, 0x128)  // dc 0xa5d10
+DC_ADDRESS(0x0a5d10, 0xfc)
+VA(0x004baa40, 0xFA) MAC_ADDRESS(0x0cd64c, 0x128)
 int playerData::nextHero()
 {
     int cur = findHero(m_currHeroId);
@@ -1680,7 +1719,8 @@ int playerData::nextHero()
     return -1;
 }
 
-VA(0x004bab40, 0x43) MAC_ADDRESS(0x0cd774, 0x94)  // dc 0xa5e0c
+DC_ADDRESS(0x0a5e0c, 0xa4)
+VA(0x004bab40, 0x43) MAC_ADDRESS(0x0cd774, 0x94)
 int playerData::nextTown()
 {
     if (m_numTowns > 0) {
@@ -1694,13 +1734,15 @@ int playerData::nextTown()
     return -1;
 }
 
-VA(0x004bab90, 0x10) MAC_ADDRESS(0x0cd808, 0x2c)  // dc 0xa5eb0
+DC_ADDRESS(0x0a5eb0, 0x38)
+VA(0x004bab90, 0x10) MAC_ADDRESS(0x0cd808, 0x2c)
 bool playerData::hasMobileHero()
 {
     return nextHero() != -1;
 }
 
-VA(0x004baba0, 0x29) MAC_ADDRESS(0x0cd834, 0x128)  // dc 0xa5ee8
+DC_ADDRESS(0x0a5ee8, 0x48)
+VA(0x004baba0, 0x29) MAC_ADDRESS(0x0cd834, 0x128)
 int getNumObelisks(int whichPlayer)
 {
     int numFound = 0;
@@ -1712,7 +1754,8 @@ int getNumObelisks(int whichPlayer)
     return numFound;
 }
 
-// Original: playerData::BuildingsOwned; game.cpp:1873, dc 0xa5f30
+// Original: playerData::BuildingsOwned; game.cpp:1873
+DC_ADDRESS(0x0a5f30, 0xbe)
 int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
 {
     int count = 0;
@@ -1731,7 +1774,8 @@ int playerData::buildingsOwned(int townType, int buildingId, int mageLevel)
     return count;
 }
 
-VA(0x004babd0, 0xDC) MAC_ADDRESS(0x0cd95c, 0x120)  // dc 0xa5ff0
+DC_ADDRESS(0x0a5ff0, 0x122)
+VA(0x004babd0, 0xDC) MAC_ADDRESS(0x0cd95c, 0x120)
 int playerData::numOfGivenArtifact(int whichArtifact) const
 {
     int count = 0;
@@ -1779,7 +1823,8 @@ bool playerData::hasGivenArtifact(int artifact)
     return false;
 }
 
-VA(0x004bad80, 0x1A) MAC_ADDRESS(0x0cdba4, 0x4c)  // dc 0xa6114
+DC_ADDRESS(0x0a6114, 0x2e)
+VA(0x004bad80, 0x1A) MAC_ADDRESS(0x0cdba4, 0x4c)
 bool playerData::isLocalHuman() const
 {
     if (isHuman() && m_isLocal)
@@ -1790,7 +1835,8 @@ bool playerData::isLocalHuman() const
 // Dreamcast game.cpp:1946 and the retained Mac body place this ordinary
 // query after isLocalHuman. Windows retains 35 direct calls to this body;
 // Mac has 55 direct references. Both retained bodies normalize the byte.
-VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)  // dc 0xa6144
+DC_ADDRESS(0x0a6144, 0x3c)
+VA(0x004bada0, 0xC) MAC_ADDRESS(0x0cdbf0, 0x18)
 bool playerData::isHuman() const
 {
     if (m_isHuman)
@@ -1805,7 +1851,8 @@ bool playerData::isHuman() const
 // ==0/!strcmp states yield two reproduced objects: with both ==0 tests the
 // caller is 85.6147%; with the human !strcmp test it is 100%, with no game
 // sibling score changes. Keep this ordinary helper and both isHuman calls.
-VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)  // dc 0xa6180
+DC_ADDRESS(0x0a6180, 0xb0)
+VA(0x004badb0, 0x9C) MAC_ADDRESS(0x0cdc08, 0xd0)
 char* playerData::getName()
 {
     if ((!isHuman() && _strcmpi(m_name, g_generalText->getText(
@@ -1817,14 +1864,16 @@ char* playerData::getName()
     return m_name;
 }
 
-VA(0x004bae50, 0x1B) MAC_ADDRESS(0x0cdcd8, 0x38)  // dc 0xa6230
+DC_ADDRESS(0x0a6230, 0x44)
+VA(0x004bae50, 0x1B) MAC_ADDRESS(0x0cdcd8, 0x38)
 void playerData::guessGrailLocation(long playerId)
 {
     type_point guess = aiAttemptPuzzleGuess(playerId);
     m_puzzleGuess = guess;
 }
 
-VA(0x004bae70, 0x55) MAC_ADDRESS(0x0cdd10, 0x54)  // dc 0xa6274
+DC_ADDRESS(0x0a6274, 0xb4)
+VA(0x004bae70, 0x55) MAC_ADDRESS(0x0cdd10, 0x54)
 int game::mineTypesOwned(int whichPlayer, int mineType)
 {
     int count = 0;
@@ -1836,7 +1885,8 @@ int game::mineTypesOwned(int whichPlayer, int mineType)
     return count;
 }
 
-VA(0x004baed0, 0x2C) MAC_ADDRESS(0x0cdd64, 0x3c)  // dc 0xa6328
+DC_ADDRESS(0x0a6328, 0x28)
+VA(0x004baed0, 0x2C) MAC_ADDRESS(0x0cdd64, 0x3c)
 void computeUALoc(int whichPlayer)
 {
     g_game->m_players[whichPlayer].guessGrailLocation(whichPlayer);
@@ -1875,7 +1925,8 @@ void computeUALoc(int whichPlayer)
 // Further float-lifetime controls: split percentage assignment/division,
 // explicit float casts and a named numerator all remain 98.9637%; a named
 // denominator gives 95.5130% (six states, four emitted objects).
-VA(0x004baf00, 0x25A) MAC_ADDRESS(0x0cdda0, 0x220)  // linkorder, dc 0xa6350
+DC_ADDRESS(0x0a6350, 0x272)
+VA(0x004baf00, 0x25A) MAC_ADDRESS(0x0cdda0, 0x220)  // linkorder
 int game::setupPuzzlePieces(int whichPlayer, int countOnly)
 {
     long piece;
@@ -1933,13 +1984,15 @@ int game::setupPuzzlePieces(int whichPlayer, int countOnly)
     return piecesRemoved;
 }
 
-VA(0x004bb160, 0x7) MAC_ADDRESS(0x0cdfc0, 0xc)  // dc 0xa65c4
+DC_ADDRESS(0x0a65c4, 0xe)
+VA(0x004bb160, 0x7) MAC_ADDRESS(0x0cdfc0, 0xc)
 NewfullMap* game::getWorldMapData()
 {
     return &m_worldMap;
 }
 
-VA(0x004bb170, 0xD6) MAC_ADDRESS(0x0cdfcc, 0xa4)  // dc 0xa65d4
+DC_ADDRESS(0x0a65d4, 0xba)
+VA(0x004bb170, 0xD6) MAC_ADDRESS(0x0cdfcc, 0xa4)
 int game::getNewBoatId()
 {
     unsigned int i;
@@ -1956,7 +2009,8 @@ int game::getNewBoatId()
     return -1;
 }
 
-VA(0x004bb250, 0x1AA) MAC_ADDRESS(0x0ce070, 0x158)  // dc 0xa6690
+DC_ADDRESS(0x0a6690, 0x12c)
+VA(0x004bb250, 0x1AA) MAC_ADDRESS(0x0ce070, 0x158)
 int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove, signed char type)
 {
     int id = getNewBoatId();
@@ -1986,7 +2040,8 @@ int game::createBoat(int x, int y, int z, int owner, unsigned char isRemoteMove,
     return id;
 }
 
-// Original: game::Scan; game.cpp:2158, dc 0xa67bc
+// Original: game::Scan; game.cpp:2158
+DC_ADDRESS(0x0a67bc, 0x94)
 int game::scan(signed char* whichList, int start, int length)
 {
     for (int i = start; i < start + length; ++i) {
@@ -1996,7 +2051,8 @@ int game::scan(signed char* whichList, int start, int length)
     return -1;
 }
 
-// Original: game::RandomScan; game.cpp:2173, dc 0xa6850
+// Original: game::RandomScan; game.cpp:2173
+DC_ADDRESS(0x0a6850, 0x86)
 int game::randomScan(signed char* whichList, int start, int length,
                      signed char scanValue)
 {
@@ -2008,7 +2064,8 @@ int game::randomScan(signed char* whichList, int start, int length,
     return id >= start ? id : -1;
 }
 
-VA(0x004bb400, 0x1DC) MAC_ADDRESS(0x0ce1c8, 0x1d0)  // dc 0xa68d8
+DC_ADDRESS(0x0a68d8, 0x3fc)
+VA(0x004bb400, 0x1DC) MAC_ADDRESS(0x0ce1c8, 0x1d0)
 int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
@@ -2094,7 +2151,8 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // bitset<8>::reference layout stages the pool pointer and index before test;
 // restoring operator[] at both sites raises Mac to 539/1932 (27.90%) while
 // the focused VC6 build stays 98.98% with the same exact CFG and call order.
-VA(0x004bb5e0, 0x282) MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global, dc 0xa6cd4
+DC_ADDRESS(0x0a6cd4, 0x2fe)
+VA(0x004bb5e0, 0x282) MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
 int game::getNewHeroId(int playerPos, THeroClass excluded,
                        unsigned char preferAlignment,
                        THeroClass preferredClass)
@@ -2201,7 +2259,8 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
     return -1;
 }
 
-VA(0x004bb870, 0x89) MAC_ADDRESS(0x0ceb24, 0x5c)  // dc 0xa6fd4
+DC_ADDRESS(0x0a6fd4, 0xa6)
+VA(0x004bb870, 0x89) MAC_ADDRESS(0x0ceb24, 0x5c)
 int game::getTownId(int x, int y, int z)
 {
     for (unsigned i = 0; i < m_towns.size(); i++) {
@@ -2211,7 +2270,8 @@ int game::getTownId(int x, int y, int z)
     return -1;
 }
 
-// Original: game::GetHeroId; game.cpp:2390, dc 0xa707c
+// Original: game::GetHeroId; game.cpp:2390
+DC_ADDRESS(0x0a707c, 0x90)
 int game::getHeroId(type_point heroLocation)
 {
     for (int i = 0; i < HERO_COUNT; ++i) {
@@ -2224,6 +2284,7 @@ int game::getHeroId(type_point heroLocation)
 // Original GetMineId, game.cpp:2405, dc 0xa710c. The ordinary helper
 // scans x/y/z in that order and returns -1 after exhausting the mine pool.
 // Complete expands it in RandomizeEvents's LIGHTHOUSE and MINE arms.
+DC_ADDRESS(0x0a710c, 0xa6)
 MAC_ADDRESS(0x0ceb80, 0x5c)
 int game::getMineId(int x, int y, int z)
 {
@@ -2236,7 +2297,8 @@ int game::getMineId(int x, int y, int z)
     return -1;
 }
 
-VA(0x004bb900, 0x87) MAC_ADDRESS(0x0cebdc, 0x5c)  // dc 0xa71b4
+DC_ADDRESS(0x0a71b4, 0xc2)
+VA(0x004bb900, 0x87) MAC_ADDRESS(0x0cebdc, 0x5c)
 int game::getGeneratorId(int x, int y, int z)
 {
     for (unsigned i = 0; i < m_generators.size(); i++) {
@@ -2247,6 +2309,7 @@ int game::getGeneratorId(int x, int y, int z)
     return -1;
 }
 
+DC_ADDRESS(0x0a7414, 0xf8)
 VA(0x004bb990, 0x1CF) MAC_ADDRESS(0x0cec38, 0x104)
 int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
 {
@@ -2272,7 +2335,8 @@ int __fastcall game::loadString(TAbstractFile* infile, std::string& s)
     return length;
 }
 
-// Original: game::GetGarrisonId; game.cpp:2433, dc 0xa7278
+// Original: game::GetGarrisonId; game.cpp:2433
+DC_ADDRESS(0x0a7278, 0xa6)
 int game::getGarrisonId(int x, int y, int z)
 {
     for (int i = 0; i < m_garrisons.size(); ++i) {
@@ -2283,9 +2347,10 @@ int game::getGarrisonId(int x, int y, int z)
     return -1;
 }
 
-// Original: GenerateStandardFileName; game.cpp:2448, dc 0xa7320
+// Original: GenerateStandardFileName; game.cpp:2448
 // DC retains this ordinary utility without a recorded named caller. Keep its
 // source operation without assigning it a retail address or inventing a use.
+DC_ADDRESS(0x0a7320, 0xf2)
 void generateStandardFileName(char* longName, char* retName)
 {
     char* period = strrchr(longName, '.');
@@ -2316,7 +2381,8 @@ void generateStandardFileName(char* longName, char* retName)
 // Function-entry versus block-owned buffer declarations produce identical
 // game-unit VC6 objects with the canonical endian writer; this lifetime
 // spelling does not explain the retained saveString calls in retail callers.
-VA(0x004bbb60, 0xBB) MAC_ADDRESS(0x0ced3c, 0xf0)  // dc 0xa750c
+DC_ADDRESS(0x0a750c, 0xc2)
+VA(0x004bbb60, 0xBB) MAC_ADDRESS(0x0ced3c, 0xf0)
 int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 {
     HOMM3_RELEASE_VERIFY(outfile != 0);
@@ -2353,7 +2419,8 @@ int __fastcall game::saveString(TAbstractFile* outfile, std::string& s)
 // chain instead rejects string::assign(pointer,length), cb69 at budget67.
 // Direct versus copy string initialization and function-owned buffer locals
 // are object-identical controls; neither explains these compiler decisions.
-VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)  // dc 0xa75d0
+DC_ADDRESS(0x0a75d0, 0x1f8)
+VA(0x004bbc20, 0x21E) MAC_ADDRESS(0x0cee2c, 0x194)
 int game::saveRumours(TAbstractFile* outfile)
 {
     int rumourListSize;
@@ -2387,7 +2454,8 @@ int game::saveRumours(TAbstractFile* outfile)
     return 1;
 }
 
-VA(0x004bbe40, 0x294) MAC_ADDRESS(0x0cefc0, 0x1b8)  // dc 0xa77c8
+DC_ADDRESS(0x0a77c8, 0x192)
+VA(0x004bbe40, 0x294) MAC_ADDRESS(0x0cefc0, 0x1b8)
 int game::loadRumours(TAbstractFile* infile)
 {
     unsigned char value;
@@ -2420,7 +2488,8 @@ int game::loadRumours(TAbstractFile* infile)
 // line table constructs location before the two obscurer pointers and names
 // vector::push_back directly. With that source order, VC6 expands clear and
 // push_back exactly while preserving the hero/boat obscureCell wrappers.
-VA(0x004bcb30, 0x26C) MAC_ADDRESS(0x0d02a8, 0x274)  // sole caller game::Load, dc 0xa8144
+DC_ADDRESS(0x0a8144, 0x28a)
+VA(0x004bcb30, 0x26C) MAC_ADDRESS(0x0d02a8, 0x274)  // sole caller game::Load
 void game::setupShipyards()
 {
     type_point location;
@@ -2471,6 +2540,7 @@ void game::setupShipyards()
 
 // E:\gamedcs\game.cpp:2654. Mac retains this helper at 0xcf178;
 // Windows expands the call from game::save.
+DC_ADDRESS(0x0a795c, 0xc6)
 MAC_ADDRESS(0x0cf178, 0xb0)
 int game::saveBlackMarkets(TAbstractFile* outfile)
 {
@@ -2490,6 +2560,7 @@ int game::saveBlackMarkets(TAbstractFile* outfile)
 // DC calls clear, resize and operator[]. The ordinary helper restores one
 // caller cleanup boundary; its natural expansion needs no inline-depth pin.
 
+DC_ADDRESS(0x0a7a24, 0x98)
 MAC_ADDRESS(0x0cf228, 0xc8)
 int game::loadBlackMarkets(TAbstractFile* infile)
 {
@@ -2519,6 +2590,10 @@ int game::loadBlackMarkets(TAbstractFile* infile)
 // The generic university fill stays an aggregate; its elemental-school
 // initializer belongs only to the Conflux consumers (see type_university).
 template <class T>
+DC_ADDRESS(0x0c184c, 0x80)
+DC_ADDRESS(0x0c19e8, 0x80)
+DC_ADDRESS(0x0c1a68, 0x80)
+DC_ADDRESS(0x0c1ae8, 0x84)
 bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
@@ -2542,6 +2617,10 @@ bool loadVector(TAbstractFile* infile, std::vector<T>& destVector)
 // The point/long writer, resize, size, _Ucopy and _Ufill instances emit
 // identical raw code; retail's folded calls do not require a type adapter.
 template <class T>
+DC_ADDRESS(0x0c18cc, 0x84)
+DC_ADDRESS(0x0c1dd4, 0x84)
+DC_ADDRESS(0x0c1e58, 0x84)
+DC_ADDRESS(0x0c1edc, 0x88)
 bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     int count = srcVector.size();
@@ -2553,12 +2632,14 @@ bool saveVector(TAbstractFile* outfile, std::vector<T>& srcVector)
     return true;
 }
 
-// Original: load_object_vector; game.cpp:2733, dc 0xc1950 / 0xc1b6c.
+// Original: load_object_vector; game.cpp:2733 / 0xc1b6c.
 // Both DC instantiations have the same source rows and reference interface.
 // Raw public YA_N proves bool; the primitive type display uses a byte alias.
 // Complete uses TAbstractFile in place of the DC gz handle; generator calls
 // expand, while the creature-bank instantiation is retained at 0x4d2870.
 template <class T>
+DC_ADDRESS(0x0c1950, 0x98)
+DC_ADDRESS(0x0c1b6c, 0x98)
 bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
 {
     short count;
@@ -2572,10 +2653,12 @@ bool loadObjectVector(TAbstractFile* infile, std::vector<T>& destVector)
     return 1;
 }
 
-// Original: save_object_vector; game.cpp:2754, dc 0xc1d38 / 0xc1f64.
+// Original: save_object_vector; game.cpp:2754 / 0xc1f64.
 // The matching reference writer preserves each record's own save boundary.
 // Both raw public symbols return bool (YA_N), like the record members (QAA_N).
 template <class T>
+DC_ADDRESS(0x0c1d38, 0x9c)
+DC_ADDRESS(0x0c1f64, 0x9c)
 bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 {
     short count = srcVector.size();
@@ -2594,6 +2677,7 @@ bool saveObjectVector(TAbstractFile* outfile, std::vector<T>& srcVector)
 // reward count; DC2783 then delegates the short-count artifact tail to
 // load_vector. Keeping that nested boundary also bounds the ordinary member
 // before VC6 chooses its expansion into loadObjectVector.
+DC_ADDRESS(0x0a7abc, 0xa4)
 MAC_ADDRESS(0x0cf2f0, 0xf0)
 bool type_creature_bank::load(void* input)
 {
@@ -2612,10 +2696,11 @@ bool type_creature_bank::load(void* input)
     return loadVector(infile, m_artifacts);
 }
 
-// Original: type_creature_bank::save; game.cpp:2790, dc 0xa7b60.
+// Original: type_creature_bank::save; game.cpp:2790
 // DC2791..2794 write the four fixed bands without checking each result;
 // DC2795 returns save_vector for the artifact tail. Complete expands this
 // ordinary member in its retained saveObjectVector<type_creature_bank>.
+DC_ADDRESS(0x0a7b60, 0x64)
 MAC_ADDRESS(0x0cf3e0, 0xb0)
 bool type_creature_bank::save(void* output)
 {
@@ -2659,7 +2744,8 @@ void applySavedGameHeader(const SavedGameHeader& saved)
 // Complete places the save-header constructor before its owning game calls.
 // Those calls expand it; the selection TU retains the constructor call.
 // Mac places it before the save-header reset/save/load and game::load cluster.
-// E:\gamedcs\Game.h:1301, dc 0xbceb4
+// E:\gamedcs\Game.h:1301
+DC_ADDRESS(0x0bceb4, 0x4c)
 VA(0x004bc0e0, 0x251) MAC_ADDRESS(0x0cf490, 0x260)
 SavedGameHeader::SavedGameHeader()
 {
@@ -2668,7 +2754,7 @@ SavedGameHeader::SavedGameHeader()
     m_version = 42;
 }
 
-// Original: game::Load; game.cpp:3026, dc 0xa83d0. Complete loads a
+// Original: game::Load; game.cpp:3026 Complete loads a
 // SavedGameHeader value and restores the acting-player and human-player state
 // before the map pools. DC's gzread interface became TAbstractFile::read.
 // Its scalar reads and final map-extra read stage their results through count.
@@ -2681,7 +2767,8 @@ SavedGameHeader::SavedGameHeader()
 // disabled-skill clear and native packed-byte read, game::load matches all
 // 139 retail blocks exactly. No inline-control pragma or release assertion is
 // needed by this model.
-VA(0x004bcda0, 0xEC2) MAC_ADDRESS(0x0d051c, 0x1eac)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
+DC_ADDRESS(0x0a83d0, 0x778)
+VA(0x004bcda0, 0xEC2) MAC_ADDRESS(0x0d051c, 0x1eac)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG'
 int game::load(TAbstractFile* infile)
 {
     SavedGameHeader saved;
@@ -2932,6 +3019,7 @@ int game::load(TAbstractFile* infile)
 // Retained compiler-generated SCampaign memberwise assignment.
 VA_COMPGEN(0x004bdc70, 0x309, IMPLICIT_COPY_ASSIGN, SCampaign)
 
+DC_ADDRESS(0x0a8b48, 0x2a)
 VA(0x004be140, 0x11E) MAC_ADDRESS(0x0d2508, 0x228)
 int SGameSetupOptions::save(TAbstractFile* outfile)
 {
@@ -3010,7 +3098,8 @@ int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
 // entry and removing the remaining availability-guard braces are byte-flat.
 // Keep the canonical helper calls.
 
-VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
+DC_ADDRESS(0x0a8cd0, 0xcfe)
+VA(0x004be3f0, 0xAA5) MAC_ADDRESS(0x0d2954, 0x1ba8)  // SavedGameHeader + write/pool callee sequence
 int game::save(TAbstractFile* outfile)
 {
     char byteValue;
@@ -3221,8 +3310,9 @@ int game::save(TAbstractFile* outfile)
 // Complete retains calls to these ordinary members in game::save.
 // Dreamcast attributes their older definitions to Game.h; the Mac
 // build also retains both calls.
-// E:\gamedcs\Game.h:1312, dc 0xbcf00
-VA(0x004bc350, 0x271) MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout, dc 0xbcf00
+// E:\gamedcs\Game.h:1312
+DC_ADDRESS(0x0bcf00, 0x6c)
+VA(0x004bc350, 0x271) MAC_ADDRESS(0x0cf6f0, 0x330)  // anchor-caller (game::Save) + layout
 void SavedGameHeader::reset()
 {
     if (g_inCampaign)
@@ -3252,7 +3342,8 @@ void SavedGameHeader::reset()
 
 // Complete serializes the expanded snapshot through its abstract stream.
 // Mac stages each scalar separately before its stream write.
-// E:\gamedcs\Game.h:1325, dc 0xbcf6c
+// E:\gamedcs\Game.h:1325
+DC_ADDRESS(0x0bcf6c, 0x78)
 VA(0x004bc5d0, 0x17A) MAC_ADDRESS(0x0cfa20, 0x214)  // anchor-layout + game::Save caller
 int SavedGameHeader::save(TAbstractFile* outfile)
 {
@@ -3290,7 +3381,8 @@ int SavedGameHeader::save(TAbstractFile* outfile)
 }
 
 
-VA(0x004beea0, 0x2F6) MAC_ADDRESS(0x0d44fc, 0x2e8)  // dc 0xa99d0
+DC_ADDRESS(0x0a99d0, 0x4b8)
+VA(0x004beea0, 0x2F6) MAC_ADDRESS(0x0d44fc, 0x2e8)
 unsigned char game::saveGame(const char* filename, unsigned char determineSuffix, unsigned char campaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
     char nameNoExtension[351] = {0};
@@ -3363,6 +3455,7 @@ unsigned char game::saveGame(const char* filename, unsigned char determineSuffix
     }
 }
 
+DC_ADDRESS(0x0a9e88, 0x246)
 VA(0x004bf1a0, 0x183) MAC_ADDRESS(0x0d47e4, 0x3fc)
 void game::setupOrigData()
 {
@@ -3414,6 +3507,7 @@ void game::setupOrigData()
     MEMSET(m_cartographerFlags, 0, sizeof(m_cartographerFlags), i);
 }
 
+DC_ADDRESS(0x0aa0d0, 0x31e)
 VA(0x004bf330, 0x23B) MAC_ADDRESS(0x0d4be0, 0x14c)
 int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 {
@@ -3462,6 +3556,7 @@ int game::loadGame(const char* filename, int isOrigData, int isQuickLoad)
 // getArmy call. Keep that reference and all army helper calls. Both builds
 // subscript m_towns directly: getTown's sentinel guard is absent from
 // retail (96.75% -> 99.91%, Mac 23.78% -> 50.00%).
+DC_ADDRESS(0x0aa3f0, 0x308)
 VA(0x004bf570, 0x203) MAC_ADDRESS(0x0d4d2c, 0x2d4)
 void game::giveTroopsToNeutralTown(int townId)
 {
@@ -3527,7 +3622,8 @@ void game::giveTroopsToNeutralTown(int townId)
     }
 }
 
-// Original: game::GiveTroopsToNeutralTowns; game.cpp:4029, dc 0xaa6f8
+// Original: game::GiveTroopsToNeutralTowns; game.cpp:4029
+DC_ADDRESS(0x0aa6f8, 0xe8)
 MAC_ADDRESS(0x0d5000, 0x13c)
 void game::giveTroopsToNeutralTowns()
 {
@@ -3560,7 +3656,8 @@ void game::giveTroopsToNeutralTowns()
 // return for valid ownership. This removes both remaining joins at 90.0315%
 // with the full contribution and all relocation names/addends unchanged.
 // The earlier failure scopes used break and do not predict this lowering.
-VA(0x004bf780, 0x6E2) MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity, dc 0xaa7e0
+DC_ADDRESS(0x0aa7e0, 0x5c4)
+VA(0x004bf780, 0x6E2) MAC_ADDRESS(0x0d513c, 0x960)  // order-map + whole-function identity
 void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 {
     signed char victoryType = m_mapHeader.m_victoryCondition.m_type;
@@ -3708,7 +3805,8 @@ void game::validateVictoryLossConditions(unsigned char checkMapLocations)
 // DC hasHero is an unsigned byte. Mac retains separate resource-bonus
 // arms in town enumeration order; restoring that order gives VC6 EXACT.
 // The Mac comparison remains nonexact, with all helper paths retained.
-VA(0x004bfe70, 0x6A8) MAC_ADDRESS(0x0d5a9c, 0x8b4)  // dc 0xaada4
+DC_ADDRESS(0x0aada4, 0xb2a)
+VA(0x004bfe70, 0x6A8) MAC_ADDRESS(0x0d5a9c, 0x8b4)
 void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                   TCampaignBrief::ScenarioStruct* campaignContext, int gameVersion)
 {
@@ -3954,10 +4052,11 @@ unsigned char game::newMap(const char* mapPath, const char* mapName,
     }
 }
 
-// Original: SetupFirstPlayer; game.cpp:4474, dc 0xab8d0.
+// Original: SetupFirstPlayer; game.cpp:4474
 // Complete makes this a game member: 0x4c0632 saves incoming ECX and
 // indexes the player array through that receiver throughout the body.
-VA(0x004c0630, 0xB1) MAC_ADDRESS(0x0d6410, 0xbc)  // dc 0xab8d0
+DC_ADDRESS(0x0ab8d0, 0x9a)
+VA(0x004c0630, 0xB1) MAC_ADDRESS(0x0d6410, 0xbc)
 void game::setupFirstPlayer()
 {
     // DC locals: startingPos, localPlayer. The calls at dc 0xab8f8 and
@@ -3984,6 +4083,7 @@ void game::setupFirstPlayer()
 }
 // E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
 // and spell stores fold away, leaving only the randomized primary lane.
+DC_ADDRESS(0x0ab96c, 0x66)
 MAC_ADDRESS(0x0d64cc, 0xb4)
 static void randomizeScholar(NewmapCell* cell)
 {
@@ -3999,7 +4099,8 @@ static void randomizeScholar(NewmapCell* cell)
 
 // Complete's ARTIFACT arm at 0x4c0cc0 retains the customization test,
 // Random call and low-nibble clear; the DC guarded-artifact machinery is absent.
-// E:\gamedcs\game.cpp:4524, dc 0xab9d4
+// E:\gamedcs\game.cpp:4524
+DC_ADDRESS(0x0ab9d4, 0x2c8)
 MAC_ADDRESS(0x0d6580, 0x50)
 static void randomizeArtifact(NewmapCell* cell)
 {
@@ -4021,6 +4122,7 @@ static void randomizeRefugeeCamp(NewmapCell* cell)
 }
 
 // E:\gamedcs\game.cpp:4613.
+DC_ADDRESS(0x0abc9c, 0xb0)
 MAC_ADDRESS(0x0d662c, 0x9c)
 static void randomizeSeaChest(NewmapCell* cell)
 {
@@ -4040,6 +4142,7 @@ static void randomizeSeaChest(NewmapCell* cell)
 
 // Mac 0:d66f8 calls the retained level overload at 0:e07f4. Its three
 // randomizeEvents callers pass levels 1, 2 and 3 at d7f60/d7f70/d7f80.
+DC_ADDRESS(0x0abd4c, 0x5c)
 MAC_ADDRESS(0x0d66c8, 0x64)
 static void randomizeShrine(NewmapCell* cell, const int level)
 {
@@ -4053,8 +4156,9 @@ static void randomizeShrine(NewmapCell* cell, const int level)
     info->clearVisitedBits();
 }
 
-// E:\gamedcs\game.cpp:4654, dc 0xabda8
+// E:\gamedcs\game.cpp:4654
 // RandomizeEvents expands this ordinary static helper.
+DC_ADDRESS(0x0abda8, 0x86)
 MAC_ADDRESS(0x0d672c, 0x118)
 static void randomizeWagon(NewmapCell* cell)
 {
@@ -4073,7 +4177,8 @@ static void randomizeWagon(NewmapCell* cell)
 
 // DC 4682..4684 writes the id, clears visit bits, then draws the price.
 // Complete's TREE_OF_KNOWLEDGE arm preserves those same packed lanes.
-// E:\gamedcs\game.cpp:4681, dc 0xabe30
+// E:\gamedcs\game.cpp:4681
+DC_ADDRESS(0x0abe30, 0x5e)
 MAC_ADDRESS(0x0d6844, 0x60)
 static void randomizeWiseTree(short id, NewmapCell* cell)
 {
@@ -4084,6 +4189,7 @@ static void randomizeWiseTree(short id, NewmapCell* cell)
 }
 
 // E:\gamedcs\game.cpp:4691.
+DC_ADDRESS(0x0abe90, 0xe6)
 MAC_ADDRESS(0x0d68a4, 0xe8)
 static void randomizeTreasure(NewmapCell* cell)
 {
@@ -4106,7 +4212,8 @@ static void randomizeTreasure(NewmapCell* cell)
 
 // CodeView names separate i/level locals and the set_tomb boundary. Retail
 // 0x4c1b01 reloads gpGame for the artifact draw and expands the packed setter.
-// E:\gamedcs\game.cpp:4724, dc 0xabf78
+// E:\gamedcs\game.cpp:4724
+DC_ADDRESS(0x0abf78, 0x6e)
 MAC_ADDRESS(0x0d698c, 0xa0)
 static void randomizeTomb(NewmapCell* cell)
 {
@@ -4130,6 +4237,7 @@ static void randomizeTomb(NewmapCell* cell)
 // Ownership probe: the MapCell.h body at 0x4c2330 is currently fully
 // expanded here. Replacing this helper's forced-inline spelling with ordinary static
 // did not recover the retained call; the fatal header-emission gate remains.
+DC_ADDRESS(0x0abfe8, 0x60)
 MAC_ADDRESS(0x0d6a2c, 0x118)
 static void randomizePyramid(NewmapCell* cell)
 {
@@ -4175,7 +4283,8 @@ static void randomizePyramid(NewmapCell* cell)
 // declaration/initialization orders, and pre/post-reset induction ordering.
 // The direct count-in-loop spelling duplicates the popcount loop and falls to
 // 87.05.
-VA(0x004c06f0, 0x179) MAC_ADDRESS(0x0d6b44, 0x13c)  // dc-order + member receiver, dc 0xac048
+DC_ADDRESS(0x0ac048, 0x11e)
+VA(0x004c06f0, 0x179) MAC_ADDRESS(0x0d6b44, 0x13c)  // dc-order + member receiver
 void game::randomizeUniversity(NewmapCell* cell)
 {
     type_university university;
@@ -4224,6 +4333,7 @@ void game::randomizeUniversity(NewmapCell* cell)
 // Complete's mask filtering; retail's proxy-call sequence selects operator[].
 // Mac d6d98..d6dd4 expands setWitchSkill separately in the selected-skill
 // and no-available-skill branches. Keep both source calls at those boundaries.
+DC_ADDRESS(0x0ac168, 0x3a)
 MAC_ADDRESS(0x0d6c80, 0x16c)
 static void randomizeWitchHut(NewmapCell* cell)
 {
@@ -4255,7 +4365,8 @@ static void randomizeWitchHut(NewmapCell* cell)
     }
 }
 
-VA(0x004c0870, 0x22A) MAC_ADDRESS(0x0d6dec, 0x270)  // dc 0xac1a4
+DC_ADDRESS(0x0ac1a4, 0x2ee)
+VA(0x004c0870, 0x22A) MAC_ADDRESS(0x0d6dec, 0x270)
 void game::randomizeHolyGrail()
 {
     if (m_ultimateRadius == 0 && m_ultimateArtifactX != -1) {
@@ -4319,7 +4430,8 @@ void game::randomizeHolyGrail()
     }
 }
 
-VA(0x004c0aa0, 0xBE) MAC_ADDRESS(0x0d705c, 0x104)  // dc 0xac494
+DC_ADDRESS(0x0ac494, 0x1a6)
+VA(0x004c0aa0, 0xBE) MAC_ADDRESS(0x0d705c, 0x104)
 void game::initRandomArtifacts()
 {
     std::copy(m_artifactDisabled,
@@ -4351,7 +4463,8 @@ void game::initRandomArtifacts()
 // non-exact (23.28%). Windows VC6 matches all 0x160 retail bytes when the z
 // equality names exitPoint first and the squared y term precedes squared x.
 // E:\\gamedcs\\game.cpp:4950
-VA(0x004c0b60, 0x160) MAC_ADDRESS(0x0d7160, 0x180)  // dc-order + NewMap caller, dc 0xac63c
+DC_ADDRESS(0x0ac63c, 0x2d4)
+VA(0x004c0b60, 0x160) MAC_ADDRESS(0x0d7160, 0x180)  // dc-order + NewMap caller
 void game::matchUndergroundGates()
 {
     long distance;
@@ -4466,7 +4579,8 @@ void game::matchUndergroundGates()
 // and claim sites; all canonical helper calls remain intact. Mac 0xd7dfc
 // calls randomizeRefugeeCamp, so the refugee-camp arm uses that shared helper
 // (80.00%; 84.79% with its body written in place).
-VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
+DC_ADDRESS(0x0ac910, 0x1278)
+VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
 void game::randomizeEvents()
 {
     unsigned long numLithTwoWay = 0;
@@ -4999,6 +5113,7 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // Explicit result(0) gives 80.4993% but lowers the campaign reader; direct wide
 // assignment gives 67.4290%. The legacy source dereference still stays called
 // where retail expands it. No inline controls are needed for these readers.
+DC_ADDRESS(0x0adb88, 0x3b0)
 VA(0x004c2450, 0x88E) MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
 bool game::loadMap(TAbstractFile* mapFile)
 {
@@ -5219,6 +5334,7 @@ void game::readMapHeroSetups(TAbstractFile* mapFile, int mapVersion)
     }
 }
 
+DC_ADDRESS(0x0adf38, 0x67a)
 VA(0x004c3200, 0x398) MAC_ADDRESS(0x0d9320, 0x588)
 int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 {
@@ -5386,6 +5502,7 @@ int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
 // writes reuse char storage at sp+0x53 and integer storage at sp+0x54;
 // unchecked writes have separate temporaries. Preserve those two lifetimes
 // through the canonical scalar helpers; Windows reproduces exactly.
+DC_ADDRESS(0x0ae5b4, 0x5ae)
 VA(0x004c35a0, 0x2E8) MAC_ADDRESS(0x0d98a8, 0x4cc)
 int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 {
@@ -5515,7 +5632,8 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
 // shared char storage at sp+0x81 for checked bytes, and int storage at sp+0x84
 // for checked little-endian amounts. Keep these lifetimes through the scalar
 // helpers; the combined source model reproduces Windows exactly.
-VA(0x004c3890, 0x3E4) MAC_ADDRESS(0x0d9d74, 0x500)  // sole Load caller + retail body; dc 0xaeb64
+DC_ADDRESS(0x0aeb64, 0x5b4)
+VA(0x004c3890, 0x3E4) MAC_ADDRESS(0x0d9d74, 0x500)  // sole Load caller + retail body;
 int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
                                         int saveVersion)
 {
@@ -5635,6 +5753,7 @@ int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
     return 0;
 }
 
+DC_ADDRESS(0x0af118, 0x19c)
 VA(0x004c3c80, 0x10B) MAC_ADDRESS(0x0da274, 0x16c)
 int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 {
@@ -5671,6 +5790,7 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
 
 // Mac retains the time-limit short-write check; the caller ignores this
 // helper's result, so Windows can discard that check when expanding it.
+DC_ADDRESS(0x0af2b4, 0x1d4)
 MAC_ADDRESS(0x0da3e0, 0x138)
 int NewSMapHeader::saveLossCondition(char type, TAbstractFile* outfile)
 {
@@ -5695,7 +5815,8 @@ int NewSMapHeader::saveLossCondition(char type, TAbstractFile* outfile)
 }
 
 // Complete adds saveVersion; every retained return pops three arguments.
-VA(0x004c3d90, 0x15E) MAC_ADDRESS(0x0da518, 0x19c)  // DC loadLossCondition + sole Load caller + ret 0xc, dc 0xaf488
+DC_ADDRESS(0x0af488, 0x1c4)
+VA(0x004c3d90, 0x15E) MAC_ADDRESS(0x0da518, 0x19c)  // DC loadLossCondition + sole Load caller + ret 0xc
 int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
                                      int saveVersion)
 {
@@ -5867,7 +5988,8 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
 // Restoring count at the two readString calls is byte-score flat (95.2598%);
 // combining it with all ten stream reads remains 79.0894%. The string-result
 // source facts are retained independently of that unresolved stream mapping.
-VA(0x004c4390, 0x92E) MAC_ADDRESS(0x0dab84, 0xa60)  // DC Read + LoadMap/Get callers + stream order, dc 0xaf64c
+DC_ADDRESS(0x0af64c, 0xb3a)
+VA(0x004c4390, 0x92E) MAC_ADDRESS(0x0dab84, 0xa60)  // DC Read + LoadMap/Get callers + stream order
 int NewSMapHeader::read(TAbstractFile* infile, int campaignMap)
 {
     char padding[g_mapHeaderPaddingSize];
@@ -6116,6 +6238,7 @@ void game::applyMapHeaderAvailability()
 // alignment and name length as owned values, which keep writeValue; the
 // setup key and portrait reuse enumBuffer like the other enum writes
 // (95.51%; writeValue<char> for those two gives 78.12%).
+DC_ADDRESS(0x0b0188, 0x5cc)
 VA(0x004c4f10, 0x71D) MAC_ADDRESS(0x0db804, 0x6f0)  // game::Save caller + DC identity + stream-write order
 int NewSMapHeader::save(TAbstractFile* outfile)
 {
@@ -6277,7 +6400,8 @@ int NewSMapHeader::save(TAbstractFile* outfile)
 // reader from 90.8783% to 90.13% (84 to 83 exact CFG blocks); retail's
 // retained bitset<8>::_Xran call still does not appear. Keep the proxy form.
 
-VA(0x004c5630, 0x7CD) MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges, dc 0xb0754
+DC_ADDRESS(0x0b0754, 0x752)
+VA(0x004c5630, 0x7CD) MAC_ADDRESS(0x0dbef4, 0x8b8)  // DC Load + saved-header callers + helper edges
 int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 {
     char enumBuffer;
@@ -6453,7 +6577,8 @@ int NewSMapHeader::load(TAbstractFile* infile, int saveVersion)
 }
 
 // The retained ret 0xc independently fixes the three explicit PC arguments.
-VA(0x004c5e00, 0x210) MAC_ADDRESS(0x0dc7ac, 0xcc)  // DC Get + five PC callers + TGzFile/Read edges, dc 0xb0ea8
+DC_ADDRESS(0x0b0ea8, 0x266)
+VA(0x004c5e00, 0x210) MAC_ADDRESS(0x0dc7ac, 0xcc)  // DC Get + five PC callers + TGzFile/Read edges
 int NewSMapHeader::get(const char* path, const char* filename,
                        int campaignMap)
 {
@@ -6479,7 +6604,8 @@ int NewSMapHeader::get(const char* path, const char* filename,
 // DC names size/count/instr. Declaration-order and entry-vs-arm pointer
 // lifetime controls keep this body exact and read() at 59.53%; those scopes
 // do not explain VC6 expanding the two readString calls in that caller.
-VA(0x004c6010, 0x1CE) MAC_ADDRESS(0x0dc878, 0x114)  // dc 0xb1110
+DC_ADDRESS(0x0b1110, 0x11e)
+VA(0x004c6010, 0x1CE) MAC_ADDRESS(0x0dc878, 0x114)
 int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 {
     int count;
@@ -6507,7 +6633,8 @@ int __fastcall NewSMapHeader::readString(TAbstractFile* infile, std::string& s)
 // DC game.cpp:7290 subscripts m_towns and 7317 names IsComputerTeam followed
 // by IsHumanTeam on GetTeam results; that spelling is exact (the getTown and
 // isHumanAlly wrappers score 76.05%).
-VA(0x004c61e0, 0x4A8) MAC_ADDRESS(0x0dc98c, 0x3dc)  // dc 0xb1230
+DC_ADDRESS(0x0b1230, 0x518)
+VA(0x004c61e0, 0x4A8) MAC_ADDRESS(0x0dc98c, 0x3dc)
 void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove, unsigned char checkEndGame)
 {
     town* thisTown = &m_towns[townId];
@@ -6576,7 +6703,8 @@ void game::claimTown(int townId, int newPlayerOwner, unsigned char isRemoteMove,
     }
 }
 
-VA(0x004c66e0, 0xCB) MAC_ADDRESS(0x0dcd68, 0x10c)  // dc 0xb1748
+DC_ADDRESS(0x0b1748, 0xde)
+VA(0x004c66e0, 0xCB) MAC_ADDRESS(0x0dcd68, 0x10c)
 void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType)
 {
     mine& currentMine = m_mines[mineId];
@@ -6595,7 +6723,8 @@ void game::claimMine(int mineId, int newPlayerOwner, type_action_type actionType
         checkEndGame(0);
 }
 
-VA(0x004c67b0, 0x1A4) MAC_ADDRESS(0x0dce74, 0x11c)  // dc 0xb1828
+DC_ADDRESS(0x0b1828, 0x15e)
+VA(0x004c67b0, 0x1A4) MAC_ADDRESS(0x0dce74, 0x11c)
 void game::claimGenerator(int generatorId, int newPlayerOwner)
 {
     generator& currentGenerator = m_generators[generatorId];
@@ -6613,7 +6742,8 @@ void game::claimGenerator(int generatorId, int newPlayerOwner)
         checkEndGame(0);
 }
 
-VA(0x004c6960, 0xC9) MAC_ADDRESS(0x0dcf90, 0xfc)  // dc 0xb1988
+DC_ADDRESS(0x0b1988, 0xc8)
+VA(0x004c6960, 0xC9) MAC_ADDRESS(0x0dcf90, 0xfc)
 void game::claimGarrison(int garrisonId, int newPlayerOwner)
 {
     garrison& currentGarrison = m_garrisons[garrisonId];
@@ -6641,7 +6771,8 @@ void game::claimGarrison(int garrisonId, int newPlayerOwner)
 // the structural residual unchanged (25/29 blocks, same five call sites; the
 // vector insert target is the native folded point/pointer alias). Preserve
 // operator== rather than the historical flattened comparison.
-VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)  // dc 0xb1a50
+DC_ADDRESS(0x0b1a50, 0x23c)
+VA(0x004c6a30, 0x21F) MAC_ADDRESS(0x0dd08c, 0x298)
 void game::claimShipyard(type_point location, int newPlayerOwner)
 {
     // Original DC locals: cell, this_hero, current_player, i.
@@ -6686,7 +6817,8 @@ void game::claimShipyard(type_point location, int newPlayerOwner)
     }
 }
 
-VA(0x004c6c50, 0x2EB) MAC_ADDRESS(0x0dd324, 0x3e8)  // dc 0xb1c8c
+DC_ADDRESS(0x0b1c8c, 0x28e)
+VA(0x004c6c50, 0x2EB) MAC_ADDRESS(0x0dd324, 0x3e8)
 void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                     const town* thisTown, int x, int y,
                     unsigned char showDismiss, unsigned char isQuickView)
@@ -6764,6 +6896,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
 
 // Original GetRandomNumTroops, game.cpp:7572, dc 0xb1f1c. Ordinary
 // member expanded in RandomizeEvents; no retained retail row is known.
+DC_ADDRESS(0x0b1f1c, 0x42)
 MAC_ADDRESS(0x0dd70c, 0x38)
 int game::getRandomNumTroops(int whichMon)
 {
@@ -6772,7 +6905,8 @@ int game::getRandomNumTroops(int whichMon)
 }
 
 
-VA(0x004c6f40, 0x3F) MAC_ADDRESS(0x0dd744, 0x54)  // dc 0xb1f60
+DC_ADDRESS(0x0b1f60, 0x44)
+VA(0x004c6f40, 0x3F) MAC_ADDRESS(0x0dd744, 0x54)
 void startAITheme()
 {
     char name[40];
@@ -6782,14 +6916,16 @@ void startAITheme()
     g_soundManager->startMP3(name, 0, 1);
 }
 
-VA(0x004c6f80, 0x4F) MAC_ADDRESS(0x0dd798, 0x30)  // dc 0xb1fa4
+DC_ADDRESS(0x0b1fa4, 0x1c)
+VA(0x004c6f80, 0x4F) MAC_ADDRESS(0x0dd798, 0x30)
 void game::turnOnAIMusic()
 {
     startAITheme();
     g_soundManager->m_playSounds = 0;
 }
 
-VA(0x004c6fd0, 0x10) MAC_ADDRESS(0x0dd7c8, 0x14)  // dc 0xb1fc0
+DC_ADDRESS(0x0b1fc0, 0x10)
+VA(0x004c6fd0, 0x10) MAC_ADDRESS(0x0dd7c8, 0x14)
 void game::turnOffAIMusic()
 {
     g_soundManager->m_playSounds = 1;
@@ -6822,7 +6958,8 @@ void game::turnOffAIMusic()
 // before the watch player. Together these recover Windows 89.3660 -> 99.9789
 // with all 114 CFG blocks and 167 relocations agreeing; byte scratch homes
 // remain different. All game sibling CUR and available Mac scores are flat.
-VA(0x004c6fe0, 0x947) MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
+DC_ADDRESS(0x0b1fd0, 0xb04)
+VA(0x004c6fe0, 0x947) MAC_ADDRESS(0x0dd7dc, 0x89c)  // dc-name/order + retail caller/callee/body
 void game::nextPlayer()
 {
     int toWho;
@@ -7014,7 +7151,8 @@ void game::nextPlayer()
         g_advManager->forceNewHover();
 }
 
-// Original: game::clear_recruits; game.cpp:8266, dc 0xb3d8c
+// Original: game::clear_recruits; game.cpp:8266
+DC_ADDRESS(0x0b3d8c, 0x74)
 MAC_ADDRESS(0x0deefc, 0x9c)
 void game::clearRecruits(int* recruits)
 {
@@ -7030,7 +7168,8 @@ void game::clearRecruits(int* recruits)
     }
 }
 
-// Original: get_new_hero; game.cpp:8290, dc 0xb3e00
+// Original: get_new_hero; game.cpp:8290
+DC_ADDRESS(0x0b3e00, 0x5e)
 MAC_ADDRESS(0x0def98, 0x114)
 int getNewHero(THeroClass heroClass)
 {
@@ -7043,7 +7182,8 @@ int getNewHero(THeroClass heroClass)
     return heroId;
 }
 
-VA(0x004c7930, 0x266) MAC_ADDRESS(0x0de078, 0x308)  // dc 0xb2ad4
+DC_ADDRESS(0x0b2ad4, 0x55c)
+VA(0x004c7930, 0x266) MAC_ADDRESS(0x0de078, 0x308)
 int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 {
     const playerData& p = m_players[whichPlayer];
@@ -7094,7 +7234,8 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 // The public's _N return and retail's direct AL load also require a bool
 // result local: unsigned char adds a normalization at the return. DC lowers
 // both source bool and unsigned char to T_UCHAR, so that record cannot decide.
-VA(0x004c7ba0, 0xAC) MAC_ADDRESS(0x0de380, 0xb8)  // dc 0xb3030
+DC_ADDRESS(0x0b3030, 0x14c)
+VA(0x004c7ba0, 0xAC) MAC_ADDRESS(0x0de380, 0xb8)
 bool game::growCoverOfDarkness()
 {
     bool changed = false;
@@ -7110,7 +7251,8 @@ bool game::growCoverOfDarkness()
     return changed;
 }
 
-VA(0x004c7c50, 0x389) MAC_ADDRESS(0x0de438, 0x3e0)  // dc 0xb317c
+DC_ADDRESS(0x0b317c, 0x6da)
+VA(0x004c7c50, 0x389) MAC_ADDRESS(0x0de438, 0x3e0)
 void game::resetAllPlayerVisibility()
 {
     int i;
@@ -7192,7 +7334,8 @@ void game::resetAllPlayerVisibility()
 // encode only a 0xe0 target versus 0xd0 candidate frame and the consequent
 // scratch-slot displacements; DC's typed array/reference locals and town_id
 // have been restored without changing that frame.
-VA(0x004c7fe0, 0x462) MAC_ADDRESS(0x0de818, 0x6e4)  // dc 0xb3858
+DC_ADDRESS(0x0b3858, 0x532)
+VA(0x004c7fe0, 0x462) MAC_ADDRESS(0x0de818, 0x6e4)
 // DC game.cpp:8094..8254 records hero/array references and a long town_id.
 // is_human_ally takes the owner/player, then expands GetTeam and calls
 // IsHumanTeam. The previous team-taking duplicate lost that source boundary.
@@ -7301,13 +7444,14 @@ void game::perDay()
     m_grailAsked = 0;
 }
 
-// Original: game::set_weekly_recruits; game.cpp:8308, dc 0xb3e60
+// Original: game::set_weekly_recruits; game.cpp:8308
 // Complete passes a player index instead of the older recruits/align pair.
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
 // this body; DC's nullary set_recruits is the surrounding all-player operation.
 // Mac 0xdf0ac initializes the local artifact's id before its extra field.
 // The TArtifact constructor preserves that order in VC6; the default
 // constructor reverses the two stores in this caller.
+DC_ADDRESS(0x0b3e60, 0x1ee)
 VA(0x004c8450, 0x248) MAC_ADDRESS(0x0df0ac, 0x238)
 void game::setWeeklyRecruits(int playerPos)
 {
@@ -7380,10 +7524,11 @@ void game::replaceRecruit(int playerPos, long recruitSlot)
     }
 }
 
-// Original: game::set_recruits; game.cpp:8373, dc 0xb40f4
+// Original: game::set_recruits; game.cpp:8373
 // Complete's NewMap and PerWeek both expand these two eight-player passes.
 // The DC neutral recruit pair (receiver+0xe188) and its extra clear/fill calls
 // disappeared from the desktop game layout and both retail expansions.
+DC_ADDRESS(0x0b40f4, 0xea)
 MAC_ADDRESS(0x0df448, 0x90)
 void game::setRecruits()
 {
@@ -7424,7 +7569,8 @@ void game::setRecruits()
 // local. The MONSTER arm's own four-byte split (retail consumes the loaded
 // m_extraInfo in place and reloads it for the preserved lanes, ours copies it)
 // rides on the same allocator phase.
-VA(0x004c8780, 0x7B7) MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
+DC_ADDRESS(0x0b41e0, 0x5d8)
+VA(0x004c8780, 0x7B7) MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
 void game::perWeek()
 {
     hero* obscuringHero;
@@ -7621,7 +7767,8 @@ void game::perWeek()
     setSummoningGenerators();
 }
 
-VA(0x004c8f40, 0x378) MAC_ADDRESS(0x0dfb94, 0x340)  // dc 0xb47b8
+DC_ADDRESS(0x0b47b8, 0x39e)
+VA(0x004c8f40, 0x378) MAC_ADDRESS(0x0dfb94, 0x340)
 void game::perMonth()
 {
     const int numcreaturemonthcreatures = 14;
@@ -7737,7 +7884,8 @@ void game::perMonth()
 // Keep the canonical iterator and fill helpers. Windows currently retains
 // two extra inequality calls and one extra subscript call (84.75%); the
 // Complete range has no direct statement counterpart in the older DC body.
-VA(0x004c92c0, 0x202) MAC_ADDRESS(0x0dfed4, 0x398)  // anchor-global, dc 0xb4b58
+DC_ADDRESS(0x0b4b58, 0x12a)
+VA(0x004c92c0, 0x202) MAC_ADDRESS(0x0dfed4, 0x398)  // anchor-global
 TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
 {
     int i;
@@ -7794,7 +7942,8 @@ TCreatureType game::getRandomMonster(int minLevel, int maxLevel)
     return TCreatureType(x);
 }
 
-VA(0x004c94d0, 0xCD) MAC_ADDRESS(0x0e0278, 0x398)  // dc 0xb4c84
+DC_ADDRESS(0x0b4c84, 0x180)
+VA(0x004c94d0, 0xCD) MAC_ADDRESS(0x0e0278, 0x398)
 TArtifact game::getRandomArtifactId(int artifactClass)
 {
     int unallocatedInClass;
@@ -7844,7 +7993,8 @@ TArtifact game::getRandomArtifactId(int artifactClass)
     }
 }
 
-VA(0x004c95a0, 0x18E) MAC_ADDRESS(0x0e0610, 0x1e4)  // dc 0xb4e04
+DC_ADDRESS(0x0b4e04, 0x19c)
+VA(0x004c95a0, 0x18E) MAC_ADDRESS(0x0e0610, 0x1e4)
 SpellID game::getRandomSpell(const std::bitset<5> spellLevels)
 {
     int availableCount = 0;
@@ -7897,7 +8047,7 @@ SpellID game::getRandomSpell(int level)
     return getRandomSpell(spellLevels);
 }
 
-// Original: game::RandomizeHeroPool; game.cpp:8896, dc 0xb4fa0
+// Original: game::RandomizeHeroPool; game.cpp:8896
 // NewMap expands this loop in retail, including Complete's enlarged roster
 // and separate last-Wisdom/last-magic-school tracking bytes.
 // Mac newMap calls the retained body at code0+0xe085c. Its four ordered calls
@@ -7906,6 +8056,7 @@ SpellID game::getRandomSpell(int level)
 // the current Mac declaration places the hero fields 0x20 bytes later.
 // Keeping the index at function scope also makes VC6 expand this ordinary
 // helper in newMap while retaining its nested calls, matching Windows retail.
+DC_ADDRESS(0x0b4fa0, 0xf4)
 MAC_ADDRESS(0x0e085c, 0xb4)
 void game::randomizeHeroPool()
 {
@@ -7927,7 +8078,8 @@ void game::randomizeHeroPool()
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
 // type_artifact constructor builds both war-machine artifacts.
-VA(0x004c9730, 0x159) MAC_ADDRESS(0x0e0910, 0x1c4)  // dc 0xb5094
+DC_ADDRESS(0x0b5094, 0x268)
+VA(0x004c9730, 0x159) MAC_ADDRESS(0x0e0910, 0x1c4)
 void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
 {
     armyGroup* currentArmy = &m_heroes[hero].m_army;
@@ -7977,7 +8129,8 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     }
 }
 
-VA(0x004c9890, 0xFD) MAC_ADDRESS(0x0e0ad4, 0x114)  // dc 0xb52fc
+DC_ADDRESS(0x0b52fc, 0x1fc)
+VA(0x004c9890, 0xFD) MAC_ADDRESS(0x0e0ad4, 0x114)
 void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m_extraInfo)
 {
     if (objType == RANDOM_MONSTER)
@@ -8037,7 +8190,8 @@ void game::insertObject(int x, int y, int z, int objType, int objectIndex, int m
 // every measured consumer. SH4 cannot settle an x86 SIB operand-order choice.
 // A named m_objectTypes reference across push_back/back/size lowered the Mac
 // match from 15.9672% to 15.1460%; the direct member uses were restored.
-VA(0x004c9990, 0x43A) MAC_ADDRESS(0x0e0be8, 0x448)  // anchor-global, dc 0xb54f8
+DC_ADDRESS(0x0b54f8, 0x416)
+VA(0x004c9990, 0x43A) MAC_ADDRESS(0x0e0be8, 0x448)  // anchor-global
 void game::convertObject(NewmapCell* tempCell)
 {
     char tempText[100];
@@ -8116,7 +8270,8 @@ void game::convertObject(NewmapCell* tempCell)
 // The artifact arguments are artraits.txt class bits: 2 treasure,
 // 4 minor, 8 major, 16 relic, and RANDOM_ARTIFACT's 14 is
 // treasure|minor|major, i.e. every class except relics.
-VA(0x004c9dd0, 0x270) MAC_ADDRESS(0x0e1030, 0x3c0)  // dc 0xb5910
+DC_ADDRESS(0x0b5910, 0x3ca)
+VA(0x004c9dd0, 0x270) MAC_ADDRESS(0x0e1030, 0x3c0)
 void game::processRandomObjects()
 {
     int y, z, x;
@@ -8241,7 +8396,8 @@ void game::processRandomObjects()
 // original less-than loop and all helpers preserved. Mac reaches 99.37%;
 // only its larger stack frame remains different. Do not invent frame padding.
 // Mac 0xe1490 retains playerData::isHuman; Windows expands that source call.
-VA(0x004ca040, 0x1F1) MAC_ADDRESS(0x0e13f0, 0x1dc)  // linkorder, dc 0xb5cdc
+DC_ADDRESS(0x0b5cdc, 0x2a2)
+VA(0x004ca040, 0x1F1) MAC_ADDRESS(0x0e13f0, 0x1dc)  // linkorder
 void game::createTownHeroes(int* startingHeroIds)
 {
     int heroId;
@@ -8282,7 +8438,8 @@ void game::createTownHeroes(int* startingHeroIds)
 }
 
 // Mac 0xe15cc..0xe1670 expands getTeamMask before the terrain sweep.
-VA(0x004ca240, 0xF6) MAC_ADDRESS(0x0e15cc, 0x1bc)  // dc 0xb5f80
+DC_ADDRESS(0x0b5f80, 0xd2)
+VA(0x004ca240, 0xF6) MAC_ADDRESS(0x0e15cc, 0x1bc)
 void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
 {
     unsigned char players = getTeamMask(whichPlayer);
@@ -8299,7 +8456,8 @@ void game::makeTerrainVisible(int whichPlayer, unsigned short visMask)
     }
 }
 
-VA(0x004ca340, 0x6F)  // dc 0xb6054
+DC_ADDRESS(0x0b6054, 0xbe)
+VA(0x004ca340, 0x6F)
 void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
 {
     if (slot >= 0) {
@@ -8322,7 +8480,8 @@ void game::giveArmy(armyGroup* thisMonInfo, int monType, int monNum, int slot)
     }
 }
 
-VA(0x004ca3b0, 0x58) MAC_ADDRESS(0x0e1788, 0x50)  // dc 0xb6114
+DC_ADDRESS(0x0b6114, 0xbc)
+VA(0x004ca3b0, 0x58) MAC_ADDRESS(0x0e1788, 0x50)
 int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichHero)
 {
     int value = 0;
@@ -8336,7 +8495,8 @@ int game::experienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
     return value;
 }
 
-VA(0x004ca410, 0x116) MAC_ADDRESS(0x0e17d8, 0x138)  // dc 0xb61d0
+DC_ADDRESS(0x0b61d0, 0x128)
+VA(0x004ca410, 0x116) MAC_ADDRESS(0x0e17d8, 0x138)
 void game::setupAdjacentMons()
 {
     type_point excluded(0xff, 0xff, 0xff);
@@ -8375,7 +8535,8 @@ static void setComputerScreenWidgetsEnabled(unsigned char enabled)
     g_advManager->m_advWindow->getWidget(12)->enable(enabled);
 }
 
-VA(0x004ca530, 0x80) MAC_ADDRESS(0x0e19d4, 0x50)  // dc 0xb62f8
+DC_ADDRESS(0x0b62f8, 0x64)
+VA(0x004ca530, 0x80) MAC_ADDRESS(0x0e19d4, 0x50)
 void game::cancelComputerScreen()
 {
     g_completeDrawEnabled = 1;
@@ -8383,6 +8544,7 @@ void game::cancelComputerScreen()
     setComputerScreenWidgetsEnabled(1);
 }
 
+DC_ADDRESS(0x0b635c, 0x1dc)
 VA(0x004ca5b0, 0x1C9) MAC_ADDRESS(0x0e1a24, 0x1d8)
 void game::showComputerScreen()
 {
@@ -8419,6 +8581,7 @@ void game::showComputerScreen()
         showHeroesLogo();
 }
 
+DC_ADDRESS(0x0b6538, 0x108)
 VA(0x004ca780, 0xB4) MAC_ADDRESS(0x0e1bfc, 0x100)
 void game::showHeroesLogo()
 {
@@ -8450,7 +8613,8 @@ void game::showHeroesLogo()
     heroLogo->dispose();
 }
 
-VA(0x004ca840, 0x19C) MAC_ADDRESS(0x0e1cfc, 0x21c)  // dc 0xb6640
+DC_ADDRESS(0x0b6640, 0x236)
+VA(0x004ca840, 0x19C) MAC_ADDRESS(0x0e1cfc, 0x21c)
 void game::waitForPlayer(char* text, int playerId)
 {
     if (!g_blackoutPlayer || g_numHumanPlayers <= 1 || g_remoteOn)
@@ -8487,8 +8651,9 @@ void game::waitForPlayer(char* text, int playerId)
     g_advManager->m_advWindow->updateTownLocators(0, 1, 0);
     g_advManager->m_advWindow->updateQuestLogButton(1);
 }
-// Original: game::SetupTowns; game.cpp:9798, dc 0xb6878
+// Original: game::SetupTowns; game.cpp:9798
 // The DC release body is empty; its 6 bytes only home this and return.
+DC_ADDRESS(0x0b6878, 0x6)
 void game::setupTowns()
 {
 }
@@ -8500,9 +8665,10 @@ DATA(0x006971a0)
 // Previous project spelling: gRandomTownNames.
 static TPickRandomTownName g_randomTownNames[9];
 
-// E:\gamedcs\game.cpp:9803, dc 0xb6944.
+// E:\gamedcs\game.cpp:9803
 // Mac retains this helper at 0:0xe1f18; VC6 expands its call in
 // processOnMapTowns.
+DC_ADDRESS(0x0b6944, 0x72)
 MAC_ADDRESS(0x0e1f18, 0x80)
 const char* getRandomTownName(int townType)
 {
@@ -8514,8 +8680,9 @@ const char* getRandomTownName(int townType)
     return g_townNames[townType][name];
 }
 
-// E:\gamedcs\game.cpp:9821, dc 0xb69b8
+// E:\gamedcs\game.cpp:9821
 // Mac retains this helper at 0:0xe1f98; VC6 expands its source call.
+DC_ADDRESS(0x0b69b8, 0x3a)
 MAC_ADDRESS(0x0e1f98, 0x8c)
 void resetRandomTownNames()
 {
@@ -8523,9 +8690,10 @@ void resetRandomTownNames()
         g_randomTownNames[i].reset();
 }
 
-// Original: game::CheckHeroConsistency; game.cpp:10132, dc 0xb7554
+// Original: game::CheckHeroConsistency; game.cpp:10132
 // The DC release body only homes this and returns; Mac retains a single BLR
 // at code 0:0xe2410, called by townManager::open and philAI::doAI.
+DC_ADDRESS(0x0b7554, 0xc)
 MAC_ADDRESS(0x0e2410, 0x4)
 void game::checkHeroConsistency()
 {
@@ -8536,7 +8704,8 @@ void game::checkHeroConsistency()
 // initializeTownNameText. The direct m_towns subscript and string assignment
 // give 99.98% (getTown plus assign(): 95.79%); the residual is the unclaimed
 // g_randomTownNames end-bound data label.
-VA(0x004caa70, 0x39C) MAC_ADDRESS(0x0e2024, 0x1bc)  // DC name/order + retail map/vector/string shape, dc 0xb69f4
+DC_ADDRESS(0x0b69f4, 0x290)
+VA(0x004caa70, 0x39C) MAC_ADDRESS(0x0e2024, 0x1bc)  // DC name/order + retail map/vector/string shape
 void game::processOnMapTowns()
 {
     int numMapLayers;
@@ -8593,6 +8762,7 @@ void game::processOnMapTowns()
     }
 }
 
+DC_ADDRESS(0x0b7204, 0x350)
 VA(0x004cae10, 0x1B1) MAC_ADDRESS(0x0e21e0, 0x230)
 void game::processOnMapHeroes()
 {
@@ -8674,6 +8844,7 @@ void game::processOnMapHeroes()
 // and spills these values. Moving the fileSize declaration alone and swapping
 // isDiff/diffSize declarations were byte-flat in earlier controls. Missing DC
 // queueSize/attempts/pNetMsg have no independent retail semantics proven yet.
+DC_ADDRESS(0x0b7560, 0x1064)
 VA(0x004cafd0, 0xD14) MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
 int game::transmitSaveGame(int toWho, int thisPlayerDead,
                            unsigned char inGame, unsigned char makeOrig)
@@ -8982,7 +9153,8 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
     return 1;
 }
 
-VA(0x004cbd40, 0xA83) MAC_ADDRESS(0x0e31b0, 0xc0c)  // retail body + dc 0xb85c4 source shape
+DC_ADDRESS(0x0b85c4, 0xe44)
+VA(0x004cbd40, 0xA83) MAC_ADDRESS(0x0e31b0, 0xc0c)  // retail body +  source shape
 int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
                           unsigned char inGame, unsigned char isDiff)
 {
@@ -9321,7 +9493,8 @@ int game::receiveSaveGame(int fileSize, int fullGameCRC, int fromWho,
     return 1;
 }
 
-VA(0x004cc7d0, 0x5FE) MAC_ADDRESS(0x0e3dbc, 0x4f0)  // dc 0xb9408
+DC_ADDRESS(0x0b9408, 0x5c6)
+VA(0x004cc7d0, 0x5FE) MAC_ADDRESS(0x0e3dbc, 0x4f0)
 void game::doNewTurn()
 {
     int newHero;
@@ -9437,7 +9610,8 @@ void game::doNewTurn()
     g_advManager->m_advWindow->setBackgroundAnimation(0);
 }
 
-VA(0x004ccdd0, 0x56) MAC_ADDRESS(0x0e42ac, 0x40)  // dc 0xb99d0
+DC_ADDRESS(0x0b99d0, 0x62)
+VA(0x004ccdd0, 0x56) MAC_ADDRESS(0x0e42ac, 0x40)
 int game::getBoatsBuilt()
 {
     int count = 0;
@@ -9451,7 +9625,8 @@ int game::getBoatsBuilt()
 // Both retail bodies index the town list without the mutable getTown's -1
 // sentinel arm. A read-only game view selects the existing const overload;
 // Mac matches all 196 bytes, with both hasBuilding expansions preserved.
-VA(0x004cce30, 0xB8) MAC_ADDRESS(0x0e42ec, 0xc4)  // dc 0xb9a34
+DC_ADDRESS(0x0b9a34, 0xf0)
+VA(0x004cce30, 0xB8) MAC_ADDRESS(0x0e42ec, 0xc4)
 int game::getNumThievesGuilds(int whichPlayer)
 {
     int count = 0;
@@ -9467,7 +9642,8 @@ int game::getNumThievesGuilds(int whichPlayer)
     return count;
 }
 
-VA(0x004ccef0, 0x23) MAC_ADDRESS(0x0e43b0, 0x38)  // dc 0xb9b24
+DC_ADDRESS(0x0b9b24, 0x30)
+VA(0x004ccef0, 0x23) MAC_ADDRESS(0x0e43b0, 0x38)
 void game::setMapSize(int width, int height)
 {
     g_mapWidth = width;
@@ -9475,7 +9651,8 @@ void game::setMapSize(int width, int height)
     g_searchArray->close();
 }
 
-// Original: game::HeroIDToHeroPos; game.cpp:11221, dc 0xb9b54
+// Original: game::HeroIDToHeroPos; game.cpp:11221
+DC_ADDRESS(0x0b9b54, 0x44)
 int game::heroIdToHeroPos(playerData* player, int id)
 {
     for (int i = 0; i < player->m_numHeroes; ++i) {
@@ -9485,7 +9662,8 @@ int game::heroIdToHeroPos(playerData* player, int id)
     return -1;
 }
 
-// Original: game::TownIDToTownPos; game.cpp:11231, dc 0xb9b98
+// Original: game::TownIDToTownPos; game.cpp:11231
+DC_ADDRESS(0x0b9b98, 0x6c)
 int game::townIdToTownPos(playerData* player, int id)
 {
     for (int i = 0; i < player->m_numTowns; ++i) {
@@ -9495,7 +9673,8 @@ int game::townIdToTownPos(playerData* player, int id)
     return -1;
 }
 
-// Original: game::SetMarketArtifacts; game.cpp:11241, dc 0xb9c04
+// Original: game::SetMarketArtifacts; game.cpp:11241
+DC_ADDRESS(0x0b9c04, 0xa6)
 MAC_ADDRESS(0x0e43e8, 0xa0)
 void game::setMarketArtifacts()
 {
@@ -9508,7 +9687,8 @@ void game::setMarketArtifacts()
     m_marketArtifacts[6] = getRandomArtifactId(8);
 }
 
-// Original: game::SetSummoningGenerators; game.cpp:11252, dc 0xb9cac
+// Original: game::SetSummoningGenerators; game.cpp:11252
+DC_ADDRESS(0x0b9cac, 0xaa)
 MAC_ADDRESS(0x0e4488, 0xe4)
 void game::setSummoningGenerators()
 {
@@ -9525,7 +9705,8 @@ void game::setSummoningGenerators()
     }
 }
 
-// Original: game::SetupNewRumour; game.cpp:11445, dc 0xbac04
+// Original: game::SetupNewRumour; game.cpp:11445
+DC_ADDRESS(0x0bac04, 0xa0)
 MAC_ADDRESS(0x0e4d38, 0x64)
 void game::setupNewRumour()
 {
@@ -9538,7 +9719,8 @@ void game::setupNewRumour()
         setSpecialRumour();
 }
 
-VA(0x004ccf20, 0x8E) MAC_ADDRESS(0x0e456c, 0x1a4)  // dc 0xb9d58
+DC_ADDRESS(0x0b9d58, 0x122)
+VA(0x004ccf20, 0x8E) MAC_ADDRESS(0x0e456c, 0x1a4)
 void game::setCannedRumour()
 {
     int available = 0;
@@ -9567,6 +9749,7 @@ void game::setCannedRumour()
     }
 }
 
+DC_ADDRESS(0x0b9e7c, 0x1c2)
 VA(0x004ccfb0, 0x1BD) MAC_ADDRESS(0x0e4710, 0x12c)
 void game::setMapRumour()
 {
@@ -9612,7 +9795,8 @@ void game::setMapRumour()
 // The human-name logical zero test in getName above completes the first
 // nested name expansion and brings this body to 100%; other game scores
 // and all available Mac comparisons are unchanged.
-VA(0x004cd170, 0x59B) MAC_ADDRESS(0x0e483c, 0x4fc)  // dc 0xba040
+DC_ADDRESS(0x0ba040, 0xbc4)
+VA(0x004cd170, 0x59B) MAC_ADDRESS(0x0e483c, 0x4fc)
 void game::setSpecialRumour()
 {
     // Original DC locals: iRoll, value, iRetries, index, two iRoll2,
@@ -9725,6 +9909,7 @@ void game::setSpecialRumour()
     }
 }
 
+DC_ADDRESS(0x0baca4, 0x20c)
 VA(0x004cd710, 0x200) MAC_ADDRESS(0x0e4d9c, 0x2a8)
 void game::giveTimeEventReward(const TTimedEvent* thisEvent)
 {
@@ -9781,9 +9966,10 @@ void game::giveTimeEventReward(const TTimedEvent* thisEvent)
     }
 }
 
-// Original: game::GiveTownEventReward; game.cpp:11499, dc 0xbaeb0
+// Original: game::GiveTownEventReward; game.cpp:11499
 // Both date arms of Complete checkForTownEvent 0x4cda10 expand this operation:
 // select the town, require its owner to be local, then grant the two rewards.
+DC_ADDRESS(0x0baeb0, 0x44)
 MAC_ADDRESS(0x0e5044, 0x84)
 void game::giveTownEventReward(const TTownEvent& thisEvent)
 {
@@ -9794,6 +9980,7 @@ void game::giveTownEventReward(const TTownEvent& thisEvent)
     }
 }
 
+DC_ADDRESS(0x0baef4, 0xf8)
 VA(0x004cd910, 0xF5) MAC_ADDRESS(0x0e50c8, 0x10c)  // unique body/order + 0x34-byte TTimedEvent stride
 void game::checkForTimeEvent()
 {
@@ -9820,7 +10007,8 @@ void game::checkForTimeEvent()
     }
 }
 
-VA(0x004cda10, 0x164) MAC_ADDRESS(0x0e51d4, 0x10c)  // dc 0xbafec
+DC_ADDRESS(0x0bafec, 0xf8)
+VA(0x004cda10, 0x164) MAC_ADDRESS(0x0e51d4, 0x10c)
 void game::checkForTownEvent()
 {
     int day = getCurrentTurn();
@@ -9844,7 +10032,8 @@ void game::checkForTownEvent()
     }
 }
 
-VA(0x004cdb80, 0x231) MAC_ADDRESS(0x0e52e0, 0x2cc)  // dc 0xbb0e4
+DC_ADDRESS(0x0bb0e4, 0x2fc)
+VA(0x004cdb80, 0x231) MAC_ADDRESS(0x0e52e0, 0x2cc)
 unsigned char game::getRandomLith(const std::vector<type_point>& points,
                                     type_point& result, long cellType,
                                     long excluded) const
@@ -9897,25 +10086,29 @@ unsigned char game::getRandomLith(const std::vector<type_point>& points,
     return 0;
 }
 
-VA(0x004cddc0, 0x22) MAC_ADDRESS(0x0e55ac, 0x38)  // dc 0xbb3e0
+DC_ADDRESS(0x0bb3e0, 0x3c)
+VA(0x004cddc0, 0x22) MAC_ADDRESS(0x0e55ac, 0x38)
 unsigned char game::getRandomLithExit(long color, type_point& result) const
 {
     return getRandomLith(getLithExits(color), result, 0x2c, -1);
 }
 
-VA(0x004cddf0, 0x24) MAC_ADDRESS(0x0e55e4, 0x3c)  // dc 0xbb41c
+DC_ADDRESS(0x0bb41c, 0x3e)
+VA(0x004cddf0, 0x24) MAC_ADDRESS(0x0e55e4, 0x3c)
 unsigned char game::getRandomLith(long color, long excluded, type_point& result) const
 {
     return getRandomLith(getLiths(color), result, 0x2d, excluded);
 }
 
-VA(0x004cde20, 0x1D) MAC_ADDRESS(0x0e5620, 0x30)  // dc 0xbb45c
+DC_ADDRESS(0x0bb45c, 0x32)
+VA(0x004cde20, 0x1D) MAC_ADDRESS(0x0e5620, 0x30)
 unsigned char game::getRandomWhirlpool(long excluded, type_point& result) const
 {
     return getRandomLith(getWhirlpools(), result, 0x6f, excluded);
 }
 
-VA(0x004cde40, 0xE0) MAC_ADDRESS(0x0e5650, 0x134)  // dc 0xbb490
+DC_ADDRESS(0x0bb490, 0x19c)
+VA(0x004cde40, 0xE0) MAC_ADDRESS(0x0e5650, 0x134)
 type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 {
     long exitGate = m_undergroundGatePairs[cell->m_extraInfo];
@@ -9941,7 +10134,8 @@ type_point game::getUndergroundGateExit(const NewmapCell* cell) const
 // (Mac 0xe605c..0xe607c); that final ordering makes Windows byte-exact.
 // The former counted-loop markers over-inlined bitset<8>'s default construction.
 // No inline-depth control is needed with the recovered library operations.
-VA(0x004cdf20, 0x585) MAC_ADDRESS(0x0e5784, 0x97c)  // anchor-global, dc 0xbb62c
+DC_ADDRESS(0x0bb62c, 0x6fc)
+VA(0x004cdf20, 0x585) MAC_ADDRESS(0x0e5784, 0x97c)  // anchor-global
 game::game()
 {
     m_difficultyRating = 0;
@@ -9993,13 +10187,15 @@ VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra) MAC_COMPGEN_ADDRESS(0x0e6
 VA_COMPGEN(0x004ce570, 0x32, IMPLICIT_DTOR, playerData) MAC_COMPGEN_ADDRESS(0x0e65b0, 0x68, IMPLICIT_DTOR, playerData)
 
 // E:\gamedcs\game.cpp:11749
-VA(0x004ce5b0, 0x346) MAC_ADDRESS(0x0e67ac, 0x3f4)  // dc 0xbbd28
+DC_ADDRESS(0x0bbd28, 0x140)
+VA(0x004ce5b0, 0x346) MAC_ADDRESS(0x0e67ac, 0x3f4)
 game::~game()
 {
     clearEventRecords();
 }
 
-VA(0x004ce900, 0x3B) MAC_ADDRESS(0x0e6ba0, 0x54)  // dc 0xbbe68
+DC_ADDRESS(0x0bbe68, 0x7c)
+VA(0x004ce900, 0x3B) MAC_ADDRESS(0x0e6ba0, 0x54)
 boat* game::getHeroBoat(int id, unsigned char occupied)
 {
     for (boat* i = m_boats.begin(); i != m_boats.end(); i++) {
@@ -10009,7 +10205,8 @@ boat* game::getHeroBoat(int id, unsigned char occupied)
     return 0;
 }
 
-VA(0x004ce940, 0x27) MAC_ADDRESS(0x0e6bf4, 0x48)  // dc 0xbbee4
+DC_ADDRESS(0x0bbee4, 0xe8)
+VA(0x004ce940, 0x27) MAC_ADDRESS(0x0e6bf4, 0x48)
 bool game::isHuman(int gamePos) const
 {
     if (gamePos >= 8 || gamePos < 0)
@@ -10017,7 +10214,8 @@ bool game::isHuman(int gamePos) const
     return m_players[gamePos].isHuman();
 }
 
-VA(0x004ce970, 0x3C) MAC_ADDRESS(0x0e6c3c, 0x4c)  // dc 0xbbfcc
+DC_ADDRESS(0x0bbfcc, 0x44)
+VA(0x004ce970, 0x3C) MAC_ADDRESS(0x0e6c3c, 0x4c)
 bool game::isLocalHuman(int gamePos) const
 {
     if (gamePos >= 8 || gamePos < 0)
@@ -10025,13 +10223,15 @@ bool game::isLocalHuman(int gamePos) const
     return m_players[gamePos].isLocalHuman();
 }
 
-VA(0x004ce9b0, 0x6A) MAC_ADDRESS(0x0e6c88, 0x3c)  // dc 0xbc010
+DC_ADDRESS(0x0bc010, 0x28)
+VA(0x004ce9b0, 0x6A) MAC_ADDRESS(0x0e6c88, 0x3c)
 playerData* game::getLocalPlayer()
 {
     return &m_players[getLocalPlayerGamePos()];
 }
 
-VA(0x004cea20, 0x4E) MAC_ADDRESS(0x0e6cc4, 0x90)  // dc 0xbc038
+DC_ADDRESS(0x0bc038, 0x88)
+VA(0x004cea20, 0x4E) MAC_ADDRESS(0x0e6cc4, 0x90)
 int game::getLocalPlayerGamePos() const
 {
     if (g_mpNetProtocol == MP_HOTSEAT) {
@@ -10043,7 +10243,8 @@ int game::getLocalPlayerGamePos() const
     return g_localGamePos;
 }
 
-VA(0x004cea70, 0xE7) MAC_ADDRESS(0x0e6d54, 0xe0)  // dc 0xbc0c0
+DC_ADDRESS(0x0bc0c0, 0x13a)
+VA(0x004cea70, 0xE7) MAC_ADDRESS(0x0e6d54, 0xe0)
 type_point game::getPuzzleOrigin() const
 {
     type_point result(m_ultimateArtifactX - 9,
@@ -10059,7 +10260,8 @@ type_point game::getPuzzleOrigin() const
     return result;
 }
 
-VA(0x004ceb60, 0xBD) MAC_ADDRESS(0x0e6e34, 0x48)  // dc 0xbc1fc
+DC_ADDRESS(0x0bc1fc, 0x40)
+VA(0x004ceb60, 0xBD) MAC_ADDRESS(0x0e6e34, 0x48)
 char* game::getPlayerName(int gamePos)
 {
     if (gamePos >= 8 || gamePos < 0)
@@ -10067,7 +10269,8 @@ char* game::getPlayerName(int gamePos)
     return m_players[gamePos].getName();
 }
 
-VA(0x004cec20, 0x25) MAC_ADDRESS(0x0e6e7c, 0xe4)  // dc 0xbc23c
+DC_ADDRESS(0x0bc23c, 0x7c)
+VA(0x004cec20, 0x25) MAC_ADDRESS(0x0e6e7c, 0xe4)
 int game::getGamePosFromDPID(unsigned long dpid) const
 {
     for (int i = 0; i < 8; i++) {
@@ -10077,7 +10280,8 @@ int game::getGamePosFromDPID(unsigned long dpid) const
     return -1;
 }
 
-VA(0x004cec50, 0x3E) MAC_ADDRESS(0x0e6f60, 0x64)  // dc 0xbc2b8
+DC_ADDRESS(0x0bc2b8, 0x46)
+VA(0x004cec50, 0x3E) MAC_ADDRESS(0x0e6f60, 0x64)
 bool game::isLastHuman(int gamePos) const
 {
     int i = gamePos + 1;
@@ -10091,7 +10295,8 @@ bool game::isLastHuman(int gamePos) const
     return true;
 }
 
-VA(0x004cec90, 0x18) MAC_ADDRESS(0x0e6fc4, 0x30)  // dc 0xbc300
+DC_ADDRESS(0x0bc300, 0x20)
+VA(0x004cec90, 0x18) MAC_ADDRESS(0x0e6fc4, 0x30)
 bool game::isMultiplayer() const
 {
     if (g_remoteOn || g_mpNetProtocol == MP_HOTSEAT)
@@ -10288,7 +10493,7 @@ bool loadObjectVector(TAbstractFile* infile,
 
 // Retained instantiation of the canonical template at game.cpp2733.
 #if 0  // @carcass -- claim-only template instance
-VA(0x004d2870, 0x24D) MAC_ADDRESS(0x0e7af0, 0xbc)  // dc 0xc1b6c
+VA(0x004d2870, 0x24D) MAC_ADDRESS(0x0e7af0, 0xbc)
 bool loadObjectVector(TAbstractFile* infile,
                       std::vector<type_creature_bank>& destVector)
 {
@@ -10330,7 +10535,7 @@ bool saveVector(TAbstractFile* outfile, std::vector<long>& srcVector)
     // @stub
 }
 
-VA(0x004d2b20, 0x60) MAC_ADDRESS(0x0e7998, 0x9c)  // university stride and sole Save call, dc 0xc1edc
+VA(0x004d2b20, 0x60) MAC_ADDRESS(0x0e7998, 0x9c)  // university stride and sole Save call
 bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 {
     // @stub
@@ -10338,7 +10543,7 @@ bool saveVector(TAbstractFile* outfile, std::vector<type_university>& srcVector)
 #endif
 
 #if 0  // @carcass -- claim-only template instance
-VA(0x004d2b80, 0x102) MAC_ADDRESS(0x0e7bac, 0xbc)  // dc 0xc1f64
+VA(0x004d2b80, 0x102) MAC_ADDRESS(0x0e7bac, 0xbc)
 bool saveObjectVector(TAbstractFile* outfile,
                       std::vector<type_creature_bank>& srcVector)
 {
@@ -10346,7 +10551,8 @@ bool saveObjectVector(TAbstractFile* outfile,
 }
 #endif
 
-// Original: game::GetLastHuman; game.cpp:11869, dc 0xbc320
+// Original: game::GetLastHuman; game.cpp:11869
+DC_ADDRESS(0x0bc320, 0x64)
 MAC_ADDRESS(0x0e6ff4, 0x60)
 int game::getLastHuman() const
 {

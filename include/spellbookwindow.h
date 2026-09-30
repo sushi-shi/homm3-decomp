@@ -1,6 +1,8 @@
 #ifndef HOMM3_SPELLBOOKWINDOW_H
 #define HOMM3_SPELLBOOKWINDOW_H
 
+#include "va.h"
+
 #include "advmgr_popup.h"
 #include "herospec.h"
 #include "spellschool.h"
@@ -91,6 +93,7 @@ public:
 
     class TSpellbookEntry {
     public:
+        DC_ADDRESS(0x14d320, 0xa)
         TSpellbookEntry(SpellID id, TSpellSchool school,
                         TSkillMastery mastery)
             : m_id(id), m_school(school), m_mastery(mastery)
@@ -109,17 +112,20 @@ public:
     virtual void close(unsigned char update);
 
     // E:\gamedcs\SpellbookWindow.h:222
+    DC_ADDRESS(0x14d32c, 0x10)
     void setSchool(TSpellSchool school)
     {
         m_school = school;
         s_lastSchool = school;
     }
     // E:\gamedcs\SpellbookWindow.h:230
+    DC_ADDRESS(0x14d33c, 0x6)
     unsigned getSchool() const
     {
         return m_school;
     }
     // E:\gamedcs\SpellbookWindow.h:236
+    DC_ADDRESS(0x14d344, 0x20)
     void setContext(TSpellContext context)
     {
         if (context == eContextAdventure)
@@ -129,6 +135,7 @@ public:
         s_lastContext = context;
     }
     // E:\gamedcs\SpellbookWindow.h:248
+    DC_ADDRESS(0x14d364, 0x6)
     unsigned getContextMask() const
     {
         return m_contextMask;
@@ -136,11 +143,13 @@ public:
     void gotoPage(int page);
     int getPage();
     // E:\gamedcs\SpellbookWindow.h:258
+    DC_ADDRESS(0x14d36c, 0x1c)
     void previousPage()
     {
         gotoPage(m_page - 1);
     }
     // E:\gamedcs\SpellbookWindow.h:264
+    DC_ADDRESS(0x14d388, 0x1c)
     void nextPage()
     {
         gotoPage(m_page + 1);

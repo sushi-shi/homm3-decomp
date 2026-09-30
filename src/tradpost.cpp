@@ -55,7 +55,8 @@ DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
 // CAdvPopup base. They differ only in the vtable immediate and their EH
 // state table, which is also why /OPT:ICF could not fold them.
 
-VA(0x005df5f0, 0x200c) MAC_ADDRESS(0x1e35f0, 0x3378)  // dc 0x181a88
+DC_ADDRESS(0x181a88, 0x1338)
+VA(0x005df5f0, 0x200c) MAC_ADDRESS(0x1e35f0, 0x3378)
 TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
@@ -252,7 +253,8 @@ TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     }
 }
 
-VA(0x005e1600, 0x14) MAC_ADDRESS(0x1e3560, 0x30)  // dc 0x181a34
+DC_ADDRESS(0x181a34, 0x1a)
+VA(0x005e1600, 0x14) MAC_ADDRESS(0x1e3560, 0x30)
 void tradeResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
@@ -261,7 +263,8 @@ void tradeResourceSlider(int state, heroWindow* parentWindow)
 
 VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
 
-VA(0x005e1650, 0x6B) MAC_ADDRESS(0x1e6968, 0xb0)  // dc 0x182dc0
+DC_ADDRESS(0x182dc0, 0x62)
+VA(0x005e1650, 0x6B) MAC_ADDRESS(0x1e6968, 0xb0)
 TTradeResourceWindow::~TTradeResourceWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -270,7 +273,8 @@ TTradeResourceWindow::~TTradeResourceWindow()
     }
 }
 
-VA(0x005e16c0, 0x1fab) MAC_ADDRESS(0x1e6a18, 0x3288)  // dc 0x182e24
+DC_ADDRESS(0x182e24, 0x10a8)
+VA(0x005e16c0, 0x1fab) MAC_ADDRESS(0x1e6a18, 0x3288)
 TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
@@ -469,7 +473,8 @@ TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
     }
 }
 
-VA(0x005e3670, 0x14) MAC_ADDRESS(0x1e3590, 0x30)  // dc 0x181a50
+DC_ADDRESS(0x181a50, 0x1a)
+VA(0x005e3670, 0x14) MAC_ADDRESS(0x1e3590, 0x30)
 void giveResourceSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
@@ -478,7 +483,8 @@ void giveResourceSlider(int state, heroWindow* parentWindow)
 
 VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
 
-VA(0x005e36c0, 0x6B) MAC_ADDRESS(0x1e9ca0, 0xb0)  // dc 0x183ecc
+DC_ADDRESS(0x183ecc, 0x62)
+VA(0x005e36c0, 0x6B) MAC_ADDRESS(0x1e9ca0, 0xb0)
 TGiveResourceWindow::~TGiveResourceWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -487,7 +493,8 @@ TGiveResourceWindow::~TGiveResourceWindow()
     }
 }
 
-VA(0x005e3730, 0x1f56) MAC_ADDRESS(0x1e9d50, 0x31a4)  // dc 0x183f30
+DC_ADDRESS(0x183f30, 0x1274)
+VA(0x005e3730, 0x1f56) MAC_ADDRESS(0x1e9d50, 0x31a4)
 TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
@@ -684,7 +691,8 @@ TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
 
 VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
 
-VA(0x005e56c0, 0x6B) MAC_ADDRESS(0x1ecef4, 0xb0)  // dc 0x1851a4
+DC_ADDRESS(0x1851a4, 0x62)
+VA(0x005e56c0, 0x6B) MAC_ADDRESS(0x1ecef4, 0xb0)
 TBuyArtifactWindow::~TBuyArtifactWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -693,7 +701,8 @@ TBuyArtifactWindow::~TBuyArtifactWindow()
     }
 }
 
-VA(0x005e5730, 0x24a7) MAC_ADDRESS(0x1ecfa4, 0x4748)  // dc 0x185208
+DC_ADDRESS(0x185208, 0x1a2c)
+VA(0x005e5730, 0x24a7) MAC_ADDRESS(0x1ecfa4, 0x4748)
 TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
@@ -973,7 +982,8 @@ TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
 
 VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
 
-VA(0x005e7c10, 0x6B) MAC_ADDRESS(0x1f16ec, 0xb0)  // dc 0x186c34
+DC_ADDRESS(0x186c34, 0x62)
+VA(0x005e7c10, 0x6B) MAC_ADDRESS(0x1f16ec, 0xb0)
 TSellArtifactWindow::~TSellArtifactWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -982,7 +992,8 @@ TSellArtifactWindow::~TSellArtifactWindow()
     }
 }
 
-VA(0x005e7c80, 0x1fd5) MAC_ADDRESS(0x1f179c, 0x3288)  // dc 0x186c98
+DC_ADDRESS(0x186c98, 0x16f4)
+VA(0x005e7c80, 0x1fd5) MAC_ADDRESS(0x1f179c, 0x3288)
 TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
@@ -1195,7 +1206,8 @@ TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     }
 }
 
-VA(0x005e9c60, 0x14) MAC_ADDRESS(0x1e35c0, 0x30)  // dc 0x181a6c
+DC_ADDRESS(0x181a6c, 0x1a)
+VA(0x005e9c60, 0x14) MAC_ADDRESS(0x1e35c0, 0x30)
 void sellCreatureSlider(int state, heroWindow* parentWindow)
 {
     g_rightAmount = state;
@@ -1204,7 +1216,8 @@ void sellCreatureSlider(int state, heroWindow* parentWindow)
 
 VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
 
-VA(0x005e9cb0, 0x6B) MAC_ADDRESS(0x1f4a24, 0xb0)  // dc 0x18838c
+DC_ADDRESS(0x18838c, 0x64)
+VA(0x005e9cb0, 0x6B) MAC_ADDRESS(0x1f4a24, 0xb0)
 TSellCreatureWindow::~TSellCreatureWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -1331,6 +1344,7 @@ DATA(0x0067839c) float g_creatureSaleEfficency[11] = {
 // calls and let VC6 expand this ordinary helper at its original source position.
 // The four declaration/query controls preserve the entire object section bytes
 // and relocation destinations; an explicit inline keyword is unnecessary.
+DC_ADDRESS(0x1883f0, 0x62)
 MAC_ADDRESS(0x1f4ad4, 0xcc)
 static void countMarkets()
 {
@@ -1344,7 +1358,8 @@ static void countMarkets()
         g_marketCount = 10;
 }
 
-VA(0x005e9d20, 0x139) MAC_ADDRESS(0x1f4ba0, 0x138)  // dc 0x188454
+DC_ADDRESS(0x188454, 0xc4)
+VA(0x005e9d20, 0x139) MAC_ADDRESS(0x1f4ba0, 0x138)
 void doArtifactMerchants()
 {
     if (g_townManager->m_townToView->m_visitingHeroId == -1) {
@@ -1364,7 +1379,8 @@ void doArtifactMerchants()
     doMarket();
 }
 
-VA(0x005e9e60, 0x38) MAC_ADDRESS(0x1f4cd8, 0x50)  // dc 0x188518
+DC_ADDRESS(0x188518, 0x126)
+VA(0x005e9e60, 0x38) MAC_ADDRESS(0x1f4cd8, 0x50)
 void doFreelancersGuild(hero* inHero)
 {
     g_marketCount = 5;
@@ -1394,7 +1410,8 @@ void doFreelancersGuild(town* currentTown)
     doMarket();
 }
 
-VA(0x005e9fe0, 0xdc) MAC_ADDRESS(0x1f4e48, 0xb0)  // dc 0x188640
+DC_ADDRESS(0x188640, 0x5c)
+VA(0x005e9fe0, 0xdc) MAC_ADDRESS(0x1f4e48, 0xb0)
 void doMarketplace()
 {
     g_marketArtifacts = g_game->m_marketArtifacts;
@@ -1406,7 +1423,8 @@ void doMarketplace()
     doMarket();
 }
 
-VA(0x005ea0c0, 0x32) MAC_ADDRESS(0x1f4ef8, 0x4c)  // dc 0x18869c
+DC_ADDRESS(0x18869c, 0x36)
+VA(0x005ea0c0, 0x32) MAC_ADDRESS(0x1f4ef8, 0x4c)
 void doTradingPost()
 {
     g_marketCount = 5;
@@ -1416,7 +1434,8 @@ void doTradingPost()
     doMarket();
 }
 
-VA(0x005ea100, 0x2A) MAC_ADDRESS(0x1f4f44, 0x40)  // dc 0x1886d4
+DC_ADDRESS(0x1886d4, 0x32)
+VA(0x005ea100, 0x2A) MAC_ADDRESS(0x1f4f44, 0x40)
 void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 {
     g_marketHero = inHero;
@@ -1442,7 +1461,8 @@ void doBlackMarket(hero* inHero, TArtifact* blackArtifacts)
 // declaration/store-order sweep found no improvement (the moved-store
 // controls added 2--80 slots). Keep the separately attested delete statements
 // instead of spelling a synthetic shared-cleanup goto.
-VA(0x005ea130, 0x49c) MAC_ADDRESS(0x1f4f84, 0x5d8)  // anchor-callee (from 6 entry points) + linkorder, dc 0x188708
+DC_ADDRESS(0x188708, 0x4cc)
+VA(0x005ea130, 0x49c) MAC_ADDRESS(0x1f4f84, 0x5d8)  // anchor-callee (from 6 entry points) + linkorder
 void doMarket()
 {
     message msg;
@@ -1565,7 +1585,8 @@ void doMarket()
     }
 }
 
-VA(0x005ea5d0, 0x103) MAC_ADDRESS(0x1f555c, 0x194)  // dc 0x188bd4
+DC_ADDRESS(0x188bd4, 0xf4)
+VA(0x005ea5d0, 0x103) MAC_ADDRESS(0x1f555c, 0x194)
 void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 {
     type_artifact art;
@@ -1606,7 +1627,8 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
 // 0x188d00, lines 913-914). Complete removes that field from widget's
 // proved layout; its retained Update bodies only contain the broadcasts.
 // These are ordinary TU helpers even where VC6 expands their calls.
-// Original: TTradeResourceWindow::SetWidgetOn; tradpost.cpp:905, dc 0x188cc8.
+// Original: TTradeResourceWindow::SetWidgetOn; tradpost.cpp:905
+DC_ADDRESS(0x188cc8, 0x38)
 MAC_ADDRESS(0x1f56f0, 0x60)
 void TTradeResourceWindow::setWidgetOn(short id)
 {
@@ -1614,21 +1636,24 @@ void TTradeResourceWindow::setWidgetOn(short id)
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// Original: TTradeResourceWindow::SetWidgetOff; tradpost.cpp:911, dc 0x188d00.
+// Original: TTradeResourceWindow::SetWidgetOff; tradpost.cpp:911
+DC_ADDRESS(0x188d00, 0x34)
 MAC_ADDRESS(0x1f5750, 0x34)
 void TTradeResourceWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// Original: TTradeResourceWindow::SetWidgetDisabled; tradpost.cpp:918, dc 0x188d34.
+// Original: TTradeResourceWindow::SetWidgetDisabled; tradpost.cpp:918
+DC_ADDRESS(0x188d34, 0x1c)
 MAC_ADDRESS(0x1f5784, 0x34)
 void TTradeResourceWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// Original: TGiveResourceWindow::SetWidgetOn; tradpost.cpp:923, dc 0x188d50.
+// Original: TGiveResourceWindow::SetWidgetOn; tradpost.cpp:923
+DC_ADDRESS(0x188d50, 0x38)
 MAC_ADDRESS(0x1f57b8, 0x60)
 void TGiveResourceWindow::setWidgetOn(short id)
 {
@@ -1636,21 +1661,24 @@ void TGiveResourceWindow::setWidgetOn(short id)
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// Original: TGiveResourceWindow::SetWidgetOff; tradpost.cpp:929, dc 0x188d88.
+// Original: TGiveResourceWindow::SetWidgetOff; tradpost.cpp:929
+DC_ADDRESS(0x188d88, 0x34)
 MAC_ADDRESS(0x1f5818, 0x34)
 void TGiveResourceWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// Original: TGiveResourceWindow::SetWidgetDisabled; tradpost.cpp:936, dc 0x188dbc.
+// Original: TGiveResourceWindow::SetWidgetDisabled; tradpost.cpp:936
+DC_ADDRESS(0x188dbc, 0x1c)
 MAC_ADDRESS(0x1f584c, 0x34)
 void TGiveResourceWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// Original: TBuyArtifactWindow::SetWidgetOn; tradpost.cpp:941, dc 0x188dd8.
+// Original: TBuyArtifactWindow::SetWidgetOn; tradpost.cpp:941
+DC_ADDRESS(0x188dd8, 0x38)
 MAC_ADDRESS(0x1f5880, 0x60)
 void TBuyArtifactWindow::setWidgetOn(short id)
 {
@@ -1658,21 +1686,24 @@ void TBuyArtifactWindow::setWidgetOn(short id)
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// Original: TBuyArtifactWindow::SetWidgetOff; tradpost.cpp:947, dc 0x188e10.
+// Original: TBuyArtifactWindow::SetWidgetOff; tradpost.cpp:947
+DC_ADDRESS(0x188e10, 0x68)
 MAC_ADDRESS(0x1f58e0, 0x34)
 void TBuyArtifactWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// Original: TBuyArtifactWindow::SetWidgetDisabled; tradpost.cpp:954, dc 0x188e78.
+// Original: TBuyArtifactWindow::SetWidgetDisabled; tradpost.cpp:954
+DC_ADDRESS(0x188e78, 0x1c)
 MAC_ADDRESS(0x1f5914, 0x34)
 void TBuyArtifactWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// Original: TSellArtifactWindow::SetWidgetOn; tradpost.cpp:959, dc 0x188e94.
+// Original: TSellArtifactWindow::SetWidgetOn; tradpost.cpp:959
+DC_ADDRESS(0x188e94, 0x38)
 MAC_ADDRESS(0x1f5948, 0x60)
 void TSellArtifactWindow::setWidgetOn(short id)
 {
@@ -1680,21 +1711,24 @@ void TSellArtifactWindow::setWidgetOn(short id)
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// Original: TSellArtifactWindow::SetWidgetOff; tradpost.cpp:965, dc 0x188ecc.
+// Original: TSellArtifactWindow::SetWidgetOff; tradpost.cpp:965
+DC_ADDRESS(0x188ecc, 0x34)
 MAC_ADDRESS(0x1f59a8, 0x34)
 void TSellArtifactWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// Original: TSellArtifactWindow::SetWidgetDisabled; tradpost.cpp:972, dc 0x188f00.
+// Original: TSellArtifactWindow::SetWidgetDisabled; tradpost.cpp:972
+DC_ADDRESS(0x188f00, 0x1c)
 MAC_ADDRESS(0x1f59dc, 0x34)
 void TSellArtifactWindow::setWidgetDisabled(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
 }
 
-// Original: TSellCreatureWindow::SetWidgetOn; tradpost.cpp:977, dc 0x188f1c.
+// Original: TSellCreatureWindow::SetWidgetOn; tradpost.cpp:977
+DC_ADDRESS(0x188f1c, 0x38)
 MAC_ADDRESS(0x1f5a10, 0x60)
 void TSellCreatureWindow::setWidgetOn(short id)
 {
@@ -1702,14 +1736,16 @@ void TSellCreatureWindow::setWidgetOn(short id)
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
 }
 
-// Original: TSellCreatureWindow::SetWidgetOff; tradpost.cpp:983, dc 0x188f54.
+// Original: TSellCreatureWindow::SetWidgetOff; tradpost.cpp:983
+DC_ADDRESS(0x188f54, 0x34)
 MAC_ADDRESS(0x1f5a70, 0x34)
 void TSellCreatureWindow::setWidgetOff(short id)
 {
     broadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
 }
 
-// Original: TSellCreatureWindow::SetWidgetDisabled; tradpost.cpp:990, dc 0x188f88.
+// Original: TSellCreatureWindow::SetWidgetDisabled; tradpost.cpp:990
+DC_ADDRESS(0x188f88, 0x1c)
 MAC_ADDRESS(0x1f5aa4, 0x34)
 void TSellCreatureWindow::setWidgetDisabled(short id)
 {
@@ -1742,7 +1778,8 @@ void TSellCreatureWindow::setWidgetDisabled(short id)
 // Earlier duplicated decimal-format calls scored 86.8941%; a do/while(0)
 // formatting scope scores 86.9674%. Keep the proven helper and its full
 // three-output contract instead of copied arithmetic in this caller.
-VA(0x005ea6e0, 0x862) MAC_ADDRESS(0x1f5ad8, 0x900)  // ordermap clean run + arity ret 4, dc 0x188fa4
+DC_ADDRESS(0x188fa4, 0x602)
+VA(0x005ea6e0, 0x862) MAC_ADDRESS(0x1f5ad8, 0x900)  // ordermap clean run + arity ret 4
 void TTradeResourceWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
@@ -1945,7 +1982,8 @@ void TTradeResourceWindow::update(unsigned char update)
         drawWindow(1, 0xffff0001, 0xffff);
 }
 
-VA(0x005eaf50, 0x744) MAC_ADDRESS(0x1f63d8, 0x794)  // dc 0x1895a8
+DC_ADDRESS(0x1895a8, 0x504)
+VA(0x005eaf50, 0x744) MAC_ADDRESS(0x1f63d8, 0x794)
 void TGiveResourceWindow::update(bool update)
 {
     message msg;
@@ -2149,7 +2187,8 @@ void TGiveResourceWindow::update(bool update)
 // command before the column split and its repeated second-column assignment.
 // These phases reproduce Windows exactly. Removing qty
 // re-evaluates its condition across calls, unlike Mac's retained r24 value.
-VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4, dc 0x189aac
+DC_ADDRESS(0x189aac, 0x580)
+VA(0x005eb6a0, 0x7d9) MAC_ADDRESS(0x1f6b6c, 0x774)  // ordermap clean run + arity ret 4
 void TBuyArtifactWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
@@ -2336,7 +2375,8 @@ void TBuyArtifactWindow::update(unsigned char update)
         drawWindow(1, 0xffff0001, 0xffff);
 }
 
-VA(0x005ebe80, 0x6cb) MAC_ADDRESS(0x1f72e0, 0x684)  // dc 0x18a02c
+DC_ADDRESS(0x18a02c, 0x522)
+VA(0x005ebe80, 0x6cb) MAC_ADDRESS(0x1f72e0, 0x684)
 void TSellArtifactWindow::update(unsigned char update)
 {
     int tempMaxUnitsToTrade;
@@ -2504,7 +2544,8 @@ void TSellArtifactWindow::update(unsigned char update)
 // repeats that store in the resource column. Windows retains the same repeat
 // before the resource-column broadcast; preserving it also restores the
 // shared constant register choice.
-VA(0x005ec550, 0x7ba) MAC_ADDRESS(0x1f7964, 0x7e0)  // ordermap clean run + arity ret 4, dc 0x18a550
+DC_ADDRESS(0x18a550, 0x63a)
+VA(0x005ec550, 0x7ba) MAC_ADDRESS(0x1f7964, 0x7e0)  // ordermap clean run + arity ret 4
 void TSellCreatureWindow::update(bool update)
 {
     int tempMaxUnitsToTrade;
@@ -2730,13 +2771,15 @@ void TSellCreatureWindow::update(bool update)
 
 // Mac 0x1f8144 loads the indexed market value. The same load is expanded
 // in getTradeRatio and the resource, artifact, and creature trade callers.
+DC_ADDRESS(0x18ab8c, 0xe)
 VA(0x005ecd10, 0x0B) MAC_ADDRESS(0x1f8144, 0x14)
 long getMarketValue(EGameResource resource)
 {
     return g_marketValues[resource + 1];
 }
 
-VA(0x005ecd20, 0x94) MAC_ADDRESS(0x1f8158, 0xe4)  // dc 0x18ab9c
+DC_ADDRESS(0x18ab9c, 0x1ac)
+VA(0x005ecd20, 0x94) MAC_ADDRESS(0x1f8158, 0xe4)
 double getTradeRatio(EGameResource source, EGameResource dest, double efficiency)
 {
     double ratio = static_cast<double>(getMarketValue(dest))
@@ -2753,6 +2796,7 @@ double getTradeRatio(EGameResource source, EGameResource dest, double efficiency
 // rounded ratios and the resource-limited maximum. Complete expands this
 // ordinary helper in Update; the discarded maximum then disappears.
 
+DC_ADDRESS(0x18ad48, 0x140)
 MAC_ADDRESS(0x1f823c, 0xc0)
 void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
@@ -2773,7 +2817,8 @@ void TTradeResourceWindow::computeTradeRatios(int inLeftResource,
     }
 }
 
-// Original: TGiveResourceWindow::ComputeTradeRatios; tradpost.cpp:2202, dc 0x18ae88.
+// Original: TGiveResourceWindow::ComputeTradeRatios; tradpost.cpp:2202
+DC_ADDRESS(0x18ae88, 0x6c)
 MAC_ADDRESS(0x1f833c, 0x2c)
 void TGiveResourceWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
@@ -2784,10 +2829,11 @@ void TGiveResourceWindow::computeTradeRatios(int inLeftResource,
     *inMaxUnitsToTrade = g_currentPlayer->m_resources[inLeftResource];
 }
 
-// Original: TBuyArtifactWindow::ComputeTradeRatios; tradpost.cpp:2209, dc 0x18aef4.
+// Original: TBuyArtifactWindow::ComputeTradeRatios; tradpost.cpp:2209
 // Both DC's double pool at 0x18b10c and Complete's fadd at 0x5ebd51 /
 // 0x5edccf use 0.5. The formerly flattened handler used 0.999, hidden by
 // relocation masking despite a 100% instruction match.
+DC_ADDRESS(0x18aef4, 0xe0)
 MAC_ADDRESS(0x1f8368, 0xf4)
 void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
     int inRightResource, int* inTradeRatio, int* inLeftDenominated,
@@ -2812,7 +2858,8 @@ void TBuyArtifactWindow::computeTradeRatios(int inLeftResource,
 // DC gives the market value its own row (2240, with the __utos conversion)
 // before the division row 2241. The artifact reads and the clamp have one
 // scope per body (a braced body has two), so they stay unbraced.
-VA(0x005ecdc0, 0xbb) MAC_ADDRESS(0x1f845c, 0x118)  // dc 0x18afd4
+DC_ADDRESS(0x18afd4, 0x140)
+VA(0x005ecdc0, 0xbb) MAC_ADDRESS(0x1f845c, 0x118)
 void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     type_artifact artifact;
@@ -2841,7 +2888,8 @@ void TSellArtifactWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // buys at least one unit of the resource the ratio is left-denominated; below
 // that it inverts to units-per-resource. The tradeable count is the stack size
 // (less one when it is the hero's only army) divided by the ratio.
-VA(0x005ece80, 0x157) MAC_ADDRESS(0x1f8574, 0x1e4)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
+DC_ADDRESS(0x18b114, 0x1d4)
+VA(0x005ece80, 0x157) MAC_ADDRESS(0x1f8574, 0x1e4)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies
 void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightResource, int* inTradeRatio, int* inLeftDenominated, int* inMaxUnitsToTrade)
 {
     float denominator = static_cast<float>(g_creatureTypeTraits[
@@ -2883,7 +2931,8 @@ void TSellCreatureWindow::computeTradeRatios(int inLeftResource, int inRightReso
 // their placement here restores the original source order after both surviving
 // ComputeTradeRatios definitions.
 
-// Original: TTradeResourceWindow::SetupNewTrade; tradpost.cpp:2286, dc 0x18b2e8.
+// Original: TTradeResourceWindow::SetupNewTrade; tradpost.cpp:2286
+DC_ADDRESS(0x18b2e8, 0x40)
 MAC_ADDRESS(0x1f8758, 0x64)
 void TTradeResourceWindow::setupNewTrade()
 {
@@ -2893,7 +2942,8 @@ void TTradeResourceWindow::setupNewTrade()
     g_rightAmount = 0;
 }
 
-// Original: TGiveResourceWindow::SetupNewTrade; tradpost.cpp:2294, dc 0x18b328.
+// Original: TGiveResourceWindow::SetupNewTrade; tradpost.cpp:2294
+DC_ADDRESS(0x18b328, 0x40)
 MAC_ADDRESS(0x1f87bc, 0x64)
 void TGiveResourceWindow::setupNewTrade()
 {
@@ -2903,7 +2953,8 @@ void TGiveResourceWindow::setupNewTrade()
     g_rightAmount = 0;
 }
 
-// Original: TBuyArtifactWindow::SetupNewTrade; tradpost.cpp:2302, dc 0x18b368.
+// Original: TBuyArtifactWindow::SetupNewTrade; tradpost.cpp:2302
+DC_ADDRESS(0x18b368, 0x40)
 MAC_ADDRESS(0x1f8820, 0x6c)
 void TBuyArtifactWindow::setupNewTrade()
 {
@@ -2914,6 +2965,7 @@ void TBuyArtifactWindow::setupNewTrade()
 }
 
 // E:\gamedcs\tradpost.cpp:2312
+DC_ADDRESS(0x18b3a8, 0x2a)
 MAC_ADDRESS(0x1f888c, 0x3c)
 void TSellArtifactWindow::setupNewTrade()
 {
@@ -2922,7 +2974,8 @@ void TSellArtifactWindow::setupNewTrade()
     g_rightAmount = 1;
 }
 
-// Original: TSellCreatureWindow::SetupNewTrade; tradpost.cpp:2319, dc 0x18b3d4.
+// Original: TSellCreatureWindow::SetupNewTrade; tradpost.cpp:2319
+DC_ADDRESS(0x18b3d4, 0x40)
 MAC_ADDRESS(0x1f88c8, 0x64)
 void TSellCreatureWindow::setupNewTrade()
 {
@@ -2935,6 +2988,7 @@ void TSellCreatureWindow::setupNewTrade()
 // E:\gamedcs\tradpost.cpp:2327
 // Mac 0x1f8958..0x1f89a8 constructs the zeroed message, then sets its
 // id and codeX; the shared message constructor owns the zero fields.
+DC_ADDRESS(0x18b414, 0x76)
 MAC_ADDRESS(0x1f892c, 0xf4)
 void TSellArtifactWindow::updateMarketBackpack()
 {
@@ -2951,6 +3005,7 @@ void TSellArtifactWindow::updateMarketBackpack()
 }
 
 // E:\gamedcs\tradpost.cpp:2344
+DC_ADDRESS(0x18b48c, 0x3a)
 MAC_ADDRESS(0x1f8a20, 0x60)
 void TSellArtifactWindow::incrementBackpackStart()
 {
@@ -2963,6 +3018,7 @@ void TSellArtifactWindow::incrementBackpackStart()
 }
 
 // E:\gamedcs\tradpost.cpp:2356
+DC_ADDRESS(0x18b4c8, 0x78)
 MAC_ADDRESS(0x1f8a80, 0x64)
 void TSellArtifactWindow::decrementBackpackStart()
 {
@@ -2981,7 +3037,8 @@ void TSellArtifactWindow::decrementBackpackStart()
 // sell/buy resource buttons, each re-selecting a side and recomputing the
 // exchange ratio through the inlined ComputeTradeRatios. Hover events copy the
 // rollover string.
-VA(0x005ecfe0, 0x3ba) MAC_ADDRESS(0x1f8ae4, 0x2c8)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
+DC_ADDRESS(0x18b540, 0x284)
+VA(0x005ecfe0, 0x3ba) MAC_ADDRESS(0x1f8ae4, 0x2c8)  // anchor-vtable 0x6439f8 slot 9
 int TTradeResourceWindow::windowHandler(message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
@@ -3084,7 +3141,8 @@ int TTradeResourceWindow::windowHandler(message& msg)
     return 1;
 }
 
-VA(0x005ed3a0, 0x1a2) MAC_ADDRESS(0x1f8dac, 0x1a4)  // dc 0x18b7c4
+DC_ADDRESS(0x18b7c4, 0x110)
+VA(0x005ed3a0, 0x1a2) MAC_ADDRESS(0x1f8dac, 0x1a4)
 void TTradeResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3128,7 +3186,8 @@ void TTradeResourceWindow::setRolloverText(int codeY)
 // only because the compiler expands the canonical playerData::isHuman here.
 // Thirteen natural recipient/flag lifetime models emit one identical VC6
 // object; changing those scopes does not recover the retained isHuman call.
-VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
+DC_ADDRESS(0x18b8d4, 0x26c)
+VA(0x005ed550, 0x2f1) MAC_ADDRESS(0x1f8f50, 0x314)  // anchor-vtable 0x643a34 slot 9
 int TGiveResourceWindow::windowHandler(message& msg)
 {
     int r = CAdvPopup::windowHandler(msg);
@@ -3241,7 +3300,8 @@ int TGiveResourceWindow::windowHandler(message& msg)
     return 1;
 }
 
-VA(0x005ed850, 0x190) MAC_ADDRESS(0x1f9264, 0x1b8)  // dc 0x18bb40
+DC_ADDRESS(0x18bb40, 0x124)
+VA(0x005ed850, 0x190) MAC_ADDRESS(0x1f9264, 0x1b8)
 void TGiveResourceWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3278,7 +3338,8 @@ void TGiveResourceWindow::setRolloverText(int codeY)
 // ComputeTradeRatios); subtype 0xd commits the purchase (spend resources, give
 // the artifact, empty the slot) or the two tab-command panels; subtype 0xe
 // right-clicks an artifact slot into its info popup. Hover copies the rollover.
-VA(0x005ed9e0, 0x3e2) MAC_ADDRESS(0x1f941c, 0x30c)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
+DC_ADDRESS(0x18bc64, 0x284)
+VA(0x005ed9e0, 0x3e2) MAC_ADDRESS(0x1f941c, 0x30c)  // anchor-vtable 0x643a70 slot 9
 int TBuyArtifactWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -3395,7 +3456,8 @@ int TBuyArtifactWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x005eddd0, 0x188) MAC_ADDRESS(0x1f9728, 0x1b4)  // dc 0x18bee8
+DC_ADDRESS(0x18bee8, 0x124)
+VA(0x005eddd0, 0x188) MAC_ADDRESS(0x1f9728, 0x1b4)
 void TBuyArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3445,7 +3507,8 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
 // helper path. Two separate viewArtifact source calls remain separate on Mac;
 // keep its shared call. Widget-local flags lower both compiler comparisons.
-VA(0x005edf60, 0x75f) MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
+DC_ADDRESS(0x18c00c, 0x36c)
+VA(0x005edf60, 0x75f) MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9
 int TSellArtifactWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -3614,7 +3677,8 @@ int TSellArtifactWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x005ee6c0, 0x1cf) MAC_ADDRESS(0x1f9ce8, 0x210)  // dc 0x18c378
+DC_ADDRESS(0x18c378, 0x144)
+VA(0x005ee6c0, 0x1cf) MAC_ADDRESS(0x1f9ce8, 0x210)
 void TSellArtifactWindow::setRolloverText(int codeY)
 {
     switch (codeY) {
@@ -3667,7 +3731,8 @@ void TSellArtifactWindow::setRolloverText(int codeY)
 // an army slot (each re-selection re-runs ComputeTradeRatios); subtype 0xd runs
 // the sell/max panels and the two tab-command buttons; subtype 0xe right-clicks
 // an army slot into ViewArmy. Hover copies the rollover string.
-VA(0x005ee890, 0x33f) MAC_ADDRESS(0x1f9ef8, 0x368)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
+DC_ADDRESS(0x18c4bc, 0x2f4)
+VA(0x005ee890, 0x33f) MAC_ADDRESS(0x1f9ef8, 0x368)  // anchor-vtable 0x643ae8 slot 9
 int TSellCreatureWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -3791,7 +3856,8 @@ int TSellCreatureWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
-VA(0x005eebd0, 0x1a1) MAC_ADDRESS(0x1fa260, 0x1bc)  // dc 0x18c7b0
+DC_ADDRESS(0x18c7b0, 0x134)
+VA(0x005eebd0, 0x1a1) MAC_ADDRESS(0x1fa260, 0x1bc)
 void TSellCreatureWindow::setRolloverText(int codeY)
 {
     switch (codeY) {

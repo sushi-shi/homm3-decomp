@@ -30,7 +30,8 @@
 
 static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw);
 
-VA(0x004f7a30, 0x1CF)  // dc 0xe7c90
+DC_ADDRESS(0x0e7c90, 0x8e)
+VA(0x004f7a30, 0x1CF)
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine, int sw)
 {
     DWORD lastError;
@@ -61,10 +62,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine
     return 0;
 }
 
-// Original: AppInit; kbwin.cpp:166, dc 0xe7d20
+// Original: AppInit; kbwin.cpp:166
 // Complete uses ANSI window APIs and initializes the desktop Imm mouse;
 // DC uses wide WinCE APIs and its own DirectInput/sound initialization.
 // The ordinary helper expands into WinMain at 0x4f7a30 in Complete.
+DC_ADDRESS(0x0e7d20, 0x118)
 static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
 {
     WNDCLASSA appClass;
@@ -109,7 +111,8 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
 }
 
 // AppWndProc retains its AppCommand call at +0x359 without an inline fence.
-VA(0x004f7c00, 0x394)  // dc 0xe7e38
+DC_ADDRESS(0x0e7e38, 0x180)
+VA(0x004f7c00, 0x394)
 LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     switch (message) {
@@ -214,7 +217,8 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
     return DefWindowProcA(window, message, messageParam, messageData);
 }
 
-VA(0x004f7fa0, 0xA)  // dc 0xe7fb8
+DC_ADDRESS(0x0e7fb8, 0x18)
+VA(0x004f7fa0, 0xA)
 void appExit()
 {
     cleanUpWinGraphics();
@@ -223,7 +227,8 @@ void appExit()
 
 // Mac retains the shared event pump at code 0+0x20f90c. Its event polling
 // uses Mac OS services; this Windows body pumps native window messages.
-VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)  // dc 0xe7fd0
+DC_ADDRESS(0x0e7fd0, 0x42)
+VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)
 void process1WindowsMessage()
 {
     MSG message;
@@ -252,7 +257,8 @@ void process1WindowsMessage()
 // E:\gamedcs\kbwin.cpp:648
 // homm2 lineage kept the three non-size menu commands; the About
 // template is the ordinal 0x67 (homm2 passed the string "HEROES").
-VA(0x004f8060, 0xD4)  // dc 0xe8014
+DC_ADDRESS(0x0e8014, 0x4)
+VA(0x004f8060, 0xD4)
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     int command;
@@ -285,9 +291,10 @@ LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     return 0;
 }
 
-// Original: UpdateDfltMenu; kbwin.cpp:680, dc 0xe8018.
+// Original: UpdateDfltMenu; kbwin.cpp:680
 // The released menu-update hook has an empty body. The adjacent 0x4f8140
 // procedure is the four-argument About callback, not this one-argument hook.
+DC_ADDRESS(0x0e8018, 0x4)
 void updateDfltMenu(HMENU menu)
 {
 }
@@ -310,7 +317,8 @@ BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
     return 0;
 }
 
-VA(0x004f8180, 0x5C)  // dc 0xe801c
+DC_ADDRESS(0x0e801c, 0x4)
+VA(0x004f8180, 0x5C)
 void kbChangeMenu(HMENU newMenu)
 {
     if (!newMenu)
@@ -329,7 +337,8 @@ void kbChangeMenu(HMENU newMenu)
     }
 }
 
-VA(0x004f81e0, 0x31) MAC_ADDRESS(0x20ff48, 0x38)  // dc 0xe8020
+DC_ADDRESS(0x0e8020, 0x34)
+VA(0x004f81e0, 0x31) MAC_ADDRESS(0x20ff48, 0x38)
 void setNoDialogMenus(int noMenus)
 {
     if (g_menusSuppressed && !noMenus)
@@ -342,7 +351,8 @@ void setNoDialogMenus(int noMenus)
     setMenus(g_activeMenu, noMenus);
 }
 
-VA(0x004f8220, 0xB2)  // dc 0xe8054
+DC_ADDRESS(0x0e8054, 0x4)
+VA(0x004f8220, 0xB2)
 void setMenus(HMENU menu, int enabled)
 {
     int count;
@@ -382,13 +392,15 @@ void setMenus(HMENU menu, int enabled)
     }
 }
 
-VA(0x004f82e0, 0x6) MAC_ADDRESS(0x20fc5c, 0xc)  // dc 0xe8058
+DC_ADDRESS(0x0e8058, 0x12)
+VA(0x004f82e0, 0x6) MAC_ADDRESS(0x20fc5c, 0xc)
 unsigned long GameTime::get()
 {
     return timeGetTime();
 }
 
-VA(0x004f82f0, 0xCD) MAC_ADDRESS(0x20fc68, 0x40)  // dc 0xe806c
+DC_ADDRESS(0x0e806c, 0x2c)
+VA(0x004f82f0, 0xCD) MAC_ADDRESS(0x20fc68, 0x40)
 void GameTime::delayTil(unsigned long time)
 {
     while (!GameTime::isPast(time)) {
@@ -397,15 +409,17 @@ void GameTime::delayTil(unsigned long time)
     }
 }
 
-VA(0x004f83c0, 0xD0) MAC_ADDRESS(0x20fca8, 0x34)  // dc 0xe8098
+DC_ADDRESS(0x0e8098, 0x1a)
+VA(0x004f83c0, 0xD0) MAC_ADDRESS(0x20fca8, 0x34)
 void GameTime::delay(int interval)
 {
     GameTime::delayTil(GameTime::get() + interval);
 }
 
-// Original: InitVideo; kbwin.cpp:851, dc 0xe80b4
+// Original: InitVideo; kbwin.cpp:851
 // Empty hook; heroWindowManager::open retains the call to retail's
 // shared ICF ret at 0x5bc690.
+DC_ADDRESS(0x0e80b4, 0x30)
 MAC_ADDRESS(0x20fcdc, 0x4)
 void initVideo()
 {

@@ -272,6 +272,7 @@ public:
     FileTime m_fileTime;  // +0x6f8
     SavedGameHeader m_saved;  // +0x700
 
+    DC_ADDRESS(0x1474b8, 0xbc)
     VA(0x00578E00, 0x25F)  // retained retail body; formerly enrolled by CLASS_CTOR
     GameSelectionHeadersStruct()
     {
@@ -320,6 +321,7 @@ public:
     // The 0x7c-byte player-record stride leaves three bytes of tail alignment.
     char m_tailPadding[3];
     // E:\gamedcs\SingleSelectionWindow.h:108
+    DC_ADDRESS(0x147574, 0x68)
     VA(0x0057C790, 0x40) MAC_ADDRESS(0x16ed9c, 0x78)
     CNetPlayerHandlerPlayer()
     {
@@ -333,6 +335,7 @@ public:
         memset(m_availableHeroes, 0, sizeof(m_availableHeroes));
     }
     // E:\gamedcs\SingleSelectionWindow.h:122
+    DC_ADDRESS(0x1475dc, 0x12)
     unsigned char isHuman()
     {
         if (m_dpid)
@@ -340,6 +343,7 @@ public:
         return 0;
     }
     // E:\gamedcs\SingleSelectionWindow.h:130
+    DC_ADDRESS(0x1475f0, 0x20)
     void clear()
     {
         m_dpid = 0;
@@ -351,6 +355,7 @@ public:
     // helper but expands both calls in SetupAdvancedOptions.  Retail x86
     // directly proves that Complete changed the three independent stores
     // from DC's hero/player/town statement order to town/player/hero.
+    DC_ADDRESS(0x147610, 0x1a)
     void resetAdvancedOptions()
     {
         m_townIndex = -1;
