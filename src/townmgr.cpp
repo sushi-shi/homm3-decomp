@@ -1932,7 +1932,7 @@ void townManager::changeTown(unsigned char fade)
     message msg;
     msg.m_id = MESSAGE_WIDGET;
     msg.m_codeY = -1;
-    setCommandAndText(&msg);
+    setCommandAndText(msg);
     stopMouseThread();
 }
 
@@ -2376,16 +2376,21 @@ void townManager::setArmyCommand(int splitEnabled, unsigned char joinDialog)
 // Residual: town-id array address reassociation; four sum orders and named
 // slot/top or pointer-index forms did not improve it. Naming the selected
 // town id before getTownName is also byte-flat. Helpers stay canonical.
+// Original public ?SetCommandAndText@townManager@@QAAXAAUmessage@@@Z
+// proves message&. Both native and Complete pass one address; this ordinary
+// member is not a pointer-based callback or a virtual interface. Restoring
+// the reference leaves this full VC6 body and both caller bodies byte-flat;
+// the 99.9775% residual remains only the two town-ID address rows.
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)
 DC_ADDRESS(0x16c940, 0x572)
-MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*)
-void townManager::setCommandAndText(message* msg)
+MAC_ADDRESS(0x1bfbd0, 0x9e0)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message&)
+void townManager::setCommandAndText(message& msg)
 {
-    int code = msg->m_codeY;
+    int code = msg.m_codeY;
     if (code >= 0 && code <= DWELLING_6_UPG_ID
         && (code = static_cast<TTownScreenWindow*>(m_townWindow)
-                       ->m_zBuffer[msg->m_mouseY * 800 + msg->m_mouseX] - 1) >= 0
+                       ->m_zBuffer[msg.m_mouseY * 800 + msg.m_mouseX] - 1) >= 0
         && code <= DWELLING_6_UPG_ID) {
         g_outlinedTownObjectId = code;
         playImmEffect(DATA_COMPGEN(0x0068c210, guiPopEffectName, "GuiPop"), 1);
@@ -2482,7 +2487,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
     case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID;
         armyCommand(m_garrisonStrip, slot, shift, 0);
         break;
@@ -2514,7 +2519,7 @@ void townManager::setCommandAndText(message* msg)
     case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
     case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID: {
-        int shift = msg->m_qualifier & 3;
+        int shift = msg.m_qualifier & 3;
         int slot = code - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
         armyCommand(m_heroStrip, slot, shift, 0);
         break;
@@ -4886,7 +4891,7 @@ void townManager::drawTown(int update, int incFrame,
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)
 DC_ADDRESS(0x175160, 0x14d2)
-MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*)
+MAC_ADDRESS(0x1d00c0, 0x19e4)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message&)
 int townManager::main(message& msg)
 {
     int exitFlag = 0;
@@ -5468,7 +5473,7 @@ building_popup:
                     }
                 } else {
                     doCommand(m_command, 0, 0);
-                    setCommandAndText(&msg);
+                    setCommandAndText(msg);
                 }
                 break;
             }
@@ -5519,7 +5524,7 @@ building_popup:
         if (hover != m_lastHover || msg.m_qualifier != m_lastQualifier) {
             m_lastHover = hover;
             m_lastQualifier = msg.m_qualifier;
-            setCommandAndText(&msg);
+            setCommandAndText(msg);
         }
         break;
     }

@@ -910,7 +910,7 @@ public:
     // at +0x1c4/+0x1c8.
     unsigned char m_currentDwellingIdOff[7];
     void resetStrips();
-    void setCommandAndText(message* msg);
+    void setCommandAndText(message& msg);
     void showText();
     void setArmyCommand(int splitEnabled, unsigned char joinDialog);
     void doCommand(int inCommand, unsigned char isGarrison,
