@@ -1879,14 +1879,18 @@ void army::doPostAttack(army* target, int attackDamage, int killedCount,
 // fresh full blind).
 
 // Dreamcast records the three MarkCreatureEffect source calls; the
-// canonical helper is retained at each site and expands in retail.
+// canonical helper is retained at each site and expands in retail. Mac
+// 0x4d3e8 expands the same owning-side accessor for this stack as for
+// the target and the stack behind it; keep that accessor at all three sites.
 
 // Original public ?do_attack@army@@AAA_NPAV1@H@Z proves this overload is
 // private and returns bool. The direction overload is the public entry;
 // all calls to the single-swing helper remain inside army. Mac forwards
 // CheckSpecialAttack's byte result, replacing it with true for fresh blind.
-// The remaining Windows differences are scratch-register choices in three
-// MarkCreatureEffect expansions and the reload order after DoMultiHeadAttack.
+// The owning-side accessor restores the first retail address calculation
+// (Windows 99.9040 -> 99.9232). Remaining differences are address-register
+// choices in the other two MarkCreatureEffect expansions and the reload
+// order after DoMultiHeadAttack.
 
 VA(0x00441610, 0x6A0) MAC_ADDRESS(0x04d288, 0x638)  // corroborates, dc 0x46bec
 bool army::doAttack(army* armyToAttack, int direction)
@@ -1923,7 +1927,7 @@ bool army::doAttack(army* armyToAttack, int direction)
         }
     }
     g_combatManager->resetLimitCreature();
-    g_combatManager->markCreatureEffect(m_combatSide, m_bitIndex);
+    g_combatManager->markCreatureEffect(getOwningSide(), m_bitIndex);
     checkLuck();
     int damage = 0;
     int killed = 0;

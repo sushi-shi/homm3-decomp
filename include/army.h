@@ -774,7 +774,10 @@ public:
     // family without changing the attested relative order below.
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fireDamage);
+private:
+    // Original public ?range_attack@army@@AAAXPAV1@@Z: one private volley.
     void rangeAttack(army* armyToAttack);
+public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
     void turn(unsigned char animateTurn);
