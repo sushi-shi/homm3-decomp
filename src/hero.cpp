@@ -4949,6 +4949,10 @@ void hero::transferArtifacts(hero* src)
 // positive capacity arms and eligible-slot nesting supplied no further gain.
 // Explicit outer-loop break/return exits with this snapshot both fall to
 // 95.49%; the remaining difference is outer-loop exit/epilogue ordering.
+// Mac 0x103238/0x1032e4/0x10344c expands the canonical equipped-record
+// reference reader before each id load: vacancy plus both capacity scans.
+// Retaining getArtifact at these readonly sites holds Windows at 98.7339%;
+// the remaining outer-loop exit/epilogue frontier is unchanged.
 VA(0x004e2550, 0x2EC)
 MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
@@ -4963,7 +4967,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
     }
 
     for (; remaining != 0; slot++, remaining--) {
-        if (m_equipped[slot].m_artifactId != ARTIFACT_NONE)
+        if (getArtifact(TArtifactSlot(slot)).m_artifactId != ARTIFACT_NONE)
             continue;
         if (!artifactAllowedInSlot(TArtifact(artifact), TArtifactSlot(slot)))
             continue;
@@ -4978,7 +4982,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
             int occupied = 0;
             for (int i = 0; i < 19; i++) {
                 if (classSlots[i] &&
-                    m_equipped[i].m_artifactId != ARTIFACT_NONE)
+                    getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                     occupied++;
             }
             if (worn >= capacity - occupied)
@@ -5023,7 +5027,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                          == componentClass) ? 1 : 0;
                     for (int i = 0; i < 19; i++) {
                         if (classSlots[i] &&
-                            m_equipped[i].m_artifactId != ARTIFACT_NONE)
+                            getArtifact(TArtifactSlot(i)).m_artifactId != ARTIFACT_NONE)
                             occupied++;
                     }
                     if (componentCount >= capacity - occupied) {
