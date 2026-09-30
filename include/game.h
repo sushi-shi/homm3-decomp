@@ -2014,6 +2014,20 @@ inline bool game::townAlreadyBuiltOn(int townId) const
     return m_towns[townId].m_builtThisTurn != 0;
 }
 
+// Mac expands this complete global operation in checkAdvCheatCode
+// (0x908..0x930), checkCombatCheatCode (0x8004c..0x80074), and the
+// combat cheat worker (0x75a40..0x75a60). Each reloads g_game for the
+// campaign write; a game member caching this would change that operation.
+// The shared boundary/name and header visibility are inferred from those
+// cross-TU expansions. Inline supplies one ODR-safe header body, not a
+// Dreamcast qualifier claim: the older DC callers spell these stores out.
+inline void markGameAsCheated()
+{
+    g_game->m_isCheater = 1;
+    if (g_inCampaign)
+        g_game->m_campaign.m_isCheater = 1;
+}
+
 // --- type_creature_bank ---
 
 // Dreamcast Game.h proves the complete 200-byte class and its single char

@@ -62,27 +62,59 @@ public:
     // no-trigger sentinel. imageInfo's TPoint stays uninitialized there,
     // which is why it has no initializer here either.
     TObjectType();
+private:
+    // The image and mask setters own these values and their invariants.
     int m_imageNumber;
     std::bitset<48> m_passableMask;
     std::bitset<48> m_triggerMask;
+public:
     std::bitset<10> m_terrainMask;
     std::bitset<10> m_recommendedTerrainMask;
+private:
     TAdventureObjectType m_objectType;
     int m_subtype;
+public:
     int m_slotCategory;
+private:
     unsigned char m_isUnderlay;
+public:
     unsigned char m_hasTrigger;
     TPoint m_triggerCell;
+private:
     TImageInfo m_imageInfo;
-    // is defined in the Complete .msk/objects compiland in the
-    // of range). The ROLE is proven by its conversion-constructor caller - the result is what
+public:
+    // The image-name registry lookup reads this record's image number;
+    // lazy registry/empty-string initialization does not modify the record.
+    // Constness is inferred from that ownership, not surviving DC types.
     const std::basic_string<char, std::char_traits<char>,
-                            std::allocator<char> >& getImageName();
+                            std::allocator<char> >& getImageName() const;
     // CObjectType's conversion loads each dimension as a dword before
     // narrowing it to char. Direct field access folds those into byte
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    // Mac CObjectType conversion 0x128c7c..0x128d24 expands these four
+    // coordinate-to-mask queries before assigning the destination cells.
+    // The names and member boundaries are inferred; getBitPos owns the
+    // shared 8-by-6 coordinate mapping. Mac placement 0x22e090..0x22e17c
+    // expands the same trigger/passability queries; both Windows TUs need
+    // their definitions visible here.
+    bool isDrawCell(unsigned x, unsigned y) const
+    {
+        return m_imageInfo.m_drawMask.test(CObjectType::getBitPos(x, y));
+    }
+    bool isPassableCell(unsigned x, unsigned y) const
+    {
+        return m_passableMask.test(CObjectType::getBitPos(x, y));
+    }
+    bool isShadowCell(unsigned x, unsigned y) const
+    {
+        return m_imageInfo.m_shadowMask.test(CObjectType::getBitPos(x, y));
+    }
+    bool isTriggerCell(unsigned x, unsigned y) const
+    {
+        return m_triggerMask.test(CObjectType::getBitPos(x, y));
+    }
     // Project name for the Complete-only terrain query. The non-const
     // subscript uses VC6's reference proxy, preserving the checked bitset
     // call in mine placement at 0x545a01. A const query expands test and
@@ -96,6 +128,12 @@ public:
         return m_recommendedTerrainMask.test(terrain);
     }
     int getHeight() const { return m_imageInfo.m_objectSize.m_y; }
+    // Mac conversion 0x128d7c..0x128d94 reads this metadata after the
+    // masks. These read-only counterparts of the existing fluent setters
+    // have inferred names and boundaries; preserve each stored type.
+    TAdventureObjectType getObjectType() const { return m_objectType; }
+    int getSubtype() const { return m_subtype; }
+    unsigned char isUnderlay() const { return m_isUnderlay; }
     // Retail 0x514610 and 0x514a60, both in the same Complete-only
     // compiland and both returning *this - the per-row `>>` at 0x514b80
     // chains them off each other's result. setImageName resolves the

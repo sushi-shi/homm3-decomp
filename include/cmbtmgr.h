@@ -1858,8 +1858,8 @@ public:
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int seed,
                      unsigned char isSurrounded);
-    // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
-    unsigned char nextArmy(unsigned char checkingForBadMorale);
+    // Original public ?NextArmy@combatManager@@QAA_N_N@Z: bool result/flag.
+    bool nextArmy(bool checkingForBadMorale);
     void setNextArmy(int group, int index);
 
 private:

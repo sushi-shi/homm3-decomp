@@ -1414,6 +1414,9 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 // native bitset bounds check and reproduces the scalar-buffer homes. The
 // remaining 99.9557% residual is the x/uintBuffer stack-home permutation;
 // all 49 blocks and 22 calls agree. Outer local-order controls are object-identical.
+// With fill_n and the loop-local bit counter, direct member.test(bit) still
+// changes the packed-bit update from retail's eight instructions to eleven
+// (98.21%). The const pointer retains that expansion; all 22 calls agree.
 VA(0x004ba670, 0x36A) MAC_ADDRESS(0x0ccd7c, 0x4fc)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
@@ -3786,7 +3789,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
             campaignHero->removeArtifact(hero::EQUIPPED_SLOT_SPELLBOOK);
         if (m_campaign.m_currentMap == GAME_SCENARIO_2) {
             type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE);
-            campaignHero->giveArtifact(&alliance, 0, 0);
+            campaignHero->giveArtifact(alliance, 0, 0);
         }
     }
 
@@ -3835,7 +3838,7 @@ void game::newMap(TAbstractFile* mapFile, int* playerHeroFaces,
                 hero* bonusHero = getHero(heroId);
                 if (bonusHero != NULL) {
                     type_artifact artifact(getRandomArtifactId(2));
-                    bonusHero->giveArtifact(&artifact, 1, 1);
+                    bonusHero->giveArtifact(artifact, 1, 1);
                 }
                 break;
             }
@@ -7329,7 +7332,7 @@ void game::setWeeklyRecruits(int playerPos)
         do {
             artifact = newHero->getBackpack(backpackSlot);
             if (artifact.m_artifactId != -1
-                && newHero->equipArtifact(&artifact, -1))
+                && newHero->equipArtifact(artifact, -1))
                 newHero->removeBackpackArtifact(backpackSlot);
         } while (backpackSlot--);
 
@@ -7935,10 +7938,10 @@ void game::setRandomHeroArmies(int hero, int cheat, unsigned char minimal)
     if (random(1, 100) <= 88 && traits->m_secondStack != -1) {
         if (traits->m_secondStack == CREATURE_BALLISTA) {
             type_artifact artifact(ARTIFACT_BALLISTA);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else if (traits->m_secondStack == CREATURE_FIRST_AID_TENT) {
             type_artifact artifact(ARTIFACT_FIRST_AID_TENT);
-            m_heroes[hero].giveArtifact(&artifact, 0, 0);
+            m_heroes[hero].giveArtifact(artifact, 0, 0);
         } else {
             currentArmy->m_armies[i] = traits->m_secondStack;
             currentArmy->m_numTroops[i] = random(traits->m_secondStackLow,

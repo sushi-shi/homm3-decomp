@@ -22,7 +22,7 @@ template<class E, class Tr, class A> class basic_string;
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
     CREATURE_NONE = -1,
-    // Original TCreatureType::Pikeman, ordinal zero; GetBaseCreature
+    // Original TCreatureType::Pikeman, ordinal zero; Dreamcast GetBaseCreature
     // returns this value on its out-of-range dwelling arm.
     CREATURE_PIKEMAN = 0,
     // The two griffins, byte-proven by ai_tactical's

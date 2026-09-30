@@ -3538,7 +3538,7 @@ void townManager::handleMageGuildClick()
         if (g_windowManager->m_dialogReturn == DIALOG_RETURN_DECLINE)
             return;
         type_artifact spellbook(ARTIFACT_SPELLBOOK);
-        currentHero->giveArtifact(&spellbook, 1, 1);
+        currentHero->giveArtifact(spellbook, 1, 1);
         g_currentPlayer->m_resources[GOLD] -= 500;
     }
 
@@ -4291,7 +4291,7 @@ void doBlacksmith(int heroId, int townType)
         && g_windowManager->m_dialogReturn
                == TBlacksmithWindow::BUY_BUTTON_ID) {
         g_game->getHero(heroId)->giveArtifact(
-            &g_blacksmithArtifacts[townType], 1, 1);
+            g_blacksmithArtifacts[townType], 1, 1);
         const int* cost =
             g_creatureTypeTraits[g_blacksmithMachines[townType]].m_cost;
         for (int i = 0; i < 7; i++)

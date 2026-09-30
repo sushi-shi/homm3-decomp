@@ -762,7 +762,11 @@ public:
                        long* fireDamage) const;
     void adjustHitpoints();
     unsigned char attackHex(int hex, unsigned char restoreFacing);
-    unsigned char doAttack(army* armyToAttack, int direction);
+private:
+    // Original public ?do_attack@army@@AAA_NPAV1@H@Z: private bool.
+    // Keep this overload in its attested LF_FIELDLIST position.
+    bool doAttack(army* armyToAttack, int direction);
+public:
     void doAttack(int direction);
 
     // LF_FIELDLIST 0x205b entries 115..227. Overloads share one roster
@@ -770,7 +774,10 @@ public:
     // family without changing the attested relative order below.
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fireDamage);
+private:
+    // Original public ?range_attack@army@@AAAXPAV1@@Z: one private volley.
     void rangeAttack(army* armyToAttack);
+public:
     void rangeAttack();
     void attackWall(int targetGridIndex);
     void turn(unsigned char animateTurn);
@@ -779,12 +786,12 @@ public:
     bool canCastResurrect() const;
     bool canCastSpell(long hex) const;
     bool canRetaliate(const army& attacker) const;
-    unsigned char canShoot(const army* excluded) const;
+    bool canShoot(const army* excluded) const;
     void castCaliphSpell(long hex);
     void castResurrect(long hex);
     void castDemonicResurrect(long hex);
     void castFaerieDragonSpell(long hex);
-    unsigned char checkSpecialAttack(army* target);
+    bool checkSpecialAttack(army* target);
     void castSpell(long hex);
     // Complete retains this ordinary destructor in Army code at 0x43d400,
     // immediately after army(). Its body owns the member cleanup; callers
@@ -1071,7 +1078,7 @@ private:
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
-    unsigned char checkSpecialAttack(army* target);
+    bool checkSpecialAttack(army* target);
     // 0x440bc0, EH-bearing carcass in army.cpp; declared for
     // do_attack's kill-accounting tail.
     void doPostAttack(army* target, int iDamage, int iKilled,
@@ -1354,7 +1361,7 @@ public:
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
-    unsigned char canShoot(const army* excluded) const;        // 0x4428f0
+    bool canShoot(const army* excluded) const;        // 0x4428f0
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
@@ -1806,7 +1813,7 @@ extern int g_walkingTo;
 extern int g_walkingTo2;
 extern int g_walkingYMod;
 
-unsigned char isValidCaliphSpell(SpellID spell, const army* target);
+bool isValidCaliphSpell(SpellID spell, const army* target);
 // 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
 // and army::can_cast_spell (0x4476c0) also calls. It opens by
 // rejecting a target that already carries the spell
@@ -1815,7 +1822,7 @@ unsigned char isValidCaliphSpell(SpellID spell, const army* target);
 // is_valid_caliph_spell and can_cast_spell - so it is a retail-only
 // factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
-unsigned char spellIsValidOnTarget(int spell, const army* target);
+bool spellIsValidOnTarget(int spell, const army* target);
 
 // E:\gamedcs\army.cpp:917, dc 0x44e14
 // E:\gamedcs\army.cpp:2708, dc 0x47944

@@ -25,8 +25,8 @@
 // similarly bracketed by CTeamAlignmentDlg's ctor and CreateWin.
 
 // The CreateWin family is reconstructed below. CTownDlg retains the Complete
-// sprite widget and direct dwelling lookup where Dreamcast's older source
-// names a button and GetBaseCreature.
+// sprite widget and the canonical dwelling lookup; the older Dreamcast
+// popup additionally constructs a button.
 #include "va.h"
 #include "includes.h"
 
@@ -35,6 +35,7 @@
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "csprite.h"
+#include "creaturetype.h"
 #include "font.h"
 #include "game.h"
 #include "iconwdgt.h"
@@ -301,7 +302,15 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 // E:\gamedcs\singleselectionpopups.cpp:302. DC lines 304/311 use
 // text lookups for both captions and GetTownTypeName for the label.
 // Complete keeps its getText calls and the town-name helper. The two
-// GetBaseCreature calls and button ctor belong to the older popup.
+// GetBaseCreature calls survive as expanded Complete lookups; only the
+// extra button constructor belongs to the older popup.
+// DC 0x12e976/0x12e97a and Mac 0x16c9dc derive the caption position from
+// the icon position. Keeping a second running text coordinate reproduced
+// the flow but gave the wrong stack homes. The direct expression fixes
+// those homes and the helper fixes the town-row byte offset. Residual:
+// VC6 retains one vector<widget*>::size call in the final expanded Add,
+// where retail reuses the computed size. Prefix/postfix loop increments,
+// separate loop counters and per-iteration caption locals do not close it.
 VA(0x00575e60, 0x670) MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
@@ -321,37 +330,32 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 
     int centerX = m_width / 2;
     int iconX = centerX - 68;
-    int textX = iconX - 10;
-    int creatureBase = townType * (2 * TOWN_DWELLING_COUNT);
     int slot;
     for (slot = 0; slot < 3; ++slot) {
-        int creature = g_townDwellingCreatures[creatureBase + slot];
+        TCreatureType creature = getBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
             iconX, 159, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(textX, 193, 52, 32,
+        add(new textWidget(iconX - 10, 193, 52, 32,
             g_creatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
-        textX += 52;
     }
 
     iconX = centerX - 88;
-    textX = iconX - 10;
     for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
-        int creature = g_townDwellingCreatures[creatureBase + slot];
+        TCreatureType creature = getBaseCreature(townType, slot);
         iconWidget* portrait = new iconWidget(
             iconX, 235, 32, 32, slot, "cprsmall.def",
             0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
         add(portrait);
         portrait->setIconFrame(creature + 2);
-        add(new textWidget(textX, 267, 52, 32,
+        add(new textWidget(iconX - 10, 267, 52, 32,
             g_creatureTypeTraits[creature].m_name, "tiny.fnt",
             font::PRIMARY, -1, 1, 0, 8));
         iconX += 52;
-        textX += 52;
     }
     return 1;
 }

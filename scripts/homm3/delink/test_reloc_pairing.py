@@ -581,6 +581,35 @@ class IdentityRelocationTests(unittest.TestCase):
         self.assertEqual(identity_relocations.resolve_name(
             "??_C@_03x@", {}, identities, "v"), 0x7000)
 
+    def test_unit_scoped_target_literal_uses_proven_effective_address(self):
+        from homm3.build import identity_relocations
+        from homm3.compare.canonicalize import CoffObject
+        literal = "??_C@_06CMFN@Error?$CB?$AA@"
+        base = coff([("_f", mov_eax(0x64) + b"\xc3",
+                      [(1, "_offsets", DIR32)])])
+        target = coff([("_f", mov_eax(4) + b"\xc3",
+                        [(1, literal, DIR32)])])
+        authority = {"_offsets": (0x27faa8, "data")}
+        identities = {("mapcell", literal): {0x27fb08}}
+        out, count = identity_relocations.canonicalize(
+            base, target, authority, identities, unit="mapcell")
+        parsed = CoffObject(out)
+        relocation = parsed.relocations[0]
+        self.assertEqual(count, 1)
+        self.assertEqual(parsed.symbols[relocation.symbol_index].name, "_offsets")
+        data = parsed.section_bytes(parsed.sections[relocation.section - 1])
+        self.assertEqual(struct.unpack_from("<I", data, relocation.site)[0], 0x64)
+
+        for unit, proof in (
+                ("other", identities),
+                ("mapcell", {}),
+                ("mapcell", {("mapcell", literal): {0x27fb0c}}),
+                ("mapcell", {("mapcell", literal): {0x27fb08, 0x27fb0c}})):
+            with self.subTest(unit=unit, proof=proof):
+                result = identity_relocations.canonicalize(
+                    base, target, authority, proof, unit=unit)
+                self.assertEqual(result, (target, 0))
+
 
 if __name__ == "__main__":
     unittest.main()

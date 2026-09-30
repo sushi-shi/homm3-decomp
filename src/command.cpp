@@ -348,7 +348,7 @@ int combatManager::main(message& msg)
 
             case RS_COMBAT_END_PLACEMENT:
                 finishCreaturePlacement();
-                nextArmy(1);
+                nextArmy(true);
                 break;
 
             case RS_PLAYER_DROPPED:
@@ -920,7 +920,7 @@ int combatManager::processCombatMsg(message& msg)
                         false, true);
                 }
                 finishCreaturePlacement();
-                nextArmy(1);
+                nextArmy(true);
                 m_backgroundDrawn = 0;
                 drawFrame(1, 0, 0, 0, 1, 0);
                 break;
@@ -2631,7 +2631,7 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 
     testRaiseDoor();
     if (returnValue) {
-        while (!nextArmy(1))
+        while (!nextArmy(true))
             resetRound();
     }
     checkChangeSelector();

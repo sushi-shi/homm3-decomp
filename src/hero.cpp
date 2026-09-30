@@ -1117,12 +1117,12 @@ void hero::initialize(const HeroExtra* setup)
         }
         for (i = 0; i < 19; i++) {
             if (setup->m_artifacts[i].m_artifactId != ARTIFACT_NONE)
-                equipArtifact(&setup->m_artifacts[i], i);
+                equipArtifact(setup->m_artifacts[i], i);
         }
         std::fill_n(m_backpack, 64, ARTIFACT_NONE);
         for (i = 0; i < 64; i++) {
             if (setup->m_backpack[i].m_artifactId != ARTIFACT_NONE)
-                addToBackpack(&setup->m_backpack[i], -1);
+                addToBackpack(setup->m_backpack[i], -1);
         }
     }
 
@@ -2730,7 +2730,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
                 g_heroScreenDraggedArtifact.m_artifactId, slot)) {
         if (oldArtifact.m_artifactId == ARTIFACT_NONE) {
             g_currentHero->equipArtifact(
-                &g_heroScreenDraggedArtifact, slot);
+                g_heroScreenDraggedArtifact, slot);
             if (g_game->m_gameVersion >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
@@ -2742,7 +2742,7 @@ static void handleArtifactClick(long code, unsigned char rightMouse)
         } else {
             g_currentHero->removeArtifact(slot);
             g_currentHero->equipArtifact(
-                &g_heroScreenDraggedArtifact, slot);
+                g_heroScreenDraggedArtifact, slot);
             if (g_game->m_gameVersion >= 2)
                 g_currentHero->heroFn004DC100(slot);
             g_currentHero->updateStats();
@@ -2832,7 +2832,7 @@ unsigned char hero::heroFn004DBF30(int combination, long slot)
 
     return equipArtifact(
         // The Complete combination table stores the added artifact ordinal; equipArtifact receives the canonical DC-typed record.
-        &type_artifact(static_cast<TArtifact>(g_combinationArtifacts[combination].m_artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
+        type_artifact(static_cast<TArtifact>(g_combinationArtifacts[combination].m_artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */),
         -1);
 }
 
@@ -2849,7 +2849,7 @@ void hero::heroFn004DC070(long slot)
         if (components.test(artifactId)) {
             // Complete enumerates all 144 component bits, beyond DC's 128 artifact ids; each set bit becomes a typed artifact record.
             type_artifact artifact(static_cast<TArtifact>(artifactId) /* HOMM3_ENUM_CAST_REVISION_BOUNDARY */);
-            equipArtifact(&artifact, -1);
+            equipArtifact(artifact, -1);
         }
     }
 }
@@ -3246,7 +3246,7 @@ static void handleBackpackClick(long code, unsigned char rightMouse)
         if (rightMouse)
             return;
         if (!g_currentHero->addToBackpack(
-                &g_heroScreenDraggedArtifact, index)) {
+                g_heroScreenDraggedArtifact, index)) {
             std::string msg = g_currentHero->getBackpackError(
                 g_heroScreenDraggedArtifact.m_artifactId);
             normalDialog(msg.c_str(),
@@ -4262,7 +4262,7 @@ VA(0x004e1550, 0xA2) MAC_ADDRESS(0x101ea4, 0xfc)  // dc 0xd2be8
 THeroScreenWindow::~THeroScreenWindow()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != ARTIFACT_NONE) {
-        g_currentHero->giveArtifact(&g_heroScreenDraggedArtifact, 0, 0);
+        g_currentHero->giveArtifact(g_heroScreenDraggedArtifact, 0, 0);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
         g_mouseManager->setPointer(0, mouseManager::DEFAULT_SET);
     }
@@ -4712,7 +4712,7 @@ void hero::transferArtifacts(hero* src)
             artifact.m_artifactId == ARTIFACT_AMMO_CART ||
             artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
-        if (!addToBackpack(&artifact, -1))
+        if (!addToBackpack(artifact, -1))
             return;
         src->removeArtifact(slot);
     }
@@ -4726,7 +4726,7 @@ void hero::transferArtifacts(hero* src)
             artifact.m_artifactId == ARTIFACT_AMMO_CART ||
             artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
             continue;
-        if (!addToBackpack(&artifact, -1))
+        if (!addToBackpack(artifact, -1))
             return;
         src->removeBackpackArtifact(index);
     }
@@ -4954,42 +4954,48 @@ unsigned char hero::heroFn004E2840(long artifact, long slot)
     try {
         accepted = heroFn004E2550(artifact, slot);
     } catch (...) {
-        equipArtifact(&displaced, slot);
+        equipArtifact(displaced, slot);
         throw;
     }
-    equipArtifact(&displaced, slot);
+    equipArtifact(displaced, slot);
     return accepted;
 }
 
+// Original public ?equip_artifact@hero@@QAA_NABUtype_artifact@@J@Z
+// proves bool and const-reference formals. Complete dereferences the
+// supplied record without a null branch; the recursive spellbook case
+// passes an ordinary type_artifact temporary on both desktop builds.
+// DC's artifactAllowedInSlot call remains inside Complete's shared
+// heroFn004E2550 placement gate.
 VA(0x004e2a00, 0x1C7) MAC_ADDRESS(0x1035fc, 0x258)  // dc 0xd39d8
-unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
+bool hero::equipArtifact(const type_artifact& artifact, long slot)
 {
     if (slot == -1) {
         slot = 0;
         while (1) {
             if (slot >= 19)
                 return 0;
-            if (heroFn004E2550(artifact->m_artifactId, slot))
+            if (heroFn004E2550(artifact.m_artifactId, slot))
                 break;
             ++slot;
         }
     } else {
-        if (!heroFn004E2550(artifact->m_artifactId, slot))
+        if (!heroFn004E2550(artifact.m_artifactId, slot))
             return 0;
     }
 
-    m_equipped[slot].m_artifactId = artifact->m_artifactId;
-    m_equipped[slot].m_extra = artifact->m_extra;
+    m_equipped[slot].m_artifactId = artifact.m_artifactId;
+    m_equipped[slot].m_extra = artifact.m_extra;
 
-    if (artifact->m_artifactId == ARTIFACT_TITANS_THUNDER
+    if (artifact.m_artifactId == ARTIFACT_TITANS_THUNDER
         && m_equipped[17].m_artifactId == ARTIFACT_NONE) {
         type_artifact spellbook(ARTIFACT_SPELLBOOK);
-        equipArtifact(&spellbook, 17);
+        equipArtifact(spellbook, 17);
     }
 
     bool updateSpells = false;
     int combinationIndex =
-        g_artifactTraits[artifact->m_artifactId].m_comboType;
+        g_artifactTraits[artifact.m_artifactId].m_comboType;
     if (combinationIndex != -1) {
         const std::bitset<144>& components =
             g_combinationArtifacts[combinationIndex].m_components;
@@ -5004,7 +5010,7 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
                 int componentSlot =
                     g_artifactTraits[component].m_allowableSlotMask;
                 if (componentSlot
-                        == g_artifactTraits[artifact->m_artifactId]
+                        == g_artifactTraits[artifact.m_artifactId]
                                .m_allowableSlotMask
                     && !keptSlot)
                     keptSlot = true;
@@ -5016,10 +5022,10 @@ unsigned char hero::equipArtifact(const type_artifact* artifact, long slot)
 
     for (int skill = 0; skill < 4; skill++)
         adjustPrimarySkill(skill,
-            g_artifactPrimarySkillBonuses[artifact->m_artifactId][skill]);
+            g_artifactPrimarySkillBonuses[artifact.m_artifactId][skill]);
 
     if (updateSpells
-        || g_artifactTraits[artifact->m_artifactId].m_givesSpells)
+        || g_artifactTraits[artifact.m_artifactId].m_givesSpells)
         updateSpellList();
     return 1;
 }
@@ -5132,15 +5138,18 @@ std::string hero::getBackpackError(TArtifact artifact) const
                          g_artifactTraits[artifact].m_name);
 }
 
+// Original public ?add_to_backpack@hero@@QAA_NABUtype_artifact@@J@Z
+// has the same bool/reference contract. Retail copies the complete
+// record after the capacity, war-machine and occupied-slot checks.
 VA(0x004e2f90, 0xD1) MAC_ADDRESS(0x103c74, 0x134)  // dc 0xd3cfc
-unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
+bool hero::addToBackpack(const type_artifact& artifact, long slot)
 {
     if (m_backpackCount >= 64)
         return 0;
-    if (artifact->m_artifactId == ARTIFACT_CATAPULT ||
-        artifact->m_artifactId == ARTIFACT_BALLISTA ||
-        artifact->m_artifactId == ARTIFACT_AMMO_CART ||
-        artifact->m_artifactId == ARTIFACT_FIRST_AID_TENT)
+    if (artifact.m_artifactId == ARTIFACT_CATAPULT ||
+        artifact.m_artifactId == ARTIFACT_BALLISTA ||
+        artifact.m_artifactId == ARTIFACT_AMMO_CART ||
+        artifact.m_artifactId == ARTIFACT_FIRST_AID_TENT)
         return 0;
     if (slot < 0) {
         for (slot = 0; slot < 64; slot++) {
@@ -5153,7 +5162,7 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
         for (long i = last; i >= slot; i--)
             m_backpack[i + 1] = m_backpack[i];
     }
-    m_backpack[slot] = *artifact;
+    m_backpack[slot] = artifact;
     m_backpackCount++;
     return 1;
 }
@@ -5205,8 +5214,15 @@ unsigned char hero::addToBackpack(const type_artifact* artifact, long slot)
 // string/EH callees still take a different inlining path. Mac is 93.8830%,
 // with entry register assignment the first difference. Prompt copy and
 // destructor call order already agree on Mac; retain their source lifetime.
+// Original public ?GiveArtifact@hero@@QAAXABUtype_artifact@@H_N@Z proves
+// the artifact reference independently of the older return/flag contracts.
+// Complete and Mac unconditionally forward that record to EquipArtifact
+// before reading its id; no caller supplies a null artifact. Complete adds
+// a placement result and uses its two byte flags for assembly announcements
+// and victory checking. DC instead names int bCheckEnd and bool equip_it;
+// retain the desktop result and flag behavior while restoring the reference.
 VA(0x004e3070, 0x339) MAC_ADDRESS(0x103da8, 0x2f0)  // anchor-global, dc 0xd3de4
-unsigned char hero::giveArtifact(const type_artifact* artifact,
+unsigned char hero::giveArtifact(const type_artifact& artifact,
                                  unsigned char announce,
                                  unsigned char checkEnd)
 {
@@ -5215,7 +5231,7 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
         placed = 1;
         if (g_game->m_gameVersion >= 2) {
             int targetCombo =
-                g_artifactTraits[artifact->m_artifactId].m_targetCombo;
+                g_artifactTraits[artifact.m_artifactId].m_targetCombo;
             if (targetCombo != -1 && m_owner >= 0 && m_owner < 8) {
                 if (heroFn004DBE80(targetCombo)) {
                     playerData& player = g_game->m_players[m_owner];
@@ -5248,10 +5264,10 @@ unsigned char hero::giveArtifact(const type_artifact* artifact,
     if (!placed)
         return 0;
 
-    if (g_artifactTraits[artifact->m_artifactId].m_comboType != -1
+    if (g_artifactTraits[artifact.m_artifactId].m_comboType != -1
         && m_owner >= 0 && m_owner < 8)
         g_game->m_players[m_owner].m_assembledCombinations[
-            g_artifactTraits[artifact->m_artifactId].m_comboType] = true;
+            g_artifactTraits[artifact.m_artifactId].m_comboType] = true;
 
     if (checkEnd &&
         g_game->m_mapHeader.m_victoryCondition.checkForArtifactWin())
@@ -5266,7 +5282,7 @@ int hero::giveRandomArtifact()
     if (artifact.m_artifactId == ARTIFACT_NONE)
         giveResource(GOLD, 1000);
     else
-        giveArtifact(&artifact, 1, 1);
+        giveArtifact(artifact, 1, 1);
     return artifact.m_artifactId;
 }
 
@@ -6311,17 +6327,12 @@ bool std::bitset<144>::any() const
     // @stub - <bitset>'s own definition; see h3_stl_comdat_anchor
 }
 
-VA(0x004e64e0, 0x4)  // stl-comdat, retail-only
-int* std::vector<int>::begin()
-{
-    // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
-}
-
-VA(0x004e64f0, 0x4)  // stl-comdat, retail-only
-int* std::vector<int>::end()
-{
-    // @stub - <vector>'s own definition; see h3_stl_comdat_anchor
-}
+// THeroScreenWindow's constructor calls the widget vector's begin/end;
+// retail relocation sites are 0x4e1317/0x4e1321. The native COMDATs and bodies are
+// respectively 8b4104c3 / 8b4108c3 (mov eax,[ecx+4/8]; ret). The former
+// vector<int> placeholders had no emitted owner in this TU.
+VA_COMPGEN(0x004e64e0, 0x4, VECTOR_BEGIN, widget)
+VA_COMPGEN(0x004e64f0, 0x4, VECTOR_END, widget)
 
 // std::vector<T*>::push_back(T* const&) - 434 B, `ret 4`: one ICF-folded
 // body for every pointer-element vector. hero.obj emits it for the hero
