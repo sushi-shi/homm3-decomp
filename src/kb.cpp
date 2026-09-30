@@ -2442,6 +2442,9 @@ void sendPlayerLost()
 // self-call difference is the switch table's shifted +0x1318/+0x1314 addend.
 // DC retains a text lookup in the older victory arms. Keep Complete's getText
 // helper; this spelling is Windows byte-flat here.
+// DC 3165/3167 separately admits a won defeat-hero condition and its team;
+// keep those nested predicates as in the loss display. Windows is byte-flat
+// at 97.3784% after restoring this source boundary.
 VA(0x004f15e0, 0x1348)
 DC_ADDRESS(0x0e29a8, 0xb1a)
 MAC_ADDRESS(0x113208, 0x154c)  // linkorder + anchor-string/callee
@@ -2673,16 +2676,17 @@ bool displayVCWinLoss(VictoryConditionStruct& victoryCondition,
         break;
 
     case VICTORY_CONDITION_DEFEAT_HERO:
-        if (victoryCondition.m_gameWon
-            && g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
-                                  victoryCondition.m_playerWinner)) {
-            gameWon = 1;
-            sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
-                    g_game->getHero(victoryCondition.m_heroId)->m_name);
-            if (!remoteCheck)
-                sendPlayerWon();
-            normalDialog(g_text, 1, -1, -1, -1, 0,
-                         -1, 0, -1, 0, -1, 0);
+        if (victoryCondition.m_gameWon) {
+            if (g_game->onSameTeam(g_game->getLocalPlayerGamePos(),
+                                   victoryCondition.m_playerWinner)) {
+                gameWon = 1;
+                sprintf(g_text, g_generalText->getText(GENERAL_TEXT_LOCAL_DEFEAT_HERO_VICTORY_FORMAT),
+                        g_game->getHero(victoryCondition.m_heroId)->m_name);
+                if (!remoteCheck)
+                    sendPlayerWon();
+                normalDialog(g_text, 1, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            }
         }
         break;
 
