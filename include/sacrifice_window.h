@@ -23,7 +23,7 @@ struct type_artifact_offering : public type_artifact {
     // Its base call passes -1 to type_artifact(TArtifact), so the inherited
     // default-argument path supplies construction without written wrappers.
 
-    void set(const type_artifact* artifact, long slot, const hero* owner);
+    void set(const type_artifact& artifact, TArtifactSlot slot, const hero* owner);
 };
 SIZE(type_artifact_offering, 16);
 
@@ -204,7 +204,7 @@ public:
     virtual int exitDialog(message& msg);                      // slot 14
 
 private:
-    unsigned char addArtifact(type_artifact artifact, long source);
+    bool addArtifact(type_artifact artifact, TArtifactSlot source);
     void clear();
     void createArtifactWidgets(long& widgetId, int curPlayer);
     long createCreatureIcons(

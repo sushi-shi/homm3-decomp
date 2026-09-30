@@ -80,13 +80,15 @@ DATA(0x006830c8) static long g_constCreatureOfferings[2][2] = {
 VA(0x0055fc30, 0xab)
 DC_ADDRESS(0x123e8c, 0x7c)
 MAC_ADDRESS(0x1552ec, 0xe0)
-void type_artifact_offering::set(const type_artifact* artifact, long slot,
+// DC records const type_artifact& and TArtifactSlot; native bodies use the
+// same pointer/dword ABI. Preserve that source boundary in both callers.
+void type_artifact_offering::set(const type_artifact& artifact, TArtifactSlot slot,
                                  const hero* owner)
 {
     long artifactClass =
-        g_artifactTraits[artifact->m_artifactId].m_artifactClass;
-    m_artifactId = artifact->m_artifactId;
-    m_extra = artifact->m_extra;
+        g_artifactTraits[artifact.m_artifactId].m_artifactClass;
+    m_artifactId = artifact.m_artifactId;
+    m_extra = artifact.m_extra;
     m_source = slot;
     m_value = 0;
 
@@ -975,7 +977,7 @@ MAC_ADDRESS(0x159bb0, 0xc4)
 void type_sacrifice_window::pickUpArtifact(
     type_artifact artifact, long slot, unsigned char newArtifact)
 {
-    m_holdingArtifact.set(&artifact, slot, m_currentHero);
+    m_holdingArtifact.set(artifact, TArtifactSlot(slot), m_currentHero);
     if (newArtifact) {
         m_totalExperience += m_holdingArtifact.m_value;
         updateExperience();
@@ -1217,10 +1219,12 @@ int type_sacrifice_window::scrollBackpackRight(message& msg)
 // Complete expands this helper into both artifact-batch callbacks. It fills
 // the first empty offering, adds that record's scaled value, and refreshes
 // the corresponding pair of offering widgets.
+// DC's native decoration proves bool (_N), despite its lowered byte dossier,
+// and TArtifactSlot for source: add_artifact@@AAA_NUtype_artifact@@W4TArtifactSlot.
 DC_ADDRESS(0x12681c, 0x88)
 MAC_ADDRESS(0x15a3e0, 0xd4)
-unsigned char type_sacrifice_window::addArtifact(
-    type_artifact artifact, long source)
+bool type_sacrifice_window::addArtifact(
+    type_artifact artifact, TArtifactSlot source)
 {
     // DC 0x12681c records the offering index as signed long.
     long i;
@@ -1229,12 +1233,12 @@ unsigned char type_sacrifice_window::addArtifact(
             break;
     }
     if (i == m_artifactOfferings.size())
-        return 0;
+        return false;
 
-    m_artifactOfferings[i].set(&artifact, source, m_currentHero);
+    m_artifactOfferings[i].set(artifact, source, m_currentHero);
     m_totalExperience += m_artifactOfferings[i].m_value;
     updateArtifactOffering(i);
-    return 1;
+    return true;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1310. Mac retains this ordinary helper at
@@ -1253,7 +1257,8 @@ void type_sacrifice_window::emptyBackpack()
             if (artifact.m_artifactId != ARTIFACT_NONE)
                 break;
         }
-        if (!addArtifact(artifact, SACRIFICE_BACKPACK_SOURCE_SLOT))
+        if (!addArtifact(artifact,
+                TArtifactSlot(SACRIFICE_BACKPACK_SOURCE_SLOT)))
             break;
         m_currentHero->removeBackpackArtifact(i);
     }
@@ -1321,7 +1326,7 @@ int type_sacrifice_window::allArtifacts(message& msg)
         for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
             artifact = window->m_currentHero->getArtifact(TArtifactSlot(slot));
             if (artifact.m_artifactId != ARTIFACT_NONE) {
-                if (!window->addArtifact(artifact, slot))
+                if (!window->addArtifact(artifact, TArtifactSlot(slot)))
                     break;
                 window->m_currentHero->removeArtifact(slot);
                 window->updateSlot(slot);
