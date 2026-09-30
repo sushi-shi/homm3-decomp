@@ -3647,12 +3647,12 @@ void combatManager::powEffect(TSpellEffectID spellEffect, int resetLimitCreature
     for (side = 0; side < 2; side++) {
         for (slot = 0; slot < m_numArmies[side]; slot++) {
             army& stack = m_armies[side][slot];
-            if (stack.m_postPowSpellToCast != -1) {
+            if (stack.m_postPowSpellToCast != SPELL_NONE) {
                 if (stack.m_numTroops > 0)
-                    castSpell(static_cast<ESpellId>(stack.m_postPowSpellToCast),
+                    castSpell(stack.m_postPowSpellToCast,
                               stack.m_gridIndex,
                               1, -1, eMasteryNone, 3);
-                stack.m_postPowSpellToCast = -1;
+                stack.m_postPowSpellToCast = SPELL_NONE;
             }
         }
     }

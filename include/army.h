@@ -401,13 +401,14 @@ public:
     // onward, so DC 216 lands on +0xec). PowEffect's post-animation
     // walk is its only decoded reader: any stack whose value is not -1
     // gets that spell cast on its own hex, and the slot is reset to -1
-    // straight after. Spelled int because SpellID's enum lives in a
-    // header this one does not include. The ROUND view is admitted to
+    // straight after. All five full native army records use SpellID
+    // (LF_ENUM 0x1b61, signed int), preserving the four-byte layout.
+    // The ROUND view is admitted to
     // the same slice 2026-08-20: InitClean (0x43d5c0) resets it to -1
     // out of the same shared `or eax,-1` it uses for originalIndex and
     // the iMirror pair, which is a second and independent witness that
     // +0xec is a dword field and not pad.
-    int m_postPowSpellToCast;         // +0xec
+    ESpellId m_postPowSpellToCast;     // +0xec
     unsigned char m_hitByCreature;  // +0xf0
     // The side that OWNS this stack, written once by Init and never by
     // a spell: the hypnotize flip is applied ON READ by

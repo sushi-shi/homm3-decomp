@@ -208,7 +208,7 @@ void army::initClean()
     m_imageHeight = 0;
     m_showPowEffect = 0;
     m_resetThisRound = 0;
-    m_postPowSpellToCast = -1;
+    m_postPowSpellToCast = SPELL_NONE;
     m_mirrorSourceIndex = -1;
     m_mirrorDestIndex = -1;
     m_originalIndex = -1;
