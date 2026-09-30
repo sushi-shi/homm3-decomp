@@ -153,5 +153,6 @@ struct THeroSpecificAbility {
 SIZE(THeroSpecificAbility, 40);
 
 extern const THeroSpecificAbility (&g_heroSpecificAbilities)[HOMM3_HERO_COUNT];
+extern THeroSpecificAbility g_heroSpecificAbilitiesImp[HOMM3_HERO_COUNT];
 
 #endif  /* HOMM3_HEROSPEC_H */

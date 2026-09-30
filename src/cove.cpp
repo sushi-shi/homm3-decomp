@@ -8,8 +8,6 @@
 
 #include <limits.h>
 
-extern THeroSpecificAbility g_heroSpecificAbilitiesImp[HOMM3_HERO_COUNT];
-
 // Cove data adapted from the VCMI HotA port. HotA Crew and VCMI contributors;
 // CC BY-SA 4.0. See extensions/cove/definition.json for the pinned sources.
 namespace cove {
