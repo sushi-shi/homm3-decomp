@@ -13,16 +13,7 @@ int VictoryConditionStruct::appliesToPlayer(long playerId) const
 {
     if (!m_appliesToComputer) {
         int team = g_game->getTeam(playerId);
-        if (team >= 0) {
-            int player = 0;
-            signed char* teams = g_game->m_mapHeader.m_teamInfo;
-            for (; player < 8; ++player) {
-                if (teams[player] == team
-                    && g_game->isHuman(player))
-                    return 1;
-            }
-        }
-        return 0;
+        return g_game->isHumanTeam(team);
     }
     return 1;
 }

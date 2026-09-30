@@ -99,7 +99,7 @@ void game::initNewGame(int difficulty, int version,
     for (slot = 0; slot < 8; slot++) {
         if (!this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeHuman && !this->m_mapHeader.m_playerSlotAttributes[slot].m_canBeComputer) {
             m_setup.m_handicap[slot] = -1;
-            m_setup.m_alignment[slot] = -1;
+            m_setup.m_alignment[slot] = eTownNeutral;
             m_setup.m_playerPos[slot] = -1;
             m_setup.m_canFlipFromToComputer[slot] = -1;
         } else {

@@ -742,6 +742,7 @@ public:
     type_creature_bank& getCreatureBank() const;
     void clearVisitedBits();
     short getCustomIndex() const;
+    short getCustomMonsterIndex() const;
     short getItemId() const;
     bool playerKnowsCell(short player) const;
     void setCellVisited(short player);
@@ -1606,12 +1607,22 @@ inline enum EGameResource ExtraInfoUnion::getCampfireResource() const
 DC_ADDRESS(0x0bc95c, 0x16)
 inline void ExtraInfoUnion::clearVisitedBits() { m_cellVisitedInfo.m_visited = 0; }
 
-// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974
-// Complete narrows MonsterInfo::index from DC's 12 bits to eight; retail
-// MonstersGiveReward (0x4a6b30) and DoWanderingMonsterResult (0x4a7740)
-// both extract that eight-bit field before indexing the custom list.
+// Original: ExtraInfoUnion::get_custom_index; MapCell.h:974.
+// DC 0x9c7c8 extracts bits 19..30 and get_treasure_data calls it at
+// 0x90d1a. Mac 0xaa36c expands the same 12-bit extraction before the
+// treasure-pool lookup. Complete's monster pool has a separate index lane.
 DC_ADDRESS(0x09c7c8, 0xc)
-inline short ExtraInfoUnion::getCustomIndex() const { return m_monsterInfo.m_index; }
+inline short ExtraInfoUnion::getCustomIndex() const
+{
+    return m_customResourceInfo.m_index;
+}
+
+// Inferred Complete name: MonstersGiveReward (0x4a6b30) and
+// DoWanderingMonsterResult (0x4a7740) extract the eight-bit monster index.
+inline short ExtraInfoUnion::getCustomMonsterIndex() const
+{
+    return m_monsterInfo.m_index;
+}
 
 DC_ADDRESS(0x01fa80, 0x12)
 inline short ExtraInfoUnion::getItemId() const { return m_skeletonInfo.m_id; }

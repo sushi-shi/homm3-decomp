@@ -909,7 +909,7 @@ public:
     DC_ADDRESS(0x181418, 0x50)
     CTownNetMsgHandler(TResourceDisplay* display)
     {
-        m_resourceDisplay = display;
+        setResourceDisplay(display);
     }
 
     // Four bytes on the Dreamcast and no retail row of its own, so it
@@ -980,11 +980,12 @@ MAC_ADDRESS(0x1b8f54, 0xcc)
 townObject::~townObject()
 {
     delete m_objBorder;
-    m_objIcon->dispose();
+    ResourceManager::dispose(m_objIcon);
     if (m_objOutline)
-        m_objOutline->dispose();
+        ResourceManager::dispose(m_objOutline);
     if (m_objHotspot)
-        m_objHotspot->dispose();
+        ResourceManager::dispose(m_objHotspot);
+    ResourceManager::delSprFromCache();
 }
 
 // Original: townObject::DrawOutline; townmgr.cpp:1913
@@ -2107,7 +2108,7 @@ void townManager::setupTown(unsigned char fade)
 // its empty arm draws no group at all.
 VA(0x005c6e10, 0x29B)
 DC_ADDRESS(0x16c0e4, 0x1f4)
-MAC_ADDRESS(0x1befc0, 0x308)
+MAC_ADDRESS(0x1befc0, 0x308)  // MAC_ABSTRACTION_FROM(tokens1:dfa462667662,13.7887): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void townManager::newStrips()
 {
     if (m_townToView->m_garrisonHeroId != -1) {
@@ -2877,6 +2878,7 @@ TThievesGuildWindow::~TThievesGuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // Eight player columns shared by the guild builder, rollover and click handler.
@@ -3274,6 +3276,7 @@ THallWindow::~THallWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x005cc980, 0x179F)
@@ -3408,6 +3411,7 @@ TMageGuildWindow::~TMageGuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The mage guild page's rollover line. The page lays its thirty spell
@@ -3799,6 +3803,7 @@ type_garrison_base_window::~type_garrison_base_window()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The garrison dialog's status line, and the town page's command with
@@ -4252,6 +4257,7 @@ TBlacksmithWindow::~TBlacksmithWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x005d1aa0, 0xB3)
@@ -4487,6 +4493,7 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // Original: TShipWindow::SetRightClickText; townmgr.cpp:5461
@@ -4868,10 +4875,11 @@ int exitTownManager(message& msg)
     return 2;
 }
 
-// E:\gamedcs\townmgr.cpp:6792
-DC_ADDRESS(0x176bf0, 0x108)
+// Original: townManager::SwapHeroes, townmgr.cpp:6778.
+// Mac 0x1d20a8 calls town::swapHeroes (0x1b3910).
+DC_ADDRESS(0x176b88, 0x66)
 MAC_ADDRESS(0x1d207c, 0x74)
-void townManager::moveHeroToGarrison()
+void townManager::swapHeroes()
 {
     if (!g_currentPlayer->isLocalHuman())
         return;
@@ -5703,9 +5711,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         }
         break;
 
-    case TOWN_COMMAND_SWAP_HEROES:
+    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
         if (g_currentPlayer->isLocalHuman()) {
-            swapHeroes();
+            moveHeroToGarrison();
             resetStrips();
         }
         break;
@@ -5717,9 +5725,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
         }
         break;
 
-    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
+    case TOWN_COMMAND_SWAP_HEROES:
         if (g_currentPlayer->isLocalHuman()) {
-            moveHeroToGarrison();
+            swapHeroes();
             resetStrips();
         }
         break;
@@ -5734,9 +5742,9 @@ void townManager::doCommand(int inCommand, unsigned char isGarrison,
 // moved, both troop strips are invalid, so they are dropped and NewStrips
 // rebuilds them around the new arrangement.
 VA(0x005d5150, 0xC2)
-DC_ADDRESS(0x176b88, 0x66)
+DC_ADDRESS(0x176bf0, 0x108)
 MAC_ADDRESS(0x1d20f0, 0x108)
-void townManager::swapHeroes()
+void townManager::moveHeroToGarrison()
 {
     playerData* player = &g_game->m_players[m_townToView->m_owner];
 
@@ -5929,6 +5937,7 @@ TBuyBuildWindow::~TBuyBuildWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The buy-a-building transaction: put up TBuyBuildWindow, price the
@@ -6446,7 +6455,7 @@ void townManager::buildObj(int buildingId)
 // its own spell.
 VA(0x005d6ef0, 0x1BD)
 DC_ADDRESS(0x179e74, 0x1a8)
-MAC_ADDRESS(0x1d43c4, 0x2bc)
+MAC_ADDRESS(0x1d43c4, 0x2bc)  // MAC_ABSTRACTION_FROM(tokens1:4683f38cbe85,16.7143): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void townManager::setupMage(heroWindow* mageWin)
 {
     message msg;
@@ -6572,6 +6581,7 @@ TTavernWindow::~TTavernWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x005d7920, 0x20A)
@@ -6769,6 +6779,7 @@ DC_ADDRESS(0x17ad3c, 0x3a)
 MAC_ADDRESS(0x1d5c14, 0x84)
 int TTavernWindow::open(int zOrder, unsigned char update)
 {
+    ResourceManager::delSprFromCache();
     videoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
     int result = heroWindow::open(zOrder, update);
     if (result)
@@ -7111,7 +7122,7 @@ TCastleWindow::TCastleWindow()
         m_widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, g_text, 0x800));
         int summoned = g_townManager->m_townToView->m_summoningType;
         strcpy(g_text, g_townCastleDefNames[
-                   g_game->getAlignment(summoned) + 1]);
+                   g_game->getCreatureAlignment(summoned) + 1]);
         m_widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, g_text, 0x800));
     } else {
         m_widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, g_text, 0x800));
@@ -7564,6 +7575,7 @@ TCastleWindow::~TCastleWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // ---------------------------------------------------------------------
@@ -8038,11 +8050,7 @@ void townManager::setupWell(TCastleWindow* wellWin)
         TCreatureType rowCreature =
             g_townDwellingCreatures[m_townToView->m_type * TOWN_DWELLING_SLOTS
                                    + m_currentDwellingIdOff[i]];
-        const char* creatureName;
-        if (rowCreature >= 0 && rowCreature <= 150)
-            creatureName = g_creatureTypeTraits[rowCreature].m_pluralName;
-        else
-            creatureName = "";
+        const char* creatureName = getArmyName(rowCreature, 2);
         strcpy(g_text, creatureName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);
@@ -8056,13 +8064,8 @@ void townManager::setupWell(TCastleWindow* wellWin)
         wellWin->broadcastMessage(msg);
 
         msg.m_codeY = 0x20;
-        const char* summonName;
-        if (g_townManager->m_townToView->m_summoningType >= 0
-            && g_townManager->m_townToView->m_summoningType <= 150)
-            summonName =
-                g_creatureTypeTraits[g_townManager->m_townToView->m_summoningType].m_pluralName;
-        else
-            summonName = "";
+        const char* summonName = getArmyName(
+            g_townManager->m_townToView->m_summoningType, 2);
         strcpy(g_text, summonName);
         msg.m_extraText = g_text;
         wellWin->broadcastMessage(msg);

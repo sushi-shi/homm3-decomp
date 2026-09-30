@@ -125,11 +125,9 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
             int creature = g_game->m_gameVersion ? 145 : 118;
             int owner = thisHero->m_owner;
             while (creature--) {
-                int townType = g_game->getAlignment(creature);
+                int townType = g_game->getCreatureAlignment(creature);
 
-                int alignment = owner >= 0
-                    ? g_game->m_setup.m_alignment[owner]
-                    : -1;
+                int alignment = g_game->getAlignment(owner);
                 if (townType == alignment &&
                     (disguiseCreature == CREATURE_NONE ||
                      g_creatureTypeTraits[creature].m_aiValue >

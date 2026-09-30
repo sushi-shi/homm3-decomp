@@ -3007,6 +3007,10 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // branches and 12 semantic calls still align; predict-inline has the
 // same nine out-of-line calls. Mac improves 16.8103 -> 17.3658% and
 // the other 38 available cmbtmgr pairs hold. Keep the source call.
+// DC also retains the bitmap Grab/Draw and sprite Draw forwarding overloads;
+// Mac 0x73edc/0x73f38/0x7404c expands their map/width/height/pitch arguments.
+// Restoring those calls moves Windows 94.19 -> 91.24 and Mac 17.37 -> 20.44;
+// keep the wrapper boundaries during subsequent lifetime/inlining recovery.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3057,25 +3061,15 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
                     (deltaY - remaining * flatness) * step
                     / static_cast<double>(nframes) + startY);
             }
-            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch());
-            const_cast<CSprite*>(missile)->draw(
-                0, frame, 0, 0, width, height,
-                g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                g_windowManager->m_screenBitmap->getWidth(),
-                g_windowManager->m_screenBitmap->getHeight(),
-                g_windowManager->m_screenBitmap->getPitch(), 0, 1);
+            saved.grab(g_windowManager->m_screenBitmap, x, y);
+            missile->draw(0, frame, 0, 0, width, height,
+                          g_windowManager->m_screenBitmap, x, y, false, true);
             updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
             scrollTo(x, y, width, height, true, true, true);  // DC 3717
             updateArea.clip(g_combatDrawLimits);
             updateCombatArea(updateArea);
             saved.draw(0, 0, width, height,
-                       g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch(), false);
+                       g_windowManager->m_screenBitmap, x, y, false);
             ++frame;
             if (frame >= missile->getNumFrames(0))
                 frame = 0;

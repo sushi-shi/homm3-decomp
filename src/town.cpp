@@ -450,7 +450,7 @@ int town::save(TAbstractFile* outfile)
 // retail expands the active-mask test.
 VA(0x005bd700, 0x47)
 DC_ADDRESS(0x165d5c, 0x46)
-MAC_ADDRESS(0x1b2878, 0x74)
+MAC_ADDRESS(0x1b2878, 0x74)  // MAC_ABSTRACTION_FROM(tokens1:ba5974b2646b,93.1034): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 int town::getPortraitFrame(bool isSmall) const
 {
     int frame;
@@ -660,7 +660,7 @@ int town::hasGarrison()
 
 VA(0x005be030, 0x1D3)
 DC_ADDRESS(0x1665a0, 0xe8)
-MAC_ADDRESS(0x1b3460, 0x204)
+MAC_ADDRESS(0x1b3460, 0x204)  // MAC_ABSTRACTION_FROM(tokens1:c6d77840248c,92.2481): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void town::giveSpells(hero* forceHero) const
 {
     if (!forceHero && m_visitingHeroId == -1 && m_garrisonHeroId == -1)
@@ -1037,7 +1037,7 @@ void checkEndGame(int forceWin);
 // E:\gamedcs\town.cpp:1340
 VA(0x005bede0, 0x427)
 DC_ADDRESS(0x166fc8, 0x202)
-MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global
+MAC_ADDRESS(0x1b43ac, 0x420)  // anchor-global MAC_ABSTRACTION_FROM(tokens1:3d4087a52cab,40.4494): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 // Moving the result declaration after the fort/capitol snapshots and
 // grouping the special-effect guards did not recover the retained hasBuilding
 // call (six VC6 combinations, three objects). Keep the canonical helpers.
@@ -1107,7 +1107,7 @@ type_building_id town::buildBuilding(int buildingId,
 
 VA(0x005bf210, 0x1A5)
 DC_ADDRESS(0x1671cc, 0xa6)
-MAC_ADDRESS(0x1b47cc, 0x17c)
+MAC_ADDRESS(0x1b47cc, 0x17c)  // MAC_ABSTRACTION_FROM(tokens1:5ef3fb3e2c1c,89.4737): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void town::updateShipyard()
 {
     if (hasBuilding(DOCK_ID, true)) {
@@ -1194,7 +1194,7 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 // all five source checks use the same built/active Town.h accessor.
 VA(0x005bf600, 0xC6)
 DC_ADDRESS(0x167458, 0x7c)
-MAC_ADDRESS(0x1b4cac, 0x130)
+MAC_ADDRESS(0x1b4cac, 0x130)  // MAC_ABSTRACTION_FROM(tokens1:1fa74b51d1cd,100.0000): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 short town::getGoldIncome(unsigned char includeSilo) const
 {
     short income = 500;
@@ -1215,7 +1215,7 @@ short town::getGoldIncome(unsigned char includeSilo) const
 // active-mask checks for the dwelling and matching horde building.
 VA(0x005bf6d0, 0x97)
 DC_ADDRESS(0x1674d4, 0x70)
-MAC_ADDRESS(0x1b4ddc, 0x14c)
+MAC_ADDRESS(0x1b4ddc, 0x14c)  // MAC_ABSTRACTION_FROM(tokens1:dac3849bd975,100.0000): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 int town::getHorde(long dwelling) const
 {
     if (!hasBuilding(DWELLING_0_ID + dwelling, true))
@@ -1233,7 +1233,7 @@ int town::getHorde(long dwelling) const
 // both active-mask checks use that same header boundary.
 VA(0x005bf770, 0x9E)
 DC_ADDRESS(0x167544, 0x8e)
-MAC_ADDRESS(0x1b4f28, 0x138)
+MAC_ADDRESS(0x1b4f28, 0x138)  // MAC_ABSTRACTION_FROM(tokens1:92246271e5b1,100.0000): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 long town::getHordeBonus(long dwelling) const
 {
     if (!hasBuilding(DWELLING_0_ID + dwelling, true))
@@ -2101,7 +2101,7 @@ unsigned char town::initializeBuildingCostsTables()
         }
     }
 
-    sheet->dispose();
+    ResourceManager::dispose(sheet);
     return 1;
 }
 

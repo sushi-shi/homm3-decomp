@@ -181,12 +181,8 @@ TSpellbookWindow::TSpellbookWindow(const hero& h, const armyGroup* g, TSpellbook
       m_enemyGroup(g),
       m_onMagicPlains(magicTerrain)
 {
-    // DC181 calls del_Spr_from_Cache, a sprite-cache sweep with LOD
-    // file-map and cached-frame operations (resourcemanager.cpp:2280..2350).
-    // Complete has neither that work nor a call here: after the derived
-    // vptr store at +0x4d it reads h's id directly. The canonical ordinary
-    // helper belongs to resourcemanager.cpp, so retaining its external
-    // call cannot reproduce this PC prologue by cross-TU auto-inlining.
+    // DC181 names the cache hook; its Complete body is empty.
+    ResourceManager::delSprFromCache();
 
     if (h.m_id != g_lastSpellbookHeroId) {
         s_lastPage = -1;
@@ -392,6 +388,7 @@ TSpellbookWindow::~TSpellbookWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x0059c970, 0x1B)

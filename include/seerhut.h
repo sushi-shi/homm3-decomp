@@ -130,10 +130,11 @@ public:
 };
 SIZE(TSeerReward, 0xc);
 
-struct TSeerData {
-    type_quest* m_quest;              // Prior role: quest.
-    unsigned char m_visitedPlayers;  // Prior role: visitedPlayers.
-    TSeerReward m_reward;            // Prior role: reward.
+// Mac TSeerHut construction calls TQuestGuard at 0x169ad8, then clears
+// the reward at +5 before its own field writes. Complete's packed guard
+// is the common five-byte prefix of the revised Dreamcast TSeerData base.
+struct TSeerData : public TQuestGuard {
+    TSeerReward m_reward;
 };
 SIZE(TSeerData, 0x11);
 

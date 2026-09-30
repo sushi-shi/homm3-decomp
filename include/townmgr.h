@@ -149,9 +149,9 @@ enum ETownCommand {
     TOWN_COMMAND_SWAP_ARMY = 3,
     TOWN_COMMAND_VIEW_HERO = 4,
     TOWN_COMMAND_SPLIT_ARMY = 5,
-    TOWN_COMMAND_SWAP_HEROES = 7,
+    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 7,
     TOWN_COMMAND_MOVE_HERO_FROM_GARRISON = 8,
-    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 9
+    TOWN_COMMAND_SWAP_HEROES = 9
 };
 
 // The panorama's four per-town-type tables, all in townmgr.obj's own

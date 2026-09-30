@@ -674,7 +674,8 @@ class SGameSetupOptions {
 public:
     signed char m_color[8];
     signed char m_handicap[8];
-    int m_alignment[8];
+    // Original SGameSetupOptions::alignment: TTownType[8].
+    TTownType m_alignment[8];
     signed char m_playerPos[8];
     signed char m_difficulty;
     char m_filename[251];
@@ -696,7 +697,7 @@ public:
         for (int i = 0; i < 8; ++i) {
             m_color[i] = i;
             m_handicap[i] = 0;
-            m_alignment[i] = i % 9;
+            m_alignment[i] = H3_ENUM_DECODE(TTownType, i % 9);
             m_playerPos[i] = i;
             m_canFlipFromToComputer[i] = i;
             m_startingHero[i] = -1;
@@ -1280,7 +1281,8 @@ public:
     // i.e. an eight-entry int array of pre-chosen starting heroes that
     // overrides GetStartingHeroId for human players.
     void createTownHeroes(int* startingHeroIds);
-    int getAlignment(int creature) const;
+    int getCreatureAlignment(int creature) const;
+    TTownType getAlignment(int playerId) const;
     void claimShipyard(type_point location, int newPlayerOwner);  // 0x4c6a30
     void claimTown(int townId, int newPlayerOwner,
                    unsigned char isRemoteMove,
@@ -1492,8 +1494,6 @@ public:
             return 0;
         return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
     }
-    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
-    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
     // Own the retained inline body here with the game interface. The selected
     // retail copy is in philai.obj; emission does not give that TU ownership.
     // Mac expands this version-aware wrapper before the retained global
@@ -1677,9 +1677,8 @@ public:
     // by name where ours spelled the general accessor:
     //   * the id is compared at CHAR width and only widened INSIDE the
     //     taken arm (`mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al`),
-    //     which is what re-reading the field in the arm produces and what
-    //     passing it through an `int` parameter cannot - the widening would
-    //     then dominate the test;
+    //     which the separate getter uses must preserve, unlike
+    //     passing the id to GetHero/GetTown before the sentinel test;
     //   * the null arm comes LAST (`je` to it, body falls through) and
     //     reuses whatever zero register is already live, i.e. the source
     //     tests `!= -1` and returns the pointer first.
@@ -1690,12 +1689,13 @@ public:
     // expands GetCurrHero with the non-null arm falling through and the
     // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
     // lays the arms out the other way round. DC sizes them apart too - 68 B
-    // against GetHero's 36 - so this is a separate inline, not a forwarder.
+    // against GetHero's 36. DC retains GetCurrHeroId inside this helper,
+    // and GetCurrTownId inside GetCurrTown; keep both accessor paths.
     DC_ADDRESS(0x002ed4, 0x44)
     hero* getCurrHero()
     {
-        if (g_currentPlayer->m_currHeroId != -1)
-            return &m_heroes[g_currentPlayer->m_currHeroId];
+        if (getCurrHeroId() != -1)
+            return &m_heroes[getCurrHeroId()];
         return 0;
     }
 
@@ -1726,8 +1726,8 @@ public:
     DC_ADDRESS(0x01ff40, 0x58)
     town* getCurrTown()
     {
-        if (g_currentPlayer->m_currTownId != -1)
-            return &m_towns[g_currentPlayer->m_currTownId];
+        if (getCurrTownId() != -1)
+            return &m_towns[getCurrTownId()];
         return 0;
     }
 
@@ -1740,17 +1740,13 @@ public:
     // inline-only member: retail has no out-of-line row and
     // townManager::SetupTown 0x5c68a4 expands it in place - the towns
     // vector's _First out of +0x21614, the 360-byte stride, +0xc4 for
-    // cName and its own `_Ptr == 0 ? "" : _Ptr`. Note it does NOT go
-    // through GetTown: no `cmp id,-1` is emitted at that site.
-
-    // GATED, for the reason town::get_location's note gives: this
-    // header rides in initialize.cpp's closure, which carries the
-    // tree's include-set canary. Every consumer opens the macro for
-    // itself and re-measures.
+    // cName and its own `_Ptr == 0 ? "" : _Ptr`. DC retains the const
+    // GetTown overload, which indexes without the non-const overload's
+    // -1 sentinel check. Preserve that source call.
     DC_ADDRESS(0x169c7c, 0x1c)
     const char* getTownName(int townId) const
     {
-        return m_towns[townId].m_name.c_str();
+        return getTown(townId)->m_name.c_str();
     }
 
     // Original: game::GetMine; Game.h:1036
@@ -2024,16 +2020,28 @@ inline bool game::isHumanAlly(int playerNum) const
 // Complete's retained body and ClaimTown expansion prove the creature-domain
 // semantics. The nested zero check leaves the body byte-exact while making its
 // VC6 source cost 75, so the 72-budget nested call remains out of line without
-// a pragma. Dreamcast's same-named game.h:1375 helper instead maps player ids.
+// a pragma. The creature-domain name is inferred; DC get_alignment is the
+// separate player accessor below.
 VA(0x004c6690, 0x43)
-DC_ADDRESS(0x02000c, 0x58)
-inline int game::getAlignment(int creature) const
+inline int game::getCreatureAlignment(int creature) const
 {
     if (m_gameVersion == 0) {
         if (isBaseElemental(creature))
             return -1;
     }
     return g_creatureTypeTraits[creature].m_townType;
+}
+
+// Original: game::get_alignment(int player_id) const, Game.h:1375.
+// DC 0x2000c reads this+0xd302+4*player_id after the negative-id guard.
+// CodeView places sSetup at +0xd2f2 and its TTownType alignment[8] at +0x10.
+// Complete expands this player lookup in viewPuzzle and markAIPuzzle; it is
+// unrelated to the creature-traits lookup at Windows 0x4c6690 above.
+DC_ADDRESS(0x02000c, 0x58)
+inline TTownType game::getAlignment(int playerId) const
+{
+    return playerId >= 0 ? m_setup.m_alignment[playerId]
+                         : eTownNeutral;
 }
 
 // Game.h:1380. DispatchEvent expands this cell accessor; the

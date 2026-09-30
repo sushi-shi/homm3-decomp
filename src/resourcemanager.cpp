@@ -1044,10 +1044,10 @@ font* ResourceManager::loadFontData(const char* name, TAbstractFile* stream,
             result.get()->setPalette(*palette);
         }
         catch (...) {
-            palette->dispose();
+            ResourceManager::dispose(palette);
             throw;
         }
-        palette->dispose();
+        ResourceManager::dispose(palette);
     }
 
     return result.release();
@@ -1729,7 +1729,7 @@ void ResourceManager::getBackdrop(const char* resName, Bitmap16Bit* destBmap)
     if (source) {
         source->draw(0, 0, source->getWidth(), source->getHeight(),
                      destBmap, 0, 0, false);
-        source->dispose();
+        ResourceManager::dispose(source);
     } else {
         reportMissingTypedResource(
             DATA_COMPGEN(0x00683094, getBackdropErrorContext, "GetBackdrop"),

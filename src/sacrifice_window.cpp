@@ -1900,7 +1900,8 @@ type_skeleton_window::~type_skeleton_window()
 {
     for (unsigned int i = 0; i < m_deathSamples.size(); i++) {
         g_soundManager->stopSample(m_deathSamples[i]->m_memSample.m_memSampleHandle);
-        m_deathSamples[i]->dispose();
+        // The preceding dereference and Complete release are unguarded.
+        ResourceManager::dispose(static_cast<resource*>(m_deathSamples[i]));
     }
     deleteWidgets();
 }
@@ -2070,7 +2071,10 @@ int type_skeleton_window::windowHandler(message& msg)
 // Original: type_skeleton_window::ExitDialog; source line 2293
 // Retail vtable 0x641694 slot 14 points to 0x5f1180, the identical body claimed
 // by type_university_window::exitDialog. Both classes own this override.
+// Mac retains the skeleton-window override between windowHandler and
+// handleWidgetHover; descriptor data +0x7c28 selects this 44-byte body.
 DC_ADDRESS(0x128080, 0x16)
+MAC_ADDRESS(0x15cc44, 0x2c)
 int type_skeleton_window::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;

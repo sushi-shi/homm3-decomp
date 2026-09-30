@@ -909,7 +909,7 @@ void advManager::close()
 
     for (i = 0; i < LOOPING_SOUND_COUNT; i++) {
         if (m_loopedSample[i]) {
-            m_loopedSample[i]->dispose();
+            ResourceManager::dispose(static_cast<resource*>(m_loopedSample[i]));
             m_loopedSample[i] = 0;
         }
     }
@@ -936,7 +936,7 @@ void advManager::close()
     for (i = 0; i < 10; i++) {
         ResourceManager::dispose(m_groundTileset[i]);
         m_groundTileset[i] = 0;
-        m_heroSamples[i]->dispose();
+        ResourceManager::dispose(static_cast<resource*>(m_heroSamples[i]));
         m_heroSamples[i] = 0;
     }
 
@@ -2323,6 +2323,8 @@ static void setTombHelpText(
 // duplicates the load into each arm: measured 2026-09-06 at WATER_WHEEL +0x44
 // against retail (SetRolloverText 96.0784, QuickInfo 95.0826) where the
 // ternary lands at +7 (96.8953 / 95.8819).
+// DC retains GetWheelGold here; its canonical body owns the *500 and
+// short result. The other help readers likewise use their typed accessors.
 DC_ADDRESS(0x00bc00, 0xac)
 MAC_ADDRESS(0x00bb48, 0x114)
 static void setWaterWheelHelpText(
@@ -2331,7 +2333,7 @@ static void setWaterWheelHelpText(
     strcpy(buffer, g_quickViewText[WATER_WHEEL]);
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
-        short gold = (cell->m_extraInfo & 0x1f) * 500;
+        short gold = cell->getWheelGold();
         if (gold == 0)
             strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
         else
@@ -2355,8 +2357,8 @@ static void setWindmillHelpText(
     strcpy(buffer, g_quickViewText[WINDMILL]);
     if (cell->m_isTrigger && cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator);
-        unsigned long amount = cell->m_extraInfo >> 13;
-        if ((amount & 0xf) == 0)
+        short amount = cell->getWindmillAmount();
+        if (amount == 0)
             strcat(buffer, g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
         else
             strcat(buffer, g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
@@ -3510,7 +3512,7 @@ void setShrineHelpText(char* buffer, hero* currentHero, NewmapCell* cell, Global
     unsigned char knowsShrineType =
         g_game->getInfoFlag(type, g_netLocalGamePos);
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        SpellID spell = static_cast<int>(cell->m_extraInfo << 9) >> 22;
+        SpellID spell = cell->getShrineSpell();
         strcat(buffer, separator1);
         char temp[500];
         sprintf(temp, g_generalText->getText(GENERAL_TEXT_SHRINE_SPELL_FORMAT),
@@ -3541,7 +3543,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     int infolevel = visited;
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
         strcat(buffer, separator1);
-        int price = static_cast<int>(cell->m_extraInfo << 16) >> 29;
+        int price = cell->getTreePrice();
         strcat(buffer, g_constWiseTreePriceText[price]);
     } else if (infolevel) {
         strcat(buffer, separator1);
@@ -3551,8 +3553,7 @@ void setTreeHelpText(char* buffer, hero* currentHero, NewmapCell* cell, const ch
     if (currentHero) {
         unsigned char heroVisited =
             (currentHero->m_treeOfKnowledgeFlags
-             & (1UL << (static_cast<unsigned char>(cell->m_extraInfo)
-                        & 0x1f))) != 0;
+             & (1UL << cell->getItemId())) != 0;
         strcat(buffer, separator2);
         if (heroVisited)
             strcat(buffer,
@@ -3576,7 +3577,7 @@ void setWitchHutHelpText(char* buffer, hero* currentHero, NewmapCell* cell, cons
         return;
 
     if (cell->playerKnowsCell(g_netLocalGamePos)) {
-        int skill = static_cast<int>(cell->m_extraInfo << 12) >> 25;
+        int skill = cell->getWitchSkill();
         strcat(buffer, separator1);
         char tempText[50];
         sprintf(tempText,
@@ -4253,6 +4254,7 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
         startX = 0;
     }
 
+    g_mouseManager->disable();  // DC advmgr.cpp:5045; returned count is unused.
     m_cursorDrawn = 0;
 
     int drawheight = COMPLETE_DRAW_LAST_Y;
@@ -4349,6 +4351,7 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
         m_advWindow->drawChatText(false);
     }
 
+    g_mouseManager->enable();  // DC advmgr.cpp:5210.
     if (updateBottomView)
         updBottomView(0, true, true);
 }
@@ -6119,10 +6122,7 @@ void advManager::updateRadar(type_point origin, unsigned char updateFlag, unsign
 
     if (!suppressIcon)
         icons->drawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
-                             g_windowManager->m_screenBitmap->getMap(0, 0), destX,
-                             destY, g_windowManager->m_screenBitmap->getWidth(),
-                             g_windowManager->m_screenBitmap->getHeight(),
-                             g_windowManager->m_screenBitmap->getPitch(), 0);
+                             g_windowManager->m_screenBitmap, destX, destY, false);
 
     if (updateFlag)
         g_windowManager->updateScreen(rectX, rectY, rectWidth, rectHeight);
@@ -6277,7 +6277,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     if (currHero) {
-                        testFlag = 1UL << (testCell->m_extraInfo & 0x1f);
+                        testFlag = 1UL << testCell->getItemId();
                         visited = testFlag & currHero->m_arenaFlags;
                         if (visited)
                             sprintf(tempText, visitFormat,
@@ -6398,7 +6398,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = (g_currentPlayer->m_deadGuyFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6420,7 +6420,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_defenseTowerFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6535,7 +6535,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_gardenOfRevelationFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6587,7 +6587,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 if (testCell->m_isTrigger) {
                     if (currHero) {
                         visited = g_currentPlayer->m_leanToFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f));
+                            & (1UL << testCell->getItemId());
                         if (visited)
                             sprintf(tempText, leanToFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6609,7 +6609,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_libraryFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6643,7 +6643,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_magicSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6665,7 +6665,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = ((g_currentPlayer->m_magicSpringFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f))) && !((testCell->m_extraInfo >> 6) & 1));
+                            & (1UL << testCell->getItemId())) && !((testCell->m_extraInfo >> 6) & 1));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6708,7 +6708,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_mercCampFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6747,7 +6747,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                 strcpy(g_text, g_quickViewText[testCell->m_type]);
                 if (testCell->m_isTrigger) {
                     visited = (g_currentPlayer->m_mysticalGardenFlags
-                        & (1UL << (testCell->m_extraInfo & 0x1f)))
+                        & (1UL << testCell->getItemId()))
                         && !((testCell->m_extraInfo >> 10) & 1);
                     if (visited)
                         sprintf(tempText, visitFormat,
@@ -6804,7 +6804,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_powerSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6923,7 +6923,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_trainingGroundsFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -6963,7 +6963,7 @@ void advManager::quickInfo(int cellX, int cellY, int z)
                     }
                     if (currHero) {
                         visited = (currHero->m_warSchoolFlags
-                            & (1UL << (testCell->m_extraInfo & 0x1f)));
+                            & (1UL << testCell->getItemId()));
                         if (visited)
                             sprintf(tempText, visitFormat,
                                     g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
@@ -7593,7 +7593,7 @@ void advManager::redrawAdvScreen(unsigned char update, unsigned char forceSaveBo
         setPlayerPaletteColors(bmp->getPalette().m_colors.m_data, playerId);
         bmp->draw(0, 0, bmp->getWidth(), bmp->getHeight(),
                   g_windowManager->m_screenBitmap, 0, 0, 0);
-        bmp->dispose();
+        ResourceManager::dispose(bmp);
         m_heroLogoShowing = 0;
     }
 
@@ -8959,7 +8959,7 @@ void advManager::trimLoopingSounds(int maxSoundsAllowed)
 
     for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
         if (m_loopedSample[i] && !saveSounds[i]) {
-            m_loopedSample[i]->dispose();
+            ResourceManager::dispose(static_cast<resource*>(m_loopedSample[i]));
             m_loopedSample[i] = 0;
         }
     }
@@ -9166,7 +9166,7 @@ void advManager::viewPuzzle()
     demobilizeCurrHero(0, 1);
     int pos = g_game->getLocalPlayerGamePos();
     g_game->setupPuzzlePieces(pos, 0);
-    TPuzzleWindow puzzle(pos >= 0 ? g_game->m_setup.m_alignment[pos] : -1);
+    TPuzzleWindow puzzle(g_game->getAlignment(pos));
     SAMPLE2 sample2 = loadPlaySample("Obelisk.wav");
     puzzle.updatePuzzle(1);
     drawAdventureMapGems();
@@ -9208,12 +9208,10 @@ void advManager::puzzleDraw(int startX, int startY, int z, int ultX, int ultY)
     completeDraw(startX, startY, z, 0, 0);
     g_drawingPuzzle = 0;
     m_arrowTileset->drawTile(
-        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap->getMap(0, 0),
+        0, 0, 0, 32, 32, g_windowManager->m_screenBitmap,
         (ultX - startX) * 32 + (32 - m_arrowTileset->getWidth()) / 2,
         (ultY - startY) * 32 + (32 - m_arrowTileset->getHeight()) / 2,
-        g_windowManager->m_screenBitmap->getWidth(),
-        g_windowManager->m_screenBitmap->getHeight(),
-        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+        false, false);
 }
 
 VA(0x0041ab00, 0xF8)
@@ -9298,7 +9296,7 @@ unsigned char advManager::doSystemOptions()
     if (g_config.m_walkSpeed[1] != walkSpeed) {
         int i;
         for (i = 0; i < 10; i++)
-            m_heroSamples[i]->dispose();
+            ResourceManager::dispose(static_cast<resource*>(m_heroSamples[i]));
         getCursorSampleSet(g_config.m_walkSpeed[1]);
     }
 

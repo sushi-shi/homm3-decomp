@@ -318,7 +318,7 @@ void TRecruitWindow::addCreatureWidgets(long startX, long startY, long nameY, TC
 {
     m_widgets.push_back(new bitmapBorder(startX, startY, 100, 130,
         slot + 0x21e,
-        g_creatureBackgroundNames[g_game->getAlignment(creature) + 1],
+        g_creatureBackgroundNames[g_game->getCreatureAlignment(creature) + 1],
         0x800));
 
     m_creatureWidgets[slot] = new iconWidget(startX, startY, 100, 130,
@@ -1245,7 +1245,7 @@ void quickViewRecruit(TCreatureType monType, short* numMon)
         font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
 
     recruitWindow->addWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
-        g_creatureBackgroundNames[g_game->getAlignment(monType) + 1],
+        g_creatureBackgroundNames[g_game->getCreatureAlignment(monType) + 1],
         0x800), -1);
     recruitWindow->addWidget(new iconWidget(30, 44, 100, 130, 0x216,
         g_creatureTypeTraits[monType].m_spriteName,

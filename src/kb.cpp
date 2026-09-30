@@ -222,6 +222,7 @@ void incProgressBar(bool update)
     drawProgressCount();
     if (update)
         g_windowManager->updateScreen(395, 548, 358, 16);
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x004ed350, 0xF3)
@@ -510,6 +511,9 @@ void initMainClasses()
     g_philAI = new philAI;
 }
 
+// Mac 0x10f538/0x10f688/0x10f6e0/0x10f73c/0x10f79c expands the bitmap
+// draw overload's map/width/height/pitch forwarding. Keep those five source
+// calls; the restored wrappers currently score 98.28% in VC6 (HIST 100%).
 VA(0x004edda0, 0x407)
 DC_ADDRESS(0x0dfa3c, 0x520)
 MAC_ADDRESS(0x10f454, 0x430)
@@ -527,9 +531,7 @@ void creditsWait()
         memError();
     g_windowManager->m_screenBitmap->draw(
         460, 10, g_windowManager->m_screenBitmap->getWidth(),
-        g_windowManager->m_screenBitmap->getHeight(), background->getMap(0, 0),
-        0, 0, background->getWidth(), background->getHeight(),
-        background->getPitch(), 1);
+        g_windowManager->m_screenBitmap->getHeight(), background, 0, 0, true);
     Bitmap16Bit* credits =
         new Bitmap16Bit(328, textHeight + creditsFont->m_fs.m_height);
     if (!credits)
@@ -560,29 +562,22 @@ void creditsWait()
             if (videoNeedsUpdate()) {
                 Bitmap16Bit* screen = g_windowManager->m_screenBitmap;
                 background->draw(0, 0, background->getWidth(),
-                                 background->getHeight(), screen->getMap(0, 0),
-                                 460, 10, screen->getWidth(), screen->getHeight(),
-                                 screen->getPitch(), 0);
+                                 background->getHeight(), screen, 460, 10, false);
                 if (startOffset) {
                     startOffset -= 2;
                     screen = g_windowManager->m_screenBitmap;
                     credits->draw(0, 0, 328, 580 - startOffset,
-                                  screen->getMap(0, 0), 460, startOffset + 10,
-                                  screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                                  screen, 460, startOffset + 10, true);
                 } else if (yOffset < textHeight - 580) {
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
-                    credits->draw(0, yOffset, 328, 580, screen->getMap(0, 0), 460,
-                                  10, screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                    credits->draw(0, yOffset, 328, 580, screen, 460, 10, true);
                 } else if (endOffset >= 0) {
                     endOffset -= 2;
                     yOffset += 2;
                     screen = g_windowManager->m_screenBitmap;
-                    credits->draw(0, yOffset, 328, endOffset, screen->getMap(0, 0),
-                                  460, 10, screen->getWidth(), screen->getHeight(),
-                                  screen->getPitch(), 1);
+                    credits->draw(0, yOffset, 328, endOffset, screen,
+                                  460, 10, true);
                     if (endOffset < 435)
                         g_smallFont->drawBoundedString(
                             g_credits[1], g_windowManager->m_screenBitmap, 460, 10,
@@ -3208,15 +3203,15 @@ void shutDown(const char* inExitMessage)
 
         aiShutDown();
         if (g_calligraphicFont) {
-            g_calligraphicFont->dispose();
+            ResourceManager::dispose(g_calligraphicFont);
             g_calligraphicFont = 0;
         }
         if (g_bigFont) {
-            g_bigFont->dispose();
+            ResourceManager::dispose(g_bigFont);
             g_bigFont = 0;
         }
         if (g_smallFont) {
-            g_smallFont->dispose();
+            ResourceManager::dispose(g_smallFont);
             g_smallFont = 0;
         }
         if (g_playerPalette24) {
@@ -3579,7 +3574,7 @@ void congratsWait(int mode, char* rank, int base, int score, int dayz)
         break;
 }
 
-    currentFont->dispose();
+    ResourceManager::dispose(currentFont);
 }
 
 VA(0x004f3e30, 0x7A)

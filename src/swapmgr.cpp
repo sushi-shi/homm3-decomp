@@ -1010,7 +1010,7 @@ void swapManager::close()
         m_heroes[0]->giveArtifact(g_heroScreenDraggedArtifact, 0, 0);
         g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
     }
-    m_border->dispose();
+    ResourceManager::dispose(m_border);
     g_windowManager->removeWindow(m_parent);
     delete m_parent;
     m_status = 0;

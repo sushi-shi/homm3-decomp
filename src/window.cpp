@@ -346,10 +346,7 @@ int heroWindow::saveBackground()
         m_background = new Bitmap16Bit(m_width + 8, m_height + 8);
     else
         m_background = new Bitmap16Bit(m_width, m_height);
-    m_background->grab(g_windowManager->m_screenBitmap->getMap(0, 0), m_x, m_y,
-                     g_windowManager->m_screenBitmap->getWidth(),
-                     g_windowManager->m_screenBitmap->getHeight(),
-                     g_windowManager->m_screenBitmap->getPitch());
+    m_background->grab(g_windowManager->m_screenBitmap, m_x, m_y);
     return 0;
 }
 
@@ -361,10 +358,7 @@ void heroWindow::restoreBackground(unsigned char update)
     if (!m_background)
         return;
     m_background->draw(0, 0, m_background->getWidth(), m_background->getHeight(),
-                     g_windowManager->m_screenBitmap->getMap(0, 0), m_x, m_y,
-                     g_windowManager->m_screenBitmap->getWidth(),
-                     g_windowManager->m_screenBitmap->getHeight(),
-                     g_windowManager->m_screenBitmap->getPitch(), 0);
+                       g_windowManager->m_screenBitmap, m_x, m_y, false);
     if (update)
         g_windowManager->updateScreen(m_x, m_y, m_background->getWidth(), m_background->getHeight());
     delete m_background;

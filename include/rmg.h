@@ -107,6 +107,7 @@ public:
 // to erase the original helper boundaries.
 class type_artifact_def : public type_treasure_def {
 public:
+    MAC_ADDRESS(0x231d68, 0x44)
     inline type_artifact_def(int objectType, int value)
         : type_treasure_def(objectType, 0, value, 150)
     {
@@ -120,8 +121,10 @@ class type_black_box_experience_def : public type_treasure_def {
 public:
     int m_experience;
 
-    inline type_black_box_experience_def(int value, int experience)
-        : type_treasure_def(6, 0, value, 20)
+    // Mac computes value from the sole reward argument; retail folds it at each new.
+    MAC_ADDRESS(0x231fdc, 0x70)
+    inline type_black_box_experience_def(int experience)
+        : type_treasure_def(6, 0, experience * 12 / 10, 20)
     {
         this->m_experience = experience;
     }
@@ -134,8 +137,9 @@ class type_black_box_gold_def : public type_treasure_def {
 public:
     int m_gold;
 
-    inline type_black_box_gold_def(int value, int gold)
-        : type_treasure_def(6, 0, value, 5)
+    MAC_ADDRESS(0x2320b0, 0x58)
+    inline type_black_box_gold_def(int gold)
+        : type_treasure_def(6, 0, gold, 5)
     {
         this->m_gold = gold;
     }
@@ -150,6 +154,7 @@ public:
     int m_maximumLevel;
     int m_schoolMask;
 
+    MAC_ADDRESS(0x232174, 0x78)
     inline type_black_box_spells_def(
         int value, int minimumLevel, int maximumLevel, int schoolMask)
         : type_treasure_def(6, 0, value, 2)
@@ -165,6 +170,7 @@ public:
 
 class type_key_tent_def : public type_treasure_def {
 public:
+    MAC_ADDRESS(0x232c88, 0x4c)
     inline type_key_tent_def(int subtype, int value)
         : type_treasure_def(10, subtype, value, 10)
     {
@@ -182,8 +188,9 @@ public:
 // role name remains provisional until stronger source evidence appears.
 class type_dwelling_def : public type_treasure_def {
 public:
-    inline type_dwelling_def(int subtype)
-        : type_treasure_def(17, subtype, -1, 40)
+    MAC_ADDRESS(0x2322ac, 0x38)
+    inline type_dwelling_def(int objectType, int subtype, int value, int density)
+        : type_treasure_def(objectType, subtype, value, density)
     {
     }
 
@@ -193,8 +200,9 @@ public:
 
 class type_map_dwelling_def : public type_dwelling_def {
 public:
+    MAC_ADDRESS(0x232334, 0x48)
     inline type_map_dwelling_def(int subtype)
-        : type_dwelling_def(subtype)
+        : type_dwelling_def(17, subtype, -1, 40)
     {
     }
 
@@ -203,6 +211,7 @@ public:
 
 class type_resource_lump_def : public type_treasure_def {
 public:
+    MAC_ADDRESS(0x232404, 0x38)
     inline type_resource_lump_def(
         int objectType, int subtype, int value, int density)
         : type_treasure_def(objectType, subtype, value, density)
@@ -217,7 +226,8 @@ class type_prison_def : public type_treasure_def {
 public:
     int m_experience;
 
-    inline type_prison_def(int value, int experience)
+    MAC_ADDRESS(0x23248c, 0x58)
+    inline type_prison_def(int experience, int value)
         : type_treasure_def(62, 0, value, 30)
     {
         this->m_experience = experience;
@@ -229,6 +239,7 @@ public:
 
 class type_scholar_def : public type_treasure_def {
 public:
+    MAC_ADDRESS(0x232568, 0x48)
     inline type_scholar_def()
         : type_treasure_def(81, 0, 1500, 100)
     {
@@ -240,6 +251,7 @@ public:
 
 class type_quest_creature_def : public type_black_box_creature_def {
 public:
+    MAC_ADDRESS(0x23272c, 0x50)
     inline type_quest_creature_def(int creatureType, int questIndex)
         : type_black_box_creature_def(creatureType)
     {
@@ -257,9 +269,11 @@ class type_quest_experience_def : public type_treasure_def {
 public:
     int m_experience;
 
+    // Mac receives reward first, quest index second, and computes the quest value here.
+    MAC_ADDRESS(0x232890, 0x70)
     inline type_quest_experience_def(
-        int questIndex, int value, int experience)
-        : type_treasure_def(83, questIndex, value, 10)
+        int experience, int questIndex)
+        : type_treasure_def(83, questIndex, 2 * (experience - 2000) / 3, 10)
     {
         this->m_experience = experience;
     }
@@ -274,8 +288,9 @@ class type_quest_gold_def : public type_treasure_def {
 public:
     int m_gold;
 
-    inline type_quest_gold_def(int questIndex, int value, int gold)
-        : type_treasure_def(83, questIndex, value, 10)
+    MAC_ADDRESS(0x2329d8, 0x70)
+    inline type_quest_gold_def(int gold, int questIndex)
+        : type_treasure_def(83, questIndex, 2 * (gold - 2000) / 3, 10)
     {
         this->m_gold = gold;
     }
@@ -817,11 +832,15 @@ public:
     int m_disposition;    // +0x24, serialized as one byte
     int m_unknown28;      // +0x28
 
-    rmgMonsterObject(TRmgObjectPropertiesRef* properties, int objectId, int count)
+    // Mac's retained constructor takes count/disposition/id in that order;
+    // createGuard supplies the fixed disposition at its call site.
+    MAC_ADDRESS(0x2305c4, 0x68)
+    rmgMonsterObject(TRmgObjectPropertiesRef* properties, int count,
+                     int disposition, int objectId)
         : type_object(properties)
     {
         m_count = count;
-        m_disposition = RMG_GUARD_DISPOSITION;
+        m_disposition = disposition;
         m_objectId = objectId;
     }
     virtual void write(TAbstractFile* outfile, int version);
@@ -837,8 +856,9 @@ public:
     int m_objectId;
     int m_player;
     unsigned char m_townOption;
-    rmgTownObject(TRmgObjectPropertiesRef* properties, int objectId,
-        int player, unsigned char townOption) : type_object(properties)
+    MAC_ADDRESS(0x230770, 0x68)
+    rmgTownObject(TRmgObjectPropertiesRef* properties, int player,
+        unsigned char townOption, int objectId) : type_object(properties)
     {
         m_player = player;
         m_townOption = townOption;
@@ -854,6 +874,7 @@ SIZE(rmgTownObject, 0x28);
 // 0x533460 appends an unowned player byte and three reserved bytes.
 class rmgOwnableObject : public type_object {
 public:
+    MAC_ADDRESS(0x2309e4, 0x38)
     rmgOwnableObject(TRmgObjectPropertiesRef* properties)
         : type_object(properties) {}
     virtual void write(TAbstractFile* outfile, int parameter);
@@ -869,11 +890,12 @@ public:
 };
 SIZE(rmgArtifactObject, 0x1c);
 
-// These four factories allocate the same 0x1c base extent and change only
-// the writer vptr. Their distinct default H3M payloads prove separate classes;
-// the Complete-only class spellings below describe those roles.
-// Retail vtable 0x640ac4.
-class rmgResourceObject : public type_object {
+// Mac 0x230bcc forwards the unchanged receiver to the artifact writer at
+// 0x230acc before appending the resource payload. Its constructor at
+// 0x230b1c also calls the artifact constructor (0x230a94), proving the
+// field-free artifact base. Retail vtable 0x640ac4, extent 0x1c.
+// The class spellings describe Complete-only roles, not recovered symbols.
+class rmgResourceObject : public rmgArtifactObject {
 public:
     rmgResourceObject(TRmgObjectPropertiesRef* properties);
     virtual void write(TAbstractFile* outfile, int parameter);
@@ -996,8 +1018,8 @@ public:
     int m_experience;                       // +0x28, prison definition experience
 
     rmgHeroObject(TRmgObjectPropertiesRef* properties,
-        type_random_map_generator* generator, const int& objectId, int heroIndex,
-        int experience);
+        type_random_map_generator* generator, int heroIndex,
+        int experience, int objectId);
 
     virtual void unknownOperation();
     virtual void write(TAbstractFile* outfile, int parameter);
@@ -1014,6 +1036,8 @@ struct TRmgMapItem {
     TRmgConnectionDecoration m_connection;  // +0x2c
 
     TRmgMapItem();
+    void removeObject(type_object* object);
+    int getFirstObjectType() const;
     void clear();
     void write(TAbstractFile* outfile);
     // Retained cell writer 0x546940; four scalar inputs, terrain fields only.
@@ -1196,12 +1220,14 @@ public:
     // three dimensions as a position changes retry bodies but closes no further
     // function. Neither interface/layout change is adopted.
 
-    inline type_random_map(TRmgMapItem* items, int width, int height)
+    // Mac 0x22d320 stores r4..r7 at +8..+0x14; callers pass level count 1.
+    MAC_ADDRESS(0x22d320, 0x2c)
+    inline type_random_map(TRmgMapItem* items, int width, int height, int levels)
     {
         m_mapItems = items;
         m_mapWidth = width;
         m_mapHeight = height;
-        m_numberLevels = 1;
+        m_numberLevels = levels;
         m_ownsMapItems = 0;
     }
 
@@ -1276,12 +1302,15 @@ struct TRmgTreasureGroup {
     unsigned char m_ready;                  // +0x60, set after assembly
     char m_padding0061[3];
 
-    TRmgTreasureGroup(int width, int height)
-        : m_map(width, height, 1), m_hasGuard(0), m_ready(0)
+    // Mac 0x232d6c has no dimension arguments: every group owns 16x16x1.
+    MAC_ADDRESS(0x232d6c, 0xa0)
+    TRmgTreasureGroup()
+        : m_map(16, 16, 1), m_hasGuard(0), m_ready(0)
     {
         reset();
     }
     void reset();
+    void discardObjects();
     void markPlacementOutline();
     unsigned char addGuard(type_object* guard);
     unsigned char canFitObject(TRmgObjectPropertiesRef* properties, TRmgMapPosition position);
@@ -1301,6 +1330,7 @@ class TRmgRoadMapAdapter : public TRmgRoadMapAdapterInterface {
 public:
     type_random_map* m_map;
 
+    MAC_ADDRESS(0x22ec80, 0x18)
     TRmgRoadMapAdapter(type_random_map* map) : m_map(map) {}
     virtual void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     virtual void setOverlay(const TRmgGridPoint& point, int value);
@@ -1318,6 +1348,7 @@ class TRmgMapAdapter : public TRmgMapAdapterInterface {
 public:
     type_random_map* m_map;
 
+    MAC_ADDRESS(0x22eed4, 0x18)
     inline TRmgMapAdapter(type_random_map* newMap) : m_map(newMap) {}
 
     virtual void setTile(
@@ -1348,6 +1379,7 @@ struct TRmgLinePatternTable {
 
     TRmgLinePatternTable(unsigned int patternCount, const int* patterns);
     ~TRmgLinePatternTable();
+    unsigned int getRandomFrame(unsigned int pattern) const;
 };
 SIZE(TRmgLinePatternTable, 0x50);
 
@@ -1382,6 +1414,8 @@ public:
 
     TRmgLinePainterTile at(const TRmgGridPoint& point);
     int getNeighbourLand(const TRmgGridPoint& point, unsigned int direction);
+    void buildMatchingNeighbourMask(const TRmgGridPoint& point, int land,
+                                   unsigned char* matches);
 };
 
 // The value returned at 0x4fa050 holds the painter and a copied coordinate.
@@ -1420,6 +1454,8 @@ class TRmgLinePainter : public TRmgLinePainterInterface {
 public:
     TRmgMapAdapterInterface* m_adapter;
 
+    // Mac retains adapter->getSize(), interface construction and adapter storage.
+    MAC_ADDRESS(0x253a20, 0x70)
     inline TRmgLinePainter(TRmgMapAdapterInterface* newAdapter)
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
@@ -1442,6 +1478,9 @@ public:
     virtual int getLand(const TRmgGridPoint& point);
 };
 
+// Mac ~TRmgRiverPainter calls this base destructor at 0x253cfc. Its vptr
+// comes from the same TOC slot (-0x6b5c) as the base constructor above.
+MAC_ADDRESS(0x253a90, 0x48)
 inline TRmgLinePainter::~TRmgLinePainter() {}
 
 // The retained walk at 0x4fa2b0 builds two three-dword records, selects them
@@ -1500,6 +1539,7 @@ class TRmgRoadLinePainter : public TRmgLinePainterInterface {
 public:
     TRmgRoadMapAdapterInterface* m_adapter;
 
+    MAC_ADDRESS(0x253f08, 0x70)
     inline TRmgRoadLinePainter(TRmgRoadMapAdapterInterface* newAdapter)
         : TRmgLinePainterInterface(newAdapter->getSize()), m_adapter(newAdapter)
     {
@@ -1517,6 +1557,9 @@ public:
     virtual int getLand(const TRmgGridPoint& point);
 };
 
+// Mac ~TRmgRoadPainter calls this base destructor at 0x2541e4. Constructor
+// and destructor both install the road base vptr from TOC -0x6b50.
+MAC_ADDRESS(0x253f78, 0x48)
 inline TRmgRoadLinePainter::~TRmgRoadLinePainter() {}
 
 class TRmgRoadPainter : public TRmgRoadLinePainter, public TRmgLineWalker {
@@ -1575,6 +1618,8 @@ struct TRmgZone {
 
     TRmgZone(TRmgTownSlot* slot);
     void decrementObjectCount(TAdventureObjectType objectType);
+    void initializeDistances(int originalZones);
+    void includeInBounds(TRmgMapPosition position);
     void chooseTownType(unsigned char expanded);
     void chooseTerrain();
     ~TRmgZone();
@@ -1877,6 +1922,7 @@ public:
         int& maximumY, int& maximumX) const;
     void paintZoneTerrain();
     void calculateZoneBounds();
+    void countActiveZones();
     void recenterZone(TRmgZone* zone);
     void insetIslandZone(TRmgZone* zone);
     // Complete-only 0x53cf50 marks the inset island interior; provisional name.
@@ -1971,6 +2017,7 @@ public:
     unsigned char placeObjectInZone(type_object* object, TRmgZone* zone);
     void placeGuard(int value, TRmgMapPosition position);
     int getMineGuardValue(int resource, const TRmgZone* zone) const;
+    int getZoneGuardValue(const TRmgZone* zone, int value) const;
     // Complete-only prototype/subtype/terrain filter at retail 0x546040.
     TRmgObjectPropertiesRef* selectObjectPrototype(
         int terrain, int objectType, int subtype);
@@ -1984,6 +2031,7 @@ public:
     // success transfers ownership to the generated map. Retained thiscall
     // boundary with one mutable artifact argument.
     unsigned char placeQuestArtifact(rmgQuestArtifactObject* object);
+    void replaceWithTreasure(type_object* object, int value);
     // Retained Complete-only helpers at 0x54b180 and 0x54b300. The quest
     // artifact caller supplies its origin zone and the prepared hut group.
     // Original names are unavailable; the graph and placement roles are proven.

@@ -31,8 +31,7 @@ VA(0x005ffb20, 0x14)
 DC_ADDRESS(0x198434, 0x34)
 File::File()
 {
-    m_file = NULL;
-    m_open = FALSE;
+    init();
 }
 
 VA(0x005ffb40, 0x15)

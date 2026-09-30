@@ -901,7 +901,7 @@ DC_ADDRESS(0x090d10, 0x24)
 MAC_ADDRESS(0x0aa36c, 0x20)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 {
-    return &m_fullMap->m_customTreasure[(cell->m_extraInfo >> 19) & 0xfff];
+    return &m_fullMap->m_customTreasure[cell->getCustomIndex()];
 }
 
 // E:\gamedcs\events.cpp:656.  The customised artifact: the editor record
@@ -914,10 +914,9 @@ TreasureData* advManager::getTreasureData(NewmapCell* cell) const
 // CheckLevel; the guarded copy keeps FizzleCenter as a call and the
 // plain one folds it, exactly as DoCustomSpellScroll's pair does.
 // Dreamcast places treasure on line 657 and artifactId on line 659.
-// Keeping that order and using the direct index expression in the canonical
-// getTreasureData helper reproduces retail's interleaved pool/cell loads.
-// Both this caller and doCustomSpellScroll are exact; a named helper index
-// preserves its retained body but changes these caller expansions.
+// Keep the source getCustomIndex call inside getTreasureData. The older
+// direct-expression control was exact here and in doCustomSpellScroll,
+// but omitted the DC-proven boundary retained as an expansion on Mac.
 // Negative control: spelling DC's unsigned-char human_player literally changes
 // the x86 decorated identity; retail's `_N` suffix proves this parameter is bool.
 // Splitting artifactId's declaration from its accessor assignment is byte-flat.
@@ -2559,7 +2558,7 @@ void advManager::doEventMysticalGarden(hero* currentHero, ExtraInfoUnion* cell,
 {
     // Retail records the visit before the empty-garden branch; Dreamcast's
     // getItemId call follows GiveResource on the reward path instead.
-    short id = cell->m_gardenInfo.m_id;
+    short id = cell->getItemId();
     EGameResource resource = cell->getGardenResource();
     g_currentPlayer->m_mysticalGardenFlags |= 1 << id;
 
@@ -3574,7 +3573,7 @@ void advManager::monstersGiveReward(hero* currentHero, NewmapCell* cell,
     if (!cell->isCustomized())
         return;
 
-    MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
+    MonsterData* reward = &m_fullMap->m_customMonsterList[cell->getCustomMonsterIndex()];
     if (reward->m_artifact != ARTIFACT_NONE) {
         if (currentHero->getNumberInBackpack(1) >= 64) {
             if (humanPlayer)
@@ -3801,7 +3800,7 @@ bool advManager::monstersSellOut(hero* currentHero, NewmapCell* cell,
     return true;
 }
 
-// The Armageddon's Blade content switch is shared with getAlignment. The
+// The Armageddon's Blade content switch is shared with getCreatureAlignment. The
 // upgrade path below still tests base elementals separately because the four
 // base elementals have no upgrade in the older game version.
 VA(0x004a75c0, 0xFD)
@@ -3813,7 +3812,7 @@ int advManager::getLikeModifier(hero* currentHero, TCreatureType creature)
     int armyCount = 0;
     TCreatureType like;
 
-    if (g_game->getAlignment(creature) == -1) {
+    if (g_game->getCreatureAlignment(creature) == -1) {
         like = CREATURE_NONE;
     } else {
         like = g_game->upgradedCreatureType(creature);
@@ -3873,7 +3872,7 @@ void advManager::doWanderingMonsterResult(NewmapCell* cell,
 
     if (cell->isCustomized()) {
         MonsterData* customMonster =
-            &m_fullMap->m_customMonsterList[cell->getCustomIndex()];
+            &m_fullMap->m_customMonsterList[cell->getCustomMonsterIndex()];
         if (humanPlayer && customMonster->m_message.size() > 0)
             normalDialog(customMonster->m_message.c_str(), 1, -1, -1, -1, 0, -1,
                          0, -1, 0, -1, 0);

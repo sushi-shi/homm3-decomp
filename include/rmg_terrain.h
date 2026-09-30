@@ -268,7 +268,9 @@ public:
     // the source calls restore all but one of its retained cache reads.
     unsigned int getWidth() const;
     unsigned int getHeight() const;
+    void buildNeighbourMask(const TRmgGridPoint& point, unsigned char* exists);
     void paintTransitions();
+    int selectBaseFrame(const TRmgGridPoint& point, int terrain);
     int selectBaseFrame(const TRmgGridPoint& point, int terrain, int oldFrame);
     void setTile(const TRmgGridPoint& point, const rmgTerrainTile& tile);
     void paintBaseTile(const TRmgGridPoint& point);

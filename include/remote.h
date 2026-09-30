@@ -29,7 +29,7 @@ public:
     char m_names[MAX_PLAYERS][PLAYER_NAME_SIZE];
 
     DC_ADDRESS(0x101da8, 0x1c)
-    CHotSeatMan() : m_playerCount(0) {}
+    CHotSeatMan() { clear(); }
 
     DC_ADDRESS(0x101dc4, 0x6)
     void clear() { m_playerCount = 0; }
@@ -176,7 +176,10 @@ public:
     // The final three bytes align the record; retail uses the same stride.
         char m_paddingAfterIsSystem[3];
 
+        // Mac's array-construction callback clears bytes +0/+0x84 and
+        // the deadline at +0x80; its descriptor is at data +0x8918.
         DC_ADDRESS(0x11f7d0, 0xe)
+        MAC_ADDRESS(0x212118, 0x14)
         CChatStr()
         {
             m_text[0] = 0;

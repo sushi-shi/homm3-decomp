@@ -182,7 +182,7 @@ void mouseManager::close()
         m_systemPointerIsOn = 1;
     }
     if (m_sprite)
-        m_sprite->dispose();
+        ResourceManager::dispose(m_sprite);
     m_sprite = 0;
 }
 
@@ -620,8 +620,7 @@ void mouseManager::loadFrame(int newFrame)
             surfaceDesc.lPitch,
             static_cast<unsigned short*>(surfaceDesc.lpSurface));
         CSprite* sprite = m_sprite;
-        sprite->drawPointer(newFrame, bitmap.getMap(0, 0), 0, 0,
-            bitmap.getWidth(), bitmap.getHeight(), bitmap.getPitch(), 0);
+        sprite->drawPointer(newFrame, &bitmap, 0, 0, false);
         g_ddsMouseSurface->Unlock(0);
         m_frame = newFrame;
     }

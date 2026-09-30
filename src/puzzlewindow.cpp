@@ -183,7 +183,7 @@ MAC_ADDRESS(0x1477c4, 0x10c)
 TPuzzleWindow::~TPuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
-        m_puzzlePieces[i]->dispose();
+        ResourceManager::dispose(m_puzzlePieces[i]);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
@@ -412,14 +412,14 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 }
 
 // E:\gamedcs\puzzlewindow.cpp:403.
-// Complete reads setup alignment directly and disposes through the bitmap
-// vtable; those retail operations override the older DC callees.
+// DC's get_alignment is the player accessor expanded here in Complete.
+// Resource disposal expands the canonical wrapper to the bitmap vtable call.
 DC_ADDRESS(0x115838, 0x10a)
 MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
 {
-    long puzzle;
-    if (player < 0 || (puzzle = g_game->m_setup.m_alignment[player]) == -1)
+    long puzzle = g_game->getAlignment(player);
+    if (puzzle == -1)
         puzzle = 0;
     if (g_game->m_ultimateArtifactX < 0 || !g_game->m_ultimateArtifactPresent)
         return 0;
@@ -435,7 +435,7 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
         const short* yCoordinate = g_puzzleCoordinates[puzzle].m_y;
         bitmap->markPuzzle(visible, xCoordinate[piece] - 8,
                             yCoordinate[piece] - 8);
-        bitmap->dispose();
+        ResourceManager::dispose(bitmap);
     }
     return 1;
 }

@@ -22,6 +22,9 @@ public:
     DC_ADDRESS(0x05b228, 0x58)
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
     {
+        // DC 0x5b234 guards self-assignment before transferring ownership.
+        if (this == &rhs)
+            return *this;
         if (m_ptr != rhs.m_ptr) {
             if (m_owns)
                 delete [] m_ptr;
@@ -29,8 +32,7 @@ public:
         } else if (rhs.m_owns) {
             m_owns = 1;
         }
-        m_ptr = rhs.m_ptr;
-        rhs.m_owns = 0;
+        m_ptr = rhs.release();
         return *this;
     }
 

@@ -467,9 +467,9 @@ bool generator::save(TAbstractFile* outfile)
 // game::ClaimTown is the caller that proves the body - its first
 // generator sweep IS this function inlined, down to the `-1`.
 
-// Dreamcast records the alignment local as TTownType and get_alignment's
-// header declaration returns that same enum. Complete retains the helper call
-// here while update_bonus expands its elemental gate and traits lookup.
+// Dreamcast records the alignment local as TTownType. Complete retains the
+// creature-alignment lookup here while update_bonus expands its elemental gate
+// and traits lookup. It is distinct from DC game::get_alignment(player_id).
 // Mac retains removeBonus, updateBonus and setOwner consecutively at code0
 // +0xca52c, +0xca624 and +0xca71c between save and initialize, as in the
 // Dreamcast game.cpp line order. Its calls do not establish inline spelling or
@@ -483,7 +483,7 @@ void generator::removeBonus()
         return;
 
     playerData& player = g_game->m_players[m_playerOwner];
-    int alignment = g_game->getAlignment(m_type[0]);
+    int alignment = g_game->getCreatureAlignment(m_type[0]);
     if (alignment == -1)
         return;
 
@@ -506,7 +506,7 @@ inline void generator::updateBonus()
 
     playerData& player = g_game->m_players[m_playerOwner];
     int creature = m_type[0];
-    int townType = g_game->getAlignment(creature);
+    int townType = g_game->getCreatureAlignment(creature);
     if (townType == -1)
         return;
 
@@ -1750,10 +1750,10 @@ MAC_ADDRESS(0x0cd774, 0x94)
 int playerData::nextTown()
 {
     if (m_numTowns > 0) {
-        if (g_currentPlayer->m_currTownId == -1)
+        if (g_game->getCurrTownId() == -1)
             return m_townIds[0];
         for (int i = 0; i < m_numTowns; i++) {
-            if (g_currentPlayer->m_currTownId == m_townIds[i])
+            if (g_game->getCurrTownId() == m_townIds[i])
                 return m_townIds[(i + 1) % m_numTowns];
         }
     }
@@ -2194,7 +2194,7 @@ int game::getStartingHeroId(int alignment, int playerPos, int mapPosition)
 // the focused VC6 build stays 98.98% with the same exact CFG and call order.
 VA(0x004bb5e0, 0x282)
 DC_ADDRESS(0x0a6cd4, 0x2fe)
-MAC_ADDRESS(0x0ce398, 0x78c)  // anchor-global
+MAC_ADDRESS(0x0ce398, 0x78c)  // MAC_ABSTRACTION_FROM(tokens1:9394a150a3eb,98.2919): restore the DC player-alignment accessor around the negative-player guard and setup lookup expanded at Mac 0xce3c4..0xce3dc.
 int game::getNewHeroId(int playerPos, THeroClass excluded,
                        unsigned char preferAlignment,
                        THeroClass preferredClass)
@@ -2210,11 +2210,7 @@ int game::getNewHeroId(int playerPos, THeroClass excluded,
 
     totalCount = 0;
 
-    int alignment;
-    if (playerPos >= 0)
-        alignment = m_setup.m_alignment[playerPos];
-    else
-        alignment = -1;
+    int alignment = getAlignment(playerPos);
 
     ZeroMemory(counts, sizeof(counts));
     for (heroClass = classKnight; heroClass < kNumHeroClasses;
@@ -6919,7 +6915,7 @@ void game::viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
     unsigned char hasAngelicAlliance = 0;
     TCreatureType upgradeToType = CREATURE_NONE;
 
-    if (thisTown && getAlignment(armyType) == thisTown->m_type) {
+    if (thisTown && getCreatureAlignment(armyType) == thisTown->m_type) {
         int i = DWELLING_0_ID;
         for (;;) {
             if (g_townDwellingCreatures[thisTown->m_type * 2
@@ -7331,7 +7327,7 @@ int game::computeDailyGold(int whichPlayer, unsigned char includeSilo)
 // both source bool and unsigned char to T_UCHAR, so that record cannot decide.
 VA(0x004c7ba0, 0xAC)
 DC_ADDRESS(0x0b3030, 0x14c)
-MAC_ADDRESS(0x0de380, 0xb8)
+MAC_ADDRESS(0x0de380, 0xb8)  // MAC_ABSTRACTION_FROM(tokens1:dfc52e9173c5,100.0000): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 bool game::growCoverOfDarkness()
 {
     bool changed = false;
@@ -7705,7 +7701,7 @@ void game::perWeek()
 
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if (getAlignment(align) != -1
+            if (getCreatureAlignment(align) != -1
                 && g_creatureTypeTraits[align].m_level >= 0)
                 ++i;
         }
@@ -7713,7 +7709,7 @@ void game::perWeek()
         i = rand() % i;
         for (align = m_gameVersion ? CREATURE_CATAPULT : CREATURE_PIXIE;
              align--;) {
-            if (getAlignment(align) != -1
+            if (getCreatureAlignment(align) != -1
                 && g_creatureTypeTraits[align].m_level >= 0) {
                 if ((m_gameVersion
                      || align == CREATURE_AIR_ELEMENTAL
@@ -8726,7 +8722,7 @@ void game::showHeroesLogo()
     h = g_advManager->m_advWindow->m_radarWidget->m_height;
     heroLogo->draw(0, 0, w, h, g_windowManager->m_screenBitmap, x, y, false);
     g_windowManager->updateScreen(x, y, w, h);
-    heroLogo->dispose();
+    ResourceManager::dispose(heroLogo);
 }
 
 VA(0x004ca840, 0x19C)

@@ -187,11 +187,16 @@ unsigned char CDPlayHeroes::sysMsgDestroyPlayerOrGroup(
     return CDPlay::sysMsgDestroyPlayerOrGroup(message, toId);
 }
 
+// DC 0x11bb80 calls HandleNewPlayer for a player, then always forwards
+// to the base dispatcher. The empty helper disappears in retail.
 VA(0x00552b40, 0x14)
 DC_ADDRESS(0x11bb60, 0x3a)
 unsigned char CDPlayHeroes::sysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
+    if (message->m_playerType == DPPLAYERTYPE_PLAYER)
+        handleNewPlayer(message->m_dpId, message->m_dpnName.m_shortNameA,
+                        message->m_data, message->m_dataSize);
     return CDPlay::sysMsgCreatePlayerOrGroup(message, toId);
 }
 
@@ -206,8 +211,16 @@ bool CDPlayHeroes::pollRemote()
     unsigned long toId;
 
     while (1) {
-        if (!receive(&fromId, &toId, &m_dpMsg, 1))
-            break;
+        if (!receive(&fromId, &toId, &m_dpMsg, 1)) {
+            if (getLastError() == DPLAY_RECEIVE_ERROR_NO_MESSAGES)
+                return true;
+            char description[256];
+            getErrorDesc(getLastError(), description);
+            g_logFile.log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
+                                    "DPlay Receive error [%s]"),
+                        description);
+            return false;
+        }
         if (fromId == g_thisNetPlayerInfo.m_dpid)
             continue;
         if (!fromId)
@@ -219,15 +232,6 @@ bool CDPlayHeroes::pollRemote()
         queueMsg(netMsg);
     }
 
-    if (m_res != DPLAY_RECEIVE_ERROR_NO_MESSAGES) {
-        char description[256];
-        getErrorDesc(m_res, description);
-        g_logFile.log(DATA_COMPGEN(0x00682a98, dplayReceiveErrorLog,
-                                "DPlay Receive error [%s]"),
-                    description);
-        return false;
-    }
-    return true;
 }
 
 // DC names the network singleton pDPlay; retail's remote/front-end call
@@ -691,11 +695,14 @@ MAC_ADDRESS(0x2114e8, 0x9c)
 void CChatManager::shutDown()
 {
     if (m_chatSample) {
-        m_chatSample->dispose();
-        m_playerDropSample->dispose();
-        m_sysMsgSample->dispose();
-        m_turnDurSample->dispose();
-        m_playerEnterSample->dispose();
+        // Complete releases the five resources unconditionally after the
+        // first guard (Windows 0x553800, Mac 0x2114e8). Its nullable sample
+        // wrapper would add four guards absent from both native callers.
+        ResourceManager::dispose(static_cast<resource*>(m_chatSample));
+        ResourceManager::dispose(static_cast<resource*>(m_playerDropSample));
+        ResourceManager::dispose(static_cast<resource*>(m_sysMsgSample));
+        ResourceManager::dispose(static_cast<resource*>(m_turnDurSample));
+        ResourceManager::dispose(static_cast<resource*>(m_playerEnterSample));
     }
 }
 
@@ -1028,7 +1035,7 @@ void CChatManager::resumeTimeOuts()
     for (int i = 0; i < 20; i++) {
         if (m_msgArray[i].m_killTime > 0) {
             unsigned long pausedAt = m_pauseTime;
-            unsigned long elapsed = GameTime::get() - pausedAt;
+            unsigned long elapsed = GameTime::elapsedSince(pausedAt);
             m_msgArray[i].m_killTime += elapsed;
         }
     }
@@ -1159,7 +1166,7 @@ MAC_ADDRESS(0x2127e4, 0x7c)
 int CChatEdit::onFunctionKey(message msg, int toWho)
 {
     if (m_text.size() > 0)
-        sendChat(m_text.c_str(), toWho);
+        sendChat(getText(), toWho);
     setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
     updateScreen();
@@ -1172,7 +1179,7 @@ MAC_ADDRESS(0x212860, 0x7c)
 int CChatEdit::onEnter(message msg)
 {
     if (m_text.size() > 0)
-        sendChat(m_text.c_str(), NET_MESSAGE_RECIPIENT_ALL);
+        sendChat(getText(), NET_MESSAGE_RECIPIENT_ALL);
     setupDisplayString(
         DATA_COMPGEN(0x00691210, chatEditEmptyText, ""), 0);
     updateScreen();
@@ -1398,7 +1405,7 @@ DC_ADDRESS(0x11d250, 0x40)
 CAnimatedDlg::~CAnimatedDlg()
 {
     if (m_sprite)
-        m_sprite->dispose();
+        ResourceManager::dispose(m_sprite);
 }
 
 VA(0x00554b10, 0x20)
@@ -2757,6 +2764,7 @@ CNetMsg* CNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 // Original: CTurnDuration::CTurnDuration; remote.cpp:2912
 // Retail initializer 0x5522b0 leaves nextWarning untouched, as does DC.
 DC_ADDRESS(0x11f060, 0xe)
+MAC_ADDRESS(0x2156cc, 0x18)
 CTurnDuration::CTurnDuration()
 {
     m_lastWarned = 0;
@@ -2782,7 +2790,7 @@ unsigned char CTurnDuration::isOn()
 
 VA(0x00557aa0, 0x4D)
 DC_ADDRESS(0x11f090, 0x78)
-MAC_ADDRESS(0x21570c, 0xac)
+MAC_ADDRESS(0x21570c, 0xac)  // MAC_ABSTRACTION_FROM(tokens1:a1f8fd245563,35.4651): restore DC ElapsedSince instead of pasted time subtraction; retain the unsigned duration comparison.
 unsigned char CTurnDuration::isExpired()
 {
     if ((!g_currentPlayer || g_currentPlayer->isLocalHuman())
@@ -2790,7 +2798,7 @@ unsigned char CTurnDuration::isExpired()
             && m_pauseTime <= 0) {
         unsigned long startTime = m_turnStartTime;
         if (startTime > 0
-                && GameTime::get() - startTime > m_currDuration)
+                && static_cast<unsigned long>(GameTime::elapsedSince(startTime)) > m_currDuration)
             return 1;
     }
     return 0;
@@ -2961,7 +2969,7 @@ void CTurnDuration::resume()
 {
     unsigned long pausedAt = m_pauseTime;
     if (pausedAt != 0 && m_turnStartTime != 0) {
-        unsigned long pausedFor = GameTime::get() - pausedAt;
+        unsigned long pausedFor = GameTime::elapsedSince(pausedAt);
         m_pauseTime = 0;
         addTime(pausedFor);
     }

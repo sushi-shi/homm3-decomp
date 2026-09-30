@@ -542,7 +542,7 @@ TRandomMapProgress::~TRandomMapProgress()
 }
 
 VA(0x00577180, 0x17F)
-MAC_ADDRESS(0x16d988, 0x1fc)
+MAC_ADDRESS(0x16d988, 0x1fc) // MAC_ABSTRACTION_FROM(tokens1:adf3e602a908,33.7891): restore both CSprite bitmap-overload calls; native 0x16da90/0x16db18 expands the same map/width/height/pitch forwarding.
 void TRandomMapProgress::updateProgressBar()
 {
     if (!m_barSprite)
@@ -560,19 +560,15 @@ void TRandomMapProgress::updateProgressBar()
 
     for (int i = 0; i < fullRow; i++) {
         m_barSprite->draw(0, i, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         m_window->m_x + i * 18 + 16, m_window->m_y + 0x3c,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+                        false, false);
     }
     for (int j = 0; j < partialRow; j++) {
         m_barSprite->draw(0, j, 0, 0, m_barSprite->getWidth(), m_barSprite->getHeight(),
-                        g_windowManager->m_screenBitmap->getMap(0, 0),
+                        g_windowManager->m_screenBitmap,
                         m_window->m_x + j * 18 + 16, m_window->m_y + 0x50,
-                        g_windowManager->m_screenBitmap->getWidth(),
-                        g_windowManager->m_screenBitmap->getHeight(),
-                        g_windowManager->m_screenBitmap->getPitch(), 0, 0);
+                        false, false);
     }
 
     g_windowManager->updateScreen(m_window->m_x + 16, m_window->m_y + 0x3c, 0x120, 16);

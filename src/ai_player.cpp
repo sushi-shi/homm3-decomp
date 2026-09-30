@@ -1230,7 +1230,7 @@ bool type_AI_player::canTradeResources(const int* cost, int* supply,
 
 VA(0x0042ab40, 0xD1)
 DC_ADDRESS(0x0309d4, 0x9a)
-MAC_ADDRESS(0x02e9a4, 0x124)
+MAC_ADDRESS(0x02e9a4, 0x124)  // MAC_ABSTRACTION_FROM(tokens1:fd4723e15545,94.1781): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 bool type_AI_player::buildMarkets(int* supply)
 {
     playerData* player = &g_game->m_players[m_team];
@@ -2256,7 +2256,7 @@ void type_AI_creature_swapper::dumpExtraCreature()
 // `this` to EDI, which needs shooterCount created first - no declaration order
 // reaches it. Same verdict and same root as get_simple_attack_effect.
 // The former direct alignment gate was byte-flat; Mac expands the same
-// game::getAlignment body here before normalizeAlignment.
+// game::getCreatureAlignment body here before normalizeAlignment.
 VA(0x0042c690, 0x192)
 DC_ADDRESS(0x031a00, 0xf2)
 MAC_ADDRESS(0x030118, 0x198)  // DC method + retail body/caller;
@@ -2289,7 +2289,7 @@ long type_AI_creature_swapper::chooseWeakestArmy(
         int groupedAlignment;
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[type];
         if (checkAlignments) {
-            int alignment = g_game->getAlignment(type);
+            int alignment = g_game->getCreatureAlignment(type);
             groupedAlignment = normalizeAlignment(alignment);
             if (m_alignments[groupedAlignment + 1] != 1)
                 continue;
@@ -2338,15 +2338,15 @@ long type_AI_creature_swapper::valueOfAddingArmy(
     bool badMorale = false;
     long moraleArmyValue = 0;
 
-    int alignment = g_game->getAlignment(type);
+    int alignment = g_game->getCreatureAlignment(type);
     alignment = normalizeAlignment(alignment);
 
     if (m_alignments[alignment + 1] == 0 && m_army->getNumArmies() > 0) {
         // Complete gives the base elementals the lower threshold in a
         // version-0 game before the Necropolis test (Windows 94.24%;
-        // the Mac-only getAlignment spelling scored 82.42%). The Mac body
+        // the Mac-only getCreatureAlignment spelling scored 82.42%). The Mac body
         // (0x30354..0x30390) has no game-version arm and re-expands
-        // getAlignment instead: a platform/edition difference, Mac 22.10%.
+        // getCreatureAlignment instead: a platform/edition difference, Mac 22.10%.
         int minimumMorale;
         if (g_game->m_gameVersion == 0
             && isBaseElemental(type)) {
@@ -4232,7 +4232,7 @@ static unsigned char getMapShipyard(const playerData* player, long x,
 // E:\gamedcs\ai_player.cpp:4607
 VA(0x00430f80, 0x1d2)
 DC_ADDRESS(0x035910, 0xfe)
-MAC_ADDRESS(0x035f7c, 0x14c)
+MAC_ADDRESS(0x035f7c, 0x14c)  // MAC_ABSTRACTION_FROM(tokens1:ecd84a2fe231,100.0000): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void aiBuildShip(const hero* ourHero, long x, long y, long z)
 {
     if (ourHero->belongsToHuman() && !g_goSolo)
@@ -4258,7 +4258,7 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
 
 VA(0x00431160, 0x1f3)
 DC_ADDRESS(0x035a10, 0xb6)
-MAC_ADDRESS(0x0360c8, 0x12c)
+MAC_ADDRESS(0x0360c8, 0x12c)  // MAC_ABSTRACTION_FROM(tokens1:43a2ba7d1807,51.3158): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 long aiGetShipCost(const hero* ourHero, type_point point)
 {
     const playerData* player = &g_game->m_players[ourHero->m_owner];
@@ -4343,7 +4343,7 @@ int canBuy(const town* currTown, int buildingId);
 
 VA(0x00431800, 0x3c2)
 DC_ADDRESS(0x0354bc, 0x32e)
-MAC_ADDRESS(0x03590c, 0x528)
+MAC_ADDRESS(0x03590c, 0x528)  // MAC_ABSTRACTION_FROM(tokens1:a1e94b485a5a,25.3030): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 bool considerHiring(long playerId, hero* candidate)
 {
     playerData& player = g_game->m_players[playerId];
@@ -4855,7 +4855,7 @@ long type_income_artifact::getValue(const hero* owner, unsigned char,
 
 VA(0x00432d70, 0x219)
 DC_ADDRESS(0x03704c, 0x148)
-MAC_ADDRESS(0x037d54, 0x278)
+MAC_ADDRESS(0x037d54, 0x278)  // MAC_ABSTRACTION_FROM(tokens1:948ededbbe52,51.5823): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 long type_creature_growth_artifact::getValue(const hero* owner,
                                                unsigned char,
                                                unsigned char exact) const
@@ -4959,7 +4959,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = currentHero->m_army.m_armies[heroSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            int alignment = g_game->getAlignment(creature);
+            int alignment = g_game->getCreatureAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += g_creatureTypeTraits[creature].m_aiValue
                          * currentHero->m_army.m_numTroops[heroSlot];
@@ -4977,7 +4977,7 @@ long type_angelic_alliance_artifact::getValue(
             int creature = townArmy.m_armies[townSlot];
             if (creature == CREATURE_NONE)
                 continue;
-            int alignment = g_game->getAlignment(creature);
+            int alignment = g_game->getCreatureAlignment(creature);
             if (alignment != -1 && alliedAlignments.test(alignment)) {
                 total += g_creatureTypeTraits[creature].m_aiValue
                          * townArmy.m_numTroops[townSlot];

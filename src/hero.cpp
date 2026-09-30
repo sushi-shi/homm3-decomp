@@ -428,7 +428,7 @@ static unsigned char initializeMoveConstants()
         return 0;
 
     if (resource->getNumberOfRows() < 23) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -451,7 +451,7 @@ static unsigned char initializeMoveConstants()
     g_stablesMovementBonus = atoi(resource->getRow(i++)[5]);
     g_moveConstants.m_lighthouseBonus = atoi(resource->getRow(i)[5]);
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 
@@ -4385,6 +4385,7 @@ THeroScreenWindow::~THeroScreenWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 VA(0x004e1600, 0xCB)

@@ -1393,7 +1393,6 @@ void doArtifactMerchants()
 }
 
 VA(0x005e9e60, 0x38)
-DC_ADDRESS(0x188518, 0x126)
 MAC_ADDRESS(0x1f4cd8, 0x50)
 void doFreelancersGuild(hero* inHero)
 {
@@ -1405,7 +1404,10 @@ void doFreelancersGuild(hero* inHero)
     doMarket();
 }
 
+// DC DoFreelancersGuild() reads the displayed town globally. Complete
+// passes that town explicitly; the hero overload above is the map-object path.
 VA(0x005e9ea0, 0x13b)
+DC_ADDRESS(0x188518, 0x126)
 MAC_ADDRESS(0x1f4d28, 0x120)
 void doFreelancersGuild(town* currentTown)
 {

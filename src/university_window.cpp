@@ -301,11 +301,9 @@ void type_university_window::setSelectionMode()
 {
     int i;
     for (i = 0; i < m_purchaseWidgets.size(); ++i)
-        m_purchaseWidgets[i]->sendMessage(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_CLEAR_STATUS);
+        m_purchaseWidgets[i]->hide();
     for (i = 0; i < m_selectionWidgets.size(); ++i)
-        m_selectionWidgets[i]->sendMessage(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
+        m_selectionWidgets[i]->show();
 
     for (i = 0; i < 4; ++i)
         updateSkillButton(m_skills[i]);

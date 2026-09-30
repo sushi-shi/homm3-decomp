@@ -115,7 +115,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
         1, 1, 0, 8));
 
     strcpy(g_text, g_creatureBackgroundNames[
-        g_game->getAlignment(m_creature) + 1]);
+        g_game->getCreatureAlignment(m_creature) + 1]);
 
     m_widgets.push_back(new bitmapBorder(
         20, 54, 100, 130, -1, g_text, 0x800));
@@ -673,14 +673,14 @@ unsigned char armyGroup::isMember(TCreatureType monType) const
     return 0;
 }
 
-// Naming the creature once preserves getAlignment and recovers Windows
+// Naming the creature once preserves getCreatureAlignment and recovers Windows
 // 67.8644 -> 100. Mac reuses that same creature load through the census.
 // Its ten byte stores reload a reference-bound integer zero: counted
 // std::fill_n reproduces this leaf body (99.7368%) while remaining Windows
 // exact. The older DC body calls memset instead. Pointer-range std::fill
 // keeps an eight-byte unrolled runtime loop; int versus sizeof count is flat.
 // The sole Mac residual is the fallback array's SP-0x10 versus SP-0x14 home;
-// do not pad the array or remove getAlignment to chase that displacement.
+// do not pad the array or remove getCreatureAlignment to chase that displacement.
 VA(0x0044abb0, 0x97)
 DC_ADDRESS(0x04ebf0, 0xa6)
 MAC_ADDRESS(0x05828c, 0x17c)
@@ -697,7 +697,7 @@ int armyGroup::getAlignments(unsigned char* alignments) const
         const TCreatureTypeTraits& traits = g_creatureTypeTraits[creature];
         if (traits.m_attributes & g_ctaSiegeWeapon)
             continue;
-        int alignment = g_game->getAlignment(creature);
+        int alignment = g_game->getCreatureAlignment(creature);
         alignments[alignment + 1]++;
     }
     int count = 0;
@@ -878,7 +878,7 @@ const char* armyGroup::getArmySizeName(int howMany, int nameSet)
 
 VA(0x0044ae60, 0x29A)
 DC_ADDRESS(0x04f078, 0xe8)
-MAC_ADDRESS(0x058944, 0x21c)
+MAC_ADDRESS(0x058944, 0x21c)  // MAC_ABSTRACTION_FROM(tokens1:d9fa6c33b77e,90.7407): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 int armyGroup::getMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
                          unsigned char onCursedGround,
@@ -939,7 +939,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = m_armies[index];
         do {
-            switch (g_game->getAlignment(type)) {
+            switch (g_game->getCreatureAlignment(type)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -960,7 +960,7 @@ int armyGroup::getArmyMorale(int index, const hero* ownerHero, const town* owner
     do {
         if (mode == MAGIC_TERRAIN_EVIL_FOG) {
             int type = m_armies[index];
-            switch (g_game->getAlignment(type)) {
+            switch (g_game->getCreatureAlignment(type)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1028,7 +1028,7 @@ int armyGroup::getArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = m_armies[index];
         do {
-            switch (g_game->getAlignment(creature)) {
+            switch (g_game->getCreatureAlignment(creature)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1258,10 +1258,10 @@ std::string armyGroup::getMoraleDescription(
 
     // Complete terrain arms: mutate the incoming morale home, then subtract
     // currentMorale at the tail, as proved by retail 0x44b960.
-    // Mac 0x5983c and 0x59910 expand getAlignment separately in each arm.
+    // Mac 0x5983c and 0x59910 expand getCreatureAlignment separately in each arm.
     {
         if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND) {
-            switch (g_game->getAlignment(creature)) {
+            switch (g_game->getCreatureAlignment(creature)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1288,7 +1288,7 @@ std::string armyGroup::getMoraleDescription(
             goto moraleTerrainDone;
         }
         if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG) {
-            switch (g_game->getAlignment(creature)) {
+            switch (g_game->getCreatureAlignment(creature)) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1476,7 +1476,7 @@ std::string armyGroup::getLuckDescription(
 
     // Complete adds the clover-field luck bonus before applying enemy-group
     // modifiers. Dreamcast has only the cursed-ground terrain parameter.
-    // Mac 0x59f68 expands getAlignment before the town switch.
+    // Mac 0x59f68 expands getCreatureAlignment before the town switch.
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD) {
         // Nine town values routed to NAMED exits, the recipe GetArmyMorale
         // (0x44b100) already carries: retail lowers this arm through a
@@ -1488,7 +1488,7 @@ std::string armyGroup::getLuckDescription(
         // in the no-op arms VC6 sees two outcomes, collapses the whole
         // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
         // instead of the tables.
-        switch (g_game->getAlignment(creature)) {
+        switch (g_game->getCreatureAlignment(creature)) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
         case TOWN_TOWER:
@@ -1551,7 +1551,7 @@ TTerrainType armyGroup::getNativeTerrain() const
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] == CREATURE_NONE)
             continue;
-        int alignment = g_game->getAlignment(m_armies[i]);
+        int alignment = g_game->getCreatureAlignment(m_armies[i]);
         TTerrainType terrain = townManager::getNativeTerrain(alignment);
         if (native != TERRAIN_NONE) {
             if (terrain != native)

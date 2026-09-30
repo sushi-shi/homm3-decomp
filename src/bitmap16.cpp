@@ -140,8 +140,7 @@ void Bitmap16Bit::remap(int oldGreenBits)
     for (int col = 0; col < m_width; col++) {
         for (int row = 0; row < m_height; row++) {
             Bitmap16MapPointer pixel;
-            pixel.m_pixels = m_map;
-            pixel.m_bytes += row * m_pitch + col * sizeof(unsigned short);
+            pixel.m_pixels = getMap(col, row);
             if (oldGreenBits == BITMAP_GREEN_BITS_565)
                 *pixel.m_pixels = color8888to1555(color0565to8888(*pixel.m_pixels));
             else

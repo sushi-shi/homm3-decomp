@@ -248,7 +248,7 @@ unsigned char initializeCreatureTypeTraitsTable()
     if (!traitsSheet)
         return 0;
     if (traitsSheet->getNumberOfRows() < 179) {
-        traitsSheet->dispose();
+        ResourceManager::dispose(traitsSheet);
         return 0;
     }
 
@@ -300,7 +300,7 @@ unsigned char initializeCreatureTypeTraitsTable()
     { for (int i = 0; i < 5; i++, id++, row++)
             initializeCreatureTypeTraits(id, traitsSheet->getRow(row));
     }
-    traitsSheet->dispose();
+    ResourceManager::dispose(traitsSheet);
     return 1;
 }
 

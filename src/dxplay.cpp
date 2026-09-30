@@ -746,9 +746,7 @@ unsigned char CDPlay::getPlayerName(unsigned long playerId, char* shortName, int
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, 0, &size);
     if (m_res != DPERR_BUFFERTOOSMALL)
         return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
+    name.allocSize(size + 1);
     DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetPlayerName(playerId, dpName, &size);
     if (m_res < 0)
@@ -830,9 +828,7 @@ unsigned char CDPlay::getGroupName(unsigned long groupId, char* shortName, int m
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, 0, &size);
     if (m_res != DPERR_BUFFERTOOSMALL)
         return 0;
-    unsigned long allocSize = size + 1;
-    name.m_data = new unsigned char[allocSize];
-    name.m_dataSize = allocSize;
+    name.allocSize(size + 1);
     DPNAME* dpName = static_cast<DPNAME*>(static_cast<void*>(name.m_data));
     m_res = static_cast<IDirectPlay4A*>(m_dp)->GetGroupName(groupId, dpName, &size);
     if (m_res < 0)

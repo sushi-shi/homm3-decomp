@@ -325,6 +325,6 @@ DC_ADDRESS(0x05429c, 0x64)
 MAC_ADDRESS(0x05e038, 0x4c)
 void Bitmap816::resetPalette()
 {
-    TPalette16 converted(m_p24);
+    TPalette16 converted(getPalette24());
     setPalette(converted.m_data);
 }

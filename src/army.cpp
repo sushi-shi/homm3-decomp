@@ -246,7 +246,7 @@ void army::initialize(TCreatureType type, long number, const hero* owner,
     m_drawPriority = 4;
     TCreatureTypeTraits* traits = &m_monInfo;
     *traits = g_creatureTypeTraits[type];
-    traits->m_townType = g_game->getAlignment(type);
+    traits->m_townType = g_game->getCreatureAlignment(type);
     if (owner != 0)
         owner->heroFn004E6120(type, traits);
     if (g_combatManager->m_magicTerrain
@@ -4205,7 +4205,7 @@ void army::attackWall(TWallTargetId wall, long levelsDestroyed)
     g_soundManager->waitSample(shootMemSample, -1);
     g_soundManager->waitSample(wallMemSample, -1);
     if (wallSample)
-        wallSample->dispose();
+        ResourceManager::dispose(wallSample);
     cancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
@@ -4418,10 +4418,7 @@ void army::setupAnimation()
     g_combatManager->drawFrame(0, 0, 0, 0, 1, 0);
     m_letsPretendImNotHere = 0;
     g_windowManager->m_screenBitmap->draw(
-        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid->getMap(0, 0), 0, 0,
-        g_combatManager->m_saveScreenPostGrid->getWidth(),
-        g_combatManager->m_saveScreenPostGrid->getHeight(),
-        g_combatManager->m_saveScreenPostGrid->getPitch(), false);
+        0, 0, 800, 600, g_combatManager->m_saveScreenPostGrid, 0, 0, false);
     g_combatManager->m_backgroundDrawn = 0;
 }
 
@@ -4459,11 +4456,7 @@ void army::playAnimation(int sequence, int nframes, int startFrame)
             frame.m_minX, frame.m_minY,
             frame.width(),
             frame.height(),
-            g_windowManager->m_screenBitmap->getMap(0, 0),
-            frame.m_minX, frame.m_minY,
-            g_windowManager->m_screenBitmap->getWidth(),
-            g_windowManager->m_screenBitmap->getHeight(),
-            g_windowManager->m_screenBitmap->getPitch(), false);
+            g_windowManager->m_screenBitmap, frame.m_minX, frame.m_minY, false);
 
         g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
         g_combatManager->m_saveBiggestExtent = 1;
@@ -5193,18 +5186,22 @@ void army::castSpell(long hex)
 }
 
 VA(0x004487f0, 0x43)
+// Complete moves InitiateSpell's DC get_spell_time(MAGIC_MIRROR) test
+// into this helper and adds the faerie-dragon floor. Mac 0x54de4 reads
+// the same spell-time slot; 0x54e10..0x54e34 expands cppMax's reference
+// selection between the two local values.
 MAC_ADDRESS(0x054de4, 0x5c)
 int army::getMirrorEffect() const
 {
     int effect = 0;
-    if (m_spellInfluence[36] > 0)
+    if (getSpellTime(SPELL_MAGIC_MIRROR) > 0)
         effect = m_backlashChance;
     if (m_creatureType == CREATURE_FAERIE_DRAGON) {
         const SSpellTraits* mirrorTraits =
             &g_spellTraits[SPELL_MAGIC_MIRROR];
         int current = effect;
         int innate = mirrorTraits->m_masteryBonus[0];
-        const int& selected = current < innate ? innate : current;
+        const int& selected = cppMax(current, innate);
         return selected;
     }
     return effect;

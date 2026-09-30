@@ -327,6 +327,7 @@ void TRmgBoundaryVertex::initialize()
 // into the successful allocation arm. The same site/zone fields feed the
 // Voronoi vertex calculations. Body assignments (cost 81) keep createEdge
 // exact; the initializer-list form costs 70 and loses it (90.96%).
+MAC_ADDRESS(0x25c114, 0x50)
 TRmgBoundaryVertex::TRmgBoundaryVertex(
     TPoint sitePosition, TRmgZone* zone, TRmgBoundaryVertex* twin)
 {

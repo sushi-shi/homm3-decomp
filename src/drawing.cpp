@@ -812,7 +812,7 @@ void combatManager::drawBackground()
             overlay->m_fileName);
         bitmap->draw(0, 0, bitmap->getWidth(), bitmap->getHeight(), m_saveScreenPostGrid,
                      overlay->m_x, overlay->m_y, true);
-        bitmap->dispose();
+        ResourceManager::dispose(bitmap);
     }
 
     if (m_fortificationLevel > COMBAT_FORTIFICATION_NONE && m_moatOn) {
@@ -949,6 +949,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 
 VA(0x00494390, 0xA7)
 DC_ADDRESS(0x084dac, 0x80)
+// DC retains ValidHex and InInvisibleColumn; Mac 0xa5e38..0xa5ebc
+// expands both, including the latter's nested bounds check.
 MAC_ADDRESS(0x0a5df4, 0x178)
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
@@ -957,11 +959,8 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         return;
 
     std::vector<long> hexes;
-    if (newMouseGridIndex >= 0
-            && newMouseGridIndex < COMBAT_GRID_HEX_COUNT
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT != 0
-            && newMouseGridIndex % COMBAT_GRID_COLUMN_COUNT
-                   != COMBAT_GRID_RIGHT_BORDER_COLUMN) {
+    if (validHex(newMouseGridIndex)
+            && !inInvisibleColumn(newMouseGridIndex)) {
         hexes.push_back(newMouseGridIndex);
     } else {
         newMouseGridIndex = -1;

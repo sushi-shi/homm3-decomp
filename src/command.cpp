@@ -1905,6 +1905,9 @@ void combatManager::doVictory(int winningGroup)
     g_mouseManager->m_noChangePointer = 0;
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
     g_mouseManager->showPointer(false);
+    // DC command.cpp:2710 follows ShowPointer with this header helper;
+    // Complete shares the pointer restoration before its result branches.
+    g_mouseManager->enable();
     if (!isQuickCombat()) {
         g_windowManager->m_screenBitmap->darken(0, 0, 800, 600);
         g_windowManager->updateScreen(0, 0, 800, 600);
@@ -2238,7 +2241,7 @@ void combatManager::checkGetAIMove()
 // E:\gamedcs\command.cpp:3131
 VA(0x004782d0, 0x5B5)
 DC_ADDRESS(0x06f198, 0x45c)
-MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body
+MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body MAC_ABSTRACTION_FROM(tokens1:839c88458f96,27.4105): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void combatManager::getControl()
 {
     m_lastCellIndex = -1;

@@ -86,6 +86,23 @@ public:
 };
 SIZE(DPLCONNECTION, 0x28);
 
+// DirectPlay's creation notification: DC type 0x2a2a proves all nine
+// fields and the 48-byte layout. Original fields: dwType, dwPlayerType,
+// dpId, dwCurrentPlayers, lpData, dwDataSize, dpnName, dpIdParent, dwFlags.
+struct DPMSG_CREATEPLAYERORGROUP {
+public:
+    unsigned long m_type;
+    unsigned long m_playerType;
+    unsigned long m_dpId;
+    unsigned long m_currentPlayers;
+    void* m_data;
+    unsigned long m_dataSize;
+    DPNAME m_dpnName;
+    unsigned long m_dpIdParent;
+    unsigned long m_flags;
+};
+SIZE(DPMSG_CREATEPLAYERORGROUP, 0x30);
+
 // DirectPlay's player/group destruction notification. remote.obj's override
 // of the system-message slot reads only the leading discriminator and the
 // id of the station that left, which is what fixes them at +4 and +8; the
@@ -328,22 +345,19 @@ protected:
 };
 SIZE(CDPlayPlayer, 0x104);
 
-// The group enum trampoline's backing record: a 0x100-byte name buffer
-// followed by the DPID at +0x100 (0x104 total). AddGroupEnum news one,
-// strcpys the enumerated short name in, and stores the id. CDPlayGroup is
-// defined in dxplay.h:231, following its player-record twin.
-class CDPlayGroup {
+// DC types 0x3d83/0x5447 prove the public CDPlayPlayer base at offset zero
+// and no added fields. The constructor at 0x8be70 calls that base at
+// 0x8be7a. Retail AddGroupEnum expands the same name copy and DPID store.
+class CDPlayGroup : public CDPlayPlayer {
 public:
 
     DC_ADDRESS(0x08be70, 0x1c)
     CDPlayGroup(char* name, unsigned long dpid)
+        : CDPlayPlayer(name, dpid)
     {
-        strcpy(m_name, name);
-        m_dpid = dpid;
     }
-    char m_name[0x100];  // +0x00
-    unsigned long m_dpid;  // +0x100
 };
+SIZE(CDPlayGroup, 0x104);
 
 // The address-element records one DirectPlay SP address chunk EnumAddress splits
 // out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and

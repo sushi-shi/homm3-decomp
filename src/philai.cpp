@@ -2072,7 +2072,7 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // including the following store at displacement -4. No semantic divergence.
 VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
-MAC_ADDRESS(0x13f8dc, 0x368)
+MAC_ADDRESS(0x13f8dc, 0x368)  // MAC_ABSTRACTION_FROM(tokens1:46b741d4bc9b,95.5275): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
@@ -2148,7 +2148,7 @@ void aiEnterTown(hero* currentHero, town* currentTown)
 
 VA(0x005259e0, 0x205)
 DC_ADDRESS(0x10db74, 0x150)
-MAC_ADDRESS(0x13debc, 0x1e0)
+MAC_ADDRESS(0x13debc, 0x1e0)  // MAC_ABSTRACTION_FROM(tokens1:7356389b5c96,99.7917): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void buyArtifacts(hero* currentHero, town* currentTown)
 {
     if (currentTown->m_type != TOWN_TOWER
@@ -3043,7 +3043,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
         purchaseValue = 0;
     value += purchaseValue;
 
-    // Mac 0x1429c0 expands getAlignment for the generator's creature.
+    // Mac 0x1429c0 expands getCreatureAlignment for the generator's creature.
     if (static_cast<unsigned char>(
             g_game->m_mapHeader.m_victoryCondition.appliesToPlayer(
                 g_netLocalGamePos))
@@ -3051,7 +3051,7 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
                == VICTORY_CONDITION_FLAG_ALL_GENERATORS
         && !g_game->onSameTeam(currentGenerator.getOwner(),
                                g_netLocalGamePos)
-        && g_game->getAlignment(currentGenerator.m_type[0]) != -1) {
+        && g_game->getCreatureAlignment(currentGenerator.m_type[0]) != -1) {
         value += 5000000 / g_game->m_generators.size();
     }
     return value;
@@ -3737,7 +3737,7 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
     ExtraInfoUnion* info =
         static_cast<ExtraInfoUnion*>(static_cast<void*>(cell));
     if (currentHero->m_treeOfKnowledgeFlags
-            & (1 << (static_cast<unsigned char>(cell->m_extraInfo) & 0x1f)))
+            & (1 << info->getItemId()))
         return 0;
 
     int increment = currentHero->getExperienceIncrement();

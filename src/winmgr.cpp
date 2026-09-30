@@ -487,6 +487,7 @@ void heroWindowManager::updateScreen(int x, int y, int width, int height)
 {
     if (m_isWaitingForFadeIn)
         return;
+    g_mouseManager->disable();  // DC 0x19b280; no mutation in release.
     pollSound();
     if (x < 0)
         x = 0;
@@ -497,6 +498,7 @@ void heroWindowManager::updateScreen(int x, int y, int width, int height)
     if (y + height > WINDOW_SCREEN_HEIGHT)
         height = WINDOW_SCREEN_HEIGHT - y;
     blitToScreenWithPointer(x, y, width, height);
+    g_mouseManager->enable();  // DC winmgr.cpp:899.
     pollSound();
 }
 
@@ -580,7 +582,7 @@ void heroWindowManager::saveFizzleSource(int startX, int startY, int width, int 
 
 VA(0x00602cc0, 0xF2)
 DC_ADDRESS(0x19b5c0, 0xaa)
-MAC_ADDRESS(0x20e0f0, 0x110)
+MAC_ADDRESS(0x20e0f0, 0x110) // MAC_ABSTRACTION_FROM(tokens1:bede0a020786,56.9853): restore the DC-proven bitmap Grab overload; Mac 0x20e1e8 expands its map/width/height/pitch forwarding.
 void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
                                           int height)
 {
@@ -601,11 +603,7 @@ void heroWindowManager::saveFizzleSourceX(int startX, int startY, int width,
         if (width > 0 && height > 0) {
             delete m_bmpFizzleSource;
             m_bmpFizzleSource = new Bitmap16Bit(width, height);
-            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap->getMap(0, 0),
-                           startX, startY,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch());
+            m_bmpFizzleSource->grab(g_windowManager->m_screenBitmap, startX, startY);
         }
     }
 }
@@ -733,9 +731,7 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                 fadeTime = defaultFadeTime;
 
             Bitmap16Bit destination(width, height);
-            destination.grab(m_screenBitmap->getMap(0, 0), startX, startY,
-                             m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
-                             m_screenBitmap->getPitch());
+            destination.grab(m_screenBitmap, startX, startY);
 
             for (int frame = 0; frame < 8; frame++) {
                 unsigned long deadline = GameTime::get() + fadeTime;
@@ -784,10 +780,8 @@ void heroWindowManager::fizzleForwardX(int startX, int startY, int width,
                 GameTime::delayTil(deadline);
             }
 
-            destination.draw(0, 0, width, height, m_screenBitmap->getMap(0, 0),
-                             startX, startY, m_screenBitmap->getWidth(),
-                             m_screenBitmap->getHeight(), m_screenBitmap->getPitch(),
-                             false);
+            destination.draw(0, 0, width, height, m_screenBitmap,
+                             startX, startY, false);
             blitToScreenWithPointer(startX, startY, width, height);
 
             m_colorCyclingOn = savedColorCycling;
@@ -987,7 +981,7 @@ void heroWindowManager::fadeBlit(int sx, int sy, int sw, int sh,
 // unavailable rather than pretending that the Windows body is a Mac port.
 VA(0x006030e0, 0x1F9)
 DC_ADDRESS(0x19c1bc, 0x1fa)
-MAC_ADDRESS(0x20e634, 0x444)  // anchor-caller
+MAC_ADDRESS(0x20e634, 0x444) // MAC_ABSTRACTION_FROM(tokens1:a24615a82ad2,6.7766): restore bitmap Grab/Draw wrappers; Mac 0x20e6a8/0x20e7b8 and 0x20e8c8/0x20ea54 expand them in its separate fade paths.
 void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
 {
     const unsigned int redMask2 = (Bitmap16Bit::s_redMask << 16) | Bitmap16Bit::s_redMask;
@@ -995,8 +989,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
     const unsigned int blueMask2 = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     const int fadePeriod = 50;
     Bitmap16Bit bmpFadeSource(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    bmpFadeSource.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
+    bmpFadeSource.grab(m_screenBitmap, 0, 0);
 
     // DC winmgr.cpp:1793 calls mouseManager::Disable after Grab. That
     // recovered header helper only reads the disable count, so VC6 elides
@@ -1039,8 +1032,7 @@ void heroWindowManager::fadeToBlack(int speed, unsigned char expectFadein)
                             WINDOW_SCREEN_HEIGHT);
     if (expectFadein) {
         bmpFadeSource.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-            m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-            m_screenBitmap->getHeight(), m_screenBitmap->getPitch(), 0);
+                           m_screenBitmap, 0, 0, false);
     }
 }
 
@@ -1071,8 +1063,7 @@ void heroWindowManager::fadeFromBlack(int speed)
     const unsigned int maskBlue = (Bitmap16Bit::s_blueMask << 16) | Bitmap16Bit::s_blueMask;
     const int fadePeriod = 50;
     Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
-    fadeFrom.grab(m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(),
-        m_screenBitmap->getHeight(), m_screenBitmap->getPitch());
+    fadeFrom.grab(m_screenBitmap, 0, 0);
 
     for (int shift = 2; shift > 0; shift--) {
         unsigned long deadline = GameTime::get() + fadePeriod;
@@ -1106,8 +1097,7 @@ void heroWindowManager::fadeFromBlack(int speed)
     }
 
     fadeFrom.draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
-        m_screenBitmap->getMap(0, 0), 0, 0, m_screenBitmap->getWidth(), m_screenBitmap->getHeight(),
-        m_screenBitmap->getPitch(), 0);
+                  m_screenBitmap, 0, 0, false);
     blitToScreenWithPointer(0, 0, WINDOW_SCREEN_WIDTH,
                             WINDOW_SCREEN_HEIGHT);
 }

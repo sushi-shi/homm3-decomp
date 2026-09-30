@@ -248,7 +248,7 @@ void searchArray::boardBoat(const hero* currentHero, pathCell& cell)
 // unchanged. The remaining extra slot belongs to the location return value.
 VA(0x0056a850, 0x27E)
 DC_ADDRESS(0x12b988, 0x240)
-MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map
+MAC_ADDRESS(0x16202c, 0x35c)  // exhaustive search.obj order-map MAC_ABSTRACTION_FROM(tokens1:599c6f83f8ff,39.8402): hasBuilding preserves the getBuildingMask accessor beneath the restored town-gate call; its expanded 64-bit return changes PPC allocation.
 void searchArray::enterTown(const hero* currentHero, long startTown,
                              const pathCell& currentPathCell, long limit,
                              type_search_type searchType)

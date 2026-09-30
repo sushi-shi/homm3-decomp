@@ -389,7 +389,7 @@ public:
     bool hasBuilding(int buildingId, bool checkIncluded) const
     {
         if (checkIncluded)
-            return (m_active & g_bitNumber[buildingId]) != 0;
+            return (getBuildingMask() & g_bitNumber[buildingId]) != 0;
         return (m_built & g_bitNumber[buildingId]) != 0;
     }
 

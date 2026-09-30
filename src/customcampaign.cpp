@@ -407,7 +407,7 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
         (g_game->m_campaign.m_currentCampaign == g_creatureBonusTownCampaignB &&
          g_game->m_campaign.m_currentMap == g_creatureBonusTownScenarioB)) {
         int creature = m_creature;
-        int faction = g_game->getAlignment(creature);
+        int faction = g_game->getCreatureAlignment(creature);
         for (int townIndex = 0; townIndex < player->m_numTowns; ++townIndex) {
             town* garrison = g_game->getTown(player->m_townIds[townIndex]);
             if (garrison->m_type == faction) {
@@ -2591,33 +2591,27 @@ void TCampaignBrief::MapTextStruct::play()
                 if (scrollDelay) {
                     strip->draw(0, 0, g_campaignSubtitleWidth,
                                 g_campaignSubtitleHeight - scrollDelay,
-                                g_windowManager->m_screenBitmap->getMap(0, 0),
+                                g_windowManager->m_screenBitmap,
                                 g_campaignSubtitleX,
                                 g_campaignSubtitleY + scrollDelay,
-                                g_windowManager->m_screenBitmap->getWidth(),
-                                g_windowManager->m_screenBitmap->getHeight(),
-                                g_windowManager->m_screenBitmap->getPitch(), false);
+                                false);
                 } else {
                     // Mac retains separate draws at 0:0x97b20 and 0:0x97b84.
                     if (scrollY < textHeight - g_campaignSubtitleHeight) {
                         strip->draw(0, scrollY, g_campaignSubtitleWidth,
                                     g_campaignSubtitleHeight,
-                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_windowManager->m_screenBitmap,
                                     g_campaignSubtitleX, g_campaignSubtitleY,
-                                    g_windowManager->m_screenBitmap->getWidth(),
-                                    g_windowManager->m_screenBitmap->getHeight(),
-                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                                    false);
                     } else {
                         if (!textDone)
                             textEnd = GameTime::get();
                         textDone = 1;
                         strip->draw(0, scrollY, g_campaignSubtitleWidth,
                                     g_campaignSubtitleHeight,
-                                    g_windowManager->m_screenBitmap->getMap(0, 0),
+                                    g_windowManager->m_screenBitmap,
                                     g_campaignSubtitleX, g_campaignSubtitleY,
-                                    g_windowManager->m_screenBitmap->getWidth(),
-                                    g_windowManager->m_screenBitmap->getHeight(),
-                                    g_windowManager->m_screenBitmap->getPitch(), false);
+                                    false);
                     }
                 }
                 if (redraw) {

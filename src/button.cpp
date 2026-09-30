@@ -101,7 +101,7 @@ DC_ADDRESS(0x0571ec, 0x48)
 MAC_ADDRESS(0x062d98, 0x9c)
 inline button::~button()
 {
-    m_buttonIcon->dispose();
+    ResourceManager::dispose(m_buttonIcon);
 }
 
 // E:\gamedcs\button.cpp:104..111. Original name: SetPalette.
@@ -115,7 +115,7 @@ void button::setPalette(const char* paletteName)
     TPalette16* newPalette = ResourceManager::getPalette(paletteName);
     if (newPalette) {
         m_buttonIcon->setPalette(newPalette->m_data);
-        newPalette->dispose();
+        ResourceManager::dispose(newPalette);
     }
 }
 
@@ -176,7 +176,7 @@ int button::main(message& msg)
             return 1;
         case widget::WIDGET_SET_ICON_NAME:
             if (m_buttonIcon)
-                m_buttonIcon->dispose();
+                ResourceManager::dispose(m_buttonIcon);
             m_buttonIcon = ResourceManager::getSprite(msg.m_extraText);
             return 1;
         case widget::WIDGET_SET_TEXT:
@@ -396,11 +396,9 @@ void button::draw() const
     if (frame >= frameCount)
         frame = 0;
     m_buttonIcon->drawInterface(frame, 0, 0, m_buttonIcon->getWidth(), m_buttonIcon->getHeight(),
-                              g_windowManager->m_screenBitmap->getMap(0, 0),
+                              g_windowManager->m_screenBitmap,
                               m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y,
-                              g_windowManager->m_screenBitmap->getWidth(),
-                              g_windowManager->m_screenBitmap->getHeight(),
-                              g_windowManager->m_screenBitmap->getPitch(), 0);
+                              false);
 }
 
 // E:\gamedcs\button.cpp:471
@@ -467,7 +465,7 @@ DC_ADDRESS(0x057b5c, 0x3a)
 MAC_ADDRESS(0x063930, 0x74)  // anchor-global
 textButton::~textButton()
 {
-    m_font->dispose();
+    ResourceManager::dispose(m_font);
 }
 
 VA(0x00456ca0, 0x82)

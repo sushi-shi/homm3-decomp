@@ -1895,6 +1895,7 @@ TOverviewWindow::~TOverviewWindow()
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // Mac retains this method at code 0:139ee4 and the constructor calls it

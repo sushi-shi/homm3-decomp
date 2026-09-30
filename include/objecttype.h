@@ -93,6 +93,7 @@ public:
     // loads in VC6; ordinary integer accessors retain the observed boundary.
     // Their role names are provisional: this editor type is Complete-only.
     int getWidth() const { return m_imageInfo.m_objectSize.m_x; }
+    int getOccupiedCellCount() const;
     // Mac CObjectType conversion 0x128c7c..0x128d24 expands these four
     // coordinate-to-mask queries before assigning the destination cells.
     // The names and member boundaries are inferred; getBitPos owns the

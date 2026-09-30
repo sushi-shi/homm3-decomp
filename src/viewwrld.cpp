@@ -1155,6 +1155,7 @@ MAC_ADDRESS(0x2067dc, 0x2594)  // caller stack extent + vtable 0x643c54
 TViewWorldWindow::TViewWorldWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    ResourceManager::delSprFromCache();
     m_x = 0;
     m_y = 0;
     m_width = 800;
@@ -1329,12 +1330,13 @@ MAC_ADDRESS(0x208d70, 0xe8)
 TViewWorldWindow::~TViewWorldWindow()
 {
     delete g_memoryBuffer;
-    g_csVwIcons->dispose();
+    ResourceManager::dispose(g_csVwIcons);
 
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
         if (*it)
             delete *it;
     }
+    ResourceManager::delSprFromCache();
 }
 
 // The type_func_button click code both callbacks answer, the same 13
@@ -1444,8 +1446,7 @@ void advManager::viewWorld(int whatToDraw, TSkillMastery level)
     g_combatActive = 2;
     {
         TViewWorldWindow viewWorldWindow;
-        type_point mapCenter(m_radarOrigin.m_x + 9, m_radarOrigin.m_y + 8,
-                              m_radarOrigin.m_z);
+        type_point mapCenter = getMapCenter();
 
         viewWorldWindow.init(mapCenter, 0);
         viewWorldWindow.drawWindow();

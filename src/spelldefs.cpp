@@ -129,7 +129,7 @@ unsigned char initializeSpellTraitsTable()
         return 0;
 
     if (resource->getNumberOfRows() < 92) {
-        resource->dispose();
+        ResourceManager::dispose(resource);
         return 0;
     }
 
@@ -154,7 +154,7 @@ unsigned char initializeSpellTraitsTable()
         ++row;
     }
 
-    resource->dispose();
+    ResourceManager::dispose(resource);
     return 1;
 }
 

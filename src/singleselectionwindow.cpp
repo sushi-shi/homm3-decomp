@@ -811,14 +811,14 @@ public:
     char m_paddingBeforeNumber[3];
     int m_number;                 // +0x18
     char m_fileName[0x40];        // +0x1c
-    int m_townTypes[8];           // +0x5c
+    TTownType m_townTypes[8];     // +0x5c; DC townType domain
     FileTime m_fileTime;          // +0x7c
 
     // Complete adds the transfer-list flag at +0x14 before the DC payload.
     // E:\gamedcs\singleselectionwindow.cpp:587
     DC_ADDRESS(0x147c78, 0x74)
     CMapFileNameMsg(unsigned char flag, int number, char* fileName,
-                    int* townTypes, FileTime fileTime)
+                    TTownType* townTypes, FileTime fileTime)
         : CNetMsg(RS_MAP_FILE_NAME, sizeof(CMapFileNameMsg))
     {
         m_flag = flag;
@@ -2719,7 +2719,7 @@ MAC_ADDRESS(0x186c08, 0x68)
 int CSaveGameEdit::onKeyPress(message* msg)
 {
     int ret = textEntryWidget::onKeyPress(msg);
-    if (_strcmpi(m_text.c_str(),
+    if (_strcmpi(getText(),
                  g_newGameFileName) != 0
             && g_singleSelectionWindow->m_currentMap != -1)
         g_singleSelectionWindow->setCurrentMap(-1, 1);
@@ -4959,26 +4959,22 @@ void TSingleSelectionWindow::updateAllyEnemyFlags(bool update)
     widget* flag;
     for (int i = 0; i < 8; ++i) {
         flag = getWidget(i + 120);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->hide();
         flag = getWidget(i + 112);
-        flag->sendMessage(widget::WIDGET_CLEAR_STATUS,
-                           widget::WIDGET_CLEAR_STATUS);
+        flag->hide();
 
         if (g_game->m_setup.m_playerPos[i] < 0)
             continue;
 
         if (g_game->onSameTeam(i, playerPos)) {
             flag = getWidget(allyCount + 112);
-            flag->sendMessage(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_CLEAR_STATUS);
+            flag->show();
             getWidget(allyCount + 112)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME, i);
             ++allyCount;
         } else {
             flag = getWidget(enemyCount + 120);
-            flag->sendMessage(widget::WIDGET_SET_STATUS,
-                               widget::WIDGET_CLEAR_STATUS);
+            flag->show();
             getWidget(enemyCount + 120)->sendMessage(
                 widget::WIDGET_SET_ICON_FRAME, i);
             ++enemyCount;
@@ -6364,7 +6360,8 @@ void TSingleSelectionWindow::updatePlayerPositions(unsigned char updateCurPlayer
                     static_cast<signed char>(player->m_startBonusIndex);
                 g_game->m_setup.m_startingHero[i] = -1;
                 if (player->m_townIndex != -1)
-                    g_game->m_setup.m_alignment[i] = player->m_townIndex;
+                    g_game->m_setup.m_alignment[i] =
+                        H3_ENUM_DECODE(TTownType, player->m_townIndex);
                 else if (player->isHuman())
                     g_game->m_setup.m_alignment[i] =
                         m_currentHeader->m_setup.m_alignment[i];

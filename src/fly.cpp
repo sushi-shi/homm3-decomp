@@ -220,12 +220,9 @@ int army::fly(int destIndex)
                            g_combatManager->m_drawbridgeBounds.m_minY,
                            g_combatManager->m_drawbridgeBounds.width(),
                            g_combatManager->m_drawbridgeBounds.height(),
-                           g_windowManager->m_screenBitmap->getMap(0, 0),
+                           g_windowManager->m_screenBitmap,
                            g_combatManager->m_drawbridgeBounds.m_minX,
                            g_combatManager->m_drawbridgeBounds.m_minY,
-                           g_windowManager->m_screenBitmap->getWidth(),
-                           g_windowManager->m_screenBitmap->getHeight(),
-                           g_windowManager->m_screenBitmap->getPitch(),
                            false);
                 g_combatManager->m_drawbridgeBounds = g_combatAreaLimits;
                 g_combatManager->m_saveBiggestExtent = 1;

@@ -565,7 +565,7 @@ MAC_ADDRESS(0x21ab78, 0x94)
 TMultiPlayerWindow::~TMultiPlayerWindow()
 {
     g_multiPlayerWindow = 0;
-    m_gameState->dispose();
+    ResourceManager::dispose(m_gameState);
     deleteWidgets();
     m_sessions->destroy();
     delete m_sessions;
@@ -778,15 +778,7 @@ unsigned char TMultiPlayerWindow::onModemHost()
 DC_ADDRESS(0x1018ec, 0x7e)
 inline unsigned char TMultiPlayerWindow::onIPX()
 {
-    g_mpNetProtocol = MP_IPX;
-    if (::initRemote(MP_IPX, m_playerName->getText()) &&
-        initConnection(0, 0)) {
-        DPCAPS caps;
-        g_dPlay->getCaps(&caps, 1);
-        m_sessionRefreshTimeout = caps.m_timeout + 100;
-        if (g_mpNetProtocol == MP_TCP)
-            m_sessionRefreshTimeout = 1000;
-
+    if (initRemote(MP_IPX, 0, 0)) {
         if (m_host)
             m_host->show();
         m_join->show();
@@ -1033,6 +1025,7 @@ unsigned char TMultiPlayerWindow::hostSession(const char* sessName, const char* 
     return 1;
 }
 
+// Shared setup called by the protocol-specific handlers.
 VA(0x0050fbc0, 0x86)
 DC_ADDRESS(0x100e18, 0x7a)
 unsigned char TMultiPlayerWindow::initRemote(eNetGameType netGameType, const char* extra, _DPCOMPORTADDRESS* comportInfo)
@@ -1462,12 +1455,7 @@ unsigned char TMultiPlayerWindow::onTCP()
         }
     }
 
-    m_sessions->destroy();
-    g_dPlay->enumSessions(m_sessions, m_sessionRefreshTimeout, 0x52);
-    m_sessTimer = GameTime::get();
-    m_gameSlider->updateResolution(
-        m_sessions->getCount() - 12);
-    update();
+    refreshSessions();
     return 1;
 }
 
