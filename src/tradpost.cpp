@@ -2003,6 +2003,12 @@ void TTradeResourceWindow::update(unsigned char update)
         drawWindow(1, 0xffff0001, 0xffff);
 }
 
+// All 50 blocks and 50 calls agree. Retail +0x45d loads the pending
+// right amount before multiplying by the give quantity; VC6 reverses those
+// two global operands (99.9819%). Reversing the source product and grouping
+// the real market globals ahead of all dialog consumers are both byte-flat.
+// DC 1354 and Mac 0x1f6864 retain the same single multiplication; neither
+// implies a missing helper, extra temporary, or alternate global declaration.
 VA(0x005eaf50, 0x744)
 DC_ADDRESS(0x1895a8, 0x504)
 MAC_ADDRESS(0x1f63d8, 0x794)

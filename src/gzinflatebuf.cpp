@@ -269,9 +269,12 @@ TGzInflateBuf::~TGzInflateBuf()
 // error blocks and adds reference-selection loads (24.4660%; local count
 // copies 29.0419%). No such helper is retained: the repeated pattern is a
 // hypothesis for its boundary, not proof of the original reader body.
-// The candidate also shares its 0x20 exception slot where retail reserves
-// 0x3c. An explicit refill-buffer local is byte-neutral; a separate CRC
-// byte-count local scores 81.3560% and does not resolve the trailer calls.
+// Earlier candidates shared a 0x20 exception slot, but the current native
+// helper model gives both candidate and retail TDataError at ebp-0x1c and
+// TAllocationFailure at ebp-0x3c. That lifetime discrepancy is resolved;
+// the eight-versus-four readByte expansions remain. An explicit refill
+// buffer local was byte-neutral; a separate CRC byte-count local scored
+// 81.3560% and did not resolve the trailer calls.
 // Mac expands all eight checked byte reads without a visible group boundary.
 // A success-first readByte return and swapping the refill member assignments
 // are separately byte-flat under both compilers; neither restores VC6
