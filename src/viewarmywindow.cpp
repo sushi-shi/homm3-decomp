@@ -97,7 +97,7 @@ VA(0x005f3360, 0x7B5)
 DC_ADDRESS(0x190abc, 0x3bc)
 MAC_ADDRESS(0x1ff748, 0x650)  // direct caller + CrStkPU.pcx
 TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
-                                 unsigned char showOk)
+                                 bool showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_armyType(thisArmy->m_creatureType),
       m_armySize(thisArmy->m_numTroops),
@@ -213,10 +213,10 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
 
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
-// Current group-constructor score: 88.5394 versus the preceding 91.1781;
-// HIST retains 97.4452. The background's recorded palette-call arms and the
-// morale/luck helpers' owning member stores are positive source facts. Keep
-// those boundaries while recovering this caller's remaining nested inlining.
+// Current group-constructor score is 96.6045%. The original bool flag
+// interfaces leave all three complete VC6 constructor bodies byte-flat.
+// The background's recorded palette-call arms and the morale/luck helpers'
+// owning member stores remain canonical through nested-inlining recovery.
 // The garrison/hero-screen popup: one slot of an armyGroup, shown with
 // the owning hero's bonuses folded in and the upgrade/dismiss actions
 // live. Three things separate it from the one-army constructor:
@@ -245,8 +245,8 @@ MAC_ADDRESS(0x1ffd98, 0x4f8)  // vtable-store + builder call set + describer pai
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                                  const hero* thisHero, const town* thisTown,
                                  int x0, int y0, int upgrade,
-                                 unsigned char showDismiss,
-                                 unsigned char showOk,
+                                 bool showDismiss,
+                                 bool showOk,
                                  unsigned char groupAlignments)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       m_armyType(group->m_armyTypes[iarmy]),
@@ -345,7 +345,7 @@ VA(0x005f4210, 0x3C1)
 DC_ADDRESS(0x19148c, 0x1d2)
 MAC_ADDRESS(0x200290, 0x2a4)
 TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
-                                 unsigned char showOk)
+                                 bool showOk)
     : CAdvPopup(x0, y0, 298, 311, 0x12),
       // Retail initialises the creature type in the member list, before the
       // widget run; assigning it in the body costs 94.4475 against 97.1745.
