@@ -214,8 +214,9 @@ unsigned char combatManager::failedSiege()
 // named done Boolean do not change the residual with the helpers restored.
 // Keep the artifact-value result ahead of the by-value max so its argument
 // copy dies in that arm; the final quotient likewise owns its float slot.
-// DC records iSideFV as int[2], not long[2]. Restoring that array and the
-// unsigned-char results of army::Is/IsActive is byte-flat at 94.4511%.
+// DC records iSideFV as int[2], not long[2]. Restoring that array is
+// byte-flat at 94.4511%. Native DC publics prove Is/IsActive return bool;
+// the debug type records lower that bool to an unsigned-char primitive.
 // Their canonical expansions remain present; the residual has 78 matching
 // CFG blocks in flow, 54 branches and four returns. It still hoists the
 // initial zero carrier and lowers the Done test to shr/test rather than
