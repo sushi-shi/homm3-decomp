@@ -4150,3 +4150,18 @@ createRiver 74.74646%. The supported calls remain despite the river score
 resets; prior peaks and unresolved getter/cleanup expansion evidence remain
 in the owning source and score history. No new inline qualifier or caller
 scope is introduced.
+
+
+## Map and adapter lookup paths in exact virtual methods
+
+Fifteen native Mac map/road/river methods at 0x22eadc..0x22f434 expand
+seventeen two-dimensional cell lookups, including both river-neighbour
+loops at 0x22f0dc and 0x22f228. Restore those through the existing
+getMapItem(int,int), four signed land-kind reads through getLandType,
+and the map terrain's four ordered stores through setTerrain. The native
+terrain setter expansion is 0x22eb18..0x22eb44; the supplied tile scalars
+and returned tile lifetimes remain in their original caller positions.
+
+One targeted rmg build preserves all fifteen Windows bodies at 100%.
+No header, inline qualifier, runtime dispatch or additional helper body is
+introduced. The canonical ordinary helpers remain visible in the same TU.
