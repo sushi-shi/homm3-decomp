@@ -3001,7 +3001,11 @@ void hero::heroFn004DC100(long slot)
         return;
     }
 
-    int targetCombo = g_artifactTraits[artifactId].m_targetCombo;
+    // Mac 0xf8770..0xf8780 repeats the equipped-record lookup here;
+    // keep its canonical accessor instead of reusing the first ID snapshot.
+    int targetCombo =
+        g_artifactTraits[getArtifact(TArtifactSlot(slot)).m_artifactId]
+            .m_targetCombo;
     if (targetCombo == -1)
         return;
     if (player.m_assembledCombinations[targetCombo])
