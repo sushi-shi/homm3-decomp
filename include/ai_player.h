@@ -263,8 +263,8 @@ int netValueOfLocation(hero* currentHero, HeroDestination& destination,
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
-                          unsigned char allowSpells,
-                          unsigned char exploreMode);
+                          bool allowSpells,
+                          bool exploreMode);
 
 unsigned char canTakeTown(const hero* attackingHero, const town* defendingTown);
 long findMagusHutValue(long playerId, unsigned char exploreMode);

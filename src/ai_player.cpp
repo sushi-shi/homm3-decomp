@@ -3192,14 +3192,16 @@ static void unblockLith(hero* currentHero,
 // value test. The audit's missing GetMapExtra here is a platform difference.
 // The zero-count destination vector is the native fill constructor, not a
 // default constructor (Mac 0x33328..0x3335c, DC constructor 0x38c3c).
+// Original ?AI_choose_destination@@YAHPAVhero@@JAAUHeroDestination@@AAJ_N3@Z
+// proves both final flags bool despite their lowered byte debug records.
 VA(0x0042e0b0, 0xb6e)
 DC_ADDRESS(0x033cf8, 0x46a)
 MAC_ADDRESS(0x0332f8, 0x71c)  // anchor-caller move_hero + order bracket
 int aiChooseDestination(hero* currentHero, long maxDistance,
                           HeroDestination& bestPoint,
                           long& bestRawValue,
-                          unsigned char allowSpells,
-                          unsigned char exploreMode)
+                          bool allowSpells,
+                          bool exploreMode)
 {
     long rawValue;
     long nearbyCost;
