@@ -979,8 +979,9 @@ public:
     // uses checkTerrain=1; Complete expands the helper before calling canLand.
     // These are real shared header bodies, not an ai_player.obj declaration
     // view: cursor.obj proves the same nested IsWieldingArtifact boundary.
+    // Original Dreamcast public ?IsFlying@hero@@QBA_N_N@Z proves both bools.
     DC_ADDRESS(0x01fbdc, 0x98)
-    unsigned char isFlying(unsigned char checkTerrain) const
+    bool isFlying(bool checkTerrain) const
     {
         return !(m_flags & 0x40000)
             && (m_flightLevel != -1 || isWieldingArtifact(0x48))
