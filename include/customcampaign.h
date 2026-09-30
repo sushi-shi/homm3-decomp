@@ -178,7 +178,7 @@ public:
 private:
     // Final serialized field of load; operates solely on this campaign's
     // assigned-hero list. Member ownership and name are inferred.
-    void readAssignedHeroes(TAbstractFile* infile);
+    void readAssignedHeroes(TAbstractFile* infile, int count);
 };
 SIZE(SCampaign, 0x7c);
 

@@ -1905,6 +1905,7 @@ void aiVisitWarFactory(hero* currentHero)
 // (14 objects) leave the funds/value increment ordering unresolved. A further
 // six distinct source states restore the early refusal and cost-row order;
 // three reproduced objects retain 99.4198% with no sibling changes.
+// Naming the dereferenced cost before the funds check is emitted-byte flat.
 VA(0x00525120, 0xE0) MAC_ADDRESS(0x13f074, 0x160)  // dc 0x10dea8
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
@@ -1994,6 +1995,10 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // value/experience acquisition, resource valuation and optional purchase in
 // that order; its aiEnterTown comparison is 95.5275%. A typed spellbook-ID
 // local in the DC line 768 gap is byte-flat in both compilers.
+// Current retail comparison is 99.9565%: all 73 CFG blocks, 44 calls and 72
+// relocations agree. The only residual is two SIB base/index encodings in the
+// expanded upgradeCreatures debit loop: [edx+eax] versus retail [eax+edx],
+// including the following store at displacement -4. No semantic divergence.
 VA(0x005253d0, 0x60c) MAC_ADDRESS(0x13f8dc, 0x368)  // dc 0x10e3f8
 void aiEnterTown(hero* currentHero, town* currentTown)
 {

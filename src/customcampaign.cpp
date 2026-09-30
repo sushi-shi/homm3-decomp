@@ -3017,15 +3017,14 @@ static void convertLegacyCampaignHero(hero& newHero,
         newHero.setPrimarySkill(stat, oldHero.m_stats[stat]);
 }
 
-// Inferred serialized-record operations: the assigned-hero count and signed
-// ID stream belong to the campaign, while a scenario score reader fills one
+// Inferred serialized-record operations: the assigned-hero signed ID stream
+// belongs to the campaign, while a scenario score reader fills one
 // already selected record. The assigned-list reader is an ordinary private
 // campaign member; only load calls it, and its list belongs to that receiver.
 // They preserve the scalar read order and widths; no DC declaration or
 // retained retail procedure proves these names or interfaces.
-void SCampaign::readAssignedHeroes(TAbstractFile* infile)
+void SCampaign::readAssignedHeroes(TAbstractFile* infile, int count)
 {
-    int count = readValue<unsigned char>(infile);
     m_assignedCarryover.resize(count);
     for (int assignedIndex = 0; assignedIndex < count; ++assignedIndex) {
         m_assignedCarryover[assignedIndex] =
@@ -3041,9 +3040,12 @@ void SCampaign::readAssignedHeroes(TAbstractFile* infile)
 // Further indexed-iterator, shared-count and free/member reader models do
 // not improve this. DC has no corresponding load: its campaign pools are
 // fixed arrays and its hero loader predates the versioned stream interface.
-// Pool accessors currently leave the assigned-hero reader out of line
-// (96.18%). Making that reader an ordinary private campaign member preserves
-// its ownership but does not restore the retail expansion; do not flatten it.
+// Mac 0x99510..0x99538 reads the final byte count before resizing the ID list;
+// the same count bounds the short-ID reads at 0x9954c..0x99584. Passing this
+// count from load into the private fixed-count reader restores its retail
+// expansion (96.18% -> 99.00%) while retaining the canonical pool accessors.
+// The record boundary and name are inferred; neither build retains a separate
+// reader body. Reading the count inside that helper leaves a Windows call.
 VA(0x0048a310, 0xB1E) MAC_ADDRESS(0x098ec8, 0x6d4)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
@@ -3155,7 +3157,8 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
         }
     }
 
-    readAssignedHeroes(infile);
+    int assignedCount = readValue<unsigned char>(infile);
+    readAssignedHeroes(infile, assignedCount);
 }
 
 // The fixed pre-v28 record uses the old 0x462 hero layout. Retained 0x48ae30

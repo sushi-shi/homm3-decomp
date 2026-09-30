@@ -1667,6 +1667,9 @@ unsigned char combatManager::unnamed464f50(
 // Original public ?NextArmy@combatManager@@QAA_N_N@Z proves a bool
 // result and checking-for-bad-morale flag. Retail and Mac return only
 // true/false; all callers supply that same boolean domain.
+// Residual (99.9020%): only the final SetNextArmy argument scratch registers
+// differ. Naming group/index before that call is byte-flat; why-reg --model
+// likewise finds no movement. Keep the proven bool interface and accessor.
 VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)  // dc 0x5f518
 bool combatManager::nextArmy(bool checkingForBadMorale)
 {
@@ -2187,6 +2190,12 @@ void combatManager::resetHitByCreature()
     }
 }
 
+// DC cmbtmgr.cpp:2797 records two GridX calls on the combined rejection row.
+// Keep both calls: caching the column over-inlines the early-return cleanup
+// (94.7277%); the combined guard restores all retail instructions. Refreshing
+// generated source identities proves the vector<bool> destructor's ICF fold
+// onto retail's vector<widget*> destructor, closing the remaining relocation
+// at +0x193 and producing 100% without a manually admitted alias.
 VA(0x00466010, 0x243) MAC_ADDRESS(0x071fb0, 0x294)  // dc 0x60354
 unsigned char combatManager::placeObstacle(int obstacleId)
 {
@@ -2201,10 +2210,7 @@ unsigned char combatManager::placeObstacle(int obstacleId)
             int row = gridY(hex);
             if (shape->m_minRow > row)
                 continue;
-            int column = gridX(hex);
-            if (column == 0)
-                continue;
-            if (shape->m_width + column > 15)
+            if (gridX(hex) == 0 || shape->m_width + gridX(hex) > 15)
                 continue;
             if (m_cells[hex].m_attributes & hexcell::obstacleMask)
                 continue;

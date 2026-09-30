@@ -112,9 +112,10 @@ public:
     VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
     unsigned short* getMap(int x, int y)
     {
-        return static_cast<unsigned short*>(static_cast<void*>(
-            static_cast<unsigned char*>(static_cast<void*>(m_map))
-            + y * m_pitch)) + x;
+        // Bitmap16.h:151 (dc 0x1f124): pitch advances bytes, x advances
+        // unsigned-short pixels. Preserve that typed view directly.
+        return reinterpret_cast<unsigned short*>(
+            reinterpret_cast<unsigned char*>(m_map) + y * m_pitch) + x;
     }
     const unsigned short* getMap(int x, int y) const
     {

@@ -815,7 +815,9 @@ void town::swapHeroes()
 // counter across the initial mask and selection loops lowers this to 98.0947.
 // A typed pointer to the guild row and a named row index at that store are
 // also byte-flat: both keep VC6's ECX sum where retail uses EAX. Keep the
-// array access and the DC-attested bitset reference assignment.
+// array access and the DC-attested bitset reference assignment. A reference
+// to the fixed guild slot and reversing spell/weight declaration order are
+// also byte-flat; an outer shared guild row index falls to 96.16%.
 VA(0x005be600, 0x32A) MAC_ADDRESS(0x1b3abc, 0x298)  // dc 0x166950
 void town::initializeSpells(const TownExtra* townSetup)
 {

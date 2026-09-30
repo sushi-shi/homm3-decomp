@@ -4783,7 +4783,14 @@ void hero::transferArtifacts(hero* src)
 // for(;;) with an explicit break drop to 95.24%, so retain this for shape.
 // Mac retains six bitset test/count calls in the same order as this body;
 // its call census shows no missing callee at this boundary.
-// The residual is the empty-mask branch and outer-loop exit polarity.
+// Mac 0x1033d8 snapshots the component count before count(), then reloads
+// counts[componentClass] for the increment at 0x10348c. Keep that value
+// lifetime instead of a reference: VC6 now folds the empty-mask failure
+// directly to slotFits = false, raising Windows 98.48 -> 98.73%.
+// Signed/unsigned value snapshots emit identically; an unsigned count array,
+// positive capacity arms and eligible-slot nesting supplied no further gain.
+// Explicit outer-loop break/return exits with this snapshot both fall to
+// 95.49%; the remaining difference is outer-loop exit/epilogue ordering.
 VA(0x004e2550, 0x2EC) MAC_ADDRESS(0x1031d0, 0x308)  // retail-only, hero member, ret 8
 unsigned char hero::heroFn004E2550(long artifact, long slot)
 {
@@ -4843,7 +4850,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                     keptSlot = true;
                     continue;
                 }
-                int& componentCount = counts[componentClass];
+                int componentCount = counts[componentClass];
                 std::bitset<19> classSlots =
                     g_artifactSlotMasks[componentClass];
                 size_t capacity = classSlots.count();
@@ -4865,7 +4872,7 @@ unsigned char hero::heroFn004E2550(long artifact, long slot)
                         break;
                     }
                 }
-                componentCount++;
+                counts[componentClass]++;
             } while (++component < 144);
             if (!slotFits)
                 continue;

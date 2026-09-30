@@ -479,6 +479,11 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // predecrement against zero improves Windows 84.5863 -> 86.8514; the paired
 // source-family probe keeps every helper and reproduces all emitted objects.
 // Mac instruction scheduling is supporting evidence, not a separate objective.
+// A separately initialized vector-count local before damage gives 76.19%;
+// splitting mastery initialization from the power addition with a postdecrement
+// loop gives 84.5863%. Neither restores retail's size() branch or register homes.
+// HIST 100 used getTotal as vector cardinality; that old body conflicts with
+// DC's independently proven total-combat-value accessor and is not recoverable.
 VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)  // dc 0x2a868
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {

@@ -1058,6 +1058,9 @@ long type_AI_spellcaster::getBlessValue(const army* ourArmy, type_enchant_data c
 // meaningful reuse of newDamage, a reference-bound ratio and a named return
 // value also fail to reuse retail's divisor scratch (seven states, five
 // emitted objects). The named ratio and both early guards stay intact.
+// Fresh comparison retains all 18 CFG blocks, 15 calls and 18 relocations.
+// why-reg --model diagnoses no register-binding divergence: the conversion
+// scratch lifetime is outside its model, not a named-local register swap.
 VA(0x004375d0, 0x224) MAC_ADDRESS(0x03f3fc, 0x174)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data caster) const
 {
