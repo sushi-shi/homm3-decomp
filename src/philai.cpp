@@ -556,7 +556,28 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
     return 0;
 }
 
+// Project-inferred shared traversal for the player's adventure shipyards.
+// Town docks have separate affordability/building rules in the callers.
+static void setOwnedShipyardBuildFlags(playerData* player, bool canBuildShip)
+{
+    for (unsigned int shipyardIndex = 0;
+         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
+        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
+        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
+        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
+            static_cast<const void*>(&shipyard->m_extraInfo));
+        if (info->m_boatX == ShipyardInfo::NO_BOAT)
+            continue;
+
+        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
+            info->m_boatX, info->m_boatY,
+            player->m_shipyards[shipyardIndex].m_z);
+        boatCell->m_canBuildShip = canBuildShip;
+    }
+}
+
 // E:\gamedcs\philai.cpp:833
+// The compiler observations below predate the shared shipyard traversal.
 // Complete expands this helper into MoveHero. The source-real loops and
 // `cost` local are fixed by the Dreamcast line/scope table; the extra dock
 // cost and Dinkumware vector layout are retail facts.
@@ -608,23 +629,11 @@ static void markShipyards(playerData* player)
         cell->m_canBuildShip = canBuildShip;
     }
 
-    for (unsigned int shipyardIndex = 0;
-         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        type_point shipyardPoint = player->m_shipyards[shipyardIndex];
-        NewmapCell* shipyard = g_game->getCell(shipyardPoint);
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&shipyard->m_extraInfo));
-        if (info->m_boatX == ShipyardInfo::NO_BOAT)
-            continue;
-
-        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
-            info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z);
-        boatCell->m_canBuildShip = 1;
-    }
+    setOwnedShipyardBuildFlags(player, true);
 }
 
 // E:\gamedcs\philai.cpp:896
+// The compiler observations below predate the shared shipyard traversal.
 // Complete expands this helper into MoveHero immediately after the second
 // set_danger_zones statement.
 // DC: the 920/921 absent-boat continue closes before the 925/926
@@ -647,20 +656,7 @@ static void clearShipyards(playerData* player)
         }
     }
 
-    for (unsigned int shipyardIndex = 0;
-         shipyardIndex < player->m_shipyards.size(); ++shipyardIndex) {
-        NewmapCell* shipyard = g_game->getCell(
-            player->m_shipyards[shipyardIndex]);
-        const ShipyardInfo* info = static_cast<const ShipyardInfo*>(
-            static_cast<const void*>(&shipyard->m_extraInfo));
-        if (info->m_boatX == ShipyardInfo::NO_BOAT)
-            continue;
-
-        NewmapCell* boatCell = g_game->getWorldMapData()->cell(
-            info->m_boatX, info->m_boatY,
-            player->m_shipyards[shipyardIndex].m_z);
-        boatCell->m_canBuildShip = 0;
-    }
+    setOwnedShipyardBuildFlags(player, false);
 }
 
 // Source-order declarations for helpers whose retained Complete bodies live

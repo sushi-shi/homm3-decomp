@@ -901,6 +901,25 @@ attack time, but `findAttackHex()` retains it while invalidating only value and
 hex. The constructor interleaves those stores with other setup. That review does
 not justify replacing either path with a full reset of the result triple.
 
+## AI adventure-shipyard flags
+
+The native `markShipyards()` and `clearShipyards()` boundaries now share their
+owned adventure-shipyard traversal through TU-local `setOwnedShipyardBuildFlags()`.
+The helper visits the current player list in order, reads each shipyard's packed
+boat coordinates, skips the X-coordinate `NO_BOAT` sentinel, then changes only
+the boat cell's build flag. It retains the fresh list read for the map level
+after the shipyard lookup. The copied point is a value record with no custom
+copy constructor or destructor; both callers use the same lookup sequence.
+
+Setup still returns early when the player cannot afford a boat, prices town
+docks first, and marks adventure shipyards afterward. Cleanup still visits town
+docks first and uses its original two-coordinate validity guard. Neither town
+loop is folded into the shared traversal. `moveHero()` still brackets the search
+with the native marking/cleanup helpers and danger-zone setup/clearing in the
+same order. The new helper's name, Boolean flag parameter and ordinary source
+placement are project inferences; existing native annotations remain on their
+original functions. No field visibility or storage changes are involved.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
