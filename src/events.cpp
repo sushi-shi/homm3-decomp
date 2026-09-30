@@ -2112,10 +2112,12 @@ inline void advManager::doEventFaerieRing(hero* currentHero,
     }
 }
 
-VA(0x004b0000, 0x8A)  // retained comparator;  proves const.
+// Original ??Rspell_level_order@@QBA_NW4SpellID@@0@Z proves bool output,
+// enum operands and the const member qualifier.
+VA(0x004b0000, 0x8A)  // retained comparator
 DC_ADDRESS(0x09cdc0, 0x48)
-inline unsigned char spell_level_order::operator()(SpellID first,
-                                                    SpellID second) const
+inline bool spell_level_order::operator()(ESpellId first,
+                                          ESpellId second) const
 {
     if (g_spellTraits[first].m_level == g_spellTraits[second].m_level)
         return strcmp(g_spellTraits[first].m_name,
@@ -2189,8 +2191,9 @@ void advManager::doEventHero(hero* currentHero, NewmapCell* cell,
 // Complete mastery domain through the canonical cppMax selector instead of
 // adding wrapper-owned copies. This recovers 91.2712 -> 97.19% Windows.
 // DC 1979-2019 builds the message with operator+=.
-// Remaining differences include temporary stack homes and the final
-// taught-message +=, which retains string::append
+// DC's local records retain enum SpellID vectors and loop variable; use the
+// canonical ESpellId domain through their comparator and sort instantiations.
+// Residual: the final taught-message += retains string::append
 // where retail expands it. Both builds destroy formatString's temporary at
 // the end of that expression; extending its lifetime lacks source evidence.
 VA(0x004a2940, 0x85C)
@@ -2201,8 +2204,8 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
     const int magicScholarLevel = cppMax(
         firstHero->getSecondarySkill(eSecSkillMagicScholar),
         secondHero->getSecondarySkill(eSecSkillMagicScholar));
-    std::vector<SpellID> spellsLearned;
-    std::vector<SpellID> spellsTaught;
+    std::vector<ESpellId> spellsLearned;
+    std::vector<ESpellId> spellsTaught;
 
     if (firstHero->getSecondarySkill(eSecSkillMagicScholar)
         < secondHero->getSecondarySkill(eSecSkillMagicScholar))
@@ -2218,8 +2221,9 @@ static void exchangeSpells(hero* firstHero, hero* secondHero)
             magicScholarLevel + 1,
             secondHero->getSecondarySkill(eSecSkillWisdom) + 2);
 
-        SpellID spell;
-        for (spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        ESpellId spell;
+        for (spell = SPELL_SUMMON_BOAT; spell < hero::NUM_SPELLS;
+             spell = static_cast<ESpellId>(spell + 1)) {
             if (firstHero->isInSpellbook(spell)) {
                 if (!secondHero->isInSpellbook(spell)
                     && g_spellTraits[spell].m_level <= secondSpellLevel) {
@@ -6488,18 +6492,18 @@ void advManager::receiveHeroTownData(CCombatInitMsg* combatInitMsg, int* fromWho
 // handle_message and the scalar deleting destructor all holding at
 // 100.0000. It also retires an inline-depth pin.
 
-// COMDAT pairing: std::_Sort<int, spell_level_order>, agreement 0.985.
-VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, int_spell_level_order)
+// COMDAT pairing: std::_Sort<ESpellId, spell_level_order>.
+VA_COMPGEN(0x004b00b0, 0x294, STD_SORT, ESpellId_spell_level_order)
 
-// COMDAT pairing: std::_Sort_0<int, spell_level_order>, agreement 1.000 over
+// COMDAT pairing: std::_Sort_0<ESpellId, spell_level_order>, agreement 1.000 over
 // all 330 instructions.
-VA_COMPGEN(0x004afcb0, 0x350, STD_SORT_0, int_spell_level_order)
+VA_COMPGEN(0x004afcb0, 0x350, STD_SORT_0, ESpellId_spell_level_order)
 
-// COMDAT pairing: std::_Unguarded_partition<int, spell_level_order>, 0.967.
-VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, int_spell_level_order)
+// COMDAT pairing: std::_Unguarded_partition<ESpellId, spell_level_order>.
+VA_COMPGEN(0x004b0400, 0x123, STD_UNGUARDED_PARTITION, ESpellId_spell_level_order)
 
-// COMDAT pairing: std::_Unguarded_insert<int, spell_level_order>, 0.966.
-VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, int_spell_level_order)
+// COMDAT pairing: std::_Unguarded_insert<ESpellId, spell_level_order>.
+VA_COMPGEN(0x004b0350, 0xAB, STD_UNGUARDED_INSERT, ESpellId_spell_level_order)
 
 // COMDAT pairing: ccombatinitmsg::1CCombatInitMsg, mnemonic agreement 0.938.
 VA_COMPGEN(0x004ad130, 0xB4, IMPLICIT_DTOR, ccombatinitmsg)
