@@ -2504,10 +2504,12 @@ void combatManager::processFirstAid(army* currentArmy)
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
+// Original DC public ?ProcessNextAction@combatManager@@QAAHAAUmessage@@_N@Z
+// proves bool automaticTurn despite the lowered byte CodeView primitive.
 VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
 MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
-int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
+int combatManager::processNextAction(message& msg, bool automaticTurn)
 {
     if (!isQuickCombat()) {
         m_combatWindow->clearCombatMessages();
