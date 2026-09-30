@@ -358,7 +358,8 @@ public:
     // set_bonus_display calls this header helper; retail 0x5c5b40 expands it.
     DC_ADDRESS(0x181404, 0x12)
     long getGeneratorBonus(long dwelling) const { return m_generatorBonus[dwelling]; }
-    short getGoldIncome(unsigned char includeSilo) const;
+    // Original ?get_gold_income@town@@QBAF_N@Z proves bool includeSilo.
+    short getGoldIncome(bool includeSilo) const;
     // Original ?get_horde@town@@QBA?AW4type_building_id@@J@Z proves enum return.
     type_building_id getHorde(long dwelling) const;
     long getHordeBonus(long dwelling) const;

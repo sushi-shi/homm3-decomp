@@ -1199,7 +1199,7 @@ long town::getCastleGrowthBonus(TCreatureType creature) const
 VA(0x005bf600, 0xC6)
 DC_ADDRESS(0x167458, 0x7c)
 MAC_ADDRESS(0x1b4cac, 0x130)
-short town::getGoldIncome(unsigned char includeSilo) const
+short town::getGoldIncome(bool includeSilo) const
 {
     short income = 500;
     if (hasBuilding(HALL_TOWN_ID, false))
