@@ -3547,7 +3547,10 @@ DC_ADDRESS(0x0499e8, 0x900)
 MAC_ADDRESS(0x050c8c, 0x7a8)  // anchor-global
 // Mac 0x50d18 and 0x50d34 expand getSpellTime/getSpellLevel before
 // comparing the existing duration/mastery. Their writes remain field stores.
-void army::setSpellInfluence(int spell, int power, int mastery,
+// Original DC public SetSpellInfluence takes TSkillMastery; the Complete
+// spell index remains int. Restoring the enum formal leaves all 2976
+// emitted bytes unchanged, including the retail Poison temporary.
+void army::setSpellInfluence(int spell, int power, TSkillMastery mastery,
                              const hero* castingHero)
 {
     long rounds;

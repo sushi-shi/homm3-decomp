@@ -581,7 +581,8 @@ public:
     // deque spelling and 48-byte record. Integer spell APIs convert only
     // when inserting an element, not by changing the container's type.
     typedef std::deque<ESpellId> TSpellQueue;
-    int m_spellLevel[81];          // +0x2dc .. +0x41f
+    // Native spell_level is TSkillMastery[80]; Complete adds one entry.
+    TSkillMastery m_spellLevel[81];          // +0x2dc .. +0x41f
     TSpellQueue m_spellInfluenceQueue;  // +0x420 .. +0x44f
     float m_paletteEffect;          // +0x450 (DC army@1068)
     // Retaliations left this round: simulate_attack (0x4359b0) only
@@ -894,7 +895,7 @@ public:
     unsigned long strength();
     bool isActive() const;
     inline void checkLuck();
-    void setSpellInfluence(int spell, int power, int mastery,
+    void setSpellInfluence(int spell, int power, TSkillMastery mastery,
                            const hero* castingHero);
     void cancelIndividualSpell(int spell);
     void cancelAllSpells();
@@ -1105,7 +1106,7 @@ private:
     // the two spellings are byte-identical everywhere the body uses it
     // (an index, two stores, one signed compare). Only the mangled
     // name differs, and the VA claim owns the pairing.
-    void setSpellInfluence(int spell, int power, int mastery,
+    void setSpellInfluence(int spell, int power, TSkillMastery mastery,
                            const hero* casting_hero);
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
@@ -1743,7 +1744,7 @@ inline long army::getSpellTime(int spell) const
 DC_ADDRESS(0x042a28, 0x12)
 inline TSkillMastery army::getSpellLevel(int spell) const
     {
-        return TSkillMastery(m_spellLevel[spell]);
+        return m_spellLevel[spell];
     }
 
     // E:\gamedcs\Army.h:830

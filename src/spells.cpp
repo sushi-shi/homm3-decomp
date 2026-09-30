@@ -3971,8 +3971,8 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
                 continue;
             if (spellCastWorks(spell, castingSide, &m_armies[side][i], 0,
                                creatureSpell)) {
-                m_armies[side][i].setSpellInfluence(spell, power, level,
-                                                  castingHero);
+                m_armies[side][i].setSpellInfluence(
+                    spell, power, static_cast<TSkillMastery>(level), castingHero);
                 m_effected[side][i] = 1;
             }
         }
