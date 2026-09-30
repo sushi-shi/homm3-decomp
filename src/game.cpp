@@ -8161,6 +8161,12 @@ void game::randomizeHeroPool()
 // -1 sentinel, so the hero is subscripted directly. Mac 0xe0a44..0xe0a5c
 // stores each artifact id before its -1 payload: the converting
 // type_artifact constructor builds both war-machine artifacts.
+// DC 8930..8932 records the alternating slot-clear loop below. Mac
+// 0xe0984..0xe09b8 likewise interleaves its seven type/count stores;
+// armyGroup::initialize instead retains two bulk clears at 0x58128/0x58134.
+// Equal final state does not identify that helper's expansion. Calling it
+// with a header-visible body scored Windows 80.14% (100% loop), Mac 20.1327%
+// (94.4690% loop); restore the recorded loop and source-owned helper body.
 VA(0x004c9730, 0x159)
 DC_ADDRESS(0x0b5094, 0x268)
 MAC_ADDRESS(0x0e0910, 0x1c4)
