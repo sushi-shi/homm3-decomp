@@ -1020,10 +1020,13 @@ type_point advManager::get_mouse_map_point() const
 // both Complete-only CheckDimHero tail calls through this regresses to
 // 77.17. No inline pragma is retained; recover the remaining natural
 // lifetime or compiler state before revisiting the nested calls.
+// DC original public ?DoAdvCommand@advManager@@QAAPAVNewmapCell@@AAUtype_point@@@Z
+// proves a type_point reference. Retail immediately accesses the supplied
+// point address; all thirteen adventure callers forward a valid point.
 VA(0x00407b80, 0xBF0)
 DC_ADDRESS(0x007a8c, 0xbb8)
 MAC_ADDRESS(0x008258, 0xa44)  // anchor-global
-NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
+NewmapCell* advManager::doAdvCommand(type_point& triggerPoint)
 {
     town* newTown;
     // Before normalization: curr.
@@ -1032,7 +1035,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
     int savedShowRoute;
     NewmapCell* eventCell = 0;
     message msg;
-    triggerPoint->m_x = -1;
+    triggerPoint.m_x = -1;
     currHero = g_game->getCurrHero();
 
     switch (m_advCommand) {
@@ -1096,7 +1099,7 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
             while (1) {
                 {
                     eventCell = moveHero(g_searchArray->getStep(i),
-                                         i == 0, *triggerPoint, &noMove, 0,
+                                         i == 0, triggerPoint, &noMove, 0,
                                          &foughtBattle, 0);
                     m_advWindow->updateHeroLocator(-1, 1, 1);
                     if (eventCell)
@@ -1139,8 +1142,8 @@ NewmapCell* advManager::doAdvCommand(type_point* triggerPoint)
         stopCursor(1);
 
         if (eventCell) {
-            doEvent(eventCell, *triggerPoint);
-            triggerPoint->m_x = -1;
+            doEvent(eventCell, triggerPoint);
+            triggerPoint.m_x = -1;
             eventCell = 0;
             reseed(0, 0);
         }
@@ -1637,14 +1640,14 @@ int advManager::processKeyPress(const message& msg, unsigned char& exitFlag, typ
     case KEYCODE_ENTER:
         if (localPlayer->m_currTownId != -1) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            doAdvCommand(&triggerPoint);
+            doAdvCommand(triggerPoint);
             return 1;
         }
         if (localPlayer->m_currHeroId == -1)
             break;
         if (m_curHeroMobile) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
-            doAdvCommand(&triggerPoint);
+            doAdvCommand(triggerPoint);
             return 1;
         }
         if (!waitingPlayer)
@@ -1735,7 +1738,7 @@ int advManager::processSelect(const message& msg, type_point& triggerPoint, Newm
         if (heroSlot < localPlayer->m_numHeroes) {
             if (heroId == localPlayer->m_currHeroId) {
                 m_advCommand = ADV_COMMAND_VIEW_HERO;
-                doAdvCommand(&triggerPoint);
+                doAdvCommand(triggerPoint);
             } else {
                 setHeroContext(heroId, 0, waitingPlayer, 1);
             }
@@ -1754,7 +1757,7 @@ int advManager::processSelect(const message& msg, type_point& triggerPoint, Newm
             hideRoute(1, 0, 1);
         if (townId == localPlayer->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            peventCell = doAdvCommand(&triggerPoint);
+            peventCell = doAdvCommand(triggerPoint);
         } else {
             setTownContext(townId, waitingPlayer, 1);
         }
@@ -1838,7 +1841,7 @@ int advManager::processDeSelect(const message& msg, unsigned char& exitFlag, typ
 
     case TAdventureMapWindow::MOVE_ID:
         m_advCommand = ADV_COMMAND_WALK_ROUTE;
-        peventCell = doAdvCommand(&triggerPoint);
+        peventCell = doAdvCommand(triggerPoint);
         break;
 
     case TAdventureMapWindow::ADVENTURE_OPTIONS_ID:
@@ -2137,7 +2140,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (currHero && currHero->m_z == m_lastMapHover.m_z) {
             if (currHero->m_x == m_lastMapHover.m_x && currHero->m_y == m_lastMapHover.m_y) {
                 m_advCommand = ADV_COMMAND_VIEW_HERO;
-                doAdvCommand(&triggerPoint);
+                doAdvCommand(triggerPoint);
                 return;
             }
 
@@ -2155,7 +2158,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
                     return;
                 }
             }
-            peventCell = doAdvCommand(&triggerPoint);
+            peventCell = doAdvCommand(triggerPoint);
             return;
         }
     }
@@ -2167,7 +2170,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     if (clickedType == HERO) {
         if (clickedIndex == g_game->getLocalPlayer()->m_currHeroId) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
-            doAdvCommand(&triggerPoint);
+            doAdvCommand(triggerPoint);
             return;
         }
         if (myPos != g_game->getHero(clickedIndex)->m_owner)
@@ -2183,7 +2186,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     if (clickedType == TOWN) {
         if (clickedIndex == g_game->getLocalPlayer()->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            peventCell = doAdvCommand(&triggerPoint);
+            peventCell = doAdvCommand(triggerPoint);
             return;
         }
         if (clickedIndex == -1)
@@ -2198,7 +2201,7 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
     }
 
     if (clickedType == SHIPYARD)
-        peventCell = doAdvCommand(&triggerPoint);
+        peventCell = doAdvCommand(triggerPoint);
 }
 
 // Original: advManager::ProcessMapSelect2; advmgr.cpp:2624
@@ -2228,7 +2231,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
     if (type == HERO) {
         if (id == g_game->getLocalPlayer()->m_currHeroId) {
             m_advCommand = ADV_COMMAND_VIEW_HERO;
-            doAdvCommand(&triggerPoint);
+            doAdvCommand(triggerPoint);
         } else if (localPlayer == g_game->getHero(id)->m_owner) {
             bool waiting = !g_currentPlayer->isLocalHuman();
             setHeroContext(id, 0, waiting, 1);
@@ -2237,7 +2240,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
     if (type == TOWN) {
         if (id == g_game->getLocalPlayer()->m_currTownId) {
             m_advCommand = ADV_COMMAND_VIEW_TOWN;
-            eventCell = doAdvCommand(&triggerPoint);
+            eventCell = doAdvCommand(triggerPoint);
         } else if (id != -1) {
             town* currentTown = g_game->getTown(id);
             bool waiting = !g_currentPlayer->isLocalHuman();
@@ -2247,7 +2250,7 @@ void advManager::processMapSelect2(const message& msg, type_point& triggerPoint,
         }
     }
     if (type == SHIPYARD)
-        eventCell = doAdvCommand(&triggerPoint);
+        eventCell = doAdvCommand(triggerPoint);
 }
 
 DC_ADDRESS(0x00b208, 0x50)

@@ -947,7 +947,7 @@ public:
     BlackBoxData* getBlackBox(const ExtraInfoUnion* cell) const;
     TreasureData* getTreasureData(NewmapCell* cell) const;
     void redrawAdvScreen(unsigned char update, unsigned char forceSaveBorder);
-    NewmapCell* doAdvCommand(type_point* triggerPoint);
+    NewmapCell* doAdvCommand(type_point& triggerPoint);
     // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
