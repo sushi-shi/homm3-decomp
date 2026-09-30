@@ -2617,6 +2617,11 @@ void setWitchHutHelpText(char* buffer, hero* currentHero,
 // their existing magicSpringIsFull/gardenIsFull helpers: restoring those
 // calls with the named ids raises Windows 95.5832 -> 95.69% (185 branches,
 // retail 188), without extending any rollover string temporary lifetime.
+// SIREN/STABLES retain the whole visited-text operation inside the trigger/
+// hero guard: Mac 0xda80/0xda88 and 0xdb08/0xdb10 exit to 0xe068; retail
+// 0x40c8a4/0x40c8af and 0x40c8f5/0x40c900 exit to 0x40d13b. Guarding
+// only the assignment read uninitialized visited on those exits. Restoring
+// the native scopes also recovers 95.69 -> 96.76% Windows.
 VA(0x0040b150, 0x229C)
 DC_ADDRESS(0x00c13c, 0x2c40)
 MAC_ADDRESS(0x00c1e8, 0x1eb4)  // anchor-global
@@ -3251,27 +3256,29 @@ void advManager::setRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     case SIREN:
         strcpy(g_text, g_quickViewText[SIREN]);
-        if (cell->m_isTrigger && currHero)
+        if (cell->m_isTrigger && currHero) {
             visited = (currHero->m_flags & 0x100000);
-        if (visited)
-            sprintf(tempText, visitedFormat,
-                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            sprintf(tempText, visitedFormat,
-                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-        strcat(g_text, tempText);
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+            else
+                sprintf(tempText, visitedFormat,
+                        g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+            strcat(g_text, tempText);
+        }
         break;
     case STABLES:
         strcpy(g_text, g_quickViewText[STABLES]);
-        if (cell->m_isTrigger && currHero)
+        if (cell->m_isTrigger && currHero) {
             visited = (currHero->m_flags & 0x2);
-        if (visited)
-            sprintf(tempText, visitedFormat,
-                    g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            sprintf(tempText, visitedFormat,
-                    g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
-        strcat(g_text, tempText);
+            if (visited)
+                sprintf(tempText, visitedFormat,
+                        g_generalText->getText(GENERAL_TEXT_VISITED_OBJECT));
+            else
+                sprintf(tempText, visitedFormat,
+                        g_generalText->getText(GENERAL_TEXT_UNVISITED_OBJECT));
+            strcat(g_text, tempText);
+        }
         break;
     case TEMPLE:
         strcpy(g_text, g_quickViewText[TEMPLE]);
