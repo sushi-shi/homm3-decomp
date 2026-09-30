@@ -2940,8 +2940,10 @@ int getEnemyCount()
 // DC 3448/3452 and 3491/3493 record separate nested admission tests,
 // not one combined condition. Restoring those source boundaries raises
 // Windows 79.0916% -> 81.85%, with all 46 blocks/26 branches still aligned.
-// The named call stream now has one extra LossConditionStruct constructor,
-// in the town arm after getTownId/formatting; hero/time-limit expand it.
+// At that checkpoint the named stream has one extra LossConditionStruct
+// constructor in the town arm; hero/time-limit expand it. Restoring the
+// native onSameTeam if/else arms subsequently returns this caller to 79.0916%
+// and both earlier extra constructor sites. Keep both recovered boundaries.
 VA(0x004f2960, 0x37E)
 DC_ADDRESS(0x0e3558, 0x228)
 MAC_ADDRESS(0x114924, 0x3b8)  // decorated identity (kb.h) + anchor-caller (CheckEndGame)

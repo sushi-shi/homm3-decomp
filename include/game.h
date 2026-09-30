@@ -1494,9 +1494,14 @@ public:
     DC_ADDRESS(0x01febc, 0x40)
     bool onSameTeam(int player1, int player2) const
     {
-        if (player1 < 0 || player2 < 0)
+        // Native Game.h:786/788/790/792 records distinct if/else arms.
+        // Restoring else keeps the predicate but changes LC display's nested
+        // expansion context (81.85% -> 79.0916%); preserve these source arms.
+        if (player1 < 0 || player2 < 0) {
             return 0;
-        return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
+        } else {
+            return m_mapHeader.m_teamInfo[player1] == m_mapHeader.m_teamInfo[player2];
+        }
     }
     // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
     // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
