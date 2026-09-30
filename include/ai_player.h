@@ -228,7 +228,9 @@ public:
                             unsigned char newHasAngelicAlliance);
 
     DC_ADDRESS(0x037e20, 0x6)
-    void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
+    // Original DC ?set_subtract_mode@type_AI_creature_purchaser@@QAAX_N@Z
+    // proves the bool argument independently of the lowered byte record.
+    void setSubtractMode(bool arg) { m_subtractCostMode = arg; }
 };
 SIZE(type_AI_creature_purchaser, 0x3c);
 
