@@ -779,7 +779,7 @@ int combatManager::open(int newPriority)
 
     g_chatMan.resumeTimeOuts();
     m_netMsgHandlerPause = new CNetMsgHandlerPause();
-    nextArmy(0);
+    nextArmy(false);
     return 0;
 }
 
@@ -1664,8 +1664,11 @@ unsigned char combatManager::unnamed464f50(
 // Neither retail target retains that call: Mac has only the five ordered
 // game calls below, and Windows ends after returning the selection result.
 // The two DC GetSpeed calls belong to unnamed464f50, not this body.
+// Original public ?NextArmy@combatManager@@QAA_N_N@Z proves a bool
+// result and checking-for-bad-morale flag. Retail and Mac return only
+// true/false; all callers supply that same boolean domain.
 VA(0x00465080, 0x2A2) MAC_ADDRESS(0x070b74, 0x328)  // dc 0x5f518
-unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
+bool combatManager::nextArmy(bool checkingForBadMorale)
 {
     if (m_actingSlot >= 0 && m_actingSide == 0
         && m_armies[0][m_actingSlot].m_creatureType == CREATURE_CATAPULT) {
@@ -1719,20 +1722,20 @@ unsigned char combatManager::nextArmy(unsigned char checkingForBadMorale)
                         continue;
                 }
                 setNextArmy(best->getOwningSide(), best->m_bitIndex);
-                return 1;
+                return true;
             }
             break;
         }
         if (pass == 1) {
             m_inSecondPhase = 1;
-            checkingForBadMorale = 0;
+            checkingForBadMorale = false;
             for (int s = 0; s < 2; s++) {
                 for (int j = 0; j < m_numArmies[s]; j++)
                     m_armies[s][j].m_monInfo.m_attributes &= ~creatureWaiting;
             }
         }
     }
-    return 0;
+    return false;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2364
