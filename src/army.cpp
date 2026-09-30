@@ -1100,8 +1100,8 @@ void army::endWalk()
 VA(0x0043f0b0, 0x206)
 DC_ADDRESS(0x045254, 0x172)
 MAC_ADDRESS(0x04ad94, 0x20c)
-void army::walk(int direction, unsigned char endWalk,
-                unsigned char initialWalk)
+void army::walk(int direction, bool endWalk,
+                bool initialWalk)
 {
     if (initialWalk)
         setupAnimation();
@@ -2182,7 +2182,9 @@ unsigned char army::checkObstacleAttacks(unsigned char isWalking)
 VA(0x00441fa0, 0x461)
 DC_ADDRESS(0x0472f4, 0x2f8)
 MAC_ADDRESS(0x04dc70, 0x3a4)  // anchor-global
-unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
+// Original WalkTo/move_to/simple_move publics use _N for result and
+// restoreFacing; Walk uses _N for both logical animation flags.
+bool army::walkTo(int destIndex, bool restoreFacing)
 {
     m_side = m_slot = -1;
     if (!findPath(destIndex, getSpeed(), 0, 0))
@@ -2190,7 +2192,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
     int saveFacing = m_facing;
     removeAura();
     removeBinding();
-    unsigned char succeeded = 1;
+    bool succeeded = true;
     long stop;
     if (!g_combatManager->m_creaturePlacement) {
         stop = g_searchArray->getPathSteps() - getSpeed();
@@ -2200,7 +2202,7 @@ unsigned char army::walkTo(int destIndex, unsigned char restoreFacing)
         stop = 0;
     }
     long last = g_searchArray->getPathSteps() - 1;
-    unsigned char initialWalk = 1;
+    bool initialWalk = 1;
     m_isMoving = 1;
     m_joustBonus = last - stop + 1;
     for (long i = last; i >= stop; i--) {
@@ -3883,7 +3885,7 @@ inline long army::getAttackDirection(long ourHex, const army* enemy) const
 VA(0x00445950, 0x107)
 DC_ADDRESS(0x04a6a4, 0x108)
 MAC_ADDRESS(0x051968, 0x16c)
-unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
+bool army::simpleMove(int hex, bool restoreFacing)
 {
     m_side = -1;
     m_slot = -1;
@@ -3894,7 +3896,7 @@ unsigned char army::simpleMove(int hex, unsigned char restoreFacing)
     g_combatManager->m_lastMovedArmy = 0;
     g_combatManager->turnOffHighlighter(1);
     g_combatManager->markMovingArmy(this);
-    unsigned char moved;
+    bool moved;
     if (is(creatureFlyingArmy)) {
         m_pathTarget = hex;
         moved = validFlight(hex, 0);
@@ -3970,7 +3972,7 @@ unsigned char army::attackHex(int hex, unsigned char restoreFacing)
 // E:\gamedcs\army.cpp:4427
 // The old link-order join placed move_to at 0x445cd0; decorated-symbol and
 // call-edge evidence instead prove its retail body at 0x445d10 below.
-unsigned char army::moveTo(int hex, unsigned char restore_facing)
+bool army::moveTo(int hex, bool restore_facing)
 {
     // @stub
 }
@@ -4038,7 +4040,7 @@ static TWallTargetId chooseWallTarget(TWallTargetId wall,
 VA(0x00445d10, 0x14)
 DC_ADDRESS(0x04a8b8, 0x10)
 MAC_ADDRESS(0x051c88, 0x20)
-unsigned char army::moveTo(int hex, unsigned char restoreFacing)
+bool army::moveTo(int hex, bool restoreFacing)
 {
     return simpleMove(hex, restoreFacing);
 }

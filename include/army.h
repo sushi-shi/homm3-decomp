@@ -750,13 +750,13 @@ public:
     void loadResources();
     void resetRound();
     void endWalk();
-    void walk(int direction, unsigned char endWalk,
-              unsigned char initialWalk);
-    unsigned char walkTo(int destIndex, unsigned char restoreFacing);
+    void walk(int direction, bool endWalk,
+              bool initialWalk);
+    bool walkTo(int destIndex, bool restoreFacing);
     int fly(int destIndex);
-    int flyTo(int destIndex, unsigned char restoreFacing);
+    int flyTo(int destIndex, bool restoreFacing);
     int teleport(int destIndex);
-    int teleportTo(int destIndex, unsigned char restoreFacing);
+    int teleportTo(int destIndex, bool restoreFacing);
     long adjustDamage(army* enemy, long baseDamage, bool isShot,
                        bool simulated, long distance,
                        long* fireDamage) const;
@@ -852,7 +852,7 @@ public:
     unsigned char isAdjacent(int hex) const;
     bool isEnemy(const army* arg) const;
     bool isInAura() const;
-    unsigned char moveTo(int hex, unsigned char restoreFacing);
+    bool moveTo(int hex, bool restoreFacing);
     void newTurn();
     void setAIExpectedDamage(long arg);
     int findPath(int fpTargetCellIndex, int maxMoves,
@@ -863,8 +863,8 @@ public:
                     int literalIndex, int* testCellIndex) const;
     void resetPath();
     unsigned char validPath(int destIndex, unsigned char literalTest);
-    unsigned char validFlight(int destIndex,
-                              unsigned char literalTest) const;
+    bool validFlight(int destIndex,
+                     bool literalTest) const;
     int validRange(int destIndex);
     inline long damageEnemy(army* enemy, int* damageOut, int* killed,
                             bool isShot);
@@ -966,7 +966,7 @@ private:
     bool findFlyerAttackCell(int start, int target) const;
     bool findFlyerAttackCell(int target) const;
     bool leavesNoBody() const;
-    unsigned char simpleMove(int hex, unsigned char restoreFacing);
+    bool simpleMove(int hex, bool restoreFacing);
     double computeKarma() const;
 
     // LF_FIELDLIST entries 237..249. The established source aliases preserve
@@ -989,7 +989,7 @@ private:
 
     int findPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
-    unsigned char validPath(int destIndex, unsigned char bLiteralTest);
+    unsigned char validPath(int destIndex, bool bLiteralTest);
     // Both const (?GetAttackMask@army@@QBAIHHH@Z,
     // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
     // `this` and both drive GetAdjacentCellIndex, already const.
@@ -1055,11 +1055,8 @@ private:
     // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
     // family returns `_N` - bool - and takes `restore_facing` as one:
     // WalkTo, attack_hex, move_to and ValidFlight all mangle _NH_N.
-    // RECORDED, NOT ACTED ON: the access change and the bool retype are
-    // one measured pass over the whole family (bool is not free in VC6
-    // - it normalizes), and this lane only needed the declarations.
-    unsigned char simpleMove(int hex, unsigned char restore_facing);
-    unsigned char moveTo(int hex, unsigned char restore_facing);
+    bool simpleMove(int hex, bool restore_facing);
+    bool moveTo(int hex, bool restore_facing);
     // ProcessNextAction's two dispatch-only army calls.
     void attackWall(int iTargetGridIndex);
     void castSpell(long hex);
@@ -1113,8 +1110,8 @@ private:
                            const hero* casting_hero);
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
-    unsigned char validFlight(int destIndex,
-                              unsigned char bLiteralTest) const;
+    bool validFlight(int destIndex,
+                              bool bLiteralTest) const;
     void setLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
