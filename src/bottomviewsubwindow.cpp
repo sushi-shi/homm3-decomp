@@ -769,8 +769,10 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         // positions. Keep the two-dimensional army_pos table's row boundary.
         int displaySlot = 0;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            int creature = which->getArmy().m_armies[i];
-            if (creature == -1)
+            // DC armyGroup::armyTypes is TCreatureType[7]; use that
+            // canonical read view after the native mutable get_army call.
+            TCreatureType creature = which->getArmy().m_armyTypes[i];
+            if (creature == CREATURE_NONE)
                 continue;
 
             m_widgets.push_back(new iconWidget(g_townArmyCoords[displaySlot][0],
