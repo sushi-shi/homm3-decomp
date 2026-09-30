@@ -120,7 +120,11 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     // and the divergence moves earlier), and an added early int (folded
     // away). DC types the traits local as a reference, which is adopted
     // above and is byte-neutral.
-    unsigned char shooting = thisArmy->canShoot(0);
+    // Complete adds this shooting predicate. Infer bool from canShoot
+    // and the independently proven bool getAdjustedAttack formal, rather
+    // than materializing an unsigned byte and normalizing it again at
+    // the call. VC6 restores the retail call prefix (97.01 -> 97.20).
+    bool shooting = thisArmy->canShoot(0);
     int attack = thisArmy->getAdjustedAttack(0, shooting);
     int defense = thisArmy->getAdjustedDefense(0, 1);
     if (shooting) {
