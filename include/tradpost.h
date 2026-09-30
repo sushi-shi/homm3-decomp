@@ -240,10 +240,12 @@ class TSellArtifactWindow : public CAdvPopup {
     void updateMarketBackpack();
     void incrementBackpackStart();
     void decrementBackpackStart();
+    // Original ?update_sell_artifact_widget@TSellArtifactWindow@@AAAXAAUmessage@@J@Z
+    // proves a private ordinary helper and a mutable message reference.
+    void updateSellArtifactWidget(message& msg, long i);
 
 public:
     TSellArtifactWindow(int x2, int y2);
-    void updateSellArtifactWidget(message* msg, long i);
     void setWidgetOn(short id);
     void setWidgetOff(short id);
     void setWidgetDisabled(short id);

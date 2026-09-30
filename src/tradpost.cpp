@@ -1607,7 +1607,7 @@ void doMarket()
 VA(0x005ea5d0, 0x103)
 DC_ADDRESS(0x188bd4, 0xf4)
 MAC_ADDRESS(0x1f555c, 0x194)
-void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
+void TSellArtifactWindow::updateSellArtifactWidget(message& msg, long i)
 {
     type_artifact art;
     if (i < 18) {
@@ -1622,25 +1622,25 @@ void TSellArtifactWindow::updateSellArtifactWidget(message* msg, long i)
     }
 
     if (art.m_artifactId == -1) {
-        msg->m_codeY = i + 0x54;
+        msg.m_codeY = i + 0x54;
     } else {
-        msg->m_codeX = 5;
-        msg->m_extra = 2;
-        broadcastMessage(*msg);
-        msg->m_codeX = 5;
-        msg->m_codeY = i + 0x54;
-        msg->m_extra = 6;
-        broadcastMessage(*msg);
-        msg->m_codeX = 4;
-        msg->m_extra = art.m_artifactId;
+        msg.m_codeX = 5;
+        msg.m_extra = 2;
+        broadcastMessage(msg);
+        msg.m_codeX = 5;
+        msg.m_codeY = i + 0x54;
+        msg.m_extra = 6;
+        broadcastMessage(msg);
+        msg.m_codeX = 4;
+        msg.m_extra = art.m_artifactId;
     }
-    broadcastMessage(*msg);
+    broadcastMessage(msg);
     if (g_selectedArtifact == i)
-        msg->m_codeX = 5;
+        msg.m_codeX = 5;
     else
-        msg->m_codeX = 6;
-    msg->m_extra = 4;
-    msg->m_codeY = i + 0x6b;
+        msg.m_codeX = 6;
+    msg.m_extra = 4;
+    msg.m_codeY = i + 0x6b;
 }
 
 // DC SetWidgetOff also clears widget::focusable after GetWidget (e.g.
@@ -2548,7 +2548,7 @@ void TSellArtifactWindow::update(bool update)
                 msg.m_codeY = slot + 0x6b;
                 msg.m_extra = 6;
                 broadcastMessage(msg);
-                updateSellArtifactWidget(&msg, slot);
+                updateSellArtifactWidget(msg, slot);
                 broadcastMessage(msg);
             }
         }
