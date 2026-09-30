@@ -1168,6 +1168,10 @@ bool searchArray::checkEnemyArmies(long hex, long cost,
 // score-derived rQueue reference and keep canonical clear/size/back/pop_back
 // on the owning member. This restores the retail copy/cost/distance blocks
 // and improves 92.2606% to 94.5290%; the retained pc lifetime is unchanged.
+// Mac c7290..c72c8 expands offsetToFront twice: hex's front is computed
+// before the adjacent front and both precede the moat tests. Preserve those
+// two canonical calls and coordinate owners rather than sharing a sideStep
+// result. This native source recovery is Windows-byte-flat at 94.5290%.
 // Remaining first structural delta is the double-wide moat/flight-cost
 // register allocation; the three differing call names are the previously
 // reviewed pointer-copy and pointer-vector insertion aliases above.
@@ -1265,9 +1269,9 @@ unsigned char searchArray::findCombatPath(const army* currentArmy,
             if (!currentArmy->is(creatureDoubleWide)) {
                 moat = isMoat(adjacent);
             } else {
-                long sideStep = currentArmy->offsetToFront(-1);
-                long tail = adjacent + sideStep;
-                if (isMoat(adjacent) && adjacent != hex + sideStep)
+                long front = hex + currentArmy->offsetToFront(-1);
+                long tail = adjacent + currentArmy->offsetToFront(-1);
+                if (isMoat(adjacent) && adjacent != front)
                     moat = 1;
                 if (isMoat(tail) && tail != hex)
                     moat = 1;
