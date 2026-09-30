@@ -1713,7 +1713,9 @@ MAC_ADDRESS(0x009a30, 0x23c)
 int advManager::processSelect(const message& msg, type_point& triggerPoint, NewmapCell*& peventCell)
 {
     playerData* localPlayer = g_game->getLocalPlayer();
-    unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
+    // This predicate feeds native bool context flags. A byte local adds
+    // test/setne normalization at both calls that retail does not contain.
+    bool waitingPlayer = !g_currentPlayer->isLocalHuman();
 
     switch (msg.m_codeY) {
     case TAdventureMapWindow::HERO_0_ID:
@@ -2187,7 +2189,8 @@ void advManager::processMapSelect(const message& msg, type_point& triggerPoint, 
         if (clickedIndex == -1)
             return;
         town* clickedTown = g_game->getTown(clickedIndex);
-        unsigned char waitingPlayer = !g_currentPlayer->isLocalHuman();
+        // Retail forwards this predicate directly to the bool context flag.
+        bool waitingPlayer = !g_currentPlayer->isLocalHuman();
         if (g_game->onSameTeam(g_curWatchPlayer, clickedTown->m_owner)
             || m_debugViewAll)
             setTownContext(clickedIndex, waitingPlayer, 1);
