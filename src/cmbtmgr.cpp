@@ -2988,25 +2988,21 @@ unsigned char combatManager::inLineOfSight(int sourceIndex, int destIndex) const
 // edit costs ShootMissile 91.74 -> 90.43. Where DC names a local, name
 // it; where DC does not, fold it.
 
-// The trajectory, for the next reader. `travelX` accumulates deltaX and
-// `remaining` counts nframes down to zero, so
-//   x = startX + travelX / nframes
-//   y = startY + step * (deltaY - remaining * flatness) / nframes
-// with flatness = 2*abs(deltaX)/nframes. Both endpoints are exact
-// (step 0 gives the start, step nframes gives the destination, since
-// remaining is 0 there) and the deviation peaks at abs(deltaX)/2
-// halfway - the arc is half the horizontal span, which is what makes
-// `flatness` the right name for the coefficient rather than a height.
+// DC 3697 multiplies deltaX by step; 3698 computes nframes - step.
+// Mac 0x73df8 also subtracts step, while its horizontal product is
+// strength-reduced. Keep the ordinary indexed loop and trajectory,
+// rather than spelling compiler-created induction variables in source.
 
 // DC cmbtmgr.cpp:3721 retains UpdateCombatArea(SLimitData). Mac
 // 0x73fdc..0x74000 expands its inclusive width/height and UpdateScreen
 // call after clipping the same four-word rectangle.
-// Canonical by-value call measures Windows 100 -> 94.19%; the frame
-// shrinks from retail 0x9c to 0x8c, travelX/remaining exchange slots,
-// and rectangle-update scratch registers differ. All 37 blocks, 21
-// branches and 12 semantic calls still align; predict-inline has the
-// same nine out-of-line calls. Mac improves 16.8103 -> 17.3658% and
-// the other 38 available cmbtmgr pairs hold. Keep the source call.
+// DC 3703/3707/3725 name the bitmap Grab/Draw and const sprite Draw
+// forwarding overloads. Restoring those calls measures Windows 94.19
+// -> 91.24%; the native indexed loop measures 89.12%. It retains the
+// final Draw's nested GetMap and GetNumFrames, which retail expands
+// (14 calls vs 12). The frame remains 0x8c vs retail 0x9c. Native
+// operand-order alternatives are Windows-flat. All other available
+// cmbtmgr Mac pairs hold; keep these canonical source operations.
 VA(0x00467a00, 0x3AF)
 DC_ADDRESS(0x0614f0, 0x4b8)
 MAC_ADDRESS(0x073c44, 0x488)  // anchor-global
@@ -3040,48 +3036,30 @@ void combatManager::shootBallisticMissile(int startX, int startY, int destX,
         g_combatSpeedFactors[g_config.m_combatSpeed] * 100.0f);
 
     int frame = 0;
-    int step = 0;
-    if (nframes > 0) {
-        int travelX = 0;
-        int remaining = nframes;
-        // Retail advances step before the remaining-frame decrement.
-        // Keep both real induction variables in the loop increment.
-        for (; step < nframes; step++, --remaining) {
-            unsigned long nextFrameTime = GameTime::get() + missileperiod;
-            if (step != 0) {
-                // Mac 0x73e24 copies a four-word rectangle temporary here.
-                updateArea = TDrawbridgeBounds(
-                    x, y, x + width - 1, y + height - 1);
-                x = startX + travelX / nframes;
-                y = static_cast<int>(
-                    (deltaY - remaining * flatness) * step
-                    / static_cast<double>(nframes) + startY);
-            }
-            saved.grab(g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch());
-            const_cast<CSprite*>(missile)->draw(
-                0, frame, 0, 0, width, height,
-                g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                g_windowManager->m_screenBitmap->getWidth(),
-                g_windowManager->m_screenBitmap->getHeight(),
-                g_windowManager->m_screenBitmap->getPitch(), 0, 1);
-            updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
-            scrollTo(x, y, width, height, true, true, true);  // DC 3717
-            updateArea.clip(g_combatDrawLimits);
-            updateCombatArea(updateArea);
-            saved.draw(0, 0, width, height,
-                       g_windowManager->m_screenBitmap->getMap(0, 0), x, y,
-                       g_windowManager->m_screenBitmap->getWidth(),
-                       g_windowManager->m_screenBitmap->getHeight(),
-                       g_windowManager->m_screenBitmap->getPitch(), false);
-            ++frame;
-            if (frame >= missile->getNumFrames(0))
-                frame = 0;
-            GameTime::delayTil(nextFrameTime);
-            travelX += deltaX;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long nextFrameTime = GameTime::get() + missileperiod;
+        if (step != 0) {
+            // Mac 0x73e24 copies a four-word rectangle temporary here.
+            updateArea = TDrawbridgeBounds(
+                x, y, x + width - 1, y + height - 1);
+            x = startX + deltaX * step / nframes;
+            y = static_cast<int>(
+                (deltaY - flatness * (nframes - step)) * step
+                / static_cast<double>(nframes) + startY);
         }
+        saved.grab(g_windowManager->m_screenBitmap, x, y);
+        missile->draw(0, frame, 0, 0, width, height,
+                      g_windowManager->m_screenBitmap, x, y, false, true);
+        updateArea.include(SLimitData(x, y, x + width - 1, y + height - 1));
+        scrollTo(x, y, width, height, true, true, true);  // DC 3717
+        updateArea.clip(g_combatDrawLimits);
+        updateCombatArea(updateArea);
+        saved.draw(0, 0, width, height,
+                   g_windowManager->m_screenBitmap, x, y, false);
+        ++frame;
+        if (frame >= missile->getNumFrames(0))
+            frame = 0;
+        GameTime::delayTil(nextFrameTime);
     }
 }
 
