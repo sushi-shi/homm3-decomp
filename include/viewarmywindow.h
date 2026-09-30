@@ -44,6 +44,8 @@ public:
     void doModal();
     void quickView();
     virtual int windowHandler(message& msg);
+    // Project-inferred scoped preview shared by hill-fort and sacrifice UI.
+    static void showCenteredCreature(int armyType, bool quickView);
 
 private:
     enum EOtherWidgetIDs {

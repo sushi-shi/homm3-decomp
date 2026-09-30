@@ -442,6 +442,21 @@ int TViewArmyWindow::convertID2HelpID(int id) const
     }
 }
 
+// Project-inferred complete preview lifetime shared by three click handlers.
+// Keep construction at the native provisional coordinates before centering;
+// both native view methods and destruction complete before the caller resumes.
+// Ordinary owner-TU placement is provisional, without a native address claim.
+void TViewArmyWindow::showCenteredCreature(int armyType, bool quickView)
+{
+    TViewArmyWindow window(armyType, 0x77, 0x20,
+                          static_cast<unsigned char>(!quickView));
+    window.centerWindow(-1, -1);
+    if (quickView)
+        window.quickView();
+    else
+        window.doModal();
+}
+
 // Original: TViewArmyWindow::QuickView; viewarmywindow.cpp:366
 // HillFortWindow's right-click path invokes the common quick-view wrapper.
 DC_ADDRESS(0x191764, 0x40)

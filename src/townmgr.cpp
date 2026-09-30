@@ -4415,8 +4415,7 @@ TShipWindow::TShipWindow(int type)
         getWidget(BUY_BUTTON_ID)->enable(0);
     setWinText(this, 12);
 
-    if (!(g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[6] >= 1000
-        && g_game->m_players[g_game->getLocalPlayerGamePos()].m_resources[0] >= 10)) {
+    if (!g_game->m_players[g_game->getLocalPlayerGamePos()].canAffordBoat()) {
         // Not the heroWindow::Widget*Status pair: those live in
         // window.obj and VC6 cannot inline across a TU, while retail
         // emits both message builds inline here and shares one record
@@ -5074,11 +5073,7 @@ int townManager::main(message& msg)
                                 != -1) {
                                 buildObj(DOCK_WITH_BOAT_ID);
                                 g_game->m_players[
-                                    g_game->getLocalPlayerGamePos()]
-                                    .m_resources[6] -= 1000;
-                                g_game->m_players[
-                                    g_game->getLocalPlayerGamePos()]
-                                    .m_resources[0] -= 10;
+                                    g_game->getLocalPlayerGamePos()].payBoatCost();
                                 m_resourceDisplay->update(1, 1);
                             }
                         }

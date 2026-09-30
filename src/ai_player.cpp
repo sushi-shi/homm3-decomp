@@ -4250,12 +4250,11 @@ void aiBuildShip(const hero* ourHero, long x, long y, long z)
         return;
     }
 
-    if (player->m_resources[WOOD] < 10 || player->m_resources[GOLD] < 1000)
+    if (!player->canAffordBoat())
         return;
     if (g_game->createBoat(x, y, z, ourHero->m_owner, 0, 1) == -1)
         return;
-    player->m_resources[GOLD] -= 1000;
-    player->m_resources[WOOD] -= 10;
+    player->payBoatCost();
 }
 
 VA(0x00431160, 0x1f3)
@@ -4276,8 +4275,7 @@ long aiGetShipCost(const hero* ourHero, type_point point)
         shipyardTown->getBuildCost(DOCK_ID, cost);
     }
 
-    cost[WOOD] += 10;
-    cost[GOLD] += 1000;
+    addBoatCost(cost);
     return -aiResourceCost(player, cost);
 }
 

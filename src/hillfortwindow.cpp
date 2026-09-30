@@ -598,12 +598,7 @@ void THillFortWindow::handleClick(message& msg)
                 g_hillFortWindow->getCreatureType(msg.m_codeY - CREATURE_PORTRAIT_1_ID);
             if (creature == CREATURE_NONE)
                 break;
-            TViewArmyWindow viewArmy(creature, 0x77, 0x20, !rightClick);
-            viewArmy.centerWindow(-1, -1);
-            if (rightClick)
-                viewArmy.quickView();
-            else
-                viewArmy.doModal();
+            TViewArmyWindow::showCenteredCreature(creature, rightClick != 0);
         }
         break;
     }

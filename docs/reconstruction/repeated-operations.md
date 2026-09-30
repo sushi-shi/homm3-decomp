@@ -590,11 +590,44 @@ recruitment's gold/optional-resource pair, gifts, exchanges and scaled purchase
 budgets remain distinct operations. Existing affordability loops and the native
 hill-fort `canAfford()` helper retain their own contracts.
 
+## Boat prices and centered creature previews
+
+The boat-price review connects four affordability checks, three successful
+purchase paths and two AI cost estimates. `playerData::canAffordBoat()` owns the
+1,000-gold/10-wood predicate used by map shipyards, the town ship dialog, AI boat
+building and AI shipyard marking. These are pure resource reads; the shared
+query uses the gold-first ordering of the UI paths. `payBoatCost()` preserves
+gold-before-wood debits and leaves every other resource untouched. `addBoatCost()`
+adds wood then gold to an existing int cost row, preserving any dock-building
+cost already present. The three operations use one pair of named price values.
+
+Boat creation and payment remain separate. The map event checks dialog success
+and creation success before charging; town docks additionally update the dock
+building before charging and refreshing resources. AI uses the player pointer
+captured before dock/boat construction, while UI callers resolve their player
+at the existing payment stage. The local-player getter reads protocol/player
+identity and human flags, which neither debit changes. Missing locations,
+capacity checks, ownership claims and the different affordability timing remain
+with the callers. Map loading, remote replay and Summon Boat still use
+`createBoat()` without paying a purchase cost. AI path valuation retains its
+missing-shipyard return and dock-plus-boat estimate; marking keeps its full
+resource-row test when a dock must also be built.
+
+Hill-fort, sacrifice and skeleton-transformer click handlers now share
+`TViewArmyWindow::showCenteredCreature()`. It owns the identical stack lifetime:
+construct at the existing 119/32 coordinates with the same OK-button policy,
+center, run quick view or modal view, and destroy before returning. Caller
+creature/amount/selection guards remain outside it. Recruitment stays at its
+fixed position, and game/combat army views keep their heap-owned windows and
+post-dialog upgrade/dismiss/spell work. No new data members or virtual slots
+are introduced. All new helper names and ordinary source placement are project
+inferences, without invented native addresses or inline declarations.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
 tests, validation checks or matching-score investigations. Earlier compiler
 observations recorded with the accessor inventory do not validate these changes.
 The extraction checkpoint `aa71fa920` preserved the published C++ implementation
-at `582687638`. The subsequent combat, recruitment and resource-payment
-continuations above have not been compiled or measured.
+at `582687638`. The subsequent shared-operation continuations above have not
+been compiled or measured.

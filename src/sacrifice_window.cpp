@@ -1651,14 +1651,7 @@ void type_sacrifice_window::creatureClick(
         if (leftPane)
             amount = m_currentHero->m_army.m_numTroops[slot] - amount;
         if (creatureType != CREATURE_NONE && amount > 0) {
-            TViewArmyWindow viewArmyWindow(
-                creatureType, 0x77, 0x20,
-                static_cast<unsigned char>(!rightClick));
-            viewArmyWindow.centerWindow(-1, -1);
-            if (rightClick)
-                viewArmyWindow.quickView();
-            else
-                viewArmyWindow.doModal();
+            TViewArmyWindow::showCenteredCreature(creatureType, rightClick != 0);
         }
     } else {
         if (m_currentCreature.m_group >= 0) {
@@ -2015,14 +2008,7 @@ void type_skeleton_window::creatureClick(
     if (rightClick
         || (slot == m_selectedIndex && side == m_selectedGroup)) {
         if (creatureType != CREATURE_NONE) {
-            TViewArmyWindow viewArmyWindow(
-                creatureType, 0x77, 0x20,
-                static_cast<unsigned char>(!rightClick));
-            viewArmyWindow.centerWindow(-1, -1);
-            if (rightClick)
-                viewArmyWindow.quickView();
-            else
-                viewArmyWindow.doModal();
+            TViewArmyWindow::showCenteredCreature(creatureType, rightClick != 0);
         }
     } else if (m_selectedGroup < 0) {
         m_selectedIndex = slot;

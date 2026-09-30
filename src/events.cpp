@@ -660,8 +660,7 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
         return;
     }
 
-    if (g_game->m_players[g_netLocalGamePos].m_resources[GOLD] < 1000
-        || g_game->m_players[g_netLocalGamePos].m_resources[WOOD] < 10) {
+    if (!g_game->m_players[g_netLocalGamePos].canAffordBoat()) {
         normalDialog((*g_generalText)[GENERAL_TEXT_BOAT_PURCHASE_CANNOT_AFFORD],
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return;
@@ -673,8 +672,7 @@ void advManager::doEventShipyard(NewmapCell* cell, type_point point, unsigned ch
                cell->m_shipyardInfo.m_boatX,
                cell->m_shipyardInfo.m_boatY,
                boatPoint.m_z, g_netLocalGamePos, 0, 1) != -1) {
-        g_game->m_players[g_netLocalGamePos].m_resources[GOLD] -= 1000;
-        g_game->m_players[g_netLocalGamePos].m_resources[WOOD] -= 10;
+        g_game->m_players[g_netLocalGamePos].payBoatCost();
     }
 }
 

@@ -43,6 +43,9 @@ enum EDayOfWeek {
 int __fastcall readHeroId(TAbstractFile* infile, int mapVersion);
 int __fastcall loadHeroId(TAbstractFile* infile, int saveVersion);
 
+// Project-inferred addition to an existing AI dock/boat cost estimate.
+void addBoatCost(int* cost);
+
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
 // std::vector; the DC build has 9 at STLport's 12). The seventh and eighth
@@ -1026,6 +1029,10 @@ public:
     // not clamped. Native resource storage remains public (DC 0x1c50).
     void payResourceCost(const int* cost);
     void payResourceCost(const long* cost);
+    // Boat payment remains separate from creation, which is also used by
+    // map loading, replay and spells. Neither operation builds a boat.
+    bool canAffordBoat() const;
+    void payBoatCost();
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.

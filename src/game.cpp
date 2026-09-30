@@ -1164,6 +1164,33 @@ int game::saveObeliskPool(TAbstractFile* outfile)
     return 0;
 }
 
+// Project names for the fixed shipyard price. UI text retains its native
+// literals; affordability, payment and AI budgets share these numeric values.
+// The ordinary helper bodies below have inferred owner-TU placement, without
+// native symbol or explicit inline claims.
+enum EBoatPurchaseCost {
+    BOAT_GOLD_COST = 1000,
+    BOAT_WOOD_COST = 10
+};
+
+bool playerData::canAffordBoat() const
+{
+    return m_resources[GOLD] >= BOAT_GOLD_COST
+        && m_resources[WOOD] >= BOAT_WOOD_COST;
+}
+
+void playerData::payBoatCost()
+{
+    m_resources[GOLD] -= BOAT_GOLD_COST;
+    m_resources[WOOD] -= BOAT_WOOD_COST;
+}
+
+void addBoatCost(int* cost)
+{
+    cost[WOOD] += BOAT_WOOD_COST;
+    cost[GOLD] += BOAT_GOLD_COST;
+}
+
 // Project-inferred full-row payment shared by building and creature/engine
 // purchases. Costs are int rows in traits/buildings and long rows from
 // GetUpgradeCost. Keep their types and one subtraction loop without copying

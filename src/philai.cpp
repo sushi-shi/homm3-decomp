@@ -580,8 +580,7 @@ static void markShipyards(playerData* player)
 {
     int cost[7];
 
-    if (player->m_resources[WOOD] < 10
-        || player->m_resources[GOLD] < 1000)
+    if (!player->canAffordBoat())
         return;
 
     for (int townIndex = 0; townIndex < player->m_numTowns;
@@ -600,8 +599,7 @@ static void markShipyards(playerData* player)
         } else if (currentTown->canBuild(DOCK_ID)) {
             canBuildShip = 1;
             currentTown->getBuildCost(DOCK_ID, cost);
-            cost[WOOD] += 10;
-            cost[GOLD] += 1000;
+            addBoatCost(cost);
             for (int resource = 0; resource < 7; ++resource) {
                 if (player->m_resources[resource] < cost[resource])
                     canBuildShip = 0;
