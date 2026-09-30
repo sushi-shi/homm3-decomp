@@ -313,7 +313,8 @@ format bounds but no pinned library reproduces are `import-structure`, with each
 reason in `data_coverage.json` `linker_structures`. In the pinned image these
 are the vendor DLLs (no pinned import libraries), the hints of every KERNEL32
 and USER32 import (0 in retail), the DLL spelling `KeRNeL32.dll`, and the
-descriptors' TimeDateStamp 0xad2b0000, none of which LINK writes; the
+descriptors' TimeDateStamp 0xad2b0000. These are not reproduced from the pinned
+link inputs; their producer and any shared edit history remain unresolved. The
 unreferenced string `GetSysteminfo` after the last record stays missing.
 
 Game `.CRT$XCU` entries are the words `__initterm` walks between the verified

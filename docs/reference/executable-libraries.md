@@ -67,7 +67,7 @@ section, and the thirteen `DPAID_*`, `DPSPGUID_*`, `CLSID_DirectPlay*` and
 
 | dll | imports | note |
 |---|---|---|
-| `KeRNeL32.dll` | 105 | mixed-case name as linked — an import-library fingerprint worth preserving |
+| `KeRNeL32.dll` | 105 | observed mixed-case spelling; producer and edit history unresolved |
 | `USER32.dll` | 56 | includes the raw message pump (`GetMessageA`, `TranslateMessage`, `DispatchMessageA`) |
 | `mss32.dll` | 31 | Miles Sound System (vendored SDK: `vendor/miles-5.0e`) |
 | `IFC20.dll` | 26 | Immersion force-feedback (CImmMouse/CImmProject/CImmEffect…), all MSVC-mangled C++ |

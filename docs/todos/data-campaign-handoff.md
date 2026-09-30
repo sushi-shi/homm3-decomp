@@ -154,7 +154,8 @@ The definitions are in [data matching](../tooling/data-matching.md), sections
   class. Inference only proposes rows (`homm3 verify padding --propose`).
 - **Stale padding rows:** a row whose bytes an exact comparison now covers is
   stale; retire it with `homm3 verify padding --stale --retire`.
-- **`import-structure`:** post-link edits of the shipped exe; see the
+- **`import-structure`:** format-bounded bytes with unresolved provenance;
+  post-link editing is a hypothesis, not an identified common patch. See the
   [import-table todo](import-table-post-link-edits.md).
 - **The invariant:** a data byte is exact only when a compiled definition
   *emits* it at that address. A short array's tail is flagged; it is never
