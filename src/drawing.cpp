@@ -1005,6 +1005,13 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // DC drawing.cpp:1207/1307 names GetHexIndex in both grid walks. The two
 // canonical lowercase calls remain in the authored loops below; the audit
 // does not resolve their spelling to the older decorated name.
+// DC1153 constructs temp_limits with the empty default constructor, but
+// DC1378/1380 clips and passes the member rectangle directly (this+0x13408),
+// as Mac 0xa6600..0xa6684 also does. Do not invent a temp_limits copy for
+// that operation. Direct member calls without provisional reference aliases
+// are VC6 byte-flat at 98.0274%; all 117 blocks, 75 branches and 31 calls
+// align. The by-value update's scratch selection still adds an EDI save;
+// preserve the canonical helper instead of pasting its four arguments.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
@@ -1187,10 +1194,8 @@ void combatManager::drawFrame(bool update,
             return;
         }
 
-        SLimitData& bounds = m_drawbridgeBounds;
-        const SLimitData& combatDrawLimits = g_combatDrawLimits;
-        bounds.clip(combatDrawLimits);
-        updateCombatArea(bounds);
+        m_drawbridgeBounds.clip(g_combatDrawLimits);
+        updateCombatArea(m_drawbridgeBounds);
     }
 
     if (limitCreatureEffect || limitDraw)
