@@ -232,6 +232,7 @@ SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
+    bool sellSelectedArtifact();
     void setupNewTrade();
     void updateMarketBackpack();
     void incrementBackpackStart();

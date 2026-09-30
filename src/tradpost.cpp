@@ -1,4 +1,5 @@
 #include "va.h"
+#include "artifact_inventory.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -39,6 +40,9 @@ DATA(0x006aaab0) static int g_rightAmount;
 DATA(0x006aaab4) static TTradeResourceWindow* g_tradeWindow;
 DATA(0x006aaa8c) static TGiveResourceWindow* g_giveWindow;
 DATA(0x006aaabc) static TSellCreatureWindow* g_sellCreatureWindow;
+
+static ArtifactInventoryPanel* g_tradeInventory;
+static int inventoryTradeQuote(int slot, int resource);
 
 // --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
 // Retail emits each dialog as (constructor, ??_G, destructor) in image order;
@@ -1572,8 +1576,12 @@ void doMarket()
             g_selectedArtifact = -1;
             g_leftResource = -1;
             g_rightAmount = 0;
+            g_tradeInventory = new ArtifactInventoryPanel(
+                *g_sellArtWindow, *g_marketHero, 26, 74, 4, 4, inventoryTradeQuote);
             g_sellArtWindow->update(0);
             g_sellArtWindow->doModal(0);
+            delete g_tradeInventory;
+            g_tradeInventory = 0;
             delete g_sellArtWindow;
             break;
 
@@ -2552,6 +2560,17 @@ void TSellArtifactWindow::update(unsigned char update)
                 broadcastMessage(msg);
             }
         }
+    }
+
+    if (g_tradeInventory) {
+        // The grid replaces the paper doll and the five-slot backpack strip.
+        for (int id = 0x54; id <= MARKET_ARTIFACT_RIGHT_ARROW_ID; ++id) {
+            widget* old = getWidget(id);
+            if (old) old->m_status &= ~(widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        g_tradeInventory->refresh(g_leftResource);
+        static_cast<textWidget*>(getWidget(2))->setText(
+            "Choose a resource. Select an artifact and click Trade, or Shift-click to sell immediately.");
     }
 
     if (update)
@@ -3541,11 +3560,61 @@ void TBuyArtifactWindow::setRolloverText(int codeY)
 // setupNewTrade. This model lifts Windows 81.15 -> 83.16 while retaining every
 // helper path. Two separate viewArtifact source calls remain separate on Mac;
 // keep its shared call. Widget-local flags lower both compiler comparisons.
+static int inventoryTradeQuote(int slot, int resource)
+{
+    if (!g_marketHero || !g_sellArtWindow || resource < 0 || resource >= 7
+        || slot < 0 || slot >= 82) return 0;
+    const type_artifact& item = slot < 18
+        ? g_marketHero->getArtifact(TArtifactSlot(slot))
+        : g_marketHero->getBackpack(slot - 18);
+    int id = item.m_artifactId;
+    if (id < 0 || id >= ARTIFACT_COUNT
+        || (id <= ARTIFACT_FIRST_AID_TENT && id != ARTIFACT_SPELL_SCROLL)) return 0;
+    int price, denominated, count;
+    g_sellArtWindow->computeTradeRatios(slot, resource, &price, &denominated, &count);
+    return price;
+}
+
+bool TSellArtifactWindow::sellSelectedArtifact()
+{
+    if (!g_currentPlayer->isLocalHuman()) return false;
+    int price = inventoryTradeQuote(g_selectedArtifact, g_leftResource);
+    if (price <= 0) return false;
+    if (g_selectedArtifact < 18)
+        g_marketHero->removeArtifact(g_selectedArtifact);
+    else
+        g_marketHero->removeBackpackArtifact(static_cast<short>(g_selectedArtifact - 18));
+    g_currentPlayer->m_resources[g_leftResource] += price;
+    g_leftDenominated = 1;
+    g_selectedArtifact = -1;
+    g_rightAmount = 0;
+    g_backpackStart = 0;
+    return true;
+}
+
 VA(0x005edf60, 0x75f)
 DC_ADDRESS(0x18c00c, 0x36c)
 MAC_ADDRESS(0x1f98dc, 0x40c)  // anchor-vtable 0x643aac slot 9
 int TSellArtifactWindow::windowHandler(message& msg)
 {
+    if (g_tradeInventory) {
+        ArtifactInventoryPanel::Event event = g_tradeInventory->handle(msg);
+        if (event != ArtifactInventoryPanel::ignored) {
+            if (event == ArtifactInventoryPanel::picked || event == ArtifactInventoryPanel::quickSell) {
+                int slot = g_tradeInventory->selectedSlot();
+                // Reject special items even before a payment resource is chosen.
+                if (inventoryTradeQuote(slot, g_leftResource < 0 ? 6 : g_leftResource) > 0) {
+                    g_selectedArtifact = slot;
+                    g_backpackStart = 0;
+                    if (g_leftResource >= 0) setupNewTrade();
+                    if (event == ArtifactInventoryPanel::quickSell) sellSelectedArtifact();
+                }
+            }
+            update(true);
+            return MESSAGE_DISPATCH_CONSUME;
+        }
+    }
+
     int result = CAdvPopup::windowHandler(msg);
     if (result)
         return result;
@@ -3638,26 +3707,7 @@ int TSellArtifactWindow::windowHandler(message& msg)
         case MARKET_WIDGET_ACTIVATE:
             switch (msg.m_codeY) {
             case MARKET_LEFT_PANEL_ID:
-                if (g_rightAmount == 0)
-                    break;
-                if (g_ratioInverted) {
-                    g_currentPlayer->m_resources[g_leftResource] +=
-                        g_giveQuantity * g_rightAmount;
-                    if (g_selectedArtifact < 18) {
-                        g_marketHero->removeArtifact(g_selectedArtifact);
-                    } else {
-                        int numInBackpack =
-                            g_marketHero->getNumberInBackpack(1);
-                        int slot = (g_selectedArtifact - 18
-                                    + (g_backpackStart & 0xff))
-                                   % numInBackpack;
-                        g_marketHero->removeBackpackArtifact(slot);
-                    }
-                }
-                g_leftDenominated = 1;
-                g_leftResource = -1;
-                g_selectedArtifact = -1;
-                updateFlag = 1;
+                if (sellSelectedArtifact()) updateFlag = 1;
                 break;
 
             case MARKET_ARTIFACT_LEFT_ARROW_ID:

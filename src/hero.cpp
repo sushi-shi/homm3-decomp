@@ -1,5 +1,6 @@
 #include "text.h"
 #include "va.h"
+#include "artifact_inventory.h"
 #include "objnames.h"
 #include "includes.h"
 #include "homm3_limit.h"
@@ -3561,6 +3562,17 @@ DC_ADDRESS(0x0cf54c, 0xc38)
 MAC_ADDRESS(0x0f96b0, 0xf40)  // anchor-bracket + absent-callees
 int THeroScreenWindow::windowHandler(message& msg)
 {
+    if (msg.m_id == MESSAGE_WIDGET && msg.m_codeX == widget::WIDGET_DESELECT
+        && msg.m_codeY == ARTIFACT_INVENTORY_BUTTON_ID) {
+        if (g_heroScreenDraggedArtifact.m_artifactId == ARTIFACT_NONE) {
+            int slot = showArtifactInventory(*g_currentHero);
+            if (slot >= 0) handleBackpackClick(BACKPACK_SLOT_0_ID + slot, 0);
+            updateBackpack();
+            drawWindow(true, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        }
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
     int exitFlag = 0;
     int result = CAdvPopup::windowHandler(msg);
     if (result)
@@ -4360,6 +4372,8 @@ THeroScreenWindow::THeroScreenWindow()
         else
             memError();
     }
+    addArtifactInventoryButton(*this, 490, 406);
+
 }
 
 #if 0  // @carcass
