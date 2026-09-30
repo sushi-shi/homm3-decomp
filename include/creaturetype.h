@@ -16,8 +16,8 @@ const int g_creatureTypeLast = 0x96;
 // literal count so each singular/plural selection folds at its call site.
 // DC 299..307 keeps the else arm (row 303 is its own jump); the guard-return
 // spelling costs /Ob2 more and pushed getArmyHelpText's appends out of line.
-DC_ADDRESS(0x01ef94, 0x5c)
 VA(0x00440100, 0x3E)  // two-register /Gr ABI + trait lookup
+DC_ADDRESS(0x01ef94, 0x5c)
 inline const char* getArmyName(int type, int count)
 {
     if (type < 0 || type > g_creatureTypeLast) {
@@ -38,7 +38,7 @@ inline const char* getArmyName(int type, int count)
         || (type) == CREATURE_FIRE_ELEMENTAL \
         || (type) == CREATURE_WATER_ELEMENTAL)
 
-// Original GetBaseCreature: creaturetype.cpp:202, DC 0x718dc. The two
+// Original GetBaseCreature: creaturetype.cpp:202. The two
 // CTownDlg::CreateWin calls are named at DC lines 326/342. Complete Mac
 // expands the same row lookup at 0x16c924/0x16ca40, as does Windows; a
 // shared header body/inline linkage are inferred for Complete's cross-TU

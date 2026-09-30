@@ -23,8 +23,9 @@ DATA(0x006aa608) static TTownGateWindow* g_townGateWindow;
 
 static void townGateSliderCallback(int state, heroWindow* parentWindow);
 
+VA(0x005c1ab0, 0x882)
 DC_ADDRESS(0x1690b0, 0x774)
-VA(0x005c1ab0, 0x882) MAC_ADDRESS(0x1b7448, 0xfc4)
+MAC_ADDRESS(0x1b7448, 0xfc4)
 TTownGateWindow::TTownGateWindow(bool adventureSpell)
   : CAdvPopup(247, 65, 306, 469, 18),
     m_topTown(0), m_selectedTown(-1), m_adventureSpell(adventureSpell)
@@ -121,8 +122,9 @@ TTownGateWindow::TTownGateWindow(bool adventureSpell)
 
 VA_COMPGEN(0x005c2340, 0x21, SCALAR_DELETING_DTOR, TTownGateWindow)
 
+VA(0x005c2370, 0x8f)
 DC_ADDRESS(0x169824, 0x6a)
-VA(0x005c2370, 0x8f) MAC_ADDRESS(0x1b8544, 0xc8)
+MAC_ADDRESS(0x1b8544, 0xc8)
 TTownGateWindow::~TTownGateWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -131,15 +133,17 @@ TTownGateWindow::~TTownGateWindow()
     }
 }
 
+VA(0x005c2400, 0x1AF)
 DC_ADDRESS(0x169890, 0x1c)
-VA(0x005c2400, 0x1AF) MAC_ADDRESS(0x1b860c, 0x94)
+MAC_ADDRESS(0x1b860c, 0x94)
 void TTownGateWindow::addTown(int newTown)
 {
     m_towns.push_back(newTown);
 }
 
+VA(0x005c25b0, 0x1B5)
 DC_ADDRESS(0x1698ac, 0x13c)
-VA(0x005c25b0, 0x1B5) MAC_ADDRESS(0x1b86a0, 0x214)
+MAC_ADDRESS(0x1b86a0, 0x214)
 void TTownGateWindow::updateTownLocator(int i)
 {
     message msg;
@@ -204,8 +208,9 @@ void TTownGateWindow::updateTownLocators()
     drawWindow(1, 0xffff0001, 0xffff);
 }
 
+VA(0x005c2770, 0xC8)
 DC_ADDRESS(0x169a88, 0x58)
-VA(0x005c2770, 0xC8) MAC_ADDRESS(0x1b897c, 0xac)
+MAC_ADDRESS(0x1b897c, 0xac)
 void TTownGateWindow::doModal()
 {
     message msg;
@@ -238,8 +243,9 @@ void TTownGateWindow::doModal()
 // line behind the block order. 69.8969 -> 100.0000, 2026-09-05. A `goto`
 // into the OK arm expresses the same merge and is byte-flat with the
 // unduplicated form - only the duplicate moves it.
+VA(0x005c2840, 0x13B)
 DC_ADDRESS(0x169ae0, 0xc6)
-VA(0x005c2840, 0x13B) MAC_ADDRESS(0x1b8a28, 0x154)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler
+MAC_ADDRESS(0x1b8a28, 0x154)  // anchor-vtable (slot 9) + CAdvPopup::WindowHandler
 int TTownGateWindow::windowHandler(message& msg)
 {
     int handled = CAdvPopup::windowHandler(msg);
@@ -277,8 +283,9 @@ int TTownGateWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_CONSUME;
 }
 
+VA(0x005c2980, 0x89)
 DC_ADDRESS(0x169ba8, 0x64)
-VA(0x005c2980, 0x89) MAC_ADDRESS(0x1b8b7c, 0x54)
+MAC_ADDRESS(0x1b8b7c, 0x54)
 static void townGateSliderCallback(int state, heroWindow* parentWindow)
 {
     g_townGateWindow->m_topTown = state;

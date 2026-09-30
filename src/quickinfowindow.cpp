@@ -13,8 +13,9 @@
 #include "textwdgt.h"
 #include "winmgr.h"
 
+VA(0x0052f8c0, 0x430)
 DC_ADDRESS(0x11787c, 0x2e0)
-VA(0x0052f8c0, 0x430) MAC_ADDRESS(0x14b6bc, 0x514)
+MAC_ADDRESS(0x14b6bc, 0x514)
 TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
     TCreatureType id, int count, TDisposition disposition, int cost)
     : TDialogBox(0, 0, 256, 256, 0x12)
@@ -72,8 +73,9 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel viewLevel,
 
 VA_COMPGEN(0x0052fcf0, 0x21, SCALAR_DELETING_DTOR, TQuickCreatureWindow)
 
+VA(0x0052fd20, 0xB)
 DC_ADDRESS(0x117b5c, 0x2e)
-VA(0x0052fd20, 0xB) MAC_ADDRESS(0x14bbd0, 0x60)
+MAC_ADDRESS(0x14bbd0, 0x60)
 TQuickCreatureWindow::~TQuickCreatureWindow()
 {
 }

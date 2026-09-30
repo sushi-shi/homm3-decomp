@@ -485,6 +485,7 @@ public:
     int m_x;
     int m_y;
     int m_id;
+
     DC_ADDRESS(0x01eff0, 0xe)
     TDrawParts() : m_isValid(false) {}
 };
@@ -1309,6 +1310,7 @@ private:
                                bool humanPlayer);
 
 public:
+
     // E:\gamedcs\AdvMgr.h:1245. DC's fixed viewport center is (6,5);
     // Complete's wider view uses (9,8), as the retail recentering paths prove.
     DC_ADDRESS(0x01f000, 0x84)
@@ -1492,6 +1494,7 @@ private:
 };
 
 unsigned short getMapExtra(int x, int y, int z);
+
 DC_ADDRESS(0x01f084, 0x4c)
 inline int getMapExtra(type_point point)
 {

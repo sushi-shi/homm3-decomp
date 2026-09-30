@@ -10,8 +10,9 @@ CSequence::CSequence()
 {
 }
 
+VA(0x0047b840, 0x44)
 DC_ADDRESS(0x071f20, 0x40)
-VA(0x0047b840, 0x44) MAC_ADDRESS(0x08a014, 0x118)
+MAC_ADDRESS(0x08a014, 0x118)
 CSequence::CSequence(int num)
 {
     m_numFrames = 0;
@@ -20,8 +21,9 @@ CSequence::CSequence(int num)
     MEMSET_LOCAL(m_f, 0, num * sizeof(m_f[0]), num, i);
 }
 
+VA(0x0047b890, 0x0F)
 DC_ADDRESS(0x071f60, 0x18)
-VA(0x0047b890, 0x0F) MAC_ADDRESS(0x08a12c, 0x5c)
+MAC_ADDRESS(0x08a12c, 0x5c)
 CSequence::~CSequence()
 {
     if (m_f)
@@ -66,8 +68,9 @@ int CSequence::addFrame(const char* name, int w, int h, unsigned char* data,
     return 0;
 }
 
+VA(0x0047b8a0, 0x26)
 DC_ADDRESS(0x0720c8, 0x38)
-VA(0x0047b8a0, 0x26) MAC_ADDRESS(0x08a188, 0x34)
+MAC_ADDRESS(0x08a188, 0x34)
 int CSequence::addFrame(CSpriteFrame* frame)
 {
     if (m_numFrames < m_allocatedFrames) {

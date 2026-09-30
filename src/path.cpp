@@ -6,8 +6,9 @@
 #include "hexcell.h"
 #include "terrain.h"
 
+VA(0x005239d0, 0x96)
 DC_ADDRESS(0x10c918, 0x8a)
-VA(0x005239d0, 0x96) MAC_ADDRESS(0x13cd64, 0xe8)
+MAC_ADDRESS(0x13cd64, 0xe8)
 int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimited, unsigned char literalTarget)
 {
     if (!combatManager::validHex(fpTargetCellIndex))
@@ -25,8 +26,9 @@ int army::findPath(int fpTargetCellIndex, int maxMoves, unsigned char moveUnlimi
         g_combatManager->m_creaturePlacement, moves, -1);
 }
 
+VA(0x00523a70, 0xA8)
 DC_ADDRESS(0x10c9a4, 0x48)
-VA(0x00523a70, 0xA8) MAC_ADDRESS(0x13ce4c, 0x9c)
+MAC_ADDRESS(0x13ce4c, 0x9c)
 unsigned char army::validPath(int destIndex, unsigned char literalTest)
 {
     if (!combatManager::validHex(destIndex))
@@ -37,8 +39,9 @@ unsigned char army::validPath(int destIndex, unsigned char literalTest)
     return 1;
 }
 
+VA(0x00523b20, 0x89)
 DC_ADDRESS(0x10c9ec, 0x7e)
-VA(0x00523b20, 0x89) MAC_ADDRESS(0x13cee8, 0xa8)
+MAC_ADDRESS(0x13cee8, 0xa8)
 unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex) const
 {
     int testCellIndex;
@@ -54,8 +57,9 @@ unsigned army::getAttackMask(int currIndex, int criteria, int literalTargetIndex
     return mask;
 }
 
+VA(0x00523bb0, 0x1DF)
 DC_ADDRESS(0x10ca6c, 0x18a)
-VA(0x00523bb0, 0x1DF) MAC_ADDRESS(0x13cf90, 0x240)
+MAC_ADDRESS(0x13cf90, 0x240)
 int army::validAttack(int currIndex, int direction, int criteria, int literalIndex, int* testCellIndex) const
 {
     if (!combatManager::validHex(currIndex))
@@ -106,8 +110,9 @@ int army::validAttack(int currIndex, int direction, int criteria, int literalInd
     return 0;
 }
 
+VA(0x00523d90, 0x57)
 DC_ADDRESS(0x10cbf8, 0x88)
-VA(0x00523d90, 0x57) MAC_ADDRESS(0x13d1d0, 0x90)
+MAC_ADDRESS(0x13d1d0, 0x90)
 int army::getAdjacentCellIndex(int currIndex, int direction) const
 {
     if (!combatManager::validHex(currIndex))
@@ -119,8 +124,9 @@ int army::getAdjacentCellIndex(int currIndex, int direction) const
     return g_combatManager->m_adjacentCells[currIndex][direction];
 }
 
+VA(0x00523df0, 0x86)
 DC_ADDRESS(0x10cc80, 0x5a)
-VA(0x00523df0, 0x86) MAC_ADDRESS(0x13d260, 0x8c)
+MAC_ADDRESS(0x13d260, 0x8c)
 long army::getAdjacentHex(long hex, long direction) const
 {
     // Dreamcast path.cpp:271 calls OffsetToFront(-1) for the double-wide
@@ -136,8 +142,9 @@ long army::getAdjacentHex(long hex, long direction) const
     return getAdjacentCellIndex(hex, direction);
 }
 
+VA(0x00523e80, 0x3B)
 DC_ADDRESS(0x10ccdc, 0x4c)
-VA(0x00523e80, 0x3B) MAC_ADDRESS(0x13d2ec, 0x68)
+MAC_ADDRESS(0x13d2ec, 0x68)
 int getAdjacentCellIndexNoArmy(int currIndex, int direction)
 {
     if (!combatManager::validHex(currIndex))
@@ -149,8 +156,9 @@ int getAdjacentCellIndexNoArmy(int currIndex, int direction)
     return g_combatManager->m_adjacentCells[currIndex][direction];
 }
 
+VA(0x00523ec0, 0x1F)
 DC_ADDRESS(0x10cd28, 0x28)
-VA(0x00523ec0, 0x1F) MAC_ADDRESS(0x13d354, 0x40)
+MAC_ADDRESS(0x13d354, 0x40)
 int oppositeDirection(int direction)
 {
     if (direction < 6)

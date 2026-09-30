@@ -37,15 +37,19 @@ public:
     virtual void draw() const;
     // Dreamcast textwdgt.cpp:257: empty Dim overrides widget dimming.
     virtual void dim() const;
+
+    VA(0x0057C6D0, 0xAC)
     DC_ADDRESS(0x1473f8, 0x24)
-    VA(0x0057C6D0, 0xAC) MAC_ADDRESS(0x005bcc, 0x4c)  // textWidget vtable slot 13 + DC header COMDAT
+    MAC_ADDRESS(0x005bcc, 0x4c)  // textWidget vtable slot 13 + DC header COMDAT
     virtual void setText(const char* newText) { m_text = newText; }
+
     // E:\gamedcs\TextWdgt.h:67; DC emits this header helper out of line,
     // while Complete folds the c_str() access into its callers.
     // Class-inline as in TextWdgt.h:67. Removing the unsupported forceinline
     // qualifier is byte-neutral across the affected widget/name-edit callers.
     DC_ADDRESS(0x0d8d14, 0x18)
     const char* getText() { return m_text.c_str(); }
+
     // E:\gamedcs\TextWdgt.h:78
     DC_ADDRESS(0x1652f4, 0x6)
     void setColor(font::TColor newColor) { m_color = newColor; }

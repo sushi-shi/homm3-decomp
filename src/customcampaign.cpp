@@ -235,13 +235,15 @@ public:
 
 // The campaign stream adapter owns these two virtuals and its local
 // constructor above. Retail 0x63dacc supplies the read/write slots.
-VA(0x00483f10, 0x17) MAC_ADDRESS(0x091bfc, 0x30)
+VA(0x00483f10, 0x17)
+MAC_ADDRESS(0x091bfc, 0x30)
 int TStreamBufFile::read(void* data, int size)
 {
     return m_buffer->sgetn(static_cast<char*>(data), size);
 }
 
-VA(0x00483f30, 0x17) MAC_ADDRESS(0x091c2c, 0x30)
+VA(0x00483f30, 0x17)
+MAC_ADDRESS(0x091c2c, 0x30)
 int TStreamBufFile::write(const void* data, int size)
 {
     return m_buffer->sputn(static_cast<const char*>(data), size);
@@ -250,8 +252,9 @@ int TStreamBufFile::write(const void* data, int size)
 // Original: hero_power; game.cpp:3275
 // The primary-total plus 28 secondary-skill sum moved with campaign hero
 // sorting into this TU. Retail 0x483f50 retains the same hero-pointer helper.
+VA(0x00483f50, 0x26)
 DC_ADDRESS(0x0a8ba0, 0xcc)
-VA(0x00483f50, 0x26) MAC_ADDRESS(0x091c5c, 0xdc)
+MAC_ADDRESS(0x091c5c, 0xdc)
 int heroPower(hero* candidate)
 {
     int primary = candidate->getPrimarySkillTotal();
@@ -268,7 +271,8 @@ struct CrossoverHeroStronger {
 // DC compare_heroes (game.cpp:3288, dc 0xa8c6c) returns a signed qsort
 // difference after score and experience. Complete uses this bool predicate
 // on hero references and adds hero ID as the final tie-break for std::sort.
-VA(0x00483f80, 0x9B) MAC_ADDRESS(0x091d38, 0xbc)  // retained written predicate; score/experience/hero-id ordering
+VA(0x00483f80, 0x9B)
+MAC_ADDRESS(0x091d38, 0xbc)  // retained written predicate; score/experience/hero-id ordering
 bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 {
     int leftValue = heroPower(&lhs);
@@ -283,10 +287,10 @@ bool CrossoverHeroStronger::operator()(hero& lhs, hero& rhs) const
 }
 
 // --- the eight campaign start bonuses ---
-
 VA_COMPGEN(0x00484020, 0x23, SCALAR_DELETING_DTOR, TCampaignBonus)
 
-VA(0x00484050, 0x3D) MAC_ADDRESS(0x091f98, 0x84)
+VA(0x00484050, 0x3D)
+MAC_ADDRESS(0x091f98, 0x84)
 void TCampaignSpellBonus::read(TAbstractFile* file)
 {
     {
@@ -309,13 +313,15 @@ bool TCampaignSpellBonus::isBuildingBonus() const
     return false;
 }
 
-VA(0x00484090, 0x6) MAC_ADDRESS(0x092024, 0x8)
+VA(0x00484090, 0x6)
+MAC_ADDRESS(0x092024, 0x8)
 const char* TCampaignSpellBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677248, spellBonusDefName, "SpellBon.def");
 }
 
-VA(0x004840a0, 0x25) MAC_ADDRESS(0x092034, 0x40)
+VA(0x004840a0, 0x25)
+MAC_ADDRESS(0x092034, 0x40)
 void TCampaignSpellBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
@@ -331,7 +337,8 @@ void TCampaignSpellBonus::apply(int whichPlayer) const
 // Reversing the equivalent comparison to heroPower(candidate) >
 // heroPower(best) preserves those source calls but moves VC6 from 98.3704%
 // to 96.19%; keep the natural best-first expression and both helper sites.
-VA(0x004840d0, 0x155) MAC_ADDRESS(0x091e3c, 0x158)
+VA(0x004840d0, 0x155)
+MAC_ADDRESS(0x091e3c, 0x158)
 hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 {
     hero* best = 0;
@@ -364,19 +371,22 @@ hero* getCampaignBonusHero(int heroSelector, int whichPlayer)
 // The two spell rows share the general-text pair 708/709: the campaign
 // brief shows one for a learned spell and one for the scroll that
 // carries it.
-VA(0x00484230, 0x46) MAC_ADDRESS(0x092074, 0x70)
+VA(0x00484230, 0x46)
+MAC_ADDRESS(0x092074, 0x70)
 std::string TCampaignSpellBonus::getText() const
 {
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
-VA(0x00484280, 0x46) MAC_ADDRESS(0x0920e4, 0x70)
+VA(0x00484280, 0x46)
+MAC_ADDRESS(0x0920e4, 0x70)
 std::string TCampaignSpellScrollBonus::getText() const
 {
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SCROLL_FORMAT), g_spellTraits[m_spell].m_name);
 }
 
-VA(0x004842d0, 0x3B) MAC_ADDRESS(0x092154, 0x58)
+VA(0x004842d0, 0x3B)
+MAC_ADDRESS(0x092154, 0x58)
 void TCampaignSpellScrollBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
@@ -387,7 +397,8 @@ void TCampaignSpellScrollBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x00484310, 0x1D5) MAC_ADDRESS(0x0921ac, 0x218)
+VA(0x00484310, 0x1D5)
+MAC_ADDRESS(0x0921ac, 0x218)
 void TCampaignCreatureBonus::apply(int whichPlayer) const
 {
     playerData* player = &g_game->m_players[whichPlayer];
@@ -423,7 +434,8 @@ void TCampaignCreatureBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x004844f0, 0x51) MAC_ADDRESS(0x0923c4, 0xb8)
+VA(0x004844f0, 0x51)
+MAC_ADDRESS(0x0923c4, 0xb8)
 void TCampaignCreatureBonus::read(TAbstractFile* file)
 {
     {
@@ -446,13 +458,15 @@ bool TCampaignCreatureBonus::isBuildingBonus() const
     return false;
 }
 
-VA(0x00484550, 0x6) MAC_ADDRESS(0x092484, 0x8)
+VA(0x00484550, 0x6)
+MAC_ADDRESS(0x092484, 0x8)
 const char* TCampaignCreatureBonus::getIconDefName() const
 {
     return "twcrport.def";
 }
 
-VA(0x00484560, 0x7) MAC_ADDRESS(0x09248c, 0xc)
+VA(0x00484560, 0x7)
+MAC_ADDRESS(0x09248c, 0xc)
 int TCampaignCreatureBonus::getIconIndex() const
 {
     return m_creature + 2;
@@ -460,7 +474,8 @@ int TCampaignCreatureBonus::getIconIndex() const
 
 // Singular against plural on a count of exactly one, and an empty name
 // for any creature outside the 0..150 table.
-VA(0x00484570, 0x7A) MAC_ADDRESS(0x092498, 0xac)
+VA(0x00484570, 0x7A)
+MAC_ADDRESS(0x092498, 0xac)
 std::string TCampaignCreatureBonus::getText() const
 {
     const char* name;
@@ -473,7 +488,8 @@ std::string TCampaignCreatureBonus::getText() const
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_count, name);
 }
 
-VA(0x004845f0, 0x24) MAC_ADDRESS(0x092544, 0x4c)
+VA(0x004845f0, 0x24)
+MAC_ADDRESS(0x092544, 0x4c)
 void TCampaignBuildingBonus::read(TAbstractFile* file)
 {
     {
@@ -483,19 +499,22 @@ void TCampaignBuildingBonus::read(TAbstractFile* file)
     }
 }
 
-VA(0x00484620, 0x3) MAC_ADDRESS(0x092590, 0x8)
+VA(0x00484620, 0x3)
+MAC_ADDRESS(0x092590, 0x8)
 bool TCampaignBuildingBonus::isBuildingBonus() const
 {
     return true;
 }
 
-VA(0x00484630, 0x17) MAC_ADDRESS(0x092598, 0x20)
+VA(0x00484630, 0x17)
+MAC_ADDRESS(0x092598, 0x20)
 const char* TCampaignBuildingBonus::getIconDefName() const
 {
     return g_campaignBuildingIconNames[m_town][m_building];
 }
 
-VA(0x00484650, 0x146) MAC_ADDRESS(0x0925b8, 0x1d0)
+VA(0x00484650, 0x146)
+MAC_ADDRESS(0x0925b8, 0x1d0)
 void TCampaignBuildingBonus::apply(int whichPlayer) const
 {
     playerData* player = &g_game->m_players[whichPlayer];
@@ -526,14 +545,16 @@ void TCampaignBuildingBonus::apply(int whichPlayer) const
     target->buildBuilding(m_building, 0, 0);
 }
 
-VA(0x004847a0, 0x3C) MAC_ADDRESS(0x092790, 0x70)
+VA(0x004847a0, 0x3C)
+MAC_ADDRESS(0x092790, 0x70)
 std::string TCampaignBuildingBonus::getText() const
 {
     const char* format = g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT);
     return formatString(format, getBuildingName(m_town, m_building));
 }
 
-VA(0x004847e0, 0x22) MAC_ADDRESS(0x092800, 0x28)
+VA(0x004847e0, 0x22)
+MAC_ADDRESS(0x092800, 0x28)
 void TCampaignBuildingBonus::setTown(int town)
 {
     m_town = town;
@@ -546,20 +567,23 @@ bool TCampaignArtifactBonus::isBuildingBonus() const
     return false;
 }
 
-VA(0x00484810, 0x6) MAC_ADDRESS(0x092830, 0x8)
+VA(0x00484810, 0x6)
+MAC_ADDRESS(0x092830, 0x8)
 const char* TCampaignArtifactBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677258, artifactBonusDefName, "ArtifBon.def");
 }
 
-VA(0x00484820, 0x40) MAC_ADDRESS(0x092840, 0x6c)
+VA(0x00484820, 0x40)
+MAC_ADDRESS(0x092840, 0x6c)
 std::string TCampaignArtifactBonus::getText() const
 {
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_ITEM_FORMAT),
                          g_artifactTraits[m_artifact].m_name);
 }
 
-VA(0x00484860, 0x3B) MAC_ADDRESS(0x0928ac, 0x58)
+VA(0x00484860, 0x3B)
+MAC_ADDRESS(0x0928ac, 0x58)
 void TCampaignArtifactBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
@@ -570,7 +594,8 @@ void TCampaignArtifactBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x004848a0, 0x38) MAC_ADDRESS(0x092904, 0x8c)
+VA(0x004848a0, 0x38)
+MAC_ADDRESS(0x092904, 0x8c)
 void TCampaignArtifactBonus::read(TAbstractFile* file)
 {
     short value;
@@ -586,7 +611,8 @@ bool TCampaignPrimarySkillBonus::isBuildingBonus() const
     return false;
 }
 
-VA(0x004848e0, 0x6) MAC_ADDRESS(0x092998, 0x8)
+VA(0x004848e0, 0x6)
+MAC_ADDRESS(0x092998, 0x8)
 const char* TCampaignPrimarySkillBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677268, primarySkillBonusDefName, "PSkilBon.def");
@@ -595,7 +621,8 @@ const char* TCampaignPrimarySkillBonus::getIconDefName() const
 // The frame is the strongest of the four deltas, and ties keep the FIRST:
 // the compare is `>` against a running best that starts at zero, so an
 // all-negative row still answers 0.
-VA(0x004848f0, 0x1E) MAC_ADDRESS(0x0929a0, 0x6c)
+VA(0x004848f0, 0x1E)
+MAC_ADDRESS(0x0929a0, 0x6c)
 int TCampaignPrimarySkillBonus::getIconIndex() const
 {
     int best = 0;
@@ -609,7 +636,8 @@ int TCampaignPrimarySkillBonus::getIconIndex() const
     return best;
 }
 
-VA(0x00484910, 0x275) MAC_ADDRESS(0x092a0c, 0x19c)
+VA(0x00484910, 0x275)
+MAC_ADDRESS(0x092a0c, 0x19c)
 std::string TCampaignPrimarySkillBonus::getText() const
 {
     std::string list;
@@ -638,7 +666,8 @@ std::string TCampaignPrimarySkillBonus::getText() const
 // saturates there, a positive value is taken as it stands, and a
 // non-positive one falls back to the stat's own floor - zero for attack
 // and defence, one for power and knowledge.
-VA(0x00484b90, 0x5D) MAC_ADDRESS(0x092ba8, 0xf0)  // anchor-vtable (0x63da00+0x14), retail-only
+VA(0x00484b90, 0x5D)
+MAC_ADDRESS(0x092ba8, 0xf0)  // anchor-vtable (0x63da00+0x14), retail-only
 void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
@@ -650,7 +679,8 @@ void TCampaignPrimarySkillBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x00484bf0, 0x31) MAC_ADDRESS(0x092c98, 0x7c)
+VA(0x00484bf0, 0x31)
+MAC_ADDRESS(0x092c98, 0x7c)
 void TCampaignPrimarySkillBonus::read(TAbstractFile* file)
 {
     short heroId;
@@ -665,19 +695,22 @@ bool TCampaignSecondarySkillBonus::isBuildingBonus() const
     return false;
 }
 
-VA(0x00484c30, 0x6) MAC_ADDRESS(0x092d1c, 0x8)
+VA(0x00484c30, 0x6)
+MAC_ADDRESS(0x092d1c, 0x8)
 const char* TCampaignSecondarySkillBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677280, secondarySkillBonusDefName, "SSkilBon.def");
 }
 
-VA(0x00484c40, 0xE) MAC_ADDRESS(0x092d24, 0x18)
+VA(0x00484c40, 0xE)
+MAC_ADDRESS(0x092d24, 0x18)
 int TCampaignSecondarySkillBonus::getIconIndex() const
 {
     return m_skill * 3 + m_level - 1;
 }
 
-VA(0x00484c50, 0x4B) MAC_ADDRESS(0x092d3c, 0x80)
+VA(0x00484c50, 0x4B)
+MAC_ADDRESS(0x092d3c, 0x80)
 std::string TCampaignSecondarySkillBonus::getText() const
 {
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_SKILL_FORMAT),
@@ -688,7 +721,8 @@ std::string TCampaignSecondarySkillBonus::getText() const
 // A skill the hero does not have yet goes through GiveSS, which also
 // takes the free slot; an already-known one is written in place. Either
 // way a hero who is already better keeps what he has.
-VA(0x00484ca0, 0x4F) MAC_ADDRESS(0x092dbc, 0x6c)
+VA(0x00484ca0, 0x4F)
+MAC_ADDRESS(0x092dbc, 0x6c)
 void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
 {
     hero* target = getCampaignBonusHero(m_hero, whichPlayer);
@@ -701,7 +735,8 @@ void TCampaignSecondarySkillBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x00484cf0, 0x56) MAC_ADDRESS(0x092e28, 0xa8)
+VA(0x00484cf0, 0x56)
+MAC_ADDRESS(0x092e28, 0xa8)
 void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
 {
     {
@@ -718,19 +753,22 @@ void TCampaignSecondarySkillBonus::read(TAbstractFile* file)
     }
 }
 
-VA(0x00484d50, 0x3) MAC_ADDRESS(0x092ed0, 0x8)
+VA(0x00484d50, 0x3)
+MAC_ADDRESS(0x092ed0, 0x8)
 bool TCampaignResourceBonus::isBuildingBonus() const
 {
     return false;
 }
 
-VA(0x00484d60, 0x6) MAC_ADDRESS(0x092ed8, 0x8)
+VA(0x00484d60, 0x6)
+MAC_ADDRESS(0x092ed8, 0x8)
 const char* TCampaignResourceBonus::getIconDefName() const
 {
     return DATA_COMPGEN(0x00677290, resourceBonusDefName, "BoRes.def");
 }
 
-VA(0x00484d70, 0x15) MAC_ADDRESS(0x092ee0, 0x24)
+VA(0x00484d70, 0x15)
+MAC_ADDRESS(0x092ee0, 0x24)
 int TCampaignResourceBonus::getIconIndex() const
 {
     if (m_resource < 0)
@@ -741,7 +779,8 @@ int TCampaignResourceBonus::getIconIndex() const
 // The mixed rows take their own general-text lines; the seven plain ones
 // take the shared resource-name table, and anything else leaves the name
 // null for format_string to print as an empty %s.
-VA(0x00484d90, 0x8E) MAC_ADDRESS(0x092f04, 0xd4)
+VA(0x00484d90, 0x8E)
+MAC_ADDRESS(0x092f04, 0xd4)
 std::string TCampaignResourceBonus::getText() const
 {
     const char* name = 0;
@@ -767,7 +806,8 @@ std::string TCampaignResourceBonus::getText() const
     return formatString(g_generalText->getText(GENERAL_TEXT_CAMPAIGN_START_WITH_QUANTITY_FORMAT), m_amount, name);
 }
 
-VA(0x00484e20, 0xDE) MAC_ADDRESS(0x092fd8, 0xc4)
+VA(0x00484e20, 0xDE)
+MAC_ADDRESS(0x092fd8, 0xc4)
 void TCampaignResourceBonus::apply(int whichPlayer) const
 {
     playerData* player = &g_game->m_players[whichPlayer];
@@ -796,7 +836,8 @@ void TCampaignResourceBonus::apply(int whichPlayer) const
     }
 }
 
-VA(0x00484f00, 0x37) MAC_ADDRESS(0x09309c, 0x84)
+VA(0x00484f00, 0x37)
+MAC_ADDRESS(0x09309c, 0x84)
 void TCampaignResourceBonus::read(TAbstractFile* file)
 {
     {
@@ -816,7 +857,8 @@ void TCampaignResourceBonus::read(TAbstractFile* file)
 // The root's destructor, out of line. Nothing calls it - the `??_G` below
 // and both sibling destructors expand the single vptr store - but a plain
 // non-COMDAT body is emitted and kept regardless.
-VA(0x00484f40, 0x7) MAC_ADDRESS(0x093120, 0x48)
+VA(0x00484f40, 0x7)
+MAC_ADDRESS(0x093120, 0x48)
 TCampaignStartOption::~TCampaignStartOption()
 {
 }
@@ -830,7 +872,8 @@ VA_COMPGEN(0x00484f50, 0x23, SCALAR_DELETING_DTOR, TCampaignStartOption)
 // running crossover slot as soon as the scenario carries anything to carry
 // over - a crossover artifact, a hero placeholder, or a positive status for
 // this option's own player - and -1 otherwise.
-VA(0x00484f80, 0x7F) MAC_ADDRESS(0x093168, 0xc4)
+VA(0x00484f80, 0x7F)
+MAC_ADDRESS(0x093168, 0xc4)
 int TCampaignStartOption::slot5(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
@@ -848,7 +891,8 @@ int TCampaignStartOption::slot5(
 // as a prerequisite must already be completed, and then one of the option's
 // own choices must answer slot 5 with the value asked about. An option with
 // no choices at all is asked with -1.
-VA(0x00485000, 0x8B) MAC_ADDRESS(0x09322c, 0xd4)
+VA(0x00485000, 0x8B)
+MAC_ADDRESS(0x09322c, 0xd4)
 bool TCampaignStartOption::slot12(
     const TCampaignBrief::ScenarioStruct* scenario, int value) const
 {
@@ -868,7 +912,8 @@ bool TCampaignStartOption::slot12(
 }
 
 // Slot 7, inherited unchanged by all three concrete options.
-VA(0x00485090, 0x6) MAC_ADDRESS(0x093300, 0x8)
+VA(0x00485090, 0x6)
+MAC_ADDRESS(0x093300, 0x8)
 int TCampaignStartOption::slot7(int which) const
 {
     return -1;
@@ -876,7 +921,8 @@ int TCampaignStartOption::slot7(int which) const
 
 // The bonus list's own destructor: every element is deleted through
 // TCampaignBonus's virtual destructor, then the vector's own teardown.
-VA(0x004850a0, 0x8E) MAC_ADDRESS(0x093308, 0xd0)
+VA(0x004850a0, 0x8E)
+MAC_ADDRESS(0x093308, 0xd0)
 TCampaignStartBonusOption::~TCampaignStartBonusOption()
 {
     for (unsigned int i = 0; i < m_bonuses.size(); ++i)
@@ -885,19 +931,22 @@ TCampaignStartBonusOption::~TCampaignStartBonusOption()
 
 VA_COMPGEN(0x00485130, 0x21, SCALAR_DELETING_DTOR, TCampaignStartBonusOption)
 
-VA(0x00485160, 0x13) MAC_ADDRESS(0x0933d8, 0x8)
+VA(0x00485160, 0x13)
+MAC_ADDRESS(0x0933d8, 0x8)
 int TCampaignStartBonusOption::getCount() const
 {
     return m_bonuses.size();
 }
 
-VA(0x00485180, 0x6) MAC_ADDRESS(0x0933e0, 0x8)
+VA(0x00485180, 0x6)
+MAC_ADDRESS(0x0933e0, 0x8)
 int TCampaignStartBonusOption::getPlayer(int which) const
 {
     return m_player;
 }
 
-VA(0x00485190, 0x1B0) MAC_ADDRESS(0x0933e8, 0x260)
+VA(0x00485190, 0x1B0)
+MAC_ADDRESS(0x0933e8, 0x260)
 void TCampaignStartBonusOption::read(TAbstractFile* file)
 {
     int count;
@@ -948,12 +997,14 @@ void TCampaignStartBonusOption::read(TAbstractFile* file)
 // address, which every derived vftable's slot 0 points at.
 VA_COMPGEN(0x00485340, 0x21, SCALAR_DELETING_DTOR, TCampaignSpellBonus)
 
-VA(0x00485370, 0x7) MAC_ADDRESS(0x091df4, 0x48)
+VA(0x00485370, 0x7)
+MAC_ADDRESS(0x091df4, 0x48)
 TCampaignBonus::~TCampaignBonus()
 {
 }
 
-VA(0x00485380, 0x32) MAC_ADDRESS(0x0936a8, 0x58)
+VA(0x00485380, 0x32)
+MAC_ADDRESS(0x0936a8, 0x58)
 void TCampaignStartBonusOption::apply(void* scenario)
 {
     std::vector<TCampaignBonus*>& bonuses = m_bonuses;
@@ -964,33 +1015,38 @@ void TCampaignStartBonusOption::apply(void* scenario)
 
 // The town every building bonus is bound to is the map header's own main
 // town type for this option's player.
-VA(0x004853c0, 0x46) MAC_ADDRESS(0x093700, 0x8c)
+VA(0x004853c0, 0x46)
+MAC_ADDRESS(0x093700, 0x8c)
 void TCampaignStartBonusOption::setTown(CMapHeaderData* header)
 {
     for (unsigned int i = 0; i < m_bonuses.size(); ++i)
         m_bonuses[i]->setTown(header->m_playerSlotAttributes[m_player].m_mainTownType);
 }
 
-VA(0x00485410, 0x15) MAC_ADDRESS(0x09378c, 0x38)
+VA(0x00485410, 0x15)
+MAC_ADDRESS(0x09378c, 0x38)
 int TCampaignStartBonusOption::getIconIndex(int which) const
 {
     return m_bonuses[which]->getIconIndex();
 }
 
-VA(0x00485430, 0x15) MAC_ADDRESS(0x0937c4, 0x38)
+VA(0x00485430, 0x15)
+MAC_ADDRESS(0x0937c4, 0x38)
 bool TCampaignStartBonusOption::isBuildingBonus(int which) const
 {
     return m_bonuses[which]->isBuildingBonus();
 }
 
-VA(0x00485450, 0x15) MAC_ADDRESS(0x0937fc, 0x38)
+VA(0x00485450, 0x15)
+MAC_ADDRESS(0x0937fc, 0x38)
 const char* TCampaignStartBonusOption::getIconDefName(void* scenario,
                                                      int which) const
 {
     return m_bonuses[which]->getIconDefName();
 }
 
-VA(0x00485470, 0x27) MAC_ADDRESS(0x093834, 0x44)
+VA(0x00485470, 0x27)
+MAC_ADDRESS(0x093834, 0x44)
 std::string TCampaignStartBonusOption::getText(void* scenario,
                                                int which) const
 {
@@ -998,8 +1054,8 @@ std::string TCampaignStartBonusOption::getText(void* scenario,
 }
 
 // --- the crossover-hero starting option (vftable 0x63dad8) ---
-
-VA(0x004854a0, 0x12) MAC_ADDRESS(0x0938cc, 0x8)
+VA(0x004854a0, 0x12)
+MAC_ADDRESS(0x0938cc, 0x8)
 int TCampaignStartCrossoverOption::getCount() const
 {
     return m_choices.size();
@@ -1016,7 +1072,8 @@ hero* TCampaignStartCrossoverOption::getFirstCrossoverHero(
     return pool.size() != 0 ? &pool[0] : 0;
 }
 
-VA(0x004854c0, 0x6E) MAC_ADDRESS(0x0938d4, 0x48)
+VA(0x004854c0, 0x6E)
+MAC_ADDRESS(0x0938d4, 0x48)
 const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
                                                           int which) const
 {
@@ -1041,7 +1098,8 @@ const char* TCampaignStartCrossoverOption::getIconDefName(void* campaignRecord,
 // lookup and constructs the formatted string directly in the return slot.
 // A named string result adds two CodeWarrior copies absent from that body.
 // The old flattened source gave 86.04%, but omitted both Mac helpers.
-VA(0x00485530, 0x260) MAC_ADDRESS(0x093924, 0x1cc)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
+VA(0x00485530, 0x260)
+MAC_ADDRESS(0x093924, 0x1cc)  // anchor-callee(CampaignHeaderStruct::Load 0x488880), retail-only
 std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
                                                    int which) const
 {
@@ -1061,7 +1119,8 @@ std::string TCampaignStartCrossoverOption::getText(void* campaignRecord,
 
 // The player position the pool is handed to. Slot 12 asks with -1 when the
 // option carries no choices at all, which reads the first slot instead.
-VA(0x00485790, 0x17) MAC_ADDRESS(0x093af0, 0x20)
+VA(0x00485790, 0x17)
+MAC_ADDRESS(0x093af0, 0x20)
 int TCampaignStartCrossoverOption::getPlayer(int which) const
 {
     if (which < 0)
@@ -1069,7 +1128,8 @@ int TCampaignStartCrossoverOption::getPlayer(int which) const
     return m_choices[which].m_player;
 }
 
-VA(0x004857b0, 0x1F4) MAC_ADDRESS(0x093b10, 0xc0)
+VA(0x004857b0, 0x1F4)
+MAC_ADDRESS(0x093b10, 0xc0)
 void TCampaignStartCrossoverOption::read(TAbstractFile* file)
 {
     int count;
@@ -1094,14 +1154,16 @@ void TCampaignStartCrossoverOption::read(TAbstractFile* file)
     }
 }
 
-VA(0x004859b0, 0x24) MAC_ADDRESS(0x093bd8, 0x34)
+VA(0x004859b0, 0x24)
+MAC_ADDRESS(0x093bd8, 0x34)
 int TCampaignStartCrossoverOption::slot5(
     const TCampaignBrief::ScenarioStruct* scenario, int which) const
 {
     return g_game->m_campaign.m_mapScores[m_choices[which].m_scenario].m_index;
 }
 
-VA(0x004859e0, 0x44) MAC_ADDRESS(0x093c0c, 0x90)
+VA(0x004859e0, 0x44)
+MAC_ADDRESS(0x093c0c, 0x90)
 bool TCampaignStartCrossoverOption::slot12(
     const TCampaignBrief::ScenarioStruct* scenario, int value) const
 {
@@ -1114,7 +1176,8 @@ bool TCampaignStartCrossoverOption::slot12(
 // Slot 1 for BOTH crossover options - `mov al,1; ret 4`, and /OPT:ICF folds
 // the two identical bodies onto this one address, so only this copy carries
 // the claim (the starting-hero twin below is defined and left unclaimed).
-VA(0x00485a30, 0x5) MAC_ADDRESS(0x0938c4, 0x8)
+VA(0x00485a30, 0x5)
+MAC_ADDRESS(0x0938c4, 0x8)
 bool TCampaignStartCrossoverOption::isBuildingBonus(int which) const
 {
     return true;
@@ -1127,13 +1190,15 @@ bool TCampaignStartHeroOption::isBuildingBonus(int which) const
     return true;
 }
 
-VA(0x00485a40, 0x13) MAC_ADDRESS(0x093ca4, 0x8)
+VA(0x00485a40, 0x13)
+MAC_ADDRESS(0x093ca4, 0x8)
 int TCampaignStartHeroOption::getCount() const
 {
     return m_choices.size();
 }
 
-VA(0x00485a60, 0x30) MAC_ADDRESS(0x093cac, 0x3c)
+VA(0x00485a60, 0x30)
+MAC_ADDRESS(0x093cac, 0x3c)
 const char* TCampaignStartHeroOption::getIconDefName(void* campaign,
                                                      int which) const
 {
@@ -1142,7 +1207,8 @@ const char* TCampaignStartHeroOption::getIconDefName(void* campaign,
     return g_heroTraits[m_choices[which].m_hero].m_largePortraitName;
 }
 
-VA(0x00485a90, 0xBA) MAC_ADDRESS(0x093cf0, 0xa4)
+VA(0x00485a90, 0xBA)
+MAC_ADDRESS(0x093cf0, 0xa4)
 std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
 {
     if (m_choices[which].m_hero == -1)
@@ -1151,7 +1217,8 @@ std::string TCampaignStartHeroOption::getText(void* campaign, int which) const
                          g_heroTraits[m_choices[which].m_hero].m_defaultName);
 }
 
-VA(0x00485b50, 0x10) MAC_ADDRESS(0x093d94, 0x10)
+VA(0x00485b50, 0x10)
+MAC_ADDRESS(0x093d94, 0x10)
 int TCampaignStartHeroOption::getPlayer(int which) const
 {
     return m_choices[which].m_player;
@@ -1166,7 +1233,8 @@ int TCampaignStartHeroOption::getPlayer(int which) const
 // retail's EBX file and ESI receiver bindings and matches all 26 blocks
 // exactly. The erase(begin, end) spelling had the same behavior, branches and
 // call multiset but assigned the callee-saved roles differently (93.9951%).
-VA(0x00485b60, 0x1FB) MAC_ADDRESS(0x093da4, 0xe0)  // anchor-vtable (0x63db0c+0x24), retail-only
+VA(0x00485b60, 0x1FB)
+MAC_ADDRESS(0x093da4, 0xe0)  // anchor-vtable (0x63db0c+0x24), retail-only
 void TCampaignStartHeroOption::read(TAbstractFile* file)
 {
     int count;
@@ -1192,13 +1260,15 @@ void TCampaignStartHeroOption::read(TAbstractFile* file)
     }
 }
 
-VA(0x00485d60, 0x11) MAC_ADDRESS(0x093e84, 0x14)
+VA(0x00485d60, 0x11)
+MAC_ADDRESS(0x093e84, 0x14)
 int TCampaignStartHeroOption::slot7(int which) const
 {
     return m_choices[which].m_hero;
 }
 
-VA(0x00485d80, 0x3) MAC_ADDRESS(0x091f94, 0x4)
+VA(0x00485d80, 0x3)
+MAC_ADDRESS(0x091f94, 0x4)
 void TCampaignBonus::setTown(int)
 {
 }
@@ -1230,7 +1300,8 @@ void TCampaignBonus::setTown(int)
 // the string; the loop then reuses count, with separate conditional arms.
 // That lifetime reproduces its r31/r30/r29 count/remaining/destination roles
 // and branch sequence; Windows remains 95.1988% with the same calls.
-VA(0x00485d90, 0x1BB) MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
+VA(0x00485d90, 0x1BB)
+MAC_ADDRESS(0x093f48, 0xe8)  // anchor-caller(ScenarioStruct::Read +0x2b), retail-only
 std::string readLengthPrefixedString(TAbstractFile* infile)
 {
     unsigned int count;
@@ -1257,7 +1328,8 @@ std::string readLengthPrefixedString(TAbstractFile* infile)
     return text;
 }
 
-VA(0x00485f50, 0x8B) MAC_ADDRESS(0x094030, 0xa8)
+VA(0x00485f50, 0x8B)
+MAC_ADDRESS(0x094030, 0xa8)
 TCampaignBrief::ScenarioStruct::ScenarioStruct()
 {
     m_prologue = 0;
@@ -1266,7 +1338,8 @@ TCampaignBrief::ScenarioStruct::ScenarioStruct()
     memset(m_heroesStatus, 0, sizeof(m_heroesStatus));
 }
 
-VA(0x00485fe0, 0x12C) MAC_ADDRESS(0x09413c, 0x10c)
+VA(0x00485fe0, 0x12C)
+MAC_ADDRESS(0x09413c, 0x10c)
 TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 {
     delete m_prologue;
@@ -1294,7 +1367,8 @@ TCampaignBrief::ScenarioStruct::~ScenarioStruct()
 // destination before the copy 98.46. Do not manufacture a spill carrier.
 // The major recovery still depends on game.h's HeroExtra pads not being
 // members: retail's generated assignment skips every one of them.
-VA(0x00486110, 0x32F) MAC_ADDRESS(0x094248, 0x290)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
+VA(0x00486110, 0x32F)
+MAC_ADDRESS(0x094248, 0x290)  // anchor-caller(DoPreLoadCustomization +0x117), retail-only
 void game::rehomeCampaignHeroSetup(int heroId)
 {
     HeroExtra& setup = m_heroSetup[heroId];
@@ -1318,8 +1392,9 @@ void game::rehomeCampaignHeroSetup(int heroId)
         newSetup.m_portraitNumber = newHeroId;
 }
 
+VA(0x00486440, 0x145)
 DC_ADDRESS(0x07d22c, 0x148)
-VA(0x00486440, 0x145) MAC_ADDRESS(0x0944d8, 0x170)  // ; MAC_ABSTRACTION_FROM(tokens1:fb3d7c91633f,15.4891): canonical getCrossoverHeroes owns both indexed pool queries; private pool storage, availability writes and rehome helper calls are preserved.
+MAC_ADDRESS(0x0944d8, 0x170)  // ; MAC_ABSTRACTION_FROM(tokens1:fb3d7c91633f,15.4891): canonical getCrossoverHeroes owns both indexed pool queries; private pool storage, availability writes and rehome helper calls are preserved.
 void SCampaign::doPreLoadCustomization()
 {
     unsigned int poolIndex;
@@ -1352,7 +1427,8 @@ void SCampaign::doPreLoadCustomization()
 // These lifetimes and ordering reproduce all Windows instructions (100%).
 // CodeWarrior emits default-argument constructor glue for savedArtifacts[].
 MAC_COMPGEN_ADDRESS(0x09513c, 0x10, CLASS_CTOR, type_artifact)
-VA(0x00486590, 0xA84) MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
+VA(0x00486590, 0xA84)
+MAC_ADDRESS(0x094648, 0xaf4)  // two calls from ScenarioStruct's 0x487290 map setup
 void TCampaignBrief::ScenarioStruct::initializeCrossoverHero(
     HeroPlaceholderData* placeholder, hero* sourceHero)
 {
@@ -1581,7 +1657,8 @@ static void offerArtifactToPlayerHeroes(const type_artifact& artifact,
 // Mac stores the packed point's x/y/z fields in order. Expanding the point
 // constructor into three field assignments drops Windows from 93.5215% to
 // 88.94%; preserve the canonical constructor call.
-VA(0x00487020, 0x263) MAC_ADDRESS(0x095254, 0x300)  // anchor-caller(0x487290's two placeholder loops), retail-only
+VA(0x00487020, 0x263)
+MAC_ADDRESS(0x095254, 0x300)  // anchor-caller(0x487290's two placeholder loops), retail-only
 void TCampaignBrief::ScenarioStruct::placeStartingHero(
     HeroPlaceholderData* placeholder)
 {
@@ -1685,7 +1762,8 @@ hero* SCampaign::findCrossoverHero(int heroId)
 // locals preserves their lifetime across the pass and restores Windows's
 // separate slots and 0x4c frame. All instructions and CFG blocks now match;
 // the inner-loop declarations had reused point storage (99.8262%).
-VA(0x00487290, 0x664) MAC_ADDRESS(0x095554, 0x450)  // anchor-caller(game::NewMap +0x7ce), retail-only
+VA(0x00487290, 0x664)
+MAC_ADDRESS(0x095554, 0x450)  // anchor-caller(game::NewMap +0x7ce), retail-only
 void TCampaignBrief::ScenarioStruct::placeCrossoverHeroes()
 {
     SCampaign* campaign = &g_game->m_campaign;
@@ -1808,7 +1886,8 @@ static void collectCrossoverArtifacts(std::vector<type_artifact>& artifacts,
 // this also makes the Windows body exact. Retail's
 // ICF label names vector<type_dialog_resource>::insert at the wrapper address;
 // the source-correct vector<type_artifact> specialization resolves there too.
-VA(0x00487900, 0x2CD) MAC_ADDRESS(0x095b50, 0x1d0)  // anchor-caller(game::NewMap +0x5cb), retail-only
+VA(0x00487900, 0x2CD)
+MAC_ADDRESS(0x095b50, 0x1d0)  // anchor-caller(game::NewMap +0x5cb), retail-only
 void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 {
     SCampaign* campaign = &g_game->m_campaign;
@@ -1844,7 +1923,8 @@ void TCampaignBrief::ScenarioStruct::giveCrossoverArtifacts()
 
 // Complete-only. Seeks the campaign stream to this scenario's map data
 // and reads the map header out of a gzip-inflating view of it.
-VA(0x00487d30, 0x96) MAC_ADDRESS(0x095d28, 0x9c)
+VA(0x00487d30, 0x96)
+MAC_ADDRESS(0x095d28, 0x9c)
 void TCampaignBrief::ScenarioStruct::loadMapHeader(
     std::streambuf* stream, NewSMapHeader* mapHeader, int which)
 {
@@ -1856,9 +1936,11 @@ void TCampaignBrief::ScenarioStruct::loadMapHeader(
 
 VA_COMPGEN(0x00487dd0, 0x23, SCALAR_DELETING_DTOR, TAbstractFile)
 
-VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, TStreamBufFile) MAC_COMPGEN_ADDRESS(0x095dc4, 0x54, IMPLICIT_DTOR, TStreamBufFile)
+VA_COMPGEN(0x00487e00, 0x07, IMPLICIT_DTOR, TStreamBufFile)
+MAC_COMPGEN_ADDRESS(0x095dc4, 0x54, IMPLICIT_DTOR, TStreamBufFile)
 
-VA(0x00487e10, 0x2D) MAC_ADDRESS(0x095e74, 0x34)
+VA(0x00487e10, 0x2D)
+MAC_ADDRESS(0x095e74, 0x34)
 void TCampaignBrief::ScenarioStruct::markCrossoverHeroes(bool* wanted)
 {
     for (unsigned int placeholderIndex = 0;
@@ -1978,7 +2060,8 @@ void TCampaignBrief::MapTextStruct::read(TAbstractFile* infile)
 // in readPackedBits reproduces every other decision near cb 650..710; the
 // copy loop's legacy dereference still differs. DC and Mac show no extra
 // accessor calls in this Complete-only reader.
-VA(0x00487e40, 0x586) MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
+VA(0x00487e40, 0x586)
+MAC_ADDRESS(0x0960b0, 0x6f4)  // anchor-caller(CampaignHeaderStruct::Load +0x379), retail-only
 void TCampaignBrief::ScenarioStruct::read(TAbstractFile* infile,
                                           int numScenarios,
                                           int campaignVersion)
@@ -2073,12 +2156,17 @@ TCampaignStartHeroOption::TCampaignStartHeroOption()
 }
 
 VA_COMPGEN(0x00488400, 0x21, SCALAR_DELETING_DTOR, TCampaignStartCrossoverOption)
+
 VA_COMPGEN(0x00488430, 0x21, SCALAR_DELETING_DTOR, TCampaignStartHeroOption)
 
-VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption) MAC_COMPGEN_ADDRESS(0x099bbc, 0x7c, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
-VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption) MAC_COMPGEN_ADDRESS(0x099b40, 0x7c, IMPLICIT_DTOR, TCampaignStartHeroOption)
+VA_COMPGEN(0x00488460, 0x2C, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
+MAC_COMPGEN_ADDRESS(0x099bbc, 0x7c, IMPLICIT_DTOR, TCampaignStartCrossoverOption)
 
-VA(0x004884c0, 0x103) MAC_ADDRESS(0x0967f8, 0x13c)  // CampaignHeaderStruct::StartScenario sole caller
+VA_COMPGEN(0x00488490, 0x2C, IMPLICIT_DTOR, TCampaignStartHeroOption)
+MAC_COMPGEN_ADDRESS(0x099b40, 0x7c, IMPLICIT_DTOR, TCampaignStartHeroOption)
+
+VA(0x004884c0, 0x103)
+MAC_ADDRESS(0x0967f8, 0x13c)  // CampaignHeaderStruct::StartScenario sole caller
 void TCampaignBrief::ScenarioStruct::startScenario(
     std::streambuf* stream, int option)
 {
@@ -2100,7 +2188,8 @@ void TCampaignBrief::ScenarioStruct::startScenario(
 
 // Complete's constructor and destructor live before their callers in this
 // TU. VC6 expands them in selectCampaign; other TUs retain source calls.
-VA(0x004885d0, 0xCB) MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
+VA(0x004885d0, 0xCB)
+MAC_ADDRESS(0x096934, 0xb0)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
     const char* filename)
 {
@@ -2115,8 +2204,9 @@ TCampaignBrief::CampaignHeaderStruct::CampaignHeaderStruct(
 // constructor 0x459362 and destructor 0x45b05b) retains the call. With the
 // body defined in campaignbrief.cpp VC6 expands it into ~TCampaignBrief
 // (62.61%); owning it here restores that destructor and selectCampaign.
+VA(0x004886a0, 0x132)
 DC_ADDRESS(0x05ade8, 0x28)
-VA(0x004886a0, 0x132) MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
+MAC_ADDRESS(0x096a68, 0x94)  // retained body and cross-TU callers
 TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 {
     clearScenarios();
@@ -2124,7 +2214,8 @@ TCampaignBrief::CampaignHeaderStruct::~CampaignHeaderStruct()
 
 // Complete-only; also reached from the custom-campaign list scanner
 // (0x482fd0 family). Name provisional.
-VA(0x004887e0, 0x30) MAC_ADDRESS(0x096b74, 0x6c)
+VA(0x004887e0, 0x30)
+MAC_ADDRESS(0x096b74, 0x6c)
 void TCampaignBrief::CampaignHeaderStruct::freeData()
 {
     if (m_stream) {
@@ -2137,7 +2228,8 @@ void TCampaignBrief::CampaignHeaderStruct::freeData()
     }
 }
 
-VA(0x00488810, 0x32) MAC_ADDRESS(0x096c64, 0x74)
+VA(0x00488810, 0x32)
+MAC_ADDRESS(0x096c64, 0x74)
 bool TCampaignBrief::CampaignHeaderStruct::loadScenario(
     int which, NewSMapHeader* mapHeader)
 {
@@ -2165,7 +2257,8 @@ void TCampaignBrief::CampaignHeaderStruct::markRequiredCampaignHeroes(
 
 // Complete-only; the 0x482fd0-family caller sizes the campaign list with
 // it. Name provisional.
-VA(0x00488850, 0x2F) MAC_ADDRESS(0x096d64, 0x8c)
+VA(0x00488850, 0x2F)
+MAC_ADDRESS(0x096d64, 0x8c)
 int TCampaignBrief::CampaignHeaderStruct::getNumMaps() const
 {
     int numMaps = 0;
@@ -2234,7 +2327,8 @@ static void applyCampaignMapHeader(
             mapHeader.m_playerSlotAttributes[slotIndex].m_defaultPlaceholders);
 }
 
-VA(0x00488880, 0x5D6) MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
+VA(0x00488880, 0x5D6)
+MAC_ADDRESS(0x096df0, 0x5ac)  // anchor-caller(TCampaignBrief ctor), retail-only
 bool TCampaignBrief::CampaignHeaderStruct::load()
 {
     if (m_stream)
@@ -2328,7 +2422,8 @@ bool TCampaignBrief::CampaignHeaderStruct::load()
 // destructor stays at 0x485fe0, then flags&1 gates operator delete.
 VA_COMPGEN(0x00488eb0, 0x21, SCALAR_DELETING_DTOR, ScenarioStruct)
 
-VA(0x00488ee0, 0x1D) MAC_ADDRESS(0x097548, 0x44)
+VA(0x00488ee0, 0x1D)
+MAC_ADDRESS(0x097548, 0x44)
 void TCampaignBrief::CampaignHeaderStruct::startMusic()
 {
     g_soundManager->startMP3(g_campaignMusicTraits[m_campaignMusic].m_name, 0, 1);
@@ -2350,7 +2445,8 @@ bool TCampaignBrief::ScenarioStruct::prerequisitesMet() const
 // Complete-only. A scenario without map data is marked unavailable and
 // already completed; otherwise every prerequisite scenario must be
 // completed in the running campaign's score table.
-VA(0x00488f00, 0xAC) MAC_ADDRESS(0x09761c, 0xa8)
+VA(0x00488f00, 0xAC)
+MAC_ADDRESS(0x09761c, 0xa8)
 void TCampaignBrief::CampaignHeaderStruct::getAvailableScenarios(
     unsigned char* available) const
 {
@@ -2375,7 +2471,8 @@ void TCampaignBrief::ScenarioStruct::playText(bool epilogue)
         text->play();
 }
 
-VA(0x00488fb0, 0x528) MAC_ADDRESS(0x097700, 0x6bc)  // PlayScenarioPrologue callee + music-cell reader, retail-only
+VA(0x00488fb0, 0x528)
+MAC_ADDRESS(0x097700, 0x6bc)  // PlayScenarioPrologue callee + music-cell reader, retail-only
 void TCampaignBrief::MapTextStruct::play()
 {
     // The direct speech->dispose() below is Windows byte-exact. Replacing it
@@ -2607,7 +2704,8 @@ void TCampaignBrief::CampaignHeaderStruct::playScenarioText(int which, bool epil
     m_scenarios[which]->playText(epilogue);
 }
 
-VA(0x004894e0, 0x1D) MAC_ADDRESS(0x097e20, 0x30)
+VA(0x004894e0, 0x1D)
+MAC_ADDRESS(0x097e20, 0x30)
 void TCampaignBrief::CampaignHeaderStruct::startScenario(
     int which, int option)
 {
@@ -2659,8 +2757,9 @@ void CampaignScenarioInfo::write(TAbstractFile* outfile) const
 // TCampaignWindow, SavedGameHeader and game. Mac places it after
 // CampaignScenarioInfo::write and before the generated member teardown/
 // selectCampaign cluster. The older DC class used a header constructor.
+VA(0x00489500, 0x88)
 DC_ADDRESS(0x0bcd90, 0x70)
-VA(0x00489500, 0x88) MAC_ADDRESS(0x098064, 0xe8)
+MAC_ADDRESS(0x098064, 0xe8)
 SCampaign::SCampaign()
 {
     m_isCheater = 0;
@@ -2673,7 +2772,8 @@ SCampaign::SCampaign()
     memset(m_campaignCompleted, 0, sizeof(m_campaignCompleted));
 }
 
-VA(0x00489590, 0x233) MAC_ADDRESS(0x098380, 0xc8)
+VA(0x00489590, 0x233)
+MAC_ADDRESS(0x098380, 0xc8)
 void SCampaign::selectCampaign(int campaignIndex, const char* filename)
 {
     m_mapScores.clear();
@@ -2702,8 +2802,9 @@ const int g_campaignMapOrdinal07 = 7;
 
 // Complete retains this vector scan and oldmain calls it across translation
 // units. The older Dreamcast inline header body scans fixed arrays instead.
+VA(0x004897d0, 0x43)
 DC_ADDRESS(0x0e6ef8, 0x3a)
-VA(0x004897d0, 0x43) MAC_ADDRESS(0x098448, 0x3c)
+MAC_ADDRESS(0x098448, 0x3c)
 bool SCampaign::campaignComplete()
 {
     for (unsigned int i = 0; i < m_mapScores.size(); ++i) {
@@ -2729,7 +2830,8 @@ bool SCampaign::campaignComplete()
 // homes. Signed index and late bare declaration are flat; naming the score
 // row loses ground. The register model's heroId/pool declaration swap also
 // worsens the residual, so retain the native acquisition order.
-VA(0x00489820, 0x600) MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
+VA(0x00489820, 0x600)
+MAC_ADDRESS(0x098484, 0x4b0)  // anchor-caller(oldmain end-of-campaign arm), retail-only
 void SCampaign::completeCurrentMap(
     const TCampaignBrief::CampaignHeaderStruct* header)
 {
@@ -2855,8 +2957,8 @@ void SCampaign::completeCurrentMap(
 // membership call. Pointer/reference results, signed/unsigned indices and
 // marker constness do not remove it. Mac 0x98a0c/0x98a14 identifies the vector
 // lookup, but supplies no independent game helper beyond that operation.
-
-VA(0x00489e20, 0x450) MAC_ADDRESS(0x098934, 0x248)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
+VA(0x00489e20, 0x450)
+MAC_ADDRESS(0x098934, 0x248)  // anchor-caller(CompleteCurrentMap +0x5e8), retail-only
 void SCampaign::pruneCrossoverHeroes(const TCampaignBrief::CampaignHeaderStruct* header)
 {
     bool wanted[game::HERO_COUNT];
@@ -2925,14 +3027,16 @@ int SCampaign::findLatestCrossoverScenario(int slot) const
     return source;
 }
 
-VA(0x0048a270, 0x2F) MAC_ADDRESS(0x098bf0, 0x34)
+VA(0x0048a270, 0x2F)
+MAC_ADDRESS(0x098bf0, 0x34)
 void SCampaign::playScenarioPrologue(TCampaignBrief::CampaignHeaderStruct* header)
 {
     int map = m_currentMap;
     header->playScenarioText(map, false);
 }
 
-VA(0x0048a2a0, 0x70) MAC_ADDRESS(0x098c24, 0x8c)
+VA(0x0048a2a0, 0x70)
+MAC_ADDRESS(0x098c24, 0x8c)
 void SCampaign::playScenarioEpilogue(TCampaignBrief::CampaignHeaderStruct* header)
 {
     int map = m_currentMap;
@@ -3028,7 +3132,8 @@ void SCampaign::readAssignedHeroes(TAbstractFile* infile, int count)
 // expansion (96.18% -> 99.00%) while retaining the canonical pool accessors.
 // The record boundary and name are inferred; neither build retains a separate
 // reader body. Reading the count inside that helper leaves a Windows call.
-VA(0x0048a310, 0xB1E) MAC_ADDRESS(0x098ec8, 0x6d4)  // SavedGameHeader::Load caller + member/helper graph
+VA(0x0048a310, 0xB1E)
+MAC_ADDRESS(0x098ec8, 0x6d4)  // SavedGameHeader::Load caller + member/helper graph
 void SCampaign::load(TAbstractFile* infile, int saveVersion)
 {
     int i;
@@ -3148,7 +3253,8 @@ void SCampaign::load(TAbstractFile* infile, int saveVersion)
 // then constructs 18 equipped and 64 backpack artifacts. That is exactly
 // declaration-order base/member construction; there is no custom body.
 // SCampaign::Load passes its address to the 16-element constructor iterator.
-VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero) MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
+VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero)
+MAC_COMPGEN_ADDRESS(0x09959c, 0x70, CLASS_CTOR, LegacyCampaignHero)
 
 // Complete campaign serialization; no SCampaign::Save counterpart appears
 // in the Dreamcast roster. Retail writes seven leading bytes, the campaign
@@ -3177,7 +3283,8 @@ VA_COMPGEN(0x0048AE30, 0x5D, CLASS_CTOR, LegacyCampaignHero) MAC_COMPGEN_ADDRESS
 // 99.9858%. Extra braces around the three runs were also byte-flat. The
 // earlier shared-counter probe without the recovered references was
 // 78.7965%; that result did not exclude the source reconstruction above.
-VA(0x0048ae90, 0x370) MAC_ADDRESS(0x09960c, 0x3b4)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
+VA(0x0048ae90, 0x370)
+MAC_ADDRESS(0x09960c, 0x3b4)  // link-order successor of LegacyCampaignHero's ctor; SCampaign::Load's mirror
 void SCampaign::save(TAbstractFile* outfile)
 {
     unsigned int index;
@@ -3278,12 +3385,19 @@ void SCampaign::save(TAbstractFile* outfile)
 // nested-element types are independently fixed by the +0x5c/+0x3c/+0x4c
 // member layouts and by the caller's 0x14/0x492/0x10/8-byte strides.
 VA_COMPGEN(0x004013D0, 0x28, VECTOR_CONSTRUCTOR_ITERATOR, LegacyCampaignHero)
+
 VA_COMPGEN(0x00404140, 0x03, VECTOR_DESTROY, type_artifact)
+
 VA_COMPGEN(0x0048B440, 0x21, VECTOR_SIZE, CampaignScenarioInfo)
+
 VA_COMPGEN(0x0048B470, 0x23, VECTOR_SIZE, hero)
+
 VA_COMPGEN(0x004AF4E0, 0x13, VECTOR_SIZE, hero_vector)
+
 VA_COMPGEN(0x0048C270, 0x285, VECTOR_INSERT, hero_vector)
+
 VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
+
 // ...and the SINGLE-element arm of the same two overload groups, 387 bytes
 // each against the count arms' 645. Which element type each belongs to is
 // read off its own named callees: 0x48c0e0 calls _Construct<vector<hero>> at
@@ -3292,16 +3406,24 @@ VA_COMPGEN(0x0048C7A0, 0x285, VECTOR_INSERT, type_artifact_vector)
 // against the object's two COMDATs, zipping by RVA against COFF order with
 // the 387-byte arm first on both sides.
 VA_COMPGEN(0x0048c0e0, 0x183, VECTOR_INSERT, hero_vector)
+
 VA_COMPGEN(0x0048c610, 0x183, VECTOR_INSERT, type_artifact_vector)
+
 VA_COMPGEN(0x0048CA30, 0x6A, VECTOR_ERASE, type_artifact_vector)
+
 VA_COMPGEN(0x0048CAE0, 0x2E4, VECTOR_INSERT, CampaignScenarioInfo)
+
 VA_COMPGEN(0x0048CDD0, 0x44, VECTOR_ERASE, CampaignScenarioInfo)
+
 VA_COMPGEN(0x0048D060, 0x331, VECTOR_INSERT, hero)
+
 VA_COMPGEN(0x0048D3A0, 0x6D, VECTOR_ERASE, hero)
+
 VA_COMPGEN(0x0054D330, 0x246, VECTOR_INSERT, type_artifact)
 
+VA(0x0048b200, 0x80)
 DC_ADDRESS(0x07d374, 0x4a)
-VA(0x0048b200, 0x80) MAC_ADDRESS(0x0999c0, 0x74)
+MAC_ADDRESS(0x0999c0, 0x74)
 int SCampaign::getScore() const
 {
     int totalScore = 0;
@@ -3319,8 +3441,9 @@ int SCampaign::getScore() const
     return ((totalScore + numScores / 2) / numScores) * 5;
 }
 
+VA(0x0048b280, 0x57)
 DC_ADDRESS(0x07d3c0, 0x60)
-VA(0x0048b280, 0x57) MAC_ADDRESS(0x099a34, 0x44)
+MAC_ADDRESS(0x099a34, 0x44)
 int SCampaign::getTotalTime() const
 {
     int totalTime = 0;
@@ -3333,7 +3456,8 @@ int SCampaign::getTotalTime() const
     return totalTime;
 }
 
-VA(0x0048b2e0, 0x8C) MAC_ADDRESS(0x099a78, 0xc8)
+VA(0x0048b2e0, 0x8C)
+MAC_ADDRESS(0x099a78, 0xc8)
 void SCampaign::applyBriefingChoice(int option)
 {
     m_briefingChoice = option;
@@ -3361,6 +3485,7 @@ VA_COMPGEN(0x0048C500, 0xA3, VECTOR_ERASE, hero_vector)
 // ScenarioStruct::PlaceCrossoverHeroes. Both bodies are byte-identical to
 // this compile's instruction stream.
 VA_COMPGEN(0x0048eec0, 0x3ED, STD_SORT_0, HeroPlaceholderData_HeroPlaceholderStronger)
+
 VA_COMPGEN(0x0048f630, 0x1AE, STD_SORT, HeroPlaceholderData_HeroPlaceholderStronger)
 
 VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
@@ -3369,7 +3494,9 @@ VA_COMPGEN(0x0048f7e0, 0x159, STD_SORT, hero_crossoverherostronger)
 VA_COMPGEN(0x0048f2b0, 0x333, STD_SORT_0, hero_crossoverherostronger)
 
 VA_COMPGEN(0x0048fa40, 0x1D7, STD_MEDIAN, hero_crossoverherostronger)
+
 VA_COMPGEN(0x0048f940, 0xF4, STD_UNGUARDED_INSERT, hero_crossoverherostronger)
+
 VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronger)
 
 // COMDAT pairing: bitset<145>::_Xran and bitset<8>::_Xran. Five byte-identical
@@ -3382,9 +3509,11 @@ VA_COMPGEN(0x0048fc20, 0x195, STD_UNGUARDED_PARTITION, hero_crossoverherostronge
 // compares against 0x81 (129) at all three of its callers and is claimed in
 // game.cpp. Recovered campaign readers now emit 129-bit members here too.
 VA_COMPGEN(0x0048d9a0, 0xCB, BITSET_XRAN, Bitset145)
+
 VA_COMPGEN(0x0048da70, 0xCB, BITSET_XRAN, Bitset8)
 
 VA_COMPGEN(0x0048d440, 0x3E, VECTOR_UCOPY, hero)
+
 VA_COMPGEN(0x0048d8d0, 0x38, VECTOR_UCOPY, type_artifact_vector)
 
 // COMDAT pairing: hero::copy_backward, mnemonic agreement 0.918.
@@ -3413,21 +3542,26 @@ VA_COMPGEN(0x0048c5b0, 0x53, VECTOR_DESTROY, hero_vector)
 // reference argument.
 VA_COMPGEN(0x0045ff30, 0x2C0, VECTOR_COPY_ASSIGN, hero)
 
-VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero) MAC_COMPGEN_ADDRESS(0x06bd4c, 0x3e4, IMPLICIT_COPY_CTOR, hero)
+VA_COMPGEN(0x00460850, 0x4B1, IMPLICIT_COPY_CTOR, hero)
+MAC_COMPGEN_ADDRESS(0x06bd4c, 0x3e4, IMPLICIT_COPY_CTOR, hero)
 
 VA_COMPGEN(0x004603a0, 0x355, STD_CONSTRUCT, hero)
 
 // --- basic_filebuf<char> and the <fstream> COMDAT block --------------------
-
 VA_COMPGEN(0x0048b4e0, 0x1E1, FILEBUF_OVERFLOW, char)
+
 VA_COMPGEN(0x0048b6d0, 0x1B0, FILEBUF_PBACKFAIL, char)
+
 VA_COMPGEN(0x0048b880, 0x30, FILEBUF_UNDERFLOW, char)
+
 VA_COMPGEN(0x0048b8b0, 0x1E9, FILEBUF_UFLOW, char)
 
 VA_COMPGEN(0x0048baa0, 0x86, FILEBUF_SEEKOFF, char)
+
 VA_COMPGEN(0x0048bb30, 0x188, FILEBUF_SEEKPOS, char)
 
 VA_COMPGEN(0x0048bcc0, 0x32, FILEBUF_SETBUF, char)
+
 VA_COMPGEN(0x0048bd00, 0x1B, FILEBUF_SYNC, char)
 
 // Slot 0 of the same vtable, which is what makes this one of the three
@@ -3443,6 +3577,7 @@ VA_COMPGEN(0x0048bea0, 0x58, STREAMBUF_INIT, char)
 // agreements 0.933 and 1.000. Both are reached from the campaign's
 // carry-over hero vector.
 VA_COMPGEN(0x0048ce20, 0x23, VECTOR_CAPACITY, hero)
+
 VA_COMPGEN(0x0048d410, 0x26, VECTOR_DESTROY, hero)
 
 VA_COMPGEN(0x0048ce50, 0x210, VECTOR_INSERT, hero)
@@ -3467,18 +3602,24 @@ VA_COMPGEN(0x00488e60, 0x4B, CLASS_CTOR, locale)
 // ScenarioStruct's deleting wrapper at 0x488eb0 expands in this TU.
 // The same native wrapper remains in campaignbrief, where its enrollment
 // lives; its ordinary destructor at 0x485fe0 remains owned by this file.
-
 VA_COMPGEN(0x0048d800, 0x19, CLASS_CTOR, locale)
 
 VA_COMPGEN(0x0048d860, 0x38, VECTOR_UCOPY, hero_vector)
+
 VA_COMPGEN(0x0048d8a0, 0x29, VECTOR_UFILL, hero_vector)
+
 VA_COMPGEN(0x0048d910, 0x29, VECTOR_UFILL, type_artifact_vector)
+
 VA_COMPGEN(0x0048dcc0, 0x285, STD_FILL, hero_vector)
+
 VA_COMPGEN(0x0048df50, 0x2C9, STD_COPY_BACKWARD, hero_vector)
+
 VA_COMPGEN(0x0048e4f0, 0x1A0, STD_FILL, type_artifact_vector)
+
 VA_COMPGEN(0x0048e690, 0x1B1, STD_COPY_BACKWARD, type_artifact_vector)
 
 VA_COMPGEN(0x0048eb60, 0x67, CLASS_CTOR, codecvt)
+
 VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 
 // The two starting-options records' own vector helpers, all four proved by
@@ -3487,8 +3628,11 @@ VA_COMPGEN(0x0048ec10, 0x18, CODECVT_DO_LENGTH, char)
 // option's _Ucopy folds onto vector<type_artifact>'s (same width) and only
 // its _Ufill survives as its own address.
 VA_COMPGEN(0x0048dba0, 0x31, VECTOR_UCOPY, TCampaignCrossoverChoice)
+
 VA_COMPGEN(0x0048dbe0, 0x28, VECTOR_UFILL, TCampaignCrossoverChoice)
+
 VA_COMPGEN(0x0048dc50, 0x2C, VECTOR_UFILL, TCampaignHeroChoice)
+
 VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 
 // ScenarioStruct::read's prerequisite append retains single-element insert
@@ -3504,11 +3648,14 @@ VA_COMPGEN(0x0048e9e0, 0xB, STD_CONSTRUCT, TCampaignCrossoverChoice)
 // push_back and direct bitset proxy assignment gives the best reader,
 // 84.92324%, and inlines these unchanged library bodies; their MAX stays 100%.
 VA_COMPGEN(0x0048bf00, 0x1AD, VECTOR_INSERT_SINGLE, unsigned_char)
+
 VA_COMPGEN(0x0048db40, 0x24, VECTOR_UCOPY, unsigned_char)
+
 // rmg_terrain emits a byte-identical _Ufill, but that body already represents
 // its distinct retained 0x5b8060. Do not steal that enrollment or manufacture
 // another copy to hide this consumer's remaining emission debt.
 VA_COMPGEN(0x0048db70, 0x24, VECTOR_UFILL, unsigned_char)
+
 VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 
 // --- the <fstream> facet block, claimed 2026-09-06 -------------------------
@@ -3517,6 +3664,7 @@ VA_COMPGEN(0x0048e9d0, 0x09, STD_CONSTRUCT, unsigned_char)
 // agreement against the object's own free COMDATs (0.885 and 0.887, and no
 // second candidate above 0.45 in either case):
 VA_COMPGEN(0x0048bd50, 0x14F, IMPLICIT_DTOR, basic_filebuf)
+
 VA_COMPGEN(0x0048d5a0, 0x22E, FILEBUF_INITCVT, char)
 
 VA_COMPGEN(0x0048d820, 0x3B, STREAMBUF_GETLOC, char)
@@ -3558,11 +3706,15 @@ VA_COMPGEN(0x0054ded0, 0x63, BITSET_SET, Bitset129)
 // `_Lockit` and registers _Tidy with atexit (`push 0x48ed50 / call
 // _atexit` at 0x48ecae is the link between the two rows).
 VA_COMPGEN(0x0048e8c0, 0x102, LOCALE_ADDFAC_CODECVT, char)
+
 VA_COMPGEN(0x0048ec60, 0x7B, TIDYFAC_CODECVT_SAVE, char)
+
 VA_COMPGEN(0x0048ed50, 0x92, TIDYFAC_CODECVT_TIDY, char)
 
 VA_COMPGEN(0x0048ebd0, 0x3, CODECVT_BASE_DO_ALWAYS_NOCONV, char)
+
 VA_COMPGEN(0x0048ebe0, 0x6, CODECVT_BASE_DO_ENCODING, char)
+
 VA_COMPGEN(0x0048ebf0, 0x1C, CODECVT_DO_IN, char)
 
 // ...and the facet's scalar deleting destructor, slot 0 of its vftable.

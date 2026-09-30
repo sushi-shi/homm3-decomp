@@ -104,6 +104,7 @@ public:
     void saveFizzleSourceX(int startX, int startY, int width, int height);
     void fizzleForwardX(int startX, int startY, int width, int height,
                         int fadeTime);
+
     // Original: heroWindowManager::SaveFizzleSource; WinMgr.h:181
     DC_ADDRESS(0x0230bc, 0x48)
     void saveFizzleSource(const SLimitData& limits)
@@ -111,6 +112,7 @@ public:
         saveFizzleSource(limits.m_minX, limits.m_minY,
                          limits.width(), limits.height());
     }
+
     // Original: heroWindowManager::FizzleForward; WinMgr.h:187
     DC_ADDRESS(0x023104, 0x50)
     void fizzleForward(const SLimitData& limits, int fadeTime)
@@ -118,7 +120,8 @@ public:
         fizzleForward(limits.m_minX, limits.m_minY,
                       limits.width(), limits.height(), fadeTime);
     }
-    // WinMgr.h:193..200 (dc 0x70af0/0x70b40) proves the const-reference
+
+    // DC WinMgr.h:193..200 proves the const-reference
     // rectangle overloads and their Width/Height calls. Complete uses the X
     // pixel path at the adventure-spell sites as well as in combat drawing.
     DC_ADDRESS(0x070af0, 0x50)
@@ -127,6 +130,7 @@ public:
         fizzleForwardX(limits.m_minX, limits.m_minY,
                        limits.width(), limits.height(), fadeTime);
     }
+
     DC_ADDRESS(0x070b40, 0x48)
     void saveFizzleSourceX(const SLimitData& limits)
     {

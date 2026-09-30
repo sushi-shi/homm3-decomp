@@ -13,6 +13,7 @@ public:
     char* m_data;
     TFileVersionInfo(const char* filename);
     ~TFileVersionInfo();
+
     // DC's source-visible wrapper. Complete expands it at the selection
     // window call site into the ProductVersion GetVersionInfo call.
     // Both DC publics return native bool (QBA_N / ABA_N), despite their

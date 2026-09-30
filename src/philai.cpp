@@ -130,8 +130,9 @@ static int onMySide(int whichPlayer)
     return g_game->onSameTeam(whichPlayer, g_netLocalGamePos);
 }
 
+VA(0x005242d0, 0x82)
 DC_ADDRESS(0x10d47c, 0x92)
-VA(0x005242d0, 0x82) MAC_ADDRESS(0x13d5b8, 0xc8)
+MAC_ADDRESS(0x13d5b8, 0xc8)
 void checkDoMain(int forceMouseCheck, int mouseOnly)
 {
     if (!(g_mainLoopInitFlags & 1)) {
@@ -162,14 +163,16 @@ static void showStatus()
 {
 }
 
+VA(0x00524360, 0x3)
 DC_ADDRESS(0x10d514, 0x4)
-VA(0x00524360, 0x3) MAC_ADDRESS(0x13d684, 0x4)
+MAC_ADDRESS(0x13d684, 0x4)
 philAI::philAI()
 {
 }
 
+VA(0x00524370, 0x73)
 DC_ADDRESS(0x10d640, 0x42)
-VA(0x00524370, 0x73) MAC_ADDRESS(0x13d804, 0xd4)
+MAC_ADDRESS(0x13d804, 0xd4)
 void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
 {
     if (currentHero->m_owner != ourGarrison->m_playerOwner)
@@ -190,8 +193,9 @@ void aiEnterGarrison(hero* currentHero, garrison* ourGarrison)
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount);
 
+VA(0x005243f0, 0x8)
 DC_ADDRESS(0x10db64, 0x10)
-VA(0x005243f0, 0x8) MAC_ADDRESS(0x13de98, 0x24)
+MAC_ADDRESS(0x13de98, 0x24)
 void aiVisitBlackMarket(hero* currentHero, TBlackMarket* blackMarket)
 {
     buyArtifacts(currentHero, blackMarket->m_artifacts, 5);
@@ -223,7 +227,7 @@ static void incrementHourGlass()
 }
 
 // E:\gamedcs\philai.cpp:150
-// DC 0x10d57c is an ordinary static helper. Complete naturally expands it
+// DC retains this ordinary static helper. Complete naturally expands it
 // at MoveHero's sole retail call site; no forced-inline declaration is needed.
 DC_ADDRESS(0x10d57c, 0x38)
 MAC_ADDRESS(0x13d724, 0x64)
@@ -238,7 +242,7 @@ static void restoreMouse(unsigned char mouseWasVisible)
 }
 
 // E:\gamedcs\philai.cpp:165
-// DC 0x10d5b4 is an ordinary static helper. The 170/171 negative-ID return
+// DC retains this ordinary static helper. The 170/171 negative-ID return
 // closes before GetTown/AI_enter_town; Complete naturally expands this body.
 DC_ADDRESS(0x10d5b4, 0x8c)
 MAC_ADDRESS(0x13d788, 0x7c)
@@ -353,8 +357,9 @@ static long getArtifactPurchaseValue(
 // the for header, preserves Windows' 98.13% and matches Mac's GPR ownership
 // and initialization order (Mac 98.1061%). Its remaining five rows differ
 // only in the stack slots for the price output and local type_artifact.
+VA(0x00524400, 0x149)
 DC_ADDRESS(0x10da30, 0xb8)
-VA(0x00524400, 0x149) MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
+MAC_ADDRESS(0x13dce4, 0x108)  // anchor-global
 void buyArtifacts(hero* currentHero, TArtifact* artifactList,
                    long marketCount)
 {
@@ -554,7 +559,7 @@ static unsigned char shouldGarrisonTown(const hero* currentHero,
 // Complete expands this helper into MoveHero. The source-real loops and
 // `cost` local are fixed by the Dreamcast line/scope table; the extra dock
 // cost and Dinkumware vector layout are retail facts.
-// DC 0x10e6e8: the resource return (839/840), absent dock (851/852), and
+// DC: the resource return (839/840), absent dock (851/852), and
 // absent boat (882/883) all end before the following work. Keep those scopes
 // and the ordinary static declaration, not the old forced-inline substitute.
 // With all four MoveHero helpers ordinary, seven deleted shipyard fences
@@ -623,7 +628,7 @@ static void markShipyards(playerData* player)
 // E:\gamedcs\philai.cpp:896
 // Complete expands this helper into MoveHero immediately after the second
 // set_danger_zones statement.
-// DC 0x10e894: the 920/921 absent-boat continue closes before the 925/926
+// DC: the 920/921 absent-boat continue closes before the 925/926
 // cell update. Its size/getCell/cell calls need no inline-depth overrides.
 // Keeping the returned boat cell in a local separates DC's call and store.
 // Passing the indexed shipyard point directly to getCell preserves DC's
@@ -858,8 +863,9 @@ static void moveAllHeroes(long playerId, long* dangerZones)
 // Native Mac retains a seven-resource counted loop; this O3 body unrolls it.
 // A != bound is byte-flat; pointer traversal and a short counter do not
 // recover that native loop. Keep the indexed helper and its exact VC6 callers.
+VA(0x00526c70, 0x48)
 DC_ADDRESS(0x10f22c, 0xca)
-VA(0x00526c70, 0x48) MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
+MAC_ADDRESS(0x140d40, 0x78)  // paired native overload; claim owns the definition
 int aiResourceCost(const playerData* player, const int* resources)
 {
     int value = 0;
@@ -868,8 +874,9 @@ int aiResourceCost(const playerData* player, const int* resources)
     return value;
 }
 
+VA(0x00526cc0, 0x55)
 DC_ADDRESS(0x10f2f8, 0x84)
-VA(0x00526cc0, 0x55) MAC_ADDRESS(0x140db8, 0x38)  // paired native overload; claim owns the definition
+MAC_ADDRESS(0x140db8, 0x38)  // paired native overload; claim owns the definition
 int aiResourceCost(long playerId, const int* resources)
 {
     return aiResourceCost(&g_game->m_players[playerId], resources);
@@ -1550,8 +1557,9 @@ inline int valueOfShrine(const hero* currentHero, NewmapCell* cell)
 // double conversion.  Reading the cost straight out of the traits row
 // fild's from the table with no staging store at all, and giving the
 // cost its own named local splits the slot in two.
+VA(0x00524550, 0xD2)
 DC_ADDRESS(0x10d7b8, 0x164)
-VA(0x00524550, 0xD2) MAC_ADDRESS(0x13daa8, 0x140)
+MAC_ADDRESS(0x13daa8, 0x140)
 long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
     EGameResource* bestResource)
 {
@@ -1579,7 +1587,8 @@ long getArtifactPurchasePrice(TArtifact artifact, long marketCount,
     return bestPrice;
 }
 
-VA(0x00524630, 0x60) MAC_ADDRESS(0x13ea7c, 0x9c)
+VA(0x00524630, 0x60)
+MAC_ADDRESS(0x13ea7c, 0x9c)
 int hero::soDGetSeerSkillValue(int skill, int level)
 {
     int typedSkill;
@@ -1694,8 +1703,9 @@ static double g_aiWaterMapFraction = 1.0;
 // estate amount, and product probes do not improve it. A signed-byte owner
 // local and a named AI-player reference both shift the shared conversion
 // scratch slots by -8 and spread Mac mismatches beyond the Estates block.
+VA(0x00524690, 0x684)
 DC_ADDRESS(0x1135ac, 0x536)
-VA(0x00524690, 0x684) MAC_ADDRESS(0x13e158, 0x7ac)  // anchor-callee
+MAC_ADDRESS(0x13e158, 0x7ac)  // anchor-callee
 long getSkillValue(const hero* ourHero, TSecondarySkill skill,
                      unsigned char complexChoice)
 {
@@ -1842,9 +1852,9 @@ long getSkillValue(const hero* ourHero, TSecondarySkill skill,
     }
 }
 
-
+VA(0x00524d20, 0xa3)
 DC_ADDRESS(0x11350c, 0xa0)
-VA(0x00524d20, 0xa3) MAC_ADDRESS(0x13e09c, 0xbc)
+MAC_ADDRESS(0x13e09c, 0xbc)
 long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
 {
     type_spellvalue value(ourHero);
@@ -1863,8 +1873,9 @@ long getSchoolValue(const hero* ourHero, TSecondarySkill skill)
     return schoolValue;
 }
 
+VA(0x00524dd0, 0xF3)
 DC_ADDRESS(0x113ae4, 0x138)
-VA(0x00524dd0, 0xF3) MAC_ADDRESS(0x13e904, 0x178)
+MAC_ADDRESS(0x13e904, 0x178)
 unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
                          unsigned char complexChoice)
 {
@@ -1904,8 +1915,9 @@ unsigned char wantsSkill(const hero* ourHero, TSecondarySkill first,
     return 1;
 }
 
+VA(0x00524ed0, 0xED)
 DC_ADDRESS(0x113cbc, 0xe4)
-VA(0x00524ed0, 0xED) MAC_ADDRESS(0x13ec3c, 0x114)
+MAC_ADDRESS(0x13ec3c, 0x114)
 void aiVisitUniversity(hero* currentHero, type_university* university)
 {
     if (currentHero->m_skillCount >= 8)
@@ -1938,8 +1950,9 @@ void aiVisitUniversity(hero* currentHero, type_university* university)
     } while (g_currentPlayer->m_resources[GOLD] >= 2000);
 }
 
+VA(0x00524fc0, 0x156)
 DC_ADDRESS(0x10e0f8, 0x20)
-VA(0x00524fc0, 0x156) MAC_ADDRESS(0x13f36c, 0x48)
+MAC_ADDRESS(0x13f36c, 0x48)
 void aiVisitWarFactory(hero* currentHero)
 {
     visitWarFactory(currentHero, ARTIFACT_BALLISTA);
@@ -1960,8 +1973,9 @@ void aiVisitWarFactory(hero* currentHero)
 // six distinct source states restore the early refusal and cost-row order;
 // three reproduced objects retain 99.4198% with no sibling changes.
 // Naming the dereferenced cost before the funds check is emitted-byte flat.
+VA(0x00525120, 0xE0)
 DC_ADDRESS(0x10dea8, 0x17e)
-VA(0x00525120, 0xE0) MAC_ADDRESS(0x13f074, 0x160)
+MAC_ADDRESS(0x13f074, 0x160)
 static long valueOfWarFactory(const hero* currentHero,
                                  TArtifact engine, long moveCost)
 {
@@ -1987,8 +2001,9 @@ static long valueOfWarFactory(const hero* currentHero,
     return artifactValue - resourceCost;
 }
 
+VA(0x00525200, 0x1d0)
 DC_ADDRESS(0x10e334, 0xc2)
-VA(0x00525200, 0x1d0) MAC_ADDRESS(0x13f784, 0x158)
+MAC_ADDRESS(0x13f784, 0x158)
 void considerGarrisoning(hero* currentHero, town* currentTown)
 {
     if (g_currentPlayer->m_numHeroes < 2
@@ -2055,8 +2070,9 @@ void considerGarrisoning(hero* currentHero, town* currentTown)
 // relocations agree. The only residual is two SIB base/index encodings in the
 // expanded upgradeCreatures debit loop: [edx+eax] versus retail [eax+edx],
 // including the following store at displacement -4. No semantic divergence.
+VA(0x005253d0, 0x60c)
 DC_ADDRESS(0x10e3f8, 0x280)
-VA(0x005253d0, 0x60c) MAC_ADDRESS(0x13f8dc, 0x368)
+MAC_ADDRESS(0x13f8dc, 0x368)
 void aiEnterTown(hero* currentHero, town* currentTown)
 {
     if (currentHero->hasArtifact(ARTIFACT_HOLY_GRAIL)
@@ -2130,8 +2146,9 @@ void aiEnterTown(hero* currentHero, town* currentTown)
     }
 }
 
+VA(0x005259e0, 0x205)
 DC_ADDRESS(0x10db74, 0x150)
-VA(0x005259e0, 0x205) MAC_ADDRESS(0x13debc, 0x1e0)
+MAC_ADDRESS(0x13debc, 0x1e0)
 void buyArtifacts(hero* currentHero, town* currentTown)
 {
     if (currentTown->m_type != TOWN_TOWER
@@ -2179,7 +2196,8 @@ void buyArtifacts(hero* currentHero, town* currentTown)
     buyArtifacts(currentHero, g_game->m_marketArtifacts, marketCount);
 }
 
-VA(0x00525bf0, 0xac) MAC_ADDRESS(0x13eb18, 0xe4)
+VA(0x00525bf0, 0xac)
+MAC_ADDRESS(0x13eb18, 0xe4)
 static long valueOfUniversity(const hero* currentHero,
                          type_university* university,
                          unsigned char mustPay)
@@ -2216,8 +2234,9 @@ static long valueOfUniversity(const hero* currentHero, NewmapCell* cell)
     return valueOfUniversity(currentHero, info->getUniversity(), 1);
 }
 
+VA(0x00525ca0, 0x11e)
 DC_ADDRESS(0x10e118, 0x114)
-VA(0x00525ca0, 0x11e) MAC_ADDRESS(0x13f3b4, 0x274)
+MAC_ADDRESS(0x13f3b4, 0x274)
 void buySiegeEngine(hero* currentHero, town* currentTown,
                       type_building_id building, TArtifact engine)
 {
@@ -2252,8 +2271,9 @@ void buySiegeEngine(hero* currentHero, town* currentTown,
     currentHero->giveArtifact(type_artifact(engine), 1, 1);
 }
 
+VA(0x00525dc0, 0xB1)
 DC_ADDRESS(0x10e678, 0x70)
-VA(0x00525dc0, 0xB1) MAC_ADDRESS(0x13fc44, 0x110)
+MAC_ADDRESS(0x13fc44, 0x110)
 void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 {
     type_AI_creature_swapper swapper;
@@ -2285,8 +2305,9 @@ void aiFriendlyHeroMeeting(hero* currentHero, hero* secondHero)
 // separate priority rejections and staged values, this restores retail's
 // first selector call and second selector expansion, including retained
 // getTown/getHero calls, without inline controls.
+VA(0x00525e80, 0x362)
 DC_ADDRESS(0x10f16c, 0xc0)
-VA(0x00525e80, 0x362) MAC_ADDRESS(0x140c2c, 0x114)  // anchor-callee
+MAC_ADDRESS(0x140c2c, 0x114)  // anchor-callee
 void philAI::doAI(int whichPlayer)
 {
     pollSound();
@@ -2313,8 +2334,9 @@ void philAI::doAI(int whichPlayer)
 // DC records this helper as file-static with explore_mode by reference.
 // Keep the canonical definitions in DC source order; the VA tag here lets
 // both compilers extract this same body.
+VA(0x005261f0, 0x5ba)
 DC_ADDRESS(0x10ec58, 0x258)
-VA(0x005261f0, 0x5ba) MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee
+MAC_ADDRESS(0x14057c, 0x374)  // anchor-callee
 static void moveHero(hero* currentHero, long* dangerZones,
                      unsigned char isLastHero, unsigned char& exploreMode)
 {
@@ -2388,11 +2410,13 @@ static void moveHero(hero* currentHero, long* dangerZones,
     restoreMouse(mouseWasVisible);
 }
 
-VA(0x005267b0, 0x2da) MAC_ADDRESS(0x1401d8, 0x3a4)
+VA(0x005267b0, 0x2da)
+MAC_ADDRESS(0x1401d8, 0x3a4)
 static void moveHero(hero* currentHero, unsigned char isLastHero,
                      unsigned char& exploreMode);
 
-VA(0x00526a90, 0x1d4) MAC_ADDRESS(0x1408f0, 0x270)
+VA(0x00526a90, 0x1d4)
+MAC_ADDRESS(0x1408f0, 0x270)
 static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 
 // Complete's computer-owner purchase wrapper; its declaration belongs to
@@ -2402,15 +2426,17 @@ static hero* determineHeroToMove(int playerId, unsigned char* isLastHero);
 // (source 1451..1459), without the new computer-owner trading path.
 // Retail 0x526d2e selects g_aiPlayers[playerId] with a 152-byte stride,
 // calls trade_resources at 0x526d35, and returns with ret 4.
-VA(0x00526d20, 0x1e) MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
+VA(0x00526d20, 0x1e)
+MAC_ADDRESS(0x140df0, 0x2c)  // anchor-callee type_AI_player::trade_resources + sole caller town::buy_building 0x5bf3c0
 void unnamed526d20(int playerId, int* costs, int flag)
 {
     g_aiPlayers[playerId].tradeResources(costs, flag);
 }
 
 // E:\gamedcs\philai.cpp:1339
+VA(0x00526d40, 0x393)
 DC_ADDRESS(0x10f37c, 0x86)
-VA(0x00526d40, 0x393) MAC_ADDRESS(0x140e1c, 0x174)  // anchor-global
+MAC_ADDRESS(0x140e1c, 0x174)  // anchor-global
 type_spellvalue::type_spellvalue(const hero* newHero)
 {
     m_ourHero = newHero;
@@ -2432,8 +2458,9 @@ type_spellvalue::type_spellvalue(const hero* newHero)
     }
 }
 
+VA(0x005270e0, 0xDF)
 DC_ADDRESS(0x10f404, 0x244)
-VA(0x005270e0, 0xDF) MAC_ADDRESS(0x140f90, 0x180)
+MAC_ADDRESS(0x140f90, 0x180)
 long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable, long combatValue) const
 {
@@ -2460,8 +2487,9 @@ long type_spellvalue::getDamageSpellValue(SpellID spell, TSkillMastery mastery,
     return static_cast<long>(static_cast<double>(combatValue) * byRatio);
 }
 
+VA(0x005271c0, 0xC1)
 DC_ADDRESS(0x10f648, 0x1c8)
-VA(0x005271c0, 0xC1) MAC_ADDRESS(0x141110, 0x144)
+MAC_ADDRESS(0x141110, 0x144)
 long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
@@ -2486,8 +2514,9 @@ long type_spellvalue::getMassDamageSpellValue(SpellID spell, TSkillMastery maste
     return value < 0 ? 0 : value;
 }
 
+VA(0x00527290, 0x134)
 DC_ADDRESS(0x10f810, 0x13c)
-VA(0x00527290, 0x134) MAC_ADDRESS(0x141254, 0x158)
+MAC_ADDRESS(0x141254, 0x158)
 long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     long timesCastable) const
 {
@@ -2518,8 +2547,9 @@ long type_spellvalue::getEnchantmentValue(SpellID spell, TSkillMastery mastery,
     return total / 700;
 }
 
+VA(0x005273d0, 0x1DD)
 DC_ADDRESS(0x10fa84, 0x1e6)
-VA(0x005273d0, 0x1DD) MAC_ADDRESS(0x14145c, 0x1fc)
+MAC_ADDRESS(0x14145c, 0x1fc)
 long type_spellvalue::getRawSpellValue(SpellID spell) const
 {
     const SSpellTraits* traits = &g_spellTraits[spell];
@@ -2556,8 +2586,9 @@ long type_spellvalue::getRawSpellValue(SpellID spell) const
     return 1;
 }
 
+VA(0x005275b0, 0x8A)
 DC_ADDRESS(0x10fcf0, 0x88)
-VA(0x005275b0, 0x8A) MAC_ADDRESS(0x141728, 0xd8)
+MAC_ADDRESS(0x141728, 0xd8)
 long type_spellvalue::getBestSpellValue(long bits) const
 {
     long best = 0;
@@ -2582,8 +2613,9 @@ long type_spellvalue::getBestSpellValue(long bits) const
     return best;
 }
 
+VA(0x00527640, 0xCB)
 DC_ADDRESS(0x10fd78, 0xec)
-VA(0x00527640, 0xCB) MAC_ADDRESS(0x141800, 0x100)
+MAC_ADDRESS(0x141800, 0x100)
 long aiGetSpellValue(const hero* ourHero, SpellID spell)
 {
     type_spellvalue value(ourHero);
@@ -2601,8 +2633,9 @@ long aiGetSpellValue(const hero* ourHero, SpellID spell)
     return raw - best;
 }
 
+VA(0x00527710, 0x4C)
 DC_ADDRESS(0x10feb8, 0x3c)
-VA(0x00527710, 0x4C) MAC_ADDRESS(0x141990, 0xa0)
+MAC_ADDRESS(0x141990, 0xa0)
 float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy)
 {
     int increment = currentHero->getExperienceIncrement();
@@ -2610,8 +2643,9 @@ float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy)
     return (float(g_heroGoldCost) + armyValue) / float(increment * 40);
 }
 
+VA(0x00527760, 0x1f2)
 DC_ADDRESS(0x10fef4, 0x124)
-VA(0x00527760, 0x1f2) MAC_ADDRESS(0x141a30, 0x1c8)
+MAC_ADDRESS(0x141a30, 0x1c8)
 void aiSetHeroBonuses(hero* ourHero)
 {
     type_spellvalue caster(ourHero);
@@ -2662,8 +2696,9 @@ void aiSetHeroBonuses(hero* ourHero)
 // remains the strongest defensible spelling. Naming the numerator while
 // implicitly promoting artifactCount is also Windows byte-flat; Mac falls
 // from 88.70% to 85.82%, so that probe was restored.
+VA(0x00527960, 0x140)
 DC_ADDRESS(0x110018, 0x15a)
-VA(0x00527960, 0x140) MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee
+MAC_ADDRESS(0x141bf8, 0x1a0)  // anchor-callee
 void philAI::getTurnAIVars(int whichPlayer)
 {
     g_curHourGlassPhase = 0;
@@ -2714,14 +2749,16 @@ void philAI::getTurnAIVars(int whichPlayer)
 
 // Mac retains this member wrapper's call to valueOfLearning at 0:0x1422b0.
 // Retail 0x527aa0 takes the hero in ECX and SpellID at [ebp+8].
-VA(0x00527aa0, 0x56) MAC_ADDRESS(0x1422a4, 0x20)
+VA(0x00527aa0, 0x56)
+MAC_ADDRESS(0x1422a4, 0x20)
 int hero::valueOfSpell(SpellID spell) const
 {
     return valueOfLearning(this, spell);
 }
 
+VA(0x00527b00, 0xa4)
 DC_ADDRESS(0x110c04, 0x52)
-VA(0x00527b00, 0xa4) MAC_ADDRESS(0x142a4c, 0xc8)
+MAC_ADDRESS(0x142a4c, 0xc8)
 void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner,
@@ -2735,9 +2772,9 @@ void aiPurchaseCreatures(hero* currentHero, generator* currentGenerator)
                           hasAngelicAlliance);
 }
 
-
+VA(0x00527bb0, 0x11D)
 DC_ADDRESS(0x111630, 0x10a)
-VA(0x00527bb0, 0x11D) MAC_ADDRESS(0x143868, 0x23c)
+MAC_ADDRESS(0x143868, 0x23c)
 void aiVisitHillFort(hero* currentHero)
 {
     long cost[NUM_RESOURCES];
@@ -2769,20 +2806,22 @@ void aiVisitHillFort(hero* currentHero)
     }
 }
 
+VA(0x00527cd0, 0x1b)
 DC_ADDRESS(0x111808, 0x2a)
-VA(0x00527cd0, 0x1b) MAC_ADDRESS(0x143bd4, 0x20)
+MAC_ADDRESS(0x143bd4, 0x20)
 TPrimarySkill aiChooseMagicSkill(hero* currentHero)
 {
     return currentHero->getValueOfPower() < currentHero->getValueOfKnowledge()
         ? ePriSkillKnowledge : ePriSkillPower;
 }
 
-// DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692 (dc 0x111b7c),
+// DC MoraleIncreaseValue(const hero*, int), philai.cpp:2692,
 // becomes this hero member. Complete 0x527cf0 takes the hero in ECX and the
 // award at [ebp+8]; both exits use ret 4. Keep the changed owner/ABI explicit.
 // Original: MoraleIncreaseValue; philai.cpp:2692.
+VA(0x00527cf0, 0x89)
 DC_ADDRESS(0x111b7c, 0xc6)
-VA(0x00527cf0, 0x89) MAC_ADDRESS(0x143fc8, 0xd8)
+MAC_ADDRESS(0x143fc8, 0xd8)
 int hero::moraleIncreaseValue(int value)
 {
     if (m_army.hasAllUndead())
@@ -2794,12 +2833,13 @@ int hero::moraleIncreaseValue(int value)
     return static_cast<int>(valueAdded);
 }
 
-// DC LuckIncreaseValue(const hero*, int), philai.cpp:2728 (dc 0x111c78),
+// DC LuckIncreaseValue(const hero*, int), philai.cpp:2728,
 // becomes this hero member. Complete 0x527d80 passes ECX to getLuck, reads
 // the award from [ebp+8], and returns with ret 4 on both exits.
 // Original: LuckIncreaseValue; philai.cpp:2728.
+VA(0x00527d80, 0x90)
 DC_ADDRESS(0x111c78, 0xf0)
-VA(0x00527d80, 0x90) MAC_ADDRESS(0x144104, 0xdc)
+MAC_ADDRESS(0x144104, 0xdc)
 int hero::luckIncreaseValue(int value)
 {
     int luck = getLuck(0, 0, 1);
@@ -2815,8 +2855,9 @@ int hero::luckIncreaseValue(int value)
     return static_cast<int>(valueAdded);
 }
 
+VA(0x00527e10, 0xab)
 DC_ADDRESS(0x112208, 0x58)
-VA(0x00527e10, 0xab) MAC_ADDRESS(0x144744, 0xd4)
+MAC_ADDRESS(0x144744, 0xd4)
 void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
 {
     type_AI_creature_purchaser purchaser(currentHero->m_owner, type, number,
@@ -2830,8 +2871,9 @@ void aiRecruitRefugees(hero* currentHero, TCreatureType type, short* number)
                           hasAngelicAlliance);
 }
 
+VA(0x00527ec0, 0x93)
 DC_ADDRESS(0x11260c, 0xc4)
-VA(0x00527ec0, 0x93) MAC_ADDRESS(0x144b68, 0xf0)
+MAC_ADDRESS(0x144b68, 0xf0)
 int aiVisitSirens(const hero* currentHero, armyGroup& army)
 {
     long total = 0;
@@ -2852,8 +2894,9 @@ int aiVisitSirens(const hero* currentHero, armyGroup& army)
         * const_cast<hero*>(currentHero)->getExperienceBonusFactor());
 }
 
+VA(0x00527f60, 0x73)
 DC_ADDRESS(0x112dd4, 0x10c)
-VA(0x00527f60, 0x73) MAC_ADDRESS(0x145890, 0xe0)
+MAC_ADDRESS(0x145890, 0xe0)
 unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     TCreatureType type, short amount, long goldCost)
 {
@@ -2865,8 +2908,9 @@ unsigned char aiBribeMonsters(const hero* currentHero, NewmapCell* cell,
     return bribeWorth > fightWorth;
 }
 
+VA(0x00527fe0, 0x51)
 DC_ADDRESS(0x112ee0, 0x8a)
-VA(0x00527fe0, 0x51) MAC_ADDRESS(0x145970, 0xac)
+MAC_ADDRESS(0x145970, 0xac)
 unsigned char aiChooseResourceOrExperience(const hero* currentHero,
     EGameResource resource, int amount, int experience)
 {
@@ -2880,16 +2924,19 @@ unsigned char aiChooseResourceOrExperience(const hero* currentHero,
 }
 
 // Keep the address claim in retail order; the definition follows DC source order.
-VA(0x00528040, 0x1648) MAC_ADDRESS(0x146134, 0xa58)  // anchor-callee + DC statement shape
+VA(0x00528040, 0x1648)
+MAC_ADDRESS(0x146134, 0xa58)  // anchor-callee + DC statement shape
 long aiValueOfEvent(const hero* currentHero, type_point point,
                    long& moveCost);
 
-VA(0x00529750, 0x78) MAC_ADDRESS(0x13dbe8, 0xfc)
+VA(0x00529750, 0x78)
+MAC_ADDRESS(0x13dbe8, 0xfc)
 static long getArtifactPurchaseValue(
     TArtifact artifactId, long marketCount, long* funds);
 
+VA(0x005297d0, 0x36)
 DC_ADDRESS(0x10e028, 0x3c)
-VA(0x005297d0, 0x36) MAC_ADDRESS(0x13f1d4, 0x80)
+MAC_ADDRESS(0x13f1d4, 0x80)
 long valueOfWarFactory(const hero* currentHero, long moveCost)
 {
     return valueOfWarFactory(currentHero, ARTIFACT_FIRST_AID_TENT,
@@ -2898,8 +2945,9 @@ long valueOfWarFactory(const hero* currentHero, long moveCost)
         + valueOfWarFactory(currentHero, ARTIFACT_BALLISTA, moveCost);
 }
 
+VA(0x00529810, 0x7c)
 DC_ADDRESS(0x110174, 0x170)
-VA(0x00529810, 0x7c) MAC_ADDRESS(0x141d98, 0xb8)
+MAC_ADDRESS(0x141d98, 0xb8)
 int netValueOfArtifact(const hero* currentHero, int artifactValue,
     int goldCost, int resourceCost, EGameResource resourceType)
 {
@@ -2914,8 +2962,9 @@ int netValueOfArtifact(const hero* currentHero, int artifactValue,
             * player->m_ai.m_resourceValue[resourceType]);
 }
 
+VA(0x00529890, 0x40)
 DC_ADDRESS(0x1103c4, 0x42)
-VA(0x00529890, 0x40) MAC_ADDRESS(0x141f90, 0x80)
+MAC_ADDRESS(0x141f90, 0x80)
 long valueOfCustomItem(const hero* currentHero, NewmapCell* cell, long itemValue)
 {
     TreasureData* treasure = g_advManager->getTreasureData(cell);
@@ -2939,8 +2988,9 @@ static int valueOfSpell(const hero* currentHero, SpellID spell)
     return 0;
 }
 
+VA(0x005298d0, 0x4b)
 DC_ADDRESS(0x1105ac, 0x2c)
-VA(0x005298d0, 0x4b) MAC_ADDRESS(0x142254, 0x50)
+MAC_ADDRESS(0x142254, 0x50)
 long valueOfLearning(const hero* currentHero, SpellID spell)
 {
     if (g_spellTraits[spell].m_level
@@ -2949,11 +2999,13 @@ long valueOfLearning(const hero* currentHero, SpellID spell)
     return valueOfSpell(currentHero, spell);
 }
 
-VA(0x00529920, 0x10d) MAC_ADDRESS(0x14259c, 0x12c)
+VA(0x00529920, 0x10d)
+MAC_ADDRESS(0x14259c, 0x12c)
 static long valueOfBank(const hero* currentHero, NewmapCell* cell);
 
+VA(0x00529a30, 0x27f)
 DC_ADDRESS(0x1109b8, 0x24c)
-VA(0x00529a30, 0x27f) MAC_ADDRESS(0x142734, 0x318)
+MAC_ADDRESS(0x142734, 0x318)
 int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* cell, int moveCost)
 {
     generator currentGenerator;
@@ -3005,8 +3057,9 @@ int valueOfGenerator(const hero* currentHero, int x, int y, int z, NewmapCell* c
     return value;
 }
 
+VA(0x00529cb0, 0x2d9)
 DC_ADDRESS(0x11105c, 0x2cc)
-VA(0x00529cb0, 0x2d9) MAC_ADDRESS(0x142fe0, 0x308)
+MAC_ADDRESS(0x142fe0, 0x308)
 long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short moveCost, NewmapCell* cell)
 {
     int creatureCost[NUM_RESOURCES];
@@ -3076,8 +3129,9 @@ long valueOfEnemyTown(const hero* currentHero, const town* enemyTown, short move
     return combatValue + townValue;
 }
 
+VA(0x00529f90, 0x72)
 DC_ADDRESS(0x111834, 0xc4)
-VA(0x00529f90, 0x72) MAC_ADDRESS(0x143bf4, 0xc4)
+MAC_ADDRESS(0x143bf4, 0xc4)
 int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_magicSchoolFlags)
@@ -3095,8 +3149,9 @@ int valueOfMagicSchool(const hero* currentHero, NewmapCell* cell)
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
+VA(0x0052a010, 0x12a)
 DC_ADDRESS(0x111970, 0x12c)
-VA(0x0052a010, 0x12a) MAC_ADDRESS(0x143d3c, 0x184)
+MAC_ADDRESS(0x143d3c, 0x184)
 int valueOfMine(const hero* currentHero, NewmapCell* cell)
 {
     mine* currentMine = g_game->getMine(cell->m_extraInfo);
@@ -3127,8 +3182,9 @@ int valueOfMine(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
+VA(0x0052a140, 0x96)
 DC_ADDRESS(0x111a9c, 0xe0)
-VA(0x0052a140, 0x96) MAC_ADDRESS(0x143ec0, 0x108)
+MAC_ADDRESS(0x143ec0, 0x108)
 long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point)
 {
     int typedCreature;
@@ -3149,12 +3205,14 @@ long valueOfMonsters(const hero* currentHero, NewmapCell* cell, type_point point
     return value;
 }
 
-VA(0x0052a1e0, 0xc3) MAC_ADDRESS(0x1440a0, 0x64)
+VA(0x0052a1e0, 0xc3)
+MAC_ADDRESS(0x1440a0, 0x64)
 int valueOfMoveSource(const hero* currentHero, long flag,
                          short increase, long& moveCost);
 
+VA(0x0052a2b0, 0xc5)
 DC_ADDRESS(0x111d68, 0xae)
-VA(0x0052a2b0, 0xc5) MAC_ADDRESS(0x1441e0, 0x104)
+MAC_ADDRESS(0x1441e0, 0x104)
 int valueOfObelisk(NewmapCell* cell, long playerId)
 {
     if (g_game->m_obeliskFlags[cell->m_extraInfo] & (1 << playerId))
@@ -3174,8 +3232,9 @@ int valueOfObelisk(NewmapCell* cell, long playerId)
         / g_game->m_numObelisks;
 }
 
+VA(0x0052a380, 0x1c)
 DC_ADDRESS(0x111e34, 0x6e)
-VA(0x0052a380, 0x1c) MAC_ADDRESS(0x1442f8, 0x28)
+MAC_ADDRESS(0x1442f8, 0x28)
 int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_powerSchoolFlags)
@@ -3183,8 +3242,9 @@ int valueOfPowerSchool(const hero* currentHero, NewmapCell* cell)
     return currentHero->getValueOfPower();
 }
 
+VA(0x0052a3a0, 0x61)
 DC_ADDRESS(0x111ea4, 0xae)
-VA(0x0052a3a0, 0x61) MAC_ADDRESS(0x144320, 0xa0)
+MAC_ADDRESS(0x144320, 0xa0)
 int valueOfPrison(NewmapCell* cell, playerData* player)
 {
     if (g_currentPlayer->m_numHeroes >= 8)
@@ -3196,8 +3256,10 @@ int valueOfPrison(NewmapCell* cell, playerData* player)
 }
 
 const int g_pyramidSpellLevel = 5;
+
+VA(0x0052a410, 0xF5)
 DC_ADDRESS(0x111f54, 0x118)
-VA(0x0052a410, 0xF5) MAC_ADDRESS(0x1443c0, 0x144)
+MAC_ADDRESS(0x1443c0, 0x144)
 long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
 {
     short owner = currentHero->m_owner;
@@ -3225,8 +3287,9 @@ long valueOfPyramid(const hero* currentHero, NewmapCell* cell)
     return aiValueOfCombat(currentHero, 0, guardians, 0, cell) + value;
 }
 
+VA(0x0052a510, 0xdf)
 DC_ADDRESS(0x11206c, 0x7c)
-VA(0x0052a510, 0xdf) MAC_ADDRESS(0x144504, 0x140)
+MAC_ADDRESS(0x144504, 0x140)
 long getValueOfWell(const hero* currentHero, unsigned short moveCost)
 {
     if (currentHero->m_flags & 1)
@@ -3242,8 +3305,9 @@ long getValueOfWell(const hero* currentHero, unsigned short moveCost)
     return currentHero->getValueOfWell();
 }
 
+VA(0x0052a5f0, 0x108)
 DC_ADDRESS(0x1120e8, 0xd0)
-VA(0x0052a5f0, 0x108) MAC_ADDRESS(0x144644, 0xd4)
+MAC_ADDRESS(0x144644, 0xd4)
 int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 {
     if (currentHero->m_flags & 0x10000)
@@ -3260,8 +3324,9 @@ int valueOfRallyFlag(const hero* currentHero, long& moveCost)
 long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                          short amount);
 
+VA(0x0052a700, 0x10)
 DC_ADDRESS(0x1121b8, 0x50)
-VA(0x0052a700, 0x10) MAC_ADDRESS(0x144718, 0x2c)
+MAC_ADDRESS(0x144718, 0x2c)
 int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
 {
     TCreatureType creature = H3_ENUM_DECODE(TCreatureType, cell->m_objectIndex);
@@ -3269,9 +3334,9 @@ int valueOfRefugeeCamp(const hero* currentHero, NewmapCell* cell)
         static_cast<short>(cell->m_extraInfo));
 }
 
-
+VA(0x0052a710, 0xad)
 DC_ADDRESS(0x110c90, 0x66)
-VA(0x0052a710, 0xad) MAC_ADDRESS(0x142b98, 0xdc)
+MAC_ADDRESS(0x142b98, 0xdc)
 long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
                          short amount)
 {
@@ -3286,8 +3351,9 @@ long valueOfRecruiting(const hero* currentHero, TCreatureType creature,
         g_currentPlayer->m_resources, hasAngelicAlliance);
 }
 
+VA(0x0052a7c0, 0xa8)
 DC_ADDRESS(0x112260, 0x14c)
-VA(0x0052a7c0, 0xa8) MAC_ADDRESS(0x144818, 0xfc)
+MAC_ADDRESS(0x144818, 0xfc)
 long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* player)
 {
     long combatValue = 0;
@@ -3309,8 +3375,9 @@ long valueOfResource(const hero* currentHero, NewmapCell* cell, playerData* play
         + static_cast<double>(combatValue));
 }
 
+VA(0x0052a870, 0x4F)
 DC_ADDRESS(0x1123ac, 0xdc)
-VA(0x0052a870, 0x4F) MAC_ADDRESS(0x144914, 0x8c)
+MAC_ADDRESS(0x144914, 0x8c)
 int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
 {
     playerData* player = currentHero->getPlayer();
@@ -3321,8 +3388,9 @@ int valueOfSeaChest(const hero* currentHero, NewmapCell* cell)
     return static_cast<int>(player->m_ai.m_resourceValue[GOLD] * 1200.0);
 }
 
+VA(0x0052a8c0, 0x9a)
 DC_ADDRESS(0x112510, 0xdc)
-VA(0x0052a8c0, 0x9a) MAC_ADDRESS(0x144a54, 0xe8)
+MAC_ADDRESS(0x144a54, 0xe8)
 int valueOfScroll(const hero* currentHero, NewmapCell* cell)
 {
     SpellID spell;
@@ -3347,8 +3415,9 @@ int valueOfScroll(const hero* currentHero, NewmapCell* cell)
     return value;
 }
 
+VA(0x0052a960, 0x158)
 DC_ADDRESS(0x1126d0, 0x9c)
-VA(0x0052a960, 0x158) MAC_ADDRESS(0x144c58, 0x170)
+MAC_ADDRESS(0x144c58, 0x170)
 int valueOfSirens(const hero* currentHero)
 {
     armyGroup army = currentHero->m_army;
@@ -3364,8 +3433,9 @@ int valueOfSirens(const hero* currentHero)
         * experience - value);
 }
 
+VA(0x0052aac0, 0xB9)
 DC_ADDRESS(0x11276c, 0xc4)
-VA(0x0052aac0, 0xB9) MAC_ADDRESS(0x144dc8, 0x98)
+MAC_ADDRESS(0x144dc8, 0x98)
 int valueOfStables(const hero* currentHero, long& moveCost)
 {
     int value = 0;
@@ -3394,8 +3464,9 @@ DATA(0x00640558) static const TArtifact g_legionArtifacts[5] = {
     ARTIFACT_HEAD_OF_LEGION
 };
 
+VA(0x0052ab80, 0x505)
 DC_ADDRESS(0x112914, 0x4be)
-VA(0x0052ab80, 0x505) MAC_ADDRESS(0x145390, 0x500)
+MAC_ADDRESS(0x145390, 0x500)
 long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
 {
     short townId = static_cast<short>(g_game->getTownId(x, y, z));
@@ -3501,8 +3572,9 @@ long valueOfTown(const hero* currentHero, int x, int y, int z, short moveCost)
     return min(value, 5000000L);
 }
 
+VA(0x0052b090, 0x14e)
 DC_ADDRESS(0x112830, 0xe4)
-VA(0x0052b090, 0x14e) MAC_ADDRESS(0x144e60, 0x1a0)
+MAC_ADDRESS(0x144e60, 0x1a0)
 long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 {
     long playerId = currentHero->m_owner;
@@ -3540,7 +3612,8 @@ long valueOfReinforcing(hero* currentHero, town* currentTown, short moveCost)
 // The new helper also prices the Conflux university and unlearned guild
 // spells, then checks the per-hero town bonus mask before the stat arms.
 // Its role name is provisional; keep the retained body in this module.
-VA(0x0052b1e0, 0x2f4) MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
+VA(0x0052b1e0, 0x2f4)
+MAC_ADDRESS(0x145000, 0x390)  // anchor-callee {type_university ctor, value_of_university, AI_get_spell_value, bitset _Xran}, 2 sites in value_of_town, retail-only
 long valueOfTownBuildings(const hero* currentHero, town* currentTown)
 {
     long value = 0;
@@ -3609,8 +3682,9 @@ long valueOfTownBuildings(const hero* currentHero, town* currentTown)
     return value;
 }
 
+VA(0x0052b4e0, 0xbf)
 DC_ADDRESS(0x112f6c, 0x160)
-VA(0x0052b4e0, 0xbf) MAC_ADDRESS(0x145a1c, 0x124)
+MAC_ADDRESS(0x145a1c, 0x124)
 int valueOfTreasure(const hero* currentHero)
 {
     playerData* player = currentHero->getPlayer();
@@ -3654,8 +3728,10 @@ int valueOfTreasure(const hero* currentHero)
 // philai.h is itself in game.h's closure.
 const int g_treePriceGold = 1;
 const int g_treePriceGems = 2;
+
+VA(0x0052b5a0, 0x161)
 DC_ADDRESS(0x1130cc, 0x258)
-VA(0x0052b5a0, 0x161) MAC_ADDRESS(0x145b40, 0x20c)
+MAC_ADDRESS(0x145b40, 0x20c)
 int valueOfTree(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
@@ -3695,8 +3771,9 @@ int valueOfTree(const hero* currentHero, NewmapCell* cell)
     return levelValue - expectedPrice;
 }
 
+VA(0x0052b710, 0x7e)
 DC_ADDRESS(0x113324, 0x5c)
-VA(0x0052b710, 0x7e) MAC_ADDRESS(0x145d4c, 0xc0)
+MAC_ADDRESS(0x145d4c, 0xc0)
 int valueOfWagon(NewmapCell* cell, long playerId)
 {
     if (cell->playerKnowsCell(static_cast<short>(playerId)))
@@ -3708,8 +3785,9 @@ int valueOfWagon(NewmapCell* cell, long playerId)
         + static_cast<float>(resourcePart));
 }
 
+VA(0x0052b790, 0x71)
 DC_ADDRESS(0x113380, 0x10a)
-VA(0x0052b790, 0x71) MAC_ADDRESS(0x145e0c, 0xb8)
+MAC_ADDRESS(0x145e0c, 0xb8)
 int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
 {
     if ((1 << cell->m_extraInfo) & currentHero->m_warSchoolFlags)
@@ -3724,8 +3802,9 @@ int valueOfWarSchool(const hero* currentHero, NewmapCell* cell)
         - player->m_ai.m_resourceValue[GOLD] * 1000.0);
 }
 
+VA(0x0052b810, 0xe1)
 DC_ADDRESS(0x11348c, 0x7e)
-VA(0x0052b810, 0xe1) MAC_ADDRESS(0x145ec4, 0x140)
+MAC_ADDRESS(0x145ec4, 0x140)
 long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
                          unsigned short moveCost)
 {
@@ -3748,8 +3827,9 @@ long getValueOfSpring(const hero* currentHero, const NewmapCell* cell,
     return currentHero->getValueOfSpring();
 }
 
+VA(0x0052b900, 0xb6)
 DC_ADDRESS(0x113da0, 0x84)
-VA(0x0052b900, 0xb6) MAC_ADDRESS(0x146004, 0x130)
+MAC_ADDRESS(0x146004, 0x130)
 int valueOfWitchHut(const hero* currentHero, NewmapCell* cell)
 {
     ExtraInfoUnion* info =
@@ -4072,8 +4152,9 @@ long aiValueOfEvent(const hero* currentHero, type_point point,
     return 0;
 }
 
+VA(0x0052b9c0, 0x20c)
 DC_ADDRESS(0x1147ac, 0x2ae)
-VA(0x0052b9c0, 0x20c) MAC_ADDRESS(0x146b8c, 0x2f4)
+MAC_ADDRESS(0x146b8c, 0x2f4)
 void __cdecl aiExamineMap()
 {
     type_point point;
@@ -4111,8 +4192,9 @@ void __cdecl aiExamineMap()
             = static_cast<double>(extraMovement[skill]) / passableCells;
 }
 
+VA(0x0052bbd0, 0x87)
 DC_ADDRESS(0x114a5c, 0x7e)
-VA(0x0052bbd0, 0x87) MAC_ADDRESS(0x146e80, 0xf4)
+MAC_ADDRESS(0x146e80, 0xf4)
 TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     TSecondarySkill first, TSecondarySkill second,
     unsigned char complexChoice)
@@ -4135,8 +4217,9 @@ TSecondarySkill aiChooseSecondarySkill(const hero* ourHero,
     return second;
 }
 
+VA(0x0052bc60, 0xAB)
 DC_ADDRESS(0x114adc, 0x68)
-VA(0x0052bc60, 0xAB) MAC_ADDRESS(0x146f74, 0xd4)
+MAC_ADDRESS(0x146f74, 0xd4)
 void aiJoinDecision(hero* currentHero, TCreatureType creature,
                       short amount)
 {
@@ -4151,8 +4234,9 @@ void aiJoinDecision(hero* currentHero, TCreatureType creature,
                           hasAngelicAlliance);
 }
 
+VA(0x0052bd10, 0x1D)
 DC_ADDRESS(0x114b44, 0x44)
-VA(0x0052bd10, 0x1D) MAC_ADDRESS(0x147048, 0x34)
+MAC_ADDRESS(0x147048, 0x34)
 long aiValueOfEvent(const hero* currentHero, type_point point)
 {
     long moveCost = 0;

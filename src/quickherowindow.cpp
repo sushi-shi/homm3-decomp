@@ -33,7 +33,7 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
     {63, 132}, {99, 132}, {135, 132}
 };
 
-// Dreamcast 0x1170bc locates the disguise scans in this constructor at
+// Dreamcast locates the disguise scans in this constructor at
 // lines 94..129 and proves the separate primary-skill widget id, limit/tLimit
 // calls, and widget push_back operations. Complete replaces quantity_text's
 // 100-byte sprintf buffer with an owning ostrstream; the per-arm textWidget
@@ -49,9 +49,9 @@ DATA(0x00682378) static int g_armyPos[7][2] = {
 // exact campaign crossover initializer (100% -> 96.15%); keep its shared
 // spelling. Named primary values and split morale/luck limit assignments
 // are score-flat (three states/two objects and four states/one object).
-
+VA(0x0052ead0, 0x8C8)
 DC_ADDRESS(0x1170bc, 0x6f8)
-VA(0x0052ead0, 0x8C8) MAC_ADDRESS(0x14a820, 0xc04)  // heroqvbk.pcx + vtable/allocation block
+MAC_ADDRESS(0x14a820, 0xc04)  // heroqvbk.pcx + vtable/allocation block
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
@@ -194,8 +194,9 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel viewLevel)
 
 VA_COMPGEN(0x0052f3a0, 0x21, SCALAR_DELETING_DTOR, TQuickHeroWindow)
 
+VA(0x0052f3d0, 0x6B)
 DC_ADDRESS(0x1177b4, 0x62)
-VA(0x0052f3d0, 0x6B) MAC_ADDRESS(0x14b424, 0xac)
+MAC_ADDRESS(0x14b424, 0xac)
 TQuickHeroWindow::~TQuickHeroWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {

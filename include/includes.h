@@ -57,6 +57,7 @@ inline const T& tLimit(const T& minimum, const T& value,
         return value;
     }
 }
+
 // E:\gamedcs\includes.h:134
 DC_ADDRESS(0x01ef5c, 0x38)
 inline int limit(int minimum, int value, int maximum)
@@ -79,6 +80,7 @@ public:
     int m_numbersLeft;
     std::vector<bool> m_available;
     TPickANumber(int lowBound, int high);
+
     // Original: TPickANumber::IsAvailable; includes.h:166
     DC_ADDRESS(0x0fe374, 0x24)
     unsigned char isAvailable(int number) const
@@ -94,10 +96,12 @@ public:
 // game.obj emits the Dreamcast copies but does not own their source bodies.
 class TPickRandomTownName : public TPickANumber {
 public:
+
     // game.cpp's array initializer takes this constructor's address.
-    DC_ADDRESS(0x0bc7c8, 0x24)
     VA(0x004caa10, 0x10)
+    DC_ADDRESS(0x0bc7c8, 0x24)
     TPickRandomTownName() : TPickANumber(0, 15) {}
+
     // E:\gamedcs\includes.h:178
     DC_ADDRESS(0x0bc7ec, 0x7c)
     void reset()

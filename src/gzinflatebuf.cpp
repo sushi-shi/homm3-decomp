@@ -52,6 +52,7 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 #else
 #define GZ_WINDOW_SIZE 512
 #endif
+
 // Refill from the source streambuf and return a stream-traits integer byte.
 // Capturing that converted value before separately advancing next_in preserves
 // this retained body's 100% and recovers the constructor from 91.0739% to
@@ -59,7 +60,8 @@ DATA(0x0063e6fc) static const int g_gzMagic[2] = {0x1f, 0x8b};
 // pointer increment into the conversion argument leaves 94.9951%.
 // The native Mac 0x220a18 frame is also reproduced; its byte load is scheduled
 // after the pointer advance, leaving a separate compiler-order residual.
-VA(0x004d5fd0, 0x74) MAC_ADDRESS(0x220a18, 0xb0)
+VA(0x004d5fd0, 0x74)
+MAC_ADDRESS(0x220a18, 0xb0)
 int TGzInflateBuf::getByte()
 {
     if (m_stream.avail_in == 0) {
@@ -112,8 +114,8 @@ void TGzInflateBuf::ungetByte(signed char)
 // readByte helper. The stream-traits byte snapshot below recovers 98.9360%:
 // all 61 CFG blocks and the exception expansion sequence agree. The two
 // initial magic-byte reads retain pointer/register scheduling differences.
-
-VA(0x004d6050, 0x58A) MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
+VA(0x004d6050, 0x58A)
+MAC_ADDRESS(0x220ae4, 0x82c)  // anchor-vtable ??_7TGzInflateBuf@@6B@ + anchor-import @inflateInit2_@16, retail-only
 TGzInflateBuf::TGzInflateBuf(std::streambuf* newSource)
     : m_source(newSource),
       m_buffer(0),
@@ -216,7 +218,8 @@ VA_COMPGEN(0x004d67f0, 0x21, SCALAR_DELETING_DTOR, TGzInflateBuf)
 // 0x4d6820: hand the source stream back whatever this object read ahead -
 // the raw bytes still in next_in, or, when the member was never a gzip
 // member, the undrained tail of the output window.
-VA(0x004d6820, 0xF6) MAC_ADDRESS(0x221394, 0x12c)
+VA(0x004d6820, 0xF6)
+MAC_ADDRESS(0x221394, 0x12c)
 TGzInflateBuf::~TGzInflateBuf()
 {
     if (m_stream.avail_in > 0) {
@@ -275,7 +278,8 @@ TGzInflateBuf::~TGzInflateBuf()
 // exception-slot separation or the retained trailer calls.
 // Binding m_stream through a local reference or pointer is not the missing
 // receiver lifetime: both controls fall 81.9005 -> 73.1728% in VC6.
-VA(0x004d6920, 0x251) MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
+VA(0x004d6920, 0x251)
+MAC_ADDRESS(0x2214c0, 0x4d4)  // anchor-vtable ??_7TGzInflateBuf@@6B@ slot 4 + anchor-import @inflate@8, retail-only
 int TGzInflateBuf::underflow()
 {
     while (m_stream.avail_out > 0) {
@@ -361,5 +365,7 @@ int TGzInflateBuf::readByte()
 }
 
 VA_COMPGEN(0x0041ba90, 0x162, CLASS_CTOR, runtime_error)
+
 VA_COMPGEN(0x0041b7b0, 0x169, IMPLICIT_COPY_CTOR, TRuntimeError)
+
 VA_COMPGEN(0x0041b920, 0x16F, IMPLICIT_COPY_CTOR, TAllocationFailure)

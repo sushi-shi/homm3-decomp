@@ -37,7 +37,6 @@ DATA(0x00643b80) static const POINT g_buttonPositions[4] = {
 // belongs in this TU rather than the carcass: retail EXPANDS it at its one
 // call site in skill_click (the call census reads `set_skill base x1 vs
 // retail x0`), which /Ob2 can only do from a visible body.
-
 DC_ADDRESS(0x18fad8, 0xa)
 void type_university_skill_button::setSkill(TSecondarySkill newSkill,
                                              unsigned char newClick)
@@ -50,7 +49,6 @@ void type_university_skill_button::setSkill(TSecondarySkill newSkill,
 // out-of-line body, but both allocations in the window constructor preserve
 // this source helper in full: iconWidget base construction, derived vtable,
 // then skill/click stores.
-
 DC_ADDRESS(0x18e6ac, 0x7c)
 MAC_ADDRESS(0x1fa678, 0x70)
 type_university_skill_button::type_university_skill_button(
@@ -65,8 +63,9 @@ type_university_skill_button::type_university_skill_button(
 
 // E:\gamedcs\university_window.cpp:75
 // The public UAA_N_N0 signature preserves native Boolean click values.
+VA(0x005ef490, 0x6A)
 DC_ADDRESS(0x18e728, 0x66)
-VA(0x005ef490, 0x6A) MAC_ADDRESS(0x1fa6e8, 0xb4)  // vtable slot 13 + skill_click call
+MAC_ADDRESS(0x1fa6e8, 0xb4)  // vtable slot 13 + skill_click call
 bool type_university_skill_button::handleClick(
     bool downClick, bool rightClick)
 {
@@ -111,8 +110,9 @@ bool type_university_skill_button::handleClick(
 // The apparent +4 coordinate-load differences are the same addresses:
 // g_topBarPositions+4 and retail const_243b64. All 154 calls agree after
 // verifying the six folded vector-helper aliases against their retail bodies.
+VA(0x005ef500, 0x1252)
 DC_ADDRESS(0x18e790, 0xb68)
-VA(0x005ef500, 0x1252) MAC_ADDRESS(0x1fa79c, 0x1e68)  // Univers1.pcx + two call-site modes
+MAC_ADDRESS(0x1fa79c, 0x1e68)  // Univers1.pcx + two call-site modes
 type_university_window::type_university_window(
     hero* newHero, const type_university* university,
     unsigned char townUniversity)
@@ -295,7 +295,6 @@ type_university_window::type_university_window(
 // Dreamcast preserves this helper as a separate source function. Complete
 // inlines it into DoModal and cancel_click; retaining the boundary is required
 // even though no standalone x86 body survives.
-
 DC_ADDRESS(0x18f428, 0xe0)
 MAC_ADDRESS(0x1fc830, 0xe4)
 void type_university_window::setSelectionMode()
@@ -317,8 +316,9 @@ VA_COMPGEN(0x005f0760, 0x21, SCALAR_DELETING_DTOR, type_university_window)
 
 VA_COMPGEN(0x005ef460, 0x21, SCALAR_DELETING_DTOR, type_university_skill_button)
 
+VA(0x005f0790, 0x284)
 DC_ADDRESS(0x18f2f8, 0x130)
-VA(0x005f0790, 0x284) MAC_ADDRESS(0x1fc604, 0x22c)
+MAC_ADDRESS(0x1fc604, 0x22c)
 void type_university_window::updateSkillButton(type_university_skill& skill)
 {
     std::string text;
@@ -348,8 +348,9 @@ void type_university_window::updateSkillButton(type_university_skill& skill)
     skill.m_button->setHelpText(text.c_str(), 0, 1);
 }
 
+VA(0x005f0a20, 0x92)
 DC_ADDRESS(0x18f508, 0x22)
-VA(0x005f0a20, 0x92) MAC_ADDRESS(0x1fc914, 0x44)
+MAC_ADDRESS(0x1fc914, 0x44)
 
 void type_university_window::doModal(bool fade)
 {
@@ -357,8 +358,9 @@ void type_university_window::doModal(bool fade)
     heroWindow::doModal(fade);
 }
 
+VA(0x005f0ac0, 0x2F2)
 DC_ADDRESS(0x18f52c, 0x2b6)
-VA(0x005f0ac0, 0x2F2) MAC_ADDRESS(0x1fc958, 0x39c)
+MAC_ADDRESS(0x1fc958, 0x39c)
 void type_university_window::skillClick(TSecondarySkill skill)
 {
     std::string helpText;
@@ -402,6 +404,7 @@ void type_university_window::skillClick(TSecondarySkill skill)
         m_currentHero->getPlayer()->m_resources[GOLD] >= TUITION);
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
+
 // Earlier skillClick controls at 98.3269%: naming a button pointer was
 // byte-flat and moving the selected-skill store below setSkill fell to
 // 98.2560%. Retaining the named skill string and canonical setSkill/show/
@@ -415,7 +418,6 @@ void type_university_window::skillClick(TSecondarySkill skill)
 // type_skeleton_window::windowHandler; inheriting CAdvPopup's 0x41b1c0
 // handler loses this derived hover step. Retain the separate source
 // override without claiming the folded retail address twice.
-
 DC_ADDRESS(0x18f7e4, 0x84)
 MAC_ADDRESS(0x1fccf4, 0x5c)
 int type_university_window::windowHandler(message& msg)
@@ -432,8 +434,9 @@ int type_university_window::windowHandler(message& msg)
 // reading widget::RollOver at +0x20 and dispatching slot 13
 // (textWidget::SetText) through the +0x70 rollover pointer before a
 // whole-window redraw.
+VA(0x005f0dc0, 0x38)
 DC_ADDRESS(0x18f868, 0x48)
-VA(0x005f0dc0, 0x38) MAC_ADDRESS(0x1fcd50, 0x8c)
+MAC_ADDRESS(0x1fcd50, 0x8c)
 void type_university_window::handleWidgetHover(widget* currentWidget)
 {
     // DC 420 obtains the help pointer once before the 422..425 arms.
@@ -445,8 +448,9 @@ void type_university_window::handleWidgetHover(widget* currentWidget)
     drawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
+VA(0x005f0e00, 0xE4)
 DC_ADDRESS(0x18f8b0, 0x6c)
-VA(0x005f0e00, 0xE4) MAC_ADDRESS(0x1fcddc, 0xcc)
+MAC_ADDRESS(0x1fcddc, 0xcc)
 int type_university_window::cancelClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -467,8 +471,9 @@ int type_university_window::cancelClick(message& msg)
     return 0;
 }
 
+VA(0x005f0ef0, 0x65)
 DC_ADDRESS(0x18f91c, 0x5e)
-VA(0x005f0ef0, 0x65) MAC_ADDRESS(0x1fcea8, 0xb4)
+MAC_ADDRESS(0x1fcea8, 0xb4)
 int type_university_window::exitClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -497,8 +502,9 @@ int type_university_window::exitClick(message& msg)
 // set_selection_mode helper. Restoring that helper gives Complete's exact
 // 28-block/15-branch CFG while keeping the positive source boundary intact.
 // E:\gamedcs\university_window.cpp:479
+VA(0x005f0f60, 0x21D)
 DC_ADDRESS(0x18f97c, 0x128)
-VA(0x005f0f60, 0x21D) MAC_ADDRESS(0x1fcf5c, 0x164)  // constructor callback xref + selected-skill tail
+MAC_ADDRESS(0x1fcf5c, 0x164)  // constructor callback xref + selected-skill tail
 int type_university_window::purchaseClick(message& msg)
 {
     if (msg.m_codeX == widget::WIDGET_RIGHT_SELECT) {
@@ -533,8 +539,9 @@ int type_university_window::purchaseClick(message& msg)
 }
 
 // E:\gamedcs\university_window.cpp:515
+VA(0x005f1180, 0x2D)
 DC_ADDRESS(0x18faa4, 0x34)
-VA(0x005f1180, 0x2D) MAC_ADDRESS(0x1fd0c0, 0x2c)  // link order + vtable slot 14
+MAC_ADDRESS(0x1fd0c0, 0x2c)  // link order + vtable slot 14
 int type_university_window::exitDialog(message& msg)
 {
     msg.m_id = MESSAGE_WIDGET;

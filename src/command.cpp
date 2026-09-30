@@ -82,8 +82,9 @@ static const int g_combatActionFirstAid = 11;
 // across the wall-array scans. Windows remains 98.6842%; every helper stays.
 // A temporary bool return on validWallTarget is byte-flat in this caller
 // and Mac; keep its CodeView-proven unsigned-char boundary unchanged.
+VA(0x00473c00, 0x29F)
 DC_ADDRESS(0x06af98, 0x194)
-VA(0x00473c00, 0x29F) MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
+MAC_ADDRESS(0x081d04, 0x3f8)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map
 unsigned char combatManager::automateCatapult()
 {
     DATA(0x0063d54c) static const TWallTargetId walls[4] = {
@@ -190,8 +191,9 @@ issueCatapultOrder:
 // 0x82194/0x821d8..0x8220c. A plain bestCreatureType = -1 local with those
 // checks folds away in both current compilers (Windows remains exact, Mac
 // remains 396 vs 440 bytes); its initialization boundary is still unresolved.
+VA(0x00473ea0, 0x196)
 DC_ADDRESS(0x06b12c, 0x13c)
-VA(0x00473ea0, 0x196) MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map
+MAC_ADDRESS(0x0820fc, 0x1b8)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map
 unsigned char combatManager::automateFirstAidTent()
 {
     const army* currentArmy = getCurrentArmy();
@@ -237,8 +239,9 @@ unsigned char combatManager::automateFirstAidTent()
     return 1;
 }
 
+VA(0x00474040, 0x8C)
 DC_ADDRESS(0x06b268, 0xb0)
-VA(0x00474040, 0x8C) MAC_ADDRESS(0x0822b4, 0xd0)
+MAC_ADDRESS(0x0822b4, 0xd0)
 void combatManager::doAnimations()
 {
     if (isQuickCombat())
@@ -278,8 +281,9 @@ void combatManager::finishCreaturePlacement()
 }
 
 // E:\gamedcs\command.cpp:291
+VA(0x004740d0, 0x5AB)
 DC_ADDRESS(0x06b318, 0x352)
-VA(0x004740d0, 0x5AB) MAC_ADDRESS(0x0823fc, 0x39c)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound
+MAC_ADDRESS(0x0823fc, 0x39c)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound
 int combatManager::main(message& msg)
 {
     int result = 1;
@@ -415,8 +419,9 @@ process_action:
 // IsMoat, OffsetToFront, NeedToTurn and swap calls stay canonical.
 // Nesting firstHex assignment in ValidHex is Windows-flat and moves Mac
 // 38.2601 -> 38.0912%; keep the separate assignment and canonical check.
+VA(0x00474690, 0x36B)
 DC_ADDRESS(0x06b66c, 0x410)
-VA(0x00474690, 0x36B) MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
+MAC_ADDRESS(0x082810, 0x4a0)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map
 void combatManager::setCombatDirections(int hex)
 {
     if (isComputerAction())
@@ -571,7 +576,6 @@ int combatManager::validAttackHex(int hex)
 // E:\gamedcs\command.cpp:907. The DC line table proves this helper boundary
 // and its two-comparison body. Mac retains the ordinary helper; Complete
 // expands its call into ProcessCombatMsg.
-
 DC_ADDRESS(0x06bea4, 0x18)
 MAC_ADDRESS(0x082e98, 0x24)
 int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
@@ -613,7 +617,8 @@ int combatManager::getPointer(int inCombatCommand, int /* iHexIndex */)
 // Direct and compound float division are also Windows-flat: retail loads the
 // numerator between the two integer-to-float conversions, while VC6 loads it
 // after both. Keep the Mac-exact named components until that lifetime is found.
-VA(0x00474a00, 0x198) MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
+VA(0x00474a00, 0x198)
+MAC_ADDRESS(0x082cb0, 0x1e8)  // anchor-fields combatDirections/field_132d8 + SetPointer, dc member type 0x4c8e
 unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 {
     int yDifference;
@@ -682,8 +687,9 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 // both builds and restores the retail register setup in its expanded callers:
 // getControl, resetRound and automateFirstAidTent become exact together.
 // The nested expression is the measured control; it loses those three matches.
+VA(0x00474ba0, 0x4A)
 DC_ADDRESS(0x06bebc, 0x1b4)
-VA(0x00474ba0, 0x4A) MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
+MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
 unsigned char combatManager::isComputerAction()
 {
     if (isQuickCombat())
@@ -730,7 +736,8 @@ unsigned char combatManager::isComputerAction()
 // dereference get_owner's result unguarded.
 
 // Use the controlling player, which can change when a stack is hypnotized.
-VA(0x00474bf0, 0x188) MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
+VA(0x00474bf0, 0x188)
+MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
 unsigned char combatManager::isComputerAction(const army* currentArmy)
 {
     if (isQuickCombat())
@@ -821,8 +828,9 @@ unsigned char combatManager::isComputerAction(const army* currentArmy)
 // Native Mac 0x83920 dispatches the complete 0/1/2 information-mode switch.
 // Keeping the explicit no-info arm gives CodeWarrior the native 1/3 pivot;
 // VC6 improves 94.0588 -> 94.6868% without removing any window helpers.
+VA(0x00474d80, 0x114D)
 DC_ADDRESS(0x06c070, 0xb08)
-VA(0x00474d80, 0x114D) MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph
+MAC_ADDRESS(0x0831ac, 0xc64)  // exhaustive command order-map + callers + literal/call graph
 int combatManager::processCombatMsg(message& msg)
 {
     int mouseX = msg.m_mouseX;
@@ -1160,8 +1168,9 @@ void combatManager::getHexXY(int hex, int& x, int& y)
     y = (m_cells[hex].m_hexUly + m_cells[hex].m_hexBry) / 2;
 }
 
+VA(0x00475ed0, 0x32F)
 DC_ADDRESS(0x06d060, 0x268)
-VA(0x00475ed0, 0x32F) MAC_ADDRESS(0x083e10, 0x274)  // unique retail body + order-map
+MAC_ADDRESS(0x083e10, 0x274)  // unique retail body + order-map
 void combatManager::resetRound()
 {
     m_turnNumber++;
@@ -1225,8 +1234,9 @@ void combatManager::resetRound()
     m_lastMovedArmy = 0;
 }
 
+VA(0x00476200, 0xE1)
 DC_ADDRESS(0x06d2c8, 0x168)
-VA(0x00476200, 0xE1) MAC_ADDRESS(0x084084, 0x238)
+MAC_ADDRESS(0x084084, 0x238)
 void combatManager::autoResolveCombat()
 {
     // ai_combat.cpp's free function is __fastcall under the shared /Gr
@@ -1259,8 +1269,9 @@ void combatManager::autoResolveCombat()
     }
 }
 
+VA(0x004762f0, 0xF6)
 DC_ADDRESS(0x06d430, 0xd6)
-VA(0x004762f0, 0xF6) MAC_ADDRESS(0x0842bc, 0x15c)
+MAC_ADDRESS(0x0842bc, 0x15c)
 int combatManager::checkWin(message* msg)
 {
     if (isQuickCombat()
@@ -1292,8 +1303,9 @@ int combatManager::checkWin(message* msg)
     return 1;
 }
 
+VA(0x004763f0, 0x4D)
 DC_ADDRESS(0x06d508, 0x3e)
-VA(0x004763f0, 0x4D) MAC_ADDRESS(0x084418, 0x98)
+MAC_ADDRESS(0x084418, 0x98)
 unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 {
     if (group == 0)
@@ -1306,8 +1318,9 @@ unsigned char combatManager::isOutsidePlacementBoundry(int group, int index)
 // A positive/zero return ladder changes the retained Windows helper
 // from 100% to 88.97% and its catapult expansion to 91.17%; DC line1947
 // and Mac's branchless final result support the single comparison return.
+VA(0x00476440, 0x50)
 DC_ADDRESS(0x06d548, 0x42)
-VA(0x00476440, 0x50) MAC_ADDRESS(0x0844b0, 0x84)
+MAC_ADDRESS(0x0844b0, 0x84)
 unsigned char combatManager::validWallTarget(TWallTargetId wall)
 {
     if ((wall == WALL_TARGET_0 || wall == WALL_TARGET_6)
@@ -1384,9 +1397,9 @@ unsigned char combatManager::validWallTarget(TWallTargetId wall)
 // DC command.cpp:2129 passes army::get_controlling_side into the older
 // ShotIsThroughWall signature. Complete's canonical helper takes the army
 // instead and reads its controlling side inside that retained body.
-
+VA(0x00476490, 0x52A)
 DC_ADDRESS(0x06d58c, 0x3fa)
-VA(0x00476490, 0x52A) MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global
+MAC_ADDRESS(0x084534, 0x5a4)  // anchor-global
 int combatManager::getCommand(int newIndex)
 {
     if (newIndex == -1)
@@ -1531,8 +1544,9 @@ int combatManager::getCommand(int newIndex)
 
 // Mac retains separate ViewCastleBallista calls for wall target 7 and the
 // full-castle targets 0/6 at 0:0x84bf8 and 0:0x84ca8.
+VA(0x004769c0, 0x207)
 DC_ADDRESS(0x06d988, 0x1f0)
-VA(0x004769c0, 0x207) MAC_ADDRESS(0x084ad8, 0x200)
+MAC_ADDRESS(0x084ad8, 0x200)
 int combatManager::rightClick(int newIndex)
 {
     if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
@@ -1586,9 +1600,9 @@ int combatManager::rightClick(int newIndex)
 // (field_132d8); the rest park -1 there. Case 1/2's extra arm is the
 // wide-stack shift: when the destination cell's field_4b marks it as a
 // tail hex, the anchor moves one column against the stack's facing.
-
+VA(0x00476bd0, 0x402)
 DC_ADDRESS(0x06db78, 0x2aa)
-VA(0x00476bd0, 0x402) MAC_ADDRESS(0x084cd8, 0x308)
+MAC_ADDRESS(0x084cd8, 0x308)
 void combatManager::doCommand(int command)
 {
     army* currentArmy = getCurrentArmy();
@@ -1675,8 +1689,9 @@ void combatManager::doCommand(int command)
     }
 }
 
+VA(0x00476fe0, 0x2C4)
 DC_ADDRESS(0x06de24, 0x2b4)
-VA(0x00476fe0, 0x2C4) MAC_ADDRESS(0x084fe0, 0x2a0)
+MAC_ADDRESS(0x084fe0, 0x2a0)
 void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
 {
     hero* winner = m_heroes[winningGroup];
@@ -1723,8 +1738,9 @@ void combatManager::showEagleEye(int winningGroup, int dialogTimeout)
     }
 }
 
+VA(0x004772b0, 0x1BF)
 DC_ADDRESS(0x06e0d8, 0xf0)
-VA(0x004772b0, 0x1BF) MAC_ADDRESS(0x085280, 0x14c)
+MAC_ADDRESS(0x085280, 0x14c)
 void combatManager::showLootedArtifacts(
     std::vector<type_artifact>& lootedArtifacts, int dialogTimeout)
 {
@@ -1760,8 +1776,9 @@ void combatManager::showLootedArtifacts(
 // snapshots leave 99.8293% despite an otherwise identical call sequence.
 // Complete darkens the screen after freeArmies; the older port's earlier
 // text drawing and extra results-dialog fade/surface setup are absent.
+VA(0x00477470, 0x58C)
 DC_ADDRESS(0x06e1c8, 0x6d0)
-VA(0x00477470, 0x58C) MAC_ADDRESS(0x0853cc, 0x6e4)
+MAC_ADDRESS(0x0853cc, 0x6e4)
 void combatManager::doVictory(int winningGroup)
 {
     int lastAliveSideIndex = 1 - winningGroup;
@@ -1926,8 +1943,9 @@ void combatManager::doVictory(int winningGroup)
 // the accumulator before returning preserves the native r31 lifetime and
 // matches all 388 Mac bytes; a single return expression is only 83.2474%.
 // Both retained bodies are exact, with the factor helper still called.
+VA(0x00477a00, 0xB2)
 DC_ADDRESS(0x06e898, 0xf8)
-VA(0x00477a00, 0xB2) MAC_ADDRESS(0x085b14, 0x184)
+MAC_ADDRESS(0x085b14, 0x184)
 long combatManager::getSurrenderCost()
 {
     long cost = 0;
@@ -1953,7 +1971,6 @@ long combatManager::getSurrenderCost()
 // Complete expands this sole caller into ProcessCombatMsg and therefore has
 // no standalone retail body. Complete also omits the older port's FullUpdate
 // after the modal dialog, as it does in the neighbouring retreat path.
-
 DC_ADDRESS(0x06e990, 0x80)
 MAC_ADDRESS(0x085c98, 0xd4)
 inline int combatManager::doSurrender()
@@ -1965,8 +1982,9 @@ inline int combatManager::doSurrender()
     return g_windowManager->m_dialogReturn == DIALOG_RETURN_ACCEPT;
 }
 
+VA(0x00477ac0, 0x95)
 DC_ADDRESS(0x06ea10, 0x108)
-VA(0x00477ac0, 0x95) MAC_ADDRESS(0x085d6c, 0xcc)
+MAC_ADDRESS(0x085d6c, 0xcc)
 void combatManager::checkChangeSelector()
 {
     if (isQuickCombat())
@@ -1986,8 +2004,9 @@ void combatManager::checkChangeSelector()
     drawFrame(1, 0, 0, 0, 1, 0);
 }
 
+VA(0x00477b60, 0xB6)
 DC_ADDRESS(0x06eb18, 0xa4)
-VA(0x00477b60, 0xB6) MAC_ADDRESS(0x085e38, 0xf0)
+MAC_ADDRESS(0x085e38, 0xf0)
 void combatManager::turnOffSelector(unsigned char drawIt)
 {
     if (!m_lastMovedArmy)
@@ -2005,8 +2024,9 @@ void combatManager::turnOffSelector(unsigned char drawIt)
         drawFrame(1, 1, 0, 0, 1, 0);
 }
 
+VA(0x00477c20, 0x1E4)
 DC_ADDRESS(0x06ebbc, 0x15c)
-VA(0x00477c20, 0x1E4) MAC_ADDRESS(0x085f28, 0x258)
+MAC_ADDRESS(0x085f28, 0x258)
 void combatManager::checkChangeHighlighter(int currentIndex)
 {
     if (isQuickCombat())
@@ -2052,8 +2072,9 @@ void combatManager::checkChangeHighlighter(int currentIndex)
     drawFrame(1, 1, 0, 0, 1, 0);
 }
 
+VA(0x00477e10, 0xC2)
 DC_ADDRESS(0x06ed18, 0xa4)
-VA(0x00477e10, 0xC2) MAC_ADDRESS(0x086180, 0xfc)
+MAC_ADDRESS(0x086180, 0xfc)
 void combatManager::turnOffHighlighter(unsigned char drawIt)
 {
     if (!m_highlighterOn)
@@ -2129,8 +2150,9 @@ inline unsigned char combatManager::automateTower()
 // IsActive and the canonical surrender helper remain source calls. Mac keeps
 // the surrender call; Windows expands it. FullUpdate after each dialog is
 // DC-only: Windows retail continues directly to the response checks.
+VA(0x00477ee0, 0x3E5)
 DC_ADDRESS(0x06ee60, 0x338)
-VA(0x00477ee0, 0x3E5) MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph
+MAC_ADDRESS(0x086388, 0x3c4)  // exhaustive command order-map + call graph
 void combatManager::checkGetAIMove()
 {
     unsigned char isHuman = 0;
@@ -2200,8 +2222,9 @@ void combatManager::checkGetAIMove()
 }
 
 // E:\gamedcs\command.cpp:3131
+VA(0x004782d0, 0x5B5)
 DC_ADDRESS(0x06f198, 0x45c)
-VA(0x004782d0, 0x5B5) MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body
+MAC_ADDRESS(0x08674c, 0x5ac)  // exhaustive command order-map + body
 void combatManager::getControl()
 {
     m_lastCellIndex = -1;
@@ -2330,8 +2353,9 @@ void combatManager::getControl()
     doSpellAI();
 }
 
+VA(0x00478890, 0x6E)
 DC_ADDRESS(0x06f5f4, 0x70)
-VA(0x00478890, 0x6E) MAC_ADDRESS(0x086cf8, 0xb4)
+MAC_ADDRESS(0x086cf8, 0xb4)
 void combatManager::resetMouse()
 {
     if (isQuickCombat())
@@ -2349,8 +2373,9 @@ void combatManager::resetMouse()
     g_mouseManager->setPointer(6, mouseManager::COMBAT_SET);
 }
 
+VA(0x00478900, 0x290)
 DC_ADDRESS(0x06f664, 0x1c0)
-VA(0x00478900, 0x290) MAC_ADDRESS(0x086dac, 0x1f8)
+MAC_ADDRESS(0x086dac, 0x1f8)
 unsigned char combatManager::processMoveThenAttack(message* msg)
 {
     army* currentArmy = getCurrentArmy();
@@ -2401,8 +2426,9 @@ unsigned char combatManager::processMoveThenAttack(message* msg)
 }
 
 // Retail +0x61 scales the first-aid factor by the float 25.0 (0x63b76c).
+VA(0x00478b90, 0x1E5)
 DC_ADDRESS(0x06f824, 0x160)
-VA(0x00478b90, 0x1E5) MAC_ADDRESS(0x086fa4, 0x22c)
+MAC_ADDRESS(0x086fa4, 0x22c)
 void combatManager::processFirstAid(army* currentArmy)
 {
     if (validHex(m_nextActionGridIndex)) {
@@ -2444,8 +2470,9 @@ void combatManager::processFirstAid(army* currentArmy)
 // The residual is its nested expansion decision, not a different string.
 // DC3625's extra FullUpdate in the surrender-error arm is absent in retail.
 // Mac and Windows both retain testRaiseDoor in this caller (retail 0x4672e0).
+VA(0x00478d80, 0x1054)
 DC_ADDRESS(0x06f984, 0x82a)
-VA(0x00478d80, 0x1054) MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
+MAC_ADDRESS(0x0871d0, 0xb3c)  // anchor-callee exhaustive + single-fn gap
 int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
 {
     if (!isQuickCombat()) {
@@ -2676,8 +2703,9 @@ int combatManager::processNextAction(message& msg, unsigned char automaticTurn)
     return 1;
 }
 
+VA(0x00479de0, 0x14F)
 DC_ADDRESS(0x0701b0, 0x10a)
-VA(0x00479de0, 0x14F) MAC_ADDRESS(0x087d0c, 0x164)
+MAC_ADDRESS(0x087d0c, 0x164)
 void combatManager::resetCyclingCreatures()
 {
     int cyclingCreatures = 0;
@@ -2710,8 +2738,9 @@ void combatManager::resetCyclingCreatures()
     }
 }
 
+VA(0x00479f30, 0x8B)
 DC_ADDRESS(0x0702bc, 0xda)
-VA(0x00479f30, 0x8B) MAC_ADDRESS(0x087e70, 0xa4)
+MAC_ADDRESS(0x087e70, 0xa4)
 void combatManager::resetCycleTimers()
 {
     unsigned long now = GameTime::get();
@@ -2742,8 +2771,9 @@ void combatManager::setCombatViewArmy(int newCombatViewArmy)
     writePrefs();
 }
 
+VA(0x00479fc0, 0x131)
 DC_ADDRESS(0x0703c0, 0xb4)
-VA(0x00479fc0, 0x131) MAC_ADDRESS(0x087f58, 0xec)
+MAC_ADDRESS(0x087f58, 0xec)
 void combatManager::setCombatGrid(int combatShowEntireGrid,
                                   int combatShowMouseHex,
                                   int combatGridLevel,
@@ -2779,8 +2809,9 @@ void combatManager::setCombatGrid(int combatShowEntireGrid,
 // those existing higher-level calls makes Windows 94.1419% -> 100%.
 // CodeWarrior still expands both wrappers into the native scalar fizzle
 // call sequence; its scored body remains 21.4474%. No helper is flattened.
+VA(0x0047a100, 0x1CD)
 DC_ADDRESS(0x070474, 0x1dc)
-VA(0x0047a100, 0x1CD) MAC_ADDRESS(0x088044, 0x2f0)
+MAC_ADDRESS(0x088044, 0x2f0)
 army* combatManager::addArmy(int side, int monType, int monQty,
                              int gridIndex, int setAttributes,
                              int fizzleItIn)
@@ -2823,8 +2854,9 @@ army* combatManager::addArmy(int side, int monType, int monQty,
     return newArmy;
 }
 
+VA(0x0047a2d0, 0xA7)
 DC_ADDRESS(0x070650, 0xc4)
-VA(0x0047a2d0, 0xA7) MAC_ADDRESS(0x088334, 0xe0)
+MAC_ADDRESS(0x088334, 0xe0)
 std::string combatManager::getTowerString(TWallSection wall, long archers,
                                              long skill) const
 {
@@ -2840,8 +2872,9 @@ std::string combatManager::getTowerString(TWallSection wall, long archers,
         skill, archers * 2, archers * 3);
 }
 
+VA(0x0047a380, 0x180)
 DC_ADDRESS(0x070714, 0x10a)
-VA(0x0047a380, 0x180) MAC_ADDRESS(0x088414, 0x190)
+MAC_ADDRESS(0x088414, 0x190)
 void combatManager::viewCastleBallista(int isQuickInfo)
 {
     if (m_fortificationLevel < COMBAT_FORTIFICATION_CITADEL)
@@ -2864,8 +2897,9 @@ void combatManager::viewCastleBallista(int isQuickInfo)
                  -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
+VA(0x0047a500, 0x164)
 DC_ADDRESS(0x070820, 0xfe)
-VA(0x0047a500, 0x164) MAC_ADDRESS(0x0885a4, 0x16c)
+MAC_ADDRESS(0x0885a4, 0x16c)
 unsigned char combatManager::handleCombatPlayerDrop(unsigned long dpid,
                                                       message* msg)
 {

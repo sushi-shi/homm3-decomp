@@ -53,7 +53,8 @@ long aiGetShipCost(const hero* ourHero, type_point point);
 // order. They are DEFINED by philai.cpp, not here.
 class type_AI_player {
 public:
-    // DC ai_player.h:263 (dc 0x37dec). Complete inlines the helper into
+
+    // DC ai_player.h:263. Complete inlines the helper into
     // AI_initialize; retail leaves exactly the team-word store.
     DC_ADDRESS(0x037dec, 0x4)
     void init(short newTeam) { m_team = newTeam; }
@@ -70,22 +71,25 @@ protected:
 public:
     void calculateDemand();  // 0x428740
     void endTurn();  // 0x428dd0
+
     DC_ADDRESS(0x114bc0, 0x4)
     long getMagusHutValue() const { return m_magusHutValue; }
 
-    // DC ai_player.h:273-274, dc 0x37df0: clear the cached value.
+    // DC ai_player.h:273-274: clear the cached value.
     DC_ADDRESS(0x037df0, 0x6)
     void clearMagusHutValue() { m_magusHutValue = 0; }
     // DC ai_player.h:278 (dc 0x37df8, ?...@@QBANW4EGameResource@@@Z);
     // inlined into type_income_artifact::get_value, whose by-value double
     // return temp at [ebp-8] is what the retail bytes home under /Op.
     long getResourceValue(int* resources) const;
+
     DC_ADDRESS(0x037df8, 0xe)
     double getResourceValue(enum EGameResource resource) const
     {
         return m_resourceValue[resource];
     }
     void startTurn();  // 0x4297c0
+
     DC_ADDRESS(0x114bc4, 0x14)
     static void setAttackBonuses(float computerBonus,
                                    float humanBonus)
@@ -133,8 +137,9 @@ extern type_AI_player g_aiPlayers[8];
 // constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
 struct type_creature_source {
 public:
-    DC_ADDRESS(0x037e08, 0x16)
+
     VA(0x004286b0, 0x21)  // DC signature/layout + retail stores;
+    DC_ADDRESS(0x037e08, 0x16)
     type_creature_source(TCreatureType newType, short* newAmount,
                          bool isFree)
         : m_type(newType), m_ptr(newAmount), m_isFree(isFree)
@@ -186,6 +191,7 @@ public:
                         const armyGroup* sourceArmy,
                         const hero* secondHero,
                         unsigned char newHasAngelicAlliance);
+
     DC_ADDRESS(0x114bd8, 0x4)
     long getArmyIncrease() const { return m_armyValueIncrease; }
 };
@@ -220,6 +226,7 @@ public:
                             const armyGroup* newAdjacentArmy,
                             const long* newFunds,
                             unsigned char newHasAngelicAlliance);
+
     DC_ADDRESS(0x037e20, 0x6)
     void setSubtractMode(unsigned char arg) { m_subtractCostMode = arg; }
 };

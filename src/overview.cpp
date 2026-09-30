@@ -125,8 +125,9 @@ void updateBackpack(int slot);
 // Windows from 91.74% to 91.85% without changing the 204-call sequence.
 // Mac candidate and retail each retain 214 calls; these six align at call
 // ordinals 66, 70, 172, 195, 200 and 205, all targeting the retail indexer.
+VA(0x0051bd50, 0x25DC)
 DC_ADDRESS(0x104458, 0x25a4)
-VA(0x0051bd50, 0x25DC) MAC_ADDRESS(0x133448, 0x290c)  // exhaustive body/caller identity
+MAC_ADDRESS(0x133448, 0x290c)  // exhaustive body/caller identity
 void game::setupDynamicStuff(int update, int forceUpdate)
 {
     int curBitmap;
@@ -795,8 +796,9 @@ void game::setupDynamicStuff(int update, int forceUpdate)
 // the source vocabulary; the Complete body proves the changed player fields,
 // slider update, two-message protocol, per-mode title counts, and geometry.
 // E:\gamedcs\overview.cpp:1170
+VA(0x0051e330, 0x33A)
 DC_ADDRESS(0x1069fc, 0x31a)
-VA(0x0051e330, 0x33A) MAC_ADDRESS(0x135d54, 0x3d4)
+MAC_ADDRESS(0x135d54, 0x3d4)
 void game::setupNewOverviewType(int whichType, unsigned char update)
 {
     g_overviewType = whichType;
@@ -882,8 +884,9 @@ void game::setupNewOverviewType(int whichType, unsigned char update)
 // Original: UpdateFlaggableIcon; overview.cpp:1254
 // Complete uses the incoming window receiver and its owned flaggable-item
 // array; the Dreamcast free function operates on the global overview window.
+VA(0x0051e670, 0x14D)
 DC_ADDRESS(0x106d18, 0x7e)
-VA(0x0051e670, 0x14D) MAC_ADDRESS(0x136128, 0x188)
+MAC_ADDRESS(0x136128, 0x188)
 void TOverviewWindow::updateFlaggableIcon(int i)
 {
     message msg;
@@ -918,8 +921,9 @@ void TOverviewWindow::updateFlaggableIcon(int i)
 // Complete uses the incoming window receiver and its owned flaggable-item
 // array; the Dreamcast free function operates on the global overview window.
 // E:\gamedcs\overview.cpp:1279
+VA(0x0051e7c0, 0x2A)
 DC_ADDRESS(0x106d98, 0x32)
-VA(0x0051e7c0, 0x2A) MAC_ADDRESS(0x1362b0, 0x74)  // called by WindowHandler and DoFlaggableButtons
+MAC_ADDRESS(0x1362b0, 0x74)  // called by WindowHandler and DoFlaggableButtons
 void TOverviewWindow::updateFlaggableIcons()
 {
     for (int i = 0; i < 7; ++i)
@@ -930,8 +934,9 @@ void TOverviewWindow::updateFlaggableIcons()
 // Original: DoFlaggableButtons; overview.cpp:1287
 // Complete uses the incoming window receiver and its owned flaggable-item
 // array; the Dreamcast free function operates on the global overview window.
+VA(0x0051e7f0, 0xE0)
 DC_ADDRESS(0x106dcc, 0xc2)
-VA(0x0051e7f0, 0xE0) MAC_ADDRESS(0x136324, 0xc0)
+MAC_ADDRESS(0x136324, 0xc0)
 void TOverviewWindow::doFlaggableButtons(int which)
 {
     switch (which) {
@@ -968,9 +973,9 @@ void TOverviewWindow::doFlaggableButtons(int which)
 // as literals rather than grown into EOverviewIconId because overview.h is
 // this TU's private header and the enum's declarator count is an
 // include-set input to the four large bodies around this one.
-
+VA(0x0051e8d0, 0x57B)
 DC_ADDRESS(0x106e90, 0x7d6)
-VA(0x0051e8d0, 0x57B) MAC_ADDRESS(0x1363e4, 0x8cc)
+MAC_ADDRESS(0x1363e4, 0x8cc)
 void game::overview()
 {
     g_overviewReturnAction = -1;
@@ -1147,8 +1152,9 @@ static void updateArtifacts(int slot)
 }
 
 // Mac and older DC place these retained helpers before backpack scrolling.
+VA(0x00522470, 0x15E)
 DC_ADDRESS(0x107668, 0x180)
-VA(0x00522470, 0x15E) MAC_ADDRESS(0x136cb0, 0x1cc)
+MAC_ADDRESS(0x136cb0, 0x1cc)
 void updateBackpack(int slot)
 {
     int i = 0;
@@ -1184,8 +1190,9 @@ void updateBackpack(int slot)
 
 // Complete retains this body even though its same-TU callers expand it.
 // External linkage reproduces that emission; Dreamcast labels the older body static.
+VA(0x005225d0, 0x55)
 DC_ADDRESS(0x1078e8, 0x8c)
-VA(0x005225d0, 0x55) MAC_ADDRESS(0x136e7c, 0x90)
+MAC_ADDRESS(0x136e7c, 0x90)
 long getLastBackpackIndex(long heroNumber)
 {
     if (heroNumber >= g_game->getLocalPlayer()->m_numHeroes)
@@ -1257,8 +1264,9 @@ static void showArtifact(hero* currHero,
 // widened four-row id bands, the two hero-army presentations, backpack and
 // equipped-artifact rules, the added experience/mana/specialty cases, the
 // split visiting/garrison town cases, and the summoning-portal recruit pair.
+VA(0x0051ee50, 0xBD0)
 DC_ADDRESS(0x107a90, 0xa10)
-VA(0x0051ee50, 0xBD0) MAC_ADDRESS(0x1370fc, 0xd90)  // exhaustive body/caller identity
+MAC_ADDRESS(0x1370fc, 0xd90)  // exhaustive body/caller identity
 int game::processIconSelect(int codeY, unsigned char rightMouse)
 {
     int slot;
@@ -1670,8 +1678,9 @@ int game::processIconSelect(int codeY, unsigned char rightMouse)
 // the static scalar declaration; default on emits its direct TD load.
 // This is not an engine flag: off breaks font::fillLinesVector (100 ->17%).
 // Scalar storage/profile provenance remains open; no linkage workaround.
+VA(0x0051fa20, 0x1C)
 DC_ADDRESS(0x1084a0, 0x50)
-VA(0x0051fa20, 0x1C) MAC_ADDRESS(0x137e8c, 0x44)
+MAC_ADDRESS(0x137e8c, 0x44)
 void overviewSliderCallback(int state, heroWindow* parentWindow)
 {
     g_overviewTop[g_overviewType] = state;
@@ -1690,8 +1699,9 @@ void overviewSliderCallback(int state, heroWindow* parentWindow)
 // our current VC6 context expands several of those workers. Direct insert
 // spellings and a shipyard-vector alias previously hid part of this residual.
 // Keep the canonical appends while recovering the remaining inline decisions.
+VA(0x0051fa40, 0x1311)
 DC_ADDRESS(0x1084f0, 0xa84)
-VA(0x0051fa40, 0x1311) MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callback/dtor identity
+MAC_ADDRESS(0x137ed0, 0x1e48)  // exhaustive ctor/callback/dtor identity
 TOverviewWindow::TOverviewWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -1873,8 +1883,9 @@ TOverviewWindow::TOverviewWindow()
 
 VA_COMPGEN(0x00520d60, 0x21, SCALAR_DELETING_DTOR, TOverviewWindow)
 
+VA(0x00520d90, 0x9C)
 DC_ADDRESS(0x108f74, 0x68)
-VA(0x00520d90, 0x9C) MAC_ADDRESS(0x139e00, 0xe4)
+MAC_ADDRESS(0x139e00, 0xe4)
 TOverviewWindow::~TOverviewWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -1953,8 +1964,9 @@ void TOverviewWindow::updateRollover(char* text)
 // Declaring top after slot reaches 98.51; equal aggregate block counts alone
 // do not settle this register-lifetime difference. Keep every helper call.
 // E:\gamedcs\overview.cpp:2115
+VA(0x00520e30, 0xB2C)
 DC_ADDRESS(0x10906c, 0x90e)
-VA(0x00520e30, 0xB2C) MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map + exhaustive body
+MAC_ADDRESS(0x13a018, 0xc18)  // vtable/caller/order-map + exhaustive body
 void TOverviewWindow::doRollover(int codeY)
 {
     if (codeY >= 200 && codeY <= 999) {
@@ -2465,8 +2477,9 @@ void TOverviewWindow::setHeroArtifactPage(int row, int, int pageId)
 // keyboard order is PRIOR/NEXT/HOME/END, and all page arms read overviewTop[0].
 // The mouse cache-hit return precedes the store, rollover, and second return.
 // E:\gamedcs\overview.cpp:2546
+VA(0x00521960, 0xB03)
 DC_ADDRESS(0x10997c, 0x87c)
-VA(0x00521960, 0xB03) MAC_ADDRESS(0x13aca4, 0x690)  // vtable slot 9 + exhaustive call/CFG identity
+MAC_ADDRESS(0x13aca4, 0x690)  // vtable slot 9 + exhaustive call/CFG identity
 int TOverviewWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);

@@ -7,6 +7,7 @@
 template<class T>
 class TAutoArrayPtr {
 public:
+
     DC_ADDRESS(0x05b1f8, 0xe)
     TAutoArrayPtr(T* ptr = 0) : m_owns(ptr != 0), m_ptr(ptr) {}
     // CodeView 0x57b9 declares this ordinary copy constructor, but has no
@@ -14,8 +15,10 @@ public:
     // directly from pointers; retain the declaration without guessing a
     // transfer implementation from the other ownership operations.
     TAutoArrayPtr(const TAutoArrayPtr& rhs);
+
     DC_ADDRESS(0x05b208, 0x20)
     ~TAutoArrayPtr() { if (m_owns) delete [] m_ptr; }
+
     DC_ADDRESS(0x05b228, 0x58)
     TAutoArrayPtr& operator=(const TAutoArrayPtr& rhs)
     {
@@ -30,8 +33,10 @@ public:
         rhs.m_owns = 0;
         return *this;
     }
+
     DC_ADDRESS(0x05b280, 0x4)
     T* get() const { return m_ptr; }
+
     // Original: TAutoArrayPtr<char>::release; AutoArrayPtr.h:77
     DC_ADDRESS(0x05b2d4, 0x8)
     T* release() const { m_owns = 0; return m_ptr; }

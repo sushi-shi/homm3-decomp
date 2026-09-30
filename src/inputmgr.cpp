@@ -13,8 +13,8 @@
 #include "textntry.h"
 #include "winmgr.h"
 
-DC_ADDRESS(0x0dc894, 0x20c)
 VA(0x004ec0e0, 0x1AB)
+DC_ADDRESS(0x0dc894, 0x20c)
 int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
     message* e;
@@ -58,8 +58,8 @@ int keyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long
     return e->m_id == 0;
 }
 
-DC_ADDRESS(0x0dcaa0, 0x1ac)
 VA(0x004ec290, 0x1CC)
+DC_ADDRESS(0x0dcaa0, 0x1ac)
 int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long longParam)
 {
     message* e;
@@ -131,8 +131,9 @@ int mouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wordParam, long lo
 // construction rather than this constructor body. The message array uses
 // its canonical default constructor; repeating its stores in an additional
 // derived wrapper would introduce a second clear pass absent from retail.
+VA(0x004ec460, 0x6F)
 DC_ADDRESS(0x0dd97c, 0x68)
-VA(0x004ec460, 0x6F) MAC_ADDRESS(0x10e068, 0x7c)
+MAC_ADDRESS(0x10e068, 0x7c)
 inputManager::inputManager()
 {
     m_keyboardFilter = 1;
@@ -145,8 +146,9 @@ inputManager::inputManager()
     m_prevDialog = 0;
 }
 
+VA(0x004ec4d0, 0x6D)
 DC_ADDRESS(0x0dd9e4, 0x4a)
-VA(0x004ec4d0, 0x6D) MAC_ADDRESS(0x10e10c, 0x78)
+MAC_ADDRESS(0x10e10c, 0x78)
 int inputManager::open(int keyboardFilter)
 {
     memset(m_buffer, 0, sizeof(m_buffer));
@@ -161,8 +163,9 @@ int inputManager::open(int keyboardFilter)
     return 0;
 }
 
+VA(0x004ec540, 0x1E)
 DC_ADDRESS(0x0dda30, 0x1e)
-VA(0x004ec540, 0x1E) MAC_ADDRESS(0x10e184, 0x24)
+MAC_ADDRESS(0x10e184, 0x24)
 void inputManager::close()
 {
     if (m_status != 1)
@@ -173,15 +176,17 @@ void inputManager::close()
     m_status = 0;
 }
 
+VA(0x004ec560, 0x5)
 DC_ADDRESS(0x0dda50, 0x4)
-VA(0x004ec560, 0x5) MAC_ADDRESS(0x10e1a8, 0x8)
+MAC_ADDRESS(0x10e1a8, 0x8)
 int inputManager::main(message& msg)
 {
     return 0;
 }
 
+VA(0x004ec570, 0x18)
 DC_ADDRESS(0x0dda54, 0x20)
-VA(0x004ec570, 0x18) MAC_ADDRESS(0x10e1b0, 0x38)
+MAC_ADDRESS(0x10e1b0, 0x38)
 void inputManager::flush()
 {
     process1WindowsMessage();
@@ -190,9 +195,9 @@ void inputManager::flush()
 }
 
 // canonical message clear, and both call the already-claimed
-
+VA(0x004ec590, 0xAE)
 DC_ADDRESS(0x0dda74, 0x19e)
-VA(0x004ec590, 0xAE) MAC_ADDRESS(0x10e1e8, 0x15c)
+MAC_ADDRESS(0x10e1e8, 0x15c)
 message inputManager::getEvent()
 {
     message msg;
@@ -212,8 +217,9 @@ message inputManager::getEvent()
     return msg;
 }
 
+VA(0x004ec640, 0xAD)
 DC_ADDRESS(0x0ddc14, 0xf2)
-VA(0x004ec640, 0xAD) MAC_ADDRESS(0x10e344, 0x154)
+MAC_ADDRESS(0x10e344, 0x154)
 message inputManager::peekEvent()
 {
     message msg;
@@ -266,8 +272,9 @@ void inputManager::setKeyCodeType(int newType)
 
 // Mac 0:0x10e55c copies the pretranslated message codeY field to codeX.
 // Complete's Windows body decodes scan codes and shift state instead.
+VA(0x004ec6f0, 0x1C6)
 DC_ADDRESS(0x0ddd60, 0x114)
-VA(0x004ec6f0, 0x1C6) MAC_ADDRESS(0x10e55c, 0xc)
+MAC_ADDRESS(0x10e55c, 0xc)
 void inputManager::asciiConvert(message* msg)
 {
     if ((msg->m_codeX >= KEYCODE_F1 && msg->m_codeX <= KEYCODE_F10)
@@ -303,8 +310,8 @@ void inputManager::asciiConvert(message* msg)
     }
 }
 
-DC_ADDRESS(0x0dde74, 0x1d0)
 VA(0x004ec8c0, 0x340)
+DC_ADDRESS(0x0dde74, 0x1d0)
 void inputManager::makeScanCodeTable()
 {
     for (unsigned index = 0; index < 128; index++)
@@ -400,8 +407,9 @@ void inputManager::makeScanCodeTable()
     m_scanCodeTable[88] = 0x5800;
 }
 
+VA(0x004ecc00, 0xCA)
 DC_ADDRESS(0x0de044, 0xa4)
-VA(0x004ecc00, 0xCA) MAC_ADDRESS(0x10e568, 0xe8)
+MAC_ADDRESS(0x10e568, 0xe8)
 void inputManager::forceMouseMove()
 {
     message* e;

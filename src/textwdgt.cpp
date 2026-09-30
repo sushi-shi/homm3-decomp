@@ -45,8 +45,9 @@ VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 // backColor -> 0x48, justify -> 0x4c, color -> 0x44, and VC6 rotates the
 // emitted run one place left against source order, so the source has to be
 // written `Color; BackColor; Justify;` to land retail's order.
+VA(0x005bc280, 0x12D)
 DC_ADDRESS(0x164c80, 0xa4)
-VA(0x005bc280, 0x12D) MAC_ADDRESS(0x1b149c, 0xb4)  // anchor-vtable 0x642db0 + ret 0x2c
+MAC_ADDRESS(0x1b149c, 0xb4)  // anchor-vtable 0x642db0 + ret 0x2c
 textWidget::textWidget(int x, int y, int w, int h, const char* text,
                        const char* fontName, font::TColor color, int id,
                        unsigned justify, int backColor, int style)
@@ -66,8 +67,9 @@ textWidget::textWidget(int x, int y, int w, int h, const char* text,
     m_justify = justify;
 }
 
+VA(0x005bc3b0, 0x8A)
 DC_ADDRESS(0x164d24, 0x44)
-VA(0x005bc3b0, 0x8A) MAC_ADDRESS(0x1b1550, 0x80)
+MAC_ADDRESS(0x1b1550, 0x80)
 textWidget::~textWidget()
 {
     m_font->dispose();
@@ -92,8 +94,9 @@ void textWidget::initialize(int x, int y, int w, int h, int id, int style,
 }
 
 // E:\gamedcs\textwdgt.cpp:120
+VA(0x005bc440, 0x1AD)
 DC_ADDRESS(0x164dd4, 0x1a8)
-VA(0x005bc440, 0x1AD) MAC_ADDRESS(0x1b15d0, 0x260)  // vtable 0x642db0 slot 2 + widget-message protocol
+MAC_ADDRESS(0x1b15d0, 0x260)  // vtable 0x642db0 slot 2 + widget-message protocol
 int textWidget::main(message& msg)
 {
     if (m_sleepCount > 0) {
@@ -187,8 +190,9 @@ void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
+VA(0x005bc5f0, 0x92)
 DC_ADDRESS(0x164f80, 0xb2)
-VA(0x005bc5f0, 0x92) MAC_ADDRESS(0x1b1834, 0xfc)
+MAC_ADDRESS(0x1b1834, 0xfc)
 void textWidget::draw() const
 {
     if (m_status & WIDGET_DRAWN) {
@@ -210,8 +214,9 @@ void textWidget::draw() const
     }
 }
 
+VA(0x005bc690, 0x1)
 DC_ADDRESS(0x165034, 0x4)
-VA(0x005bc690, 0x1) MAC_ADDRESS(0x1b1930, 0x4)
+MAC_ADDRESS(0x1b1930, 0x4)
 void textWidget::dim() const
 {
 }
@@ -260,10 +265,12 @@ VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 // E:\gamedcs\textwdgt.cpp:320
 // CodeView dc 0x1653b0: CV_fldattr_t.compgenx marks this destructor
 // as implicit. Its retained retail body performs only base/member teardown.
-VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget) MAC_COMPGEN_ADDRESS(0x1b1a7c, 0x60, IMPLICIT_DTOR, bitmapBackedTextWidget)
+VA_COMPGEN(0x005bc6d0, 0x8A, IMPLICIT_DTOR, bitmapBackedTextWidget)
+MAC_COMPGEN_ADDRESS(0x1b1a7c, 0x60, IMPLICIT_DTOR, bitmapBackedTextWidget)
 
+VA(0x005bc760, 0x7B)
 DC_ADDRESS(0x1651d8, 0x7a)
-VA(0x005bc760, 0x7B) MAC_ADDRESS(0x1b1934, 0x74)
+MAC_ADDRESS(0x1b1934, 0x74)
 bitmapBackedTextWidget::bitmapBackedTextWidget(
     int x, int y, int w, int h, const char* text, const char* fontName,
     const char* backName, font::TColor color, int id, unsigned justify,
@@ -282,7 +289,9 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(
 // The shared const interface moves unchanged CEnterNameEdit::OnKillFocus
 // CUR 100 -> 99.8710; its MAX/HIST stay 100 and no banked peak is lost.
 #if 0  // @carcass
-VA(0x005bc7e0, 0x3) MAC_ADDRESS(0x1b1830, 0x4)  // anchor-vtable (0x642dbc, 0x642df4)
+
+VA(0x005bc7e0, 0x3)
+MAC_ADDRESS(0x1b1830, 0x4)  // anchor-vtable (0x642dbc, 0x642df4)
 void textWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
     // @stub
@@ -296,8 +305,9 @@ void bitmapBackedTextWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 {
 }
 
+VA(0x005bc7f0, 0x7c)
 DC_ADDRESS(0x165258, 0x9c)
-VA(0x005bc7f0, 0x7c) MAC_ADDRESS(0x1b19ac, 0xd0)
+MAC_ADDRESS(0x1b19ac, 0xd0)
 void bitmapBackedTextWidget::draw() const
 {
     int drawX = m_x + m_parentWindow->m_x;

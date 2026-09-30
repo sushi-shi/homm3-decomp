@@ -36,8 +36,9 @@ static long ftol(double d)
     return result.m_words[0];
 }
 
+VA(0x00522650, 0x16)
 DC_ADDRESS(0x10a2a8, 0x48)
-VA(0x00522650, 0x16) MAC_ADDRESS(0x13b73c, 0x40)
+MAC_ADDRESS(0x13b73c, 0x40)
 TPalette16::TPalette16()
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -47,16 +48,18 @@ VA_COMPGEN(0x00522670, 0x21, SCALAR_DELETING_DTOR, TPalette16)
 
 // The raw 16-bit table overload: 0x80 dwords straight into the payload at
 // +0x1c, the same shape TPalette24's raw-data constructor has at 0x522e80.
+VA(0x005226a0, 0x2D)
 DC_ADDRESS(0x10a2f0, 0x48)
-VA(0x005226a0, 0x2D) MAC_ADDRESS(0x13b77c, 0x68)
+MAC_ADDRESS(0x13b77c, 0x68)
 TPalette16::TPalette16(const unsigned short* newData)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, newData, sizeof(m_data));
 }
 
+VA(0x005226d0, 0x9D)
 DC_ADDRESS(0x10a338, 0x72)
-VA(0x005226d0, 0x9D) MAC_ADDRESS(0x13b7e4, 0x88)
+MAC_ADDRESS(0x13b7e4, 0x88)
 TPalette16::TPalette16(const TPalette24& p24, int rbits, int rshift,
                        int gbits, int gshift, int bbits, int bshift)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -83,8 +86,9 @@ TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift,
     convertRGBQUADto16(quad, rbits, rshift, gbits, gshift, bbits, bshift);
 }
 
+VA(0x00522770, 0x9F)
 DC_ADDRESS(0x10a498, 0x70)
-VA(0x00522770, 0x9F) MAC_ADDRESS(0x13b86c, 0x84)
+MAC_ADDRESS(0x13b86c, 0x84)
 TPalette16::TPalette16(const char* name, const TPalette24& p24,
                        int rbits, int rshift, int gbits, int gshift,
                        int bbits, int bshift)
@@ -94,8 +98,9 @@ TPalette16::TPalette16(const char* name, const TPalette24& p24,
                   bbits, bshift);
 }
 
+VA(0x00522810, 0xC6)
 DC_ADDRESS(0x10a508, 0xd8)
-VA(0x00522810, 0xC6) MAC_ADDRESS(0x13b8f0, 0x120)
+MAC_ADDRESS(0x13b8f0, 0x120)
 TPalette16::TPalette16(const TPalette24& p24)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -170,16 +175,18 @@ TPalette16::TPalette16(const char* name, const TPalette24& p24)
 // The pointer-taking copy constructor, and the payload-only assignment behind
 // it - both the TPalette24 shapes with the 0x200-byte table in place of the
 // 0x300-byte one, and the assignment keeps the resource identity.
+VA(0x005228e0, 0x30)
 DC_ADDRESS(0x10a854, 0x4a)
-VA(0x005228e0, 0x30) MAC_ADDRESS(0x13ba10, 0x68)
+MAC_ADDRESS(0x13ba10, 0x68)
 TPalette16::TPalette16(const TPalette16* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_data, copy->m_data, sizeof(m_data));
 }
 
+VA(0x00522910, 0x21)
 DC_ADDRESS(0x10a8a0, 0x40)
-VA(0x00522910, 0x21) MAC_ADDRESS(0x13ba78, 0x48)
+MAC_ADDRESS(0x13ba78, 0x48)
 TPalette16* TPalette16::operator=(const TPalette16* from)
 {
     if (this != from)
@@ -187,8 +194,9 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
     return this;
 }
 
+VA(0x00522940, 0xB)
 DC_ADDRESS(0x10a8e0, 0x2e)
-VA(0x00522940, 0xB) MAC_ADDRESS(0x13bac0, 0x60)
+MAC_ADDRESS(0x13bac0, 0x60)
 TPalette16::~TPalette16()
 {
 }
@@ -255,8 +263,9 @@ void TPalette16::convertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshif
     }
 }
 
+VA(0x00522950, 0xBE)
 DC_ADDRESS(0x10aa98, 0xac)
-VA(0x00522950, 0xBE) MAC_ADDRESS(0x13bbc0, 0xe0)
+MAC_ADDRESS(0x13bbc0, 0xe0)
 void TPalette16::cycle(int begin, int end, int step)
 {
     if (step > 0) {
@@ -340,8 +349,9 @@ void TPalette16::adjustHue(float hue, float amount)
     }
 }
 
+VA(0x00522a10, 0x122)
 DC_ADDRESS(0x10b1ec, 0x134)
-VA(0x00522a10, 0x122) MAC_ADDRESS(0x13bca0, 0x160)
+MAC_ADDRESS(0x13bca0, 0x160)
 void TPalette16::adjustSaturation(float amount)
 {
     const unsigned int redNorm =
@@ -394,7 +404,8 @@ void TPalette16::adjustSaturation(float amount)
 
 #endif  // @carcass
 
-VA(0x00522b40, 0x6) MAC_ADDRESS(0x13be00, 0x8)  // TPalette16 vtable 0x640368 slot 2
+VA(0x00522b40, 0x6)
+MAC_ADDRESS(0x13be00, 0x8)  // TPalette16 vtable 0x640368 slot 2
 unsigned int TPalette16::getSize() const
 {
     return sizeof(*this);
@@ -427,8 +438,9 @@ void TPalette16::adjustValue(float amount)
     }
 }
 
+VA(0x00522b50, 0x1F5)
 DC_ADDRESS(0x10b484, 0x328)
-VA(0x00522b50, 0x1F5) MAC_ADDRESS(0x13be08, 0x274)
+MAC_ADDRESS(0x13be08, 0x274)
 void TPalette16::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
@@ -489,8 +501,9 @@ void TPalette16::adjustHSV(float hue, float hueAdjust,
     }
 }
 
+VA(0x00522d50, 0xD6)
 DC_ADDRESS(0x10b7ac, 0xea)
-VA(0x00522d50, 0xD6) MAC_ADDRESS(0x13c07c, 0x170)
+MAC_ADDRESS(0x13c07c, 0x170)
 void TPalette16::gray()
 {
     const unsigned int redNorm =
@@ -516,8 +529,9 @@ void TPalette16::gray()
 }
 #undef max
 
+VA(0x00522e30, 0x16)
 DC_ADDRESS(0x10b898, 0x6c)
-VA(0x00522e30, 0x16) MAC_ADDRESS(0x13c1ec, 0x40)  // null-name resource ctor + TPalette24 vtable
+MAC_ADDRESS(0x13c1ec, 0x40)  // null-name resource ctor + TPalette24 vtable
 TPalette24::TPalette24()
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -525,16 +539,18 @@ TPalette24::TPalette24()
 
 VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
 
+VA(0x00522e80, 0x2D)
 DC_ADDRESS(0x10b904, 0x48)
-VA(0x00522e80, 0x2D) MAC_ADDRESS(0x13c22c, 0x68)
+MAC_ADDRESS(0x13c22c, 0x68)
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, data, sizeof(m_palette));
 }
 
+VA(0x00522eb0, 0x42)
 DC_ADDRESS(0x10b94c, 0x78)
-VA(0x00522eb0, 0x42) MAC_ADDRESS(0x13c294, 0x124)
+MAC_ADDRESS(0x13c294, 0x124)
 TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
@@ -559,16 +575,18 @@ TPalette24::TPalette24(const tagRGBQUAD* quad)
     }
 }
 
+VA(0x00522f00, 0x30)
 DC_ADDRESS(0x10ba3c, 0x4a)
-VA(0x00522f00, 0x30) MAC_ADDRESS(0x13c3b8, 0x68)
+MAC_ADDRESS(0x13c3b8, 0x68)
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
 {
     memcpy(m_palette, copy->m_palette, sizeof(m_palette));
 }
 
+VA(0x00522f30, 0x21)
 DC_ADDRESS(0x10ba88, 0x22)
-VA(0x00522f30, 0x21) MAC_ADDRESS(0x13c420, 0x48)  // payload-only assignment; resource identity retained
+MAC_ADDRESS(0x13c420, 0x48)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {
     if (this != &from)
@@ -576,13 +594,15 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
     return *this;
 }
 
+VA(0x00522f60, 0x0b)
 DC_ADDRESS(0x10baac, 0x44)
-VA(0x00522f60, 0x0b) MAC_ADDRESS(0x13c468, 0x60)  // TPalette24 vtable 0x640374 + resource dtor tail
+MAC_ADDRESS(0x13c468, 0x60)  // TPalette24 vtable 0x640374 + resource dtor tail
 TPalette24::~TPalette24()
 {
 }
 
-VA(0x00522f70, 0x06) MAC_ADDRESS(0x13c4c8, 0x8)  // TPalette24 vtable 0x640374 slot 2
+VA(0x00522f70, 0x06)
+MAC_ADDRESS(0x13c4c8, 0x8)  // TPalette24 vtable 0x640374 slot 2
 unsigned int TPalette24::getSize() const
 {
     return sizeof(*this);
@@ -660,8 +680,9 @@ void TPalette24::gray()
     }
 }
 
+VA(0x00522f80, 0x20E)
 DC_ADDRESS(0x10bfd4, 0x39c)
-VA(0x00522f80, 0x20E) MAC_ADDRESS(0x13c4d0, 0x2c4)
+MAC_ADDRESS(0x13c4d0, 0x2c4)
 void TPalette24::adjustHSV(float hue, float hueAdjust,
                            float saturationAdjust, float valueAdjust)
 {
@@ -724,8 +745,9 @@ void TPalette24::adjustHSV(float hue, float hueAdjust,
 }
 
 // Original: RGBToHSV; palette.cpp:827
+VA(0x00523190, 0x160)
 DC_ADDRESS(0x10c370, 0x1f2)
-VA(0x00523190, 0x160) MAC_ADDRESS(0x13c794, 0x1c8)
+MAC_ADDRESS(0x13c794, 0x1c8)
 void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
               float* h, float* s, float* v)
 {
@@ -766,8 +788,9 @@ void rgbToHSV(unsigned int r, unsigned int g, unsigned int b,
 }
 
 // Original: HSVToRGB; palette.cpp:862
+VA(0x005232f0, 0x2EC)
 DC_ADDRESS(0x10c564, 0x34c)
-VA(0x005232f0, 0x2EC) MAC_ADDRESS(0x13c95c, 0x248)
+MAC_ADDRESS(0x13c95c, 0x248)
 void hsvToRGB(float h, float s, float v,
               unsigned int* r, unsigned int* g, unsigned int* b)
 {

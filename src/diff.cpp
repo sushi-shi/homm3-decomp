@@ -38,8 +38,9 @@ unsigned char* CDiffFile::getData()
     return static_cast<unsigned char*>(static_cast<void*>(this + 1));
 }
 
+VA(0x00490f60, 0xc5)
 DC_ADDRESS(0x0822ec, 0x8a)
-VA(0x00490f60, 0xc5) MAC_ADDRESS(0x0a25d0, 0xcc)
+MAC_ADDRESS(0x0a25d0, 0xcc)
 void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
     unsigned char* newSaveGame = new unsigned char[m_numBytes];
@@ -72,8 +73,9 @@ void* CDiffFile::apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     return newSaveGame;
 }
 
+VA(0x00491030, 0x20)
 DC_ADDRESS(0x082378, 0x14)
-VA(0x00491030, 0x20) MAC_ADDRESS(0x0a269c, 0x14)
+MAC_ADDRESS(0x0a269c, 0x14)
 CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
                        unsigned char* newData, int newSize)
     : m_oldData(oldData), m_newData(newData),
@@ -99,8 +101,9 @@ int CDiffMaker::countSameBytes(int oldOffset, int newOffset)
     return count;
 }
 
+VA(0x00491050, 0xed)
 DC_ADDRESS(0x0823d8, 0xae)
-VA(0x00491050, 0xed) MAC_ADDRESS(0x0a270c, 0x108)
+MAC_ADDRESS(0x0a270c, 0x108)
 bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
                               int& oldCount, int& newCount)
 {
@@ -143,8 +146,9 @@ bool CDiffMaker::findNextSame(int oldOffset, int newOffset,
 // diffSize/m_numBytes stores outside the loop's lexical scopes. The changed
 // arm advances newOffset before oldOffset (DC 214/215); the same-data arm uses
 // the opposite order (DC 242/243).
+VA(0x00491140, 0x1bf)
 DC_ADDRESS(0x082488, 0x130)
-VA(0x00491140, 0x1bf) MAC_ADDRESS(0x0a2814, 0x1c0)  // linkorder + calls FindNextSame and emits 12-byte records
+MAC_ADDRESS(0x0a2814, 0x1c0)  // linkorder + calls FindNextSame and emits 12-byte records
 CDiffFile* CDiffMaker::makeDiff(unsigned long& diffSize)
 {
     diffSize = 0;

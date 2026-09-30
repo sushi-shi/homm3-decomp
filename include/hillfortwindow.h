@@ -169,6 +169,7 @@ private:
     friend int hillFortWindowHandler(message& msg);
     // Original: UpgradeAll, hillfortwindow.cpp:500.
     void upgradeAll();
+
     // Original: GetCreatureType, HillFortWindow.h:170; const receiver proven.
     DC_ADDRESS(0x0d7764, 0x10)
     TCreatureType getCreatureType(int slotnum) const { return m_slot[slotnum].m_type; }

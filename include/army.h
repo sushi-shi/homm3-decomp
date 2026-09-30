@@ -1622,8 +1622,8 @@ inline int army::getLuck(unsigned char applyLimits) const
     }
 
     // E:\gamedcs\Army.h:736
-DC_ADDRESS(0x027c9c, 0x30)
 VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body
+DC_ADDRESS(0x027c9c, 0x30)
 inline int army::offsetToFront(int direction) const
     {
         if (direction >= 0 && direction <= 2)
@@ -1704,8 +1704,8 @@ inline int army::getOwningSide() const
     }
 
     // E:\gamedcs\Army.h:800
-DC_ADDRESS(0x027d44, 0x30)
 VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
+DC_ADDRESS(0x027d44, 0x30)
 inline int army::getControllingSide() const
     {
         if (m_spellInfluence[60])
@@ -1756,8 +1756,8 @@ inline bool army::isInAura() const
         return m_auraSources.size() > 0;
     }
 
-DC_ADDRESS(0x027d9c, 0x3a)
 VA(0x0041f380, 0x27)  // anchor-callee
+DC_ADDRESS(0x027d9c, 0x3a)
 inline bool army::isIncapacitated() const
     {
         return m_spellInfluence[62] || m_spellInfluence[70]
@@ -1804,6 +1804,7 @@ inline bool army::leavesNoBody() const
     {
         return is(creatureSummoned | creatureSacrificed);
     }
+
     // E:\gamedcs\Army.h:881
 DC_ADDRESS(0x0872f4, 0xa)
 inline bool army::isInAreaHighlight() const

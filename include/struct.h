@@ -31,10 +31,12 @@ public:
     short m_x : 10;
     short m_y : 10;
     short m_z : 4;
+
     DC_ADDRESS(0x01eda8, 0x8)
     type_point() {}
-    DC_ADDRESS(0x01edb0, 0x6e)
+
     VA(0x004192b0, 0x44)  // anchor-callee
+    DC_ADDRESS(0x01edb0, 0x6e)
     type_point(short newX, short newY, short newZ)
     {
         m_x = newX;
@@ -43,29 +45,32 @@ public:
     }
     // DC S_PUB32 ?is_valid@type_point@@QBA_NXZ proves a const bool member.
     bool isValid() const;
+
     // Dreamcast S_PUB32 is ??8type_point@@QBA_NABU0@@Z: bool return,
     // const member, const-reference operand.
-    DC_ADDRESS(0x01ee20, 0x7a)
     VA(0x0042ec20, 0x45)  // exact body + sole caller
+    DC_ADDRESS(0x01ee20, 0x7a)
     bool operator==(const type_point& arg) const
     {
         return m_x == arg.m_x && m_y == arg.m_y && m_z == arg.m_z;
     }
-    DC_ADDRESS(0x037d2c, 0x5a)
+
     VA(0x00482340, 0x45)  // call edge + byte-identical point comparison
+    DC_ADDRESS(0x037d2c, 0x5a)
     bool operator!=(const type_point& arg) const
     {
         return m_x != arg.m_x || m_y != arg.m_y || m_z != arg.m_z;
     }
+
     // E:\gamedcs\struct.h:120, and advspells.obj's own Dreamcast roster
-    // retains it out of line (dc 0x22fe4, 0x2e B). Retail has no body:
+    // retains it out of line (0x2e B). Retail has no body:
     // advManager::TownGate (0x41d360) is the admitted witness and EXPANDS
     // it twice in one statement pair - once for the `< best` test and
     // once for the store into `best`, each time as
     // `(this->x - p2->x)^2 + (this->y - p2->y)^2` with the two 10-bit
     // bitfields sign-extended through the shl/movsx/sar triple. The z
     // plane takes no part, which is what makes it a MAP distance.
-    // DC struct.h:120 proves const type_point& p2 (dc 0x22fe4).
+    // DC struct.h:120 proves const type_point& p2.
     DC_ADDRESS(0x022fe4, 0x2e)
     int distanceSquared(const type_point& p2) const
     {
@@ -89,15 +94,20 @@ public:
     int m_minY;
     int m_maxX;
     int m_maxY;
+
     DC_ADDRESS(0x0639e8, 0x4)
     SLimitData() {}
+
     DC_ADDRESS(0x01ee9c, 0x26)
     SLimitData(int minx, int miny, int maxx, int maxy)
         : m_minX(minx), m_minY(miny), m_maxX(maxx), m_maxY(maxy) {}
+
     DC_ADDRESS(0x023014, 0xa)
     int width() const { return m_maxX - m_minX + 1; }
+
     DC_ADDRESS(0x023020, 0xa)
     int height() const { return m_maxY - m_minY + 1; }
+
     DC_ADDRESS(0x0872a8, 0x32)
     bool intersects(const SLimitData& limits) const
     {
@@ -106,6 +116,7 @@ public:
             && m_minY <= limits.m_maxY
             && m_maxY >= limits.m_minY;
     }
+
     // Original: SLimitData::Contains; struct.h:293
     DC_ADDRESS(0x0639ec, 0x2a)
     unsigned char contains(int x, int y) const
@@ -113,11 +124,13 @@ public:
         return m_minX <= x && x <= m_maxX
             && m_minY <= y && y <= m_maxY;
     }
+
     DC_ADDRESS(0x0872dc, 0x16)
     bool isEmpty() const
     {
         return m_maxX < m_minX || m_maxY < m_minY;
     }
+
     DC_ADDRESS(0x02302c, 0x2c)
     void clip(const SLimitData& limits)
     {
@@ -130,6 +143,7 @@ public:
         if (m_maxY > limits.m_maxY)
             m_maxY = limits.m_maxY;
     }
+
     DC_ADDRESS(0x04c968, 0x2c)
     void include(const SLimitData& limits)
     {
@@ -155,14 +169,16 @@ public:
     unsigned long m_dpid;  // +0x00
     char m_name[24];  // +0x04
     int m_version;
-    DC_ADDRESS(0x11f5e4, 0xe)
+
     VA(0x0057F720, 0x18)
+    DC_ADDRESS(0x11f5e4, 0xe)
     CNetPlayerInfo()
     {
         m_dpid = 0;
         m_name[0] = 0;
         m_version = g_videoGameState;
     }
+
     // E:\gamedcs\struct.h:346
     DC_ADDRESS(0x1473cc, 0x2c)
     CNetPlayerInfo(char* name, unsigned long dpid)
@@ -183,6 +199,7 @@ namespace GameTime {
     unsigned long get();             // 0x4f82e0
     void delayTil(unsigned long time);  // 0x4f82f0
     void delay(int interval);        // 0x4f83c0
+
     // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
     // header inlines of the same family; no retail out-of-line body
     // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
@@ -197,6 +214,7 @@ namespace GameTime {
     {
         return static_cast<long>(stop - start);
     }
+
     // DC struct.h:412 explicitly calls Get then Elapsed(stop, start).
     // Retain the canonical call even where retail expands the subtraction.
     DC_ADDRESS(0x01eed4, 0x30)
@@ -204,6 +222,7 @@ namespace GameTime {
     {
         return elapsed(get(), time);
     }
+
     // DC public ?IsPast@GameTime@@YA_NK@Z proves native bool although
     // NB11 lowers its return record to T_UCHAR. DC struct.h:420 calls
     // ElapsedSince then tests the sign, as retail caller expansions do.
@@ -212,7 +231,8 @@ namespace GameTime {
     {
         return elapsedSince(time) >= 0;
     }
-    // DC struct.h:438 (dc 0x4c994, 44 B on SH4) - the frame-pacing
+
+    // DC struct.h:438 (44 B on SH4) - the frame-pacing
     // step, and a HEADER INLINE: no retail out-of-line body exists,
     // /Ob2 expands it at every site. army::Fly (0x4b4a40) is the
     // expansion that proves the shape - `this_frame` is homed to a

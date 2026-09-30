@@ -788,6 +788,7 @@ public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > m_message;
     unsigned char m_hasCustomGuardians;
     armyGroup m_guardians;
+
     // E:\gamedcs\MapCell.h:333
     DC_ADDRESS(0x0f4790, 0x3c)
     TreasureData() : m_hasCustomGuardians(0) {}
@@ -873,6 +874,7 @@ public:
     signed char m_townNum;
     __int64 m_buildBuildings;
     unsigned short m_generatorBonuses[7];
+
     // MapCell.h:400 in the DC roster - a header-inline default constructor.
     // loadTownEventList's resize temp proves its whole body: after the base
     // string is tidied it zeroes the eight bytes of BuildBuildings and
@@ -898,6 +900,7 @@ public:
     // this written empty default for the existing resize temporaries.
     // DC class 0x309b has only generated default/copy constructors (0x103).
     CObjectType() {}
+
     // Dreamcast retains an out-of-line copy, while Complete
     // expands this header helper at the view-world draw-cell test.
     // E:\gamedcs\MapCell.h:565
@@ -976,6 +979,7 @@ public:
     type_point getTrigger() const;
     CObjectType* getObjectTypePtr() const;
     TAdventureObjectType getType() const;
+
     // Original: CObject::CObject; MapCell.h:587
     // loadMapObjects' vector resize expands the distinct default ctor;
     // the recorded overload is not a five-argument ctor with defaults.
@@ -985,6 +989,7 @@ public:
         m_extraInfo = 0xffffffff;
         m_animationOffset = static_cast<unsigned char>(random(0, 255));
     }
+
     // Original: CObject::CObject; MapCell.h:595
     // game::InsertObject expands this coordinate/type/extra-info overload.
     DC_ADDRESS(0x0bc868, 0x74)
@@ -1154,8 +1159,9 @@ public:
     // E:\gamedcs\MapCell.h:685
     // Mac NewfullMap::init passes this retained constructor through the
     // array-construction callback at 0x11f28c.
+    VA(0x004fd650, 0x3E)
     DC_ADDRESS(0x0f49a4, 0xac)
-    VA(0x004fd650, 0x3E) MAC_ADDRESS(0x11f354, 0x80)
+    MAC_ADDRESS(0x11f354, 0x80)
     NewmapCell()
     {
         m_groundSet = 0;
@@ -1208,6 +1214,7 @@ public:
     // DC type 0x30cb records public TArtifact Artifact. The map and save
     // formats encode different widths; decode those at the stream boundary.
     TArtifact m_artifact;
+
     // E:\gamedcs\MapCell.h:735
     DC_ADDRESS(0x0f4a50, 0x28)
     MonsterData() { m_artifact = ARTIFACT_NONE; }
@@ -1456,7 +1463,7 @@ public:
 
 // Canonical inline definitions in Dreamcast MapCell.h source-line order.
 
-// MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
+// MapCell.h:769 in the DC roster, i.e. a header inline of
 // this class - and retail keeps no out-of-line row for it either.
 // advManager::ProcessDeSelect's elevation-toggle arm expands it in
 // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
@@ -1475,14 +1482,14 @@ inline const NewmapCell* NewfullMap::zCell(int x, int y, int z) const
     return m_cellData + x + y * m_size + z * m_size * m_size;
 }
 
-// MapCell.h:850, dc 0x1f974. This worker reproduces all 49 retail bytes
+// MapCell.h:850. This worker reproduces all 49 retail bytes
 // at 0x408770, including the boat callers' retained zero-coordinate lookup.
 // The former scalar-cell claim incorrectly distinguished 49 x86 bytes from
 // 82 SH4 bytes and alleged a zCell bounds test absent on both platforms.
 // Identical folded bodies cannot prove a unique original retail symbol;
 // this annotation owns the emitted canonical worker, not a renamed wrapper.
-DC_ADDRESS(0x01f974, 0x52)
 VA(0x00408770, 0x31)  // exact body + anchor-callees
+DC_ADDRESS(0x01f974, 0x52)
 inline NewmapCell* NewfullMap::zCell(int x, int y, int z)
 {
     return m_cellData + x + y * m_size + z * m_size * m_size;
@@ -1520,8 +1527,8 @@ inline NewmapCell* NewfullMap::cell(type_point point)
 // public decoration is `?PlayerKnowsCell@ExtraInfoUnion@@QBA_NF@Z`),
 
 // The visited-player mask is eight bits at +5.
-DC_ADDRESS(0x01fa40, 0x40)
 VA(0x00529690, 0x33)  // hd-crossbuild + anchor-callee x3
+DC_ADDRESS(0x01fa40, 0x40)
 inline bool ExtraInfoUnion::playerKnowsCell(short player) const
 {
     if (player < 0 || player >= 8)
@@ -1562,7 +1569,7 @@ inline bool ExtraInfoUnion::isDefendedArtifact() const
     return m_artifactInfo.m_price == const_artifact_defended;
 }
 
-// MapCell.h:959/964, dc 0x9c7b4 / 0x9c7c0. DoEventCampfire (0x4a1120)
+// DC MapCell.h:959/964. DoEventCampfire (0x4a1120)
 // proves the short size truncation and unsigned resource lane. The DC public
 // ?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ returns the
 // enum; its conversion is what takes doEventCampfire past the /Ob2 save cliff.
@@ -1644,7 +1651,7 @@ inline enum EGameResource ExtraInfoUnion::getGardenResource() const
     return H3_ENUM_DECODE(EGameResource, m_gardenInfo.m_resource);
 }
 
-// Original SetGarden, MapCell.h:1028..1032, dc 0xbc9b0.
+// Original SetGarden, MapCell.h:1028..1032.
 DC_ADDRESS(0x0bc9b0, 0x54)
 inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 {
@@ -1656,7 +1663,7 @@ inline void ExtraInfoUnion::setGarden(short id, EGameResource resource)
 DC_ADDRESS(0x09c858, 0xc)
 inline void ExtraInfoUnion::setGardenEmpty() { m_gardenInfo.m_full = 0; }
 
-// Original SetMagicSpring, MapCell.h:1040..1043, dc 0xbca04.
+// Original SetMagicSpring, MapCell.h:1040..1043.
 DC_ADDRESS(0x0bca04, 0x48)
 inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
 {
@@ -1664,7 +1671,7 @@ inline void ExtraInfoUnion::setMagicSpring(short id, unsigned char full)
     m_magicSpringInfo.m_full = full;
 }
 
-// MapCell.h:1046/1051, dc 0x9c864 / 0x9c870. do_event_pyramid
+// DC MapCell.h:1046/1051. do_event_pyramid
 // (0x4a4230) proves the signed spell lane and bit-zero guarded flag.
 DC_ADDRESS(0x09c864, 0xa)
 inline int ExtraInfoUnion::getPyramidSpell() const { return m_pyramidInfo.m_spell; }
@@ -1673,8 +1680,8 @@ DC_ADDRESS(0x09c870, 0x6)
 inline bool ExtraInfoUnion::pyramidIsGuarded() const { return m_pyramidInfo.m_guarded; }
 
 // E:\gamedcs\MapCell.h:1056
-DC_ADDRESS(0x09c878, 0x20)
 VA(0x004c2330, 0x27)
+DC_ADDRESS(0x09c878, 0x20)
 inline void ExtraInfoUnion::setPyramid(bool guards, int newSpell)
 {
     m_pyramidInfo.m_guarded = guards;
@@ -1750,7 +1757,7 @@ inline void ExtraInfoUnion::setSkeleton(int id, bool hasTreasure, short artifact
     m_skeletonInfo.m_hasTreasure = hasTreasure;
 }
 
-// MapCell.h:1111/1116, dc 0x9c918 / 0x9c924. The original return domains
+// DC MapCell.h:1111/1116. The original return domains
 // are SeaChestRewardTypes / TArtifact; retain the existing int-wide reads.
 DC_ADDRESS(0x09c918, 0xc)
 inline int ExtraInfoUnion::getSeaChestReward() const { return m_seaChestInfo.m_reward; }
@@ -1823,8 +1830,8 @@ inline bool ExtraInfoUnion::wagonIsFull() const { return m_wagonInfo.m_full; }
 // bitset default-constructed and unpinned, RandomizeEvents retains this call
 // and the 0x4c2360 body matches exactly.
 // E:\gamedcs\MapCell.h:1176
-DC_ADDRESS(0x0bcac8, 0x74)
 VA(0x004c2360, 0x27)
+DC_ADDRESS(0x0bcac8, 0x74)
 inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 {
     m_wagonInfo.m_resource = resource;
@@ -1839,8 +1846,8 @@ inline void ExtraInfoUnion::setWagon(EGameResource resource, short amount)
 // These named stores retain the exact 0x4c2390 body; the packed-mask
 // spelling made VC6 expand every use and omit the standalone helper.
 // E:\gamedcs\MapCell.h:1185
-DC_ADDRESS(0x0bcb3c, 0x58)
 VA(0x004c2390, 0x21)
+DC_ADDRESS(0x0bcb3c, 0x58)
 inline void ExtraInfoUnion::setWagon(int artifact)
 {
     m_wagonInfo.m_artifact = artifact;
@@ -1914,8 +1921,8 @@ inline TSecondarySkill ExtraInfoUnion::getWitchSkill() const
 // E:\gamedcs\MapCell.h:1251
 // DC lines 1252/1253 assign the typed skill, then clear visits. Retail folds
 // those field stores into the combined 0xfff0001f mask; retain the source fields.
-DC_ADDRESS(0x0bcbdc, 0x3c)
 VA(0x004c23c0, 0x1c)
+DC_ADDRESS(0x0bcbdc, 0x3c)
 inline void ExtraInfoUnion::setWitchSkill(TSecondarySkill skill)
 {
     m_witchHutInfo.m_skill = skill;

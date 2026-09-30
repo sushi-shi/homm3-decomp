@@ -43,6 +43,7 @@ public:
     int m_score;
     int m_index;
     int m_completeOrder;
+
     MAC_ADDRESS(0x097e50, 0x20)
     CampaignScenarioInfo()
         : m_completed(false), m_days(0), m_score(0), m_index(-1), m_completeOrder(0)
@@ -168,6 +169,7 @@ public:
     // Retail-only load surface at 0x48a310; SavedGameHeader::Load passes the
     // stream and save version and the callee reads both.
     void load(TAbstractFile* infile, int saveVersion);
+
     VA(0x0057C780, 0x0E)  // hd-crossbuild masked identity + sole retail caller
     CampaignScenarioInfo* getCurrentScenario()
     {

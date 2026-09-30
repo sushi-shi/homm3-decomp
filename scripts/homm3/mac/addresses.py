@@ -7,13 +7,15 @@ literals keep their reviewed Mac data inventories.
 
 Placement is the identity join:
 
-  VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)
+  VA(0x004d8720, 0x568)
+  DC_ADDRESS(...)                 (when a Dreamcast procedure is retained)
+  MAC_ADDRESS(0x0f3fe4, 0x568)
                    the Mac body of the function this VA claims. The pair is
-                   written on one line so every existing VA-to-declarator
-                   scanner keeps its adjacency.
+                   written in one annotation block, one macro per line.
   MAC_ADDRESS(0x0f1db4, 0x60)       (own line, directly above a definition)
                    a source function with no Windows VA.
-  VA_COMPGEN(...) MAC_COMPGEN_ADDRESS(offset, size, KIND, Owner)
+  VA_COMPGEN(...)
+  MAC_COMPGEN_ADDRESS(offset, size, KIND, Owner)
                    a compiler-generated body; kind and owner must agree with
                    the VA_COMPGEN it sits beside. A standalone
                    MAC_COMPGEN_ADDRESS names a Mac-only generated body.
@@ -32,6 +34,7 @@ Every source address claim and runtime label must resolve to exactly one
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from bisect import bisect_left
 from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
@@ -197,6 +200,8 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
                 path, _line_of(raw, start), va, size,
                 (args[2], args[3]) if compgen else None, label)))
     by_end = {end: claim for _start, end, claim in windows}
+    windows_ends = sorted(by_end)
+    dc_gap = re.compile(r"(?:\s|DC_ADDRESS\s*\([^()]*\))*")
 
     claims: list[Claim] = []
     for head, compgen in ((MAC_HEAD_RE, False), (MAC_COMPGEN_HEAD_RE, True)):
@@ -222,15 +227,24 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
             if size <= 0 or offset % 4 or size % 4:
                 problems.append(f"{where}: {macro} span {offset:#x}+{size:#x} is not a word-aligned code span")
                 continue
-            # A same-line VA/VA_COMPGEN pairs with this claim.
+            # Pair within the annotation block, across comments and DC claims.
             line_start = masked.rfind("\n", 0, start) + 1
             before = masked[line_start:start]
             partner = None
+            previous = bisect_left(windows_ends, start) - 1
+            if previous >= 0:
+                previous_end = windows_ends[previous]
+                candidate = by_end[previous_end]
+                gap = masked[previous_end + 1:start]
+                # Generated claims have no following definition to delimit
+                # ownership. A blank line ends their annotation block.
+                separated = candidate.compgen is not None and re.search(
+                    r"\n[ \t]*\n", raw[previous_end + 1:start])
+                if not separated and dc_gap.fullmatch(gap):
+                    partner = candidate
             if before.strip():
-                stripped = before.rstrip()
-                partner = by_end.get(line_start + len(stripped) - 1)
-                if partner is None:
-                    problems.append(f"{where}: {macro} must follow its VA/VA_COMPGEN on the same line "
+                if partner is None and not dc_gap.fullmatch(before):
+                    problems.append(f"{where}: {macro} must follow its VA/VA_COMPGEN in the annotation block "
                                     "or stand alone above a definition")
                     continue
             if partner is not None:
@@ -255,7 +269,7 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
                 problems.append(f"{where}: orphan MAC_ADDRESS - no definition follows")
                 continue
             if re.match(r"(?:VA|VA_COMPGEN)\s*\(", masked[follower:]):
-                problems.append(f"{where}: write MAC_ADDRESS on the line of the VA it pairs with")
+                problems.append(f"{where}: write MAC_ADDRESS after the VA it pairs with")
                 continue
             if ACCESS_LABEL_RE.match(masked, follower):
                 problems.append(f"{where}: write MAC_ADDRESS below the access label, "
@@ -263,7 +277,7 @@ def scan_text(raw: str, path: str) -> tuple[list[Claim], list[WindowsClaim], lis
                 continue
             if follower in owned_definitions:
                 problems.append(f"{where}: this definition is VA({owned_definitions[follower]:#010x}); "
-                                "write its Mac address on that VA line")
+                                "write its Mac address after that VA in the annotation block")
                 continue
             label, parameters = _declarator(masked[follower:follower + 2000])
             if not label:

@@ -756,6 +756,7 @@ extern const char* g_townTypeNames[10];
 
 class townManager : public baseManager {
 public:
+
     // Original: townManager::SetTown; TownMgr.h:686
     // town::view0x5be210 expands the assignment to Complete's +0x38 field.
     DC_ADDRESS(0x168e24, 0x6)

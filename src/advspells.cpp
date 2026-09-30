@@ -21,8 +21,9 @@
 #include "towngatewindow.h"
 #include "winmgr.h"
 
+VA(0x0041c2f0, 0x192)
 DC_ADDRESS(0x02194c, 0xe0)
-VA(0x0041c2f0, 0x192) MAC_ADDRESS(0x01cf84, 0x224)
+MAC_ADDRESS(0x01cf84, 0x224)
 void advManager::checkCastSpell()
 {
     if (g_game->getCurrHeroId() == -1)
@@ -71,8 +72,9 @@ void advManager::checkCastSpell()
 // Each arm re-derives its own `who` because each inlined handler opens with
 // its own game::GetCurrHero, and the two ViewWorld arms hand their own case
 // value to both ViewWorld and GetManaCost.
+VA(0x0041c490, 0x404)
 DC_ADDRESS(0x021a2c, 0x158)
-VA(0x0041c490, 0x404) MAC_ADDRESS(0x01d1a8, 0x1bc)  // linkorder + anchor-callee hero::Fly / get_spell_level
+MAC_ADDRESS(0x01d1a8, 0x1bc)  // linkorder + anchor-callee hero::Fly / get_spell_level
 void advManager::castSpell(SpellID whichSpell)
 {
     hero* who = g_game->getCurrHero();
@@ -153,8 +155,9 @@ void advManager::castSpell(SpellID whichSpell)
 // test scored 91.4864% with an extra comparison. The flag records the
 // actual successful cell test while preserving search order and refusal
 // side effects; no new helper is inferred from that flag.
+VA(0x0041c8a0, 0x54D)
 DC_ADDRESS(0x021b84, 0x4d0)
-VA(0x0041c8a0, 0x54D) MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
+MAC_ADDRESS(0x01d364, 0x650)  // anchor-callee hero::find_summonable_boat + game::CreateBoat
 void advManager::summonBoat(TSkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_SUMMON_BOAT];
@@ -256,8 +259,9 @@ void advManager::summonBoat(TSkillMastery level)
 }
 
 // E:\gamedcs\advspells.cpp:328
+VA(0x0041cdf0, 0x29D)
 DC_ADDRESS(0x022054, 0x206)
-VA(0x0041cdf0, 0x29D) MAC_ADDRESS(0x01d9b4, 0x310)  // anchor-vtable TSkuttleBoatWindow ctor/dtor
+MAC_ADDRESS(0x01d9b4, 0x310)  // anchor-vtable TSkuttleBoatWindow ctor/dtor
 void advManager::skuttleBoat(TSkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_SCUTTLE_BOAT];
@@ -330,8 +334,9 @@ void advManager::skuttleBoat(TSkillMastery level)
 // DC425..427 the scoped doorWin, and DC462 one-argument GetManaCost.
 // The traits reference and mastery parameter retain their recorded types;
 // TSpellTraits is the older source name for SSpellTraits.
+VA(0x0041d090, 0x2C6)
 DC_ADDRESS(0x02225c, 0x2b4)
-VA(0x0041d090, 0x2C6) MAC_ADDRESS(0x01dcc4, 0x404)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo
+MAC_ADDRESS(0x01dcc4, 0x404)  // anchor-vtable TDimensionDoorWindow ctor/dtor + anchor-callee TeleportTo
 void advManager::dimensionDoor(TSkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_DIMENSION_DOOR];
@@ -433,8 +438,9 @@ void advManager::dimensionDoor(TSkillMastery level)
 // Windows to 90.50%.
 // Original local names: TGWindow, closest_town, closest_distance_2,
 // hero_loc, town_loc; normalized below without changing their scopes.
+VA(0x0041d360, 0x5C8)
 DC_ADDRESS(0x022510, 0x3d6)
-VA(0x0041d360, 0x5C8) MAC_ADDRESS(0x01e0c8, 0x6c0)  // anchor-vtable TTownGateWindow ctor/dtor
+MAC_ADDRESS(0x01e0c8, 0x6c0)  // anchor-vtable TTownGateWindow ctor/dtor
 void advManager::townGate(TSkillMastery level)
 {
     const SSpellTraits& traits = g_spellTraits[SPELL_TOWN_PORTAL];
@@ -532,7 +538,6 @@ void advManager::townGate(TSkillMastery level)
 // E:\gamedcs\advspells.cpp:605
 // Visions. Raises the caster's own visions level, posts the confirmation
 // line and charges the mana; the sample runs across all of it.
-
 DC_ADDRESS(0x0228e8, 0xdc)
 MAC_ADDRESS(0x01e798, 0x138)
 void advManager::identify(TSkillMastery level)
@@ -552,7 +557,6 @@ void advManager::identify(TSkillMastery level)
 // Water Walk. hero::CanWalkOnWater is the whole gate - already walking, or
 // wearing the boots (artifact 0x5a), and nothing happens; aboard a boat the
 // helper answers no and the spell runs.
-
 DC_ADDRESS(0x0229c4, 0x7a)
 MAC_ADDRESS(0x01e8d0, 0x128)
 void advManager::waterWalk(TSkillMastery level)
@@ -571,7 +575,6 @@ void advManager::waterWalk(TSkillMastery level)
 
 // E:\gamedcs\advspells.cpp:654
 // Disguise. The shortest of the four: set the level, charge, wait.
-
 DC_ADDRESS(0x022a40, 0x5a)
 MAC_ADDRESS(0x01e9f8, 0xc8)
 void advManager::disguise(TSkillMastery level)
@@ -588,7 +591,6 @@ void advManager::disguise(TSkillMastery level)
 // but the boat case is not silent here - it gets its own refusal line, and
 // retail re-reads the boat bit for that second test rather than reusing the
 // one IsFlying already made. hero::Fly charges the mana itself.
-
 DC_ADDRESS(0x022a9c, 0xec)
 MAC_ADDRESS(0x01eac0, 0x160)
 void advManager::flight(TSkillMastery level)
@@ -616,8 +618,9 @@ void advManager::flight(TSkillMastery level)
 // just re-obscure the cell; is_replay only suppresses the packet; and
 // draw_changes decides whether the sample plays and whether the visibility
 // scan runs at all.
+VA(0x0041d930, 0x464)
 DC_ADDRESS(0x022b88, 0x45c)
-VA(0x0041d930, 0x464) MAC_ADDRESS(0x01ec20, 0x4d4)
+MAC_ADDRESS(0x01ec20, 0x4d4)
 void advManager::teleportTo(hero* who, type_point destination,
                             const char* sampleName,
                             unsigned char isRemoteMove,

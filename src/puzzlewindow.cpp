@@ -121,8 +121,9 @@ static Bitmap816* getPuzzleBitmap(long puzzle, long piece)
     return ResourceManager::getBitmap816(pieceName);
 }
 
+VA(0x0052c1e0, 0x388)
 DC_ADDRESS(0x114f40, 0x328)
-VA(0x0052c1e0, 0x388) MAC_ADDRESS(0x14727c, 0x548)
+MAC_ADDRESS(0x14727c, 0x548)
 TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
@@ -176,8 +177,9 @@ TPuzzleWindow::TPuzzleWindow(int puzzlenum)
 
 VA_COMPGEN(0x0052c570, 0x21, SCALAR_DELETING_DTOR, TPuzzleWindow)
 
+VA(0x0052c5a0, 0x96)
 DC_ADDRESS(0x115268, 0xa2)
-VA(0x0052c5a0, 0x96) MAC_ADDRESS(0x1477c4, 0x10c)
+MAC_ADDRESS(0x1477c4, 0x10c)
 TPuzzleWindow::~TPuzzleWindow()
 {
     for (int i = 0; i < 48; ++i)
@@ -209,8 +211,9 @@ int TPuzzleWindow::convertID2HelpID(int id) const
 }
 
 // E:\gamedcs\puzzlewindow.cpp:203
+VA(0x0052c640, 0x78)
 DC_ADDRESS(0x115328, 0x7e)
-VA(0x0052c640, 0x78) MAC_ADDRESS(0x1478d0, 0xfc)  // vtable slot 9 + CAdvPopup delegation
+MAC_ADDRESS(0x1478d0, 0xfc)  // vtable slot 9 + CAdvPopup delegation
 int TPuzzleWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);
@@ -240,8 +243,9 @@ int TPuzzleWindow::windowHandler(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
+VA(0x0052c6c0, 0xAD)
 DC_ADDRESS(0x1153a8, 0x11c)
-VA(0x0052c6c0, 0xAD) MAC_ADDRESS(0x1479cc, 0xec)
+MAC_ADDRESS(0x1479cc, 0xec)
 int TPuzzleWindow::updatePuzzle(int full)
 {
     int piecesNotFound = 0;
@@ -306,8 +310,9 @@ type_AI_puzzle_tile::type_AI_puzzle_tile()
 
 static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17]);
 
+VA(0x0052c770, 0x140)
 DC_ADDRESS(0x115538, 0x184)
-VA(0x0052c770, 0x140) MAC_ADDRESS(0x147b28, 0x1e0)
+MAC_ADDRESS(0x147b28, 0x1e0)
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
     m_objectType = 0;
@@ -340,7 +345,6 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 // the two four-bit offsets together, `test cl,0x1f` for terrain, `test
 // ecx,0x1fe0` for river and road together, and `test dl,1` for diggable.
 // has_grail and visible are deliberately NOT compared.
-
 DC_ADDRESS(0x1156bc, 0xc0)
 MAC_ADDRESS(0x147d08, 0x178)
 unsigned char type_AI_puzzle_tile::operator==(
@@ -364,8 +368,9 @@ unsigned char type_AI_puzzle_tile::operator==(
 // final cursors are not dereferenced, but their formation is not valid portable
 // C++. The earlier guarded repair scored 60.63%; bounded offset alternatives
 // remain non-exact. No extra allocation or padding guarantee is claimed.
+VA(0x0052c8b0, 0xFC)
 DC_ADDRESS(0x11577c, 0xbc)
-VA(0x0052c8b0, 0xFC) MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
+MAC_ADDRESS(0x147e80, 0xf0)  // bracketed between tile ctor and AI attempt
 void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 {
     int offsetX = (-16 - destX) & 31;
@@ -409,7 +414,6 @@ void Bitmap816::markPuzzle(unsigned char* visible, long destX, long destY)
 // E:\gamedcs\puzzlewindow.cpp:403.
 // Complete reads setup alignment directly and disposes through the bitmap
 // vtable; those retail operations override the older DC callees.
-
 DC_ADDRESS(0x115838, 0x10a)
 MAC_ADDRESS(0x147f70, 0x148)
 static unsigned char markAIPuzzle(long player, unsigned char* visible)
@@ -439,7 +443,6 @@ static unsigned char markAIPuzzle(long player, unsigned char* visible)
 // E:\gamedcs\puzzlewindow.cpp:445.
 // DC proves the array reference and point local.
 // Complete's tile dimensions are 19x17, independently fixed by retail strides.
-
 DC_ADDRESS(0x115944, 0x12c)
 MAC_ADDRESS(0x1480b8, 0x190)
 static void createAIPuzzleMap(long player, unsigned char* visible,
@@ -467,8 +470,9 @@ static void createAIPuzzleMap(long player, unsigned char* visible,
 // direct construction keeps its canonical point constructor and avoids a copy.
 // Retail loads current before storing best; DC 668/669 spans support the
 // point assignment before that scalar update (Windows 99.22 -> 100).
+VA(0x0052c9b0, 0x55B)
 DC_ADDRESS(0x115f64, 0x3e4)
-VA(0x0052c9b0, 0x55B) MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller
+MAC_ADDRESS(0x1489fc, 0x428)  // anchor-caller
 type_point aiAttemptPuzzleGuess(long player)
 {
     int found = g_game->setupPuzzlePieces(player, 1);
@@ -527,14 +531,13 @@ type_point aiAttemptPuzzleGuess(long player)
 
 // E:\gamedcs\puzzlewindow.cpp:472. Retail expands this file static into
 // match_puzzle below - its only call site - so no out-of-line retail row
-// exists; the Dreamcast build kept one at dc 0x115a70. `origin` arrives BY
+// exists; the Dreamcast build kept one. `origin` arrives BY
 // VALUE and is rebased in place (the dword copy at match_puzzle+0x26c then
 // two bitfield writes), and both index parameters are reused as the scan's
 // own counters: `first_y` keeps the caller's value as its lower bound while
 // `first_x` restarts at zero. A single mismatched tile answers zero
 // immediately, which is why retail's failure edge jumps straight past the
 // caller's score test.
-
 DC_ADDRESS(0x115a70, 0x176)
 MAC_ADDRESS(0x148248, 0x240)
 static long checkMatch(long player, long firstX, long firstY,
@@ -585,8 +588,9 @@ static long checkMatch(long player, long firstX, long firstY,
 // differences are four size-only blocks with matching branch/call structure.
 // Whole-board references, long census counters and uncast RECT bounds retain
 // Windows 95.1081%; Mac reference selectors remain a non-exact source lead.
+VA(0x0052cf10, 0x5B4)
 DC_ADDRESS(0x115be8, 0x37c)
-VA(0x0052cf10, 0x5B4) MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d
+MAC_ADDRESS(0x148488, 0x574)  // anchor-caller AI_attempt_puzzle_guess +0x39d
 static type_point matchPuzzle(long player, type_AI_puzzle_tile (&puzzleMap)[19][17])
 {
     type_AI_puzzle_tile first;

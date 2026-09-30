@@ -30,8 +30,8 @@
 
 static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw);
 
-DC_ADDRESS(0x0e7c90, 0x8e)
 VA(0x004f7a30, 0x1CF)
+DC_ADDRESS(0x0e7c90, 0x8e)
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE previousInstance, LPSTR cmdLine, int sw)
 {
     DWORD lastError;
@@ -111,8 +111,8 @@ static int appInit(HINSTANCE instance, HINSTANCE previousInstance, int sw)
 }
 
 // AppWndProc retains its AppCommand call at +0x359 without an inline fence.
-DC_ADDRESS(0x0e7e38, 0x180)
 VA(0x004f7c00, 0x394)
+DC_ADDRESS(0x0e7e38, 0x180)
 LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     switch (message) {
@@ -217,8 +217,8 @@ LRESULT CALLBACK appWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
     return DefWindowProcA(window, message, messageParam, messageData);
 }
 
-DC_ADDRESS(0x0e7fb8, 0x18)
 VA(0x004f7fa0, 0xA)
+DC_ADDRESS(0x0e7fb8, 0x18)
 void appExit()
 {
     cleanUpWinGraphics();
@@ -227,8 +227,9 @@ void appExit()
 
 // Mac retains the shared event pump at code 0+0x20f90c. Its event polling
 // uses Mac OS services; this Windows body pumps native window messages.
+VA(0x004f7fb0, 0xAA)
 DC_ADDRESS(0x0e7fd0, 0x42)
-VA(0x004f7fb0, 0xAA) MAC_ADDRESS(0x20f90c, 0x350)
+MAC_ADDRESS(0x20f90c, 0x350)
 void process1WindowsMessage()
 {
     MSG message;
@@ -257,8 +258,8 @@ void process1WindowsMessage()
 // E:\gamedcs\kbwin.cpp:648
 // homm2 lineage kept the three non-size menu commands; the About
 // template is the ordinal 0x67 (homm2 passed the string "HEROES").
-DC_ADDRESS(0x0e8014, 0x4)
 VA(0x004f8060, 0xD4)
+DC_ADDRESS(0x0e8014, 0x4)
 LRESULT appCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
     int command;
@@ -317,8 +318,8 @@ BOOL CALLBACK appAbout(HWND dialog, UINT message, WPARAM messageParam, LPARAM me
     return 0;
 }
 
-DC_ADDRESS(0x0e801c, 0x4)
 VA(0x004f8180, 0x5C)
+DC_ADDRESS(0x0e801c, 0x4)
 void kbChangeMenu(HMENU newMenu)
 {
     if (!newMenu)
@@ -337,8 +338,9 @@ void kbChangeMenu(HMENU newMenu)
     }
 }
 
+VA(0x004f81e0, 0x31)
 DC_ADDRESS(0x0e8020, 0x34)
-VA(0x004f81e0, 0x31) MAC_ADDRESS(0x20ff48, 0x38)
+MAC_ADDRESS(0x20ff48, 0x38)
 void setNoDialogMenus(int noMenus)
 {
     if (g_menusSuppressed && !noMenus)
@@ -351,8 +353,8 @@ void setNoDialogMenus(int noMenus)
     setMenus(g_activeMenu, noMenus);
 }
 
-DC_ADDRESS(0x0e8054, 0x4)
 VA(0x004f8220, 0xB2)
+DC_ADDRESS(0x0e8054, 0x4)
 void setMenus(HMENU menu, int enabled)
 {
     int count;
@@ -392,15 +394,17 @@ void setMenus(HMENU menu, int enabled)
     }
 }
 
+VA(0x004f82e0, 0x6)
 DC_ADDRESS(0x0e8058, 0x12)
-VA(0x004f82e0, 0x6) MAC_ADDRESS(0x20fc5c, 0xc)
+MAC_ADDRESS(0x20fc5c, 0xc)
 unsigned long GameTime::get()
 {
     return timeGetTime();
 }
 
+VA(0x004f82f0, 0xCD)
 DC_ADDRESS(0x0e806c, 0x2c)
-VA(0x004f82f0, 0xCD) MAC_ADDRESS(0x20fc68, 0x40)
+MAC_ADDRESS(0x20fc68, 0x40)
 void GameTime::delayTil(unsigned long time)
 {
     while (!GameTime::isPast(time)) {
@@ -409,8 +413,9 @@ void GameTime::delayTil(unsigned long time)
     }
 }
 
+VA(0x004f83c0, 0xD0)
 DC_ADDRESS(0x0e8098, 0x1a)
-VA(0x004f83c0, 0xD0) MAC_ADDRESS(0x20fca8, 0x34)
+MAC_ADDRESS(0x20fca8, 0x34)
 void GameTime::delay(int interval)
 {
     GameTime::delayTil(GameTime::get() + interval);

@@ -82,8 +82,9 @@ bool army::findFlyerAttackCell(int target) const
     return 0;
 }
 
+VA(0x004b46c0, 0x2F9)
 DC_ADDRESS(0x0a1430, 0xe4)
-VA(0x004b46c0, 0x2F9) MAC_ADDRESS(0x0c8070, 0x14c)
+MAC_ADDRESS(0x0c8070, 0x14c)
 unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
 {
     if (!combatManager::validHex(destIndex))
@@ -108,8 +109,9 @@ unsigned char army::validFlight(int destIndex, unsigned char literalTest) const
     return 1;
 }
 
+VA(0x004b49c0, 0x76)
 DC_ADDRESS(0x0a1514, 0x7c)
-VA(0x004b49c0, 0x76) MAC_ADDRESS(0x0c81bc, 0xe4)
+MAC_ADDRESS(0x0c81bc, 0xe4)
 int army::flyTo(int destIndex, unsigned char restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
@@ -143,9 +145,9 @@ int army::flyTo(int destIndex, unsigned char restoreFacing)
 // Keep the by-value frame extent and the canonical renderer calls: Complete's
 // fixed-viewport header helpers eliminate ScrollTo and expand UpdateCombatArea.
 // No extra block is needed around the outer loop; its removal is byte-flat.
-
+VA(0x004b4a40, 0x44E)
 DC_ADDRESS(0x0a1590, 0x40e)
-VA(0x004b4a40, 0x44E) MAC_ADDRESS(0x0c82a0, 0x5dc)
+MAC_ADDRESS(0x0c82a0, 0x5dc)
 int army::fly(int destIndex)
 {
     unsigned char turn;
@@ -255,8 +257,9 @@ int army::fly(int destIndex)
     return 1;
 }
 
+VA(0x004b4e90, 0x76)
 DC_ADDRESS(0x0a19a0, 0xdc)
-VA(0x004b4e90, 0x76) MAC_ADDRESS(0x0c887c, 0xe4)
+MAC_ADDRESS(0x0c887c, 0xe4)
 int army::teleportTo(int destIndex, unsigned char restoreFacing)
 {
     if (combatManager::validHex(destIndex)) {
@@ -274,8 +277,9 @@ int army::teleportTo(int destIndex, unsigned char restoreFacing)
     return 0;
 }
 
+VA(0x004b4f10, 0x102)
 DC_ADDRESS(0x0a1a7c, 0x12c)
-VA(0x004b4f10, 0x102) MAC_ADDRESS(0x0c8960, 0x1bc)
+MAC_ADDRESS(0x0c8960, 0x1bc)
 int army::teleport(int destIndex)
 {
     unsigned char turn;

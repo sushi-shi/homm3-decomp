@@ -84,6 +84,7 @@ public:
     void castResurrection(type_spell_choice& choice,
                            const hero* castingHero);
     long takeDamage(long damage);
+
     DC_ADDRESS(0x02c698, 0xa)
     bool operator<(const type_monster_data& arg) const
     {

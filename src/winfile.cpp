@@ -27,31 +27,31 @@
 
 #include "winfile.h"
 
-DC_ADDRESS(0x198434, 0x34)
 VA(0x005ffb20, 0x14)
+DC_ADDRESS(0x198434, 0x34)
 File::File()
 {
     m_file = NULL;
     m_open = FALSE;
 }
 
-DC_ADDRESS(0x198468, 0x34)
 VA(0x005ffb40, 0x15)
+DC_ADDRESS(0x198468, 0x34)
 File::~File()
 {
     if (m_file)
         CloseHandle(m_file);
 }
 
-DC_ADDRESS(0x19849c, 0xa)
 VA(0x005ffb60, 0xB)
+DC_ADDRESS(0x19849c, 0xa)
 unsigned char File::isOpen()
 {
     return m_file != NULL;
 }
 
-DC_ADDRESS(0x1984a8, 0x26)
 VA(0x005ffb70, 0x20)
+DC_ADDRESS(0x1984a8, 0x26)
 unsigned char File::close()
 {
     if (!m_file)
@@ -72,8 +72,8 @@ inline unsigned char File::exists(const char* filename)
 
 // Original: File::Delete; winfile.cpp:77
 // The semantic suffix avoids the C++ keyword delete after case normalization.
-DC_ADDRESS(0x1984f0, 0x18)
 VA(0x005ffb90, 0x24)
+DC_ADDRESS(0x1984f0, 0x18)
 unsigned char File::deleteFile(const char* filename)
 {
     unsigned char deleted;
@@ -85,8 +85,8 @@ unsigned char File::deleteFile(const char* filename)
     return deleted;
 }
 
-DC_ADDRESS(0x198568, 0x4e)
 VA(0x005ffbc0, 0x84)
+DC_ADDRESS(0x198568, 0x4e)
 unsigned char File::open(const char* filename, FileMode mode)
 {
     if (m_file) {
@@ -111,8 +111,8 @@ unsigned char File::open(const char* filename, FileMode mode)
     return TRUE;
 }
 
-DC_ADDRESS(0x1985b8, 0x2c)
 VA(0x005ffc50, 0x30)
+DC_ADDRESS(0x1985b8, 0x2c)
 unsigned long File::write(void* data, unsigned long dBytes)
 {
     unsigned long dBytesWritten;
@@ -123,8 +123,8 @@ unsigned long File::write(void* data, unsigned long dBytes)
     return WriteFile(m_file, data, dBytes, &dBytesWritten, NULL) ? dBytesWritten : 0;
 }
 
-DC_ADDRESS(0x1985e4, 0x2c)
 VA(0x005ffc80, 0x30)
+DC_ADDRESS(0x1985e4, 0x2c)
 unsigned long File::read(void* data, unsigned long dBytes)
 {
     unsigned long dBytesRead;
@@ -135,8 +135,8 @@ unsigned long File::read(void* data, unsigned long dBytes)
     return ReadFile(m_file, data, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
 }
 
-DC_ADDRESS(0x198610, 0x20)
 VA(0x005ffcb0, 0x16)
+DC_ADDRESS(0x198610, 0x20)
 unsigned long File::seekEnd()
 {
     if (!m_file)
@@ -145,8 +145,8 @@ unsigned long File::seekEnd()
     return SetFilePointer(m_file, 0, NULL, FILE_END);
 }
 
-DC_ADDRESS(0x198630, 0x20)
 VA(0x005ffcd0, 0x16)
+DC_ADDRESS(0x198630, 0x20)
 unsigned long File::seekBegin()
 {
     if (!m_file)
@@ -155,8 +155,8 @@ unsigned long File::seekBegin()
     return SetFilePointer(m_file, 0, NULL, FILE_BEGIN);
 }
 
-DC_ADDRESS(0x198650, 0x1e)
 VA(0x005ffcf0, 0x21)
+DC_ADDRESS(0x198650, 0x1e)
 unsigned long File::seekCur(int seekAmt)
 {
     if (!m_file)
@@ -165,8 +165,8 @@ unsigned long File::seekCur(int seekAmt)
     return SetFilePointer(m_file, seekAmt, NULL, FILE_CURRENT);
 }
 
-DC_ADDRESS(0x198670, 0x74)
 VA(0x005ffd20, 0x4E)
+DC_ADDRESS(0x198670, 0x74)
 unsigned long File::seek(unsigned long dBytesToSeek, unsigned long dStart)
 {
     if (!m_file)
@@ -179,8 +179,8 @@ unsigned long File::seek(unsigned long dBytesToSeek, unsigned long dStart)
     return SetFilePointer(m_file, dBytesToSeek, NULL, FILE_CURRENT);
 }
 
-DC_ADDRESS(0x1986e4, 0x20)
 VA(0x005ffd70, 0x16)
+DC_ADDRESS(0x1986e4, 0x20)
 unsigned long File::getPosition()
 {
     if (!m_file)
@@ -189,8 +189,8 @@ unsigned long File::getPosition()
     return SetFilePointer(m_file, 0, NULL, FILE_CURRENT);
 }
 
-DC_ADDRESS(0x198704, 0x44)
 VA(0x005ffd90, 0x32)
+DC_ADDRESS(0x198704, 0x44)
 unsigned long File::getLength()
 {
     unsigned long dPosition;

@@ -106,6 +106,7 @@ class ClaimsTest(unittest.TestCase):
     def test_mac_and_windows_scanners_skip_dc_annotations(self):
         from homm3.mac.addresses import scan_text
         for text in ('DC_ADDRESS(0x100,12)\nVA(0x401000,4) MAC_ADDRESS(0x200,16)\nvoid helper() {}\n',
+                     'VA(0x401000,4)\nDC_ADDRESS(0x100,12)\nMAC_ADDRESS(0x200,16)\nvoid helper() {}\n',
                      'VA(0x401000,4) MAC_ADDRESS(0x200,16)\nDC_ADDRESS(0x100,12)\nvoid helper() {}\n'):
             mac,win,errors=scan_text(text,'src/widget.cpp')
             self.assertEqual(errors,[])

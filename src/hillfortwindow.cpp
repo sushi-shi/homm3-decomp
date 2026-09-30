@@ -60,8 +60,9 @@ const float g_afUpgradeCostFactor[7] = {
     0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
 };
 
+VA(0x004e75f0, 0x7E9)
 DC_ADDRESS(0x0d641c, 0x710)
-VA(0x004e75f0, 0x7E9) MAC_ADDRESS(0x10843c, 0xe20)
+MAC_ADDRESS(0x10843c, 0xe20)
 THillFortWindow::THillFortWindow()
     : heroWindow(0x32, 0x32, 0x28c, 0x15c, 2)
 {
@@ -184,8 +185,9 @@ THillFortWindow::THillFortWindow()
 
 VA_COMPGEN(0x004e7de0, 0x21, SCALAR_DELETING_DTOR, THillFortWindow)
 
+VA(0x004e7e10, 0x75)
 DC_ADDRESS(0x0d6b2c, 0x68)
-VA(0x004e7e10, 0x75) MAC_ADDRESS(0x10925c, 0xb4)
+MAC_ADDRESS(0x10925c, 0xb4)
 THillFortWindow::~THillFortWindow()
 {
     g_hillFortWindow = 0;
@@ -206,8 +208,9 @@ int THillFortWindow::convertID2HelpID(int id) const
     return id - BACKGROUND_ID;
 }
 
+VA(0x004e7e90, 0x1F)
 DC_ADDRESS(0x0d6bb0, 0x22)
-VA(0x004e7e90, 0x1F) MAC_ADDRESS(0x109310, 0x48)
+MAC_ADDRESS(0x109310, 0x48)
 void THillFortWindow::doModal()
 {
     recalculate(0);
@@ -292,9 +295,9 @@ inline bool canAfford(const long* cost, const long* playerRes)
 // `msg.extraText` in the SET_ICON_NAME statement - byte-flat; and carrying
 // `totalID` the same way in the totals loop below - 83.4988, so the lever is
 // specific to the loop whose derived id feeds six different widget bands.
-
+VA(0x004e7eb0, 0x64D)
 DC_ADDRESS(0x0d6bf8, 0x52a)
-VA(0x004e7eb0, 0x64D) MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
+MAC_ADDRESS(0x109408, 0x734)  // source/call order + DoModal/handler call sites
 void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
 {
     message msg;
@@ -503,8 +506,9 @@ void THillFortWindow::recalculate(unsigned char drawDimmedButtons)
     broadcastMessage(msg);
 }
 
+VA(0x004e8500, 0x18F)
 DC_ADDRESS(0x0d7124, 0x134)
-VA(0x004e8500, 0x18F) MAC_ADDRESS(0x109b3c, 0x260)
+MAC_ADDRESS(0x109b3c, 0x260)
 void THillFortWindow::upgradeSlot(int which, unsigned char showMessage)
 {
     switch (m_slot[which].m_state) {
@@ -563,8 +567,9 @@ void THillFortWindow::upgradeAll()
     }
 }
 
+VA(0x004e8690, 0x1B8)
 DC_ADDRESS(0x0d72f4, 0x162)
-VA(0x004e8690, 0x1B8) MAC_ADDRESS(0x109eb8, 0x210)
+MAC_ADDRESS(0x109eb8, 0x210)
 void THillFortWindow::handleClick(message& msg)
 {
     unsigned char rightClick =
@@ -614,8 +619,9 @@ void THillFortWindow::handleClick(message& msg)
 }
 
 // E:\gamedcs\hillfortwindow.cpp:612
+VA(0x004e8850, 0x369)
 DC_ADDRESS(0x0d7458, 0x294)
-VA(0x004e8850, 0x369) MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take
+MAC_ADDRESS(0x10a0c8, 0x32c)  // DoModal address-take
 int hillFortWindowHandler(message& msg)
 {
     pollSound();

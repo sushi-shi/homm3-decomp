@@ -367,7 +367,8 @@ public:
     static const SLimitData s_upperTowerLimits;
     // Original: CombatAreaLimits_Visible.
     static const SLimitData s_visibleCombatAreaLimits;
-    // drawing.cpp:666, Dreamcast dc 0x841d4. range_attack uses this
+
+    // Dreamcast drawing.cpp:666. range_attack uses this
     // five-argument overload to center the Magog effect before animating it.
     // Complete Windows and Mac fold the fixed-viewport facade in army.cpp;
     // that cross-TU expansion supports header visibility of this delegation.
@@ -380,6 +381,7 @@ public:
         return scrollTo(SLimitData(x, y, x + 1, y + 1), draw,
                         doscrollX, doscrollY);
     }
+
     // DC drawing.cpp:679/680 constructs the extent and delegates. The
     // Complete combat missile callers expand this across translation units;
     // Mac's contiguous drawing bodies leave no retained coordinate facade.
@@ -1227,7 +1229,8 @@ public:
     int drawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    bool isFlipped, unsigned char colorRow);
-    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). Its S_PUB32
+
+    // DC header inline (cmbtmgr.h:1460, 18 B). Its S_PUB32
     // identity is ?ValidHex@combatManager@@SA_NH@Z: static bool. No retail
     // body; place_shooter (0x422060) carries two copies of it, one on
     // the loop index (which VC6 strength-reduces onto the same 30-byte
@@ -1735,6 +1738,7 @@ public:
     // DC cmbtmgr.cpp:4158: PowEffect(TSpellEffectID, int).
     // The enum uses the same int-wide retail argument slot.
     void powEffect(TSpellEffectID spellEffect, int resetLimitCreature);  // 0x468990
+
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
     DC_ADDRESS(0x042a3c, 0x38)
@@ -1745,7 +1749,8 @@ public:
             return findAnimateDeadTarget(group, hex);
         return findResurrectionTarget(group, hex, creatureSpell);
     }
-    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); SH4 proves the
+
+    // DC header inline (cmbtmgr.h:1473, 32 B); SH4 proves the
     // typed target -> wallTargets[target].wall -> wallStrength chain.
     // Retail has no body because /Ob2 folds the same chain into its callers.
     DC_ADDRESS(0x027edc, 0x20)
@@ -1753,30 +1758,35 @@ public:
     {
         return m_wallStrength[s_wallTargets[target].m_wall];
     }
-    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
+
+    // DC header inline (cmbtmgr.h:1478); the DC xref graph
     // lists it among DoCompAI's callees and retail carries no
     // out-of-line copy, so it is the /Ob2 inline-away case.
     DC_ADDRESS(0x027efc, 0x2c)
     army* getCurrentArmy() { return &m_armies[m_actingSide][m_actingSlot]; }
+
     // Original: combatManager::get_current_army; CmbtMgr.h:1483
     DC_ADDRESS(0x1581b8, 0x2c)
     const army* getCurrentArmy() const
     {
         return &m_armies[m_actingSide][m_actingSlot];
     }
+
     // E:\gamedcs\CmbtMgr.h:1488. Dreamcast proves the single-expression
     // helper and its four ordered bounds. Complete widens the window to the
     // retail 800x556 combat area; ProcessCombatMsg retains the source call
     // and VC6 expands it into the four retail comparisons.
-    // DC dc 0x70a2c has x/y only, no receiver: this is static.
+    // DC has x/y only, no receiver: this is static.
     DC_ADDRESS(0x070a2c, 0x2a)
     static unsigned char inCombatArea(int x, int y)
     {
         return x >= 0 && x < 800 && y >= 0 && y < 556;
     }
+
     // Original: combatManager::is_in_second_phase; CmbtMgr.h:1494
     DC_ADDRESS(0x027f28, 0xc)
     unsigned char isInSecondPhase() const { return m_inSecondPhase; }
+
     // Dreamcast S_PUB32 fixes this entire inline band: GetHexIndex and GridX
     // are static int helpers, RowIsOdd is a const bool member, and
     // InInvisibleColumn is static bool. Their CodeView lines also fix this
@@ -1786,21 +1796,25 @@ public:
     {
         return y * COMBAT_GRID_ROW_STRIDE + x;
     }
+
     DC_ADDRESS(0x063a50, 0xa)
     bool rowIsOdd(int y) const
     {
         return (y & 1) != 0;
     }
+
     // LF_MFUNCTION has no this type: this is a static header helper.
     // E:\gamedcs\CmbtMgr.h:1513
     DC_ADDRESS(0x027f34, 0x18)
     static int gridY(int index) { return index / COMBAT_GRID_ROW_STRIDE; }
+
     DC_ADDRESS(0x027f4c, 0x18)
     static int gridX(int index)
     {
         return index % COMBAT_GRID_ROW_STRIDE;
     }
-    // DC header inline (cmbtmgr.h:1525, dc 0x27f64). mark_teleport's
+
+    // DC header inline (cmbtmgr.h:1525). mark_teleport's
     // retail expansion retains the ValidHex bounds checks and the two
     // invisible edge columns, 0 and 16 of each 17-cell row.
     DC_ADDRESS(0x027f64, 0x3c)
@@ -1811,6 +1825,7 @@ public:
         int column = gridX(index);
         return column == 0 || column == COMBAT_GRID_LAST_COLUMN;
     }
+
     // Returns a REFERENCE on its own public
     // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
     // renders every reference as a pointer, which is what this
@@ -1820,7 +1835,8 @@ public:
     {
         return m_cells[getHexIndex(x, y)];
     }
-    // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
+
+    // DC header inline (CmbtMgr.h:1542). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
     // own guards just tested; routing the call through this inline does
     // NOT reproduce that (VC6 CSEs the second load away either way) -
@@ -1828,6 +1844,7 @@ public:
     // matching lever.
     DC_ADDRESS(0x027fa0, 0x34)
     TObstacle& getObstacle(int index) { return m_obstacles[index]; }
+
     DC_ADDRESS(0x04cc74, 0x18)
     void markCreatureEffect(int group, int index)
     {

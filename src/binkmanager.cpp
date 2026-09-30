@@ -60,8 +60,9 @@ void BinkManager::setPixelFormat(unsigned long redMask, unsigned long greenMask,
 // HANDLE in place of a file name.
 // Retail retains four serviceSounds calls. The Windows body is source-local
 // to soundmgr.cpp; its platform evidence comment explains that visibility.
+VA(0x0044d5a0, 0x283)
 DC_ADDRESS(0x050a7c, 0x4)
-VA(0x0044d5a0, 0x283) MAC_ADDRESS(0x25d430, 0x27c)
+MAC_ADDRESS(0x25d430, 0x27c)
 HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
 {
     char name[40];
@@ -117,8 +118,9 @@ HBINK BinkManager::getBinkFilePtr(char* filename, int binkOptions)
     return 0;
 }
 
+VA(0x0044D830, 0x1A3)
 DC_ADDRESS(0x050a84, 0x4)
-VA(0x0044D830, 0x1A3) MAC_ADDRESS(0x25d6ac, 0x19c)
+MAC_ADDRESS(0x25d6ac, 0x19c)
 void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
                    bool useDirtyRects)
 {
@@ -169,8 +171,9 @@ void BinkManager::openBink(int id, int x, int y, int w, int h, int loop,
 // smackmgr.cpp's VideoDrawCurrentFrame uses this namespace-qualified call.
 // Mac 25d8b4/25d90c retain a copy in each selected-track branch; Windows
 // 44da47 shares the copy tail. Keep both source calls and their own handles.
+VA(0x0044d9e0, 0x6E)
 DC_ADDRESS(0x050a88, 0x4)
-VA(0x0044d9e0, 0x6E) MAC_ADDRESS(0x25d848, 0xe8)
+MAC_ADDRESS(0x25d848, 0xe8)
 void BinkManager::drawCurrentBinkFrame()
 {
     if (g_playingBink.m_bink && g_playingBinkActive) {
@@ -186,8 +189,9 @@ void BinkManager::drawCurrentBinkFrame()
     }
 }
 
+VA(0x0044da50, 0x4D)
 DC_ADDRESS(0x050a8c, 0x4)
-VA(0x0044da50, 0x4D) MAC_ADDRESS(0x25d930, 0x78)
+MAC_ADDRESS(0x25d930, 0x78)
 void BinkManager::restartBink()
 {
     if (g_playingBink.m_bink) {
@@ -203,8 +207,9 @@ void BinkManager::restartBink()
 // paused frames remain dirty. This recovers the retail shared exit layout;
 // separate true/false stores, readiness scopes and terminal guards did not.
 // E:\gamedcs\binkmanager.cpp:252
+VA(0x0044DAA0, 0x21A)
 DC_ADDRESS(0x050a90, 0x4)
-VA(0x0044DAA0, 0x21A) MAC_ADDRESS(0x25d9a8, 0x278)  // dc-order-map + caller (smackmgr VideoNextFrame)
+MAC_ADDRESS(0x25d9a8, 0x278)  // dc-order-map + caller (smackmgr VideoNextFrame)
 void BinkManager::nextBinkFrame()
 {
     HBINK video = g_playingBink.m_bink;
@@ -255,8 +260,9 @@ void BinkManager::nextBinkFrame()
 }
 
 // E:\gamedcs\binkmanager.cpp:345 () - namespace-qualified entry
+VA(0x0044dcc0, 0x60)
 DC_ADDRESS(0x050a94, 0x4)
-VA(0x0044dcc0, 0x60) MAC_ADDRESS(0x25dc20, 0x9c)
+MAC_ADDRESS(0x25dc20, 0x9c)
 void BinkManager::closeBink()
 {
     if (g_playingBink.m_bink) {
@@ -284,8 +290,9 @@ namespace BinkManager {
 static unsigned char playBinkCore(int id, int x, int y, int w, int h);
 }
 
+VA(0x0044DD20, 0x227)
 DC_ADDRESS(0x050a98, 0x4)
-VA(0x0044DD20, 0x227) MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay)
+MAC_ADDRESS(0x25dcbc, 0x50)  // dc-order-map + caller (smackmgr VideoPlay)
 int BinkManager::playBink(int id, int x, int y, int w, int h)
 {
     g_soundManager->m_playSounds = 1;
@@ -297,6 +304,7 @@ int BinkManager::playBink(int id, int x, int y, int w, int h)
 
 // Mac 0:0x25dd0c retains the modal loop separately from playBink's state wrapper.
 namespace BinkManager {
+
 MAC_ADDRESS(0x25dd0c, 0x240)
 static unsigned char playBinkCore(int id, int x, int y, int w, int h)
 {

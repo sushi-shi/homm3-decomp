@@ -13,8 +13,9 @@
 #include "window.h"
 #include "winmgr.h"
 
+VA(0x004b0900, 0x10)
 DC_ADDRESS(0x09e510, 0xe)
-VA(0x004b0900, 0x10) MAC_ADDRESS(0x0c3910, 0x18)
+MAC_ADDRESS(0x0c3910, 0x18)
 executive::executive()
 {
     m_headManager = 0;
@@ -24,9 +25,9 @@ executive::executive()
 }
 
 // gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
-
+VA(0x004b0910, 0x79)
 DC_ADDRESS(0x09e520, 0x74)
-VA(0x004b0910, 0x79) MAC_ADDRESS(0x0c3928, 0xdc)
+MAC_ADDRESS(0x0c3928, 0xdc)
 int executive::initSystem()
 {
     if (g_inputManager->open(-1))
@@ -38,8 +39,9 @@ int executive::initSystem()
     return 0;
 }
 
+VA(0x004b0990, 0x78)
 DC_ADDRESS(0x09e594, 0xd8)
-VA(0x004b0990, 0x78) MAC_ADDRESS(0x0c3a04, 0xf0)
+MAC_ADDRESS(0x0c3a04, 0xf0)
 void executive::shutDownSystem()
 {
     g_shutDownDone = 1;
@@ -60,8 +62,9 @@ void executive::shutDownSystem()
     g_inputManager->close();
 }
 
+VA(0x004b0a10, 0x10B)
 DC_ADDRESS(0x09e66c, 0x10a)
-VA(0x004b0a10, 0x10B) MAC_ADDRESS(0x0c3af4, 0x2c0)
+MAC_ADDRESS(0x0c3af4, 0x2c0)
 int executive::doDialog(baseManager* newDialog)
 {
     executive dialogExec;
@@ -95,8 +98,9 @@ int executive::doDialog(baseManager* newDialog)
     return dialogExec.m_dialogReturn;
 }
 
+VA(0x004b0b20, 0xCB)
 DC_ADDRESS(0x09e778, 0xc0)
-VA(0x004b0b20, 0xCB) MAC_ADDRESS(0x0c3db4, 0x14c)
+MAC_ADDRESS(0x0c3db4, 0x14c)
 int executive::addManager(baseManager* newManager, int newPriority)
 {
     if (!newManager)
@@ -134,8 +138,9 @@ int executive::addManager(baseManager* newManager, int newPriority)
     return 0;
 }
 
+VA(0x004b0bf0, 0x79)
 DC_ADDRESS(0x09e838, 0x60)
-VA(0x004b0bf0, 0x79) MAC_ADDRESS(0x0c3f00, 0xc8)
+MAC_ADDRESS(0x0c3f00, 0xc8)
 void executive::removeManager(baseManager* killManager)
 {
     if (!killManager)
@@ -163,8 +168,9 @@ void executive::removeManager(baseManager* killManager)
     killManager->m_nextManager = 0;
 }
 
+VA(0x004b0c70, 0x1D0)
 DC_ADDRESS(0x09e898, 0x118)
-VA(0x004b0c70, 0x1D0) MAC_ADDRESS(0x0c3fc8, 0x258)
+MAC_ADDRESS(0x0c3fc8, 0x258)
 void executive::callManager(baseManager* newManager)
 {
     baseManager* saved = m_currentManager;
@@ -218,8 +224,9 @@ void executive::callManager(baseManager* newManager)
     m_currentManager = saved;
 }
 
+VA(0x004b0e40, 0xF5)
 DC_ADDRESS(0x09e9b0, 0x130)
-VA(0x004b0e40, 0xF5) MAC_ADDRESS(0x0c4220, 0x198)
+MAC_ADDRESS(0x0c4220, 0x198)
 void executive::mainLoop()
 {
     message msg;

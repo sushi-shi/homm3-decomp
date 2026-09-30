@@ -143,8 +143,9 @@ public:
     int m_subType;
     unsigned long m_size;
     int m_uncompressedSize;
-    DC_ADDRESS(0x02018c, 0x2a)
+
     VA(0x004f2930, 0x23)  // anchor-callee + exact body, retail-only slot
+    DC_ADDRESS(0x02018c, 0x2a)
     CNetMsg(eRS_Messages subType, unsigned long size)
     {
         this->m_subType = subType;
@@ -153,6 +154,7 @@ public:
         m_dpidFrom = 0;
         m_uncompressedSize = 0;
     }
+
     // Original: CNetMsg::IsCompressed; netmsg.h:179
     DC_ADDRESS(0x11f5f4, 0x16)
     unsigned char isCompressed()
@@ -166,6 +168,7 @@ void destroyMsg(CNetMsg* netMsg);
 
 class CReadyToPlayMsg : public CNetMsg {
 public:
+
     DC_ADDRESS(0x11f60c, 0x20)
     CReadyToPlayMsg()
         : CNetMsg(RS_READY_TO_PLAY, sizeof(CReadyToPlayMsg)) {}
@@ -174,6 +177,7 @@ SIZE(CReadyToPlayMsg, 0x14);
 
 class CAllReadyToPlayMsg : public CNetMsg {
 public:
+
     // DC netmsg.h:199 (0x11f638) calls the canonical CNetMsg ctor.
     // Retail's WaitForReadyToPlayMsg expansion stores that same 20-byte
     // header at 0x5550c2..0x5550d8; no default-base workaround is needed.
@@ -193,6 +197,7 @@ public:
     int m_nextActionGridIndex;
     int m_nextActionGridIndex2;
     int m_seed;
+
     DC_ADDRESS(0x070a58, 0x4c)
     CCombatMainMsg(int nextAction, int nextActionExtra,
                    int nextActionGridIndex, int nextActionGridIndex2,
@@ -252,6 +257,7 @@ SIZE(t_complex_net_message, 0x18);
 // member extent in the wait-dialog constructor.
 class CCombatInitMsg : public t_complex_net_message {
 public:
+
     // Retail expands this member sequence in DoNetCombat and the wait dialog.
     // E:\gamedcs\netmsg.h:264
     DC_ADDRESS(0x09caa0, 0xd8)
@@ -309,6 +315,7 @@ public:
     unsigned long m_thisPlayerDead;
     unsigned char m_isDiff;
     unsigned char m_makeOrig;
+
     DC_ADDRESS(0x0bd0b4, 0x58)
     CGameTransmitInitMsg(unsigned long fileSize,
                          unsigned long fullGameCRC,
@@ -332,6 +339,7 @@ SIZE(CGameTransmitInitMsg, 0x24);
 class CGameTransmitReqMsg : public CNetMsg {
 public:
     int m_blockNbr;
+
     DC_ADDRESS(0x0bd10c, 0x30)
     CGameTransmitReqMsg(int blockNbr)
         : CNetMsg(RS_GAME_TRANSMIT_REQ, sizeof(CGameTransmitReqMsg)),
@@ -345,6 +353,7 @@ class CGameTransmitMainMsg : public CNetMsg {
 public:
     unsigned long m_blockNbr;
     unsigned long m_blockSize;
+
     DC_ADDRESS(0x0bd13c, 0x48)
     static CGameTransmitMainMsg* createMsg(unsigned long maxSize)
     {
@@ -358,6 +367,7 @@ public:
         msg->m_subType = RS_GAME_TRANSMIT_MAIN;
         return msg;
     }
+
     DC_ADDRESS(0x0bd184, 0x44)
     void update(unsigned char* data, unsigned long blockSize)
     {
@@ -371,8 +381,10 @@ public:
         memcpy(temp, data, blockSize);
         m_size = getSize();
     }
+
     DC_ADDRESS(0x0bd1c8, 0xe)
     unsigned long getSize() { return m_blockSize + sizeof(*this); }
+
     DC_ADDRESS(0x0bd1d8, 0xc)
     unsigned char* getData()
     {
@@ -387,6 +399,7 @@ SIZE(CGameTransmitMainMsg, 0x1c);
 
 class CGameTransmitConfirmEndMsg : public CNetMsg {
 public:
+
     DC_ADDRESS(0x0bd1e4, 0x28)
     CGameTransmitConfirmEndMsg()
         : CNetMsg(RS_GAME_XFER_CONFIRM_END,
@@ -403,6 +416,7 @@ public:
     int m_weekType;
     int m_weekTypeExtra;
     unsigned long m_diffSize;
+
     DC_ADDRESS(0x0bd20c, 0x4c)
     CGameTransmitEndMsg(int monthType, int monthTypeExtra,
                         int weekType, int weekTypeExtra,
@@ -421,6 +435,7 @@ SIZE(CGameTransmitEndMsg, 0x28);
 class CChatMsg : public CNetMsg {
 public:
     char m_text[128];
+
     DC_ADDRESS(0x11f64c, 0x44)
     CChatMsg(const char* text)
         : CNetMsg(RS_CHAT_MSG, 0)
@@ -428,6 +443,7 @@ public:
         strncpy(m_text, text, 127);
         m_size = getSize();
     }
+
     // The wire extent; readers consume only the address of m_text.
     DC_ADDRESS(0x11f690, 0x18)
     unsigned long getSize()
@@ -442,6 +458,7 @@ public:
 class CPlayerDropMsg : public CNetMsg {
 public:
     unsigned long m_dpid;
+
     DC_ADDRESS(0x11f6a8, 0x2c)
     CPlayerDropMsg(unsigned long dpid)
         : CNetMsg(RS_PLAYER_DROPPED, sizeof(CPlayerDropMsg)),
@@ -454,6 +471,7 @@ SIZE(CPlayerDropMsg, 0x18);
 
 class CSetAsHostMsg : public CNetMsg {
 public:
+
     // Original: CSetAsHostMsg::CSetAsHostMsg; netmsg.h:433
     DC_ADDRESS(0x11f6d4, 0x20)
     CSetAsHostMsg() : CNetMsg(RS_SET_AS_HOST, sizeof(CSetAsHostMsg)) {}
@@ -471,6 +489,7 @@ public:
 class CTurnUpdateMsg : public CNetMsg {
 public:
     int m_gamePos;
+
     DC_ADDRESS(0x0201b8, 0x30)
     CTurnUpdateMsg(int gamePos)
         : CNetMsg(RS_TURN_UPDATE, sizeof(CTurnUpdateMsg)),
@@ -481,6 +500,7 @@ SIZE(CTurnUpdateMsg, 24);
 class CPlayerDropUpdateMsg : public CNetMsg {
 public:
     unsigned long m_dpidDropped;
+
     // DC netmsg.h:461 supplies the constructor and payload name. Retail's
     // two inlined HandleNewHost copies independently prove the 0x18-byte
     // extent, RS_PLAYER_DROP_UPDATE subtype, and final payload store.
@@ -494,6 +514,7 @@ SIZE(CPlayerDropUpdateMsg, 0x18);
 class CPlayerDeadMsg : public CNetMsg {
 public:
     int m_gamePos;
+
     // kb.obj's HandleRemoteDeadPlayerExit (0x4f4c00) builds this message at
     // both of its transmit sites and proves the whole record: the base
     // constructor's five stores in their declared order, the RS_PLAYER_DEAD
@@ -514,7 +535,8 @@ public:
     signed char m_ssLevel[28];  // +0x18
     signed char m_stats[4];  // +0x34
     int m_numSSs;  // +0x38
-    // DC netmsg.h:488 (dc 0x9cb78): DoCombat expands this header body.
+
+    // DC netmsg.h:488: DoCombat expands this header body.
     DC_ADDRESS(0x09cb78, 0x58)
     CHeroLevelUpdateMsg(int hero, int numSSs,
                         signed char* ssLevel,
@@ -537,6 +559,7 @@ class CPlayerWonMsg : public CNetMsg {
 public:
     int m_gamePos;
     VictoryConditionStruct m_victoryCondition;
+
     // Dreamcast netmsg.h:505 fixes the reference parameter and statement
     // order. Complete expands this constructor into DisplayVCWinLoss while
     // retaining or expanding the CNetMsg base constructor per call site.
@@ -555,6 +578,7 @@ class CPlayerLostMsg : public CNetMsg {
 public:
     int m_loser;
     LossConditionStruct m_lossCondition;
+
     // kb.obj's SendPlayerLost builds this at all three DisplayLCWinLoss
     // arms. The member's own default constructor runs before the body's
     // assignment - retail stores Type/-1, GameLost/0 and playerLoser/-1
@@ -573,6 +597,7 @@ SIZE(CPlayerLostMsg, 0x3c);
 
 class CMapChange : public CNetMsg {
 public:
+
     // Dreamcast netmsg.h:532 names the parameters `id` and `size` and keeps
     // this CNetMsg construction as a distinct source boundary.
     DC_ADDRESS(0x023154, 0x1c)
@@ -616,6 +641,7 @@ class CMCTeleportHero : public CMapChange {
 public:
     int m_heroId;
     type_point m_point;
+
     // Retail has NO out-of-line body: advManager::TeleportTo (0x41d930) is
     // the only constructor site in the image and expands it, sharing the
     // CNetMsg base's zero register with the `gCompleteDrawEnabled = 0` store
@@ -635,6 +661,7 @@ class CMCClaimMine : public CMapChange {
 public:
     signed char m_mineId;
     int m_playerPos;
+
     DC_ADDRESS(0x08f2c8, 0x34)
     CMCClaimMine(signed char id, int player)
         : CMapChange(RS_CLAIM_MINE, sizeof(CMCClaimMine))
@@ -649,6 +676,7 @@ class CMCClaimTown : public CMapChange {
 public:
     signed char m_townId;
     int m_playerPos;
+
     DC_ADDRESS(0x08f2fc, 0x34)
     CMCClaimTown(signed char id, int player)
         : CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown))
@@ -663,6 +691,7 @@ class CMCClaimGenerator : public CMapChange {
 public:
     int m_generatorId;
     int m_playerPos;
+
     DC_ADDRESS(0x0bd258, 0x38)
     CMCClaimGenerator(int id, int player)
         : CMapChange(RS_CLAIM_GENERATOR, sizeof(CMCClaimGenerator)),
@@ -673,10 +702,11 @@ class CMCClaimGarrison : public CMapChange {
 public:
     int m_garrisonId;
     int m_playerPos;
+
     // Dreamcast netmsg.h:619 owns the two-argument constructor. Complete
     // retains its out-of-line copy in game.obj after RandomizeEvents.
-    DC_ADDRESS(0x0bd290, 0x38)
     VA(0x004c23e0, 0x31)  // retained game.obj copy
+    DC_ADDRESS(0x0bd290, 0x38)
     CMCClaimGarrison(int id, int player)
         : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
           m_garrisonId(id), m_playerPos(player)
@@ -688,6 +718,7 @@ class CMCClaimShipYard : public CMapChange {
 public:
     type_point m_point;
     int m_playerPos;
+
     DC_ADDRESS(0x0bd2c8, 0x6c)
     CMCClaimShipYard(type_point location, int player)
         : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
@@ -698,6 +729,7 @@ class CMCBuildBoat : public CMapChange {
 public:
     type_point m_point;
     int m_playerPos;
+
     DC_ADDRESS(0x0bd334, 0x6c)
     CMCBuildBoat(type_point location, int player)
         : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
@@ -713,6 +745,7 @@ public:
 class CMCEraseObject : public CMapChange {
 public:
     type_point m_point;
+
     DC_ADDRESS(0x09cbd0, 0x4c)
     CMCEraseObject(type_point location)
         : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject)),
@@ -728,6 +761,7 @@ class CMCDeadHero : public CMapChange {
 public:
     int m_heroId;
     type_point m_point;
+
     DC_ADDRESS(0x0d5964, 0x54)
     CMCDeadHero(int id, type_point location)
         : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero)),
@@ -743,6 +777,7 @@ public:
     int m_heroId;
     type_point m_point;
     int m_playerPos;
+
     DC_ADDRESS(0x09cc1c, 0x5c)
     CMCRecruitHero(int id, type_point location, int player)
         : CMapChange(RS_RECRUIT_HERO, sizeof(CMCRecruitHero)),
@@ -759,6 +794,7 @@ SIZE(CMCRecruitHero, 0x20);
 class CMCDeadPlayer : public CMapChange {
 public:
     int m_playerPos;
+
     DC_ADDRESS(0x0e7024, 0x28)
     CMCDeadPlayer(int player)
         : CMapChange(RS_DEAD_PLAYER, sizeof(CMCDeadPlayer)),
@@ -771,6 +807,7 @@ SIZE(CMCDeadPlayer, 0x18);
 class CMCHideHero : public CMapChange {
 public:
     int m_heroId;
+
     // Dreamcast netmsg.h:717-718 proves the CMapChange construction boundary
     // is followed by a distinct heroId assignment statement. Retail lowers
     // this coherently in add_garrison_hero. Retail SwapHeroes schedules the
@@ -802,6 +839,7 @@ public:
     type_point m_point;
     int m_playerPos;
     int m_range;
+
     DC_ADDRESS(0x09cc78, 0x5c)
     CSetVisibilityMsg(type_point point, int playerPos, int range)
         : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg)),
@@ -820,6 +858,7 @@ public:
     type_point m_point;
     int m_playerPos;
     int m_range;
+
     DC_ADDRESS(0x09ccd4, 0x5c)
     CResetVisibilityMsg(type_point point, int playerPos, int range)
         : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg)),
@@ -831,6 +870,7 @@ SIZE(CResetVisibilityMsg, 0x20);
 // this constructor in place and proves both the store order and 0x14 extent.
 class CEndPlacementPhaseMsg : public CNetMsg {
 public:
+
     DC_ADDRESS(0x070aa4, 0x20)
     CEndPlacementPhaseMsg()
         : CNetMsg(RS_END_PLACEMENT_PHASE,
@@ -844,6 +884,7 @@ SIZE(CEndPlacementPhaseMsg, 0x14);
 class CCombatTypeMsg : public CNetMsg {
 public:
     int m_quick;
+
     // DC netmsg.h:770/771 calls CNetMsg at 0xe705c before assigning
     // quick at 0xe7060. Retail oldmain expands the same header/payload
     // at 0x4efe09 onward; its scheduling does not create a second ctor.
@@ -865,6 +906,7 @@ class CTradeRequestMsg : public CNetMsg {
 public:
     hero m_left;
     hero m_right;
+
     DC_ADDRESS(0x09cd30, 0x90)
     CTradeRequestMsg(hero* left, hero* right)
         : CNetMsg(RS_TRADE_REQUEST, sizeof(CTradeRequestMsg))
@@ -877,6 +919,7 @@ SIZE(CTradeRequestMsg, 0x938);
 
 class CPlayerActiveMsg : public CNetMsg {
 public:
+
     // Original: CPlayerActiveMsg::CPlayerActiveMsg; netmsg.h:793
     DC_ADDRESS(0x11f71c, 0x20)
     CPlayerActiveMsg() : CNetMsg(RS_PLAYER_ACTIVE, sizeof(CPlayerActiveMsg)) {}
@@ -888,6 +931,7 @@ SIZE(CPlayerActiveMsg, 0x14);
 class CPingMsg : public CNetMsg {
 public:
     unsigned long m_pingTime;
+
     DC_ADDRESS(0x11f73c, 0x28)
     CPingMsg(unsigned long pingTime, eRS_Messages id)
         : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
@@ -902,6 +946,7 @@ SIZE(CPingMsg, 0x18);
 class CPingResponseMsg : public CNetMsg {
 public:
     unsigned long m_pingTime;
+
     DC_ADDRESS(0x11f764, 0x28)
     CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
         : CNetMsg(id, sizeof(CPingResponseMsg)), m_pingTime(pingTime) {}
@@ -916,6 +961,7 @@ public:
     int m_niceGuy;
     int m_resource;
     int m_qty;
+
     DC_ADDRESS(0x038070, 0x38)
     CGiftMsg(int niceGuy, int resource, int qty)
         : CNetMsg(RS_GIFT, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
@@ -927,6 +973,7 @@ class CGiftRequestMsg : public CNetMsg {
 public:
     int m_greedyGuy;
     int m_resource;
+
     DC_ADDRESS(0x0380a8, 0x30)
     CGiftRequestMsg(int greedyGuy, int resource)
         : CNetMsg(RS_GIFT_REQUEST, sizeof(CGiftRequestMsg)),
@@ -938,6 +985,7 @@ SIZE(CGiftRequestMsg, 28);
 
 class CSessionLostMsg : public CNetMsg {
 public:
+
     // Original: CSessionLostMsg::CSessionLostMsg; netmsg.h:852
     DC_ADDRESS(0x11f78c, 0x20)
     CSessionLostMsg() : CNetMsg(RS_SESSION_LOST, sizeof(CSessionLostMsg)) {}
@@ -950,6 +998,7 @@ SIZE(CSessionLostMsg, 0x14);
 class CNormalWinMsg : public CNetMsg {
 public:
     int m_gamePos;
+
     // kb.obj's CheckEndGame (0x4f2ce0) builds this message on the
     // last-team-standing path and proves the whole record: the base
     // constructor's five stores in their declared order, RS_NORMAL_WIN as
@@ -965,6 +1014,7 @@ SIZE(CNormalWinMsg, 0x18);
 class CDestroyPlayerMsg : public CNetMsg {
 public:
     unsigned long m_dpid;
+
     DC_ADDRESS(0x0bd3d0, 0x30)
     CDestroyPlayerMsg(unsigned long dpid)
         : CNetMsg(RS_DESTROY_PLAYER, sizeof(CDestroyPlayerMsg)),
@@ -979,6 +1029,7 @@ SIZE(CDestroyPlayerMsg, 0x18);
 // every-thirtieth-block acknowledgement site (subtype 1080, size 0x14).
 class CGameXferAckMsg : public CNetMsg {
 public:
+
     DC_ADDRESS(0x0bd400, 0x28)
     CGameXferAckMsg()
         : CNetMsg(RS_GAME_TRANSMIT_ACK, sizeof(CGameXferAckMsg))

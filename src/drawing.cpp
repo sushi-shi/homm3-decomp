@@ -221,8 +221,9 @@ static std::string getEstimatedDamage(const army* currentArmy,
     return result;
 }
 
+VA(0x004922f0, 0x54C)
 DC_ADDRESS(0x08354c, 0x3a2)
-VA(0x004922f0, 0x54C) MAC_ADDRESS(0x0a3f84, 0x724)
+MAC_ADDRESS(0x0a3f84, 0x724)
 bool combatManager::showCreatureSpellError(
     char* buffer, const army* currentArmy)
 {
@@ -349,8 +350,9 @@ bool combatManager::showCreatureSpellError(
 }
 
 // E:\gamedcs\drawing.cpp:326
+VA(0x00492840, 0xB8E)
 DC_ADDRESS(0x0838f0, 0x4c0)
-VA(0x00492840, 0xB8E) MAC_ADDRESS(0x0a46a8, 0x7c4)  // retail CFG/calls + DC source shape
+MAC_ADDRESS(0x0a46a8, 0x7c4)  // retail CFG/calls + DC source shape
 void combatManager::combatMessage(int command)
 {
     if (!m_combatShowIt
@@ -482,17 +484,20 @@ void combatManager::combatMessage(int command)
     m_combatWindow->combatMessage(g_text, 0, priority);
 }
 
-VA(0x004933d0, 0x27A) MAC_ADDRESS(0x0a3d7c, 0x208)
+VA(0x004933d0, 0x27A)
+MAC_ADDRESS(0x0a3d7c, 0x208)
 static std::string getEstimatedDamage(const army* currentArmy,
                                         army* targetArmy,
                                         unsigned char ranged,
                                         long distance);
 
-VA(0x00493650, 0xBD) MAC_ADDRESS(0x0a3c9c, 0xe0)
+VA(0x00493650, 0xBD)
+MAC_ADDRESS(0x0a3c9c, 0xe0)
 static std::string formatRounded(long amount, long high);
 
+VA(0x00493710, 0x63)
 DC_ADDRESS(0x083db0, 0xa8)
-VA(0x00493710, 0x63) MAC_ADDRESS(0x0a4e6c, 0x84)
+MAC_ADDRESS(0x0a4e6c, 0x84)
 void combatManager::resetLimitCreature()
 {
     memset(m_creatureEffect, 0, sizeof m_creatureEffect);
@@ -504,8 +509,9 @@ void combatManager::resetLimitCreature()
     m_drawbridgeBounds = g_combatAreaLimits;
 }
 
+VA(0x00493780, 0x44)
 DC_ADDRESS(0x083e58, 0x34)
-VA(0x00493780, 0x44) MAC_ADDRESS(0x0a4ef0, 0x7c)
+MAC_ADDRESS(0x0a4ef0, 0x7c)
 void combatManager::updateCombatArea()
 {
     if (!static_cast<const combatManager*>(this)->isQuickCombat()
@@ -629,8 +635,9 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame, int x, int
 #endif  // @carcass
 
 // E:\gamedcs\drawing.cpp:689
+VA(0x004937d0, 0x155)
 DC_ADDRESS(0x0842a8, 0x176)
-VA(0x004937d0, 0x155) MAC_ADDRESS(0x0a4f6c, 0x1c8)
+MAC_ADDRESS(0x0a4f6c, 0x1c8)
 void combatManager::setupGridForArmy(const army* thisArmy)
 {
     if (isQuickCombat())
@@ -666,8 +673,9 @@ void combatManager::setupGridForArmy(const army* thisArmy)
     }
 }
 
+VA(0x00493930, 0x3c0)
 DC_ADDRESS(0x084420, 0x3bc)
-VA(0x00493930, 0x3c0) MAC_ADDRESS(0x0a5134, 0x4b8)
+MAC_ADDRESS(0x0a5134, 0x4b8)
 int combatManager::updateGrid(int postGridIsClean, int setupGrid)
 {
     if (isQuickCombat())
@@ -785,8 +793,9 @@ int combatManager::updateGrid(int postGridIsClean, int setupGrid)
     return update;
 }
 
+VA(0x00493cf0, 0x1ab)
 DC_ADDRESS(0x0847dc, 0x1e8)
-VA(0x00493cf0, 0x1ab) MAC_ADDRESS(0x0a55ec, 0x230)
+MAC_ADDRESS(0x0a55ec, 0x230)
 void combatManager::drawBackground()
 {
     if (static_cast<const combatManager*>(this)->isQuickCombat())
@@ -835,8 +844,9 @@ void combatManager::drawBackground()
 }
 
 // E:\gamedcs\drawing.cpp:982
+VA(0x00493ea0, 0x4ca)
 DC_ADDRESS(0x0849c4, 0x3d4)
-VA(0x00493ea0, 0x4ca) MAC_ADDRESS(0x0a581c, 0x5d8)
+MAC_ADDRESS(0x0a581c, 0x5d8)
 // At the retained UpdateCombatArea call, passing m_drawbridgeBounds directly
 // or adding a short-lived SLimitData copy leaves Windows at 96.403%; naming
 // width/height inside the canonical helper also leaves the call byte-flat.
@@ -847,6 +857,7 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
     DATA(0x006772d8)
     static int lastMouseGridIndex = -1;
     DATA_COMPGEN_GUARD(0x006969b0, oldMouseGridHexesGuard, oldHexes)
+
     VA_COMPGEN(0x00494370, 0x20, STATIC_DTOR, oldHexes)
     DATA(0x006969b8)
     static std::vector<long> oldHexes;
@@ -936,8 +947,9 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
         oldHexes.push_back(hexes[i]);
 }
 
+VA(0x00494390, 0xA7)
 DC_ADDRESS(0x084dac, 0x80)
-VA(0x00494390, 0xA7) MAC_ADDRESS(0x0a5df4, 0x178)
+MAC_ADDRESS(0x0a5df4, 0x178)
 void combatManager::updateMouseGrid(int newMouseGridIndex,
                                     int allowDuringAction)
 {
@@ -992,8 +1004,9 @@ void combatManager::updateMouseGrid(int newMouseGridIndex,
 // canonical lowercase calls remain in the authored loops below; the audit
 // does not resolve their spelling to the older decorated name.
 // E:\gamedcs\drawing.cpp:1141
+VA(0x00494440, 0x7d5)
 DC_ADDRESS(0x084e2c, 0x5c8)
-VA(0x00494440, 0x7d5) MAC_ADDRESS(0x0a5f6c, 0x758)  // anchor-global + retail arity
+MAC_ADDRESS(0x0a5f6c, 0x758)  // anchor-global + retail arity
 void combatManager::drawFrame(bool update,
                               bool limitCreatureEffect,
                               bool limitDraw, int delay,
@@ -1185,7 +1198,6 @@ void combatManager::drawFrame(bool update,
 // Dreamcast drawing.cpp:1399. Complete's /Ob2 build folds this helper into
 // DrawFrame, but the source boundary and statement grouping remain positive
 // CodeView evidence.
-
 DC_ADDRESS(0x0853f4, 0x84)
 MAC_ADDRESS(0x0a66c4, 0xb4)
 void combatManager::drawObstacleAt(int hexIndex)
@@ -1205,8 +1217,9 @@ void combatManager::drawObstacleAt(int hexIndex)
     }
 }
 
+VA(0x00494c20, 0x31c)
 DC_ADDRESS(0x085478, 0x35a)
-VA(0x00494c20, 0x31c) MAC_ADDRESS(0x0a6778, 0x36c)
+MAC_ADDRESS(0x0a6778, 0x36c)
 void combatManager::drawWallAt(int hexIndex, int dx)
 {
     const TWallTraits* const wtTable = s_wallTraits[m_defendingTown->m_type];
@@ -1319,7 +1332,6 @@ void combatManager::drawWallAt(int hexIndex, int dx)
 // into DrawFrame; retaining the helper keeps the original local lifetime and
 // statement boundary visible to the compiler. Ordinary auto-inlining retains
 // all exact callers; no explicit inline keyword is needed or evidenced.
-
 DC_ADDRESS(0x0857d4, 0x70)
 MAC_ADDRESS(0x0a6ae4, 0x84)
 void combatManager::drawDeadOccupants(int index)
@@ -1332,8 +1344,9 @@ void combatManager::drawDeadOccupants(int index)
     }
 }
 
+VA(0x00494f40, 0x147)
 DC_ADDRESS(0x085844, 0x134)
-VA(0x00494f40, 0x147) MAC_ADDRESS(0x0a6b68, 0x194)
+MAC_ADDRESS(0x0a6b68, 0x194)
 void combatManager::drawOccupant(int index, int drawPriority,
                                  int numBoxOnly)
 {
@@ -1373,8 +1386,9 @@ void combatManager::drawOccupant(int index, int drawPriority,
     occupant->drawToBuffer(hex.m_refX, hex.m_refY, 1);
 }
 
+VA(0x00495090, 0x114)
 DC_ADDRESS(0x085978, 0xce)
-VA(0x00495090, 0x114) MAC_ADDRESS(0x0a6cfc, 0x1bc)
+MAC_ADDRESS(0x0a6cfc, 0x1bc)
 int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
                               int x, int y, SLimitData* limits,
                               bool isFlipped,
@@ -1406,8 +1420,9 @@ int combatManager::drawArcher(const CSprite* sprite, int sequence, int frame,
     return 1;
 }
 
+VA(0x004951b0, 0xfd)
 DC_ADDRESS(0x085a48, 0x108)
-VA(0x004951b0, 0xfd) MAC_ADDRESS(0x0a6eb8, 0x19c)
+MAC_ADDRESS(0x0a6eb8, 0x19c)
 int combatManager::drawCreature(const CSprite* sprite, int sequence, int frame,
                                 int x, int y, SLimitData* limits, int id,
                                 bool isFlipped, int color)
@@ -1459,8 +1474,9 @@ int combatManager::drawCreatureAlpha(const CSprite* sprite, int sequence,
     return 1;
 }
 
+VA(0x004952b0, 0xfb)
 DC_ADDRESS(0x085c2c, 0xd2)
-VA(0x004952b0, 0xfb) MAC_ADDRESS(0x0a7054, 0x198)
+MAC_ADDRESS(0x0a7054, 0x198)
 int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
                                   int frame, int x, int y,
                                   SLimitData* limits,
@@ -1489,8 +1505,9 @@ int combatManager::drawCombatHero(const CSprite* sprite, int sequence,
     return 1;
 }
 
+VA(0x004953b0, 0x144)
 DC_ADDRESS(0x085d00, 0x13c)
-VA(0x004953b0, 0x144) MAC_ADDRESS(0x0a71ec, 0x1f8)
+MAC_ADDRESS(0x0a71ec, 0x1f8)
 int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
                                    int x, int y,
                                    bool isFlipped,
@@ -1523,8 +1540,9 @@ int combatManager::drawSpellEffect(const CSprite* sprite, int frame,
     return 1;
 }
 
+VA(0x00495500, 0x142)
 DC_ADDRESS(0x085e3c, 0xde)
-VA(0x00495500, 0x142) MAC_ADDRESS(0x0a73e4, 0x1f4)
+MAC_ADDRESS(0x0a73e4, 0x1f4)
 int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
                                     int x, int y,
                                     bool isFlipped)
@@ -1553,8 +1571,9 @@ int combatManager::drawSpriteObject(const CSprite* sprite, int frame,
     return 1;
 }
 
+VA(0x00495650, 0xD9)
 DC_ADDRESS(0x085f1c, 0x54)
-VA(0x00495650, 0xD9) MAC_ADDRESS(0x0a75d8, 0x14c)
+MAC_ADDRESS(0x0a75d8, 0x14c)
 int combatManager::drawCreatureAndHeroSubwindows()
 {
     if (m_combatWindow->m_heroSubWindows[0]->isShown())
@@ -1581,8 +1600,9 @@ int combatManager::drawCreatureAndHeroSubwindows()
     return 1;
 }
 
+VA(0x00495730, 0x73)
 DC_ADDRESS(0x085f70, 0x64)
-VA(0x00495730, 0x73) MAC_ADDRESS(0x0a7724, 0x9c)
+MAC_ADDRESS(0x0a7724, 0x9c)
 int combatManager::drawObstacle(const hexcell& cell)
 {
     TObstacle& obstacle = getObstacle(cell.m_obstacleIndex);
@@ -1593,8 +1613,9 @@ int combatManager::drawObstacle(const hexcell& cell)
         cell.m_hexUlx, cell.m_hexUly - yOffset, 0);
 }
 
+VA(0x004957b0, 0x125)
 DC_ADDRESS(0x085fd4, 0xc2)
-VA(0x004957b0, 0x125) MAC_ADDRESS(0x0a77c0, 0x1bc)
+MAC_ADDRESS(0x0a77c0, 0x1bc)
 int combatManager::drawWall(const Bitmap816* image, int x, int y,
                             int width, int height, int dx, int dy)
 {
@@ -1619,8 +1640,9 @@ int combatManager::drawWall(const Bitmap816* image, int x, int y,
     return 1;
 }
 
+VA(0x004958e0, 0x129)
 DC_ADDRESS(0x086098, 0x134)
-VA(0x004958e0, 0x129) MAC_ADDRESS(0x0a797c, 0x1b0)
+MAC_ADDRESS(0x0a797c, 0x1b0)
 int combatManager::drawObject(const Bitmap816* image, int x, int y)
 {
     SLimitData limits(x, y,
@@ -1646,8 +1668,9 @@ int combatManager::drawObject(const Bitmap816* image, int x, int y)
     return 1;
 }
 
+VA(0x00495a10, 0x1d7)
 DC_ADDRESS(0x0861cc, 0x1b2)
-VA(0x00495a10, 0x1d7) MAC_ADDRESS(0x0a7b2c, 0x28c)
+MAC_ADDRESS(0x0a7b2c, 0x28c)
 int combatManager::drawMoatOverlay(int index)
 {
     const hexcell& cell = m_cells[index];
@@ -1698,8 +1721,9 @@ int combatManager::drawMoatOverlay(int index)
     return 1;
 }
 
+VA(0x00495bf0, 0x35e)
 DC_ADDRESS(0x086380, 0x32c)
-VA(0x00495bf0, 0x35e) MAC_ADDRESS(0x0a7db8, 0x408)
+MAC_ADDRESS(0x0a7db8, 0x408)
 void combatManager::computeMaxExtent()
 {
     int side;
@@ -1777,8 +1801,9 @@ void combatManager::computeMaxExtent()
     m_drawbridgeBounds.clip(g_combatDrawLimits);
 }
 
+VA(0x00495f50, 0x17c)
 DC_ADDRESS(0x0866ac, 0x10e)
-VA(0x00495f50, 0x17c) MAC_ADDRESS(0x0a81c0, 0x1e8)
+MAC_ADDRESS(0x0a81c0, 0x1e8)
 void combatManager::computeExtent(const CSprite* sprite, int sequence,
                                   int frame, int x, int y,
                                   SLimitData* limits, int isFlipped,
@@ -1808,8 +1833,9 @@ void combatManager::computeExtent(const CSprite* sprite, int sequence,
         m_drawbridgeBounds.include(*limits);
 }
 
+VA(0x004960d0, 0x76a)
 DC_ADDRESS(0x0867bc, 0x6e2)
-VA(0x004960d0, 0x76a) MAC_ADDRESS(0x0a83a8, 0x8ec)
+MAC_ADDRESS(0x0a83a8, 0x8ec)
 void combatManager::cycleCombatScreen()
 {
     resetLimitCreature();
@@ -1986,8 +2012,9 @@ void combatManager::cycleCombatScreen()
         GameTime::nextFrameTime(g_timers[8], 100);
 }
 
+VA(0x00496840, 0x1c5)
 DC_ADDRESS(0x086ea0, 0x19c)
-VA(0x00496840, 0x1c5) MAC_ADDRESS(0x0a8c94, 0x29c)
+MAC_ADDRESS(0x0a8c94, 0x29c)
 void combatManager::spellEffect(int effect, army* targetArmy, int delay,
                                 bool doWince)
 {
@@ -2036,8 +2063,9 @@ void combatManager::spellEffect(int effect, army* targetArmy, int delay,
     drawFrame(1, 0, 0, delay, 1, 1);
 }
 
+VA(0x00496a10, 0x23d)
 DC_ADDRESS(0x08703c, 0x23a)
-VA(0x00496a10, 0x23d) MAC_ADDRESS(0x0a8f30, 0x278)
+MAC_ADDRESS(0x0a8f30, 0x278)
 void combatManager::spellEffect(int effect, int hex, int delay,
                                 bool leaveLastFrame)
 {

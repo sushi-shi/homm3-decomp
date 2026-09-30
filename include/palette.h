@@ -107,7 +107,7 @@ public:
     // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
     // its constructor 0x4b5070 runs this body on that subobject as a
     // member initializer. Declaration only - the body stays palette's.
-    // DC Palette.h:137-140, dc 0x122b08. No receiver; three mask stores.
+    // DC Palette.h:137-140. No receiver; three mask stores.
     // Retail ResourceManager::setPixelFormat expands this header helper.
     DC_ADDRESS(0x122b08, 0x1c)
     static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)

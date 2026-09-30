@@ -93,6 +93,7 @@ public:
 
     class TSpellbookEntry {
     public:
+
         DC_ADDRESS(0x14d320, 0xa)
         TSpellbookEntry(SpellID id, TSpellSchool school,
                         TSkillMastery mastery)
@@ -118,12 +119,14 @@ public:
         m_school = school;
         s_lastSchool = school;
     }
+
     // E:\gamedcs\SpellbookWindow.h:230
     DC_ADDRESS(0x14d33c, 0x6)
     unsigned getSchool() const
     {
         return m_school;
     }
+
     // E:\gamedcs\SpellbookWindow.h:236
     DC_ADDRESS(0x14d344, 0x20)
     void setContext(TSpellContext context)
@@ -134,6 +137,7 @@ public:
             m_contextMask = eCombatContextMask;
         s_lastContext = context;
     }
+
     // E:\gamedcs\SpellbookWindow.h:248
     DC_ADDRESS(0x14d364, 0x6)
     unsigned getContextMask() const
@@ -142,12 +146,14 @@ public:
     }
     void gotoPage(int page);
     int getPage();
+
     // E:\gamedcs\SpellbookWindow.h:258
     DC_ADDRESS(0x14d36c, 0x1c)
     void previousPage()
     {
         gotoPage(m_page - 1);
     }
+
     // E:\gamedcs\SpellbookWindow.h:264
     DC_ADDRESS(0x14d388, 0x1c)
     void nextPage()

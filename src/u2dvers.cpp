@@ -3,8 +3,8 @@
 
 #include "u2dvers.h"
 
-DC_ADDRESS(0x18e3b0, 0x4)
 VA(0x005eeda0, 0x4C)
+DC_ADDRESS(0x18e3b0, 0x4)
 TFileVersionInfo::TFileVersionInfo(const char* filename)
 {
     unsigned long ignoredHandle;
@@ -19,16 +19,16 @@ TFileVersionInfo::TFileVersionInfo(const char* filename)
     }
 }
 
-DC_ADDRESS(0x18e3b4, 0x4)
 VA(0x005eedf0, 0xE)
+DC_ADDRESS(0x18e3b4, 0x4)
 TFileVersionInfo::~TFileVersionInfo()
 {
     if (m_data)
         delete[] m_data;
 }
 
-DC_ADDRESS(0x18e3b8, 0x4)
 VA(0x005eee00, 0x265)
+DC_ADDRESS(0x18e3b8, 0x4)
 bool TFileVersionInfo::getVersionInfo(const char* name, std::string* buffer) const
 {
     // The PC implementation is absent from DC's stub. Retail normalizes

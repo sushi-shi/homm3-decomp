@@ -70,13 +70,15 @@ public:
     int select(message& msg);
     // E:\gamedcs\button.cpp:401
     int deselect(message& msg);
+
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // wrapper is inlined at its retail call sites. The old 0x404200 mapping
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
     DC_ADDRESS(0x057da4, 0x18)
     void setText(const char* newText) { m_text = newText; }
-    // Dreamcast button.h:99 (dc 0x669f4, 6 B SH4: one store). A free
+
+    // Dreamcast button.h:99 (6 B SH4: one store). A free
     // /Ob2 candidate site wherever a caller uses it - see
     // TSingleSelectionWindow::CreateFilterWidgets, whose insert-expansion
     // sequence is reproduced only with this setter in its six loops.
@@ -86,12 +88,14 @@ public:
     // writer (TSingleSelectionWindow::createFilterWidgets) takes the same
     // setter form beside setDisabledFrame. Project name.
     void setHighlightFrame(long frame) { m_highlightedFrame = frame; }
-    DC_ADDRESS(0x002e10, 0x20)
+
     VA(0x004e1370, 0x1AF)
+    DC_ADDRESS(0x002e10, 0x20)
     void setHotkey(int code)
     {
         m_hotKeyCodes.push_back(code);
     }
+
     // Dreamcast button.h:120-122: the separate vector<int>::clear wrapper.
     // TAdvMenu::SetSleepImage retains this call in its source line table.
     DC_ADDRESS(0x002e30, 0x18)

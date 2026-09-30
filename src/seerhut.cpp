@@ -106,8 +106,9 @@ std::string formatString(const char* format, ...);
 // ResourceManager's canonical inline helper restores that decision and makes
 // the Windows body exact without changing the seven retained calls.
 // E:\gamedcs\seerhut.cpp:50
+VA(0x0056c3e0, 0x183)
 DC_ADDRESS(0x12cd28, 0x35c)
-VA(0x0056c3e0, 0x183) MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
+MAC_ADDRESS(0x2545ec, 0x124)  // anchor-string(seerhut.txt) + anchor-callee(LoadSeerHutTextColumn)
 unsigned char initializeSeerHutText()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -136,7 +137,8 @@ unsigned char initializeSeerHutText()
 
 VA_COMPGEN(0x0056cbe0, 0x21, SCALAR_DELETING_DTOR, type_quest)
 
-VA(0x0056cb80, 0x5F) MAC_ADDRESS(0x163ff4, 0x98)  // sole callee of all nine factory arms
+VA(0x0056cb80, 0x5F)
+MAC_ADDRESS(0x163ff4, 0x98)  // sole callee of all nine factory arms
 type_quest::type_quest(unsigned char flags)
 {
     m_seerHut = flags;
@@ -146,12 +148,14 @@ type_quest::type_quest(unsigned char flags)
 
 // The common virtual base destructor. Its three std::string members unwind
 // in reverse order.
-VA(0x0056cc10, 0xA0) MAC_ADDRESS(0x16408c, 0x78)
+VA(0x0056cc10, 0xA0)
+MAC_ADDRESS(0x16408c, 0x78)
 type_quest::~type_quest()
 {
 }
 
-VA(0x0056ccb0, 0x44) MAC_ADDRESS(0x16410c, 0x60)
+VA(0x0056ccb0, 0x44)
+MAC_ADDRESS(0x16410c, 0x60)
 unsigned char type_quest::hasExpired() const
 {
     if (m_limit < 0)
@@ -187,7 +191,8 @@ unsigned char type_quest::hasExpired() const
 // Earlier controls on the reference-bound Load were that dword row (48.83%),
 // one shared scalar block (49.60%), and hoisting extra (49.60%), against the
 // 49.7043% peak. Those results do not justify retaining the wrong lifetimes.
-VA(0x0056cd00, 0x14F) MAC_ADDRESS(0x164178, 0x134)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
+VA(0x0056cd00, 0x14F)
+MAC_ADDRESS(0x164178, 0x134)  // anchor-vtable 0x64174c slot 11 + the chain from all eight leaf Loads, retail-only
 void type_quest::load(TAbstractFile* file, int version)
 {
     m_seerHut = readValue<unsigned char>(file) != 0;
@@ -224,7 +229,8 @@ void type_quest::load(TAbstractFile* file, int version)
 // /Ob1 is byte-identical to the configured /Ob2 body. /Os retains all
 // three _Tidy calls and uses __EH_prolog (30.4375%); retail retains only
 // the first cleanup and emits its prologue inline. Neither policy explains it.
-VA(0x0056ce50, 0x11E) MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
+VA(0x0056ce50, 0x11E)
+MAC_ADDRESS(0x1642ac, 0xe0)  // anchor-vtable 0x64174c slot 12 + the chain from all eight leaf LoadFromMaps, retail-only
 void type_quest::loadFromMap(TAbstractFile* file)
 {
     m_limit = readLittleEndianValue<int>(file);
@@ -239,7 +245,8 @@ void type_quest::loadFromMap(TAbstractFile* file)
 // writeLittleEndianValue supplies that file-format boundary while retaining
 // writeScalar/writeValue underneath. Windows remains exact. CodeWarrior
 // still retains this scalar wrapper where native expands the operation.
-VA(0x0056cf70, 0xCD) MAC_ADDRESS(0x16438c, 0x180)
+VA(0x0056cf70, 0xCD)
+MAC_ADDRESS(0x16438c, 0x180)
 void type_quest::save(TAbstractFile* file)
 {
     {
@@ -267,7 +274,8 @@ void type_quest::save(TAbstractFile* file)
 // Constructing text from the separator directly removes two extra Mac calls
 // (6/6 retained) and exactly matches Windows. The earlier 75.2472% control
 // also moved remainingDays earlier, so it did not isolate construction.
-VA(0x0056d040, 0x1F7) MAC_ADDRESS(0x16450c, 0x108)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
+VA(0x0056d040, 0x1F7)
+MAC_ADDRESS(0x16450c, 0x108)  // anchor-caller(both base dialog getters) + the row-column-51 read, retail-only
 std::string type_quest::getTimeLimitText()
 {
     int days = g_game->getCurrentTurn();
@@ -278,7 +286,8 @@ std::string type_quest::getTimeLimitText()
     return text;
 }
 
-VA(0x0056d240, 0xCA) MAC_ADDRESS(0x164614, 0x78)
+VA(0x0056d240, 0xCA)
+MAC_ADDRESS(0x164614, 0x78)
 std::string type_quest::getProposalDialogText()
 {
     if (m_limit < 0)
@@ -286,7 +295,8 @@ std::string type_quest::getProposalDialogText()
     return m_progressText + getTimeLimitText();
 }
 
-VA(0x0056d310, 0xCA) MAC_ADDRESS(0x1646f4, 0x78)
+VA(0x0056d310, 0xCA)
+MAC_ADDRESS(0x1646f4, 0x78)
 std::string type_quest::getProgressDialogText()
 {
     if (m_limit < 0)
@@ -301,42 +311,50 @@ type_experience_quest::type_experience_quest(unsigned char flags)
     m_requiredLevel = 0;
 }
 
-VA(0x0056d3e0, 0x2A) MAC_ADDRESS(0x1647ac, 0x34)
+VA(0x0056d3e0, 0x2A)
+MAC_ADDRESS(0x1647ac, 0x34)
 std::string type_experience_quest::getRequirementText()
 {
     return formatString(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                          m_requiredLevel);
 }
+
 // All nine description getters use the fourth string in the selected quest
 // text group directly. VC6 reproduces their retail address calculation when
 // the source names m_text3; the generic column selector adds an extra step.
-VA(0x0056d410, 0x72) MAC_ADDRESS(0x1647e0, 0x9c)
+VA(0x0056d410, 0x72)
+MAC_ADDRESS(0x1647e0, 0x9c)
 std::string type_experience_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
                          m_requiredLevel);
 }
 
-VA(0x0056d490, 0x1A) MAC_ADDRESS(0x164884, 0x1c)
+VA(0x0056d490, 0x1A)
+MAC_ADDRESS(0x164884, 0x1c)
 unsigned char type_experience_quest::isSatisfied(hero* currentHero)
 {
     return currentHero->m_level >= m_requiredLevel;
 }
-VA(0x0056d4b0, 0x9F) MAC_ADDRESS(0x1648a0, 0x80)
+
+VA(0x0056d4b0, 0x9F)
+MAC_ADDRESS(0x1648a0, 0x80)
 void type_experience_quest::doProposalDialog(hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056d550, 0x9B) MAC_ADDRESS(0x164920, 0x80)
+VA(0x0056d550, 0x9B)
+MAC_ADDRESS(0x164920, 0x80)
 void type_experience_quest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x11,
                  m_requiredLevel, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056d5f0, 0x35) MAC_ADDRESS(0x1649a0, 0x7c)
+VA(0x0056d5f0, 0x35)
+MAC_ADDRESS(0x1649a0, 0x7c)
 void type_experience_quest::load(TAbstractFile* file, int version)
 {
     unsigned short level;
@@ -346,7 +364,8 @@ void type_experience_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-VA(0x0056d630, 0xE1) MAC_ADDRESS(0x164a84, 0x68)
+VA(0x0056d630, 0xE1)
+MAC_ADDRESS(0x164a84, 0x68)
 void type_experience_quest::save(TAbstractFile* file)
 {
     short level = m_requiredLevel;
@@ -354,7 +373,9 @@ void type_experience_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-VA(0x0056d720, 0x23E) MAC_ADDRESS(0x164aec, 0x14c)
+
+VA(0x0056d720, 0x23E)
+MAC_ADDRESS(0x164aec, 0x14c)
 void type_experience_quest::setDefaultText()
 {
     const TSeerHutQuestText& texts = questTexts();
@@ -376,12 +397,15 @@ type_skill_quest::type_skill_quest(unsigned char flags)
     memset(m_requiredSkills, 0, sizeof(m_requiredSkills));
 }
 
-VA(0x0056d960, 0x22) MAC_ADDRESS(0x164c84, 0x30)
+VA(0x0056d960, 0x22)
+MAC_ADDRESS(0x164c84, 0x30)
 std::string type_skill_quest::getRequirementText()
 {
     return skillRequirementText(m_requiredSkills);
 }
-VA(0x0056d990, 0xD3) MAC_ADDRESS(0x164cb4, 0xb8)
+
+VA(0x0056d990, 0xD3)
+MAC_ADDRESS(0x164cb4, 0xb8)
 std::string type_skill_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
@@ -389,7 +413,8 @@ std::string type_skill_quest::getQuestDescription()
 }
 
 // E:\gamedcs\seerhut.cpp
-VA(0x0056da70, 0x60) MAC_ADDRESS(0x164d74, 0xd0)  // anchor-vtable 0x6417c4 slot 2, retail-only
+VA(0x0056da70, 0x60)
+MAC_ADDRESS(0x164d74, 0xd0)  // anchor-vtable 0x6417c4 slot 2, retail-only
 unsigned char type_skill_quest::isSatisfied(hero* currentHero)
 {
     for (int i = 0; i < 4; ++i) {
@@ -448,7 +473,8 @@ void type_skill_quest::showSkillRequirementsDialog(
 // format-register order is now exact, with every named helper retained.
 // Mac is 96.79% (592 bytes on both sides), with string homes uniformly four
 // bytes low; Windows is 74.91%. Extended c_str pointer lifetimes add spills.
-VA(0x0056dad0, 0x28C) MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
+VA(0x0056dad0, 0x28C)
+MAC_ADDRESS(0x164f04, 0x250)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
 void type_skill_quest::doProposalDialog(hero* currentHero)
 {
     signed char missing[4];
@@ -482,35 +508,41 @@ void type_skill_quest::doProposalDialog(hero* currentHero)
 // expands the ordinary helper; the previous local loop scored 96.6180%.
 // This Complete quest has no Dreamcast counterpart to settle the source form.
 // E:\gamedcs\seerhut.cpp
-VA(0x0056dd60, 0xF5) MAC_ADDRESS(0x165154, 0x54)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
+VA(0x0056dd60, 0xF5)
+MAC_ADDRESS(0x165154, 0x54)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
 void type_skill_quest::doProgressDialog()
 {
     showSkillRequirementsDialog(
         getProgressDialogText().c_str(), m_requiredSkills);
 }
 
-VA(0x0056de60, 0x29) MAC_ADDRESS(0x1651a8, 0x6c)
+VA(0x0056de60, 0x29)
+MAC_ADDRESS(0x1651a8, 0x6c)
 void type_skill_quest::load(TAbstractFile* file, int version)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
     type_quest::load(file, version);
 }
 
-VA(0x0056de90, 0x25) MAC_ADDRESS(0x165214, 0x5c)
+VA(0x0056de90, 0x25)
+MAC_ADDRESS(0x165214, 0x5c)
 void type_skill_quest::loadFromMap(TAbstractFile* file)
 {
     file->read(m_requiredSkills, sizeof(m_requiredSkills));
     type_quest::loadFromMap(file);
 }
 
-VA(0x0056dec0, 0xD7) MAC_ADDRESS(0x165270, 0x5c)
+VA(0x0056dec0, 0xD7)
+MAC_ADDRESS(0x165270, 0x5c)
 void type_skill_quest::save(TAbstractFile* file)
 {
     file->write(m_requiredSkills, sizeof(m_requiredSkills));
 
     type_quest::save(file);
 }
-VA(0x0056dfa0, 0x124) MAC_ADDRESS(0x1652cc, 0xc4)
+
+VA(0x0056dfa0, 0x124)
+MAC_ADDRESS(0x1652cc, 0xc4)
 std::string type_skill_quest::skillRequirementText(
     const signed char (&skills)[4])
 {
@@ -524,6 +556,7 @@ std::string type_skill_quest::skillRequirementText(
     }
     return joinTextList(requirements);
 }
+
 // Direct completionText = formatString(...) expands assign here (49.37%,
 // versus 96.5299% with the diagnostic pin); unlike the proposal assignment,
 // retail retains this second assign. No DC counterpart settles the boundary.
@@ -537,7 +570,8 @@ std::string type_skill_quest::skillRequirementText(
 // also reproduces retail's _Tidy call/expansion split, but drops six other
 // quest-text callers (monster 95.53 -> 72.12, doQuestLog 96.54 -> 86.43);
 // calling questTexts() per use instead of the texts local gives 55.47%.
-VA(0x0056e0d0, 0x169) MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
+VA(0x0056e0d0, 0x169)
+MAC_ADDRESS(0x165390, 0x144)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::setDefaultText()
 {
     const TSeerHutQuestText& texts = questTexts();
@@ -560,54 +594,63 @@ type_defeat_hero_quest::type_defeat_hero_quest(unsigned char flags)
     m_satisfiedMask = 0;
 }
 
-VA(0x0056e240, 0xF2) MAC_ADDRESS(0x165520, 0x54)
+VA(0x0056e240, 0xF2)
+MAC_ADDRESS(0x165520, 0x54)
 std::string type_defeat_hero_quest::getRequirementText()
 {
     return g_game->getHero(m_defeatedHero)->m_name;
 }
 
-VA(0x0056e340, 0x8B) MAC_ADDRESS(0x165574, 0xc8)
+VA(0x0056e340, 0x8B)
+MAC_ADDRESS(0x165574, 0xc8)
 std::string type_defeat_hero_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_defeatedHero)->m_name);
 }
 
-VA(0x0056e3d0, 0x06) MAC_ADDRESS(0x16563c, 0x8)
+VA(0x0056e3d0, 0x06)
+MAC_ADDRESS(0x16563c, 0x8)
 int type_defeat_hero_quest::questType()
 {
     return 3;
 }
 
-VA(0x0056e3e0, 0x29) MAC_ADDRESS(0x165644, 0x38)
+VA(0x0056e3e0, 0x29)
+MAC_ADDRESS(0x165644, 0x38)
 unsigned char type_defeat_hero_quest::isSatisfied(hero* currentHero)
 {
     if (currentHero->m_owner < 0)
         return 0;
     return (m_satisfiedMask & (1 << currentHero->m_owner)) != 0;
 }
-VA(0x0056e410, 0x99) MAC_ADDRESS(0x16567c, 0x74)
+
+VA(0x0056e410, 0x99)
+MAC_ADDRESS(0x16567c, 0x74)
 void type_defeat_hero_quest::doProposalDialog(hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056e4b0, 0x95) MAC_ADDRESS(0x1656f0, 0x74)
+VA(0x0056e4b0, 0x95)
+MAC_ADDRESS(0x1656f0, 0x74)
 void type_defeat_hero_quest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056e550, 0x26) MAC_ADDRESS(0x165764, 0x30)
+VA(0x0056e550, 0x26)
+MAC_ADDRESS(0x165764, 0x30)
 void type_defeat_hero_quest::notifyHeroDefeated(int heroId, int player)
 {
     if (player >= 0 && heroId == m_defeatedHero)
         m_satisfiedMask |= 1 << player;
 }
 
-VA(0x0056e580, 0x6E) MAC_ADDRESS(0x165794, 0xc0)
+VA(0x0056e580, 0x6E)
+MAC_ADDRESS(0x165794, 0xc0)
 void type_defeat_hero_quest::load(TAbstractFile* file, int version)
 {
     {
@@ -640,7 +683,8 @@ void type_defeat_hero_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-VA(0x0056e5f0, 0xF4) MAC_ADDRESS(0x1658bc, 0x8c)
+VA(0x0056e5f0, 0xF4)
+MAC_ADDRESS(0x1658bc, 0x8c)
 void type_defeat_hero_quest::save(TAbstractFile* file)
 {
     short id = m_defeatedHero;
@@ -652,7 +696,9 @@ void type_defeat_hero_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-VA(0x0056e6f0, 0x29E) MAC_ADDRESS(0x165948, 0x1e4)
+
+VA(0x0056e6f0, 0x29E)
+MAC_ADDRESS(0x165948, 0x1e4)
 void type_defeat_hero_quest::setDefaultText()
 {
     const TSeerHutQuestText& texts = questTexts();
@@ -683,7 +729,8 @@ type_monster_quest::type_monster_quest(unsigned char flags)
 
 // Explicit invalid-range branches reproduce all 84 Mac bytes; the ternary
 // materializes an extra boolean or reverses the two arms. Windows stays exact.
-VA(0x0056ea30, 0xF9) MAC_ADDRESS(0x165b7c, 0x54)
+VA(0x0056ea30, 0xF9)
+MAC_ADDRESS(0x165b7c, 0x54)
 std::string type_monster_quest::getRequirementText()
 {
     const char* name;
@@ -694,7 +741,8 @@ std::string type_monster_quest::getRequirementText()
     return name;
 }
 
-VA(0x0056eb30, 0x90) MAC_ADDRESS(0x165bd0, 0xc8)
+VA(0x0056eb30, 0x90)
+MAC_ADDRESS(0x165bd0, 0xc8)
 std::string type_monster_quest::getQuestDescription()
 {
     return formatString(
@@ -704,13 +752,15 @@ std::string type_monster_quest::getQuestDescription()
             : "");
 }
 
-VA(0x0056ebc0, 0x06) MAC_ADDRESS(0x165c98, 0x8)
+VA(0x0056ebc0, 0x06)
+MAC_ADDRESS(0x165c98, 0x8)
 int type_monster_quest::questType()
 {
     return 4;
 }
 
-VA(0x0056ebd0, 0x26) MAC_ADDRESS(0x165ca0, 0x28)
+VA(0x0056ebd0, 0x26)
+MAC_ADDRESS(0x165ca0, 0x28)
 unsigned char type_monster_quest::isSatisfied(hero* currentHero)
 {
     int owner = currentHero->m_owner;
@@ -719,21 +769,25 @@ unsigned char type_monster_quest::isSatisfied(hero* currentHero)
         return 0;
     return owner == m_defeatedBy;
 }
-VA(0x0056ec00, 0x9F) MAC_ADDRESS(0x165cc8, 0x80)
+
+VA(0x0056ec00, 0x9F)
+MAC_ADDRESS(0x165cc8, 0x80)
 void type_monster_quest::doProposalDialog(hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056eca0, 0x9B) MAC_ADDRESS(0x165d48, 0x80)
+VA(0x0056eca0, 0x9B)
+MAC_ADDRESS(0x165d48, 0x80)
 void type_monster_quest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, 0x15,
                  m_monsterId, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x0056ed40, 0x45) MAC_ADDRESS(0x165dc8, 0xb0)
+VA(0x0056ed40, 0x45)
+MAC_ADDRESS(0x165dc8, 0xb0)
 void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
                                                 int player)
 {
@@ -745,7 +799,8 @@ void type_monster_quest::notifyMonsterDefeated(TQuestPosition where,
     m_defeatedBy = player;
 }
 
-VA(0x0056ed90, 0x51) MAC_ADDRESS(0x165e78, 0xc0)
+VA(0x0056ed90, 0x51)
+MAC_ADDRESS(0x165e78, 0xc0)
 void type_monster_quest::load(TAbstractFile* file, int version)
 {
     file->read(&m_position, sizeof(m_position));
@@ -776,7 +831,8 @@ void type_monster_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-VA(0x0056edf0, 0x2B) MAC_ADDRESS(0x164a1c, 0x68)
+VA(0x0056edf0, 0x2B)
+MAC_ADDRESS(0x164a1c, 0x68)
 void type_experience_quest::loadFromMap(TAbstractFile* file)
 {
     int level;
@@ -786,7 +842,8 @@ void type_experience_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-VA(0x0056ee20, 0xFE) MAC_ADDRESS(0x165fa0, 0xac)
+VA(0x0056ee20, 0xFE)
+MAC_ADDRESS(0x165fa0, 0xac)
 void type_monster_quest::save(TAbstractFile* file)
 {
     file->write(&m_position, sizeof(m_position));
@@ -819,7 +876,8 @@ void type_monster_quest::save(TAbstractFile* file)
 // lower four other consumers, including two exact drawing functions. Keeping
 // its invalid-range guard as an early return restores 96.7191%; the plural
 // selection remains the canonical shared helper's conditional expression.
-VA(0x0056ef20, 0x57C) MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
+VA(0x0056ef20, 0x57C)
+MAC_ADDRESS(0x16604c, 0x490)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
 void type_monster_quest::setDefaultText()
 {
     m_position = g_game->gameFn004CEF10(m_mapMonster);
@@ -869,13 +927,17 @@ void type_monster_quest::setDefaultText()
                                        monsterName, direction.c_str());
 }
 
-VA_COMPGEN(0x0056e990, 0xA0, IMPLICIT_DTOR, type_experience_quest) MAC_COMPGEN_ADDRESS(0x16b5ec, 0x60, IMPLICIT_DTOR, type_experience_quest)
+VA_COMPGEN(0x0056e990, 0xA0, IMPLICIT_DTOR, type_experience_quest)
+MAC_COMPGEN_ADDRESS(0x16b5ec, 0x60, IMPLICIT_DTOR, type_experience_quest)
 
 // The vector-owning artifact leaf has its own wrapper/body pair.
 VA_COMPGEN(0x0056f4a0, 0x21, SCALAR_DELETING_DTOR, type_artifact_quest)
-VA_COMPGEN(0x0056f4d0, 0xC2, IMPLICIT_DTOR, type_artifact_quest) MAC_COMPGEN_ADDRESS(0x16b450, 0x7c, IMPLICIT_DTOR, type_artifact_quest)
 
-VA(0x0056f5a0, 0x4C) MAC_ADDRESS(0x166540, 0x78)
+VA_COMPGEN(0x0056f4d0, 0xC2, IMPLICIT_DTOR, type_artifact_quest)
+MAC_COMPGEN_ADDRESS(0x16b450, 0x7c, IMPLICIT_DTOR, type_artifact_quest)
+
+VA(0x0056f5a0, 0x4C)
+MAC_ADDRESS(0x166540, 0x78)
 int type_artifact_quest::getAIValue(int player)
 {
     int total = 0;
@@ -887,7 +949,9 @@ int type_artifact_quest::getAIValue(int player)
     }
     return total;
 }
-VA(0x0056f5f0, 0x136) MAC_ADDRESS(0x166670, 0xb4)
+
+VA(0x0056f5f0, 0x136)
+MAC_ADDRESS(0x166670, 0xb4)
 std::string type_artifact_quest::getRequirementText()
 {
     std::vector<std::string> requirements;
@@ -895,14 +959,17 @@ std::string type_artifact_quest::getRequirementText()
         requirements.push_back(g_artifactTraits[m_artifacts[i]].m_name);
     return joinTextList(requirements);
 }
-VA(0x0056f730, 0xCF) MAC_ADDRESS(0x166724, 0xc0)
+
+VA(0x0056f730, 0xCF)
+MAC_ADDRESS(0x166724, 0xc0)
 std::string type_artifact_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
-VA(0x0056f800, 0x58) MAC_ADDRESS(0x1667ec, 0x9c)
+VA(0x0056f800, 0x58)
+MAC_ADDRESS(0x1667ec, 0x9c)
 unsigned char type_artifact_quest::isSatisfied(hero* currentHero)
 {
     if (m_artifacts.size() == 0)
@@ -913,7 +980,8 @@ unsigned char type_artifact_quest::isSatisfied(hero* currentHero)
     return 1;
 }
 
-VA(0x0056f860, 0x37) MAC_ADDRESS(0x166888, 0x74)
+VA(0x0056f860, 0x37)
+MAC_ADDRESS(0x166888, 0x74)
 void type_artifact_quest::takePayment(hero* currentHero)
 {
     for (unsigned i = 0; i < m_artifacts.size(); ++i)
@@ -929,7 +997,8 @@ void type_artifact_quest::takePayment(hero* currentHero)
 // counted insert, and per-iteration resource construction did not establish
 // a source-backed match, so the ordinary helper and push_back remain.
 // E:\gamedcs\seerhut.cpp
-VA(0x0056f8a0, 0x313) MAC_ADDRESS(0x1668fc, 0x1e8)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
+VA(0x0056f8a0, 0x313)
+MAC_ADDRESS(0x1668fc, 0x1e8)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
 void type_artifact_quest::doProposalDialog(hero* currentHero)
 {
     std::vector<TArtifact> missingArtifacts;
@@ -964,7 +1033,8 @@ void type_artifact_quest::doProposalDialog(hero* currentHero)
 // inside its loop, matching Mac 0x166b74. The earlier copied loop reached
 // only 89.8471%; preserve the retained helper and both proposal call sites.
 // E:\gamedcs\seerhut.cpp
-VA(0x0056fbc0, 0xE6) MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
+VA(0x0056fbc0, 0xE6)
+MAC_ADDRESS(0x166ae4, 0x54)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
 void type_artifact_quest::doProgressDialog()
 {
     showArtifactProgress(getProgressDialogText().c_str(), m_artifacts);
@@ -984,7 +1054,9 @@ void type_artifact_quest::showArtifactProgress(
     }
     extendedDialog(text, dialogResources, -1, -1, 0);
 }
-VA(0x0056fcb0, 0x1EE) MAC_ADDRESS(0x166bdc, 0xac)
+
+VA(0x0056fcb0, 0x1EE)
+MAC_ADDRESS(0x166bdc, 0xac)
 void type_artifact_quest::load(TAbstractFile* file, int version)
 {
     int i;
@@ -1006,7 +1078,8 @@ void type_artifact_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-VA(0x0056fea0, 0x1FA) MAC_ADDRESS(0x166c88, 0xc0)
+VA(0x0056fea0, 0x1FA)
+MAC_ADDRESS(0x166c88, 0xc0)
 void type_artifact_quest::loadFromMap(TAbstractFile* file)
 {
     int i;
@@ -1029,7 +1102,8 @@ void type_artifact_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-VA(0x005700a0, 0x121) MAC_ADDRESS(0x166d48, 0xac)
+VA(0x005700a0, 0x121)
+MAC_ADDRESS(0x166d48, 0xac)
 void type_artifact_quest::save(TAbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_artifacts.size());
@@ -1041,7 +1115,9 @@ void type_artifact_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-VA(0x005701d0, 0x199) MAC_ADDRESS(0x166df4, 0x160)
+
+VA(0x005701d0, 0x199)
+MAC_ADDRESS(0x166df4, 0x160)
 void type_artifact_quest::setDefaultText()
 {
     const TSeerHutQuestText& texts = questTexts();
@@ -1059,7 +1135,9 @@ void type_artifact_quest::setDefaultText()
 // The two-vector creature leaf has the second distinct implicit
 // wrapper/body pair in the family.
 VA_COMPGEN(0x00570370, 0x21, SCALAR_DELETING_DTOR, type_creature_quest)
-VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest) MAC_COMPGEN_ADDRESS(0x16b3b8, 0x98, IMPLICIT_DTOR, type_creature_quest)
+
+VA_COMPGEN(0x005703a0, 0xD7, IMPLICIT_DTOR, type_creature_quest)
+MAC_COMPGEN_ADDRESS(0x16b3b8, 0x98, IMPLICIT_DTOR, type_creature_quest)
 
 MAC_ADDRESS(0x166f54, 0x84)
 type_creature_quest::type_creature_quest(unsigned char flags)
@@ -1067,7 +1145,8 @@ type_creature_quest::type_creature_quest(unsigned char flags)
 {
 }
 
-VA(0x00570480, 0x55) MAC_ADDRESS(0x166fe0, 0x100)
+VA(0x00570480, 0x55)
+MAC_ADDRESS(0x166fe0, 0x100)
 int type_creature_quest::getAIValue(int player)
 {
     int total = 0;
@@ -1076,7 +1155,9 @@ int type_creature_quest::getAIValue(int player)
         total += g_creatureTypeTraits[m_types[i]].m_aiValue * m_counts[i];
     return total;
 }
-VA(0x005704e0, 0x1A7) MAC_ADDRESS(0x1670e0, 0x12c)
+
+VA(0x005704e0, 0x1A7)
+MAC_ADDRESS(0x1670e0, 0x12c)
 std::string type_creature_quest::getRequirementText()
 {
     std::string requirement;
@@ -1089,14 +1170,17 @@ std::string type_creature_quest::getRequirementText()
     }
     return joinTextList(requirements);
 }
-VA(0x00570690, 0xCF) MAC_ADDRESS(0x16720c, 0xc0)
+
+VA(0x00570690, 0xCF)
+MAC_ADDRESS(0x16720c, 0xc0)
 std::string type_creature_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
                          getRequirementText().c_str());
 }
 
-VA(0x00570760, 0x60) MAC_ADDRESS(0x1672d4, 0xa4)
+VA(0x00570760, 0x60)
+MAC_ADDRESS(0x1672d4, 0xa4)
 unsigned char type_creature_quest::isSatisfied(hero* currentHero)
 {
     if (m_types.size() == 0)
@@ -1107,7 +1191,8 @@ unsigned char type_creature_quest::isSatisfied(hero* currentHero)
     return 1;
 }
 
-VA(0x005707c0, 0xB3) MAC_ADDRESS(0x167378, 0xc0)
+VA(0x005707c0, 0xB3)
+MAC_ADDRESS(0x167378, 0xc0)
 void type_creature_quest::takePayment(hero* currentHero)
 {
     for (unsigned i = 0; i < m_types.size(); ++i) {
@@ -1127,8 +1212,8 @@ void type_creature_quest::takePayment(hero* currentHero)
 // Slot 4 lists only stacks for which the visitor's whole army is below the
 // quest count. The display keeps the full required count (not the deficit),
 // both in the localized text fragment and in the packed creature picture.
-
-VA(0x00570880, 0x2F8) MAC_ADDRESS(0x167438, 0x28c)
+VA(0x00570880, 0x2F8)
+MAC_ADDRESS(0x167438, 0x28c)
 void type_creature_quest::doProposalDialog(hero* currentHero)
 {
     std::string text;
@@ -1174,7 +1259,8 @@ void type_creature_quest::doProposalDialog(hero* currentHero)
 // This Complete-only interface is inferred from retail; the combined
 // helper/lifetime model must be measured in the merged compiler context.
 // E:\gamedcs\seerhut.cpp
-VA(0x00570b80, 0x2D5) MAC_ADDRESS(0x1676c4, 0x2b8)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
+VA(0x00570b80, 0x2D5)
+MAC_ADDRESS(0x1676c4, 0x2b8)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
 void type_creature_quest::doProgressDialog()
 {
     std::string text;
@@ -1210,7 +1296,8 @@ void type_creature_quest::doProgressDialog()
     extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
 }
 
-VA(0x00570e60, 0x208) MAC_ADDRESS(0x16797c, 0x138)
+VA(0x00570e60, 0x208)
+MAC_ADDRESS(0x16797c, 0x138)
 void type_creature_quest::load(TAbstractFile* file, int version)
 {
     int i;
@@ -1236,7 +1323,8 @@ void type_creature_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-VA(0x00571070, 0x20A) MAC_ADDRESS(0x167ab4, 0x134)
+VA(0x00571070, 0x20A)
+MAC_ADDRESS(0x167ab4, 0x134)
 void type_creature_quest::loadFromMap(TAbstractFile* file)
 {
     int i;
@@ -1266,7 +1354,8 @@ void type_creature_quest::loadFromMap(TAbstractFile* file)
 // body. Retail's one-slot frame and reuse of the file parameter home for the
 // integer count identify the canonical by-value writeValue boundary; direct
 // staging used two frame slots and stopped at 99.4853%.
-VA(0x00571280, 0x137) MAC_ADDRESS(0x167be8, 0xe4)
+VA(0x00571280, 0x137)
+MAC_ADDRESS(0x167be8, 0xe4)
 void type_creature_quest::save(TAbstractFile* file)
 {
     unsigned char count = static_cast<unsigned char>(m_types.size());
@@ -1278,7 +1367,9 @@ void type_creature_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
-VA(0x005713c0, 0x16A) MAC_ADDRESS(0x167ccc, 0x118)
+
+VA(0x005713c0, 0x16A)
+MAC_ADDRESS(0x167ccc, 0x118)
 void type_creature_quest::setDefaultText()
 {
     if (m_completionText.length() == 0) {
@@ -1299,12 +1390,15 @@ type_resource_quest::type_resource_quest(unsigned char flags)
     memset(m_resources, 0, sizeof(m_resources));
 }
 
-VA(0x00571560, 0x12) MAC_ADDRESS(0x167e30, 0x2c)
+VA(0x00571560, 0x12)
+MAC_ADDRESS(0x167e30, 0x2c)
 int type_resource_quest::getAIValue(int player)
 {
     return aiResourceCost(player, m_resources);
 }
-VA(0x00571580, 0x15A) MAC_ADDRESS(0x167e5c, 0xe0)
+
+VA(0x00571580, 0x15A)
+MAC_ADDRESS(0x167e5c, 0xe0)
 std::string type_resource_quest::getRequirementText()
 {
     std::vector<std::string> requirements;
@@ -1319,7 +1413,9 @@ std::string type_resource_quest::getRequirementText()
     }
     return joinTextList(requirements);
 }
-VA(0x005716e0, 0xCF) MAC_ADDRESS(0x167f3c, 0xc0)
+
+VA(0x005716e0, 0xCF)
+MAC_ADDRESS(0x167f3c, 0xc0)
 std::string type_resource_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
@@ -1328,7 +1424,8 @@ std::string type_resource_quest::getQuestDescription()
 
 // Vtable 0x6418f0 slot 2. A hero without an owner cannot pay; otherwise
 // every one of the seven treasury balances must cover the quest price.
-VA(0x005717b0, 0x4B) MAC_ADDRESS(0x168004, 0xf0)  // anchor-vtable
+VA(0x005717b0, 0x4B)
+MAC_ADDRESS(0x168004, 0xf0)  // anchor-vtable
 unsigned char type_resource_quest::isSatisfied(hero* currentHero)
 {
     int owner = currentHero->m_owner;
@@ -1345,7 +1442,8 @@ unsigned char type_resource_quest::isSatisfied(hero* currentHero)
     return 1;
 }
 
-VA(0x00571800, 0x3D) MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
+VA(0x00571800, 0x3D)
+MAC_ADDRESS(0x1680f4, 0x94)  // anchor-vtable
 void type_resource_quest::takePayment(hero* currentHero)
 {
     int* questResource = m_resources;
@@ -1356,7 +1454,8 @@ void type_resource_quest::takePayment(hero* currentHero)
     } while (--count);
 }
 
-VA(0x00571840, 0x29D) MAC_ADDRESS(0x168188, 0x234)
+VA(0x00571840, 0x29D)
+MAC_ADDRESS(0x168188, 0x234)
 void type_resource_quest::doProposalDialog(hero* currentHero)
 {
     std::vector<std::string> requirements;
@@ -1391,7 +1490,8 @@ void type_resource_quest::doProposalDialog(hero* currentHero)
     extendedDialog(text.c_str(), dialogResources, -1, -1, 0);
 }
 
-VA(0x00571ae0, 0x9A) MAC_ADDRESS(0x1683bc, 0xb4)  // anchor-vtable
+VA(0x00571ae0, 0x9A)
+MAC_ADDRESS(0x1683bc, 0xb4)  // anchor-vtable
 void type_resource_quest::doProgressDialog()
 {
     std::vector<type_dialog_resource> dialogResources;
@@ -1410,31 +1510,36 @@ void type_resource_quest::doProgressDialog()
 // 0x571bc4 and 0x571bf4 transfer the whole 28-byte resource array. Mac
 // 0x1684ac, 0x168528 and 0x1685a8 transfer seven 4-byte scalars with
 // byte swapping. A shared serialization-helper boundary remains unresolved.
-VA(0x00571b80, 0x29) MAC_ADDRESS(0x168470, 0x80)
+VA(0x00571b80, 0x29)
+MAC_ADDRESS(0x168470, 0x80)
 void type_resource_quest::load(TAbstractFile* file, int version)
 {
     file->read(m_resources, sizeof(m_resources));
     type_quest::load(file, version);
 }
 
-VA(0x00571bb0, 0x25) MAC_ADDRESS(0x1684f0, 0x78)
+VA(0x00571bb0, 0x25)
+MAC_ADDRESS(0x1684f0, 0x78)
 void type_resource_quest::loadFromMap(TAbstractFile* file)
 {
     file->read(m_resources, sizeof(m_resources));
     type_quest::loadFromMap(file);
 }
 
-VA(0x00571be0, 0xD7) MAC_ADDRESS(0x168568, 0x78)
+VA(0x00571be0, 0xD7)
+MAC_ADDRESS(0x168568, 0x78)
 void type_resource_quest::save(TAbstractFile* file)
 {
     file->write(m_resources, sizeof(m_resources));
 
     type_quest::save(file);
 }
+
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
 // conditional-expression body over-expanded that child (91.2333%).
-VA(0x00571cc0, 0x23E) MAC_ADDRESS(0x1685e0, 0x1e0)
+VA(0x00571cc0, 0x23E)
+MAC_ADDRESS(0x1685e0, 0x1e0)
 void type_resource_quest::setDefaultText()
 {
     std::vector<std::string> requirements;
@@ -1463,44 +1568,53 @@ type_be_hero_quest::type_be_hero_quest(unsigned char flags)
 {
 }
 
-VA(0x00571f00, 0x19) MAC_ADDRESS(0x168800, 0x18)
+VA(0x00571f00, 0x19)
+MAC_ADDRESS(0x168800, 0x18)
 unsigned char type_be_hero_quest::isSatisfied(hero* currentHero)
 {
     return currentHero->m_id == m_requiredHero;
 }
-VA(0x00571f20, 0x99) MAC_ADDRESS(0x168818, 0x74)
+
+VA(0x00571f20, 0x99)
+MAC_ADDRESS(0x168818, 0x74)
 void type_be_hero_quest::doProposalDialog(hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x00571fc0, 0x95) MAC_ADDRESS(0x16888c, 0x74)
+VA(0x00571fc0, 0x95)
+MAC_ADDRESS(0x16888c, 0x74)
 void type_be_hero_quest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
-VA(0x00572060, 0xF2) MAC_ADDRESS(0x168900, 0x54)
+
+VA(0x00572060, 0xF2)
+MAC_ADDRESS(0x168900, 0x54)
 std::string type_be_hero_quest::getRequirementText()
 {
     return g_game->getHero(m_requiredHero)->m_name;
 }
 
-VA(0x00572160, 0x8B) MAC_ADDRESS(0x168954, 0xc8)
+VA(0x00572160, 0x8B)
+MAC_ADDRESS(0x168954, 0xc8)
 std::string type_be_hero_quest::getQuestDescription()
 {
     return formatString(questTexts().m_text3.c_str(),
                          g_game->getHero(m_requiredHero)->m_name);
 }
 
-VA(0x005721f0, 0x06) MAC_ADDRESS(0x168a1c, 0x8)
+VA(0x005721f0, 0x06)
+MAC_ADDRESS(0x168a1c, 0x8)
 int type_be_hero_quest::questType()
 {
     return 8;
 }
 
-VA(0x00572200, 0x30) MAC_ADDRESS(0x168a24, 0x7c)
+VA(0x00572200, 0x30)
+MAC_ADDRESS(0x168a24, 0x7c)
 void type_be_hero_quest::load(TAbstractFile* file, int version)
 {
     short id;
@@ -1510,7 +1624,8 @@ void type_be_hero_quest::load(TAbstractFile* file, int version)
     type_quest::load(file, version);
 }
 
-VA(0x00572230, 0x31) MAC_ADDRESS(0x168aa0, 0x64)
+VA(0x00572230, 0x31)
+MAC_ADDRESS(0x168aa0, 0x64)
 void type_be_hero_quest::loadFromMap(TAbstractFile* file)
 {
     unsigned char id;
@@ -1531,7 +1646,8 @@ void type_be_hero_quest::save(TAbstractFile* file)
     type_quest::save(file);
 }
 
-VA(0x00572270, 0x276) MAC_ADDRESS(0x168b6c, 0x184)
+VA(0x00572270, 0x276)
+MAC_ADDRESS(0x168b6c, 0x184)
 void type_be_hero_quest::setDefaultText()
 {
     hero* requiredHero = g_game->getHero(m_requiredHero);
@@ -1553,32 +1669,38 @@ type_belong_to_player_quest::type_belong_to_player_quest(unsigned char flags)
 {
 }
 
-VA(0x005724f0, 0x1A) MAC_ADDRESS(0x168d30, 0x1c)
+VA(0x005724f0, 0x1A)
+MAC_ADDRESS(0x168d30, 0x1c)
 unsigned char type_belong_to_player_quest::isSatisfied(hero* currentHero)
 {
     return currentHero->m_owner == m_requiredOwner;
 }
-VA(0x00572510, 0x99) MAC_ADDRESS(0x168d4c, 0x74)
+
+VA(0x00572510, 0x99)
+MAC_ADDRESS(0x168d4c, 0x74)
 void type_belong_to_player_quest::doProposalDialog(hero* currentHero)
 {
     normalDialog(getProposalDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x005725b0, 0x95) MAC_ADDRESS(0x168dc0, 0x74)
+VA(0x005725b0, 0x95)
+MAC_ADDRESS(0x168dc0, 0x74)
 void type_belong_to_player_quest::doProgressDialog()
 {
     normalDialog(getProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
 
-VA(0x00572650, 0x20) MAC_ADDRESS(0x168e34, 0x24)
+VA(0x00572650, 0x20)
+MAC_ADDRESS(0x168e34, 0x24)
 std::string type_belong_to_player_quest::getRequirementText()
 {
     return std::string();
 }
 
-VA(0x00572670, 0x19D) MAC_ADDRESS(0x168e58, 0xb4)
+VA(0x00572670, 0x19D)
+MAC_ADDRESS(0x168e58, 0xb4)
 std::string type_belong_to_player_quest::getQuestDescription()
 {
     // Mac copies into a stack buffer with the ASCII-lowercase routine at
@@ -1591,13 +1713,15 @@ std::string type_belong_to_player_quest::getQuestDescription()
                          requirement.c_str());
 }
 
-VA(0x00572810, 0x06) MAC_ADDRESS(0x168f0c, 0x8)
+VA(0x00572810, 0x06)
+MAC_ADDRESS(0x168f0c, 0x8)
 int type_belong_to_player_quest::questType()
 {
     return 9;
 }
 
-VA(0x00572820, 0x35) MAC_ADDRESS(0x168f14, 0x74)
+VA(0x00572820, 0x35)
+MAC_ADDRESS(0x168f14, 0x74)
 void type_belong_to_player_quest::load(TAbstractFile* file, int version)
 {
     unsigned char owner;
@@ -1619,7 +1743,8 @@ void type_belong_to_player_quest::loadFromMap(TAbstractFile* file)
     type_quest::loadFromMap(file);
 }
 
-VA(0x00572860, 0xE0) MAC_ADDRESS(0x168fec, 0x64)
+VA(0x00572860, 0xE0)
+MAC_ADDRESS(0x168fec, 0x64)
 void type_belong_to_player_quest::save(TAbstractFile* file)
 {
     unsigned char owner = static_cast<unsigned char>(m_requiredOwner);
@@ -1627,10 +1752,12 @@ void type_belong_to_player_quest::save(TAbstractFile* file)
 
     type_quest::save(file);
 }
+
 // The canonical questTexts -> questTextRow chain is exact. Branch returns
 // in the shared row selector preserve the retained child call here; its old
 // conditional-expression body over-expanded that child (87.4421%).
-VA(0x00572940, 0x204) MAC_ADDRESS(0x169050, 0x168)
+VA(0x00572940, 0x204)
+MAC_ADDRESS(0x169050, 0x168)
 void type_belong_to_player_quest::setDefaultText()
 {
     std::string requirement = g_colors[m_requiredOwner];
@@ -1648,7 +1775,8 @@ void type_belong_to_player_quest::setDefaultText()
                               requirement.c_str());
 }
 
-VA(0x00572b50, 0xD) MAC_ADDRESS(0x1691b8, 0x10)
+VA(0x00572b50, 0xD)
+MAC_ADDRESS(0x1691b8, 0x10)
 TQuestGuard::TQuestGuard()
 {
     m_quest = 0;
@@ -1659,7 +1787,8 @@ TQuestGuard::TQuestGuard()
 // hasExpired and the row selector retained at 0x52e6b0. Keep those canonical
 // calls. Direct predicate use preserves all retail bytes; the intermediate
 // bool result added an absent conversion and measured 96.25%.
-VA(0x00572b60, 0x1FE) MAC_ADDRESS(0x1691c8, 0x250)
+VA(0x00572b60, 0x1FE)
+MAC_ADDRESS(0x1691c8, 0x250)
 void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
                           NewmapCell* eventCell, type_point point)
 {
@@ -1704,8 +1833,8 @@ void TQuestGuard::doEvent(hero* currentHero, bool humanPlayer,
 // whatever that column holds. Nullary where the quick-info and rollover
 // pair above take a player, which is what TQuestLogWindow's call site
 // pushes.
-
-VA(0x00572d60, 0xE0) MAC_ADDRESS(0x16943c, 0xc8)
+VA(0x00572d60, 0xE0)
+MAC_ADDRESS(0x16943c, 0xc8)
 std::string TQuestGuard::questGuardFn00572D60()
 {
     return formatString(
@@ -1713,7 +1842,8 @@ std::string TQuestGuard::questGuardFn00572D60()
         m_quest->getRequirementText().c_str());
 }
 
-VA(0x00572e40, 0x1FF) MAC_ADDRESS(0x169504, 0x110)
+VA(0x00572e40, 0x1FF)
+MAC_ADDRESS(0x169504, 0x110)
 std::string TQuestGuard::questGuardFn00572E40(int player)
 {
     std::string text;
@@ -1727,7 +1857,8 @@ std::string TQuestGuard::questGuardFn00572E40(int player)
     return text;
 }
 
-VA(0x00573040, 0x1FF) MAC_ADDRESS(0x169614, 0x110)
+VA(0x00573040, 0x1FF)
+MAC_ADDRESS(0x169614, 0x110)
 std::string TQuestGuard::questGuardFn00573040(int player)
 {
     std::string text;
@@ -1763,7 +1894,8 @@ type_artifact_quest::type_artifact_quest(TArtifact artifact, int textRow)
     setDefaultText();
 }
 
-VA(0x00573240, 0x23C) MAC_ADDRESS(0x169724, 0x194)  // hd-crossbuild + nine vtables + four callers
+VA(0x00573240, 0x23C)
+MAC_ADDRESS(0x169724, 0x194)  // hd-crossbuild + nine vtables + four callers
 type_quest* createQuest(int questType, unsigned char flags)
 {
     switch (questType) {
@@ -1789,7 +1921,8 @@ type_quest* createQuest(int questType, unsigned char flags)
     return 0;
 }
 
-VA(0x00573480, 0x52) MAC_ADDRESS(0x1698b8, 0xb4)  // hd-crossbuild
+VA(0x00573480, 0x52)
+MAC_ADDRESS(0x1698b8, 0xb4)  // hd-crossbuild
 int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
 {
     {
@@ -1812,8 +1945,8 @@ int TQuestGuard::load(TAbstractFile* infile, int saveVersion)
 // and then the quest's own slot 12 or slot 13 - which is a second,
 // independent witness for slot 13 being the serializer: this body picks
 // it out of the vtable at +0x34 right after writing the type byte.
-
-VA(0x005734e0, 0x3B) MAC_ADDRESS(0x16996c, 0x80)
+VA(0x005734e0, 0x3B)
+MAC_ADDRESS(0x16996c, 0x80)
 void TQuestGuard::read(TAbstractFile* infile)
 {
     unsigned char questType;
@@ -1824,7 +1957,8 @@ void TQuestGuard::read(TAbstractFile* infile)
         m_quest->loadFromMap(infile);
 }
 
-VA(0x00573520, 0x5E) MAC_ADDRESS(0x1699ec, 0xd8)
+VA(0x00573520, 0x5E)
+MAC_ADDRESS(0x1699ec, 0xd8)
 int TQuestGuard::save(TAbstractFile* outfile)
 {
     if (!m_quest) {
@@ -1870,7 +2004,8 @@ inline void TSeerHut::setRandomName(TSeerHut& thisHut)
     thisHut.m_nameIndex = chosen;
 }
 
-VA(0x005735a0, 0xC3) MAC_ADDRESS(0x169b0c, 0xf0)
+VA(0x005735a0, 0xC3)
+MAC_ADDRESS(0x169b0c, 0xf0)
 int TSeerHut::getValue(hero* currentHero)
 {
     int value = m_reward.getValue(currentHero);
@@ -1910,9 +2045,9 @@ int TSeerHut::getValue(hero* currentHero)
 // byte residual is a two-instruction scheduling difference inside the expanded
 // ordinary getValue helper; why-reg finds the same pseudos in a different C1
 // processing order, and its source-local creation-order probe regresses.
-
+VA(0x00573670, 0x400)
 DC_ADDRESS(0x12d0e4, 0x74)
-VA(0x00573670, 0x400) MAC_ADDRESS(0x169bfc, 0x2d4)  // code plus two retail switch tables in the admitted row
+MAC_ADDRESS(0x169bfc, 0x2d4)  // code plus two retail switch tables in the admitted row
 void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
 {
     if (!m_quest || m_quest->hasExpired()) {
@@ -1951,7 +2086,7 @@ void TSeerHut::doSeerEvent(hero* currentHero, bool humanPlayer)
     }
 }
 
-// Dreamcast preserves this private helper at dc 0x12d158 and places it after
+// Dreamcast preserves this private helper and places it after
 // DoSeerEvent in the TU. Complete replaces its fixed-buffer sprintf with a
 // string-returning formatter, but retail's no-quest arm corroborates the
 // helper's name lookup followed by NormalDialog. Once the caller owns the
@@ -1992,7 +2127,7 @@ void TSeerHut::doCompletionDialog(
     }
 }
 
-// Dreamcast seerhut.cpp:414 (dc 0x12d758) records this as a separate,
+// Dreamcast seerhut.cpp:414 records this as a separate,
 // no-local switch helper called first by DoCompletionDialog. Retail's inlined
 // copy preserves the ten reward arms and Complete's shifted skill pictures.
 // Original: TSeerHut::GetRewardType; seerhut.cpp:414
@@ -2038,7 +2173,8 @@ int TSeerHut::getRewardType()
 }
 
 // retail's real `AI_get_value_of_artifact(const type_artifact&, long)`
-VA(0x00573a70, 0x210) MAC_ADDRESS(0x169ed0, 0x268)
+VA(0x00573a70, 0x210)
+MAC_ADDRESS(0x169ed0, 0x268)
 int TSeerReward::getValue(const hero* currentHero)
 {
     switch (m_rewardType) {
@@ -2109,7 +2245,8 @@ int TSeerReward::getValue(const hero* currentHero)
 // DC TSeerHut::GiveReward (seerhut.cpp:266, dc0x12d4dc) owns the older
 // equivalent switch. Complete doSeerEvent passes this+5 at0x573919; the
 // retained body reads its type at+0, proving the separate TSeerReward owner.
-VA(0x00573c80, 0x290) MAC_ADDRESS(0x16a138, 0x290)
+VA(0x00573c80, 0x290)
+MAC_ADDRESS(0x16a138, 0x290)
 void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 {
     switch (m_rewardType) {
@@ -2212,7 +2349,8 @@ void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
 // DC TSeerHut::GetRewardExtra (seerhut.cpp:373, dc0x12d6d8) queries the
 // same reward domain. Complete's completion offer passes this+5 to0x573f10,
 // which reads type+0/payload+4/+8: the interface moved to TSeerReward.
-VA(0x00573f10, 0xBC) MAC_ADDRESS(0x16a3c8, 0xfc)
+VA(0x00573f10, 0xBC)
+MAC_ADDRESS(0x16a3c8, 0xfc)
 int TSeerReward::getRewardExtra(const hero* thisHero)
 {
     switch (m_rewardType) {
@@ -2243,8 +2381,9 @@ int TSeerReward::getRewardExtra(const hero* thisHero)
     }
 }
 
+VA(0x00573fd0, 0x91)
 DC_ADDRESS(0x12d8c0, 0x22)
-VA(0x00573fd0, 0x91) MAC_ADDRESS(0x16a588, 0x13c)
+MAC_ADDRESS(0x16a588, 0x13c)
 int TSeerHut::save(TAbstractFile* outfile)
 {
     if (!m_quest) {
@@ -2273,7 +2412,8 @@ int TSeerHut::save(TAbstractFile* outfile)
     }
 }
 
-VA(0x00574070, 0x138) MAC_ADDRESS(0x16a6c4, 0x108)  // UpdateQuestLocator caller; HD twin 0x574440
+VA(0x00574070, 0x138)
+MAC_ADDRESS(0x16a6c4, 0x108)  // UpdateQuestLocator caller; HD twin 0x574440
 std::string TSeerHut::getSeerLogText()
 {
     std::string logFormat =
@@ -2288,8 +2428,8 @@ std::string TSeerHut::getSeerLogText()
 // takes " " and is SetRolloverText's, 0x5743e0 takes "\n\n" and is
 // QuickInfo's. 556 B each and, again, byte-identical apart from that one
 // separator relocation.
-
-VA(0x005741b0, 0x22C) MAC_ADDRESS(0x16a7cc, 0x150)
+VA(0x005741b0, 0x22C)
+MAC_ADDRESS(0x16a7cc, 0x150)
 std::string TSeerHut::seerHutFn005741B0(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
@@ -2308,7 +2448,8 @@ std::string TSeerHut::seerHutFn005741B0(int player) const
     return text;
 }
 
-VA(0x005743e0, 0x22C) MAC_ADDRESS(0x16a91c, 0x150)
+VA(0x005743e0, 0x22C)
+MAC_ADDRESS(0x16a91c, 0x150)
 std::string TSeerHut::seerHutFn005743E0(int player) const
 {
     if (!playerHasInfo(static_cast<unsigned char>(player)))
@@ -2374,7 +2515,8 @@ static type_quest* readQuestFromMap(TAbstractFile* infile,
     return quest;
 }
 
-VA(0x00574610, 0x480) MAC_ADDRESS(0x16aae8, 0x534)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
+VA(0x00574610, 0x480)
+MAC_ADDRESS(0x16aae8, 0x534)  // anchor-caller readObject SEER arm; bracket seerhut..singleselectionpopups
 void TSeerHut::read(TAbstractFile* infile)
 {
     if (g_game->m_mapHeader.m_version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -2477,8 +2619,9 @@ void TSeerHut::read(TAbstractFile* infile)
 // decisions; open-coded staging blocks expanded it and measured 35.2488%.
 // Dreamcast's older four-line body has one gzread and no comparable quest
 // representation.
+VA(0x00574A90, 0x24A)
 DC_ADDRESS(0x12d8e4, 0x40)
-VA(0x00574A90, 0x24A) MAC_ADDRESS(0x16b01c, 0x27c)
+MAC_ADDRESS(0x16b01c, 0x27c)
 void TSeerHut::load(TAbstractFile* infile, int saveVersion)
 {
     if (saveVersion < 28) {
@@ -2534,7 +2677,11 @@ VA_COMPGEN(0x004af840, 0x29, VECTOR_UFILL, string)
 // retail invalid-position throw and overlap-safe copy; npos/empty-string
 // data point to 0x63a60c/0x63a608. No template body or caller is manufactured.
 VA_COMPGEN(0x004af350, 0x183, VECTOR_INSERT_SINGLE, string)
+
 VA_COMPGEN(0x004af500, 0x4D, VECTOR_DESTROY, string)
+
 VA_COMPGEN(0x004af800, 0x38, VECTOR_UCOPY, string)
+
 VA_COMPGEN(0x004af870, 0x154, STD_FILL, string)
+
 VA_COMPGEN(0x004af9d0, 0x165, STD_COPY_BACKWARD, string)

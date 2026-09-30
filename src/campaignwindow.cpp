@@ -57,7 +57,7 @@ DATA(0x00694e2c) static TCampaignWindow* g_campaignWindow;
 // The row type and the caption block live in campaignwindow.h.
 
 // E:\gamedcs\campaignwindow.cpp:78
-// Dreamcast emits it out of line (dc 0x5b53c, 0x34 B); retail has no slot for
+// Dreamcast emits it out of line (0x34 B); retail has no slot for
 // it, because /Ob2 expands it at all three call sites. The expansion is
 // register-visible and is what the handler's EBX is: the inlined `this` is
 // loaded once from gpCampaignWindow ahead of the sweep and reused by every
@@ -80,7 +80,8 @@ void TCampaignWindow::hideText()
 // track, snapshot the Bink playback state into the row and clear
 // its first track so the next row opens a fresh one, then hang the row's still on
 // the window. The destructor and the hover handler restore that snapshot.
-VA(0x0045e7c0, 0x27A) MAC_ADDRESS(0x069dec, 0x190)
+VA(0x0045e7c0, 0x27A)
+MAC_ADDRESS(0x069dec, 0x190)
 void TCampaignWindow::openPreview(int campaignIndex)
 {
     SCampaignPreview* preview = &g_campaignPreviews[campaignIndex];
@@ -135,9 +136,9 @@ void TCampaignWindow::openPreview(int campaignIndex)
 // That is the OVER-inline class on a Dinkumware member no declarator can
 // reach, and the pin lever is out of bounds for this lane; max/hist keep the
 // 98.4726 peak the shadow bought.
-
+VA(0x0045ea40, 0x692)
 DC_ADDRESS(0x05b570, 0x790)
-VA(0x0045ea40, 0x692) MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;
+MAC_ADDRESS(0x069f7c, 0xb58)  // campbkx2.pcx + vtable/global stores; Complete narrows the reset flag and adds the campaign-set slot;
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
@@ -279,12 +280,14 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
 
 VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
 
-VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign) MAC_COMPGEN_ADDRESS(0x06aaf4, 0xc8, IMPLICIT_DTOR, SCampaign)
+VA_COMPGEN(0x0045f110, 0x100, IMPLICIT_DTOR, SCampaign)
+MAC_COMPGEN_ADDRESS(0x06aaf4, 0xc8, IMPLICIT_DTOR, SCampaign)
 
 VA_COMPGEN(0x0045f9e0, 0x265, VECTOR_COPY_ASSIGN, CampaignScenarioInfo)
 
+VA(0x0045f210, 0xAE)
 DC_ADDRESS(0x05bd00, 0x68)
-VA(0x0045f210, 0xAE) MAC_ADDRESS(0x06abbc, 0x18c)
+MAC_ADDRESS(0x06abbc, 0x18c)
 TCampaignWindow::~TCampaignWindow()
 {
     // Six Complete campaign previews retain independent copies of the Bink
@@ -309,8 +312,9 @@ TCampaignWindow::~TCampaignWindow()
     }
 }
 
+VA(0x0045f2c0, 0x2C)
 DC_ADDRESS(0x05bd68, 0x2c)
-VA(0x0045f2c0, 0x2C) MAC_ADDRESS(0x06ad48, 0x58)
+MAC_ADDRESS(0x06ad48, 0x58)
 void TCampaignWindow::doModal()
 {
     g_soundManager->startMP3("MainMenu", 0, 1);
@@ -326,8 +330,9 @@ DATA(0x0066cad8) static int g_lastCampaignHoverId = -1;
 // a campaign and cancelling. Keeping the two switch breaks also reproduces
 // the Windows dispatcher (88.2203% to 100%); neither arm falls through.
 // E:\gamedcs\campaignwindow.cpp:291
+VA(0x0045f2f0, 0x26C)
 DC_ADDRESS(0x05bd94, 0x1b0)
-VA(0x0045f2f0, 0x26C) MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG
+MAC_ADDRESS(0x06ada0, 0x318)  // DoModal address-take + Complete video/widget CFG
 int campaignWindowHandler(message& msg)
 {
     int exitFlag = 0;

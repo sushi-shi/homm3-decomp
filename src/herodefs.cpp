@@ -210,15 +210,19 @@ namespace {
 // CodeView field pStr; each loader owns its own private string class.
 class TAutoStrPtr {
 public:
+
     // E:\gamedcs\herodefs.cpp:391
     DC_ADDRESS(0x0d60d4, 0x8)
     TAutoStrPtr() : m_string(0) {}
+
     // E:\gamedcs\herodefs.cpp:394
     DC_ADDRESS(0x0d60dc, 0x18)
     ~TAutoStrPtr() { delete[] m_string; }
+
     // E:\gamedcs\herodefs.cpp:396
     DC_ADDRESS(0x0d60f4, 0x4)
     void set(char* value) { m_string = value; }
+
     // E:\gamedcs\herodefs.cpp:398
     DC_ADDRESS(0x0d60f8, 0x4)
     char* get() const { return m_string; }
@@ -233,8 +237,9 @@ static void initializeHeroTraits(int id, const TSpreadsheetResource::TStringVect
 static void initializeHeroClassTraits(int id, const TSpreadsheetResource::TStringVector& values);
 static void initializeSSkillTraits(int id, const TSpreadsheetResource::TStringVector& values);
 
+VA(0x004e67a0, 0x176)
 DC_ADDRESS(0x0d5a40, 0x72)
-VA(0x004e67a0, 0x176) MAC_ADDRESS(0x1077f8, 0xd4)
+MAC_ADDRESS(0x1077f8, 0xd4)
 unsigned char initializeHeroTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -258,8 +263,9 @@ unsigned char initializeHeroTraitsTable()
     return 1;
 }
 
+VA(0x004e6920, 0x1E2)
 DC_ADDRESS(0x0d5ab4, 0x72)
-VA(0x004e6920, 0x1E2) MAC_ADDRESS(0x1078cc, 0xd4)
+MAC_ADDRESS(0x1078cc, 0xd4)
 bool initializeHeroClassTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(
@@ -283,8 +289,9 @@ bool initializeHeroClassTraitsTable()
     return 1;
 }
 
+VA(0x004e6b10, 0x1C8)
 DC_ADDRESS(0x0d5b28, 0x98)
-VA(0x004e6b10, 0x1C8) MAC_ADDRESS(0x1079a0, 0xd4)
+MAC_ADDRESS(0x1079a0, 0xd4)
 bool initializeSSkillTraitsTable()
 {
     TSpreadsheetResource* resource = ResourceManager::getSpreadsheet(

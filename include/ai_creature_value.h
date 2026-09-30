@@ -15,11 +15,13 @@ public:
     TCreatureType m_type;
     long m_value;
     short m_amount;
+
     DC_ADDRESS(0x037e28, 0xa)
     bool operator<(const type_creature_value& arg) const
     {
         return m_value < arg.m_value;
     }
+
     DC_ADDRESS(0x037e34, 0xa)
     bool operator>(const type_creature_value& arg) const
     {

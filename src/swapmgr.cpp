@@ -75,8 +75,9 @@ inline CSwapManagerChatEdit::CSwapManagerChatEdit(
 // late-owned controls, then register every non-null widget in vector order.
 // Complete adds the SoD background and artifact slots plus the network arrow
 // split; retail fixes all constructor arguments below.
+VA(0x005aaa80, 0x38E9)
 DC_ADDRESS(0x159328, 0x2ff8)
-VA(0x005aaa80, 0x38E9) MAC_ADDRESS(0x19be6c, 0x9d30)
+MAC_ADDRESS(0x19be6c, 0x9d30)
 TSwapWindow::TSwapWindow(hero** heroes)
     : heroWindow(0, 0, 800, 600, 1)
 {
@@ -669,8 +670,9 @@ TSwapWindow::TSwapWindow(hero** heroes)
     }
 }
 
+VA(0x005ae370, 0x1D)
 DC_ADDRESS(0x15f13c, 0x28)
-VA(0x005ae370, 0x1D) MAC_ADDRESS(0x1aa048, 0x48)
+MAC_ADDRESS(0x1aa048, 0x48)
 void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
 {
     ::sendChat(chat, toWho);
@@ -679,8 +681,9 @@ void CSwapManagerChatEdit::sendChat(const char* chat, int toWho)
 
 VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
 
+VA(0x005ae3c0, 0x6B)
 DC_ADDRESS(0x15c320, 0x62)
-VA(0x005ae3c0, 0x6B) MAC_ADDRESS(0x1a5b9c, 0xb0)
+MAC_ADDRESS(0x1a5b9c, 0xb0)
 TSwapWindow::~TSwapWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -689,8 +692,9 @@ TSwapWindow::~TSwapWindow()
     }
 }
 
+VA(0x005ae430, 0xCB)
 DC_ADDRESS(0x15c384, 0xec)
-VA(0x005ae430, 0xCB) MAC_ADDRESS(0x1a5c4c, 0x12c)
+MAC_ADDRESS(0x1a5c4c, 0x12c)
 void TSwapWindow::updateArrows()
 {
     if (!m_leftArrow)
@@ -735,6 +739,7 @@ void TSwapWindow::updateArrows()
 // prove that the byte is assigned in the body, not a member initializer.
 class CSwapMgrNetMsgHandler : public CNetMsgHandler {
 public:
+
     // E:\gamedcs\swapmgr.cpp:512
     DC_ADDRESS(0x15f1e4, 0x44)
     CSwapMgrNetMsgHandler() { m_field0c = 0; }
@@ -745,8 +750,9 @@ public:
 };
 SIZE(CSwapMgrNetMsgHandler, 0x10);
 
+VA(0x005ae500, 0xA9)
 DC_ADDRESS(0x15c470, 0xc4)
-VA(0x005ae500, 0xA9) MAC_ADDRESS(0x1a5d78, 0x13c)
+MAC_ADDRESS(0x1a5d78, 0x13c)
 swapManager::swapManager(hero* leftHero, hero* rightHero)
 {
     m_heroes[0] = leftHero;
@@ -774,8 +780,10 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     g_swapManager = this;
     m_netMsgHandler = 0;
 }
+
+VA(0x005ae5b0, 0x19B)
 DC_ADDRESS(0x15c534, 0x114)
-VA(0x005ae5b0, 0x19B) MAC_ADDRESS(0x1a5eb4, 0x2c0)
+MAC_ADDRESS(0x1a5eb4, 0x2c0)
 void swapManager::reset()
 {
     message msg;
@@ -833,8 +841,9 @@ int swapManager::drawSwapWin()
 // Windows and scored Mac callers remain unchanged.
 // DC line 703 uses TTextResource::operator[] for the hero-name format;
 // restoring that source call is VC6 byte-flat.
+VA(0x005ae750, 0x3A2)
 DC_ADDRESS(0x15c66c, 0x3d8)
-VA(0x005ae750, 0x3A2) MAC_ADDRESS(0x1a61d8, 0x478)  // full retail body +  dossier
+MAC_ADDRESS(0x1a61d8, 0x478)  // full retail body +  dossier
 int swapManager::open(int newPriority)
 {
     g_heroScreenDraggedArtifact.m_artifactId = ARTIFACT_NONE;
@@ -938,8 +947,9 @@ int swapManager::open(int newPriority)
     return 0;
 }
 
+VA(0x005aeb00, 0x213)
 DC_ADDRESS(0x15f228, 0x100)
-VA(0x005aeb00, 0x213) MAC_ADDRESS(0x1a9e84, 0x144)
+MAC_ADDRESS(0x1a9e84, 0x144)
 CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
 {
     switch (netMsg->m_subType)
@@ -990,8 +1000,9 @@ CNetMsg* CSwapMgrNetMsgHandler::handleNetMsg(CNetMsg* netMsg)
     return 0;
 }
 
+VA(0x005aed20, 0x9B)
 DC_ADDRESS(0x15ca44, 0x98)
-VA(0x005aed20, 0x9B) MAC_ADDRESS(0x1a6650, 0x128)
+MAC_ADDRESS(0x1a6650, 0x128)
 void swapManager::close()
 {
     if (g_heroScreenDraggedArtifact.m_artifactId != -1)
@@ -1010,8 +1021,10 @@ void swapManager::close()
     g_advManager->enableButtons();
     g_advManager->reseed(0, 0);
 }
+
+VA(0x005aedc0, 0x140)
 DC_ADDRESS(0x15cadc, 0x1ee)
-VA(0x005aedc0, 0x140) MAC_ADDRESS(0x1a67d8, 0x204)
+MAC_ADDRESS(0x1a67d8, 0x204)
 void swapManager::drawSelector()
 {
     int x = 0;
@@ -1095,8 +1108,9 @@ inline void swapManager::updateArtifactWidget(long id, TArtifact artifact)
     m_parent->broadcastMessage(msg);
 }
 
+VA(0x005aef00, 0x24C)
 DC_ADDRESS(0x15cd2c, 0x8e)
-VA(0x005aef00, 0x24C) MAC_ADDRESS(0x1a6aa0, 0x17c)
+MAC_ADDRESS(0x1a6aa0, 0x17c)
 void swapManager::updateSlot(int hero, TArtifactSlot slot)
 {
     int artifact = m_heroes[hero]->getArtifact(TArtifactSlot(slot)).m_artifactId;
@@ -1197,8 +1211,9 @@ void swapManager::updateBackpackItem(int hero, int i)
     m_parent->broadcastMessage(msg);
 }
 
+VA(0x005af150, 0x157)
 DC_ADDRESS(0x15cea4, 0xb0)
-VA(0x005af150, 0x157) MAC_ADDRESS(0x1a6d94, 0x160)
+MAC_ADDRESS(0x1a6d94, 0x160)
 void swapManager::updateBackpack(int hero)
 {
     message msg;
@@ -1224,8 +1239,9 @@ void swapManager::updateBackpack(int hero)
     m_parent->broadcastMessage(msg);
 }
 
+VA(0x005af2b0, 0x2DD)
 DC_ADDRESS(0x15cf54, 0x1fc)
-VA(0x005af2b0, 0x2DD) MAC_ADDRESS(0x1a6ef4, 0x2b0)
+MAC_ADDRESS(0x1a6ef4, 0x2b0)
 void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned char shift)
 {
     if (rightMouse)
@@ -1297,8 +1313,9 @@ void swapManager::handleMonster(int hero, int monster, int rightMouse, unsigned 
 // not the recovered branch model. A broader outer action ladder was flat.
 // DC lines 1118/1124 use TTextResource::operator[] for the two trade
 // warnings; those calls are restored and VC6 byte-flat.
+VA(0x005af590, 0x3F7)
 DC_ADDRESS(0x15d150, 0x190)
-VA(0x005af590, 0x3F7) MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body
+MAC_ADDRESS(0x1a71a4, 0x450)  // Main roster/callees + full retail body
 void swapManager::handleArtifactClick(long side, long id, unsigned char rightClick)
 {
     TArtifactSlot slot =
@@ -1409,8 +1426,9 @@ void swapManager::handleArtifactClick(long side, long id, unsigned char rightCli
 }
 
 // E:\gamedcs\swapmgr.cpp:1168
+VA(0x005af990, 0x251)
 DC_ADDRESS(0x15d2e0, 0x160)
-VA(0x005af990, 0x251) MAC_ADDRESS(0x1a75f4, 0x1a8)  // roster bracket + body/callees
+MAC_ADDRESS(0x1a75f4, 0x1a8)  // roster bracket + body/callees
 void swapManager::handleBackpackClick(long side, long id, unsigned char rightClick)
 {
     hero* ourHero = m_heroes[side];
@@ -1447,8 +1465,9 @@ void swapManager::handleBackpackClick(long side, long id, unsigned char rightCli
     }
 }
 
+VA(0x005afbf0, 0x17A)
 DC_ADDRESS(0x15d440, 0x6a)
-VA(0x005afbf0, 0x17A) MAC_ADDRESS(0x1a779c, 0x144)
+MAC_ADDRESS(0x1a779c, 0x144)
 void swapManager::sendHeroUpdate()
 {
     if (g_remoteOn && m_humanPlayerTrade && m_givingToAlly) {
@@ -1464,7 +1483,6 @@ void swapManager::sendHeroUpdate()
 
 // E:\gamedcs\swapmgr.cpp:1660. Dreamcast keeps this one-statement helper;
 // Complete folds it into both exits of Main.
-
 DC_ADDRESS(0x15de34, 0xc)
 MAC_ADDRESS(0x1a8714, 0x18)
 inline int swapManager::exitSwapManager(message& msg)
@@ -1477,13 +1495,13 @@ inline int swapManager::exitSwapManager(message& msg)
 // Dreamcast retains a substantial WinCE side-swap body. Complete's desktop
 // dispatcher has no corresponding instructions at Main's attested call site;
 // keep the source boundary while recording that proven revision removal.
-
 DC_ADDRESS(0x15de40, 0x4c8)
 inline void swapManager::swapSide()
 {
 }
 
 #if 0  // @carcass: the active implicit special member emits this COMDAT
+
 // Complete's two hero snapshots are 0x492 bytes apart. Retail tears down the
 // two std::string members at CHeroUpdateMsg +0x884 and +0x3f2 in reverse
 // member order; the active VC6 object already emits this exact 123-byte body.
@@ -1520,8 +1538,9 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // requested result after the switch scores 71.6782% (bool/byte/int).
 // A combined inner selector scores 80.3929%; conditional left/right forms
 // reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
+VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
-VA(0x005afdf0, 0xABB) MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher +  dossier
+MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher +  dossier
 int swapManager::main(message& msg)
 {
     int exitFlag = 0;
@@ -2044,8 +2063,9 @@ int swapManager::main(message& msg)
 // Retail primary-stat loads use biased addresses into gStatNames. The
 // 115..118 band subtracts 115 before indexing the canonical four entries.
 // Widget 145 maps to the default arm (dispatch index 19), not this band.
+VA(0x005b08b0, 0x4EF)
 DC_ADDRESS(0x15e308, 0x552)
-VA(0x005b08b0, 0x4EF) MAC_ADDRESS(0x1a872c, 0x5a8)  // retail byte table + DC statement roster
+MAC_ADDRESS(0x1a872c, 0x5a8)  // retail byte table + DC statement roster
 void swapManager::setRolloverText(int codeY)
 {
     if (m_parent->m_chatEdit->m_hasFocus)
@@ -2243,7 +2263,6 @@ void swapManager::setRolloverText(int codeY)
 // HandleMonster expands the helper while retaining the GetNumArmies and
 // ViewArmy call order; retail fixes the first-selected hero/second slot pair.
 // Mac retains this helper at code 0:0x1a8cd4 and handleMonster calls it.
-
 DC_ADDRESS(0x15e85c, 0x5e)
 MAC_ADDRESS(0x1a8cd4, 0xa0)
 void swapManager::viewMon()
@@ -2253,8 +2272,9 @@ void swapManager::viewMon()
                      m_heroes[m_sourceHeroIndex]->m_army.getNumArmies() > 1, 0);
 }
 
+VA(0x005b0da0, 0x141)
 DC_ADDRESS(0x15e8bc, 0x142)
-VA(0x005b0da0, 0x141) MAC_ADDRESS(0x1a8d74, 0x1ac)
+MAC_ADDRESS(0x1a8d74, 0x1ac)
 void swapManager::swapMons()
 {
     int nonemptyTroops = 0;
@@ -2286,8 +2306,9 @@ void swapManager::swapMons()
 }
 
 // E:\gamedcs\swapmgr.cpp:2072
+VA(0x005b0ef0, 0x1D4)
 DC_ADDRESS(0x15ea00, 0x190)
-VA(0x005b0ef0, 0x1D4) MAC_ADDRESS(0x1a8f20, 0x2a4)  // body/callee corroborates
+MAC_ADDRESS(0x1a8f20, 0x2a4)  // body/callee corroborates
 void swapManager::update()
 {
     message msg;
@@ -2354,7 +2375,6 @@ void swapManager::update()
 
 // E:\gamedcs\swapmgr.cpp:2140. The older build retains this refresh
 // boundary; Complete expands its Update body at Main's chat-refresh site.
-
 DC_ADDRESS(0x15eb90, 0x1a)
 MAC_ADDRESS(0x1a91c4, 0x34)
 inline void swapManager::onChatUpdate()
@@ -2392,8 +2412,9 @@ void swapManager::handleHeroUpdateMsg(CNetMsg* netMsg)
 // Applying this to the trade case and canonical onReceiveFromAlly restores
 // Windows' separate 0x14-byte packet homes (0x28 frame) and the entire body
 // from 88.4550% to 100%; all other scored Windows/Mac rows stay unchanged.
+VA(0x005b10d0, 0x2A8)
 DC_ADDRESS(0x15ec58, 0x1a0)
-VA(0x005b10d0, 0x2A8) MAC_ADDRESS(0x1a9998, 0x234)  // switch ids/callees + ret 8
+MAC_ADDRESS(0x1a9998, 0x234)  // switch ids/callees + ret 8
 void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 {
     switch (msg.m_codeY)
@@ -2462,8 +2483,9 @@ void swapManager::onWidgetDeselect(message& msg, int& exitFlag)
 
 // E:\gamedcs\swapmgr.cpp:2231
 // The retained COMDAT belongs to this canonical inline definition.
+VA(0x005b1380, 0x1C)
 DC_ADDRESS(0x15edf8, 0x2a)
-VA(0x005b1380, 0x1C) MAC_ADDRESS(0x1a9bcc, 0x4c)
+MAC_ADDRESS(0x1a9bcc, 0x4c)
 inline bool swapManager::isLeftHero()
 {
     if (m_heroes[0]->m_owner == g_game->getLocalPlayerGamePos())

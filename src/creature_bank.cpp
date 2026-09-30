@@ -31,8 +31,9 @@ MAC_ADDRESS(0x089fe4, 0x30)
 type_creature_bank_level::type_creature_bank_level() {}
 
 // E:\gamedcs\creature_bank.cpp:25
+VA(0x0047aad0, 0x5E)
 DC_ADDRESS(0x0714e0, 0x34)
-VA(0x0047aad0, 0x5E) MAC_ADDRESS(0x089f90, 0x54)
+MAC_ADDRESS(0x089f90, 0x54)
 type_creature_bank_traits::type_creature_bank_traits()
 {
 }
@@ -40,7 +41,6 @@ type_creature_bank_traits::type_creature_bank_traits()
 // E:\gamedcs\creature_bank.cpp:32; original initialize_creature_bank_level.
 // DC proves static linkage and both reference parameters. Retail expands
 // the one source call in initializeCreatureBankTraits; keep the real body.
-
 DC_ADDRESS(0x070fe0, 0x14a)
 MAC_ADDRESS(0x0893bc, 0x19c)
 static void initializeCreatureBankLevel(type_creature_bank_level& traits,
@@ -73,8 +73,9 @@ static void initializeCreatureBankLevel(type_creature_bank_level& traits,
     traits.m_relicArtifacts = atoi(resource[column + 1]);
 }
 
+VA(0x0047ab30, 0x254)
 DC_ADDRESS(0x07112c, 0xec)
-VA(0x0047ab30, 0x254) MAC_ADDRESS(0x089558, 0x1ac)
+MAC_ADDRESS(0x089558, 0x1ac)
 unsigned char initializeCreatureBankTraits()
 {
     TSpreadsheetResource* sheet = ResourceManager::getSpreadsheet(
@@ -144,7 +145,6 @@ unsigned char initializeCreatureBankTraits()
 // out-of-line row survives. The free-slot cursor starts AT the slot being
 // split and is carried across the whole run - every site's scan begins at
 // its own `slot` argument, which is what fixes the parameter's second role.
-
 DC_ADDRESS(0x071218, 0xb8)
 MAC_ADDRESS(0x089704, 0x9c)
 static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
@@ -173,9 +173,9 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // also decide which slot the upgrade roll may promote: one stack becomes
 // five groups and slot 2 is the candidate, two become 2+3 with slot 3, and
 // three become 2+2 with slot 0.
-
+VA(0x0047ad90, 0x36E)
 DC_ADDRESS(0x0712d0, 0x210)
-VA(0x0047ad90, 0x36E) MAC_ADDRESS(0x0897a0, 0x348)
+MAC_ADDRESS(0x0897a0, 0x348)
 void initializeCreatureBank(type_creature_bank* bank,
                               type_creature_bank_type type)
 {

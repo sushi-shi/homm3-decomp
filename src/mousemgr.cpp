@@ -102,28 +102,31 @@ DATA(0x0067ff50) POINT g_mouseHotSpots[mouseManager::MAX_POINTER_SETS][144] = {
 // is the unwind scaffolding).
 class TCSLock {
 public:
-    // DC 0xff7e0 records only frame line 291 and closing line 294; the
+
+    // DC records only frame line 291 and closing line 294; the
     // unrecorded 292..293 hold the non-null invariant and the member store.
     // Retail proves the invariant's IL cost: checkUpdate's nested hidePointer
     // expansion keeps this constructor as a call (0x50d890) at budget 21,
     // which requires cb > 40. The plain store+call body costs 39 (free, so
     // always expanded; checkUpdate 96.73%); the release VERIFY costs 46.
-    DC_ADDRESS(0x0ff7e0, 0x20)
     VA(0x0050d890, 0x19)  // byte-identified out-of-line copy
+    DC_ADDRESS(0x0ff7e0, 0x20)
     TCSLock(CRITICAL_SECTION* criticalSection) {
         HOMM3_RELEASE_VERIFY(criticalSection != 0);
         m_section = criticalSection;
         EnterCriticalSection(m_section);
     }
-    DC_ADDRESS(0x0ff800, 0x18)
+
     VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4)
+    DC_ADDRESS(0x0ff800, 0x18)
     ~TCSLock() { LeaveCriticalSection(m_section); }
 
     CRITICAL_SECTION* m_section;
 };
 
+VA(0x0050cb50, 0x6F)
 DC_ADDRESS(0x0fe9d4, 0x7c)
-VA(0x0050cb50, 0x6F) MAC_ADDRESS(0x216dc8, 0x7c)
+MAC_ADDRESS(0x216dc8, 0x7c)
 mouseManager::mouseManager()
 {
     m_busy = 0;
@@ -150,8 +153,9 @@ mouseManager::~mouseManager()
 // +0x78, then the flags&1 operator-delete tail. No standalone retail claim.
 VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 
+VA(0x0050cbf0, 0x4A)
 DC_ADDRESS(0x0fea80, 0x34)
-VA(0x0050cbf0, 0x4A) MAC_ADDRESS(0x216e8c, 0x88)
+MAC_ADDRESS(0x216e8c, 0x88)
 int mouseManager::open(int newPriority)
 {
     m_noChangePointer = 0;
@@ -164,8 +168,9 @@ int mouseManager::open(int newPriority)
     return 0;
 }
 
+VA(0x0050cc40, 0x38)
 DC_ADDRESS(0x0feab4, 0x46)
-VA(0x0050cc40, 0x38) MAC_ADDRESS(0x216f14, 0x7c)
+MAC_ADDRESS(0x216f14, 0x7c)
 void mouseManager::close()
 {
     if (m_status != 1)
@@ -181,8 +186,9 @@ void mouseManager::close()
     m_sprite = 0;
 }
 
+VA(0x0050cc80, 0x1B)
 DC_ADDRESS(0x0feafc, 0x1a)
-VA(0x0050cc80, 0x1B) MAC_ADDRESS(0x216f90, 0x28)
+MAC_ADDRESS(0x216f90, 0x28)
 void mouseManager::reset()
 {
     m_savedRect.left = 0;
@@ -204,8 +210,9 @@ int mouseManager::main(message& msg)
     return 0;
 }
 
+VA(0x0050cca0, 0xE0)
 DC_ADDRESS(0x0feb1c, 0x136)
-VA(0x0050cca0, 0xE0) MAC_ADDRESS(0x216fc0, 0x160)
+MAC_ADDRESS(0x216fc0, 0x160)
 void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 {
     TCSLock lock(&m_sectionMouse);
@@ -258,8 +265,9 @@ void mouseManager::setPointer(int newFrame, mouseManager::EPointerSet newSet)
 // elites with every sibling exact. Rectangle-copy initialization and ordinary
 // helpers reach 99.8420 with the old shared origin, 99.7141 with the proven
 // origins retained; old forced/interleaved construction was 94.1675.
+VA(0x0050cd90, 0x770)
 DC_ADDRESS(0x0fec54, 0x5d8)
-VA(0x0050cd90, 0x770) MAC_ADDRESS(0x217120, 0x62c)  // anchor-global
+MAC_ADDRESS(0x217120, 0x62c)  // anchor-global
 void mouseManager::update(bool forceIt)
 {
     TCSLock lock(&m_sectionMouse);
@@ -435,8 +443,9 @@ void mouseManager::update(bool forceIt)
     m_busy--;
 }
 
+VA(0x0050d500, 0x3F)
 DC_ADDRESS(0x0ff22c, 0x3a)
-VA(0x0050d500, 0x3F) MAC_ADDRESS(0x21774c, 0xa8)
+MAC_ADDRESS(0x21774c, 0xa8)
 void mouseManager::mouseCoords(int& x, int& y)
 {
     POINT cursor;
@@ -489,8 +498,9 @@ void mouseManager::restoreUnderlying(
     }
 }
 
+VA(0x0050d540, 0x6F)
 DC_ADDRESS(0x0ff3a8, 0x38)
-VA(0x0050d540, 0x6F) MAC_ADDRESS(0x2179e0, 0x54)
+MAC_ADDRESS(0x2179e0, 0x54)
 void mouseManager::hidePointer()
 {
     TCSLock lock(&m_sectionMouse);
@@ -498,8 +508,9 @@ void mouseManager::hidePointer()
         update(1);
 }
 
+VA(0x0050d5b0, 0xD0)
 DC_ADDRESS(0x0ff3e0, 0x68)
-VA(0x0050d5b0, 0xD0) MAC_ADDRESS(0x217a34, 0x88)
+MAC_ADDRESS(0x217a34, 0x88)
 void mouseManager::showPointer(bool force)
 {
     TCSLock lock(&m_sectionMouse);
@@ -515,7 +526,7 @@ void mouseManager::showPointer(bool force)
 }
 
 // E:\gamedcs\mousemgr.cpp:934
-// DC 0xff448 proves the TCSLock, x/y locals, MouseCoords call and member
+// DC proves the TCSLock, x/y locals, MouseCoords call and member
 // stores in this order. Retail expands this ordinary helper in Update and
 // ShowPointer, including MouseCoords and both lock boundaries.
 DC_ADDRESS(0x0ff448, 0x3a)
@@ -529,8 +540,9 @@ void mouseManager::getPointerPosition()
     m_currentY = y;
 }
 
+VA(0x0050d680, 0x210)
 DC_ADDRESS(0x0ff484, 0x18c)
-VA(0x0050d680, 0x210) MAC_ADDRESS(0x217b00, 0x168)  // anchor-global
+MAC_ADDRESS(0x217b00, 0x168)  // anchor-global
 void mouseManager::checkUpdate()
 {
     TCSLock lock(&m_sectionMouse);
@@ -584,9 +596,9 @@ void mouseManager::checkUpdate()
 // The retail linker places its COMDAT between SetPointer and Update.
 // The canonical in-class body and VA stay above in CodeView source order;
 // EH unwind funclets still use its retained callable copy.
-
+VA(0x0050d8b0, 0x16B)
 DC_ADDRESS(0x0ff610, 0xf6)
-VA(0x0050d8b0, 0x16B) MAC_ADDRESS(0x217c68, 0x150)
+MAC_ADDRESS(0x217c68, 0x150)
 void mouseManager::loadFrame(int newFrame)
 {
     TCSLock lock(&m_sectionMouse);
@@ -619,8 +631,9 @@ void mouseManager::loadFrame(int newFrame)
 // Public ?ShowSystemCursor@mouseManager@@QAAX_N@Z proves bool; the NB11
 // T_UCHAR formal is its lowered storage record. Preserve the separate helper
 // calls at DC1123/1124 and1128/1129 and retail's byte-tested flag.
+VA(0x0050da20, 0x37)
 DC_ADDRESS(0x0ff708, 0x64)
-VA(0x0050da20, 0x37) MAC_ADDRESS(0x217db8, 0x58)  // anchor-global
+MAC_ADDRESS(0x217db8, 0x58)  // anchor-global
 void mouseManager::showSystemCursor(bool showIt)
 {
     if (showIt) {

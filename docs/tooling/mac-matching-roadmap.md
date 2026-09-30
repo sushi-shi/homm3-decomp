@@ -72,8 +72,8 @@ They can cross functions or contain inline data, and do not admit boundaries.
 1. Identify the Mac body through strings, constants, field accesses, calls and
    data references, and verify both boundaries. `homm3 mac inventory` admits
    proven single-function spans to `config/mac/functions.tsv`.
-2. Write the claim beside the Windows VA:
-   `VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)`. Run `homm3 mac parity`.
+2. Write `MAC_ADDRESS(0x0f3fe4, 0x568)` on its own line after the Windows
+   `VA(0x004d8720, 0x568)` and any `DC_ADDRESS` claims. Run `homm3 mac parity`.
 3. Run `homm3 build --fast <unit>`, then `homm3 mac diff <Windows-VA>`. If the
    pair is unavailable, `build/mac/report.json` names the unresolved callee or
    TOC datum; add the reviewed runtime label or data binding below.
@@ -176,10 +176,11 @@ compiler calibration and exact-comparison constraints.
 
 ## Source addresses and executable inventory
 
-Mac function addresses live in source beside their Windows claim, as
-`VA(0x004d8720, 0x568) MAC_ADDRESS(0x0f3fe4, 0x568)`, or on their own line
-directly above a definition with no Windows VA; `MAC_COMPGEN_ADDRESS` sits
-beside a `VA_COMPGEN`. Offsets are relative to PEF code section 0; the macros
+Mac function addresses live in source in the function's annotation block:
+`VA`, `DC_ADDRESS`, then `MAC_ADDRESS`, one macro per line, omitting platforms
+without a claim. Keep evidence comments attached to the block, with a blank
+line before them. `MAC_COMPGEN_ADDRESS` follows its `VA_COMPGEN` on a separate
+line. Offsets are relative to PEF code section 0; the macros
 claim functions only. The executable-wide tables mirror `config/retail`:
 `config/mac/functions.tsv` (every verified span), `runtime-map.tsv`,
 `runtime-aliases.tsv`, `glue-map.tsv` and `zlib-map.tsv` (library labels with

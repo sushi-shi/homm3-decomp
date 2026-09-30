@@ -53,8 +53,9 @@ DATA(0x006604d0) static double g_defenseEstimates[5] = {
 
 float valueOfExperience(const hero* currentHero, const armyGroup& currentArmy);
 
+VA(0x00423c80, 0x79)
 DC_ADDRESS(0x029978, 0xb8)
-VA(0x00423c80, 0x79) MAC_ADDRESS(0x025ea0, 0xcc)
+MAC_ADDRESS(0x025ea0, 0xcc)
 long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const hero* castingHero, const hero* targetHero) const
 {
     if (m_totalValue == 0)
@@ -68,7 +69,7 @@ long type_monster_data::getEnchantmentValue(type_spell_choice& choice, const her
 }
 
 // E:\gamedcs\ai_combat.cpp:56
-// RECONSTRUCTED FROM ITS INLINED COPIES (dc 0x29a30) - retail has no
+// RECONSTRUCTED FROM ITS INLINED COPIES - retail has no
 // out-of-line row: /Ob2 expands both uses (0x425c65 and 0x425d8d
 // inside cast_enchantment). Preserve the ordinary TU helper; an unused
 // emitted copy does not require a retail address claim. Bytes prove the shape:
@@ -96,8 +97,9 @@ void type_monster_data::castEnchantment(long spellValue, unsigned char increase)
     m_combatValuePerHit = m_totalValue / previous;
 }
 
+VA(0x00423d00, 0xDA)
 DC_ADDRESS(0x029b94, 0x116)
-VA(0x00423d00, 0xDA) MAC_ADDRESS(0x026078, 0x15c)
+MAC_ADDRESS(0x026078, 0x15c)
 long type_monster_data::getResurrectionValue(type_spell_choice& choice, const hero* castingHero) const
 {
     if (m_originalNumber <= m_number)
@@ -130,8 +132,9 @@ void type_monster_data::castResurrection(
     m_totalValue += resurrected * m_value;
 }
 
+VA(0x00423de0, 0xB1)
 DC_ADDRESS(0x029ce0, 0x10a)
-VA(0x00423de0, 0xB1) MAC_ADDRESS(0x026228, 0x140)
+MAC_ADDRESS(0x026228, 0x140)
 long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, const hero* targetHero, long damage) const
 {
     if (m_totalValue == 0)
@@ -150,8 +153,9 @@ long type_monster_data::getSpellDamage(SpellID spell, const hero* castingHero, c
     return min(damage, m_totalValue);
 }
 
+VA(0x00423ea0, 0x36)
 DC_ADDRESS(0x029dec, 0x40)
-VA(0x00423ea0, 0x36) MAC_ADDRESS(0x026368, 0x48)
+MAC_ADDRESS(0x026368, 0x48)
 long type_monster_data::takeDamage(long damage)
 {
     if (m_totalValue < damage) {
@@ -165,8 +169,9 @@ long type_monster_data::takeDamage(long damage)
     return damage;
 }
 
+VA(0x00423ee0, 0x233)
 DC_ADDRESS(0x029e2c, 0x12c)
-VA(0x00423ee0, 0x233) MAC_ADDRESS(0x0263b0, 0x218)
+MAC_ADDRESS(0x0263b0, 0x218)
 type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* newArmy, double baseModifier, const hero* enemyHero, const town* enemyTown, NewmapCell* mapCell)
 {
     m_currentHero = const_cast<hero*>(newHero);
@@ -222,13 +227,13 @@ type_AI_combat_data::type_AI_combat_data(const hero* newHero, const armyGroup* n
 }
 
 // E:\gamedcs\ai_combat.cpp:221
-// DC 0x29f58 places these six named locals in the outer scope (its record
+// DC places these six named locals in the outer scope (its record
 // order does not prove declaration order). Line 222 copies base_modifier
 // before the tactics stores; retail likewise copies both dwords at entry.
 // Preserve that initializer and the actual vector begin/end sort interface.
-
+VA(0x00424120, 0x66E)
 DC_ADDRESS(0x029f58, 0x518)
-VA(0x00424120, 0x66E) MAC_ADDRESS(0x02662c, 0x48c)  // dc-callgraph unique
+MAC_ADDRESS(0x02662c, 0x48c)  // dc-callgraph unique
 void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* enemyHero)
 {
     type_monster_data unit;
@@ -326,8 +331,9 @@ void type_AI_combat_data::initializeCreatures(double baseModifier, const hero* e
     std::sort(m_creatures.begin(), m_creatures.end());
 }
 
+VA(0x00424790, 0xE5)
 DC_ADDRESS(0x02a470, 0xba)
-VA(0x00424790, 0xE5) MAC_ADDRESS(0x026ab8, 0x138)
+MAC_ADDRESS(0x026ab8, 0x138)
 void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 {
     m_wallArcheryPenalty = 0;
@@ -364,7 +370,7 @@ void type_AI_combat_data::checkWallArcheryPenalty(const town* enemyTown)
 }
 
 // E:\gamedcs\ai_combat.cpp:381
-// DC 0x2a52c proves the const receiver and this source position. Retail
+// DC proves the const receiver and this source position. Retail
 // expands the one call in initializeCreatures; that is not evidence for an
 // explicit inline keyword. All eight declaration/order controls are score-
 // flat; keep the ordinary canonical helper and its real read-only interface.
@@ -386,8 +392,9 @@ type_speed_catagory type_AI_combat_data::getCatagory(
     return H3_ENUM_DECODE(type_speed_catagory, catagory);
 }
 
+VA(0x00424880, 0xDB)
 DC_ADDRESS(0x02a588, 0xba)
-VA(0x00424880, 0xDB) MAC_ADDRESS(0x026c54, 0x130)
+MAC_ADDRESS(0x026c54, 0x130)
 void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
 {
     if (m_totalCombatValue == 0) {
@@ -409,8 +416,9 @@ void type_AI_combat_data::adjustArmy(unsigned char dismissHero)
 }
 
 // E:\gamedcs\ai_combat.cpp:437
+VA(0x00424960, 0x65)
 DC_ADDRESS(0x02a644, 0x4e)
-VA(0x00424960, 0x65) MAC_ADDRESS(0x026d84, 0x64)
+MAC_ADDRESS(0x026d84, 0x64)
 long type_AI_combat_data::getFastestSpeed() const
 {
     long fastest = 0;
@@ -420,8 +428,9 @@ long type_AI_combat_data::getFastestSpeed() const
     return fastest;
 }
 
+VA(0x004249d0, 0x218)
 DC_ADDRESS(0x02a694, 0xce)
-VA(0x004249d0, 0x218) MAC_ADDRESS(0x026de8, 0x110)
+MAC_ADDRESS(0x026de8, 0x110)
 long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_AI_combat_data& defender, long start, long damage) const
 {
     if (damage == 0)
@@ -449,7 +458,7 @@ long type_AI_combat_data::getNextChainLightningTarget(long excluded, const type_
 }
 
 // E:\gamedcs\ai_combat.cpp:498
-// RECONSTRUCTED FROM ITS ONE INLINED COPY (dc 0x2a764) - no retail row:
+// RECONSTRUCTED FROM ITS ONE INLINED COPY - no retail row:
 // /Ob2 expands the single call site (get_damage_spell_value 0x424e69).
 // This is an ordinary TU helper, the value-side mirror of cast_chain_lightning.
 DC_ADDRESS(0x02a764, 0x80)
@@ -469,8 +478,9 @@ void type_AI_combat_data::getChainLightningValue(type_spell_choice& choice, cons
     }
 }
 
+VA(0x00424bf0, 0x123)
 DC_ADDRESS(0x02a7e4, 0x82)
-VA(0x00424bf0, 0x123) MAC_ADDRESS(0x026fac, 0xb8)
+MAC_ADDRESS(0x026fac, 0xb8)
 void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extraTargets) const
 {
     long targetIndex = defender.m_creatures[choice.m_target].m_index;
@@ -499,8 +509,9 @@ void type_AI_combat_data::getAreaValue(type_spell_choice& choice, const type_AI_
 // loop gives 84.5863%. Neither restores retail's size() branch or register homes.
 // HIST 100 used getTotal as vector cardinality; that old body conflicts with
 // DC's independently proven total-combat-value accessor and is not recoverable.
+VA(0x00424d20, 0x290)
 DC_ADDRESS(0x02a868, 0xce)
-VA(0x00424d20, 0x290) MAC_ADDRESS(0x027064, 0x12c)
+MAC_ADDRESS(0x027064, 0x12c)
 void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
@@ -530,8 +541,9 @@ void type_AI_combat_data::getDamageSpellValue(type_spell_choice& choice, const t
     }
 }
 
+VA(0x00424fb0, 0x145)
 DC_ADDRESS(0x02a938, 0xb0)
-VA(0x00424fb0, 0x145) MAC_ADDRESS(0x027190, 0xc4)
+MAC_ADDRESS(0x027190, 0xc4)
 void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_combat_data& defender, long damage) const
 {
     type_AI_combat_data& targetData = defender;
@@ -551,8 +563,9 @@ void type_AI_combat_data::castChainLightning(type_spell_choice& choice, type_AI_
     }
 }
 
+VA(0x00425100, 0x15A)
 DC_ADDRESS(0x02a9e8, 0x94)
-VA(0x00425100, 0x15A) MAC_ADDRESS(0x027254, 0xc8)
+MAC_ADDRESS(0x027254, 0xc8)
 void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extraTargets) const
 {
     long targetIndex = defender.m_creatures[choice.m_target].m_index;
@@ -569,8 +582,9 @@ void type_AI_combat_data::castAreaEffect(type_spell_choice& choice, type_AI_comb
     }
 }
 
+VA(0x00425260, 0x180)
 DC_ADDRESS(0x02aa7c, 0xbe)
-VA(0x00425260, 0x180) MAC_ADDRESS(0x02731c, 0x130)
+MAC_ADDRESS(0x02731c, 0x130)
 void type_AI_combat_data::castDamageSpell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     long damage = choice.getMasteryValue()
@@ -610,8 +624,9 @@ unsigned char type_AI_combat_data::hasCreature(TCreatureType creature) const
     return 0;
 }
 
+VA(0x004253e0, 0x12F)
 DC_ADDRESS(0x02ab88, 0x90)
-VA(0x004253e0, 0x12F) MAC_ADDRESS(0x027498, 0xa0)
+MAC_ADDRESS(0x027498, 0xa0)
 long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const hero* castingHero) const
 {
     long value = 0;
@@ -625,7 +640,7 @@ long type_AI_combat_data::getMassDamageValue(type_spell_choice& choice, const he
 // E:\gamedcs\ai_combat.cpp:731
 // Retail expands this helper inside cast_spell and emits no out-of-line row.
 // Its first nested get_mass_damage_value expands while the defender-side
-// call stays out of line. DC 0x2ac18 proves the const receiver; the ordinary
+// call stays out of line. DC proves the const receiver; the ordinary
 // body retains that natural split without an invented inline qualifier.
 DC_ADDRESS(0x02ac18, 0x3e)
 MAC_ADDRESS(0x027538, 0x84)
@@ -640,7 +655,7 @@ void type_AI_combat_data::getMassDamageValue(
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-// Original cast_mass_damage_spell, dc 0x2ac58: one ordinary helper, two
+// Original cast_mass_damage_spell: one ordinary helper, two
 // castSpell calls. Line 758 assigns take_damage's return to the running value;
 // retail 0x425bd0 does so in both expansions (ESI/EDI <- EAX), then subtracts
 // that capped value. Separate subscripts also reproduce retail's vector reload
@@ -670,7 +685,7 @@ void type_AI_combat_data::castMassDamageSpell(
 }
 
 // E:\gamedcs\ai_combat.cpp:768
-// RECONSTRUCTED FROM ITS FOUR INLINED COPIES (dc 0x2ace4) - no retail
+// RECONSTRUCTED FROM ITS FOUR INLINED COPIES - no retail
 // row: /Ob2 inlined all four call sites in the two-side overload below
 // and OPT:REF dropped the body. The const signature and ordinary definition
 // preserve all four expansions; emission alone does not prove source inline.
@@ -691,8 +706,9 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, const h
     }
 }
 
+VA(0x00425510, 0x382)
 DC_ADDRESS(0x02ad58, 0x108)
-VA(0x00425510, 0x382) MAC_ADDRESS(0x027720, 0x160)
+MAC_ADDRESS(0x027720, 0x160)
 void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     if (!defender.m_canCastSpells
@@ -727,8 +743,9 @@ void type_AI_combat_data::getEnchantmentValue(type_spell_choice& choice, type_AI
         defender.getEnchantmentValue(choice, m_currentHero);
 }
 
+VA(0x004258a0, 0x269)
 DC_ADDRESS(0x02ae60, 0xa2)
-VA(0x004258a0, 0x269) MAC_ADDRESS(0x027880, 0xd8)
+MAC_ADDRESS(0x027880, 0xd8)
 void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero* castingHero, unsigned char increase)
 {
     long value;
@@ -745,8 +762,9 @@ void type_AI_combat_data::castEnchantment(type_spell_choice& choice, const hero*
 }
 
 // E:\gamedcs\ai_combat.cpp:871
+VA(0x00425b10, 0xB4)
 DC_ADDRESS(0x02af04, 0xb2)
-VA(0x00425b10, 0xB4) MAC_ADDRESS(0x027958, 0x114)
+MAC_ADDRESS(0x027958, 0x114)
 void type_AI_combat_data::castEnchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
     if (choice.m_spell == SPELL_DISPEL) {
@@ -828,8 +846,9 @@ void type_AI_combat_data::castSummoning(type_spell_choice& choice)
 // getDamageSpellValue arms and the four cast helpers. A seven-mutation VC6
 // register probe on this body found no closer binding than the current one.
 // E:\gamedcs\ai_combat.cpp:965
+VA(0x00425bd0, 0x593)
 DC_ADDRESS(0x02b094, 0x296)
-VA(0x00425bd0, 0x593) MAC_ADDRESS(0x027b88, 0x3c0)  // anchor-global
+MAC_ADDRESS(0x027b88, 0x3c0)  // anchor-global
 void type_AI_combat_data::castSpell(
     type_AI_combat_data& defender,
     type_speed_catagory round)
@@ -956,8 +975,9 @@ long type_AI_combat_data::inflictCatagoryDamage(long damage,
     return damage;
 }
 
+VA(0x00426170, 0x131)
 DC_ADDRESS(0x02b408, 0x19a)
-VA(0x00426170, 0x131) MAC_ADDRESS(0x027ff0, 0x140)
+MAC_ADDRESS(0x027ff0, 0x140)
 long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speedLimit)
 {
     long sum = 0;
@@ -984,8 +1004,9 @@ long type_AI_combat_data::inflictMeleeDamage(long damage, long start, long speed
     return damage;
 }
 
+VA(0x004262b0, 0x4F)
 DC_ADDRESS(0x02b5a4, 0x46)
-VA(0x004262b0, 0x4F) MAC_ADDRESS(0x028130, 0x120)
+MAC_ADDRESS(0x028130, 0x120)
 void type_AI_combat_data::kill()
 {
     m_totalCombatValue = 0;
@@ -995,8 +1016,9 @@ void type_AI_combat_data::kill()
     }
 }
 
+VA(0x00426300, 0x8D)
 DC_ADDRESS(0x02b5ec, 0x38)
-VA(0x00426300, 0x8D) MAC_ADDRESS(0x028250, 0x74)
+MAC_ADDRESS(0x028250, 0x74)
 void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
 {
     m_totalCombatValue -= damage;
@@ -1009,8 +1031,9 @@ void type_AI_combat_data::inflictDamage(long damage, long blockerSpeed)
         inflictMeleeDamage(damage, 0, 4);
 }
 
+VA(0x00426390, 0xBB)
 DC_ADDRESS(0x02b624, 0x196)
-VA(0x00426390, 0xBB) MAC_ADDRESS(0x0282c4, 0xf4)
+MAC_ADDRESS(0x0282c4, 0xf4)
 long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned char shootersBlocked) const
 {
     long value = 0;
@@ -1027,8 +1050,9 @@ long type_AI_combat_data::getAttack(type_speed_catagory speedLimit, unsigned cha
     return value;
 }
 
+VA(0x00426450, 0x71)
 DC_ADDRESS(0x02b7bc, 0xd2)
-VA(0x00426450, 0x71) MAC_ADDRESS(0x0283b8, 0x13c)
+MAC_ADDRESS(0x0283b8, 0x13c)
 long type_AI_combat_data::getFinalMeleeValue() const
 {
     long value = 0;
@@ -1100,8 +1124,9 @@ inline type_AI_combat_data::type_AI_combat_data(
 {
 }
 
+VA(0x004264d0, 0x2ED)
 DC_ADDRESS(0x02b948, 0x190)
-VA(0x004264d0, 0x2ED) MAC_ADDRESS(0x028688, 0x124)
+MAC_ADDRESS(0x028688, 0x124)
 void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
 {
     float attacker = static_cast<float>(getFinalMeleeValue());
@@ -1122,8 +1147,9 @@ void type_AI_combat_data::doGeneralMelee(type_AI_combat_data& defender)
     }
 }
 
+VA(0x004267c0, 0x3FD)
 DC_ADDRESS(0x02bad8, 0x168)
-VA(0x004267c0, 0x3FD) MAC_ADDRESS(0x0287ac, 0x2d0)
+MAC_ADDRESS(0x0287ac, 0x2d0)
 bool type_AI_combat_data::chooseMelee(
     const type_AI_combat_data& enemy,
     type_speed_catagory currentRound) const
@@ -1183,8 +1209,9 @@ bool type_AI_combat_data::chooseMelee(
     return static_cast<short>(bestIndex) == currentRound;
 }
 
+VA(0x00426bc0, 0x224)
 DC_ADDRESS(0x02bc40, 0x96)
-VA(0x00426bc0, 0x224) MAC_ADDRESS(0x028afc, 0xf4)
+MAC_ADDRESS(0x028afc, 0xf4)
 void type_AI_combat_data::simulateCombat(type_AI_combat_data& defender)
 {
     for (long round = 1; round < 4; round++) {
@@ -1244,8 +1271,9 @@ static void doEagleEye(hero* winner, hero* loser)
 // body walks slot by slot - armies[i] at [esi], numTroops[i] at
 // [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
 // .. 0x426e89) - i.e. the losing side's stacks.
+VA(0x00426df0, 0xED)
 DC_ADDRESS(0x02bd6c, 0xe8)
-VA(0x00426df0, 0xED) MAC_ADDRESS(0x028ccc, 0x130)  // corroborates (hd-crossbuild + ida)
+MAC_ADDRESS(0x028ccc, 0x130)  // corroborates (hd-crossbuild + ida)
 void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGroup& destination)
 {
     float factor = currentHero->getNecromancyFactor(1);
@@ -1274,8 +1302,9 @@ void createSkeletons(const hero* currentHero, const armyGroup* deadArmy, armyGro
 }
 
 // E:\gamedcs\ai_combat.cpp:1440
+VA(0x00426ee0, 0x1D8)
 DC_ADDRESS(0x02be54, 0x1b0)
-VA(0x00426ee0, 0x1D8) MAC_ADDRESS(0x028dfc, 0x204)  // anchor-global
+MAC_ADDRESS(0x028dfc, 0x204)  // anchor-global
 void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemyTown)
 {
     unsigned char retreated = 0;
@@ -1336,8 +1365,9 @@ void type_AI_combat_data::doAftermath(type_AI_combat_data& defender, town* enemy
 // EH-bearing: the two stack-local type_AI_combat_data objects give the
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
 // and the two `mov [ebp-4], state` writes between the constructors.
+VA(0x004270c0, 0x149)
 DC_ADDRESS(0x02c004, 0x13c)
-VA(0x004270c0, 0x149) MAC_ADDRESS(0x029000, 0x158)  // anchor-global
+MAC_ADDRESS(0x029000, 0x158)  // anchor-global
 unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup& defendingArmy, town* defendingTown, NewmapCell* cell)
 {
     float attackerModifier = random(75, 125) / 100.0f;
@@ -1358,8 +1388,9 @@ unsigned char aiQuickCombat(hero* attackingHero, hero* defendingHero, armyGroup&
 
 // E:\gamedcs\ai_combat.cpp:1539
 // EH-bearing, same shape as AI_quick_combat.
+VA(0x00427210, 0x113)
 DC_ADDRESS(0x02c140, 0x13c)
-VA(0x00427210, 0x113) MAC_ADDRESS(0x029158, 0x144)  // anchor-global
+MAC_ADDRESS(0x029158, 0x144)  // anchor-global
 void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attackingArmy, armyGroup& defendingArmy, const town* defendingTown, NewmapCell* cell)
 {
     float attackerLuck = random(75, 125) / 100.0f;
@@ -1377,8 +1408,9 @@ void aiAutoCombat(hero* attackingHero, hero* defendingHero, armyGroup& attacking
         defendingHero->m_mana = static_cast<short>(defender.getMana());
 }
 
+VA(0x00427330, 0x318)
 DC_ADDRESS(0x02c27c, 0x36c)
-VA(0x00427330, 0x318) MAC_ADDRESS(0x02929c, 0x450)
+MAC_ADDRESS(0x02929c, 0x450)
 long aiValueOfCombat(const hero* attackingHero, const hero* defendingHero,
                         const armyGroup& defendingArmy,
                         const town* defendingTown, NewmapCell* cell)
@@ -1469,8 +1501,9 @@ long aiValueOfCombat(const hero* attackingHero, TCreatureType type, long size,
     return aiValueOfCombat(attackingHero, 0, monsters, 0, cell);
 }
 
+VA(0x00427650, 0x33)
 DC_ADDRESS(0x02c614, 0x14)
-VA(0x00427650, 0x33) MAC_ADDRESS(0x0296ec, 0x24)
+MAC_ADDRESS(0x0296ec, 0x24)
 long aiApproximateStrength(const hero* currentHero)
 {
     return aiApproximateStrength(currentHero, currentHero->m_army);
@@ -1478,8 +1511,9 @@ long aiApproximateStrength(const hero* currentHero)
 
 // E:\gamedcs\ai_combat.cpp:1674
 // LOCATED (hd-crossbuild + ida): same body with the group in edx.
+VA(0x00427690, 0x2F)
 DC_ADDRESS(0x02c628, 0x40)
-VA(0x00427690, 0x2F) MAC_ADDRESS(0x029710, 0x80)  // corroborates (hd-crossbuild + ida)
+MAC_ADDRESS(0x029710, 0x80)  // corroborates (hd-crossbuild + ida)
 long aiApproximateStrength(const hero* currentHero, const armyGroup& currentArmy)
 {
     long value = currentArmy.getAIValue();

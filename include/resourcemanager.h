@@ -66,9 +66,11 @@ resource* getFromCache(const char* name);
 DC_ADDRESS(0x122530, 0x90)
 inline void dispose(resource* value) { value->dispose(); }
 void dispose(sample* value);
+
 DC_ADDRESS(0x1225dc, 0xf6)
 inline void dispose(CSprite* value) { value->dispose(); }
-// Older DC resourcemanager.cpp:2280, dc 0x1226d4 had the cache sweep.
+
+// Older DC resourcemanager.cpp:2280 had the cache sweep.
 // Complete has no cache-sweep work in the Windows and Mac selection teardown.
 // Keep the original call and expose the empty helper across translation units.
 DC_ADDRESS(0x1226d4, 0x1d6)

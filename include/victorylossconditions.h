@@ -71,9 +71,10 @@ public:
     unsigned char m_gameWon;
     signed char m_playerWinner;
     char m_paddingAfterWinner[2];
+
     // E:\gamedcs\VictoryLossConditions.h
-    DC_ADDRESS(0x0bccdc, 0x1e)
     VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor)
+    DC_ADDRESS(0x0bccdc, 0x1e)
     VictoryConditionStruct()
       : m_type(-1), m_gameWon(0), m_playerWinner(-1) {}
     int appliesToPlayer(long playerId) const;
@@ -126,8 +127,9 @@ public:
     short m_numDays;
     unsigned char m_gameLost;
     signed char m_playerLoser;
-    DC_ADDRESS(0x0bccfc, 0x22)
+
     VA(0x0045bac0, 0xE)  // retained retail body; formerly enrolled by CLASS_CTOR
+    DC_ADDRESS(0x0bccfc, 0x22)
     LossConditionStruct()
       : m_type(-1), m_gameLost(0), m_playerLoser(-1) {}
     unsigned char checkForDefeatedHeroLoss(const hero* loser);

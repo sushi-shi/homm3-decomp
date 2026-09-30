@@ -5,8 +5,9 @@
 
 #include "lodfile.h"
 
+VA(0x004fa590, 0x77)
 DC_ADDRESS(0x0e908c, 0x34)
-VA(0x004fa590, 0x77) MAC_ADDRESS(0x11b598, 0x5c)
+MAC_ADDRESS(0x11b598, 0x5c)
 void LODFile::clear()
 {
     if (m_opened) {
@@ -20,7 +21,6 @@ void LODFile::clear()
 // E:\gamedcs\lodfile.cpp:72
 // DC's getDataPtr is an ordinary helper called at pointAt line 431.
 // The PC expansion seeks the archive stream before returning its handle.
-
 DC_ADDRESS(0x0e9100, 0x54)
 MAC_ADDRESS(0x11b5f4, 0x8c)
 void* LODFile::getDataPtr(const char* itemName)
@@ -36,8 +36,9 @@ void* LODFile::getDataPtr(const char* itemName)
     return 0;
 }
 
+VA(0x004fa610, 0x45)
 DC_ADDRESS(0x0e9154, 0x42)
-VA(0x004fa610, 0x45) MAC_ADDRESS(0x11b680, 0x70)
+MAC_ADDRESS(0x11b680, 0x70)
 LODEntry* LODFile::getItemIndex(const char* itemName)
 {
     if (m_opened) {
@@ -58,8 +59,9 @@ unsigned char LODFile::exist(const char* itemName)
 
 // Mac retains both recursive calls at 0x11b770 and 0x11b7d8. The Windows
 // retail body at 0x4fa660 carries equivalent loops at the same two branches.
+VA(0x004fa660, 0x113)
 DC_ADDRESS(0x0e91c0, 0xf2)
-VA(0x004fa660, 0x113) MAC_ADDRESS(0x11b6f0, 0x148)
+MAC_ADDRESS(0x11b6f0, 0x148)
 void LODFile::find(unsigned begin, unsigned end, const char* itemName)
 {
     if (begin == end) {
@@ -145,8 +147,9 @@ LODHeader::LODHeader()
     memset(m_reserved, 0, sizeof(m_reserved));
 }
 
+VA(0x004fa780, 0x7B)
 DC_ADDRESS(0x0e9330, 0x42)
-VA(0x004fa780, 0x7B) MAC_ADDRESS(0x11b854, 0x7c)
+MAC_ADDRESS(0x11b854, 0x7c)
 LODFile::LODFile()
 {
     m_fileptr = 0;
@@ -155,15 +158,17 @@ LODFile::LODFile()
     m_dataBuffer = 0;
 }
 
+VA(0x004fa800, 0x97)
 DC_ADDRESS(0x0e9374, 0x48)
-VA(0x004fa800, 0x97) MAC_ADDRESS(0x11b934, 0x7c)
+MAC_ADDRESS(0x11b934, 0x7c)
 LODFile::~LODFile()
 {
     clear();
 }
 
+VA(0x004fa8a0, 0x1C4)
 DC_ADDRESS(0x0e941c, 0x140)
-VA(0x004fa8a0, 0x1C4) MAC_ADDRESS(0x11ba00, 0x174)
+MAC_ADDRESS(0x11ba00, 0x174)
 int LODFile::open(const char* filename, int flags)
 {
     if (m_opened)
@@ -212,8 +217,9 @@ void LODFile::sort()
     qsort(&m_subindex[0], m_numEntries, sizeof(LODEntry), compare);
 }
 
+VA(0x004faa70, 0xAB)
 DC_ADDRESS(0x0e9690, 0x4e)
-VA(0x004faa70, 0xAB) MAC_ADDRESS(0x11bb74, 0x80)
+MAC_ADDRESS(0x11bb74, 0x80)
 unsigned char LODFile::pointAt(const char* itemName)
 {
     if (!getDataPtr(itemName)) {
@@ -229,8 +235,9 @@ unsigned char LODFile::pointAt(const char* itemName)
     return 1;
 }
 
+VA(0x004fab20, 0x114)
 DC_ADDRESS(0x0e96e0, 0x188)
-VA(0x004fab20, 0x114) MAC_ADDRESS(0x11bbf4, 0x174)
+MAC_ADDRESS(0x11bbf4, 0x174)
 int LODFile::read(void* dest, int numBytes)
 {
     if (!m_opened)

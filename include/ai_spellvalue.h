@@ -68,6 +68,7 @@ enum ESpellValueClass {
 class type_spellvalue {
 public:
     type_spellvalue(const hero* newHero);
+
     // CodeView LF_ONEMETHOD marks ~type_spellvalue compiler-generated
     // (compgenx, attributes 0x103). Let the vector member generate it;
     // ai.cpp enrolls the retained retail body.
@@ -76,7 +77,8 @@ public:
     // AI_get_spell_value applies before appraising anything.
     DC_ADDRESS(0x037e40, 0x8)
     unsigned char canCastSpells() const { return m_power > 0; }
-    // DC ai_spellvalue.h:99, dc 0x114bdc (philai.obj). AI_set_hero_bonuses
+
+    // DC ai_spellvalue.h:99 (philai.obj). AI_set_hero_bonuses
     // (0x527760) reads this initial pool for the well/spring valuations.
     DC_ADDRESS(0x114bdc, 0x4)
     long getMana() const { return m_mana; }
@@ -89,16 +91,19 @@ public:
     long getValueOfIncrease(long baseValue, long powerChange,
                                long durationChange, long manaChange);
     long getRawSpellValue(SpellID spell) const;
+
     // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
     // type_school_artifact::get_value call sites in retail.
     DC_ADDRESS(0x037e48, 0x4)
     void setPower(long arg) { m_power = arg; }
-    // DC ai_spellvalue.h:119, dc 0x114be0 (philai.obj). The same consumer
+
+    // DC ai_spellvalue.h:119 (philai.obj). The same consumer
     // reseeds the valuer from hero::mana through this setter.
     DC_ADDRESS(0x114be0, 0x4)
     void setMana(long arg) { m_mana = arg; }
+
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
-    // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
+    // retail call site (DC retains a 4-byte out-of-line copy).
     // combatManager::do_combat_ai writes the side's whole combat value
     // here before asking for a spell value.
     DC_ADDRESS(0x027c74, 0x4)

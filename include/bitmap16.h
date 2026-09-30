@@ -97,15 +97,19 @@ public:
     void colorize(int x, int y, int w, int h, float hue, float saturation);
     void gray(int x, int y, int w, int h);
     void grabAndBlur(const Bitmap16Bit* src, int sx, int sy);
+
     // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
     // inline because Complete's ResourceManager expands them into its
     // bitmap-remap blit rather than calling the emitted DC copies.
     DC_ADDRESS(0x01f100, 0xc)
     int getWidth() const { return m_width; }
+
     DC_ADDRESS(0x01f10c, 0xc)
     int getHeight() const { return m_height; }
+
     DC_ADDRESS(0x01f118, 0xc)
     int getPitch() const { return m_pitch; }
+
     // Original: Bitmap16Bit::SetPixelFormat; Bitmap16.h:142
     DC_ADDRESS(0x122b8c, 0x1c)
     static void setPixelFormat(unsigned int red, unsigned int green, unsigned int blue)
@@ -115,8 +119,8 @@ public:
         s_blueMask = blue;
     }
 
-    DC_ADDRESS(0x01f124, 0x22)
     VA(0x004efff0, 0x19)  // COMDAT owner (kb.obj emits ?GetMap@Bitmap16Bit@@QAEPAGHH@Z), body in bitmap16.h
+    DC_ADDRESS(0x01f124, 0x22)
     unsigned short* getMap(int x, int y)
     {
         // Bitmap16.h:151 (dc 0x1f124): pitch advances bytes, x advances
@@ -124,6 +128,7 @@ public:
         return reinterpret_cast<unsigned short*>(
             reinterpret_cast<unsigned char*>(m_map) + y * m_pitch) + x;
     }
+
     DC_ADDRESS(0x04ca7c, 0x10)
     const unsigned short* getMap(int x, int y) const
     {
@@ -131,8 +136,9 @@ public:
             static_cast<const unsigned char*>(static_cast<const void*>(m_map))
             + y * m_pitch)) + x;
     }
-    DC_ADDRESS(0x04ca8c, 0x90)
+
     VA(0x004f0010, 0x3B)  // COMDAT owner + anchor-callee the 0x44e2b0 raw Draw, body in bitmap16.h
+    DC_ADDRESS(0x04ca8c, 0x90)
     void draw(int srcX, int srcY, int srcWidth, int srcHeight,
               Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
     {
@@ -140,7 +146,8 @@ public:
              dstX, dstY, dst->getWidth(), dst->getHeight(), dst->getPitch(),
              flipped);
     }
-    // DC Bitmap16.h:168, retained at dc 0x4cb1c. This header forwarding
+
+    // DC Bitmap16.h:168 retains this inline body. This header forwarding
     // overload calls GetMap/GetWidth/GetHeight/GetPitch and then the raw
     // six-argument Grab. Complete's ShootAnimatedMissile expands it into
     // the retained raw call at 0x0044e3f0.

@@ -10,8 +10,9 @@
 #include "window.h"
 #include "winmgr.h"
 
+VA(0x005fe340, 0x62)
 DC_ADDRESS(0x196b4c, 0x88)
-VA(0x005fe340, 0x62) MAC_ADDRESS(0x20a504, 0x54)
+MAC_ADDRESS(0x20a504, 0x54)
 widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
     : m_sleepCount(0)
 {
@@ -33,8 +34,9 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
 
 VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
 
+VA(0x005fe410, 0x1D)
 DC_ADDRESS(0x196bd4, 0x3a)
-VA(0x005fe410, 0x1D) MAC_ADDRESS(0x20a558, 0x28)
+MAC_ADDRESS(0x20a558, 0x28)
 widget::widget()
     : m_sleepCount(0)
 {
@@ -44,8 +46,9 @@ widget::widget()
     m_status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
 
+VA(0x005fe430, 0x45)
 DC_ADDRESS(0x196c10, 0x5a)
-VA(0x005fe430, 0x45) MAC_ADDRESS(0x20a580, 0x98)
+MAC_ADDRESS(0x20a580, 0x98)
 widget::~widget()
 {
     if (s_lastHoverWidget == this)
@@ -58,8 +61,9 @@ widget::~widget()
     }
 }
 
+VA(0x005fe480, 0x4E)
 DC_ADDRESS(0x196c6c, 0x50)
-VA(0x005fe480, 0x4E) MAC_ADDRESS(0x20a618, 0x54)
+MAC_ADDRESS(0x20a618, 0x54)
 void widget::initialize(int x, int y, int w, int h, int id, int style)
 {
     m_parentWindow = 0;
@@ -75,8 +79,9 @@ void widget::initialize(int x, int y, int w, int h, int id, int style)
     m_style = style;
 }
 
+VA(0x005fe4d0, 0x17)
 DC_ADDRESS(0x196cbc, 0xe)
-VA(0x005fe4d0, 0x17) MAC_ADDRESS(0x20a66c, 0x14)
+MAC_ADDRESS(0x20a66c, 0x14)
 int widget::open(int newPriority, heroWindow* parent)
 {
     m_priority = newPriority;
@@ -93,8 +98,9 @@ void widget::close()
 {
 }
 
+VA(0x005fe4f0, 0x2C8)
 DC_ADDRESS(0x196cd0, 0x2b8)
-VA(0x005fe4f0, 0x2C8) MAC_ADDRESS(0x20a684, 0x388)
+MAC_ADDRESS(0x20a684, 0x388)
 int widget::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -181,8 +187,9 @@ int widget::main(message& msg)
     return 0;
 }
 
+VA(0x005fe7c0, 0x40)
 DC_ADDRESS(0x196f88, 0x40)
-VA(0x005fe7c0, 0x40) MAC_ADDRESS(0x20aa0c, 0x74)
+MAC_ADDRESS(0x20aa0c, 0x74)
 int widget::sendMessage(widget::ECommands command, int extra)
 {
     message msg;
@@ -197,16 +204,18 @@ int widget::sendMessage(widget::ECommands command, int extra)
     return main(msg);
 }
 
+VA(0x005fe800, 0x32)
 DC_ADDRESS(0x196fc8, 0x34)
-VA(0x005fe800, 0x32) MAC_ADDRESS(0x20aa80, 0x54)
+MAC_ADDRESS(0x20aa80, 0x54)
 void widget::dim() const
 {
     g_windowManager->m_screenBitmap->darken(
         m_x + m_parentWindow->m_x, m_y + m_parentWindow->m_y, m_width, m_height);
 }
 
+VA(0x005fe840, 0xE9)
 DC_ADDRESS(0x196ffc, 0xaa)
-VA(0x005fe840, 0xE9) MAC_ADDRESS(0x20aad4, 0x110)
+MAC_ADDRESS(0x20aad4, 0x110)
 void widget::setHelpText(const char* text, const char* rclick, unsigned char copyText)
 {
     if (m_rollOver) {
@@ -236,8 +245,9 @@ void widget::setHelpText(const char* text, const char* rclick, unsigned char cop
     }
 }
 
+VA(0x005fe930, 0xC)
 DC_ADDRESS(0x1970a8, 0x18)
-VA(0x005fe930, 0xC) MAC_ADDRESS(0x20abe4, 0x34)
+MAC_ADDRESS(0x20abe4, 0x34)
 void widget::processHover()
 {
     m_parentWindow->handleWidgetHover(this);
@@ -245,8 +255,9 @@ void widget::processHover()
 
 // Dreamcast calls sendMessage in both enable branches; Mac retains both
 // calls at 0:0x20ac34/0x20ac44. Windows expands the canonical helper body.
+VA(0x005fe940, 0x83)
 DC_ADDRESS(0x1970c0, 0x44)
-VA(0x005fe940, 0x83) MAC_ADDRESS(0x20ac18, 0x40)
+MAC_ADDRESS(0x20ac18, 0x40)
 void widget::enable(unsigned char arg)
 {
     if (arg)

@@ -45,13 +45,16 @@
  *                                  to its single code section (section 0),
  *                                  never a file offset or loaded address.
  *                                  Functions only - data keeps its reviewed
- *                                  Mac inventories. Written on the VA line
- *                                  it pairs with (`VA(...) MAC_ADDRESS(...)`),
- *                                  or on its own line directly above a
- *                                  definition that has no Windows VA
+ *                                  Mac inventories. Written after DC_ADDRESS
+ *                                  and VA when present, one macro per line
+ *                                  directly above the function definition
  *   MAC_COMPGEN_ADDRESS(offset, size, kind, owner)
- *                                  compiler-generated Mac body; beside the
+ *                                  compiler-generated Mac body; below the
  *                                  VA_COMPGEN it pairs with, same kind/owner
+ * Address blocks use VA, DC_ADDRESS, MAC_ADDRESS order, one macro per line.
+ * Leave a blank line before the block's evidence comments (or its first
+ * macro when there are no comments), keeping comments attached to the block.
+ *
  *   DATA(addr)                     owning global datum definition, or the
  *                                  canonical extern when its defining TU
  *                                  is not authored; externs identify storage

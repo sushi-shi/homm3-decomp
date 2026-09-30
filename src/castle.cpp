@@ -48,8 +48,9 @@ static unsigned char g_castleBuildOrder[18];
 DATA(0x0063BCC8)
 static const int g_hallHelpIndices[8] = {19, 20, 21, 22, 23, 24, 18, 25};
 
+VA(0x004610e0, 0x49)
 DC_ADDRESS(0x05c1d8, 0x4e)
-VA(0x004610e0, 0x49) MAC_ADDRESS(0x06c9b0, 0x70)
+MAC_ADDRESS(0x06c9b0, 0x70)
 const char* getBuildingName(int townType, int buildingId)
 {
     if (buildingId < BUILDING_ID_TOWN_FIRST) {
@@ -62,8 +63,9 @@ const char* getBuildingName(int townType, int buildingId)
     return g_dwellingNames[townType][buildingId - 30];
 }
 
+VA(0x00461130, 0x5C)
 DC_ADDRESS(0x05c228, 0x50)
-VA(0x00461130, 0x5C) MAC_ADDRESS(0x06ca20, 0x108)
+MAC_ADDRESS(0x06ca20, 0x108)
 int canBuy(const town* currTown, int buildingId)
 {
     int cost[NUM_RESOURCES];
@@ -78,8 +80,9 @@ int canBuy(const town* currTown, int buildingId)
 }
 
 // E:\gamedcs\castle.cpp:328
+VA(0x00461190, 0x91C)
 DC_ADDRESS(0x05c278, 0x60c)
-VA(0x00461190, 0x91C) MAC_ADDRESS(0x06cb28, 0xa14)  // source-order + sole DoHall caller
+MAC_ADDRESS(0x06cb28, 0xa14)  // source-order + sole DoHall caller
 void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 {
     int i;
@@ -283,9 +286,9 @@ void townManager::setupCastle(heroWindow* inCasWin, int isReset)
 // switch shapes: both building dispatches span -1..43 with the buildings
 // arm laid out first, and the click-side help lookup is a fifteen-case
 // switch on the resource-bar ids.
-
+VA(0x00461AB0, 0x767)
 DC_ADDRESS(0x05c884, 0x77c)
-VA(0x00461AB0, 0x767) MAC_ADDRESS(0x06d53c, 0x74c)  // THallWindow vtable 0x6437a0 slot 9
+MAC_ADDRESS(0x06d53c, 0x74c)  // THallWindow vtable 0x6437a0 slot 9
 int THallWindow::windowHandler(message& msg)
 {
     int result = CAdvPopup::windowHandler(msg);

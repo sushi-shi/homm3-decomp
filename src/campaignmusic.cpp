@@ -190,7 +190,8 @@ DATA(0x0066c090) SCampaignMusicCue g_campaignMusicCues[49] = {
     { "CampainMusic11", 0 }
 };
 
-VA(0x0045e250, 0x160) MAC_ADDRESS(0x21dd80, 0x1c4)
+VA(0x0045e250, 0x160)
+MAC_ADDRESS(0x21dd80, 0x1c4)
 unsigned char initializeCampaignMusicTable()
 {
     TResourcePtr<TTextResource> textResource(
@@ -205,6 +206,7 @@ unsigned char initializeCampaignMusicTable()
         strSize += strlen(textResource->getText(cue)) + 1;
 
     DATA_COMPGEN_GUARD(0x00694e18, campaignMusicTracksGuard, campaignMusicTracks)
+
     VA_COMPGEN(0x0045e3b0, 0x16, STATIC_DTOR, campaignMusicTracks)
     DATA(0x00694e20)
     static TAutoArrayPtr<char> campaignMusicTracks(new char[strSize]);

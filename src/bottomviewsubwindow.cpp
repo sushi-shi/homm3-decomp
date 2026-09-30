@@ -59,11 +59,11 @@
 // 392 function spans; adding hero.h moves 118700 ex bytes) and produce
 // identical object code anyway. The C1 handle-order lever does not
 // reach this TU. See TBottomViewKingdom for what the wall actually is.
-
 VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 
+VA(0x00450d50, 0x78)
 DC_ADDRESS(0x055114, 0x74)
-VA(0x00450d50, 0x78) MAC_ADDRESS(0x05f1f0, 0xcc)
+MAC_ADDRESS(0x05f1f0, 0xcc)
 type_bottom_view_window::~type_bottom_view_window()
 {
     for (std::vector<widget*>::iterator it = m_widgets.begin();
@@ -168,8 +168,9 @@ void type_bottom_view_window::animate()
 {
 }
 
+VA(0x00450dd0, 0x319)
 DC_ADDRESS(0x05518c, 0x2bc)
-VA(0x00450dd0, 0x319) MAC_ADDRESS(0x05f2c0, 0x400)
+MAC_ADDRESS(0x05f2c0, 0x400)
 TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -220,14 +221,16 @@ TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 
 VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
 
+VA(0x00451120, 0x78)
 DC_ADDRESS(0x056ea4, 0x18)
-VA(0x00451120, 0x78) MAC_ADDRESS(0x062898, 0x60)
+MAC_ADDRESS(0x062898, 0x60)
 TBottomViewNewTurn::~TBottomViewNewTurn()
 {
 }
 
+VA(0x004511a0, 0x79)
 DC_ADDRESS(0x055448, 0x64)
-VA(0x004511a0, 0x79) MAC_ADDRESS(0x05f6c0, 0xe4)
+MAC_ADDRESS(0x05f6c0, 0xe4)
 void TBottomViewNewTurn::animate()
 {
     if (m_frame == m_icon->m_sprite->getNumFrames(0) - 1)
@@ -269,8 +272,9 @@ void TBottomViewNewTurn::animate()
 //     that call lifts the Complete constructor from 98.09% to exact.
 // DC also records `char str[20]` inside the resource guard; it has no
 // corresponding live storage in this optimized Complete body.
+VA(0x00451220, 0x393)
 DC_ADDRESS(0x0554ac, 0x2bc)
-VA(0x00451220, 0x393) MAC_ADDRESS(0x05f7a4, 0x41c)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg
+MAC_ADDRESS(0x05f7a4, 0x41c)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg
 TBottomViewResourceMessage::TBottomViewResourceMessage(
     heroWindow* parent, int res, int quantity,
     const std::string* message)
@@ -326,6 +330,7 @@ VA_COMPGEN(0x00454150, 0xA4, STREAMBUF_XSPUTN, char)
 // definitions on which a live annotation can sit, so ordinary members use
 // claim-only carcass declarators and deleting wrappers use VA_COMPGEN.
 #if 0  // @carcass -- compiler/library COMDATs emitted by the constructor
+
 VA(0x004515c0, 0x10)
 void ios_base::ios_base();
 
@@ -346,14 +351,16 @@ void ostrstream::`vbase destructor'();
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
+VA(0x004517a0, 0x78)
 DC_ADDRESS(0x056ef0, 0x18)
-VA(0x004517a0, 0x78) MAC_ADDRESS(0x062838, 0x60)
+MAC_ADDRESS(0x062838, 0x60)
 TBottomViewResourceMessage::~TBottomViewResourceMessage()
 {
 }
 
+VA(0x00451820, 0x1DC)
 DC_ADDRESS(0x055768, 0x140)
-VA(0x00451820, 0x1DC) MAC_ADDRESS(0x05fbc0, 0x214)
+MAC_ADDRESS(0x05fbc0, 0x214)
 TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
                                        const std::string* message)
     : type_bottom_view_window(parent)
@@ -374,8 +381,9 @@ TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
 
 VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
 
+VA(0x00451a30, 0x78)
 DC_ADDRESS(0x056f3c, 0x18)
-VA(0x00451a30, 0x78) MAC_ADDRESS(0x0627d8, 0x60)
+MAC_ADDRESS(0x0627d8, 0x60)
 TBottomViewMessage::~TBottomViewMessage()
 {
 }
@@ -451,7 +459,7 @@ static int g_heroArmyCoords[7][2] = {
 // they are two statements in two arms, not one hoisted call.
 
 // THE ACTING HERO COMES FROM game::GetCurrHero (96.52 -> 97.77,
-// 2026-08-14). dc 0x558a8 line 229 calls it by name; see the note on
+// 2026-08-14). dc line 229 calls it by name; see the note on
 // TBottomViewTown below for why that accessor is not GetHero applied to
 // gpCurrentPlayer->currHeroId.
 // 2026-09-05, easy lane 3 - first divergence localised. The stat sweep's
@@ -469,8 +477,9 @@ static int g_heroArmyCoords[7][2] = {
 // owning source body. The cross-TU count expansion leaves header visibility
 // open; no explicit inline qualifier is proven. Current ordinary call gives
 // 95.87521% versus 97.7573% for the pasted count; keep the supported boundary.
+VA(0x00451ab0, 0x68A)
 DC_ADDRESS(0x0558a8, 0x54c)
-VA(0x00451ab0, 0x68A) MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
+MAC_ADDRESS(0x05fdd4, 0x9b4)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -535,8 +544,9 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
 
+VA(0x00452170, 0x78)
 DC_ADDRESS(0x056f88, 0x18)
-VA(0x00452170, 0x78) MAC_ADDRESS(0x062778, 0x60)
+MAC_ADDRESS(0x062778, 0x60)
 TBottomViewHero::~TBottomViewHero()
 {
 }
@@ -627,7 +637,7 @@ static int g_townArmyCoords[7][2] = {
 // declaration that ours does not.
 
 // ALL SEVEN SITES ARE SOURCE-REAL: town::HasBuilding (restored
-// 2026-08-30). dc 0x55df4 spells the hall ladder (lines
+// 2026-08-30). dc spells the hall ladder (lines
 // 369/371/373, `mov #11/#12/#13,r5 / mov #0,r6`), the fort ladder
 // (382/384/386, r5 = 7/8/9, r6 = 0) and the silo gate (line 402, r5 =
 // 15, r6 = 1) as calls where this body tested `built`/`active &
@@ -674,8 +684,9 @@ static int g_townArmyCoords[7][2] = {
 // 94.8000 to 94.8201%; changing only its enum element type is byte-flat.
 // Address-arithmetic review (2026-09-10): indexing army_pos by the packed
 // display slot replaces its flattened int* walk and raises 94.0054 to 94.80%.
+VA(0x004521f0, 0x8D4)
 DC_ADDRESS(0x055df4, 0x5c4)
-VA(0x004521f0, 0x8D4) MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown
+MAC_ADDRESS(0x060788, 0xcac)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown
 TBottomViewTown::TBottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -785,8 +796,9 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
 
+VA(0x00452b00, 0x78)
 DC_ADDRESS(0x056fd4, 0x18)
-VA(0x00452b00, 0x78) MAC_ADDRESS(0x062718, 0x60)
+MAC_ADDRESS(0x062718, 0x60)
 TBottomViewTown::~TBottomViewTown()
 {
 }
@@ -798,7 +810,7 @@ TBottomViewTown::~TBottomViewTown()
 // THE MISSING INLINE CANDIDATE WAS town::HasBuilding, AND IT IS LANDED
 // (94.0575 -> 98.5213, 2026-08-15). The hall census below calls it three
 // times where this body tested `active & bitNumber[HALL_*_ID]` by hand;
-// dc 0x563b8 lines 531/533/535 are `mov #13/#12/#11,r5 / mov #1,r6 /
+// dc lines 531/533/535 are `mov #13/#12/#11,r5 / mov #1,r6 /
 // jsr @r11` on `?HasBuilding@town@@QBA_NH_N@Z`, and retail's own
 // out-of-line copy at 0x4305a0 proves the arm: `check_included != 0`
 // reads [ecx+0x158] = active. The expansion is byte-identical to the
@@ -833,9 +845,9 @@ TBottomViewTown::~TBottomViewTown()
 // order is downstream of it and byte-invariant under every init form
 // tried: four statements, a chained assignment, an aggregate
 // initializer and a hand-written 3/0/1/2 order all give the same bytes.
-
+VA(0x00452b80, 0x620)
 DC_ADDRESS(0x0563b8, 0x4c8)
-VA(0x00452b80, 0x620) MAC_ADDRESS(0x061434, 0x8a4)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom
+MAC_ADDRESS(0x061434, 0x8a4)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom
 TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -909,8 +921,9 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 // image-wide reference to this class's table.
 VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
 
+VA(0x004531d0, 0x78)
 DC_ADDRESS(0x057020, 0x18)
-VA(0x004531d0, 0x78) MAC_ADDRESS(0x0626b8, 0x60)
+MAC_ADDRESS(0x0626b8, 0x60)
 TBottomViewKingdom::~TBottomViewKingdom()
 {
 }
@@ -924,9 +937,9 @@ TBottomViewKingdom::~TBottomViewKingdom()
 //   * the two captions only exist when the acting player is human -
 //     general text 631 at y=20 and the player's own name at y=123, both
 //     'medfont.fnt' in font::PRIMARY, centred, with id -1.
-
+VA(0x00453250, 0x3EE)
 DC_ADDRESS(0x056880, 0x33c)
-VA(0x00453250, 0x3EE) MAC_ADDRESS(0x061cd8, 0x5fc)
+MAC_ADDRESS(0x061cd8, 0x5fc)
 TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
     : type_bottom_view_window(parent)
 {
@@ -981,10 +994,12 @@ TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 
 VA_COMPGEN(0x00453970, 0xAE, CLASS_CTOR, basic_ostream)
+
 VA_COMPGEN(0x00455820, 0x10B, CLASS_CTOR, numpunct)
 
+VA(0x00453670, 0x78)
 DC_ADDRESS(0x05706c, 0x18)
-VA(0x00453670, 0x78) MAC_ADDRESS(0x062658, 0x60)
+MAC_ADDRESS(0x062658, 0x60)
 TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 {
 }
@@ -1009,9 +1024,9 @@ long TBottomViewEnemyTurn::sumMobility(long playerId)
 
 // lastStepTime IS READ INTO A LOCAL BEFORE THE FIRST CALL, exactly as
 // in TBottomViewNewTurn::animate.
-
+VA(0x004536f0, 0x271)
 DC_ADDRESS(0x056c14, 0x1e4)
-VA(0x004536f0, 0x271) MAC_ADDRESS(0x06236c, 0x2ec)
+MAC_ADDRESS(0x06236c, 0x2ec)
 void TBottomViewEnemyTurn::animate()
 {
     unsigned long lastStep = m_lastStepTime;
@@ -1150,10 +1165,15 @@ VA_COMPGEN(0x00453c80, 0x1D, EXCEPTION_DORAISE, bad_cast)
 // Each ??_G is the wrapper over the ??1 immediately named, in the
 // flags&1 / operator delete form.
 VA_COMPGEN(0x00453c70, 0xB, IMPLICIT_DTOR, bad_cast)
+
 VA_COMPGEN(0x00453ca0, 0x21, SCALAR_DELETING_DTOR, bad_cast)
+
 VA_COMPGEN(0x00453f40, 0xB, IMPLICIT_DTOR, basic_ios)
+
 VA_COMPGEN(0x004542c0, 0x21, SCALAR_DELETING_DTOR, basic_ios)
+
 VA_COMPGEN(0x004542f0, 0x21, SCALAR_DELETING_DTOR, basic_streambuf)
+
 VA_COMPGEN(0x00455bc0, 0x21, SCALAR_DELETING_DTOR, numpunct)
 
 // COMDAT pairing: bad_cast::bad_cast(const&), agreement 0.857 against a 32 B
@@ -1171,14 +1191,19 @@ VA_COMPGEN(0x00453d90, 0x3B, IOS_BASE_GETLOC, char)
 VA_COMPGEN(0x00454a10, 0x1C, CLASS_CTOR, bad_cast)
 
 VA_COMPGEN(0x00455930, 0x4, NUMPUNCT_DO_DECIMAL_POINT, char)
+
 VA_COMPGEN(0x00455940, 0x4, NUMPUNCT_DO_THOUSANDS_SEP, char)
 
 VA_COMPGEN(0x00455950, 0xCF, NUMPUNCT_DO_GROUPING, char)
+
 VA_COMPGEN(0x00455a20, 0xCF, NUMPUNCT_DO_FALSENAME, char)
+
 VA_COMPGEN(0x00455af0, 0xCF, NUMPUNCT_DO_TRUENAME, char)
 
 VA_COMPGEN(0x00455760, 0x1E, NUMPUNCT_FALSENAME, char)
+
 VA_COMPGEN(0x00455780, 0x1E, NUMPUNCT_TRUENAME, char)
+
 VA_COMPGEN(0x00455800, 0x1E, NUMPUNCT_GROUPING, char)
 
 // COMDAT pairing: _Tidyfac's two instantiations. The object emits exactly
@@ -1190,8 +1215,11 @@ VA_COMPGEN(0x00455800, 0x1E, NUMPUNCT_GROUPING, char)
 // then 0x55c20, while 0x11ab90 installs numpunct<char>'s vtbl_245728 and
 // then stores into bss_294da0.
 VA_COMPGEN(0x00455c20, 0x7B, TIDYFAC_NUM_PUT_SAVE, char)
+
 VA_COMPGEN(0x00455ca0, 0x7B, TIDYFAC_NUMPUNCT_SAVE, char)
+
 VA_COMPGEN(0x00455d20, 0x92, TIDYFAC_NUM_PUT_TIDY, char)
+
 VA_COMPGEN(0x00455dc0, 0x92, TIDYFAC_NUMPUNCT_TIDY, char)
 
 // COMDAT pairing: basic_streambuf<char>::uflow. Not reached by any rel32 call
@@ -1214,20 +1242,26 @@ VA_COMPGEN(0x00453a30, 0x238, OSTREAM_INSERT_INT, char)
 // COMDAT pairing: locale::id::operator size_t, agreement 0.905, and
 // locale::~locale, agreement 1.000. Both are 1:1 in this object.
 VA_COMPGEN(0x00453cf0, 0x32, LOCALE_ID_CAST, char)
+
 VA_COMPGEN(0x00453d70, 0x18, IMPLICIT_DTOR, locale)
 
 // COMDAT pairing: basic_streambuf<char>::seekoff and ::seekpos - the BASE
 // class defaults, both 40 bytes, distinct from basic_stringbuf's overrides
 // already claimed in resourcemanager. Agreements 1.000 and 1.000.
 VA_COMPGEN(0x00454200, 0x28, STREAMBUF_SEEKOFF, char)
+
 VA_COMPGEN(0x00454230, 0x28, STREAMBUF_SEEKPOS, char)
 
 VA_COMPGEN(0x00454740, 0x23, SCALAR_DELETING_DTOR, facet)
 
 VA_COMPGEN(0x00454050, 0x6, STREAMBUF_OVERFLOW, char)
+
 VA_COMPGEN(0x00454060, 0x3, STREAMBUF_SHOWMANYC, char)
+
 VA_COMPGEN(0x00454070, 0x4, STREAMBUF_UNDERFLOW, char)
+
 VA_COMPGEN(0x00454260, 0x5, STREAMBUF_SETBUF, char)
+
 VA_COMPGEN(0x00454270, 0x3, STREAMBUF_IMBUE, char)
 
 // COMDAT pairing: basic_ostream<char>'s scalar deleting destructor,

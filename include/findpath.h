@@ -116,21 +116,23 @@ public:
     searchArray();
     ~searchArray();
     void close();
+
     // Retail 0x4b3b90 checks receiver+0x24 for null, then indexes the
     // 30-byte pathCell array and returns ret 4. FindCombatPath calls at
     // 0x4b382f/0x4b3881/0x4b393e/0x4b3990 correspond to the four
     // expansions of DC mark_enemy's get_hex call.
     // E:\gamedcs\FindPath.h:194
-    DC_ADDRESS(0x027fe8, 0x16)
     VA(0x004b3b90, 0x20)  // caller/get_hex correlation
+    DC_ADDRESS(0x027fe8, 0x16)
     pathCell* getHex(long x) const
     {
         if (m_cellData == 0)
             return 0;
         return &m_cellData[x];
     }
-    DC_ADDRESS(0x020064, 0x84)
+
     VA(0x0042ecc0, 0x62)  // hd-crossbuild + exact body/callers x2
+    DC_ADDRESS(0x020064, 0x84)
     pathCell* getCell(type_point point, bool flying) const
     {
         if (!m_cellData)
@@ -153,6 +155,7 @@ public:
     {
         m_result.clear();
     }
+
     // Dreamcast FindPath.h:216/226. Both const header helpers retain public
     // SH4 copies, while Complete expands build_path's calls into the result
     // vector's size and indexed pointer load.
@@ -161,6 +164,7 @@ public:
     {
         return m_result.size();
     }
+
     // DC FindPath.h:221-223, get_step: the route direction is a byte result
     // read from the indexed pathCell, distinct from get_step_cell's pointer.
     DC_ADDRESS(0x02012c, 0x38)
@@ -168,20 +172,24 @@ public:
     {
         return m_result[i]->m_direction;
     }
+
     DC_ADDRESS(0x028000, 0x18)
     const pathCell* getStepCell(long i) const
     {
         return m_result[i];
     }
+
     // Dreamcast FindPath.h:231/236/257.  These source helpers are all
     // folded into ai_player.obj's destination chooser on retail x86.  Keep
     // the boundaries visible in C++ even where the selected lowering is a
     // vector::size call or direct field/index arithmetic.
     DC_ADDRESS(0x037e4c, 0x18)
     long getVisitedCount() const { return m_visitedPoints.size(); }
+
     DC_ADDRESS(0x037e64, 0x18)
     pathCell* getVisitedCell(long index) { return m_visitedPoints[index]; }
     long getTravelTime(const army* currentArmy, long hex) const;
+
     // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
     // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
     // retail bodies prove: move_toward (0x41f580) and FindCombatPath
@@ -193,6 +201,7 @@ public:
     // loses the movsx, exactly as it should.
     DC_ADDRESS(0x028018, 0xa)
     unsigned char isMoat(short hex) const { return m_isMoatSlowed[hex]; }
+
     // E:\\gamedcs\\findpath.h:247 (). Retail folds this
     // const tiny helper into move_hero and AI_choose_destination as the
     // byte read at +0x20.
@@ -209,6 +218,7 @@ public:
     void seedCombatPosition(const army* thisArmy, long currentGroup,
                             long limit, unsigned char inPlacementPhase,
                             long baseSpeed);
+
     // Dreamcast FindPath.h:252. MoveHero brackets its move_hero call with
     // this setter; Complete expands both calls to the +0x6c store.
     DC_ADDRESS(0x114be4, 0x6)
@@ -216,6 +226,7 @@ public:
     {
         m_dangerZones = dangerZoneMap;
     }
+
     // E:\gamedcs\FindPath.h:257
     DC_ADDRESS(0x037e84, 0x12)
     void setRectangle(tagRECT& rect)
@@ -315,8 +326,8 @@ inline long& getDangerCell(long* dangerZones, type_point point)
 }
 
 // E:\gamedcs\FindPath.h:270
-DC_ADDRESS(0x037eec, 0x64)
 VA(0x0042ed30, 0x4E)
+DC_ADDRESS(0x037eec, 0x64)
 inline long searchArray::getDangerValue(type_point point) const
 {
     if (!m_dangerZones)

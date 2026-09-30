@@ -81,8 +81,9 @@ VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, button)
 // (_N) for end throughout the constructor/initialize forwarding chain.
 // This differs from lowered CodeView's byte description. Keep m_endDialog
 // and its ==1 predicate unchanged: the public ABI does not prove its type.
+VA(0x00455ef0, 0x1F7)
 DC_ADDRESS(0x057130, 0xbc)
-VA(0x00455ef0, 0x1F7) MAC_ADDRESS(0x062c6c, 0x12c)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven
+MAC_ADDRESS(0x062c6c, 0x12c)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven
 button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, bool end, int hotkey, int style)
     : widget(x, y, w, h, id, style)
 {
@@ -95,8 +96,9 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
     m_buttonIcon = ResourceManager::getSprite(image);
 }
 
+VA(0x004560f0, 0x9A)
 DC_ADDRESS(0x0571ec, 0x48)
-VA(0x004560f0, 0x9A) MAC_ADDRESS(0x062d98, 0x9c)
+MAC_ADDRESS(0x062d98, 0x9c)
 inline button::~button()
 {
     m_buttonIcon->dispose();
@@ -143,8 +145,9 @@ void button::initialize(int x, int y, int w, int h, int id,
 // E:\gamedcs\button.cpp:131
 // E:\gamedcs\struct.h:411
 // E:\gamedcs\button.cpp:131
+VA(0x00456190, 0x6CF)
 DC_ADDRESS(0x0572d0, 0x460)
-VA(0x00456190, 0x6CF) MAC_ADDRESS(0x062f68, 0x554)  // linkorder bracket; Select/widget-Main/manager callees byte-proven
+MAC_ADDRESS(0x062f68, 0x554)  // linkorder bracket; Select/widget-Main/manager callees byte-proven
 int button::main(message& msg)
 {
     if (m_style == WIDGET_STYLE_AUTO_REPEAT && (m_status & WIDGET_SELECTED)) {
@@ -294,8 +297,9 @@ int button::main(message& msg)
 // the same sixty-tick delay. DC392 and retail Select +0xb3 call the
 // canonical GameTime::Get; DC also proves the message reference formal.
 // E:\gamedcs\button.cpp:366
+VA(0x00456860, 0xDA)
 DC_ADDRESS(0x057730, 0x122)
-VA(0x00456860, 0xDA) MAC_ADDRESS(0x0634bc, 0x124)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven
+MAC_ADDRESS(0x0634bc, 0x124)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven
 int button::select(message& msg)
 {
     m_status |= WIDGET_SELECTED;
@@ -372,8 +376,9 @@ void button::zBufferDraw(unsigned short* zBuffer, int id) const
 // disabled fall to disabled_frame; selected to selectedFrame; any
 // frame past the sequence-0 count clamps to 0.
 // E:\gamedcs\button.cpp:446
+VA(0x00456940, 0x99)
 DC_ADDRESS(0x05793c, 0xe6)
-VA(0x00456940, 0x99) MAC_ADDRESS(0x0636d4, 0x110)  // vtable-slot 4 of button (0x63bb54)
+MAC_ADDRESS(0x0636d4, 0x110)  // vtable-slot 4 of button (0x63bb54)
 void button::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
@@ -408,8 +413,9 @@ void button::dim() const
 }
 
 // E:\gamedcs\button.cpp:477
+VA(0x004569e0, 0x2E)
 DC_ADDRESS(0x057a28, 0x32)
-VA(0x004569e0, 0x2E) MAC_ADDRESS(0x0637e8, 0x54)  // anchor-global
+MAC_ADDRESS(0x0637e8, 0x54)  // anchor-global
 void button::setPlayerPaletteColors(int whichPlayer)
 {
     ::setPlayerPaletteColors(m_buttonIcon->getPalette(), whichPlayer);
@@ -424,7 +430,8 @@ void button::setPlayerPaletteColors(int whichPlayer)
 // nothing but the qualified base call - it stays a CALL rather than an
 // /Ob2-inlined nothing because widget::onSleepChange has no definition
 // visible here (widget.h declares it only, the Close idiom).
-VA(0x00456a10, 0x10) MAC_ADDRESS(0x06383c, 0x20)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
+VA(0x00456a10, 0x10)
+MAC_ADDRESS(0x06383c, 0x20)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
 void button::onSleepChange(int on)
 {
     widget::onSleepChange(on);
@@ -442,8 +449,9 @@ textButton::textButton() : button()
 {
 }
 
+VA(0x00456a50, 0x193)
 DC_ADDRESS(0x057ab4, 0xa8)
-VA(0x00456a50, 0x193) MAC_ADDRESS(0x06385c, 0xd4)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven
+MAC_ADDRESS(0x06385c, 0xd4)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven
 textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text, const char* fontName, int normal, int selected, bool end, int hotkey, int style, font::TColor newColor)
     : button()
 {
@@ -454,15 +462,17 @@ textButton::textButton(int x, int y, int w, int h, int id, const char* image, co
 }
 
 // E:\gamedcs\button.cpp:519
+VA(0x00456bf0, 0xAB)
 DC_ADDRESS(0x057b5c, 0x3a)
-VA(0x00456bf0, 0xAB) MAC_ADDRESS(0x063930, 0x74)  // anchor-global
+MAC_ADDRESS(0x063930, 0x74)  // anchor-global
 textButton::~textButton()
 {
     m_font->dispose();
 }
 
+VA(0x00456ca0, 0x82)
 DC_ADDRESS(0x057b98, 0xb4)
-VA(0x00456ca0, 0x82) MAC_ADDRESS(0x0639a4, 0xf4)
+MAC_ADDRESS(0x0639a4, 0xf4)
 void textButton::draw() const
 {
     if (!(m_status & WIDGET_DRAWN))
@@ -487,8 +497,9 @@ void textButton::draw() const
                             drawX, drawY, m_width, m_height, font::TColor(color), 5, -1);
 }
 
+VA(0x00456d30, 0x46)
 DC_ADDRESS(0x057c4c, 0x90)
-VA(0x00456d30, 0x46) MAC_ADDRESS(0x063a98, 0x6c)
+MAC_ADDRESS(0x063a98, 0x6c)
 type_func_button::type_func_button(long x, long y, long w, long h, long id,
                                    const char* image,
                                    handler_type newHandler,
@@ -519,15 +530,17 @@ VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, type_func_button)
 // immediately by inlined ~button's store collapses to one (dead-store
 // elimination; ~textButton keeps both because Font->Dispose intervenes).
 // E:\gamedcs\button.cpp:559
+VA(0x00456db0, 0x9A)
 DC_ADDRESS(0x057e7c, 0x18)
-VA(0x00456db0, 0x9A) MAC_ADDRESS(0x063b94, 0x60)  // anchor-global
+MAC_ADDRESS(0x063b94, 0x60)  // anchor-global
 type_func_button::~type_func_button()
 {
 }
 
 // E:\gamedcs\button.cpp:574
+VA(0x00456e50, 0x44)
 DC_ADDRESS(0x057d48, 0x5c)
-VA(0x00456e50, 0x44) MAC_ADDRESS(0x063b04, 0x90)  // vtable-slot 2 of type_func_button (0x63bbbc)
+MAC_ADDRESS(0x063b04, 0x90)  // vtable-slot 2 of type_func_button (0x63bbbc)
 int type_func_button::main(message& msg)
 {
     int result = button::main(msg);

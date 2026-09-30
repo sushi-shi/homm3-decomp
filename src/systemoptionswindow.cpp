@@ -40,8 +40,9 @@
 // Native Mac 0x1ab964 onward retains the vector indexer; DC names the
 // outer operator on the corresponding label and confirmation statements.
 // E:\gamedcs\systemoptionswindow.cpp:43
+VA(0x005b1790, 0x187C)
 DC_ADDRESS(0x15f588, 0x10ac)
-VA(0x005b1790, 0x187C) MAC_ADDRESS(0x1aa2ec, 0x2534)  // sole sysopbck.pcx reference + vtable block
+MAC_ADDRESS(0x1aa2ec, 0x2534)  // sole sysopbck.pcx reference + vtable block
 TSystemOptionsWindow::TSystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), m_prefsChanged(0)
 {
@@ -261,8 +262,9 @@ TSystemOptionsWindow::TSystemOptionsWindow()
 
 VA_COMPGEN(0x005b3010, 0x21, SCALAR_DELETING_DTOR, TSystemOptionsWindow)
 
+VA(0x005b3040, 0x6B)
 DC_ADDRESS(0x160634, 0x62)
-VA(0x005b3040, 0x6B) MAC_ADDRESS(0x1ac820, 0xac)
+MAC_ADDRESS(0x1ac820, 0xac)
 TSystemOptionsWindow::~TSystemOptionsWindow()
 {
     for (widget** it = m_widgets.begin(); it != m_widgets.end(); ++it) {
@@ -296,8 +298,9 @@ int TSystemOptionsWindow::convertID2HelpID(int id) const
     return helpID;
 }
 
+VA(0x005b30b0, 0x8E)
 DC_ADDRESS(0x160700, 0x6e)
-VA(0x005b30b0, 0x8E) MAC_ADDRESS(0x1ac964, 0xcc)
+MAC_ADDRESS(0x1ac964, 0xcc)
 void TSystemOptionsWindow::doModal()
 {
     m_prefsChanged = 0;
@@ -373,8 +376,9 @@ void TSystemOptionsWindow::doModal()
 // send_message here (DC never expands widget::set_visible; all 51 of its
 // uses call dc 0x56df8). Retail pushes both constants before getWidget, as
 // a direct send does: 96.70 -> 100 (2026-09-29).
+VA(0x005b3140, 0x61E)
 DC_ADDRESS(0x160770, 0x578)
-VA(0x005b3140, 0x61E) MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch
+MAC_ADDRESS(0x1aca30, 0x6a4)  // vtable slot 9 + inlined help switch
 int TSystemOptionsWindow::windowHandler(message& msg)
 {
     // DC records one procedure-local save; Mac reuses r24 in both slider arms.

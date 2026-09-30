@@ -51,9 +51,9 @@
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
 // ============================================================================
-
+VA(0x00575220, 0x40)
 DC_ADDRESS(0x12de28, 0x80)
-VA(0x00575220, 0x40) MAC_ADDRESS(0x16ba44, 0x74)
+MAC_ADDRESS(0x16ba44, 0x74)
 CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId)
 {
     m_x = xPos;
@@ -75,8 +75,9 @@ VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x64
 // deselection inside that arm, then returns zero if unselected. This natural
 // branch form lets VC6 share the earlier zero-return epilogue: all 21 retail
 // blocks and four returns match. No goto or extra source operation is needed.
+VA(0x00575290, 0x179)
 DC_ADDRESS(0x12dea8, 0x100)
-VA(0x00575290, 0x179) MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4
+MAC_ADDRESS(0x16bab8, 0x1a4)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4
 int CHotspotWidget::main(message& msg)
 {
     if (m_sleepCount > 0)
@@ -132,9 +133,9 @@ int CHotspotWidget::main(message& msg)
 // ============================================================================
 // CBonusDlg - the two-CreateWin bonus dialog.
 // ============================================================================
-
+VA(0x00575410, 0x20)
 DC_ADDRESS(0x12dfa8, 0x48)
-VA(0x00575410, 0x20) MAC_ADDRESS(0x16bc5c, 0x54)
+MAC_ADDRESS(0x16bc5c, 0x54)
 CBonusDlg::CBonusDlg(unsigned char newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
@@ -142,8 +143,9 @@ CBonusDlg::CBonusDlg(unsigned char newGameMode)
 
 VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // dc 0x12f304
 
+VA(0x005754f0, 0x254)
 DC_ADDRESS(0x12dff0, 0x1dc)
-VA(0x005754f0, 0x254) MAC_ADDRESS(0x16bcb0, 0x2a4)
+MAC_ADDRESS(0x16bcb0, 0x2a4)
 unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
@@ -161,9 +163,9 @@ unsigned char CBonusDlg::createWin(const char* title, CSprite* sprite, int frame
 // ============================================================================
 // CSpriteWidget - a widget wrapping a CSprite.
 // ============================================================================
-
+VA(0x00575750, 0x54)
 DC_ADDRESS(0x12f0c8, 0x54)
-VA(0x00575750, 0x54) MAC_ADDRESS(0x16d230, 0x9c)
+MAC_ADDRESS(0x16d230, 0x9c)
 void CSpriteWidget::draw() const
 {
     m_sprite->draw(0, m_frame, 0, 0, m_width, m_height,
@@ -172,7 +174,7 @@ void CSpriteWidget::draw() const
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin that
-// builds a sprite icon (dc 0x12f018, no standalone retail body). Stores the
+// builds a sprite icon (no standalone retail body). Stores the
 // sprite/frame past the widget base and normalises frame against sequence 0's
 // count; GetNumFrames(0)'s else arm folds to the literal-0 divisor.
 DC_ADDRESS(0x12f018, 0x94)
@@ -196,8 +198,9 @@ void CSpriteWidget::zBufferDraw(unsigned short* zBuffer, int id) const
 
 VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // dc 0x12f11c
 
+VA(0x005757e0, 0x226)
 DC_ADDRESS(0x12e1cc, 0x1d4)
-VA(0x005757e0, 0x226) MAC_ADDRESS(0x16bf54, 0x25c)
+MAC_ADDRESS(0x16bf54, 0x25c)
 unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const char* botTitle, const char* description)
 {
     if (!setup(300, 225, 200, 150))
@@ -212,8 +215,9 @@ unsigned char CBonusDlg::createWin(const char* title, Bitmap816* image, const ch
     return 1;
 }
 
+VA(0x00575a10, 0x10)
 DC_ADDRESS(0x12f0ac, 0x18)
-VA(0x00575a10, 0x10) MAC_ADDRESS(0x16d20c, 0x20)
+MAC_ADDRESS(0x16d20c, 0x20)
 int CSpriteWidget::main(message& msg)
 {
     return widget::main(msg);
@@ -222,9 +226,9 @@ int CSpriteWidget::main(message& msg)
 // ============================================================================
 // CBitmapWidget - a widget wrapping a Bitmap816.
 // ============================================================================
-
+VA(0x00575a20, 0x3e)
 DC_ADDRESS(0x12f1fc, 0x70)
-VA(0x00575a20, 0x3e) MAC_ADDRESS(0x16d144, 0x68)
+MAC_ADDRESS(0x16d144, 0x68)
 void CBitmapWidget::draw() const
 {
     m_image->draw(0, 0, m_image->getWidth(), m_image->getHeight(),
@@ -233,7 +237,7 @@ void CBitmapWidget::draw() const
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap CreateWin
-// callers (dc 0x12f168, no standalone retail body). Stores the image past the
+// callers (no standalone retail body). Stores the image past the
 // widget base with the bitmap's own extent.
 DC_ADDRESS(0x12f168, 0x78)
 CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* image)
@@ -265,16 +269,17 @@ VA_COMPGEN(0x00575a60, 0x5, IMPLICIT_DTOR, CBitmapWidget)  // dc 0x12f2a0
 // ============================================================================
 // CHeroDlg
 // ============================================================================
-
+VA(0x00575a70, 0x20)
 DC_ADDRESS(0x12e3a0, 0x50)
-VA(0x00575a70, 0x20) MAC_ADDRESS(0x16c1b0, 0x54)
+MAC_ADDRESS(0x16c1b0, 0x54)
 CHeroDlg::CHeroDlg(unsigned char newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
 }
 
+VA(0x00575a90, 0x380)
 DC_ADDRESS(0x12e3f0, 0x29e)
-VA(0x00575a90, 0x380) MAC_ADDRESS(0x16c204, 0x3e4)
+MAC_ADDRESS(0x16c204, 0x3e4)
 unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
 {
     char tempText[256];
@@ -305,9 +310,9 @@ unsigned char CHeroDlg::createWin(Bitmap816* heroPick, const char* heroName, CSp
 // ============================================================================
 // CTownDlg
 // ============================================================================
-
+VA(0x00575e10, 0x20)
 DC_ADDRESS(0x12e690, 0x78)
-VA(0x00575e10, 0x20) MAC_ADDRESS(0x16c5e8, 0x54)
+MAC_ADDRESS(0x16c5e8, 0x54)
 CTownDlg::CTownDlg(unsigned char newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
@@ -327,8 +332,9 @@ VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0
 // VC6 retains one vector<widget*>::size call in the final expanded Add,
 // where retail reuses the computed size. Prefix/postfix loop increments,
 // separate loop counters and per-iteration caption locals do not close it.
+VA(0x00575e60, 0x670)
 DC_ADDRESS(0x12e708, 0x3be)
-VA(0x00575e60, 0x670) MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args)
+MAC_ADDRESS(0x16c63c, 0x52c)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args)
 unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 {
     if (!setup(272, 140, 256, 320))
@@ -380,9 +386,9 @@ unsigned char CTownDlg::createWin(CSprite* town, int frame, TTownType townType)
 // ============================================================================
 // CTeamAlignmentDlg
 // ============================================================================
-
+VA(0x005764d0, 0x53)
 DC_ADDRESS(0x12eac8, 0x5c)
-VA(0x005764d0, 0x53) MAC_ADDRESS(0x16cb68, 0x64)
+MAC_ADDRESS(0x16cb68, 0x64)
 CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
     : CSingleSelPopup(0x12, newGameMode)
 {
@@ -403,8 +409,9 @@ VA_COMPGEN(0x00576530, 0x5, IMPLICIT_DTOR, CTeamAlignmentDlg)  // dc 0x12b038
 // `volatile xStart` (distance 15 -> 8), which is neither source evidence nor
 // exact and is deliberately rejected. Restoring the two preceding real
 // CreateWin bodies (CHeroDlg and CTownDlg) also leaves this score unchanged.
+VA(0x00576540, 0x3e8)
 DC_ADDRESS(0x12eb24, 0x256)
-VA(0x00576540, 0x3e8) MAC_ADDRESS(0x16cbcc, 0x2b0)  // anchor-vtable
+MAC_ADDRESS(0x16cbcc, 0x2b0)  // anchor-vtable
 unsigned char CTeamAlignmentDlg::createWin()
 {
     int xStart;
@@ -451,8 +458,9 @@ int CTeamAlignmentDlg::countNumPlayers(int teamNbr)
     return count;
 }
 
+VA(0x00576930, 0xd1)
 DC_ADDRESS(0x12edd4, 0xd8)
-VA(0x00576930, 0xd1) MAC_ADDRESS(0x16cf50, 0x170)
+MAC_ADDRESS(0x16cf50, 0x170)
 void CTeamAlignmentDlg::getTeams()
 {
     unsigned char assigned[8] = { 0 };
@@ -492,8 +500,8 @@ void CTeamAlignmentDlg::getTeams()
 // Advance override 0x577320, and 0x576f00 is the only body that stores that
 // vtable.  The base's own constructor 0x530e20 sits in the
 // quicktownwindow..recruit span and is left unclaimed.
-
-VA(0x00576F00, 0x190) MAC_ADDRESS(0x16d654, 0x21c)
+VA(0x00576F00, 0x190)
+MAC_ADDRESS(0x16d654, 0x21c)
 TRandomMapProgress::TRandomMapProgress(int totalSteps)
     : TProgressSink(totalSteps)
 {
@@ -521,7 +529,8 @@ TRandomMapProgress::TRandomMapProgress(int totalSteps)
 // Slot 0 of vtable 0x641b14.
 VA_COMPGEN(0x00577090, 0x21, SCALAR_DELETING_DTOR, TRandomMapProgress)
 
-VA(0x005770C0, 0xBE) MAC_ADDRESS(0x16d870, 0x118)
+VA(0x005770C0, 0xBE)
+MAC_ADDRESS(0x16d870, 0x118)
 TRandomMapProgress::~TRandomMapProgress()
 {
     g_windowManager->removeWindow(m_window);
@@ -532,7 +541,8 @@ TRandomMapProgress::~TRandomMapProgress()
         delete m_widgets[i];
 }
 
-VA(0x00577180, 0x17F) MAC_ADDRESS(0x16d988, 0x1fc)
+VA(0x00577180, 0x17F)
+MAC_ADDRESS(0x16d988, 0x1fc)
 void TRandomMapProgress::updateProgressBar()
 {
     if (!m_barSprite)
@@ -570,7 +580,8 @@ void TRandomMapProgress::updateProgressBar()
 }
 
 // Slot 1 of vtable 0x641b14 - the base's SetTotal override.
-VA(0x00577300, 0x12) MAC_ADDRESS(0x16db84, 0x24)
+VA(0x00577300, 0x12)
+MAC_ADDRESS(0x16db84, 0x24)
 void TRandomMapProgress::setTotal(int totalSteps)
 {
     m_steps = totalSteps;

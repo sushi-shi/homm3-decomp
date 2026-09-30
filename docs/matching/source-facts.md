@@ -13,8 +13,11 @@ MAC_ADDRESS(0x0459a4, 0xb0)
 void type_AI_spellcaster::considerSummon(type_spell_choice& choice) const
 ```
 
-Keep `VA(...) MAC_ADDRESS(...)` together and put `DC_ADDRESS` on its own
-line above them. Header helpers without Windows or Mac claims use the same
+Use `VA(...)`, `DC_ADDRESS(...)`, `MAC_ADDRESS(...)` order, one macro per
+line, omitting platforms without a claim. Leave a blank line before the
+block's evidence comments, or before its first macro if there are no comments.
+Keep the comments directly attached to the block and omit addresses already
+recorded by its macros. Header helpers without Windows or Mac claims use the same
 macro. Repeat it for distinct retained emissions of one template body. Under
 VC6 and CodeWarrior it expands to nothing; Clang exposes the claim to the
 source inventory. Address annotations do not change function score hashes.

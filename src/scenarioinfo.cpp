@@ -105,8 +105,9 @@ public:
 SIZE(CScenarioPlayerInfoWidget, 0x60);
 
 // E:\gamedcs\scenarioinfo.cpp:258
+VA(0x00567290, 0x2109)
 DC_ADDRESS(0x129db4, 0xcbc)
-VA(0x00567290, 0x2109) MAC_ADDRESS(0x15ddc0, 0x2640)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape
+MAC_ADDRESS(0x15ddc0, 0x2640)  // anchor CAdvPopup ctor + GSelPop1.pcx + DC source shape
 CScenarioInfoDlg::CScenarioInfoDlg()
     // DC 258 centers against SCREEN_WIDTH/HEIGHT; retail +0x2f/+0x31
     // pushes y=7 then x=18 for the fixed 800x600 screen.
@@ -379,7 +380,8 @@ CScenarioInfoDlg::CScenarioInfoDlg()
 
 // Retail draws the player name with g_smallFont and every later label with
 // g_tinyFont (0x698a04).
-VA(0x005693a0, 0x394) MAC_ADDRESS(0x160de8, 0x4cc)
+VA(0x005693a0, 0x394)
+MAC_ADDRESS(0x160de8, 0x4cc)
 void CScenarioPlayerInfoWidget::draw() const
 {
     int windowX = m_parentWindow->m_x;
@@ -481,7 +483,8 @@ void CScenarioPlayerInfoWidget::draw() const
 VA_COMPGEN(0x00569740, 0x21, SCALAR_DELETING_DTOR,
            CScenarioPlayerInfoWidget)
 
-VA(0x00569770, 0x55) MAC_ADDRESS(0x160d6c, 0x7c)
+VA(0x00569770, 0x55)
+MAC_ADDRESS(0x160d6c, 0x7c)
 CScenarioPlayerInfoWidget::~CScenarioPlayerInfoWidget()
 {
     if (m_heroPortrait)
@@ -490,8 +493,9 @@ CScenarioPlayerInfoWidget::~CScenarioPlayerInfoWidget()
 
 VA_COMPGEN(0x005697d0, 0x21, SCALAR_DELETING_DTOR, CScenarioInfoDlg)
 
+VA(0x00569800, 0x98)
 DC_ADDRESS(0x12aa70, 0x8e)
-VA(0x00569800, 0x98) MAC_ADDRESS(0x160400, 0x114)
+MAC_ADDRESS(0x160400, 0x114)
 CScenarioInfoDlg::~CScenarioInfoDlg()
 {
     m_victoryIcon->dispose();
@@ -506,8 +510,9 @@ CScenarioInfoDlg::~CScenarioInfoDlg()
     }
 }
 
+VA(0x005698a0, 0x1E)
 DC_ADDRESS(0x12ab00, 0x20)
-VA(0x005698a0, 0x1E) MAC_ADDRESS(0x160514, 0x34)
+MAC_ADDRESS(0x160514, 0x34)
 int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
 {
     if (id == SCENARIO_INFO_ACCEPT_ID)
@@ -515,8 +520,9 @@ int CScenarioInfoDlg::onWidgetDeselect(int id, bool& exitFlag)
     return CHeroWindowEx::onWidgetDeselect(id, exitFlag);
 }
 
+VA(0x005698c0, 0xF2)
 DC_ADDRESS(0x12ab20, 0x108)
-VA(0x005698c0, 0xF2) MAC_ADDRESS(0x160548, 0x158)
+MAC_ADDRESS(0x160548, 0x158)
 void CScenarioInfoDlg::updateAllyEnemyFlags()
 {
     int localPlayer = g_game->getLocalPlayerGamePos();
@@ -554,7 +560,7 @@ void CScenarioInfoDlg::updateAllyEnemyFlags()
 }
 
 // E:\\gamedcs\\scenarioinfo.cpp:661
-// Dreamcast keeps this as an ordinary out-of-line member at dc 0x12af90.
+// Dreamcast keeps this as an ordinary out-of-line member.
 // Complete's ctor at 0x567290 expands the same five-widget/message sequence,
 // so the declaration remains non-inline and VC6 /Ob2 owns the caller choice.
 DC_ADDRESS(0x12af90, 0x74)
@@ -573,8 +579,9 @@ void CScenarioInfoDlg::setDifficultyHiLite()
     broadcastMessage(msg);
 }
 
+VA(0x005699C0, 0x320)
 DC_ADDRESS(0x12ac28, 0x368)
-VA(0x005699C0, 0x320) MAC_ADDRESS(0x1606a0, 0x390)
+MAC_ADDRESS(0x1606a0, 0x390)
 unsigned char CScenarioInfoDlg::processRightSelect(int id)
 {
     switch (id) {

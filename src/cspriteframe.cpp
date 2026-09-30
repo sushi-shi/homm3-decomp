@@ -38,8 +38,9 @@ CSpriteFrame::CSpriteFrame()
 {
 }
 
+VA(0x0047c2b0, 0xa7)
 DC_ADDRESS(0x074664, 0xaa)
-VA(0x0047c2b0, 0xa7) MAC_ADDRESS(0x08b24c, 0xc8)
+MAC_ADDRESS(0x08b24c, 0xc8)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            TEncodingMethod encoding)
@@ -53,8 +54,9 @@ CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
         memcpy(m_map, data, m_dataSize);
 }
 
+VA(0x0047c360, 0xc9)
 DC_ADDRESS(0x074710, 0xba)
-VA(0x0047c360, 0xc9) MAC_ADDRESS(0x08b314, 0xd4)
+MAC_ADDRESS(0x08b314, 0xd4)
 CSpriteFrame::CSpriteFrame(const char* name, int w, int h,
                            unsigned char* data, int csize,
                            TEncodingMethod encoding,
@@ -98,8 +100,9 @@ void CSpriteFrame::~CSpriteFrame()
 
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)
 
+VA(0x0047c430, 0x22)
 DC_ADDRESS(0x07483c, 0x6e)
-VA(0x0047c430, 0x22) MAC_ADDRESS(0x08b3e8, 0x70)  // vtable 0x63d6bc + resource::~resource
+MAC_ADDRESS(0x08b3e8, 0x70)  // vtable 0x63d6bc + resource::~resource
 CSpriteFrame::~CSpriteFrame()
 {
     if (m_map)
@@ -128,8 +131,9 @@ void CSpriteFrame::clear()
     }
 }
 
+VA(0x0047c460, 0xF7)
 DC_ADDRESS(0x074918, 0xfe)
-VA(0x0047c460, 0xF7) MAC_ADDRESS(0x08b458, 0x2ac)
+MAC_ADDRESS(0x08b458, 0x2ac)
 void CSpriteFrame::setPixelFormat(unsigned rmask, unsigned gmask,
                                   unsigned bmask)
 {
@@ -783,7 +787,8 @@ void CSpriteFrame::encodeAdvObj()
     m_croppedWidth = newCroppedWidth;
 }
 
-VA(0x0047c560, 0x07) MAC_ADDRESS(0x08b704, 0xc)  // vtable slot 2: fixed object extent + owned bytes
+VA(0x0047c560, 0x07)
+MAC_ADDRESS(0x08b704, 0xc)  // vtable slot 2: fixed object extent + owned bytes
 unsigned int CSpriteFrame::getSize() const
 {
     return sizeof(*this) + m_dataSize;
@@ -866,9 +871,9 @@ inline void CSpriteFrame::clip(int& sx, int& sy, int& sw, int& sh,
 // source model and makes VC6 place its initialization before the loop guard,
 // matching both retail halves exactly; rebuilding it from a base plus an
 // integer row offset deferred that store and measured 98.62%.
-
+VA(0x0047c570, 0x465)
 DC_ADDRESS(0x075810, 0x310)
-VA(0x0047c570, 0x465) MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
+MAC_ADDRESS(0x08b710, 0x430)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
                         unsigned short* dst, int dx, int dy, int dw, int dh,
                         int dpitch, TPalette16& pal, unsigned char hflip,
@@ -1035,8 +1040,9 @@ void CSpriteFrame::draw(int sx, int sy, int sw, int sh,
 // The native per-row destination lifetime also appears in the exact adjacent
 // adventure renderer. Advancing that cursor directly restores 95.9000%;
 // splitting its address into a base and offset leaves 94.7302%.
+VA(0x0047c9e0, 0x6BC)
 DC_ADDRESS(0x075b20, 0x540)
-VA(0x0047c9e0, 0x6BC) MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte verdict
+MAC_ADDRESS(0x08bb40, 0x6f4)  // unique PC/DC renderer identity; retail byte verdict
 void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
                                     unsigned short* dst, int dx, int dy,
                                     int dw, int dh, int dpitch,
@@ -1308,9 +1314,9 @@ void CSpriteFrame::drawCreatureImpl(int sx, int sy, int sw, int sh,
 // row loop one enclosing lifetime. Advancing lineDst directly by dpitch keeps
 // that source model and matches both retail direction arms exactly; rebuilding
 // it from rowBase plus an integer rowOffset measured 96.6247%.
-
+VA(0x0047d0a0, 0x44B)
 DC_ADDRESS(0x076060, 0x324)
-VA(0x0047d0a0, 0x44B) MAC_ADDRESS(0x08c234, 0x460) // retail packed-cell decoder + DC source identity
+MAC_ADDRESS(0x08c234, 0x460) // retail packed-cell decoder + DC source identity
 void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
@@ -1492,12 +1498,13 @@ void CSpriteFrame::drawAdvObjImpl(int sx, int sy, int sw, int sh,
 // ECX where this compile uses the two the other way round - which is B-family
 // homing on values that arrive as parameters, the same class DrawTileShadow
 // left behind two rows up.
-// DC 0x76384 records palette and aCellOffset as read-only pointers; lines
+// DC records palette and aCellOffset as read-only pointers; lines
 // 2462/2463 load the map table and bind pal+0x1c before either row loop.
 // A single native row cursor restores 98.0000%; a fixed base plus row offset
 // leaves 94.5249%. The decoder and palette helpers remain unchanged.
+VA(0x0047d4f0, 0x43C)
 DC_ADDRESS(0x076384, 0x302)
-VA(0x0047d4f0, 0x43C) MAC_ADDRESS(0x08c694, 0x450)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
+MAC_ADDRESS(0x08c694, 0x450)  // anchor-caller (DrawSpellEffect 0x47efca) + DC source identity
 void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
                                            unsigned short* dst, int dx, int dy,
                                            int dw, int dh, int dpitch,
@@ -1679,8 +1686,9 @@ void CSpriteFrame::drawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
 // dropping it took this row 98.5765 -> 99.9400 on one line.
 // The native row cursor restores 99.9404%; an extra base/offset pair changes
 // the surrounding lifetimes and leaves 94.3325%.
+VA(0x0047d930, 0x40F)
 DC_ADDRESS(0x076688, 0x2fe)
-VA(0x0047d930, 0x40F) MAC_ADDRESS(0x08cae4, 0x440)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
+MAC_ADDRESS(0x08cae4, 0x440)  // anchor-callee (CSprite::DrawAdvObjShadow/DrawHeroShadow) + DC source identity
 void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
                                         unsigned short* dst, int dx, int dy,
                                         int dw, int dh, int dpitch,
@@ -1872,8 +1880,9 @@ void CSpriteFrame::drawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
 // pointer directly. Restoring those lifetimes reaches 81.4249%, preserving
 // every decoder/delegation call and the DC const line-table pointer. The
 // entry this-register home and replicated arm allocation still differ.
+VA(0x0047dd40, 0xAD8)
 DC_ADDRESS(0x076988, 0x762)
-VA(0x0047dd40, 0xAD8) MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
+MAC_ADDRESS(0x08cf24, 0x834) // retail raw/tileset decoder + DC source identity
 void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
                             int dx, int dy, int dw, int dh, int dpitch,
                             TPalette16& pal, unsigned char hflip,
@@ -2308,8 +2317,9 @@ void CSpriteFrame::drawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
 // decrement, which is what retail spells: 97.8963 -> 99.9300 here.
 // DC decoder/helper scopes and pixel arithmetic remain intact, including
 // reverse/raw source walks.
+VA(0x0047e820, 0x740)
 DC_ADDRESS(0x0770ec, 0x576)
-VA(0x0047e820, 0x740) MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
+MAC_ADDRESS(0x08d758, 0x7a0)  // anchor-callee (CSprite::DrawTileShadow/DrawShroudTile) + DC source identity
 void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
                                   unsigned short* dst, int dx, int dy, int dw,
                                   int dh, int dpitch, TPalette16& pal,
@@ -2649,8 +2659,9 @@ void CSpriteFrame::drawTileShadow(int sx, int sy, int sw, int sh,
 // and its flag color last.
 // The native row cursor restores all Windows bytes. Splitting its address
 // into a fixed base and row offset leaves 98.0214%; retain one row lifetime.
+VA(0x0047ef60, 0x47C)
 DC_ADDRESS(0x077664, 0x338)
-VA(0x0047ef60, 0x47C) MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
+MAC_ADDRESS(0x08def8, 0x44c)  // anchor-callee (CSprite::DrawSpellEffect) + DC source identity
 void CSpriteFrame::drawSpellEffect(int sx, int sy, int sw, int sh,
                                    unsigned short* dst, int dx, int dy, int dw,
                                    int dh, int dpitch, TPalette16& pal,

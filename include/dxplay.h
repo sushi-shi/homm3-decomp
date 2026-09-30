@@ -155,6 +155,7 @@ public:
     unsigned long m_user2;  // +0x100
     unsigned long m_user3;  // +0x104
     unsigned long m_user4;  // +0x108
+
     // E:\gamedcs\dxplay.h:57
     DC_ADDRESS(0x08bca0, 0x8c)
     CDPlaySession(const DPSESSIONDESC2* session)
@@ -179,8 +180,8 @@ public:
 
     // DC dxplay.h:90 retains the third early success arm. It preserves the
     // exact standalone body and avoids a byte temporary in Update's expansion.
-    DC_ADDRESS(0x101d58, 0x2a)
     VA(0x005112c0, 0x1C)  // exact selected COMDAT
+    DC_ADDRESS(0x101d58, 0x2a)
     unsigned char isJoinDisabled()
     {
         if (m_flags & 0x20)
@@ -191,6 +192,7 @@ public:
             return 1;
         return 0;
     }
+
     DC_ADDRESS(0x101d84, 0x14)
     unsigned char isPasswordProtected()
     {
@@ -210,6 +212,7 @@ public:
     unsigned char* m_connection;  // +0x10
     char m_name[128];  // +0x14
     unsigned long m_size;  // +0x94
+
     DC_ADDRESS(0x08bd2c, 0x64)
     CDPlayConnection(const GUID* guid, unsigned long connSize, void* conn,
         char* name)
@@ -220,6 +223,7 @@ public:
         memcpy(m_connection, conn, m_size);
         strcpy(m_name, name);
     }
+
     DC_ADDRESS(0x08bd90, 0x18)
     ~CDPlayConnection()
     {
@@ -236,6 +240,7 @@ class CDPlayMsg {
 public:
     unsigned char* m_data;
     unsigned long m_dataSize;
+
     // separate line rows prove body assignments rather than an initializer list;
     // Complete folds the helper into its callers while preserving both stores.
     DC_ADDRESS(0x08bda8, 0xa)
@@ -244,15 +249,17 @@ public:
         m_data = 0;
         m_dataSize = 0;
     }
+
     // Mac 0x46ef8 is a deleting destructor called from CDPlayHeroes, but it
     // reads its data pointer at +0x0c; this Windows wrapper stores it at +0.
     // The Mac class identity is unresolved, so it is not an exact source pair.
-    DC_ADDRESS(0x08bdb4, 0x18)
     VA(0x00497790, 0x21)  // annotation-only anchor for the active header-inline COMDAT
+    DC_ADDRESS(0x08bdb4, 0x18)
     ~CDPlayMsg()
     {
         destroy();
     }
+
     // early size guard, conditional delete, allocation, and size store; retail's
     // inlined cmp/jb fixes this equivalent operand order.
     DC_ADDRESS(0x08bdcc, 0x40)
@@ -266,6 +273,7 @@ public:
         m_dataSize = dSize;
         return 1;
     }
+
     DC_ADDRESS(0x08be0c, 0x2c)
     unsigned char destroy()
     {
@@ -276,6 +284,7 @@ public:
         m_dataSize = 0;
         return 1;
     }
+
     // Original: CDPlayMsg::GetId; dxplay.h:177
     // ReceiveSystemMsg0x497910 expands the null-data sentinel and the
     // payload's first dword load. The bytes are a DirectPlay message.
@@ -296,14 +305,17 @@ SIZE(CDPlayMsg, 0x08);
 // news one per enumerated player and expands it there.
 class CDPlayPlayer {
 public:
+
     DC_ADDRESS(0x08be48, 0x28)
     CDPlayPlayer(char* name, unsigned long dpid)
     {
         strcpy(m_name, name);
         m_dpid = dpid;
     }
+
     DC_ADDRESS(0x14746c, 0xa)
     char* getName() { return m_name; }
+
          // DC dxplay.h:210
     DC_ADDRESS(0x11f7ac, 0x8)
     unsigned long getId() { return m_dpid; }
@@ -322,6 +334,7 @@ SIZE(CDPlayPlayer, 0x104);
 // defined in dxplay.h:231, following its player-record twin.
 class CDPlayGroup {
 public:
+
     DC_ADDRESS(0x08be70, 0x1c)
     CDPlayGroup(char* name, unsigned long dpid)
     {
@@ -341,6 +354,7 @@ class CDPlayAddressElement {
 public:
     GUID m_guid;  // +0x00
     char* m_data;  // +0x10
+
     DC_ADDRESS(0x08be8c, 0x44)
     CDPlayAddressElement(const GUID* guid, const void* data,
         unsigned long dataSize)
@@ -350,6 +364,7 @@ public:
         m_data = new char[dataSize];
         memcpy(m_data, data, m_dataSize);
     }
+
     DC_ADDRESS(0x08bed0, 0x18)
     ~CDPlayAddressElement()
     {
@@ -416,18 +431,21 @@ public:
         GUID* instance, unsigned long flags);
     virtual unsigned char enumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
         unsigned long groupId, GUID* instance, unsigned long flags);
-    DC_ADDRESS(0x08bee8, 0x1c)
+
     VA(0x00496c70, 0x21)
+    DC_ADDRESS(0x08bee8, 0x1c)
     virtual void setGuid(GUID guid)
     {
         m_guid = guid;
     }
-    DC_ADDRESS(0x08bf04, 0x6)
+
     VA(0x00496ca0, 0x4)
+    DC_ADDRESS(0x08bf04, 0x6)
     virtual GUID* getGuid()
     {
         return &m_guid;
     }
+
     // E:\gamedcs\dxplay.h:375
     DC_ADDRESS(0x101d98, 0x6)
     long getLastError() { return m_res; }
@@ -438,8 +456,9 @@ public:
     virtual unsigned char receive(unsigned long* fromId, unsigned long* toId,
         CDPlayMsg* message, unsigned long flags);
     virtual void getErrorDesc(long error, char* description);
-    DC_ADDRESS(0x08bf0c, 0x8)
+
     VA(0x00496cb0, 0x4)
+    DC_ADDRESS(0x08bf0c, 0x8)
     virtual bool isHost()
     {
         return m_isHost;
@@ -456,20 +475,23 @@ public:
         unsigned long* numMessages, unsigned long* numBytes);
 
 protected:
-    DC_ADDRESS(0x08bf14, 0x4)
+
     VA(0x00496cc0, 0x5)
+    DC_ADDRESS(0x08bf14, 0x4)
     virtual unsigned char receiveMsg(unsigned long from, unsigned long to, CDPlayMsg* msg)
     {
         return 1;
     }
     virtual unsigned char receiveSystemMsg(
         unsigned long toId, CDPlayMsg* message);
-    DC_ADDRESS(0x08bf18, 0x4)
+
     VA(0x00496cd0, 0x5)
+    DC_ADDRESS(0x08bf18, 0x4)
     virtual unsigned char sysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* sysMsg, unsigned long toID)
     {
         return 1;
     }
+
     // Complete base/lobby vtables0x63dc28/0x63dd20 slots44..54 share
     // the return-true body0x496cd0 (mov al,1; ret8). DC's distinct
     // in-class virtual defaults remain distinct source methods.
@@ -480,6 +502,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgChat; dxplay.h:442
     DC_ADDRESS(0x08bf20, 0x4)
     virtual unsigned char sysMsgChat(
@@ -487,6 +510,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgDeleteGroupFromGroup; dxplay.h:443
     DC_ADDRESS(0x08bf24, 0x4)
     virtual unsigned char sysMsgDeleteGroupFromGroup(
@@ -494,6 +518,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgDeletePlayerFromGroup; dxplay.h:444
     DC_ADDRESS(0x08bf28, 0x4)
     virtual unsigned char sysMsgDeletePlayerFromGroup(
@@ -501,6 +526,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgSecureMessage; dxplay.h:445
     DC_ADDRESS(0x08bf2c, 0x4)
     virtual unsigned char sysMsgSecureMessage(
@@ -508,6 +534,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgSessionLost; dxplay.h:446
     DC_ADDRESS(0x08bf30, 0x4)
     virtual unsigned char sysMsgSessionLost(
@@ -515,6 +542,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgSetPlayerOrGroupData; dxplay.h:447
     DC_ADDRESS(0x08bf34, 0x4)
     virtual unsigned char sysMsgSetPlayerOrGroupData(
@@ -522,6 +550,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgSetPlayerOrGroupName; dxplay.h:448
     DC_ADDRESS(0x08bf38, 0x4)
     virtual unsigned char sysMsgSetPlayerOrGroupName(
@@ -529,6 +558,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgSetSessionDesc; dxplay.h:449
     DC_ADDRESS(0x08bf3c, 0x4)
     virtual unsigned char sysMsgSetSessionDesc(
@@ -536,6 +566,7 @@ protected:
     {
         return 1;
     }
+
     // Original: CDPlay::SysMsgStartSession; dxplay.h:450
     DC_ADDRESS(0x08bf40, 0x4)
     virtual unsigned char sysMsgStartSession(

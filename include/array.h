@@ -32,6 +32,7 @@
 template<class T>
 class CAutoArray {
 public:
+
     DC_ADDRESS(0x08c118, 0x30)
     DC_ADDRESS(0x103054, 0x30)
     DC_ADDRESS(0x11ff34, 0x30)
