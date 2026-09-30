@@ -442,7 +442,7 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
 
 // E:\gamedcs\events.cpp:5661
 // RETAIL_LOCATED(0x004abdc0, 0x6D0)  // located @stub (promoted to active VA), dc 0x9a898
-int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player)
+int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, bool human_player)
 {
     // @stub
 }
@@ -5405,6 +5405,9 @@ void advManager::generatorEvent(hero* who, NewmapCell* eventCell, type_point poi
 void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 
 // E:\gamedcs\events.cpp:5661
+// Native public ?CreatureBankEvent@advManager@@AAAHPAVhero@@PAVNewmapCell@@
+// PADUtype_point@@_N@Z proves bool humanPlayer. Keep the independently
+// decorated int return and mutable cText pointer.
 // DC proves the original cText parameter is char*, even though this version
 // never reads it. All three active source callers supply an empty literal.
 // Native reward-list review: Mac 0xb906c..0xb90b0 retains two separate
@@ -5416,7 +5419,7 @@ void doMonsterJoinDialog(hero* inHero, TCreatureType type, int amount);
 VA(0x004abdc0, 0x6D0)
 DC_ADDRESS(0x09a898, 0x532)
 MAC_ADDRESS(0x0b8ca8, 0x618)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6
-int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, unsigned char humanPlayer)
+int advManager::creatureBankEvent(hero* who, NewmapCell* cell, char* text, type_point point, bool humanPlayer)
 {
     type_creature_bank& bank = cell->getCreatureBank();
     TCreatureType leaderMonster = CREATURE_NONE;
