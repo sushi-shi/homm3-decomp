@@ -7026,8 +7026,9 @@ TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
     ResourceManager::delSprFromCache();  // DC townmgr.cpp:8256
-    // Conventional release expansion of VERIFY(Widgets.size() == 0).
-    static_cast<void>(m_widgets.size() == 0);
+    // DC 8257 initializes the removed scroll_offset (+0x58), not a size
+    // check. Mac 0x1d66b8..0x1d66d4 goes from base/vtable setup to reserve.
+    // Removing the formerly assumed release VERIFY is byte-flat at 95.6830%.
     m_widgets.reserve(156);
 
     if (g_townManager->m_townToView->m_type == TOWN_DUNGEON
