@@ -1154,14 +1154,17 @@ static void addReward(std::string& text, const std::string& alternate,
 // E:\gamedcs\events.cpp:852
 // DC locals: experience_gained, reward_given, msg, amount,
 // join_dialog_needed and new_creatures; their native types are retained.
+// Original DC public GiveBlackBoxReward@advManager@@AAA_N...@@_N...
+// proves a bool result and bool human_player; primitive 0x20's displayed
+// unsigned-char spelling cannot establish either declaration.
 // Removing throwaway enum-conversion aliases is byte-flat. Four expression
 // states reproduce four objects; the direct string assignment below restores
 // the native lifetime. Remaining vector/string inline decisions are unresolved.
 VA(0x0049fa90, 0x106B)
 DC_ADDRESS(0x09138c, 0x870)
 MAC_ADDRESS(0x0aac80, 0xab0)  // dc-bracket forced, ret 0x18=p7 + format_string reward text
-unsigned char advManager::giveBlackBoxReward(const char* text, hero* currentHero,
-    NewmapCell* cell, type_point point, unsigned char humanPlayer,
+bool advManager::giveBlackBoxReward(const char* text, hero* currentHero,
+    NewmapCell* cell, type_point point, bool humanPlayer,
     BlackBoxData* blackBox)
 {
     long experienceGained = 0;

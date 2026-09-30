@@ -1058,11 +1058,11 @@ private:
                         type_point point, bool humanPlayer);
     void doEventBlackBox(class hero* currentHero, NewmapCell* cell,
                          type_point point, bool humanPlayer);
-    // DC events.cpp:852 returns unsigned char and takes a byte player flag.
-    // Retail 0x49fa90 returns its saved reward byte after string cleanup.
-    unsigned char giveBlackBoxReward(const char* text, class hero* currentHero,
+    // DC's original GiveBlackBoxReward symbol decorates both its result and
+    // human_player as _N (bool); primitive 0x20 alone is ambiguous.
+    bool giveBlackBoxReward(const char* text, class hero* currentHero,
                             NewmapCell* cell, type_point point,
-                            unsigned char humanPlayer, class BlackBoxData* blackBox);
+                            bool humanPlayer, class BlackBoxData* blackBox);
     void doEventBoat(class hero* currentHero, NewmapCell* cell);
     void doEventBorderGuard(type_point point, NewmapCell* cell,
                             unsigned char humanPlayer);
