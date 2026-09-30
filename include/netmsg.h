@@ -157,9 +157,11 @@ public:
         m_uncompressedSize = 0;
     }
 
-    // Original: CNetMsg::IsCompressed; netmsg.h:179
+    // Original: CNetMsg::IsCompressed; netmsg.h:179.
+    // Native public ?IsCompressed@CNetMsg@@QAA_NXZ proves bool return;
+    // DC's primitive 0x20 is its lowered storage type.
     DC_ADDRESS(0x11f5f4, 0x16)
-    unsigned char isCompressed()
+    bool isCompressed()
     {
         return m_uncompressedSize && m_uncompressedSize != m_size;
     }
