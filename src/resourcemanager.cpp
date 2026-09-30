@@ -1268,16 +1268,6 @@ TSpreadsheetResource* ResourceManager::getSpreadsheet(const char* name)
     return loaded;
 }
 
-// Original: ResourceManager::Dispose; resourcemanager.cpp:2196
-// DC releases a ds_engine sample-cache entry. Complete's sample owns its
-// sound data and inherits reference-counted resource disposal (0x55d0f0).
-DC_ADDRESS(0x1225c0, 0x1c)
-void ResourceManager::dispose(sample* value)
-{
-    if (value)
-        value->dispose();
-}
-
 // Original: ResourceManager::Expunge; resourcemanager.cpp:2359
 DC_ADDRESS(0x1228ac, 0x7c)
 MAC_ADDRESS(0x154748, 0x7c)

@@ -1538,9 +1538,14 @@ CHeroUpdateMsg::~CHeroUpdateMsg()
 // requested result after the switch scores 71.6782% (bool/byte/int).
 // A combined inner selector scores 80.3929%; conditional left/right forms
 // reach 83.6259%/83.4984%, below 84.0502%. Canonical helper order is retained.
+// Fresh native-call review at 86.81%: the apparent main/$L inliner
+// differences are EH funclet labels. The remaining extra call is sprintf:
+// Complete shares the left/right experience-format tail, whereas Mac keeps
+// all four experience/mana sprintf sites. Complete also shares the expired
+// return with the final ExitSwapManager tail; DC explicitly returns at 1245.
 VA(0x005afdf0, 0xABB)
 DC_ADDRESS(0x15d4ac, 0x986)
-MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher +  dossier
+MAC_ADDRESS(0x1a7954, 0xdc0)  // full retail dispatcher + DC dossier
 int swapManager::main(message& msg)
 {
     int exitFlag = 0;

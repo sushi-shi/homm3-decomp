@@ -791,34 +791,38 @@ int advManager::validMoveWithEvent(hero* who, int direction)
     return 1;
 }
 
+// DC cursor.cpp:1027 proves const hero* currHero; bWithEvent and
+// normal_move_only supply the two remaining semantic parameter names.
+// All hero accessors used here now retain their recovered const contracts;
+// the retail address ABI does not require a mutable hero facade.
 VA(0x00481be0, 0x2ED)
 DC_ADDRESS(0x07bee4, 0x2f4)
 MAC_ADDRESS(0x090dec, 0x3f8)
-int advManager::validMove(hero* who, int direction, int computerMove,
-                          unsigned char landOnly)
+int advManager::validMove(const hero* currentHero, int direction, int withEvent,
+                          unsigned char normalMoveOnly)
 {
     int stepX = g_normalDirTable[direction].m_x;
-    int srcX = who->m_x;
+    int srcX = currentHero->m_x;
     int stepY = g_normalDirTable[direction].m_y;
-    int srcY = who->m_y;
+    int srcY = currentHero->m_y;
     int destX = srcX + stepX;
     int destY = srcY + stepY;
 
     if (destX < 0 || destX >= g_mapWidth || destY < 0 || destY >= g_mapWidth)
         return 0;
 
-    if (who->isFlying(0) && !landOnly)
+    if (currentHero->isFlying(0) && !normalMoveOnly)
         return 1;
 
-    NewmapCell* destCell = m_fullMap->cell(destX, destY, who->m_z);
-    NewmapCell* srcCell = m_fullMap->cell(srcX, srcY, who->m_z);
+    NewmapCell* destCell = m_fullMap->cell(destX, destY, currentHero->m_z);
+    NewmapCell* srcCell = m_fullMap->cell(srcX, srcY, currentHero->m_z);
 
     if (destCell->m_isBlocked)
         return 0;
 
     if (destCell->m_groundSet == eTerrainWater) {
-        if (!(who->m_flags & 0x40000)
-                && !(who->canWalkOnWater(0) && !landOnly)) {
+        if (!(currentHero->m_flags & 0x40000)
+                && !(currentHero->canWalkOnWater(0) && !normalMoveOnly)) {
             if (!(destCell->m_type == BOAT && destCell->m_isTrigger)
                     && !(destCell->m_type == SHIPWRECK
                          && destCell->m_isTrigger))
@@ -826,18 +830,18 @@ int advManager::validMove(hero* who, int direction, int computerMove,
         }
 
         if (srcCell->m_groundSet == eTerrainWater && stepX && stepY
-                && !(who->canWalkOnWater(0) && !landOnly)) {
-            if (m_fullMap->cell(srcX + stepX, srcY, who->m_z)->m_groundSet
+                && !(currentHero->canWalkOnWater(0) && !normalMoveOnly)) {
+            if (m_fullMap->cell(srcX + stepX, srcY, currentHero->m_z)->m_groundSet
                     != eTerrainWater)
                 return 0;
-            if (m_fullMap->cell(srcX, srcY + stepY, who->m_z)->m_groundSet
+            if (m_fullMap->cell(srcX, srcY + stepY, currentHero->m_z)->m_groundSet
                     != eTerrainWater)
                 return 0;
         }
     } else {
-        if ((who->m_flags & 0x40000) && destCell->m_type != ANCHOR_POINT)
+        if ((currentHero->m_flags & 0x40000) && destCell->m_type != ANCHOR_POINT)
             return 0;
-        if ((who->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT)
+        if ((currentHero->m_flags & 0x40000) && destCell->m_type == ANCHOR_POINT)
             return 1;
     }
 
@@ -857,7 +861,7 @@ int advManager::validMove(hero* who, int direction, int computerMove,
     if (destCell->m_type == HERO
             && destCell->getMapObject() == SANCTUARY) {
         hero* occupant = g_game->getHero(destCell->m_extraInfo);
-        if (occupant->m_owner != who->m_owner)
+        if (occupant->m_owner != currentHero->m_owner)
             return 0;
     }
 

@@ -5,6 +5,7 @@
 
 #include "resource.h"
 #include "csprite.h"
+#include "sample.h"
 
 class CSprite;
 class font;
@@ -65,7 +66,22 @@ resource* getFromCache(const char* name);
 // member virtual calls. Their bodies must be visible at those source calls.
 DC_ADDRESS(0x122530, 0x90)
 inline void dispose(resource* value) { value->dispose(); }
-void dispose(sample* value);
+
+// Original: ResourceManager::Dispose(sample*), DC resourcemanager.cpp:2196.
+// DC releases a ds_engine cache entry; Complete's sample owns its sound
+// data and inherits reference-counted resource disposal (Windows 0x55d0f0).
+// Complete castSpell (spells.cpp) expands the null guard and virtual call
+// on Windows and Mac 0x190d5c..0x190d70 / 0x190ff0..0x191004. Mac's
+// readFromBitmapResource 0x154728+0x20 is followed directly by expunge
+// 0x154748+0x7c and resource::dispose 0x1547c4: no wrapper body survives.
+// Header visibility and inline linkage are inferred for Complete, not a
+// DC-proven explicit qualifier (all three DC overload flags are zero).
+DC_ADDRESS(0x1225c0, 0x1c)
+inline void dispose(sample* value)
+{
+    if (value)
+        value->dispose();
+}
 
 DC_ADDRESS(0x1225dc, 0xf6)
 inline void dispose(CSprite* value) { value->dispose(); }

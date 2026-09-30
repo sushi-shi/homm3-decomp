@@ -71,7 +71,7 @@ SIZE(type_creature_bank_traits, 0x190);
 
 extern const type_creature_bank_traits* g_constCreatureBankTraits;
 
-void initializeCreatureBank(type_creature_bank* bank,
+void initializeCreatureBank(type_creature_bank& bank,
                               type_creature_bank_type type);
 
 #endif  /* HOMM3_CREATURE_BANK_H */

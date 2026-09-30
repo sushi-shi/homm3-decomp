@@ -337,6 +337,15 @@ unsigned char searchArray::enterHostileTrigger(const hero* currentHero,
 // the full AI search), the garrison falls into the monster's
 // `search_type >= const_AI_search` answer, and the hero arm's identical
 // answer is cross-jumped onto it.
+// Residual 99.96974%: PlayerHasInfo first differs at test al,dl versus
+// retail test dl,al; the following IsSatisfied virtual dispatch uses
+// EDX versus EAX. All 60 CFG blocks, 29 branches, 12 calls and 25 relocations
+// agree. Three canonical visit-mask operand states reproduce one object;
+// a direct border-mask return and direct GetAIValue call each reproduce
+// two objects but leave MAX unchanged. Keep the canonical helper calls.
+// The inline report's +0x5a target discrepancy is switch-table label data,
+// not a retained call. The register model's named blocksLanding diagnostic
+// worsens distance 55 to 66 and supplies no supported source recovery.
 // DC search.cpp:393 proves the pathCell reference; retail uses the
 // same cell address and the body requires its referent.
 VA(0x0056ab40, 0x50C)

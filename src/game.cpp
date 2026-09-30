@@ -4580,6 +4580,8 @@ void game::matchUndergroundGates()
 // separate block locals: retail carries five EH states and five independent
 // vector<TArtifact> teardown paths for exactly those records.
 
+// Historical probes below predate the recovered helper calls and removal of
+// all inline-depth controls; their scores describe that older source model.
 // 86.92752% wall, 2026-08-22. The semantic skeleton is closed at 213 blocks
 // on both sides (88 candidate branches against retail's 87), and the frame is
 // within one dword (`0x334` against `0x330`). The remaining deltas are bounded
@@ -4605,8 +4607,8 @@ void game::matchUndergroundGates()
 // 86.7325 against 86.9275. The residual is which of two identical blocks
 // the cross-jumper elects as canonical, not a source fact; re-take this
 // pairing if a later change gives the two blocks different predecessors.
-// The two remaining REAL call divergences are both over-inlines that need
-// a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
+// That model's two remaining real call divergences were over-expansions:
+// retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
 // short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
 // at randomize_pyramid's, and this CL expands both.
 // 2026-09-06, polish lane 48. READ predict-inline's census HERE BEFORE
@@ -4645,6 +4647,17 @@ void game::matchUndergroundGates()
 // and claim sites; all canonical helper calls remain intact. Mac 0xd7dfc
 // calls randomizeRefugeeCamp, so the refugee-camp arm uses that shared helper
 // (80.00%; 84.79% with its body written in place).
+// DC 5349 calls cell(x-1,y,z) separately for the type and trigger tests,
+// then 5351 calls it again for extraInfo. Retail 0x4c17d0..0x4c1846
+// repeats the address calculation; a cached left pointer erases those
+// source calls. Restore the compound guard and its else setter/increment:
+// 80.0034 -> 87.8205 in two reproduced source-family states, with no
+// sibling MAX loss. Mac 0xd7c10..0xd7c78 combines the three calculations.
+// DC 5121..5123 and Mac 0xd75b4..0xd75d4 keep bank visits, index and
+// empty as three field operations. The RESOURCE arm likewise dispatches
+// type before its two quantity guards (DC 5439..5455, Mac 0xd7e04..0xd7e78).
+// Restoring those typed operations together reaches 89.2299%; the five
+// distinct bank lifetimes and all canonical helper calls remain intact.
 VA(0x004c0cc0, 0x1668)
 DC_ADDRESS(0x0ac910, 0x1278)
 MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order
@@ -4680,8 +4693,6 @@ void game::randomizeEvents()
     EGameResource resType;
     int newOwner;
     NewmapCell::TObjectCell* thisObj;
-
-    const unsigned long poolIndexBits = 0x03ffe000;
 
     for (z = 0; z < getNumMapLevels(); ++z) {
         for (y = 0; y < g_mapHeight; ++y) {
@@ -4741,14 +4752,14 @@ void game::randomizeEvents()
                 case CREATURE_BANK:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
                         {
                             int converted;
                             converted = tempCell->m_objectIndex;
-                            initializeCreatureBank(&bank, type_creature_bank_type(converted));
+                            initializeCreatureBank(bank, type_creature_bank_type(converted));
                         }
                         m_creatureBanks.push_back(bank);
                     }
@@ -4803,11 +4814,11 @@ void game::randomizeEvents()
                 case DERELICT_SHIP:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_DERELICT);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4816,11 +4827,11 @@ void game::randomizeEvents()
                 case SEPULCHER:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_SEPULCHER);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4829,11 +4840,11 @@ void game::randomizeEvents()
                 case SHIPWRECK:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_SHIPWRECK);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4842,11 +4853,11 @@ void game::randomizeEvents()
                 case DRAGON_CITY:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_DRAGON);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4936,18 +4947,18 @@ void game::randomizeEvents()
                     break;
 
                 case MAGIC_SPRING:
-                    // DC 5355/5356 separates the setter from its increment.
-                    if (x > 0) {
-                        NewmapCell* left = m_worldMap.cell(x - 1, y, z);
-                        if (left->m_type == MAGIC_SPRING && left->m_isTrigger) {
-                            tempCell->m_extraInfo = left->m_extraInfo;
-                            break;
-                        }
+                    if (x > 0
+                            && m_worldMap.cell(x - 1, y, z)->m_type == MAGIC_SPRING
+                            && m_worldMap.cell(x - 1, y, z)->m_isTrigger) {
+                        tempCell->m_extraInfo =
+                            m_worldMap.cell(x - 1, y, z)->m_extraInfo;
                     }
-                    static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&tempCell->m_extraInfo))
-                        ->setMagicSpring(numMagicSpring, 1);
-                    ++numMagicSpring;
+                    else {
+                        static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->m_extraInfo))
+                            ->setMagicSpring(numMagicSpring, 1);
+                        ++numMagicSpring;
+                    }
                     break;
 
                 case MERC_CAMP:
@@ -4999,16 +5010,20 @@ void game::randomizeEvents()
                     break;
 
                 case RESOURCE:
-                    if ((tempCell->m_extraInfo & 0x7ffff) == 0) {
-                        if (tempCell->m_objectIndex == WOOD
-                            || tempCell->m_objectIndex == ORE
-                            || tempCell->m_objectIndex == GOLD)
-                            id = random(5, 10);
-                        else
-                            id = random(3, 6);
-                        tempCell->m_extraInfo =
-                            (tempCell->m_extraInfo & 0xfff80000)
-                            | (id & 0x7ffff);
+                    // DC 5439 dispatches the resource type before the
+                    // separate quantity tests at 5444 and 5453. Mac
+                    // 0xd7e04..0xd7e78 retains those same two write arms.
+                    switch (tempCell->m_objectIndex) {
+                    case WOOD:
+                    case ORE:
+                    case GOLD:
+                        if (tempCell->m_customResourceInfo.m_qty == 0)
+                            tempCell->m_customResourceInfo.m_qty = random(5, 10);
+                        break;
+                    default:
+                        if (tempCell->m_customResourceInfo.m_qty == 0)
+                            tempCell->m_customResourceInfo.m_qty = random(3, 6);
+                        break;
                     }
                     break;
 
@@ -5180,6 +5195,13 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // Explicit result(0) gives 80.4993% but lowers the campaign reader; direct wide
 // assignment gives 67.4290%. The legacy source dereference still stays called
 // where retail expands it. No inline controls are needed for these readers.
+// The spell-processing index is signed: Mac d8a4c uses cmpwi r27,70,
+// and retail's outer spell-stride latch (+0x439, target B51) uses jl at
+// 0x2530. The packed decoder instead uses cmplwi/jb and stays unsigned.
+// Restoring the outer int index raises Windows 82.7736 -> 82.8580;
+// sibling Windows CUR and all available Mac scores are unchanged.
+// The older DC filename loader has no spell-plane counterpart; its rumour
+// string lifetime and later pool clear calls already agree with this source.
 VA(0x004c2450, 0x88E)
 DC_ADDRESS(0x0adb88, 0x3b0)
 MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
@@ -5234,7 +5256,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
         std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
 
-        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {
@@ -8959,6 +8981,29 @@ void game::processOnMapHeroes()
 // and spills these values. Moving the fileSize declaration alone and swapping
 // isDiff/diffSize declarations were byte-flat in earlier controls. Missing DC
 // queueSize/attempts/pNetMsg have no independent retail semantics proven yet.
+// DC 10473..10491, Mac e2e84..e2ef0 and retail's resend arm store the block
+// number first, reuse current/bytesLeft, form unsigned char* end=data+fileSize,
+// then choose the message's blockSize before update(current, blockSize). The
+// log reads the message fields and current-data. Restoring those lifetimes
+// removes the invented offset/size locals and raises Windows 85.0816 ->
+// 92.7077; the frame is now retail's 0x3a4. All 122 CFG blocks align (113
+// exact, nine size-only). DC 10326/10327 and Mac e2908/e290c reset current
+// before bytesLeft; this source-order correction is Windows-flat. The timeout
+// start is DC-proven int; GameTime's unsigned result/argument conversions
+// preserve its bit pattern, and that declaration correction is byte-flat.
+// The remaining call-report difference is a shifted switch-table target;
+// predict-inline's unmatched pair names that table, not a lost game helper.
+// Available Mac scores and sibling Windows MAX are unchanged.
+// DC 10409/10430 records killDPID before the opaque destroy/drop calls;
+// those calls reread the player field, while the later message uses the saved
+// ID. DC 10413/10418 and 10434/10437, Mac e2b84/e2bc0 and e2ca0/e2cd8,
+// and retail +0x97f/+0xad0 clear network info before constructing the message.
+// The broadcast clear intentionally uses m_players[toWho], not m_players[i]:
+// retail's +0xad0 block loads [ebp+8] (toWho), Mac e2c2c..e2c44 forms that row before
+// reusing r23 as the loop index, and DC 10434 reads the argument slot.
+// Preserve this native indexing despite its unusual broadcast behavior.
+// These lifetime/receiver corrections raise Windows 92.7077 -> 97.4264;
+// all 122 CFG blocks, 101 call entries and 172 relocations now agree.
 VA(0x004cafd0, 0xD14)
 DC_ADDRESS(0x0b7560, 0x1064)
 MAC_ADDRESS(0x0e2414, 0xd20)  // retail body + typed catch + continuation/tables
@@ -9087,8 +9132,8 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
 
     transferSmack->start();
     while (!done) {
-        bytesLeft = fileSize;
         current = data;
+        bytesLeft = fileSize;
         curBlock = 0;
         while (bytesLeft > 0) {
             pollSound();
@@ -9117,16 +9162,16 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             "Finished sending data... Now handling requests.."));
         done = 1;
         {
-            CGameTransmitEndMsg end(g_monthType, g_monthTypeExtra,
+            CGameTransmitEndMsg endMsg(g_monthType, g_monthTypeExtra,
                                      g_weekType, g_weekTypeExtra, diffSize);
-            transmitRemoteData(&end, toWho, false, true);
+            transmitRemoteData(&endMsg, toWho, false, true);
         }
     }
     done = 0;
 
     unsigned char playerDone[8];
     memset(playerDone, 0, sizeof(playerDone));
-    unsigned long dataTimeOutStart = GameTime::get();
+    int dataTimeOutStart = GameTime::get();
     int retryCount = 0;
 
     while (!done) {
@@ -9148,12 +9193,12 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                 if (g_windowManager->m_dialogReturn
                         != DIALOG_RETURN_ACCEPT) {
                     if (inGame && toWho != NET_MESSAGE_RECIPIENT_ALL) {
+                        unsigned long killDPID = m_players[toWho].m_dpid;
                         g_dPlay->destroyPlayer(m_players[toWho].m_dpid);
                         handlePlayerDrop(m_players[toWho].m_dpid);
-                        CDestroyPlayerMsg destroyMsg(
-                            m_players[toWho].m_dpid);
                         m_players[toWho].clearNetInfo();
                         g_playerDrop = 1;
+                        CDestroyPlayerMsg destroyMsg(killDPID);
                         transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                false, true);
                         return 0;
@@ -9163,10 +9208,10 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
                                     && i != g_game->getLocalPlayerGamePos()) {
                                 unsigned long killDPID =
                                     m_players[i].m_dpid;
-                                g_dPlay->destroyPlayer(killDPID);
-                                handlePlayerDrop(killDPID);
+                                g_dPlay->destroyPlayer(m_players[i].m_dpid);
+                                handlePlayerDrop(m_players[i].m_dpid);
+                                m_players[toWho].clearNetInfo();
                                 CDestroyPlayerMsg destroyMsg(killDPID);
-                                m_players[i].clearNetInfo();
                                 transmitRemoteDataDPID(&destroyMsg, NET_BROADCAST_DPID,
                                                        false, true);
                             }
@@ -9196,18 +9241,21 @@ int game::transmitSaveGame(int toWho, int thisPlayerDead,
             case RS_GAME_TRANSMIT_REQ: {
                 CGameTransmitReqMsg* receivedMsg =
                     static_cast<CGameTransmitReqMsg*>(confirmMsg);
-                int blockOffset = receivedMsg->m_blockNbr
-                    * GAME_TRANSMIT_PAYLOAD_SIZE;
-                int resendSize = fileSize - blockOffset;
-                if (resendSize >= GAME_TRANSMIT_PAYLOAD_SIZE)
-                    resendSize = GAME_TRANSMIT_PAYLOAD_SIZE;
-
                 gameTransmitMainMsg->m_blockNbr = receivedMsg->m_blockNbr;
-                gameTransmitMainMsg->update(data + blockOffset, resendSize);
+                current = data + receivedMsg->m_blockNbr
+                    * GAME_TRANSMIT_PAYLOAD_SIZE;
+                unsigned char* end = data + fileSize;
+                bytesLeft = end - current;
+                if (bytesLeft >= GAME_TRANSMIT_PAYLOAD_SIZE)
+                    gameTransmitMainMsg->m_blockSize = GAME_TRANSMIT_PAYLOAD_SIZE;
+                else
+                    gameTransmitMainMsg->m_blockSize = bytesLeft;
+                gameTransmitMainMsg->update(current, gameTransmitMainMsg->m_blockSize);
                 g_logFile.log(DATA_COMPGEN(
                                 0x00677f08, xferResendLog,
                                 "Transmitting resend %d size %d (offset=%d)"),
-                            receivedMsg->m_blockNbr, resendSize, blockOffset);
+                            gameTransmitMainMsg->m_blockNbr,
+                            gameTransmitMainMsg->m_blockSize, current - data);
                 transmitRemoteData(gameTransmitMainMsg, toWho,
                                    false, true);
                 break;
