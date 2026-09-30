@@ -237,6 +237,14 @@ SIZE(TBuyArtifactWindow, 0x64);
 class TSellArtifactWindow : public CAdvPopup {
 private:
     int m_lastHoverId;          // +0x60, last widget the hover handler rolled over
+    // Original SetWidgetOn/Off/Disabled and ComputeTradeRatios publics
+    // encode AAAX: private ordinary helpers, as in the other market windows.
+    void setWidgetOn(short id);
+    void setWidgetOff(short id);
+    void setWidgetDisabled(short id);
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
     void setupNewTrade();
     void updateMarketBackpack();
     void incrementBackpackStart();
@@ -247,13 +255,7 @@ private:
 
 public:
     TSellArtifactWindow(int x2, int y2);
-    void setWidgetOn(short id);
-    void setWidgetOff(short id);
-    void setWidgetDisabled(short id);
     void update(bool update);
-    void computeTradeRatios(int inLeftResource, int inRightResource,
-                            int* inTradeRatio, int* inLeftDenominated,
-                            int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellArtifactWindow();
@@ -261,19 +263,22 @@ public:
 SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
+private:
+    // Original SetWidgetOn/Off/Disabled and ComputeTradeRatios publics
+    // encode AAAX: private ordinary helpers, as in the other market windows.
+    void setWidgetOn(short id);
+    void setWidgetOff(short id);
+    void setWidgetDisabled(short id);
+    void computeTradeRatios(int inLeftResource, int inRightResource,
+                            int* inTradeRatio, int* inLeftDenominated,
+                            int* inMaxUnitsToTrade);
     void setupNewTrade();
     slider* m_creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
     int m_lastHoverId;          // +0x64, last widget the hover handler rolled over
 
 public:
     TSellCreatureWindow(int x2, int y2);
-    void setWidgetOn(short id);
-    void setWidgetOff(short id);
-    void setWidgetDisabled(short id);
     void update(bool update);
-    void computeTradeRatios(int inLeftResource, int inRightResource,
-                            int* inTradeRatio, int* inLeftDenominated,
-                            int* inMaxUnitsToTrade);
     void setRolloverText(int codeY);
     virtual int windowHandler(message& msg);   // slot 9
     virtual ~TSellCreatureWindow();
