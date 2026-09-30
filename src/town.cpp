@@ -1334,9 +1334,14 @@ long town::getLegionBonus(long dwelling) const
 // survives; the old generated Windows label did not prove a non-const API.
 // The connected const declaration/direct call reproduces the same VC6 bytes
 // for both bodies; getGrowthRate remains 90% with the helper boundary intact.
-// The restored call shifts VC6's hasBuilding inlining: one additional call
-// remains in this candidate. Keep the source helper boundary while that
-// compiler decision is investigated. Accumulating the castle contribution
+// The nested assembled getter expands getCastleGrowthBonus (C2 cost 84),
+// leaving budget 53 for each hasBuilding (cost 62); both are retained here.
+// Retail expands the castle test and retains only the citadel test (+0x183,
+// pushes 0/8). The horde loop and final Grail tests are expanded in both.
+// Grouping the castle helper's terminal citadel/zero branch into a conditional
+// expression (DC town.cpp:1506) is byte-flat at 90%, including the native
+// protected-mask boundary: four source states/two reproduced objects.
+// Keep the complete canonical getter path. Accumulating the castle contribution
 // in the helper's growth local is byte-flat for both this caller and its
 // exact retained helper. An early-return sum lowers them to 80.97/85.18%;
 // explicit short conversion of getGeneratorBonus is also byte-flat.
@@ -1363,7 +1368,7 @@ short town::getGrowthRate(short dwelling) const
     }
 
     for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
-        // Retail retains this hasBuilding call; DC also names the helper.
+        // DC names this helper; retail expands the loop check.
         if (hasBuilding(g_hordeBuildings[slot], true)
             && s_constHordeEffects[m_type][slot].m_dwelling == dwelling) {
             growth += s_constHordeEffects[m_type][slot].m_bonus;

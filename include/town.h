@@ -318,7 +318,6 @@ public:
 protected:
     int m_generatorBonus[14];
 
-public:
     // Three 64-bit building bitfields, all read as pairs of dwords by
     // retail's __int64 lowering (the DC's own set_mask/
     // get_buildable_mask signatures are __int64 too; the DC build
@@ -334,9 +333,14 @@ public:
     //               (can_build and can_ever_build inline that test as
     //               their first gate).
     // Names provisional.
+    // DC town class 0x1aa3 (also 0x61b5/0x631f) marks populationMask,
+    // full_building_mask and legal_buildings protected (field attributes 2).
+    // Keep their native boundary and layout; callers use the public queries.
     __int64 m_built;
     __int64 m_active;
     __int64 m_available;
+
+public:
     void applySpecialBuildingEffect(hero* townHero);
     unsigned char canBuildDock() const;
 
