@@ -1531,7 +1531,7 @@ public:
     // as native bool (_N); the lowered debug records spell them T_UCHAR.
     // Keep creatureSpell integral for Complete's artifact caster value 2.
     bool hasValidSpellTarget(ESpellId spellId, TSkillMastery mastery,
-                             long castingSide,
+                             int castingSide,
                              bool firstTarget,
                              long creatureSpell);  // 0x5a40d0
     // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
@@ -1542,8 +1542,10 @@ public:
     // (spells.cpp:2645 / 3078); DC spells mastery as TSkillMastery.
     // Hero getSpellLevel already returns this enum; callers forward it
     // directly, including eMasteryExpert for the artifact casts.
+    // Original publics encode H for the index/side here and the side above;
+    // findSpellTarget independently encodes JJ and keeps its long parameters.
     bool validSpellTarget(ESpellId spellId, TSkillMastery mastery,
-                          long targetIndex, long castingSide,
+                          int targetIndex, int castingSide,
                           bool firstTarget,
                           long creatureSpell);  // 0x5a39c0
     // Retained resurrection body 0x5a7560, also called by Archangels.

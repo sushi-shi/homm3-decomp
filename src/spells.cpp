@@ -2450,6 +2450,9 @@ army* combatManager::findSpellTarget(ESpellId spell, long side, long hex,
 // Original ValidSpellTarget/HasValidSpellTarget DC publics encode W4SpellID@@;
 // ESpellId restores that shared enum through the findSpellTarget path.
 // Explicit conversions remain only at the legacy int spell interfaces.
+// Their original publics and typed records prove int index/side (H), unlike
+// findSpellTarget's long side/hex (JJ). The old long validator declarations
+// came from the initial x86-width reconstruction, not Complete source proof.
 // Native bool result/firstTarget contracts preserve CUR 73.6540% and reset
 // the earlier 96.5992% MAX. Explicit target-presence and bool parity-local
 // probes (four source states, one reproduced object) are byte-identical.
@@ -2457,8 +2460,8 @@ VA(0x005a39c0, 0x2B4)
 DC_ADDRESS(0x152edc, 0x228)
 MAC_ADDRESS(0x1941f8, 0x3a4)  // order-map+arity
 bool combatManager::validSpellTarget(ESpellId spellId, TSkillMastery mastery,
-                                     long targetIndex,
-                                     long castingSide,
+                                     int targetIndex,
+                                     int castingSide,
                                      bool firstTarget,
                                      long creatureSpell)
 {
@@ -2686,7 +2689,7 @@ VA(0x005a40d0, 0x9B)
 DC_ADDRESS(0x153580, 0xb8)
 MAC_ADDRESS(0x194a34, 0x114)
 bool combatManager::hasValidSpellTarget(ESpellId spellId, TSkillMastery mastery,
-                                        long castingSide,
+                                        int castingSide,
                                         bool firstTarget,
                                         long creatureSpell)
 {
