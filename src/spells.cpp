@@ -4029,15 +4029,17 @@ void combatManager::setMassSpellInfluence(const hero* castingHero, SpellID spell
 // Original DC ?ShowMassSpell@combatManager@@QAAXAAY11BE@_NH_N@Z
 // proves bool [2][20] and bool showWince; CodeView's byte primitive is their
 // lowered encoding. All callers pass m_effected, preserving its bool domain.
+// DC records iMaxFrames in procedure scope, outside the animation block.
+// Its assignment follows LoadSpellEffect; it is not initialized on entry.
 VA(0x005a67c0, 0x4AC)
 DC_ADDRESS(0x155b28, 0x3e2)
 MAC_ADDRESS(0x1976b8, 0x588)  // order-map+arity
 void combatManager::showMassSpell(bool (&effected)[2][20],
                                   int spellEffect, bool showWince)
 {
+    int frames;
     if (!static_cast<const combatManager*>(this)->isQuickCombat()) {
         loadSpellEffect(spellEffect);
-        int frames;
         if (m_powSprite)
             frames = m_powSprite->getNumFrames(cs_walk);
         else
