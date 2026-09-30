@@ -542,6 +542,10 @@ bool initializeArtifactTraitsTable()
 // current placement; this bounded lifetime probe is inconclusive.
 // Explicit successful-match breaks in either mask search leave all 1504
 // initializer bytes unchanged, including both retained equality calls.
+// Complete Mac's zero-based mask cursor (0x5a944..0x5a9c4) also supports
+// a signed slot loop over 0..18 with resource[slot + 2]. That model is
+// byte-flat at 89.3604% and leaves all three bitset inline frontiers intact;
+// the native lowering does not identify a unique source index owner.
 // Moving the four Complete-only defaults to the caller and chaining their two
 // integer sentinels reaches 89.3861%. Declaring the bitset before the cost
 // assignment then reaches 89.9743%. The old explicit bitset<19> instantiation
