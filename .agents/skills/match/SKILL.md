@@ -122,7 +122,7 @@ rejecting it solely on a percentage. Revise models that contradict proven
 behavior, ABI, layout or source facts.
 
 Finish an adopted change with `homm3 build --fast <TU>`, regenerate README with
-`homm3 status summary --write-readme`, then commit and push under the user's existing
+`homm3 status update --write-readme` to bank the measured scores, then commit and push under the user's existing
 branch authorization. Workers return their commits for coordinated integration
 and publishing. Do not require a full build or extra checks before handoff.
 Report the target's result and remaining differences. Mention collateral only

@@ -7245,37 +7245,6 @@ void game::nextPlayer()
         g_advManager->forceNewHover();
 }
 
-// Original: game::clear_recruits; game.cpp:8266
-DC_ADDRESS(0x0b3d8c, 0x74)
-MAC_ADDRESS(0x0deefc, 0x9c)
-void game::clearRecruits(int* recruits)
-{
-    for (int i = 0; i < 2; ++i) {
-        int heroId = recruits[i];
-        if (heroId >= 0) {
-            hero* recruitHero = getHero(heroId);
-            if (recruitHero->m_flags & g_heroRecruitReservedFlag)
-                continue;
-            m_heroAvailability[heroId] = -1;
-            recruits[i] = -1;
-        }
-    }
-}
-
-// Original: get_new_hero; game.cpp:8290
-DC_ADDRESS(0x0b3e00, 0x5e)
-MAC_ADDRESS(0x0def98, 0x114)
-int getNewHero(THeroClass heroClass)
-{
-    int heroId = 0;
-    for (; heroId < game::HERO_COUNT; ++heroId) {
-        if (g_game->getHero(heroId)->m_heroClass == heroClass
-            && g_game->m_heroAvailability[heroId] == -1)
-            return heroId;
-    }
-    return heroId;
-}
-
 VA(0x004c7930, 0x266)
 DC_ADDRESS(0x0b2ad4, 0x55c)
 MAC_ADDRESS(0x0de078, 0x308)
@@ -7542,6 +7511,40 @@ void game::perDay()
     m_grailAsked = 0;
 }
 
+// Original: game::clear_recruits; game.cpp:8266
+// DC 8266/8290 and Mac 0xdeefc/0xdef98 place these two helpers between
+// perDay and setWeeklyRecruits. DC names the long loop index recruit and
+// the selected hero pointer old_hero.
+DC_ADDRESS(0x0b3d8c, 0x74)
+MAC_ADDRESS(0x0deefc, 0x9c)
+void game::clearRecruits(int* recruits)
+{
+    for (long recruit = 0; recruit < 2; ++recruit) {
+        int heroId = recruits[recruit];
+        if (heroId >= 0) {
+            hero* oldHero = getHero(heroId);
+            if (oldHero->m_flags & g_heroRecruitReservedFlag)
+                continue;
+            m_heroAvailability[heroId] = -1;
+            recruits[recruit] = -1;
+        }
+    }
+}
+
+// Original: get_new_hero; game.cpp:8290
+DC_ADDRESS(0x0b3e00, 0x5e)
+MAC_ADDRESS(0x0def98, 0x114)
+int getNewHero(THeroClass heroClass)
+{
+    int heroId = 0;
+    for (; heroId < game::HERO_COUNT; ++heroId) {
+        if (g_game->getHero(heroId)->m_heroClass == heroClass
+            && g_game->m_heroAvailability[heroId] == -1)
+            return heroId;
+    }
+    return heroId;
+}
+
 // Original: game::set_weekly_recruits; game.cpp:8308
 // Complete passes a player index instead of the older recruits/align pair.
 // The two-slot loop, tutorial choices and equipment/mana/army closeout identify
@@ -7649,26 +7652,17 @@ void game::setRecruits()
 // relationship from PerDay and predecessor relationship to PerMonth close the
 // otherwise ambiguous Dreamcast bracket.
 
-// Residual (98.8948%, HIST 99.8370%): restoring the Dreamcast-proven IsCastle
-// source boundary made the entire neutral-town arm exact; Complete's retail
-// bytes separately select HasBuilding's built-mask lane for the Summoning
-// Portal test. The residual is the opening creature-week scan's C1 handle-state
-// ESI/EDI role permutation (`this` versus `i`), which why-reg proves
-// source-unaddressable: the reference binds `i` to ESI and `this` to EDI, so
-// `i` would have to be the earlier-created call-crossing pseudo. PROVED
-// IMPOSSIBLE by the front end: `il-locals` shows this body's handles as
-// this 0xc5c6 then obscuringHero/align/alternateBonus/bonusAmount/x/y/i 0xc5ce,
-// i.e. `this` precedes every local, and handle-order.md measures params < `this`
-// < locals as parse-FIXED with assignment strictly top-to-bottom. No declaration
-// order can put `i` ahead of `this`, so the binding is TU state, not source. THE 99.8370 HIST WAS REACHED BY
-// THIS EXACT src_hash (1078057cac97 at f8570b07/a5348767, CUR 98.8948 in the
-// same row), so the permutation is a TU-state effect that some include closure
-// already produced - not a lost source shape. Byte-flat here: `int i = 0` at the
-// declaration, moving `i` first in the declaration block, assigning `i` before
-// the two CREATURE_NONE stores, and binding the MONSTER arm's packed dword to a
-// local. The MONSTER arm's own four-byte split (retail consumes the loaded
-// m_extraInfo in place and reloads it for the preserved lanes, ours copies it)
-// rides on the same allocator phase.
+// DC game.cpp:8514/8529/8534 passes map_cell directly to its inherited
+// garden, wheel and windmill setters. Both random draws belong to line 8534;
+// Mac 0xdf9c0..0xdf9f4 and Windows evaluate the amount before the resource.
+// DC 8543/8547 and Mac 0xdfa10..0xdfa2c write the signed fountain bitfield.
+// DC 8462/8464/8466 records the ordinary z/y/x loops. Do not reproduce
+// optimizer induction or cast m_extraInfo through void* to call base helpers.
+// The native receiver model currently leaves clearRecruits out of line in
+// setRecruits' expansion; retail expands it and retains getHero. Prior raw
+// aliases scored 96.9467%; the canonical model scores 94.1719%. The native
+// loop spelling, obscuringHero initialization and helper body placement are
+// byte-flat for that boundary. Historical 99.8370% is a TU-context lead.
 VA(0x004c8780, 0x7B7)
 DC_ADDRESS(0x0b41e0, 0x5d8)
 MAC_ADDRESS(0x0df4d8, 0x6bc)  // PerDay/PerMonth bracket + dc lines/callees
@@ -7764,10 +7758,8 @@ void game::perWeek()
     }
 
     for (z = 0; z < getNumMapLevels(); ++z) {
-        y = 0;
-        if (g_mapHeight > 0) {
-            do {
-                for (x = 0; x < g_mapWidth; ++x) {
+        for (y = 0; y < g_mapHeight; ++y) {
+            for (x = 0; x < g_mapWidth; ++x) {
                 mapCell = m_worldMap.cell(x, y, z);
                 if (!mapCell->m_isTrigger)
                     continue;
@@ -7786,11 +7778,9 @@ void game::perWeek()
                     break;
 
                 case MONSTER: {
-                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                    if (!info->m_monsterInfo.m_dontGrow) {
-                        count = (info->m_monsterInfo.m_qty << 4)
-                                + info->m_monsterInfo.m_unused27;
+                    if (!mapCell->m_monsterInfo.m_dontGrow) {
+                        count = (mapCell->m_monsterInfo.m_qty << 4)
+                                + mapCell->m_monsterInfo.m_unused27;
                         increase = count / 10;
                         count += increase;
                         if (count > 64000)
@@ -7798,16 +7788,14 @@ void game::perWeek()
                         // Windows reloads the packed dword between lanes;
                         // Mac 0xdf93c..0xdf954 stores the same qty and high
                         // nibble through the existing monster bitfields.
-                        info->m_monsterInfo.m_qty = count >> 4;
-                        info->m_monsterInfo.m_unused27 = count;
+                        mapCell->m_monsterInfo.m_qty = count >> 4;
+                        mapCell->m_monsterInfo.m_unused27 = count;
                     }
                     break;
                 }
 
                 case MYSTICAL_GARDEN: {
-                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                    info->fillGarden(random(0, 1) ? GOLD : GEMS);
+                    mapCell->fillGarden(random(0, 1) ? GOLD : GEMS);
                     break;
                 }
 
@@ -7817,42 +7805,28 @@ void game::perWeek()
                 }
 
                 case WATER_WHEEL: {
-                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                    info->setWheelGold(1000);
+                    mapCell->setWheelGold(1000);
                     break;
                 }
 
                 case WINDMILL: {
-                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&mapCell->m_extraInfo));
-                    int resQty = random(3, 6);
-                    EGameResource resType;
-                    {
-                        resType = EGameResource(random(1, 5));
-                    }
-                    info->setWindmill(resType, resQty);
+                    mapCell->setWindmill(EGameResource(random(1, 5)), random(3, 6));
                     break;
                 }
 
                 case FOUNTAIN_OF_FORTUNE: {
                     luckBonus = random(0, 3);
                     if (luckBonus == 0)
-                        mapCell->m_extraInfo =
-                            mapCell->m_extraInfo | 0x1e000;
+                        mapCell->m_fountainInfo.m_luck = -1;
                     else
-                        mapCell->m_extraInfo =
-                            (mapCell->m_extraInfo & 0xfffe1fff)
-                            | ((luckBonus & 0xf) << 13);
+                        mapCell->m_fountainInfo.m_luck = luckBonus;
                     break;
                 }
                 }
 
                 if (obscuringHero)
                     obscuringHero->obscureCell();
-                }
-                ++y;
-            } while (y < g_mapHeight);
+            }
         }
     }
 

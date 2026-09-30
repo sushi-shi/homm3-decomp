@@ -401,7 +401,7 @@ ai_player	?markTown@type_garrison_purchaser@@UBEXPAVtown@@@Z	100.0000	100.0000	1
 ai_player	?markTown@type_town_threat_checker@@UBEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570	tokens1:9d4afad7a374
 ai_player	?markTowns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x282b0	tokens1:89f6baebfcbc
 ai_player	?netValueOfLocation@@YIHPAVhero@@AAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	100.0000	100.0000	100.0000	0x2f980	tokens1:5f8e1440b532
-ai_player	?purchaseBuilding@type_AI_player@@IAEEPAE@Z	94.1381	94.1381	97.8283	0x2ae00	tokens1:c6721fac2c48
+ai_player	?purchaseBuilding@type_AI_player@@IAEEPAE@Z	94.1381	94.1381	97.8283	0x2ae00	tokens1:b89a3f789c77
 ai_player	?removeNegativeArtifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0	tokens1:de6760d19625
 ai_player	?resetMagusHutValue@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0	tokens1:a0fb16651b00
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0	tokens1:09bb9ea71372
@@ -2057,7 +2057,7 @@ game	?nextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40	tokens1:a12
 game	?numOfGivenArtifact@playerData@@QBEHH@Z	100.0000	100.0000	100.0000	0xbabd0	tokens1:6f2acc104950
 game	?perDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0	tokens1:250677db0bd7
 game	?perMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40	tokens1:2c09a74a1a47
-game	?perWeek@game@@QAEXXZ	96.9467	96.9467	99.8370	0xc8780	tokens1:1041d282a786
+game	?perWeek@game@@QAEXXZ	94.1719	94.1719	99.8370	0xc8780	tokens1:c9626b695129
 game	?processOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10	tokens1:c7c5111c9b3c
 game	?processOnMapTowns@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcaa70	tokens1:753faa84817b
 game	?processRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0	tokens1:5315678f9f97

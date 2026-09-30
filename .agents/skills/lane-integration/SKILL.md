@@ -34,7 +34,7 @@ ledger side.
 
 After resolving source conflicts, use `homm3 build --fast <TU>` for the affected
 function's TU when its compiled result needs refreshing. Regenerate README with
-`homm3 status summary --write-readme`, then commit and push under the user's existing
+`homm3 status update --write-readme` to bank the measured scores, then commit and push under the user's existing
 authorization. Do not run routine full builds, tests or standalone validation
 checks. README's table is MAX and its footer reports CUR/MAX/HIST. Workers return
 their commits for coordinated integration and publishing.

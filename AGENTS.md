@@ -55,7 +55,8 @@ same loop.
 
 For ordinary matching, improve the current Windows game function using native
 evidence, run the targeted build, regenerate README with
-`homm3 status summary --write-readme`, then commit and push. This applies to workers too.
+`homm3 status update --write-readme` (also banking the measured scores), then
+commit and push. This applies to workers too.
 Do not run routine full builds, tests, standalone validation checks or broad
 accounting passes. Inspect evidence and compiler differences as needed to solve
 the current function; do not turn the diagnostic commands below into a checklist.

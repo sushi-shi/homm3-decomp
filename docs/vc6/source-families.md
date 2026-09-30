@@ -42,9 +42,9 @@ full-build comparison objects. The unchanged-source control compares with the
 live report, so a fast-build adoption does not require an intermediate MAX
 checkpoint. The ledger still supplies projected MAX/HIST behavior. The driver
 also verifies opposite-corner reproduction before searching. Adopt supported
-source deliberately and finish with full `homm3 build`. Per-function mock
-behavior suites are not prerequisites; use a temporary diagnostic only for a
-concrete unresolved semantic question.
+source deliberately and finish with `homm3 build --fast <TU>`, then
+`homm3 status update --write-readme` and commit for publishing. Routine matching
+does not require a full build, tests or standalone validation checks.
 
 Source-model evidence is collected separately for [RMG](../reconstruction/rmg-source-models.md)
 and [game helpers](../reconstruction/game-source-models.md). Those records describe
