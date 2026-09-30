@@ -299,6 +299,12 @@ DC_ADDRESS(0x03cc8c, 0x22c)
 MAC_ADDRESS(0x03d71c, 0x290)
 type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
 {
+    // Original NB11 records attack/ratio at procedure scope (both scope=None),
+    // unlike the inner-loop/final-if declarations. Their assignment sites
+    // stay fixed; VC6 remains 97.5667%, with 25 exact CFG blocks and only
+    // the 24 register rows in the four canonical group-value calls differing.
+    long attack;
+    double ratio;
     unsigned char first = 1;
     this->m_ourGroup = side;
     m_enemyGroup = 1 - side;
@@ -314,7 +320,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
             if (ourArmy->m_creatureType == CREATURE_ARROW_TOWER)
                 continue;
             bool ranged = ourArmy->canShoot(0);
-            long attack = ourArmy->getAttackModifier(0, ranged);
+            attack = ourArmy->getAttackModifier(0, ranged);
             long defense = ourArmy->getDefenseModifier();
             if (first || m_lowestAttack > attack)
                 m_lowestAttack = attack;
@@ -345,7 +351,7 @@ type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat
         low = m_awakeFriendlyValue;
     }
     if (low * 5 > high && high != 0) {
-        double ratio = static_cast<double>(high) / static_cast<double>(low);
+        ratio = static_cast<double>(high) / static_cast<double>(low);
         for (m_roundsLeft = 0; m_roundsLeft < 6; m_roundsLeft++) {
             if (ratio >= g_aiOddsLadder[m_roundsLeft])
                 break;
