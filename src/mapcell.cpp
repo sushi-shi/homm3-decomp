@@ -1694,6 +1694,9 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // byte width of its older file format and the short width of later formats.
 // Complete VC6 expands the calls in all four readers. The original names are
 // unavailable in the older Dreamcast build.
+// Native Mac 0x1217f4/0x121860 byte-reverses the short before sign
+// extension. Keep that conversion in each canonical reader; it is the
+// identity operation in Windows, where the same file is little endian.
 MAC_ADDRESS(0x1217a0, 0x6c)
 static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
 {
@@ -1704,6 +1707,7 @@ static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
     }
     short wide;
     infile->read(&wide, sizeof(wide));
+    wide = LITTLE_ENDIAN_SHORT(wide);
     return wide;
 }
 
@@ -1717,6 +1721,7 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
     }
     short wide;
     infile->read(&wide, sizeof(wide));
+    wide = LITTLE_ENDIAN_SHORT(wide);
     return wide;
 }
 
