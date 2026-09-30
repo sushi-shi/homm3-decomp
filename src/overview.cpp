@@ -1904,6 +1904,9 @@ TOverviewWindow::~TOverviewWindow()
 // Mac retains this method at code 0:139ee4 and the constructor calls it
 // eight times for mine, generator, garrison and shipyard records. Windows
 // expands the lookup and insertion in the constructor.
+// Mac reuses its initial count (r6) for the new index at 0x139f40. A named
+// saved-count hypothesis removes the second size() call but lowers the
+// constructor from 92.03 to 88.69%; native CSE also explains that reuse.
 MAC_ADDRESS(0x139ee4, 0xa0)
 void TOverviewWindow::addFlaggableItem(int itemType)
 {
