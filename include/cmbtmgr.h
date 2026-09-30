@@ -1133,8 +1133,7 @@ public:
     void initiateSpell(SpellID spellToCast, int creatureSpell);
     unsigned char placeObstacle(int obstacleId);
     void markMovingArmy(army* stack);  // 0x46a520
-    unsigned char checkObstacleAttacks(army* thisArmy,
-                                         unsigned char isWalking);
+    bool checkObstacleAttacks(army* thisArmy, bool isWalking);
     void lootDeadHero(int side,
                       std::vector<type_artifact>& lootedArtifacts);
     void calculateGainedExperience(int side, int* experienceGained);

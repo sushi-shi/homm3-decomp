@@ -799,7 +799,7 @@ public:
     ~army();
     void faerieDragonSpell();
     unsigned char unnamed447fe0();
-    unsigned char checkObstacleAttacks(unsigned char isWalking);
+    bool checkObstacleAttacks(bool isWalking);
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
                          long attackDistance);
@@ -1071,7 +1071,7 @@ private:
     // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
     // volley worker above calls it once per shot.
     void animateMissile(army* armyToAttack);
-    unsigned char checkObstacleAttacks(unsigned char is_walking);
+    bool checkObstacleAttacks(bool is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.

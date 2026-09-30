@@ -4189,11 +4189,12 @@ void combatManager::markMovingArmy(army* stack)
 
 VA(0x0046a570, 0xE0)
 MAC_ADDRESS(0x076cf0, 0x15c)
-unsigned char combatManager::checkObstacleAttacks(army* thisArmy,
-                                                    unsigned char isWalking)
+// Complete manager interface is inferred: the original bool army wrapper
+// forwards its result unchanged in retail, and this body returns only 0/1.
+bool combatManager::checkObstacleAttacks(army* thisArmy, bool isWalking)
 {
-    unsigned char attacked = 0;
-    unsigned char moatAttacked = 0;
+    bool attacked = false;
+    bool moatAttacked = false;
     int hex = thisArmy->m_gridIndex;
 
     if (!m_obstacleAttackVisited[hex]) {

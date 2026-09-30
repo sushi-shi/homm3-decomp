@@ -2151,7 +2151,9 @@ void army::doAttack(int direction)
 VA(0x00441f70, 0x26)
 DC_ADDRESS(0x047270, 0x84)
 MAC_ADDRESS(0x04dc2c, 0x44)
-unsigned char army::checkObstacleAttacks(unsigned char isWalking)
+// Original ?check_obstacle_attacks@army@@QAA_N_N@Z proves both
+// boolean domains; Complete delegates the older inline operation.
+bool army::checkObstacleAttacks(bool isWalking)
 {
     if (m_creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 0;
