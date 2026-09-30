@@ -720,6 +720,17 @@ void __cdecl processMP3Stop(void* nothing)
     _endthread();
 }
 
+// Mac's bytewise equality helper is retained at 0x21946c/0x2194b4.
+// Windows expands equivalent filename comparisons in startMP3 and the
+// threaded playback/resume-position paths (0x59ad12/0x59ad4b/0x59aa9c).
+// The original name is unknown; its other Mac callers do not prove a
+// shared Windows header, so keep the body visible to this confirmed caller.
+MAC_ADDRESS(0x26b018, 0x30)
+bool stringsEqual(const char* first, const char* second)
+{
+    return strcmp(first, second) == 0;
+}
+
 VA(0x0059a840, 0x3BB)
 DC_ADDRESS(0x14b7f4, 0xf4)
 void __cdecl processStopAndPlayMP3(void* arglist)
@@ -772,7 +783,7 @@ void __cdecl processStopAndPlayMP3(void* arglist)
                 EnterCriticalSection(&g_soundManager->m_sectionMp3Change);
                 EnterCriticalSection(&g_soundManager->m_sectionSoundCall);
                 for (int slot = 0; slot < g_mp3ResumePositionCount; ++slot) {
-                    if (strcmp(g_mp3ResumePositions[slot].m_name, g_currentStream) == 0) {
+                    if (stringsEqual(g_mp3ResumePositions[slot].m_name, g_currentStream)) {
                         AIL_set_stream_position(
                             g_mp3Stream, g_mp3ResumePositions[slot].m_position);
                         break;
@@ -851,8 +862,8 @@ void soundManager::startMP3(const char* filename, int loopCount, unsigned char s
         return;
 
     EnterCriticalSection(&m_sectionMp3NameChange);
-    if (strcmp(filename, g_waitingStream) != 0) {
-        if (strcmp(filename, g_currentStream) == 0) {
+    if (!stringsEqual(filename, g_waitingStream)) {
+        if (stringsEqual(filename, g_currentStream)) {
             LeaveCriticalSection(&m_sectionMp3NameChange);
             EnterCriticalSection(&m_sectionSoundCall);
             int streamStatus = AIL_stream_status(g_mp3Stream);
@@ -910,7 +921,7 @@ void soundManager::threadStopMP3()
 
         int slot;
         for (slot = 0; slot < g_mp3ResumePositionCount; ++slot) {
-            if (strcmp(g_mp3ResumePositions[slot].m_name, g_currentStream) == 0) {
+            if (stringsEqual(g_mp3ResumePositions[slot].m_name, g_currentStream)) {
                 g_mp3ResumePositions[slot].m_position =
                     AIL_stream_position(g_mp3Stream);
                 break;

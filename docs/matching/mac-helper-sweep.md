@@ -506,3 +506,110 @@ leads: 1,580 call sites across 195 targets were reopened. They include actual
 runtime operations as well as platform adapters and potential shared helpers;
 each still needs operation and caller evidence. This correction is coverage
 work, not a claim that those calls are all missing from source.
+
+
+### Reopened music and rectangle helpers
+
+The full Mac equality body (`0x26b018 + 0x30`) compares bytes through NUL
+and returns a boolean. `startMP3` calls it at `0x21946c` and `0x2194b4`;
+Windows expands equivalent equality operations at `0x59ad12` and
+`0x59ad4b`. Those Windows source comparisons and the two threaded resume-position
+searches now call `stringsEqual`,
+whose canonical body expresses equality through `strcmp`. Its name is
+inferred. The body is visible before the confirmed Windows caller in
+`soundmgr.cpp`; the Mac utility-region placement and other Mac callers do
+not establish cross-TU Windows expansion or an original header. The source
+owns its `MAC_ADDRESS`, replacing the old unknown-runtime label.
+
+The native playback bodies differ in storage and scheduling: Mac compares
+against the current record and its three-record cache; Windows compares
+against queued and current stream names. This restores the common equality
+operation without claiming identical state machines. Mac's preceding ASCII
+lowercase copy (`0x219454`) is absent from the complete Windows `startMP3`
+body (`0x59acb0 + 0x355`), which compares the original filename. The focused
+VC6 build retains Windows MAX 100% for `startMP3`.
+
+Re-reading every branch of `0x20f2dc + 0x74` disproved its prior intersection
+label: it stores **minimum** left/top and **maximum** right/bottom. Its Mac
+mouse-update caller (`0x2174c4`) passes the new rectangle, saved rectangle
+and work output. This is the existing Windows `UnionRect` source operation,
+not a missing intersection or a demonstrated platform semantic difference.
+The descriptive label and its evidence have been corrected.
+
+Mac `serviceSounds` (`0x219268 + 0x20`) forwards to the three-record music
+service (`0x2181a0 + 0x18c`), whose tick-guarded loop changes volume and
+stops or pauses records. The entire Windows counterpart (`0x59a7d0 + 0x51`)
+instead locks, calls `AIL_serve`, conditionally services one stream, sleeps
+and unlocks, exactly as the existing source does. Its separate threaded
+fade is already represented in `threadStopMP3`; inserting the Mac record
+loop in Windows `serviceSounds` would change the platform implementation.
+
+The remaining music filename copies already use `strcpy`; Mac's copy
+primitive (`0x26ae40 + 0x1c`) returns the written terminator, but `startMP3`
+does not consume that return at `0x21959c`. Mac's stack file adapter is
+constructed once and destroyed at all seven exits. Its path operation
+(`0x277bc4`) calls `FSMakeFSSpec`, optional `FSpCreate`, and
+`ResolveAliasFile`; it does not itself open the stream. Windows' existing
+playback thread formats the path at `0x59a98e` and calls `AIL_open_stream`
+at `0x59a9f4`. The adapter lifetime therefore does not require an extra
+Windows object; the deferred file/stream operation is already represented.
+
+### Combat startup and victory review
+
+The full Mac victory body (`0x853cc + 0x6e4`) and exact Windows source
+preserve Complete's later darken/update after `freeArmies`. DC's earlier
+GameText lookup and medium-font draw (`0x6e214`, `0x6e23c`) are absent.
+After the local-winner results modal/destructor (`0x859bc`, `0x859cc`),
+Mac tests the hero and directly awards experience and rewards. It does not
+perform DC's intervening fade, backbuffer recreation and screen fill
+(`0x6e74a`, `0x6e766`, `0x6e782`). The earlier darken is a distinct operation;
+a nested text or fade call elsewhere is not evidence for those old sites.
+
+Combat startup likewise goes from the battle sample/fade to its three
+canonical bitmap allocations (`0x6e2f0`, `0x6e314`, `0x6e338`), without
+DC's extra global backbuffer creation at `0x5d686`. Two reopened Mac `bzero`
+calls (`0x6e368`, `0x6e374`) already correspond to the source's two `memset`
+calls: receiver offsets `+0x4c`/`+0x107` and count `0xbb` match
+`m_lastDrawGridShade`/`m_curDrawGridShade` and `COMBAT_GRID_CELLS` exactly.
+
+The seven indirect `startMP3` calls are also accounted for. Native array
+construction at `0x2198f8..0x21990c` builds three music records; their
+constructor (`0x2199b8`) calls the stream constructor (`0x27dd70`), which
+installs the loader-proven vtable at data-section `0x6050c`. Its slots identify
+open (`+0xc`, `0x27de30`), close (`+0x10`, `0x27df70`), play (`+0x18`,
+`0x27dff0`), resume (`+0x24`, `0x27e1e8`) and volume (`+0x28`, `0x27e240`).
+The complete callees use Classic Mac file/sound APIs. The corresponding
+Windows operations already live in `resumeStream` and its playback thread,
+including close/open, loop count, saved-position restoration, volume and
+start. Mac's three-record cache and tick-driven fade are distinct from the
+Windows single-stream/thread sequence; equal call counts were not used as
+proof of correspondence.
+
+The full checkpoint passed: no Windows MAX loss, no unreviewed Mac
+regression, no unresolved link symbols, and clean source ownership,
+source inventory and data coverage gates. All four restored equality calls
+preserve their callers' previous Windows scores.
+
+### Saved-header cleanup on serialization exits
+
+All 304 calls to the four campaign-vector cleanup wrappers in Mac
+`game::load` and `game::save` were checked individually for receiver and
+deleting flag. Each function has 38 calls per member. The `SavedGameHeader`
+local is at stack `+0x168` in load and `+0xe8` in save; its constructor
+(`0xcf490`) constructs `SCampaign` at header `+0x4a8`. Campaign construction
+(`0x98064`) establishes the following members:
+
+| Campaign member | Mac offset | Cleanup chain |
+| --- | --- | --- |
+| `m_carryOverHeroes` | `+0x30` | `0x98320` → `0x6b7fc` → `0x6b9d8` |
+| `m_carryoverArtifact` | `+0x3c` | `0x98264` → `0x6b860` → `0x6b964` |
+| `m_mapScores` | `+0x48` | `0x981a8` → `0x6b8c4` → `0x6b928` |
+| `m_assignedCarryover` | `+0x54` | `0x67278` → `0x68da4` → `0x68f40` |
+
+Every inspected caller passes the identified member address and flag zero.
+The complete destructor chains destroy nested hero/artifact vectors or
+clear POD map-score/hero-ID elements, then free vector storage. The source
+already owns the same four `std::vector` members through local
+`SavedGameHeader saved`; implicit C++ destruction supplies those operations
+on every return. No explicit destructor call or new game helper is needed.
+This accounts for these cleanup sites, not the complete load/save review.
