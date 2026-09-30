@@ -702,10 +702,14 @@ unsigned char combatManager::checkSetMouseDirection(int x, int y, int hex)
 // both builds and restores the retail register setup in its expanded callers:
 // getControl, resetRound and automateFirstAidTent become exact together.
 // The nested expression is the measured control; it loses those three matches.
+// Original ?is_computer_action@combatManager@@AAA_NXZ proves private
+// bool. The Complete worker result is inferred as bool from its 0/1 domain
+// and retail forwarding its AL unchanged through this adapter, without
+// byte-to-bool normalization.
 VA(0x00474ba0, 0x4A)
 DC_ADDRESS(0x06bebc, 0x1b4)
 MAC_ADDRESS(0x082ebc, 0x64)  // anchor-callee IsQuickCombat + current-army forwarding
-unsigned char combatManager::isComputerAction()
+bool combatManager::isComputerAction()
 {
     if (isQuickCombat())
         return 1;
@@ -753,7 +757,7 @@ unsigned char combatManager::isComputerAction()
 // Use the controlling player, which can change when a stack is hypnotized.
 VA(0x00474bf0, 0x188)
 MAC_ADDRESS(0x082f20, 0x28c)  // anchor-global + retained nullary caller, retail-only overload
-unsigned char combatManager::isComputerAction(const army* currentArmy)
+bool combatManager::isComputerAction(const army* currentArmy)
 {
     if (isQuickCombat())
         return 1;

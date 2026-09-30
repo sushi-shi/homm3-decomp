@@ -1209,7 +1209,7 @@ public:
     unsigned char handleCombatPlayerDrop(unsigned long dpid, message* msg);
 
 private:
-    unsigned char isComputerAction();
+    bool isComputerAction();
 
 public:
     void updateMouseGrid(int gridIndex, std::vector<long>& hexes,
@@ -1501,7 +1501,7 @@ private:
                                long ourGroup);  // 0x4227a0
 
 public:
-    unsigned char isComputerAction(const army* currentArmy);
+    bool isComputerAction(const army* currentArmy);
     // DC publishes void(int,int,int); Complete's x86 body changes the result
     // to an unsigned-byte "pointer changed" flag. Its retail field/call graph
     // fixes the three arguments as mouse x, mouse y and combat hex.
