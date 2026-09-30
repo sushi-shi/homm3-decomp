@@ -5767,18 +5767,18 @@ void advManager::updateRadar(type_point origin, bool updateFlag, bool partialUpd
     int rowPhase = 0;
     int blockPhase = 0;
     unsigned short* destRow;
+    // DC 7097..7117 names GetMap for the radar origin. Mac 13a5c..13b20
+    // and retail compute map + bytePitch*rectY + 2*rectX, with no signed
+    // divide/round path. Let the canonical accessor preserve byte pitch.
     if (g_mapHeight == MAP_DIMENSION_SMALL
         || g_mapHeight == MAP_DIMENSION_MEDIUM) {
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     } else if (g_mapHeight == MAP_DIMENSION_LARGE) {
         rowPhase = 0;
         blockPhase = 0;
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     } else {
-        destRow = g_windowManager->m_screenBitmap->getMap(0, 0)
-                  + g_windowManager->m_screenBitmap->getPitch() * rectY / 2 + rectX;
+        destRow = g_windowManager->m_screenBitmap->getMap(rectX, rectY);
     }
 
     int visibilityBit = g_mapVisibilityBit;
