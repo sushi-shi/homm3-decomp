@@ -181,7 +181,7 @@ protected:
     long doBestSwap(bool canTakeAll);
     void dumpExtraCreature();
     long valueOfAddingArmy(TCreatureType type, short count,
-                              short& slot, unsigned char mustReplaceCreature);
+                              short& slot, bool mustReplaceCreature);
 
 public:
     void doSwap(hero* currentHero, armyGroup* sourceArmy,

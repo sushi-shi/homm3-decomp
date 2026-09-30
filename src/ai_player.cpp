@@ -2329,11 +2329,13 @@ long type_AI_creature_swapper::chooseWeakestArmy(
 // `why-reg` leaves distance 155; its best volatile-value probe moves that
 // metric by only five and does not improve objdiff, while the measured
 // pointer/reference, declaration and expression variants are flat or worse.
-// DC records an unsigned-char must_replace_creature parameter and the
-// min(int,int) wrapper at line 2404. Retail likewise copies both the current
+// Original DC ?value_of_adding_army@type_AI_creature_swapper@@IAAJW4TCreatureType@@FAAF_N@Z
+// proves bool must_replace_creature; the byte debug primitive is lowered bool.
+// All five Complete call sites pass true/false and retain the short& slot.
+// DC records the min(int,int) wrapper at line 2404. Retail copies the current
 // minimum and creature speed to separate temporary homes before choosing
 // their addresses. Restoring min instead of the reference-only cppMin
-// recovers 89.0856% from 86.1781%; the byte-flag signature is retained too.
+// recovers 89.0856% from 86.1781%.
 // DC lines 2351/2352 place traits and value before the morale locals;
 // restoring that declaration order is byte-flat at the recovered peak.
 VA(0x0042c830, 0x33F)
@@ -2341,7 +2343,7 @@ DC_ADDRESS(0x031af4, 0x346)
 MAC_ADDRESS(0x0302b0, 0x3d4)  // DC method/callgraph + retail Complete body;
 long type_AI_creature_swapper::valueOfAddingArmy(
     TCreatureType type, short count, short& slot,
-    unsigned char mustReplaceCreature)
+    bool mustReplaceCreature)
 {
     const TCreatureTypeTraits* traits = &g_creatureTypeTraits[type];
     long value = traits->m_aiValue * count;
