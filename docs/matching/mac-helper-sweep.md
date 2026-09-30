@@ -613,3 +613,33 @@ already owns the same four `std::vector` members through local
 `SavedGameHeader saved`; implicit C++ destruction supplies those operations
 on every return. No explicit destructor call or new game helper is needed.
 This accounts for these cleanup sites, not the complete load/save review.
+
+### Host queries and remote cleanup
+
+Seven Mac host-query sites already have source calls to `CDPlay::isHost`:
+lobby startup (`0x11025c`), main-menu widget hiding (`0x11cb60`), selection
+host forwarding (`0x182650`), the ready-dialog completion (`0x21370c`),
+player-drop recovery (`0x213fbc`) and both ready-dialog message guards
+(`0x215e70`, `0x216078`). The ready-dialog completion query is inside the
+existing nested `CWaitForReadyPlayersDlg::wait`. The Mac helper (`0x211154`)
+reads a platform-global host byte; Windows' canonical method reads
+`m_isHost`. The native guards, arguments and corresponding source calls
+were checked individually.
+
+The eighth query, in `remoteCleanup` (`0x212aac`), guards a Mac-only
+GameRanger host-closed notification. Its complete helper builds a
+`GRgr/HCls` Apple Event; the preceding notification builds `GRgr/GEnd`
+with `GTim`, `Scor` and `AScr` parameters. Both send and dispose their Apple
+Event descriptors. Complete Windows `remoteCleanup` (`0x5544b0 + 0xaa`)
+contains neither notification nor that host guard. Its existing virtual
+player destruction, session close and DirectPlay deletion also account for
+DC's three indirect calls at `0x11ce9c`, `0x11cea8`, `0x11ceb8`, by receiver,
+vtable slot (`+0x20`, `+0x18`, `+0`) and deleting flag.
+
+Mac additionally destroys its separate global network transport at
+`0x212afc`. Its destructor calls `0x27afb4`, which shuts down the connection,
+destroys service state, frees its buffer, removes the receiver from a global
+registry and updates the service reference count. Windows owns its transport
+through the DirectPlay interface: `closeSession` calls `Close`, and the
+canonical `CDPlay` destructor calls `Release`. Those platform ownership
+paths are already present; no second Windows transport object is implied.
