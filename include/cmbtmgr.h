@@ -1369,7 +1369,7 @@ public:
     void findMoveOrder(std::vector<army*>* result);
     long getTotalCombatValue(long side, long lowestAttack,
                                 long lowestDefense,
-                                unsigned char includeCripples) const;
+                                bool includeCripples) const;
     CSprite* loadSpellEffect(int effect);  // 0x5a92f0
 
 private:

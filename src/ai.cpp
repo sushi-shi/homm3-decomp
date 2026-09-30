@@ -372,7 +372,9 @@ bool combatManager::aiCheckRetreat()
 VA(0x0041eac0, 0xB8)
 DC_ADDRESS(0x023f2c, 0xe0)
 MAC_ADDRESS(0x020058, 0x128)
-long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, unsigned char includeCripples) const
+// Original DC public ?get_total_combat_value@combatManager@@QBAJJJJ_N@Z
+// proves bool includeCripples; the three numeric parameters remain long.
+long combatManager::getTotalCombatValue(long side, long lowestAttack, long lowestDefense, bool includeCripples) const
 {
     long total = 0;
     const army* currentArmy = m_armies[side];
