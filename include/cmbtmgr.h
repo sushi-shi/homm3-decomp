@@ -1430,8 +1430,8 @@ private:
 
 public:
     void berserkAttack(army* currentArmy, const army* target);  // 0x4222c0
-    long chooseMeleeAction(const army* currentArmy, unsigned char teleport,
-                             unsigned char simulated, long side);  // 0x421f80
+    long chooseMeleeAction(const army* currentArmy, bool teleport,
+                             bool simulated, long side);  // 0x421f80
     unsigned char failedSiege();  // 0x41e440
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
@@ -1480,7 +1480,7 @@ private:
                                      long* openHexes,
                                      searchArray* currentSearchArray);  // 0x4205d0
     void chooseShooterAction(const army* currentArmy,
-                               unsigned char simulated, long side);  // 0x41f060
+                               bool simulated, long side);  // 0x41f060
     unsigned char hasRangedAdvantage(
         type_AI_combat_parameters& data);  // 0x420a80
     void placeShooter(const army* currentArmy);  // 0x422060

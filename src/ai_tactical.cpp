@@ -153,11 +153,12 @@ MAC_COMPGEN_ADDRESS(0x046c1c, 0x240, IMPLICIT_COPY_CTOR, army)
 VA(0x00435980, 0x2A)
 DC_ADDRESS(0x03c810, 0x44)
 MAC_ADDRESS(0x03cfd8, 0x44)
-long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, unsigned char ranged, long distance)
+// Original DC public ?AI_get_attack_damage@@YAJABVarmy@@J0_NJ@Z.
+long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy, bool ranged, long distance)
 {
     long troops = (currentArmy.m_monInfo.m_hitPoints + ourHits - 1)
                   / currentArmy.m_monInfo.m_hitPoints;
-    return currentArmy.getAverageDamage(&enemy, ranged, troops, 1, distance);
+    return currentArmy.getAverageDamage(enemy, ranged, troops, 1, distance);
 }
 
 // E:\gamedcs\ai_tactical.cpp:215 -  No retail slot of its
@@ -165,7 +166,7 @@ long aiGetAttackDamage(const army& currentArmy, long ourHits, const army& enemy,
 // /OPT:REF dropped the out-of-line copy.
 DC_ADDRESS(0x03c854, 0x88)
 MAC_ADDRESS(0x03d01c, 0xc0)
-void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
+void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, bool ranged, long distance) const
 {
     // Mac 0x3d054 retains this call; VC6 expands the same source helper.
     long damage = aiGetAttackDamage(currentArmy, ourHits, enemy, ranged,
@@ -187,7 +188,7 @@ void type_AI_combat_parameters::simulateSingleAttack(const army& currentArmy, lo
 VA(0x004359b0, 0x1D5)
 DC_ADDRESS(0x03c8dc, 0xd0)
 MAC_ADDRESS(0x03d0dc, 0x19c)
-void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, unsigned char ranged, long distance) const
+void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ourHits, const army& enemy, long& enemyHits, bool ranged, long distance) const
 {
     if (ranged)
         ranged = currentArmy.canShoot(0);
@@ -207,7 +208,7 @@ void type_AI_combat_parameters::simulateAttack(const army& currentArmy, long& ou
 VA(0x00435b90, 0xD2)
 DC_ADDRESS(0x03c9ac, 0xe8)
 MAC_ADDRESS(0x03d278, 0x108)
-long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, long ourTotal, const army& enemy, long enemyTotal, unsigned char ranged, long distance) const
+long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, long ourTotal, const army& enemy, long enemyTotal, bool ranged, long distance) const
 {
     long ourHits;
     long enemyHits;
@@ -236,7 +237,7 @@ long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, l
 VA(0x00435c70, 0x3D)
 DC_ADDRESS(0x03ca94, 0x4e)
 MAC_ADDRESS(0x03d380, 0x7c)
-long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, const army& enemy, unsigned char ranged, long distance) const
+long type_AI_combat_parameters::getSimpleAttackEffect(const army& currentArmy, const army& enemy, bool ranged, long distance) const
 {
     long ourTotal = currentArmy.getTotalHitPoints(0);
     long enemyTotal = enemy.getTotalHitPoints(0);
@@ -263,9 +264,13 @@ long type_AI_combat_parameters::getRangedAttackValue(const army& currentArmy, co
 VA(0x00435dc0, 0xF3)
 DC_ADDRESS(0x03cba0, 0xea)
 MAC_ADDRESS(0x03d5d8, 0x144)
+// Keep the complete bool chain through simulation, loss valuation and its
+// logical fields. Restoring only the simulation signatures while retaining
+// uchar loss flags/casts adds normalization: Mac falls 100 -> 85.49 here
+// (simple attack 100 -> 95.08); the coherent native chain retains both exact.
 long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const army& enemy, long distance) const
 {
-    unsigned char ranged = currentArmy.canShoot(0);
+    bool ranged = currentArmy.canShoot(0);
     long ourHits = currentArmy.getTotalHitPoints(m_simulated);
     long enemyHits = enemy.getTotalHitPoints(m_simulated);
     long ourLeft = ourHits;
@@ -275,11 +280,11 @@ long type_AI_combat_parameters::getExchangeEffect(const army& currentArmy, const
         simulateAttack(enemy, enemyLeft, currentArmy, ourLeft, ranged, 0);
     long value = enemy.getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
                                               enemyHits - enemyLeft,
-                                              static_cast<unsigned char>(m_killsOnly && !m_simulated));
+                                              m_killsOnly && !m_simulated);
     if (ourHits > ourLeft)
         value -= currentArmy.getLossCombatValue(m_lowestAttack, m_lowestDefense, ranged,
                                                      ourHits - ourLeft,
-                                                     static_cast<unsigned char>(m_killsOnly && !m_simulated));
+                                                     m_killsOnly && !m_simulated);
     return value;
 }
 
@@ -562,7 +567,7 @@ long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex, long tro
             continue;
         if (alreadyChecked & (1 << target->m_bitIndex))
             continue;
-        long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
+        long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
         if (estimate->m_simulated)
             damage = min(static_cast<int>(damage),
                            static_cast<int>(target->getTotalHitPoints(1)));
@@ -587,7 +592,7 @@ long getBreathBonus(long ourGroup, const army* ourArmy, long ourHex, long troopC
     army* target = g_combatManager->m_cells[hex].getArmy();
     if (target == 0 || target == enemy)
         return 0;
-    long damage = ourArmy->getAverageDamage(target, 0, troopCount, 1, 0);
+    long damage = ourArmy->getAverageDamage(*target, 0, troopCount, 1, 0);
     if (estimate->m_simulated)
         damage = min(static_cast<int>(damage),
                        static_cast<int>(target->getTotalHitPoints(1)));
@@ -1072,7 +1077,7 @@ MAC_ADDRESS(0x03f278, 0x9c)
 long type_AI_spellcaster::getAttackBoostValue(const army* ourArmy,
     const army* enemy, long duration, double increase) const
 {
-    long oldDamage = ourArmy->getAverageDamage(enemy, ourArmy->canShoot(0),
+    long oldDamage = ourArmy->getAverageDamage(*enemy, ourArmy->canShoot(0),
         ourArmy->m_numTroops, 1, 0);
     return getAttackBoostValue(ourArmy, enemy, oldDamage, duration, increase);
 }
@@ -1135,7 +1140,7 @@ long type_AI_spellcaster::getFrenzyValue(const army* ourArmy, type_enchant_data 
     const army* target = ourArmy->getAITarget();
     if (target == 0 || ourArmy->getAITargetTime() > 1)
         return 0;
-    unsigned char ranged = ourArmy->canShoot(0);
+    bool ranged = ourArmy->canShoot(0);
     long ourHits = ourArmy->getTotalHitPoints(0);
     long enemyHits = target->getTotalHitPoints(0);
     long oldDamage = aiGetAttackDamage(*(ourArmy), ourHits, *(target), ranged, 0);
@@ -1245,7 +1250,7 @@ long type_AI_spellcaster::getFortuneValue(const army* ourArmy, type_enchant_data
         return 0;
     long bonus = g_spellTraits[SPELL_FORTUNE].m_masteryBonus[caster.m_mastery];
     long luck = ourArmy->getLuck(0);
-    long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
+    long damage = ourArmy->getAverageDamage(*target, ourArmy->canShoot(0),
                                                ourArmy->m_numTroops, 0, 0);
     long strikes;
     long value = 0;
@@ -1279,7 +1284,7 @@ DC_ADDRESS(0x03e9d8, 0x236)
 MAC_ADDRESS(0x0401f0, 0x1d0)
 long type_AI_spellcaster::getDefenseBoostValue(const army* ourArmy, const army* enemy, long duration, double increase) const
 {
-    long damage = enemy->getAverageDamage(ourArmy, enemy->canShoot(0),
+    long damage = enemy->getAverageDamage(*ourArmy, enemy->canShoot(0),
                                             enemy->m_numTroops, 0, 0);
     long reduced = static_cast<long>(static_cast<double>(damage) / increase);
     long hits = ourArmy->getTotalHitPoints(0);
@@ -1972,11 +1977,11 @@ long type_AI_spellcaster::getCounterstrokeValue(const army* ourArmy, type_enchan
     if (target == 0)
         return 0;
     long ourHits = ourArmy->getTotalHitPoints(0);
-    ourHits -= target->getAverageDamage(ourArmy, 0, target->m_numTroops, 1, 0);
+    ourHits -= target->getAverageDamage(*ourArmy, 0, target->m_numTroops, 1, 0);
     if (ourHits <= 0)
         return 0;
     long enemyHits = target->getTotalHitPoints(0);
-    long totalDamage = ourArmy->getAverageDamage(target, 0, ourArmy->m_numTroops, 1, 0);
+    long totalDamage = ourArmy->getAverageDamage(*target, 0, ourArmy->m_numTroops, 1, 0);
     long newDamage = aiGetAttackDamage(*ourArmy, ourHits, *target, 0, 0);
     if (newDamage > enemyHits)
         newDamage = enemyHits;
@@ -2007,11 +2012,11 @@ long type_AI_spellcaster::getFireShieldValue(const army* ourArmy, type_enchant_d
     const army* target = m_meleeEnemies[ourArmy->m_bitIndex].m_enemy;
     if (!target || target->is(creatureImmuneToFireSpells))
         return 0;
-    long reflected = target->getAverageDamage(ourArmy, 0,
+    long reflected = target->getAverageDamage(*ourArmy, 0,
         target->m_numTroops, 1, 0);
     reflected = reflected * amount / 100;
     reflected = min(reflected, ourArmy->getTotalHitPoints(0));
-    long oldDamage = ourArmy->getAverageDamage(target, 0,
+    long oldDamage = ourArmy->getAverageDamage(*target, 0,
         ourArmy->m_numTroops, 1, 0);
     long combined = count * reflected + oldDamage;
     double increase = static_cast<double>(combined)
@@ -2024,7 +2029,7 @@ DC_ADDRESS(0x040928, 0xde)
 MAC_ADDRESS(0x043b74, 0xf0)
 long type_AI_spellcaster::getTraitorValue(const army* enemy, const army* target) const
 {
-    unsigned char ranged = enemy->canShoot(0);
+    bool ranged = enemy->canShoot(0);
     if (target->getOwningSide() == m_side)
         return 0;
     long enemyHits = enemy->getTotalHitPoints(0);
@@ -2421,7 +2426,7 @@ long type_AI_spellcaster::getCloneValue(const army* ourArmy, type_enchant_data c
             const army* target = ourArmy->getAITarget();
             if (target != 0
                     && ourArmy->getAITargetTime() <= 1) {
-                long damage = ourArmy->getAverageDamage(target, ourArmy->canShoot(0),
+                long damage = ourArmy->getAverageDamage(*target, ourArmy->canShoot(0),
                                                            ourArmy->m_numTroops, 1, 0);
                 return target->getLossCombatValue(m_estimate.m_lowestAttack,
                                                      m_estimate.m_lowestDefense,
@@ -2759,7 +2764,7 @@ void type_AI_spellcaster::setMeleeEnemies()
         if (!target || ourArmy->canShoot(0) || ourArmy->getAITargetTime() > 1)
             continue;
         m_meleeEnemies[i].m_enemy = target;
-        long damage = target->getAverageDamage(ourArmy, 0, target->m_numTroops, 0, 0);
+        long damage = target->getAverageDamage(*ourArmy, 0, target->m_numTroops, 0, 0);
         m_meleeEnemies[i].m_damage = damage;
         m_meleeEnemies[i].m_totalDamage = damage;
         m_meleeEnemies[i].m_count = 1;
@@ -2781,10 +2786,11 @@ void type_AI_spellcaster::setWorstEnemies()
 // Original: type_AI_spellcaster::add_enemy; ai_tactical.cpp:3237
 DC_ADDRESS(0x042220, 0x5a)
 MAC_ADDRESS(0x045e94, 0xa0)
+// Original DC public ?add_enemy@type_AI_spellcaster@@IAAXAAUtype_AI_enemy_data@@PBVarmy@@1_N@Z.
 void type_AI_spellcaster::addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
-                                 const army* enemy, unsigned char ranged)
+                                 const army* enemy, bool ranged)
 {
-    long damage = enemy->getAverageDamage(ourArmy, ranged, enemy->m_numTroops, 0, 0);
+    long damage = enemy->getAverageDamage(*ourArmy, ranged, enemy->m_numTroops, 0, 0);
     sum.m_count++;
     sum.m_totalDamage += damage;
     if (damage > sum.m_damage) {

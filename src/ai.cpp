@@ -538,7 +538,8 @@ unsigned char combatManager::chooseCyclopsAction(long bestValue, long side, type
 VA(0x0041f060, 0xD1)
 DC_ADDRESS(0x02452c, 0xd8)
 MAC_ADDRESS(0x020990, 0x124)
-void combatManager::chooseShooterAction(const army* currentArmy, unsigned char simulated, long side)
+// Original DC public ?choose_shooter_action@combatManager@@AAAXPBVarmy@@_NJ@Z.
+void combatManager::chooseShooterAction(const army* currentArmy, bool simulated, long side)
 {
     long bestValue = 0;
     type_AI_combat_parameters data(this, side);
@@ -830,10 +831,10 @@ long combatManager::getAreaEffect(long side, const army* ourArmy, long markedEne
         if ((markedEnemies & (1 << enemy->m_bitIndex)) == 0)
             continue;
         if (enemy->is(creatureFireballAttack) && enemy->canShoot(0))
-            total += enemy->getAverageDamage(ourArmy, 1, enemy->m_numTroops,
+            total += enemy->getAverageDamage(*ourArmy, 1, enemy->m_numTroops,
                                                1, 0);
         if (enemy->is(creatureHasExtendedAttack))
-            total += enemy->getAverageDamage(ourArmy, 0, enemy->m_numTroops,
+            total += enemy->getAverageDamage(*ourArmy, 0, enemy->m_numTroops,
                                                1, 0);
     }
     if (canCastSpells(side, 1)) {
@@ -904,7 +905,7 @@ void combatManager::markFriendlyArmies(const army* ourArmy, long* enemyAttacks, 
             continue;
         long meleeValue;
         if (friendly->is(creatureHasExtendedAttack)) {
-            long damage = friendly->getAverageDamage(ourArmy, 0,
+            long damage = friendly->getAverageDamage(*ourArmy, 0,
                                                        friendly->m_numTroops,
                                                        1, 0);
             meleeValue = ourArmy->getLossCombatValue(
@@ -2003,7 +2004,8 @@ unsigned char combatManager::chooseMeleeTarget(const army* currentArmy, unsigned
 VA(0x00421f80, 0xD5)
 DC_ADDRESS(0x026ee0, 0xc6)
 MAC_ADDRESS(0x0242d4, 0x124)
-long combatManager::chooseMeleeAction(const army* currentArmy, unsigned char teleport, unsigned char simulated, long side)
+// Original DC public ?choose_melee_action@combatManager@@QAAJPBVarmy@@_N1J@Z.
+long combatManager::chooseMeleeAction(const army* currentArmy, bool teleport, bool simulated, long side)
 {
     type_AI_combat_parameters data(this, side);
     data.m_simulated = simulated;
@@ -2394,7 +2396,9 @@ void combatManager::findAITargets(long ourGroup, const army* currentArmy,
     long j;
     army* ours = m_armies[ourGroup];
     army* theirs;
-    unsigned char shooter;
+    // Preserve canShoot's logical result through getSimpleAttackEffect's
+    // original bool interface without an integer-to-bool conversion.
+    bool shooter;
     for (i = 0; i < m_numArmies[ourGroup]; i++, ours++) {
         ours->clearAIValues();
         if (ours->is(creatureImmobilized))

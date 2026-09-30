@@ -818,8 +818,8 @@ public:
     long getAIPossibleTargets() const;
     long getAttackModifier(const army* enemy,
                              unsigned char rangedAttack) const;
-    long getAverageDamage(const army* enemy, unsigned char rangedAttack,
-                            long amount, unsigned char limitDamage,
+    long getAverageDamage(const army& enemy, bool rangedAttack,
+                            long amount, bool limitDamage,
                             long distance) const;
     double getAverageDamage() const;
     long getEstimatedDamage(const army* target, long amount,
@@ -836,15 +836,15 @@ public:
     long getCounterClockwise(long direction) const;
     float getFireShieldStrength() const;
     long getLossCombatValue(long lowestAttack, long lowestDefense,
-                               unsigned char ranged, long damage,
-                               unsigned char killsOnly) const;
+                               bool ranged, long damage,
+                               bool killsOnly) const;
     long getResurrectionSize(const army* target) const;
     int getSecondGridIndex() const;
     long getTotalCombatValue(long lowestAttack,
                                 long lowestDefense) const;
-    long getTotalHitPoints(unsigned char simulated) const;
+    long getTotalHitPoints(bool simulated) const;
     double getUnitCombatValue(long lowestAttack, long lowestDefense,
-                                 unsigned char ranged,
+                                 bool ranged,
                                  const army* excluded) const;
     long getValidCaliphSpells(const army* target) const;
     int getBestDirection(int start, int target, int direction);
@@ -1369,9 +1369,9 @@ public:
     unsigned char canCastResurrect(long hex) const;
     unsigned char canCastSpell(long hex) const;
     long getLossCombatValue(long lowest_attack, long lowest_defense,
-                               unsigned char ranged, long damage,
-                               unsigned char kills_only) const; // 0x442fd0
-    long getTotalHitPoints(unsigned char simulated) const;   // 0x443080
+                               bool ranged, long damage,
+                               bool kills_only) const; // 0x442fd0
+    long getTotalHitPoints(bool simulated) const;   // 0x443080
     inline void checkLuck();
     inline long damageEnemy(army* enemy, int* iDamage, int* iKilled,
                             bool bIsShot);
@@ -1440,8 +1440,8 @@ public:
     void doMultiHeadAttack(unsigned attackMask, int* damage, int* killed,
                               long* fire_damage);
     void doFireShield(long damage);
-    long getAverageDamage(const army* enemy, unsigned char ranged_attack,
-                            long amount, unsigned char limit_damage,
+    long getAverageDamage(const army& enemy, bool ranged_attack,
+                            long amount, bool limit_damage,
                             long distance) const;               // 0x442780
     // The no-argument overload (0x4426f0, claimed in army.cpp): what
     // this stack averages per swing, as a double in st(0).
@@ -1487,7 +1487,7 @@ public:
     long getTotalCombatValue(long lowest_attack,
                                 long lowest_defense) const;     // 0x442e60
     double getUnitCombatValue(long lowest_attack, long lowest_defense,
-                                 unsigned char ranged,
+                                 bool ranged,
                                  const army* excluded) const;   // 0x442a50
     // Returns float in st(0): the stack's own 0x4a0 while
     // fireShieldRounds is set, else the Efreet Sultan's innate

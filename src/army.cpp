@@ -2429,13 +2429,16 @@ double army::getAverageDamage() const
 VA(0x00442780, 0x100)
 DC_ADDRESS(0x047af8, 0xd2)
 MAC_ADDRESS(0x04e6f4, 0xdc)
-long army::getAverageDamage(const army* enemy, unsigned char rangedAttack, long amount, unsigned char limitDamage, long distance) const
+// Original DC public ?get_average_damage@army@@QBAJABV1@_NJ1J@Z proves
+// const army& and both bool flags. Mac retains adjustDamage/getTotalHitPoints;
+// retail accesses the supplied enemy directly with no nullable-target arm.
+long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, bool limitDamage, long distance) const
 {
     double average = getAverageDamage();
-    long damage = adjustDamage(const_cast<army*>(enemy),
+    long damage = adjustDamage(const_cast<army*>(&enemy),
                                 static_cast<long>(amount * average),
                                 rangedAttack, 1, distance, 0);
-    long totalLife = enemy->getTotalHitPoints(0);
+    long totalLife = enemy.getTotalHitPoints(0);
     if (damage < 1)
         damage = 1;
     if (rangedAttack && is(creatureTwoAttacks))
@@ -2528,8 +2531,9 @@ static const double g_artilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
 VA(0x00442a50, 0x410)
 DC_ADDRESS(0x047cf4, 0x472)
 MAC_ADDRESS(0x04e9ec, 0x30c)  // anchor-global
+// Original DC public ?get_unit_combat_value@army@@QBANJJ_NPBV1@@Z.
 double army::getUnitCombatValue(long lowestAttack, long lowestDefense,
-                                   unsigned char ranged,
+                                   bool ranged,
                                    const army* excluded) const
 {
     long attackDiff = getAttackModifier(0, ranged) - lowestAttack;
@@ -2597,7 +2601,7 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
 {
     if (m_numTroops <= 0)
         return 0;
-    unsigned char ranged = canShoot(0);
+    bool ranged = canShoot(0);
     double value = getUnitCombatValue(lowestAttack, lowestDefense,
                                          ranged, 0);
     if (is(creatureClone))
@@ -2609,9 +2613,11 @@ long army::getTotalCombatValue(long lowestAttack, long lowestDefense) const
 VA(0x00442fd0, 0xA9)
 DC_ADDRESS(0x0482f0, 0x164)
 MAC_ADDRESS(0x04ee24, 0x114)
+// Original DC public ?get_loss_combat_value@army@@QBAJJJ_NJ0@Z proves
+// both flags bool, with 0 backreferencing _N.
 long army::getLossCombatValue(long lowestAttack, long lowestDefense,
-                                 unsigned char ranged, long damage,
-                                 unsigned char killsOnly) const
+                                 bool ranged, long damage,
+                                 bool killsOnly) const
 {
     double value = getUnitCombatValue(lowestAttack, lowestDefense,
                                          ranged, 0);
@@ -2628,7 +2634,8 @@ long army::getLossCombatValue(long lowestAttack, long lowestDefense,
 VA(0x00443080, 0x50)
 DC_ADDRESS(0x048454, 0x4c)
 MAC_ADDRESS(0x04ef38, 0x68)
-long army::getTotalHitPoints(unsigned char simulated) const
+// Original DC public ?get_total_hit_points@army@@QBAJ_N@Z.
+long army::getTotalHitPoints(bool simulated) const
 {
     long total;
     if (is(creatureClone))

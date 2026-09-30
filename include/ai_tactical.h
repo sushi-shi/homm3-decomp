@@ -89,8 +89,12 @@ struct type_AI_combat_parameters {
 public:
     long m_lowestAttack;  // +0x00
     long m_lowestDefense;  // +0x04
-    unsigned char m_killsOnly;  // +0x08
-    unsigned char m_simulated;  // +0x09
+    // Bool inference: killsOnly is written only 0/1; simulated is written
+    // 0 or native bool choose-action parameters. Retail forwards both fields
+    // unchanged to native bool getLossCombatValue/getTotalHitPoints parameters.
+    // The lowered DC member byte types alone do not distinguish bool/uchar.
+    bool m_killsOnly;  // +0x08
+    bool m_simulated;  // +0x09
     // Dreamcast and retail byte-field boundaries agree: this gap
     // aligns the following four-byte field or aggregate.
     char m_paddingBeforeFriendlyCombatValue[0x2];
@@ -121,19 +125,21 @@ public:
     long getRangedAttackValue(const army& currentArmy, const army& enemy) const;
     long getSimpleAttackEffect(const army& currentArmy, long ourTotal,
                                   const army& enemy, long enemyTotal,
-                                  unsigned char ranged, long distance) const;
+                                  bool ranged, long distance) const;
     long getSimpleAttackEffect(const army& currentArmy, const army& enemy,
-                                  unsigned char ranged, long distance) const;
+                                  bool ranged, long distance) const;
     void simulateAttack(const army& currentArmy, long& ourHits,
                          const army& enemy, long& enemyHits,
-                         unsigned char ranged, long distance) const;
+                         bool ranged, long distance) const;
     // DC ai_tactical.cpp:200..390 proves const army references, referenced
     // hit outputs, and const combat-query receivers across this family.
     // Retail uses those same pointer-width ABI slots and writes only the hit
-    // outputs, so preserve the canonical interfaces at every source call.
+    // outputs. Original simulate_attack/simulate_single_attack publics end
+    // AAJ01_NJ@Z; both get_simple_attack_effect publics likewise prove _N.
+    // Keep bool throughout the connected attack simulation interfaces.
     void simulateSingleAttack(const army& currentArmy, long& ourHits,
                                 const army& enemy, long& enemyHits,
-                                unsigned char ranged, long distance) const;
+                                bool ranged, long distance) const;
 };
 SIZE(type_AI_combat_parameters, 0x28);
 
@@ -386,7 +392,7 @@ protected:
     void setMeleeEnemies();
     void setWorstEnemies();
     void addEnemy(type_AI_enemy_data& sum, const army* ourArmy,
-                  const army* enemy, unsigned char ranged);
+                  const army* enemy, bool ranged);
     unsigned char spellsNotRequired() const;
 };
 SIZE(type_AI_spellcaster, 0x410);
@@ -414,7 +420,7 @@ double valueOfLuckAndMorale(long value, long change,
 double aiValueOfMorale(long morale, long change);
 double aiValueOfLuck(long luck, long change);
 long aiGetAttackDamage(const army& currentArmy, long ourHits,
-                          const army& enemy, unsigned char ranged,
+                          const army& enemy, bool ranged,
                           long distance);
 long getMultiHeadBonus(long ourGroup, const army* ourArmy, long ourHex,
                           long troopCount, const army* enemy, long enemyHex,
