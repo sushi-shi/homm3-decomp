@@ -5424,7 +5424,10 @@ void advManager::drawShroud(int srcX, int srcY, int z, int destX, int destY)
 // 95.2382%. Retail and candidate now agree on 41 CFG blocks, 22 branches,
 // and all nine direct calls. Mac's direct-call count also agrees at 7/7.
 // Earlier default-then-assign point controls beat direct constructors at
-// both call sites; the residual is register scheduling.
+// both call sites. DC 6884/6896 and Mac 0x131f0..0x13214 / 0x132e4..0x13308
+// read the signed TObjectCell nibble members at the two draw sites, rather
+// than named byte-shift temporaries. Together with DC 6821/6822 and
+// 6829/6830 clipping updates, the native expressions recover 100% Windows.
 VA(0x00412470, 0x482)
 DC_ADDRESS(0x0142e0, 0x4e4)
 MAC_ADDRESS(0x012fc8, 0x40c)  // linkorder
@@ -5453,13 +5456,13 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     tileh = 32;
 
     if (baseX < 8) {
-        tilex = 8 - baseX;
-        tilew = baseX + 24;
+        tilex += 8 - baseX;
+        tilew -= 8 - baseX;
         baseX = 8;
     }
     if (baseY < 0) {
-        tiley = -baseY;
-        tileh = baseY + 32;
+        tiley -= baseY;
+        tileh -= -baseY;
         baseY = 0;
     }
     if (baseX + tilew > 600)
@@ -5503,14 +5506,11 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
                             % sprite->getNumFrames(0);
-                signed char offsets = objCell->m_offsets;
-                int yOffset = offsets >> 4;
-                offsets <<= 4;
-                int xOffset = offsets >> 4;
+
                 sprite->drawAdvObjWithFlag(
                     frame,
-                    tilex + (objType->m_width - xOffset - 1) * 32,
-                    tiley + (objType->m_height - yOffset - 1) * 32,
+                    tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                    tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8,
                     g_systemPalette->m_data[64 + owner], false);
@@ -5519,14 +5519,11 @@ void advManager::drawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                              + m_fullMap->m_objects[objCell->m_objectIndex]
                                    .m_animationOffset)
                             % sprite->getNumFrames(0);
-                signed char offsets = objCell->m_offsets;
-                int yOffset = offsets >> 4;
-                offsets <<= 4;
-                int xOffset = offsets >> 4;
+
                 sprite->drawAdvObj(
                     frame,
-                    tilex + (objType->m_width - xOffset - 1) * 32,
-                    tiley + (objType->m_height - yOffset - 1) * 32,
+                    tilex + (objType->m_width - objCell->m_cellX - 1) * 32,
+                    tiley + (objType->m_height - objCell->m_cellY - 1) * 32,
                     tilew, tileh, g_windowManager->m_screenBitmap,
                     baseX, baseY + 8, false);
             }
