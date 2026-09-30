@@ -4349,7 +4349,7 @@ textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0	-
 textntry	?draw@textEntryWidget@@UBEXXZ	100.0000	100.0000	100.0000	0x1bb400	tokens1:7684716801bb
 textntry	?getCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1baba0	tokens1:f692ca8ac7af
 textntry	?ignoreKey@textEntryWidget@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bba20	tokens1:c23a57405621
-textntry	?main@textEntryWidget@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bb150	tokens1:03dc2de31713
+textntry	?main@textEntryWidget@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bb150	tokens1:d66baacac43f
 textntry	?onKeyPress@textEntryWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bac50	tokens1:837dae48dda2
 textntry	?onKillFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba60	tokens1:aca40f0519e6
 textntry	?onSetFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba50	tokens1:67ed56adc07f

@@ -353,8 +353,14 @@ int textEntryWidget::main(message& msg)
                     }
                 } else if (hitX >= m_x && hitY >= m_y && hitX < m_x + m_width
                     && hitY < m_y + m_height) {
-                    if (!m_hasFocus && m_parentWindow)
-                        m_parentWindow->setFocus(m_id);
+                    if (!m_hasFocus) {
+                        // DC textntry.cpp:448 proves the unused local
+                        // `message setFocus` and its default construction.
+                        // Complete can elide its side-effect-free stores.
+                        message setFocus;
+                        if (m_parentWindow)
+                            m_parentWindow->setFocus(m_id);
+                    }
                     msg.m_id = MESSAGE_WIDGET;
                     msg.m_codeX = WIDGET_SELECT;
                     msg.m_codeY = m_id;

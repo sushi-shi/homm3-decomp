@@ -432,3 +432,77 @@ Mac `computeExtent` (`0xa81c0`), icon-widget real width/height (`0x10c858`,
 (`0x13d44..0x13d64`, `0x13e0c..0x13e24`). The missing DC edges in these
 specific operations are obsolete `SpriteDataReload` guards. This does not
 classify the remaining sprite drawing and palette-getter leads.
+
+
+### Campaign launch and text-entry call review
+
+The full Mac `campaignBriefHandler` (`0x679f0 + 0x838`) preserves the
+campaign launch through `CampaignHeaderStruct::startScenario` (`0x97e20`)
+and `ScenarioStruct::startScenario` (`0x967f8`). Their existing source calls
+own `setupFirstPlayer` and the streamed `newMap` operation. DC's direct
+`doPreLoadCustomization` call (`0x5a8fc`) moved into `newMap`: Mac `0xd5d10`
+calls it under a non-null campaign-context guard before `processOnMapHeroes`.
+The scenario caller passes that context at `0x96908`. The handler's
+`applyBriefingChoice` is a separate operation, not a replacement for
+pre-load customization.
+
+The older special hero-preview branch (heroes 117/123, `un44.def`,
+`CHeroDlg`, bitmap/sprite disposal) is absent from Complete's right-click
+path. Mac `0x67c20..0x67c80` obtains the widget help text and opens the
+normal dialog, as the source does. Both prologue paths, reset-game arguments,
+five Mac virtual calls and four DC virtual calls are also represented.
+DC's two description `textButton` constructions use GeneralText 39/497;
+Complete uses plain `textWidget` labels with the same indices at Mac
+`0x6652c` / `0x66818`. These are widget-interface changes, not missing
+button calls.
+
+DC `textEntryWidget::main` proves the local `message setFocus` at
+`textntry.cpp:448`, inside `!m_hasFocus` and before the parent-window guard.
+The canonical constructor only initializes the unused object's fields.
+That source declaration and scope are restored; the focused VC6 build
+preserves Windows MAX 100%. Mac `0x1b0180..0x1b019c` and Windows
+`0x5bb287..0x5bb29f` are compatible with eliminating its unused stores.
+This recovers a source lifetime, not a missing runtime action.
+
+The remaining text-entry indirect calls were checked by receiver, vtable
+slot, arguments and guard: resource disposal/background deletion, focus
+redraw, key filtering, post-edit redraw, text assignment, focus gain/loss,
+key dispatch and background capture. All already have canonical source
+calls. Mac's complete constructor, destructor, focus/key/main/draw bodies,
+display-string setup, text setter, focus callbacks and background methods
+were read alongside their source; the saved-background flag, constructor
+and bitmap forwarding are already represented by `CTextEntrySave`.
+
+The full checkpoint also preserved text-entry Windows MAX 100%; its Mac
+comparison rose from 30.1980% to 30.3218%. Linking, source ownership,
+source inventory and data coverage passed without an unreviewed regression.
+
+### Save-dialog operation placement
+
+Complete validates the filename inside the selection dialog, then writes the
+save after it closes. Mac `saveValid` (`0x16dc84 + 0x18c`) performs validation;
+the outer `saveGame` (`0x187b4 + 0x288`) constructs, runs and destroys the
+dialog at `0x18888/0x18894/0x188a0`, then calls the game writer at `0x1894c`
+for a nonempty filename. Both paths already exist in source. The older DC
+writer calls at `0x13d174` and the save-mode constructor's `0x1352b6` therefore
+do not justify adding a second write inside Complete's dialog. Its constructor
+backs up headers in memory; that is distinct from the final disk write.
+
+DC's pre-launch `stopAllSamples` (`0x13d69c`) is absent from Complete's
+corresponding Mac dispatch (`0x17e808..0x17e814`) and complete `onBeginGame`
+body (`0x183698 + 0x51c`). The inspected constructor tail also preserves
+three existing virtual operations: disabling widget 186 for a remote non-host,
+enabling save-edit auto draw, and disabling widgets 107 through 111 in
+save/load mode (`0x175498`, `0x175518`, `0x175584`).
+
+### Review coverage correction
+
+The working call inventory had treated every named entry in
+`config/mac/runtime-map.tsv` as library/runtime code. That was too broad:
+descriptive labels with unknown ownership, `mac_port` and `mac_platform`
+ownership do not establish that the corresponding Windows source operation
+has been reconciled. The inventory now retains those destinations as review
+leads: 1,580 call sites across 195 targets were reopened. They include actual
+runtime operations as well as platform adapters and potential shared helpers;
+each still needs operation and caller evidence. This correction is coverage
+work, not a claim that those calls are all missing from source.
