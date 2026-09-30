@@ -2271,12 +2271,14 @@ void type_AI_spellcaster::considerResurrect(type_spell_choice& choice) const
                                              creatureCast))
             continue;
         long hex = ourArmy->m_gridIndex;
-        if (g_combatManager->findResurrectionTarget(choice.m_spell, m_side, hex, 0)
+        if (g_combatManager->findResurrectionTarget(
+                static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
                 != ourArmy) {
             if (!ourArmy->is(creatureDoubleWide))
                 continue;
             hex = ourArmy->getSecondGridIndex();
-            if (g_combatManager->findResurrectionTarget(choice.m_spell, m_side, hex, 0)
+            if (g_combatManager->findResurrectionTarget(
+                    static_cast<ESpellId>(choice.m_spell), m_side, hex, 0)
                     != ourArmy)
                 continue;
         }
@@ -2394,14 +2396,14 @@ void type_AI_spellcaster::considerSacrifice(type_spell_choice& choice) const
 
         long candidateTargetHex = candidateHealedArmy->m_gridIndex;
         army* target = g_combatManager->findResurrectionTarget(
-            choice.m_spell, m_side, candidateTargetHex, 0);
+            static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
 
         if (target != candidateHealedArmy) {
             if (!candidateHealedArmy->is(creatureDoubleWide))
                 continue;
             candidateTargetHex = candidateHealedArmy->getSecondGridIndex();
             target = g_combatManager->findResurrectionTarget(
-                choice.m_spell, m_side, candidateTargetHex, 0);
+                static_cast<ESpellId>(choice.m_spell), m_side, candidateTargetHex, 0);
             if (target != candidateHealedArmy)
                 continue;
         }
