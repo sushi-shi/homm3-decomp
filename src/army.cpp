@@ -2473,7 +2473,9 @@ long army::getAverageDamage(const army& enemy, bool rangedAttack, long amount, b
 VA(0x00442880, 0x68)
 DC_ADDRESS(0x047bcc, 0x38)
 MAC_ADDRESS(0x04e7d0, 0x70)
-unsigned char army::isEnemy(const army* arg) const
+// Original public ?is_enemy@army@@QBA_NPBV1@@Z proves bool. Its callers
+// use the result as a predicate; keep the native type through adjacency.
+bool army::isEnemy(const army* arg) const
 {
     if (!arg)
         return 0;
@@ -2513,7 +2515,10 @@ bool army::canShoot(const army* excluded) const
 VA(0x004429f0, 0x5C)
 DC_ADDRESS(0x047c74, 0x80)
 MAC_ADDRESS(0x04e958, 0x94)
-unsigned char army::enemyIsAdjacent(const army* excluded) const
+// Original public ?enemy_is_adjacent@army@@QBA_NPBV1@@Z proves bool.
+// Retail directly forwards the manager's second-cell result, so that
+// canonical callee must share the bool domain rather than normalize a byte.
+bool army::enemyIsAdjacent(const army* excluded) const
 {
     if (g_combatManager->enemyIsAdjacent(this, m_gridIndex, excluded))
         return 1;

@@ -1122,7 +1122,7 @@ public:
     // play before it lands the DamageWall - the wall visibly breaks
     // mid-animation, not on the last frame.
     enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
-    unsigned char enemyIsAdjacent(const army* currentArmy, int gridIndex,
+    bool enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                     const army* excluded) const;
     unsigned char isAdjacent(int first, int second) const;
     void viewArmy(army* thisArmy, int isQuickView);

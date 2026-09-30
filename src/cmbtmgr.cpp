@@ -3767,7 +3767,9 @@ void combatManager::checkRebirth()
 VA(0x00469600, 0x6E)
 DC_ADDRESS(0x062db8, 0x94)
 MAC_ADDRESS(0x075c3c, 0x9c)
-unsigned char combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
+// Original public ?enemy_is_adjacent@combatManager@@QBA_NPBVarmy@@H0@Z
+// proves bool independently of CodeView's lowered byte display.
+bool combatManager::enemyIsAdjacent(const army* currentArmy, int gridIndex,
                                                const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {

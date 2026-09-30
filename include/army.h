@@ -803,7 +803,7 @@ public:
     void clearAIValues();
     void considerAttack(const army* enemy, long value,
                          long attackDistance);
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     unsigned getAttackMask(int currIndex, int criteria,
                            int literalTargetIndex) const;
     long getAdjustedAttack(const army* enemy,
@@ -850,7 +850,7 @@ public:
     int getBestDirection(int start, int target, int direction);
     unsigned char isAdjacent(const army& otherArmy) const;
     unsigned char isAdjacent(int hex) const;
-    unsigned char isEnemy(const army* arg) const;
+    bool isEnemy(const army* arg) const;
     bool isInAura() const;
     unsigned char moveTo(int hex, unsigned char restoreFacing);
     void newTurn();
@@ -1332,13 +1332,13 @@ public:
     // the 112-byte hexcell stride.
     int midX() const;                        // 0x446660
     int midY() const;                        // 0x446630
-    unsigned char isEnemy(const army* arg) const; // 0x442880
+    bool isEnemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
     // two-hex creature its second hex as well. Const
     // (?enemy_is_adjacent@army@@QBA_NPBV1@@Z) - the last of the chain
     // combatManager::enemy_is_adjacent's own const `this` needs.
-    unsigned char enemyIsAdjacent(const army* excluded) const;
+    bool enemyIsAdjacent(const army* excluded) const;
     // 0x4430d0: clamps the AI's committed damage to what the stack can
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
     void setAIExpectedDamage(long arg);
