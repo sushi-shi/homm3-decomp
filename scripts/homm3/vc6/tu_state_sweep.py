@@ -363,13 +363,9 @@ def _first_pass(unit: str, payload: bytes) -> bytes:
 
 
 def _normalized_pair(plan: UnitPlan, candidate: bytes) -> tuple[bytes, bytes]:
-    base = _first_pass(plan.unit, candidate)
-    target = plan.target_first
-    base, _ = normalize._retain_matching_target_padding(base, target)
-    base, _ = normalize._canonicalize_except_list_literals(base, target)
-    target, _, _ = normalize._canonicalize_equivalent_relocations(
-        base, target, normalize._retail_symbol_rvas(), image_base=normalize.retail_image_base())
-    base, _ = normalize._canonicalize_matching_eh_handler_owners(base, target)
+    base, target, _ = normalize.canonicalize_pair(
+        _first_pass(plan.unit, candidate), plan.target_first, plan.unit,
+        normalize._retail_symbol_rvas(), image_base=normalize.retail_image_base())
     return base, target
 
 
@@ -383,6 +379,7 @@ def _report_scores(
         "$schema": "https://raw.githubusercontent.com/encounter/objdiff/main/config.schema.json",
         "build_base": False,
         "build_target": False,
+        "options": {"functionRelocDiffs": "all"},
         "units": [{
             "name": plan.unit,
             "base_path": str(base_path.resolve()),
