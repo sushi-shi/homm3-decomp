@@ -136,7 +136,7 @@ TViewArmyWindow::TViewArmyWindow(const army* thisArmy, int x0, int y0,
     createNameWidget(thisArmy->getName());
 
     createPortraitWidget(stackTraits->m_spriteName,
-                           stackTraits->m_townType, thisArmy->m_numTroops);
+                           static_cast<TTownType>(stackTraits->m_townType), thisArmy->m_numTroops);
     createAttackWidget(typeTraits.m_attackSkill, attack);
     createDefenseWidget(typeTraits.m_defenseSkill, defense);
     createShotsWidget(*stackTraits, typeTraits.m_numShots,
@@ -274,7 +274,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     createNameWidget(getArmyName(m_armyType, 2));
 
     int townType = g_game->getAlignment(m_armyType);
-    createPortraitWidget(traits.m_spriteName, townType,
+    createPortraitWidget(traits.m_spriteName, static_cast<TTownType>(townType),
                            group->m_numTroops[iarmy]);
 
     if (thisHero)
@@ -365,7 +365,7 @@ TViewArmyWindow::TViewArmyWindow(int armyType, int x0, int y0,
     createNameWidget(traits->m_pluralName);
 
     int townType = g_game->getAlignment(armyType);
-    createPortraitWidget(traits->m_spriteName, townType, 0);
+    createPortraitWidget(traits->m_spriteName, static_cast<TTownType>(townType), 0);
 
     createAttackWidget(traits->m_attackSkill, traits->m_attackSkill);
     createDefenseWidget(traits->m_defenseSkill, traits->m_defenseSkill);
@@ -728,12 +728,15 @@ void TViewArmyWindow::createNameWidget(const char* name)
 // them in the popup's one Verd10B row. The count line is suppressed for an
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
+// Original public create_portrait_widget encodes W4TTownType; the DC
+// formal independently names TTownType town_type. Keep caller integer
+// domains separate and convert at this recovered helper boundary.
 // E:\gamedcs\viewarmywindow.cpp:646
 VA(0x005f5060, 0x2D6)
 DC_ADDRESS(0x191f2c, 0x154)
 MAC_ADDRESS(0x2012cc, 0x27c)  // ctor call set + CrBkg table + Verd10B.fnt
 void TViewArmyWindow::createPortraitWidget(const char* spriteName,
-                                             int townType, int count)
+                                             TTownType townType, int count)
 {
     m_widgets.push_back(new bitmapBorder(
         21, 48, 100, 130, SPRITE_BACKGROUND_ID,
