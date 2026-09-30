@@ -1748,7 +1748,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     int x;
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     thisBox.m_hasCustomTreasure = charBuffer != 0;
     if (thisBox.m_hasCustomTreasure) {
@@ -1757,38 +1757,38 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     }
 
     count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (static_cast<unsigned>(count) < sizeof(intBuffer))
+    if (count < sizeof(intBuffer))
         return -1;
     thisBox.m_experienceBonus = intBuffer;
     count = infile->read(&intBuffer, sizeof(intBuffer));
-    if (static_cast<unsigned>(count) < sizeof(intBuffer))
+    if (count < sizeof(intBuffer))
         return -1;
     thisBox.m_manaBonus = intBuffer;
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     thisBox.m_moraleBonus = charBuffer;
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     thisBox.m_luckBonus = charBuffer;
 
     for (x = 0; x < 7; ++x) {
         count = infile->read(&intBuffer, sizeof(intBuffer));
-        if (static_cast<unsigned>(count) < sizeof(intBuffer))
+        if (count < sizeof(intBuffer))
             return -1;
         thisBox.m_resQty[x] = intBuffer;
     }
     for (x = 0; x < 4; ++x) {
         count = infile->read(&charBuffer, sizeof(charBuffer));
-        if (static_cast<unsigned>(count) < sizeof(charBuffer))
+        if (count < sizeof(charBuffer))
             return -1;
         thisBox.m_primarySkillBonus[x] = charBuffer;
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     if (number == 0) {
@@ -1797,14 +1797,14 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         thisBox.m_secondarySkills.resize(number);
         for (x = 0; x < number; ++x) {
             count = infile->read(&charBuffer, sizeof(charBuffer));
-            if (static_cast<unsigned>(count) < sizeof(charBuffer))
+            if (count < sizeof(charBuffer))
                 return -1;
             // Mac 0x121b14..0x121b68 directly stores each decoded enum word.
             int skillType = charBuffer;
             thisBox.m_secondarySkills[x].m_type =
                 H3_ENUM_DECODE(TSecondarySkill, skillType);
             count = infile->read(&charBuffer, sizeof(charBuffer));
-            if (static_cast<unsigned>(count) < sizeof(charBuffer))
+            if (count < sizeof(charBuffer))
                 return -1;
             int skillLevel = charBuffer;
             thisBox.m_secondarySkills[x].m_level =
@@ -1813,7 +1813,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     if (number == 0) {
@@ -1835,7 +1835,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     if (number == 0) {
@@ -1848,14 +1848,14 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
         thisBox.m_spells.resize(number);
         for (x = 0; x < number; ++x) {
             count = infile->read(&charBuffer, sizeof(charBuffer));
-            if (static_cast<unsigned>(count) < sizeof(charBuffer))
+            if (count < sizeof(charBuffer))
                 return -1;
             thisBox.m_spells[x] = H3_ENUM_DECODE(ESpellId, charBuffer);
         }
     }
 
     count = infile->read(&charBuffer, sizeof(charBuffer));
-    if (static_cast<unsigned>(count) < sizeof(charBuffer))
+    if (count < sizeof(charBuffer))
         return -1;
     number = charBuffer;
     thisBox.m_creatures.initialize();
@@ -1864,14 +1864,14 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData& thisBox,
             readMapCreatureId(infile, mapVersion);
 
         count = infile->read(&shortBuffer, sizeof(shortBuffer));
-        if (static_cast<unsigned>(count) < sizeof(shortBuffer))
+        if (count < sizeof(shortBuffer))
             return -1;
         thisBox.m_creatures.m_numTroops[x] = shortBuffer;
     }
 
     char padding[8];
     count = infile->read(padding, sizeof(padding));
-    if (static_cast<unsigned>(count) < sizeof(padding))
+    if (count < sizeof(padding))
         return -1;
     return 0;
 }
