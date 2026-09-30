@@ -703,6 +703,15 @@ void CChatManager::shutDown()
     }
 }
 
+// Project-inferred queue removal shared by capacity eviction and expiration.
+// Both callers establish that a message exists; neither clears its text here.
+void CChatManager::discardOldestChat()
+{
+    m_msgArray[m_currMsg].m_killTime = 0;
+    m_currMsg = getNextMsgNbr(m_currMsg);
+    --m_msgCount;
+}
+
 VA(0x00553840, 0x11B)
 DC_ADDRESS(0x11c3a8, 0x104)
 MAC_ADDRESS(0x211584, 0x148)
@@ -717,11 +726,8 @@ void CChatManager::addChat(const char* format, ...)
     if (m_position == m_msgCount - 1)
         atNewestMessage = true;
 
-    if (m_msgCount >= 20) {
-        m_msgArray[m_currMsg].m_killTime = 0;
-        m_currMsg = (m_currMsg + 1) % m_maxLines;
-        --m_msgCount;
-    }
+    if (m_msgCount >= 20)
+        discardOldestChat();
 
     int msgNbr = getNextFreeMsgNbr();
     strncpy(m_msgArray[msgNbr].m_text, chatText, 127);
@@ -736,6 +742,16 @@ void CChatManager::addChat(const char* format, ...)
         // Mac 0:0x2116a8 passes null to the retained sound helper.
         playChatSample(0);
     }
+}
+
+// Project-inferred system-message insertion. Preserve AddChat's format
+// interpretation and clear the flag only after it returns. Player join/drop
+// announcements retain the flag through sound playback and remain distinct.
+void CChatManager::addSystemChat(const char* format)
+{
+    m_isSysMsg = 1;
+    addChat(format);
+    m_isSysMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:904
@@ -776,9 +792,7 @@ void __cdecl CChatManager::turnDurationMsg(const char* format, ...)
             DATA_COMPGEN(0x00660358, turnDurationLineFormat, "%s%s"),
             (*g_generalText)[GENERAL_TEXT_TURN_DURATION_PREFIX],
             chatText);
-        m_isSysMsg = 1;
-        addChat(finalText);
-        m_isSysMsg = 0;
+        addSystemChat(finalText);
     }
 
     playChatSample(m_turnDurSample);
@@ -800,9 +814,7 @@ void __cdecl CChatManager::systemMsg(const char* format, ...)
         g_generalText->getText(GENERAL_TEXT_TURN_DURATION_PREFIX),
         chatText);
 
-    m_isSysMsg = 1;
-    addChat(finalText);
-    m_isSysMsg = 0;
+    addSystemChat(finalText);
     playChatSample(m_sysMsgSample);
 }
 
@@ -931,9 +943,7 @@ void CChatManager::killOldChat()
         unsigned long killTime = m_msgArray[m_currMsg].m_killTime;
         if (static_cast<unsigned long>(GameTime::elapsedSince(killTime))
                 > 20000) {
-            m_msgArray[m_currMsg].m_killTime = 0;
-            m_currMsg = getNextMsgNbr(m_currMsg);
-            --m_msgCount;
+            discardOldestChat();
             m_changed = 1;
             m_chatKilled = 1;
 

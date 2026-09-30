@@ -266,6 +266,11 @@ protected:
     void killOldChat();
     void updateNewChat();
     void updateWidgetText(int numLines, textWidget* widget);
+
+private:
+    // Project-inferred operations; callers retain expiration/display policy.
+    void discardOldestChat();
+    void addSystemChat(const char* format);
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);

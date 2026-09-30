@@ -829,6 +829,27 @@ The nearby data/session/address readers require a separate review: they differ
 in accepted first-query results, zero-size handling and when output sizes become
 visible. Similar allocation tails alone do not justify sharing their protocols.
 
+## Chat queue removal and system-message state
+
+Capacity eviction in `addChat()` and timed expiration in `killOldChat()` now
+share `discardOldestChat()`: clear the oldest record's timestamp, advance the
+circular index through the existing `getNextMsgNbr()` helper, then decrement
+the count. Both callers retain their nonempty/capacity guards. Expiration keeps
+its clock reads, changed/killed flags, later-message timeout extensions and
+scroll-position update. Insertion keeps its pre-eviction newest-message snapshot
+and post-insertion position/changed updates. The helper does not erase text or
+system-message tags, and `clearChat()` retains its separate full timestamp sweep.
+
+Ordinary system messages and turn-duration messages share `addSystemChat()`:
+set the system flag, call the existing variadic `addChat()`, then clear the flag.
+Formatting and sound selection stay in each caller, as does the turn-duration
+display guard and unconditional sound tail. The existing interpretation of the
+formatted string by `addChat()` is preserved. Player-enter and player-drop
+announcements intentionally remain distinct: they keep the flag set through
+their sound helper before clearing it. The new private methods introduce no
+storage, virtual slots, native address claims or explicit-inline qualifiers;
+their names and ordinary source placement are project inferences.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
