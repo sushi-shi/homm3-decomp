@@ -1417,6 +1417,11 @@ int NewfullMap::readShrineData(TAbstractFile* infile, CObject* shrineObject)
     return 0;
 }
 
+// Mac 0x120f9c..0x121004 expands the same versioned creature reader
+// retained at 0x1217a0. Keep its ordinary definition in that source order.
+static int readMapCreatureId(TAbstractFile* infile, int mapVersion);
+
+// The following troop count is checked before lhbrx at Mac 0x121030.
 VA(0x004fee50, 0xBC)
 DC_ADDRESS(0x0ede58, 0x128)
 MAC_ADDRESS(0x120f14, 0x180)
@@ -1431,19 +1436,11 @@ int NewfullMap::readTreasureData(TAbstractFile* infile, TreasureData* treasure)
 
     if (treasure->m_hasCustomGuardians) {
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            if (g_game->m_mapHeader.m_version
-                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char creature;
-                infile->read(&creature, sizeof(creature));
-                treasure->m_guardians.m_armies[i] = creature;
-            } else {
-                short creature;
-                infile->read(&creature, sizeof(creature));
-                treasure->m_guardians.m_armies[i] = creature;
-            }
+            treasure->m_guardians.m_armies[i] =
+                readMapCreatureId(infile, g_game->m_mapHeader.m_version);
 
             short amount;
-            if (static_cast<unsigned>(infile->read(&amount, sizeof(amount)))
+            if (static_cast<unsigned>(readLittleEndianValue(infile, amount))
                 < sizeof(amount))
                 return -1;
             treasure->m_guardians.m_numTroops[i] = amount;
@@ -1694,7 +1691,8 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 // second is called by loadBlackBox. Each reads a signed creature ID using the
 // byte width of its older file format and the short width of later formats.
 // Complete VC6 expands the calls in all four readers. The original names are
-// unavailable in the older Dreamcast build.
+// unavailable in the older Dreamcast build. Both short arms are little endian:
+// Mac 0x1217f4 and 0x121860 use lhbrx followed by extsh, without count guards.
 MAC_ADDRESS(0x1217a0, 0x6c)
 static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
 {
@@ -1703,8 +1701,7 @@ static int readMapCreatureId(TAbstractFile* infile, int mapVersion)
         infile->read(&narrow, sizeof(narrow));
         return narrow;
     }
-    short wide;
-    infile->read(&wide, sizeof(wide));
+    short wide = readLittleEndianValue<short>(infile);
     return wide;
 }
 
@@ -1716,11 +1713,13 @@ static int readSavedCreatureId(TAbstractFile* infile, int saveVersion)
         infile->read(&narrow, sizeof(narrow));
         return narrow;
     }
-    short wide;
-    infile->read(&wide, sizeof(wide));
+    short wide = readLittleEndianValue<short>(infile);
     return wide;
 }
 
+// Map scalars are little endian: Mac 0x12193c/0x121978/0x121a24 decode
+// the checked experience, mana and resource reads. Artifact shorts at
+// 0x121c34 are unchecked; troop shorts at 0x121d84 follow a count guard.
 VA(0x004ff6b0, 0x535)
 DC_ADDRESS(0x0ee56c, 0x4f2)
 MAC_ADDRESS(0x121878, 0x570)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic)
@@ -1740,10 +1739,10 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
             return -1;
     }
 
-    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    if (readLittleEndianValue(infile, dwordValue) < sizeof(dwordValue))
         return -1;
     thisBox->m_experienceBonus = dwordValue;
-    if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    if (readLittleEndianValue(infile, dwordValue) < sizeof(dwordValue))
         return -1;
     thisBox->m_manaBonus = dwordValue;
 
@@ -1755,7 +1754,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     thisBox->m_luckBonus = value;
 
     for (i = 0; i < 7; ++i) {
-        if (infile->read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        if (readLittleEndianValue(infile, dwordValue) < sizeof(dwordValue))
             return -1;
         thisBox->m_resQty[i] = dwordValue;
     }
@@ -1801,8 +1800,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                 infile->read(&narrow, sizeof(narrow));
                 thisBox->m_artifacts[i] = TArtifact(narrow);
             } else {
-                short wide;
-                infile->read(&wide, sizeof(wide));
+                short wide = readLittleEndianValue<short>(infile);
                 thisBox->m_artifacts[i] = TArtifact(wide);
             }
         }
@@ -1835,7 +1833,7 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
             readMapCreatureId(infile, mapVersion);
 
         short troops;
-        if (infile->read(&troops, sizeof(troops)) < sizeof(troops))
+        if (readLittleEndianValue(infile, troops) < sizeof(troops))
             return -1;
         thisBox->m_creatures.m_numTroops[i] = troops;
     }
@@ -1903,6 +1901,9 @@ VA_COMPGEN(0x004ffdf0, 0xB0, IMPLICIT_DTOR, BlackBoxData)
 // _First writes a literal zero rather than differencing two pointers.  The
 // fixed-length loops count with a signed `int` against 7 and 4, while the
 // three list loops compare against size() and so come out unsigned.
+// The save format uses native-order reward scalars and troop counts, but
+// Mac 0x1225ec serializes creature IDs through sthbrx. Keep that unchecked
+// little-endian write separate from the following checked native short.
 VA(0x004ffea0, 0x35A)
 DC_ADDRESS(0x0eebdc, 0x4c2)
 MAC_ADDRESS(0x1221bc, 0x4b0)
@@ -1979,7 +1980,7 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
         return -1;
     for (i = 0; i < numArmies; ++i) {
         short creature = thisBox->m_creatures.m_armies[i];
-        outfile->write(&creature, 2);
+        writeLittleEndianValue(outfile, creature);
         short count = thisBox->m_creatures.m_numTroops[i];
         if (static_cast<unsigned>(outfile->write(&count, 2)) < 2)
             return -1;

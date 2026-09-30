@@ -1015,8 +1015,43 @@ no successful full Mac-preservation checkpoint is claimed. The refreshed source 
 and no ownership gaps; RMG still has its 201 pre-existing Clang body-analysis
 diagnostics, which remain explicit coverage gaps.
 
-The working inventory now has 6,043 open native call-site leads and 1,953
+The working inventory now has 5,979 open native call-site leads and 2,017
 explicit operation-site notes. There are also three source-body mapping gaps
 in unpaired template members (`bitset_iterator` default construction and
 addition, and `TRmgCoordinatePoint::operator+=`). Neither those gaps nor the
 359 functions without native pairing are treated as completed body reviews.
+
+
+### Black-box and treasure stream calls
+
+The map reader's full Mac body at `0x121878+0x570` decodes its experience,
+mana, resource dwords, newer artifact shorts and troop-count shorts as little
+endian. Those five operations now use the existing scalar reader. The
+artifact read remains unchecked; the other four operations keep their count
+guards. Both canonical creature-ID readers also now decode their unchecked
+short arm through that helper, matching `lhbrx`/`extsh` at `0x1217f4` and
+`0x121860` while keeping their different version tests.
+
+The saved-game reader and writer use native-order reward dwords and troop
+counts. Creature IDs are an explicit exception: `saveBlackBox` uses `sthbrx`
+at `0x1225ec`, so that unchecked transfer now calls the existing endian
+writer. The following checked troop-count write remains native order. The
+signed vector counts, signed skill/spell IDs, and unchecked unsigned artifact
+byte in `loadBlackBox` remain distinct. Map-file empty lists call `clear`;
+saved-game lists always call `resize`, including for zero.
+
+`readTreasureData` now calls the canonical `readMapCreatureId` for the same
+expanded version branch at Mac `0x120f9c..0x121004`, followed by the checked
+endian troop-count reader. Its forward declaration preserves the ordinary
+helper's later source position. Save/load treasure helpers already retain
+their string and army calls; army results are deliberately ignored, and the
+helpers themselves return only zero or minus one.
+
+This batch restores ten source calls and accounts for 64 native call-site
+leads after inspecting the complete callers and the four-byte vector-clear
+callee. The targeted mapcell build keeps `saveBlackBox` and `readGarrisonData`
+at 100%, raises `loadBlackBox` from 91.4115% to 91.4222%, and measures
+`readBlackBox` at 91.1309% and `readTreasureData` at 89.4321%. The latter's Mac
+comparison now retains an unpaired `readLittleEndianValue<short>` call; this
+additional comparison gap is recorded, with no fabricated target address or
+inline qualifier. Windows score losses remain visible in the checkpoint.
