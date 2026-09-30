@@ -3844,6 +3844,8 @@ type_adventure_cursor advManager::getNormalCursor(NewmapCell* currCell)
 // DC 4595 reads the level-change guard's hero through GetHero(player's
 // current id), not GetCurrHero; restoring it gives 87.38 -> 88.60. Mac
 // calls getCurrHero there (a platform difference).
+// Mac e7ac..e810 expands the current-hero ID before both hover guards;
+// preserve getCurrHeroId while keeping Windows separate GetHero lookup.
 VA(0x0040e360, 0x918)
 DC_ADDRESS(0x00f3a8, 0x9c4)
 MAC_ADDRESS(0x00e5e8, 0xa94)  // anchor-callee
@@ -3872,14 +3874,14 @@ int advManager::processHover(int mouseX, int mouseY)
         NewmapCell* currCell = getCell(m_lastMapHover);
         setRolloverText(currCell, rx, ry);
 
-        if (g_currentPlayer->m_currHeroId != -1
-            && g_game->getHero(g_currentPlayer->m_currHeroId)->m_z
+        if (g_game->getCurrHeroId() != -1
+            && g_game->getHero(g_game->getCurrHeroId())->m_z
                != m_lastMapHover.m_z) {
             g_mouseManager->setPointer(0, mouseManager::ADVENTURE_SET);
             return 1;
         }
 
-        if (g_currentPlayer->m_currHeroId == -1) {
+        if (g_game->getCurrHeroId() == -1) {
             if (currCell->m_type == TOWN) {
                 town* currentTown = g_game->getTown(
                     currCell->getTriggerCell()->getMapExtraInfo());
@@ -4254,6 +4256,7 @@ void advManager::drawAdventureMapGems()
                       g_windowManager->m_screenBitmap, 556, 508, 0, 1);
 }
 
+// Mac fc50..fc60 expands getCurrHeroId before the cursor draw guard.
 VA(0x0040f3f0, 0x47D)
 DC_ADDRESS(0x010788, 0x514)
 MAC_ADDRESS(0x00f948, 0x5e0)
@@ -4330,7 +4333,7 @@ void advManager::completeDraw(int startX, int startY, int z, unsigned char force
         }
     }
 
-    if (g_currentPlayer->m_currHeroId == -1)
+    if (g_game->getCurrHeroId() == -1)
         m_drawCursor = false;
     if (m_drawCursor)
         drawCursorAlpha();
@@ -7611,6 +7614,7 @@ void advManager::mobilizeCurrHero(int inMove, bool waitingPlayer, bool drawChang
 // conjunction shipped a cost-169 body that /Ob2 expanded into doAdventureOptions,
 // doSystemOptions, screenScroll, processDeSelect, processRadarSelect and
 // deactivateCurrHero (all back to 100%).
+// Mac 17e90..17e98 expands getCurrHeroId after the current-player guard.
 VA(0x00417680, 0x1AF)
 DC_ADDRESS(0x01a520, 0x13c)
 MAC_ADDRESS(0x017e58, 0x14c)
@@ -7621,7 +7625,7 @@ void advManager::demobilizeCurrHero(bool waitingPlayer,
         return;
     if (!g_currentPlayer)
         return;
-    if (g_currentPlayer->m_currHeroId == -1)
+    if (g_game->getCurrHeroId() == -1)
         return;
     if (!m_curHeroMobile)
         return;
