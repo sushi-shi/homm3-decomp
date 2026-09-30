@@ -641,17 +641,37 @@ public:
 };
 SIZE(type_tree_info, 4);
 
-// Two more retail-used arms of the four-byte union. Both getters extract
-// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
-// The other DC arms remain unmodelled until a retail consumer needs them.
+// DC type 0x2d41: unused:5, visited_bits:8, index:12, empty:1,
+// all unsigned int. RandomizeEvents 5121..5123 clears visits, writes the
+// index and clears empty separately. Mac 0xd75c4..0xd75d4 and the getter
+// at 0x5fc0 retain numeric index bits 13..24 and empty bit 25.
+#if defined(__MWERKS__)
+#pragma reverse_bitfields on
+#endif
 struct type_creature_bank_info {
 public:
-    unsigned long m_unused : 13;
-    unsigned long m_index : 12;
-    unsigned long m_tail : 7;
+    unsigned int m_unused : 5;
+    unsigned int m_visitedBits : 8;
+    unsigned int m_index : 12;
+    unsigned int m_empty : 1;
 };
 SIZE(type_creature_bank_info, 4);
 
+// DC type 0x2f7d: qty:19, index:12, custom:1. The RESOURCE arm in
+// RandomizeEvents preserves the upper 13 bits while assigning qty;
+// Mac 0xd7e44..0xd7e4c uses the same numeric low-19-bit lane.
+struct CustomResourceInfo {
+public:
+    unsigned int m_qty : 19;
+    unsigned int m_index : 12;
+    unsigned int m_custom : 1;
+};
+SIZE(CustomResourceInfo, 4);
+#if defined(__MWERKS__)
+#pragma reverse_bitfields off
+#endif
+
+// Retail's university getter extracts bits 13..24 as a pool index.
 struct type_university_info {
 public:
     unsigned long m_unused : 13;
@@ -697,6 +717,7 @@ public:
         type_tree_info m_treeInfo;
         ShrineInfo m_shrineInfo;
         type_creature_bank_info m_creatureBankInfo;
+        CustomResourceInfo m_customResourceInfo;
         type_university_info m_universityInfo;
         // Original CodeView arm names: extraInfo, monster_info, campfire_info,
         // treasure_info, scholar_info, sea_chest_info, shipyard_info.

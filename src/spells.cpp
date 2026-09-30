@@ -710,6 +710,8 @@ void combatManager::unnamed59FDE0(int x, int y, army* target)
 // overloads; keep one body and distinguish inferred linkage from DC flags.
 // Header visibility restores the lane's 92.43%, with every other measured
 // Windows score and all 34 available spells/resource-manager Mac pairs held.
+// The mass Dispel/Cure this_army reference locals are DC-proven at
+// 1452/1517; restoring them holds Windows 92.43% and all 21 Mac comparisons.
 VA(0x0059fe30, 0x2A4F) MAC_ADDRESS(0x190540, 0x29f4)  // retail largest-unadmitted row, dc 0x14f7dc
 void combatManager::castSpell(SpellID spellId, int targetIndex,
                               int isMonsterSpell,
@@ -1384,14 +1386,16 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
             clearEffects();
             for (int side = 0; side < 2; ++side) {
                 for (int index = 0; index < m_numArmies[side]; ++index) {
-                    army* dispelTarget = &m_armies[side][index];
+                    // DC this_army is army& in the lexical scope at
+                    // 0x151080..0x1510e2, spells.cpp:1452.
+                    army& thisArmy = m_armies[side][index];
                     if (validSpellTargetArmy(spellId, m_currentSide,
-                                             dispelTarget, 1,
+                                             &thisArmy, 1,
                                              isMonsterSpell)) {
                         for (int dispelledSpell = 0;
                              dispelledSpell < 81; ++dispelledSpell) {
                             if (dispelledSpell != SPELL_POISON)
-                                dispelTarget->cancelIndividualSpell(
+                                thisArmy.cancelIndividualSpell(
                                     dispelledSpell);
                         }
                         m_effected[side][index] = 1;
@@ -1443,12 +1447,14 @@ void combatManager::castSpell(SpellID spellId, int targetIndex,
         } else {
             clearEffects();
             for (int index = 0; index < m_numArmies[m_currentSide]; ++index) {
-                army* cureTarget = &m_armies[m_currentSide][index];
-                if (!cureTarget->getSpellTime(60)
+                // DC this_army is army& in the lexical scope at
+                // 0x15126e..0x1512da, spells.cpp:1517.
+                army& thisArmy = m_armies[m_currentSide][index];
+                if (!thisArmy.getSpellTime(60)
                     && validSpellTargetArmy(SPELL_CURE, m_currentSide,
-                                             cureTarget, 1,
+                                             &thisArmy, 1,
                                              isMonsterSpell)) {
-                    cureTarget->cure(mastery, monsterPower,
+                    thisArmy.cure(mastery, monsterPower,
                                       castingHero);
                     m_effected[m_currentSide][index] = 1;
                 }

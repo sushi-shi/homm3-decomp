@@ -4401,6 +4401,8 @@ void game::matchUndergroundGates()
 // separate block locals: retail carries five EH states and five independent
 // vector<TArtifact> teardown paths for exactly those records.
 
+// Historical probes below predate the recovered helper calls and removal of
+// all inline-depth controls; their scores describe that older source model.
 // 86.92752% wall, 2026-08-22. The semantic skeleton is closed at 213 blocks
 // on both sides (88 candidate branches against retail's 87), and the frame is
 // within one dword (`0x334` against `0x330`). The remaining deltas are bounded
@@ -4426,8 +4428,8 @@ void game::matchUndergroundGates()
 // 86.7325 against 86.9275. The residual is which of two identical blocks
 // the cross-jumper elects as canonical, not a source fact; re-take this
 // pairing if a later change gives the two blocks different predecessors.
-// The two remaining REAL call divergences are both over-inlines that need
-// a statement pin: retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
+// That model's two remaining real call divergences were over-expansions:
+// retail CALLS ExtraInfoUnion::SetWagon(EGameResource,
 // short) at randomize_wagon's first store and ExtraInfoUnion::set_pyramid
 // at randomize_pyramid's, and this CL expands both.
 // 2026-09-06, polish lane 48. READ predict-inline's census HERE BEFORE
@@ -4466,6 +4468,17 @@ void game::matchUndergroundGates()
 // and claim sites; all canonical helper calls remain intact. Mac 0xd7dfc
 // calls randomizeRefugeeCamp, so the refugee-camp arm uses that shared helper
 // (80.00%; 84.79% with its body written in place).
+// DC 5349 calls cell(x-1,y,z) separately for the type and trigger tests,
+// then 5351 calls it again for extraInfo. Retail 0x4c17d0..0x4c1846
+// repeats the address calculation; a cached left pointer erases those
+// source calls. Restore the compound guard and its else setter/increment:
+// 80.0034 -> 87.8205 in two reproduced source-family states, with no
+// sibling MAX loss. Mac 0xd7c10..0xd7c78 combines the three calculations.
+// DC 5121..5123 and Mac 0xd75b4..0xd75d4 keep bank visits, index and
+// empty as three field operations. The RESOURCE arm likewise dispatches
+// type before its two quantity guards (DC 5439..5455, Mac 0xd7e04..0xd7e78).
+// Restoring those typed operations together reaches 89.2299%; the five
+// distinct bank lifetimes and all canonical helper calls remain intact.
 VA(0x004c0cc0, 0x1668) MAC_ADDRESS(0x0d72e0, 0xebc)  // NewMap caller + dc order, dc 0xac910
 void game::randomizeEvents()
 {
@@ -4499,8 +4512,6 @@ void game::randomizeEvents()
     EGameResource resType;
     int newOwner;
     NewmapCell::TObjectCell* thisObj;
-
-    const unsigned long poolIndexBits = 0x03ffe000;
 
     for (z = 0; z < getNumMapLevels(); ++z) {
         for (y = 0; y < g_mapHeight; ++y) {
@@ -4560,14 +4571,14 @@ void game::randomizeEvents()
                 case CREATURE_BANK:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
                         {
                             int converted;
                             converted = tempCell->m_objectIndex;
-                            initializeCreatureBank(&bank, type_creature_bank_type(converted));
+                            initializeCreatureBank(bank, type_creature_bank_type(converted));
                         }
                         m_creatureBanks.push_back(bank);
                     }
@@ -4622,11 +4633,11 @@ void game::randomizeEvents()
                 case DERELICT_SHIP:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_DERELICT);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4635,11 +4646,11 @@ void game::randomizeEvents()
                 case SEPULCHER:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_SEPULCHER);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4648,11 +4659,11 @@ void game::randomizeEvents()
                 case SHIPWRECK:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_SHIPWRECK);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4661,11 +4672,11 @@ void game::randomizeEvents()
                 case DRAGON_CITY:
                     {
                         tempCell->clearVisitedBits();
-                        tempCell->m_extraInfo =
-                            ((m_creatureBanks.size() & 0xfff) << 13)
-                            | (tempCell->m_extraInfo & ~poolIndexBits);
+                        tempCell->m_creatureBankInfo.m_index =
+                            m_creatureBanks.size();
+                        tempCell->m_creatureBankInfo.m_empty = 0;
                         type_creature_bank bank;
-                        initializeCreatureBank(&bank,
+                        initializeCreatureBank(bank,
                                                  CREATURE_BANK_DRAGON);
                         m_creatureBanks.push_back(bank);
                     }
@@ -4755,18 +4766,18 @@ void game::randomizeEvents()
                     break;
 
                 case MAGIC_SPRING:
-                    // DC 5355/5356 separates the setter from its increment.
-                    if (x > 0) {
-                        NewmapCell* left = m_worldMap.cell(x - 1, y, z);
-                        if (left->m_type == MAGIC_SPRING && left->m_isTrigger) {
-                            tempCell->m_extraInfo = left->m_extraInfo;
-                            break;
-                        }
+                    if (x > 0
+                            && m_worldMap.cell(x - 1, y, z)->m_type == MAGIC_SPRING
+                            && m_worldMap.cell(x - 1, y, z)->m_isTrigger) {
+                        tempCell->m_extraInfo =
+                            m_worldMap.cell(x - 1, y, z)->m_extraInfo;
                     }
-                    static_cast<ExtraInfoUnion*>(
-                        static_cast<void*>(&tempCell->m_extraInfo))
-                        ->setMagicSpring(numMagicSpring, 1);
-                    ++numMagicSpring;
+                    else {
+                        static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->m_extraInfo))
+                            ->setMagicSpring(numMagicSpring, 1);
+                        ++numMagicSpring;
+                    }
                     break;
 
                 case MERC_CAMP:
@@ -4818,16 +4829,20 @@ void game::randomizeEvents()
                     break;
 
                 case RESOURCE:
-                    if ((tempCell->m_extraInfo & 0x7ffff) == 0) {
-                        if (tempCell->m_objectIndex == WOOD
-                            || tempCell->m_objectIndex == ORE
-                            || tempCell->m_objectIndex == GOLD)
-                            id = random(5, 10);
-                        else
-                            id = random(3, 6);
-                        tempCell->m_extraInfo =
-                            (tempCell->m_extraInfo & 0xfff80000)
-                            | (id & 0x7ffff);
+                    // DC 5439 dispatches the resource type before the
+                    // separate quantity tests at 5444 and 5453. Mac
+                    // 0xd7e04..0xd7e78 retains those same two write arms.
+                    switch (tempCell->m_objectIndex) {
+                    case WOOD:
+                    case ORE:
+                    case GOLD:
+                        if (tempCell->m_customResourceInfo.m_qty == 0)
+                            tempCell->m_customResourceInfo.m_qty = random(5, 10);
+                        break;
+                    default:
+                        if (tempCell->m_customResourceInfo.m_qty == 0)
+                            tempCell->m_customResourceInfo.m_qty = random(3, 6);
+                        break;
                     }
                     break;
 
@@ -4999,6 +5014,13 @@ VA_COMPGEN(0x004c2420, 0x26, IMPLICIT_DTOR, type_creature_bank)
 // Explicit result(0) gives 80.4993% but lowers the campaign reader; direct wide
 // assignment gives 67.4290%. The legacy source dereference still stays called
 // where retail expands it. No inline controls are needed for these readers.
+// The spell-processing index is signed: Mac d8a4c uses cmpwi r27,70,
+// and retail's outer spell-stride latch (+0x439, target B51) uses jl at
+// 0x2530. The packed decoder instead uses cmplwi/jb and stays unsigned.
+// Restoring the outer int index raises Windows 82.7736 -> 82.8580;
+// sibling Windows CUR and all available Mac scores are unchanged.
+// The older DC filename loader has no spell-plane counterpart; its rumour
+// string lifetime and later pool clear calls already agree with this source.
 VA(0x004c2450, 0x88E) MAC_ADDRESS(0x0d82cc, 0xbcc)  // sole NewMap caller + full stream/callee sequence
 bool game::loadMap(TAbstractFile* mapFile)
 {
@@ -5051,7 +5073,7 @@ bool game::loadMap(TAbstractFile* mapFile)
         && m_mapHeader.m_version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
         std::bitset<70> serializedSpells = readPackedBits<70>(mapFile);
 
-        for (unsigned int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
             if (serializedSpells[spell]) {
                 for (artifact = 0; artifact < 144; ++artifact) {
                     if (g_artifactTraits[artifact].m_givesSpells) {

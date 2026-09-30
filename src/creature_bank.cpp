@@ -169,8 +169,16 @@ static void splitSlot(armyGroup* currentArmyGroup, long slot, long groups)
 // five groups and slot 2 is the candidate, two become 2+3 with slot 3, and
 // three become 2+2 with slot 0.
 
+// Original: initialize_creature_bank; DC 0x712d0 records bank as
+// type_creature_bank& (parameter sp+0x34). Windows and Mac 0x897a0 pass
+// its address and access the bank unconditionally; neither contradicts
+// that interface. A generated decorated name is not retail type evidence.
+// The pre-edit retail comparison is 100%; the reference spelling preserves
+// all 880 emitted VC6 bytes including padding. Focused creature_bank/game
+// builds preserve their available Mac comparisons. Before delink refresh,
+// the old pointer target name cannot bind this renamed reference definition.
 VA(0x0047ad90, 0x36E) MAC_ADDRESS(0x0897a0, 0x348)  // dc 0x712d0
-void initializeCreatureBank(type_creature_bank* bank,
+void initializeCreatureBank(type_creature_bank& bank,
                               type_creature_bank_type type)
 {
     int roll = random(1, 100);
@@ -183,45 +191,45 @@ void initializeCreatureBank(type_creature_bank* bank,
 
     const type_creature_bank_level* level =
         &g_constCreatureBankTraits[type].m_levels[which];
-    bank->m_guards = level->m_guards;
-    memcpy(bank->m_resources, level->m_resources, sizeof(bank->m_resources));
-    bank->m_rewardCreature = level->m_rewardCreature;
-    bank->m_rewardCreatures = level->m_rewardCreatures;
+    bank.m_guards = level->m_guards;
+    memcpy(bank.m_resources, level->m_resources, sizeof(bank.m_resources));
+    bank.m_rewardCreature = level->m_rewardCreature;
+    bank.m_rewardCreatures = level->m_rewardCreatures;
 
     int drawn;
     for (drawn = 0; drawn < level->m_relicArtifacts; ++drawn)
-        bank->m_artifacts.push_back(g_game->getRandomArtifactId(16));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(16));
     for (drawn = 0; drawn < level->m_majorArtifacts; ++drawn)
-        bank->m_artifacts.push_back(g_game->getRandomArtifactId(8));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(8));
     for (drawn = 0; drawn < level->m_minorArtifacts; ++drawn)
-        bank->m_artifacts.push_back(g_game->getRandomArtifactId(4));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(4));
     for (drawn = 0; drawn < level->m_treasureArtifacts; ++drawn)
-        bank->m_artifacts.push_back(g_game->getRandomArtifactId(2));
+        bank.m_artifacts.push_back(g_game->getRandomArtifactId(2));
 
     long slot = 0;
-    switch (bank->m_guards.getNumArmies()) {
+    switch (bank.m_guards.getNumArmies()) {
     case CREATURE_BANK_GUARDS_ONE_STACK:
-        splitSlot(&bank->m_guards, 0, 5);
+        splitSlot(&bank.m_guards, 0, 5);
         slot = 2;
         break;
     case CREATURE_BANK_GUARDS_TWO_STACKS:
-        splitSlot(&bank->m_guards, 1, 2);
-        splitSlot(&bank->m_guards, 0, 3);
+        splitSlot(&bank.m_guards, 1, 2);
+        splitSlot(&bank.m_guards, 0, 3);
         slot = 3;
         break;
     case CREATURE_BANK_GUARDS_THREE_STACKS:
-        splitSlot(&bank->m_guards, 1, 2);
-        splitSlot(&bank->m_guards, 0, 2);
+        splitSlot(&bank.m_guards, 1, 2);
+        splitSlot(&bank.m_guards, 0, 2);
         slot = 0;
         break;
     }
 
     if (random(1, 100) <= level->m_upgradeChance) {
-        TCreatureType current = bank->m_guards.m_armyTypes[slot];
+        TCreatureType current = bank.m_guards.m_armyTypes[slot];
         if (g_game->isBaseCreature(current)) {
-            TCreatureType promoted = bank->m_guards.m_armyTypes[slot];
+            TCreatureType promoted = bank.m_guards.m_armyTypes[slot];
             int upgraded = g_game->upgradedCreatureType(promoted);
-            bank->m_guards.m_armies[slot] = upgraded;
+            bank.m_guards.m_armies[slot] = upgraded;
         }
     }
 }
