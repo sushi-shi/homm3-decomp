@@ -1114,8 +1114,10 @@ void hero::initialize(const HeroExtra* setup)
         m_portrait = setup->m_portraitNumber;
 
     if (setup->m_customPrimarySkills) {
-        int i;
-        MEMCPY(m_stats, setup->m_primarySkills, sizeof(m_stats), i);
+        // Mac 0xf4658..0xf466c widens each signed skill byte before the
+        // store, matching the existing int-valued setter's expansion.
+        for (int i = 0; i < 4; i++)
+            setPrimarySkill(i, setup->m_primarySkills[i]);
     }
 
     if (setup->m_customSecondarySkills) {

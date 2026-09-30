@@ -24,6 +24,8 @@ without banking the ledger. After source, header, profile, claim or merge
 changes, refresh the affected TU before reusing its score. Inspect a failing
 command's actual cause and repair only the inputs needed for that build.
 Routine matching needs no full build, tests or standalone validation checks.
+Native disassembly and focused compiler diagnostics are part of matching and
+remain authorized; the restriction on extra checks does not exclude them.
 Workers follow this same focused workflow in their separate worktrees.
 If a recovered interface renames a compared symbol, compile the owning TU,
 then run `homm3 delink --unit <TU>` before the next fast comparison. Repeat

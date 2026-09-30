@@ -1029,7 +1029,9 @@ def _std_algorithm_element(rest: str):
     vector_element = re.match(r"V\?\$vector@[VU]([A-Za-z_]\w*)@", rest)
     if vector_element:
         return vector_element.group(1) + "_vector", max(0, depth - 1)
-    match = re.match(r"[VU]([A-Za-z_]\w*)@", rest)
+    # Enum-valued ranges retain their source type (W4), just as class and
+    # struct elements do. Do not collapse them into the underlying int key.
+    match = re.match(r"(?:[VU]|W4)([A-Za-z_]\w*)@", rest)
     if match:
         return match.group(1), max(0, depth - 1)
     if rest[:1] in DEQUE_PRIMITIVE_ELEMENT:
