@@ -1241,6 +1241,9 @@ unsigned char hero::belongsToHuman() const
     return g_game->isHuman(m_owner) != 0;
 }
 
+// Mac 0xf4c28/0xf4ca4 and the following artifact scans expand the
+// eight-byte record-reference accessors. Keep the canonical Hero.h:965/970
+// getArtifact/getBackpack paths instead of direct array reads.
 VA(0x004d9070, 0x45)
 DC_ADDRESS(0x0cc0e4, 0x52)
 MAC_ADDRESS(0x0f4c1c, 0x68)
@@ -1248,7 +1251,7 @@ long hero::getEquippedArtifacts(unsigned char countWarMachines) const
 {
     long count = 0;
     for (int slot = 0; slot < 19; slot++) {
-        int id = m_equipped[slot].m_artifactId;
+        int id = getArtifact(TArtifactSlot(slot)).m_artifactId;
         if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
             id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
@@ -1266,7 +1269,7 @@ long hero::getNumberInBackpack(unsigned char countWarMachines) const
     if (countWarMachines)
         return m_backpackCount;
     for (int slot = 0; slot < 64; slot++) {
-        int id = m_backpack[slot].m_artifactId;
+        int id = getBackpack(slot).m_artifactId;
         if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
             id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
             count++;
@@ -1320,11 +1323,11 @@ MAC_ADDRESS(0x0f4d94, 0x68)
 unsigned char hero::hasArtifact(int whichArtifact) const
 {
     for (int slot = 0; slot < 19; slot++) {
-        if (m_equipped[slot].m_artifactId == whichArtifact)
+        if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
             return 1;
     }
     for (int pack = 0; pack < 64; pack++) {
-        if (m_backpack[pack].m_artifactId == whichArtifact)
+        if (getBackpack(pack).m_artifactId == whichArtifact)
             return 1;
     }
     return 0;
@@ -1336,10 +1339,10 @@ MAC_ADDRESS(0x0f4dfc, 0xc4)
 unsigned char hero::isWieldingArtifact(int whichArtifact) const
 {
     if (whichArtifact == ARTIFACT_SPELLBOOK) {
-        return m_equipped[17].m_artifactId == ARTIFACT_SPELLBOOK;
+        return getArtifact(eArtifactSlotSpellbook).m_artifactId == ARTIFACT_SPELLBOOK;
     } else {
         for (int slot = 0; slot < 19; slot++) {
-            if (m_equipped[slot].m_artifactId == whichArtifact)
+            if (getArtifact(TArtifactSlot(slot)).m_artifactId == whichArtifact)
                 return 1;
         }
     }
@@ -1379,7 +1382,7 @@ void hero::destroySiegeWeaponArtifact(int creatureType)
     }
     // Nineteen equipped slots, one more than the DC build's eighteen.
     for (int slot = 0; slot < 19; slot++) {
-        if (m_equipped[slot].m_artifactId == artifact) {
+        if (getArtifact(TArtifactSlot(slot)).m_artifactId == artifact) {
             removeArtifact(slot);
             return;
         }
