@@ -94,7 +94,7 @@ advmgr	?doAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	94.8372	94.
 advmgr	?doAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00	tokens1:b5da8b6a746f
 advmgr	?doSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00	tokens1:413a8bc047dc
 advmgr	?drawAdvObj@advManager@@QAEXHHHHH@Z	87.7608	87.7608	87.9441	0x10c00	tokens1:c89803615da7
-advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2050	85.2050	85.2335	0x11590	tokens1:0938607e2189
+advmgr	?drawAdvObjShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11590	tokens1:6dae9dbf4b3c
 advmgr	?drawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0	tokens1:35617ae5edc3
 advmgr	?drawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0	tokens1:ef6dac784460
 advmgr	?drawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50	tokens1:c4a9733725d9
@@ -200,7 +200,7 @@ ai	?_Sort@std@@YIXPAPAVarmy@@0Ufunc_moves_before@@0@Z	100.0000	100.0000	100.0000
 ai	?_Sort_0@std@@YIXPAPAVarmy@@0Ufunc_moves_before@@0@Z	100.0000	100.0000	100.0000	0x23340	-
 ai	?_Unguarded_insert@std@@YIXPAPAVarmy@@PAV2@Ufunc_moves_before@@@Z	100.0000	100.0000	100.0000	0x237c0	-
 ai	?_Unguarded_partition@std@@YIPAPAVarmy@@PAPAV2@0PAV2@Ufunc_moves_before@@@Z	100.0000	100.0000	100.0000	0x23820	-
-ai	?aiCheckRetreat@combatManager@@QAEEXZ	94.4511	94.4511	95.7719	0x1e570	tokens1:cf411cec81cd
+ai	?aiCheckRetreat@combatManager@@QAEEXZ	94.4511	94.4511	95.7719	0x1e570	tokens1:c70d61fe8327
 ai	?attemptShooterDefense@combatManager@@AAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760	tokens1:4d246a3a2b7f
 ai	?berserkAttack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0	tokens1:da393658a44a
 ai	?canCastSpells@combatManager@@QBEEJE@Z	100.0000	100.0000	100.0000	0x1f890	tokens1:0e44a4ebf80a
@@ -990,8 +990,8 @@ cmbtmgr	?setNextArmy@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x65330	
 cmbtmgr	?setupAdjacencyArray@combatManager@@AAEXXZ	100.0000	100.0000	100.0000	0x640a0	tokens1:c5ebe3df5946
 cmbtmgr	?setupAndLoadObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66290	tokens1:88ee7c1ee002
 cmbtmgr	?setupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	100.0000	100.0000	100.0000	0x639f0	tokens1:d06a7f6403d2
-cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:4dc9747a4bbe
-cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	94.1906	94.1906	100.0000	0x67a00	tokens1:c7c05522b659
+cmbtmgr	?shootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	94.6967	94.6967	100.0000	0x67db0	tokens1:4eb23a14c530
+cmbtmgr	?shootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.1219	89.1219	100.0000	0x67a00	tokens1:08ebca4df748
 cmbtmgr	?shootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	96.5625	96.5625	100.0000	0x68220	tokens1:b764eb463ab5
 cmbtmgr	?shotIsNotOptimal@combatManager@@QBEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600	tokens1:84bb1e66fa9a
 cmbtmgr	?shotIsThroughWall@combatManager@@QBEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510	tokens1:2b74d27c31da
@@ -4228,7 +4228,7 @@ spells	?demonicResurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	97.2740	97.2740	
 spells	?displayFailureReason@combatManager@@QAEXHPBDJ@Z	100.0000	100.0000	100.0000	0x1a2c60	tokens1:ac0c52503e7f
 spells	?doBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20	tokens1:10276108e1ac
 spells	?drawBolt@combatManager@@QAEXPAUSBolt@@H@Z	100.0000	100.0000	100.0000	0x1a5440	tokens1:77fe36e615c5
-spells	?earthquake@combatManager@@QAEXH@Z	83.7388	83.7388	86.9157	0x1a7c80	tokens1:26400b2bb62c
+spells	?earthquake@combatManager@@QAEXH@Z	87.0197	87.0197	87.0197	0x1a7c80	tokens1:0efae9dc8808
 spells	?findAnimateDeadTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50	tokens1:c538d970d8f0
 spells	?findDemonicResurrectionTarget@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3e40	tokens1:ea8043ced0e6
 spells	?findResurrectionTarget@combatManager@@QAEPAVarmy@@HHJ@Z	100.0000	100.0000	100.0000	0x1a3cc0	tokens1:4a8899993fac
@@ -4418,7 +4418,7 @@ town	?getPortraitFrame@town@@QBEH_N@Z	100.0000	100.0000	100.0000	0x1bd700	tokens
 town	?getPrimarySkill@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x1bde40	tokens1:3f23609cc735
 town	?getSiloIncome@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280	tokens1:32a1c2e5c6ff
 town	?getTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450	tokens1:5327a64312cd
-town	?giveEventReward@town@@QAEXPBVTTownEvent@@@Z	94.9615	94.9615	94.9825	0x1bfeb0	tokens1:0bcbe87dbd3b
+town	?giveEventReward@town@@QAEXABVTTownEvent@@@Z	100.0000	100.0000	100.0000	0x1bfeb0	tokens1:d5e1e2408b20
 town	?giveSpells@town@@QBEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1be030	tokens1:c6d77840248c
 town	?hasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0	tokens1:b50503afce0b
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0	tokens1:d2853d2508f6

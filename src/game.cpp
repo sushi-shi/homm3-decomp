@@ -10106,7 +10106,7 @@ void game::giveTownEventReward(const TTownEvent& thisEvent)
     town* thisTown = getTown(thisEvent.m_townNum);
     if (g_netLocalGamePos == thisTown->m_owner) {
         giveTimeEventReward(&thisEvent);
-        thisTown->giveEventReward(&thisEvent);
+        thisTown->giveEventReward(thisEvent);
     }
 }
 
