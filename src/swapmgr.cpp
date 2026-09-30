@@ -2499,9 +2499,10 @@ inline bool swapManager::isLeftHero()
 }
 
 // E:\gamedcs\swapmgr.cpp:2241
+// Original public ?IsRightHero@swapManager@@QAA_NXZ proves bool; keep inline placement.
 DC_ADDRESS(0x15ee24, 0x2a)
 MAC_ADDRESS(0x1a9c18, 0x4c)
-inline unsigned char swapManager::isRightHero()
+inline bool swapManager::isRightHero()
 {
     if (m_heroes[1]->m_owner == g_game->getLocalPlayerGamePos())
         return true;
