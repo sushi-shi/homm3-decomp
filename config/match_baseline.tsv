@@ -2271,7 +2271,7 @@ hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890	tokens1
 hero	?initialize@hero@@QAEXF@Z	97.3624	97.3624	97.3624	0xd8720	tokens1:fd67951950d8
 hero	?initialize@hero@@QAEXPBVHeroExtra@@@Z	74.6586	76.3958	100.0000	0xd8b30	tokens1:0c85d76db41d
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0	tokens1:90bec856c736
-hero	?initializeBallisticsTable@@YIEXZ	99.9742	99.9742	100.0000	0xd7240	tokens1:e4f46e6af119
+hero	?initializeBallisticsTable@@YIEXZ	100.0000	100.0000	100.0000	0xd7240	tokens1:e4f46e6af119
 hero	?initializeHeroSpecificAbilitiesTable@@YIEXZ	100.0000	100.0000	100.0000	0xd71a0	tokens1:3b7f7700bf2e
 hero	?isInIdentifyRange@hero@@QBEEPBUtype_point@@@Z	100.0000	100.0000	100.0000	0xe5e10	tokens1:db3fb36b9669
 hero	?isInPatrolRadius@hero@@QBEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0	tokens1:54ef7c96cd78
