@@ -1814,6 +1814,11 @@ void advManager::doEventDefenseTower(hero* currentHero, NewmapCell* cell,
     }
 }
 
+// DC events.cpp:1677 isolates the creature-bank empty bit; Mac
+// 0xad618..0xad61c reads the same one-bit member. Use the canonical bank
+// record rather than a raw extra-info mask. The preceding retail source
+// comparison has all nine instruction blocks exact; cached label residuals
+// remain separate from this native field recovery.
 VA(0x004a2140, 0xE8)
 DC_ADDRESS(0x092dec, 0x11a)
 MAC_ADDRESS(0x0ad5d8, 0x18c)
@@ -1821,7 +1826,7 @@ void advManager::doEventDragonCity(hero* currentHero, NewmapCell* cell,
                                       type_point point, bool humanPlayer)
 {
     cell->setCellVisited(currentHero->m_owner);
-    if (cell->m_extraInfo & 0x2000000) {
+    if (cell->m_creatureBankInfo.m_empty) {
         if (humanPlayer) {
             normalDialog((*g_generalText)[GENERAL_TEXT_DRAGON_CITY_EMPTIED],
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
