@@ -940,6 +940,12 @@ void advManager::vwDrawRoad(int srcX, int srcY, int z, int destX, int destY)
 // retail keeps this no-draw-first order. DC 1045's bCloudFlip store before
 // baseX/baseY is +0.04 only. Retail's frame is 0x10 against our 0xc: hflip
 // and lookup get real locals where this body reuses the parameter homes.
+// Nesting the canonical GetPitch in both Bitmap16Bit::getMap overloads
+// changes this CURRENT comparison from 93.3920% to 88.3551%. Retail retains
+// two getMap calls: they match candidate+0x21e/+0x3b2. Candidate additionally
+// retains getMap at +0x27c/+0x3c6/+0x424 (five vs two); the original-header
+// control has only four, with two extras. MAX 93.3920 remains held because
+// this caller's source tokens are unchanged; that is not a current match gain.
 VA(0x005f9940, 0x44A)
 DC_ADDRESS(0x194b48, 0x284)
 MAC_ADDRESS(0x205a1c, 0x4dc)  // exhaustive dc-order-map + VWCompleteDraw call order (the iVWTerrains-gated layer)
