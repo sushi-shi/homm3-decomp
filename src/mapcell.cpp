@@ -2109,9 +2109,15 @@ int NewfullMap::readSeerData(TAbstractFile* infile, CObject* seerObject)
 // but a secondary skill or a spell is drawn from a CANDIDATE LIST built on
 // the spot - every skill the scenario has not disabled, or every spell that
 // both belongs to a school and is not disabled - and then indexed by one
-// Random over the list's length.  That list is a std::vector<int> built
-// with push_back, which is why this body carries an EH frame and a vector
-// teardown on both arms.
+// Random over the list's length. Both lists own their vector teardown.
+// Mac retains distinct skill/spell vector families: push_back at 0x12a880
+// versus 0xbe580. The latter is shared with exchangeSpells, whose DC locals
+// prove vector<enum SpellID>. Use the existing ESpellId enum for that domain;
+// the legacy global SpellID alias still denotes int. TSecondarySkill owns
+// the skill candidates. Their enum iterators supply the appended values.
+// Both emitted enum insert bodies reproduce retail 0x54d120, including its
+// new/delete targets; vector<int>::insert instead has its separately
+// admitted identity at 0x404200. The caller's instructions match throughout.
 
 VA(0x00500b30, 0x2AE) MAC_ADDRESS(0x122f6c, 0x318)  // dc 0xefbb8
 int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
@@ -2151,8 +2157,10 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 
     case const_scholar_secondary_skill:
         if (isRandom) {
-            std::vector<int> candidates;
-            for (int skill = 0; skill < 28; ++skill) {
+            std::vector<TSecondarySkill> candidates;
+            for (TSecondarySkill skill = eSecSkillPathfinding;
+                 skill < kNumSecSkills;
+                 skill = H3_ENUM_DECODE(TSecondarySkill, skill + 1)) {
                 if (!g_game->m_ssDisabled[skill])
                     candidates.push_back(skill);
             }
@@ -2165,8 +2173,10 @@ int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 
     case const_scholar_spell:
         if (isRandom) {
-            std::vector<int> candidates;
-            for (int spell = 0; spell < 70; ++spell) {
+            std::vector<ESpellId> candidates;
+            for (ESpellId spell = SPELL_SUMMON_BOAT;
+                 spell < 70;
+                 spell = H3_ENUM_DECODE(ESpellId, spell + 1)) {
                 if (g_spellTraits[spell].m_schoolBits
                     && !g_game->m_spellDisabledInfo[spell])
                     candidates.push_back(spell);
