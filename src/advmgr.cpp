@@ -7758,7 +7758,9 @@ void advManager::setHeroContext(int heroId, int inMove, bool waitingPlayer, bool
 
     player->m_currHeroId = heroId;
 
-    hero* curr = g_game->getHero(heroId);
+    // DC 9570 and Mac 0x182c0 reload the selected player's current hero id
+    // after storing it, then pass that member to the canonical GetHero.
+    hero* curr = g_game->getHero(player->m_currHeroId);
     NewmapCell* cell = getCell(curr->getLocation());
 
     if (!waitingPlayer) {
