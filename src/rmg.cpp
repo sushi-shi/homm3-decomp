@@ -10354,10 +10354,14 @@ int TRandomMapRequest::generate(const char* fileName, void* progress)
     }
 }
 
-// The branch queue naturally emits these ordinary Dinkumware members.
+// The branch queue naturally emits its destructor with list teardown expanded.
+// Retail carveBranchingPaths unwind thunk 0x62fdb8 passes its queue at
+// EBP-0x68 to 0x54c6a0; the emitted queue destructor has the same 77 bytes
+// and delete relocations at +0x23/+0x3a. No standalone list destructor is
+// emitted. The list member operations below retain their own native owners.
 // Eight-byte coordinate values and 16-byte linked nodes identify list<TPoint>;
 // erase's iterator result is returned through a hidden stack pointer.
-VA_COMPGEN(0x0054C6A0, 0x4D, LIST_DTOR, TPoint)
+VA_COMPGEN(0x0054C6A0, 0x4D, QUEUE_LIST_DTOR, TPoint)
 VA_COMPGEN(0x0054D000, 0x5E, LIST_INSERT_SINGLE, TPoint)
 VA_COMPGEN(0x0054D060, 0x36, LIST_ERASE_ITERATOR, TPoint)
 // Natural per-level queue cleanup emits all 69 retail bytes, including delete.

@@ -446,7 +446,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_INSERT_COUNT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN", "VECTOR_COPY_CTOR",
-                 "LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
+                 "LIST_DTOR", "QUEUE_LIST_DTOR", "LIST_INSERT_SINGLE", "LIST_ERASE_ITERATOR",
                  "LIST_ERASE_RANGE", "LIST_BUYNODE",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
@@ -1119,6 +1119,15 @@ def _demangle_key(mangled: str):
         r"^\?([A-Za-z_]\w*)@\?1\?\?.+@\$[A-Z]V", mangled)
     if local_static_dtor:
         return f"{local_static_dtor.group(1).lower()}@local_static_dtor"
+    # The queue owns its list member's teardown. Keep that emitted wrapper
+    # distinct from list::~list, even when its expanded instructions agree.
+    # Admit only the evidenced list/default-allocator specialization.
+    queue_list_dtor = re.match(
+        r"^\?\?1\?\$queue@(?P<element>[UV](?P<owner>[A-Za-z_]\w*)@@)"
+        r"V\?\$list@(?P=element)V\?\$allocator@(?P=element)"
+        r"@std@@@std@@@std@@QAE@XZ$", mangled)
+    if queue_list_dtor:
+        return f"{queue_list_dtor.group('owner').lower()}@queue_list_dtor"
     # RMG's branch queue retains ordinary Dinkumware list<TPoint> members.
     # Public erase overloads have the same owner and iterator result: the
     # argument suffix, not size or emission order, distinguishes the range.
@@ -2554,7 +2563,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@{algorithm}", []).append(row)
             continue
         list_member = next(
-            (kind for kind in ("list_dtor", "list_insert_single",
+            (kind for kind in ("list_dtor", "queue_list_dtor", "list_insert_single",
                                "list_erase_iterator", "list_erase_range",
                                "list_buynode")
              if f"${kind}$" in row["name"]), None)
