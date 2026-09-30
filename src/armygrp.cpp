@@ -49,7 +49,9 @@ static TSplitWindow* g_splitWindow;
 VA(0x004496a0, 0x16)
 DC_ADDRESS(0x04dae4, 0x22)
 MAC_ADDRESS(0x056454, 0x94)
-unsigned char armyGroup::hasCreatures() const
+// Native public ?HasCreatures@armyGroup@@QBA_NXZ proves the const bool
+// interface; CodeView's unsigned-byte return is its lowered representation.
+bool armyGroup::hasCreatures() const
 {
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         if (m_armies[i] != CREATURE_NONE)
