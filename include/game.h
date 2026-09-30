@@ -1661,9 +1661,10 @@ private:
     void setupShipyards();
 
 public:
+    // Original DC ViewArmy public ends HH_N3@Z: both UI flags are bool.
     void viewArmy(armyGroup& group, int iarmy, const hero* thisHero,
                   const town* thisTown, int x, int y,
-                  unsigned char showDismiss, unsigned char isQuickView);
+                  bool showDismiss, bool isQuickView);
     void overview();
 
     VA(0x004317d0, 0x26)  // hd-crossbuild + exact body/callers x15
