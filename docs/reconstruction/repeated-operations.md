@@ -523,11 +523,48 @@ field list `0x4429`. The earlier unresolved semantic alias is now documented in
 the owning header. The new helper names and ordinary source-file placement are
 project inferences; they carry no invented native address or inline claim.
 
+## Recruitment selection and quantity changes
+
+The four creature-card branches in `recruitUnit::main()` now use
+`handleCreatureClick()`. Selecting a different card with the left button stores
+the selected position and creature, resets the purchase quantity and controls,
+then invokes the existing `update(1, slot)`. Clicking the selected card or using
+the right button opens the same scoped creature preview. That preview is still
+destroyed before Main's common redraw; recruitment retains its fixed position,
+whereas the hill-fort and sacrifice/transformer callers center their previews.
+
+`setPurchaseQuantity()` shares the quantity/slider/accept-button transition
+between card selection, maximum quantity and a completed purchase. Its nested
+`updatePurchaseQuantityControls()` is also used after typed input's existing
+lower-then-upper clamp. The window and quantity are reread after the virtual
+slider setter before enabling the accept button. The helpers do not calculate
+prices, change slider resolution, redraw or finish the dialog.
+
+The slider callback already receives the slider's new state and deliberately
+does not write it back. Cancellation clears the quantity and disables acceptance
+without touching the slider. Opening initializes quantity and totals separately;
+`update()` retains its affordability clamp, remote/view-only button gates and
+new-creature-only resolution change. Successful purchase still delivers the
+army/artifact first, charges gold and the optional resource, narrows the stock
+deduction to short, and only then resets the purchase selection. Capacity
+failures and single-creature/town completion retain their existing exits.
+
+Native recruitUnit `0x3f7f`, field list `0x5223`, explicitly records public
+`monsterType`, `selectedPosition` and `numberToBuy`; no visibility is inferred
+from these new private helper methods. Names and ordinary source placement are
+project inferences without native address or explicit inline claims.
+
+The surrounding resource review distinguishes paired/partial recruitment costs,
+market exchange/gift ordering and dense seven-resource upgrade costs. The
+blacksmith's seven-entry loop subtracts every entry from gold, unlike a normal
+row payment; the sparse town-build dialog also preserves its selected resource
+indices. Those operations are not changed by the recruitment helper extraction.
+
 ## Validation provenance
 
 Per the user's instruction, this continuation and the PR split ran no builds,
 tests, validation checks or matching-score investigations. Earlier compiler
 observations recorded with the accessor inventory do not validate these changes.
 The extraction checkpoint `aa71fa920` preserved the published C++ implementation
-at `582687638`. The combat damage/vanish continuation above was added afterward
-and has not been compiled or measured.
+at `582687638`. The combat damage/vanish and recruitment continuations above were added
+afterward and have not been compiled or measured.

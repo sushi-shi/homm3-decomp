@@ -202,6 +202,14 @@ public:
 
     void update(bool newMonster, long slot);
     void setRolloverText(int codeY);
+
+private:
+    // Project-inferred operations shared by the four creature cards and
+    // quantity edits. DC recruitUnit 0x3f7f / fields 0x5223 records the
+    // selected creature, position and quantity as public; retain that access.
+    void updatePurchaseQuantityControls();
+    void setPurchaseQuantity(int quantity);
+    void handleCreatureClick(TCreatureType creature, int slot, bool quickView);
 };
 SIZE(recruitUnit, 188);
 

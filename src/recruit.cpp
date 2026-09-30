@@ -746,6 +746,43 @@ int finishRecruitUnit(message& msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
+// Project-inferred quantity/display boundary. Slider state must be written
+// before enabling the accept button; reread both the window and quantity after
+// the virtual setter. This does not recompute costs or draw the window.
+// The slider callback and cancellation deliberately do not set slider state.
+void recruitUnit::updatePurchaseQuantityControls()
+{
+    g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
+    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+}
+
+void recruitUnit::setPurchaseQuantity(int quantity)
+{
+    m_numberToBuy = quantity;
+    updatePurchaseQuantityControls();
+}
+
+// All four cards share this transition or the same scoped creature preview.
+// Keep the existing update's availability/cost work and destroy the preview
+// before Main's common redraw. Ordinary owner-TU placement is provisional;
+// no native helper identity or explicit inline declaration is claimed.
+void recruitUnit::handleCreatureClick(TCreatureType creature, int slot,
+                                     bool quickView)
+{
+    if (m_selectedPosition != slot && !quickView) {
+        m_selectedPosition = slot;
+        m_monsterType = creature;
+        setPurchaseQuantity(0);
+        update(1, slot);
+    } else {
+        TViewArmyWindow viewArmyWindow(creature, 0x77, 0x20, !quickView);
+        if (quickView)
+            viewArmyWindow.quickView();
+        else
+            viewArmyWindow.doModal();
+    }
+}
+
 // E:\gamedcs\recruit.cpp:704
 // The message command map is fixed by the retail switch tables: 0x20e is the
 // typed quantity, 0x214 the maximum button, 0x21a..0x21d the four creature
@@ -843,81 +880,24 @@ int recruitUnit::main(message& msg)
                     m_numberToBuy = 0;
                 if (m_numberToBuy > m_maxAvail)
                     m_numberToBuy = m_maxAvail;
-                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                updatePurchaseQuantityControls();
                 update(0, -1);
                 break;
 
             case RECRUIT_CREATURE_0_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_0 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_0;
-                    m_monsterType = m_monType1;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 0);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType1, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType1, RECRUIT_SLOT_0, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_1_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_1 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_1;
-                    m_monsterType = m_monType2;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 1);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType2, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType2, RECRUIT_SLOT_1, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_2_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_2 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_2;
-                    m_monsterType = m_monType3;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 2);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType3, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType3, RECRUIT_SLOT_2, exitFlag != 0);
                 break;
 
             case RECRUIT_CREATURE_3_ID:
-                if (m_selectedPosition != RECRUIT_SLOT_3 && !exitFlag) {
-                    m_selectedPosition = RECRUIT_SLOT_3;
-                    m_monsterType = m_monType4;
-                    m_numberToBuy = 0;
-                    g_recruitWindow->m_quantitySlider->setState(0);
-                    g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
-                    update(1, 3);
-                } else {
-                    TViewArmyWindow viewArmyWindow(
-                        m_monType4, 0x77, 0x20, !exitFlag);
-                    if (exitFlag)
-                        viewArmyWindow.quickView();
-                    else
-                        viewArmyWindow.doModal();
-                }
+                handleCreatureClick(m_monType4, RECRUIT_SLOT_3, exitFlag != 0);
                 break;
             }
             g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
@@ -929,9 +909,7 @@ int recruitUnit::main(message& msg)
             case RECRUIT_MAXIMUM_ID:
                 if (exitFlag)
                     break;
-                m_numberToBuy = m_maxAvail;
-                g_recruitWindow->m_quantitySlider->setState(m_numberToBuy);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                setPurchaseQuantity(m_maxAvail);
                 update(0, -1);
                 g_recruitWindow->drawWindow(1, WINDOW_ALL_WIDGETS_LOW,
                                             WINDOW_ALL_WIDGETS_HIGH);
@@ -986,9 +964,7 @@ int recruitUnit::main(message& msg)
                     g_currentPlayer->m_resources[m_altResource] -=
                         m_resourcesPerTroop * m_numberToBuy;
                 *m_numAvail -= static_cast<short>(m_numberToBuy);
-                m_numberToBuy = 0;
-                g_recruitWindow->m_quantitySlider->setState(0);
-                g_recruitWindow->m_acceptButton->enable(m_numberToBuy != 0);
+                setPurchaseQuantity(0);
 
                 if (m_monType2 == CREATURE_NONE
                     || m_type == RECRUIT_SOURCE_TOWN)
